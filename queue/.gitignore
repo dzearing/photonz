@@ -7,6 +7,9 @@ loop.log
 # queue/sweep/README.md explains the folder and stays tracked.
 sweep/*.log
 sweep/latest.json
+# The last run that went blind: the app stopped launching part way through, so
+# it is kept apart from latest.json and never read as the state of the set.
+sweep/blind.json
 sweep/requested.json
 sweep/.claimed.json
 # The rotating check's state: where it has got to in the set, what it last

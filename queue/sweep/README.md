@@ -1,7 +1,7 @@
 # queue/sweep
 
 The full walk sweep runs every scripted walk in `Scripts/playtest`:
-about 540 walks and about 105 minutes,
+about 560 walks and about 105 minutes,
 counted by `queue/bin/sweep-size.mjs` rather than written down here. This folder
 is where the go loop hands that run back and forth with the task runners.
 
@@ -44,16 +44,46 @@ Drills: `node queue/bin/sweep-schedule-drill.mjs`, `node queue/bin/loop-day-dril
 | `requested.json` | a task runner, via `queue/bin/sweep.sh request` | who asked for a sweep and why. Several asks before the next sweep collapse into the one run that serves them all. Asking does not start one: see the schedule above. |
 | `rotation.json` | the loop, via `queue/bin/sweep.sh slice` | where the rotating check has got to in the set, and the commit it last checked. |
 | `last-slice.json` | the same | what the last rotating check ran and found. Never the state of the walk set. |
-| `latest.json` | the loop, via `queue/bin/sweep.sh run` | the last sweep: how long it took, how many walks passed, and the name of every walk that failed. |
+| `latest.json` | the loop, via `queue/bin/sweep.sh run` | the last sweep: how long it took, how many walks passed, and the name of every walk that failed. Only runs that could SEE land here: a run that went blind does not, so this stays the last run that really covered the set. |
+| `blind.json` | the same | the last run that WENT BLIND, if there was one: where the app stopped launching, how many walks that cost, and what it did answer before it. `sweep.sh status` leads with it while it is newer than `latest.json`. |
 | `<date>-<time>.log` | the same run | the full output, one line per walk. The last ten are kept. |
 | `.claimed.json` | `sweep.sh run`, at the moment it starts | the requests this run is serving, plus who is running it, when it began, which log it is writing and how big the set is. Deleted when the run is written down. One left behind means a run that never finished. |
 | `.awake.pid` | `playtest-all.sh` | the caffeinate holding the Mac awake for the length of the run, so a run that is killed does not leave the hold behind. |
 
+## A sweep that goes blind says so
+
+On the night of 2026-09-21 the probe stopped launching 117 walks into a sweep.
+The run carried on to the end of the set anyway, and each of the remaining 436
+walks came back in 0s with `no done.json`, so the sweep wrote down 438 failing
+walks out of 553. That record replaced one that had passed 537 of 544 the same
+morning, and for the next day `sweep.sh status` told every runner the app was
+broken in 438 ways. Four of the names were run on their own and passed in about
+20 seconds each.
+
+A walk that nothing ran is UNANSWERED. It is not a pass and it is not a failure,
+and it is now treated like one:
+
+* `Scripts/playtest.sh` exits **5** when the probe will not launch, and says so
+  in words instead of leaving `playtest-all.sh` to guess from an empty folder;
+* `Scripts/playtest-all.sh` counts those apart, and after five in a row it
+  **stops the run** rather than marching the rest of the set past an app that
+  is not there;
+* `queue/bin/sweep-parse.mjs` reads a run of five or more the same way in any
+  log, old wording included, and takes those walks out of the failing list and
+  out of the counts. One on its own is still a flake and still a failure;
+* the run is written to `blind.json`, never over `latest.json`, so the last run
+  that really covered the set stays the record and the twelve-hour floor is
+  still counted from a run that could see. The request that asked for the sweep
+  is handed back.
+
+Drill: `node queue/bin/sweep-blind-drill.mjs`.
+
 ## A sweep that is cut short still counts
 
-A run can end four ways, and only the first is the state of the walk set:
-it covered the set, a locked screen let only part of it through, it hit its own
-clock cap, or it was INTERRUPTED because whoever was running it went away.
+A run can end five ways, and only the first is the state of the walk set:
+it covered the set, a locked screen let only part of it through, the app
+stopped launching and it went blind, it hit its own clock cap, or it was
+INTERRUPTED because whoever was running it went away.
 
 The last one used to lose everything twice over. The requests are claimed at
 the START of a run (one arriving during a sweep belongs to the next one) and
@@ -94,7 +124,7 @@ PHOTONZ_QUEUE_DIR=/tmp/swq PHOTONZ_SWEEP_ARGS="--no-build caliper" \
 ## Why a runner never runs the sweep itself
 
 A task runner's background work is terminated at 600s. The sweep is
-ten times the 600s ceiling, so a runner that starts one is killed waiting
+eleven times the 600s ceiling, so a runner that starts one is killed waiting
 for it and its task is handed back unfinished. Eight of the twenty recorded runner failures are this,
 including 2026-09-07 16:22 ("The full walk sweep is still running (it re-runs
 all 253 walks)") and 2026-09-08 00:03 ("Background tasks still running after

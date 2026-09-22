@@ -34,6 +34,10 @@ const record = {
   began, ended, seconds: Number(seconds),
   walks: r.walks, passed: r.passed, failed: r.failed, crashed: r.crashed,
   couldNotRun: r.couldNotRun,
+  // The app stopped launching part way through this check, so these walks were
+  // never put in front of anything. Unanswered, and never written onto the
+  // standing task as broken.
+  blind: r.blind, blindWalks: r.blindWalks,
   of: Number(of) || 0, asked: Number(ran) || 0,
   from: pick.from || 0, to: pick.nextCursor || 0,
   changed: pick.changed || [],
@@ -43,7 +47,18 @@ const record = {
 };
 writeFileSync(out, JSON.stringify(record, null, 2) + '\n');
 
-const broken = [...r.failed, ...r.crashed];
+// A check that lost the app says that first and loudest. Its own failures are
+// still real and still get written down; what it never ran is not.
+if (r.blind) {
+  console.log(`==> Rotating check WENT BLIND: the app stopped launching at ${r.blind.from}, `
+    + `so the ${r.blind.count} walks from there on never ran at all.`);
+  console.log('    They are unknown, not failing, and none of them is named as broken anywhere.');
+  console.log('    Chase why the probe will not launch: Scripts/probe-app.sh');
+}
+
+// r.crashed is {name, why} objects, not names. Spreading them straight in put
+// "[object Object]" in the line this writes onto the standing walk task.
+const broken = [...r.failed, ...r.crashed.map((c) => c.name)];
 const scope = cutShort
   ? `${r.walks} of the ${ran} it set out to run (out of ${of})`
   : `${r.walks} of ${of} walks`;

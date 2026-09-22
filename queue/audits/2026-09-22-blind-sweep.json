@@ -1,0 +1,26 @@
+{
+  "feature": "A sweep that goes blind says so",
+  "epic": "unmanned-loop",
+  "summary": "When the app stops launching part way through a walk run, the run now stops and says it went blind instead of writing down every walk after that point as a broken walk. On the night of 2026-09-21 one of those runs reported 438 of 553 walks failing, on code that had passed 537 of 544 that morning, and the loop pointed runners at that list for a day.",
+  "setup": "Nothing to install and nothing to turn on. This is the loop's own reporting, so it is read from a terminal in the repo rather than in the app.",
+  "try": [
+    { "do": "Run `queue/bin/sweep.sh status`. It leads with THE APP STOPPED LAUNCHING and names two failing walks, where yesterday it named 438." },
+    { "do": "Read the sentence under it: the 436 walks after distance-parking-preview are called unknown, not failing." },
+    { "do": "Run `node queue/bin/sweep-blind-drill.mjs`. It feeds run logs with the app going missing and checks none of those walks is ever named as broken." },
+    { "do": "Prove it on the real thing: move dist/Photonz Probe.app aside, run `Scripts/playtest-all.sh --no-build --only <a file naming 8 walks>`, and put the bundle back." },
+    { "do": "Watch it stop after five, not eight: it prints STOPPING ... This run has GONE BLIND and exits 5." },
+    { "do": "Open the standing walk task on the dashboard. Its failing list is 7 names from the last run that really covered the set, not 438." }
+  ],
+  "evaluate": [
+    "Does `sweep.sh status` make it obvious in the first line that the news is about the app not starting, rather than about walks?",
+    "Is five walks in a row the right point to call a run blind, or should one failure to launch already stop the run?",
+    "A blind run is kept in queue/sweep/blind.json and shown until a real sweep overtakes it. Is that the right place, or should the dashboard show it too?",
+    "The blind run's real failures (two walks it answered before the app went away) are printed but are not written onto the standing walk task. Is that the right call, or should they be filed?"
+  ],
+  "rough": [
+    "No screenshot: this change has no surface in the app at all, so the evidence is terminal output and it is quoted in the task log rather than photographed. A walk was run anyway (redline-walk, 14 real window captures) only to prove the launch path still works after the change to Scripts/playtest.sh.",
+    "The dashboard still reads queue/sweep/latest.json only, so a blind run shows there as nothing having happened since the last real sweep. That is better than what it showed before, which was 438 broken walks, but it is not the whole truth and a person watching the dashboard would not learn the app had stopped launching.",
+    "What made the app stop launching on 2026-09-21 is still unknown. This task was about the sweep telling a broken app from a missing one, and it deliberately did not chase that.",
+    "Two drills in queue/bin were already failing before this work and still are: sweep-size-drill (docs quoting 322 walks and 52 minutes where the set is 559 walks and 107 minutes) and dev-app-drill (a wording assertion that has drifted from the sentence the code prints). Neither is caused by this change."
+  ]
+}

@@ -2,6 +2,77 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-09-22 — A sweep that goes blind says so
+
+On the night of 2026-09-21 the probe stopped launching 117 walks into a full
+sweep. The run carried on to the end of the set anyway, and each of the
+remaining 436 walks came back in 0s with `no done.json`, so the sweep wrote down
+438 failing walks out of 553. That record replaced one that had passed 537 of
+544 the same morning, and for the next day `sweep.sh status` and the standing
+walk task told every runner the app was broken in 438 ways. Four of the names
+were run on their own and passed in about 20 seconds each.
+
+The guard that existed only covered a run that never started at all
+(`r.walks === 0 && r.couldNotRun === 0`). A run that answers 115 walks and then
+loses its eyes sailed straight past it.
+
+A walk that nothing ran is UNANSWERED: not a pass, not a failure, and never a
+walk to file a bug against. Four places now agree on that.
+
+`Scripts/playtest.sh` exits **5** with `==> Verdict: THE APP WOULD NOT START`
+when the probe will not come up. It used to die on the spot under `set -e` with
+no verdict printed at all, which is exactly why those walks said `no done.json`:
+the same six words a merely slow walk says.
+
+`Scripts/playtest-all.sh` counts those apart (`0 passed, 0 failed, 5 could not
+start`), and after five in a row it **stops the run**:
+
+    ==> STOPPING: the app has failed to launch 5 times in a row, starting at arrow-parts-walk.
+        This run has GONE BLIND.
+
+Five, not one: a single failure to get the probe up is a flake and stays a
+failure, so a real break is not swallowed by the same machinery.
+
+`queue/bin/sweep-parse.mjs` reads a run of five or more the same way out of ANY
+log, the old wording included, so the poisoned run of 2026-09-21 reads correctly
+today: 117 walks, 115 passed, 2 failed, and a hole 436 walks wide. Those names
+leave the failing list, leave the counts, and the run is never `complete`.
+
+`queue/bin/sweep-record.mjs` writes a blind run to `queue/sweep/blind.json`,
+never over `latest.json`. That was the judgment call. Keeping it in
+`latest.json` with a flag on it would have reset the twelve-hour floor
+`sweep-schedule.mjs` counts from, on the exact night the app had stopped
+launching, and would have left the dashboard drawing 115 of 553 as a passed
+total. `sweep.sh status` and `sweep.sh summary` both lead with the blind run
+while it is newer than the last real sweep, so the news is loud and the record
+of the walk set is still a run that could see.
+
+**Verified on the real thing, not assumed.** Parked `dist/Photonz Probe.app`
+and ran the real chain twice: `playtest-all.sh` stopped at five of eight walks
+and exited 5, and a narrowed `sweep.sh run` in a sandbox queue printed
+`Walk sweep WENT BLIND after 0m 15s`, left `latest.json` byte-identical, wrote
+`blind.json`, handed its request back, left no claim behind and filed no task.
+Put the bundle back and ran `redline-walk` for real to prove the launch path is
+untouched: ok, 14 real window captures.
+
+**The poisoned records are replaced.** `queue/sweep/latest.json` is the
+2026-09-21T06:47:03Z run again (537 of 544 in 113 minutes), re-recorded from its
+own log through the fixed reader rather than hand-edited, and the standing walk
+task's failing list went from 438 names to 7 by running the real writer over it.
+
+New drill `queue/bin/sweep-blind-drill.mjs`, 46 checks, wired into CI. Two
+things fixed alongside, both reproduced first: `sweep-size.mjs --check` was
+failing on main (three places said "ten times the 600s ceiling" where a full
+sweep is eleven), and a rotating check that found a crashed walk wrote
+`[object Object]` onto the standing walk task because `r.crashed` holds objects.
+
+`Scripts/test.sh`: 8909 tests in 711 suites passed.
+
+**Next**: a full sweep is asked for, since `playtest.sh` and `playtest-all.sh`
+are on the path of every walk. **Open**: what made the app stop launching that
+night is still unknown, and this task deliberately did not chase it. The
+dashboard still reads `latest.json` only, so a blind run does not show there.
+
 ## 2026-09-18 — A walk whose app died says the app died
 
 A scripted walk that ends because the app ABORTED leaves no `done.json`, and

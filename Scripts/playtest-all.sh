@@ -10,7 +10,8 @@
 #   Scripts/playtest-all.sh --no-build      reuse the built probe
 #   PHOTONZ_SWEEP=1 Scripts/playtest-all.sh  all of them (see the gate below)
 #
-# Exits 0 when every walk passed, 1 when one failed or crashed, and 3 when the
+# Exits 0 when every walk passed, 1 when one failed or crashed, 5 when the run
+# WENT BLIND because the app stopped launching, and 3 when the
 # Mac's screen was locked: then the walks that look a control up by name were
 # refused and the run covered only a part of the set, however many of the rest
 # passed. A walk whose APP DIED is reported as a crash, with the frames it died
@@ -19,7 +20,7 @@
 # crashes as seven slow walks (2026-09-17 night).
 # Never touches "dist/Photonz Dev.app".
 #
-# The whole set is now about 540 walks and about 105 minutes (counted by
+# The whole set is now about 560 walks and about 105 minutes (counted by
 # queue/bin/sweep-size.mjs, never typed in), and it is GATED behind
 # PHOTONZ_SWEEP=1. That is not a build flag, it is a guard rail: a task runner
 # has its background work killed at 600s, and eight of the twenty recorded
@@ -62,14 +63,14 @@ if [[ -n "$ONLY_FILE" ]]; then
 fi
 
 # The whole set is
-# about 540 walks and about 105 minutes, which is ten times the 600s ceiling
+# about 560 walks and about 105 minutes, which is eleven times the 600s ceiling
 # on a task runner's background work, so running it from inside a task ends with
 # the runner terminated and its task handed back unfinished. Point whoever did
 # that at the way that survives instead of letting them start the run.
 if (( ${#PATTERNS[@]} == 0 )) && [[ -z "$ONLY_FILE" && "${PHOTONZ_SWEEP:-0}" != 1 ]]; then
   cat >&2 <<'EOM'
 !! Refusing to run the whole walk set here: it is
-!! about 540 walks and about 105 minutes, and a task runner's background work
+!! about 560 walks and about 105 minutes, and a task runner's background work
 !! is terminated at 600s, so this run would be killed
 !! and the task that started it would be handed back unfinished.
 !!
@@ -185,6 +186,16 @@ CRASH_WHY=()
 LOCKED=0
 # ...and how many of them, so a run of a handful says what it could not reach.
 COULD_NOT_RUN=0
+# Walks that had NO APP to run in, because the probe would not launch. Never
+# failures: a walk nothing ran is unanswered. One on its own is a flake (a
+# previous probe still shutting down); BLIND_AFTER in a row is the app not
+# coming back, and the run stops there rather than marking the rest of the set
+# broken. On 2026-09-21 it did not stop and wrote down 436 walks as failing in
+# 0s each, on code that had passed 537 of 544 that morning.
+BLIND_AFTER=5
+BLIND_RUN=0
+BLIND_FROM=""
+BLIND=()
 # How long the run took, and how long each walk in it took, because "the full
 # run takes about four hours" was a guess nobody could check. Every walk prints
 # its own seconds and the run prints its total, so a walk that has started
@@ -209,7 +220,26 @@ for walk in Scripts/playtest/*.json; do
   if (( code == 0 )); then
     verdict="ok"
     PASSED=$((PASSED + 1))
+    BLIND_RUN=0
+  elif (( code == 5 )); then
+    # There was no app. Not a pass, not a failure: unanswered.
+    BLIND+=("$name")
+    BLIND_RUN=$((BLIND_RUN + 1))
+    (( BLIND_RUN == 1 )) && BLIND_FROM="$name"
+    printf '%4ds  COULD NOT START  the probe would not launch, so nothing ran this walk\n' $((SECONDS - WALK_BEGAN))
+    if (( BLIND_RUN >= BLIND_AFTER )); then
+      echo
+      echo "==> STOPPING: the app has failed to launch $BLIND_RUN times in a row, starting at $BLIND_FROM."
+      echo "    This run has GONE BLIND. Carrying on would put every remaining walk in front of no app"
+      echo "    and write it down as broken, which is exactly what happened on 2026-09-21: 436 walks"
+      echo "    marked failing in 0s each, on code that had passed 537 of 544 that morning."
+      echo "    The walks already answered above are real. Everything not run is unknown."
+      echo "    What to chase is why the probe will not launch: Scripts/probe-app.sh"
+      break
+    fi
+    continue
   elif (( code == 3 )); then
+    BLIND_RUN=0
     # The screen is locked and THIS walk looks a control up by name, so it did
     # not run. Others still can: half the walk set never asks for a name, and
     # those run and photograph the app normally (PlaytestLockSafety). So the run
@@ -230,6 +260,7 @@ for walk in Scripts/playtest/*.json; do
     verdict="CRASHED  $why"
     CRASHED+=("$name")
     CRASH_WHY+=("$why")
+    BLIND_RUN=0
   else
     # A walk that simply ran out of road says so in its own words; only a walk
     # that left nothing at all falls back to "no done.json", and now that a
@@ -238,6 +269,7 @@ for walk in Scripts/playtest/*.json; do
     [[ -n "$reason" ]] || reason="$(printf '%s' "$out" | sed -n 's/.*"error" : "\(.*\)",*$/\1/p' | head -1)"
     verdict="FAILED  ${reason:-no done.json}"
     FAILED+=("$name")
+    BLIND_RUN=0
   fi
   TOOK=$((SECONDS - WALK_BEGAN))
   printf '%4ds  %s\n' "$TOOK" "$verdict"
@@ -261,6 +293,18 @@ if (( LOCKED )); then
   fi
   echo "    Unlock the screen to run the rest."
 fi
+# The app not being there at all. Said above the counts, because the counts
+# underneath are about the walks that DID get an app; the rest are unanswered
+# and are never named as failures anywhere.
+if (( ${#BLIND[@]} )); then
+  echo "==> ${#BLIND[@]} walk(s) COULD NOT START: the probe would not launch, beginning at $BLIND_FROM."
+  echo "    Nothing ran them, so they are not a pass and not a failure. They are unknown."
+  echo "    Whatever is wrong is with launching the app, not with those walks: chase it in"
+  echo "    Scripts/probe-app.sh and in the output above, and run one of them on its own."
+  if (( RAN )); then
+    echo "    The $RAN walk(s) answered before that are real and their counts below are real."
+  fi
+fi
 # A crash is not a slow walk and must never read as one. Say it above the
 # counts, with what it died in, because that line is the whole point: the loop
 # reads these words and nothing else.
@@ -282,6 +326,7 @@ fi
 COUNTS="==> $PASSED passed, ${#FAILED[@]} failed"
 (( ${#CRASHED[@]} )) && COUNTS="$COUNTS, ${#CRASHED[@]} crashed"
 (( LOCKED )) && COUNTS="$COUNTS, $COULD_NOT_RUN could not run"
+(( ${#BLIND[@]} )) && COUNTS="$COUNTS, ${#BLIND[@]} could not start"
 echo "$COUNTS"
 (( ${#FAILED[@]} == 0 )) || printf '    %s\n' "${FAILED[@]}"
 (( ${#CRASHED[@]} == 0 )) || printf '    %s\n' "${CRASHED[@]}"
@@ -293,5 +338,9 @@ echo
 # whatever ran is a part and never the state of the set. The sweep records it as
 # a partial, keeps its request pending, and still files any walk that FAILED in
 # the part that ran.
+# Exit 5 means THE RUN WENT BLIND: the app stopped launching, so a stretch of
+# the set was never put in front of anything. It outranks the lock, because a
+# locked run at least had an app.
+(( ${#BLIND[@]} )) && exit 5
 (( LOCKED )) && exit 3
 exit $(( ${#FAILED[@]} + ${#CRASHED[@]} == 0 ? 0 : 1 ))

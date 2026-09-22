@@ -18,6 +18,7 @@
 //   queue/bin/sweep-record.mjs <runlog> <latest.json> <claimed.json> <requested.json> \
 //       <began> <ended> <seconds> <runlogRelPath> <timedOut 0|1> <totalWalks> <headSha> [<interrupted 0|1>]
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { parseSweepLog, sweepSentences } from './sweep-parse.mjs';
 
 // Record one run and settle its requests. Returns what it wrote and what it
@@ -26,6 +27,8 @@ export function recordSweep({
   logText, latest, claimed, req,
   began, ended, seconds, runlogRel,
   timedOut = false, interrupted = false, total = 0, head = null,
+  // Where a run that went blind is written down instead of latest.json.
+  blindFile = null,
   // Only write latest.json if this run is newer than what is already there.
   // The recovery path reads a run that ended hours ago, and a stale record
   // written over a fresh one would be worse than the silence it is fixing.
@@ -44,6 +47,9 @@ export function recordSweep({
     // is filed like any failure and read like nothing else: it takes the open
     // document with it and everything after it is a question mark.
     crashed: r.crashed,
+    // The app stopped launching part way through, so these walks were never put
+    // in front of anything. Unanswered, never failures.
+    blind: r.blind, blindWalks: r.blindWalks,
     ranWalks: r.ranWalks, refusedWalks: r.refusedWalks,
     requests, log: runlogRel,
     complete: r.complete, timedOut: r.timedOut,
@@ -65,6 +71,26 @@ export function recordSweep({
   // dashboard counts how long the lock has been going from exactly those
   // records. So the silence is only for a run with no walks AND no refusals.
   const nothingToSay = r.walks === 0 && r.couldNotRun === 0;
+
+  // A run that WENT BLIND is not written over latest.json either, and for the
+  // same reason with a worse blast radius. On 2026-09-21 the probe stopped
+  // launching 117 walks in; the run carried on to the end of the set and every
+  // walk after that point came back "FAILED  no done.json" in 0s. That record
+  // replaced a sweep that had passed 537 of 544 the same morning, and the loop
+  // spent the next day telling runners 438 walks were broken. Four of the names
+  // were spot-checked and passed in about 20s each.
+  //
+  // So it lands in blind.json instead: kept, said out loud, and not mistaken
+  // for a reading of the walk set. Nothing is thrown away, because the walks it
+  // DID answer before it went blind are in that file too. And because
+  // latest.json is what the schedule counts its twelve hours from, a blind run
+  // does not buy itself half a day of nobody looking again.
+  const wentBlind = Boolean(r.blind);
+  if (wentBlind) {
+    const where = blindFile || join(dirname(latest), 'blind.json');
+    writeFileSync(where, JSON.stringify(result, null, 2) + '\n');
+  }
+
   let older = false;
   if (onlyIfNewer) {
     try {
@@ -72,7 +98,7 @@ export function recordSweep({
       older = Boolean(was.ended && ended && Date.parse(was.ended) >= Date.parse(ended));
     } catch { /* nothing recorded yet */ }
   }
-  const recorded = !nothingToSay && !older;
+  const recorded = !nothingToSay && !older && !wentBlind;
   if (recorded) writeFileSync(latest, JSON.stringify(result, null, 2) + '\n');
 
   // Hand the requests back unless the set was actually covered. This is the
@@ -92,7 +118,7 @@ export function recordSweep({
     handedBack = requests.length;
   }
 
-  return { result, recorded, older, handedBack };
+  return { result, recorded, older, handedBack, blind: wentBlind };
 }
 
 // ---- the command line ------------------------------------------------------
@@ -101,19 +127,25 @@ if (invokedDirectly) {
   const [logFile, latest, claimed, req, began, ended, seconds, runlogRel, timedOut, total, head, interrupted] =
     process.argv.slice(2);
 
-  const { result, recorded, handedBack } = recordSweep({
+  const { result, recorded, handedBack, blind } = recordSweep({
     logText: existsSync(logFile) ? readFileSync(logFile, 'utf8') : '',
     latest, claimed, req, began, ended, seconds, runlogRel,
     timedOut: timedOut === '1', interrupted: interrupted === '1',
     total, head,
   });
 
-  if (!recorded) {
+  if (blind) {
+    console.log('==> This run WENT BLIND, so it is not written down as the state of the walk set: '
+      + 'the last run that really covered the set stays the record. What it did answer is in '
+      + 'queue/sweep/blind.json.');
+  } else if (!recorded) {
     console.log('==> Not one walk answered and nothing was refused, so this run is not written down: '
       + 'the last recorded sweep stays the last recorded sweep.');
   }
   for (const line of sweepSentences(result)) console.log(line);
-  if (result.failed.length) console.log(`Failing: ${result.failed.join(', ')}`);
+  if (result.failed.length) {
+    console.log(`Failing${blind ? ' in the part it answered' : ''}: ${result.failed.join(', ')}`);
+  }
   if (handedBack) {
     console.log(`${handedBack} sweep request(s) handed back: this run did not cover the set, so a sweep is still owed.`);
   }

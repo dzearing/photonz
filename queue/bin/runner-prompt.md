@@ -83,7 +83,7 @@ The machine you run on is the user's. Anything you start, you finish.
   Scripts/playtest.sh Scripts/playtest/<name>.json --no-build
   Scripts/playtest-all.sh --no-build <name-fragment>   # a handful at once
   ```
-  The whole set is about 540 walks and about 105 minutes, which is eleven times the 600s
+  The whole set is about 560 walks and about 105 minutes, which is eleven times the 600s
   ceiling on your background work, so starting it inside a task ends with you
   terminated and your task handed back unfinished. That is not hypothetical:
   eight of the twenty recorded runner failures are exactly this, including
@@ -120,10 +120,11 @@ The machine you run on is the user's. Anything you start, you finish.
   that you asked for one and why, and finish.
 
 - **A walk that says CRASHED means the app DIED, and that is yours to chase.**
-  A walk has four endings and they are different news: it ran (`ok` or
+  A walk has five endings and they are different news: it ran (`ok` or
   `FAILED  <the step>`), it ran out of time (`ran out of time after 180s, with
   the app still running`), the screen was locked and it needed a name
-  (`COULD NOT RUN`), or the app went away part way through:
+  (`COULD NOT RUN`), the app would not start at all (`COULD NOT START`), or the
+  app went away part way through:
   ```
   unique-layer-names-walk    9s  CRASHED  EXC_CRASH (SIGABRT) in EditorState.document.getter < … < closure #1 in EditorState.renameLayer(id:to:)
   ```
@@ -135,6 +136,14 @@ The machine you run on is the user's. Anything you start, you finish.
   stack is in the walk's own output, the report itself is under
   `~/Library/Logs/DiagnosticReports`, and
   `node Scripts/crash-report.mjs --file "<report>.ips"` reads any of them.
+
+  `COULD NOT START` is the one that is NOT about the app being broken: there was
+  no app. Nothing ran that walk, so it is unanswered, and it is never a walk to
+  file a bug against. Five of them in a row and the run stops itself and says it
+  has GONE BLIND, because marching the rest of the set past an app that is not
+  there is how a sweep on 2026-09-21 reported 438 of 553 walks broken on code
+  that had passed 537 of 544 that morning. What to chase then is why
+  `Scripts/probe-app.sh` will not launch, not any of the walks.
 
 - **If your task owns a failing walk, say so on the task.** The sweep's list of
   failures says which of them another open task is already on, so nobody

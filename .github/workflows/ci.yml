@@ -50,6 +50,13 @@ jobs:
           node queue/bin/sweep-parse-drill.mjs
           node queue/bin/sweep-interrupt-drill.mjs
 
+      # And a sweep that loses the app part way through says the run went blind
+      # rather than writing down every walk after that point as broken. One did
+      # on 2026-09-21: 438 of 553 named as failing, on code that had passed 537
+      # of 544 that morning, and the loop sent runners at that list for a day.
+      - name: A sweep that goes blind says so
+        run: node queue/bin/sweep-blind-drill.mjs
+
       - name: Swift version
         run: swift --version
 

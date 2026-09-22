@@ -1137,7 +1137,7 @@ export function loopScript(status = readStatus(), alive = loopAlive(status)) {
 
 // ---- the full walk sweep ----------------------------------------------------
 // A runner cannot run the whole walk set: it is
-// about 540 walks and about 105 minutes, and a runner's background work is cut
+// about 560 walks and about 105 minutes, and a runner's background work is cut
 // off at 600s. So it asks with queue/bin/sweep.sh request and the loop runs one
 // between tasks. Requests that nothing ever serves used to be invisible: seven
 // of them sat unserved for three days because the loop had no code to run

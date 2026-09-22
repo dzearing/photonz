@@ -2,7 +2,7 @@
 # The full walk sweep, owned by the go loop instead of by a task runner.
 #
 # Scripts/playtest-all.sh runs every scripted walk in Scripts/playtest:
-# about 540 walks and about 105 minutes. That size is COUNTED, not remembered:
+# about 560 walks and about 105 minutes. That size is COUNTED, not remembered:
 # queue/bin/sweep-size.mjs reads the walk count off disk and the seconds a walk
 # costs out of the recorded sweeps in queue/history.jsonl, and CI fails if this
 # comment drifts away from it. It used to be typed in, and by 2026-09-19 eleven
@@ -51,6 +51,9 @@ REPO="$PWD"
 SDIR="${PHOTONZ_QUEUE_DIR:-$REPO/queue}/sweep"
 REQ="$SDIR/requested.json"
 LATEST="$SDIR/latest.json"
+# Where a run that went BLIND lands. It is not latest.json on purpose: a run
+# that lost the app part way has a hole in it and is never the state of the set.
+BLIND="$SDIR/blind.json"
 Q() { node queue/bin/queue.mjs "$@"; }
 mkdir -p "$SDIR"
 
@@ -243,6 +246,27 @@ slice-summary)
 
 # ----------------------------------------------------------------- status ----
 status)
+  # A run that went blind is the loudest news there is, and it is not in
+  # latest.json by design, so it is said FIRST and only while it is still newer
+  # than the last real sweep. Without this a runner asking what the sweep found
+  # at eight in the morning would be told about a clean run from yesterday and
+  # never hear that the app had stopped launching overnight.
+  if [[ -s "$BLIND" ]]; then
+    node -e '
+      const fs = require("fs");
+      import("./queue/bin/sweep-parse.mjs").then(({ sweepSentences }) => {
+        const b = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+        let latest = null;
+        try { latest = JSON.parse(fs.readFileSync(process.argv[2], "utf8")); } catch {}
+        if (latest && latest.ended && b.ended && Date.parse(latest.ended) >= Date.parse(b.ended)) return;
+        console.log("!! THE APP STOPPED LAUNCHING during the last sweep.");
+        for (const line of sweepSentences(b)) console.log(line);
+        if (b.failed.length) console.log(`Failing in the part it answered: ${b.failed.join(", ")}`);
+        if (b.log) console.log(`Full output: ${b.log}`);
+        console.log("");
+      });
+    ' "$BLIND" "$LATEST"
+  fi
   if [[ -s "$LATEST" ]]; then
     node -e '
       const fs = require("fs");
@@ -279,12 +303,25 @@ status)
 
 # ---------------------------------------------------------------- summary ----
 # One compact JSON line about the last sweep, for the loop's event log.
+#
+# It reads blind.json when that is the newer of the two, because the loop writes
+# this line into history.jsonl right after every run and a blind run leaves
+# latest.json alone. Without this the loop would have recorded the PREVIOUS
+# sweep's counts a second time, as if a fresh sweep had just answered for the
+# code that had in fact stopped launching.
 summary)
-  if [[ -s "$LATEST" ]]; then
+  if [[ -s "$LATEST" || -s "$BLIND" ]]; then
     node -e '
-      const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
-      console.log(JSON.stringify({ walks: r.walks, passed: r.passed, failed: r.failed.length, seconds: r.seconds, complete: r.complete !== false, total: r.total || 0, ...(r.interrupted ? { interrupted: true } : {}), ...(r.timedOut ? { timedOut: true } : {}), ...(r.screenLocked ? { screenLocked: true, couldNotRun: r.couldNotRun || 0, partial: !!r.partial } : {}) }));
-    ' "$LATEST"
+      const fs = require("fs");
+      const read = (p) => { try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch { return null; } };
+      const latest = read(process.argv[1]);
+      const blind = read(process.argv[2]);
+      const newer = blind && (!latest || !latest.ended || !blind.ended
+        || Date.parse(blind.ended) > Date.parse(latest.ended));
+      const r = newer ? blind : latest;
+      if (!r) { console.log("{}"); process.exit(0); }
+      console.log(JSON.stringify({ walks: r.walks, passed: r.passed, failed: r.failed.length, seconds: r.seconds, complete: r.complete !== false, total: r.total || 0, ...(r.blind ? { blind: true, blindFrom: r.blind.from, blindWalks: r.blind.count } : {}), ...(r.interrupted ? { interrupted: true } : {}), ...(r.timedOut ? { timedOut: true } : {}), ...(r.screenLocked ? { screenLocked: true, couldNotRun: r.couldNotRun || 0, partial: !!r.partial } : {}) }));
+    ' "$LATEST" "$BLIND"
   else
     echo '{}'
   fi
@@ -533,6 +570,25 @@ run)
   # second time.
   RECORDED=0
   [[ -s "$LATEST" ]] && [[ "$(node -e 'try{console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).began||"")}catch{console.log("")}' "$LATEST")" == "$began" ]] && RECORDED=1
+
+  # A run that WENT BLIND is not in latest.json either, and it needs its own
+  # words: it answered real walks and then lost the app, which is neither "no
+  # answers" nor a reading of the set. sweep-record.mjs has already written it
+  # to blind.json and said the sentences; this says what happens next.
+  BLIND_RUN=0
+  [[ -s "$BLIND" ]] && [[ "$(node -e 'try{console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).began||"")}catch{console.log("")}' "$BLIND")" == "$began" ]] && BLIND_RUN=1
+
+  if (( BLIND_RUN )); then
+    echo "==> Walk sweep WENT BLIND after $((took / 60))m $((took % 60))s: the app stopped launching part way through."
+    echo "    The walks after that point had nothing to run in. They are unknown, not failing, and none of"
+    echo "    them is named as a broken walk anywhere."
+    echo "    Nothing is written down as the state of the walk set: the last run that really covered it stays"
+    echo "    the record, and the request that asked for this one is pending again."
+    echo "    What it answered before it went blind: queue/sweep/blind.json"
+    echo "    Why the app would not launch is the thing to chase, and the run log has it: queue/sweep/$stamp.log"
+    (( INTERRUPTED )) && exit 4
+    exit 0
+  fi
 
   if (( ! RECORDED )); then
     if (( INTERRUPTED )); then

@@ -430,7 +430,7 @@ trusted.
 
 ### The whole set is the loop's job, not a runner's
 
-The set is about 540 walks and about 105 minutes, counted by
+The set is about 560 walks and about 105 minutes, counted by
 `queue/bin/sweep-size.mjs` rather than typed in here. A task runner's
 background work is terminated at 600s, so a runner that starts the whole set is
 killed waiting for it and its task is handed back unfinished; eight of the

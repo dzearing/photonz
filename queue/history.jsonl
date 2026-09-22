@@ -6165,3 +6165,14 @@
 {"t":"2026-09-22T08:08:16.255Z","ev":"task_note","id":"swap-the-window-into-a-mode-from-a-chip-beside-t"}
 {"t":"2026-09-22T08:08:16.303Z","ev":"task_note","id":"a-mode-is-written-down-so-pixel-art-can-be-added"}
 {"t":"2026-09-22T08:08:32.421Z","ev":"task_done","id":"swap-the-window-into-a-mode-from-a-chip-beside-t","from":"in_progress","note":"Shipped behind next-window-modes (on by default in Next). Chip at the leading end of the title bar beside the traffic lights, popup list, View > Mode, control 1 to control 4; five modes including Everything. Model is WindowMode/WindowModes/WindowModeSession in PhotonzCore, pure and Codable, driven by WindowModeStore which hands PanelSectionVisibilityStore a new arrangement on a swap. Way back shipped in the same slice: folded sections still listed at the foot of the panel as Always hidden, hand edits keep the mode and read 'Design, edited', Reset Design, and Show Everything. Verified: 8909 core tests green, window-modes-walk 131 steps ok with 9 real window captures, all 22 panel walks and 14 menu walks green. Audit queue/audits/2026-09-22-window-modes.json. Commit 656a36f8, pushed."}
+{"t":"2026-09-22T08:21:49.007Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-4"}
+{"t":"2026-09-22T08:21:49.090Z","ev":"slice_pass","walks":50,"passed":47,"failed":3,"seconds":771,"of":559,"rotating":true}
+{"t":"2026-09-22T08:21:49.212Z","ev":"task_started","id":"a-sweep-that-goes-blind-says-so-instead-of-faili","title":"A sweep that goes blind says so instead of failing four hundred walks","priority":"p1-high"}
+{"t":"2026-09-22T08:28:01.535Z","ev":"task_note","id":"a-sweep-that-goes-blind-says-so-instead-of-faili"}
+{"t":"2026-09-22T08:28:01.590Z","ev":"task_note","id":"a-sweep-that-goes-blind-says-so-instead-of-faili"}
+{"t":"2026-09-22T08:28:46.651Z","ev":"task_created","id":"the-dev-app-drill-stops-going-red-just-because-t","priority":"p2-normal","title":"The dev app drill stops going red just because time passed"}
+{"t":"2026-09-22T08:29:56.402Z","ev":"task_walks","id":"a-sweep-that-goes-blind-says-so-instead-of-faili","walks":[]}
+{"t":"2026-09-22T08:30:09.489Z","ev":"task_note","id":"a-sweep-that-goes-blind-says-so-instead-of-faili"}
+{"t":"2026-09-22T08:30:09.538Z","ev":"task_note","id":"a-sweep-that-goes-blind-says-so-instead-of-faili"}
+{"t":"2026-09-22T08:30:09.587Z","ev":"task_note","id":"a-sweep-that-goes-blind-says-so-instead-of-faili"}
+{"t":"2026-09-22T08:30:09.637Z","ev":"task_note","id":"a-sweep-that-goes-blind-says-so-instead-of-faili"}

@@ -12,10 +12,12 @@
 #   PHOTONZ_PLAYTEST_TIMEOUT=300 Scripts/playtest.sh ...   (default 180s)
 #
 # Exits 0 when done.json says "ok", 1 when the walk failed or ran out of time,
-# 3 when the screen was locked and the walk could not run at all, and 4 when THE
-# APP DIED part way through: that one prints what macOS wrote down about the
-# crash, because "no done.json" is what a merely slow walk says and a crash is
-# not that. Prints the output folder and the log's last lines either way.
+# 3 when the screen was locked and the walk could not run at all, 4 when THE
+# APP DIED part way through, and 5 when THE APP WOULD NOT START at all. Those
+# last two print what really happened rather than "no done.json", which is what
+# a merely slow walk says: a crash and an app that never came up are both news
+# about the app, and neither is news about the walk.
+# Prints the output folder and the log's last lines either way.
 # Never touches "dist/Photonz Dev.app".
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -61,7 +63,23 @@ rm -f "$OUT/done.json" "$OUT/log.json"
 # rewrites those files when it symbolicates them, and their mtime lies.
 RUN_BEGAN_MS="$(node -e 'console.log(Date.now())')"
 
+# If the probe will not launch there is no app to walk, and that has to be its
+# own answer rather than a walk failing. Under `set -e` this line used to end
+# the script on the spot with no verdict printed at all, so playtest-all fell
+# back to its "no done.json" wording and a sweep on the night of 2026-09-21
+# wrote down 436 walks as broken in 0s each on code that passed 537 of 544 that
+# morning. Exit 5 says what really happened, once, in words.
+set +e
 Scripts/probe-app.sh --playtest "$SCRIPT_ABS" ${NO_BUILD:+"$NO_BUILD"}
+LAUNCH_CODE=$?
+set -e
+if (( LAUNCH_CODE != 0 )); then
+  echo "!! THE APP WOULD NOT START (probe-app.sh exit $LAUNCH_CODE), so this walk never ran. That is not" >&2
+  echo "   the walk failing and it is not the app being broken in the way the walk was about to" >&2
+  echo "   check: there was no app. Why is in the output just above." >&2
+  echo "==> Verdict: THE APP WOULD NOT START  probe-app.sh exit $LAUNCH_CODE"
+  exit 5
+fi
 
 # Anchored on the bundle's executable path, exactly as probe-app.sh anchors it,
 # so it can never match "Photonz Dev.app", "Photonz.app" or a bare `swift build`.
