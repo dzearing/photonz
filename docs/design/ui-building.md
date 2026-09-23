@@ -836,7 +836,9 @@ real limit of the slices above, not an oversight.
   properties, and no numbers beyond those four. A colour answer may be a raw
   paint or a saved colour, so a copy can be "the danger one" and follow every
   later edit to that name.
-- **Detach is one way.** There is no re-attach; undo is the way back.
+- **Detach is one way.** There is no re-attach; undo is the way back. A copy
+  CAN be pointed at a different component without detaching, see "Landed: a
+  copy can be pointed at a different component" below.
 - **A main cannot be made from a group that already contains a main.** An
   instance inside a main is fine and updates correctly; promoting a group that
   holds a main is out, and the command is disabled with the reason on hover.
@@ -4048,3 +4050,57 @@ grid of boxes.
 
 Not in this slice: linking a side to a spacing token, dragging room out on the
 canvas, and a lock that ties opposite sides together while you type.
+
+
+## Landed: a copy can be pointed at a different component (Next, `next-components`, 2026-09-23)
+
+Building a screen means trying things. Before this, a copy was stuck being a
+copy of the component it was made from: the only way to change your mind was to
+delete it, drag the other one out of the Library and put back by hand every
+size, every bit of room and every knob you had set. On a screen with twenty
+copies on it, that is the difference between exploring a layout and committing
+to one.
+
+Chosen by the user on 2026-09-20, answering "You put a Button on a screen and
+set it up. Should you be able to point it at a different component without
+starting over?" with **"A row in the panel that says which one it is"**, over
+dropping a tile onto an existing copy and over doing both.
+
+**Where it is.** The Component section already had to name the component a copy
+follows. That name is now a menu: pick the copy, press the name, choose another
+component. It lists every component in the document, alphabetically, with a tick
+on the one it follows now; a component that would end up holding itself is
+dimmed. A document with only one component shows a plain name rather than a menu
+of one.
+
+**What a copy keeps**, the same every time
+(`Sources/PhotonzCore/ComponentSwap.swift`):
+
+- Where it sits on the canvas.
+- A size it was GIVEN by hand. A size it never set follows the new original
+  instead, so a badge does not arrive stretched to the width of the button it
+  replaced.
+- A look it set for itself, part by part, the same way it survives an edit to
+  the original.
+- Every knob the new component also has, **matched by the name on the panel**:
+  a Card's Title becomes a Nav Bar's Title, carrying the words typed into it.
+  A choice travels by the name of the alternative it had settled on.
+- Its name, if somebody typed one. A copy still called after its original is
+  renamed after the new one.
+
+**What it gives up**, out loud:
+
+- A knob the new component does not have. The notice NAMES it ("Title did not
+  carry over") rather than counting it, and stays up for three seconds rather
+  than the usual one and a half, because it is a sentence you may want to press
+  Command Z about.
+- The type it had set for its own words, which belonged to pieces of the old
+  drawing.
+
+One undo puts the whole thing back, knobs included. The swap reaches every
+picked copy in one step, which is the twenty-copies case the feature exists for,
+and it works on a copy inside a group and on a copy inside another component —
+there, every copy of the component it lives in follows.
+
+Tests: `Tests/PhotonzCoreTests/ComponentSwapTests.swift`. Walk:
+`Scripts/playtest/point-a-copy-at-another-walk.json`.

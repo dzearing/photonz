@@ -1,0 +1,54 @@
+{
+  "out": "/tmp/photonz-playtest/point-a-copy-at-another",
+  "setup": { "forget": ["all"] },
+  "seed": "A copy used to be stuck being a copy of the component it was made from: changing your mind meant deleting it and typing every setting back. The walk sets a copy up, points it at a different component from the line that names it, and reads what came with it and what did not.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1320, "height": 920 },
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+
+    { "do": "dragTile", "tile": "Card", "to": [400, 300] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "dragTile", "tile": "Nav Bar", "to": [400, 780] },
+    { "do": "wait", "seconds": 1.0 },
+
+    { "do": "click", "at": [400, 300] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "focus", "field": "Title" },
+    { "do": "type", "text": "Payment details" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-a-card-set-up", "note": "a copy of the Card with its Title typed. The Component section names what it follows, and that name is now a menu" },
+    { "do": "snapshot", "name": "point-a-copy-1-a-card-set-up" },
+    { "do": "panel", "stage": "1-a-card-set-up" },
+
+    { "do": "panelMenu", "menu": "Card", "choose": "Nav Bar" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "2-now-a-nav-bar", "note": "THE TEST: the same copy is a Nav Bar, standing where the card stood, still saying Payment details, because both components call that knob Title" },
+    { "do": "snapshot", "name": "point-a-copy-2-now-a-nav-bar" },
+    { "do": "panel", "stage": "2-now-a-nav-bar" },
+    { "do": "render", "name": "point-a-copy-2-now-a-nav-bar-doc" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "3-one-undo", "note": "one undo puts the Card back, Title and all" },
+    { "do": "snapshot", "name": "point-a-copy-3-one-undo" },
+    { "do": "render", "name": "point-a-copy-3-one-undo-doc" },
+
+    { "do": "dragTile", "tile": "Button", "to": [1010, 300] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "click", "at": [400, 300] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panelMenu", "menu": "Card", "choose": "Button" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "4-said-what-it-left", "note": "a Button has no knob called Title, so the copy loses it and the app SAYS so by name rather than dropping it quietly" },
+    { "do": "snapshot", "name": "point-a-copy-4-said-what-it-left" },
+    { "do": "panel", "stage": "4-said-what-it-left" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "5-back-again", "note": "and back again: the Card, with Payment details in its Title" },
+    { "do": "snapshot", "name": "point-a-copy-5-back-again" },
+    { "do": "render", "name": "point-a-copy-5-back-again-doc" }
+  ]
+}

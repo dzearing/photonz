@@ -747,10 +747,7 @@ struct ComponentInstanceInspector: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 6) {
                     ComponentMark(size: 12, isInstance: true)
-                    Text(main.name)
-                        .font(.subheadline.weight(.medium))
-                        .lineLimit(2)
-                        .truncationMode(.middle)
+                    follows(main)
                 }
                 Text(summary)
                     .font(.caption)
@@ -796,6 +793,60 @@ struct ComponentInstanceInspector: View {
             .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
             .padding(.vertical, 4)
         }
+    }
+
+    /// The line that names the component this copy follows, and the way to
+    /// point it at a different one (`ComponentSwap`).
+    ///
+    /// It is the SAME line either way. The panel already had to say which
+    /// component this is, so the shortest honest version of "let me change my
+    /// mind" is that line becoming something you can press, rather than a
+    /// second row underneath it saying the same word twice. A document holding
+    /// one component has nothing to offer, so there it stays a plain name: a
+    /// menu with one row in it is a control that lies about what it can do.
+    @ViewBuilder private func follows(_ main: Layer) -> some View {
+        let choices = editorState.componentSwapChoices(instances: selection.instances)
+        if choices.isEmpty {
+            Text(main.name)
+                .font(.subheadline.weight(.medium))
+                .lineLimit(2)
+                .truncationMode(.middle)
+        } else {
+            Menu {
+                ForEach(choices) { choice in
+                    // A Toggle rather than a Button, so the one it follows now
+                    // wears a tick: "which one is this" is the question the
+                    // line answers, and an open menu must not stop answering
+                    // it. The ticked row is dimmed because pressing it would
+                    // be a swap to where you already are.
+                    Toggle(isOn: Binding(
+                        get: { choice.isCurrent },
+                        set: { _ in editorState.swapInstances(instances: selection.instances,
+                                                              to: choice.id) })) {
+                        Text(choice.name)
+                    }
+                    .disabled(!choice.canTake)
+                }
+            } label: {
+                Text(main.name)
+                    .font(.subheadline.weight(.medium))
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+            .panelHelp(swapHelp)
+            .playtestField("Component")
+        }
+    }
+
+    /// What the line says under the pointer: the rule for what survives, in
+    /// the order somebody worries about it.
+    private var swapHelp: String {
+        let what = selection.count == 1 ? "this copy" : "these \(selection.count) copies"
+        return "Points \(what) at a different component. Where it sits, a size you gave it "
+            + "and every knob the new one also has come with it; a knob it does not have is "
+            + "dropped, and the app says which"
     }
 
     /// What the section says the selection IS, in the same place for one copy

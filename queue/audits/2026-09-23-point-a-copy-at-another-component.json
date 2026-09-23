@@ -1,0 +1,28 @@
+{
+  "feature": "Point a copy at a different component",
+  "epic": "ui-components",
+  "summary": "A copy already on the canvas can now be pointed at a different component from the line in the Component section that names it. It stays where it is, keeps a size you gave it and every knob the new component also has, and the app names anything it could not carry.",
+  "setup": "Photonz Dev, release Next, flag next-components (on by default). Any document; the Library's five starters are enough.",
+  "try": [
+    { "do": "Open the Library, Comps shelf, and drag the Card tile onto an empty part of the canvas." },
+    { "do": "Drag the Nav Bar tile onto the canvas below it, so the document holds both components." },
+    { "do": "Click the Card copy, then type Payment details into the Title field in the Component section." },
+    { "do": "Press the name Card at the top of the Component section and choose Nav Bar.", "shot": "point-a-copy-2-now-a-nav-bar-sc.png" },
+    { "do": "Press Command Z, then choose Button from the same menu instead.", "shot": "point-a-copy-4-said-what-it-left-sc.png" },
+    { "do": "Press Command Z once and check the Card is back with Payment details still in its Title." },
+    { "do": "Shift click two copies of the same component and point both at another one in a single press." }
+  ],
+  "evaluate": [
+    "Is the name at the top of the Component section obviously something you can press, or did you have to be told?",
+    "When the copy became a Nav Bar it kept the words you typed, because both components call that knob Title. Is matching by the name on the panel what you would expect, or did you expect it to keep nothing?",
+    "The copy keeps a size you gave it by hand and otherwise takes the new component's own size. Is that the right split, or should it always stay the size it was?",
+    "The pill names what did not carry over and leaves after three seconds. Is that long enough to decide to undo?",
+    "The copy keeps its top left corner rather than its centre when the new component is a different size. Does it land where you expect?"
+  ],
+  "rough": [
+    "The menu is a plain alphabetical list of every component in the document. On a document with forty of them that is a long menu with no search and no pictures.",
+    "A component that would end up holding itself is dimmed in the menu with nothing saying why. A menu row cannot carry a hover tip, so the reason is only in the section's own tooltip.",
+    "Nothing carries the swap on the canvas itself: there is no drop-a-tile-onto-a-copy gesture. That was option B on the card and the user chose the row, so it is deliberately not built.",
+    "A copy that had a type of its own for its words loses it, because those words belonged to pieces of the old drawing. The pill says so as part of the same sentence, which makes that sentence long."
+  ]
+}

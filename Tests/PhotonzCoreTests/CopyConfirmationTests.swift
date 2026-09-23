@@ -68,10 +68,45 @@ struct CopyConfirmationTests {
         #expect(notice.detail == "1 of 2 shapes shows. Copies pick it with Shape")
     }
 
+    @Test func pointingACopySomewhereElseSaysWhatItFollowsNow() {
+        let notice = CopyConfirmation(subject: .componentSwapped(component: "Badge", count: 1,
+                                                                 dropped: [], droppedOwnType: false),
+                                      shownAt: t0)
+        #expect(notice.title == "Swapped")
+        #expect(notice.detail == "It follows Badge now")
+    }
+
+    /// A setting that could not come with it is NAMED. A copy that quietly
+    /// lost the words somebody typed is the one thing this notice exists to
+    /// stop: the picture changed, so the swap is obvious, and the loss is not.
+    @Test func aSettingLeftBehindIsNamedOnTheNotice() {
+        let notice = CopyConfirmation(subject: .componentSwapped(component: "Badge", count: 3,
+                                                                 dropped: ["Label", "Room"],
+                                                                 droppedOwnType: false),
+                                      shownAt: t0)
+        #expect(notice.detail == "3 copies follow Badge now. Label and Room did not carry over")
+    }
+
+    /// A swap that left a knob behind stays up long enough to read and undo;
+    /// one that carried everything is a glance.
+    @Test func aSwapThatLeftSomethingBehindStaysUpLongerThanOneThatDidNot() {
+        let clean = CopyConfirmation(subject: .componentSwapped(component: "Badge", count: 1,
+                                                                dropped: [], droppedOwnType: false),
+                                     shownAt: t0)
+        let lossy = CopyConfirmation(subject: .componentSwapped(component: "Badge", count: 1,
+                                                                dropped: ["Label"],
+                                                                droppedOwnType: false),
+                                     shownAt: t0)
+        #expect(clean.lifetime == CopyConfirmation.lifetime)
+        #expect(lossy.lifetime == CopyConfirmation.breakLifetime)
+    }
+
     @Test func noLineCarriesAnEmDash() {
         for subject in [CopyConfirmation.Subject.specList(measurements: 0),
                         .specList(measurements: 4), .measurements(count: 1), .measurements(count: 5),
                         .componentChoiceMade(options: 3, knob: "Shape"),
+                        .componentSwapped(component: "Badge", count: 1, dropped: ["Label"],
+                                          droppedOwnType: true),
                         .componentVersionAdded(version: "Disabled", component: "Button"),
                         .componentVersionAdded(version: "Version 2", component: nil)] {
             let notice = CopyConfirmation(subject: subject, shownAt: t0)

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-22T22:53:19.192Z",
-  "updated": "2026-09-22T22:53:23.096Z",
+  "updated": "2026-09-23T09:33:45.156Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-22 while finishing resizing-one-piece-inside-a-turned-card-moves-th. Three back-to-back full runs of Scripts/test.sh on the same commit: run 1 failed with 1 issue, run 2 failed with 3 issues, run 3 passed with 9094 tests. The issue named each time:\n\n  x Test \"What lands is inside the budget it was given, and not far under it\" recorded an issue at VideoExportBudgetTests.swift:155:9: Expectation failed: (Self.bytes(of: tighter) -> 125039) < (landed -> 116723)\n\nTests/PhotonzMediaTests/VideoExportBudgetTests.swift:155 is the last line of theBudgetPredictsTheFile: it exports the same 3-second 1280x800 synthetic source at VideoExportQuality.standard and again at .small, and claims the .small file is the smaller of the two. Both land around 120KB, so on that source the hardware encoder is near its own floor and the bitrate ceiling is not what is deciding the size; which file comes out smaller is then down to the encoder, not to the recipe. Self.busySource(seconds:3,size:) is the source. Either give it a source with enough detail that both budgets actually bind, or make the claim about the recipe rather than about the bytes.",
@@ -25,6 +25,10 @@
     {
       "t": "2026-09-22T22:53:23.095Z",
       "note": "walks --none -> none"
+    },
+    {
+      "t": "2026-09-23T09:33:45.155Z",
+      "note": "Seen again 2026-09-23 on the component swap task: VideoExportBudgetTests.swift:155 (bytes(of: tighter) 124091 < landed 118796) in a full Scripts/test.sh run with the probe app building alongside; the suite alone passed immediately after. Two full runs on the same commit gave 1 issue then 3, so the count moves with the load as well as the pass or fail."
     }
   ],
   "walks": []

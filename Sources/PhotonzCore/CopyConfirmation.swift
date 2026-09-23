@@ -38,6 +38,13 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// command looks like it did nothing at all. `component` names the
         /// original it used to follow.
         case componentDetached(component: String?, count: Int)
+        /// A copy was pointed at a DIFFERENT component (`ComponentSwap`). The
+        /// picture changes, so the swap itself is obvious; what is not obvious
+        /// is which of the settings you had typed came with it, and a knob the
+        /// new component does not offer is gone until you undo. So the line
+        /// names them rather than leaving you to find out later.
+        case componentSwapped(component: String?, count: Int, dropped: [String],
+                              droppedOwnType: Bool)
         /// Layers became a set of alternatives with a knob that picks between
         /// them (`docs/design/ui-building.md`, the C6 follow-up). Settling the
         /// choice HIDES all but one of the shapes that were just selected, so
@@ -271,6 +278,12 @@ public struct CopyConfirmation: Hashable, Sendable {
              .componentVersionAdded, .regionSliceRefused,
              .separatedIntoLayers, .turnedIntoText, .turnedIntoTextInBatch,
              .lookPasted, .shapesCombined: return Self.breakLifetime
+        // ...and a swap is one of them exactly when it left something behind:
+        // "Title did not carry over" is a sentence naming a thing you may want
+        // to press Command Z about, and the swap that carried everything is
+        // just a confirmation you glance at.
+        case .componentSwapped(_, _, let dropped, let droppedOwnType):
+            return dropped.isEmpty && !droppedOwnType ? Self.lifetime : Self.breakLifetime
         // Still working: it waits for its own answer (see `workingLifetime`).
         case .readingTheWords: return Self.workingLifetime
         default: return Self.lifetime
@@ -311,6 +324,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .componentInstances: return "Updated"
         case .componentCycle: return "Not placed"
         case .componentDetached: return "Detached"
+        case .componentSwapped: return "Swapped"
         case .componentChoiceMade: return "Choice added"
         case .componentOriginalArrived: return "Copy placed"
         case .componentVersionAdded: return "Variant added"
@@ -384,6 +398,15 @@ public struct CopyConfirmation: Hashable, Sendable {
             }
             return one ? "It no longer follows \(component)"
                        : "\(count) copies no longer follow \(component)"
+        case .componentSwapped(let component, let count, let dropped, let droppedOwnType):
+            let what = count == 1 ? "It follows" : "\(count) copies follow"
+            let named = component.flatMap { $0.isEmpty ? nil : $0 } ?? "a different component"
+            var line = "\(what) \(named) now"
+            var left = dropped
+            if droppedOwnType { left.append("the type it set for its own words") }
+            guard !left.isEmpty else { return line }
+            line += ". \(ComponentVersionApply.list(left)) did not carry over"
+            return line
         case .componentChoiceMade(let options, let knob):
             return "1 of \(options) shapes shows. Copies pick it with \(knob)"
         case .componentOriginalArrived(let component):

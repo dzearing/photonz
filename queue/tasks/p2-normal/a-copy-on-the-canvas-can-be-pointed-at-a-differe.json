@@ -5,21 +5,21 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 200,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T18:07:03.226Z",
-  "updated": "2026-09-22T12:17:53.396Z",
+  "updated": "2026-09-23T09:34:13.307Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Ninth manager pass carrying this as an open thread with no card ever opened against it. That is the actual failure being corrected here: the thread kept being recorded and never turned into a question the user could answer.\n\nThe gap is stated in the spec itself, docs/design/ui-building.md, What the first version deliberately does not do: Detach is one way, there is no re-attach. Nothing in that list covers swapping which main a copy follows, and nothing in Sources/PhotonzCore/ComponentInstances.swift offers it.\n\nBLOCKED ON ITS CARD. This adds something visible that the user has not asked for, and the shape of it is exactly the product question: whether it is a row in the Component section, a drop of one tile onto an existing copy, or something else. Do not build it before the card is answered.\n\nOne of the card options is do not build it, marked declines, because a tool where you delete and redo is a defensible answer for a first version and the user should be able to say so.",
   "acceptance": [
-    "A copy already on the canvas can be pointed at a different component, in whatever way the answered card says.",
-    "What the copy keeps and what it gives up is the same every time and is written down: its place on the canvas, its size, and any knob the new component also has.",
-    "A knob the new component does not have is dropped, and the app says how many were dropped rather than losing them silently.",
+    "A copy already on the canvas can be pointed at a different component from the line in the Component section that names it, which is the shape the answered card chose.",
+    "What the copy keeps and what it gives up is the same every time and is written down: where it sits, a size it was GIVEN by hand (a size it never set follows the new original instead), a look it set for itself, and any knob the new component also has, matched by the name on the panel.",
+    "A knob the new component does not have is dropped, and the app NAMES it rather than losing it silently.",
     "One undo step puts the copy back exactly as it was, knobs included.",
     "A copy inside a group, and a copy inside another component, both survive the swap without moving anything around them.",
-    "Try it: Photonz Dev, release Next, flag next-components. Drag a Button onto a screen, set its Label and its corner radius, then point it at the Badge and back again. Name the try path exactly in the audit.",
+    "Try it: Photonz Dev, release Next, flag next-components. Drag a Card and a Nav Bar out of the Library, type into the Card copy's Title, then point it at the Nav Bar and back again. Name the try path exactly in the audit.",
     "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task´s log if it does not",
     "audit written under queue/audits/"
   ],
@@ -67,6 +67,34 @@
     {
       "t": "2026-09-22T12:17:53.395Z",
       "note": "seq 150 -> 200"
+    },
+    {
+      "t": "2026-09-23T09:05:06.892Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T09:33:59.500Z",
+      "note": "Acceptance item 2 rewritten to the rule actually built and tested. The card said 'its size' is kept; keeping it literally would leave a Badge stretched to the width of the Button it replaced, with no way to tell why, so the rule is the one a copy already lives by: a size the copy OWNS is its own and survives, a size it was only following follows the new original. Item 6's try path changed from Button/Badge/corner radius to Card/Nav Bar: the starters expose wording and show-or-hide knobs, a corner radius knob has to be added on the original first, and Card and Nav Bar both call a knob Title, which is what proves a knob carries ACROSS rather than just surviving."
+    },
+    {
+      "t": "2026-09-23T09:34:10.966Z",
+      "note": "Adversarial review BEFORE building. The card's option A said the panel line becomes a control, and the shortest version of that is the line itself becoming a menu rather than a new row under it: the panel is already full and a second row would print the same word twice. Rejected on the way: a search field in the menu (five starters, alphabetical, nothing to search yet), thumbnails in the rows (a menu of pictures is a shelf, and the shelf is six inches below), and a confirm step before the swap (undo is one press and the pill says what went). A document holding ONE component shows a plain name, not a menu of one, because a control that can only do nothing teaches you it does nothing."
+    },
+    {
+      "t": "2026-09-23T09:34:11.020Z",
+      "note": "Adversarial review of the BUILT thing, on the probe. Two things changed because of it. (1) The pill that names a dropped knob lived 1.6s, and the code's own comment says 1.6s is under the time it takes to read a sentence naming two things and decide what to do about it; a swap that drops something now uses the 3.0s life the other act-on-me notices use, and a swap that carried everything keeps the glance. Caught because the first walk waited 1.2s and photographed no pill at all. (2) The first draft of the menu row was a Toggle bound to .constant, which draws the tick correctly and never fires the swap; it was dead until the walk was run."
+    },
+    {
+      "t": "2026-09-23T09:34:11.075Z",
+      "note": "left rough, under the follow-up bar: the menu is a plain alphabetical list of every component in the document, so a document with forty of them gives a forty row menu with no search and no pictures (nothing has forty today; the app ships five starters). And a component that would make itself hold itself is dimmed in the menu with nothing saying why, because a menu row cannot carry a hover tip; the reason is in the section's own tooltip. Both go here rather than into tasks: neither is broken and neither is reachable in a document anyone has."
+    },
+    {
+      "t": "2026-09-23T09:34:13.306Z",
+      "note": "owns these walks: point-a-copy-at-another-walk"
     }
+  ],
+  "started": "2026-09-23T09:05:06.891Z",
+  "walks": [
+    "point-a-copy-at-another-walk"
   ]
 }

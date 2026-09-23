@@ -1030,6 +1030,36 @@ extension EditorState {
         perform(announcing: false) { $0.clearInstanceSize(instances: [instance]) }
     }
 
+    // MARK: - Pointing a copy at a different component
+
+    /// The components the picked copies could be pointed at, which is what the
+    /// name at the top of the Component section opens
+    /// (`ComponentSwap`). Empty when there is nothing else in the Library to
+    /// choose, so the name stays a plain name rather than a menu of one.
+    func componentSwapChoices(instances: [UUID]) -> [ComponentSwapChoice] {
+        guard componentsEnabled, let document, instances.count > 0 else { return [] }
+        let choices = document.componentSwapChoices(instances: instances)
+        return choices.count > 1 ? choices : []
+    }
+
+    /// Points every picked copy at another component, in one undo step, and
+    /// says out loud what came with them and what did not.
+    ///
+    /// The notice is not optional here. The picture changes, so the swap is
+    /// obvious; what is NOT obvious is that a knob the new component has no
+    /// name for has just stopped being answered, and the only way back is undo.
+    func swapInstances(instances: [UUID], to componentID: UUID) {
+        guard componentsEnabled, !instances.isEmpty else { return }
+        discardDragPreview()
+        var report: ComponentSwapReport?
+        perform(announcing: false) { report = $0.swapComponentInstances(ids: instances,
+                                                                        to: componentID) }
+        guard let report else { return }
+        raiseCanvasNotice(.componentSwapped(component: report.component, count: report.copies,
+                                            dropped: report.droppedKnobs,
+                                            droppedOwnType: report.droppedOwnType))
+    }
+
     /// Whether Layer ▸ Detach Instance would do anything: one unlocked copy is
     /// selected.
     var canDetachInstance: Bool {

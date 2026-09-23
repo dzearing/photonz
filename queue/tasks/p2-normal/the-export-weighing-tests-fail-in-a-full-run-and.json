@@ -1,0 +1,32 @@
+{
+  "id": "the-export-weighing-tests-fail-in-a-full-run-and",
+  "title": "The export weighing tests fail in a full run and pass on their own",
+  "goal": "Running the whole test suite reports the video and animated export size tests as broken, and running those same tests by themselves passes every time. Anyone finishing a piece of work sees a red gate they did not cause, and the habit that grows out of that is running the gate twice and believing the second answer.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 3150,
+  "status": "dropped",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T09:33:32.273Z",
+  "updated": "2026-09-23T09:33:45.206Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen twice on 2026-09-23 while finishing the component swap task, on a machine also building the probe app.\n\nRun 1 (Scripts/test.sh, whole suite): 1 issue, 9175 tests.\nRun 2 (Scripts/test.sh, whole suite), full output in /tmp/photonz-fulltest.log:\n  AnimatedExportWeighTests.swift:109:21: Expectation failed: (written[0].count -> 145596) == (written[1].count -> 280327)\n  VideoExportBudgetTests.swift:155:9: Expectation failed: (Self.bytes(of: tighter) -> 124091) < (landed -> 118796)\n  AnimatedExportWeighTests.swift:128:17: Expectation failed: (small < standard -> true) && (standard < high -> false)\n\nRun 3, the two suites alone:\n  Scripts/test.sh --filter \"AnimatedExportWeighTests|VideoExportBudgetTests\"\n  Test run with 8 tests in 2 suites passed after 18.567 seconds.\n\nSo the same code passes and fails depending on what else is running, which points at the encoder producing a different size when the machine is busy (a time based bitrate settle, or a frame dropped under load) rather than at the weighing logic. Nothing in the component work touches video export.",
+  "acceptance": [
+    "Two back to back full runs of Scripts/test.sh report no failures in AnimatedExportWeighTests or VideoExportBudgetTests",
+    "Whatever makes the size land differently under load is named in the test file, or the test is rewritten to check something that does not depend on how busy the machine is",
+    "The tests still catch a real regression: a deliberately wrong budget or quality ladder still fails them"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T09:33:32.275Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-23T09:33:45.205Z",
+      "note": "folded into an-animated-export-weighed-twice-comes-out-the-s and the-export-size-test-fails-about-one-run-in-thre, which already cover both halves of it"
+    }
+  ],
+  "walks": []
+}
