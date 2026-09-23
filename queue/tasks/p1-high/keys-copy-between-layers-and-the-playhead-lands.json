@@ -1,0 +1,41 @@
+{
+  "id": "keys-copy-between-layers-and-the-playhead-lands",
+  "title": "Keys copy between layers and the playhead lands on them",
+  "goal": "Last building slice of the user's keyframe ask. Keys copy and paste between layers and moments, the playhead snaps to keys and jumps between them from the keyboard, and a clip's volume keys draw as a level line on its sound that you drag, as in Premiere.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 0.615,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T13:13:48.656Z",
+  "updated": "2026-09-23T13:14:07.386Z",
+  "deps": [
+    "a-layer-s-track-opens-into-one-lane-per-keyed-va",
+    "a-clip-s-sound-is-on-the-timeline-from-the-momen"
+  ],
+  "blockedBy": [],
+  "notes": "Split out of keyframe-anything-and-see-and-shape-the-keys-on by the manager pass 2026-09-23 06:10. Needs the lanes (a-layer-s-track-opens-into-one-lane-per-keyed-va) and sound segments on the timeline (a-clip-s-sound-is-on-the-timeline-from-the-momen). Keys: the user wrote Shift-K and Option-K. Check them against premiere-s-keys-work-on-the-timeline before binding (Premiere's own next/previous keyframe defaults may differ, and K is part of JKL); if they collide, keep the user's pair and write the collision into the log rather than choosing silently.",
+  "acceptance": [
+    "Copy selected keys, move the playhead or select another layer, paste: the keys land at the playhead on the matching values",
+    "Dragging the playhead snaps to keys, and Shift-K and Option-K jump to the next and previous key",
+    "Volume keys on a clip show as a level line with points on its sound segment; drag a point up or down to change the level, click the line to add one",
+    "Reachable at Next defaults with no flag changed: a walk with no flags copies a title's keys to a second title and dips the volume under it, photographing both; audit written under queue/audits/",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T13:13:48.658Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-23T13:13:55.734Z",
+      "note": "seq 370 -> 122"
+    },
+    {
+      "t": "2026-09-23T13:14:07.385Z",
+      "note": "seq 122 -> 0.615"
+    }
+  ],
+  "source": "user"
+}

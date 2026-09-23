@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:42:39.137Z",
-  "updated": "2026-09-23T12:10:31.640Z",
+  "updated": "2026-09-23T13:14:07.589Z",
   "deps": [
     "tracks-you-can-add-rename-group-hide-mute-lock-a",
     "a-clip-s-sound-is-on-the-timeline-from-the-momen",
@@ -45,6 +45,10 @@
     {
       "t": "2026-09-23T12:10:31.639Z",
       "note": "seq 1.05 -> 190"
+    },
+    {
+      "t": "2026-09-23T13:14:07.588Z",
+      "note": "manager 2026-09-23 06:10: keyframing (Premiere's Effect Controls) is owned by keyframe-anything-and-see-and-shape-the-keys-on and its three slices. If they have not landed when this runs, name the gap and point at them rather than filing it again."
     }
   ]
 }

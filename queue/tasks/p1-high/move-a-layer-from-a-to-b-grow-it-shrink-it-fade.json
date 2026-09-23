@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.711Z",
-  "updated": "2026-09-23T12:10:31.281Z",
+  "updated": "2026-09-23T13:14:07.539Z",
   "deps": [
     "tracks-you-can-add-rename-group-hide-mute-lock-a"
   ],
@@ -38,6 +38,10 @@
     {
       "t": "2026-09-23T12:10:31.280Z",
       "note": "seq 0.6 -> 120"
+    },
+    {
+      "t": "2026-09-23T13:14:07.538Z",
+      "note": "manager 2026-09-23 06:10: every-value-in-the-panel-has-a-key-diamond is sequenced before this and builds the keying itself (panel diamonds, and a change on the canvas at another moment adds a key). This task then draws those keys on the layer's track in the new timeline, adds easing from right-click and the In and Out presets. Build on its keys, do not add a second arming control."
     }
   ]
 }

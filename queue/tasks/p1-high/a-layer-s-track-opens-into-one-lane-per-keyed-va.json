@@ -1,0 +1,42 @@
+{
+  "id": "a-layer-s-track-opens-into-one-lane-per-keyed-va",
+  "title": "A layer's track opens into one lane per keyed value",
+  "goal": "Second slice of the user's keyframe ask. A small arrow on a layer's track opens it into one lane for each value that has keys, so you can see every key, drag keys in time, pick several at once, copy them with Option, delete them, and set how each key eases in or out, including drawing the curve yourself.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 0.61,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T13:13:48.580Z",
+  "updated": "2026-09-23T13:14:07.333Z",
+  "deps": [
+    "every-value-in-the-panel-has-a-key-diamond",
+    "move-a-layer-from-a-to-b-grow-it-shrink-it-fade"
+  ],
+  "blockedBy": [],
+  "notes": "Split out of keyframe-anything-and-see-and-shape-the-keys-on by the manager pass 2026-09-23 06:10. Needs the keys from every-value-in-the-panel-has-a-key-diamond and the per-layer track from move-a-layer-from-a-to-b-grow-it-shrink-it-fade (which draws a layer's keys on its track in the new timeline). EasingCurve in LayerMotion.swift already has linear, easeIn, easeOut, easeInOut and custom(x1,y1,x2,y2); Hold is new (steps(1) is not the same thing: hold keeps the value until the next key). The icon timing strip (MotionStripView) already draws lanes and curves for icons: reuse its drawing where it fits the mock rather than writing a second lane renderer, and name what was shared in the log.",
+  "acceptance": [
+    "A chevron on a layer's track opens one lane per keyed value, each key a diamond, as the video-motion mock draws it",
+    "Drag a key in time; drag a box round several and move them together; Option-drag copies; Delete removes; each is one undo step",
+    "Right-click a key: Linear, Ease In, Ease Out, Ease In and Out, Hold, Bezier; the choice shows on the key and in playback",
+    "A curve view on a lane shows the value over time, and dragging a bezier handle reshapes the ease between two keys",
+    "Reachable at Next defaults with no flag changed: a walk with no flags opens a title's lanes, drags a key and eases it, and photographs the lanes beside the mock frame; audit written under queue/audits/",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T13:13:48.582Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-23T13:13:55.683Z",
+      "note": "seq 360 -> 121"
+    },
+    {
+      "t": "2026-09-23T13:14:07.332Z",
+      "note": "seq 121 -> 0.61"
+    }
+  ],
+  "source": "user"
+}

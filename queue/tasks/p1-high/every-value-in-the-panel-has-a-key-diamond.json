@@ -1,0 +1,39 @@
+{
+  "id": "every-value-in-the-panel-has-a-key-diamond",
+  "title": "Every value in the panel has a key diamond",
+  "goal": "First slice of the user's 'keyframes too!' ask. Beside every value that can change over time in a video, a small diamond starts keying it, the way Premiere's stopwatch does; after that, changing the value at another moment, on the canvas or in the panel, adds a key, and arrows step to the previous and next key.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 0.6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T13:13:33.766Z",
+  "updated": "2026-09-23T13:13:55.632Z",
+  "deps": [
+    "a-recording-opens-in-the-video-editor-for-real-i",
+    "the-video-mocks-are-the-user-s-again-and-d18-is"
+  ],
+  "blockedBy": [],
+  "notes": "Split out of keyframe-anything-and-see-and-shape-the-keys-on (user, 2026-09-23) by the manager pass 2026-09-23 06:10; that task keeps its acceptance and closes the set. Extend the model that exists, never a second one: LayerMotion / MotionProperty / MotionStop in Sources/PhotonzCore/LayerMotion.swift already play once on a timed layer (see the done task transitions-at-a-cut-and-effects-you-can-control: 'effects over time invented nothing'). MotionProperty today covers position, scale, rotation, opacity, color, strokeWidth, blur; this slice adds crop, cornerRadius, shadow, textSize, volume, and effect amounts. Panel rows today: InspectorPanel.swift, MotionListInspector.swift, EffectsListInspector.swift. Target mock: docs/design/mocks/pages/video-motion.html and video.html (grep 'diamond'), read AFTER the-video-mocks-are-the-user-s-again-and-d18-is restores them. The canvas-drag-makes-a-key path is built here; move-a-layer-from-a-to-b then puts those keys on the new track. Deps: the video editor must be on at defaults first (a-recording-opens-in-the-video-editor-for-real-i) and the mocks must be the user's (the-video-mocks-are-the-user-s-again-and-d18-is).",
+  "acceptance": [
+    "A layer in a recording document shows a key diamond beside position, scale, rotation, opacity, crop, corner radius, blur, shadow, colour, text size, audio volume and effect amounts; clicking it starts keying that value with a key at the playhead",
+    "With keying on, moving the playhead and changing the value on the canvas or in the panel adds a key; the diamond is filled on a key and hollow between keys, with previous and next key arrows beside it",
+    "The picture and the export both show the value moving between keys, checked by a render test and an export test that reads a frame back",
+    "Undo removes a key in one step, and clicking a lit diamond turns keying off for that value after asking if keys would be lost",
+    "Reachable at Next defaults with no flag changed: a walk with no flags keys a title's scale at two moments and photographs the panel and the canvas between them",
+    "Side by side with the keyframe drawing in the video-motion mock, every difference listed in the audit; audit written under queue/audits/",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T13:13:33.768Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-23T13:13:55.631Z",
+      "note": "seq 350 -> 0.6"
+    }
+  ],
+  "source": "user"
+}

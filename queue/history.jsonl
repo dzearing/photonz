@@ -6629,3 +6629,18 @@
 {"t":"2026-09-23T12:57:24.117Z","ev":"task_note","id":"playing-a-recording-never-blinks"}
 {"t":"2026-09-23T12:57:24.169Z","ev":"task_note","id":"playing-a-recording-never-blinks"}
 {"t":"2026-09-23T12:57:38.336Z","ev":"task_done","id":"playing-a-recording-never-blinks","from":"in_progress","note":"A late frame now holds the last good picture instead of drawing empty (MovieFramesInHand in PhotonzCore, drawn with frames in hand), the renderer redraws when a missing or smaller frame lands under the same ref, and frames are read by 4 decoders per recording, 8 ahead, at the size the canvas shows. Verified: 3 new renderer tests + 9 core tests (renderer landing tests failed before the fix); new walk playing-a-recording-never-blinks-walk on a 3456x2234 fixture drew the clip at 24/24 looks, and FAILED at 15/24 with the old behaviour restored; 6 neighbouring recording/export walks ok. Walk needs next-a-recording-is-a-document, off at Next defaults (task a-recording-opens-in-the-video-editor-for-real-i). Full suite red only on the known export-size flake, also red on clean main. Commit 48bd9f44; audit queue/audits/2026-09-23-playback-never-blinks.json."}
+{"t":"2026-09-23T13:11:08.822Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":626,"of":573,"rotating":true}
+{"t":"2026-09-23T13:13:33.770Z","ev":"task_created","id":"every-value-in-the-panel-has-a-key-diamond","priority":"p1-high","title":"Every value in the panel has a key diamond"}
+{"t":"2026-09-23T13:13:48.584Z","ev":"task_created","id":"a-layer-s-track-opens-into-one-lane-per-keyed-va","priority":"p1-high","title":"A layer's track opens into one lane per keyed value"}
+{"t":"2026-09-23T13:13:48.660Z","ev":"task_created","id":"keys-copy-between-layers-and-the-playhead-lands","priority":"p1-high","title":"Keys copy between layers and the playhead lands on them"}
+{"t":"2026-09-23T13:13:55.633Z","ev":"task_resequenced","id":"every-value-in-the-panel-has-a-key-diamond","from":350,"to":0.6}
+{"t":"2026-09-23T13:13:55.685Z","ev":"task_resequenced","id":"a-layer-s-track-opens-into-one-lane-per-keyed-va","from":360,"to":121}
+{"t":"2026-09-23T13:13:55.736Z","ev":"task_resequenced","id":"keys-copy-between-layers-and-the-playhead-lands","from":370,"to":122}
+{"t":"2026-09-23T13:13:55.786Z","ev":"task_resequenced","id":"keyframe-anything-and-see-and-shape-the-keys-on","from":0.62,"to":123}
+{"t":"2026-09-23T13:14:07.334Z","ev":"task_resequenced","id":"a-layer-s-track-opens-into-one-lane-per-keyed-va","from":121,"to":0.61}
+{"t":"2026-09-23T13:14:07.387Z","ev":"task_resequenced","id":"keys-copy-between-layers-and-the-playhead-lands","from":122,"to":0.615}
+{"t":"2026-09-23T13:14:07.439Z","ev":"task_resequenced","id":"keyframe-anything-and-see-and-shape-the-keys-on","from":123,"to":0.62}
+{"t":"2026-09-23T13:14:07.489Z","ev":"task_note","id":"keyframe-anything-and-see-and-shape-the-keys-on"}
+{"t":"2026-09-23T13:14:07.540Z","ev":"task_note","id":"move-a-layer-from-a-to-b-grow-it-shrink-it-fade"}
+{"t":"2026-09-23T13:14:07.590Z","ev":"task_note","id":"measure-the-video-editor-against-premiere-and-fi"}
+{"t":"2026-09-23T13:14:50.057Z","ev":"manager","filed":3,"readyBefore":25,"readyAfter":24,"report":"queue/manager/2026-09-23-0610.md"}
