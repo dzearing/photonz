@@ -69,12 +69,14 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// part the command does not look like it did: without a word on
         /// screen a person sees the menu close and nothing else, and the new
         /// drawing is just something that turned up next to their work.
-        case componentVersionAdded(version: String, component: String?)
+        case componentVersionAdded(version: String, component: String?,
+                                   property: String = ComponentNaming.defaultVariantPropertyName)
         /// A copy was showing a version of its component that has just been
         /// deleted, so it was put back on one the component still has
         /// (`ComponentVersions`). Nothing else on screen says so: the copy
         /// simply draws something else the next time you look at it.
-        case componentVersionGone(count: Int, version: String?)
+        case componentVersionGone(count: Int, version: String?,
+                                  property: String = ComponentNaming.defaultVariantPropertyName)
         /// One piece's look and wording was pushed onto the same piece in
         /// every other version of its component
         /// (`ComponentVersionMatching`). The versions it reached are drawings
@@ -327,8 +329,13 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .componentSwapped: return "Swapped"
         case .componentChoiceMade: return "Choice added"
         case .componentOriginalArrived: return "Copy placed"
-        case .componentVersionAdded: return "Variant added"
-        case .componentVersionGone: return "Variant deleted"
+        // The author owns this word: a component whose question they called
+        // State says "State added", never "Variant added"
+        // (`ComponentVariantWording`).
+        case .componentVersionAdded(_, _, let property):
+            return "\(ComponentVariantWording(property).one) added"
+        case .componentVersionGone(_, _, let property):
+            return "\(ComponentVariantWording(property).one) deleted"
         case .componentVersionsMatched: return "Applied"
         case .componentPieceRefused(let refusal): return refusal.title
         case .linksBroken(let report): return report.title
@@ -415,14 +422,16 @@ public struct CopyConfirmation: Hashable, Sendable {
             }
             return "The original of \(component) arrived beside it. "
                 + "Editing that changes every copy"
-        case .componentVersionAdded(let version, let component):
+        case .componentVersionAdded(let version, let component, _):
             guard let component, !component.isEmpty else {
                 return "\(version) is now its own drawing on the canvas"
             }
             return "\(version) is now its own drawing of \(component) on the canvas"
-        case .componentVersionGone(let count, let version):
+        case .componentVersionGone(let count, let version, let property):
             let copies = count == 1 ? "1 copy" : "\(count) copies"
-            guard let version, !version.isEmpty else { return "\(copies) moved to another variant" }
+            guard let version, !version.isEmpty else {
+                return "\(copies) moved to another \(ComponentVariantWording(property).one)"
+            }
             return "\(copies) moved to \(version)"
         case .componentVersionsMatched(let piece, let versions):
             guard !versions.isEmpty else { return piece }

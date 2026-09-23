@@ -1,0 +1,29 @@
+{
+  "feature": "A button with states and properties, set on each copy",
+  "epic": "ui-components",
+  "summary": "You can now give a button a Rest, Hover, Pressed and Disabled look, call the question State, and set each copy's state and wording from the panel, without the app switching to a different word for it halfway through. Renaming the question renames it everywhere: the Add menu, the Layer menu, the button that carries one edit to the other drawings, the notice on the canvas and the Library tile.",
+  "setup": "Photonz Dev, Experiments window, release Next. Components are on by default. Start from a blank picture.",
+  "try": [
+    { "do": "Drag the Button tile off the Library onto the picture. A copy lands where you dropped it and its original stands clear of it." },
+    { "do": "Click the copy, then press Edit Original in the Component section." },
+    { "do": "Under Properties press Add and pick A second Variant. Type Hover, press Return. Do it twice more for Pressed and Disabled.", "shot": "2026-09-23-button-states-3-add-menu.png" },
+    { "do": "Type State over the box that says Variant, and press Return. Check the Add menu again: it now offers Another State.", "shot": "2026-09-23-button-states-3-named-state.png" },
+    { "do": "Give each of the three new drawings a different look: fade one, put a border on one, fade one a little." },
+    { "do": "Drag the Button tile on three more times, side by side under the originals, and set each copy's State row to a different state.", "shot": "2026-09-23-button-states-5-four-copies.png" },
+    { "do": "Type Save into the Label row of the leftmost copy, then select the Default original and give it a border.", "shot": "2026-09-23-button-states-6-original-edited.png" }
+  ],
+  "evaluate": [
+    "After you type State over the box, does anything on screen still call it something else?",
+    "With the four copies side by side, can you tell at a glance which one is which?",
+    "Is the State row the first thing you reach for when you click a copy, or did you look somewhere else first?",
+    "Adding a look before you can name the question: did that order feel natural, or did you go hunting for the name first?",
+    "Is A second Variant the right name for the Add row, or would you rather it said something about looks?"
+  ],
+  "rough": [
+    "A copy showing the FIRST look wears no name on the canvas, so of four copies side by side three say Hover, Pressed and Disabled and one says nothing at all. That is deliberate (a screen of twelve ordinary buttons would otherwise carry twelve labels saying the same word) but in a row of four it reads as the odd one being broken rather than as Default.",
+    "You cannot name the question until the component has two looks. A component with one drawing has no Properties row for it, so somebody who wants to call it State first has to add a look before the box exists to type in.",
+    "The four DRAWINGS still do not read as a set. On the tutorial's own small page the app puts Default top left with its copies underneath and Hover, Pressed and Disabled in a column to the right, because four of them side by side do not fit across the page. Filed as its own task.",
+    "One component still holds at most ONE look-changing property. A real button wants a Type of primary or secondary AND a State of rest or hovered, and the two would combine into a matrix of drawings. The model and the panel already read a LIST, so this is an addition rather than a rewrite, but it is not built and nothing offers to add a second one.",
+    "The kind chip beside the property still reads lowercase variant while the row above it says State. It is the same chip that says text and number on the other rows, so it is the app's category rather than a second name, but it is the one place the old word is still visible."
+  ]
+}

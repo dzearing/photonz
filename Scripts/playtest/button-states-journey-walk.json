@@ -1,0 +1,530 @@
+{
+  "out": "/tmp/photonz-playtest/button-states-journey",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "seed": "The whole journey the user said they could not do: make a button that has a Rest, Hover, Pressed and Disabled look, give it a label a copy can change, then put four copies side by side and set each one's state and wording from the panel. Every turn claims what the panel says, so the walk fails when the app answers differently rather than when a step falls over.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1320,
+      "height": 920
+    },
+    {
+      "do": "action",
+      "action": "showComponentShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        300,
+        180
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "click",
+      "at": [
+        300,
+        180
+      ]
+    },
+    {
+      "do": "action",
+      "action": "selectComponentOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "scrollPanel",
+      "by": -900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "1-original",
+      "note": "the original picked. Its Component section holds one list called Properties with an Add on it"
+    },
+    {
+      "do": "snapshot",
+      "name": "states-1-original"
+    },
+    {
+      "do": "panel",
+      "stage": "1-original"
+    },
+    {
+      "do": "action",
+      "action": "addComponentVersion"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "type",
+      "text": "Hover"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "addComponentVersion"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "type",
+      "text": "Pressed"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "addComponentVersion"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "type",
+      "text": "Disabled"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "scrollPanel",
+      "by": -900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "2-four-looks",
+      "note": "four drawings of the same component: where did the app put them, and do they read as one set"
+    },
+    {
+      "do": "snapshot",
+      "name": "states-2-four-looks"
+    },
+    {
+      "do": "render",
+      "name": "states-2-four-looks-doc"
+    },
+    {
+      "do": "panel",
+      "stage": "2-four-looks"
+    },
+    {
+      "do": "focus",
+      "field": "Property name"
+    },
+    {
+      "do": "type",
+      "text": "State"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "scrollPanel",
+      "by": -900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "3-named-state",
+      "note": "the question is called State now. Does anything else still call it Variant"
+    },
+    {
+      "do": "snapshot",
+      "name": "states-3-named-state"
+    },
+    {
+      "do": "panel",
+      "stage": "3-named-state"
+    },
+    {
+      "do": "menus",
+      "stage": "3-named-state"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Property",
+      "shot": "states-3-add-menu"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        700,
+        180
+      ],
+      "shot": "states-3-layer-menu"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "control": "Apply to Other Variants",
+      "present": true
+    },
+    {
+      "do": "action",
+      "action": "fadeLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Pressed"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "borderLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Hover"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "fadeLayerSlightly"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-looks-differ",
+      "note": "each look is now drawn differently, so four copies can be told apart"
+    },
+    {
+      "do": "snapshot",
+      "name": "states-4-looks-differ"
+    },
+    {
+      "do": "render",
+      "name": "states-4-looks-differ-doc"
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        240,
+        640
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        480,
+        640
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "click",
+      "at": [
+        480,
+        640
+      ]
+    },
+    {
+      "do": "action",
+      "action": "showNextComponentVersion"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        720,
+        640
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "click",
+      "at": [
+        720,
+        640
+      ]
+    },
+    {
+      "do": "action",
+      "action": "showNextComponentVersion"
+    },
+    {
+      "do": "action",
+      "action": "showNextComponentVersion"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        960,
+        640
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "click",
+      "at": [
+        960,
+        640
+      ]
+    },
+    {
+      "do": "action",
+      "action": "showNextComponentVersion"
+    },
+    {
+      "do": "action",
+      "action": "showNextComponentVersion"
+    },
+    {
+      "do": "action",
+      "action": "showNextComponentVersion"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "scrollPanel",
+      "by": -900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "5-four-copies",
+      "note": "four copies side by side, one on each state, and the panel of the last one says which state it is on"
+    },
+    {
+      "do": "snapshot",
+      "name": "states-5-four-copies"
+    },
+    {
+      "do": "render",
+      "name": "states-5-four-copies-doc"
+    },
+    {
+      "do": "panel",
+      "stage": "5-four-copies"
+    },
+    {
+      "do": "click",
+      "at": [
+        240,
+        640
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "focus",
+      "field": "Label"
+    },
+    {
+      "do": "type",
+      "text": "Save"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Label",
+      "reads": "Save"
+    },
+    {
+      "do": "click",
+      "at": [
+        720,
+        640
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Label",
+      "reads": "Button"
+    },
+    {
+      "do": "describe",
+      "stage": "6-own-wording",
+      "note": "one copy was given its own wording and the others kept the original's"
+    },
+    {
+      "do": "click",
+      "at": [
+        240,
+        640
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "selectComponentOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "borderLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "click",
+      "at": [
+        240,
+        640
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "scrollPanel",
+      "by": -900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "field": "Label",
+      "reads": "Save"
+    },
+    {
+      "do": "describe",
+      "stage": "7-original-edited",
+      "note": "the Default drawing was given a border and every copy on Default took it, and the copy that had been given its own wording kept it"
+    },
+    {
+      "do": "snapshot",
+      "name": "states-6-original-edited"
+    },
+    {
+      "do": "render",
+      "name": "states-6-original-edited-doc"
+    },
+    {
+      "do": "panel",
+      "stage": "6-original-edited"
+    }
+  ]
+}

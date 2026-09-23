@@ -6459,3 +6459,16 @@
 {"t":"2026-09-23T09:34:11.022Z","ev":"task_note","id":"a-copy-on-the-canvas-can-be-pointed-at-a-differe"}
 {"t":"2026-09-23T09:34:11.077Z","ev":"task_note","id":"a-copy-on-the-canvas-can-be-pointed-at-a-differe"}
 {"t":"2026-09-23T09:34:13.308Z","ev":"task_walks","id":"a-copy-on-the-canvas-can-be-pointed-at-a-differe","walks":["point-a-copy-at-another-walk"]}
+{"t":"2026-09-23T09:37:44.073Z","ev":"task_done","id":"a-copy-on-the-canvas-can-be-pointed-at-a-differe","from":"in_progress","note":"The Component section's name is a menu: pick a copy, press the name, choose another component. It keeps where it sits, a size it was given by hand, the look it set for itself and every knob the new component also has (matched by the name on the panel); anything it could not carry is NAMED on the pill, which now lives 3s rather than 1.6s. One undo restores it. Core in Sources/PhotonzCore/ComponentSwap.swift with 20 tests; panel in ComponentPanel.swift; notice in CopyConfirmation. Verified on the probe: Scripts/playtest/point-a-copy-at-another-walk.json, 41 steps green, five real window captures, Card copy with Title typed -> Nav Bar keeps Payment details, -> Button says Title did not carry over. Full Scripts/test.sh run three times: only the two already-filed flaky export weighing suites failed, and they pass on their own. Audit: queue/audits/2026-09-23-point-a-copy-at-another-component.json. Committed 361f06de and pushed."}
+{"t":"2026-09-23T09:49:12.789Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":662,"of":570,"rotating":true}
+{"t":"2026-09-23T09:49:12.909Z","ev":"task_started","id":"make-a-button-with-states-and-properties-and-set","title":"Make a button with states and properties, and set them on a copy","priority":"p2-normal"}
+{"t":"2026-09-23T10:15:26.532Z","ev":"task_note","id":"an-animated-export-weighed-twice-comes-out-the-s"}
+{"t":"2026-09-23T10:43:55.294Z","ev":"task_created","id":"the-looks-of-one-component-stay-together-as-a-se","priority":"p2-normal","title":"The looks of one component stay together as a set"}
+{"t":"2026-09-23T10:43:58.072Z","ev":"task_walks","id":"make-a-button-with-states-and-properties-and-set","walks":["button-states-journey-walk"]}
+{"t":"2026-09-23T10:44:22.429Z","ev":"task_note","id":"make-a-button-with-states-and-properties-and-set"}
+{"t":"2026-09-23T10:44:22.478Z","ev":"task_note","id":"make-a-button-with-states-and-properties-and-set"}
+{"t":"2026-09-23T10:44:22.526Z","ev":"task_note","id":"make-a-button-with-states-and-properties-and-set"}
+{"t":"2026-09-23T10:44:22.575Z","ev":"task_note","id":"make-a-button-with-states-and-properties-and-set"}
+{"t":"2026-09-23T10:44:22.625Z","ev":"task_note","id":"make-a-button-with-states-and-properties-and-set"}
+{"t":"2026-09-23T10:44:22.674Z","ev":"task_note","id":"make-a-button-with-states-and-properties-and-set"}
+{"t":"2026-09-23T10:44:22.723Z","ev":"task_note","id":"make-a-button-with-states-and-properties-and-set"}

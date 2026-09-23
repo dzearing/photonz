@@ -970,7 +970,7 @@ public enum TutorialGuides {
     ///
     /// The eight steps are the whole budget the track's tests allow, so two
     /// things that were in the first draft are said rather than done: pressing
-    /// Apply to Other Variants for real (it needs a piece selected INSIDE one
+    /// Apply to Other States for real (it needs a piece selected INSIDE one
     /// drawing and a difference to carry, or the row is dimmed), and a step of
     /// its own for picking a copy before switching it.
     public static let componentVersions = TutorialGuide(
@@ -993,7 +993,7 @@ public enum TutorialGuides {
                 id: "add-a-look",
                 anchor: .panelSection("component"),
                 title: "Add the second one",
-                body: "Under Properties, open Add and pick A second look. An exact copy of this drawing lands beside it on clear page, and every tool works on it.",
+                body: "Under Properties, open Add and pick A second Variant. An exact copy of this drawing lands beside it on clear page, and every tool works on it.",
                 side: .leading,
                 advance: .waitsFor(.editMade),
                 prepare: [.showPanel, .revealTarget]),
@@ -1025,7 +1025,7 @@ public enum TutorialGuides {
                 id: "the-other-two",
                 anchor: .panelSection("component"),
                 title: "Now Pressed and Disabled",
-                body: "Click the first drawing, add a look called Pressed, then one more called Disabled. Each starts as a copy, so you change one thing rather than redraw.",
+                body: "Click the first drawing, open Add and pick Another State. Call it Pressed, then do it once more for Disabled. Each starts as a copy, so you change one thing rather than redraw.",
                 side: .leading,
                 prepare: [.showPanel, .revealTarget]),
             TutorialStep(

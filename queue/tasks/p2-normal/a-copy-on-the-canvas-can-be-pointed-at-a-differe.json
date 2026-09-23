@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 200,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T18:07:03.226Z",
-  "updated": "2026-09-23T09:34:13.307Z",
+  "updated": "2026-09-23T09:37:44.072Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Ninth manager pass carrying this as an open thread with no card ever opened against it. That is the actual failure being corrected here: the thread kept being recorded and never turned into a question the user could answer.\n\nThe gap is stated in the spec itself, docs/design/ui-building.md, What the first version deliberately does not do: Detach is one way, there is no re-attach. Nothing in that list covers swapping which main a copy follows, and nothing in Sources/PhotonzCore/ComponentInstances.swift offers it.\n\nBLOCKED ON ITS CARD. This adds something visible that the user has not asked for, and the shape of it is exactly the product question: whether it is a row in the Component section, a drop of one tile onto an existing copy, or something else. Do not build it before the card is answered.\n\nOne of the card options is do not build it, marked declines, because a tool where you delete and redo is a defensible answer for a first version and the user should be able to say so.",
@@ -91,10 +91,15 @@
     {
       "t": "2026-09-23T09:34:13.306Z",
       "note": "owns these walks: point-a-copy-at-another-walk"
+    },
+    {
+      "t": "2026-09-23T09:37:44.070Z",
+      "note": "The Component section's name is a menu: pick a copy, press the name, choose another component. It keeps where it sits, a size it was given by hand, the look it set for itself and every knob the new component also has (matched by the name on the panel); anything it could not carry is NAMED on the pill, which now lives 3s rather than 1.6s. One undo restores it. Core in Sources/PhotonzCore/ComponentSwap.swift with 20 tests; panel in ComponentPanel.swift; notice in CopyConfirmation. Verified on the probe: Scripts/playtest/point-a-copy-at-another-walk.json, 41 steps green, five real window captures, Card copy with Title typed -> Nav Bar keeps Payment details, -> Button says Title did not carry over. Full Scripts/test.sh run three times: only the two already-filed flaky export weighing suites failed, and they pass on their own. Audit: queue/audits/2026-09-23-point-a-copy-at-another-component.json. Committed 361f06de and pushed."
     }
   ],
   "started": "2026-09-23T09:05:06.891Z",
   "walks": [
     "point-a-copy-at-another-walk"
-  ]
+  ],
+  "completed": "2026-09-23T09:37:44.071Z"
 }

@@ -3256,8 +3256,13 @@ final class EditorState {
         // that still exists, and nothing else on screen says so: the copy
         // simply draws something else the next time you look at it.
         if report.strandedInstances > 0 {
-            raiseCanvasNotice(.componentVersionGone(count: report.strandedInstances,
-                                                    version: report.strandedOnVersion))
+            let property = report.componentIDs.count == 1
+                ? report.componentIDs.first.flatMap { document?.componentVariantName(of: $0) }
+                : nil
+            raiseCanvasNotice(.componentVersionGone(
+                count: report.strandedInstances,
+                version: report.strandedOnVersion,
+                property: property ?? ComponentNaming.defaultVariantPropertyName))
             return
         }
         guard !report.isEmpty else { return }

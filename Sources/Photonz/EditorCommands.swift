@@ -894,7 +894,9 @@ struct EditorCommands: Commands {
                 // Add Variant takes no key either: it is a thing you do once
                 // per look, from the original's own Properties list, and a key
                 // for it would be a key nobody could name.
-                Button("Add Variant") { editor?.addComponentVersion() }
+                Button(editor?.selectedComponentVariantWording.addCommand ?? "Add Variant") {
+                    editor?.addComponentVersion()
+                }
                     .disabled(!(editor?.canAddComponentVersion ?? false))
                 // Apply to Other Variants is ABSENT unless the selected piece
                 // is part of an original that HAS other looks, because on

@@ -412,6 +412,20 @@ extension EditorState {
     /// cannot edit, and the whole reason a version is a real drawing on the
     /// canvas is that every tool already works on it. The name field opens on
     /// it too, so naming it is typing rather than hunting.
+    /// The word to say about the looks of whatever is selected: the author's,
+    /// so the Layer menu says Add State on a component whose question they
+    /// called State (`ComponentVariantWording`).
+    ///
+    /// It answers for a COPY as well as an original, because the menus are the
+    /// same menus on both and a copy is the thing most people have selected.
+    var selectedComponentVariantWording: ComponentVariantWording {
+        guard let document, let id = actionableLayerIDs.first,
+              let layer = document.layer(id: id),
+              let componentID = layer.componentID ?? layer.instanceOf
+        else { return ComponentVariantWording(nil) }
+        return document.componentVariantWording(of: componentID)
+    }
+
     @discardableResult
     func addComponentVersion() -> UUID? {
         guard canAddComponentVersion, let id = actionableLayerIDs.first,
@@ -442,9 +456,12 @@ extension EditorState {
                 .flatMap { document.canvasBounds(of: $0.id) }
             bringIntoView(box, alongside: source)
         }
+        let property = document.componentVariantName(of: componentID)
         raiseCanvasNotice(.componentVersionAdded(
-            version: document.componentVersion(of: componentID, id: added)?.name ?? "The new variant",
-            component: document.mainComponent(componentID: componentID)?.name))
+            version: document.componentVersion(of: componentID, id: added)?.name
+                ?? "The new \(ComponentVariantWording(property).one)",
+            component: document.mainComponent(componentID: componentID)?.name,
+            property: property))
         return added
     }
 

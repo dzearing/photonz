@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 210,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T15:03:35.089Z",
-  "updated": "2026-09-22T12:17:53.445Z",
+  "updated": "2026-09-23T10:44:22.722Z",
   "deps": [
     "every-pane-says-what-it-is-for-in-words-somebody",
     "a-copy-of-a-component-is-configured-not-authored"
@@ -88,6 +88,46 @@
     {
       "t": "2026-09-22T12:17:53.444Z",
       "note": "seq 160 -> 210"
+    },
+    {
+      "t": "2026-09-23T09:49:12.907Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T10:43:58.069Z",
+      "note": "owns these walks: button-states-journey-walk"
+    },
+    {
+      "t": "2026-09-23T10:44:22.427Z",
+      "note": "ADVERSARIAL REVIEW BEFORE BUILDING, done by walking the journey in the probe rather than reading. Wrote Scripts/playtest/button-states-journey-walk.json: drop a Button, add Hover, Pressed and Disabled, name the question State, make each look differ, place four copies and put each on a different state. The three sibling tasks had already landed, so most of it WORKED: the original's Properties list is one list with an Add on it, the copy's panel is State then Label then Edit Original and Detach with nothing author-only on it, and four copies side by side really do show four different looks. What did NOT work was acceptance 7. Typing State over the box renamed one row and left the app saying Variant in six other places, so somebody who had just named the question was asked to work out six more times that all of it was about their States: the Add menu's heading and its row (Variant / A second look), Layer menu Add Variant, the button that carries one edit to the other drawings (Other Variants Already Match), the canvas notice (Variant added), the Library tile detail (3 variants), and the name an unnamed new drawing arrives under (Variant 4)."
+    },
+    {
+      "t": "2026-09-23T10:44:22.476Z",
+      "note": "BUILT: the author owns the word. New core ComponentVariantWording (Sources/PhotonzCore/ComponentVariantWording.swift) plus ComponentNaming.plural, one place the word is decided, falling back to Variant on a blank or absent name. ComponentVersionApply carries a propertyName so its title and help read from it; the componentVersionAdded and componentVersionGone notices take the word as a case parameter; ComponentNaming.versionName/freshVersionName/detail take it too; the panel's Add menu, the Layer context menu and the menu bar's Add Variant all read EditorState.selectedComponentVariantWording. Tests: Tests/PhotonzCoreTests/ComponentVariantWordingTests.swift, 9 tests, written first. Full Scripts/test.sh green: 9185 tests in 734 suites."
+    },
+    {
+      "t": "2026-09-23T10:44:22.524Z",
+      "note": "VERIFIED IN THE APP, screen unlocked and Screen Recording granted, 8 real window captures. With the property called State the panel Add menu reads 'Another State' (walk step 45, rows dumped), and a right click on the original reads 'Add State' and 'Other States Already Match' (walk step 47). Acceptance 6: four copies side by side, one on each of Default, Hover, Pressed and Disabled, told apart by look and by the canvas badge (queue/audits/2026-09-23-button-states-5-four-copies.png). Acceptance 8: a copy given its own Label of Save kept it while the Default original was given a border, and that border reached it and the other Default copies (2026-09-23-button-states-6-original-edited.png). Walks: 22 component walks, 45 tutorial walks, 6 library walks and version-labels-row all pass."
+    },
+    {
+      "t": "2026-09-23T10:44:22.573Z",
+      "note": "THE OPEN QUESTION IS SETTLED, and it did not need a prototype: the rewrite the task was worried about cannot happen. componentVariantProperties(of:) already answers an ARRAY and ComponentPropertyList already loops over it with ForEach, so a second look-changing property is an addition to what is there rather than a rewrite of it. What is missing is only the ability to make one: ComponentVariantProperty.id is the component's own id, so a component can hold at most one today, and Add offers exactly one row for it. So a Type of primary or secondary alongside a State of rest or hovered is a feature to build when the user wants it, not a shape to design around now. Left in the audit's rough rather than filed: it is a direction the user was explicitly unsure about, and their reaction to the audit line is the right way for it to become a task."
+    },
+    {
+      "t": "2026-09-23T10:44:22.623Z",
+      "note": "FILED: the-looks-of-one-component-stay-together-as-a-se, with the reproduction. The four DRAWINGS still do not read as a set on a page too narrow for them: on the states guide's own 720x480 sample the app leaves Default top left with its copies under it and Hover, Pressed and Disabled in a column beside it, because four 240-wide drawings with the 24pt gap need 1032pt. That is roomForDrawing being a generic packer, and keeping a set together is a real decision rather than a tweak, which is why it is its own task."
+    },
+    {
+      "t": "2026-09-23T10:44:22.672Z",
+      "note": "left rough, under the follow-up bar: (1) a copy showing the FIRST look wears no name on the canvas, so in a row of four copies three say Hover, Pressed and Disabled and one says nothing. It is deliberate and tested (ComponentVersions.versionName, 'the odd one out', so a screen of twelve plain buttons is not twelve identical labels) and it is in the audit's rough for the user to react to rather than changed by guess. (2) The kind chip still reads lowercase 'variant' beside a row named State; it is the same chip that says text and number on the other rows, so it is the app's category rather than a second name. (3) The apply button's playtest name is still the fixed string 'Apply to Other Variants' with the state in its detail, which is agent-facing and deliberately stable, and its detail line still says 'every variant already matches'. (4) You cannot name the question until the component has two looks, because a one-drawing component has no variant property; sound, and in the audit's rough."
+    },
+    {
+      "t": "2026-09-23T10:44:22.721Z",
+      "note": "left rough: the versionName(at:) fallback in componentVersions(of:) still spells an unnamed drawing 'Variant N' rather than after the property, because that path only fires for a document whose version names were never settled and it sits in a function called from everywhere. Not worth the lookup in a hot path."
     }
+  ],
+  "started": "2026-09-23T09:49:12.906Z",
+  "walks": [
+    "button-states-journey-walk"
   ]
 }

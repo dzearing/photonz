@@ -221,7 +221,8 @@ extension PhotonzDocument {
                                 name: layer.name,
                                 detail: ComponentNaming.detail(
                                     instanceCount: instanceCount(of: componentID),
-                                    versionCount: componentVersionCount(of: componentID)))
+                                    versionCount: componentVersionCount(of: componentID),
+                                    property: componentVariantName(of: componentID)))
         }
     }
 }

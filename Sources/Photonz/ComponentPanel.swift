@@ -426,10 +426,13 @@ struct LibraryComponentInspector: View {
         main.children.count == 1 ? "1 layer inside" : "\(main.children.count) layers inside"
     }
 
-    /// How many looks this component holds, when it holds more than one.
+    /// How many looks this component holds, when it holds more than one, in
+    /// the word the author gave the property (`ComponentVariantWording`).
     private func versions(_ componentID: UUID) -> String {
         let count = editorState.componentVersions(of: componentID).count
-        return count > 1 ? " • \(count) variants" : ""
+        guard count > 1 else { return "" }
+        let word = ComponentVariantWording(editorState.componentVariantName(of: componentID))
+        return " • \(count) \(word.many.lowercased())"
     }
 
     private func copies(_ componentID: UUID) -> String {
@@ -1372,6 +1375,11 @@ struct ComponentPropertyList: View {
         editorState.componentPropertyCandidates(componentID: componentID, version: version)
     }
 
+    /// The word this component's looks are spoken about in.
+    private var wording: ComponentVariantWording {
+        ComponentVariantWording(editorState.componentVariantName(of: componentID))
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Divider().padding(.vertical, 2)
@@ -1405,8 +1413,12 @@ struct ComponentPropertyList: View {
     /// rows read the same" can be held to.
     @ViewBuilder private var addMenu: some View {
         Menu {
-            Section("Variant") {
-                Button(variants.isEmpty ? "A second look" : "Another look") {
+            // No heading over it: the row NAMES the property, so a heading
+            // would be the same word twice. It says the author's word, so a
+            // component whose question is called State offers "Another State"
+            // rather than a second name for it (`ComponentVariantWording`).
+            Section {
+                Button(wording.addRow(hasAny: !variants.isEmpty)) {
                     editorState.addComponentVersion(componentID: componentID, from: version)
                 }
             }

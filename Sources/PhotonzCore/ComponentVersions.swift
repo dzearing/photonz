@@ -141,7 +141,9 @@ extension PhotonzDocument {
         var copy = settled.reidentified()
         guard var group = copy.group else { return nil }
         let chosen = ComponentNaming.normalized(name)
-            ?? ComponentNaming.freshVersionName(taken: existing.map(\.name), count: existing.count)
+            ?? ComponentNaming.freshVersionName(taken: existing.map(\.name),
+                                                count: existing.count,
+                                                property: componentVariantName(of: componentID))
         // `reidentified` mints a component of its own, because duplicating a
         // main is how you get a second component. This is the other errand:
         // the same component, one more drawing of it.
@@ -432,25 +434,33 @@ extension ComponentNaming {
     public static let defaultVersionName = "Default"
 
     /// What the look in position `index` is called before anybody names it.
-    /// "Variant", because that is the word the panel now asks the question in
-    /// (`ComponentVariantProperty`).
-    public static func versionName(at index: Int) -> String {
-        index == 0 ? defaultVersionName : "Variant \(index + 1)"
+    /// Named after the PROPERTY it is an option of, so a component whose
+    /// question the author called State never grows an option called
+    /// "Variant 4" (`ComponentVariantWording`).
+    public static func versionName(at index: Int,
+                                   property: String = defaultVariantPropertyName) -> String {
+        index == 0 ? defaultVersionName : "\(ComponentVariantWording(property).one) \(index + 1)"
     }
 
-    /// A name nobody is using yet: "Variant 2", then "Variant 3"…
-    static func freshVersionName(taken: [String], count: Int) -> String {
+    /// A name nobody is using yet: "Variant 2", then "Variant 3"… or "State 2"
+    /// on a component whose question is called State.
+    static func freshVersionName(taken: [String], count: Int,
+                                 property: String = defaultVariantPropertyName) -> String {
+        let word = ComponentVariantWording(property).one
         var index = max(count + 1, 2)
-        while taken.contains("Variant \(index)") { index += 1 }
-        return "Variant \(index)"
+        while taken.contains("\(word) \(index)") { index += 1 }
+        return "\(word) \(index)"
     }
 
     /// The detail line on a component's tile: how many looks it holds and how
     /// many copies of it are out. A component with one look says nothing about
-    /// variants, because one look is just the component.
-    public static func detail(instanceCount: Int, versionCount: Int) -> String {
+    /// variants, because one look is just the component. It counts them in the
+    /// author's own word, so a tile never says variants about a component whose
+    /// question is called State (`ComponentVariantWording`).
+    public static func detail(instanceCount: Int, versionCount: Int,
+                              property: String = defaultVariantPropertyName) -> String {
         guard versionCount > 1 else { return detail(instanceCount: instanceCount) }
-        let versions = "\(versionCount) variants"
+        let versions = "\(versionCount) \(ComponentVariantWording(property).many.lowercased())"
         switch instanceCount {
         case 0: return versions
         case 1: return "\(versions) • 1 copy"

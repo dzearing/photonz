@@ -3908,9 +3908,11 @@ own correction settled it: "component properties makes sense. Variant is a
 property of the component."
 
 - **One list, one Add.** The original's section shows **Properties**. Its Add
-  menu opens with a **Variant** section ("A second look", then "Another look"),
-  and the rest of the menu is unchanged: pick a piece of the component and the
-  kind of property it should be.
+  menu opens with the row that makes another drawing of the whole thing, named
+  after the property itself ("A second Variant", then "Another Variant", and
+  "Another State" once the author has called it State), and the rest of the menu
+  is unchanged: pick a piece of the component and the kind of property it should
+  be.
 - **The variant is a row, not a section.** It wears an editable name, a
   `variant` chip like every other row's kind chip, and its looks underneath. The
   name is the point: an author calls it **State**, or **Type**, or **Size**, and
@@ -3945,8 +3947,30 @@ Model in `ComponentVariantProperty.swift` (`ComponentVariantProperty`,
 `renameComponentVariantProperty`) and the `variantName` field on `GroupContent`;
 the panel in `ComponentPanel.swift` (`ComponentPropertyList`,
 `ComponentVariantPropertyRow`, `ComponentInstanceProperties`). Menus: Layer ▸
-**Add Variant**, Layer ▸ **Apply to Other Variants**. Tests in
-`ComponentVariantPropertyTests.swift`.
+**Add Variant**, Layer ▸ **Apply to Other Variants** — both of which say the
+author's word instead, so on a button whose question is called State they read
+**Add State** and **Apply to 3 Other States**. Tests in
+`ComponentVariantPropertyTests.swift` and `ComponentVariantWordingTests.swift`.
+
+### The author owns the word (2026-09-23)
+
+Renaming the property to State used to change one row and leave the app saying
+Variant in six other places: the Add menu's heading and row, Layer ▸ Add
+Variant, the button that pushes one edit onto the other drawings ("Other
+Variants Already Match"), the notice that comes up on the canvas ("Variant
+added"), the Library tile's detail line ("3 variants"), and the name a new
+unnamed drawing arrived under ("Variant 4"). Somebody who had just typed State
+over the box was then asked to work out, six more times, that all of that was
+about their States.
+
+`ComponentVariantWording` is the one place that word is decided. It takes what
+the author called the property, falls back to "Variant" for a blank or absent
+name, and carries the plural (`ComponentNaming.plural`, a small rule for short
+nouns: hisses take -es, a consonant before a final y turns it into -ies). Every
+sentence above reads from it, `ComponentVersionApply` carries a `propertyName`
+so its title and help do too, and the canvas notices take the word as a case
+parameter. The states tutorial names the Add rows exactly as the app spells
+them, held there by a test.
 
 ## Position and Size leave the panel (2026-09-15)
 

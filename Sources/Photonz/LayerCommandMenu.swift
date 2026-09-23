@@ -153,7 +153,9 @@ enum LayerCommandList {
         // nothing on the layer you right clicked is a row people hunt the
         // reason for.
         if display.isMainComponent, editorState.canAddComponentVersion {
-            rows.append(.command("Add Variant") { editorState.addComponentVersion() })
+            rows.append(.command(editorState.selectedComponentVariantWording.addCommand) {
+                editorState.addComponentVersion()
+            })
         }
         // Only on a piece of an original that has other looks, and it names
         // them, so the row answers "what would this touch" before it is

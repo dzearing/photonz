@@ -297,6 +297,19 @@ struct TutorialComponentsTrackTests {
         #expect(rename < ids.firstIndex(of: "the-other-two")!)
     }
 
+    /// The guide tells you to pick a row off the Add menu BY NAME, so it has
+    /// to spell that row the way the app spells it. The app spells it after
+    /// whatever the property is called (`ComponentVariantWording`), so the
+    /// first time it is "A second Variant" and, once the guide has had you
+    /// rename the question to State, it is "Another State".
+    @Test func itNamesTheAddRowsTheWayTheAppSpellsThem() throws {
+        let guide = try statesGuide()
+        let first = try #require(guide.steps.first { $0.id == "add-a-look" })
+        #expect(first.body.contains(ComponentVariantWording(nil).addRow(hasAny: false)))
+        let rest = try #require(guide.steps.first { $0.id == "the-other-two" })
+        #expect(rest.body.contains(ComponentVariantWording("State").addRow(hasAny: true)))
+    }
+
     @Test func itSaysWhatCarriesAcrossSoNobodyRedrawsTheButtonFourTimes() throws {
         let guide = try statesGuide()
         let differs = try #require(guide.steps.first { $0.id == "change-only-what-differs" })
