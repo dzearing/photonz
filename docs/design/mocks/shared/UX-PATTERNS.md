@@ -1,6 +1,11 @@
 # Photonz — UX patterns & interaction model (the app's spine)
 
-**Status: v2.1. §3's height rule gains rule 5, the FOLD the dock guarantees,
+**Status: v2.2. D18 is rewritten at the user's direction (2026-09-23): a
+document with time has TRACKS (video, titles, audio, captions), named,
+renamable, groupable, each holding many clips, and a clip can move between
+them. The v2.0 D18 ("a timeline row is a LAYER") is withdrawn, and so is its
+claim that the video pages' tracks and their docks without a Layers group were
+wrong: the pages are back to what the user drew. v2.1: §3's height rule gains rule 5, the FOLD the dock guarantees,
 and corrects rule 2: Appearance is a list of the parts a thing is made of, not
 a form, which is why it was the only promised section the budget could never
 shorten and so the section every new feature's room came out of, seven times.
@@ -10,7 +15,7 @@ the fold, a pane you just opened is exempt, and a new group has to say which
 line of the column's height it spends from. Rule 4 now binds the groups that
 bound themselves, so a cut layers list stops reading as the whole document.
 Chosen by the user on 2026-09-20 and built on 2026-09-22
-(`appearance-is-below-the-fold-again-because-the-p`). v2.0: Gains D18 and D19, from the video design pass
+(`appearance-is-below-the-fold-again-because-the-p`). v2.0 (its D18 withdrawn in v2.2): Gains D18 and D19, from the video design pass
 (`docs/design/video-surface.md`, 2026-09-19). D18: a timeline row is a LAYER and
 is named what that layer is named, so the numbered track model fourteen video
 pages had drawn is wrong and so is their deletion of the Layers group to make
@@ -2788,66 +2793,81 @@ three interface tokens it shares its shapes with).
 
 ---
 
-### D18 — A timeline row is a LAYER, and it is called what that layer is called
+### D18 — A document with time has TRACKS, and a track holds many clips
 
-Added 2026-09-19 by the video design pass (`docs/design/video-surface.md`).
-Fourteen video pages had drawn a numbered track model — `V1`, `V2`, `V3`, `V4`,
-`Gfx`, `Audio` — and every one of them deleted the **Layers** group from the
-dock to make room for it. Both halves of that are wrong, and they are wrong
-together: the track names are the reason the list looked redundant.
+Rewritten 2026-09-23 at the user's direction. The version written on 2026-09-19
+("a timeline row is a layer, and it is called what that layer is called") took
+the user's tracks out of fourteen video pages, renamed every row after a layer,
+put a Layers group back into docks the user had drawn without one, and wrote
+itself here as the rule that justified all of it. The user rejected it: they
+want real tracks. The pages were put back as the user drew them (the
+`video*.html` pages and `comp-video.html` as they stood before commit 72a2a75c),
+and this is the rule they draw.
 
-**The rule.** A row in the bottom dock is one layer of the document. It carries
-that layer's own name, in that layer's own letters, with that layer's own icon,
-and the rows run in the same order as the Layers group in the dock, because they
-are the same list read a different way. There are no numbered rows, because
-`V1` is a name that appears nowhere else in the document and a person whose
-layers are called `settings-capture` and `Lower third` cannot connect the two.
+**The rule.** A document with a duration has tracks, the way Premiere and Final
+Cut do. A track is a horizontal row of the timeline with a header at its left,
+and it holds any number of clips laid along time, with gaps allowed between
+them. There are four kinds:
 
-Four consequences, and each one settled a disagreement between pages:
+| Kind | What it holds | How the mocks name it |
+| --- | --- | --- |
+| **Video** | pictures: recordings, images, overlays, adjustment and matte clips | `V1`, `V2`, `V3`, `V4` (`video-compositing`) |
+| **Titles** | text, graphics and component instances | `Title`, `Gfx` (`video-title-wt`, `video-move-wt`) |
+| **Audio** | sound: a recording's own sound, music, a voice-over | `Audio`, or by what is on it (`Music`, `Voiceover` in `video-audio`) |
+| **Captions** | caption cues, one clip per cue | `CAP`, which arrives when captions are generated (`video.html`, `video-captions`) |
 
-1. **A layer draws a bar when it occupies time, and a bare heading when it does
-   not.** `MotionStrip.swift` says today that *"a layer row is a HEADING and not
-   a bar: the layer itself does not occupy time, the properties on it do"* —
-   true of a bell that rotates, false of a clip, which is exactly a start and an
-   end. One rule covers both and the component does not fork.
-2. **A property lane is a CHILD of the layer whose property it is** (`.track.sub`),
-   indented under it, never a sibling of a clip. `video-move-wt` and
-   `video-zoom-wt` had each invented `.track.kft` for this locally.
-3. **Two shots laid end to end are two pieces of one row, not two rows.**
-   Splitting never adds a row, which is what stops a timeline growing a row per
-   cut, and the seam between them is an edit point (`comp-video` §02). "Pieces"
-   is the word the shipping app already says on its own trim bar.
-4. **A clip's sound is drawn inside that clip**, as a strip along the bottom of
-   its own bar, until you separate it. Afterwards it is its own layer with its
-   own name and its own row. A permanent empty `Audio` track is a row for a
-   layer that does not exist.
+What a person can do with them, each of which the pages draw or a user task
+asks for:
 
-**Layers never leaves the dock, and it cannot.** Two views of one model is the
-app's normal condition — canvas, Layers and Properties already all follow one
-selection — and a video document is full of layers that do not occupy time: a
-background, an adjustment, a matte, a component master. Delete Layers and those
-have no row anywhere. There is also no lever to pull:
-`PanelSectionVisibility.optionalSections` deliberately does not list Layers, so
-no mode, no preset and no switch can take it away.
+1. **Named, and renamable.** A new track gets its kind and a number, the names a
+   Premiere editor already reads (`V1`, `V2`, `Audio`). Double-clicking the
+   header renames it. The header column is **58px** and track names are
+   **uppercase** (`.track .tl`, `--tl-label` on `.timeline`), as the pages draw
+   them; a page whose names run longer widens `--tl-label` for itself.
+2. **Grouped.** Tracks can be put in a group whose header carries a chevron, and
+   collapsing the group folds its tracks into one row.
+3. **Many clips per track.** Two shots laid end to end are two clips on one
+   track, and cutting a clip makes two clips on the same track, never a new
+   track. The seam between them is an edit point (`comp-video` §02) and a
+   transition lives on it (§03).
+4. **A clip can move between tracks.** Every clip is a layer of the document:
+   the canvas selects it, the panel shows its properties, and dragging it up or
+   down the timeline moves it to another track of its kind. Dropping it between
+   two tracks makes a new track there. On video tracks the higher track draws
+   over the lower one, so track order is stacking order.
+5. **Switches on every header.** Hide (video) or mute (audio), solo, and lock,
+   on the track header where a Premiere editor looks for them. Adding a track is
+   a `+` at the foot of the headers and an item on the right-click menu of the
+   track area; the header's own right-click menu holds rename, group, and delete.
+6. **Keyframe lanes open under the track** whose clip they animate, indented and
+   quieter than a track (`video-move-wt`'s Position lane, `video-zoom-wt`'s
+   Scale and Centre), and close again when the clip is put down.
 
-The label column is **92px** (`--tl-label` on `.timeline`, matching
-`MotionStripView.labelWidth`) and it is **not uppercased**: the Layers list
-beside it does not uppercase, and shouting somebody's file name back at them is
-not a style. Canonical pages: `pages/comp-video.html` §07 (the primitive),
-`pages/video-shell.html` (the whole surface).
+**Where there is a timeline, the timeline is the layer list.** The user's
+`video.html` says it in its own caption ("Resolved - what the dock is for"): a
+Layers group beside the timeline listed the same objects in the same order, a
+second rendering of what you had just clicked, so the video docks carry no
+Layers group and the dock is the clip detail pane. Layers is untouched wherever
+there is no timeline, where it is the only inventory of the document.
 
-**The fourteen pages conform as of 2026-09-22.** Every `video*` page opens
-**Layers** as the first group of its dock, its rows match the strip one for one
-in order and icon, and picking a clip lights both. Where the strip is built from
-a list in JS (`video`, `video-motion`, `video-compositing`, `video-audio`,
-`video-captions`), the group is built from the SAME list, so a later edit cannot
-put the two out of step. No numbered row is left anywhere in the set.
+Canonical pages: `pages/video.html` (the whole editor, five tracks),
+`pages/video-compositing.html` (four stacked video tracks),
+`pages/video-audio.html` (audio tracks with mute and solo),
+`pages/comp-video.html` (the clip, the edit point, the overlap, and trimming).
+
+**What was withdrawn with the old D18**: numbered rows being "wrong", a row per
+layer, a row named after its layer, a 92px lowercase label column, a clip's
+sound drawn inside the clip instead of on an audio track, and "Layers never
+leaves the dock". Code written against the old rule (`ClipPieces`, whose comments
+cite D18 for "a split adds a piece, never a row") still shows what this rule
+shows, one track after a cut, and moves onto the track model with the task that
+builds tracks.
 
 ---
 
 ### D19 — "Timeline when time" and a mode are different questions, and they compose
 
-Added 2026-09-19 with D18. Two mechanisms were being described as one:
+Added 2026-09-19 alongside the first D18, and still standing after D18 was rewritten on 2026-09-23. Two mechanisms were being described as one:
 
 - **"Timeline when time" is about EXISTENCE, and it is automatic.** The bottom
   dock exists because the document has a duration (§1, region 8). Nobody chooses
@@ -2921,5 +2941,5 @@ spare at each, prints the numbers and gives you `⎋`. Same values, same undo
 step. That is the same relation as dragging a layer's corner versus entering
 Crop, and it is not a duplicate to be removed.
 
-Canonical pages: `pages/video-shell.html` block 05, `pages/comp-video.html` §08.
+Canonical page: `pages/comp-video.html` §07 (the trimming clip).
 Full write-up: `docs/design/video-surface.md` §10.

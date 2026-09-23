@@ -60,12 +60,13 @@
     groups.forEach(function (g) {
       var ttl = g.querySelector('.dgrp-h .ttl');
       /* A REQUIRED group is listed but has no switch. Layers is the case that
-         forced this (UX-PATTERNS D18): it is the only inventory of a document,
-         and a video document is full of layers that occupy no time, so hiding
-         it leaves them with no row anywhere. The app agrees by construction —
-         PanelSectionVisibility.optionalSections deliberately does not list
-         Layers — and this menu used to offer what the app cannot do. It stays
-         in the list, because the list answers "which panels do I have". */
+         forced this: in a document with no timeline it is the only inventory
+         of the document, and the app agrees by construction
+         (PanelSectionVisibility.optionalSections deliberately does not list
+         Layers), so this menu must not offer what the app cannot do. It stays
+         in the list, because the list answers "which panels do I have". A
+         video dock carries no Layers group at all (UX-PATTERNS D18: where
+         there is a timeline, the timeline is the layer list). */
       var required = g.hasAttribute('data-required') ||
                      g.getAttribute('data-grp') === 'layers';
       var it = document.createElement('div');

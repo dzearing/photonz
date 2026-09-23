@@ -26,7 +26,7 @@
 .va-meter .mpeak{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.85;transform:translateX(-1px)}
 
 /* ---------- the timeline dock: audio lanes on the shared time axis ---------- */
-#tlDock{--gutter:92px;flex:0 0 auto;max-height:340px;overflow:auto;padding:0;display:flex;flex-direction:column}
+#tlDock{--gutter:58px;flex:0 0 auto;max-height:340px;overflow:auto;padding:0;display:flex;flex-direction:column}
 .tlbar{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);border-bottom:1px solid var(--edge-lo);position:sticky;top:0;z-index:6;background:var(--panel);flex-wrap:wrap}
 .tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;white-space:nowrap}
 .tlbar .now{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink);background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);padding:3px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -67,13 +67,13 @@
 
 /* ---------- narrow: the window container query, not the viewport ---------- */
 @container shell (max-width:880px){
-  #tlDock{--gutter:76px}
+  #tlDock{--gutter:52px}
   #video-audio .vframe{width:300px;height:169px}
   .vurow .nm{width:52px}
   .tlgrid .track .lane.alane{height:72px}
 }
 @container shell (max-width:620px){
-  #tlDock{--gutter:76px}
+  #tlDock{--gutter:52px}
   #video-audio .vframe{width:216px;height:122px}
   .vurow .nm{display:none}
   .tlbar .now{display:none}
@@ -201,20 +201,11 @@
 
       <div class="splitter v" data-min="212" data-max="420"></div>
 
-      <!-- THE RIGHT DOCK · Layers stays (UX-PATTERNS D18): the timeline is the
-           same list read sideways, row for row, in the same order. -->
+      <!-- THE RIGHT DOCK · no Layers group here: this workspace has a timeline,
+           and the timeline IS the layer list -->
       <div class="pdock" id="dock">
 
-        <!-- SELECTION, place 1 of 3: the stack -->
-        <div class="dgrp" data-grp="layers" data-gh="sm" id="gLayers">
-          <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">2</span></div>
-          <div class="dgrp-b" id="layerList">
-            <div class="lrow sel" data-layer="music"><i class="ic ic-waveform"></i><span class="nm">Music</span><i class="ic sm ic-eye eye"></i></div>
-            <div class="lrow" data-layer="vo"><i class="ic ic-waveform"></i><span class="nm">Voiceover</span><i class="ic sm ic-eye eye"></i></div>
-          </div>
-        </div>
-
-        <!-- SELECTION, place 3 of 3: what the selected layer is -->
+        <!-- SELECTION, place 3 of 3: the channel strip for the selected track -->
         <div class="dgrp grow" id="gProps">
           <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Music</span>
             <button class="btn ghost icon sm" title="Panel menu" data-menu="#propMenu"><i class="ic ic-more"></i></button>
@@ -230,8 +221,10 @@
             </div>
             <div class="section">
               <div class="sec-h">Fades <span class="mut">drag the diamonds on the lane</span></div>
-              <div class="irow split"><span class="rl">Fade in</span><span class="val" id="fInVal">1.5s</span></div>
-              <div class="irow split"><span class="rl">Fade out</span><span class="val" id="fOutVal">1.5s</span></div>
+              <div class="grid2">
+                <div class="field"><span class="k">In</span><span class="v" id="fInVal">1.5s</span></div>
+                <div class="field"><span class="k">Out</span><span class="v" id="fOutVal">1.5s</span></div>
+              </div>
               <div class="irow" style="margin-top:var(--s2)"><span class="rl">Curve</span>
                 <span class="select" id="aSelCurve" tabindex="0" role="button" data-menu="#curveMenu"><span class="lead" id="aCurveVal">Ease in out</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
               </div>
@@ -279,7 +272,6 @@
 
       <!-- THE RAIL -->
       <div class="drail">
-        <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
         <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
         <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
         <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
@@ -475,9 +467,9 @@
 
   function buildTimeline(){
     if(!grid) return;
-    var h='<div class="track"><span class="tl" aria-hidden="true"></span><div class="lane rlane"><div class="ruler" id="aRuler"></div></div></div>';
+    var h='<div class="track"><span class="tl">Time</span><div class="lane rlane"><div class="ruler" id="aRuler"></div></div></div>';
     S.tracks.forEach(function(tr){
-      h+='<div class="track"><span class="tl"><i class="ic xs ic-waveform"></i> '+tr.name+'</span>'+
+      h+='<div class="track"><span class="tl"><i class="ic xs ic-audio"></i> '+tr.name+'</span>'+
          '<div class="lane alane" data-lane="'+tr.id+'">'+
            '<svg viewBox="0 0 1000 100" preserveAspectRatio="none"></svg>'+
            '<span class="cliptag">'+tr.file+'</span>'+
@@ -589,14 +581,7 @@
     [].forEach.call(document.querySelectorAll(".vurow"), function(r){
       r.classList.toggle("sel", r.getAttribute("data-vu")===S.sel);
     });
-    [].forEach.call(document.querySelectorAll("#layerList .lrow"), function(r){
-      r.classList.toggle("sel", r.getAttribute("data-layer")===S.sel);
-    });
   }
-  document.addEventListener("click", function(e){
-    var r=e.target.closest("#layerList .lrow");
-    if(r) select(r.getAttribute("data-layer"));
-  });
 
   /* ---------------- PROPERTIES (selection, place 3 of 3) ----------------
      The channel strip is static DS markup so slider.js wires the volume
@@ -640,13 +625,18 @@
     if(tr.id==="music"){
       extra.innerHTML='<div class="section"><div class="sec-h">Ducking <span class="mut">under the voiceover</span></div>'+
         '<div class="btnrow"><button class="btn sm '+(S.duck?"primary":"ghost")+'" id="duckToggle" aria-pressed="'+S.duck+'"><i class="ic ic-audio"></i> '+(S.duck?"On":"Off")+'</button></div>'+
-        '<div class="irow split" style="margin-top:var(--s2)"><span class="rl">Amount</span><span class="val">'+DUCK_DB+' dB</span></div>'+
-        '<div class="irow split"><span class="rl">Ramp</span><span class="val">'+(DUCK_RAMP*1000)+' ms</span></div>'+
-        '<div class="irow split"><span class="rl">Follows</span><span class="val">Voiceover</span></div></div>';
+        '<div class="grid2" style="margin-top:var(--s2)">'+
+          '<div class="field"><span class="k">Amount</span><span class="v">'+DUCK_DB+' dB</span></div>'+
+          '<div class="field"><span class="k">Ramp</span><span class="v">'+(DUCK_RAMP*1000)+' ms</span></div>'+
+        '</div>'+
+        '<p class="note">Ducking is a relationship, not a baked edit. Move the voiceover and the dip follows it.</p></div>';
     } else {
       extra.innerHTML='<div class="section"><div class="sec-h">Clip</div>'+
-        '<div class="irow split"><span class="rl">Reads</span><span class="val">'+tr.file+'</span></div>'+
-        '<div class="irow split"><span class="rl">Ducks</span><span class="val">Music, under this</span></div></div>';
+        '<div class="grid2">'+
+          '<div class="field"><span class="k">In</span><span class="v">'+tr.clip[0].toFixed(1)+'s</span></div>'+
+          '<div class="field"><span class="k">Out</span><span class="v">'+tr.clip[1].toFixed(1)+'s</span></div>'+
+        '</div>'+
+        '<p class="note">The music track ducks under this one, so its timing drives the dip.</p></div>';
     }
   }
 

@@ -238,7 +238,8 @@
 .dockmenu .menuitem .ck{margin-left:auto;color:var(--accent);flex:none;visibility:hidden}
 .dockmenu .menuitem.on .ck{visibility:visible}
 /* a required panel is listed but carries no switch: it says so rather than
-   offering a toggle the app does not have (UX-PATTERNS D18) */
+   offering a toggle the app does not have (PanelSectionVisibility never
+   hides Layers) */
 .dockmenu .menuitem.req{cursor:default;color:var(--dim)}
 .dockmenu .menuitem.req:hover{background:transparent}
 .dockmenu .menuitem.req .ck{color:var(--faint)}

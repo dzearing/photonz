@@ -48,7 +48,7 @@
 #video-compositing .canvas>.selwrap{width:fit-content}
 
 /* ---------- the timeline dock ---------- */
-#tlDock{--gutter:92px;flex:0 0 auto;max-height:260px;overflow:auto;padding:0;display:flex;flex-direction:column}
+#tlDock{--gutter:58px;flex:0 0 auto;max-height:260px;overflow:auto;padding:0;display:flex;flex-direction:column}
 .tlbar{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);border-bottom:1px solid var(--edge-lo);position:sticky;top:0;z-index:6;background:var(--panel);flex-wrap:wrap}
 .tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;white-space:nowrap}
 .tlbar .now{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink);background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);padding:3px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -93,11 +93,11 @@
 
 /* ---------- narrow: the window container query, not the viewport ---------- */
 @container shell (max-width:880px){
-  #tlDock{--gutter:76px}
+  #tlDock{--gutter:52px}
   .cstage{width:360px}
 }
 @container shell (max-width:620px){
-  #tlDock{--gutter:76px}
+  #tlDock{--gutter:52px}
   .cstage{width:250px}
   .tlbar .now{display:none}
 }
@@ -153,7 +153,7 @@
             </div>
             <div class="sel-ring"></div>
             <span class="handle tl"></span><span class="handle tr"></span><span class="handle bl"></span><span class="handle br"></span>
-            <span class="mtag" id="selTag">subject · 1920 × 1080</span>
+            <span class="mtag" id="selTag">FG subject.mov · 1920 × 1080</span>
           </div>
         </div>
 
@@ -242,20 +242,8 @@
 
       <div class="splitter v" data-min="212" data-max="420"></div>
 
-      <!-- THE RIGHT DOCK · Layers stays (UX-PATTERNS D18): the timeline is the
-           same list read sideways, row for row, in the same order. -->
+      <!-- THE RIGHT DOCK · no Layers group: the timeline IS the layer list -->
       <div class="pdock" id="dock">
-
-        <!-- SELECTION, place 1 of 3: the stack itself -->
-        <div class="dgrp" data-grp="layers" data-gh="sm" id="gLayers">
-          <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">4</span></div>
-          <div class="dgrp-b" id="layerList">
-            <div class="lrow adj" data-layer="grade"><i class="ic ic-sliders"></i><span class="nm">colour grade</span><i class="ic sm ic-eye eye"></i></div>
-            <div class="lrow" data-layer="matte"><i class="ic ic-component"></i><span class="nm">Matte shape</span><i class="ic sm ic-eye eye"></i></div>
-            <div class="lrow sel" data-layer="fg"><i class="ic ic-film"></i><span class="nm">subject</span><i class="ic sm ic-eye eye"></i></div>
-            <div class="lrow" data-layer="bg"><i class="ic ic-film"></i><span class="nm">background</span><i class="ic sm ic-eye eye"></i></div>
-          </div>
-        </div>
 
         <!-- SELECTION, place 3 of 3: the rule that applies to the selected layer -->
         <div class="dgrp grow" id="gProps">
@@ -304,7 +292,6 @@
 
       <!-- THE RAIL -->
       <div class="drail">
-        <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
         <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
         <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
         <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
@@ -344,7 +331,7 @@
     </div>
 
     <!-- TIMELINE DOCK · SELECTION, place 2 of 3: the timeline IS the layer list -->
-    <div class="timeline" id="tlDock" data-tl-summary="subject">
+    <div class="timeline" id="tlDock" data-tl-summary="V2 · FG subject.mov">
       <div class="tlbar">
         <span class="lbl">Composite</span>
         <span class="tsep"></span>
@@ -354,17 +341,17 @@
       </div>
       <div class="tlz">
         <div class="tlgrid">
-          <div class="track"><span class="tl" aria-hidden="true"></span><div class="lane rlane"><div class="ruler" id="ruler"></div></div></div>
-          <div class="track"><span class="tl"><i class="ic xs ic-sliders"></i> colour grade</span>
+          <div class="track"><span class="tl">Time</span><div class="lane rlane"><div class="ruler" id="ruler"></div></div></div>
+          <div class="track"><span class="tl"><i class="ic xs ic-sliders"></i> V4</span>
             <div class="lane"><div class="clip grade" data-layer="grade" style="left:0;width:100%">colour grade</div></div>
           </div>
-          <div class="track"><span class="tl"><i class="ic xs ic-component"></i> Matte shape</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-component"></i> V3</span>
             <div class="lane"><div class="clip vcp-matte" data-layer="matte" style="left:0;width:100%">Matte shape</div></div>
           </div>
-          <div class="track"><span class="tl"><i class="ic xs ic-film"></i> subject</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V2</span>
             <div class="lane"><div class="clip fg sel" data-layer="fg" style="left:0;width:100%">subject.mov</div></div>
           </div>
-          <div class="track"><span class="tl"><i class="ic xs ic-film"></i> background</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span>
             <div class="lane"><div class="clip bg" data-layer="bg" style="left:0;width:100%">beach.mov</div></div>
           </div>
           <div class="playstrip"><div class="playhead" id="phead"></div></div>
@@ -421,10 +408,10 @@
   var grade=document.getElementById("ckGrade");
 
   var LAYERS=[
-    {id:"grade",name:"colour grade",kind:"adj"},
+    {id:"grade",name:"Colour grade",kind:"adj"},
     {id:"matte",name:"Matte shape",kind:"matte"},
-    {id:"fg",name:"subject",kind:"clip"},
-    {id:"bg",name:"background",kind:"clip"}
+    {id:"fg",name:"FG subject.mov",kind:"clip"},
+    {id:"bg",name:"BG beach.mov",kind:"clip"}
   ];
   var DEF={keyed:false,thresh:40,spill:40,blend:"screen",matte:"off",sel:"fg"};
   var st={keyed:DEF.keyed,thresh:DEF.thresh,spill:DEF.spill,blend:DEF.blend,matte:DEF.matte,sel:DEF.sel};
@@ -481,11 +468,10 @@
   }
 
   /* ---------------- TIMELINE (selection, place 2 of 3) ----------------
-     The timeline is the Layers group read sideways: same objects, same
-     order, same names, plus time.
+     The timeline is the layer list: same objects, same order, plus time.
      Clicking a clip selects the layer; the collapsed dock reads the
      selection back through data-tl-summary. */
-
+  var TRACKS={grade:"V4",matte:"V3",fg:"V2",bg:"V1"};
   function select(id){
     st.sel=id;
     renderProps(); syncCanvasSel(); syncTimelineSel();
@@ -498,16 +484,12 @@
     [].forEach.call(document.querySelectorAll(".tlgrid .clip"), function(c){
       c.classList.toggle("sel", c.getAttribute("data-layer")===st.sel);
     });
-    /* the Layers group and the strip are one list, so they cannot disagree */
-    [].forEach.call(document.querySelectorAll("#layerList .lrow"), function(r){
-      r.classList.toggle("sel", r.getAttribute("data-layer")===st.sel);
-    });
     var tl=document.getElementById("tlDock");
     var l=layerOf(st.sel);
-    if(tl && l) tl.setAttribute("data-tl-summary", l.name);
+    if(tl && l) tl.setAttribute("data-tl-summary",(TRACKS[l.id]?TRACKS[l.id]+" · ":"")+l.name);
   }
   document.addEventListener("click", function(e){
-    var c=e.target.closest(".tlgrid .clip") || e.target.closest("#layerList .lrow");
+    var c=e.target.closest(".tlgrid .clip");
     if(c) select(c.getAttribute("data-layer"));
   });
 
@@ -540,11 +522,11 @@
          slrowHTML("Threshold","Key threshold","ckThresh",st.thresh,"ckThreshV")+
          slrowHTML("Spill kill","Spill suppression","ckSpill",st.spill,"ckSpillV")+
          '</div>'+
+         '<p class="note" id="ckHint"></p>'+
          '</div>'+
          '<div class="section"><div class="sec-h">Clip <span class="mut">subject.mov</span></div>'+
-           '<div class="irow split"><span class="rl">Reads</span><span class="val">subject.mov</span></div>'+
-           '<div class="irow split"><span class="rl">Volume</span><span class="val">100%</span></div>'+
-           '<div class="irow split"><span class="rl">Speed</span><span class="val">1.00×</span></div></div>';
+           '<div class="grid2"><div class="field"><span class="k">In</span><span class="v">0.0s</span></div>'+
+           '<div class="field"><span class="k">Out</span><span class="v">8.0s</span></div></div></div>';
     } else if(l.id==="grade"){
       h+='<div class="section"><div class="sec-h">Blend <span class="mut" id="ckBlendVal">'+(st.blend==="plus-lighter"?"add":st.blend)+'</span></div>'+
          '<div class="seg stack" id="ckBlend">'+
@@ -553,7 +535,7 @@
            '<button data-b="multiply"'+(st.blend==="multiply"?' class="on"':'')+'>Multiply</button>'+
            '<button data-b="plus-lighter"'+(st.blend==="plus-lighter"?' class="on"':'')+'>Add</button>'+
          '</div>'+
-         '</div>'+
+         '<p class="note">The mode sets how this layer\'s pixels combine with what is under it. <b>Screen</b> and <b>Add</b> lighten, <b>Multiply</b> darkens, <b>Normal</b> covers.</p></div>'+
          '<div class="section"><div class="sec-h">Matte <span class="mut">from the layer below</span></div>'+
          '<div class="seg stack" id="matteSeg">'+
            '<button data-m="off"'+(st.matte==="off"?' class="on"':'')+'>Off</button>'+
@@ -561,7 +543,7 @@
            '<button data-m="luma"'+(st.matte==="luma"?' class="on"':'')+'>Luma</button>'+
            '<button data-m="text"'+(st.matte==="text"?' class="on"':'')+'>Text</button>'+
          '</div>'+
-         '</div>';
+         '<p class="note">The matte layer decides where this grade shows through. Because a matte is just another layer, a keyframed shape animates the reveal.</p></div>';
     } else if(l.id==="matte"){
       h+='<div class="section"><div class="sec-h">Matte source <span class="mut">used by the grade above</span></div>'+
          '<div class="seg stack" id="matteSeg">'+
@@ -570,12 +552,14 @@
            '<button data-m="luma"'+(st.matte==="luma"?' class="on"':'')+'>Luma</button>'+
            '<button data-m="text"'+(st.matte==="text"?' class="on"':'')+'>Text</button>'+
          '</div>'+
-         '</div>';
+         '<p class="note"><b>Shape</b> masks by a hard alpha region, <b>Luma</b> reveals by brightness so the edges feather, <b>Text</b> punches the fill through letterforms.</p></div>';
     } else {
       h+='<div class="section"><div class="sec-h">Clip <span class="mut">beach.mov</span></div>'+
-         '<div class="irow split"><span class="rl">Reads</span><span class="val">beach.mov</span></div>'+
-         '<div class="irow split"><span class="rl">Role</span><span class="val">plate</span></div>'+
-         '<div class="irow split"><span class="rl">Blend</span><span class="val">normal</span></div></div>';
+         '<div class="grid2"><div class="field"><span class="k">In</span><span class="v">0.0s</span></div>'+
+         '<div class="field"><span class="k">Out</span><span class="v">12.0s</span></div>'+
+         '<div class="field"><span class="k">Role</span><span class="v">plate</span></div>'+
+         '<div class="field"><span class="k">Blend</span><span class="v">normal</span></div></div>'+
+         '<p class="note">The background plate sits at the bottom of the stack, so everything above composites over it.</p></div>';
     }
     propBody.innerHTML=h;
     /* .drag while the pointer is down, so the shared bubble shows */
@@ -592,6 +576,12 @@
   function syncKeyControls(){
     var kv=document.getElementById("ckKeyVal");
     if(kv) kv.textContent=st.keyed?"on":"off";
+    var hint=document.getElementById("ckHint");
+    if(hint){
+      hint.innerHTML = st.keyed
+        ? 'Green removed. Raise <b>threshold</b> to cut more green. Lower <b>spill kill</b> to see the green fringe return on the shoulders and hair.'
+        : 'Press <b>Key it</b> to remove the green and drop the subject over the beach. Threshold controls how much green is cut; spill kill removes the fringe the light casts on the subject.';
+    }
     [["ckThresh",st.thresh,"ckThreshV"],["ckSpill",st.spill,"ckSpillV"]].forEach(function(r){
       var el=document.getElementById(r[0]);
       var num=document.getElementById(r[2]);

@@ -19424,3 +19424,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 `answerCloseFirst`, `exportVideoAsTheSheetDoes`).
 
 **Next:** the Command S decision; video guides for the editor.
+
+## 2026-09-23 — The video mocks are the user's again, and D18 is rewritten
+
+- Restored the fourteen `video*.html` pages and `comp-video.html` to their state before 72a2a75c: real tracks (V1 to V4, Title, Gfx, CAP, Audio), and video docks with no Layers group ("where there is a timeline, the timeline is the layer list"). Re-applied the two later edits that were not part of the rewrite: comp-video's Trimming a clip (now §07, on a V1 track) and video-freeze-wt's answered caption.
+- Deleted `video-shell.html` (the loop's study arguing against tracks) and its index entry. Shared `.track .tl` is back to 58px uppercase.
+- UX-PATTERNS D18 rewritten (v2.2): a document with time has tracks (video, titles, audio, captions), named, renamable, groupable, each holding many clips, and a clip moves between them. `video-surface.md` and `video.md` now point at the restored mocks as the target and mark the "almost no new chrome / reuse the timing strip" parts withdrawn.
+- Next: the tracks model and the mock's timeline dock (`tracks-you-can-add-…`, `the-timeline-is-the-one-in-the-mock`). Left rough in the task log: the restored panels carry in/out fields and explanatory sentences that 7cb506b1 had taken out; a runner building from them keeps the values, not the sentences.

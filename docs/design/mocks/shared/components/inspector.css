@@ -135,31 +135,21 @@
 .vctrls{display:flex;align-items:center;justify-content:center;gap:16px;padding:9px;background:var(--panel-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line);color:var(--dim);font-size:14px}
 .vctrls .t{font-family:var(--mono);font-size:11px;color:var(--faint)}
 .timeline{background:var(--panel);padding:10px 12px 14px;position:relative;min-height:172px;
-  /* The column down the left holding the row names. 92px, which is what the
-     shipping strip uses (`MotionStripView.labelWidth`). It was 58 and
-     uppercase, which fitted V1 and GFX and nothing else — and a row in this
-     app is a LAYER, so the thing in this column is a name somebody typed.
-     Changed 2026-09-19 by the video design pass; see
-     docs/design/video-surface.md §7. The ruler and the playhead are derived
-     from it so the three can never drift apart again. */
-  --tl-label:92px}
+  /* The track header column: 58px, uppercase track names (V1, V2, AUDIO,
+     TITLE), as the video mocks draw it. The ruler and the playhead are derived
+     from it so the three cannot drift apart. A page whose track names run
+     longer sets its own --tl-label. (A 2026-09-19 pass widened this to 92px
+     and dropped the uppercase to fit layer names in place of tracks; the user
+     rejected that on 2026-09-23 and the column is back to what they drew.) */
+  --tl-label:58px}
 .ruler{height:16px;border-bottom:1px solid var(--line);display:flex;gap:0;margin-bottom:8px;position:relative;
   /* the ruler measures the LANES, so it starts where they start: the
      label column + the 8px track gap. Without this every mock
      timeline read 4s about 120px left of the frame it pointed at. */
-  margin-left:calc(var(--tl-label,92px) + 8px)}
+  margin-left:calc(var(--tl-label,58px) + 8px)}
 .ruler span{flex:1;font-size:9px;color:var(--faint);font-family:var(--mono);border-left:1px solid var(--line);padding-left:3px}
 .track{display:flex;align-items:center;gap:8px;margin:6px 0}
-/* A row is named for the layer it draws, in the letters that layer's name is
-   spelled with. No uppercasing: the layers list right beside it does not
-   uppercase, and shouting somebody's file name back at them is not a style. */
-.track .tl{width:var(--tl-label,92px);font-size:10px;color:var(--faint);font-weight:600;letter-spacing:.01em;flex:none;display:flex;align-items:center;gap:5px;
-  min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-/* A property lane is a CHILD of the layer whose property it is, never a
-   sibling of a clip. It is indented under its layer and drawn quieter, which
-   is the same shape the shipped strip uses (`MotionStripGroup`). */
-.track.sub .tl{padding-left:14px;font-weight:500}
-.track.sub .lane{height:18px}
+.track .tl{width:var(--tl-label,58px);font-size:10px;color:var(--faint);font-weight:600;text-transform:uppercase;letter-spacing:.04em;flex:none;display:flex;align-items:center;gap:5px}
 .track .lane{flex:1;height:34px;position:relative;display:flex;gap:4px}
 /* A lane holding a .ruler must NOT be a flex row: the ruler's ticks are
    absolutely positioned, so the flex lane collapsed it to width 0. Six video
@@ -178,8 +168,8 @@
   /* --t is the position in LANE space, 0..1, which is what a time is.
      A page that still sets an inline left:% keeps its old behaviour,
      because an inline style wins over this rule. */
-  left:calc(var(--tl-label,92px) + 8px + 12px
-            + (100% - var(--tl-label,92px) - 8px - 24px) * var(--t,.38))}
+  left:calc(var(--tl-label,58px) + 8px + 12px
+            + (100% - var(--tl-label,58px) - 8px - 24px) * var(--t,.38))}
 .playhead::before{content:"";position:absolute;top:-6px;left:-4px;border:5px solid transparent;border-top-color:var(--crit)}
 /* THE TIMELINE'S OWN LOCAL BAR (UX-PATTERNS D8, last row of the table: what is
    scoped to the timeline dock lives on the dock's bar, not on the transport).
@@ -194,8 +184,7 @@
 .tlbar .tstrip{display:inline-flex;align-items:center;gap:2px;flex:none}
 .tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;
   color:var(--faint);font-weight:660;white-space:nowrap}
-/* ...unless it is carrying a NAME somebody typed. D18: the app does not shout
-   a layer's name back at them, in the label column or anywhere else. */
+/* ...unless it is carrying a NAME somebody typed, such as a clip's file name */
 .tlbar .lbl.nm{text-transform:none;letter-spacing:.01em}
 
 .wave{display:flex;align-items:center;gap:2px;height:100%;padding:0 6px}

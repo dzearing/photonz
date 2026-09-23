@@ -1,4 +1,28 @@
-# Video, drawn against the app that exists
+# Video: the surface, the decisions, and what has been built
+
+> **Read this first (2026-09-23).** The target for video is **the user's
+> mocks**: `docs/design/mocks/pages/video.html` (the whole editor), the thirteen
+> `video-*.html` walkthroughs and studies beside it, and
+> `docs/design/mocks/pages/comp-video.html` (the primitives). They were put back
+> on 2026-09-23 exactly as the user drew them, **real tracks included**, after
+> this document's first pass (2026-09-19) and a follow-up (2026-09-22) had
+> rewritten them to fit the code: tracks renamed into layer rows, the audio
+> tracks folded into clips, a Layers group put back into docks the user drew
+> without one, and a page of its own (`video-shell.html`, now deleted) arguing
+> that video "needs almost no new chrome" and could reuse the icon animation
+> timing strip. The user rejected all of that. **Video gets the timeline the
+> mock draws** (transport with scrubber and volume, ruler in seconds, red
+> playhead, named track headers, clips as bars, zoom), **not the icon timing
+> strip**, and **a document with time has tracks** (UX-PATTERNS D18, rewritten
+> the same day).
+>
+> What still stands below: the transport rules (D8), the panel budget arithmetic
+> (§4, as a fact about height, not an argument against tracks), trim as a tool
+> (§10, answered by the user), and the cutting, titles and zoom decisions and
+> their built behaviour (§11 to §13). Where those sections speak of a layer's
+> "row", the mock's track is the target. §0, the row half of §2, §3 and the
+> first four rows of §7 are withdrawn and say so where they stand.
+
 
 **Status:** design pass, 2026-09-19; §10 added 2026-09-20 when the trim card
 came back answered. Written for the task *Refine the video design so it reads as
@@ -10,21 +34,21 @@ the same app*, ahead of the five build tasks that follow it (`a-document-can-hav
 
 The arithmetic in §4 is `Tests/PhotonzCoreTests/DockWithTimeTests.swift`, eight
 passing tests, so the numbers here stay true or the suite goes red. The drawing
-is `docs/design/mocks/pages/video-shell.html`. The primitives are
-`docs/design/mocks/pages/comp-video.html`.
+is the user's `docs/design/mocks/pages/video.html` and its walkthroughs. The
+primitives are `docs/design/mocks/pages/comp-video.html`.
 
 ---
 
 ## 0. The finding in one paragraph
 
-Video needs almost no new chrome. The timing strip across the bottom already
-ships, it already groups its rows under the layer they belong to, and its own
-source already says video can take it as it stands. What video needs is for the
-recording window to stop being a separate little player and become the ordinary
-editor with time in it — and for fourteen clickthrough pages to stop drawing a
-track model the app does not have. The expensive part is not the timeline. It is
-that opening the bottom dock takes 235 points off a panel that only just fits
-today, and no amount of tidying video's own sections gets that back.
+*Withdrawn 2026-09-23.* This section said video needed almost no new chrome,
+that the icon animation timing strip could carry video as it stood, and that the
+fourteen pages should stop drawing a track model. The user rejected every part
+of that. What video needs is what `video.html` draws: its own timeline, with a
+transport, a ruler, a playhead and tracks that hold clips, inside the ordinary
+editor window. The one part of the old finding that stands is the cost: opening
+the bottom dock takes height off a panel that only just fits (§4), and the
+timeline has to be designed with that number in view, not argued away with it.
 
 ---
 
@@ -67,26 +91,22 @@ own window.
 **A document may have a duration. A layer may have an in and an out.** That is
 the whole of it, and everything else follows.
 
-- **A clip is a layer.** It is picked in the layers list, named, hidden,
-  reordered, styled, given effects, and it appears in the timeline because it
-  has an in and an out. There is no clip object, no track object, no media
-  object. `comp-video` §01 already said this ("a clip is a layer with an in and
-  an out"); the fourteen pages then drew a track model on top of it anyway.
-- **A row in the timeline is a layer.** It is named with the layer's own name,
-  in the layer's own letters, with the layer's own icon. It is the layers list
-  turned on its side. There are no numbered tracks.
-- **A row carries a bar when the layer occupies time, and is a bare heading
-  when it does not.** This is the one place the shipped strip has to grow.
-  `MotionStrip.swift` says today: *"A layer row is a HEADING and not a bar: the
-  layer itself does not occupy time, the properties on it do."* True of a bell
-  that rotates. False of a clip, which is exactly a start and an end. So the
-  group row gains an optional bar, and the rule becomes: **a layer draws a bar
-  when it has an in and an out, and a heading when it does not.** One rule, both
-  jobs, no fork.
-- **A property lane is a child of its layer's row**, revealed by the same
-  disclosure the layers list already uses for a group. It is never a sibling of
-  a clip. This is already how the shipped strip is built
-  (`MotionStripGroup` holds `lanes`).
+- **A clip is a layer.** It is picked on the timeline and on the canvas, styled,
+  given effects, and it has an in and an out. `comp-video` §01 says it: "a clip
+  is a layer with an in and an out".
+- **A document with time has tracks** (UX-PATTERNS D18, rewritten 2026-09-23).
+  Video, titles, audio and captions tracks, named (`V1`, `V2`, `Audio`,
+  `Title`), renamable, groupable, each holding many clips, and a clip can be
+  dragged from one track to another. Where there is a timeline, the timeline is
+  the layer list, and the video docks carry no Layers group (`video.html`'s own
+  caption, "Resolved - what the dock is for").
+- *Withdrawn 2026-09-23:* "a row in the timeline is a layer", "there are no
+  numbered tracks" and "a row carries a bar when the layer occupies time". The
+  rows are tracks, and the timeline is the one `video.html` draws rather than
+  the icon strip grown a bar.
+- **A property lane opens under the track whose clip it animates**, indented and
+  quieter than a track (`video-move-wt`'s Position lane, `video-zoom-wt`'s Scale
+  and Centre).
 - **A transition belongs to the join.** `comp-video` §02–§04 is right and
   nothing here changes it: the edit point is the selectable thing, the band
   draws over both clips, spare media draws outside them, and a dip is an outline
@@ -107,9 +127,9 @@ already names.
 | --- | --- | --- |
 | The picture | `.canvas` | The document, same as ever. Playing is the canvas drawing a different moment. |
 | Play, scrub, timecodes | `.transport`, bottom dock, top row | D8 stands: volume · skip · play · loop · timecode · scrubber · timecode, nothing else. |
-| Clips, cuts, waveforms, property lanes | `.timeline`, bottom dock, under the transport | The shipped timing strip, given a duration instead of a lap. |
+| Tracks, clips, cuts, waveforms, property lanes | `.timeline`, bottom dock, under the transport | The timeline `video.html` draws: track headers, clips as bars, a ruler in seconds, a red playhead. Not the icon timing strip. |
 | Timeline zoom, blade, and what is scoped to the timeline | `.tlbar`, the timeline's own local bar | D8's last row. The zoom is built, §13. The blade is not: cutting is the playhead and B. |
-| Which layers exist, their order, their eyes | Layers, in the one dock | Not deleted. See §3. |
+| Which layers exist, their order, their eyes | The timeline's tracks and their headers | Where there is a timeline, the timeline is the layer list (D18). The video dock has no Layers group. |
 | What the thing you picked IS | the section named after it, in the one dock | Clip · Transition · Caption · Title. It REPLACES Text, it does not stack on it. |
 | What it looks like | Appearance, Effects | Unchanged. A clip takes a drop shadow like anything else. |
 | What moves, and by how much | Motion | Unchanged, as the pane-load study settled. |
@@ -119,48 +139,16 @@ already names.
 
 ---
 
-## 3. Layers does not leave, and this is the pass's main correction
+## 3. Withdrawn: "Layers does not leave"
 
-Every one of the fourteen video pages draws a dock of **Properties · Effects ·
-Library** and no Layers. `video.html` says out loud why:
-
-> Layers listed the same seven objects, in the same five groups, in the same
-> order as the timeline — a second rendering of what you had just clicked, so
-> the dock read as having no job. It is gone from this lens; where there is a
-> timeline, the timeline *is* the layer list.
-
-**The complaint is right and the conclusion is wrong.** Three reasons, and the
-third is fatal.
-
-1. **"This lens" is the language §1 forbids.** *"Image · UI · Video are not
-   separate apps, and they are not modes you toggle."* A dock that loses a
-   section when the document gains a duration is a lens by another name.
-2. **The list is not a duplicate of the timeline, it is a projection of it.**
-   The timeline orders by time across and by stack down. The layers list orders
-   by stack only, and it carries what a timeline row has no room for: the eye,
-   the lock, nesting, the thumbnail, rename in place. Two views of one model is
-   the app's normal condition — canvas, layers and panel already all show the
-   same selection.
-3. **Not everything in a video document has time.** A background, an adjustment
-   layer, a frame, a component master, a matte: `video-compositing` draws four
-   of these and calls them V1–V4. With Layers deleted, anything without an in
-   and an out has no row anywhere and becomes unreachable. That is the case the
-   whole `components-on-the-timeline` task is about.
-
-There is also no escape hatch. `PanelSectionVisibility.optionalSections` is
-`library, libraryItem, measurements, motion, placement, columns, arrange,
-component, shadow`. **Layers is not in it, deliberately** — *"the core sections
-are not in the list at all so no set of answers can empty the panel"*. It cannot
-be hidden by automatic, by a mode, or by the user.
-
-So: **Layers stays, and the timeline's rows are named for the same layers, in
-the same order, with the same icons.** The duplication `video.html` objected to
-becomes the point: you learn one list and read it two ways. `pane-load.html`
-already drew it this way for the icon strip — rows called "Bell body" and
-"Knob", with their layer icons, under a Layers group listing the same two — and
-that page is what shipped.
-
-**The pages are wrong and they get fixed.** See §7.
+*Withdrawn 2026-09-23.* This section argued that the user's `video.html` was
+wrong to take the Layers group out of the video dock, and on the strength of it
+the fourteen pages were given a Layers group on 2026-09-22. The user's design
+stands: where there is a timeline, the timeline is the layer list, and the video
+dock is the clip detail pane. The pages are back to that. The one fact from the
+old argument worth keeping is mechanical: the app's panel code does not let
+Layers be hidden today (`PanelSectionVisibility.optionalSections` omits it), so
+building the user's dock is work for the timeline build, not a switch to flip.
 
 ---
 
@@ -312,10 +300,10 @@ answer wins and what happens to the pages.
 
 | The question | Answered N ways | The answer | What changes |
 | --- | --- | --- | --- |
-| **Is Layers in the dock?** | `video*` (14): no. `pane-load`, `modes`: yes. | **Yes.** §3. | Done 2026-09-22. All fifteen `video*` pages now open Layers as the first group of every dock, listing the same rows as the strip in the same order with the same icons, and every dock with a rail gained a Layers tab. Where a page builds its strip from a list in JS (`video.html`, `video-motion`, `video-compositing`, `video-audio`, `video-captions`), the Layers group is built from that SAME list, so the two cannot drift. `video.html`'s "Resolved" caption was rewritten on 2026-09-19. |
-| **What is a timeline row called?** | `V1 V2 V3 V4` · `Gfx` · `Audio` · `Source`/`Retimed` · `Position`/`Scale`/`Centre` · layer names (`pane-load`, and the shipped strip) | **The layer's own name, in the layer's own letters.** | `.track .tl` widens 58 → 92 to match `MotionStripView.labelWidth` and stops uppercasing somebody's layer name. Page labels change with it. |
-| **What can a row BE?** | a track · a property lane · a before/after comparison | **A layer, or a property lane nested under one.** Nothing else. | `video-speed`'s Source/Retimed rows are a diagram about retiming, not timeline rows, and belong inside the retime settings. `video-move-wt`/`video-zoom-wt` property lanes nest under their layer. |
-| **Where does the audio of a clip live?** | a permanent `Audio` track on six pages · welded to the clip on others | **Inside the clip's own row as a waveform, until you separate it; then it is its own layer with its own name and its own row.** | The permanent empty `Audio` track goes. |
+| **Is Layers in the dock?** | `video*` (14): no. `pane-load`, `modes`: yes. | **No, in a document with a timeline** (the user's `video.html`, restored 2026-09-23; D18). | The 2026-09-22 change that put Layers into all fourteen docks was reverted with the rest. |
+| **What is a timeline row called?** | `V1 V2 V3 V4` · `Gfx` · `Audio` · `Title` · `CAP` | **A track name**, as the pages draw it, renamable by the person. | The 2026-09-19 relabelling to layer names and the 92px lowercase label column were reverted; `.track .tl` is 58px and uppercase again. |
+| **What can a row BE?** | a track · a property lane · a before/after comparison | **A track, or a property lane under one.** `video-speed`'s Source/Retimed pair is the user's before-and-after and stays as drawn. | Reverted to the pages as drawn. |
+| **Where does the audio of a clip live?** | on an `Audio` track | **On an audio track**, the way Premiere does it. | The 2026-09-19 answer (inside the clip until separated) is withdrawn. |
 | **What does the transport's scrubber measure?** | document time (12 pages) · transition progress (`video-transitions`) · speed (`video-speed`) | **Document time. Always.** D8, and the one control whose meaning may never change. | A transition's own progress preview sits beside the transition, in its settings. |
 | **Can you zoom the timeline?** | yes, `Fit 1x 2x 4x` (`video.html` only) · no (13 pages) | **Yes, on every page, on the timeline's local bar.** | `.tlbar` gets a fixed left group (select · blade · zoom) and a variable right group (what the selection is about). The Duck/Clear/Reset that pages already put there stay on the right. |
 
@@ -379,10 +367,9 @@ So the build tasks know their edges.
   own interaction code and relocating it is building. The page keeps it for now
   and the rule stands against it.
 - **Not re-authoring the fourteen clickthrough walkthroughs.** Their steps are
-  scripted flows; re-drawing them is building, and this is the design pass. The
-  answers are settled here and in UX-PATTERNS D18; the mechanical half (row
-  names, the label column, `video.html`'s wrong caption) is applied now and the
-  rest is filed.
+  scripted flows. (The row renames, the label column and the Layers groups that
+  a 2026-09-19 and 2026-09-22 pass did apply to them were reverted on
+  2026-09-23: the pages are the user's.)
 - **Not building a mixer.** §5.
 - **Not fixing the panel's 189 point overflow.** §4 item 6.
 - **Not deciding multi-camera, colour management, proxies or collaborative
@@ -517,8 +504,8 @@ corner and entering Crop.
   frames outside them stay in the document, which is what makes the spare
   drawing honest and what answers §8's fourth prediction. A trim that deleted
   frames would be the first destructive edit in the app.
-- **The strip of pieces stays a strip of pieces.** Splitting adds a piece to a
-  row, not a row (D18 item 3). Trim acts on the piece you picked.
+- **A cut never adds a track.** Cutting makes two clips on the same track
+  (D18 item 3). Trim acts on the clip you picked.
 
 ### 10.6 What this costs, so the build task is not surprised
 

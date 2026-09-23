@@ -193,18 +193,8 @@
           <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
           <div class="pdock" id="dock">
 
-            <!-- LAYERS · UX-PATTERNS D18. The timeline is this same list read
-                 sideways: same rows, same order, same icons. The Arrow arrives
-                 when it is drawn, in both views at once. -->
-            <div class="dgrp" data-grp="layers" data-gh="sm" id="gLayers">
-              <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt" id="layerCount">2</span></div>
-              <div class="dgrp-b">
-                <div class="lrow wt-off" id="lrArrow"><i class="ic ic-cursor"></i><span class="nm">Arrow</span><i class="ic sm ic-eye eye"></i></div>
-                <div class="lrow" id="lrRec"><i class="ic ic-film"></i><span class="nm">screen-recording</span><i class="ic sm ic-eye eye"></i></div>
-                <div class="lrow" id="lrVoice"><i class="ic ic-waveform"></i><span class="nm">voice-over</span><i class="ic sm ic-eye eye"></i></div>
-              </div>
-            </div>
-
+            <!-- No Layers group in a workspace that has a timeline: the
+                 timeline below IS the layer list (UX-PATTERNS D9 note). -->
             <!-- PROPERTIES · contextual to what is selected -->
             <div class="dgrp" id="gProps" style="--gh:320px">
               <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
@@ -213,10 +203,10 @@
                 <div id="propsClip" class="wt-off">
                   <div class="section">
                     <div class="sec-h">Clip <span class="mut" id="pClipName">screen-recording</span></div>
-                    <div class="irow split"><span class="rl">Reads</span><span class="val">screen-recording.mov</span></div>
-                    <div class="irow split"><span class="rl">Volume</span>
-                      <span class="stepper sm"><input value="100" aria-label="Volume"><span class="k">%</span></span></div>
-                    <div class="irow split"><span class="rl">Speed</span><span class="val">1.00×</span></div>
+                    <div class="grid2">
+                      <div class="field"><span class="k">In</span><span class="v" id="pIn">0:00</span></div>
+                      <div class="field"><span class="k">Out</span><span class="v" id="pOut">0:18</span></div>
+                    </div>
                   </div>
 
                   <div class="section">
@@ -224,12 +214,16 @@
                     <div class="irow" id="rowFreeze"><span class="rl">Hold</span>
                       <button class="btn secondary sm" id="btnFreeze"><i class="ic ic-pause"></i> Freeze frame</button>
                     </div>
+                    <div class="irow wt-off" id="rowHoldLen"><span class="rl">Length</span>
+                      <span class="select"><span class="lead" id="pHoldLen">3.0s</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+                    </div>
                     <div class="irow wt-off" id="rowRipple" style="grid-template-columns:1fr"><span class="rl">The insert pushes</span>
                       <span class="seg pseg" role="group" aria-label="Ripple">
                         <button class="on" id="ripAll">Everything</button>
                         <button id="ripPic">Picture only</button>
                       </span>
                     </div>
+                    <p class="note" id="pFreezeNote">A freeze is not a new kind of object. It is a clip whose in and out are the same frame, which is why it trims, moves, and takes a transition like any other clip.</p>
                   </div>
                   <div class="section">
                     <div class="sec-h">Animate <span class="mut">no keys</span></div>
@@ -253,6 +247,7 @@
                   </div>
                   <div class="section">
                     <div class="sec-h">Time <span class="mut">0:06 to 0:09</span></div>
+                    <p class="note">The arrow was drawn while the playhead sat inside the hold, so it takes the hold’s in and out. It is on screen for exactly as long as the frozen frame is.</p>
                   </div>
                 </div>
               </div>
@@ -302,7 +297,6 @@
 
           <!-- THE RAIL · what the dock collapses to -->
           <div class="drail">
-            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
             <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
             <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
           </div>
@@ -331,13 +325,13 @@
 
         <div class="timeline" id="timeline" data-tl-summary="screen-recording · 0:00 / 0:06" style="min-height:160px">
           <div class="ruler"><span>0s</span><span>3s</span><span>6s</span><span>9s</span><span>12s</span><span>15s</span><span class="wt-off" id="tick7">18s</span></div>
-          <div class="track wt-off" id="trackGfx"><span class="tl"><i class="ic xs ic-cursor"></i> Arrow</span>
+          <div class="track wt-off" id="trackGfx"><span class="tl"><i class="ic xs ic-cursor"></i> Gfx</span>
             <div class="lane abs">
               <div class="clip gfx wt-off" id="clipArrow" style="left:28.57%;width:14.29%" tabindex="0" role="button">Arrow</div>
             </div>
           </div>
 
-          <div class="track"><span class="tl"><i class="ic xs ic-film"></i> screen-recording</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span>
             <div class="lane abs">
               <div class="clip v1" id="clipA" style="left:0;width:100%" tabindex="0" role="button">screen-recording</div>
               <div class="clip frz wt-off" id="clipFrz" style="left:28.57%;width:14.29%" tabindex="0" role="button"><i class="ic xs ic-pause"></i> Still · 0:06</div>
@@ -345,7 +339,7 @@
             </div>
           </div>
 
-          <div class="track"><span class="tl"><i class="ic xs ic-waveform"></i> voice-over</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-audio"></i> Audio</span>
             <div class="lane abs">
               <div class="clip aud" id="clipAud" style="left:0;width:100%"><span class="wave"><i style="height:40%"></i><i style="height:70%"></i><i style="height:30%"></i><i style="height:88%"></i><i style="height:55%"></i><i style="height:66%"></i><i style="height:22%"></i><i style="height:80%"></i><i style="height:48%"></i><i style="height:74%"></i></span></div>
               <div class="clip aud wt-off" id="clipAud2" style="left:42.86%;width:57.14%"><span class="wave"><i style="height:66%"></i><i style="height:22%"></i><i style="height:80%"></i><i style="height:48%"></i><i style="height:74%"></i><i style="height:35%"></i></span></div>
@@ -376,38 +370,38 @@
       <li class="wt-step"
           data-title="Select the clip"
           data-cue="#clipA" data-cue-label="Click the recording" data-cue-place="top"
-          data-select="#clipA,#lrRec" data-show="#frameRing,#propsClip" data-hide="#propsEmpty"
+          data-select="#clipA" data-show="#frameRing,#propsClip" data-hide="#propsEmpty"
           data-css="#scrubFill=width:33.3%|#scrubKnob=left:33.3%|#playhead=--t:0.333"
           data-set="#tcCur=0:06|#propKind=Clip">
         <div class="wt-cap vid">
           <span class="wt-n">2</span>
           <p class="wt-do">the <b>screen-recording</b> clip</p>
-          <p class="wt-where">the <b>screen-recording</b> row, which is the <b>screen-recording</b> layer</p>
-          <p class="wt-res">the clip outlines, its row lights up in <b>Layers</b>, and Properties shows what the clip is plus a <b>Time</b> section. Everything about how a clip behaves in time lives in one place: freeze, speed, and hold. Where it starts and ends stays on the strip.</p>
+          <p class="wt-where">the V1 track</p>
+          <p class="wt-res">Properties shows the clip’s in and out, and a <b>Time</b> section. Everything about how a clip behaves in time lives in one place: freeze, speed, and hold.</p>
         </div>
       </li>
 
       <li class="wt-step"
           data-title="Freeze the frame"
           data-cue="#btnFreeze" data-cue-label="Click Freeze frame" data-cue-place="left"
-          data-select="#clipA,#lrRec" data-show="#frameRing,#propsClip,#clipFrz,#clipB,#frzBadge,#rowRipple,#tick7,#clipAud2,#audGap" data-hide="#propsEmpty"
+          data-select="#clipA" data-show="#frameRing,#propsClip,#clipFrz,#clipB,#frzBadge,#rowHoldLen,#rowRipple,#tick7,#clipAud2,#audGap" data-hide="#propsEmpty"
           data-css="#scrubFill=width:33.3%|#scrubKnob=left:33.3%|#playhead=--t:0.286|#clipA=width:28.57%|#clipAud=width:28.57%"
           data-set="#tcCur=0:06|#propKind=Clip|#docLen=0:21|#tcEnd=0:21">
         <div class="wt-cap vid">
           <span class="wt-n">3</span>
           <p class="wt-do"><b>Freeze frame</b></p>
           <p class="wt-where">Properties, in the <b>Time</b> section</p>
-          <p class="wt-res">the clip splits at the playhead and a three second <b>still</b> drops in between the halves, and <b>Layers</b> still says two: a hold is a piece of the same row, not a new layer. It is hatched on the timeline and named for the frame it holds. The cut is now 0:21, and the ruler grew a division to say so, because inserting a hold inserts time.</p>
+          <p class="wt-res">the clip splits at the playhead and a three second <b>still</b> drops in between the halves. It is hatched on the timeline and named for the frame it holds. The cut is now 0:21, and the ruler grew a division to say so, because inserting a hold inserts time.</p>
         </div>
       </li>
 
       <li class="wt-step"
           data-title="Decide what gets pushed"
           data-cue="#ripPic" data-cue-label="Click Picture only" data-cue-place="top"
-          data-select="#clipA,#lrRec" data-show="#frameRing,#propsClip,#clipFrz,#clipB,#frzBadge,#rowRipple,#tick7" data-hide="#propsEmpty,#clipAud2,#audGap"
+          data-select="#clipA" data-show="#frameRing,#propsClip,#clipFrz,#clipB,#frzBadge,#rowHoldLen,#rowRipple,#tick7" data-hide="#propsEmpty,#clipAud2,#audGap"
           data-activate="#ripPic"
           data-css="#scrubFill=width:33.3%|#scrubKnob=left:33.3%|#playhead=--t:0.286|#clipA=width:28.57%|#clipAud=width:85.7%"
-          data-set="#tcCur=0:06|#propKind=Clip|#docLen=0:21|#tcEnd=0:21">
+          data-set="#tcCur=0:06|#propKind=Clip|#docLen=0:21|#tcEnd=0:21|#pFreezeNote=Everything pushes the whole timeline, which keeps sound locked to the picture it belongs to. Picture only holds the image while the voice keeps running, which is what you want when you are talking over the frozen frame.">
         <div class="wt-cap vid">
           <span class="wt-n">4</span>
           <p class="wt-do"><b>Picture only</b></p>
@@ -419,7 +413,7 @@
       <li class="wt-step"
           data-title="Look inside the hold"
           data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:08" data-cue-place="top"
-          data-select="#clipA,#lrRec" data-show="#frameRing,#propsClip,#clipFrz,#clipB,#frzBadge,#rowRipple,#tick7" data-hide="#propsEmpty,#clipAud2,#audGap"
+          data-select="#clipA" data-show="#frameRing,#propsClip,#clipFrz,#clipB,#frzBadge,#rowHoldLen,#rowRipple,#tick7" data-hide="#propsEmpty,#clipAud2,#audGap"
           data-activate="#ripPic"
           data-css="#scrubFill=width:38%|#scrubKnob=left:38%|#playhead=--t:0.38|#clipA=width:28.57%|#clipAud=width:85.7%"
           data-set="#tcCur=0:08|#propKind=Clip|#docLen=0:21|#tcEnd=0:21|#frzBadgeTx=Held frame · 0:06">
@@ -434,7 +428,7 @@
       <li class="wt-step"
           data-title="Pick up the Shape tool"
           data-cue="#tShape" data-cue-label="Click the Shape tool" data-cue-place="top"
-          data-tool="#tShape" data-select="#clipA,#lrRec" data-show="#frameRing,#propsClip,#clipFrz,#clipB,#frzBadge,#rowRipple,#tick7" data-hide="#propsEmpty,#clipAud2,#audGap"
+          data-tool="#tShape" data-select="#clipA" data-show="#frameRing,#propsClip,#clipFrz,#clipB,#frzBadge,#rowHoldLen,#rowRipple,#tick7" data-hide="#propsEmpty,#clipAud2,#audGap"
           data-activate="#ripPic"
           data-css="#scrubFill=width:38%|#scrubKnob=left:38%|#playhead=--t:0.38|#clipA=width:28.57%|#clipAud=width:85.7%"
           data-set="#tcCur=0:08|#propKind=Clip|#docLen=0:21|#tcEnd=0:21">
@@ -449,15 +443,15 @@
       <li class="wt-step"
           data-title="Point at the thing"
           data-cue="#cvArrow" data-cue-label="Drag an arrow towards the button" data-cue-place="right"
-          data-tool="#tShape" data-select="#clipArrow,#lrArrow" data-show="#clipFrz,#clipB,#frzBadge,#tick7,#cvArrow,#arrowRing,#trackGfx,#lrArrow,#clipArrow,#propsArrow" data-hide="#propsEmpty,#propsClip,#frameRing,#clipAud2,#audGap"
+          data-tool="#tShape" data-select="#clipArrow" data-show="#clipFrz,#clipB,#frzBadge,#tick7,#cvArrow,#arrowRing,#trackGfx,#clipArrow,#propsArrow" data-hide="#propsEmpty,#propsClip,#frameRing,#clipAud2,#audGap"
           data-activate="#ripPic"
           data-css="#scrubFill=width:38%|#scrubKnob=left:38%|#playhead=--t:0.38|#clipA=width:28.57%|#clipAud=width:85.7%"
-          data-set="#tcCur=0:08|#propKind=Shape|#docLen=0:21|#tcEnd=0:21|#layerCount=3">
+          data-set="#tcCur=0:08|#propKind=Shape|#docLen=0:21|#tcEnd=0:21">
         <div class="wt-cap vid">
           <span class="wt-n">7</span>
           <p class="wt-do" data-verb="Drag">an <b>arrow</b> across the frame, towards the button</p>
           <p class="wt-where">the canvas</p>
-          <p class="wt-res">the arrow lands as a layer, it appears in <b>Layers</b> and as its own row on the strip, and that row lines up exactly with the hold, because that is where the playhead was when you drew it. Freeze, mark it up, carry on: the annotation kit and the timeline are the same document.</p>
+          <p class="wt-res">the arrow lands as a layer, and its clip on the Gfx track lines up exactly with the hold, because that is where the playhead was when you drew it. Freeze, mark it up, carry on: the annotation kit and the timeline are the same document.</p>
         </div>
       </li>
 

@@ -29,7 +29,7 @@
 .tbadge b{font-weight:700}
 
 /* ---------- the timeline dock: two clips and the shared .xband on the cut ---------- */
-#video-transitions #tlDock{--gutter:92px;flex:0 0 auto;max-height:200px;overflow:auto;padding:0;display:flex;flex-direction:column}
+#video-transitions #tlDock{--gutter:58px;flex:0 0 auto;max-height:200px;overflow:auto;padding:0;display:flex;flex-direction:column}
 #video-transitions .tlbar{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);border-bottom:1px solid var(--edge-lo);position:sticky;top:0;z-index:6;background:var(--panel);flex-wrap:wrap}
 #video-transitions .tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;white-space:nowrap}
 #video-transitions .tlbar .now{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--ink);background:var(--panel-2);border:1px solid var(--edge-lo);border-radius:var(--r2);padding:3px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -60,13 +60,13 @@
 
 /* ---------- narrow: the window container query, not the viewport ---------- */
 @container shell (max-width:880px){
-  #video-transitions #tlDock{--gutter:76px}
+  #video-transitions #tlDock{--gutter:52px}
   .tstage{width:400px;height:225px}
   .tlayer h3{font-size:24px}
   .tlayer{padding:var(--s4)}
 }
 @container shell (max-width:620px){
-  #video-transitions #tlDock{--gutter:76px}
+  #video-transitions #tlDock{--gutter:52px}
   .tstage{width:272px;height:153px}
   .tlayer h3{font-size:17px}
   .tlayer p{display:none}
@@ -205,15 +205,8 @@
         <!-- THE RIGHT DOCK -->
         <div class="pdock" id="dock">
 
-          <!-- LAYERS · UX-PATTERNS D18. The timeline is this same list read
-               sideways: same rows, same order, same icons. -->
-          <div class="dgrp" data-grp="layers" data-gh="sm" id="gLayers">
-            <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">1</span></div>
-            <div class="dgrp-b">
-              <div class="lrow"><i class="ic ic-film"></i><span class="nm">intro</span><i class="ic sm ic-eye eye"></i></div>
-            </div>
-          </div>
-
+          <!-- No Layers group in a workspace that has a timeline: the timeline
+               dock below IS the layer list. -->
           <!-- SELECTION, place 3 of 3: the transition's own parameters -->
           <div class="dgrp" id="gProps" style="--gh:184px">
             <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Transition</span>
@@ -222,8 +215,10 @@
             <div class="dgrp-b">
               <div class="section">
                 <div class="sec-h">Transition <span class="mut" id="propType">Cross dissolve</span></div>
-                <div class="irow split"><span class="rl">Outgoing</span><span class="val">clip-01</span></div>
-                <div class="irow split"><span class="rl">Incoming</span><span class="val">clip-02</span></div>
+                <div class="grid2">
+                  <div class="field"><span class="k">From</span><span class="v">clip-01</span></div>
+                  <div class="field"><span class="k">To</span><span class="v">clip-02</span></div>
+                </div>
                 <div class="irow"><span class="rl">Length</span>
                   <div class="slider sm"><input id="dur" type="range" min="100" max="2000" step="50" value="400" aria-label="Transition duration"></div>
                 </div>
@@ -260,7 +255,7 @@
                 <div class="libtile tt" tabindex="0" role="button" data-t="morph"><span class="th th-morph"></span><span class="cap"><span class="nm">Morph</span><span class="mt">scale and blend</span></span></div>
                 <div class="libtile tt" tabindex="0" role="button" data-t="cut"><span class="th th-cut"></span><span class="cap"><span class="nm">Cut</span><span class="mt">hard, no ramp</span></span></div>
               </div>
-              <p class="note" style="padding:0 var(--pad-sm) var(--s2)">Drag a tile onto a cut, or pick one to apply it to the selected cut.</p>
+              <p class="note" style="padding:0 var(--pad-sm) var(--s2)">Drag a tile onto a cut, or pick one to apply it to the selected cut. Every transition rides the same keyframe and easing engine as the rest of the timeline.</p>
             </div>
           </div>
 
@@ -292,7 +287,6 @@
 
         <!-- THE RAIL -->
         <div class="drail">
-          <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
           <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
           <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
           <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
@@ -330,7 +324,7 @@
         <span class="tc" id="tcEnd">400 ms</span>
       </div>
 
-      <!-- TIMELINE DOCK · the layers list read sideways, row for row -->
+      <!-- TIMELINE DOCK · the layer list of this workspace -->
       <div class="timeline" id="tlDock" data-tl-summary="Cross dissolve · 400 ms · at 0:06">
         <div class="tlbar">
           <span class="lbl">Timeline</span>
@@ -342,10 +336,10 @@
         </div>
         <div class="tlz">
           <div class="tlgrid">
-            <div class="track"><span class="tl" aria-hidden="true"></span>
+            <div class="track"><span class="tl">Time</span>
               <div class="lane rlane"><div class="ruler" id="ruler"></div></div>
             </div>
-            <div class="track"><span class="tl"><i class="ic xs ic-film"></i> intro</span>
+            <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span>
               <div class="lane abs" id="track">
                 <div class="clip v1" style="left:0;width:52%"><span class="lbl">clip-01</span><span class="tc">0:00</span></div>
                 <div class="clip v2" style="left:52%;width:48%"><span class="lbl">clip-02</span><span class="tc">0:06</span></div>

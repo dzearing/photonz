@@ -7,9 +7,15 @@ happens to each.
 
 Export landed on 2026-09-21 behind `next-export-the-video`: §8.
 
-This is the *what it is* document. Where the chrome goes and why is
-`docs/design/video-surface.md`; the fifteen clickthroughs under
-`docs/design/mocks/pages` are the ideas it was drawn against.
+This is the *what it is* document: it records the model and what has been
+built. **The target is the user's mocks**, not this document and not what ships
+today: `docs/design/mocks/pages/video.html` (the whole editor), the `video-*.html`
+walkthroughs beside it, and `comp-video.html` (the primitives), restored on
+2026-09-23 exactly as the user drew them, real tracks included. Where what is
+built here differs from them (the timeline below most of all), the mock wins and
+the difference is work still to do. The design decisions are
+`docs/design/video-surface.md` and UX-PATTERNS D18 (a document with time has
+tracks).
 
 ---
 
@@ -147,20 +153,29 @@ nothing else in the app changes.
 
 | What | Where | Fact |
 | --- | --- | --- |
-| The timeline | bottom dock, the shipped timing strip | `document.hasTime` |
+| The timeline | bottom dock (today the icon timing strip; the target is `video.html`'s timeline) | `document.hasTime` |
 | The transport | the timeline's top row | the same fact |
 | A playhead you can drag | over the timeline's lanes | the same fact |
 
 A document with no duration is untouched: no timeline, no transport, no
 playhead, and the arrows and the space bar mean what they always meant.
 
-### The timeline is the timing strip
+### What ships today, and what the timeline is meant to be
 
-There is no second component. `MotionStripGroup` grew a bar, so the rule is now
-*a layer draws a bar when it has an in and an out, and a heading when it does
-not* — true of a clip and of a bell that rotates, one rule, no fork. The rows
-are the layers, named with the layer's own name and icon, which is the layers
-list turned on its side.
+**What ships** is the icon animation timing strip with a bar added:
+`MotionStripGroup` grew a bar, so a layer with an in and an out draws one and
+every other layer draws a heading, and the rows are the layers under their own
+names. That was a stopgap, and on 2026-09-23 the user said it looks nothing like
+the timeline they designed.
+
+**The target** is the timeline `video.html` draws: a transport with volume, a
+large play button, the current time, a full-width scrubber and the duration; a
+ruler in seconds; a red playhead that spans every track; **tracks** (video,
+titles, audio, captions) with headers that carry a name and their switches,
+each holding many clips drawn as rounded bars with the clip's name inside; and
+zoom. A document with time has tracks (UX-PATTERNS D18). Building that is the
+task *The timeline is the one in the mock*, and real tracks are *Tracks you can
+add, rename, group, hide, mute, lock*.
 
 **The ruler is the one thing not shared.** An icon repeats and is read in
 milliseconds, because ninety of them is the whole reason the strip exists. A
@@ -169,6 +184,10 @@ a recording is. `MotionStripRuler` has had two forms since the model landed;
 this task gave the document form timecode labels.
 
 ### The transport
+
+What ships today is below. The mock's transport (`video.html`) also carries a
+volume control and a full-width scrubber, and the mock is the target; what
+follows is the reasoning the built one was made with.
 
 Only the controls that do something: where the playhead is, back a frame, play
 or pause, on a frame, and how long the whole thing runs for. No volume: sound

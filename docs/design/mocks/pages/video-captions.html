@@ -41,7 +41,7 @@
 .autoflag{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:6px;font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:linear-gradient(120deg,#6E8BFF,#c56cff);padding:3px 8px;border-radius:999px;z-index:3;box-shadow:0 6px 16px -6px rgba(157,108,255,.6)}
 
 /* ---------- the timeline dock: a caption track on shared primitives ---------- */
-#tlDock{--gutter:92px;flex:0 0 auto;max-height:300px;overflow:auto;padding:0;display:flex;flex-direction:column}
+#tlDock{--gutter:58px;flex:0 0 auto;max-height:300px;overflow:auto;padding:0;display:flex;flex-direction:column}
 .tlbar{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);border-bottom:1px solid var(--edge-lo);position:sticky;top:0;z-index:6;background:var(--panel);flex-wrap:wrap}
 .tlbar .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:660;white-space:nowrap}
 .tlbar .trk-auto{display:inline-flex;align-items:center;gap:5px;color:var(--comp);font-size:10px;font-weight:640;white-space:nowrap}
@@ -96,12 +96,12 @@
 
 /* ---------- narrow: the window container query, not the viewport ---------- */
 @container shell (max-width:880px){
-  #tlDock{--gutter:76px}
+  #tlDock{--gutter:52px}
   #video-captions .vframe{width:300px;height:169px}
   .tlbar .now{display:none}
 }
 @container shell (max-width:620px){
-  #tlDock{--gutter:76px}
+  #tlDock{--gutter:52px}
   #video-captions .vframe{width:216px;height:122px}
   .tlbar .trk-auto{display:none}
 }
@@ -234,19 +234,9 @@
 
       <div class="splitter v" data-min="212" data-max="420"></div>
 
-      <!-- THE RIGHT DOCK · Layers stays (UX-PATTERNS D18): the timeline is the
-           same list read sideways, row for row, in the same order. -->
+      <!-- THE RIGHT DOCK · no Layers group here: this workspace has a timeline,
+           and the timeline IS the layer list -->
       <div class="pdock" id="dock">
-
-        <!-- SELECTION, place 1 of 3: the stack. Captions arrive as a layer when
-             they are generated, so the row and the line appear together. -->
-        <div class="dgrp" data-grp="layers" data-gh="sm" id="gLayers">
-          <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt" id="layerCount">1</span></div>
-          <div class="dgrp-b" id="layerList">
-            <div class="lrow" id="lrCaps" hidden><i class="ic ic-captions"></i><span class="nm">Captions</span><i class="ic sm ic-eye eye"></i></div>
-            <div class="lrow" id="lrClip"><i class="ic ic-film"></i><span class="nm">Launch teaser</span><i class="ic sm ic-eye eye"></i></div>
-          </div>
-        </div>
 
         <!-- SELECTION, place 3 of 3, plus the ACTIVE TOOL's options at the top -->
         <div class="dgrp grow" id="gProps">
@@ -272,7 +262,7 @@
 
             <div class="section" id="cueSec">
               <div class="sec-h">Cue <span class="mut" id="cueMeta">1 of 2</span></div>
-              <div id="cueFields"></div>
+              <div class="grid2" id="cueFields"></div>
             </div>
 
             <div class="section">
@@ -283,6 +273,7 @@
                 <button data-style="C">Karaoke</button>
               </div>
               <div id="capSpec"><!-- spec readouts injected --></div>
+              <p class="note">The line is a text layer wearing a named style. Change the style in the design system and every cue re-skins.</p>
             </div>
           </div>
         </div>
@@ -325,7 +316,6 @@
 
       <!-- THE RAIL -->
       <div class="drail">
-        <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
         <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
         <button class="drailtab" data-group="#gEffects" title="Effects"><i class="ic sm ic-sparkle"></i><span class="lb">Effects</span></button>
         <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
@@ -364,9 +354,9 @@
       <span class="tc">0:06</span>
     </div>
 
-    <!-- TIMELINE DOCK · the same rows the Layers group lists, on shared
-         timeline primitives. SELECTION, place 2 of 3: the selected cue reads
-         here and in the panel at the same time. -->
+    <!-- TIMELINE DOCK · the caption track, on shared timeline primitives.
+         SELECTION, place 2 of 3: this workspace has no Layers group because the
+         timeline is the layer list, so the selected cue reads here. -->
     <div class="timeline" id="tlDock" data-tl-summary="Cue 1 of 2 · 0.20s to 2.63s">
       <div class="tlbar">
         <span class="lbl">Caption track</span>
@@ -429,7 +419,7 @@
     var ws = WORDS.filter(function(x){ return x.cue===ci; });
     var t0 = Math.min.apply(null, ws.map(function(x){ return x.t; }));
     var t1 = Math.max.apply(null, ws.map(function(x){ return x.t+x.d; }));
-    return {t0:t0, t1:t1, n:ws.length, text:ws.map(function(x){ return x.w; }).join(" ")};
+    return {t0:t0, t1:t1, n:ws.length};
   }
   var CUES = [cueSpan(0), cueSpan(1)];
 
@@ -502,7 +492,7 @@
   }
 
   /* ---------------- TIMELINE: the caption track (selection, place 2 of 3:
-     the timeline is the Layers group read sideways) ---------------- */
+     the timeline is the layer list in this workspace) ---------------- */
   var tlDock=document.getElementById("tlDock");
   function updateTlSummary(){
     if(!tlDock) return;
@@ -512,32 +502,16 @@
       "Cue "+(selCue+1)+" of "+CUES.length+" · "+c.t0.toFixed(2)+"s to "+c.t1.toFixed(2)+"s");
   }
   var playhead=null;
-  function syncLayerList(){
-    var lr=document.getElementById("lrCaps"), n=document.getElementById("layerCount");
-    if(lr) lr.hidden=!gen;
-    if(lr) lr.classList.toggle("sel", !!gen);
-    var clip=document.getElementById("lrClip");
-    if(clip) clip.classList.toggle("sel", !gen);
-    if(n) n.textContent = gen ? "2" : "1";
-  }
   function renderTrack(){
     if(!body) return;
-    syncLayerList();
+    if(!gen){ renderEmpty(); return; }
     body.innerHTML =
       '<div class="tlz"><div class="tlgrid" id="tlGrid">'+
-        '<div class="track"><span class="tl" aria-hidden="true"></span><div class="lane rlane"><div class="ruler" id="capRuler"></div></div></div>'+
-        (gen
-          ? '<div class="track"><span class="tl"><i class="ic xs ic-captions"></i> Captions</span><div class="lane cuelane" id="cueLane"></div></div>'+
-            '<div class="track sub"><span class="tl"><span class="trk-auto">Words</span></span><div class="lane wordlane" id="wordLane"></div></div>'
-          : '')+
-        '<div class="track"><span class="tl"><i class="ic xs ic-film"></i> Launch teaser</span><div class="lane abs"><div class="clip v1'+(gen?'':' sel')+'" style="left:0;width:100%"><span class="lbl">Launch teaser</span></div></div></div>'+
+        '<div class="track"><span class="tl">Time</span><div class="lane rlane"><div class="ruler" id="capRuler"></div></div></div>'+
+        '<div class="track"><span class="tl">Cues</span><div class="lane cuelane" id="cueLane"></div></div>'+
+        '<div class="track"><span class="tl"><span class="trk-auto"><i class="ic xs ic-captions"></i>Words</span></span><div class="lane wordlane" id="wordLane"></div></div>'+
         '<div class="playstrip"><div class="playhead" id="capHead"><span class="head"></span></div></div>'+
-      '</div></div>'+
-      (gen ? '' : emptyHTML());
-    if(!gen){
-      var gb=document.getElementById("genBtn");
-      if(gb) gb.addEventListener("click", generate);
-    }
+      '</div></div>';
     var ruler=document.getElementById("capRuler");
     TICKS.forEach(function(t,i){
       var tk=document.createElement("span");
@@ -547,7 +521,7 @@
       ruler.appendChild(tk);
     });
     var cl=document.getElementById("cueLane");
-    if(cl) CUES.forEach(function(c,i){
+    CUES.forEach(function(c,i){
       var el=document.createElement("div");
       el.className="clip cue"+(i===currentCue()?" live":"")+(i===selCue?" sel":"");
       el.style.left=pct(c.t0)+"%"; el.style.width=pct(c.t1-c.t0)+"%";
@@ -556,7 +530,6 @@
       cl.appendChild(el);
     });
     var wl=document.getElementById("wordLane");
-    if(wl){
     TICKS.forEach(function(t){ var g=document.createElement("i"); g.className="gl"; g.style.left=pct(t)+"%"; wl.appendChild(g); });
     var ai=activeWordIdx();
     WORDS.forEach(function(x,i){
@@ -570,18 +543,20 @@
       el.innerHTML='<span class="wword">'+x.w+'</span>';
       wl.appendChild(el);
     });
-    }
     playhead=document.getElementById("capHead");
     positionPlayhead();
   }
   function positionPlayhead(){ if(playhead) playhead.style.left=pct(playT)+"%"; }
 
-  function emptyHTML(){
-    return '<div class="capempty">'+
+  function renderEmpty(){
+    body.innerHTML =
+      '<div class="capempty">'+
         '<span class="g"><i class="ic ic-captions lg"></i></span>'+
         '<p>No captions on this clip yet. Auto-generate a word-level track from the clip audio, then scrub to see each word light up.</p>'+
         '<button class="btn primary" id="genBtn"><i class="ic ic-sparkle"></i> Auto-generate captions</button>'+
       '</div>';
+    var gb=document.getElementById("genBtn");
+    if(gb) gb.addEventListener("click", generate);
   }
 
   function generate(){
@@ -614,11 +589,13 @@
     if(kind) kind.textContent = gen ? "Cue" : "Clip";
     if(meta) meta.textContent = gen ? ((selCue+1)+" of "+CUES.length) : "none";
     if(!f) return;
-    if(!gen){ f.innerHTML='<div class="irow split"><span class="rl">No cues</span><span class="val">generate first</span></div>'; return; }
+    if(!gen){ f.innerHTML='<div class="field" style="grid-column:1 / -1"><span class="k">No cues</span><span class="v">generate first</span></div>'; return; }
     var c=CUES[selCue];
     f.innerHTML =
-      '<div class="irow split"><span class="rl">Says</span><span class="val">'+c.text+'</span></div>'+
-      '<div class="irow split"><span class="rl">Words</span><span class="val">'+c.n+'</span></div>';
+      '<div class="field"><span class="k">In</span><span class="v">'+c.t0.toFixed(2)+'s</span></div>'+
+      '<div class="field"><span class="k">Out</span><span class="v">'+c.t1.toFixed(2)+'s</span></div>'+
+      '<div class="field"><span class="k">Dur</span><span class="v">'+(c.t1-c.t0).toFixed(2)+'s</span></div>'+
+      '<div class="field"><span class="k">Words</span><span class="v">'+c.n+'</span></div>';
   }
 
   /* ---------------- STYLE SPEC ---------------- */

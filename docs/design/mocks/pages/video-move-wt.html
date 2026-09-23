@@ -36,6 +36,8 @@
   #video-move-wt .clip.txt{background:#2a2f45;border:1px solid #3d456a;line-height:32px}
 
   /* keyframe lanes · the same timeline, one row per animated property */
+  #video-move-wt .track.kft{margin:2px 0}
+  #video-move-wt .track.kft .tl{font-size:9.5px;text-transform:none;letter-spacing:0}
   #video-move-wt .kfl{height:18px;background:var(--panel-2);border:1px solid var(--line);border-radius:5px;position:relative;display:block;flex:1}
   #video-move-wt .kfd{position:absolute;top:50%;width:9px;height:9px;background:var(--accent);border:1px solid var(--panel);
     border-radius:2px;transform:translate(-50%,-50%) rotate(45deg)}
@@ -205,18 +207,8 @@
           <!-- THE RIGHT DOCK · stacked, collapsible, independently scrolling groups -->
           <div class="pdock" id="dock">
 
-            <!-- LAYERS · UX-PATTERNS D18. The timeline is this same list read
-                 sideways: same rows, same order, same icons. Position is a
-                 property lane under Sparkle, not a layer, so it has no row here. -->
-            <div class="dgrp" data-grp="layers" data-gh="sm" id="gLayers">
-              <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt">3</span></div>
-              <div class="dgrp-b">
-                <div class="lrow" id="lrArt"><i class="ic ic-sparkle"></i><span class="nm">Sparkle</span><i class="ic sm ic-loop" title="This layer has motion"></i><i class="ic sm ic-eye eye"></i></div>
-                <div class="lrow" id="lrRec"><i class="ic ic-film"></i><span class="nm">screen-recording</span><i class="ic sm ic-eye eye"></i></div>
-                <div class="lrow" id="lrVoice"><i class="ic ic-waveform"></i><span class="nm">voice-over</span><i class="ic sm ic-eye eye"></i></div>
-              </div>
-            </div>
-
+            <!-- No Layers group in a workspace that has a timeline: the
+                 timeline below IS the layer list (UX-PATTERNS D9 note). -->
             <!-- PROPERTIES · contextual to what is selected -->
             <div class="dgrp" id="gProps" style="--gh:300px">
               <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="propKind">Nothing selected</span></div>
@@ -243,6 +235,7 @@
                       <button class="btn ghost icon sm" title="Keyframe Rotation"><i class="ic ic-keyframe"></i></button></div>
                     <div class="irow split"><span class="rl">Blur</span><span class="field"><span class="v">0</span></span>
                       <button class="btn ghost icon sm" title="Keyframe Blur"><i class="ic ic-keyframe"></i></button></div>
+                    <p class="note">A key records a value at a moment. The button that makes one sits on the row of the value it records, so there is no separate mode to enter.</p>
                   </div>
 
                   <div class="section wt-off" id="secEase">
@@ -256,6 +249,7 @@
                         <button id="pathCur">Curved</button>
                       </span>
                     </div>
+                    <p class="note" id="pPathNote">Easing is how fast it travels. The path is where it travels. They are separate on purpose: a straight move can still ease, and an arc can still run at a flat rate.</p>
                   </div>
                 </div>
               </div>
@@ -305,7 +299,6 @@
 
           <!-- THE RAIL · what the dock collapses to -->
           <div class="drail">
-            <button class="drailtab" data-group="#gLayers" title="Layers"><i class="ic sm ic-layers"></i><span class="lb">Layers</span></button>
             <button class="drailtab" data-group="#gProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
             <button class="drailtab" data-group="#gLibrary" title="Library"><i class="ic sm ic-library"></i><span class="lb">Library</span></button>
           </div>
@@ -340,14 +333,14 @@
 
         <div class="timeline" id="timeline" data-tl-summary="Sparkle · 0:04 / 0:08" style="min-height:170px">
           <div class="ruler"><span>0s</span><span>3s</span><span>6s</span><span>9s</span><span>12s</span><span>15s</span></div>
-          <div class="track"><span class="tl"><i class="ic xs ic-sparkle"></i> Sparkle</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-sparkle"></i> Gfx</span>
             <div class="lane abs">
               <div class="clip gfx" id="clipArt" style="left:22%;width:28%" tabindex="0" role="button">Sparkle</div>
             </div>
           </div>
 
           <!-- the keyframe lane: the "keyframe editor" is just the timeline -->
-          <div class="track sub wt-off" id="lanePos"><span class="tl">Position</span>
+          <div class="track kft wt-off" id="lanePos"><span class="tl">Position</span>
             <div class="lane rlane kfl">
               <span class="kfseg wt-off" id="segPos" style="left:22%;width:22%"></span>
               <span class="kfd wt-off" id="kdP1" style="left:22%"></span>
@@ -355,11 +348,11 @@
             </div>
           </div>
 
-          <div class="track"><span class="tl"><i class="ic xs ic-film"></i> screen-recording</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span>
             <div class="lane abs"><div class="clip v1" style="left:0;width:100%">screen-recording</div></div>
           </div>
 
-          <div class="track"><span class="tl"><i class="ic xs ic-waveform"></i> voice-over</span>
+          <div class="track"><span class="tl"><i class="ic xs ic-audio"></i> Audio</span>
             <div class="lane abs"><div class="clip aud" style="left:0;width:100%"><span class="wave"><i style="height:40%"></i><i style="height:70%"></i><i style="height:30%"></i><i style="height:88%"></i><i style="height:55%"></i><i style="height:66%"></i><i style="height:22%"></i><i style="height:80%"></i><i style="height:48%"></i><i style="height:74%"></i></span></div></div>
           </div>
           <div class="playhead" id="playhead" style="--t:0.0"></div>
@@ -373,12 +366,12 @@
       <li class="wt-step"
           data-title="Select the graphic"
           data-cue="#clipArt" data-cue-label="Click the Sparkle clip" data-cue-place="top"
-          data-select="#clipArt,#lrArt" data-show="#propsArt,#artRing" data-hide="#propsEmpty"
+          data-select="#clipArt" data-show="#propsArt,#artRing" data-hide="#propsEmpty"
           data-set="#propKind=Asset layer">
         <div class="wt-cap vid">
           <span class="wt-n">1</span>
           <p class="wt-do">the <b>Sparkle</b> clip</p>
-          <p class="wt-where">the <b>Sparkle</b> row on the timeline, which is the <b>Sparkle</b> layer</p>
+          <p class="wt-where">the Gfx track on the timeline</p>
           <p class="wt-res">one selection in three places: the ring on the canvas, the clip outlined on the timeline, and Properties showing this layer’s Transform and an <b>Animate</b> section. Nothing about animating is hidden behind a mode.</p>
         </div>
       </li>
@@ -386,7 +379,7 @@
       <li class="wt-step"
           data-title="Go to where the move starts"
           data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:04" data-cue-place="top"
-          data-select="#clipArt,#lrArt" data-show="#propsArt,#artRing" data-hide="#propsEmpty"
+          data-select="#clipArt" data-show="#propsArt,#artRing" data-hide="#propsEmpty"
           data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22"
           data-set="#propKind=Asset layer|#tcCur=0:04">
         <div class="wt-cap vid">
@@ -400,7 +393,7 @@
       <li class="wt-step"
           data-title="Record where it starts"
           data-cue="#kfPos" data-cue-label="Click the keyframe button on Position" data-cue-place="left"
-          data-select="#clipArt,#lrArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#secEase" data-hide="#propsEmpty"
+          data-select="#clipArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#secEase" data-hide="#propsEmpty"
           data-css="#scrubFill=width:22%|#scrubKnob=left:22%|#playhead=--t:0.22"
           data-set="#propKind=Asset layer|#tcCur=0:04|#pKeyCount=1 key|#vPosition=280, 690">
         <div class="wt-cap vid">
@@ -414,7 +407,7 @@
       <li class="wt-step"
           data-title="Go to where it should arrive"
           data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:08" data-cue-place="top"
-          data-select="#clipArt,#lrArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#secEase" data-hide="#propsEmpty"
+          data-select="#clipArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#secEase" data-hide="#propsEmpty"
           data-css="#scrubFill=width:44%|#scrubKnob=left:44%|#playhead=--t:0.44"
           data-set="#propKind=Asset layer|#tcCur=0:08|#pKeyCount=1 key|#vPosition=280, 690">
         <div class="wt-cap vid">
@@ -428,7 +421,7 @@
       <li class="wt-step"
           data-title="Drag it to the other point"
           data-cue="#cvArt" data-cue-label="Drag the graphic up beside the button" data-cue-place="left"
-          data-select="#clipArt,#lrArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#kdP2,#segPos,#secEase,#pathLine" data-hide="#propsEmpty"
+          data-select="#clipArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#kdP2,#segPos,#secEase,#pathLine" data-hide="#propsEmpty"
           data-css="#scrubFill=width:44%|#scrubKnob=left:44%|#playhead=--t:0.44|#cvArt=left:66%;top:26%"
           data-set="#propKind=Asset layer|#tcCur=0:08|#pKeyCount=2 keys|#vPosition=1390, 290|#pX=1390|#pY=290">
         <div class="wt-cap vid">
@@ -443,7 +436,7 @@
           data-title="Ease the move"
           data-cue="#easInOut" data-cue-label="Open Curve, choose Ease in out" data-cue-place="left"
           data-pop="#curveMenu"
-          data-select="#clipArt,#lrArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#kdP2,#segPos,#secEase,#pathLine" data-hide="#propsEmpty"
+          data-select="#clipArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#kdP2,#segPos,#secEase,#pathLine" data-hide="#propsEmpty"
           data-css="#scrubFill=width:44%|#scrubKnob=left:44%|#playhead=--t:0.44|#cvArt=left:66%;top:26%"
           data-set="#propKind=Asset layer|#tcCur=0:08|#pKeyCount=2 keys|#vPosition=1390, 290|#pX=1390|#pY=290|#curveVal=Ease in out|#pEaseState=Ease in out">
         <div class="wt-cap vid">
@@ -457,22 +450,22 @@
       <li class="wt-step"
           data-title="Bend the path"
           data-cue="#pathHandle" data-cue-label="Drag the path handle up" data-cue-place="top"
-          data-select="#clipArt,#lrArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#kdP2,#segPos,#secEase,#pathArc" data-hide="#propsEmpty"
+          data-select="#clipArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#kdP2,#segPos,#secEase,#pathArc" data-hide="#propsEmpty"
           data-class="#pathCur=on|#pathStr=-on"
           data-css="#scrubFill=width:44%|#scrubKnob=left:44%|#playhead=--t:0.44|#cvArt=left:66%;top:26%"
-          data-set="#propKind=Asset layer|#tcCur=0:08|#pKeyCount=2 keys|#vPosition=1390, 290|#pX=1390|#pY=290|#curveVal=Ease in out|#pEaseState=Ease in out">
+          data-set="#propKind=Asset layer|#tcCur=0:08|#pKeyCount=2 keys|#vPosition=1390, 290|#pX=1390|#pY=290|#curveVal=Ease in out|#pEaseState=Ease in out|#pPathNote=The handle is the curve’s control point. Drag it and the graphic arcs; double-click it and the path snaps back to straight.">
         <div class="wt-cap vid">
           <span class="wt-n">7</span>
           <p class="wt-do" data-verb="Drag">the <b>handle</b> on the middle of the path, upward</p>
           <p class="wt-where">the canvas</p>
-          <p class="wt-res">the straight run becomes an arc, and the Path control flips to <b>Curved</b> to say so. The handle is the curve's control point, so double-clicking it snaps the path back to straight. Nothing was added: the two keys are the same two keys, and what changed is how the value gets from one to the other.</p>
+          <p class="wt-res">the straight run becomes an arc, and the Path control flips to <b>Curved</b> to say so. Nothing was added: the two keys are the same two keys, and what changed is how the value gets from one to the other.</p>
         </div>
       </li>
 
       <li class="wt-step"
           data-title="Scrub through it"
           data-cue="#scrubKnob" data-cue-label="Drag the playhead to 0:06" data-cue-place="top"
-          data-select="#clipArt,#lrArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#kdP2,#segPos,#secEase,#pathArc" data-hide="#propsEmpty"
+          data-select="#clipArt" data-show="#propsArt,#artRing,#lanePos,#kdP1,#kdP2,#segPos,#secEase,#pathArc" data-hide="#propsEmpty"
           data-class="#pathCur=on|#pathStr=-on"
           data-css="#scrubFill=width:33%|#scrubKnob=left:33%|#playhead=--t:0.33|#cvArt=left:35%;top:28%"
           data-set="#propKind=Asset layer|#tcCur=0:06|#pKeyCount=2 keys|#vPosition=790, 320|#pX=790|#pY=320|#curveVal=Ease in out|#pEaseState=Ease in out">
