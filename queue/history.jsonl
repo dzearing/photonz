@@ -6427,3 +6427,4 @@
 {"t":"2026-09-23T06:27:27.670Z","ev":"task_note","id":"the-dev-app-drill-stops-going-red-just-because-t"}
 {"t":"2026-09-23T06:27:27.718Z","ev":"task_note","id":"the-dev-app-drill-stops-going-red-just-because-t"}
 {"t":"2026-09-23T06:27:38.592Z","ev":"task_walks","id":"the-dev-app-drill-stops-going-red-just-because-t","walks":[]}
+{"t":"2026-09-23T06:27:47.338Z","ev":"task_done","id":"the-dev-app-drill-stops-going-red-just-because-t","from":"in_progress","note":"devAppState now carries the clock it was read at, and devAppSentence measures from that instead of Date.now(), so a fixture state and the words about it share one clock. queue/bin/queue-lib.mjs + queue/bin/dev-app-drill.mjs, committed 73213b2c. Verified: the drill passes at now, +30d, +365d and -30d under a shifted process clock (it failed at +0 before); all 13 other .mjs drills identical at now and +1y; failure/manager-due/leftovers shell drills green; Scripts/test.sh green, 9124 tests."}
