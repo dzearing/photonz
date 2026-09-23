@@ -1,0 +1,35 @@
+{
+  "id": "keyframe-anything-and-see-and-shape-the-keys-on",
+  "title": "Keyframe anything, and see and shape the keys on the timeline",
+  "goal": "User 2026-09-23: 'keyframes too!'. The motion task makes a layer move A to B; this makes keyframes a first-class editing tool across the app, as Premiere's Effect Controls and After Effects do, but by direct manipulation. Target the keyframe drawing in the user's mocks (video-motion.html, video.html) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 0.62,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T12:32:02.204Z",
+  "updated": "2026-09-23T12:32:02.279Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window after the 2026-09-23 video audit.",
+  "acceptance": [
+    "Every animatable value has a keyframe diamond beside it in the panel (position, scale, rotation, opacity, crop, corner radius, blur, shadow, colour, text size, audio volume, effect amounts); clicking it arms keyframing for that value, as Premiere's stopwatch",
+    "With keyframing armed, changing the value at another moment (on the canvas or in the panel) adds a key; the panel diamond shows filled on a key, hollow between, with previous/next key arrows",
+    "A layer's track expands (chevron) to show one lane per animated property with its keys as diamonds; drag keys in time, marquee-select several, Opt-drag to copy, Delete to remove",
+    "Right-click a key: Linear, Ease In, Ease Out, Ease In and Out, Hold, Bezier; a curve view per lane lets you drag the bezier handles",
+    "Copy and paste keys between layers and moments; the playhead snaps to keys; Shift-K / Opt-K jump next/previous key",
+    "Audio volume keyframes draw on the audio segment as a level line with points you drag, as in Premiere",
+    "A walk at Next defaults animates a title's position, scale and blur with eased keys and a volume dip, and photographs the lanes"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T12:32:02.206Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-23T12:32:02.278Z",
+      "note": "seq 350 -> 0.62"
+    }
+  ]
+}

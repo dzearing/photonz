@@ -82,7 +82,8 @@
           "success": [
             "Click a cut and pick a transition from thumbnail tiles at the cut, as the mock draws it",
             "Any layer, text included, moves from A to B, grows or shrinks, rotates and fades by dragging it on the canvas at two moments; the keys show on its track and can be dragged",
-            "Speed and freeze are a dropdown and a right-click action, not a panel of radios"
+            "Speed and freeze are a dropdown and a right-click action, not a panel of radios",
+            "Any animatable value (transform, opacity, effects, text, volume) can be keyframed from a diamond beside it; keys show per property on the layer's track, drag in time, take easing and bezier curves from right-click, and copy between layers"
           ]
         },
         {
