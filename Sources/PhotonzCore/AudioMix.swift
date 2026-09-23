@@ -246,8 +246,11 @@ extension PhotonzDocument {
     /// is not pulled all the way down. A held frame contributes nothing,
     /// because one frame has no sound under it.
     public func audioMix() -> [AudioMixSegment] {
-        allLayers.flatMap { layer -> [AudioMixSegment] in
-            guard let sound = layer.sound, layer.isVisible, let time = layer.time,
+        // A muted or outsoloed track is not heard (`DocumentTracks.swift`).
+        let silenced = layersSilencedByTrack()
+        return allLayers.flatMap { layer -> [AudioMixSegment] in
+            guard let sound = layer.sound, layer.isVisible, !silenced.contains(layer.id),
+                  let time = layer.time,
                   let pieces = layer.clipPieces
             else { return [] }
             let level = layer.soundLevel ?? AudioLevel()

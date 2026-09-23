@@ -887,6 +887,14 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// playhead, which is inside the catching distance, so the picture is of a
     /// catch rather than of a near miss.
     case clipSlideOntoPlayheadHeld, clipCarryLastToFrontHeld
+    /// The picked clip taken hold of and carried up onto the track above
+    /// its own, or up past the top track, where a drop makes a new track, and
+    /// LEFT IN THE HAND so a walk can photograph the lane or the line lit
+    /// where it would land (`DocumentTracks.swift`). `clipDragRelease` lets go.
+    case clipCarryUpATrackHeld, clipCarryToNewTrackOnTopHeld
+    /// Group the tracks picked in the timeline's gutter: the right-click
+    /// menu's Group Tracks, for a walk that cannot open a right-click menu.
+    case tracksGroupPicked
     /// Let go of whichever of those is in the hand.
     case clipDragRelease
     /// The LEFT end of a TITLE's bar dragged an eighth of the document
@@ -969,6 +977,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .clipDragStartIn, .clipDragStartBackOut, .clipDragEndIn,
              .clipCarryLastToFront, .clipSlideLater,
              .clipSlideOntoPlayheadHeld, .clipCarryLastToFrontHeld, .clipDragRelease,
+             .clipCarryUpATrackHeld, .clipCarryToNewTrackOnTopHeld, .tracksGroupPicked,
              .clipPickCut, .clipPickFirstCut, .clipTransitionDissolve, .clipTransitionDipToBlack,
              .clipTransitionHardCut, .clipTransitionDragLonger, .clipBlurComesOn,
              .titleDragStartEarlier, .titleDragEndLater,

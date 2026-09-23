@@ -260,13 +260,25 @@ struct TimelineDock: View {
                 VStack(alignment: .leading, spacing: 0) {
                     rulerRow(laneWidth: laneWidth)
                     ScrollView(.vertical) {
+                        let order = editorState.timelineTrackRows.map(\.id)
                         VStack(alignment: .leading, spacing: Self.rowSpacing) {
-                            ForEach(Self.trackOrder(editorState.motionStripGroups)) { group in
-                                TimelineTrackRow(group: group, laneWidth: laneWidth, isBlade: isBlade)
+                            ForEach(editorState.timelineRows) { row in
+                                switch row {
+                                case .group(let group, let isCollapsed, let tracks):
+                                    TimelineGroupRow(group: group, isCollapsed: isCollapsed,
+                                                     tracks: tracks, laneWidth: laneWidth)
+                                case .track(let track, let inGroup):
+                                    TimelineTrackRow(row: track, inGroup: inGroup,
+                                                     index: order.firstIndex(of: track.id) ?? 0,
+                                                     trackCount: order.count,
+                                                     laneWidth: laneWidth, isBlade: isBlade)
+                                }
                             }
+                            TimelineAddTrackRow(laneWidth: laneWidth)
                         }
                         .padding(.vertical, Self.rowSpacing)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .coordinateSpace(.named(Self.tracksSpace))
                     }
                     .scrollBounceBehavior(.basedOnSize)
                 }
@@ -360,172 +372,39 @@ struct TimelineDock: View {
         return true
     }
 
-    /// Picture over sound, as every editor stacks them and as the mock does:
-    /// titles and video on top in their layer order, audio underneath.
-    static func trackOrder(_ groups: [MotionStripGroup]) -> [MotionStripGroup] {
-        groups.filter { $0.trackKind != .audio } + groups.filter { $0.trackKind == .audio }
-    }
-
     /// As tall as the tracks it holds, and no taller.
     private var bodyHeight: CGFloat {
-        let groups = editorState.motionStripGroups
-        let rows = groups.reduce(CGFloat(0)) { total, group in
-            let lane = group.isSound ? Self.soundLaneHeight : Self.laneHeight
-            return total + lane + CGFloat(group.lanes.count) * MotionStripView.laneHeight + Self.rowSpacing
+        var rows: CGFloat = 0
+        for row in editorState.timelineRows {
+            switch row {
+            case .group(_, let isCollapsed, _):
+                rows += (isCollapsed ? TimelineGroupRow.foldedHeight : TimelineGroupRow.openHeight)
+                    + Self.rowSpacing
+            case .track(let track, _):
+                rows += Self.height(of: track) + Self.rowSpacing
+            }
         }
+        rows += TimelineAddTrackRow.height + Self.rowSpacing
         let content = Self.rulerHeight + rows + Self.rowSpacing
         let overview = editorState.isTimelineOpenedOut ? TimelineOverviewBar.height + 4 : 0
         return overview + min(Self.bodyCeiling, content)
     }
-}
 
-// MARK: - One track
-
-/// One track (`.track`): its name in the gutter and its clip in the lane, with
-/// the lanes of anything moving on it underneath.
-///
-/// Until tracks are their own thing (`tracks-you-can-add-rename-group-hide-mute-lock-a`)
-/// a track is a layer with time, named after the layer, with the icon and the
-/// clip colour of what the layer is.
-private struct TimelineTrackRow: View {
-    @Environment(EditorState.self) private var editorState
-    let group: MotionStripGroup
-    let laneWidth: CGFloat
-    let isBlade: Bool
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            HStack(spacing: TimelineDock.gap) {
-                header
-                lane
-            }
-            .frame(height: laneHeight)
-            .playtestField("Timing \(group.layerName)")
-            ForEach(group.lanes) { lane in
-                MotionStripLaneView(lane: lane, layerName: group.layerName, laneWidth: laneWidth)
-            }
+    /// One track's full height: its lane, the lanes of anything moving on
+    /// its clips, and the rows of the parts inside them.
+    static func height(of track: TimelineTrackRowModel) -> CGFloat {
+        let lane = track.carriesSound ? soundLaneHeight : laneHeight
+        let motionLanes = track.clips.reduce(0) { $0 + $1.lanes.count }
+        let inner = track.inner.reduce(CGFloat(0)) { total, group in
+            total + 3 + (group.isSound ? soundLaneHeight : laneHeight)
+                + CGFloat(group.lanes.count) * (MotionStripView.laneHeight + 3)
         }
+        return lane + CGFloat(motionLanes) * (MotionStripView.laneHeight + 3) + inner
     }
 
-    private var laneHeight: CGFloat {
-        group.isSound ? TimelineDock.soundLaneHeight : TimelineDock.laneHeight
-    }
-
-    private var isPicked: Bool { editorState.selectedLayerID == group.layerID }
-
-    private var header: some View {
-        Button { editorState.selectLayer(group.layerID) } label: {
-            VideoKit.TrackHeader(title: group.layerName, symbol: Self.symbol(group.trackKind),
-                                 width: TimelineDock.gutter, uppercase: false, isSelected: isPicked)
-                .frame(height: laneHeight)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .help(group.layerName)
-        .accessibilityLabel("Track \(group.layerName)")
-    }
-
-    private var lane: some View {
-        let ruler = editorState.motionStripRuler
-        return ZStack(alignment: .topLeading) {
-            gridlines(ruler)
-            // A press on the bare lane puts the playhead there, the way the
-            // strip always has; a clip on top takes its own presses first.
-            Color.clear
-                .contentShape(Rectangle())
-                .gesture(bareLaneScrub(ruler))
-            clip(ruler)
-            if isBlade { blade(ruler) }
-        }
-        .frame(width: laneWidth, height: laneHeight, alignment: .topLeading)
-        .clipShape(TimelineEdgeClip())
-    }
-
-    /// `.lane .gl`: a hairline under every second on the ruler, so a clip's
-    /// edge can be read against the numbers above it.
-    private func gridlines(_ ruler: MotionStripRuler) -> some View {
-        ForEach(ruler.secondTicks, id: \.ms) { tick in
-            Rectangle()
-                .fill(VideoKit.Palette.edgeLo)
-                .frame(width: 1, height: laneHeight)
-                .offset(x: laneWidth * ruler.fraction(ofMS: tick.ms))
-        }
-        .allowsHitTesting(false)
-    }
-
-    @ViewBuilder private func clip(_ ruler: MotionStripRuler) -> some View {
-        if let bar = group.bar {
-            if editorState.trimmingLayerID == group.layerID {
-                ClipTrimBar(bar: bar, layerName: group.layerName, laneWidth: laneWidth,
-                            height: laneHeight)
-            } else {
-                ClipPiecesBar(layerID: group.layerID, layerName: group.layerName,
-                              bar: bar, laneWidth: laneWidth, isSound: group.isSound,
-                              kind: Self.clipKind(group.trackKind), height: laneHeight)
-            }
-        } else {
-            // A layer that is there the whole way through: one clip the
-            // length of the document. It has no ends to drag because it has
-            // no times of its own; picking it is all a press does.
-            let x0 = laneWidth * ruler.fraction(ofMS: 0)
-            let x1 = laneWidth * ruler.fraction(ofMS: Double(editorState.documentLengthMS))
-            VideoKit.ClipBar(title: group.layerName, kind: Self.clipKind(group.trackKind),
-                             isSelected: isPicked, height: laneHeight)
-                .frame(width: max(2, x1 - x0))
-                .offset(x: x0)
-                .onTapGesture { editorState.selectLayer(group.layerID) }
-        }
-    }
-
-    /// With the Blade in hand the whole lane is a place to cut: the playhead
-    /// goes where you clicked and the clip there is cut in two, the same cut
-    /// B makes.
-    private func blade(_ ruler: MotionStripRuler) -> some View {
-        Color.clear
-            .contentShape(Rectangle())
-            .onTapGesture(coordinateSpace: .local) { point in
-                let ms = ruler.ms(atFraction: Double(min(max(0, point.x / laneWidth), 1)))
-                editorState.selectLayer(group.layerID)
-                editorState.dragPlayhead(toMS: Int(ms.rounded()))
-                editorState.splitClipAtPlayhead()
-            }
-            .playtestHover("Blade \(group.layerName)") { inside in
-                if inside { NSCursor.crosshair.push() } else { NSCursor.pop() }
-            }
-            .playtestControl("Blade \(group.layerName)", detail: "Timeline")
-    }
-
-    private func bareLaneScrub(_ ruler: MotionStripRuler) -> some Gesture {
-        DragGesture(minimumDistance: 0)
-            .onChanged { value in
-                if !editorState.isAuditioningScrub { editorState.beginPlayheadDrag() }
-                let fraction = min(max(0, value.location.x / laneWidth), 1)
-                editorState.dragPlayhead(toMS: Int(ruler.ms(atFraction: Double(fraction)).rounded()))
-            }
-            .onEnded { _ in editorState.endPlayheadDrag() }
-    }
-
-    /// The mock's track icons: `ic-image` for the picture, `ic-layers` for
-    /// what sits over it, `ic-audio`, `ic-text`, `ic-component`.
-    static func symbol(_ kind: TimelineTrackKind) -> String {
-        switch kind {
-        case .video: "photo"
-        case .overlay: "square.3.layers.3d"
-        case .audio: "music.note"
-        case .text: "textformat"
-        case .component: "square.on.square.dashed"
-        }
-    }
-
-    static func clipKind(_ kind: TimelineTrackKind) -> VideoKit.ClipKind {
-        switch kind {
-        case .video: .video
-        case .overlay: .overlay
-        case .audio: .audio
-        case .text: .text
-        case .component: .component
-        }
-    }
+    /// The space the tracks are laid out in, which is what a clip carried up
+    /// or down measures its pointer against.
+    nonisolated static let tracksSpace = "timelineTracks"
 }
 
 // MARK: - The wheel

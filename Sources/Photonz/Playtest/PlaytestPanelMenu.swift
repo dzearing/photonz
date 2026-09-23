@@ -165,7 +165,12 @@ enum PlaytestPanelMenu {
                 timestamp: ProcessInfo.processInfo.systemUptime,
                 windowNumber: window.windowNumber, context: nil,
                 eventNumber: 0, clickCount: 1, pressure: 1) else { return nil }
-        var view = content.hitTest(content.convert(point, from: nil))
+        // `hitTest` takes a point in the SUPERVIEW's space. Handed the content
+        // view's own (flipped) space it answered for the point mirrored top to
+        // bottom, so a right click on the timeline under the picture asked the
+        // canvas for its menu.
+        let local = content.superview.map { $0.convert(point, from: nil) } ?? point
+        var view = content.hitTest(local)
         while let here = view {
             if let menu = here.menu(for: event) ?? here.menu { return (menu, here) }
             if here === content { break }

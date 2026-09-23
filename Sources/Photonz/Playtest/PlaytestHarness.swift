@@ -3169,6 +3169,35 @@ private final class Run {
                 guard editor.clipBarReadout != nil else {
                     throw Failure(description: "the carry is not showing where it would land")
                 }
+            case .clipCarryUpATrackHeld, .clipCarryToNewTrackOnTopHeld:
+                guard let id = editor.clipInHandID, let document = editor.document,
+                      let own = document.trackID(ofClip: id) else {
+                    throw Failure(description: "there is no clip picked to carry to another track")
+                }
+                let order = document.timelineTracks.map(\.id)
+                let target: TrackDrop
+                if action == .clipCarryToNewTrackOnTopHeld {
+                    target = .newTrack(at: 0)
+                } else {
+                    guard let at = order.firstIndex(of: own), at > 0 else {
+                        throw Failure(description: "the picked clip is on the top track, so there "
+                            + "is no track above it to carry it onto")
+                    }
+                    target = .onto(order[at - 1])
+                }
+                editor.beginClipBarDrag(layerID: id, grab: .body)
+                guard editor.clipBarDrag != nil else {
+                    throw Failure(description: "the clip could not be taken hold of; is its track locked?")
+                }
+                editor.setClipTrackDrop(target)
+                guard editor.clipTrackDrop != nil else {
+                    throw Failure(description: "the carry is not showing where it would land")
+                }
+            case .tracksGroupPicked:
+                guard editor.canGroupPickedTracks else {
+                    throw Failure(description: "no track is picked in the timeline's gutter to group")
+                }
+                editor.groupPickedTracks()
             case .clipDragRelease:
                 guard editor.clipBarDrag != nil else {
                     throw Failure(description: "nothing is being dragged to let go of")
@@ -4198,6 +4227,7 @@ private final class Run {
                  .clipDragStartIn, .clipDragStartBackOut, .clipDragEndIn,
                  .clipCarryLastToFront, .clipSlideLater,
                  .clipSlideOntoPlayheadHeld, .clipCarryLastToFrontHeld, .clipDragRelease,
+                 .clipCarryUpATrackHeld, .clipCarryToNewTrackOnTopHeld, .tracksGroupPicked,
                  .clipPickCut, .clipPickFirstCut, .clipTransitionDissolve, .clipTransitionDipToBlack,
                  .clipTransitionHardCut, .clipTransitionDragLonger, .clipBlurComesOn,
                  .titleDragStartEarlier, .titleDragEndLater,

@@ -611,7 +611,11 @@ struct ClipPiecesBar: View {
     /// sliding along the document, because a clip of one piece has no order to
     /// rearrange. ⌘ always means the whole clip.
     private func carry(_ pieces: ClipPieces, index: Int) -> some Gesture {
-        DragGesture(minimumDistance: 3)
+        // On the dock the pointer is read in the tracks' own space too, so a
+        // clip carried up or down lands on the track under it, or on a new
+        // one between two (`EditorState+Tracks`).
+        DragGesture(minimumDistance: 3,
+                    coordinateSpace: kind == nil ? .local : .named(TimelineDock.tracksSpace))
             .onChanged { value in
                 if editorState.clipBarDrag == nil {
                     let whole = pieces.count == 1
@@ -622,6 +626,10 @@ struct ClipPiecesBar: View {
                 editorState.updateClipBarDrag(
                     byMS: Self.ms(value.translation.width, laneWidth: laneWidth,
                                   ruler: editorState.motionStripRuler))
+                if kind != nil {
+                    editorState.updateClipTrackDrop(pointerY: value.location.y,
+                                                    travelledY: value.translation.height)
+                }
             }
             .onEnded { _ in editorState.commitClipBarDrag() }
     }

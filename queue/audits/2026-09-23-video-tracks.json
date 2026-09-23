@@ -1,0 +1,29 @@
+{
+  "feature": "Tracks on the video timeline",
+  "epic": "video-cutting",
+  "summary": "A recording's timeline now has real tracks. You can add a video, audio or captions track, rename one, hide, mute, solo or lock it, group tracks under a chevron, and carry a clip onto another track or onto a new one.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a screen recording (or the sample recording) and show the timeline.",
+  "try": [
+    { "do": "Click the + at the foot of the track names and choose Video Track. An empty V2 appears over V1.", "shot": "2026-09-23-video-tracks-3-added-sc.png" },
+    { "do": "Double click V2's name, type Overlay, press Return.", "shot": "2026-09-23-video-tracks-4-renamed-sc.png" },
+    { "do": "Rest the pointer on V1 and click its lock; rest on Audio and click mute and S (solo).", "shot": "2026-09-23-video-tracks-5-lock-mute-solo-sc.png" },
+    { "do": "Rest on V1 and click the eye. The recording leaves the picture and the lane goes faint.", "shot": "2026-09-23-video-tracks-6-v1-hidden-sc.png" },
+    { "do": "Drag the recording's clip up onto Overlay, then up past the top track so a line appears, and let go.", "shot": "2026-09-23-video-tracks-8-new-track-held-sc.png" },
+    { "do": "Click Overlay, Shift-click V1, then right-click V1 and choose Group 2 Tracks.", "shot": "2026-09-23-video-tracks-10-menu-sc.png" },
+    { "do": "Click the chevron on Group 1 to fold it, and again to open it.", "shot": "2026-09-23-video-tracks-12-folded-sc.png" },
+    { "do": "Press Cmd-Z a few times. Each track change comes back one step at a time." }
+  ],
+  "evaluate": [
+    "Would a Premiere editor find the track controls where they expect them, given they only appear when the pointer rests on a track?",
+    "Is V1 at the bottom and new video tracks going on top the order you expect?",
+    "Does carrying a clip past the top track to make a new one feel natural, or would you rather drop onto empty space?",
+    "Is 84 points of track names enough once you rename tracks to real words?"
+  ],
+  "rough": [
+    "The drag between tracks was checked by walks through the app's own hand, not a real pointer drag: synthetic mouse events do not reach the timeline's gestures. Please try the drag yourself first.",
+    "The mock shows an empty Audio track under V1 even before there is sound. Here an Audio track appears only once a sound is on the timeline. That is folded into the task that puts a recording's sound on its own track from open.",
+    "The mock names a title's track Title. Here every picture track is V1, V2 and so on until you rename it, the way Premiere does.",
+    "A track's switches show only while the pointer rests on it (and any that are on stay up). The mock's headers have no switches at all, and three switches in the 84 point gutter cut a picked track's name down to one letter.",
+    "A folded group whose tracks are empty shows a bare bar; with clips on them it draws each clip as a thin stroke."
+  ]
+}

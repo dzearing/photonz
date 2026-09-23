@@ -1041,6 +1041,20 @@ final class EditorState {
     /// grabbed, and where it has got to. Kept out of the document so a whole
     /// drag is one step to undo, exactly like the timing drag next door.
     var clipBarDrag: ClipBarDragSession?
+    /// The tracks picked in the timeline's gutter (`EditorState+Tracks`).
+    var selectedTrackIDs: Set<UUID> = []
+    /// Track groups folded shut in this window. How you are looking at the
+    /// timeline, not what the document is, so it is never saved or undone.
+    var collapsedTrackGroupIDs: Set<UUID> = []
+    /// The track whose name is being typed over in its header.
+    var renamingTrackID: UUID?
+    /// Where the clip in hand would land if it were let go of now, while it is
+    /// being carried up or down the timeline.
+    var clipTrackDrop: ClipTrackDrop?
+    /// Where each track's row is on screen, written by the rows as they lay
+    /// out and read when a clip is carried over them. Not watched: nothing is
+    /// drawn from it.
+    @ObservationIgnored var trackDropRows: [UUID: TrackDropRow] = [:]
     /// The Escape watch armed for exactly as long as a clip's bar is in hand.
     @ObservationIgnored var clipBarEscapeWatch: Any?
     /// ...and the one armed while a transition's band is.

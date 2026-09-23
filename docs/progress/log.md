@@ -19444,3 +19444,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - A recording's bottom dock is now `TimelineDock` (video.html): kit transport with mute and scrubber, Select/Blade + zoom bar, seconds ruler, named tracks with kit-coloured clips, red playhead. Icons keep `MotionStripView`.
 - Core: `TimelineTrackKind`, `MotionStripRuler.secondTicks` (tests first).
 - Next: real tracks (V1/V2/Audio names), the recording's sound as its own segment, keyframe readout/easing in the bar.
+
+## 2026-09-23 — Tracks you can add, rename, group, hide, mute, lock, and move clips between
+
+- Core (tests first, `DocumentTracksTests`): `DocumentTracks.swift` adds `DocumentTrack` (video/audio/captions; hidden, muted, solo, locked, group) and `DocumentTrackGroup`, written on the document; `Layer.trackID` says which track a clip is on. A document nobody changed a track on writes no tracks: its timeline shows one implicit track per clip (V1 at the bottom, Audio under), and the first track edit writes them all down. Add, rename, delete, group/ungroup, move a clip to a track or a new one (kind, lock and overlap rules), restack the picture by track order, `TrackDrop.resolve` for a drop on or between rows. `drawn(atTimeMS:)` and `audioMix()` honour hide, mute and solo.
+- App: `TimelineTrackRows.swift` (track header with hover switches, rename on double click, right-click menu, locked hatch, drop highlight and insertion line, group heading with chevron, + row), `EditorState+Tracks.swift`. Clip bars on the dock carry between tracks. Locked tracks refuse drags and cuts.
+- Harness: right-click menus hit test in the superview's space (a right click on the timeline was answered by the canvas). All 20 other rightClick walks re-run green.
+- Walk: `tracks-you-can-add-rename-group-walk`, no flags, 12 real captures. Audit: `queue/audits/2026-09-23-video-tracks.json`.
+- Open: a real pointer drag between tracks can't be driven by a walk; the empty Audio track from the mock is folded into the sound-from-open task.

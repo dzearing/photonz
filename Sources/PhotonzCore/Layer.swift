@@ -1622,6 +1622,11 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// thing: at the level it was recorded at, the whole way through.
     public var soundLevel: AudioLevel?
 
+    /// The timeline track this clip sits on (`DocumentTracks.swift`). Nil is a
+    /// clip on a track of its own, worked out when the timeline is read, which
+    /// is every layer in every document written before tracks existed.
+    public var trackID: UUID?
+
     /// Set on a picture that Separate into Layers lifted off a screenshot as a
     /// RUN OF TEXT: the label on a button, a row's caption, a heading. It is
     /// still a picture, because reading the words is a separate step, and this
@@ -1718,6 +1723,8 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         // was set to.
         copy.soundDetached = soundDetached
         copy.soundLevel = soundLevel
+        // ...and sits on the same track.
+        copy.trackID = trackID
         // A copy of a run of text is still a run of text, so double clicking it
         // still offers to read the words.
         copy.isARunOfText = isARunOfText

@@ -97,7 +97,9 @@ extension EditorState {
         guard Experiments.shared.cutRecordingEnabled, documentHasTime,
               let id = clipInHandID, let time = document?.layer(id: id)?.time,
               let pieces = clipInHandPieces else { return false }
-        guard documentTimeMS > time.inMS, documentTimeMS < time.outMS else { return false }
+        guard documentTimeMS > time.inMS, documentTimeMS < time.outMS,
+              // A clip on a locked track is not cut (`DocumentTracks.swift`).
+              !isClipLocked(id) else { return false }
         var trial = pieces
         return trial.split(atMS: documentTimeMS - time.inMS)
     }
@@ -321,8 +323,11 @@ extension EditorState {
     func beginClipBarDrag(layerID: UUID, grab: ClipBarGrab) {
         endTrimBeforeCutting()
         guard let document, let layer = document.layer(id: layerID),
-              let time = layer.time, let pieces = layer.clipPieces else { return }
+              let time = layer.time, let pieces = layer.clipPieces,
+              // Nothing on a locked track moves (`DocumentTracks.swift`).
+              !document.isClipOnLockedTrack(layerID) else { return }
         pauseDocument()
+        clipTrackDrop = nil
         // Taking hold of a bar picks its clip, and taking hold of a piece
         // picks that piece, so the panel is talking about what is in the hand.
         if case .carry(let piece) = grab {
@@ -372,6 +377,15 @@ extension EditorState {
             guard landing.movedMS != 0 else { break }
             perform { $0.trimClipEnd(id, ofPiece: after, byMS: landing.movedMS) }
         case .body:
+            // Carried onto another track, or onto a new one between two: the
+            // slide and the change of track land as one step.
+            if let drop = clipTrackDrop {
+                clipTrackDrop = nil
+                if drop.allowed {
+                    landClip(id, atInMS: landing.clipStartMS, moved: landing.movedMS != 0, on: drop)
+                    break
+                }
+            }
             guard landing.movedMS != 0 else { break }
             perform { $0.moveClip(id, toInMS: landing.clipStartMS) }
         case .carry(let piece):
@@ -387,6 +401,7 @@ extension EditorState {
     /// written.
     func cancelClipBarDrag() {
         stopWatchingForClipBarEscape()
+        clipTrackDrop = nil
         guard clipBarDrag != nil else { return }
         clipBarDrag = nil
         documentMomentChanged()
@@ -453,7 +468,9 @@ extension EditorState {
                                         lengthMS: landing.pieces.piece(at: after)?.lengthMS ?? 0,
                                         changeMS: landing.movedMS)
         case .body:
-            return ClipBarCopy.moving(startMS: landing.clipStartMS, changeMS: landing.movedMS)
+            let moving = ClipBarCopy.moving(startMS: landing.clipStartMS, changeMS: landing.movedMS)
+            guard let track = clipTrackDropReading else { return moving }
+            return "\(moving), \(track)"
         case .carry(let piece):
             guard let to = landing.dropIndex else { return nil }
             return ClipBarCopy.carrying(pieceNumber: piece + 1, toPlace: to + 1,

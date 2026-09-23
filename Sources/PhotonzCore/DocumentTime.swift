@@ -218,6 +218,14 @@ extension PhotonzDocument {
         let moment = min(max(0, ms), lastDrawableTimeMS)
         var shown = self
         shown.layers = layers.map { $0.shownTree(atTimeMS: moment, framesInHand: framesInHand) }
+        // A track switched off, or outsoloed, takes its clips off screen the
+        // way their own stretch ending does (`DocumentTracks.swift`).
+        let offTrack = layersOffScreenByTrack()
+        if !offTrack.isEmpty {
+            for index in shown.layers.indices where offTrack.contains(shown.layers[index].id) {
+                shown.layers[index].isVisible = false
+            }
+        }
         // In a document that finishes, the lap IS the document: four seconds in
         // is four seconds in, never four seconds modulo something.
         let cycle = max(1, documentDurationMS)

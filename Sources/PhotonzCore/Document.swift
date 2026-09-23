@@ -78,6 +78,12 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// undo step and does not make a file look edited; it rides along with the
     /// next save the person makes.
     public var readWords = ReadWords()
+    /// The timeline's tracks, top to bottom, once anybody has changed one
+    /// (`DocumentTracks.swift`). Empty is every document nobody has, whose
+    /// timeline still shows a track per clip, worked out as it is read.
+    public var tracks: [DocumentTrack] = []
+    /// The groups tracks have been gathered into.
+    public var trackGroups: [DocumentTrackGroup] = []
 
     public init(canvasSize: CGSize, layers: [Layer] = [], pixelScale: CGFloat = 1,
                 colorStyles: [ColorStyle] = [], textStyles: [TextStyle] = [],
@@ -96,6 +102,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case canvasSize, layers, pixelScale, colorStyles, textStyles, effectStyles, guides
         case gridOriginX, gridOriginY, motionCycleMS, readWords, durationMS
+        case tracks, trackGroups
     }
 
     /// A document with no styles in it writes no styles key, so one saved
@@ -124,6 +131,10 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // A document nothing has been read off writes no readings key, so one
         // saved before the app kept its reading is byte for byte what it was.
         if !readWords.isEmpty { try c.encode(readWords, forKey: .readWords) }
+        // A timeline nobody has changed a track on writes no tracks, so every
+        // recording saved before tracks existed is byte for byte what it was.
+        if !tracks.isEmpty { try c.encode(tracks, forKey: .tracks) }
+        if !trackGroups.isEmpty { try c.encode(trackGroups, forKey: .trackGroups) }
     }
 
     public init(from decoder: Decoder) throws {
@@ -158,6 +169,8 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // pictures yet, which is what every document written before this did:
         // it is read in the background on open, exactly as it was.
         readWords = try c.decodeIfPresent(ReadWords.self, forKey: .readWords) ?? ReadWords()
+        tracks = try c.decodeIfPresent([DocumentTrack].self, forKey: .tracks) ?? []
+        trackGroups = try c.decodeIfPresent([DocumentTrackGroup].self, forKey: .trackGroups) ?? []
     }
 
     /// A new document built around a base image, which becomes the bottom layer.
