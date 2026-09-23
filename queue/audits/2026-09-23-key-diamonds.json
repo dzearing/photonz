@@ -1,0 +1,29 @@
+{
+  "feature": "Every value in the panel has a key diamond",
+  "epic": "video-transitions-motion",
+  "summary": "Pick a layer in a recording and the Animating section lists every value that can change over time, each with a diamond. Click one to start keying it at the playhead. From then on, changing that value at another moment, in the panel or by dragging on the canvas, adds a key.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a screen recording and type a title on it with the text tool.",
+  "try": [
+    { "do": "With the title picked, scroll the panel to Animating and look at the dim diamonds beside Position, Scale, Rotation, Opacity, Color, Blur, Shadow size and Text size.", "shot": "2026-09-23-key-diamonds-1.png" },
+    { "do": "Click the diamond beside Scale. It fills: a key at the playhead." },
+    { "do": "Move the playhead two seconds later, type 160 into Scale and press Return. That is a second key.", "shot": "2026-09-23-key-diamonds-2.png" },
+    { "do": "Step back a second. The diamond is hollow, Scale reads part way, and the title on the canvas is part grown.", "shot": "2026-09-23-key-diamonds-3.png" },
+    { "do": "Click the ‹ and › arrows beside the diamond to jump between the two keys. Press Command Z to take the second key back." },
+    { "do": "Click the diamond beside Position, step back a second and drag the title on the canvas. The drag is a Position key; the title is still where it was a second later.", "shot": "2026-09-23-key-diamonds-5.png" },
+    { "do": "Click the lit Scale diamond. It asks before removing the keys, and the title keeps the size it has at the playhead.", "shot": "2026-09-23-key-diamonds-4.png" },
+    { "do": "Right-click any row for Add Key Here, Remove Key Here and Stop Animating." }
+  ],
+  "evaluate": [
+    "The diamond works as Premiere's stopwatch: click a lit one to stop animating, after a question. The mock instead has a filled diamond remove only the key under the playhead (that is on the row's right-click here). Keep the stopwatch?",
+    "Does listing every value, keyed or not, answer 'how do I animate this?' without making the section feel long?",
+    "Is a drag on the canvas turning into a key what you expect once Position is keyed, or should it ask the first time?",
+    "Are the three diamond states (dim, violet outline, violet fill) easy to tell apart at a glance?"
+  ],
+  "rough": [
+    "The old Motion section still shows a keyed value again as From, To, Start and Over rows, so the panel says one thing twice. It stays until a curve can be chosen on a key; folded into the lanes task.",
+    "The mock lists only what is animating, with an Animate a property button, and its own caption says every value should be listed. The app lists every value, as the task asks.",
+    "The mock has no key arrows; the task asked for them, so each keyed row has ‹ ◆ ›. Value boxes are narrow 52pt fields where the mock draws wide dark boxes; folded into the video properties look task.",
+    "Crop and glow cannot be keyed yet: crop needs a rectangle value. Left on the parent keyframe task.",
+    "The mock's Graph link and its Easing menu on the timeline bar are not here. A new key eases in and out, and the curve can still be changed in the Motion section."
+  ]
+}

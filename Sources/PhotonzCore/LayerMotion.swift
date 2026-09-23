@@ -34,6 +34,14 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     /// the strip, the From and To row, undo and the export without a line
     /// written for it (`docs/design/video-transitions.md`).
     case blur
+    /// How round its corners are, in document points: the mask a picture, a
+    /// clip or a box is cut out with (`LayerStyle.cornerRadius`).
+    case cornerRadius
+    /// How soft and far its shadow spreads, in document points: the first
+    /// shadow in its Effects list, which a key brings in when there is none.
+    case shadow
+    /// How big its type is, in document points. Words only.
+    case textSize
 
     /// What the menu item and the row are called.
     public var title: String {
@@ -45,6 +53,9 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
         case .color: "Color"
         case .strokeWidth: "Stroke width"
         case .blur: "Blur"
+        case .cornerRadius: "Corner radius"
+        case .shadow: "Shadow size"
+        case .textSize: "Text size"
         }
     }
 
@@ -66,8 +77,13 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     /// app and in a browser. Without it the two disagree the moment a layer
     /// carries both, because growing something multiplies the line it is drawn
     /// with and setting that line afterwards throws the multiplication away.
+    ///
+    /// Corner, shadow and type size sit innermost with the line, for the same
+    /// reason: they are lengths the growth multiplies, so they are set before
+    /// it rather than after.
     public static let nestingOrder: [MotionProperty] =
-        [.opacity, .blur, .position, .rotation, .scale, .color, .strokeWidth]
+        [.opacity, .blur, .position, .rotation, .scale, .color, .strokeWidth,
+         .cornerRadius, .shadow, .textSize]
 
     /// One item of the plus's menu: a property, the value the layer is wearing
     /// now, and whether this layer is already animating it.
@@ -134,6 +150,14 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
             // there.
             guard layer.style.effects.contains(where: { $0.kind == .blur }) else { return nil }
             return .number(Double(layer.style.blurRadius))
+        case .cornerRadius:
+            guard layer.hasRoundableCorners else { return nil }
+            return .number(Double(layer.roundedCornerRadius))
+        case .shadow:
+            guard let shadow = layer.style.shadows.first else { return nil }
+            return .number(Double(shadow.radius))
+        case .textSize:
+            return layer.text.map { .number(Double($0.fontSize)) }
         }
     }
 
@@ -164,7 +188,9 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
         case let (.scale, .number(percent)): return "\(MotionNumber.text(percent))%"
         case let (.opacity, .number(percent)): return "\(MotionNumber.text(percent))%"
         case let (.strokeWidth, .number(points)): return "\(MotionNumber.text(points)) pt"
-        case let (.blur, .number(points)): return "\(MotionNumber.text(points)) pt"
+        case let (.blur, .number(points)), let (.cornerRadius, .number(points)),
+             let (.shadow, .number(points)), let (.textSize, .number(points)):
+            return "\(MotionNumber.text(points)) pt"
         case let (.position, .point(point)):
             return "\(MotionNumber.text(Double(point.x))), \(MotionNumber.text(Double(point.y)))"
         case let (.color, .color(hex)): return hex
@@ -847,6 +873,15 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
             return LayerMotion(property: .color, from: .color(hex), to: .color(hex),
                                timing: MotionTiming(startMS: 0, durationMS: 600),
                                curve: .easeInOut, repeats: plays)
+        case .cornerRadius, .shadow, .textSize:
+            // Reached through a key diamond rather than the plus, but a motion
+            // of any property can be asked for, so these start from what the
+            // layer has and grow by half: something to see, tuned from there.
+            let now = if case let .number(number) = current ?? .number(0) { number } else { 0.0 }
+            let to = now > 0 ? (now * 1.5 * 10).rounded() / 10 : 12
+            return LayerMotion(property: property, from: .number(now), to: .number(to),
+                               timing: MotionTiming(startMS: 0, durationMS: 600),
+                               curve: .easeInOut, repeats: plays)
         }
     }
 }
@@ -978,6 +1013,35 @@ extension MotionProperty {
             // this already by wrapping this row (`nestingOrder`); what is
             // multiplied here is only what came from above.
             moved.setOutlineWidthForMotion(CGFloat(max(0, points)) * grown)
+        case let (.cornerRadius, .number(points)):
+            // Rounded the way the layer rounds: a box curves its own outline,
+            // a picture or a clip is masked (`setRoundedCorners`).
+            moved.setRoundedCorners(CGFloat(max(0, points)) * grown)
+        case let (.shadow, .number(points)):
+            // The first shadow's softness. A layer with none is given one the
+            // moment the size rises above nothing, which is what keying a
+            // shadow onto a title that never had one means; at nothing it is
+            // left without one rather than carrying an invisible entry.
+            let radius = CGFloat(max(0, points)) * grown
+            var shadows = moved.style.shadows
+            if shadows.isEmpty {
+                if radius > 0 { moved.style.shadows = [ShadowStyle(radius: radius)] }
+            } else {
+                shadows[0].radius = radius
+                moved.style.shadows = shadows
+            }
+        case let (.textSize, .number(points)):
+            // The type grows and so does the box it is set in, about the box's
+            // middle, so the words neither wrap nor get cut off on the way up.
+            guard var text = moved.text, text.fontSize > 0 else { break }
+            let size = CGFloat(max(1, points)) * grown
+            let factor = size / text.fontSize
+            text.fontSize = size
+            moved.content = .text(text)
+            let box = moved.frame.standardized
+            let grownBox = CGSize(width: box.width * factor, height: box.height * factor)
+            moved.frame = CGRect(x: box.midX - grownBox.width / 2, y: box.midY - grownBox.height / 2,
+                                 width: grownBox.width, height: grownBox.height)
         default:
             break
         }

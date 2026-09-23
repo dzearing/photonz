@@ -105,6 +105,13 @@ enum InspectorSectionID: String, CaseIterable {
     // move broken into its two properties: this is the whole move in two
     // buttons, and that is its parts, so the short way round comes first
     // (`ClipReframe.swift`).
+    // Every value of the picked layer that can change over time, each with a
+    // key diamond (Next, `every-value-in-the-panel-has-a-key-diamond`).
+    // Present in a document with time, for one picked layer, and ABOVE
+    // Reframe and Motion: those are two ways of making a move, and this is
+    // the list of what is moving and where its keys are, which is what the
+    // mock's clip detail pane leads with ("Animating").
+    case keys
     case reframe
     case motion
     // What happens at the CUT you have picked (Next,
@@ -174,6 +181,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .collage: "Collage"
         case .canvas: "Canvas"
         case .effects: "Effects"
+        case .keys: "Animating"
         case .motion: "Motion"
         case .reframe: "Reframe"
         case .transition: "Transition"

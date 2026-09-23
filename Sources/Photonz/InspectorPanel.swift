@@ -108,6 +108,10 @@ struct InspectorPanel: View {
     /// short way round comes first, and the parts are under it for anybody who
     /// wants to tune the timing.
     private static let orderVersionReframeAboveMotion = 8
+    /// Animating, the list of what is keyed, above Reframe and Motion: those
+    /// are two ways of making a move, and this is what is moving
+    /// (`PropertyKeysInspector`).
+    private static let orderVersionKeysAboveReframe = 9
     /// The sections named after the thing you have picked, in the order they
     /// sit in. One list, so the migration and the rule stay the same sentence.
     private static let pickedSections: [InspectorSectionID] =
@@ -160,6 +164,10 @@ struct InspectorPanel: View {
             .init(version: orderVersionReframeAboveMotion,
                   sections: [InspectorSectionID.reframe.rawValue],
                   .before, InspectorSectionID.motion.rawValue),
+            // ...and what is keyed above both.
+            .init(version: orderVersionKeysAboveReframe,
+                  sections: [InspectorSectionID.keys.rawValue],
+                  .before, InspectorSectionID.reframe.rawValue),
         ]
     }
     @State private var order: [InspectorSectionID] = InspectorSectionID.allCases
@@ -686,6 +694,10 @@ struct InspectorPanel: View {
         // time under it, which is what a camera can be moved on at all: a title
         // has no frame to push in to and a sound draws nothing to push in on.
         if editorState.canReframeAClip { set.insert(.reframe) }
+        // What is keyed on the picked layer, in a document with time
+        // (`PropertyKeysInspector`). One layer, like Motion: a key is that
+        // layer's own value at a moment.
+        if editorState.keyLayer != nil { set.insert(.keys) }
         // The picked shapes' own settings: thickness, corners, an arrow's head
         // and caption — for EVERYTHING picked, like the rows above. Present
         // whenever the picked shapes share at least one setting, so two arrows
@@ -913,6 +925,8 @@ struct InspectorPanel: View {
             })
         case .measurements:
             return AnyView(MeasurementsSectionAccessory())
+        case .keys:
+            return AnyView(PropertyKeysSectionAccessory())
         case .library:
             let scope = LibraryScope(rawValue: libraryScopeRaw) ?? .media
             return AnyView(Text(scope.title)
@@ -1090,6 +1104,8 @@ struct InspectorPanel: View {
             }
         case .motion:
             MotionListInspector()
+        case .keys:
+            PropertyKeysInspector()
         case .reframe:
             ReframeInspector()
         case .transition:

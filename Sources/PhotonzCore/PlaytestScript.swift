@@ -696,6 +696,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// of the timeline needs a way to put the playhead there, and the three
     /// fractions above cannot say nought.
     case videoSeekStart
+    /// The playhead a second later, or a second earlier: how a walk puts it
+    /// BETWEEN two moments the fractions above land on, which is where a
+    /// keyed value is on its way (`every-value-in-the-panel-has-a-key-diamond`).
+    case videoStepOneSecond, videoStepBackOneSecond
     /// Cutting a recording into pieces: put a cut where the playhead is, throw
     /// away the piece the playhead is in, and take the last one back.
     case videoCut, videoDeletePiece, videoUndoEdit
@@ -1015,7 +1019,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
         case .videoBeginTrim, .videoTrimStart, .videoTrimEnd, .videoTrimDone,
              .videoTrimCancel, .videoTrimReset, .videoPlay, .videoPause,
              .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters,
-             .videoSeekStart: true
+             .videoSeekStart, .videoStepOneSecond, .videoStepBackOneSecond: true
         default: false
         }
     }

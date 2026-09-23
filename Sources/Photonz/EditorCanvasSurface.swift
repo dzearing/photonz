@@ -30,7 +30,9 @@ struct EditorCanvasSurface: View {
                    crispTile: editorState.crispTile,
                    crispTileViewport: editorState.crispTileViewport,
                    viewport: editorState.viewport,
-                   document: editorState.document,
+                   // Keyed layers posed at the playhead, so a handle is
+                   // round the picture (`canvasGeometryDocument`).
+                   document: editorState.canvasGeometryDocument,
                    selection: editorState.selection,
                    selectionTargetsPixels: editorState.selectionTargetsPixels,
                    cropRect: editorState.cropRect,

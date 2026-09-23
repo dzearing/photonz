@@ -3376,6 +3376,8 @@ private final class Run {
             case .videoSeekMiddle: editor.scrubDocument(toMS: editor.documentLengthMS / 2)
             case .videoSeekThreeQuarters:
                 editor.scrubDocument(toMS: editor.documentLengthMS * 3 / 4)
+            case .videoStepOneSecond: editor.scrubDocument(toMS: editor.documentTimeMS + 1000)
+            case .videoStepBackOneSecond: editor.scrubDocument(toMS: editor.documentTimeMS - 1000)
             case .videoTrimStart, .videoTrimEnd:
                 guard let session = editor.trimSession,
                       let start = editor.trimmedClipStartMS else {
@@ -4178,6 +4180,7 @@ private final class Run {
                  .videoTrimReset,
                  .videoCopyGIF,
                  .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters, .videoSeekStart,
+                 .videoStepOneSecond, .videoStepBackOneSecond,
                  .videoCut, .videoDeletePiece, .videoUndoEdit, .videoPlay, .videoPause,
                  .videoDragTrimNearCut, .videoDragTrimJustPastCut, .videoDragTrimClearOfCut,
                  .videoDragTrimFreedNearCut,

@@ -102,8 +102,10 @@ extension EditorState {
         // rest of the card would shuffle under the pointer for the whole drag
         // and snap back on mouse-up (`holdingTurnedPivots`).
         let byHand = Experiments.shared.placementEnabled
-        doc.holdingTurnedPivots(above: id) { doc in
-            doc.updateLayer(id: id) { $0 = $0.resized(to: frame, chosenByHand: byHand) }
+        foldingIntoKeys(id, in: &doc) { doc in
+            doc.holdingTurnedPivots(above: id) { doc in
+                doc.updateLayer(id: id) { $0 = $0.resized(to: frame, chosenByHand: byHand) }
+            }
         }
         submit(doc)
     }
@@ -126,14 +128,19 @@ extension EditorState {
         let byHand = Experiments.shared.placementEnabled
         perform { document in
             let canvas = document.canvasSize
-            // Every turned card above this layer keeps the pivot it had, so
-            // resizing or moving one piece leaves the rest of the card exactly
-            // where it is drawn (`holdingTurnedPivots`).
-            document.holdingTurnedPivots(above: id) { document in
-                document.updateLayer(id: id) {
-                    $0 = AnnotationBuilder.planningCaption(
-                        $0.resized(to: frame, chosenByHand: byHand), canvas: canvas,
-                        captionPillSize: $0.measuredCaptionPillSize)
+            // A keyed layer's move, resize or turn lands as keys at the
+            // playhead rather than as a change to the layer
+            // (`EditorState+PropertyKeys`), in this same step.
+            foldingIntoKeys(id, in: &document) { document in
+                // Every turned card above this layer keeps the pivot it had, so
+                // resizing or moving one piece leaves the rest of the card
+                // exactly where it is drawn (`holdingTurnedPivots`).
+                document.holdingTurnedPivots(above: id) { document in
+                    document.updateLayer(id: id) {
+                        $0 = AnnotationBuilder.planningCaption(
+                            $0.resized(to: frame, chosenByHand: byHand), canvas: canvas,
+                            captionPillSize: $0.measuredCaptionPillSize)
+                    }
                 }
             }
             // In the SAME mutation as the move, so one undo puts the layer back
@@ -164,7 +171,7 @@ extension EditorState {
         previewRotations[id] = transform.rotation
         guard dragPreview?.layerID != id else { return }
         guard var doc = document, doc.layer(id: id) != nil else { return }
-        doc.updateLayer(id: id) { $0.transform = transform }
+        foldingIntoKeys(id, in: &doc) { $0.updateLayer(id: id) { $0.transform = transform } }
         submit(doc)
     }
 
@@ -177,7 +184,9 @@ extension EditorState {
         previewRotations[id] = nil
         dragPreviewGeneration += 1
         clearPreviewAfterNextFrame = dragPreview != nil
-        perform { $0.updateLayer(id: id) { $0.transform = transform } }
+        perform { document in
+            foldingIntoKeys(id, in: &document) { $0.updateLayer(id: id) { $0.transform = transform } }
+        }
     }
 
     /// Endpoint-drag commit from the canvas (document coords, ⇧ already

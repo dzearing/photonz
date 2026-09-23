@@ -1,0 +1,460 @@
+{
+  "out": "/tmp/photonz-playtest/key-a-title-s-scale-walk",
+  "seed": "Every value in the panel has a key diamond. This walk opens a recording at Next defaults with no flag changed, types a title on it, and keys the title's scale at two moments the way Premiere's stopwatch does: the diamond starts keying with a key at the playhead, a new value typed at a later moment is a second key, the diamond is hollow between them and filled on them, the arrows step between them, undo takes a key back in one step, and turning keying off asks first.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekMiddle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        620,
+        330
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Launch day"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "reveal",
+      "control": "Animating section"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-nothing-keyed",
+      "note": "THE FIRST TEST, at Next defaults: a title typed on a recording, and the panel's Animating section lists every value it has that can change over time, each with a dim diamond. Nothing is keyed yet, and 'how do I animate this?' has a visible answer on a layer nobody has touched"
+    },
+    {
+      "do": "expect",
+      "field": "Animating Count",
+      "reads": "None keyed"
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Scale",
+      "reads": "not keyed"
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Text size",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Shadow size",
+      "present": true
+    },
+    {
+      "do": "panel",
+      "stage": "1-nothing-keyed"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-a-title-nothing-keyed"
+    },
+    {
+      "do": "press",
+      "control": "Key",
+      "in": "Scale"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-keying",
+      "note": "THE SECOND TEST: one click on the diamond starts keying Scale with a key at the playhead. The diamond fills, because a key sits right here"
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Scale",
+      "reads": "on a key"
+    },
+    {
+      "do": "expect",
+      "field": "Animating Count",
+      "reads": "1 keyed"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekThreeQuarters"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Scale",
+      "reads": "between keys"
+    },
+    {
+      "do": "press",
+      "control": "Scale Value"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "160"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-second-key",
+      "note": "THE THIRD TEST: two seconds later, typing 160 into Scale is a second key, not a new still size. There is no Add Key button: changing a keyed value at another moment is what adds one"
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Scale",
+      "reads": "on a key"
+    },
+    {
+      "do": "panel",
+      "stage": "3-second-key"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-second-key-at-160"
+    },
+    {
+      "do": "action",
+      "action": "videoStepBackOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-between",
+      "note": "THE FOURTH TEST: a second back, between the two keys. The diamond is hollow and coloured, the value reads on its way from 100 to 160, and the title on the canvas is part way grown"
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Scale",
+      "reads": "between keys"
+    },
+    {
+      "do": "panel",
+      "stage": "4-between"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-between-the-keys"
+    },
+    {
+      "do": "press",
+      "control": "Previous Key",
+      "in": "Scale"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-stepped-back",
+      "note": "THE FIFTH TEST: the left arrow puts the playhead on the key before, and the diamond fills again"
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Scale",
+      "reads": "on a key"
+    },
+    {
+      "do": "press",
+      "control": "Next Key",
+      "in": "Scale"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Scale",
+      "reads": "on a key"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-stepped-to-the-next-key"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-undone",
+      "note": "THE SIXTH TEST: one undo takes the second key away in one step, and the first stays"
+    },
+    {
+      "do": "expect",
+      "field": "Animating Count",
+      "reads": "1 keyed"
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Scale",
+      "reads": "between keys"
+    },
+    {
+      "do": "action",
+      "action": "redo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Scale",
+      "reads": "on a key"
+    },
+    {
+      "do": "press",
+      "control": "Key",
+      "in": "Scale"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "7-asks",
+      "note": "THE SEVENTH TEST: clicking the lit diamond on a value with two keys asks before losing them"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-stop-animating-asks"
+    },
+    {
+      "do": "press",
+      "control": "Remove Keys",
+      "in": "Sheet"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Animating Count",
+      "reads": "None keyed"
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Scale",
+      "reads": "not keyed"
+    },
+    {
+      "do": "describe",
+      "stage": "8-stopped",
+      "note": "keying is off, and the title keeps the size it had at the playhead rather than jumping back"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-keying-off-keeps-the-size"
+    },
+    {
+      "do": "press",
+      "control": "Key",
+      "in": "Position"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Position",
+      "reads": "on a key"
+    },
+    {
+      "do": "action",
+      "action": "videoStepBackOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Position",
+      "reads": "between keys"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "drag",
+      "from": [
+        720,
+        350
+      ],
+      "to": [
+        900,
+        420
+      ],
+      "space": "document",
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "9-dragged-on-the-canvas",
+      "note": "THE EIGHTH TEST: with Position keyed, dragging the title on the canvas a second earlier is a second Position key where the hand left it, not a move of the whole title. The diamond fills, and the arrows now have somewhere to go"
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Position",
+      "reads": "on a key"
+    },
+    {
+      "do": "expect",
+      "field": "Animating Count",
+      "reads": "1 keyed"
+    },
+    {
+      "do": "panel",
+      "stage": "9-dragged"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-a-drag-is-a-position-key"
+    },
+    {
+      "do": "press",
+      "control": "Next Key",
+      "in": "Position"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "10-back-where-it-was",
+      "note": "a second later, on the first Position key, the title is back where it was keyed: the drag moved only the moment it was made at"
+    },
+    {
+      "do": "snapshot",
+      "name": "8-the-first-key-is-untouched"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Position",
+      "reads": "on a key"
+    },
+    {
+      "do": "describe",
+      "stage": "11-drag-undone",
+      "note": "one undo takes the dragged key back, and the one set with the diamond stays"
+    }
+  ]
+}

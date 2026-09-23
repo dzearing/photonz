@@ -162,7 +162,7 @@ enum MotionSVG {
                 }
                 wrap.omitPaint.insert(role)
                 push(" \(role)=\"\(track.base)\"", [track.element])
-            case .blur:
+            case .blur, .cornerRadius, .shadow, .textSize:
                 // An animated SVG has no way to say this yet: a blur in the
                 // file is a filter, and animating its softness means writing a
                 // filter and animating the number inside it. Said out loud in
@@ -296,8 +296,8 @@ enum MotionSVG {
         case .strokeWidth:
             element = "animate"
             attributes = "attributeName=\"stroke-width\""
-        case .blur:
-            // Never reached: a blur is dropped before a track is asked for.
+        case .blur, .cornerRadius, .shadow, .textSize:
+            // Never reached: these are dropped before a track is asked for.
             return nil
         }
 
@@ -519,7 +519,7 @@ private extension MotionProperty {
     var isTransform: Bool {
         switch self {
         case .position, .rotation, .scale: true
-        case .opacity, .color, .strokeWidth, .blur: false
+        case .opacity, .color, .strokeWidth, .blur, .cornerRadius, .shadow, .textSize: false
         }
     }
 }

@@ -880,6 +880,9 @@ final class EditorState {
     /// step per frame. The swatch, the row's summary and the canvas all read
     /// it, so the picture follows the pull and the whole pick is one step.
     var motionValuePreview: (motionID: UUID, isFrom: Bool, value: MotionValue)?
+    /// A lit key diamond was clicked on a value with more than one key, and
+    /// the panel is asking whether to lose them (`EditorState+PropertyKeys`).
+    var keyStopQuestion: KeyedProperty?
 
     // MARK: Motion (`next-motion`)
 
@@ -2817,7 +2820,7 @@ final class EditorState {
     /// canvas draws handles, knobs and outlines in. Identical to the layer
     /// itself for anything sitting loose on the canvas.
     func canvasLayer(id: UUID) -> Layer? {
-        guard var layer = document?.canvasLayer(id: id) else { return nil }
+        guard var layer = canvasGeometryDocument?.canvasLayer(id: id) else { return nil }
         if let frame = previewMoves[id] { layer.frame = frame }
         return layer
     }
@@ -2831,7 +2834,7 @@ final class EditorState {
     func canvasFrame(of id: UUID) -> CGRect? {
         guard let layer = document?.layer(id: id) else { return nil }
         if let frame = previewMoves[id] { return layer.withoutSlack(frame) }
-        return document?.canvasLayer(id: id).map { layer.withoutSlack($0.frame) }
+        return canvasGeometryDocument?.canvasLayer(id: id).map { layer.withoutSlack($0.frame) }
     }
 
     /// The other direction: a canvas-space box as the canvas SHOWS it, turned
@@ -3087,6 +3090,11 @@ final class EditorState {
         dragPreviewGeneration += 1
         let generation = dragPreviewGeneration
         guard let doc = document, let layer = doc.layer(id: id) else { return }
+        // A layer with keys in a document with time is drawn somewhere its
+        // stored frame is not, and a drag on it is folded into keys as it goes
+        // (`EditorState+PropertyKeys`): a sprite floated from the stored frame
+        // would show it in the wrong place, so it re-renders per move instead.
+        if dragMakesKeys(id) { return }
         // Zoom callouts can't be sprited: their content samples the backdrop,
         // and the leader lines must track the frame live. Text can't either: it
         // re-wraps on resize, so a stretched start-bitmap would distort glyphs.

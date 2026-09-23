@@ -19431,3 +19431,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Deleted `video-shell.html` (the loop's study arguing against tracks) and its index entry. Shared `.track .tl` is back to 58px uppercase.
 - UX-PATTERNS D18 rewritten (v2.2): a document with time has tracks (video, titles, audio, captions), named, renamable, groupable, each holding many clips, and a clip moves between them. `video-surface.md` and `video.md` now point at the restored mocks as the target and mark the "almost no new chrome / reuse the timing strip" parts withdrawn.
 - Next: the tracks model and the mock's timeline dock (`tracks-you-can-add-…`, `the-timeline-is-the-one-in-the-mock`). Left rough in the task log: the restored panels carry in/out fields and explanatory sentences that 7cb506b1 had taken out; a runner building from them keeps the values, not the sentences.
+
+## 2026-09-23 — Every value in the panel has a key diamond
+
+- New `Sources/PhotonzCore/PropertyKeys.swift`: keys are the existing `LayerMotion` (plays once; From/stops/To are the keys, one key = a 1ms span whose ends agree), volume keys are `AudioLevel` points. Start/stop keying, set a value (a key when keyed, the layer's own value when not), remove a key, step to the key before/after, fold a canvas edit into keys, and pose keyed layers for the canvas's handles. `MotionProperty` gained cornerRadius, shadow (size) and textSize.
+- App: Animating section (`PropertyKeysInspector`) for one picked layer in a document with time; canvas move/resize/turn on a keyed layer become keys, live and on release.
+- Tests: PropertyKeysTests (25), KeyedValueRenderTests, KeyedValueExportTests. Walk: `key-a-title-s-scale-walk` (no flags).
+- Next: key lanes and curves on the key (`a-layer-s-track-opens-into-one-lane-per-keyed-va`), which is also where Motion's From/To rows retire in video. Crop keys still open on the parent task.
