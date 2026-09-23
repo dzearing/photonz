@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:50:37.468Z",
-  "updated": "2026-09-23T12:57:24.168Z",
+  "updated": "2026-09-23T12:57:38.335Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): Playback of an untouched full-screen Retina recording flickers (user, 2026-09-23). Root cause, proven by a renderer test in the intake window: (1) MovieClip.swift:193-197 playing(atTimeMS:) swaps the clip to the new frame's ref whether or not it is decoded, and DocumentRenderer.swift:833 drops a layer whose ref is not in ImageStore, so a late frame draws as transparent instead of holding the last frame (video.md claims it holds; no code does). (2) movieFrameLanded (EditorState+Time.swift:210-223) resubmits an identical document, RenderDiff sees no change and renderInteractive (DocumentRenderer.swift:283-287) returns the cached blank frame, so the blank persists for the whole 33ms slot. A timing replay on a real 3456x2234 recording had 22 of 91 ticks blank, alternating 16 times; a 1696x1118 one was fine, so full-size Retina decode cannot keep up.\n\nUser: 'When I play back, it's flickering the video! not even edited.'",
@@ -68,10 +68,15 @@
     {
       "t": "2026-09-23T12:57:24.167Z",
       "note": "left rough: a frame can still be up to ~3 frames late under load (it holds, never blanks); AVAssetReader sequential decode would be faster still for straight playback but needs its own playback pipeline, not worth a task while holding covers it. Reframe section inset seen in the capture folded into the-video-properties-look-like-the-rest-of-the-d."
+    },
+    {
+      "t": "2026-09-23T12:57:38.333Z",
+      "note": "A late frame now holds the last good picture instead of drawing empty (MovieFramesInHand in PhotonzCore, drawn with frames in hand), the renderer redraws when a missing or smaller frame lands under the same ref, and frames are read by 4 decoders per recording, 8 ahead, at the size the canvas shows. Verified: 3 new renderer tests + 9 core tests (renderer landing tests failed before the fix); new walk playing-a-recording-never-blinks-walk on a 3456x2234 fixture drew the clip at 24/24 looks, and FAILED at 15/24 with the old behaviour restored; 6 neighbouring recording/export walks ok. Walk needs next-a-recording-is-a-document, off at Next defaults (task a-recording-opens-in-the-video-editor-for-real-i). Full suite red only on the known export-size flake, also red on clean main. Commit 48bd9f44; audit queue/audits/2026-09-23-playback-never-blinks.json."
     }
   ],
   "started": "2026-09-23T12:20:41.679Z",
   "walks": [
     "playing-a-recording-never-blinks-walk"
-  ]
+  ],
+  "completed": "2026-09-23T12:57:38.334Z"
 }
