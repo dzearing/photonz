@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 180,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T06:51:24.741Z",
-  "updated": "2026-09-22T12:19:59.846Z",
+  "updated": "2026-09-23T07:44:26.967Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-22 while finishing a-copy-of-a-component-is-configured-not-authored. Command: Scripts/playtest.sh Scripts/playtest/component-drag-lands-a-copy-walk.json --no-build. The walk s own panel reading at stage 1-copy: dockSections [Layers -366--203, Component -203--32, Appearance -32-215, Effects 215-283, Motion 283-364, Layout 364-623, Library 623-841], dockViewport 841, dockInView [Effects, Motion, Layout, Library]. The Component section spans -203 to -32, entirely above the visible top. Cause is EditorState.askForLibraryAfterFetching (EditorState.swift:276), called by insertStarterComponent and insertSharedComponent after a drop so the shelf stays where you left it; it sets pendingLibraryReveal, which scrolls the dock to the Library. Pre-dates the drag-lands-a-copy change: the same reveal ran when the first drop was the original. Related to appearance-is-below-the-fold-again-because-the-p, which is about the panel wanting more height than the window has; this one is about where the panel chooses to scroll.",
@@ -31,9 +31,30 @@
     {
       "t": "2026-09-22T12:19:59.821Z",
       "note": "WIDENED by the 2026-09-22 digest pass: this is not one path, it is a missing rule, and it hit four separate surfaces in twenty four hours. (1) After a component drop the panel scrolls to the Library, so the Component section spans -203 to -32 in a viewport of 841 (queue/audits/2026-09-22-component-drag-lands-a-copy.json). (2) Writing captions selects the first caption, which scrolls the panel to it and takes the Captions section out of view (queue/audits/2026-09-21-captions-from-the-sound.json). (3) Picking a component puts its Time section last before Library, so on a short window you scroll for it (queue/audits/2026-09-22-components-on-the-timeline.json). (4) The full sweep fails dock-picked-first-walk on sectionInView(\"Appearance\") timing out after 4s. Four features, four different answers to the same question: after you do something, where should the panel be looking? Nothing written down says, so each one guessed. Whoever fixes the drop should write the answer into the shared UX patterns doc beside the dock rules, so the fifth feature inherits it."
+    },
+    {
+      "t": "2026-09-23T07:03:28.851Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T07:44:13.099Z",
+      "note": "REPRODUCED first: Scripts/playtest.sh Scripts/playtest/component-drag-lands-a-copy-walk.json read back dockSections [Layers 6-169, Component 169-340, ...] the instant the drop landed, then 0.3s later [Layers -264--101, Component -101-70, ..., Library 623-841] in a dock 841 tall. The shelf reveal (askForLibraryAfterFetching) travels 270 points and the Component section could only afford 169."
+    },
+    {
+      "t": "2026-09-23T07:44:18.121Z",
+      "note": "ADVERSARIAL REVIEW, before building: the two cannot both be whole. At 1240x900 after a drop the dock holds 1111 points of sections in 841, so the Component section (171) and a usable Library (218) plus Appearance, Effects, Motion and Layout (553) between them cannot all be on screen whatever the scroll does. So the fix cannot be arithmetic that satisfies both acceptance items literally: it has to CHOOSE, and the choice the task goal makes is the thing you just put down. The shortest version that delivers it is a cap on the existing reveal rather than a new mechanism, so that is what was built."
+    },
+    {
+      "t": "2026-09-23T07:44:22.205Z",
+      "note": "starter-shelf-walk was the walk that owned the OPPOSITE guarantee (expectInView Library section after each of three drops) and it went red on the Nav Bar: the cap leaves the shelf head 4 points short of the bottom edge there. It now asserts the new rule instead, sectionInView Component after each drop, plus sectionHeaderInView Library after the Button, where both ends hold at once. Its seed says what changed and why. Not a weakening by accident: the guarantee it was written for on 2026-09-17 was the shelf 300 points below the edge, and 4 points is not that."
+    },
+    {
+      "t": "2026-09-23T07:44:26.966Z",
+      "note": "left rough, not filed: (a) the panel scrolls the layers list clean off the top to put the new component's section at the dock top, which is not new but is still a list disappearing unasked; (b) the shelf's top tile row is cut across the middle where it meets the bottom edge, which is the scroller doing what the shelf's own squeeze floor exists to avoid; (c) the standing question of whether the shelf should live at the foot of the panel outside the scroller, where it would never move and both ends of the rule would always hold. All three are in the audit's rough list, where the user reacts to them, rather than filed as tasks against a look nobody has chosen yet. The other three cases from the 2026-09-22 widening (captions, the Time section, dock-picked-first-walk) now have the rule written down but not the code; dock-picked-first-walk passes on this tree."
     }
   ],
   "walks": [
     "component-drag-lands-a-copy-walk"
-  ]
+  ],
+  "started": "2026-09-23T07:03:28.850Z"
 }

@@ -1,0 +1,28 @@
+{
+  "feature": "The panel stays on what you just put down",
+  "epic": "ui-components",
+  "summary": "Drop a component on the canvas and the right hand panel now shows the thing you placed, named and whole at the top, instead of scrolling itself down to the Library and leaving that section above the top edge. The shelf still comes back after you, as far as the new component's own section leaves room for.",
+  "setup": "Photonz Dev, a new document, window about 1240 by 900. View menu, Show Library, and switch the shelf to Comps.",
+  "try": [
+    { "do": "Open the Library shelf from the View menu and pick the Comps tab." },
+    { "do": "Drag the Button tile onto the middle of the canvas.", "shot": "2026-09-23-panel-after-a-drop-1-button.png" },
+    { "do": "Read the top of the panel without touching the scroll: it should say Component, Button, and the row of properties for what you just dropped." },
+    { "do": "Look at the foot of the panel: the Library head, its tabs, its search box and the top of the tiles should be there." },
+    { "do": "Undo, then drag the Nav Bar tile onto the canvas instead.", "shot": "2026-09-23-panel-after-a-drop-2-navbar.png" },
+    { "do": "Read the panel again: the Nav Bar's own section is at the top, and the Library head is now right on the bottom edge rather than fully back." },
+    { "do": "Drag a second tile out without scrolling the panel first, and see whether getting to it felt like a hunt." }
+  ],
+  "evaluate": [
+    "When the component lands, is the top of the panel where your eye already was?",
+    "Is losing the layers list off the top of the panel worth having the new component's settings at the top?",
+    "On the Nav Bar drop the shelf stops on the bottom edge rather than coming back whole. Is that near enough to keep building with, or does it read as the shelf running away?",
+    "Placing three things in a row: does the panel moving after each drop feel like help, or like the panel deciding for you?",
+    "Would you rather the shelf never moved at all, by living at the foot of the panel outside the scroller?"
+  ],
+  "rough": [
+    "The two cannot both be whole on a panel this over-subscribed, and this change chooses the new component. On a 1240 by 900 window a Button leaves 117 points of shelf showing; a Nav Bar, which carries a taller Layout section, leaves the shelf's head 4 points short of the bottom edge, and on a laptop window it would be further under. The fix for that is a shelf that does not live in the scroller at all, which is a look change and is not mine to make.",
+    "The panel scrolls the layers list clean off the top to do this. That is not new (the old shelf reveal took it further off), but it is still a list disappearing without being asked.",
+    "The shelf's top row of tiles is cut across the middle where it meets the bottom edge. It reads as more below rather than as anonymous pictures, but the shelf's own squeeze floor exists precisely to avoid cutting a row, and this is the scroller doing it instead.",
+    "Three of the four cases that prompted the written rule are untouched by this change: captions scrolling to the first caption, a component's Time section landing last, and dock-picked-first-walk waiting on Appearance. The rule is now written down for them; the code is not."
+  ]
+}

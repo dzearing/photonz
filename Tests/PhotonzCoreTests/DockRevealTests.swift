@@ -108,3 +108,113 @@ struct DockRevealTests {
         #expect(DockReveal.action(sectionTop: 0, sectionHeight: 0, viewportHeight: 800) == .none)
     }
 }
+
+/// The second rule of revealing, added on 2026-09-23: **after an action, the
+/// panel looks at what the action produced.**
+///
+/// A reveal is the app pointing at something you could not have known was
+/// there. It is not allowed to do that at the cost of the thing you just made:
+/// dropping a component on the canvas scrolled the dock to the Library shelf
+/// and pushed the new component's own section clean off the top of the panel,
+/// so the answer to "what did I just put down" was above the edge and you had
+/// to scroll back up to it.
+///
+/// The numbers in this suite are the ones a 1240x900 window really produced on
+/// 2026-09-22 (queue/audits/2026-09-22-component-drag-lands-a-copy.json): a
+/// dock 841 points tall, the new Component section at 169 with 171 points of
+/// height, and the Library shelf at 893 with 218.
+@Suite("DockReveal, keeping what an action produced")
+struct DockRevealKeepingProducedTests {
+
+    // MARK: The case this was written for
+
+    @Test func refusesAShelfRevealThatWouldCutTheComponentJustDropped() {
+        // Revealing the shelf wants to travel 270 points. The Component
+        // section can only afford 169 before its head goes over the edge.
+        #expect(DockReveal.reveal(sectionTop: 893, sectionHeight: 218,
+                                  keepingWholeTop: 169, keepingWholeHeight: 171,
+                                  viewportHeight: 841) == .produced(.top))
+    }
+
+    @Test func aShelfRevealThatFitsStillHappens() {
+        // The same shelf in a taller dock: the whole of it can come up with
+        // the Component section still whole, so the reveal gets what it asked
+        // for.
+        #expect(DockReveal.reveal(sectionTop: 893, sectionHeight: 218,
+                                  keepingWholeTop: 0, keepingWholeHeight: 171,
+                                  viewportHeight: 1111) == .nothing)
+        #expect(DockReveal.reveal(sectionTop: 500, sectionHeight: 218,
+                                  keepingWholeTop: 300, keepingWholeHeight: 171,
+                                  viewportHeight: 700) == .reveal(.bottom))
+    }
+
+    // MARK: Nothing produced
+
+    @Test func withNothingProducedItIsTheOldRuleExactly() {
+        #expect(DockReveal.reveal(sectionTop: 893, sectionHeight: 218,
+                                  keepingWholeTop: 0, keepingWholeHeight: 0,
+                                  viewportHeight: 841) == .reveal(.bottom))
+        #expect(DockReveal.reveal(sectionTop: 100, sectionHeight: 218,
+                                  keepingWholeTop: 0, keepingWholeHeight: 0,
+                                  viewportHeight: 841) == .nothing)
+    }
+
+    // MARK: A dock that must not twitch
+
+    @Test func staysPutWhenTheProducedSectionCanAffordNothingAtAll() {
+        // The produced section is already flush with the top: any travel
+        // towards the shelf cuts it, so the dock does not move.
+        #expect(DockReveal.reveal(sectionTop: 893, sectionHeight: 218,
+                                  keepingWholeTop: 0, keepingWholeHeight: 171,
+                                  viewportHeight: 841) == .nothing)
+    }
+
+    @Test func staysPutWhenNothingNeedsRevealingAndTheProducedSectionIsWhole() {
+        #expect(DockReveal.reveal(sectionTop: 300, sectionHeight: 218,
+                                  keepingWholeTop: 100, keepingWholeHeight: 171,
+                                  viewportHeight: 841) == .nothing)
+    }
+
+    @Test func ignoresSubPointDustInTheCap() {
+        // 0.3 of a point of room is not room, and spending it is a twitch.
+        #expect(DockReveal.reveal(sectionTop: 893, sectionHeight: 218,
+                                  keepingWholeTop: 0.3, keepingWholeHeight: 171,
+                                  viewportHeight: 841) == .nothing)
+    }
+
+    // MARK: The produced section is the one that is off screen
+
+    @Test func pullsTheProducedSectionBackWhenItHasRunOffTheTop() {
+        // Whatever the reveal wanted, a produced section above the fold is
+        // the thing the panel is for. This is the state the bug left behind.
+        #expect(DockReveal.reveal(sectionTop: 623, sectionHeight: 218,
+                                  keepingWholeTop: -101, keepingWholeHeight: 171,
+                                  viewportHeight: 841) == .produced(.top))
+    }
+
+    @Test func pullsTheProducedSectionUpWhenARevealAboveWouldPushItOffTheBottom() {
+        // The mirror image: the thing to reveal is above the fold, and
+        // scrolling back up to it would take the produced section's foot past
+        // the bottom edge. The dock goes as far up as the produced section's
+        // own foot allows.
+        #expect(DockReveal.reveal(sectionTop: -300, sectionHeight: 218,
+                                  keepingWholeTop: 600, keepingWholeHeight: 171,
+                                  viewportHeight: 841) == .produced(.bottom))
+    }
+
+    @Test func showsTheTopOfAProducedSectionTallerThanTheDock() {
+        // It can never be whole, so its beginning is the part worth keeping,
+        // exactly as a too-tall reveal target gets its top.
+        #expect(DockReveal.reveal(sectionTop: 893, sectionHeight: 218,
+                                  keepingWholeTop: 200, keepingWholeHeight: 900,
+                                  viewportHeight: 841) == .produced(.top))
+    }
+
+    // MARK: Nothing measured yet
+
+    @Test func doesNothingBeforeTheDockHasBeenMeasured() {
+        #expect(DockReveal.reveal(sectionTop: 893, sectionHeight: 218,
+                                  keepingWholeTop: 169, keepingWholeHeight: 171,
+                                  viewportHeight: 0) == .nothing)
+    }
+}

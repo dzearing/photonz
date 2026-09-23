@@ -41,6 +41,14 @@ import SwiftUI
 //    whose order has NOT been fixed: see `requestPick` at the end of this file.
 //    That goes the day Next is promoted.
 //
+// 4. **A REVEAL NEVER COSTS WHAT THE ACTION PRODUCED.** When one action both
+//    makes something and reveals something — dropping a component makes a
+//    layer and brings the shelf back — the made thing's section caps how far
+//    the dock may scroll, and the reveal spends what is left.
+//    `DockReveal.reveal` does the arithmetic; `applyLibrary` is the one caller
+//    so far. Added 2026-09-23, after a drop scrolled the new component's own
+//    section off the top of the panel in order to show the shelf.
+//
 // The same rule written for a reader rather than for a compiler is in
 // `docs/design/mocks/shared/UX-PATTERNS.md`, section 3, under Reveal.
 //
@@ -516,14 +524,30 @@ struct DockBudgetScratch: Equatable {
 
     func applyLibrary() {
         guard scratch.isPending, let frame = scratch.libraryFrame else { return }
-        let action = DockReveal.action(sectionTop: frame.minY,
-                                       sectionHeight: frame.height,
-                                       viewportHeight: scratch.viewportHeight)
+        // What the fetch PRODUCED: the section named after the thing that has
+        // just landed on the canvas, which the command that placed it named
+        // (`EditorState.sectionTheFetchProduced`). The shelf may not be brought
+        // up at its expense — see `DockReveal.reveal`, and rule 4 of the dock
+        // rule at the top of this file.
+        let produced = editorState.sectionTheFetchProduced
+            .flatMap { id in scratch.sectionFrames[id].map { (id, $0) } }
+        let outcome = DockReveal.reveal(sectionTop: frame.minY,
+                                        sectionHeight: frame.height,
+                                        keepingWholeTop: produced?.1.minY ?? 0,
+                                        keepingWholeHeight: produced?.1.height ?? 0,
+                                        viewportHeight: scratch.viewportHeight)
         scratch.isPending = false
         editorState.libraryRevealHandled()
-        guard action != .none else { return }
+        let target: (InspectorSectionID, DockReveal.Action)
+        switch outcome {
+        case .nothing: return
+        case .reveal(let action): target = (.library, action)
+        case .produced(let action):
+            guard let produced else { return }
+            target = (produced.0, action)
+        }
         withAnimation(.easeInOut(duration: 0.28)) {
-            proxy.scrollTo(InspectorSectionID.library, anchor: action == .top ? .top : .bottom)
+            proxy.scrollTo(target.0, anchor: target.1 == .top ? .top : .bottom)
         }
     }
 

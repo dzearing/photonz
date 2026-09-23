@@ -232,6 +232,7 @@ final class EditorState {
         } else {
             selectedLibraryItemID = nil
             pendingLibraryReveal = false
+            sectionTheFetchProduced = nil
             pendingLibraryTileID = nil
         }
     }
@@ -248,7 +249,10 @@ final class EditorState {
     /// needs to move at all).
     private(set) var pendingLibraryReveal = false
 
-    func libraryRevealHandled() { pendingLibraryReveal = false }
+    func libraryRevealHandled() {
+        pendingLibraryReveal = false
+        sectionTheFetchProduced = nil
+    }
 
     /// How long to wait after something is taken off the shelf before asking
     /// the dock to bring the shelf back.
@@ -277,13 +281,36 @@ final class EditorState {
     /// `InspectorDockReveal.requestLibrary` makes that call, and `DockReveal`
     /// makes the one after it, which is that a shelf already on screen never
     /// moves at all.
-    func askForLibraryAfterFetching() {
+    ///
+    /// And it is a REQUEST, not an order. The thing the fetch just put down
+    /// has first claim on the panel, so the dock brings the shelf back only as
+    /// far as the new layer's own section can afford: see
+    /// `InspectorDockReveal.applyLibrary` and `DockReveal.reveal`. Before that
+    /// cap existed, a drop on a 900 point window scrolled the new component's
+    /// section from 169 to -101 and you scrolled back up to it every time.
+    func askForLibraryAfterFetching(produced: InspectorSectionID?) {
         guard Experiments.shared.libraryEnabled, isLibraryVisible else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + Self.libraryFetchRevealDelay) {
             guard self.isLibraryVisible else { return }
+            // Named before the reveal is armed, never after: the dock reads it
+            // the instant the flag turns over. A fetch that never gets this far
+            // leaves nothing behind for the NEXT reveal to be capped by.
+            self.sectionTheFetchProduced = produced
             self.pendingLibraryReveal = true
         }
     }
+
+    /// The section named after the thing the fetch just put down — Component,
+    /// for everything that comes off the shelf today.
+    ///
+    /// This is the half of the rule the dock cannot work out for itself. The
+    /// panel already knows which section is named after what is PICKED, and a
+    /// drop picks what it placed, but the two lists are not the same: Component
+    /// is one of the sections that say where a layer sits and what it is a copy
+    /// of, not one of the sections named after a kind of layer. So the command
+    /// that does the fetching says which section its work produced, and the
+    /// dock caps the shelf's reveal at whatever that section can afford.
+    private(set) var sectionTheFetchProduced: InspectorSectionID?
 
     /// The tile the shelf itself has to scroll to, until it has.
     ///

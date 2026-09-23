@@ -1,0 +1,28 @@
+{
+  "id": "an-animated-export-weighed-twice-comes-out-the-s",
+  "title": "An animated export weighed twice comes out the same size twice",
+  "goal": "The Export sheet promises how big an animated file will be by writing one and weighing it. The test that holds it to that promise goes red when the machine is busy with something else, so a test run that means nothing sends whoever reads it hunting a bug that is not there.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 3140,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T07:43:47.881Z",
+  "updated": "2026-09-23T07:43:47.884Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED 2026-09-23 while landing the-panel-jumps-to-the-shelf-after-a-drop-instea. Under the full suite:\n\n  Scripts/test.sh  ->  Test run with 9134 tests in 730 suites failed with 2 issues\n    AnimatedExportWeighTests.swift:109: (written[0].count -> 208988) == (written[1].count -> 285616)\n      short heic at high came out 208988 bytes and then 285616\n    AnimatedExportWeighTests.swift:128: (small < standard) && (standard < high -> false)\n      short heic came out 208988/234401/138064 bytes at High/Standard/Small\n\n  Scripts/test.sh --filter AnimatedExportWeigh  ->  3 tests passed, 17.7s\n  Scripts/test.sh (second full run, quieter machine)  ->  9134 tests passed, 181.6s\n\nSo it is load dependent, the same shape as the-test-suite-stops-reporting-failures-that-are (done 2026-09-20), which was the Vision text reader returning nothing under load. This one is the HEIC encoder handing back a different number of bytes for the same frames, so it may not be fixable by waiting: if the size really does move, the sheet has a promise it cannot keep and that is worth knowing.\n\nThe suite is otherwise green on the same tree.",
+  "acceptance": [
+    "Scripts/test.sh run while the machine is also building reports the same result for AnimatedExportWeighTests as a run on an idle machine, checked both ways",
+    "If the weighing genuinely cannot be reproduced under load, the test says so out loud with a reason rather than failing",
+    "The Export sheet is checked to see whether a person can be shown two different sizes for the same choice, and the answer is written into the task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T07:43:47.883Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": []
+}

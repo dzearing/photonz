@@ -402,6 +402,40 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
   should overrule a deliberate collapse; until they answer, it does, because
   scrolling to a shut header shows a title and nothing else.
 
+  **After an action, the panel looks at what the action PRODUCED** (settled
+  2026-09-23, built in `DockReveal.reveal` and the dock's rule 4,
+  `Sources/Photonz/InspectorDockLayout.swift`). When one action both makes
+  something and reveals something, the made thing wins. The section named after
+  what just landed is whole and as high in the panel as the dock can carry it,
+  and the reveal spends whatever travel is left over. If nothing is left over,
+  the reveal gets nothing and the panel does not move at all.
+
+  This was written down because four features in two days each answered the
+  same question differently, and nothing anywhere said what the answer was:
+
+  - Drop a component on the canvas and the panel scrolled to the Library shelf,
+    which carried the new component's own section from 169 to -101 in a dock
+    841 points tall, so the answer to "what did I just put down" was above the
+    top edge (`queue/audits/2026-09-22-component-drag-lands-a-copy.json`).
+  - Writing captions selected the first caption, which scrolled the panel to it
+    and took the Captions section out of view
+    (`queue/audits/2026-09-21-captions-from-the-sound.json`).
+  - Picking a component put its Time section last, before the Library, so on a
+    short window you scrolled for it
+    (`queue/audits/2026-09-22-components-on-the-timeline.json`).
+  - `dock-picked-first-walk` failed a sweep waiting for Appearance to come into
+    view after a pick.
+
+  **What it costs, said out loud.** On an over-subscribed dock the two cannot
+  both be whole, and this rule chooses. Drop a Nav Bar in a 1240 by 900 window
+  and the shelf you dragged it from ends a few points under the bottom edge
+  instead of coming back whole; drop a Button, and there is room for the shelf's
+  head, its tabs, its search box and the top of its tiles under the new
+  component's settings. The alternative was the panel jumping to the shelf and
+  the thing you just placed going off the top, which is the bug this rule
+  replaced. A shelf that never has to move, because it sits at the foot of the
+  panel outside the scroller, is the standing question this leaves open.
+
   **What you picked sits at the top, and a pick never scrolls the dock**
   (settled 2026-09-14; chosen by the user on 2026-09-13 from
   `queue/decisions/picking-a-text-layer-leaves-its-settings-below-t-when-you-pick-something-on-the-c.json`,

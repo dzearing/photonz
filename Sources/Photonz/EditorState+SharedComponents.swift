@@ -132,7 +132,7 @@ extension EditorState {
         selectedLibraryItemID = nil
         selectLayer(placed, inGroup: self.document?.parentID(of: placed))
         // Fetched off the shelf, so the shelf stays where you left it.
-        askForLibraryAfterFetching()
+        askForLibraryAfterFetching(produced: .component)
         if broughtTheOriginal { sayTheOriginalArrived(named: shared.name) }
         return placed
     }
