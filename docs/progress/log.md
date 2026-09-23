@@ -19326,3 +19326,54 @@ were rewritten off the capture folder and onto the document.
 row's drop list both changed. Media stays empty for a plain redlining document
 (open a screenshot, annotate it, place nothing), which is the settled model
 doing what it says and the biggest thing in the audit to disagree with.
+
+## 2026-09-23 — A shape you turned still shows its points
+
+Turning a path even one degree used to take its points away, with a chip
+saying to set A back to 0 and come back. An icon is full of pieces sitting at
+an angle, so that made the one shape you most want to round a corner on the
+one shape you could not touch.
+
+The refusal's stated reason named the wrong motion, which is why it stood for
+so long. Reshaping does move the box the shape sits in, and a turn is measured
+about the middle of that box, but the drawing does not SWING, it SLIDES: for a
+turn whose linear part is `L`, about a pivot moving `c0` to `c1`, every point
+lands `(I - L)(c1 - c0)` away from where it was, the same amount whichever
+point you ask about, because the box's corner and the shape's own coordinates
+move together. One offset puts all of it back. It is the same trick a resize
+on a turned layer has always played (`Handles.anchoredFrame`).
+
+`PathEditSpace` (PhotonzCore, pure, twelve tests) is the one value that knows
+where a layer's own coordinates sit: its corner, its turn, what that turn is
+about, and any card turn above it. It answers a press in the shape's own
+coordinates, a point of the shape out on the canvas, and the box a reshaped
+shape has to take. Taken at the press and held for the whole gesture, so a
+drag cannot drift. `PathBuilder.refit` goes through it, so every reshape in
+the app gets the placement rather than the canvas remembering to ask.
+
+Three things came along with it. An arrow key now pushes a point the way the
+KEY points rather than along the shape's own grain, which on a turn is up and
+sideways at once. A sweep band stays the upright box the hand dragged and
+takes the points it visibly goes round — the task asked for a band drawn in
+the shape's own frame, and a band arriving on a slant because the shape under
+it happens to be turned reads as broken and no drawing tool does it, so the
+acceptance was amended rather than followed. And reshaping a piece inside a
+turned CARD now reads the press through the card's turn and commits inside
+`holdingTurnedPivots`, like every other gesture in one.
+
+One claim did not survive checking: I expected Turn Into Path to have been
+sliding turned shapes through the same refit, wrote a test, then reverted the
+change and ran it again. It passed both ways — a line's box does close in on
+the way through, but evenly on all four sides, so its middle never moved. The
+test stays as the boundary; the claim came out of the audit.
+
+`turned-path-keeps-its-points-walk` is new: 74 steps, six real window
+captures, checking the points land where a 30 degree turn about the box middle
+puts them, that a click reaches one there, that dragging it leaves the other
+two pixel-identical with A still reading 30, that a box sweeps up two of them,
+that a corner rounds and its lever pulls, and that undo puts each back.
+
+**Next:** a full sweep was asked for, because `refit` is one line under every
+pen, reshape, join, close, boolean and Turn Into Path walk in the set. The
+biggest thing in the audit to disagree with is the upright sweep band on a
+turned shape.
