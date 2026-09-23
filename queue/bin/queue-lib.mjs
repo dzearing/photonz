@@ -1385,6 +1385,10 @@ function readCommitsSince(builtAt, repo) {
   } catch { return []; }
 }
 
+// `at` is the clock the whole answer is measured from, and it is carried back
+// out on the state so anything writing words about that state measures from the
+// same clock. Reading it fresh instead is how a fixture written on one day
+// started describing itself a day older every day.
 export function devAppState({ at = Date.now(), builtAt = mtimeISO(join(REPO, DEV_APP_BIN)), commits = null } = {}) {
   const lockSince = mtimeISO(PLAYTEST_LOCK);
   // The lock says who took it in its first line; testing.sh writes it and a
@@ -1410,6 +1414,7 @@ export function devAppState({ at = Date.now(), builtAt = mtimeISO(join(REPO, DEV
   const behind = since.length;
   const overdue = oldest !== null && at - Date.parse(oldest.at) > REFRESH_GRACE;
   return {
+    at,
     present,
     builtAt,
     behind,
@@ -1426,7 +1431,10 @@ export function devAppState({ at = Date.now(), builtAt = mtimeISO(join(REPO, DEV
 
 // The same words the dashboard shows, in one plain line, so the loop log and
 // the page cannot drift apart. Empty when there is nothing to say.
-export function devAppSentence(state = devAppState(), at = Date.now()) {
+// The clock defaults to the one the state was read at, not to now: the ages in
+// these words describe that state, so reading them off a later clock makes the
+// sentence disagree with the numbers beside it.
+export function devAppSentence(state = devAppState(), at = (state && typeof state.at === 'number' ? state.at : Date.now())) {
   if (!state || !state.stale) return '';
   const n = state.behind;
   let s = `your dev app is ${n} commit${n === 1 ? '' : 's'} behind: it was built ${ago(state.builtAt, at)}`;

@@ -15,6 +15,12 @@
 //     compiling and an alarm that fires on every build is one nobody reads;
 //   nothing here ever clears the lock or touches the app.
 //
+// And it has to say the same thing tomorrow as it says today. Every time in
+// here is measured from the drill's own fixed clock, never the machine's: a
+// state and the sentence written from it share one clock, so the drill cannot
+// go red just because a day passed. It did, once, and a runner lost a morning
+// to a failure that was only the calendar moving.
+//
 //   node queue/bin/dev-app-drill.mjs
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, utimesSync } from 'node:fs';
 import { join } from 'node:path';
@@ -58,6 +64,7 @@ let s = state({ commits: [] });
 check('no commits since the build means not behind', s.behind === 0 && s.stale === false, s);
 check('it still says when the app was built', s.builtAt === ago(49), s.builtAt);
 check('no lock means no lock', s.lock.held === false, s.lock);
+check('the state carries the clock it was read at', s.at === NOW, s.at);
 check('nothing to say, so the sentence is empty', lib.devAppSentence(s) === '', lib.devAppSentence(s));
 
 console.log('a build newer than the newest commit');
@@ -125,6 +132,21 @@ holdLock(48.5);
 lib.devAppState({ at: NOW, builtAt: ago(49), commits: twelve() });
 lib.devAppSentence(state({ commits: twelve() }));
 check('the lock file is still there after reading the state', lib.devAppState({ at: NOW, builtAt: ago(49), commits: [] }).lock.held === true);
+
+// The words are about the state, so they are measured from the clock that
+// state was read at. Otherwise a fixture written today is described by the
+// machine's clock tomorrow, and the age in the sentence grows by a day a day.
+console.log('the same state says the same thing however long ago it was read');
+holdLock(48.5);
+s = state({ commits: twelve() });
+const written = lib.devAppSentence(s);
+check('a state read at a fixed clock is described at that clock', / 2 days/.test(written), written);
+const realNow = Date.now;
+Date.now = () => realNow() + 30 * 24 * HOUR;   // the machine's clock, a month on
+try {
+  check('a month of machine clock does not change a word of it', lib.devAppSentence(s) === written, lib.devAppSentence(s));
+  check('and a state read with no clock given still uses the machine\'s', Math.abs(lib.devAppState({ builtAt: ago(49), commits: [] }).at - Date.now()) < 5000);
+} finally { Date.now = realNow; }
 
 // The dashboard polls aggregateState every four seconds forever, and the git
 // log inside it is the only expensive part of this whole feature.
