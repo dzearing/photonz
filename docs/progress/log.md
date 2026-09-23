@@ -19273,3 +19273,56 @@ walk fails on a control that is entirely on screen.
 
 **Next:** a full sweep was asked for, because this is the walk harness and every
 walk presses something.
+
+## 2026-09-23 — The Library holds what this document has
+
+The Library's Media shelf listed the app's whole capture folder, so a brand new
+document opened onto other documents' screenshots. That is the GLOBAL shelf's
+work, and the global shelf is History: the user settled the split on
+2026-09-15, by scope rather than by kind, and `docs/design/modes.md` §6 has
+carried the bill since.
+
+Media now shows the pictures THIS document holds. `DocumentMedia` in
+`PhotonzCore` is the whole rule, with 18 tests:
+
+- **One tile per picture, not per layer.** Three placements of one banner are
+  three rows in the layers list and one tile here. Layers is where things ARE,
+  the Library is what there IS to place.
+- **The canvas the document is drawn on is left off**, because you do not place
+  the paper into the picture. That is the lowest LOCKED picture in the stack,
+  which is what opening a file, opening a recording and File ▸ New each leave
+  behind, and it is why File ▸ New opens on an empty shelf rather than on a
+  tile of white. The lowest LOCKED one rather than simply the lowest because a
+  picture can be dropped underneath the Background, and the canvas does not
+  stop being the canvas because something slid under it.
+- **The tile wears the original placement's name.** A copy is told from an
+  original by the number on the end of it, which is not a guess: a picture
+  arriving where its name is spoken for takes the next free number and it is
+  always the one arriving that steps aside. So the name no other name here is a
+  numbered copy of is the one placed first, wherever in the stack the copies
+  end up.
+
+The empty shelf says both halves: what will fill it, and that everything ever
+captured is in History (⇧⌘H).
+
+Putting a tile down again never makes a second copy of the picture.
+`pasteImage` split into `placeImage(ref:)` plus a register, and every way of
+placing goes through the ref: double click, the section's Place in Picture, a
+drag onto the canvas, a drag onto a row of the layers list. The drag is a new
+`DocumentImageDrag`, a `DragCargo` kind of its own carrying the picture's id,
+with PNG bytes riding along so the same tile still drags out to the Finder or a
+message. The canvas and the layers row both draw the same landing box they draw
+for a file.
+
+Two things the walk caught that reading the code had not: dropping a copy
+UNDERNEATH the Background made the Background itself a tile and renamed the
+picture's tile after the copy. Both are fixed above and both have tests.
+
+`document-media-walk` is new and covers the lot; `library-walk`,
+`drop-lands-here-walk`, `placed-image-name-walk` and `shelf-scope-switch-walk`
+were rewritten off the capture folder and onto the document.
+
+**Next:** a sweep was asked for, because the drag vocabulary and the layers
+row's drop list both changed. Media stays empty for a plain redlining document
+(open a screenshot, annotate it, place nothing), which is the settled model
+doing what it says and the biggest thing in the audit to disagree with.

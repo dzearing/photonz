@@ -19,7 +19,9 @@ extension CanvasNSView {
     /// shelf nobody can drag from is never met by a picture that would have
     /// taken one.
     private var takes: [DragCargo.Kind] {
-        Experiments.shared.textStyleDragEnabled ? [.textStyle, .component, .file] : [.component, .file]
+        Experiments.shared.textStyleDragEnabled
+            ? [.textStyle, .component, .documentImage, .file]
+            : [.component, .documentImage, .file]
     }
 
     /// What this drag is carrying.
@@ -49,6 +51,8 @@ extension CanvasNSView {
             // frame it would join, drawn while the button is still down.
             return trackComponentDrag(dragged.componentID, version: dragged.version,
                                       atViewPoint: viewPoint(sender))
+        case .documentImage(let imageID):
+            return trackDocumentImageDrag(imageID, atViewPoint: viewPoint(sender))
         default:
             return trackImageDrag(sender)
         }
@@ -92,6 +96,9 @@ extension CanvasNSView {
         if case .component(let dragged) = cargo {
             return dropComponent(dragged.componentID, version: dragged.version,
                                  atViewPoint: point)
+        }
+        if case .documentImage(let imageID) = cargo {
+            return dropDocumentImage(imageID, atViewPoint: point)
         }
         // The same reading the pointer answered with: a file the canvas refused
         // in the air is refused on the way down too, so nothing can slip past a
@@ -187,6 +194,40 @@ extension CanvasNSView {
                        atViewPoint point: CGPoint) -> Bool {
         guard let viewport else { return false }
         onDropComponent(componentID, version, viewport.documentPoint(fromView: point))
+        return true
+    }
+
+    /// Follows a picture dragged off the Library's Media shelf across the
+    /// canvas, and draws the box letting go here would fill — the same box,
+    /// from the same call, a file dragged in from the Finder gets.
+    ///
+    /// Takes an id rather than the drag, so a playtest can hold a picture over
+    /// the canvas without synthesising a drag session.
+    @discardableResult
+    func trackDocumentImageDrag(_ imageID: UUID, atViewPoint viewPoint: CGPoint) -> NSDragOperation {
+        guard let viewport, let document,
+              let item = DocumentMedia.item(id: imageID.uuidString, in: document)
+        else {
+            dropLanding = nil
+            hoverSlot = nil
+            refreshOverlays()
+            return []
+        }
+        clearTextStyleNote()
+        let point = viewport.documentPoint(fromView: viewPoint)
+        let rect = document.placementForIncomingImage(size: item.image.pixelSize, at: point)
+        dropLanding = rect.isEmpty ? nil : (rect, document.frameID(under: point))
+        hoverSlot = nil
+        refreshOverlays()
+        return .copy
+    }
+
+    /// Puts that picture down at a point in this view, which is what a drag
+    /// off the Media shelf ends in. Internal so a playtest can land the same
+    /// drop without synthesising a drag session.
+    func dropDocumentImage(_ imageID: UUID, atViewPoint point: CGPoint) -> Bool {
+        guard let viewport else { return false }
+        onDropDocumentImage(imageID, viewport.documentPoint(fromView: point))
         return true
     }
 

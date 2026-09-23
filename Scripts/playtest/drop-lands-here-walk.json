@@ -1,36 +1,31 @@
 {
   "out": "/tmp/photonz-playtest/drop-lands-here",
-  "seed": "A picture is dragged off the Library shelf onto the canvas, then the same file is let go the way the Finder hands it over, to prove both land on the point rather than in the middle of the canvas. The shelf tile has to come from the capture folder, so the walk borrows it for the length of the run and gives it back after.",
-  "setup": {
-    "forget": ["all"],
-    "captures": ["fixtures/Photonz drop probe.png"]
-  },
+  "seed": "A file is let go on the canvas the way the Finder hands it over, then the very same picture is dragged back off the Library shelf, to prove both land on the point rather than in the middle of the canvas. The shelf holds the pictures this document has, so the Finder drop is what puts the tile there to drag.",
+  "setup": { "forget": ["all"] },
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1240, "height": 900 },
     { "do": "action", "action": "showMediaShelf" },
     { "do": "wait", "seconds": 1.0 },
-    { "do": "focus", "field": "Search media" },
-    { "do": "type", "text": "Photonz drop probe" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "panel", "stage": "0-shelf" },
-
-    { "do": "dragTile", "tile": "Photonz drop probe", "to": [640, 200], "hold": "1-tile-in-the-air" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "1-tile-landed", "note": "a 320x200 capture dragged off the Library shelf and let go at 640,200 should read X 480 Y 100 W 320 H 200: centred on the point, not on the canvas" },
-    { "do": "snapshot", "name": "1-tile-landed" },
-    { "do": "render", "name": "1-tile-landed-doc" },
 
     { "do": "dropImage", "file": "fixtures/Photonz drop probe.png", "at": [200, 520] },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "2-finder-drop", "note": "the same file let go at 200,520 the way the Finder hands it over should read X 40 Y 420: a shelf tile and a Finder file land the same way" },
-    { "do": "snapshot", "name": "2-finder-drop" },
+    { "do": "describe", "stage": "1-finder-drop", "note": "a 320x200 file let go at 200,520 the way the Finder hands it over should read X 40 Y 420: on the point, not in the middle of the canvas" },
+    { "do": "snapshot", "name": "1-finder-drop" },
+
+    { "do": "describe", "stage": "2-shelf", "note": "that picture is now one of this document's, so it is on the Library shelf and can be dragged back off it" },
+    { "do": "panel", "stage": "2-shelf" },
+
+    { "do": "dragTile", "tile": "Photonz drop probe", "to": [640, 200], "hold": "3-tile-in-the-air" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-tile-landed", "note": "the same picture dragged off the Library shelf and let go at 640,200 should read X 480 Y 100 W 320 H 200: a shelf tile and a Finder file land the same way" },
+    { "do": "snapshot", "name": "3-tile-landed" },
+    { "do": "render", "name": "3-tile-landed-doc" },
 
     { "do": "dropImage", "file": "fixtures/Photonz drop probe.png", "at": [10, 10] },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "3-nudged-in", "note": "let go 10 points inside the top left corner, it is nudged wholly onto the canvas: X 0 Y 0, never half off the edge" },
-    { "do": "snapshot", "name": "3-nudged-in" },
-    { "do": "render", "name": "3-three-drops-doc" },
+    { "do": "describe", "stage": "4-nudged-in", "note": "let go 10 points inside the top left corner, it is nudged wholly onto the canvas: X 0 Y 0, never half off the edge" },
+    { "do": "snapshot", "name": "4-nudged-in" },
+    { "do": "render", "name": "4-three-drops-doc" },
 
     { "do": "action", "action": "undo" },
     { "do": "action", "action": "undo" },
@@ -39,8 +34,8 @@
 
     { "do": "dropImage", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "at": [450, 380] },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "4-too-big-fitted", "note": "a 1440x960 capture on a 900x700 canvas is still scaled down to fit (900x600), but sits around the drop point: X 0 Y 80, not the old centred Y 50" },
-    { "do": "snapshot", "name": "4-too-big-fitted" },
-    { "do": "render", "name": "4-too-big-doc" }
+    { "do": "describe", "stage": "5-too-big-fitted", "note": "a 1440x960 capture on a 900x700 canvas is still scaled down to fit (900x600), but sits around the drop point: X 0 Y 80, not the old centred Y 50" },
+    { "do": "snapshot", "name": "5-too-big-fitted" },
+    { "do": "render", "name": "5-too-big-doc" }
   ]
 }

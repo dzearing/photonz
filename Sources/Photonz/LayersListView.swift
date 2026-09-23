@@ -35,7 +35,7 @@ struct LayerRowDropDelegate: DropDelegate {
     /// picture arriving from outside, and a row being carried up or down the
     /// list. Named as kinds, so the day a row takes a fifth thing it is named
     /// here and nowhere else (`DragCargo`).
-    static let takes: [DragCargo.Kind] = [.textStyle, .color, .file, .layerRow]
+    static let takes: [DragCargo.Kind] = [.textStyle, .color, .documentImage, .file, .layerRow]
 
     /// The types those kinds travel as, which is what the row registers for.
     /// Registration is not gated on the styles switches: a row registers for
@@ -110,6 +110,8 @@ struct LayerRowDropDelegate: DropDelegate {
             _ = offerColor(payload)
         case .layerRow:
             editorState.sayLayerRowLanding(proposal(info))
+        case .documentImage:
+            offerDocumentImage(info)
         default:
             offerFile(info)
         }
@@ -129,6 +131,8 @@ struct LayerRowDropDelegate: DropDelegate {
             // that ended.
             editorState.sayLayerRowLanding(proposed)
             return DropProposal(operation: proposed == nil ? .forbidden : .move)
+        case .documentImage:
+            return DropProposal(operation: offerDocumentImage(info))
         default:
             // Nothing of the list's own is in the air, so this is a file coming
             // in from outside. A row answers for one because nothing behind it
@@ -166,6 +170,11 @@ struct LayerRowDropDelegate: DropDelegate {
             guard let drop = proposal(info) else { return false }
             editorState.dropRows(ids: carried, drop)
             return true
+        case .documentImage(let imageID):
+            let landing = fileLanding(info)
+            editorState.endPanelDrop(from: row.id)
+            editorState.placeDocumentImage(id: imageID, landingAt: landing)
+            return true
         default:
             let landing = fileLanding(info)
             editorState.endPanelDrop(from: row.id)
@@ -184,6 +193,17 @@ struct LayerRowDropDelegate: DropDelegate {
         return editorState.incomingDropProposal(over: row, pointerY: info.location.y,
                                                 rowHeight: rowHeight)
             ?? editorState.incomingDropOnTop
+    }
+
+    /// A picture off the Library's Media shelf held over this row. It lands
+    /// at a place in the STACK the same way a file from the Finder does, and
+    /// draws the same line saying where — the one difference is that it is
+    /// already one of this document's pictures, so what lands is another layer
+    /// pointing at it rather than a second copy of it.
+    @discardableResult
+    private func offerDocumentImage(_ info: DropInfo) -> DropOperation {
+        editorState.offerPanelDrop(.accepts(fileLanding(info)), from: row.id)
+        return .copy
     }
 
     /// Tells the panel what it is about to do with the file in the air, and

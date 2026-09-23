@@ -9,18 +9,21 @@ import SwiftUI
 /// browser window and not a mode — someone who only captures and redlines
 /// never turns it on, and the dock without it is the dock they have today.
 ///
-/// What is here now is the shelf itself and the one scope that has something
-/// real to hold: **Media** shows the captures the app already keeps in the
-/// capture folder, so the panel is useful the first time it opens rather than
-/// four empty boxes. Components, Styles and Systems arrive with the steps that
-/// create them, and until then each says so in plain words.
+/// **Media** shows the pictures THIS document holds (`DocumentMedia`), one
+/// tile per picture however many layers draw it. It used to list the app's
+/// whole capture folder, which is the global shelf's job: History (⇧⌘H) is
+/// everything you ever captured, across every document, and the Library is
+/// what this file contains and can place again (`docs/design/modes.md` §6).
+/// So a brand new document opens on an empty shelf, and the empty shelf says
+/// both what will fill it and where the captures went. Components, Styles and
+/// Systems arrive with the steps that create them, and until then each says so
+/// in plain words.
 ///
 /// Selection is the app's one selection: picking a tile clears the layer and
 /// canvas selection and opens the item's section in this same dock, exactly
 /// the way picking a layer opens its sections.
 struct LibraryPanel: View {
     @Environment(EditorState.self) private var editorState
-    @Environment(AppCoordinator.self) private var coordinator
     /// The scope you were last in, remembered across launches (and read by the
     /// section header, so a collapsed Library still says what it is set to).
     @AppStorage(LibraryPanel.scopeKey) private var scopeRaw = LibraryScope.media.rawValue
@@ -170,30 +173,19 @@ struct LibraryPanel: View {
 
     // MARK: Tiles
 
-    /// Every capture the app knows about, as library items. The name is the
-    /// file without its extension and the detail is how long ago it was taken,
-    /// and search reads both, so "png yesterday" narrows as well as a name.
-    private var mediaEntries: [CaptureEntry] { coordinator.capture.store.entries }
-
-    private func item(for entry: CaptureEntry) -> LibraryEntry {
-        let fileName = entry.url.deletingPathExtension().lastPathComponent
-        // The caption is what fits and what helps ("4 minutes ago"); the file
-        // name rides along as the detail so search still finds it by name and
-        // the item's own section can print it in full.
-        return LibraryEntry(id: entry.url.path,
-                            scope: .media,
-                            name: LibraryNaming.caption(fileName: fileName,
-                                                        takenAt: entry.createdAt, now: .now),
-                            detail: fileName)
-    }
-
-    /// The tiles Media draws for what is typed.
-    private var visibleEntries: [CaptureEntry] {
+    /// The tiles Media draws for what is typed: the pictures this document
+    /// holds, paired with the entry so the tile can draw and caption one. The
+    /// name is the layer that placed it first and the detail is how many
+    /// layers draw it, and search reads both.
+    private var visibleMedia: [(entry: LibraryEntry, item: DocumentMediaItem)] {
         guard scope == .media else { return [] }
-        let entries = mediaEntries
-        let byID = Dictionary(entries.map { ($0.url.path, $0) }, uniquingKeysWith: { first, _ in first })
-        let hits = LibrarySearch.filter(entries.map(item(for:)), query: query)
-        return hits.prefix(Self.maxTiles).compactMap { byID[$0.id] }
+        let items = editorState.documentMediaItems
+        let byID = Dictionary(items.map { ($0.id.uuidString, $0) },
+                              uniquingKeysWith: { first, _ in first })
+        let hits = LibrarySearch.filter(DocumentMedia.entriesOf(items), query: query)
+        return hits.prefix(Self.maxTiles).compactMap { entry in
+            byID[entry.id].map { (entry, $0) }
+        }
     }
 
     /// The tiles Components draws for what is typed: the mains in the open
@@ -268,14 +260,14 @@ struct LibraryPanel: View {
     /// Whether this scope has anything to show at all, whatever the search
     /// says. The empty state and the resize grabber both hang off this.
     private var isEmpty: Bool {
-        visibleEntries.isEmpty && visibleComponents.isEmpty && visibleStyles.isEmpty
+        visibleMedia.isEmpty && visibleComponents.isEmpty && visibleStyles.isEmpty
             && visibleTextStyles.isEmpty && visibleEffectStyles.isEmpty
     }
 
     /// How many tiles the shelf is showing right now, whatever scope they came
     /// from — the shelf only ever draws one scope at a time.
     private var tileCount: Int {
-        visibleEntries.count + visibleComponents.count + visibleStyles.count
+        visibleMedia.count + visibleComponents.count + visibleStyles.count
             + visibleTextStyles.count + visibleEffectStyles.count
     }
 
@@ -360,9 +352,8 @@ struct LibraryPanel: View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: LibraryShelfLayout.tileMinimumWidth),
                                     spacing: LibraryShelfLayout.tileSpacing)],
                   alignment: .leading, spacing: LibraryShelfLayout.tileSpacing) {
-            ForEach(visibleEntries) { entry in
-                LibraryTile(item: item(for: entry), entry: entry,
-                            store: coordinator.capture.store)
+            ForEach(visibleMedia, id: \.entry.id) { pair in
+                LibraryTile(item: pair.entry, media: pair.item)
             }
             ForEach(visibleComponents, id: \.entry.id) { pair in
                 LibraryComponentTile(entry: pair.entry, layer: pair.layer, starter: pair.starter,
@@ -436,6 +427,7 @@ struct LibraryPanel: View {
     /// zero, or nil when it is not on this shelf at all. One index, not one per
     /// scope: the shelf only ever draws one scope at a time.
     private func shelfIndex(of id: String) -> Int? {
+        if let index = visibleMedia.firstIndex(where: { $0.entry.id == id }) { return index }
         if let index = visibleComponents.firstIndex(where: { $0.entry.id == id }) { return index }
         if let index = visibleStyles.firstIndex(where: { $0.entry.id == id }) { return index }
         return nil
@@ -444,8 +436,8 @@ struct LibraryPanel: View {
     /// Return in the search field picks the first tile showing, so the shelf
     /// can be worked without the pointer.
     private func selectFirstTile() {
-        if let first = visibleEntries.first {
-            editorState.selectLibraryItem(first.url.path)
+        if let first = visibleMedia.first {
+            editorState.selectLibraryItem(first.entry.id)
         } else if let first = visibleComponents.first {
             editorState.selectLibraryItem(first.entry.id)
         } else if let first = visibleStyles.first {
@@ -495,11 +487,10 @@ struct LibraryPanel: View {
 
 /// One thing on the shelf: a thumbnail with its name underneath. Click picks
 /// it (which is the app's one selection, so the canvas lets go), double click
-/// places it, and it drags onto the canvas as the file it is.
+/// places it again, and it drags onto the canvas as the very same picture.
 private struct LibraryTile: View {
     let item: LibraryEntry
-    let entry: CaptureEntry
-    let store: CaptureStore
+    let media: DocumentMediaItem
     @Environment(EditorState.self) private var editorState
 
     private var isSelected: Bool { editorState.selectedLibraryItemID == item.id }
@@ -528,8 +519,6 @@ private struct LibraryTile: View {
         // matches, and a single-click-only gesture would swallow both.
         .onTapGesture(count: 2) { place() }
         .onTapGesture { editorState.selectLibraryItem(item.id) }
-        // The canvas already accepts a dropped image file (from Finder, from
-        // the history overlay), so dragging a tile onto it needs nothing new.
         // The preview is the picture itself, so a media tile and a component
         // tile are picked up the same way. Nothing in here touches the app's
         // state: a change made while the drag is being handed over redraws the
@@ -538,21 +527,24 @@ private struct LibraryTile: View {
             thumbnail.frame(width: LibraryShelfLayout.tileMinimumWidth,
                             height: LibraryShelfLayout.thumbnailHeight)
         })
-        .panelHelp("\(item.name) • \(item.detail). Double click to place it.")
+        .panelHelp("\(item.name) • \(item.detail). Double click to place it again.")
         // The same closure a walk picks the tile up with, so an unmanned run
         // can never drag something the pointer would not.
-        // The caption a person reads is "10 hours ago", which is no use to a
-        // walk written yesterday, so the file name goes alongside it and a walk
-        // may name the tile either way.
         .playtestTarget(item.name, kind: .tile, detail: item.detail, payload: dragItem)
     }
 
-    /// What dragging this tile hands over: the capture as the file it is, which
-    /// is the drop the canvas already takes from the Finder. Nothing in here
-    /// touches the app's state, so a change made while the drag is being handed
-    /// over redraws the tile and SwiftUI asks for the item all over again.
+    /// What dragging this tile hands over: the picture's id, so letting go on
+    /// the canvas puts the SAME picture down rather than a second copy of it,
+    /// with PNG bytes alongside for anywhere outside the app
+    /// (`DocumentImageDrag`). Nothing in here touches the app's state, so a
+    /// change made while the drag is being handed over redraws the tile and
+    /// SwiftUI asks for the item all over again.
     private func dragItem() -> NSItemProvider {
-        NSItemProvider(contentsOf: entry.url) ?? NSItemProvider()
+        let store = editorState.store
+        let image = media.image
+        return DocumentImageDrag.itemProvider(id: media.id, name: item.name) {
+            store.image(for: image).flatMap(DocumentImageDrag.pngData)
+        }
     }
 
     /// The picture, filling a fixed 44pt-tall well and cropped to it. The
@@ -564,18 +556,10 @@ private struct LibraryTile: View {
             .fill(.quaternary)
             .frame(height: LibraryShelfLayout.thumbnailHeight)
             .overlay {
-                if let image = store.image(for: entry) {
+                if let image = editorState.store.image(for: media.image) {
                     Image(decorative: image, scale: 1)
                         .resizable()
                         .scaledToFill()
-                }
-            }
-            .overlay {
-                if entry.kind == .video {
-                    Image(systemName: "play.fill")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.white)
-                        .shadow(radius: 2)
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 5))
@@ -591,42 +575,30 @@ private struct LibraryTile: View {
 // MARK: - The picked item's section
 
 /// What the dock says about the tile you picked: the same role the Annotation
-/// or Text section plays for a layer. Media is the only scope with items so
-/// far, so this describes a capture — its size, when it was taken, and the two
-/// things worth doing with it.
+/// or Text section plays for a layer. Media is the only scope with items of
+/// its own so far, so this describes one of the document's pictures — how big
+/// it is, how much of it is in here already, and the one thing worth doing
+/// with it.
 struct LibraryItemInspector: View {
     @Environment(EditorState.self) private var editorState
-    @Environment(AppCoordinator.self) private var coordinator
-
-    private var entry: CaptureEntry? {
-        guard let id = editorState.selectedLibraryItemID else { return nil }
-        return coordinator.capture.store.entries.first { $0.url.path == id }
-    }
 
     var body: some View {
-        if let entry {
+        if let item = editorState.selectedMediaItem {
             VStack(alignment: .leading, spacing: 8) {
-                Text(entry.url.deletingPathExtension().lastPathComponent)
+                Text(item.name)
                     .font(.subheadline.weight(.medium))
                     .lineLimit(2)
                     .truncationMode(.middle)
                 VStack(alignment: .leading, spacing: 2) {
-                    detail(RelativeTime.string(from: entry.createdAt, to: .now))
-                    if let size = pixelSize(of: entry) { detail(size) }
-                    detail(entry.url.pathExtension.uppercased())
+                    detail(item.detail)
+                    detail("\(Int(item.image.pixelSize.width)) × "
+                        + "\(Int(item.image.pixelSize.height)) px")
                 }
-                HStack(spacing: 6) {
-                    Button("Place in Picture") {
-                        editorState.placeLibraryPick()
-                    }
-                    .controlSize(.small)
-                    .panelHelp("Adds this capture to the open picture as a new layer")
-                    Button("Reveal") {
-                        NSWorkspace.shared.activateFileViewerSelecting([entry.url])
-                    }
-                    .controlSize(.small)
-                    .panelHelp("Shows the file in the Finder")
+                Button("Place in Picture") {
+                    editorState.placeLibraryPick()
                 }
+                .controlSize(.small)
+                .panelHelp("Puts this picture into the document again, as a new layer")
             }
             .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
             .padding(.vertical, 4)
@@ -635,10 +607,5 @@ struct LibraryItemInspector: View {
 
     private func detail(_ text: String) -> some View {
         Text(text).font(.caption).foregroundStyle(.secondary)
-    }
-
-    private func pixelSize(of entry: CaptureEntry) -> String? {
-        guard let image = coordinator.capture.store.image(for: entry) else { return nil }
-        return "\(image.width) × \(image.height) px"
     }
 }

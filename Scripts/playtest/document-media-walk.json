@@ -1,0 +1,55 @@
+{
+  "out": "/tmp/photonz-playtest/document-media",
+  "seed": "The Library's Media shelf holds the pictures THIS document has, not every screenshot ever taken: a brand new document opens on an empty shelf that says what will fill it and where the captures went, a picture dropped in appears on it, and putting that tile down again is a second layer pointing at the same picture rather than a second copy of it.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "action", "action": "showMediaShelf" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "1-empty-shelf",
+      "note": "a brand new document: the Media shelf is empty and says so in plain words, instead of opening full of other documents' screenshots" },
+    { "do": "panel", "stage": "1-empty-shelf" },
+    { "do": "snapshot", "name": "1-empty-shelf" },
+
+    { "do": "dropImage", "file": "fixtures/Hero banner.png", "at": [450, 260] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "2-one-tile",
+      "note": "a picture dropped on the canvas joins the shelf: one tile, captioned with the layer that placed it, saying it is used once" },
+    { "do": "panel", "stage": "2-one-tile" },
+    { "do": "expect", "tile": "Hero banner", "present": true },
+    { "do": "snapshot", "name": "2-one-tile" },
+
+    { "do": "action", "action": "pickFirstMedia" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-picked",
+      "note": "picking the tile opens the picture's own section in the same dock: its name, how much of it is in here already, how big it is, and Place in Picture" },
+    { "do": "panel", "stage": "3-picked" },
+    { "do": "snapshot", "name": "3-picked" },
+
+    { "do": "action", "action": "placeLibraryPick" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "4-placed-again",
+      "note": "Place in Picture puts the same picture down again: a second layer called Hero banner 2, and still ONE tile on the shelf, now reading used 2 times. A second copy of the picture would have split it into two tiles" },
+    { "do": "panel", "stage": "4-placed-again" },
+    { "do": "expect", "tile": "Hero banner", "present": true },
+    { "do": "expect", "tile": "Hero banner 2", "present": false },
+    { "do": "expectLayers", "count": 3 },
+    { "do": "snapshot", "name": "4-placed-again" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-undone",
+      "note": "undo takes the second placement back: the shelf reads used once again, because the shelf is a reading of the document rather than a list of its own" },
+    { "do": "panel", "stage": "5-undone" },
+    { "do": "snapshot", "name": "5-undone" },
+
+    { "do": "dragTile", "tile": "Hero banner", "onto": "Background" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "6-dropped-on-a-row",
+      "note": "the same tile dragged onto a row of the layers list lands at that place in the stack rather than on top, and it is still the same picture: one tile, used 2 times" },
+    { "do": "panel", "stage": "6-dropped-on-a-row" },
+    { "do": "expect", "tile": "Hero banner 2", "present": false },
+    { "do": "expectLayers", "count": 3 },
+    { "do": "snapshot", "name": "6-dropped-on-a-row" }
+  ]
+}

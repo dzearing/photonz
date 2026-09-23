@@ -40,6 +40,9 @@ enum DragCargo {
     case textStyle(TextStyleDrop.SavedStyle)
     /// A component off the Library shelf, and the version the shelf was set to.
     case component(ComponentDrag.Payload)
+    /// A picture off the Library's Media shelf, which is a picture this
+    /// document already holds (`DocumentImageDrag`).
+    case documentImage(UUID)
     /// A colour: off a swatch here, off the Library shelf, or out of any colour
     /// well on the Mac.
     case color(ColorDrag.Payload)
@@ -59,6 +62,7 @@ enum DragCargo {
     enum Kind: CaseIterable, Sendable {
         case textStyle
         case component
+        case documentImage
         case color
         case file
         case layerRow
@@ -68,6 +72,7 @@ enum DragCargo {
         switch self {
         case .textStyle: .textStyle
         case .component: .component
+        case .documentImage: .documentImage
         case .color: .color
         case .file: .file
         case .layerRow: .layerRow
@@ -88,6 +93,7 @@ enum DragCargo {
         switch kind {
         case .textStyle: [UTType(TextStyleDrag.typeIdentifier) ?? .data]
         case .component: [UTType(ComponentDrag.typeIdentifier) ?? .data]
+        case .documentImage: [UTType(DocumentImageDrag.typeIdentifier) ?? .data]
         case .color: ColorDrag.acceptedTypes
         case .file: FileDrop.types
         // A row travels as its id in plain text, which is why a layer row is
@@ -124,6 +130,8 @@ enum DragCargo {
                 if let style = TextStyleDrag.payloadInFlight() { return .textStyle(style) }
             case .component:
                 if let payload = ComponentDrag.payloadInFlight() { return .component(payload) }
+            case .documentImage:
+                if let id = DocumentImageDrag.idInFlight() { return .documentImage(id) }
             case .color:
                 if let payload = ColorDrag.payloadInFlight() { return .color(payload) }
             case .file:
@@ -154,6 +162,8 @@ enum DragCargo {
                 if let style = TextStyleDrag.payload(on: pasteboard) { return .textStyle(style) }
             case .component:
                 if let payload = ComponentDrag.payload(on: pasteboard) { return .component(payload) }
+            case .documentImage:
+                if let id = DocumentImageDrag.imageID(on: pasteboard) { return .documentImage(id) }
             case .color:
                 if let payload = ColorDrag.payload(on: pasteboard) { return .color(payload) }
             case .file:

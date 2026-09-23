@@ -274,6 +274,9 @@ struct CanvasView: NSViewRepresentable {
     let onDropMediaURL: (URL, CGPoint?) -> Void
     let mediaDropAnswer: (URL) -> MediaDrop.Answer?
     let onDropComponent: (UUID, UUID?, CGPoint) -> Void
+    /// A picture dragged off the Library's Media shelf, let go at a document
+    /// point: the same picture again, never a second copy of it.
+    let onDropDocumentImage: (UUID, CGPoint) -> Void
     /// A component drag moving across the canvas, so the row it is over can
     /// hold the room it would take open while the button is still down.
     let onComponentDragMoved: (UUID, UUID?, CGPoint) -> Void
@@ -443,6 +446,7 @@ struct CanvasView: NSViewRepresentable {
         view.mediaDropAnswer = mediaDropAnswer
         view.onDropImageURLIntoCollage = onDropImageURLIntoCollage
         view.onDropComponent = onDropComponent
+        view.onDropDocumentImage = onDropDocumentImage
         view.onComponentDragMoved = onComponentDragMoved
         view.onComponentDragEnded = onComponentDragEnded
         view.arrivingComponentDrawing = arrivingComponentDrawing
@@ -592,6 +596,9 @@ final class CanvasNSView: NSView {
     /// A component dragged off the Library shelf, dropped at a document point
     /// (Next, `next-components`).
     var onDropComponent: ((UUID, UUID?, CGPoint) -> Void) = { _, _, _ in }
+    /// A picture off the Library's Media shelf, dropped at a document point
+    /// (`DocumentImageDrag`).
+    var onDropDocumentImage: ((UUID, CGPoint) -> Void) = { _, _ in }
     /// A saved text style dragged off the Library shelf and let go on text:
     /// (style, the text it reached). Next, `next-styles`.
     var onDropTextStyle: ((UUID, [UUID]) -> Void) = { _, _ in }
@@ -2080,6 +2087,7 @@ final class CanvasNSView: NSView {
         // window-level drop that handles them today.
         registerForDraggedTypes([.fileURL,
                                  ComponentDrag.pasteboardType,
+                                 DocumentImageDrag.pasteboardType,
                                  TextStyleDrag.pasteboardType])
     }
 

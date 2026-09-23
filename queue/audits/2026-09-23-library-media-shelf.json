@@ -1,0 +1,30 @@
+{
+  "feature": "The Library holds what this document has",
+  "epic": "ui-building",
+  "summary": "The Library's Media shelf is now this document's own pictures instead of every screenshot on the machine. A brand new document opens on an empty shelf that says what will fill it and points at History for the captures; a picture you drop in shows up as one tile, however many layers end up drawing it; and putting that tile down again is another layer pointing at the same picture rather than a second copy of it.",
+  "setup": "Photonz Dev, release Next, Library on (View menu, Show Library) with the shelf on Media. Nothing to switch on: the change is in the shelf itself.",
+  "try": [
+    { "do": "File ▸ New, then View ▸ Show Library and pick the Media tab.", "shot": "2026-09-23-library-media-1-empty-shelf.png" },
+    { "do": "Read the empty shelf: it should say what fills it and where your captures are." },
+    { "do": "Drag a picture in from the Finder and drop it on the canvas." },
+    { "do": "Look at the shelf: one tile, named after the layer that landed.", "shot": "2026-09-23-library-media-2-picked.png" },
+    { "do": "Click the tile and read the Media section that opens under it: its name, how many layers use it, its size in pixels." },
+    { "do": "Double click the tile.", "shot": "2026-09-23-library-media-3-placed-again.png" },
+    { "do": "Check the layers list has two rows and the shelf still has one tile, now reading used 2 times." },
+    { "do": "Press ⇧⌘H and confirm every capture you have ever taken is still there, and drag one of those tiles onto the canvas." }
+  ],
+  "evaluate": [
+    "Opening a new document on an empty Media shelf: does the sentence in it tell you enough, or does the shelf read as broken?",
+    "Redlining one screenshot is the main thing this app is for, and that document has nothing placed in it, so Media stays empty the whole time. Is an empty shelf the right answer there, or should the picture you opened be on it?",
+    "Is one tile for three placements what you expect, or would you rather see the three?",
+    "Does going to History for a capture you want in this document feel like the right place, or does it feel like the Library lost something?",
+    "The tile says used once or used 2 times. Is that the most useful thing the tile could tell you about a picture?"
+  ],
+  "rough": [
+    "Media is empty for a plain redlining document: you open a screenshot, annotate it, and the shelf never fills, because the picture the document is drawn on is deliberately left off (otherwise File ▸ New shows a tile of white). That is the settled model doing what it says, and it is the biggest thing to disagree with here.",
+    "Getting a NEW capture into the open document is now History's job: ⇧⌘H, then drag the tile onto the canvas, or its Copy button and ⌘V. That path is read out of the code (a History tile drags as the file it is, and the canvas takes a file drop at a point); no walk drives the History overlay, so it is not proved by a run.",
+    "The tile itself still shows only a caption, so used 2 times is readable in the tooltip and in the picked tile's section but not on the tile.",
+    "The picked tile's section lost its Reveal button, because there is no longer a file behind a tile. Reveal in the Finder lives on the History tile, which is the thing that does have a file.",
+    "A collage's photos are on the shelf, numbered after the collage layer (Collage 1, Collage 2). Nobody has playtested a collage against this."
+  ]
+}

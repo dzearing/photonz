@@ -353,11 +353,31 @@ extension EditorState {
     @discardableResult
     func pasteImage(_ image: CGImage, at point: CGPoint? = nil,
                             fileName: String? = nil, landingAt landing: LayerDrop? = nil) -> UUID? {
-        guard let document else {
+        guard document != nil else {
             openCapture(image)
             return nil
         }
-        let ref = store.register(image)
+        return placeImage(store.register(image), at: point,
+                          named: PlacedImageNaming.layerName(fileName: fileName),
+                          landingAt: landing)
+    }
+
+    /// The same landing for a picture the document ALREADY holds: the Library
+    /// shelf putting one of its own tiles down again.
+    ///
+    /// It takes the ref rather than the pixels on purpose. Placing a tile from
+    /// the shelf must never register a second copy of a bitmap the document is
+    /// already carrying — two refs for one picture would double what a saved
+    /// file weighs and would split one Library tile into two.
+    ///
+    /// `named` is the name the layer wants, already a NAME rather than a file
+    /// path: a shelf tile hands over the name it is captioned with, and a
+    /// caption like "Screenshot 16.22.12" would lose its tail to a file's
+    /// extension rule. It still steps aside from a name already in use.
+    @discardableResult
+    func placeImage(_ ref: ImageRef, at point: CGPoint? = nil,
+                    named baseName: String, landingAt landing: LayerDrop? = nil) -> UUID? {
+        guard let document else { return nil }
         // A drop on the panel points at a place in the STACK, not a place on
         // the picture, so it is sized to the list it is joining and centred
         // there. Everything else lands the way it always has.
@@ -371,7 +391,7 @@ extension EditorState {
         if point == nil, landing == nil { frame = cascadedPasteFrame(landingAt: frame) }
         // Numbered against what is already here, so dropping one file in twice
         // gives two rows you can tell apart instead of the same word twice.
-        let name = PlacedImageNaming.layerName(fileName: fileName,
+        let name = PlacedImageNaming.layerName(named: baseName,
                                                taken: Set(document.allLayers.map(\.name)))
         let layer = Layer(name: name, content: .image(ref), frame: frame)
         discardDragPreview()

@@ -32,11 +32,42 @@
     {
       "do": "describe",
       "stage": "2-library-open",
-      "note": "View > Show Library, on the Media shelf: it joins the dock under the property sections, holding the captures the app already keeps"
+      "note": "View > Show Library, on the Media shelf: it joins the dock under the property sections. Nothing has been put into this document yet, so the shelf is empty and says what will fill it and where every capture lives instead"
+    },
+    {
+      "do": "panel",
+      "stage": "2-library-open"
     },
     {
       "do": "snapshot",
       "name": "2-library-open"
+    },
+    {
+      "do": "dropImage",
+      "file": "fixtures/Hero banner.png",
+      "at": [420, 320]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "3-a-picture-in-it",
+      "note": "a picture dropped into the document is on its shelf: one tile, named after the layer that placed it"
+    },
+    {
+      "do": "panel",
+      "stage": "3-a-picture-in-it"
+    },
+    {
+      "do": "expect",
+      "tile": "Hero banner",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "3-a-picture-in-it"
     },
     {
       "do": "focus",
@@ -44,7 +75,7 @@
     },
     {
       "do": "type",
-      "text": "screenshot"
+      "text": "hero"
     },
     {
       "do": "wait",
@@ -52,12 +83,12 @@
     },
     {
       "do": "describe",
-      "stage": "3-search",
-      "note": "typing narrows the shelf: screenshots stay, recordings drop out"
+      "stage": "4-search",
+      "note": "typing narrows the shelf the same way it always did, over this document's pictures"
     },
     {
       "do": "snapshot",
-      "name": "3-search"
+      "name": "4-search"
     },
     {
       "do": "key",
@@ -69,12 +100,12 @@
     },
     {
       "do": "describe",
-      "stage": "4-picked",
+      "stage": "5-picked",
       "note": "Return takes the top hit: the tile is outlined and a Media section opens in the dock, the way picking a layer opens its sections"
     },
     {
       "do": "snapshot",
-      "name": "4-picked"
+      "name": "5-picked"
     },
     {
       "do": "action",
@@ -86,12 +117,21 @@
     },
     {
       "do": "describe",
-      "stage": "5-placed",
-      "note": "Place in Picture (the same thing a double click on the tile does): the capture lands as a new layer, centred, and the layers list has it"
+      "stage": "6-placed",
+      "note": "Place in Picture (the same thing a double click on the tile does): the picture lands as a second layer, and the shelf still shows one tile because it is one picture"
+    },
+    {
+      "do": "panel",
+      "stage": "6-placed"
+    },
+    {
+      "do": "expect",
+      "tile": "Hero banner 2",
+      "present": false
     },
     {
       "do": "snapshot",
-      "name": "5-placed"
+      "name": "6-placed"
     },
     {
       "do": "action",
@@ -115,12 +155,12 @@
     },
     {
       "do": "describe",
-      "stage": "5-no-match",
+      "stage": "7-no-match",
       "note": "a search that finds nothing says so, instead of the scope's own empty line"
     },
     {
       "do": "snapshot",
-      "name": "5-no-match"
+      "name": "7-no-match"
     },
     {
       "do": "click",
@@ -135,24 +175,16 @@
     },
     {
       "do": "describe",
-      "stage": "6-clicked-away",
+      "stage": "8-clicked-away",
       "note": "a click on the picture that lands on nothing lets the tile go: the Media section closes"
     },
     {
       "do": "snapshot",
-      "name": "6-clicked-away"
+      "name": "8-clicked-away"
     },
     {
-      "do": "focus",
-      "field": "Search media"
-    },
-    {
-      "do": "type",
-      "text": "screenshot"
-    },
-    {
-      "do": "key",
-      "key": "return"
+      "do": "action",
+      "action": "pickFirstMedia"
     },
     {
       "do": "wait",
@@ -160,12 +192,12 @@
     },
     {
       "do": "describe",
-      "stage": "7-picked-again",
+      "stage": "9-picked-again",
       "note": "pick a tile again, so the next step has something to take the selection away from it"
     },
     {
       "do": "snapshot",
-      "name": "7-picked-again"
+      "name": "9-picked-again"
     },
     {
       "do": "tool",
@@ -189,12 +221,12 @@
     },
     {
       "do": "describe",
-      "stage": "8-canvas-wins",
+      "stage": "10-canvas-wins",
       "note": "drawing a rectangle selects it on the canvas, and the tile lets go: one thing selected at a time"
     },
     {
       "do": "snapshot",
-      "name": "8-canvas-wins"
+      "name": "10-canvas-wins"
     }
   ]
 }

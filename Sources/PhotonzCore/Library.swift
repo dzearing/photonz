@@ -58,7 +58,9 @@ public enum LibraryScope: String, CaseIterable, Hashable, Sendable, Codable {
     /// so nobody wonders whether the panel is broken.
     public var emptyMessage: String {
         switch self {
-        case .media: return "Captures you take show up here."
+        case .media:
+            return "Pictures you place in this document show up here. "
+                + "Everything you have ever captured is in History (⇧⌘H)."
         case .components: return "Components you make will show up here."
         case .styles: return "Colors and text styles you save under a name will show up here."
         case .systems: return "Design systems you add will show up here."
@@ -80,8 +82,8 @@ public enum LibraryScope: String, CaseIterable, Hashable, Sendable, Codable {
 /// inspector header need.
 public struct LibraryEntry: Identifiable, Hashable, Sendable {
     /// Stable across a reload of the list, because the selection is stored as
-    /// an id. Media uses the file's path, so a capture stays selected when the
-    /// folder is rescanned.
+    /// an id. Media uses the picture's own id (`ImageRef.id`), so a tile stays
+    /// picked while layers are added and removed around it.
     public let id: String
     public let scope: LibraryScope
     public let name: String
@@ -135,7 +137,12 @@ public enum LibrarySearch {
     }
 }
 
-/// What a tile writes under its picture.
+/// What a tile writes under a CAPTURE's picture.
+///
+/// The Library's Media shelf no longer holds captures — it holds the open
+/// document's own pictures, named after the layers that placed them
+/// (`DocumentMedia`) — so what still reads this is the shortening rule
+/// `PlacedImageNaming` shares with it, and History, which does hold captures.
 ///
 /// A capture's file name is all prefix and timestamp
 /// ("Screenshot 2026-06-21 at 10.30.45"), and a tile is about seventy points

@@ -15,14 +15,12 @@
 
     { "do": "action", "action": "showMediaShelf" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "focus", "field": "Search media" },
-    { "do": "type", "text": "screenshot" },
-    { "do": "key", "key": "return" },
+    { "do": "action", "action": "pickFirstMedia" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "action", "action": "placeLibraryPick" },
     { "do": "wait", "seconds": 1.2 },
     { "do": "describe", "stage": "2-placed-from-library",
-      "note": "a capture placed from the Library: the layer carries the time it was taken (Screenshot 16.22.12), not the whole file name, which would truncate to the same characters for every capture" },
+      "note": "the same picture put down again off the Library shelf: the second layer is Hero banner 2, numbered against the one already here rather than repeating the word" },
     { "do": "snapshot", "name": "2-placed-from-library" },
 
     { "do": "action", "action": "copyImage" },

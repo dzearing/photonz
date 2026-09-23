@@ -1149,6 +1149,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// its tile does. A walk cannot reach the dock with the pointer, so this is
     /// how the picked component's own section gets photographed.
     case pickFirstComponent
+    /// Pick the first picture on the Library's Media shelf, which is the
+    /// newest one the document holds (`DocumentMedia`). Same reason as above:
+    /// a walk cannot reach the dock with the pointer.
+    case pickFirstMedia
     /// Place the picked Library tile in the picture, which is what the item
     /// section's button and a double click on the tile both do.
     case placeLibraryPick

@@ -3959,6 +3959,10 @@ private final class Run {
                 if let first = editor.componentEntries.first {
                     editor.selectLibraryItem(first.id)
                 }
+            case .pickFirstMedia:
+                if let first = editor.documentMediaItems.first {
+                    editor.selectLibraryItem(first.id.uuidString)
+                }
             case .exportDialog: editor.isExportDialogPresented = true
             case .exportDialogAsPNG:
                 editor.playtestOpensExportOnPicture = .png
@@ -7967,15 +7971,18 @@ private final class Run {
             throw Failure(description: "the tile \"\(name)\" cannot be picked up")
         }
         let board = try await PlaytestPanelDrag.pasteboard(from: payload(), named: "style")
-        // Both, because a row takes both kinds of tile and each reads its own
-        // payload off the DRAG pasteboard, which a walk cannot start. Standing
-        // in for both is safe: each reader looks for its own type on the board
-        // and a board carrying a colour is nothing to the text style reader.
+        // All three, because a row takes every kind of tile and each reads its
+        // own payload off the DRAG pasteboard, which a walk cannot start.
+        // Standing in for all of them is safe: each reader looks for its own
+        // type on the board, and a board carrying a colour is nothing to the
+        // text style reader.
         TextStyleDrag.playtestPasteboard = board
         ColorDrag.playtestPasteboard = board
+        DocumentImageDrag.playtestPasteboard = board
         defer {
             TextStyleDrag.playtestPasteboard = nil
             ColorDrag.playtestPasteboard = nil
+            DocumentImageDrag.playtestPasteboard = nil
         }
         let frame = destination.convert(destination.bounds, to: nil)
         let windowPoint = CGPoint(x: frame.midX, y: frame.midY)

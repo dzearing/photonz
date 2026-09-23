@@ -155,6 +155,9 @@ struct EditorCanvasSurface: View {
                        editorState.placeComponent(componentID: componentID, at: point,
                                                   version: version)
                    },
+                   onDropDocumentImage: { imageID, point in
+                       editorState.placeDocumentImage(id: imageID, at: point)
+                   },
                    onComponentDragMoved: { componentID, version, point in
                        editorState.holdRoomForComponentDrag(componentID: componentID,
                                                             version: version, at: point)

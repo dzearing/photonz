@@ -44,6 +44,17 @@ public enum PlacedImageNaming {
         LayerNaming.firstFree(base: layerName(fileName: fileName), taken: taken)
     }
 
+    /// The layer name for a picture that already HAS a name rather than a file
+    /// behind it: one of the document's own pictures, put down again off the
+    /// Library's Media shelf (`DocumentMedia`). It steps aside from a name in
+    /// use exactly as above, and it is never read as a path — a caption like
+    /// "Screenshot 16.22.12" would otherwise lose its tail to the rule that
+    /// strips an extension.
+    public static func layerName(named name: String, taken: Set<String>) -> String {
+        let base = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return LayerNaming.firstFree(base: base.isEmpty ? clipboardName : base, taken: taken)
+    }
+
     /// The file's own name, without its folders and without its extension.
     private static func stem(of fileName: String?) -> String {
         guard let fileName else { return "" }

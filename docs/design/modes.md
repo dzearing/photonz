@@ -216,9 +216,12 @@ Open questions inside that model, answered on `shelves.html`:
   Library is what there IS to place.** Three placements of one bell are three
   layer rows and one Library tile, and half the Library (colour and text styles)
   is not layers at all.
-- **One bill:** the Library's Media scope shows the global capture folder today
-  (`LibraryPanel`). Under this model those belong to History, and Media becomes
-  the pictures this document uses.
+- **One bill, paid 2026-09-23:** the Library's Media scope showed the global
+  capture folder. Under this model those belong to History, and Media is now
+  the pictures this document uses — one tile per picture however many layers
+  draw it, the canvas the document is drawn on left off, and placing a tile
+  again reusing the very same picture rather than reading a file in twice.
+  `DocumentMedia` (PhotonzCore) is the rule; `LibraryPanel` draws it.
 
 ---
 

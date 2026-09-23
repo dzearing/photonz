@@ -3049,14 +3049,17 @@ final class EditorState {
         selectedLibraryItemID = id   // ...so this is the only thing selected
     }
 
-    /// Puts the picked Library media into the open picture as a new layer, the
-    /// same way a file dragged in from the Finder lands. One method, so the
-    /// tile's double click, the item section's button and a playtest all run
-    /// the same code. Media ids ARE the file's path (`LibraryEntry.id`), which
-    /// is what lets this live here rather than in the panel.
+    /// Puts the picked Library picture into the open document as a new layer,
+    /// the same way a file dragged in from the Finder lands. One method, so
+    /// the tile's double click, the item section's button and a playtest all
+    /// run the same code.
+    ///
+    /// It places the picture the document ALREADY holds rather than reading a
+    /// file again (`EditorState+Media.swift`), so putting one tile down twice
+    /// leaves two layers pointing at one bitmap.
     func placeLibraryPick() {
-        guard let id = selectedLibraryItemID else { return }
-        addImageLayerOrOpen(at: URL(fileURLWithPath: id))
+        guard let item = selectedMediaItem else { return }
+        placeMediaItem(item)
     }
 
     /// Lets go of the Library tile without touching the layer selection: what

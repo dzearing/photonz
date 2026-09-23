@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 190,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T07:08:27.495Z",
-  "updated": "2026-09-22T12:17:53.347Z",
+  "updated": "2026-09-23T08:50:34.100Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The bill named by the shelves prototype (http://127.0.0.1:8791/index.html#shelves, docs/design/modes.md section 6), settled by the user on 2026-09-15 in their own words: the split is by SCOPE, not by kind. History is the global shelf, the Library is the document own shelf.\n\nWhere it is today, verified by reading the code on 2026-09-22: Sources/Photonz/LibraryPanel.swift, header comment, Media shows the captures the app already keeps in the capture folder. That was a deliberate choice at the time so the panel was useful the first time it opened rather than four empty boxes, which is why the empty state matters here: replacing a full shelf with a blank box is a step backwards unless the blank box says what belongs there.\n\nNot a regression and not a crash; it is the app and the settled model disagreeing about what the Library is for.",
@@ -27,6 +27,42 @@
     {
       "t": "2026-09-22T12:17:53.346Z",
       "note": "seq 60 -> 190"
+    },
+    {
+      "t": "2026-09-23T07:57:31.877Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T08:08:42.445Z",
+      "note": "Media now reads DocumentMedia (PhotonzCore, 14 tests): one tile per distinct ImageRef in the open document, newest first, canvas layer excluded so File > New opens empty. Placing reuses the ref (EditorState.placeImage), tiles drag as DocumentImageDrag (id + PNG for outside the app)."
+    },
+    {
+      "t": "2026-09-23T08:47:22.049Z",
+      "note": "owns these walks: document-media-walk, library-walk, drop-lands-here-walk, placed-image-name-walk, shelf-scope-switch-walk"
+    },
+    {
+      "t": "2026-09-23T08:50:33.937Z",
+      "note": "Adversarial review before building: the shelves mock says Media becomes 'the pictures this document uses' and stops there. Two things it does not answer and the app has to. (1) A blank canvas IS a picture layer, so the literal reading opens File > New on a tile of white; the shelf therefore leaves off the canvas the document is drawn on, which also makes acceptance 1 true. (2) 'The pictures this document uses' has to mean one tile per PICTURE, not per layer, or three placements of one banner are three identical tiles; the mock says exactly this two bullets earlier and it is easy to miss. Cut as decorative: nothing. Shortest version that delivers the value: the shelf, the empty line, place-again reusing the ref."
+    },
+    {
+      "t": "2026-09-23T08:50:33.991Z",
+      "note": "Adversarial review of the built thing, on the probe: the walk caught two defects reading the code had not. Dropping a copy UNDERNEATH the Background made the Background itself a tile (the canvas rule was 'bottom layer', now 'lowest LOCKED picture') and renamed the picture's tile after the copy (the name rule was 'bottom-most', now 'the name no other name here is a numbered copy of'). Both fixed, both tested."
+    },
+    {
+      "t": "2026-09-23T08:50:34.044Z",
+      "note": "Left rough, not filed: the tile shows only its caption, so 'used 2 times' is readable in the tooltip and in the picked tile's section but not on the tile itself. A collage's photos are on the shelf numbered after the collage layer (Collage 1, Collage 2) and no walk drives a collage against this. Both are in the audit's rough list for the user to react to."
+    },
+    {
+      "t": "2026-09-23T08:50:34.099Z",
+      "note": "row-drop-slot-walk reported CRASHED once in a batch; that was my own pkill racing a probe launch while I cleaned up a duplicated walk batch, not the app. It passes on its own and passed again after. Not filed."
     }
+  ],
+  "started": "2026-09-23T07:57:31.876Z",
+  "walks": [
+    "document-media-walk",
+    "library-walk",
+    "drop-lands-here-walk",
+    "placed-image-name-walk",
+    "shelf-scope-switch-walk"
   ]
 }

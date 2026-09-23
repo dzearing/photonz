@@ -296,13 +296,25 @@ it".
 is **off until asked for**: View ▸ Show Library puts it in the dock and the
 answer sticks. Step 3 said the panel could ship empty, and a dock that grows an
 empty section on its own is a change nobody asked for, least of all the person
-who only redlines. Second, Media is **not** empty: it shows the captures the
-app already keeps in the capture folder, so the shelf is useful the first time
-it opens (rule 2) and its search and selection are things you can actually try.
-Components, Styles and Systems are empty and each says in one line what will
-fill it. Picking a media tile opens its own section in the same dock, with the
-capture's size and age and two buttons (Place in Picture, Reveal); a double
-click or a drag onto the canvas places it too. Cut from the mock as decorative
+who only redlines. Second, Media shipped showing the captures the app
+already keeps in the capture folder, so the shelf was useful the first time it
+opened (rule 2) and its search and selection were things you could actually
+try. Components, Styles and Systems are empty and each says in one line what
+will fill it. Picking a media tile opens its own section in the same dock; a
+double click or a drag onto the canvas places it too.
+
+**Changed 2026-09-23: Media is the document's own pictures.** The capture
+folder is the GLOBAL shelf's business, and the global shelf is History
+(`docs/design/modes.md` §6): a brand new document was opening onto other
+documents' screenshots. Media now shows the pictures THIS document holds, one
+tile per picture however many layers draw it, newest first, with the picture
+the document is drawn on left off so File ▸ New opens on an empty shelf. The
+empty shelf says what will fill it and where every capture lives instead.
+Placing a tile again, by double click, by the section's Place in Picture
+button, by dragging it onto the canvas or onto a row of the layers list, puts
+down another layer pointing at the SAME picture, never a second copy of it.
+The picked tile's section says how many layers draw it and how big it is.
+`DocumentMedia` (PhotonzCore) is the whole rule, and it is tested there. Cut from the mock as decorative
 at this step: the slide-down browse overlay, the plus/Add to Library menu, the
 category chip row inside a scope, the dock rail tab, and the "N uses" counts.
 
