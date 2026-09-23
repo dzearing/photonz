@@ -1,23 +1,24 @@
 {
   "id": "measure-the-video-editor-against-premiere-and-fi",
   "title": "Measure the video editor against Premiere, and file every gap",
-  "goal": "The user's goal for video is to be better than Premiere at editing recordings, and today it is a first pass at each feature, never judged as a whole. Do a real editing session on real recordings in the probe app with no flags forced beyond Next defaults (after the task that turns the editor on lands): cut a 5 minute screen recording down to 90 seconds, split the audio off, add a second clip and a music bed, put a transition on a cut, add titles and captions, punch in on a detail, export MP4. Write down every place it is slower, clumsier, missing or uglier than Premiere Pro (and than Final Cut / ScreenFlow / Screen Studio for screen recordings), with pictures.",
-  "epic": "",
+  "goal": "The user wants video editing here to be better than Premiere, and so far each feature has only been judged on its own. Do a real editing session with default settings, cutting a five minute recording to ninety seconds with a second clip, music, a transition, titles, captions and an MP4 export, and write down every place it is slower, clumsier, missing or uglier than Premiere, with pictures.",
+  "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 1.05,
+  "seq": 190,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:42:39.137Z",
-  "updated": "2026-09-23T11:53:56.162Z",
+  "updated": "2026-09-23T12:10:31.640Z",
   "deps": [
     "tracks-you-can-add-rename-group-hide-mute-lock-a",
     "a-clip-s-sound-is-on-the-timeline-from-the-momen",
     "click-a-cut-and-pick-a-transition-from-tiles",
-    "the-video-properties-look-like-the-rest-of-the-d"
+    "the-video-properties-look-like-the-rest-of-the-d",
+    "a-recording-opens-in-the-video-editor-for-real-i"
   ],
   "blockedBy": [],
-  "notes": "User on 2026-09-23: 'I want the video editing with the timeline and the whole goal to be better than premiere and this is the most basic shit possible'. Depends on: a-recording-opens-in-the-video-editor-for-real-in-next.",
+  "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): The user's goal for video is to be better than Premiere at editing recordings, and today it is a first pass at each feature, never judged as a whole. Do a real editing session on real recordings in the probe app with no flags forced beyond Next defaults (after the task that turns the editor on lands): cut a 5 minute screen recording down to 90 seconds, split the audio off, add a second clip and a music bed, put a transition on a cut, add titles and captions, punch in on a detail, export MP4. Write down every place it is slower, clumsier, missing or uglier than Premiere Pro (and than Final Cut / ScreenFlow / Screen Studio for screen recordings), with pictures.\n\nUser on 2026-09-23: 'I want the video editing with the timeline and the whole goal to be better than premiere and this is the most basic shit possible'. Depends on: a-recording-opens-in-the-video-editor-for-real-in-next.",
   "acceptance": [
     "A written gap report in docs/design/video-vs-premiere.md: each gap has what Premiere does, what Photonz does, a picture, and a severity",
     "Every gap that matters is filed as its own p1 task with source user, sequenced by how much it blocks a real edit",
@@ -36,6 +37,14 @@
     {
       "t": "2026-09-23T11:53:56.161Z",
       "note": "seq 0.2 -> 1.05"
+    },
+    {
+      "t": "2026-09-23T12:10:20.388Z",
+      "note": "triage 2026-09-23: goal rewritten in plain language, the old one kept at the top of notes; epic (none) -> video-editing; depends on a-recording-opens-in-the-video-editor-for-real-i"
+    },
+    {
+      "t": "2026-09-23T12:10:31.639Z",
+      "note": "seq 1.05 -> 190"
     }
   ]
 }

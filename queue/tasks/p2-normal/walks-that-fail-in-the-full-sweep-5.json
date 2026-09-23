@@ -4,12 +4,12 @@
   "goal": "The scripted walks are the app driving itself, and some of them no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on. This serves the focus because the sweep is the only thing that tells a focus runner whether the change it just made broke anything: a sweep with failures nobody has named cannot say that, so every focus feature ships on a weaker claim than it should.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 3090,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-09-23T00:59:10.437Z",
-  "updated": "2026-09-23T06:16:48.143Z",
+  "updated": "2026-09-23T12:12:09.151Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-23T06:16:47Z: 563 of 568 walks passed in 123 minutes.\n\nFailing walks (5): hold-pushes-the-sound-walk, punch-in-and-hold-walk, speed-a-stretch-walk, save-is-live-after-a-trim-walk, switch-says-mixed-walk\n\nThe app DIED in 2 of those, which is not a walk running slowly. Fix these first:\n  save-is-live-after-a-trim-walk: the app quit part way through and left no crash report\n  switch-says-mixed-walk: the app quit part way through and left no crash report\nCrash reports: ~/Library/Logs/DiagnosticReports. Read one with\nnode Scripts/crash-report.mjs --file \"<report>.ips\".\n\nAlready named by another open task, so read that one before re-diagnosing (1):\n  save-is-live-after-a-trim-walk -> trim-becomes-a-tool-and-the-recording-window-ret (that task says it owns this walk)\n\nThis task owns the other 4: hold-pushes-the-sound-walk, punch-in-and-hold-walk, speed-a-stretch-walk, switch-says-mixed-walk\n\nStopped failing since the last sweep (1): dock-picked-first-walk\n\nFull output: queue/sweep/2026-09-22-211335.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: appearance-is-below-the-fold-again-because-the-p: The dock height budget changed shape (Appearance became a squeezable list and the budget now guarantees a fold), and the playtest press machinery now finds a control's scroller off the view tree rather than by geometry, which every walk that presses anything goes through. 68 walks run locally green (dock, panel, appearance, effects, layers, shelf, library, separate, position, sections) but the whole set is the only honest check on the press change.; a-walk-can-reach-a-control-that-is-plainly-on-sc: The walk harness itself changed: every press, right click and reveal in all 568 walks now decides reach through one geometry (PlaytestReach) instead of AppKit's visibleRect, and sub-point overhang no longer counts as out of reach. 29 of the 30 reveal walks are green locally, but a reach rule touches every walk that presses anything.\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -30,6 +30,14 @@
     {
       "t": "2026-09-23T06:16:48.142Z",
       "note": "sweep 2026-09-23T06:16:47Z: 5 failing (hold-pushes-the-sound-walk, punch-in-and-hold-walk, speed-a-stretch-walk, save-is-live-after-a-trim-walk, switch-says-mixed-walk); stopped failing: dock-picked-first-walk"
+    },
+    {
+      "t": "2026-09-23T12:10:31.799Z",
+      "note": "seq 3090 -> 20"
+    },
+    {
+      "t": "2026-09-23T12:12:09.150Z",
+      "note": "seq 20 -> 20"
     }
   ],
   "standing": "walk-sweep"

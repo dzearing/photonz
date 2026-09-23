@@ -1,26 +1,29 @@
 {
   "id": "premiere-s-keys-work-on-the-timeline",
   "title": "Premiere's keys work on the timeline",
-  "goal": "A Premiere editor reaches for J/K/L, I/O, B, V, arrows, Cmd-K and gets nothing (only B for blade exists). Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?",
+  "goal": "A Premiere editor reaches for the usual timeline keys (play, shuttle, in and out marks, split, ripple delete, frame step) and only the blade key works, while the arrow keys nudge a picked clip instead of stepping a frame. Make those keys do what they do in Premiere while the timeline has focus, and make the transport's buttons say what the keys really do.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 0.7,
+  "seq": 140,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.505Z",
-  "updated": "2026-09-23T11:53:47.717Z",
+  "updated": "2026-09-23T12:10:31.385Z",
   "deps": [
     "the-timeline-is-the-one-in-the-mock"
   ],
   "blockedBy": [],
-  "notes": "Filed from the 2026-09-23 video audit in the intake window.",
+  "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): A Premiere editor reaches for J/K/L, I/O, B, V, arrows, Cmd-K and gets nothing (only B for blade exists). Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?\n\nFiled from the 2026-09-23 video audit in the intake window.",
   "acceptance": [
     "Space play/pause; J/K/L shuttle with repeated J/L speeding up; K+J/L inching",
     "I/O set in and out, Opt-I/O clear; Cmd-K split at playhead; Delete lift, Shift-Delete ripple",
     "Left/Right one frame, Shift+arrows five frames, Up/Down previous/next edit point, Home/End",
     "V select, B blade, A track select forward; = and - zoom, backslash fit",
-    "Where a Photoshop key conflicts, the timeline wins only while the timeline has focus; documented in the shortcuts sheet"
+    "Where a Photoshop key conflicts, the timeline wins only while the timeline has focus; documented in the shortcuts sheet",
+    "With a clip picked on the timeline, the right arrow steps the playhead one frame or leaves the layer alone, and the transport's frame buttons say whichever it does (carried from the dropped arrow-key task)",
+    "In a document with no time in it, the arrow keys still nudge a picked layer",
+    "A walk presses an arrow with a clip picked and claims what moved"
   ],
   "log": [
     {
@@ -30,6 +33,18 @@
     {
       "t": "2026-09-23T11:53:47.716Z",
       "note": "seq 410 -> 0.7"
+    },
+    {
+      "t": "2026-09-23T12:09:50.689Z",
+      "note": "Folded in from the-transport-says-the-arrow-keys-step-a-frame-a (triage 2026-09-23): with a clip picked, the arrows nudge the layer a pixel and edit the document instead of stepping the playhead, while the Previous/Next Frame buttons promise the arrows. Deliberate rule in CanvasKeys.swift:69 (arrows step a frame only with nothing picked); the broken promise is the transport help text. A walk (earlier draft of open-out-the-timeline-walk) pressed right five times with a sound picked: the layer moved 5pt in x, the playhead stayed at 4000ms. Also open from the scrub-audio task: should a key step play the sound under it? Decide here."
+    },
+    {
+      "t": "2026-09-23T12:10:20.305Z",
+      "note": "triage 2026-09-23: goal rewritten in plain language, the old one kept at the top of notes; 3 acceptance items added"
+    },
+    {
+      "t": "2026-09-23T12:10:31.384Z",
+      "note": "seq 0.7 -> 140"
     }
   ]
 }

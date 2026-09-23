@@ -1,20 +1,20 @@
 {
   "id": "a-clip-s-sound-is-on-the-timeline-from-the-momen",
   "title": "A clip's sound is on the timeline from the moment it opens",
-  "goal": "A recording's own sound is invisible until Detach Sound; a dropped sound shows as a flat blue bar with no waveform. The user: 'no audio segments'. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?",
+  "goal": "A recording's own sound is invisible until you detach it, and an added sound shows as a flat bar with no waveform. Show every clip's sound as its own segment with a waveform under the picture from the moment the recording opens.",
   "epic": "video-audio",
   "priority": "p1-high",
-  "seq": 0.4,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.361Z",
-  "updated": "2026-09-23T11:53:47.418Z",
+  "updated": "2026-09-23T12:10:31.073Z",
   "deps": [
     "the-timeline-is-the-one-in-the-mock"
   ],
   "blockedBy": [],
-  "notes": "Filed from the 2026-09-23 video audit in the intake window.",
+  "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): A recording's own sound is invisible until Detach Sound; a dropped sound shows as a flat blue bar with no waveform. The user: 'no audio segments'. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?\n\nFiled from the 2026-09-23 video audit in the intake window.",
   "acceptance": [
     "Every clip with sound shows a linked audio segment with a waveform on an audio track under it, from open",
     "Right-click, Detach Audio unlinks it so it moves on its own; linked clips move together",
@@ -29,6 +29,14 @@
     {
       "t": "2026-09-23T11:53:47.417Z",
       "note": "seq 390 -> 0.4"
+    },
+    {
+      "t": "2026-09-23T12:10:20.204Z",
+      "note": "triage 2026-09-23: goal rewritten in plain language, the old one kept at the top of notes"
+    },
+    {
+      "t": "2026-09-23T12:10:31.072Z",
+      "note": "seq 0.4 -> 80"
     }
   ]
 }

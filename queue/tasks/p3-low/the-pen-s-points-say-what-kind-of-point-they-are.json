@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-18T08:30:35.604Z",
-  "updated": "2026-09-22T12:17:53.835Z",
+  "updated": "2026-09-23T12:10:32.552Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From docs/design/vector-paths.md, Known rough edges: 'The Pen draws every anchor it has placed as the same round dot, so while you are drawing you cannot see which points are corners, bends, or curved on one side. The reshaping chrome tells all three apart.'\n\nNo card: this is not a new idiom, it is the Pen borrowing the vocabulary the reshaping chrome already ships and the user has already seen. p3 because nothing is broken and nothing is lost, it is only harder to read than it needs to be.\n\nRelated rough edge from the same list, worth mentioning in the audit rather than fixing here: 'The Pen still needs Option to place a half-smooth anchor as it draws, and its own chip does not mention it', so the two tools answer the same question differently. Once the points look different the chip has something to point at.\n\nSpec: docs/design/vector-paths.md section 'The Pen' (line 307) and 'Reshaping one' (line 474).",
@@ -40,8 +40,10 @@
       "note": "seq 30 -> 10"
     },
     {
-      "t": "2026-09-22T12:17:53.834Z",
-      "note": "seq 10 -> 10"
+      "t": "2026-09-23T12:10:32.551Z",
+      "note": "seq 10 -> 10",
+      "since": "2026-09-22T12:17:53.834Z",
+      "count": 2
     }
   ]
 }

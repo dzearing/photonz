@@ -1,20 +1,20 @@
 {
   "id": "click-a-cut-and-pick-a-transition-from-tiles",
   "title": "Click a cut and pick a transition from tiles",
-  "goal": "The transition picker is a radio list with paragraphs in the panel (TransitionInspector.swift). The mock (comp-video.html section 06, video-transitions.html) puts an AT THIS CUT popover on the edit point with thumbnail tiles, and the panel shows tidy Edit point and Transition rows with Type and Length dropdowns. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?",
+  "goal": "Picking a transition today is a list of radio buttons with paragraphs in the side panel. Clicking a cut should open a small picker right at the cut with thumbnail tiles, as the mock draws it, with type and length as simple rows in the panel.",
   "epic": "video-transitions-motion",
   "priority": "p1-high",
-  "seq": 0.5,
+  "seq": 100,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.574Z",
-  "updated": "2026-09-23T11:53:47.516Z",
+  "updated": "2026-09-23T12:10:31.175Z",
   "deps": [
     "bring-in-a-second-clip-and-cut-between-clips"
   ],
   "blockedBy": [],
-  "notes": "Filed from the 2026-09-23 video audit in the intake window.",
+  "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): The transition picker is a radio list with paragraphs in the panel (TransitionInspector.swift). The mock (comp-video.html section 06, video-transitions.html) puts an AT THIS CUT popover on the edit point with thumbnail tiles, and the panel shows tidy Edit point and Transition rows with Type and Length dropdowns. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?\n\nFiled from the 2026-09-23 video audit in the intake window.",
   "acceptance": [
     "Clicking an edit point opens the popover with animated thumbnail tiles: Cross dissolve, Dip to black, Dip to white, Push, Wipe, Blur through, each saying whether it needs overlap",
     "Properties shows Edit point (Outgoing, Incoming, Spare before/after) and Transition (Type and Length dropdowns) as label/value rows, no paragraphs",
@@ -29,6 +29,14 @@
     {
       "t": "2026-09-23T11:53:47.515Z",
       "note": "seq 420 -> 0.5"
+    },
+    {
+      "t": "2026-09-23T12:10:20.238Z",
+      "note": "triage 2026-09-23: goal rewritten in plain language, the old one kept at the top of notes"
+    },
+    {
+      "t": "2026-09-23T12:10:31.174Z",
+      "note": "seq 0.5 -> 100"
     }
   ]
 }

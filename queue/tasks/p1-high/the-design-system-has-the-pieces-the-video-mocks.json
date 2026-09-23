@@ -1,18 +1,20 @@
 {
   "id": "the-design-system-has-the-pieces-the-video-mocks",
   "title": "The design system has the pieces the video mocks are made of",
-  "goal": "The video mocks use components the SwiftUI design system does not have, so each task drew its own. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?",
+  "goal": "The video mocks are built from pieces the app's shared design library does not have yet (a transport, clip bars, track headers, a time ruler, a playhead, a picker of thumbnail tiles, keyframe marks), so every video feature drew its own. Add them to the shared library once, matching the mocks, so the timeline and everything after it use the same ones.",
   "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 0.85,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:47.067Z",
-  "updated": "2026-09-23T11:53:47.867Z",
-  "deps": [],
+  "updated": "2026-09-23T12:10:30.872Z",
+  "deps": [
+    "the-video-mocks-are-the-user-s-again-and-d18-is"
+  ],
   "blockedBy": [],
-  "notes": "Filed from the 2026-09-23 video audit in the intake window.",
+  "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): The video mocks use components the SwiftUI design system does not have, so each task drew its own. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?\n\nFiled from the 2026-09-23 video audit in the intake window.",
   "acceptance": [
     "Inventory the mock components (transport, clip bar, track header, ruler, playhead, tile popover, dropdown row, keyframe diamond) against Sources/Photonz shared components",
     "Each missing one becomes a shared SwiftUI component with its tokens from inspector.css/overlays.css and an ImageRenderer snapshot next to the mock",
@@ -26,6 +28,14 @@
     {
       "t": "2026-09-23T11:53:47.866Z",
       "note": "seq 490 -> 0.85"
+    },
+    {
+      "t": "2026-09-23T12:10:20.134Z",
+      "note": "triage 2026-09-23: goal rewritten in plain language, the old one kept at the top of notes; depends on the-video-mocks-are-the-user-s-again-and-d18-is"
+    },
+    {
+      "t": "2026-09-23T12:10:30.871Z",
+      "note": "seq 0.85 -> 40"
     }
   ]
 }

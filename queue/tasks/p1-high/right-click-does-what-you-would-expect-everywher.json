@@ -1,21 +1,21 @@
 {
   "id": "right-click-does-what-you-would-expect-everywher",
   "title": "Right-click does what you would expect, everywhere on the timeline",
-  "goal": "User: 'we need a right click menu on a segment. I expect to not need to have tools for everything, but that you can right click on places to reveal actions that can be taken at the scrub bar, or for the clip'. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?",
+  "goal": "A person expects to right-click a clip, a cut, a track or the scrub bar and find the actions for that thing, rather than hunting for a tool or a panel button. Put those menus in, carrying what the mock and a Premiere editor would expect.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 0.45,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.431Z",
-  "updated": "2026-09-23T11:53:47.466Z",
+  "updated": "2026-09-23T12:10:31.124Z",
   "deps": [
     "the-timeline-is-the-one-in-the-mock",
     "tracks-you-can-add-rename-group-hide-mute-lock-a"
   ],
   "blockedBy": [],
-  "notes": "Filed from the 2026-09-23 video audit in the intake window.",
+  "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): User: 'we need a right click menu on a segment. I expect to not need to have tools for everything, but that you can right click on places to reveal actions that can be taken at the scrub bar, or for the clip'. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?\n\nFiled from the 2026-09-23 video audit in the intake window.",
   "acceptance": [
     "Clip: Split at Playhead, Delete, Ripple Delete, Detach Audio, Speed submenu, Freeze Frame, Add Transition, Rename, Reveal in Finder, Duplicate",
     "Cut/edit point: Add Transition submenu, Remove Transition, Roll Edit",
@@ -32,6 +32,14 @@
     {
       "t": "2026-09-23T11:53:47.465Z",
       "note": "seq 400 -> 0.45"
+    },
+    {
+      "t": "2026-09-23T12:10:20.221Z",
+      "note": "triage 2026-09-23: goal rewritten in plain language, the old one kept at the top of notes"
+    },
+    {
+      "t": "2026-09-23T12:10:31.123Z",
+      "note": "seq 0.45 -> 90"
     }
   ]
 }

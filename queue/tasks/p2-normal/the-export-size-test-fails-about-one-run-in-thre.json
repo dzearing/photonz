@@ -1,21 +1,23 @@
 {
   "id": "the-export-size-test-fails-about-one-run-in-thre",
-  "title": "The export size test fails about one run in three",
-  "goal": "Running the test suite before a commit comes back red about a third of the time, on a video export test that nobody has touched. The rule is that the suite must be green before every commit, so a test that fails at random either stops honest work or teaches people to ignore a red suite. Make that test tell the truth every time it runs.",
+  "title": "An export weighs the same on a busy machine as on an idle one",
+  "goal": "The video and animated picture export size tests go red about one run in three when the machine is busy, because the encoders hand back different sizes for the same frames. A red run that means nothing blocks honest commits, and if the size really moves, the Export sheet may be promising a size it cannot keep.",
   "epic": "video-share",
   "priority": "p2-normal",
-  "seq": 3080,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T22:53:19.192Z",
-  "updated": "2026-09-23T09:33:45.156Z",
+  "updated": "2026-09-23T12:12:09.967Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Reproduced 2026-09-22 while finishing resizing-one-piece-inside-a-turned-card-moves-th. Three back-to-back full runs of Scripts/test.sh on the same commit: run 1 failed with 1 issue, run 2 failed with 3 issues, run 3 passed with 9094 tests. The issue named each time:\n\n  x Test \"What lands is inside the budget it was given, and not far under it\" recorded an issue at VideoExportBudgetTests.swift:155:9: Expectation failed: (Self.bytes(of: tighter) -> 125039) < (landed -> 116723)\n\nTests/PhotonzMediaTests/VideoExportBudgetTests.swift:155 is the last line of theBudgetPredictsTheFile: it exports the same 3-second 1280x800 synthetic source at VideoExportQuality.standard and again at .small, and claims the .small file is the smaller of the two. Both land around 120KB, so on that source the hardware encoder is near its own floor and the bitrate ceiling is not what is deciding the size; which file comes out smaller is then down to the encoder, not to the recipe. Self.busySource(seconds:3,size:) is the source. Either give it a source with enough detail that both budgets actually bind, or make the claim about the recipe rather than about the bytes.",
+  "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): Running the test suite before a commit comes back red about a third of the time, on a video export test that nobody has touched. The rule is that the suite must be green before every commit, so a test that fails at random either stops honest work or teaches people to ignore a red suite. Make that test tell the truth every time it runs.\n\nReproduced 2026-09-22 while finishing resizing-one-piece-inside-a-turned-card-moves-th. Three back-to-back full runs of Scripts/test.sh on the same commit: run 1 failed with 1 issue, run 2 failed with 3 issues, run 3 passed with 9094 tests. The issue named each time:\n\n  x Test \"What lands is inside the budget it was given, and not far under it\" recorded an issue at VideoExportBudgetTests.swift:155:9: Expectation failed: (Self.bytes(of: tighter) -> 125039) < (landed -> 116723)\n\nTests/PhotonzMediaTests/VideoExportBudgetTests.swift:155 is the last line of theBudgetPredictsTheFile: it exports the same 3-second 1280x800 synthetic source at VideoExportQuality.standard and again at .small, and claims the .small file is the smaller of the two. Both land around 120KB, so on that source the hardware encoder is near its own floor and the bitrate ceiling is not what is deciding the size; which file comes out smaller is then down to the encoder, not to the recipe. Self.busySource(seconds:3,size:) is the source. Either give it a source with enough detail that both budgets actually bind, or make the claim about the recipe rather than about the bytes.",
   "acceptance": [
     "Scripts/test.sh passes five times in a row with no change to the code under test",
-    "The export size claim still catches a real regression: a bigger budget really does have to produce a bigger file, proved on a source where the encoder is not sitting on its floor"
+    "The export size claim still catches a real regression: a bigger budget really does have to produce a bigger file, proved on a source where the encoder is not sitting on its floor",
+    "The animated picture export size tests give the same answer on a machine that is also building as on an idle one, or say out loud why they cannot",
+    "Whether the Export sheet can show a person two different sizes for the same choice is checked, and the answer is written into this task"
   ],
   "log": [
     {
@@ -29,6 +31,26 @@
     {
       "t": "2026-09-23T09:33:45.155Z",
       "note": "Seen again 2026-09-23 on the component swap task: VideoExportBudgetTests.swift:155 (bytes(of: tighter) 124091 < landed 118796) in a full Scripts/test.sh run with the probe app building alongside; the suite alone passed immediately after. Two full runs on the same commit gave 1 issue then 3, so the count moves with the load as well as the pass or fail."
+    },
+    {
+      "t": "2026-09-23T12:09:51.001Z",
+      "note": "Merged with an-animated-export-weighed-twice-comes-out-the-s (triage 2026-09-23): same failure shape, an encoder handing back a different number of bytes for the same frames when the machine is busy. That task's evidence: full Scripts/test.sh under load failed AnimatedExportWeighTests.swift:109 (short heic at High came out 208988 then 285616 bytes) and :128 (High/Standard/Small 208988/234401/138064); --filter AnimatedExportWeigh passed 3 tests in 17.7s; a second full run on a quiet machine passed 9134. Seen again on the component swap task: 145596 vs 280327. VideoExportBudgetTests.swift:155 seen again the same day (124091 < 118796). Fix both together."
+    },
+    {
+      "t": "2026-09-23T12:10:20.456Z",
+      "note": "triage 2026-09-23: goal rewritten in plain language, the old one kept at the top of notes; 2 acceptance items added; retitled from \"The export size test fails about one run in three\""
+    },
+    {
+      "t": "2026-09-23T12:10:31.742Z",
+      "note": "seq 3080 -> 10"
+    },
+    {
+      "t": "2026-09-23T12:12:09.098Z",
+      "note": "seq 10 -> 10"
+    },
+    {
+      "t": "2026-09-23T12:12:09.966Z",
+      "note": "left rough (digest 2026-09-23, from queue/audits/2026-09-22-gif-weight.json): weighing a GIF or HEIC costs 0.10 to 0.62 times the recording's length and has no length at which it gives up, so a five minute recording at High is about three minutes and a few hundred megabytes in scratch, and pressing Export before the number lands starts the work again. Not its own task: nobody picks GIF for a five minute recording yet. File it if it shows up in the Premiere measurement."
     }
   ],
   "walks": []

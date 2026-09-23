@@ -1,18 +1,18 @@
 {
   "id": "the-video-mocks-are-the-user-s-again-and-d18-is",
   "title": "The video mocks are the user's again, and D18 is gone",
-  "goal": "Commit 72a2a75c (2026-09-19, 'Video, drawn against the app that exists') and the later fourteen-pages task rewrote the user's video mocks to fit the code the loop already had: tracks removed, the Layers group argued away, and UX-PATTERNS D18 invented to replace tracks with layer rows. The user rejected the result on 2026-09-23 and wants real tracks. Restore the user's intent before anything else is built against these pages. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?",
+  "goal": "Earlier work rewrote the user's video mock pages to match what the app already did, taking out real tracks and inventing a design rule to replace them with layer rows. Put the mocks back to what the user designed, real tracks included, before anything else is built against them.",
   "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 0.2,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.081Z",
-  "updated": "2026-09-23T11:53:47.218Z",
+  "updated": "2026-09-23T12:10:30.822Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Filed from the 2026-09-23 video audit in the intake window.",
+  "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): Commit 72a2a75c (2026-09-19, 'Video, drawn against the app that exists') and the later fourteen-pages task rewrote the user's video mocks to fit the code the loop already had: tracks removed, the Layers group argued away, and UX-PATTERNS D18 invented to replace tracks with layer rows. The user rejected the result on 2026-09-23 and wants real tracks. Restore the user's intent before anything else is built against these pages. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?\n\nFiled from the 2026-09-23 video audit in the intake window.",
   "acceptance": [
     "Every change 72a2a75c and the fourteen-pages task made to docs/design/mocks/pages/video*.html, video-shell.html and comp-video.html is listed, and each one that removed or weakened something the user drew (tracks, track headers, grouping, audio lanes, the Layers group, the transport row) is reverted",
     "UX-PATTERNS D18 is rewritten: a document with time has real tracks (video, audio, captions, titles), named, renamable, groupable, each holding many clips, and a layer can move between them",
@@ -27,6 +27,14 @@
     {
       "t": "2026-09-23T11:53:47.217Z",
       "note": "seq 350 -> 0.2"
+    },
+    {
+      "t": "2026-09-23T12:10:20.116Z",
+      "note": "triage 2026-09-23: goal rewritten in plain language, the old one kept at the top of notes"
+    },
+    {
+      "t": "2026-09-23T12:10:30.821Z",
+      "note": "seq 0.2 -> 30"
     }
   ]
 }

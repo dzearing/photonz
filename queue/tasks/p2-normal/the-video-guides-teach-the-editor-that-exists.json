@@ -1,18 +1,18 @@
 {
   "id": "the-video-guides-teach-the-editor-that-exists",
   "title": "The video guides teach the editor that exists",
-  "goal": "TutorialGuides.swift trim-a-recording and export-a-recording still describe the retired recording window (click the scissors, Done throws the ends away). Rewrite the video track of guides for the rebuilt timeline: cut a recording down, add a clip, a title that moves, a transition, captions, export.",
+  "goal": "The video guides still teach the old recording window that is being retired. Rewrite them for the new timeline: cut a recording down, add a clip, a moving title, a transition, captions, and export.",
   "epic": "video-editing",
   "priority": "p2-normal",
-  "seq": 3170,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:54:04.593Z",
-  "updated": "2026-09-23T11:54:04.596Z",
+  "updated": "2026-09-23T12:12:09.456Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Filed from the 2026-09-23 video audit.",
+  "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): TutorialGuides.swift trim-a-recording and export-a-recording still describe the retired recording window (click the scissors, Done throws the ends away). Rewrite the video track of guides for the rebuilt timeline: cut a recording down, add a clip, a title that moves, a transition, captions, export.\n\nFiled from the 2026-09-23 video audit.",
   "acceptance": [
     "Every video guide step anchors to a control that exists at Next defaults",
     "Guides cover cut, second clip, title with motion, transition, captions, export",
@@ -22,6 +22,18 @@
     {
       "t": "2026-09-23T11:54:04.595Z",
       "note": "created (user)"
+    },
+    {
+      "t": "2026-09-23T12:10:20.404Z",
+      "note": "triage 2026-09-23: goal rewritten in plain language, the old one kept at the top of notes"
+    },
+    {
+      "t": "2026-09-23T12:10:32.068Z",
+      "note": "seq 3170 -> 70"
+    },
+    {
+      "t": "2026-09-23T12:12:09.455Z",
+      "note": "seq 70 -> 80"
     }
   ]
 }

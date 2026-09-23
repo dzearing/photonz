@@ -1,18 +1,18 @@
 {
   "id": "a-recording-opens-in-the-video-editor-for-real-i",
   "title": "A recording opens in the video editor, for real, in Next",
-  "goal": "About twenty video features (timeline, split, transitions, speed, punch-in, titles, captions, sound as a layer, video export) are on by default in Next, but all of them live in the editor that next-a-recording-is-a-document opens, and that flag is OFF by default. So a person opening a recording got the old play-and-shorten window and none of the work. Walks set the flag themselves, so nothing caught it. The user found this on 2026-09-23 and was furious: 'I can't create a layer, do transitions, split audio out'.",
-  "epic": "",
+  "goal": "All the video editing work (timeline, cuts, transitions, speed, titles, captions, sound, export) lives in an editor a recording only opens in when a hidden setting is switched on, and it is off by default, so a person opening a recording still gets the old play-and-shorten window. Open every recording in the video editor by default in Next.",
+  "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 0.1,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:42:39.064Z",
-  "updated": "2026-09-23T11:42:51.780Z",
+  "updated": "2026-09-23T12:10:30.769Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Root cause found in the intake window: PhotonzApp.swift:161 routes .video to ReleaseExperience.videoEditor when the flag is off. The user's dev app has the flag turned on by hand as of 2026-09-23 04:50.",
+  "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): About twenty video features (timeline, split, transitions, speed, punch-in, titles, captions, sound as a layer, video export) are on by default in Next, but all of them live in the editor that next-a-recording-is-a-document opens, and that flag is OFF by default. So a person opening a recording got the old play-and-shorten window and none of the work. Walks set the flag themselves, so nothing caught it. The user found this on 2026-09-23 and was furious: 'I can't create a layer, do transitions, split audio out'.\n\nRoot cause found in the intake window: PhotonzApp.swift:161 routes .video to ReleaseExperience.videoEditor when the flag is off. The user's dev app has the flag turned on by hand as of 2026-09-23 04:50.",
   "acceptance": [
     "next-a-recording-is-a-document is enabledByDefaultIn [.next], and a person with no stored override opening a recording in Next gets the editor with the timeline",
     "A unit test over FeatureCatalog fails when a flag enabled by default in a release depends on a flag that is off by default in that release; video flags declare that they depend on next-a-recording-is-a-document",
@@ -31,6 +31,14 @@
     {
       "t": "2026-09-23T11:42:51.779Z",
       "note": "seq 350 -> 0.1"
+    },
+    {
+      "t": "2026-09-23T12:10:20.097Z",
+      "note": "triage 2026-09-23: goal rewritten in plain language, the old one kept at the top of notes; epic (none) -> video-editing"
+    },
+    {
+      "t": "2026-09-23T12:10:30.768Z",
+      "note": "seq 0.1 -> 20"
     }
   ]
 }

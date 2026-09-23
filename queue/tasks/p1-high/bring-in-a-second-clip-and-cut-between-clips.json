@@ -1,25 +1,28 @@
 {
   "id": "bring-in-a-second-clip-and-cut-between-clips",
   "title": "Bring in a second clip and cut between clips",
-  "goal": "Transitions were squeezed onto joins inside one clip because 'there is no way to import a second recording into a document at all' (transitions task log). Multi-clip editing was never filed. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?",
+  "goal": "There is no way to bring a second recording into a video document, so every edit happens inside one clip. Let a person drop another video or a sound onto the timeline at the moment and on the track they point at, and cut between clips.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 0.35,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.292Z",
-  "updated": "2026-09-23T11:53:47.369Z",
+  "updated": "2026-09-23T12:10:31.023Z",
   "deps": [
     "the-timeline-is-the-one-in-the-mock"
   ],
   "blockedBy": [],
-  "notes": "Filed from the 2026-09-23 video audit in the intake window.",
+  "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): Transitions were squeezed onto joins inside one clip because 'there is no way to import a second recording into a document at all' (transitions task log). Multi-clip editing was never filed. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?\n\nFiled from the 2026-09-23 video audit in the intake window.",
   "acceptance": [
     "Drop a video from Finder or the Library onto the timeline at a point and onto a track; it lands as a clip there (insert and overwrite)",
     "Clips on one track butt together with an edit point between them, drawn as in comp-video.html section 02",
     "Each clip keeps its own sound as an audio segment under it",
-    "Walk at Next defaults builds screen-recording + b-roll + outro as in the mock"
+    "Walk at Next defaults builds screen-recording + b-roll + outro as in the mock",
+    "A sound let go over the timeline starts at the moment under the pointer, not at the playhead, and while it is in the air the timeline shows where it will land (carried from the dropped drop-at-a-moment task)",
+    "Letting go over the picture keeps landing at the playhead",
+    "A walk lets a sound go at a moment other than the playhead and checks where it starts"
   ],
   "log": [
     {
@@ -29,6 +32,18 @@
     {
       "t": "2026-09-23T11:53:47.368Z",
       "note": "seq 380 -> 0.35"
+    },
+    {
+      "t": "2026-09-23T12:09:50.794Z",
+      "note": "Folded in from let-go-of-a-sound-on-the-timeline-and-it-lands-a (triage 2026-09-23): a sound or video dropped on the window always lands at the playhead; the strip takes no drop at all. The drop answer is already one pure function that takes the moment (MediaDrop.answer ... atMS), so the timeline only needs a drop destination that passes the moment under the pointer. See docs/design/video-audio.md 5a. Letting go over the picture must keep landing at the playhead."
+    },
+    {
+      "t": "2026-09-23T12:10:20.186Z",
+      "note": "triage 2026-09-23: goal rewritten in plain language, the old one kept at the top of notes; 3 acceptance items added"
+    },
+    {
+      "t": "2026-09-23T12:10:31.022Z",
+      "note": "seq 0.35 -> 70"
     }
   ]
 }

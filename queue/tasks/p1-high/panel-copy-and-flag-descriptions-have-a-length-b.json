@@ -1,18 +1,18 @@
 {
   "id": "panel-copy-and-flag-descriptions-have-a-length-b",
   "title": "Panel copy and flag descriptions have a length budget the tests enforce",
-  "goal": "UX-PATTERNS says a panel carries at most one short line of text, yet video sections carry paragraphs, and flag descriptions run to 200 words. Nothing enforces it. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?",
+  "goal": "The design rules say a panel carries at most one short line of text, yet video sections carry paragraphs and experiment descriptions run to 200 words, and nothing checks. Add a length limit the test run enforces, and list every place that breaks it.",
   "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 0.75,
+  "seq": 150,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.927Z",
-  "updated": "2026-09-23T11:53:47.769Z",
+  "updated": "2026-09-23T12:12:17.530Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Filed from the 2026-09-23 video audit in the intake window.",
+  "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): UX-PATTERNS says a panel carries at most one short line of text, yet video sections carry paragraphs, and flag descriptions run to 200 words. Nothing enforces it. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?\n\nFiled from the 2026-09-23 video audit in the intake window.",
   "acceptance": [
     "Scripts/test.sh fails when a panel section string exceeds the budget (60 characters, tune with the user via a card) outside an allowlist that starts empty for video",
     "Flag descriptions capped (e.g. 40 words) with a test",
@@ -26,6 +26,18 @@
     {
       "t": "2026-09-23T11:53:47.768Z",
       "note": "seq 470 -> 0.75"
+    },
+    {
+      "t": "2026-09-23T12:10:20.322Z",
+      "note": "triage 2026-09-23: goal rewritten in plain language, the old one kept at the top of notes"
+    },
+    {
+      "t": "2026-09-23T12:10:31.436Z",
+      "note": "seq 0.75 -> 150"
+    },
+    {
+      "t": "2026-09-23T12:12:17.475Z",
+      "note": "Measured by the digest pass 2026-09-23: 96 switch descriptions in FeatureCatalog.swift, median 179 words, longest 557 (Turn Into Path), 538 and 520; 92 of the 96 are over 40 words. So a 40 word cap is a rewrite of nearly the whole catalog, not a trim: the card that tunes the budget with the user should show these numbers."
     }
   ]
 }

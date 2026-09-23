@@ -6490,3 +6490,118 @@
 {"t":"2026-09-23T11:42:51.732Z","ev":"task_note","id":"a-recording-opens-in-the-video-editor-for-real-i"}
 {"t":"2026-09-23T11:42:51.781Z","ev":"task_resequenced","id":"a-recording-opens-in-the-video-editor-for-real-i","from":350,"to":0.1}
 {"t":"2026-09-23T11:42:51.830Z","ev":"task_resequenced","id":"measure-the-video-editor-against-premiere-and-fi","from":360,"to":0.2}
+{"t":"2026-09-23T11:50:37.472Z","ev":"task_created","id":"playing-a-recording-never-blinks","priority":"p1-high","title":"Playing a recording never blinks"}
+{"t":"2026-09-23T11:50:41.040Z","ev":"task_resequenced","id":"playing-a-recording-never-blinks","from":350,"to":0.05}
+{"t":"2026-09-23T11:53:46.085Z","ev":"task_created","id":"the-video-mocks-are-the-user-s-again-and-d18-is","priority":"p1-high","title":"The video mocks are the user's again, and D18 is gone"}
+{"t":"2026-09-23T11:53:46.154Z","ev":"task_created","id":"the-timeline-is-the-one-in-the-mock","priority":"p1-high","title":"The timeline is the one in the mock"}
+{"t":"2026-09-23T11:53:46.225Z","ev":"task_created","id":"tracks-you-can-add-rename-group-hide-mute-lock-a","priority":"p1-high","title":"Tracks you can add, rename, group, hide, mute, lock, and move clips between"}
+{"t":"2026-09-23T11:53:46.296Z","ev":"task_created","id":"bring-in-a-second-clip-and-cut-between-clips","priority":"p1-high","title":"Bring in a second clip and cut between clips"}
+{"t":"2026-09-23T11:53:46.365Z","ev":"task_created","id":"a-clip-s-sound-is-on-the-timeline-from-the-momen","priority":"p1-high","title":"A clip's sound is on the timeline from the moment it opens"}
+{"t":"2026-09-23T11:53:46.435Z","ev":"task_created","id":"right-click-does-what-you-would-expect-everywher","priority":"p1-high","title":"Right-click does what you would expect, everywhere on the timeline"}
+{"t":"2026-09-23T11:53:46.509Z","ev":"task_created","id":"premiere-s-keys-work-on-the-timeline","priority":"p1-high","title":"Premiere's keys work on the timeline"}
+{"t":"2026-09-23T11:53:46.578Z","ev":"task_created","id":"click-a-cut-and-pick-a-transition-from-tiles","priority":"p1-high","title":"Click a cut and pick a transition from tiles"}
+{"t":"2026-09-23T11:53:46.646Z","ev":"task_created","id":"the-video-properties-look-like-the-rest-of-the-d","priority":"p1-high","title":"The video properties look like the rest of the design, with no paragraphs"}
+{"t":"2026-09-23T11:53:46.715Z","ev":"task_created","id":"move-a-layer-from-a-to-b-grow-it-shrink-it-fade","priority":"p1-high","title":"Move a layer from A to B, grow it, shrink it, fade it, Photoshop-style"}
+{"t":"2026-09-23T11:53:46.785Z","ev":"task_created","id":"captions-write-themselves-from-the-speech","priority":"p1-high","title":"Captions write themselves from the speech"}
+{"t":"2026-09-23T11:53:46.862Z","ev":"task_created","id":"an-editing-session-walk-runs-at-next-defaults-an","priority":"p1-high","title":"An editing session walk runs at Next defaults and fails on any blink"}
+{"t":"2026-09-23T11:53:46.931Z","ev":"task_created","id":"panel-copy-and-flag-descriptions-have-a-length-b","priority":"p1-high","title":"Panel copy and flag descriptions have a length budget the tests enforce"}
+{"t":"2026-09-23T11:53:47.000Z","ev":"task_created","id":"every-panel-follows-the-design-system","priority":"p1-high","title":"Every panel follows the design system"}
+{"t":"2026-09-23T11:53:47.071Z","ev":"task_created","id":"the-design-system-has-the-pieces-the-video-mocks","priority":"p1-high","title":"The design system has the pieces the video mocks are made of"}
+{"t":"2026-09-23T11:53:47.143Z","ev":"task_created","id":"every-objective-says-what-done-looks-like","priority":"p1-high","title":"Every objective says what done looks like"}
+{"t":"2026-09-23T11:53:47.219Z","ev":"task_resequenced","id":"the-video-mocks-are-the-user-s-again-and-d18-is","from":350,"to":0.2}
+{"t":"2026-09-23T11:53:47.270Z","ev":"task_resequenced","id":"the-timeline-is-the-one-in-the-mock","from":360,"to":0.25}
+{"t":"2026-09-23T11:53:47.319Z","ev":"task_resequenced","id":"tracks-you-can-add-rename-group-hide-mute-lock-a","from":370,"to":0.3}
+{"t":"2026-09-23T11:53:47.370Z","ev":"task_resequenced","id":"bring-in-a-second-clip-and-cut-between-clips","from":380,"to":0.35}
+{"t":"2026-09-23T11:53:47.419Z","ev":"task_resequenced","id":"a-clip-s-sound-is-on-the-timeline-from-the-momen","from":390,"to":0.4}
+{"t":"2026-09-23T11:53:47.467Z","ev":"task_resequenced","id":"right-click-does-what-you-would-expect-everywher","from":400,"to":0.45}
+{"t":"2026-09-23T11:53:47.517Z","ev":"task_resequenced","id":"click-a-cut-and-pick-a-transition-from-tiles","from":420,"to":0.5}
+{"t":"2026-09-23T11:53:47.568Z","ev":"task_resequenced","id":"the-video-properties-look-like-the-rest-of-the-d","from":430,"to":0.55}
+{"t":"2026-09-23T11:53:47.619Z","ev":"task_resequenced","id":"move-a-layer-from-a-to-b-grow-it-shrink-it-fade","from":440,"to":0.6}
+{"t":"2026-09-23T11:53:47.669Z","ev":"task_resequenced","id":"captions-write-themselves-from-the-speech","from":450,"to":0.65}
+{"t":"2026-09-23T11:53:47.718Z","ev":"task_resequenced","id":"premiere-s-keys-work-on-the-timeline","from":410,"to":0.7}
+{"t":"2026-09-23T11:53:47.770Z","ev":"task_resequenced","id":"panel-copy-and-flag-descriptions-have-a-length-b","from":470,"to":0.75}
+{"t":"2026-09-23T11:53:47.820Z","ev":"task_resequenced","id":"an-editing-session-walk-runs-at-next-defaults-an","from":460,"to":0.8}
+{"t":"2026-09-23T11:53:47.868Z","ev":"task_resequenced","id":"the-design-system-has-the-pieces-the-video-mocks","from":490,"to":0.85}
+{"t":"2026-09-23T11:53:47.920Z","ev":"task_resequenced","id":"every-panel-follows-the-design-system","from":480,"to":0.9}
+{"t":"2026-09-23T11:53:48.024Z","ev":"task_resequenced","id":"every-objective-says-what-done-looks-like","from":500,"to":0.95}
+{"t":"2026-09-23T11:53:56.163Z","ev":"task_resequenced","id":"measure-the-video-editor-against-premiere-and-fi","from":0.2,"to":1.05}
+{"t":"2026-09-23T11:54:04.597Z","ev":"task_created","id":"the-video-guides-teach-the-editor-that-exists","priority":"p2-normal","title":"The video guides teach the editor that exists"}
+{"t":"2026-09-23T11:54:18.360Z","ev":"loop_started","pid":56010}
+{"t":"2026-09-23T11:54:18.403Z","ev":"loop_awake","held":true,"pid":56023,"screenLocked":false}
+{"t":"2026-09-23T12:06:56.149Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":756,"of":572,"rotating":true}
+{"t":"2026-09-23T12:09:50.691Z","ev":"task_note","id":"premiere-s-keys-work-on-the-timeline"}
+{"t":"2026-09-23T12:09:50.743Z","ev":"task_dropped","id":"the-transport-says-the-arrow-keys-step-a-frame-a","from":"pending","note":"folded into premiere-s-keys-work-on-the-timeline, which owns what the arrows do on the timeline; acceptance carried across"}
+{"t":"2026-09-23T12:09:50.796Z","ev":"task_note","id":"bring-in-a-second-clip-and-cut-between-clips"}
+{"t":"2026-09-23T12:09:50.851Z","ev":"task_dropped","id":"let-go-of-a-sound-on-the-timeline-and-it-lands-a","from":"pending","note":"folded into bring-in-a-second-clip-and-cut-between-clips, which owns dropping media onto the timeline at a moment; acceptance carried across"}
+{"t":"2026-09-23T12:09:50.902Z","ev":"task_note","id":"the-video-properties-look-like-the-rest-of-the-d"}
+{"t":"2026-09-23T12:09:50.952Z","ev":"task_dropped","id":"the-section-you-are-using-is-the-one-you-scroll","from":"pending","note":"folded into the-video-properties-look-like-the-rest-of-the-d, which rebuilds the video panel to the mock and now owns its order; acceptance carried across"}
+{"t":"2026-09-23T12:09:51.003Z","ev":"task_note","id":"the-export-size-test-fails-about-one-run-in-thre"}
+{"t":"2026-09-23T12:09:51.055Z","ev":"task_dropped","id":"an-animated-export-weighed-twice-comes-out-the-s","from":"pending","note":"duplicate of the-export-size-test-fails-about-one-run-in-thre: same cause (encoder output size moves under load), fixed together; evidence and acceptance carried across"}
+{"t":"2026-09-23T12:09:51.107Z","ev":"task_note","id":"the-panel-keeps-its-promise-on-a-video-document"}
+{"t":"2026-09-23T12:09:51.160Z","ev":"task_note","id":"a-colour-swatch-at-the-very-top-of-the-panel-ope"}
+{"t":"2026-09-23T12:09:51.212Z","ev":"task_reprioritized","id":"a-colour-swatch-at-the-very-top-of-the-panel-ope","from":"p2-normal","to":"p3-low"}
+{"t":"2026-09-23T12:09:51.263Z","ev":"task_note","id":"find-out-whether-delete-layer-and-the-fill-keys"}
+{"t":"2026-09-23T12:09:51.313Z","ev":"task_reprioritized","id":"find-out-whether-delete-layer-and-the-fill-keys","from":"p2-normal","to":"p3-low"}
+{"t":"2026-09-23T12:10:30.717Z","ev":"task_resequenced","id":"playing-a-recording-never-blinks","from":0.05,"to":10}
+{"t":"2026-09-23T12:10:30.770Z","ev":"task_resequenced","id":"a-recording-opens-in-the-video-editor-for-real-i","from":0.1,"to":20}
+{"t":"2026-09-23T12:10:30.823Z","ev":"task_resequenced","id":"the-video-mocks-are-the-user-s-again-and-d18-is","from":0.2,"to":30}
+{"t":"2026-09-23T12:10:30.873Z","ev":"task_resequenced","id":"the-design-system-has-the-pieces-the-video-mocks","from":0.85,"to":40}
+{"t":"2026-09-23T12:10:30.923Z","ev":"task_resequenced","id":"the-timeline-is-the-one-in-the-mock","from":0.25,"to":50}
+{"t":"2026-09-23T12:10:30.974Z","ev":"task_resequenced","id":"tracks-you-can-add-rename-group-hide-mute-lock-a","from":0.3,"to":60}
+{"t":"2026-09-23T12:10:31.024Z","ev":"task_resequenced","id":"bring-in-a-second-clip-and-cut-between-clips","from":0.35,"to":70}
+{"t":"2026-09-23T12:10:31.074Z","ev":"task_resequenced","id":"a-clip-s-sound-is-on-the-timeline-from-the-momen","from":0.4,"to":80}
+{"t":"2026-09-23T12:10:31.125Z","ev":"task_resequenced","id":"right-click-does-what-you-would-expect-everywher","from":0.45,"to":90}
+{"t":"2026-09-23T12:10:31.176Z","ev":"task_resequenced","id":"click-a-cut-and-pick-a-transition-from-tiles","from":0.5,"to":100}
+{"t":"2026-09-23T12:10:31.230Z","ev":"task_resequenced","id":"the-video-properties-look-like-the-rest-of-the-d","from":0.55,"to":110}
+{"t":"2026-09-23T12:10:31.282Z","ev":"task_resequenced","id":"move-a-layer-from-a-to-b-grow-it-shrink-it-fade","from":0.6,"to":120}
+{"t":"2026-09-23T12:10:31.335Z","ev":"task_resequenced","id":"captions-write-themselves-from-the-speech","from":0.65,"to":130}
+{"t":"2026-09-23T12:10:31.386Z","ev":"task_resequenced","id":"premiere-s-keys-work-on-the-timeline","from":0.7,"to":140}
+{"t":"2026-09-23T12:10:31.438Z","ev":"task_resequenced","id":"panel-copy-and-flag-descriptions-have-a-length-b","from":0.75,"to":150}
+{"t":"2026-09-23T12:10:31.488Z","ev":"task_resequenced","id":"an-editing-session-walk-runs-at-next-defaults-an","from":0.8,"to":160}
+{"t":"2026-09-23T12:10:31.541Z","ev":"task_resequenced","id":"every-panel-follows-the-design-system","from":0.9,"to":170}
+{"t":"2026-09-23T12:10:31.591Z","ev":"task_resequenced","id":"every-objective-says-what-done-looks-like","from":0.95,"to":180}
+{"t":"2026-09-23T12:10:31.641Z","ev":"task_resequenced","id":"measure-the-video-editor-against-premiere-and-fi","from":1.05,"to":190}
+{"t":"2026-09-23T12:10:31.691Z","ev":"task_resequenced","id":"trim-becomes-a-tool-and-the-recording-window-ret","from":20,"to":200}
+{"t":"2026-09-23T12:10:31.744Z","ev":"task_resequenced","id":"the-export-size-test-fails-about-one-run-in-thre","from":3080,"to":10}
+{"t":"2026-09-23T12:10:31.801Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep-5","from":3090,"to":20}
+{"t":"2026-09-23T12:10:31.857Z","ev":"task_resequenced","id":"the-icon-preview-timing-test-goes-red-again-when","from":3120,"to":30}
+{"t":"2026-09-23T12:10:31.910Z","ev":"task_resequenced","id":"a-mistyped-status-command-stops-wiping-a-tasks-s","from":3130,"to":40}
+{"t":"2026-09-23T12:10:31.965Z","ev":"task_resequenced","id":"a-word-the-canvas-says-is-readable-when-a-trim-i","from":3070,"to":50}
+{"t":"2026-09-23T12:10:32.017Z","ev":"task_resequenced","id":"the-panel-keeps-its-promise-on-a-video-document","from":3100,"to":60}
+{"t":"2026-09-23T12:10:32.070Z","ev":"task_resequenced","id":"the-video-guides-teach-the-editor-that-exists","from":3170,"to":70}
+{"t":"2026-09-23T12:10:32.123Z","ev":"task_resequenced","id":"a-size-read-off-a-screenshot-is-the-size-the-typ","from":280,"to":80}
+{"t":"2026-09-23T12:10:32.180Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":250,"to":90}
+{"t":"2026-09-23T12:10:32.234Z","ev":"task_resequenced","id":"a-shadow-comes-out-of-the-app-a-different-shade","from":260,"to":100}
+{"t":"2026-09-23T12:10:32.285Z","ev":"task_resequenced","id":"a-lane-on-the-timing-strip-says-which-layer-it-b","from":230,"to":110}
+{"t":"2026-09-23T12:10:32.339Z","ev":"task_resequenced","id":"a-menu-that-says-custom-lets-you-get-back-to-cus","from":240,"to":120}
+{"t":"2026-09-23T12:10:32.389Z","ev":"task_resequenced","id":"the-keylines-step-of-the-icon-guide-asks-for-som","from":3040,"to":130}
+{"t":"2026-09-23T12:10:32.443Z","ev":"task_resequenced","id":"the-looks-of-one-component-stay-together-as-a-se","from":3160,"to":140}
+{"t":"2026-09-23T12:10:32.500Z","ev":"task_resequenced","id":"a-mode-is-written-down-so-pixel-art-can-be-added","from":270,"to":150}
+{"t":"2026-09-23T12:10:32.553Z","ev":"task_resequenced","id":"the-pen-s-points-say-what-kind-of-point-they-are","from":10,"to":10}
+{"t":"2026-09-23T12:10:32.604Z","ev":"task_resequenced","id":"a-screenshot-separated-before-today-only-has-to","from":20,"to":20}
+{"t":"2026-09-23T12:10:32.654Z","ev":"task_resequenced","id":"the-guide-rule-says-that-a-guide-never-closes-a","from":30,"to":30}
+{"t":"2026-09-23T12:10:32.705Z","ev":"task_resequenced","id":"a-button-that-cannot-be-pressed-stops-lighting-u","from":40,"to":40}
+{"t":"2026-09-23T12:10:32.755Z","ev":"task_resequenced","id":"a-colour-swatch-at-the-very-top-of-the-panel-ope","from":3030,"to":50}
+{"t":"2026-09-23T12:10:32.807Z","ev":"task_resequenced","id":"find-out-whether-delete-layer-and-the-fill-keys","from":3020,"to":60}
+{"t":"2026-09-23T12:10:41.857Z","ev":"triage","summary":"45 open to 41. Merged/folded 4 (arrow keys into timeline keys, drop-at-a-moment into second clip, panel order into video properties, animated export size into export size flake). Parked 2 next-epic tasks at p3. Reset 0, leftovers 0. Groomed 22: plain-language goals for the 20 video tasks filed this morning, 3 missing epics, 3 deps added, 1 retitle. Resequenced all 41; design-system pieces moved ahead of the timeline."}
+{"t":"2026-09-23T12:12:00.513Z","ev":"task_created","id":"a-task-is-not-done-while-its-feature-needs-a-swi","priority":"p2-normal","title":"A task is not done while its feature needs a switch turned on by hand"}
+{"t":"2026-09-23T12:12:09.100Z","ev":"task_resequenced","id":"the-export-size-test-fails-about-one-run-in-thre","from":10,"to":10}
+{"t":"2026-09-23T12:12:09.152Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep-5","from":20,"to":20}
+{"t":"2026-09-23T12:12:09.205Z","ev":"task_resequenced","id":"a-task-is-not-done-while-its-feature-needs-a-swi","from":25,"to":30}
+{"t":"2026-09-23T12:12:09.256Z","ev":"task_resequenced","id":"the-icon-preview-timing-test-goes-red-again-when","from":30,"to":40}
+{"t":"2026-09-23T12:12:09.305Z","ev":"task_resequenced","id":"a-mistyped-status-command-stops-wiping-a-tasks-s","from":40,"to":50}
+{"t":"2026-09-23T12:12:09.354Z","ev":"task_resequenced","id":"a-word-the-canvas-says-is-readable-when-a-trim-i","from":50,"to":60}
+{"t":"2026-09-23T12:12:09.405Z","ev":"task_resequenced","id":"the-panel-keeps-its-promise-on-a-video-document","from":60,"to":70}
+{"t":"2026-09-23T12:12:09.457Z","ev":"task_resequenced","id":"the-video-guides-teach-the-editor-that-exists","from":70,"to":80}
+{"t":"2026-09-23T12:12:09.507Z","ev":"task_resequenced","id":"a-size-read-off-a-screenshot-is-the-size-the-typ","from":80,"to":90}
+{"t":"2026-09-23T12:12:09.559Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":90,"to":100}
+{"t":"2026-09-23T12:12:09.612Z","ev":"task_resequenced","id":"a-shadow-comes-out-of-the-app-a-different-shade","from":100,"to":110}
+{"t":"2026-09-23T12:12:09.664Z","ev":"task_resequenced","id":"a-lane-on-the-timing-strip-says-which-layer-it-b","from":110,"to":120}
+{"t":"2026-09-23T12:12:09.714Z","ev":"task_resequenced","id":"a-menu-that-says-custom-lets-you-get-back-to-cus","from":120,"to":130}
+{"t":"2026-09-23T12:12:09.764Z","ev":"task_resequenced","id":"the-keylines-step-of-the-icon-guide-asks-for-som","from":130,"to":140}
+{"t":"2026-09-23T12:12:09.813Z","ev":"task_resequenced","id":"the-looks-of-one-component-stay-together-as-a-se","from":140,"to":150}
+{"t":"2026-09-23T12:12:09.863Z","ev":"task_resequenced","id":"a-mode-is-written-down-so-pixel-art-can-be-added","from":150,"to":160}
+{"t":"2026-09-23T12:12:09.916Z","ev":"task_note","id":"panel-copy-and-flag-descriptions-have-a-length-b"}
+{"t":"2026-09-23T12:12:09.968Z","ev":"task_note","id":"the-export-size-test-fails-about-one-run-in-thre"}
+{"t":"2026-09-23T12:12:17.477Z","ev":"task_note","id":"panel-copy-and-flag-descriptions-have-a-length-b"}
+{"t":"2026-09-23T12:13:19.152Z","ev":"digest","file":"2026-09-23.md"}

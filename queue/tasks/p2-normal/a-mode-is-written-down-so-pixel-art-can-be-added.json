@@ -4,12 +4,12 @@
   "goal": "If the modes the app ships with are the only ones possible, they are four applications wearing one name. Make a mode a record you can write: which panels show, which tool groups sit in the bar, what a new canvas starts at, what the canvas draws. Then add pixel art as a real one and prove the point: a small canvas, a grid at one pixel, blocky magnification instead of smoothing, a pencil rather than a brush, and no editor rebuild to get it.",
   "epic": "icon-svg",
   "priority": "p2-normal",
-  "seq": 270,
+  "seq": 160,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T07:08:14.121Z",
-  "updated": "2026-09-22T12:17:53.737Z",
+  "updated": "2026-09-23T12:12:09.862Z",
   "deps": [
     "swap-the-window-into-a-mode-from-a-chip-beside-t"
   ],
@@ -35,6 +35,14 @@
     {
       "t": "2026-09-22T12:17:53.736Z",
       "note": "seq 20 -> 270"
+    },
+    {
+      "t": "2026-09-23T12:10:32.496Z",
+      "note": "seq 270 -> 150"
+    },
+    {
+      "t": "2026-09-23T12:12:09.861Z",
+      "note": "seq 150 -> 160"
     }
   ]
 }

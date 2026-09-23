@@ -30,7 +30,7 @@ Before writing the digest, do a real design review of the last 24 hours. Evidenc
 
 Strong findings become queued tasks, and the review cites its evidence (page names, task ids); no vibes-only claims.
 
-**Judge the focus feature as a user, not as a builder.** Open the audits in `queue/audits/`, and for the feature in focus ask: could someone try this from the audit alone? Is anything in it clumsy, surprising, or ceremonial? The mocks are proposals, so a mock faithfully implemented is not a defence. Findings here become tasks against the focus epic.
+**Judge the focus feature as a user, not as a builder.** Open the audits in `queue/audits/`, and for the feature in focus ask: could someone try this from the audit alone? Is anything in it clumsy, surprising, or ceremonial? Could someone reach it at all, in Next with default settings, without turning anything on? A feature behind a switch that is off by default is not ready to try, whatever its audit says. The user's mocks are the floor, not proposals: a surface that falls short of its mock, or a mock page rewritten to match the code, is a finding, and a mock faithfully implemented is still only the minimum. Findings here become tasks against the focus epic.
 
 ## 3. Write the digest
 
@@ -51,7 +51,7 @@ Forward-looking and honest: feature ideas worth queueing, ways to improve this p
 The findings from the design review pass, with evidence: IA soundness (what bent, if anything), missing components or guidance (what got hand-rolled, what was queued for extraction), recurring UX issues (the pattern and where it hit), and rule scrubs queued (which document, which rule, why). If the day was genuinely clean, say so and name what was checked.
 
 ## Ready to try
-Any feature that became playtestable in the last day, one short paragraph each,
+Any feature that became playtestable in the last day, reachable in Next with default settings, one short paragraph each,
 linking its audit in `queue/audits/`. If nothing became playtestable, say so and
 say what is closest, so the user can see the next thing coming.
 

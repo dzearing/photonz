@@ -1,20 +1,20 @@
 {
   "id": "the-timeline-is-the-one-in-the-mock",
   "title": "The timeline is the one in the mock",
-  "goal": "The bottom dock under a recording is the icon-animation timing strip (MotionStripView document mode) with flat accent bars added: a tiny centred glyph transport, no scrubber, no volume, truncated filename labels, a blue playhead, 22px lanes. The user: 'the timeline looks nothing, absolutely nothing, like the original design'. Build the timeline dock the mock draws. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?",
+  "goal": "The strip under a recording is the icon animation strip with a few bars added, and it looks nothing like the timeline the user designed. Build the timeline the mock draws: a proper transport with a scrubber and volume, a ruler in seconds, a red playhead, named tracks with clips in them, and zoom.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 0.25,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.150Z",
-  "updated": "2026-09-23T11:53:47.269Z",
+  "updated": "2026-09-23T12:10:30.922Z",
   "deps": [
     "the-video-mocks-are-the-user-s-again-and-d18-is"
   ],
   "blockedBy": [],
-  "notes": "Filed from the 2026-09-23 video audit in the intake window.",
+  "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): The bottom dock under a recording is the icon-animation timing strip (MotionStripView document mode) with flat accent bars added: a tiny centred glyph transport, no scrubber, no volume, truncated filename labels, a blue playhead, 22px lanes. The user: 'the timeline looks nothing, absolutely nothing, like the original design'. Build the timeline dock the mock draws. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?\n\nFiled from the 2026-09-23 video audit in the intake window.",
   "acceptance": [
     "A TimelineDock replaces MotionStripView for documents with a duration; the icon timing strip is untouched for icons",
     "Transport row as in video.html: volume, previous, large round primary play, next, current time, full-width scrubber with a large thumb, duration",
@@ -31,6 +31,14 @@
     {
       "t": "2026-09-23T11:53:47.268Z",
       "note": "seq 360 -> 0.25"
+    },
+    {
+      "t": "2026-09-23T12:10:20.151Z",
+      "note": "triage 2026-09-23: goal rewritten in plain language, the old one kept at the top of notes"
+    },
+    {
+      "t": "2026-09-23T12:10:30.921Z",
+      "note": "seq 0.25 -> 50"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "Put a soft shadow on a card sitting on a white page, export the drawing, and the shadow in the file is noticeably darker than the one you were looking at. It happens to every shadow that is partly see-through, which is every shadow, so a handed-over icon does not match the one that was approved.",
   "epic": "icon-export",
   "priority": "p2-normal",
-  "seq": 260,
+  "seq": 110,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T05:02:37.826Z",
-  "updated": "2026-09-22T12:17:53.688Z",
+  "updated": "2026-09-23T12:12:09.611Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced while building a-shadow-round-a-bordered-or-grouped-shape-leave, with no group, no ring and no frame in it, so it is the shipped shadow path and not that change. Run: a temporary test drawing a shadowed shape (radius 5, offset 4/8, #000000 at 0.55) over a white SolidImage canvas, compared with Scripts/test.sh the way every other case in Tests/PhotonzRenderTests/SVGExportRenderTests.swift is. Printed: SVGDIFF probe-over-white: 2.359390625, peak 63/255. Sampled in the middle of the shadow, well clear of the shape edge: the canvas draws 192,192,192 where the file comes back 134,134,134. Same case with a COLOURED shadow (#0A2540 at 0.85) over a transparent canvas: at alpha 95 the canvas draws premultiplied 19,37,48 and the file 4,14,24, which unpremultiplied is the shadow colour exactly (11,38,64) in the file against a washed-out 51,99,129 on the canvas. Cause: the canvas mixes a shadow into what is under it in LINEAR light (Core Image working space) and every SVG reader mixes it in sRGB. color-interpolation-filters=sRGB already forces the filter internals to sRGB; what is left is the composite of the filter OUTPUT over the backdrop, which the file cannot ask a reader to do in linear light. So the fix is most likely at the canvas end (composite shadows in sRGB, which is what Figma and CSS do), and that changes the look of every existing document, so it wants a decision card before anybody writes it.\n\n--- 2026-09-17, reproduced and cause confirmed ---\nReproduced with a scratch test (card, radius 5, offset 4/8, #000000 at 0.55, over a white SolidImage canvas), rendered and rasterized the export back the way SVGExportRenderTests does. Mean diff 1.428; sampled in the shadow the canvas draws 224,224,224 where the file draws 190,190,190.\nThe arithmetic closes exactly. The file alpha at that pixel is 1-190/255 = 0.2549. Composited in LINEAR light that is 1-0.2549 = 0.7451, which sRGB-encodes to 1.055*0.7451^(1/2.4)-0.055 = 0.8783, i.e. 224.0/255. So the canvas is compositing in linear light and the reader in sRGB, exactly as the original note guessed.\nTHE ONE-LINE FIX, measured: DocumentRenderer.swift:132 `private static let sharedContext = CIContext(options: [.cacheIntermediates: true])`. CIContext defaults workingColorSpace to extended-linear sRGB. Adding `.workingColorSpace: CGColorSpace(name: CGColorSpace.sRGB) as Any` takes the same probe from mean diff 1.428 to 0.0103, canvas 191 against file 190.\nIT IS WIDER THAN SHADOWS. Same probe with plain opacity and no shadow anywhere: a 50% black over white renders 188,188,188 on the canvas where a browser/Figma/SVG draw 128,128,128, and a 50% #0A84FF over white renders 190,199,255 against 151,181,255. Every opacity slider, scrim and see-through fill is affected; a shadow is just the case that is always see-through. With the working space set to sRGB both come back at 128 and 150,181,255.\nBLAST RADIUS, measured by running the whole suite with the line changed. 7 tests fail, all of them encoding the old numbers: SVGExportRenderTests.aSoftenedShapeThrowsASoftenedShadow (1.173 vs tolerance 1.0, just needs the tolerance or a re-check), GroupRenderingTests.groupOpacityFadesTheCompositeNotEachChild, GroupRenderingTests.aGroupInsideAGroupPositionsAndFadesTogether, BorderBandRenderTests.theRowTheEdgeRunsThroughIsHalfCovered, TurnIntoPathRenderTests \"A second border, standing off the edge\" (48 vs 40 soft-edge bytes), ScaledRenderTests.theCaptureUnderneathIsNoSofterThanItWas, SeparatedShadowRoundTripTests.rebuildingTheCaptureFromItsPiecesPutsTheShadowsBack.\nTwo of those seven are REAL coupling, not just stale constants. SeparatedShadowRoundTripTests: the shadow reader that recovers a shadow off a screenshot fits its model in the compositing space, and its own comment already says \"reading it in the wrong colour space, which is the mistake this test caught, missed by eleven\" - that fit has to be redone in sRGB alongside. ScaledRenderTests: it compares the renderer against a baseline built with a bare `CIContext()`, which stays linear, so the baseline has to move too; resampling in sRGB really is measurably softer by its hardEdges metric (0.199 vs 0.376), which is also what a browser does.\nSCOPING TO NEXT IS FEASIBLE, which is the mitigation offered on the card. Only 8 sites construct a DocumentRenderer (RenderScheduler, SVGExporter x2, SiteAssets/main, EditorState x3, PlaytestHarness), so the working space can become an init parameter with two shared contexts keyed by it, and ReleaseExperience picks which one. Nothing in PhotonzRender has to learn what a release is.\nNothing was committed: this run left the source tree exactly as it found it.",
@@ -79,6 +79,14 @@
     {
       "t": "2026-09-22T12:17:53.687Z",
       "note": "seq 210 -> 260"
+    },
+    {
+      "t": "2026-09-23T12:10:32.232Z",
+      "note": "seq 260 -> 100"
+    },
+    {
+      "t": "2026-09-23T12:12:09.610Z",
+      "note": "seq 100 -> 110"
     }
   ],
   "started": "2026-09-17T07:03:32.056Z"

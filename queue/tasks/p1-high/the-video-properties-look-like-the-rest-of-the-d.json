@@ -1,26 +1,28 @@
 {
   "id": "the-video-properties-look-like-the-rest-of-the-d",
   "title": "The video properties look like the rest of the design, with no paragraphs",
-  "goal": "The panel under a recording is Reframe (raw Scale/Centre, 'Sharp to 100%', a 'Drag a box with M' paragraph), Time (a freeze explainer paragraph, a 'While the frame is held' radio group, three status sentences, a 7-item Speed radio list with 'silent' tags), Captions (a button and a paragraph), all with no horizontal inset so values clip. The user: 'It has paragraphs of text in there. it exposes features that are the most confusing, dev-debug like tools possible'. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?",
+  "goal": "The panel beside a recording is full of paragraphs and debug-like controls, its values clip at the edges, and the controls you use most sit at the bottom. Make it look like the rest of the app and the mock: tidy label and value rows, a dropdown for speed, rare actions on right-click, and what you are using near the top.",
   "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 0.55,
+  "seq": 110,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.642Z",
-  "updated": "2026-09-23T11:53:47.567Z",
+  "updated": "2026-09-23T12:10:31.229Z",
   "deps": [
     "click-a-cut-and-pick-a-transition-from-tiles"
   ],
   "blockedBy": [],
-  "notes": "Filed from the 2026-09-23 video audit in the intake window.",
+  "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): The panel under a recording is Reframe (raw Scale/Centre, 'Sharp to 100%', a 'Drag a box with M' paragraph), Time (a freeze explainer paragraph, a 'While the frame is held' radio group, three status sentences, a 7-item Speed radio list with 'silent' tags), Captions (a button and a paragraph), all with no horizontal inset so values clip. The user: 'It has paragraphs of text in there. it exposes features that are the most confusing, dev-debug like tools possible'. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?\n\nFiled from the 2026-09-23 video audit in the intake window.",
   "acceptance": [
     "Every video section uses the standard panel inset and label/value rows as the mock's PROPERTIES draws them",
     "Zero explanatory sentences in the video sections (SpeedInspector, ReframeInspector, CaptionsInspector, TransitionInspector, SoundInspector); a test asserts no panel string over 60 characters in them",
     "Speed is one dropdown row; Freeze Frame moves to the clip's right-click menu and its options to a submenu; the 'While the frame is held' radios are gone from the panel",
     "Reframe as a section is gone: scale and position are the layer's ordinary transform, animated by keys (see the motion task), with Punch In as a right-click preset",
-    "Side-by-side with video.html PROPERTIES in the audit"
+    "Side-by-side with video.html PROPERTIES in the audit",
+    "At 1200 by 720, with a clip, a sound or a title picked, its speed, its level and its fades are on screen without scrolling (carried from the dropped panel-order task)",
+    "The panel order follows a written rule about what the layer is for, not a hand-kept list, and a walk reads it back for a clip, a title and a sound"
   ],
   "log": [
     {
@@ -30,6 +32,18 @@
     {
       "t": "2026-09-23T11:53:47.566Z",
       "note": "seq 430 -> 0.55"
+    },
+    {
+      "t": "2026-09-23T12:09:50.900Z",
+      "note": "Folded in from the-section-you-are-using-is-the-one-you-scroll (triage 2026-09-23): the panel order is a hand-kept list, so every video section landed at the bottom. Four audited cases: Sound's Level fader lowest in the dock (2026-09-21-video-audio); Speed under six sections (2026-09-21-video-speed, speed-2 picture shows it cut off); Time/freeze under Reframe, Motion and Transition (hold-on-a-frame); a title's Fade below the fold at 1080 (2026-09-21-title-4-fades-on-sc.png). Order lives in InspectorPanel.swift loadOrder; the rule is written at the top of InspectorDockLayout.swift and says nothing about documents with time."
+    },
+    {
+      "t": "2026-09-23T12:10:20.255Z",
+      "note": "triage 2026-09-23: goal rewritten in plain language, the old one kept at the top of notes; 2 acceptance items added"
+    },
+    {
+      "t": "2026-09-23T12:10:31.228Z",
+      "note": "seq 0.55 -> 110"
     }
   ]
 }

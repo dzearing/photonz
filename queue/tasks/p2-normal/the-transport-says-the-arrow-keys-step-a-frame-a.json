@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 3050,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T14:56:48.887Z",
-  "updated": "2026-09-22T18:09:02.756Z",
+  "updated": "2026-09-23T12:09:50.742Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the timeline zoom, on 2026-09-22. Not introduced by it.\n\nReproduction. Scripts/playtest/open-out-the-timeline-walk.json (an earlier draft of it) pressed the right arrow five times with the detached sound layer picked, to step the playhead five frames before a split. What the walk log recorded, step by step:\n\n  [36 appKey] right sent through the app ... tree: Tutorial Sample sound [sound] (1.0, 0.0, 0.0, 0.0)\n  [37 appKey] right sent through the app ... (2.0, 0.0, 0.0, 0.0)\n  ... (5.0, 0.0, 0.0, 0.0)\n  [43 action] FAILED: there is nothing to split at 4000 ms\n\nThe layer moved five points along x. The playhead never moved: it was 4000 ms before the presses and 4000 ms after them.\n\nThe rule is deliberate and commented, Sources/Photonz/CanvasKeys.swift:69: the arrows step a frame only where selectedLayerID == nil, so the arrows still nudge a layer somebody has taken hold of. The promise that does not hold is Sources/Photonz/MotionStripView.swift:804 and :810, whose help reads \"Back one frame (←)\" and \"On one frame (→)\" whatever is picked.\n\nWorth deciding rather than patching: a nudge is how every layer in the app is moved a pixel, and a frame step is what the arrows mean in every video tool there is. One of the two has to give in a document that has time.",
@@ -26,6 +26,10 @@
     {
       "t": "2026-09-22T18:09:02.755Z",
       "note": "Related, from the scrub-audio task on 2026-09-22: dragging the playhead now plays the sound under it (ScrubAudition.swift), but stepping a frame with the arrow keys is still silent. If this task is changing what the transport says about the arrow keys, it is worth deciding at the same time whether a key step should make a sound, and if so when it stops: a key press has no end the way a drag does."
+    },
+    {
+      "t": "2026-09-23T12:09:50.741Z",
+      "note": "folded into premiere-s-keys-work-on-the-timeline, which owns what the arrows do on the timeline; acceptance carried across"
     }
   ],
   "walks": [

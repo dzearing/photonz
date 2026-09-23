@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 3060,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T17:23:59.595Z",
-  "updated": "2026-09-22T17:23:59.598Z",
+  "updated": "2026-09-23T12:09:50.848Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from a-sound-or-a-video-dropped-on-the-window-lands-a (2026-09-22). The drop answer is already one pure function, PhotonzCore/MediaDrop.swift: MediaDrop.answer(for:named:documentHasTime:atMS:hasDocument:) takes the moment as atMS, so the strip only has to pass the moment under the pointer instead of the playhead and reuse the same sentence. What does not exist is a drag DESTINATION on the strip: MotionStripView/SoundLane have no registerForDraggedTypes and no onDrop. EditorState.dropMedia(at:droppedAt:) currently reads documentTimeMS itself for both sound and clip; it would take an explicit atMS. See docs/design/video-audio.md 5a.",
@@ -24,6 +24,10 @@
     {
       "t": "2026-09-22T17:23:59.597Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-23T12:09:50.847Z",
+      "note": "folded into bring-in-a-second-clip-and-cut-between-clips, which owns dropping media onto the timeline at a moment; acceptance carried across"
     }
   ],
   "walks": [
