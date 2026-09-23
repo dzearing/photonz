@@ -734,6 +734,8 @@ final class EditorState {
                 if selectedClipPieceIndex != nil { selectedClipPieceIndex = nil }
                 // ...and so does a cut, for the same reason.
                 if selectedClipCutIndex != nil { selectedClipCutIndex = nil }
+                // ...and so does a cut between two clips.
+                if selectedLayerID != nil, selectedEditPoint != nil { selectedEditPoint = nil }
                 // The chip that says what a path's points do belongs to the
                 // path that was picked; the canvas lets those points go at the
                 // same moment (`CanvasNSView.selectedLayerID`), so the line
@@ -1055,6 +1057,24 @@ final class EditorState {
     /// out and read when a clip is carried over them. Not watched: nothing is
     /// drawn from it.
     @ObservationIgnored var trackDropRows: [UUID: TrackDropRow] = [:]
+    /// A sound or a recording held over the timeline: where it would land if
+    /// it were let go of now, which the lanes draw as a ghost
+    /// (`EditorState+TimelineDrop`).
+    var timelineFileHover: TimelineFileHover?
+    /// The file behind that ghost, read off the drag once it arrives.
+    @ObservationIgnored var timelineFileInAir: TimelineFileInAir?
+    @ObservationIgnored var timelineFilePointer: TimelineFilePointer?
+    /// The room the timeline makes past its end while a file of this length
+    /// is in the air over it.
+    var timelineDropRoomMS: Int?
+    /// Where the tracks sit in the window, in SwiftUI's global space, and how
+    /// wide a lane is. Written as they lay out; read to turn a place on a
+    /// lane into a moment, and by a walk to find one.
+    @ObservationIgnored var timelineTracksFrame: CGRect = .zero
+    @ObservationIgnored var timelineLaneWidth: CGFloat = 0
+    /// The cut between two clips on one track that is picked
+    /// (`comp-video.html` §02). Picking a layer lets it go.
+    var selectedEditPoint: TimelineEditPoint?
     /// The Escape watch armed for exactly as long as a clip's bar is in hand.
     @ObservationIgnored var clipBarEscapeWatch: Any?
     /// ...and the one armed while a transition's band is.

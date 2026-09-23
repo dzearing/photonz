@@ -262,9 +262,10 @@ struct PlaytestSetupRunner {
                 throw PlaytestSetupError(
                     description: "setup asks for the scratch file \"\(file)\", and there is no such file at \(source.path)")
             }
-            try FileManager.default.copyItem(
-                at: source, to: folder.appendingPathComponent(source.lastPathComponent))
-            placed.append(source.lastPathComponent)
+            // A sample can be asked for under a name of the walk's own.
+            let name = PlaytestSampleFile.copy(file)?.fileName ?? source.lastPathComponent
+            try FileManager.default.copyItem(at: source, to: folder.appendingPathComponent(name))
+            placed.append(name)
         }
         return placed
     }
@@ -277,7 +278,7 @@ struct PlaytestSetupRunner {
     /// some earlier walk having made it. `sample:recording` and `sample:music`
     /// name those, and everything else is a path as it always was.
     private static func scratchSource(_ file: String, besides scriptURL: URL) throws -> URL {
-        switch PlaytestSampleFile.named(file) {
+        switch PlaytestSampleFile.copy(file)?.sample {
         case .recording:
             guard let url = TutorialSampleRecording.fresh() else {
                 throw PlaytestSetupError(description: "the sample recording could not be written")

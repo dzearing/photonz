@@ -2219,6 +2219,61 @@ struct PlaytestScriptTests {
         #expect(PlaytestStep.names.contains("expectLayers"))
     }
 
+    // A clip let go on the timeline lands at the moment and on the track under
+    // the pointer (`ClipLanding`). A walk names both, and the step works out
+    // where on the lane that is, so the walk does not break when the dock moves.
+    @Test("A dropOnTimeline step names the file, the track and the moment, and lets go by default")
+    func dropOnTimelineParses() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dropOnTimeline", "file": "scratch/b-roll.mp4", "track": "V1",
+                       "seconds": 8, "insert": true, "hold": "in-the-air", "says": "lands on V1" } ] }
+        """)
+        guard case .dropOnTimeline(let file, let track, let seconds, let insert, let hold,
+                                   let release, let says) = script.steps[0] else {
+            Issue.record("dropOnTimeline"); return
+        }
+        #expect(file == "scratch/b-roll.mp4")
+        #expect(track == "V1")
+        #expect(seconds == 8)
+        #expect(insert)
+        #expect(hold == "in-the-air")
+        #expect(release)
+        #expect(says == "lands on V1")
+        #expect(PlaytestStep.names.contains("dropOnTimeline"))
+    }
+
+    @Test("A sample can be copied in under a name of the walk's own")
+    func sampleCopiesTakeAName() {
+        #expect(PlaytestSampleFile.copy("sample:recording")?.fileName == "Tutorial Sample.mp4")
+        #expect(PlaytestSampleFile.copy("sample:recording as b-roll.mp4")?.fileName == "b-roll.mp4")
+        #expect(PlaytestSampleFile.copy("sample:recording as b-roll.mp4")?.sample == .recording)
+        #expect(PlaytestSampleFile.copy("sample:music as swoosh.m4a")?.sample == .music)
+        #expect(PlaytestSampleFile.copy("sample:recording as ../escape.mp4") == nil)
+        #expect(PlaytestSampleFile.copy("pictures/cat.png") == nil)
+    }
+
+    @Test("An expectClip step claims where a clip is, and has to claim something")
+    func expectClipParses() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 8, "endsAt": 12, "count": 1 } ] }
+        """)
+        guard case .expectClip(let named, let track, let startsAt, let endsAt, let count, let within)
+                = script.steps[0] else {
+            Issue.record("expectClip"); return
+        }
+        #expect(named == "b-roll")
+        #expect(track == "V1")
+        #expect(startsAt == 8)
+        #expect(endsAt == 12)
+        #expect(count == 1)
+        #expect(within == 0.05)
+        #expect(throws: PlaytestScriptError.self) {
+            try decode("""
+            { "steps": [ { "do": "expectClip", "clip": "b-roll" } ] }
+            """)
+        }
+    }
+
     // Playing a recording flickered while every walk that played one passed,
     // because a snapshot or two cannot see a frame that is empty for 33ms.
     // `expectPlaybackNeverBlank` plays the document and looks at what the

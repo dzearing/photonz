@@ -1,0 +1,75 @@
+{
+  "out": "/tmp/photonz-playtest/second-clip-on-the-timeline-walk",
+  "seed": "A second recording or a sound let go on the TIMELINE lands at the moment and on the track under the pointer: overwrite by default, insert with the command key held, as in Premiere. While it is in the air the lane shows a dashed ghost the length of the file. Clips that meet on a track have an edit point between them, faint at rest, lit on hover and picked with a click. Letting go over the picture still lands at the playhead. At Next defaults, no flag set.",
+  "setup": {
+    "forget": ["all"],
+    "scratch": [
+      "sample:recording as b-roll.mp4",
+      "sample:recording as outro.mp4",
+      "sample:recording as cutaway.mp4",
+      "sample:music"
+    ]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-one-recording", "note": "An eight second screen recording on V1, the playhead two seconds in" },
+    { "do": "snapshot", "name": "1-one-recording" },
+
+    { "do": "dropOnTimeline", "file": "scratch/b-roll.mp4", "track": "V1", "seconds": 7.96, "release": false, "hold": "2-b-roll-in-the-air", "says": "lands on V1 at 0:08" },
+    { "do": "describe", "stage": "2-b-roll-in-the-air", "note": "THE FIRST TEST: b-roll held over V1 a few points short of the end of the recording. The lane shows a dashed ghost the length of the file, snapped onto the end of the recording, and the bar over the tracks says where it lands and that the command key inserts" },
+    { "do": "dropOnTimeline", "file": "scratch/b-roll.mp4", "track": "V1", "seconds": 7.96 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 8.0, "endsAt": 16.0, "count": 1 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 8.0, "count": 1 },
+    { "do": "snapshot", "name": "3-b-roll-butted-on" },
+
+    { "do": "dropOnTimeline", "file": "scratch/outro.mp4", "track": "V1", "seconds": 15.95 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectClip", "clip": "outro", "track": "V1", "startsAt": 16.0, "endsAt": 24.0, "count": 1 },
+    { "do": "describe", "stage": "3-three-clips", "note": "THE SECOND TEST: screen recording, b-roll and outro butt together on V1, the way the mock's V1 holds clip-01 and clip-02, with an edit point at each join" },
+    { "do": "snapshot", "name": "4-recording-b-roll-outro" },
+
+    { "do": "dropOnTimeline", "file": "scratch/Sample Music.m4a", "track": "V1", "seconds": 4.0, "hold": "5-music-in-the-air", "says": "at 0:04" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectClip", "clip": "Sample Music", "track": "Audio", "startsAt": 4.0, "count": 1 },
+    { "do": "describe", "stage": "4-sound-at-a-moment", "note": "THE THIRD TEST: music let go over the picture track four seconds in, with the playhead at two. It went to a new Audio track under the picture, and it starts at four seconds, where it was let go, not at the playhead" },
+    { "do": "snapshot", "name": "6-music-at-four-seconds" },
+
+    { "do": "dropOnTimeline", "file": "scratch/cutaway.mp4", "track": "V1", "seconds": 3.0, "insert": true, "release": false, "hold": "7-insert-in-the-air", "says": "pushing what is after" },
+    { "do": "dropOnTimeline", "file": "scratch/cutaway.mp4", "track": "V1", "seconds": 3.0, "insert": true },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectClip", "clip": "cutaway", "track": "V1", "startsAt": 3.0, "endsAt": 11.0, "count": 1 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 11.0, "endsAt": 16.0, "count": 2 },
+    { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 16.0, "endsAt": 24.0 },
+    { "do": "expectClip", "clip": "Sample Music", "track": "Audio", "startsAt": 12.0 },
+    { "do": "describe", "stage": "5-insert", "note": "THE FOURTH TEST: with the command key held, cutaway went in at three seconds and split the recording round itself; everything after it on V1 moved along eight seconds, and so did the music, which had not started yet" },
+    { "do": "snapshot", "name": "8-inserted" },
+
+    { "do": "move", "control": "Edit point b-roll to outro" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "snapshot", "name": "9-edit-point-hover" },
+    { "do": "press", "control": "Edit point b-roll to outro" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expect", "control": "Edit point b-roll to outro", "present": true },
+    { "do": "describe", "stage": "6-edit-point-picked", "note": "THE FIFTH TEST: the cut between b-roll and outro lit on hover and picked with a click: an amber seam with a ring round it, the join a transition will go on" },
+    { "do": "snapshot", "name": "10-edit-point-picked" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectClip", "clip": "cutaway", "count": 0 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 8.0, "count": 1 },
+    { "do": "expectClip", "clip": "Sample Music", "startsAt": 4.0, "count": 1 },
+    { "do": "describe", "stage": "7-undo", "note": "One Command Z takes the insert back whole: the recording is one clip again and the music is back at four seconds" },
+
+    { "do": "dropImage", "file": "scratch/Sample Music.m4a", "at": [640, 300] },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "expectClip", "clip": "Sample Music", "startsAt": 2.0 },
+    { "do": "describe", "stage": "8-picture-still-lands-at-the-playhead", "note": "THE SIXTH TEST: the same music let go over the PICTURE lands at the playhead, two seconds in, as it always has" },
+    { "do": "snapshot", "name": "11-over-the-picture" }
+  ]
+}

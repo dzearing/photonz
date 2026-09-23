@@ -19452,3 +19452,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Harness: right-click menus hit test in the superview's space (a right click on the timeline was answered by the canvas). All 20 other rightClick walks re-run green.
 - Walk: `tracks-you-can-add-rename-group-walk`, no flags, 12 real captures. Audit: `queue/audits/2026-09-23-video-tracks.json`.
 - Open: a real pointer drag between tracks can't be driven by a walk; the empty Audio track from the mock is folded into the sound-from-open task.
+
+## 2026-09-23 — Bring in a second clip and cut between clips
+
+- Core (tests first, `ClipLandingTests`): `ClipLanding.swift` works out where a clip let go on the timeline lands (`clipLanding`, retargeting sound to a sound track, lock refusal, snapping) and lands it (`land`) with overwrite (trim, split into two layers, remove) or insert (split and push along; other unlocked tracks move only what starts later). `editPoints(onTrack:)`. New notice `landedOnTrack`.
+- App: `TimelineLaneDrop.swift` (drop delegate on the tracks, dashed ghost, edit point view), `EditorState+TimelineDrop.swift` (hover, room past the end, drop lands where the ghost promised, pick an edit point). Clips alternate the mock's two clip colours along a track.
+- Harness: `dropOnTimeline` (aims at a track and a second, carries a real file URL the way the Finder does, only counts drop areas that are on screen), `expectClip`; `scratch` takes `sample:recording as b-roll.mp4`.
+- Walk: `second-clip-on-the-timeline-walk`, no flags, 11 real captures. Audit: `queue/audits/2026-09-23-second-clip-on-the-timeline.json`.
+- Next: each clip's sound as its own segment (folded into the sound-from-open task), Library tiles for recordings (filed p1), edit point properties and transitions between clips (transition task).

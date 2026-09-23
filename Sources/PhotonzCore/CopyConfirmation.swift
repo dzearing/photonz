@@ -177,6 +177,10 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// rarely where a person just let go, so without a word a clip that
         /// arrives somewhere else in time reads as a drop that did nothing.
         case clipAdded(name: String)
+        /// A sound or a recording let go on the TIMELINE landed on a track at
+        /// the moment it was let go at (`ClipLanding`), which is not the
+        /// playhead, so the words say where.
+        case landedOnTrack(name: String, track: String, atMS: Int, isSound: Bool)
         /// A sound or a recording was let go and could not be taken after all:
         /// the file has nothing playable in it, or it went away between the
         /// drag and the drop. The drag promised this would land, so the app
@@ -314,6 +318,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .soundDetached: return "Sound taken off"
         case .soundAdded: return "Sound added"
         case .clipAdded: return "Clip added"
+        case .landedOnTrack(_, _, _, let isSound): return isSound ? "Sound added" : "Clip added"
         case .mediaWouldNotOpen: return "Not added"
         case .mixWritten(let file): return file == nil ? "Not written" : "Mix written"
         case .mixHeldDown: return "Mix written, held down"
@@ -364,6 +369,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "\(name) is on the timeline"
         case .clipAdded(let name):
             return "\(name) is on the timeline at the playhead"
+        case .landedOnTrack(let name, let track, let ms, _):
+            return "\(name) is on \(track) at \(CaptionProgress.clock(ms))"
         case .mediaWouldNotOpen(let name):
             return "There is nothing in \(name) the app can play"
         case .mixWritten(let file):

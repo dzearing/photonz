@@ -98,7 +98,7 @@ struct PlaytestWalkSetupTests {
                 // The two samples are written on demand rather than kept in the
                 // repo, so there is no file to look for: what is checked is
                 // that the walk names its copy by the name it will land under.
-                if let sample = PlaytestSampleFile.named(scratch) {
+                if let sample = PlaytestSampleFile.copy(scratch) {
                     copies.insert(sample.fileName)
                     continue
                 }

@@ -178,4 +178,18 @@ public enum PlaytestSampleFile: String, CaseIterable, Sendable {
     public static func named(_ name: String) -> PlaytestSampleFile? {
         PlaytestSampleFile(rawValue: name)
     }
+
+    /// A sample and the name its copy lands under. `sample:recording` lands
+    /// under its own name; `sample:recording as b-roll.mp4` lands as
+    /// b-roll.mp4, which is how a walk that edits several clips together gets
+    /// clips with names of their own out of one sample. Nil for anything that
+    /// is not a sample.
+    public static func copy(_ text: String) -> (sample: PlaytestSampleFile, fileName: String)? {
+        let parts = text.components(separatedBy: " as ")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+        guard let sample = named(parts[0]) else { return nil }
+        if parts.count == 1 { return (sample, sample.fileName) }
+        guard parts.count == 2, !parts[1].isEmpty, !parts[1].contains("/") else { return nil }
+        return (sample, parts[1])
+    }
 }

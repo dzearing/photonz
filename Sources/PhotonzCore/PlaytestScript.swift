@@ -2036,6 +2036,21 @@ public enum PlaytestStep: Sendable, Equatable {
     /// half of the sentence it cares about.
     case dragFile(file: String, at: PlaytestPoint, hold: String?, release: Bool, leave: Bool,
                   says: String?)
+    /// A file carried from the Finder onto the TIMELINE, over the lane of the
+    /// track called `track`, `seconds` into the document, and let go there
+    /// unless `release` is false. It goes through the timeline's own drop
+    /// target, so where it lands is what the ghost promised. `insert` holds ⌘,
+    /// which a walk cannot press while a drag is in the air. `hold` names a
+    /// picture taken while it is still in the air, ghost and all, and `says`
+    /// is what the ghost must be saying then.
+    case dropOnTimeline(file: String, track: String, seconds: Double, insert: Bool,
+                        hold: String?, release: Bool, says: String?)
+    /// Where a clip on the timeline is, by its name, and FAIL when it is not
+    /// so: which track it is on, when it starts and when it ends, in seconds,
+    /// give or take `within`. `count` is how many clips are called that,
+    /// which is what an overwrite that split a clip in two has to claim.
+    case expectClip(named: String, track: String?, startsAt: Double?, endsAt: Double?,
+                    count: Int?, within: Double)
     /// One of the app's OWN things — a layer row, a shelf tile, a colour swatch
     /// — picked up by name and held over a point, so a walk can see what the
     /// panel says about a drag that has nothing to do with files. Nothing is
@@ -2906,7 +2921,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectSharp", "expectStoredRecording", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectSharp", "expectStoredRecording", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo",
     ]
@@ -2939,6 +2954,8 @@ public enum PlaytestStep: Sendable, Equatable {
         case .dragComponent: "dragComponent"
         case .dropImage: "dropImage"
         case .dragFile: "dragFile"
+        case .dropOnTimeline: "dropOnTimeline"
+        case .expectClip: "expectClip"
         case .dragOver: "dragOver"
         case .snapshot: "snapshot"
         case .render: "render"
@@ -3162,6 +3179,25 @@ public enum PlaytestStep: Sendable, Equatable {
                              release: try f.optionalFlag("release") ?? false,
                              leave: try f.optionalFlag("leave") ?? false,
                              says: try f.optionalString("says"))
+        case "dropOnTimeline":
+            self = .dropOnTimeline(file: try f.string("file"), track: try f.string("track"),
+                                   seconds: try f.number("seconds"),
+                                   insert: try f.optionalFlag("insert") ?? false,
+                                   hold: try f.optionalString("hold"),
+                                   release: try f.optionalFlag("release") ?? true,
+                                   says: try f.optionalString("says"))
+        case "expectClip":
+            let count = try f.optionalNumber("count").map { Int($0) }
+            let track = try f.optionalString("track")
+            let startsAt = try f.optionalNumber("startsAt")
+            let endsAt = try f.optionalNumber("endsAt")
+            guard track != nil || startsAt != nil || endsAt != nil || count != nil else {
+                throw f.invalid("startsAt", "expectClip has to claim something: "
+                    + "a track, a startsAt, an endsAt or a count")
+            }
+            self = .expectClip(named: try f.string("clip"), track: track, startsAt: startsAt,
+                               endsAt: endsAt, count: count,
+                               within: try f.optionalNumber("within") ?? 0.05)
         case "dragOver":
             self = .dragOver(carry: try f.string("carry"), at: try f.point("at"),
                              hold: try f.optionalString("hold"),

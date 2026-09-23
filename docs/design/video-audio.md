@@ -186,8 +186,31 @@ Three things about the shape of it:
   canvas always has.
 
 Where the drop lands in TIME is the playhead, for both, because a drop on the
-picture points at a place on the canvas and not at a place on the timeline. The
-strip itself is not a drop target yet; that is the follow-up.
+picture points at a place on the canvas and not at a place on the timeline.
+
+**Let go on the TIMELINE instead** (2026-09-23, `ClipLanding.swift`,
+`TimelineLaneDrop.swift`, `EditorState+TimelineDrop.swift`) and it lands at the
+moment and on the track under the pointer, the way b-roll goes in in Premiere:
+
+- **Overwrite** by default: whatever is on that track under the new clip is
+  trimmed back, split round it (two layers reading the same file, since a
+  clip's pieces cannot hold a hole) or taken away when wholly covered.
+- **Insert** with ⌘ held: the clip it lands inside is split and everything on
+  that track from the moment on is pushed along; on other unlocked tracks only
+  what starts at or after the moment moves, so a title stays over its picture
+  and a music bed already playing plays on.
+- A sound over a picture track goes to the nearest sound track, or a new one
+  under the picture; a video over a sound track to the nearest picture track.
+  Between two tracks makes a new one there. A locked track refuses, in words.
+- The start snaps (8pt) onto any clip edge or the playhead, and so does the
+  end. While the file is in the air the lanes show a dashed ghost the length
+  of the file, the bar over the tracks says where it lands and that ⌘ inserts,
+  and the timeline makes room past its end so a clip appended there is seen.
+- Clips that meet on a track have an **edit point** (`comp-video.html` §02):
+  a faint hairline, amber on hover, an amber ring when picked. Clips along a
+  track alternate the mock's two clip colours (`.clip.v1`, `.clip.v2`).
+
+Walk: `second-clip-on-the-timeline-walk` (`dropOnTimeline`, `expectClip`).
 
 Flag: `next-dropping-a-sound-or-a-video`. Off, every one of these is the silent
 no-entry pointer it was before.

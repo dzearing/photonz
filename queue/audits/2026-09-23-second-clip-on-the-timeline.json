@@ -1,0 +1,31 @@
+{
+  "feature": "Bring in a second clip and cut between clips",
+  "epic": "video-editing",
+  "summary": "Drag a video or a sound from the Finder onto the timeline and it lands at the moment and on the track under the pointer: it covers what was there, or with the command key held it pushes what comes after along. Clips that meet on a track have an edit point you can pick.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a screen recording and keep the timeline open.",
+  "try": [
+    { "do": "Drag a second video from the Finder over V1, near the end of the recording, and hold it there.", "shot": "2026-09-23-second-clip-2-b-roll-in-the-air-sc.png" },
+    { "do": "Let go. It butts onto the end of the recording on V1, in the second clip colour." },
+    { "do": "Drag a third video to the end of that one and let go.", "shot": "2026-09-23-second-clip-4-recording-b-roll-outro-sc.png" },
+    { "do": "Drag a music file over V1 about four seconds in, with the playhead somewhere else, and let go.", "shot": "2026-09-23-second-clip-6-music-at-four-seconds-sc.png" },
+    { "do": "Hold the command key and drag another video into the middle of the recording.", "shot": "2026-09-23-second-clip-7-insert-in-the-air-sc.png" },
+    { "do": "Let go. The recording splits round it and everything after moves along.", "shot": "2026-09-23-second-clip-8-inserted-sc.png" },
+    { "do": "Click exactly on the join between two clips.", "shot": "2026-09-23-second-clip-10-edit-point-picked-sc.png" },
+    { "do": "Press Command Z, then drop the music on the picture instead of the timeline.", "shot": "2026-09-23-second-clip-11-over-the-picture-sc.png" }
+  ],
+  "evaluate": [
+    "Does the dashed ghost show you where the clip will land before you let go, including past the end?",
+    "Is overwrite by default and command for insert what your hands expect from Premiere?",
+    "Is the snap onto the end of the clip before strong enough, or do you still leave slivers of black?",
+    "Is a sound dropped over a picture track going to the Audio track what you expected, or should it refuse?",
+    "Is the edit point easy to hit without grabbing the trim edge of the clip beside it?"
+  ],
+  "rough": [
+    "A clip's own sound still rides inside its bar (the white line through the picture clips) rather than on its own segment under it. That is the next task, A clip's sound is on the timeline from the moment it opens, and it now covers dropped clips and split halves too.",
+    "The Library shelf holds pictures only, so the mock's drag a b-roll tile from the Library is not possible yet. Filed as p1: Recordings and sounds in a document sit on the Library shelf and drag onto the timeline.",
+    "Picking an edit point shows no edit point properties and no transition picker yet; that is Click a cut and pick a transition from tiles.",
+    "The timeline makes room past its end while a file is in the air, so the lanes shrink once as the file arrives. Premiere keeps empty timeline past the end all the time instead.",
+    "An insert shows where the clip goes in but does not preview everything after it moving along; it moves when you let go.",
+    "Mock differences: video.html lights the whole lane with a dashed edge while something is over it; this draws a ghost the length of the clip instead, which says more. The edit point follows comp-video.html's CSS (faint hairline at rest, amber on hover, amber ring when picked)."
+  ]
+}

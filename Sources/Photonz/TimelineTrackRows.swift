@@ -224,16 +224,27 @@ struct TimelineTrackRow: View {
                 .contentShape(Rectangle())
                 .gesture(TimelineLaneScrub.gesture(editorState, ruler: ruler, laneWidth: laneWidth))
                 .contextMenu { TimelineTrackMenu(track: track, index: index) }
+            let alternates = alternateClips
             ForEach(row.clips) { clip in
-                TimelineClipView(group: clip, laneWidth: laneWidth, height: laneHeight)
+                TimelineClipView(group: clip, laneWidth: laneWidth, height: laneHeight,
+                                 alternate: alternates.contains(clip.id))
                     .allowsHitTesting(!track.isLocked)
                     .playtestField("Timing \(clip.layerName)")
                 if isBlade, !track.isLocked {
                     TimelineBlade(group: clip, laneWidth: laneWidth)
                 }
             }
+            if !isBlade {
+                ForEach(editorState.document?.editPoints(onTrack: track.id) ?? []) { point in
+                    TimelineEditPointView(point: point, laneWidth: laneWidth, height: laneHeight)
+                        .allowsHitTesting(!track.isLocked)
+                }
+            }
             if track.isLocked { lockedHatch }
             dropMark
+            if let hover = editorState.timelineFileHover, hover.landing.target == .onto(track.id) {
+                TimelineFileGhost(hover: hover, laneWidth: laneWidth, height: laneHeight)
+            }
         }
         .frame(width: laneWidth, height: laneHeight, alignment: .topLeading)
         .opacity(row.isOff ? 0.4 : 1)
@@ -247,6 +258,14 @@ struct TimelineTrackRow: View {
                                                                maxY: frame.maxY)
         }
         .onDisappear { editorState.trackDropRows[track.id] = nil }
+    }
+
+    /// Every other clip along the track, left to right, which wears the
+    /// mock's second clip colour (`.clip.v2`) so two clips that meet read as
+    /// two clips.
+    private var alternateClips: Set<MotionStripGroup.ID> {
+        let order = row.clips.sorted { ($0.bar?.inMS ?? 0) < ($1.bar?.inMS ?? 0) }
+        return Set(order.enumerated().filter { $0.offset % 2 == 1 }.map(\.element.id))
     }
 
     /// A locked track's lane is striped, the way a locked track reads in every
@@ -280,7 +299,7 @@ struct TimelineTrackRow: View {
 
     /// The line a drop BETWEEN tracks draws, where the new track would go.
     @ViewBuilder private func insertionLine(atTop: Bool) -> some View {
-        if let drop = editorState.clipTrackDrop, drop.allowed, case .newTrack(let at) = drop.target,
+        if let at = newTrackPlace,
            atTop ? at == index : (at == trackCount && index == trackCount - 1) {
             Capsule()
                 .fill(VideoKit.Palette.accent)
@@ -289,6 +308,18 @@ struct TimelineTrackRow: View {
                 .allowsHitTesting(false)
                 .panelReadout("new track here")
         }
+    }
+
+    /// Where a new track would be made by what is in the air: a clip carried
+    /// between two tracks, or a file let go there.
+    private var newTrackPlace: Int? {
+        if let drop = editorState.clipTrackDrop, drop.allowed, case .newTrack(let at) = drop.target {
+            return at
+        }
+        if let hover = editorState.timelineFileHover, case .newTrack(let at) = hover.landing.target {
+            return at
+        }
+        return nil
     }
 
     // MARK: The mock's words for kinds
@@ -412,10 +443,12 @@ struct TimelineClipView: View {
     let group: MotionStripGroup
     let laneWidth: CGFloat
     let height: CGFloat
+    var alternate = false
 
     var body: some View {
         let ruler = editorState.motionStripRuler
-        let kind = TimelineTrackRow.clipKind(group.trackKind)
+        let own = TimelineTrackRow.clipKind(group.trackKind)
+        let kind = alternate && own == .video ? VideoKit.ClipKind.videoAlternate : own
         if let bar = group.bar {
             if editorState.trimmingLayerID == group.layerID {
                 ClipTrimBar(bar: bar, layerName: group.layerName, laneWidth: laneWidth, height: height)

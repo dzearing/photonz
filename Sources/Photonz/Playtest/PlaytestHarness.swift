@@ -1410,6 +1410,17 @@ private final class Run {
                     + ", offered to \(chain.map { "\(type(of: $0))" }.joined(separator: " then "))\(held)\(landed)\(after)",
                  state: describe())
 
+        case .dropOnTimeline(let file, let track, let seconds, let insert, let hold, let release, let says):
+            note(number, step.name, try await dropOnTimeline(file: file, track: track, seconds: seconds,
+                                                             insert: insert, hold: hold, release: release,
+                                                             says: says),
+                 state: describe())
+
+        case .expectClip(let named, let track, let startsAt, let endsAt, let count, let within):
+            note(number, step.name, try checkClip(named: named, track: track, startsAt: startsAt,
+                                                  endsAt: endsAt, count: count, within: within),
+                 state: describe())
+
         case .snapshot(let name, let wanted):
             // Every toast is called "Toast" and they stack, so a walk asking for
             // one means the one in the corner: the newest, the one that just
@@ -11595,6 +11606,206 @@ extension PlaytestTimingGrab {
         case .start: .start
         case .end: .end
         }
+    }
+}
+
+// MARK: - A file let go on the timeline, and where a clip is
+
+// `dropOnTimeline` and `expectClip`: a file carried onto a track at a moment
+// through the timeline's own drop target, and a claim about where a clip is.
+extension Run {
+
+    /// Carries a file onto the lane of a track, at a moment, through the
+    /// timeline's own drop target, and lets go unless told not to.
+    ///
+    /// The point is worked out from where the timeline says its tracks are,
+    /// so a walk names a track and a second rather than a place in the
+    /// window, and does not break when the dock moves.
+    func dropOnTimeline(file: String, track: String, seconds: Double, insert: Bool,
+                        hold: String?, release: Bool, says: String?) async throws -> String {
+        let editor = try requireEditor()
+        let window = try requireWindow()
+        guard let document = editor.document, document.hasTime else {
+            throw Failure(description: "there is no document with a timeline open to drop \(file) on")
+        }
+        let url = try fileURL(file)
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            throw Failure(description: "there is no file at \(url.path) to drop")
+        }
+        let tracks = document.timelineTracks
+        guard let trackID = tracks.first(where: { $0.name == track })?.id else {
+            throw Failure(description: "no track is called \"\(track)\"; the tracks: "
+                + tracks.map(\.name).joined(separator: ", "))
+        }
+        guard let row = editor.trackDropRows[trackID], editor.timelineLaneWidth > 0 else {
+            throw Failure(description: "the track \"\(track)\" is not on screen: is the timeline open, "
+                + "or its group folded?")
+        }
+        // Worked out afresh after the file arrives too: the timeline makes
+        // room past its end for it, which moves every moment along the lane.
+        func aim() throws -> (global: CGPoint, window: CGPoint) {
+            let frame = editor.timelineTracksFrame
+            let row = editor.trackDropRows[trackID] ?? row
+            let fraction = editor.motionStripRuler.fraction(ofMS: seconds * 1000)
+            let global = CGPoint(x: frame.minX + TimelineDock.lanesLeading + editor.timelineLaneWidth * fraction,
+                                 y: frame.minY + (row.minY + row.maxY) / 2)
+            return (global, try self.windowPoint(PlaytestPoint(global, space: .window)))
+        }
+        let frame = editor.timelineTracksFrame
+        var (global, windowPoint) = try aim()
+        // Written the way the Finder writes a file it is dragging: as a file
+        // URL, which is the one thing every Finder drag carries.
+        let board = NSPasteboard(name: NSPasteboard.Name("photonz.playtest.timelineFile"))
+        board.clearContents()
+        board.writeObjects([url as NSURL])
+        let info = PlaytestDraggingInfo(pasteboard: board, location: windowPoint, window: window)
+        guard let content = window.contentView else {
+            throw Failure(description: "the window has no content view")
+        }
+        TimelineFileDropDelegate.walkHoldsInsert = insert
+        defer { TimelineFileDropDelegate.walkHoldsInsert = nil }
+        let chain = Self.visibleDestinations(at: windowPoint, in: content)
+        var taker: NSView?
+        for view in chain where view.draggingEntered(info) != [] {
+            taker = view
+            break
+        }
+        guard let taker else {
+            throw Failure(description: "nothing on the timeline at \(track) \(seconds)s takes a file; "
+                + "offered to \(chain.map { "\(type(of: $0))" }.joined(separator: " then "))")
+        }
+        // The file is read in the background, so the ghost arrives a moment
+        // after the file does, the way it does under a real pointer.
+        var waited = 0.0
+        while editor.timelineFileHover == nil, waited < 3 {
+            _ = taker.draggingUpdated(info)
+            await sleep(0.05)
+            waited += 0.05
+        }
+        await sleep(0.15)
+        (global, windowPoint) = try aim()
+        info.draggingLocation = windowPoint
+        _ = taker.draggingUpdated(info)
+        await sleep(0.15)
+        guard let hover = editor.timelineFileHover else {
+            taker.draggingExited(info)
+            throw Failure(description: "\(url.lastPathComponent) held over \(track) at \(seconds)s drew no "
+                + "ghost on the timeline after 3s; \(type(of: taker)) at "
+                + "\(short(taker.convert(taker.bounds, to: nil).origin)) took the drag, carrying "
+                + "\((board.types ?? []).map(\.rawValue).joined(separator: " ")), at window "
+                + "\(short(windowPoint)) (global \(short(global)), tracks at \(short(frame.origin)) "
+                + "\(Int(frame.width))x\(Int(frame.height))); the file in the air: "
+                + (editor.timelineFileInAir.map { "\($0.name), \($0.lengthMS.map(String.init) ?? "no length") ms" }
+                   ?? "never arrived")
+                + (editor.timelineFilePointer == nil ? ", the timeline was never told" : ", the timeline saw the pointer")
+                + "; offered to \(chain.map { "\(type(of: $0))" }.joined(separator: " then "))"
+                + "; drop areas: " + Self.dropAreas(in: content).joined(separator: ", "))
+        }
+        let sentence = hover.note
+        if let says, !sentence.localizedCaseInsensitiveContains(says) {
+            taker.draggingExited(info)
+            throw Failure(description: "the timeline said \"\(sentence)\" about \(url.lastPathComponent), "
+                + "and the walk expected \"\(says)\"")
+        }
+        var held = ""
+        if let hold {
+            try snapshot(content, name: hold)
+            await screenCapture(window, name: hold)
+            held = ", held \(hold).png"
+        }
+        guard release else {
+            taker.draggingExited(info)
+            await sleep(0.1)
+            return "\(url.lastPathComponent) held over \(track) at \(seconds)s, saying \"\(sentence)\"\(held)"
+        }
+        let before = document.allLayers.count
+        let took = taker.performDragOperation(info)
+        guard took else {
+            throw Failure(description: "the timeline would not take \(url.lastPathComponent), "
+                + "having said \"\(sentence)\"")
+        }
+        waited = 0
+        while (editor.document?.allLayers.count ?? before) == before, waited < 4 {
+            await sleep(0.1)
+            waited += 0.1
+        }
+        return "\(url.lastPathComponent) let go over \(track) at \(seconds)s (\(insert ? "⌘ held" : "no keys")), "
+            + "saying \"\(sentence)\"\(held); the document now holds "
+            + "\(editor.document?.allLayers.count ?? 0) layers, was \(before)"
+    }
+
+    /// The views that take drops under a point, smallest first, counting
+    /// only the part of each that is on screen. A panel scrolled part way
+    /// hangs its drop areas below its own edge, clipped out of sight but still
+    /// there, and the right hand one hangs over the end of the timeline; a
+    /// real pointer never reaches what is clipped away, so neither does this.
+    static func visibleDestinations(at windowPoint: CGPoint, in content: NSView) -> [NSView] {
+        var found: [NSView] = []
+        func walk(_ view: NSView) {
+            if !view.isHidden, !view.registeredDraggedTypes.isEmpty,
+               view.convert(view.visibleRect, to: nil).contains(windowPoint) {
+                found.append(view)
+            }
+            view.subviews.forEach(walk)
+        }
+        walk(content)
+        return found.sorted { $0.bounds.width * $0.bounds.height < $1.bounds.width * $1.bounds.height }
+    }
+
+    /// Every view in the window that takes drops, with its box in the window.
+    static func dropAreas(in content: NSView) -> [String] {
+        var found: [String] = []
+        func walk(_ view: NSView) {
+            if !view.isHidden, !view.registeredDraggedTypes.isEmpty {
+                let box = view.convert(view.bounds, to: nil)
+                found.append("\(type(of: view)) \(Int(box.minX)),\(Int(box.minY)) \(Int(box.width))x\(Int(box.height))")
+            }
+            view.subviews.forEach(walk)
+        }
+        walk(content)
+        return found
+    }
+
+    /// Where a clip on the timeline is, by name.
+    func checkClip(named: String, track: String?, startsAt: Double?, endsAt: Double?,
+                   count: Int?, within: Double) throws -> String {
+        guard let document = try requireEditor().document else {
+            throw Failure(description: "there is no document open")
+        }
+        func trackName(_ id: UUID) -> String {
+            document.trackID(ofClip: id).flatMap { document.track(id: $0)?.name } ?? "no track"
+        }
+        func seconds(_ ms: Int) -> String { String(format: "%.2fs", Double(ms) / 1000) }
+        let all = document.timelineClipLayers
+        let said = all.map { layer in
+            "\(layer.name) on \(trackName(layer.id))"
+                + (layer.time.map { " \(seconds($0.inMS)) to \(seconds($0.outMS))" } ?? " the whole way")
+        }.joined(separator: "; ")
+        let clips = all.filter { $0.name == named }
+        if let count, clips.count != count {
+            throw Failure(description: "\(clips.count) clips are called \"\(named)\", and the walk "
+                + "expected \(count); the timeline: \(said)")
+        }
+        if count == 0 { return "no clip is called \(named), as the walk said; the timeline: \(said)" }
+        let matching = clips.filter { clip in
+            guard track == nil || trackName(clip.id) == track else { return false }
+            if let startsAt {
+                guard let time = clip.time, abs(Double(time.inMS) / 1000 - startsAt) <= within else { return false }
+            }
+            if let endsAt {
+                guard let time = clip.time, abs(Double(time.outMS) / 1000 - endsAt) <= within else { return false }
+            }
+            return true
+        }
+        guard !matching.isEmpty else {
+            var wanted: [String] = []
+            if let track { wanted.append("on \(track)") }
+            if let startsAt { wanted.append("starting at \(startsAt)s") }
+            if let endsAt { wanted.append("ending at \(endsAt)s") }
+            throw Failure(description: "no clip called \"\(named)\" is \(wanted.joined(separator: ", ")); "
+                + "the timeline: \(said)")
+        }
+        return "\(named) is where the walk said; the timeline: \(said)"
     }
 }
 #endif

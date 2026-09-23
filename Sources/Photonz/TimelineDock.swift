@@ -135,7 +135,20 @@ struct TimelineDock: View {
                                enabled: editorState.canZoomTimelineIn) { editorState.zoomTimelineIn() }
             }
             Spacer(minLength: 8)
-            if editorState.isTimelineOpenedOut {
+            if let hover = editorState.timelineFileHover {
+                // What letting go does, where the timeline's own words go,
+                // and the one key that changes it.
+                Text(hover.note)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(VideoKit.Palette.ink)
+                    .lineLimit(1)
+                if hover.landing.allowed, hover.landing.edit == .overwrite {
+                    Text("⌘ inserts")
+                        .font(.system(size: 11))
+                        .foregroundStyle(VideoKit.Palette.faint)
+                        .fixedSize()
+                }
+            } else if editorState.isTimelineOpenedOut {
                 Text(editorState.timelineWindowReading)
                     .font(.system(size: 10, design: .monospaced))
                     .monospacedDigit()
@@ -279,6 +292,11 @@ struct TimelineDock: View {
                         .padding(.vertical, Self.rowSpacing)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .coordinateSpace(.named(Self.tracksSpace))
+                        .onDrop(of: FileDrop.types, delegate: TimelineFileDropDelegate(editorState: editorState))
+                        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
+                            editorState.timelineTracksFrame = frame
+                            editorState.timelineLaneWidth = laneWidth
+                        }
                     }
                     .scrollBounceBehavior(.basedOnSize)
                 }
