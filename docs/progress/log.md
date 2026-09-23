@@ -19222,3 +19222,54 @@ Found on the way and filed: one timing test in `IconPreviewRenderTests` goes red
 again in a full run on a loaded machine, having been fixed once for that reason.
 
 Next: the export size test still fails about one run in three, on its own task.
+
+## 2026-09-23 — A walk's two answers about reach became one
+
+A scripted walk asks the window to bring a control into view before pressing it.
+On 2026-09-21 that ask failed on the Time section of a long panel, saying
+"something other than a scroll is covering or cutting it", while the photograph
+the step before it took shows that section sitting in the open a third of the
+way down the panel. A runner reading that goes hunting for a cover that is not
+there.
+
+The reason it could say that is that reach was decided twice, in two different
+geometries. `reveal` worked out how far to scroll from the strip of window the
+scrolling areas around a control can park it in; the verdict on whether it had
+arrived came from AppKit's own `visibleRect`. When the two disagreed the reveal
+measured a gap of zero, scrolled nothing, and then reported that nothing else
+could be done, in a sentence that named a cause it had never measured.
+
+The symptom itself no longer reproduces: `clips` off the view tree landed in
+`16eec232` the next day and covers the case in the report, and the step put back
+into `component-on-the-timeline-walk` now passes and logs "was already where a
+person could press it". So this is the part that outlives it. One geometry
+decides now, the same one the scroll is measured against, and it lives in
+`PlaytestReach` in `PhotonzCore` as plain rectangle arithmetic with 12 tests and
+no window in sight.
+
+It answers with which of three things is in the way, and they are different
+news:
+
+- a scrolling area has it past its own edge, by this many points, which a
+  `reveal` fixes;
+- the window itself is too short and nothing around it scrolls, which no step
+  fixes;
+- it is inside the window AND inside everything that scrolls around it and
+  still not wholly showing, which is the app covering it and is now only ever
+  said when it has been measured.
+
+Every place that refuses a press says one of those three with the number
+attached, and a `panel` step prints the same sentence in `whyNot` beside every
+control it cannot reach, so an author can tell them apart without running into
+them. The verdict uses only the scrollers a control really sits in, never the
+geometric guess the reveal falls back on: a guessed scroller may send a scroll
+somewhere useless and be corrected next round, but it must not decide a control
+cannot be pressed, which is a verdict nothing corrects.
+
+Sub-point overhang stopped counting. A row lands a third of a point past the
+list it is in because heights divide by three; judged strictly it is out of
+reach, the reveal asks for two points, the list is already at its end, and a
+walk fails on a control that is entirely on screen.
+
+**Next:** a full sweep was asked for, because this is the walk harness and every
+walk presses something.

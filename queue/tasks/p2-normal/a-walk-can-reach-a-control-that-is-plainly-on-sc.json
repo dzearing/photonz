@@ -5,18 +5,18 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 150,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T02:48:31.608Z",
-  "updated": "2026-09-22T12:17:53.150Z",
+  "updated": "2026-09-23T04:02:10.262Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Reproduced 2026-09-21 on main at de8ba4e4 plus this task's changes, twice, with the probe app.\n\nRun:\n  Scripts/playtest.sh Scripts/playtest/component-on-the-timeline-walk.json --no-build\nwith a step { \"do\": \"reveal\", \"control\": \"Time section\" } immediately after insertPickedComponent.\n\nOutput:\n  [16 reveal] FAILED: scrolled 0pt and \"Time section\" is still not where a person could press it: it is already inside the part of the window a press can reach, so something other than a scroll is covering or cutting it. The window may be too short for the section it is in.\n\nThe snapshot taken by the step immediately BEFORE it (component-1-on-the-film-sc.png, copied to queue/audits/2026-09-22-components-on-the-timeline-1.png is the same layout) shows the Time section header, its reading, Start Here, End Here and the Fade rows all on screen, unobscured, about a third of the way down the panel.\n\nSo isInReach(landed) in PlaytestHarness (Sources/Photonz/Playtest/PlaytestHarness.swift, around line 4460-4505) is answering false for a control a person could press. It only shows up on a LONG panel: title-on-the-timeline-walk reveals the same control with a text layer picked and passes, because with a component picked the panel also carries Component, Layout and Library. Suspect the geometry it measures against (the dock clip view versus the window) rather than the scroll itself: it reports scrolling 0pt and then that nothing more can be done.\n\nThe walk ships without the reveal step (the expect on the Time reading field works without it), so nothing is blocked; what is lost is a walk being able to prove a person could SEE the row it is reading.",
+  "notes": "Reproduced 2026-09-21 on main at de8ba4e4 plus this task's changes, twice, with the probe app.\n\nRun:\n  Scripts/playtest.sh Scripts/playtest/component-on-the-timeline-walk.json --no-build\nwith a step { \"do\": \"reveal\", \"control\": \"Time section\" } immediately after insertPickedComponent.\n\nOutput:\n  [16 reveal] FAILED: scrolled 0pt and \"Time section\" is still not where a person could press it: it is already inside the part of the window a press can reach, so something other than a scroll is covering or cutting it. The window may be too short for the section it is in.\n\nThe snapshot taken by the step immediately BEFORE it (component-1-on-the-film-sc.png, copied to queue/audits/2026-09-22-components-on-the-timeline-1.png is the same layout) shows the Time section header, its reading, Start Here, End Here and the Fade rows all on screen, unobscured, about a third of the way down the panel.\n\nSo isInReach(landed) in PlaytestHarness (Sources/Photonz/Playtest/PlaytestHarness.swift, around line 4460-4505) is answering false for a control a person could press. It only shows up on a LONG panel: title-on-the-timeline-walk reveals the same control with a text layer picked and passes, because with a component picked the panel also carries Component, Layout and Library. Suspect the geometry it measures against (the dock clip view versus the window) rather than the scroll itself: it reports scrolling 0pt and then that nothing more can be done.\n\nThe walk ships without the reveal step (the expect on the Time reading field works without it), so nothing is blocked; what is lost is a walk being able to prove a person could SEE the row it is reading.\n\n--- 2026-09-23, the runner that did the work ---\n\nThe reported failure does NOT reproduce on main. Putting the step back\n  { \"do\": \"reveal\", \"control\": \"Time section\" }\nafter the component-1-on-the-film snapshot and running\n  Scripts/playtest.sh Scripts/playtest/component-on-the-timeline-walk.json\npasses, and logs:\n  [16 reveal] \"Time section\" in a dock section header was already where a\n  person could press it; nothing scrolled\nThe clips-off-the-view-tree change in 16eec232 (2026-09-22) is what covers it:\nits own commit message describes a reveal turning the wrong section's wheel and\nthen reporting \"something other than a scroll is covering\".\n\nWhat landed anyway is the reason the two answers could differ at all.\nPlaytestReach (Sources/PhotonzCore/PlaytestReach.swift, 12 tests) is the one\ngeometry: the window narrowed by every scrolling area the control REALLY sits\nin, which is the same rectangle bringIntoReach measures its distance against.\nisInReach is now reachTrouble(_:) == nil, and reachTrouble says which of three\nthings is in the way with the overhang in points. Every press site, the reveal,\nand the panel listing (new \"whyNot\" field beside \"inWindow\") say the same\nsentence. Sub-point overhang no longer counts as out of reach.\n\nThe verdict deliberately uses only target.clips and never the geometric\nfallback in scrollableClips: a guessed scroller may misdirect a scroll and be\ncorrected on the next round, but it must not decide a control cannot be\npressed.",
   "acceptance": [
     "A reveal of a control that is already on screen succeeds instead of failing",
     "component-on-the-timeline-walk can ask for the Time section by name and still pass",
-    "A reveal that genuinely cannot reach a control still fails, and says which of the two it is"
+    "A reveal that genuinely cannot reach a control still fails, and says which of the three it is: a scroller at its end, a window too short, or something that does not scroll covering it"
   ],
   "log": [
     {
@@ -26,9 +26,22 @@
     {
       "t": "2026-09-22T12:17:53.149Z",
       "note": "seq 3080 -> 150"
+    },
+    {
+      "t": "2026-09-23T03:34:58.925Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T03:51:47.822Z",
+      "note": "Could not reproduce the reported failure on main: with the reveal step put back in component-on-the-timeline-walk the step passes and logs 'was already where a person could press it; nothing scrolled'. The clips-off-the-view-tree fix in 16eec232 (2026-09-22) covers the case the notes describe. Rather than call it fixed by accident, the underlying reason the two answers could differ is now gone."
+    },
+    {
+      "t": "2026-09-23T04:02:10.261Z",
+      "note": "All 30 walks that use a reveal step run: 29 green, including component-on-the-timeline-walk with the new reveal of the Time section. The 30th, hold-pushes-the-sound-walk, fails at step 22 because no control called 'Hold for 5s' is in the panel at all (the press of Hold This Frame before it never settled) -- a known failure already on walks-that-fail-in-the-full-sweep-5, not this change."
     }
   ],
   "walks": [
     "component-on-the-timeline-walk"
-  ]
+  ],
+  "started": "2026-09-23T03:34:58.924Z"
 }

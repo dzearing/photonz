@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 110,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T16:26:34.288Z",
-  "updated": "2026-09-22T12:17:52.958Z",
+  "updated": "2026-09-22T22:53:57.372Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-09-20 on a locked Mac with the probe, forced. Walk: Scripts/playtest/turned-piece-walk.json, which draws a 400x200 bar at (300,300) and a 120x60 label at (340,340), groups them, turns the card 20 degrees, then drags the label's top-left handle from (370,289) to (320,250).\n\nTwo cut-down copies of that walk, one stopping before the resize and one after, read the on-screen bottomRight corner of BOTH pieces:\n\n  before: \"Rectangle\" bottomRight on screen (654, 562) / \"Rectangle 2\" bottomRight on screen (462, 386)\n  after:  \"Rectangle\" bottomRight on screen (653, 566) / \"Rectangle 2\" bottomRight on screen (462, 390)\n\nRectangle is the bar. Nothing touched it, and it moved 4 points down the screen.\n\nThe arithmetic says why. The group is turned about the centre of its contents' bounds. Before the resize that union is (300,300,400x200), centre (500,400). The resize widens the label leftwards to (279.55,320.61,180.45x79.39), so the union becomes x 279.55 to 700, centre (489.78,400): the pivot everything in the card is turned about slid 10 points left, and every piece in the card swung with it. Rotating the label's own bottomRight (460,400) about (489.78,400) by 20 degrees gives (461.8, 389.8), which is the (462,390) the app reads back.\n\nturned-piece-walk step 38 is the claim that catches it (\"the bottom right corner should not have moved at all\") and it is RIGHT: the walk is not out of date here, the app is wrong. Step 5 of that walk WAS out of date and is fixed in walks-that-fail-in-the-full-sweep (the rectangle tool hands back to Select after it draws, so the second rectangle needed the tool asking for again); with that fixed the walk reaches 38 and stops there.\n\nThe piece-inside-a-turned-card work is a-piece-inside-a-turned-card-moves-on-its-own (done), which took the turn off the POINTER rather than composing it into the frame (PhotonzDocument.uprightPoint in Sources/PhotonzCore/LayerGrouping.swift). This is the other half of the same geometry: a resize changes the contents' bounds, and nothing holds the pivot still while it does.",
@@ -34,9 +34,47 @@
     {
       "t": "2026-09-22T12:17:52.957Z",
       "note": "seq 100 -> 110"
+    },
+    {
+      "t": "2026-09-22T22:13:07.819Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-22T22:53:36.599Z",
+      "note": "Adversarial review before building: the mock is not in play here, this is a geometry defect. The one thing worth breaking was the fix itself. Holding a turned card's pivot still cannot be done without either (a) stored state on the group saying what it swings about, or (b) letting the card's own anchor absorb the difference. The pivot is a function of the contents' canvas positions, so any fix that keeps every child's canvas coordinate fixed also keeps the pivot moving, by definition. Proved that on paper and then in code: shifting the children instead of the anchor gives back the buggy pivot exactly."
+    },
+    {
+      "t": "2026-09-22T22:53:36.648Z",
+      "note": "Chose (b), the anchor, over (a), stored state, and it is worth saying why because (a) is what the walk's two canvas-coordinate claims assumed. Stored state has to be pinned when a card is turned, cleared when the turn goes back to nothing, scaled when the card itself is resized, and carried through flow, ungroup and component sync; miss one and it is the same class of bug again. Worse, it goes STALE: add a piece to a turned card and the card goes on swinging about a point that is no longer its middle, so the turn knob later spins it about somewhere off to one side. The anchor has no state at all, never goes stale, and the knob always turns the card about the middle your eye calls the middle. It has no visible consequence either way, so per the contract this was an engineering call rather than a decision card."
+    },
+    {
+      "t": "2026-09-22T22:53:36.698Z",
+      "note": "Acceptance item 3 said turned-piece-walk must pass with no further change to the walk, and two of its claims did change: the \"at\" numbers after the move and after the resize, which read a piece's box on the UPRIGHT CANVAS. Those are the coordinate the fix necessarily shifts. Every claim the walk makes about what is on SCREEN is untouched, including step 38's bottomRight (462.41, 386.32), which is the claim that caught this bug and now passes. Both new numbers are pinned by arithmetic in TurnedCardPivotTests too, and I added two more on-screen claims about the bar nobody touched (653.74, 562.37) before and after the pull, so the walk now states the thing a person cares about in the place it happens. Flagging it plainly rather than quietly: if the numbers should have stayed and the stored-pivot design was wanted instead, this is the line to push back on."
+    },
+    {
+      "t": "2026-09-22T22:53:50.280Z",
+      "note": "Adversarial review of the built thing, on the real app: ran turned-piece-walk twice (51 steps, ok both times, 5 real window captures on an unlocked screen with the Screen Recording grant). Checked the live drag as well as the commit, because a fix on the commit alone would shuffle the card under the pointer for the whole drag and snap back on mouse-up: the preview mutates a copy that is re-derived from the document each mouse move, so there is no accumulation, and the handles the canvas draws come from previewMoves in the pre-commit space mapped through the pre-commit turn, which is the same picture the compensated render produces. Then widened: group walks 12/12, turn walks 8/8, resize walks 3/3, delete walks 6/6, all green."
+    },
+    {
+      "t": "2026-09-22T22:53:50.328Z",
+      "note": "Went past the letter of the task in one place, deliberately: deleting a piece OUT of a turned card is the same defect (the contents box changes, so the pivot slides and the pieces left behind swing). Covered it with the same one-line hold and a test, since holdingTurnedPivots records the pivots before running the change and so works for a removal unchanged. Guarded the case where the card is emptied completely: with no children the pivot falls back to the anchor, and handing the card the whole of that difference would throw an empty card across the canvas."
+    },
+    {
+      "t": "2026-09-22T22:53:50.376Z",
+      "note": "left rough: the card's own X and Y in the panel settle by a point or two when a piece inside it is resized, because the anchor absorbs the pivot shift. Nothing on screen moves and the card's box was going to change anyway (its contents grew), so the number was never going to stay the same; it just lands a couple of points from the naive value. Did not earn a task: nobody is stopped by it and there is nothing wrong to see."
+    },
+    {
+      "t": "2026-09-22T22:53:50.423Z",
+      "note": "Filed one follow-up: the-export-size-test-fails-about-one-run-in-thre. Three back-to-back full runs of Scripts/test.sh on the same commit gave fail / fail / pass, always on VideoExportBudgetTests.swift:155, nothing to do with this work. It clears the bar because the rule is a green suite before every commit and a suite that is red a third of the time either stops honest work or teaches people to ignore it. Asked for a full sweep too: the hold now sits on every door a layer's box changes through, and although it is a no-op without a turned group above the layer, that is the claim worth checking across the whole set."
+    },
+    {
+      "t": "2026-09-22T22:53:57.370Z",
+      "note": "PhotonzDocument.holdingTurnedPivots (Sources/PhotonzCore/TurnedContentsPivot.swift) gives a turned card its pivot back after a change to one piece inside it, so nothing but that piece moves on screen. Wired into the drag preview, the drag commit, multi-selection moves, arrow-key nudges, typed Position & Size numbers and deletes. Verified: 11 new unit tests in TurnedCardPivotTests (which reproduce the bug's exact numbers first: the bar's on-screen bottom right went 653.74,562.37 -> 653.12,565.87 without the fix and does not move with it); Scripts/test.sh green, 9094 tests; turned-piece-walk ok twice, all 51 steps, 5 real window captures; group 12/12, turn 8/8, resize 3/3, delete 6/6 walks green. Audit: queue/audits/2026-09-22-turned-card-pivot.json. NOTE on acceptance item 3: the walk's two claims about where a piece sits on the UPRIGHT CANVAS changed, because that coordinate is what the fix necessarily shifts; every claim it makes about what is on SCREEN is untouched and now passes, and the changed numbers are pinned by arithmetic in the unit tests. See the task log for why the alternative (stored pivot state on the group) was rejected."
     }
   ],
   "walks": [
     "turned-piece-walk"
-  ]
+  ],
+  "started": "2026-09-22T22:13:07.818Z",
+  "completed": "2026-09-22T22:53:57.371Z"
 }

@@ -6386,3 +6386,30 @@
 {"t":"2026-09-23T02:33:10.857Z","ev":"task_note","id":"check-the-loop-actually-builds-most-of-its-day-n"}
 {"t":"2026-09-23T02:33:10.912Z","ev":"task_note","id":"check-the-loop-actually-builds-most-of-its-day-n"}
 {"t":"2026-09-23T02:33:10.972Z","ev":"task_note","id":"check-the-loop-actually-builds-most-of-its-day-n"}
+{"t":"2026-09-23T02:36:00.742Z","ev":"task_done","id":"check-the-loop-actually-builds-most-of-its-day-n","from":"in_progress","note":"The schedule worked and the one sweep that should not have run is fixed at its cause. Measured 2026-09-23T02:27Z with loop-day.mjs --hours 24: tasks 861m 59.8% over 24 tasks, sweeps 320m 22.2% over 3 full-set runs, slices 229m 15.9% over 21 rotating checks, between 30m 2.1%, against 41.4% building and 57.9% sweeping the day before the floor landed. Acceptance 1 and 2 met. Acceptance 3 met on the rotating checks (21, written down) and not on the sweep count, so I chased the extra one: the blind-sweep runner had repaired a poisoned latest.json by replaying a nineteen-hour-old whole-set run through recordSweep() by hand, and the schedule counts its twelve hour floor from that same began field, so the floor collapsed and the loop started a full sweep seven seconds after that task ended. Reproduced before and after (before: decide() says 'full: 25.7h since the last whole-set run'; after: 'nothing'). Fixed in 6274ee44: latest.json only ever moves forward whoever is writing, the loop's log now prints why a full sweep is due instead of just 'due', and the daily digest reports where the day went so the share self-measures. New scenario in sweep-interrupt-drill.mjs (already in CI) proves both the refusal and the cost it stops. All sweep drills green, Scripts/test.sh green (9105 tests, 726 suites). No audit: this is loop infrastructure, nothing in the app became playtestable. No sweep requested, since nothing under Sources/ or Scripts/playtest was touched."}
+{"t":"2026-09-23T02:36:35.215Z","ev":"loop_reloaded","from":"6d43a95f3673","to":"d3425a88300c"}
+{"t":"2026-09-23T02:36:35.321Z","ev":"loop_started","pid":3680}
+{"t":"2026-09-23T02:36:35.365Z","ev":"loop_awake","held":true,"pid":83166,"screenLocked":false}
+{"t":"2026-09-23T02:46:32.759Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":596,"of":568,"rotating":true}
+{"t":"2026-09-23T02:46:32.877Z","ev":"task_started","id":"the-test-suite-stops-reporting-failures-that-are","title":"The test suite stops reporting failures that are not real","priority":"p2-normal"}
+{"t":"2026-09-23T03:21:57.700Z","ev":"task_created","id":"the-icon-preview-timing-test-goes-red-again-when","priority":"p2-normal","title":"The icon preview timing test goes red again when the machine is busy"}
+{"t":"2026-09-23T03:22:01.218Z","ev":"task_walks","id":"the-test-suite-stops-reporting-failures-that-are","walks":[]}
+{"t":"2026-09-23T03:22:01.268Z","ev":"task_walks","id":"the-icon-preview-timing-test-goes-red-again-when","walks":[]}
+{"t":"2026-09-23T03:22:36.178Z","ev":"task_note","id":"the-test-suite-stops-reporting-failures-that-are"}
+{"t":"2026-09-23T03:22:36.228Z","ev":"task_note","id":"the-test-suite-stops-reporting-failures-that-are"}
+{"t":"2026-09-23T03:22:36.276Z","ev":"task_note","id":"the-test-suite-stops-reporting-failures-that-are"}
+{"t":"2026-09-23T03:22:36.325Z","ev":"task_note","id":"the-test-suite-stops-reporting-failures-that-are"}
+{"t":"2026-09-23T03:22:36.374Z","ev":"task_note","id":"the-test-suite-stops-reporting-failures-that-are"}
+{"t":"2026-09-23T03:22:57.202Z","ev":"task_note","id":"the-test-suite-stops-reporting-failures-that-are"}
+{"t":"2026-09-23T03:22:57.250Z","ev":"task_note","id":"the-test-suite-stops-reporting-failures-that-are"}
+{"t":"2026-09-23T03:22:57.299Z","ev":"task_note","id":"the-test-suite-stops-reporting-failures-that-are"}
+{"t":"2026-09-23T03:22:57.348Z","ev":"task_note","id":"the-test-suite-stops-reporting-failures-that-are"}
+{"t":"2026-09-23T03:22:57.397Z","ev":"task_note","id":"the-test-suite-stops-reporting-failures-that-are"}
+{"t":"2026-09-23T03:22:57.445Z","ev":"task_note","id":"the-test-suite-stops-reporting-failures-that-are"}
+{"t":"2026-09-23T03:22:57.494Z","ev":"task_note","id":"the-test-suite-stops-reporting-failures-that-are"}
+{"t":"2026-09-23T03:23:28.548Z","ev":"task_done","id":"the-test-suite-stops-reporting-failures-that-are","from":"in_progress","note":"The reader now tells a machine that will not read apart from a picture with nothing written on it (TextReader.Reading / recogniserHealth, with two retries), and the six checks that assert what a row says skip with the recogniser's own reason instead of going red. Scripts/test.sh catches the other cause: a run that dies on signal 10 or 11 says in plain words that the build folder is half rebuilt, deletes it and runs again. Neither cause reproduces on demand, so both were proved with a drill: PHOTONZ_RECOGNISER_REFUSES=1 gives the exact 21 issues this was filed about against the old suite and a passing run with six named skips against the new one; PHOTONZ_TEST_CRASH_DRILL=1 wiped .build, rebuilt and re-ran green. Whole suite green idle and under deliberate load (9112 tests, load average 16) apart from two unrelated timing flakes, both filed. Shipped in 50cc3f4b."}
+{"t":"2026-09-23T03:34:58.732Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-5"}
+{"t":"2026-09-23T03:34:58.817Z","ev":"slice_pass","walks":50,"passed":48,"failed":2,"seconds":657,"of":568,"rotating":true}
+{"t":"2026-09-23T03:34:58.927Z","ev":"task_started","id":"a-walk-can-reach-a-control-that-is-plainly-on-sc","title":"A walk can reach a control that is plainly on screen","priority":"p2-normal"}
+{"t":"2026-09-23T03:51:47.824Z","ev":"task_note","id":"a-walk-can-reach-a-control-that-is-plainly-on-sc"}
+{"t":"2026-09-23T04:02:10.263Z","ev":"task_note","id":"a-walk-can-reach-a-control-that-is-plainly-on-sc"}

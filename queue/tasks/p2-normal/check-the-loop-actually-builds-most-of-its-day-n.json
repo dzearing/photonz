@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 130,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T15:55:54.511Z",
-  "updated": "2026-09-23T02:33:10.971Z",
+  "updated": "2026-09-23T02:36:00.741Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Before the change, measured 2026-09-21T15:41Z over 24h: tasks 597m (41.4%), sweeps 834m (57.9%), between 9m (0.6%), 13 full-set runs, 8 tasks. Over 48h: tasks 36.2%, sweeps 63.0%, 28 full-set runs.\n\nThe projection in queue/audits/2026-09-21-sweep-schedule.json is 21 to 27 per cent on walk checks. The knob is PHOTONZ_SWEEP_FLOOR_HOURS (default 12, queue/bin/sweep-schedule.mjs) and PHOTONZ_SLICE_MINUTES (default 10).\n\nIf the share is still bad, the two likeliest causes are the rotating check costing more than budgeted (a cold probe build is minutes, and it is not in the ten minute budget) and the full sweep having grown past 113 minutes.",
@@ -66,7 +66,12 @@
     {
       "t": "2026-09-23T02:33:10.970Z",
       "note": "left rough: a blind run still costs the day twice, 79 minutes thrown away plus a 118 minute re-run 1.7h later. That is the deliberate trade made on 2026-09-22 (a blind run must not buy half a day of nobody looking) and it is the right call while blindness is rare, so it is not filed. If blind runs stop being rare the answer is to make the re-run resume from where the probe died rather than restart the set."
+    },
+    {
+      "t": "2026-09-23T02:36:00.739Z",
+      "note": "The schedule worked and the one sweep that should not have run is fixed at its cause. Measured 2026-09-23T02:27Z with loop-day.mjs --hours 24: tasks 861m 59.8% over 24 tasks, sweeps 320m 22.2% over 3 full-set runs, slices 229m 15.9% over 21 rotating checks, between 30m 2.1%, against 41.4% building and 57.9% sweeping the day before the floor landed. Acceptance 1 and 2 met. Acceptance 3 met on the rotating checks (21, written down) and not on the sweep count, so I chased the extra one: the blind-sweep runner had repaired a poisoned latest.json by replaying a nineteen-hour-old whole-set run through recordSweep() by hand, and the schedule counts its twelve hour floor from that same began field, so the floor collapsed and the loop started a full sweep seven seconds after that task ended. Reproduced before and after (before: decide() says 'full: 25.7h since the last whole-set run'; after: 'nothing'). Fixed in 6274ee44: latest.json only ever moves forward whoever is writing, the loop's log now prints why a full sweep is due instead of just 'due', and the daily digest reports where the day went so the share self-measures. New scenario in sweep-interrupt-drill.mjs (already in CI) proves both the refusal and the cost it stops. All sweep drills green, Scripts/test.sh green (9105 tests, 726 suites). No audit: this is loop infrastructure, nothing in the app became playtestable. No sweep requested, since nothing under Sources/ or Scripts/playtest was touched."
     }
   ],
-  "started": "2026-09-23T02:27:30.056Z"
+  "started": "2026-09-23T02:27:30.056Z",
+  "completed": "2026-09-23T02:36:00.740Z"
 }

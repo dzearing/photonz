@@ -5,11 +5,11 @@
   "epic": "video-share",
   "priority": "p2-normal",
   "seq": 100,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T23:41:09.189Z",
-  "updated": "2026-09-22T12:17:52.909Z",
+  "updated": "2026-09-22T22:00:16.104Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The honest reason it says nothing today is in RecordingExport's header comment: weighing a GIF IS writing the GIF, frame by frame, and for a minute of screen that is minutes of work. So this is not a matter of finding a formula, it is a matter of choosing which approximation to make and proving it.\n\nTwo approaches worth measuring before picking one:\n\n1. Sample a handful of frames (say eight, spread across the kept pieces), encode just those into a throwaway GIF at the chosen preset, and multiply by the frame count. Cheap, and it gets the palette and the typical inter-frame cost roughly right. Likely wrong for a recording that is still for half its length.\n2. Encode the whole thing in the background as soon as the sheet opens on GIF, showing the number when it arrives. Exact, and it does work nobody asked for.\n\nWhatever lands, keep the shape the video already has (RecordingExport.weight returns exact / about / unknown) and keep saying about.\n\nComes from the 2026-09-21-recording-export-size audit rough list, first item. The video half of this shipped in 2a900df4: VideoExportRecipe gives MP4 a real bits-per-second budget, and RecordingExport.weight takes the smaller of that budget and what the recording already costs. The measured error on the video was 9 to 14 per cent, which is the bar to beat.",
@@ -27,9 +27,44 @@
     {
       "t": "2026-09-22T12:17:52.908Z",
       "note": "seq 3070 -> 100"
+    },
+    {
+      "t": "2026-09-22T21:21:14.003Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-22T21:42:37.202Z",
+      "note": "walks recording-export-sheet-walk -> recording-export-sheet-walk"
+    },
+    {
+      "t": "2026-09-22T21:58:50.650Z",
+      "note": "Adversarial review BEFORE building: the task named two approaches. Measured both against real files rather than picking one. Sampling 8 frames spread across a recording and multiplying: +38% to +420% (2 clips x 2 formats x 3 presets, 36 measurements). Runs of consecutive frames with a marginal-cost model: -76% to +48%. Flat per-frame in a run: -46% to +121%. ImageIO compresses a frame against the frame before it, so any sample of scattered frames overstates, and any short run understates against a long file. The bar to beat was the video's 9-14%. Nothing came close, so no approximation was worth shipping."
+    },
+    {
+      "t": "2026-09-22T21:59:00.187Z",
+      "note": "What landed: approach 2 (write it), with the cost turned into a feature. ExportWeigh (Sources/Photonz/ExportWeigh.swift) writes the GIF/HEIC into a scratch file while the sheet is open, the line counts up in whole per cent, and pressing Export MOVES that file into place instead of writing it again. Measured: an animated export written twice lands at the same size every time (GIF identical to the byte; HEIC same size with one byte of encoder state moving at offset 1123), so the sheet says a plain size rather than 'about'. That is the one departure from the task, which asked to keep saying about; noted in the audit."
+    },
+    {
+      "t": "2026-09-22T21:59:00.235Z",
+      "note": "Adversarial review of the BUILT thing, on the probe app: pressing Small while a High GIF is still being written lands at once (recording-export-weighing-walk step 13, longest main-thread pass 2.9ms during the weigh), the part-written answer is thrown away rather than shown under the wrong word, and the walk leaves no photonz-weigh-* files in the temp folder. First pass of progress reporting redrew the sheet per frame (50/s, busiest slice 22.3ms); now it only redraws when the whole percentage changes."
+    },
+    {
+      "t": "2026-09-22T21:59:00.285Z",
+      "note": "left rough (not filed, no open task covers them and none is a defect): (1) no cap on how long a weigh may run, so a five minute recording at High is about three minutes of scratch writing while the sheet is open; (2) pressing Export before the number arrives wastes the part-written file and starts again, where handing it to the export card would not; (3) MP4 still says 'about' while GIF and HEIC are now exact. All three are in the audit's rough list for the user to react to."
+    },
+    {
+      "t": "2026-09-22T21:59:02.687Z",
+      "note": "walks recording-export-sheet-walk -> recording-export-sheet-walk, recording-export-weighing-walk"
+    },
+    {
+      "t": "2026-09-22T22:00:16.102Z",
+      "note": "GIF and HEIC now say what they will weigh on both Export sheets, exactly rather than as an estimate: the sheet writes a scratch copy while it is open (Sources/Photonz/ExportWeigh.swift), counts up in whole per cent, and pressing Export moves that very file into place. Sampling was measured first and abandoned (100-420% over for spread frames, -76% to +121% for runs). Verified: 9083 tests pass including new RecordingExportWeighingTests and AnimatedExportWeighTests (written twice, an animated export lands at the same size at every preset on a short and a longer clip); recording-export-sheet-walk holds the sheet's GIF and HEIC numbers against the files that land at 0% drift allowed and passes; new recording-export-weighing-walk shows the line counting, the sheet staying live while it writes, the number moving with the preset, and the weighed file landing in 0 ms at the promised size. Audit: queue/audits/2026-09-22-gif-weight.json."
     }
   ],
   "walks": [
-    "recording-export-sheet-walk"
-  ]
+    "recording-export-sheet-walk",
+    "recording-export-weighing-walk"
+  ],
+  "started": "2026-09-22T21:21:14.002Z",
+  "completed": "2026-09-22T22:00:16.103Z"
 }

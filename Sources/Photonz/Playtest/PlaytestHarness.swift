@@ -4304,12 +4304,13 @@ private final class Run {
         // popover and not the editor: the point is in its coordinates and the
         // event has to be addressed to it, or the click lands on the editor
         // window at whatever happens to be under those numbers.
-        guard let window = target.window, window.contentView != nil, Self.isInReach(target) else {
-            throw Failure(description: "the control \"\(target.name)\" is not where a person could "
-                + "click it: it is off the window, or the dock has scrolled it far enough that the "
-                + "panel's edge cuts across the point a press would land on. Scroll to it with a "
-                + "\"scrollPanel\" step first. A `panel` step lists every control with an "
-                + "\"inWindow\" flag that says which ones are reachable right now.")
+        guard let window = target.window, window.contentView != nil else {
+            throw Failure(description: "the control \"\(target.name)\" is in no window to click")
+        }
+        if let trouble = Self.reachTrouble(target) {
+            throw Failure(description: "a person could not click it: " + trouble
+                + " Bring it in with a \"reveal\" step first. A `panel` step lists every control, "
+                + "and says of each one it cannot reach why not.")
         }
         let flags = eventFlags(modifiers)
         let stamp = ProcessInfo.processInfo.systemUptime
@@ -5117,7 +5118,6 @@ private final class Run {
             throw Failure(description: "the control \"\(name)\" is in no window to scroll")
         }
         var moved = 0.0
-        var stuck = ""
         // Six rounds is generous: each one closes the whole measured gap, and
         // the rounds after the first are for the row heights that changed
         // under it. A dock that has not arrived in six is not going to.
@@ -5134,41 +5134,33 @@ private final class Run {
             // Effects list used to have to be written as a wheel turn of 120.
             let reaches = Self.scrollReaches(for: current, in: content)
             guard !reaches.isEmpty else {
-                throw Failure(description: "the control \"\(name)\" is out of reach and nothing "
-                    + "around it scrolls, so no step could bring it in. It may be off the window "
-                    + "itself: make the window taller, or open the section it is in.")
+                // Nothing around it scrolls, so the diagnosis is already the
+                // whole answer and there is no distance to report.
+                throw Failure(description: Self.reachTrouble(current)
+                    ?? "the control \"\(name)\" is out of reach and nothing around it scrolls")
             }
             // The innermost thing holding it turns first, because that is the
             // one a person would put the pointer over. When it is already
             // showing that stretch of its own length, or has no more to give,
             // the section around it takes the turn instead.
             var round = 0.0
-            var asked = false
             for (clip, reach) in reaches {
                 let by = Self.gap(from: current.box, into: reach)
                 guard by != 0 else { continue }
-                asked = true
                 round = Self.scrollClip(clip, by: by)
                 if round > 0.5 { break }
             }
             moved += round
-            guard round > 0.5 else {
-                stuck = asked
-                    ? "everything around it is already scrolled as far as it goes"
-                    : "it is already inside the part of the window a press can reach, so "
-                        + "something other than a scroll is covering or cutting it"
-                break
-            }
+            guard round > 0.5 else { break }
             await sleep(0.35)
         }
         let landed = try look()
-        guard Self.isInReach(landed) else {
-            throw Failure(description: "scrolled \(Int(moved))pt and \"\(name)\" is still not "
-                + "where a person could press it"
-                + (stuck.isEmpty ? "" : ": " + stuck)
-                + ". The window may be too short for the section it is in.")
-        }
-        return moved
+        guard let trouble = Self.reachTrouble(landed, tried: true) else { return moved }
+        // The reason comes from the SAME measurement that decided it had not
+        // arrived, so it can never claim something is covering a control that
+        // one more turn of a wheel would have reached.
+        throw Failure(description: "scrolled \(Int(moved))pt and a press still could not land: "
+            + trouble)
     }
 
     /// Two points of daylight, so a control resting exactly on the edge is not
@@ -5296,14 +5288,60 @@ private final class Run {
     /// be showing before a walk may press it. Anything less is a control a
     /// person would scroll to first, and so is a walk.
     private static func isInReach(_ target: PlaytestPressTarget) -> Bool {
-        guard let content = target.window?.contentView else { return false }
-        let inWindow = content.convert(content.bounds, to: nil)
-        guard inWindow.contains(target.point), target.visible.contains(target.point) else { return false }
-        // A marker with no size of its own has only its point to go on.
-        // `contains` answers no to an empty rectangle whichever side it is on,
-        // so asking about one would wrongly put every such control out of reach.
-        guard !target.box.isEmpty else { return true }
-        return inWindow.contains(target.box) && target.visible.contains(target.box)
+        reachTrouble(target) == nil
+    }
+
+    /// The same question answered in words: why a press could not land on this
+    /// right now, or nil when it could.
+    ///
+    /// ONE geometry decides, and it is the same one `reveal` measures its
+    /// distance against: the window narrowed by every scrolling area the
+    /// control really sits inside. It used to be two. The verdict came from
+    /// AppKit's `visibleRect` while the distance came from the scrollers, and
+    /// when the two disagreed a reveal scrolled nothing, concluded nothing
+    /// more could be done, and failed a control that the photograph taken one
+    /// step earlier shows sitting in the open. A judgement that cannot
+    /// disagree with itself cannot do that, and the three reasons it can give
+    /// are told apart in `PlaytestReach`: the window is too short, a scroller
+    /// has it past its edge, or something that does not scroll is over it.
+    ///
+    /// A marker with no size of its own is judged by where it is: `contains`
+    /// answers no to an empty rectangle whichever side of a frame it is on, so
+    /// asking about one directly would put every such control out of reach.
+    private static func reachTrouble(_ target: PlaytestPressTarget,
+                                     tried: Bool = false) -> String? {
+        guard let content = target.window?.contentView else {
+            return "\"\(target.name)\" is in no window, so nothing could press it"
+        }
+        let box = target.box.isEmpty
+            ? CGRect(origin: target.point, size: CGSize(width: 1, height: 1))
+            : target.box
+        guard let problem = PlaytestReach.problem(box: box,
+                                                  window: content.convert(content.bounds, to: nil),
+                                                  scrollStrip: scrollStrip(for: target, in: content),
+                                                  visible: target.visible)
+        else { return nil }
+        return PlaytestReach.sentence(problem, control: target.name, tried: tried)
+    }
+
+    /// The strip of window a scroll could park this control in: the window
+    /// narrowed by every scrolling area around it, innermost included. Empty
+    /// when one of those areas has itself been carried off the window, which
+    /// is its own answer -- nothing of the control can be showing.
+    ///
+    /// The control's OWN scrollers, read off the view tree, and never the
+    /// geometric search `scrollReaches` falls back on when a target was built
+    /// without a view in hand. A guessed scroller is allowed to send a reveal
+    /// somewhere useless and be corrected by the next round; it is not allowed
+    /// to decide a control cannot be pressed, which is a verdict nothing
+    /// corrects. A target with no scrollers of its own is judged by the window
+    /// and by what AppKit says is left of it, exactly as it was before.
+    private static func scrollStrip(for target: PlaytestPressTarget, in content: NSView) -> CGRect {
+        var strip = content.convert(content.bounds, to: nil)
+        for clip in target.clips where !clip.isHidden {
+            strip = strip.intersection(clip.convert(clip.bounds, to: nil))
+        }
+        return strip
     }
 
     /// What the panel is showing, in the names a walk has to use.
@@ -6906,7 +6944,8 @@ private final class Run {
             "tiles": targets.filter { $0.kind == .tile }.map(describe),
             "rows": targets.filter { $0.kind == .row }.map(describe),
             "controls": try pressTargets().map { control in
-                ["name": control.name, "detail": control.detail, "enabled": control.isEnabled,
+                let trouble = Self.reachTrouble(control)
+                return ["name": control.name, "detail": control.detail, "enabled": control.isEnabled,
                  // What to write in "in" for a step that should survive the
                  // words on the row changing (`PlaytestSteadyName`). An author
                  // writes what they can see, so the durable name has to be
@@ -6914,7 +6953,11 @@ private final class Run {
                  "steadyRows": control.steadyRows,
                  // Something scrolled out of the dock is still built, and still
                  // listed, but a press cannot reach it until the walk scrolls.
-                 "inWindow": Self.isInReach(control),
+                 // When it cannot, the list says WHY in the same words a failed
+                 // press would, so an author writing a step can tell a control
+                 // that needs a `reveal` from one that nothing can reach.
+                 "inWindow": trouble == nil,
+                 "whyNot": trouble ?? "",
                  "x": Int(control.point.x.rounded()), "y": Int(control.point.y.rounded())]
             },
             // Read as "Size (24 pt)": the name a walk types, then what the
@@ -7206,10 +7249,9 @@ private final class Run {
             guard let window = target.window else {
                 throw Failure(description: "\"\(target.name)\" is in no window, so there is nothing to right click")
             }
-            guard Self.isInReach(target) else {
-                throw Failure(description: "\"\(target.name)\" is not where a person could right click it: it is "
-                    + "off the window, or the dock has scrolled it far enough that the panel's edge cuts across "
-                    + "it. Scroll to it with a \"scrollPanel\" step first.")
+            if let trouble = Self.reachTrouble(target) {
+                throw Failure(description: "a person could not right click it: " + trouble
+                    + " Bring it in with a \"reveal\" step first.")
             }
             aimed = (target.name, target.detail, target.point, window)
         } else if let at {
@@ -7611,8 +7653,11 @@ private final class Run {
         guard target.isEnabled else {
             throw Failure(description: "the control \"\(target.name)\" is dimmed, so clicking it would do nothing")
         }
-        guard let window = target.window, Self.isInReach(target) else {
-            throw Failure(description: "the control \"\(target.name)\" is not where a person could click it")
+        guard let window = target.window else {
+            throw Failure(description: "the control \"\(target.name)\" is in no window to click")
+        }
+        if let trouble = Self.reachTrouble(target) {
+            throw Failure(description: "a person could not click it: " + trouble)
         }
         let stamp = ProcessInfo.processInfo.systemUptime
         guard let down = NSEvent.mouseEvent(

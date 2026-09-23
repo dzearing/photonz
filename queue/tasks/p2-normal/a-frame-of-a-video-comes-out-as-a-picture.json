@@ -5,11 +5,11 @@
   "epic": "video-share",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T16:38:56.980Z",
-  "updated": "2026-09-22T21:09:02.006Z",
+  "updated": "2026-09-22T21:09:27.038Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Comes out of the 2026-09-21-video-export audit. Export on a timed document is now VideoExportDialog (Sources/Photonz/VideoExportDialog.swift) rather than ExportDialog, and the three formats are RecordingExport.formats. The frame itself is already available: EditorState.shownDocument is document.drawn(atTimeMS: documentTimeMS), so a still is previewRenderer.render(shownDocument, store:) through the existing ExportSizer path. The sheet is the place to add it, NOT a second sheet: the whole point of the video sheet is that a recording and a picture leave through the same one.",
@@ -46,10 +46,15 @@
     {
       "t": "2026-09-22T21:09:02.005Z",
       "note": "Left rough, none of it filed: (a) the save box suggests the document's name every time, so a second still lands on the first unless it is renamed - asked about in the audit rather than decided here, since putting the moment in the name breaks the rule the other three formats follow; (b) a sheet opening on PNG shows 'size not known until it is written' for about a tenth of a second before the weigh lands, which is too fast to read here and would be slower on a twelve megapixel document; (c) the picture is remembered separately from the video format, so the recording window's own sheet is unaffected, and nothing on screen says the two memories are separate; (d) a walk cannot press Export (the save box is not drivable), so the button itself was checked by reading it while the writer behind it is driven directly."
+    },
+    {
+      "t": "2026-09-22T21:09:27.036Z",
+      "note": "PNG is a fourth answer on the document Export sheet: it writes the frame the playhead is on, everything drawn over it, at the document size, and says the moment and the real weight before you save. Core words and rules in RecordingExport.Choice (unit tested), the sheet in VideoExportDialog, the writer in EditorState.exportStillFrame through the same DocumentFrames the video export uses. Verified by 9070 green tests, a new walk with four real window captures, the written PNG opened and checked by eye, and all 14 export plus 4 video walks green. Audit: queue/audits/2026-09-22-frame-as-a-picture.json. Commit 3464259c, pushed."
     }
   ],
   "walks": [
     "a-frame-of-a-video-comes-out-as-a-picture-walk"
   ],
-  "started": "2026-09-22T20:45:09.285Z"
+  "started": "2026-09-22T20:45:09.285Z",
+  "completed": "2026-09-22T21:09:27.037Z"
 }

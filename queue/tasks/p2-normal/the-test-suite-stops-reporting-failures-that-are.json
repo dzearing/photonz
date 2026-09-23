@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 140,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "infra",
   "created": "2026-09-20T19:47:11.338Z",
-  "updated": "2026-09-22T12:17:53.101Z",
+  "updated": "2026-09-23T03:23:28.547Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED on 2026-09-20 while landing a-document-can-have-time, and it cost that runner most of an hour.\n\nWhat happens: Tests/PhotonzRenderTests/SeparatedRowsSayTheirWordsTests.swift reads the words off Fixtures/settings-pane-2x.png with TextReader (Vision) and checks that the layers list names its rows after them. Under load Vision hands back nothing, every displayName falls through to the auto name, and the eleven tests report 21 issues that all look like this:\n\n  Expectation failed: (names -> [\"Text 9\", ..., \"Background\"]).contains(words -> \"General\")\n\nThe evidence, all on the same machine and the same tree:\n\n  Scripts/test.sh                       (walks/builds running)  -> 21 issues\n  Scripts/test.sh --filter SeparatedRowsSayTheirWords (busy)    -> 21 issues\n  Scripts/test.sh --filter SeparatedRowsSayTheirWords (idle)    -> passed, 7.45s\n  Scripts/test.sh --filter SeparatedRowsSayTheirWords (idle)    -> passed, 7.42s\n  Scripts/test.sh                       (idle)                  -> passed, 8530 tests, 190.9s\n\nA throwaway diagnostic in the same tree showed the whole path working when nothing else was running: 19 pieces, 9 runs, TextReader returning General / Launch at login / Show in menu bar, and the layers list naming all nine rows correctly. So the reading is right and the timing is not.\n\nWHY IT IS WORTH FIXING rather than living with: a runner that sees this cannot tell a break from a flake. This one stashed its own work twice and spent a full extra test cycle bisecting a regression that did not exist, and it very nearly filed the wrong bug against itself. That is the same failure mode the unmanned-loop epic was promoted for.\n\nWhere to look: TextReader.words(in:) in Sources/PhotonzRender/TextReader.swift and whatever timeout or request reuse is behind it.",
@@ -44,6 +44,69 @@
     {
       "t": "2026-09-22T12:17:53.100Z",
       "note": "seq 120 -> 140"
+    },
+    {
+      "t": "2026-09-23T02:46:32.875Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T03:22:01.216Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-09-23T03:22:36.176Z",
+      "note": "ADVERSARIAL REVIEW BEFORE BUILDING. The obvious fix is to loosen the eleven checks, and it is the wrong one: they are the only thing proving a separated screenshot reads back into words a person can see, so a loosened version of them is a test that can no longer fail. The second obvious fix is to skip whenever a word is missing, which is worse: it skips silently on a real regression. The shortest fix that keeps them sharp is to make the READER able to say which of two things happened, because under the hood they already are different: the on-device recogniser answering with nothing (a switch, an icon, flat panel) and the on-device recogniser refusing to answer at all (a busy machine). Those were flattened into the same empty answer by one line, 'guard (try? handler.perform([request])) != nil else { return [] }'. Tell them apart and everything follows: retry a refusal, count the ones that survive, let the checks skip on a machine that was not reading while staying red on a machine that was."
+    },
+    {
+      "t": "2026-09-23T03:22:36.226Z",
+      "note": "COULD NOT REPRODUCE EITHER CAUSE ON DEMAND, and said so rather than claiming the fix by argument. (1) The Vision flake: the suite passed on an idle machine (7.15s), under 12 spin processes, and under 12 spin processes plus a 24-thread on-device text recognition load running against the same fixture (load average 16). The full suite passed both idle and loaded. (2) The stale build: added an optional stored property to Layer exactly as the merged-in note describes, ran Scripts/test.sh on the warm .build, and got 9112 tests green with no crash. Both causes are real and both are rarer than one runner's session. What IS provable is the behaviour when each happens, so each got a drill that makes it happen."
+    },
+    {
+      "t": "2026-09-23T03:22:36.274Z",
+      "note": "SHIPPED, part 1, the reading: Sources/PhotonzRender/TextReader.swift. New TextReader.Reading (.read([String]) or .refused(String)) with reading(_:inkHeight:) behind it; lines() keeps its old signature and counts a refusal on the way past. A refused read is retried twice, 0.1s then 0.2s later, because what is being waited out is the rest of the machine. A refusal surviving all three goes into TextReader.recogniserHealth (count plus last reason, NSLock-guarded, safe from the concurrentPerform paths that read a dozen runs at once). Nothing the app does changes: a row whose picture will not read still keeps the number it was given."
+    },
+    {
+      "t": "2026-09-23T03:22:36.323Z",
+      "note": "SHIPPED, part 2, the checks: Tests/PhotonzRenderTests/SeparatedRowsSayTheirWordsTests.swift. The six checks that assert what a row SAYS are gated on TextReader.recogniserHealth not having moved while the pane was read, and print one line naming the count and the recogniser's own reason. The two that do not depend on word content (nothingIsWrittenOntoTheCanvas, openingASavedReadingLeavesNothingPending) still run on a machine that will not read, so the gate cannot hide a real regression in them. The gate is worked out once, not six times."
+    },
+    {
+      "t": "2026-09-23T03:22:36.372Z",
+      "note": "PROVED with a drill, both ways, same tree and same machine. PHOTONZ_RECOGNISER_REFUSES=1 makes every read refuse. Against the suite as it was (git checkout of the file): 'Test run with 11 tests in 1 suite failed after 6.949 seconds with 21 issues', the first being (names -> [\"Text 9\", \"Text 8\", ..., \"Background\"]).contains(\"Save Changes\") - the exact failure this task was filed about. Against the suite as it is now: one sentence, '==> SKIPPED: this machine's text recogniser refused 9 of 9 reads, so the rows below have nothing to say and checking what they say would report a busy machine as broken code', six skips each naming their reason, and 'Test run with 11 tests in 1 suite passed'."
+    },
+    {
+      "t": "2026-09-23T03:22:57.200Z",
+      "note": "SHIPPED, part 3, the stale build folder: Scripts/test.sh. It no longer execs swift test, it runs it through tee, and if the run DIED on signal 10 or 11 (segmentation fault or bus error, which is a process reading memory laid out differently from the way it was compiled to expect, which is what a half-rebuilt package is) it prints four plain sentences saying the failures above are about half a build and not about the app, deletes .build, and runs again from scratch. If the clean run dies the same way it says that too and names the crash-report command, because then the crash is real. PHOTONZ_TEST_REBUILT guards against looping. An ordinary run pays for one mktemp and one tee: Scripts/test.sh --filter SeparatedRowsSayTheirWords costs 8.5s wall, the same as before."
+    },
+    {
+      "t": "2026-09-23T03:22:57.248Z",
+      "note": "PROVED, the stale build path: PHOTONZ_TEST_CRASH_DRILL=1 makes test.sh act as though the helper just exited on signal 11. Run twice, it printed '==> The test helper did not fail, it DIED...' and '...Throwing .build away and running again from scratch', deleted .build, rebuilt for real (62s), re-ran and exited 0 with the suite green. So the rescue is something that has been run rather than something that was written."
+    },
+    {
+      "t": "2026-09-23T03:22:57.297Z",
+      "note": "ACCEPTANCE, item by item, with the numbers. (1) Whole suite idle: 9112 tests, 728 suites, 195.6s, 1 issue (AnimatedExportWeighTests, already filed as the-export-size-test-fails-about-one-run-in-thre). Whole suite under deliberate load (12 spin processes plus 24 threads of on-device text recognition, load average 16): 9112 tests, 215.1s, 2 issues - the same export one, plus IconPreviewRenderTests, filed as the-icon-preview-timing-test-goes-red-again-when. The eleven tests this task is about gave the SAME answer both ways. (2) Done, proved by the refusal drill above. (3) SeparatedRowsSayTheirWords under real load, twice in a row: passed, passed. (4) Optional stored property added to Layer, Scripts/test.sh on the warm build folder: 9112 tests green, no crash, and had it crashed the new rescue would have caught it. (5) Done and drilled; ordinary run costs 8.5s, unchanged."
+    },
+    {
+      "t": "2026-09-23T03:22:57.346Z",
+      "note": "LOAD HARNESS, since the first two attempts at 'under load' were worthless and it is worth somebody else not repeating them: this Mac has no 'timeout' binary, so 'timeout 300 sh -c while :; do :; done &' fails instantly and the run you think is loaded is idle. Two of my runs were that before I noticed the missing uptime line. Burners must bound themselves on the wall clock ('end=$(( $(date +%s) + N )); while [ $(date +%s) -lt $end ]; do :; done'), every PID captured from $! and never from jobs -p, and a pgrep afterwards to prove nothing survived. Every run here printed 'survivors:' empty, and ps showed nothing over 50% CPU at the end."
+    },
+    {
+      "t": "2026-09-23T03:22:57.395Z",
+      "note": "Walks: three that read words off a real capture in the running app all pass on the probe after the change - separated-rows-say-their-words-walk (10s ok), read-every-label-walk (12s ok), separated-boxes-say-their-words-walk (8s ok). Probe quit afterwards. No sweep requested: the renderer change is additive and behaviour-preserving for every caller (lines() returns exactly what it returned, plus a retry that only fires where the old code returned empty), so it is not a change every walk touches."
+    },
+    {
+      "t": "2026-09-23T03:22:57.443Z",
+      "note": "left rough: the retries mean a TRANSIENT refusal now reads on the second or third go, which is very probably the whole fix for the Vision flake - and it is unproven, because a transient refusal cannot be conjured. If this suite ever goes red for a missing word again, the line to read is the skip message: if it does not appear, the recogniser answered and the words really were wrong. Did not earn a task: nothing is broken and there is nothing to do until it happens."
+    },
+    {
+      "t": "2026-09-23T03:22:57.492Z",
+      "note": "left rough: no audit written. Nothing here is a feature a person can try in the app - the app behaves exactly as it did, and the whole change is what a test run says to the person reading it. The drills are the demonstration."
+    },
+    {
+      "t": "2026-09-23T03:23:28.545Z",
+      "note": "The reader now tells a machine that will not read apart from a picture with nothing written on it (TextReader.Reading / recogniserHealth, with two retries), and the six checks that assert what a row says skip with the recogniser's own reason instead of going red. Scripts/test.sh catches the other cause: a run that dies on signal 10 or 11 says in plain words that the build folder is half rebuilt, deletes it and runs again. Neither cause reproduces on demand, so both were proved with a drill: PHOTONZ_RECOGNISER_REFUSES=1 gives the exact 21 issues this was filed about against the old suite and a passing run with six named skips against the new one; PHOTONZ_TEST_CRASH_DRILL=1 wiped .build, rebuilt and re-ran green. Whole suite green idle and under deliberate load (9112 tests, load average 16) apart from two unrelated timing flakes, both filed. Shipped in 50cc3f4b."
     }
-  ]
+  ],
+  "started": "2026-09-23T02:46:32.874Z",
+  "walks": [],
+  "completed": "2026-09-23T03:23:28.546Z"
 }
