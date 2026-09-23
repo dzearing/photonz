@@ -1,0 +1,31 @@
+{
+  "id": "panel-copy-and-flag-descriptions-have-a-length-b",
+  "title": "Panel copy and flag descriptions have a length budget the tests enforce",
+  "goal": "UX-PATTERNS says a panel carries at most one short line of text, yet video sections carry paragraphs, and flag descriptions run to 200 words. Nothing enforces it. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 0.75,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T11:53:46.927Z",
+  "updated": "2026-09-23T11:53:47.769Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the 2026-09-23 video audit in the intake window.",
+  "acceptance": [
+    "Scripts/test.sh fails when a panel section string exceeds the budget (60 characters, tune with the user via a card) outside an allowlist that starts empty for video",
+    "Flag descriptions capped (e.g. 40 words) with a test",
+    "A list of every existing offender app-wide, the video ones fixed by the panel task, the rest filed"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T11:53:46.929Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-23T11:53:47.768Z",
+      "note": "seq 470 -> 0.75"
+    }
+  ]
+}

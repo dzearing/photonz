@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 220,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T08:38:48.991Z",
-  "updated": "2026-09-23T11:30:24.457Z",
+  "updated": "2026-09-23T11:37:06.870Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Today this is a deliberate refusal rather than a bug, and the reason is written into CanvasPathEdit.swift line 110: \"Neither does one on a SLANT: reshaping moves the box the shape sits in, a turn is measured about the middle of that box, and a point dragged out on a turned path would therefore swing the whole shape round under the hand.\" The refusal is in one place, the layer.transform.isIdentity clause of CanvasNSView.editablePath (Sources/Photonz/CanvasPathEdit.swift:116), and the chip that explains it is PathEditHint.turned, read in EditorState+PathEdit.swift.\n\nSo the work is the hard part the refusal was standing in for: take the press through the inverse of the layer transform so a point is dragged in the shape own coordinates, and when the shape box has to change, recompute the turn about the NEW middle so the drawing does not rotate under the hand. pathLocalPoint in the same file is the single place the press is converted today and it subtracts the frame origin and nothing else.\n\nDo the same for the point sweep box (pathPointSweep in the same file), which currently collects points by testing screen positions.\n\nFlagged twice as an unchanged older rough edge: the 2026-09-19-sweep-up-path-points audit says \"A path that has been turned still shows no points at all, so none of this reaches one\", and the reshape work before it said the same. It matters to icon-svg specifically, because drawing an elaborate glyph means angled pieces and this is exactly where a point needs nudging.\n\nNo decision card: the points already exist and already behave, this only widens where they appear.",
@@ -67,6 +67,14 @@
     {
       "t": "2026-09-23T11:30:24.456Z",
       "note": "Two changes beyond the letter of the task, both small and both verified. (1) An arrow key with a point picked now pushes it the way the KEY points rather than along the shape's own grain, which on a turn is up and sideways at once. (2) Reshaping a path inside a turned CARD: the press now comes through the card's inherited turn as well as the layer's own, and the commit is wrapped in holdingTurnedPivots the way every other gesture inside a turned card already is, so reshaping one piece no longer walks the rest of the card. turned-piece-walk still passes. Neither was in the acceptance; both are the same bug wearing a different hat and skipping them would have shipped a turned shape that works one way at the top level and another inside a card."
+    },
+    {
+      "t": "2026-09-23T11:36:56.844Z",
+      "note": "Left rough, not filed (neither clears the follow-up bar): (1) a heavily SKEWED shape has an eight point grab radius that is a circle in the shape's own space and so an ellipse on screen, one axis a little easier to hit than the other. A plain turn is isometric so the case this task is about is exact, and nobody is skewing icon pieces today. (2) The Position and Size popover parks over the top right corner of the shape, so one of the three points is behind it in the walk's first picture. That is where the popover lands and has nothing to do with points. Both are in the audit's rough list, where the user can turn either into a task by reacting to it."
+    },
+    {
+      "t": "2026-09-23T11:37:06.868Z",
+      "note": "A turned path shows its points and reshapes like any other. PathEditSpace (PhotonzCore, pure, 12 tests) reads a press through the layer's turn and any card turn above it, maps the points back out for drawing, and places the reshaped box so the slide moving the pivot would have caused is cancelled: the parts nobody touched do not move and the A field is untouched. PathBuilder.refit goes through it, so every reshape gets it. Also: arrow keys push a point the way the key points; the sweep band stays upright and takes the points it visibly goes round (deliberately the opposite of acceptance item 4's second clause, reasoned out in the log and the acceptance amended to match); reshaping inside a turned card is held by holdingTurnedPivots. Verified: 9197 tests pass; new turned-path-keeps-its-points-walk passes all 74 steps with six real window captures on an unlocked Mac; all 18 path walks and all 3 turned walks pass. Audit at queue/audits/2026-09-23-turned-path-points.json with four screenshots. Committed 035a27c2 and pushed to main. Full sweep requested because refit is under every path walk in the set."
     }
   ],
   "source": "manager",
@@ -76,5 +84,6 @@
     "path-reshape-walk",
     "sweep-up-path-points-walk",
     "turn-into-a-path-walk"
-  ]
+  ],
+  "completed": "2026-09-23T11:37:06.869Z"
 }

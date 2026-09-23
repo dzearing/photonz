@@ -1,0 +1,35 @@
+{
+  "id": "the-video-properties-look-like-the-rest-of-the-d",
+  "title": "The video properties look like the rest of the design, with no paragraphs",
+  "goal": "The panel under a recording is Reframe (raw Scale/Centre, 'Sharp to 100%', a 'Drag a box with M' paragraph), Time (a freeze explainer paragraph, a 'While the frame is held' radio group, three status sentences, a 7-item Speed radio list with 'silent' tags), Captions (a button and a paragraph), all with no horizontal inset so values clip. The user: 'It has paragraphs of text in there. it exposes features that are the most confusing, dev-debug like tools possible'. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 0.55,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T11:53:46.642Z",
+  "updated": "2026-09-23T11:53:47.567Z",
+  "deps": [
+    "click-a-cut-and-pick-a-transition-from-tiles"
+  ],
+  "blockedBy": [],
+  "notes": "Filed from the 2026-09-23 video audit in the intake window.",
+  "acceptance": [
+    "Every video section uses the standard panel inset and label/value rows as the mock's PROPERTIES draws them",
+    "Zero explanatory sentences in the video sections (SpeedInspector, ReframeInspector, CaptionsInspector, TransitionInspector, SoundInspector); a test asserts no panel string over 60 characters in them",
+    "Speed is one dropdown row; Freeze Frame moves to the clip's right-click menu and its options to a submenu; the 'While the frame is held' radios are gone from the panel",
+    "Reframe as a section is gone: scale and position are the layer's ordinary transform, animated by keys (see the motion task), with Punch In as a right-click preset",
+    "Side-by-side with video.html PROPERTIES in the audit"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T11:53:46.644Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-23T11:53:47.566Z",
+      "note": "seq 430 -> 0.55"
+    }
+  ]
+}

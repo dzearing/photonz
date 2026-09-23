@@ -1,0 +1,31 @@
+{
+  "id": "the-design-system-has-the-pieces-the-video-mocks",
+  "title": "The design system has the pieces the video mocks are made of",
+  "goal": "The video mocks use components the SwiftUI design system does not have, so each task drew its own. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 0.85,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T11:53:47.067Z",
+  "updated": "2026-09-23T11:53:47.867Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the 2026-09-23 video audit in the intake window.",
+  "acceptance": [
+    "Inventory the mock components (transport, clip bar, track header, ruler, playhead, tile popover, dropdown row, keyframe diamond) against Sources/Photonz shared components",
+    "Each missing one becomes a shared SwiftUI component with its tokens from inspector.css/overlays.css and an ImageRenderer snapshot next to the mock",
+    "UX-PATTERNS lists them"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T11:53:47.069Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-23T11:53:47.866Z",
+      "note": "seq 490 -> 0.85"
+    }
+  ]
+}

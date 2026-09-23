@@ -1,0 +1,35 @@
+{
+  "id": "captions-write-themselves-from-the-speech",
+  "title": "Captions write themselves from the speech",
+  "goal": "User asks 2026-09-23: 'add captioning' and 'auto extract captions'. Today captions are a Write Captions button and a paragraph in the panel (CaptionsInspector.swift); see mock video-captions.html. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?",
+  "epic": "video-audio",
+  "priority": "p1-high",
+  "seq": 0.65,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T11:53:46.781Z",
+  "updated": "2026-09-23T11:53:47.668Z",
+  "deps": [
+    "tracks-you-can-add-rename-group-hide-mute-lock-a"
+  ],
+  "blockedBy": [],
+  "notes": "Filed from the 2026-09-23 video audit in the intake window.",
+  "acceptance": [
+    "When a recording with speech opens, captions are transcribed on this Mac in the background (no button needed) and land on a Captions track as timed segments; a single toggle turns this off",
+    "Each caption segment is editable in place on the timeline and on the canvas, and its edges drag to retime",
+    "A caption style (font, size, colour, background, position) applies to all, from one row in the panel",
+    "Export: burned in, or as an SRT/VTT file beside the video",
+    "Walk at Next defaults opens a recording with speech and photographs captions appearing without a click"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T11:53:46.783Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-23T11:53:47.667Z",
+      "note": "seq 450 -> 0.65"
+    }
+  ]
+}

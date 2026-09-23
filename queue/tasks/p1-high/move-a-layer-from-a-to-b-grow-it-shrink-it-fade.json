@@ -1,0 +1,35 @@
+{
+  "id": "move-a-layer-from-a-to-b-grow-it-shrink-it-fade",
+  "title": "Move a layer from A to B, grow it, shrink it, fade it, Photoshop-style",
+  "goal": "The user wants Photoshop blended into video: 'create text layers, animate them from place a to b, make transitions, grow/shrink elements'. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 0.6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T11:53:46.711Z",
+  "updated": "2026-09-23T11:53:47.618Z",
+  "deps": [
+    "tracks-you-can-add-rename-group-hide-mute-lock-a"
+  ],
+  "blockedBy": [],
+  "notes": "Filed from the 2026-09-23 video audit in the intake window.",
+  "acceptance": [
+    "Press T over the video, type: the text is a layer on a titles track with an in and an out you drag",
+    "Move the playhead, drag or resize any layer on the canvas: with keyframing armed (a diamond on the track header, as Premiere's stopwatch) that makes a key; position, scale, rotation and opacity animate between keys",
+    "Keys show on the layer's track as diamonds you can drag, right-click for easing (Linear, Ease In, Ease Out, Ease In and Out) and delete",
+    "In and Out presets for titles (fade, slide, pop, scale) from the right-click menu",
+    "A walk makes a title fly in from the left, grow, and fade out, at Next defaults"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T11:53:46.713Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-23T11:53:47.617Z",
+      "note": "seq 440 -> 0.6"
+    }
+  ]
+}

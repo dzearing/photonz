@@ -6480,3 +6480,13 @@
 {"t":"2026-09-23T11:30:12.441Z","ev":"task_note","id":"a-shape-you-turned-still-shows-its-points"}
 {"t":"2026-09-23T11:30:24.401Z","ev":"task_note","id":"a-shape-you-turned-still-shows-its-points"}
 {"t":"2026-09-23T11:30:24.458Z","ev":"task_note","id":"a-shape-you-turned-still-shows-its-points"}
+{"t":"2026-09-23T11:36:56.846Z","ev":"task_note","id":"a-shape-you-turned-still-shows-its-points"}
+{"t":"2026-09-23T11:37:06.871Z","ev":"task_done","id":"a-shape-you-turned-still-shows-its-points","from":"in_progress","note":"A turned path shows its points and reshapes like any other. PathEditSpace (PhotonzCore, pure, 12 tests) reads a press through the layer's turn and any card turn above it, maps the points back out for drawing, and places the reshaped box so the slide moving the pivot would have caused is cancelled: the parts nobody touched do not move and the A field is untouched. PathBuilder.refit goes through it, so every reshape gets it. Also: arrow keys push a point the way the key points; the sweep band stays upright and takes the points it visibly goes round (deliberately the opposite of acceptance item 4's second clause, reasoned out in the log and the acceptance amended to match); reshaping inside a turned card is held by holdingTurnedPivots. Verified: 9197 tests pass; new turned-path-keeps-its-points-walk passes all 74 steps with six real window captures on an unlocked Mac; all 18 path walks and all 3 turned walks pass. Audit at queue/audits/2026-09-23-turned-path-points.json with four screenshots. Committed 035a27c2 and pushed to main. Full sweep requested because refit is under every path walk in the set."}
+{"t":"2026-09-23T11:39:32.059Z","ev":"loop_reloaded","from":"d3425a88300c","to":"2bea43b14ec2"}
+{"t":"2026-09-23T11:39:32.174Z","ev":"loop_started","pid":3680}
+{"t":"2026-09-23T11:39:32.223Z","ev":"loop_awake","held":true,"pid":83166,"screenLocked":false}
+{"t":"2026-09-23T11:42:39.068Z","ev":"task_created","id":"a-recording-opens-in-the-video-editor-for-real-i","priority":"p1-high","title":"A recording opens in the video editor, for real, in Next"}
+{"t":"2026-09-23T11:42:39.141Z","ev":"task_created","id":"measure-the-video-editor-against-premiere-and-fi","priority":"p1-high","title":"Measure the video editor against Premiere, and file every gap"}
+{"t":"2026-09-23T11:42:51.732Z","ev":"task_note","id":"a-recording-opens-in-the-video-editor-for-real-i"}
+{"t":"2026-09-23T11:42:51.781Z","ev":"task_resequenced","id":"a-recording-opens-in-the-video-editor-for-real-i","from":350,"to":0.1}
+{"t":"2026-09-23T11:42:51.830Z","ev":"task_resequenced","id":"measure-the-video-editor-against-premiere-and-fi","from":360,"to":0.2}

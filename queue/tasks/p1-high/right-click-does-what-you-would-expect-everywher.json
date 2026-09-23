@@ -1,0 +1,37 @@
+{
+  "id": "right-click-does-what-you-would-expect-everywher",
+  "title": "Right-click does what you would expect, everywhere on the timeline",
+  "goal": "User: 'we need a right click menu on a segment. I expect to not need to have tools for everything, but that you can right click on places to reveal actions that can be taken at the scrub bar, or for the clip'. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 0.45,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T11:53:46.431Z",
+  "updated": "2026-09-23T11:53:47.466Z",
+  "deps": [
+    "the-timeline-is-the-one-in-the-mock",
+    "tracks-you-can-add-rename-group-hide-mute-lock-a"
+  ],
+  "blockedBy": [],
+  "notes": "Filed from the 2026-09-23 video audit in the intake window.",
+  "acceptance": [
+    "Clip: Split at Playhead, Delete, Ripple Delete, Detach Audio, Speed submenu, Freeze Frame, Add Transition, Rename, Reveal in Finder, Duplicate",
+    "Cut/edit point: Add Transition submenu, Remove Transition, Roll Edit",
+    "Track header: Rename, Add Track Above/Below, Hide/Mute, Lock, Group, Delete Track",
+    "Scrub bar and ruler: Add Marker, Set In, Set Out, Clear In/Out, Split Everything Here",
+    "Canvas over a video layer: the layer's actions plus Split at Playhead",
+    "Every item also has its Premiere shortcut shown in the menu"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T11:53:46.433Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-23T11:53:47.465Z",
+      "note": "seq 400 -> 0.45"
+    }
+  ]
+}

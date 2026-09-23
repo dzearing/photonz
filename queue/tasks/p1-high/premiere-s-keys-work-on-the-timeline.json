@@ -1,0 +1,35 @@
+{
+  "id": "premiere-s-keys-work-on-the-timeline",
+  "title": "Premiere's keys work on the timeline",
+  "goal": "A Premiere editor reaches for J/K/L, I/O, B, V, arrows, Cmd-K and gets nothing (only B for blade exists). Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 0.7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T11:53:46.505Z",
+  "updated": "2026-09-23T11:53:47.717Z",
+  "deps": [
+    "the-timeline-is-the-one-in-the-mock"
+  ],
+  "blockedBy": [],
+  "notes": "Filed from the 2026-09-23 video audit in the intake window.",
+  "acceptance": [
+    "Space play/pause; J/K/L shuttle with repeated J/L speeding up; K+J/L inching",
+    "I/O set in and out, Opt-I/O clear; Cmd-K split at playhead; Delete lift, Shift-Delete ripple",
+    "Left/Right one frame, Shift+arrows five frames, Up/Down previous/next edit point, Home/End",
+    "V select, B blade, A track select forward; = and - zoom, backslash fit",
+    "Where a Photoshop key conflicts, the timeline wins only while the timeline has focus; documented in the shortcuts sheet"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T11:53:46.507Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-23T11:53:47.716Z",
+      "note": "seq 410 -> 0.7"
+    }
+  ]
+}

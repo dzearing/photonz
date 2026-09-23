@@ -1,0 +1,37 @@
+{
+  "id": "an-editing-session-walk-runs-at-next-defaults-an",
+  "title": "An editing session walk runs at Next defaults and fails on any blink",
+  "goal": "Nothing ever checked the video experience end to end as a user gets it, and nothing measured playback stability. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 0.8,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T11:53:46.858Z",
+  "updated": "2026-09-23T11:53:47.819Z",
+  "deps": [
+    "tracks-you-can-add-rename-group-hide-mute-lock-a",
+    "a-clip-s-sound-is-on-the-timeline-from-the-momen",
+    "click-a-cut-and-pick-a-transition-from-tiles",
+    "move-a-layer-from-a-to-b-grow-it-shrink-it-fade",
+    "captions-write-themselves-from-the-speech"
+  ],
+  "blockedBy": [],
+  "notes": "Filed from the 2026-09-23 video audit in the intake window.",
+  "acceptance": [
+    "One walk, no flags forced: open a recording, cut it, add a second clip, a title that moves A to B, a transition, captions, export MP4",
+    "During playback it photographs 20+ moments and fails if the clip area is ever empty",
+    "It is part of the rotating check and named in the video epic's success criteria"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T11:53:46.860Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-23T11:53:47.818Z",
+      "note": "seq 460 -> 0.8"
+    }
+  ]
+}

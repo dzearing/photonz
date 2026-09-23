@@ -1,0 +1,36 @@
+{
+  "id": "the-timeline-is-the-one-in-the-mock",
+  "title": "The timeline is the one in the mock",
+  "goal": "The bottom dock under a recording is the icon-animation timing strip (MotionStripView document mode) with flat accent bars added: a tiny centred glyph transport, no scrubber, no volume, truncated filename labels, a blue playhead, 22px lanes. The user: 'the timeline looks nothing, absolutely nothing, like the original design'. Build the timeline dock the mock draws. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 0.25,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T11:53:46.150Z",
+  "updated": "2026-09-23T11:53:47.269Z",
+  "deps": [
+    "the-video-mocks-are-the-user-s-again-and-d18-is"
+  ],
+  "blockedBy": [],
+  "notes": "Filed from the 2026-09-23 video audit in the intake window.",
+  "acceptance": [
+    "A TimelineDock replaces MotionStripView for documents with a duration; the icon timing strip is untouched for icons",
+    "Transport row as in video.html: volume, previous, large round primary play, next, current time, full-width scrubber with a large thumb, duration",
+    "Ruler in seconds (0s, 3s, 6s), a red playhead with a triangle head spanning every track",
+    "Track headers with icon and name (video, audio), clips as rounded gradient bars with the clip's name inside, 28-34px lanes, colours and spacing from the mock's inspector.css/overlays.css tokens",
+    "Zoom: Fit and steps, pinch, and the timeline scrolls",
+    "Side-by-side picture with video.html in the audit, differences listed and fixed"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T11:53:46.152Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-23T11:53:47.268Z",
+      "note": "seq 360 -> 0.25"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "id": "a-clip-s-sound-is-on-the-timeline-from-the-momen",
+  "title": "A clip's sound is on the timeline from the moment it opens",
+  "goal": "A recording's own sound is invisible until Detach Sound; a dropped sound shows as a flat blue bar with no waveform. The user: 'no audio segments'. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?",
+  "epic": "video-audio",
+  "priority": "p1-high",
+  "seq": 0.4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T11:53:46.361Z",
+  "updated": "2026-09-23T11:53:47.418Z",
+  "deps": [
+    "the-timeline-is-the-one-in-the-mock"
+  ],
+  "blockedBy": [],
+  "notes": "Filed from the 2026-09-23 video audit in the intake window.",
+  "acceptance": [
+    "Every clip with sound shows a linked audio segment with a waveform on an audio track under it, from open",
+    "Right-click, Detach Audio unlinks it so it moves on its own; linked clips move together",
+    "Trim, fade handles on the segment corners, volume by dragging the level line, music on its own track",
+    "The mix meter moves into the transport area as the mock places volume"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T11:53:46.363Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-23T11:53:47.417Z",
+      "note": "seq 390 -> 0.4"
+    }
+  ]
+}

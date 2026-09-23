@@ -1,0 +1,35 @@
+{
+  "id": "tracks-you-can-add-rename-group-hide-mute-lock-a",
+  "title": "Tracks you can add, rename, group, hide, mute, lock, and move clips between",
+  "goal": "The user cannot 'edit the video tracks, add a new one, disable one, move things to new tracks'. Today a row is a layer, groups flatten, and a clip bar only moves in time (ClipBarDrag.swift). Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 0.3,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T11:53:46.221Z",
+  "updated": "2026-09-23T11:53:47.318Z",
+  "deps": [
+    "the-timeline-is-the-one-in-the-mock"
+  ],
+  "blockedBy": [],
+  "notes": "Filed from the 2026-09-23 video audit in the intake window.",
+  "acceptance": [
+    "The document model has tracks holding many clips (PhotonzCore, tested first), with undo through History",
+    "Add a video, audio or captions track from the timeline (a + and right-click on the track area); rename by double-clicking the header; group tracks and collapse the group with its chevron",
+    "Each header has hide (video) or mute (audio), solo, and lock",
+    "Drag a clip along its track and onto another track with snapping to clip edges and the playhead; a drop between tracks makes a new track",
+    "Walk at Next defaults does all of the above and photographs it"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T11:53:46.223Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-23T11:53:47.317Z",
+      "note": "seq 370 -> 0.3"
+    }
+  ]
+}
