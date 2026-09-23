@@ -68,10 +68,10 @@
      nothing is broken: the build is just old, and that is the thing that looks
      like a bug when nobody says it. */
   #dashboard .db-beat .db-old{color:var(--warn)}
-  #dashboard .db-hero .db-what{min-width:0;flex:1}
+  #dashboard .db-hero .db-what{min-width:min(16em,40%);flex:1 1 16em}
   #dashboard .db-hero .db-what b{display:block;font-size:13.5px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #dashboard .db-hero .db-what span{font-size:11.5px;color:var(--dim)}
-  #dashboard .db-hero .db-beat{flex:none;text-align:right;font-size:10.5px;color:var(--faint);line-height:1.5}
+  #dashboard .db-hero .db-beat{flex:0 1 auto;max-width:50%;text-align:right;font-size:10.5px;color:var(--faint);line-height:1.5}
   #dashboard .db-pulse{width:6px;height:6px;border-radius:50%;background:currentColor;position:relative}
   #dashboard .db-state.run .db-pulse::after{content:"";position:absolute;inset:-4px;border-radius:50%;
     border:1px solid currentColor;opacity:.5;animation:db-ping 1.6s ease-out infinite}
