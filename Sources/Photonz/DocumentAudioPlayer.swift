@@ -47,6 +47,13 @@ final class DocumentAudioPlayer {
     /// How many pieces of sound are on the engine right now.
     var scheduledCount: Int { playing.count }
 
+    /// Whether the engine's output is turned right down: the transport's
+    /// volume button. The pieces keep playing silently, so turning it back up
+    /// is in step with the picture rather than restarting anything.
+    func setMuted(_ muted: Bool) {
+        engine.mainMixerNode.outputVolume = muted ? 0 : 1
+    }
+
     /// Start the sound from a moment of the document's clock.
     ///
     /// Everything still to come is scheduled against one engine start, so all

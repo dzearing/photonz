@@ -1,0 +1,176 @@
+{
+  "out": "/tmp/photonz-playtest/the-timeline-is-the-one-in-the-mock-walk",
+  "seed": "The dock under a recording is the timeline video.html draws: a transport with volume, start, a big round play, end, the time, a full width scrubber and the length; the timeline's own bar with Select, Blade and the zoom; a ruler in seconds; a named track per clip with the clip drawn in its kind's colour and its name inside; a red playhead with a head across every track. At Next defaults, no flag set.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekQuarter"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-opened",
+      "note": "THE FIRST TEST, at defaults: the recording's dock is the mock's. Transport on top in glass, then the bar with Select lit and Fit lit, then Time over a ruler reading 0s 2s 4s 6s 8s, and one track named after the recording with a blue to violet clip carrying its name. The red playhead stands two seconds in with its triangle on the ruler"
+    },
+    {
+      "do": "panel",
+      "stage": "1-opened"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-the-dock"
+    },
+    {
+      "do": "press",
+      "control": "Timeline Blade"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Blade Tutorial Sample"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1b-bladed",
+      "note": "THE BLADE TEST: with the Blade lit, one click in the middle of the recording's track cut it there. The playhead jumped to four seconds and the clip is two pieces, the one before the cut ringed"
+    },
+    {
+      "do": "panel",
+      "stage": "1b-bladed"
+    },
+    {
+      "do": "snapshot",
+      "name": "1b-bladed"
+    },
+    {
+      "do": "press",
+      "control": "Timeline Select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "soundAddSample"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "videoSeekMiddle"
+    },
+    {
+      "do": "action",
+      "action": "clipSplit"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-two-tracks",
+      "note": "a sound added and the recording cut at four seconds: two tracks, the picture in two pieces with the piece before the cut ringed in the accent, and the sound in green on its own track with its speaker icon"
+    },
+    {
+      "do": "panel",
+      "stage": "2-two-tracks"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-two-tracks"
+    },
+    {
+      "do": "press",
+      "control": "Timeline 4x"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-zoomed",
+      "note": "4x lit: two seconds of the recording across the width, the ruler in half seconds, the overview above it saying where the window is, the playhead still on the cut"
+    },
+    {
+      "do": "panel",
+      "stage": "3-zoomed"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-zoomed-4x"
+    },
+    {
+      "do": "press",
+      "control": "Timeline Fit"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Volume"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Timeline Blade"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "4-muted-blade",
+      "note": "the speaker struck through on the transport, and the Blade lit in the timeline's bar"
+    },
+    {
+      "do": "panel",
+      "stage": "4-muted-blade"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-muted-blade"
+    }
+  ]
+}

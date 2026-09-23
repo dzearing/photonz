@@ -31,13 +31,23 @@ struct ClipPiecesBar: View {
     /// its pieces and a level line across the whole of it
     /// (`docs/design/video-audio.md`).
     var isSound: Bool = false
+    /// What the clip is, on the timeline dock (`TimelineDock.swift`): drawn in
+    /// the video kit's colour for its kind, with its name inside, the way
+    /// `video.html` draws a clip. Nil is the timing strip's plain grey bar.
+    var kind: VideoKit.ClipKind?
+    /// The lane's height, where the dock sets one.
+    var height: CGFloat?
 
     /// How tall the bar is drawn. A sound's is taller, because a waveform
     /// squeezed into eighteen points is a smear and a level line needs room to
     /// be dragged up and down in.
     private var barHeight: CGFloat {
-        isSound ? MotionStripView.soundBarHeight : MotionStripView.barHeight
+        if let height { return height }
+        return isSound ? MotionStripView.soundBarHeight : MotionStripView.barHeight
     }
+
+    /// The kit's corner on the dock, the strip's own everywhere else.
+    private var cornerRadius: CGFloat { kind == nil ? 4 : VideoKit.Metrics.clipCornerRadius }
 
     /// The widest a grip gets. It gives way to the piece it is on rather than
     /// eating it: two fixed grips on a quarter second piece would leave no
@@ -59,9 +69,13 @@ struct ClipPiecesBar: View {
         let shift = laneWidth * ruler.fraction(spanningMS: Double(headShiftMS))
         let x0 = laneWidth * ruler.fraction(ofMS: Double(bar.inMS)) + shift
         return ZStack(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: 5)
-                .fill(.quaternary.opacity(0.5))
-                .frame(height: barHeight)
+            // The dock's lane is bare, as the mock's is: the gridlines under
+            // it say where time is, and a grey trough would be a second clip.
+            if kind == nil {
+                RoundedRectangle(cornerRadius: 5)
+                    .fill(.quaternary.opacity(0.5))
+                    .frame(height: barHeight)
+            }
             if headShiftMS > 0 {
                 spare(width: shift, reading: ClipBarCopy.length(headShiftMS))
                     .offset(x: laneWidth * ruler.fraction(ofMS: Double(bar.inMS)))
@@ -198,9 +212,11 @@ struct ClipPiecesBar: View {
         // (`TimelineSpan`). What shows is identical; the work is bounded by
         // the width of the window instead of by the zoom.
         let shown = TimelineSpan.drawn(x: x, width: width, across: laneWidth)
+        let picked = isPiecePicked(index, of: pieces.count)
         if shown.width > 0 {
-        RoundedRectangle(cornerRadius: 4)
-            .fill(fill(item, picked: isPiecePicked(index, of: pieces.count)))
+        RoundedRectangle(cornerRadius: cornerRadius)
+            .fill(fill(item, picked: picked))
+            .overlay { kitFace(item, width: shown.width, hiddenLeading: max(0, -shown.x)) }
             .frame(width: shown.width, height: barHeight)
             .overlay {
                 // The sound itself, drawn from the stretch of the file this
@@ -221,11 +237,28 @@ struct ClipPiecesBar: View {
                 }
             }
             .overlay {
-                if let badge = Self.badge(item, isSound: isSound), shown.width > 22 {
+                if kind == nil, let badge = Self.badge(item, isSound: isSound), shown.width > 22 {
                     Text(badge)
                         .font(.system(size: 9, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.9))
                         .shadow(radius: 1)
+                }
+            }
+            .overlay(alignment: .topTrailing) {
+                if kind != nil, let badge = Self.badge(item, isSound: isSound), shown.width > 30 {
+                    kitBadge(badge)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+            .overlay {
+                // `outline: 2px; outline-offset: 1px`: picked is a ring round
+                // the clip in the accent, never a change to the clip's colour,
+                // which says what the clip IS.
+                if kind != nil, picked {
+                    RoundedRectangle(cornerRadius: cornerRadius + 2)
+                        .strokeBorder(VideoKit.Palette.accent, lineWidth: 2)
+                        .padding(-3)
+                        .allowsHitTesting(false)
                 }
             }
             .offset(x: shown.x)
@@ -274,7 +307,57 @@ struct ClipPiecesBar: View {
         }
     }
 
+    /// What the dock draws inside a piece: the lit top edge every clip in the
+    /// mock has, a veil over a held frame, and the clip's name where there is
+    /// room to read it.
+    /// `hiddenLeading` is how much of the piece is off the left edge of the
+    /// window, so the name stays in sight on a zoomed timeline rather than
+    /// sliding out with the clip's start.
+    @ViewBuilder private func kitFace(_ piece: ClipPiece?, width: CGFloat,
+                                      hiddenLeading: CGFloat) -> some View {
+        if let kind {
+            ZStack(alignment: isSound ? .topLeading : .leading) {
+                if piece?.isHeld == true {
+                    Color.black.opacity(0.4)
+                }
+                VStack(spacing: 0) {
+                    Rectangle().fill(Color.white.opacity(0.18)).frame(height: 1)
+                        .padding(.horizontal, cornerRadius / 2)
+                    Spacer(minLength: 0)
+                }
+                if width - hiddenLeading > 40 {
+                    Text(layerName)
+                        .font(.system(size: isSound ? 9 : 9.5, weight: .semibold))
+                        .foregroundStyle(kind.ink)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .shadow(color: .black.opacity(0.35), radius: 1)
+                        .padding(.horizontal, 8)
+                        .padding(.top, isSound ? 3 : 0)
+                        .frame(maxWidth: width - hiddenLeading - 4, alignment: .leading)
+                        .padding(.leading, hiddenLeading)
+                }
+            }
+            .allowsHitTesting(false)
+        }
+    }
+
+    /// A speed or a hold, as the kit's clip wears it: a dark chip in the top
+    /// corner rather than words across the middle of the picture.
+    private func kitBadge(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 8, weight: .bold, design: .monospaced))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 4)
+            .padding(.vertical, 1)
+            .background(RoundedRectangle(cornerRadius: 6).fill(Color.black.opacity(0.5)))
+            .padding(.top, 3)
+            .padding(.trailing, 4)
+            .allowsHitTesting(false)
+    }
+
     private func fill(_ piece: ClipPiece?, picked: Bool) -> AnyShapeStyle {
+        if let kind { return kind.fill }
         // A HELD frame is drawn as itself rather than as a short clip: it is
         // the one piece that plays no time of the recording at all, and a
         // person scanning the bar for where they froze it should not have to
@@ -371,13 +454,18 @@ struct ClipPiecesBar: View {
             let x = x0 + laneWidth * ruler.fraction(spanningMS: Double(cut.atMS - transition.beforeMS))
             let picked = editorState.selectedClipCutIndex == cut.index && isPicked
             ZStack {
+                if kind != nil {
+                    VideoKit.TransitionBand(isDip: transition.kind != .dissolve,
+                                            isSelected: picked, height: barHeight)
+                } else {
                 RoundedRectangle(cornerRadius: 3)
                     .fill(Color.accentColor.opacity(picked ? 0.55 : 0.35))
                     .overlay {
                         RoundedRectangle(cornerRadius: 3)
                             .strokeBorder(.white.opacity(picked ? 0.9 : 0.5), lineWidth: 1)
                     }
-                if width > 30 {
+                }
+                if kind == nil, width > 30 {
                     Text(ClipTransitionCopy.length(transition.lengthMS))
                         .font(.system(size: 9, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.95))
@@ -443,9 +531,7 @@ struct ClipPiecesBar: View {
                        Self.gripWidth * 3)
         let width = max(3, min(Self.gripWidth, room / 3))
         if isPicked, room >= Self.smallestGrabbablePiece {
-            Capsule()
-                .fill(Color.accentColor)
-                .overlay { Capsule().strokeBorder(Color.white.opacity(0.75), lineWidth: 1) }
+            gripFace(width: width)
                 .frame(width: width, height: barHeight)
                 // The first grip sits inside the bar and the rest hang off the
                 // join to its left, so a grip never covers the piece after it.
@@ -466,6 +552,23 @@ struct ClipPiecesBar: View {
                            : (edge == pieces.count
                               ? "Where the clip ends. Drag it."
                               : "The join after piece \(edge). Drag it."))
+        }
+    }
+
+    /// A grip as the strip draws it (an accent capsule), or as the kit's clip
+    /// does (a white bar with a dark hairline, readable on any clip colour).
+    @ViewBuilder private func gripFace(width: CGFloat) -> some View {
+        if kind == nil {
+            Capsule()
+                .fill(Color.accentColor)
+                .overlay { Capsule().strokeBorder(Color.white.opacity(0.75), lineWidth: 1) }
+        } else {
+            RoundedRectangle(cornerRadius: 2)
+                .fill(Color.white)
+                .overlay { RoundedRectangle(cornerRadius: 2).strokeBorder(Color.black.opacity(0.3), lineWidth: 0.5) }
+                .frame(width: min(4, width))
+                .padding(.vertical, 5)
+                .frame(width: width)
         }
     }
 

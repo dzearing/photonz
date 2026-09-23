@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.150Z",
-  "updated": "2026-09-23T14:42:39.335Z",
+  "updated": "2026-09-23T19:17:34.303Z",
   "deps": [
     "the-video-mocks-are-the-user-s-again-and-d18-is"
   ],
@@ -43,6 +43,34 @@
     {
       "t": "2026-09-23T14:42:39.333Z",
       "note": "video-shell.html was deleted on 2026-09-23 (task the-video-mocks-are-the-user-s-again-and-d18-is): it was the loop's own study arguing against tracks. The target is now pages/video.html, the video-*.html walkthroughs and comp-video.html, restored as the user drew them, plus UX-PATTERNS D18 (rewritten: a document with time has tracks). Where this task mentions video-shell, read video.html."
+    },
+    {
+      "t": "2026-09-23T16:29:32.902Z",
+      "note": "Build it from the video kit (Sources/Photonz/VideoKit, landed 2026-09-23): VideoKit.TransportBar/TransportButton/Scrubber for the transport row, TrackRow/TrackHeader(width: 84, uppercase: false for video.html's gutter)/TimeRuler/Playhead/ClipBar/KeyMark/Waveform/TransitionBand for the tracks. They take values and closures, no EditorState. Catalogue in UX-PATTERNS D18 'The video kit'; comparison page http://127.0.0.1:8791/shared/video-kit/index.html. Hover inside the kit goes through kitHover (playtestHover in the app)."
+    },
+    {
+      "t": "2026-09-23T18:37:14.443Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T18:43:21.565Z",
+      "note": "pre-build review: (1) the mock's tracks are V1/V2/Title/Captions/Audio; the app has no track model yet (task tracks-you-can-add-rename-group-hide-mute-lock-a), so each timed layer is one track row named after the layer, with the mock's icon and clip colour for its kind. (2) Mock transport skip back/forward go to start/end, not frame step; arrows still step frames, so the buttons follow the mock (Go to Start / Go to End). (3) Volume has no home in the document player today: add a monitor mute (not saved in the document), speaker icon as the mock draws. (4) Mock tlbar has Select/Blade radio; there is no blade mode in the app, only B. Build a Blade mode in the dock: click a clip to cut it there. (5) Keyframe readout and Easing select in the mock's tlbar belong to the keyframe tasks and are left to them. (6) Premiere check: tracks named on the left, red playhead with head, ruler in seconds, wheel scrolls sideways, pinch zooms: all expected."
+    },
+    {
+      "t": "2026-09-23T19:17:34.202Z",
+      "note": "owns these walks: the-timeline-is-the-one-in-the-mock-walk"
+    },
+    {
+      "t": "2026-09-23T19:17:34.252Z",
+      "note": "built: TimelineDock.swift replaces MotionStripView for documents with time (EditorView switch); transport from VideoKit (mute, go to start, primary play, go to end, timecodes, full-width Scrubber), local bar (Select/Blade radio, Fit/2x/4x/8x seg + zoom in, window reading, x), grid (Time + seconds ruler, track rows with kit headers at 84pt, 28pt lanes, 34pt with sound, tick gridlines, red kit Playhead over the lanes). ClipPiecesBar takes kind+height and draws the kit look (gradient per kind, name inside and kept in view when zoomed, accent ring when picked, white grips, kit TransitionBand, speed chip). Core: TimelineTrackKind + MotionStripRuler.secondTicks (TimelineDockTests). Monitor mute: EditorState.isDocumentMuted, DocumentAudioPlayer.setMuted. Wheel: sideways pans, option zooms; pinch zooms. Blade mode: click a lane cuts there."
+    },
+    {
+      "t": "2026-09-23T19:17:34.302Z",
+      "note": "verified: new walk the-timeline-is-the-one-in-the-mock-walk at defaults (5 real captures, blade cut gives 2 pieces); 42 recording walks + 12 timeline/icon walks green; Scripts/test.sh green except AnimatedExportWeighTests, which passed on rerun (already the p2 task the-export-size-test-fails-about-one-run-in-thre). Audit queue/audits/2026-09-23-timeline-dock.json with the mock side by side. Rough items folded into the tracks, sound-on-the-timeline, keyframe and Premiere keys tasks."
     }
+  ],
+  "started": "2026-09-23T18:37:14.442Z",
+  "walks": [
+    "the-timeline-is-the-one-in-the-mock-walk"
   ]
 }

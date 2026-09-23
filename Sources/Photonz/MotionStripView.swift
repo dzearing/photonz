@@ -441,11 +441,13 @@ private struct MotionStripGroupView: View {
 ///
 /// Both handles are up without hover, because a trim is a session and the two
 /// ends are the whole of what it is about.
-private struct ClipTrimBar: View {
+struct ClipTrimBar: View {
     @Environment(EditorState.self) private var editorState
     let bar: LayerTime
     let layerName: String
     let laneWidth: CGFloat
+    /// How tall the bar is drawn: the strip's own, or a timeline lane's.
+    var height: CGFloat = MotionStripView.barHeight
 
     /// How wide the grab zone on a handle is. The same seven points a motion
     /// bar's ends use, so a hand that has learned one has learned both.
@@ -464,14 +466,14 @@ private struct ClipTrimBar: View {
         return ZStack(alignment: .topLeading) {
             RoundedRectangle(cornerRadius: 5)
                 .fill(.quaternary.opacity(0.5))
-                .frame(height: MotionStripView.barHeight)
+                .frame(height: height)
             spare(width: xIn - x0, reading: session.map { Self.reading($0.spareBeforeMS) })
                 .offset(x: x0)
             spare(width: xEnd - xOut, reading: session.map { Self.reading($0.spareAfterMS) })
                 .offset(x: xOut)
             RoundedRectangle(cornerRadius: 5)
                 .fill(Color.accentColor.opacity(0.85))
-                .frame(width: max(2, xOut - xIn), height: MotionStripView.barHeight)
+                .frame(width: max(2, xOut - xIn), height: height)
                 .offset(x: xIn)
             handle(atX: xIn, isStart: true)
             handle(atX: xOut, isStart: false)
@@ -487,7 +489,7 @@ private struct ClipTrimBar: View {
         if width > 1 {
             RoundedRectangle(cornerRadius: 5)
                 .fill(.secondary.opacity(0.18))
-                .frame(width: width, height: MotionStripView.barHeight)
+                .frame(width: width, height: height)
                 .overlay {
                     if let reading, width > 34 {
                         Text(reading)
@@ -504,7 +506,7 @@ private struct ClipTrimBar: View {
             .overlay {
                 Capsule().strokeBorder(Color.white.opacity(0.8), lineWidth: 1)
             }
-            .frame(width: Self.gripWidth, height: MotionStripView.barHeight)
+            .frame(width: Self.gripWidth, height: height)
             .offset(x: x - (isStart ? 0 : Self.gripWidth))
             .contentShape(Rectangle().inset(by: -6))
             .gesture(drag(isStart: isStart))
@@ -531,7 +533,7 @@ private struct ClipTrimBar: View {
 }
 
 /// One lane: the property's name, and the bar that says when it happens.
-private struct MotionStripLaneView: View {
+struct MotionStripLaneView: View {
     @Environment(EditorState.self) private var editorState
     let lane: MotionStripLane
     let layerName: String
@@ -982,7 +984,7 @@ struct DocumentTransportBar: View {
 ///   only pins at the top tells you something is wrong and not what. This one
 ///   carries the number of decibels it is over, which is the number that gets
 ///   taken off every layer before anything is written.
-private struct MixMeter: View {
+struct MixMeter: View {
     @Environment(EditorState.self) private var editorState
 
     /// How wide the bar is. Enough to read a rise and a fall in, short enough

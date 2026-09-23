@@ -1,0 +1,30 @@
+{
+  "feature": "The timeline is the one in the mock",
+  "epic": "video-cutting",
+  "summary": "A recording's dock is now the timeline video.html draws: a glass transport with mute, start, a big round play, end and a full width scrubber; a bar with Select, Blade and Fit/2x/4x/8x zoom; a ruler in plain seconds; a named track per clip in the mock's colours; and a red playhead with a head across every track.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    { "do": "Open a screen recording (File > Open, or a capture from history).", "shot": "2026-09-23-timeline-dock-1.png" },
+    { "do": "Put this beside the mock's timeline to compare.", "shot": "2026-09-23-timeline-dock-mock.png" },
+    { "do": "Click the scissors in the timeline's bar, then click the middle of the clip.", "shot": "2026-09-23-timeline-dock-2-blade.png" },
+    { "do": "Click the arrow to go back to Select, then drag a sound file onto the window.", "shot": "2026-09-23-timeline-dock-3-tracks.png" },
+    { "do": "Click 4x, then two-finger swipe sideways over the tracks to slide along; pinch to zoom; Option + scroll zooms too.", "shot": "2026-09-23-timeline-dock-4-zoom.png" },
+    { "do": "Click the speaker at the left of the transport and press space.", "shot": "2026-09-23-timeline-dock-5-mute.png" },
+    { "do": "Drag the big white thumb on the scrubber, then click and drag along the ruler." }
+  ],
+  "evaluate": [
+    "Does it now read as the timeline you drew, at a glance, next to the mock picture?",
+    "Is the Blade as a mode (click to cut where you click) what you want, alongside B cutting at the playhead?",
+    "Is Fit/2x/4x/8x plus the magnifier the right zoom, or do you want the mock's Fit/1x/2x/4x exactly?",
+    "Is a mute button enough for volume, or do you want a level slider on hover?",
+    "Do sound tracks belong under the picture tracks, as here?"
+  ],
+  "rough": [
+    "Track names are the layer names (Tutorial Sample, Sample Music), not V1 / V2 / Audio: the app has no tracks yet. That is the task 'Tracks you can add, rename, group, hide, mute and lock'.",
+    "A recording that still carries its own sound draws a waveform and a level line inside its video clip, so its name sits at the top rather than centred as in the mock. Splitting the sound out under the picture is the task 'A clip's sound is on the timeline from the moment it opens'.",
+    "The mock's bar also has the playhead's value readout and the Easing dropdown; those belong to the keyframe tasks and are not here yet.",
+    "The mock's scrubber has green in and out marks; the app has no in and out points yet (the Premiere keys task covers I and O).",
+    "Zoom goes further than the mock: a magnifier after the steps keeps doubling past 8x, because a five minute recording needs about 60x to aim at a word.",
+    "The screenshots show a speaker icon on the sound track; it is now the mock's music note."
+  ]
+}

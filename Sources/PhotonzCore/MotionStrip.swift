@@ -118,16 +118,21 @@ public struct MotionStripGroup: Identifiable, Hashable, Sendable {
     /// and a level line with nowhere to go up or down is not draggable
     /// (`docs/design/video-audio.md`).
     public var isSound: Bool
+    /// What the row is on a document's timeline, which picks its icon and its
+    /// clip colour (`TimelineTrack.swift`).
+    public var trackKind: TimelineTrackKind
 
     public var id: UUID { layerID }
 
     public init(layerID: UUID, layerName: String, lanes: [MotionStripLane],
-                bar: LayerTime? = nil, isSound: Bool = false) {
+                bar: LayerTime? = nil, isSound: Bool = false,
+                trackKind: TimelineTrackKind = .overlay) {
         self.layerID = layerID
         self.layerName = layerName
         self.lanes = lanes
         self.bar = bar
         self.isSound = isSound
+        self.trackKind = trackKind
     }
 }
 
@@ -224,7 +229,8 @@ extension PhotonzDocument {
                                 })
             },
             bar: layer.time,
-            isSound: layer.sound != nil)
+            isSound: layer.sound != nil,
+            trackKind: layer.timelineTrackKind)
     }
 
     /// The ends of every bar except one: what the bar being dragged can catch

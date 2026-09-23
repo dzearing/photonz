@@ -215,7 +215,17 @@ extension EditorState {
     func startAudio() {
         guard documentHasAudio else { return }
         loadSoundShapes()
+        audioPlayer.setMuted(isDocumentMuted)
         audioPlayer.play(audioMix, fromMS: documentTimeMS)
+    }
+
+    /// The volume button on the transport: the sound off at the speaker, or
+    /// back on. A playthrough in progress goes quiet at once and keeps its
+    /// place, so turning the sound back on picks up where the picture is.
+    func toggleDocumentMute() {
+        isDocumentMuted.toggle()
+        audioPlayerStorage?.setMuted(isDocumentMuted)
+        if isDocumentMuted { scrubAudioStorage?.end() }
     }
 
     func stopAudio() {
@@ -246,7 +256,7 @@ extension EditorState {
     /// sound twice.
     func beginScrubAudition() {
         guard Experiments.shared.scrubAuditionEnabled, documentHasAudio,
-              !isDocumentPlaying else { return }
+              !isDocumentPlaying, !isDocumentMuted else { return }
         scrubAudio.begin(audioMix, atMS: documentTimeMS)
     }
 

@@ -96,6 +96,24 @@ extension EditorState {
                                                 documentMS: timelineLengthForZoomMS))
     }
 
+    /// The zoom steps on the timeline's own bar (`video.html` `#zoomSeg`):
+    /// Fit and then doubling, each one there only while the document is long
+    /// enough to open out that far.
+    var timelineZoomSteps: [Double] {
+        guard canOpenOutTheTimeline else { return [] }
+        let widest = TimelineZoom.widestScale(documentMS: timelineLengthForZoomMS)
+        return [1, 2, 4, 8].filter { $0 <= widest + 0.0001 }
+    }
+
+    /// Straight to one of those steps, about the same moment a press on the
+    /// zoom in button would keep still.
+    func setTimelineScale(_ scale: Double) {
+        guard canOpenOutTheTimeline else { return }
+        if scale <= 1 { return fitTimeline() }
+        setTimelineWindow(timelineWindow.zoomed(toScale: scale, anchorMS: timelineZoomAnchorMS,
+                                                documentMS: timelineLengthForZoomMS))
+    }
+
     // MARK: Moving along
 
     /// Slide the window, in the strip's own points. What dragging the overview

@@ -19438,3 +19438,9 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - App: Animating section (`PropertyKeysInspector`) for one picked layer in a document with time; canvas move/resize/turn on a keyed layer become keys, live and on release.
 - Tests: PropertyKeysTests (25), KeyedValueRenderTests, KeyedValueExportTests. Walk: `key-a-title-s-scale-walk` (no flags).
 - Next: key lanes and curves on the key (`a-layer-s-track-opens-into-one-lane-per-keyed-va`), which is also where Motion's From/To rows retire in video. Crop keys still open on the parent task.
+
+## 2026-09-23 — The timeline is the one in the mock
+
+- A recording's bottom dock is now `TimelineDock` (video.html): kit transport with mute and scrubber, Select/Blade + zoom bar, seconds ruler, named tracks with kit-coloured clips, red playhead. Icons keep `MotionStripView`.
+- Core: `TimelineTrackKind`, `MotionStripRuler.secondTicks` (tests first).
+- Next: real tracks (V1/V2/Audio names), the recording's sound as its own segment, keyframe readout/easing in the bar.

@@ -33,6 +33,9 @@ extension VideoKit {
         /// A track the app made rather than the person (captions): its name
         /// is drawn in the component colour with a sparkle.
         var isAutomatic = false
+        /// The track holding the picked clip: its name in ink rather than
+        /// faint, so the gutter says which row the panel is talking about.
+        var isSelected = false
 
         var body: some View {
             HStack(spacing: isAutomatic ? 3 : 5) {
@@ -47,7 +50,8 @@ extension VideoKit {
                     .lineLimit(1)
                     .truncationMode(.tail)
             }
-            .foregroundStyle(isAutomatic ? AnyShapeStyle(Palette.comp) : AnyShapeStyle(Palette.faint))
+            .foregroundStyle(isAutomatic ? AnyShapeStyle(Palette.comp)
+                             : isSelected ? AnyShapeStyle(Palette.ink) : AnyShapeStyle(Palette.faint))
             .frame(width: width, alignment: .leading)
             .clipped()
         }

@@ -191,7 +191,14 @@ struct EditorView: View {
             // away has to leave a way back ON SCREEN — `UX-PATTERNS.md` D9, and
             // the same rule the panel toggle three lines below follows.
             switch editorState.motionStripPhase {
-            case .open: MotionStripView()
+            case .open:
+                // A document with a length gets the video timeline the mock
+                // draws; an icon keeps the one-lap timing strip.
+                if editorState.motionStripMeasuresADocument {
+                    TimelineDock()
+                } else {
+                    MotionStripView()
+                }
             case .row: MotionStripRailView()
             case .none: EmptyView()
             }

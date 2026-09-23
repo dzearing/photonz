@@ -951,6 +951,11 @@ final class EditorState {
     var documentTimeMS: Int = 0
     /// Whether the document is playing.
     var isDocumentPlaying = false
+    /// Whether this window's sound is turned off at the speaker: the volume
+    /// button on the transport. How you are LISTENING, not part of the
+    /// document, so it is not saved, not an undo step, and never reaches an
+    /// export.
+    var isDocumentMuted = false
     /// The clock while it plays. Cancelled the moment it stops or the window
     /// closes: a timer left running on a picture nobody is watching is a core
     /// spent on nothing.
