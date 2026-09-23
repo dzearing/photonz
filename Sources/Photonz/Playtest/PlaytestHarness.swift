@@ -4518,7 +4518,8 @@ private final class Run {
                                    point: CGPoint(x: frame.midX, y: frame.midY),
                                    box: frame,
                                    visible: row.convert(row.visibleRect, to: nil),
-                                   isEnabled: true, window: row.window)
+                                   isEnabled: true, window: row.window,
+                                   clips: PlaytestPanelPress.scrollClips(of: row))
     }
 
     /// Carries a dock section up or down the column, the way a person does:
@@ -5049,7 +5050,8 @@ private final class Run {
                                        point: CGPoint(x: frame.midX, y: frame.midY),
                                        box: frame,
                                        visible: target.convert(target.visibleRect, to: nil),
-                                       isEnabled: true, window: window)
+                                       isEnabled: true, window: window,
+                                       clips: PlaytestPanelPress.scrollClips(of: target))
         }
         return marked + PlaytestPanelPress.segments(in: content, named: fields)
     }
@@ -5185,6 +5187,13 @@ private final class Run {
     /// somewhere in the document the clip is a window onto, so its box lands
     /// inside that document's own bounds.
     private static func scrollableClips(for target: PlaytestPressTarget, in content: NSView) -> [NSClipView] {
+        // The control said which scrollers hold it, off the view tree, so
+        // there is nothing to guess: outermost first, to read the same way as
+        // the search below. See `PlaytestPressTarget.clips` for the three walks
+        // the guess broke.
+        if !target.clips.isEmpty {
+            return target.clips.reversed().filter { !$0.isHidden }
+        }
         var found: [(clip: NSClipView, depth: Int)] = []
         func walk(_ view: NSView, _ depth: Int) {
             if let scroll = view as? NSScrollView, !scroll.contentView.isHidden,
@@ -7362,7 +7371,8 @@ private final class Run {
                                    point: CGPoint(x: frame.midX, y: frame.midY),
                                    box: frame,
                                    visible: match.convert(match.visibleRect, to: nil),
-                                   isEnabled: true, window: match.window)
+                                   isEnabled: true, window: match.window,
+                                   clips: PlaytestPanelPress.scrollClips(of: match))
     }
 
     /// The menu button a `panelMenu` step names, found the way a press finds a

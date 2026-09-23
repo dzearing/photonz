@@ -1,0 +1,29 @@
+{
+  "id": "the-panel-keeps-its-promise-on-a-video-document",
+  "title": "The panel keeps its promise on a video document too",
+  "goal": "On a document with time, the strip along the bottom takes its height off the right hand panel as well as off the picture, so on a laptop window there is not enough room left for Appearance and Effects to both be on screen, and the panel goes back to scrolling. Make the two sections nobody should have to scroll to fit on a video document as well as on a still one.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 3100,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T02:12:33.004Z",
+  "updated": "2026-09-23T02:12:33.007Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building appearance-is-below-the-fold-again-because-the-p on 2026-09-22, and it is the one case the fold guarantee shipped there does NOT cover. The guarantee drops itself rather than starving both sections into slivers, which is honest but leaves video editing on a laptop with the old behaviour.\n\nReproduction, arithmetic the test suite runs rather than a claim. Tests/PhotonzCoreTests/DockFoldGuaranteeTests.swift, test aDockTooShortForThePairIsLeftToScrollRatherThanStarved: the same selection that fits at a 661 point dock viewport is handed 426 once the strip takes 235 (docs/design/video-surface.md section 4, pinned in Tests/PhotonzCoreTests/DockWithTimeTests.swift), and DockHeightBudget.flexibleHeights then returns exactly the heights it would with no promise at all:\n\n  Scripts/test.sh --filter DockFoldGuaranteeTests\n  -> aDockTooShortForThePairIsLeftToScrollRatherThanStarved() passed\n\nWhat has to give is not the budget. The fixed cost above the pair is 315 points for a piece of text picked (the layers list at its floor, 51 of its chrome, and a 198 point Text form) against 414 points of room, which leaves 99 for the pair however cleverly it is shared. Candidates, none of them costed yet: the strip collapsing to its rail while the panel is being used; the layers list moving out of the column (option c on the original decision card, which hands back 163 points); the pick own section and Appearance sharing one scroller. This is a UX question with visible consequences, so it probably wants a decision card rather than a runner picking one.",
+  "acceptance": [
+    "With a clip picked on a video document at 1200 by 720, with the timing strip open at its full height, Appearance and Effects are both whole inside the panel without scrolling",
+    "The same is true with a title picked, because a title asks for a Text section as well",
+    "The panel asked-for height and the height it is given are measured and reported before and after, at a named window size and strip height",
+    "DockWithTimeTests and DockFoldGuaranteeTests are updated so the arithmetic that says it fits is pinned"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T02:12:33.006Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": []
+}

@@ -32,6 +32,15 @@ import CoreGraphics
 /// that changed height every time the leftover changed would be worse than the
 /// gap it filled.)
 ///
+/// On top of that there is a **fold the dock guarantees**. Two sections are
+/// promised: Appearance and Effects, the two touched on every single layer,
+/// which the user asked on 2026-09-07 never to have to scroll to. Sharing the
+/// dock out evenly does not keep that promise — a tall section under the pair
+/// takes room the pair needed — so when the first pass leaves one of the pair
+/// hanging past the bottom edge, a second pass re-shares the dock down to the
+/// last promised section and lets everything under it go below the fold. See
+/// `foldRescue`, and `DockFoldGuaranteeTests` for the worked cases.
+///
 /// One case is still over, on purpose. With two pieces of text picked in a
 /// window as tall as the display allows, Effects runs 838-1030 in a 996 point
 /// dock: 34 points below the fold, so Corner Radius sits on the bottom edge and
@@ -171,24 +180,58 @@ public enum DockHeightBudget {
         return max(base, min(wanted, viewport * floorShareOfDock))
     }
 
+    /// How short a PROMISED section may be squeezed once its own floor has been
+    /// given up for the fold: two rows and the padding under them.
+    ///
+    /// Every other list stops at its floor and lets the dock scroll. A promised
+    /// section cannot, because the whole point of the promise is that it never
+    /// comes to that, so its floor is advisory and this is the hard stop. Under
+    /// this a section stops reading as a section at all — it is a heading with a
+    /// sliver under it — and a dock that scrolls is honestly better.
+    public static let foldFloor: CGFloat = 74
+
     /// The height to draw each scrollable body at, by group key. Groups with
     /// nothing scrollable in them are absent.
     ///
     /// `viewport` is nil until the dock has been measured. That is one frame at
     /// launch, and squeezing every list to its floor for that frame and back
     /// again is a visible flinch, so an unmeasured dock is left alone.
+    ///
+    /// - Parameter promised: the keys of the sections that must be WHOLE inside
+    ///   the dock, whatever it costs the ones under them. See `foldRescue`.
+    ///   Empty is the plain budget, unchanged.
     public static func flexibleHeights(_ groups: [Group],
-                                       viewport: CGFloat?) -> [String: CGFloat] {
+                                       viewport: CGFloat?,
+                                       promised: Set<String> = []) -> [String: CGFloat] {
         let lists = groups.filter { $0.flexible > 0 }
         guard !lists.isEmpty else { return [:] }
-        var heights: [String: CGFloat] = [:]
 
         guard let viewport else {
+            var heights: [String: CGFloat] = [:]
             for list in lists { heights[list.key] = list.flexible }
             return heights
         }
 
-        let room = viewport - groups.reduce(0) { $0 + $1.fixed }
+        let heights = share(lists, room: viewport - groups.reduce(0) { $0 + $1.fixed })
+        return foldRescue(groups, room: viewport, promised: promised, from: heights) ?? heights
+    }
+
+    /// How much taller than the dock the groups still are once every list has
+    /// given what it can. Zero means the whole dock is on screen and the outer
+    /// scroller has nothing to do.
+    public static func overflow(_ groups: [Group], viewport: CGFloat?,
+                                promised: Set<String> = []) -> CGFloat {
+        guard let viewport else { return 0 }
+        let heights = flexibleHeights(groups, viewport: viewport, promised: promised)
+        let total = groups.reduce(0) { $0 + $1.fixed + (heights[$1.key] ?? 0) }
+        return max(0, total - viewport)
+    }
+
+    /// Share `room` out between these lists: the arithmetic above, with the
+    /// room handed in rather than worked out, so the fold can ask the same
+    /// question about part of the dock.
+    private static func share(_ lists: [Group], room: CGFloat) -> [String: CGFloat] {
+        var heights: [String: CGFloat] = [:]
         let wanted = lists.reduce(0) { $0 + $1.flexible }
         // Room to spare: nothing is squeezed, and nothing is stretched either.
         if wanted <= room {
@@ -217,14 +260,60 @@ public enum DockHeightBudget {
         return heights
     }
 
-    /// How much taller than the dock the groups still are once every list has
-    /// given what it can. Zero means the whole dock is on screen and the outer
-    /// scroller has nothing to do.
-    public static func overflow(_ groups: [Group], viewport: CGFloat?) -> CGFloat {
-        guard let viewport else { return 0 }
-        let heights = flexibleHeights(groups, viewport: viewport)
-        let total = groups.reduce(0) { $0 + $1.fixed + (heights[$1.key] ?? 0) }
-        return max(0, total - viewport)
+    /// **The fold the dock guarantees.**
+    ///
+    /// Some sections are PROMISED: Appearance and Effects, the two touched on
+    /// every single layer, which the user asked on 2026-09-07 never to have to
+    /// scroll to. The budget above cannot keep that promise on its own, because
+    /// it shares the whole dock between every list equally and then stops at
+    /// their floors — so a tall section under the pair takes room the pair
+    /// needed, and a pane list's floor (the room to draw one open effect whole)
+    /// can be 292 points of a 649 point dock all by itself.
+    ///
+    /// This is the second pass, and it runs only when the first one leaves a
+    /// promised section hanging past the bottom edge. It re-shares the dock
+    /// down to the LAST promised section — everything above the pair, which the
+    /// order rule has already decided, plus the pair itself — out of the room
+    /// the dock really has, with the promised sections allowed under their own
+    /// floors as far as `foldFloor`. Everything below the pair then takes the
+    /// least it can and goes below the fold, where the dock scrolls to it.
+    ///
+    /// Two things it deliberately does NOT do:
+    ///
+    ///  - It does not squeeze the lists ABOVE the pair past their floors. They
+    ///    are not what was promised, and a two-row layers list bought nothing
+    ///    worth having in any case we measured.
+    ///  - It does not starve the pair to pretend a fold that cannot be had. If
+    ///    the second pass still cannot fit the pair — a 1200 by 720 window with
+    ///    the timing strip open is 235 points short of ever fitting it — the
+    ///    whole rescue is dropped and the first pass's answer stands, so the
+    ///    dock scrolls exactly as it always did instead of drawing six
+    ///    peepholes. `nil` is that answer.
+    private static func foldRescue(_ groups: [Group], room: CGFloat,
+                                   promised: Set<String>,
+                                   from heights: [String: CGFloat]) -> [String: CGFloat]? {
+        guard !promised.isEmpty,
+              let fold = groups.lastIndex(where: { promised.contains($0.key) })
+        else { return nil }
+        let above = groups[...fold]
+        func bottom(_ drawn: [String: CGFloat]) -> CGFloat {
+            above.reduce(0) { $0 + $1.fixed + (drawn[$1.key] ?? $1.flexible) }
+        }
+        // The promise is already kept: the pair's own last point is inside the
+        // dock, so there is nothing to buy and nothing to spend.
+        guard bottom(heights) > room else { return nil }
+
+        let lists = above.filter { $0.flexible > 0 }.map { list in
+            guard promised.contains(list.key) else { return list }
+            return Group(key: list.key, fixed: list.fixed, flexible: list.flexible,
+                         floor: min(list.floor, foldFloor))
+        }
+        var rescued = share(lists, room: room - above.reduce(0) { $0 + $1.fixed })
+        guard bottom(rescued) <= room else { return nil }
+        for group in groups[(fold + 1)...] where group.flexible > 0 {
+            rescued[group.key] = group.squeezed
+        }
+        return rescued
     }
 
     /// The height every list is levelled to, solved exactly rather than

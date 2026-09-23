@@ -1,0 +1,29 @@
+{
+  "feature": "The fold the panel guarantees",
+  "epic": "ui-building",
+  "summary": "Appearance and Effects are now always both whole inside the right panel, on every layer, in every window that can hold them. When the sections want more height than the window has, those two are shortened and scroll inside themselves, and what goes below the fold is the sections under them.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on. Make the window about 1200 by 720, which is where this used to fail worst.",
+  "try": [
+    { "do": "Open any screenshot and draw an arrow on it with the arrow tool.", "shot": "2026-09-22-fold-arrow-sc.png" },
+    { "do": "Click the arrow. Read down the panel: Layers, Appearance, Effects, Motion, Measurements, all five headers on screen. Before today Appearance alone ran 6 points past the bottom and the three sections under it were entirely below it." },
+    { "do": "Scroll inside the Appearance section itself, with the pointer over it, to reach the arrow's line, head and caption. That inner scroll is what the section gives up to keep Effects on screen." },
+    { "do": "Add a piece of text, click it, and look again: Layers, Text, Appearance, Effects, all whole, with Motion and Measurements below the fold where the panel scrolls to them.", "shot": "2026-09-22-fold-text-sc.png" },
+    { "do": "Open the Shadow in Effects, then add a second effect from the plus. The pane you just opened is still drawn whole, even though that pushes the rest of Effects past the bottom edge." },
+    { "do": "Open a screenshot and run Separate into Layers on it, so the document holds two dozen layers. The layers list now fades its cut edge instead of ending on a clean cut that read as the whole document.", "shot": "2026-09-22-fold-layers-cut-sc.png" }
+  ],
+  "evaluate": [
+    "With an arrow picked, is seeing all five section headers worth having to scroll inside Appearance for the arrow's thickness?",
+    "With text picked, Appearance shows Opacity and Blending and scrolls for the rest. Is that the right two rows to show first, or should the section start somewhere else?",
+    "Does the faded cut edge at the bottom of a shortened section read as 'there is more below', or does it just look dim?",
+    "Motion and Measurements are now the sections you scroll to. Is that the right pair to spend, or is there one of them you reach for more often than Effects?",
+    "When you open an effect in a full panel, the panel scrolls to it and the rest of Effects goes past the bottom. Does that feel like the app helping or like the panel jumping?"
+  ],
+  "rough": [
+    "Measured, before and after, at 1200 by 720 (dock viewport 661) off the walk's own readings. Text picked, BEFORE: the panel asked for 1143 points and was given 661, drawn Layers 6-169, Text 169-367, Appearance 367-650, Effects 650-975, Motion 975-1056, Measurements 1056-1143 — Effects' last 314 points below the fold. AFTER: Layers 6-170, Text 170-368, Appearance 368-514, Effects 514-660, Motion 660-741, Measurements 741-828. Arrow picked, BEFORE: Layers 6-169, Appearance 169-667 (its own last 6 points below the fold), Effects 667-735, Motion 735-816, Measurements 816-903. AFTER: Layers 6-224, Appearance 224-424, Effects 424-492, Motion 492-573, Measurements 573-660, so the whole panel fits for the first time.",
+    "The cost is real and it is not hidden: with text picked Appearance used to be drawn whole at 283 points and is now drawn at 146, so three or four of its rows are behind an inner scroll that were on screen yesterday. The trade is Effects, which was 314 points below the fold, now being whole.",
+    "The fade on a squeezed Appearance is subtle in the text case. In the picture the section simply ends under Blending, and the 14 point gradient reads more like padding than like a cut. The arrow case is clearer because the cut lands mid-row.",
+    "It is not kept in every window. With the timing strip at its ceiling a laptop dock is 235 points short of ever fitting the pair (docs/design/video-surface.md section 4), and there the panel scrolls exactly as it did before rather than starving both sections into slivers. A video document on a laptop is still the case this does not answer.",
+    "Changed away from the decision card: the card offered 'the section never shrinks below the part you are working on'. Appearance has no notion of a part you are working on — a part's settings show because the part is switched ON, not because you opened it — so what is kept whole is Effects' opened pane, which does have one. Appearance keeps a three-row floor instead.",
+    "Found and fixed on the way: a walk reaching a control inside a shortened section used to pick its scroller by geometry, and with two shortened sections in the panel it turned the wrong one. Three walks went red on it before the fix. Also: the cut-edge fade used to be a branch AROUND the scroller rather than a flag inside it, so a list crossing the shortened threshold got a brand new scroller — which loses where it was scrolled to, and lost the rows themselves in one walk."
+  ]
+}

@@ -62,6 +62,22 @@ struct PlaytestPressTarget {
     /// popover — the colour picker above all — is a window of its own sitting
     /// on top of it, and a click meant for it has to be addressed to it.
     var window: NSWindow?
+    /// The scrolling areas this control REALLY sits inside, nearest first, off
+    /// the view tree.
+    ///
+    /// A reveal used to find these by geometry — every scroller whose scrolled
+    /// length covers the patch of window the control is in — because a target
+    /// is a point and a box rather than a view. That answer is wrong the
+    /// moment the dock holds two shortened sections at once, and on 2026-09-22
+    /// it broke three walks: the Appearance section became shortenable, its
+    /// own list is longer than the window it shows through, and the stretch of
+    /// window its unseen tail covers is the stretch the Effects list below it
+    /// had scrolled a Border into. The reveal then turned Appearance's wheel,
+    /// found the Border no closer, and reported a control "something other
+    /// than a scroll is covering". Empty for anything the panel never scrolls,
+    /// and empty for a target built without a view in hand, where the
+    /// geometric search is still the fallback.
+    var clips: [NSClipView] = []
 
     /// The same target, pressed a fraction of the way along its own width.
     /// 0 is its left edge, 1 its right; a control with no box keeps its point.
@@ -98,7 +114,8 @@ enum PlaytestPanelPress {
                                        point: CGPoint(x: box.midX, y: box.midY),
                                        box: box,
                                        isEnabled: button.isEnabled,
-                                       window: sheet)
+                                       window: sheet,
+                                       clips: scrollClips(of: button))
         }
     }
 
@@ -145,7 +162,8 @@ enum PlaytestPanelPress {
                     box: box,
                     visible: shown,
                     isEnabled: control.isEnabled && control.isEnabled(forSegment: index),
-                    window: control.window)
+                    window: control.window,
+                    clips: scrollClips(of: control))
             }
         }
     }
@@ -344,10 +362,17 @@ enum PlaytestPanelPress {
     /// The scrolling areas that cut this view off, nearest first. Empty for
     /// something the panel never scrolls.
     @MainActor static func scrollAreas(of view: NSView) -> [ObjectIdentifier] {
-        var found: [ObjectIdentifier] = []
+        scrollClips(of: view).map(ObjectIdentifier.init)
+    }
+
+    /// The same, as the clip views themselves, so a reveal can turn the wheel
+    /// of the scroller that actually holds the control. See
+    /// `PlaytestPressTarget.clips`.
+    @MainActor static func scrollClips(of view: NSView) -> [NSClipView] {
+        var found: [NSClipView] = []
         var above = view.superview
         while let here = above {
-            if let clip = here as? NSClipView { found.append(ObjectIdentifier(clip)) }
+            if let clip = here as? NSClipView { found.append(clip) }
             above = here.superview
         }
         return found

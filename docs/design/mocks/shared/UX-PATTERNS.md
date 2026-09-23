@@ -1,6 +1,16 @@
 # Photonz — UX patterns & interaction model (the app's spine)
 
-**Status: v2.0. Gains D18 and D19, from the video design pass
+**Status: v2.1. §3's height rule gains rule 5, the FOLD the dock guarantees,
+and corrects rule 2: Appearance is a list of the parts a thing is made of, not
+a form, which is why it was the only promised section the budget could never
+shorten and so the section every new feature's room came out of, seven times.
+Rule 5 settles what the column does when it wants more height than the window
+has — Appearance and Effects are always whole, what sits under them goes below
+the fold, a pane you just opened is exempt, and a new group has to say which
+line of the column's height it spends from. Rule 4 now binds the groups that
+bound themselves, so a cut layers list stops reading as the whole document.
+Chosen by the user on 2026-09-20 and built on 2026-09-22
+(`appearance-is-below-the-fold-again-because-the-p`). v2.0: Gains D18 and D19, from the video design pass
 (`docs/design/video-surface.md`, 2026-09-19). D18: a timeline row is a LAYER and
 is named what that layer is named, so the numbered track model fourteen video
 pages had drawn is wrong and so is their deletion of the Layers group to make
@@ -261,10 +271,22 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
      (Layers, the parts of what you picked, Measurements, the Library shelf) is
      as long as the document happens to make it, so nobody designed its height
      and shortening it costs a scroll you were going to do anyway. A **form**
-     (Text, Appearance, Effects, Arrange) is a set of controls somebody
-     chose, and shortening it compresses nothing, it hides controls. So forms
-     are drawn whole and paid for first, and the lists share what is left,
-     tallest first, each down to its own floor of about three rows.
+     (Text, Arrange, Layout) is a set of controls somebody chose, and
+     shortening it compresses nothing, it hides controls. So forms are drawn
+     whole and paid for first, and the lists share what is left, tallest first,
+     each down to its own floor of about three rows.
+
+     **Appearance and Effects are both LISTS** (corrected 2026-09-22, from
+     `appearance-is-below-the-fold-again-because-the-p`). This rule used to
+     call Appearance a form, on the strength of what it looks like over a plain
+     box: opacity, fill, outline, corner radius. Measured over everything else
+     it is not one. It is the list of the PARTS a thing is made of, every
+     switched-on part unfolds its own settings, and it was 250 points over a
+     rectangle, 465 over an arrow and 515 over a measurement, against a 649
+     point dock. Nobody designed those numbers, which is the whole test. While
+     it was called a form it was the one section the budget could never
+     shorten, so it was the section every new feature's room came out of —
+     seven times.
 
      **A list of PANES has a taller floor** (added 2026-09-08, from
      `one-open-effect-fits-in-the-effects-list`, audit
@@ -301,6 +323,63 @@ signal to adjust the foundation, not to invent locally** (PRODUCT-MODEL §4b req
      list ends on clean empty glass and reads as a list holding one thing, with
      the rest gone and nothing saying so. That is why the floor in rule 2 pays
      for a peek at the next entry as well as for the entry it protects.
+
+     **Every shortened body, with no exceptions for the ones that bound
+     themselves.** A group that has its own scroller — the layers list, the
+     Library shelf — is the easiest one to forget, and forgetting it costs the
+     most: on 2026-09-18 Separate into Layers left a document holding 24 layers
+     with a list showing five rows on a clean cut, so the list read as the
+     whole document (`queue/audits/2026-09-18-separate-2-layers-list.png`). The
+     fade is what makes a cut mean "there is more" instead of "that is all".
+
+  5. **When the column still wants more than the window has, the fold is
+     GUARANTEED for two groups and nobody else** (added 2026-09-22; chosen by
+     the user on 2026-09-20 from
+     `queue/decisions/appearance-is-below-the-fold-again-because-the-p-appearance-and-effects-will-not.json`,
+     built as `DockHeightBudget.foldRescue` with the worked arithmetic in
+     `DockFoldGuaranteeTests`). Rule 3 says the dock scrolls and nothing is
+     thrown away. This says WHO it scrolls to, because "the dock scrolls" was
+     being paid for seven times running by the same two groups.
+
+     - **Appearance and Effects are always whole inside the dock.** They are
+       the two groups touched on every single layer, so they are the two
+       nobody may be made to go looking for (the user, 2026-09-07). When what
+       they want does not fit, THEY are shortened and scroll inside themselves,
+       under their own floors if that is the price.
+     - **What goes below the fold is what sits under them.** Motion,
+       Measurements, the Library shelf, and anything added later: they are
+       drawn whole, the dock scrolls to them, and that is the honest cost of a
+       column with this much in it.
+     - **What it owes the group it pushes.** Nothing is thrown away and nothing
+       is collapsed on your behalf: a group below the fold keeps its full
+       height and every control in it, and the dock's own scroller is the way
+       to it. A group it CUTS SHORT instead owes it the fade of rule 4 and a
+       peek at what is past the cut, whether it bounds itself or not.
+     - **A pane you just opened is not covered by the fold.** Open an effect
+       and that pane is drawn whole even when the rest of its own group runs
+       past the bottom edge, and the dock scrolls to it. The fold is the
+       promise that you never have to go LOOKING for these two groups; once you
+       are inside one, working, the thing under your hand wins. Squeezing it
+       anyway cuts a slider across the middle, which is rule 2's pane floor and
+       the fault the user reported on 2026-09-08.
+     - **It is not a promise every window can keep, and it never pretends.**
+       With the timing strip at its ceiling a laptop dock is 235 points short
+       of ever fitting the pair (`docs/design/video-surface.md` §4). There the
+       budget drops the guarantee rather than starving both groups into
+       slivers, and the dock scrolls exactly as rule 3 says.
+
+     **What a new group has to prove before it may join the column.** This is
+     the part that stops the walk-back, and it is one question: **which line of
+     the column's height does it spend from?** A group above Appearance takes
+     room out of the promised pair's share, so the pair gets shorter and the
+     answer has to say by how much, measured. A group below the pair spends
+     from what is left after them, which on a full dock is a scroll, and the
+     answer has to say that out loud rather than discovering it in an audit.
+     **"From Appearance's" is not an answer.** Seven ordering fixes between
+     2026-09-03 and 2026-09-16 each moved which group lost and none of them
+     moved the total; the Sections row (2026-09-17) and Motion arriving under
+     Effects (2026-09-16, `queue/audits/2026-09-16-motion-under-effects.json`)
+     are the two most recent cases of the same crowding.
 
   **Reveal** (added 2026-09-04 to describe shipped behavior: commit `4a6aac7`,
   audit `2026-09-03-library-reveal`): when the app brings a group into view for
@@ -1541,6 +1620,10 @@ Every editor/scenario page must satisfy:
       long list is bounded and scrolls inside its own group, forms are drawn
       whole, and no list stretches the window. When the whole thing still does
       not fit, the dock scrolls; no section is cut down to make it fit.
+- [ ] **The fold is kept** (§3, height rule 5): Appearance and Effects are both
+      whole inside the dock, at the window sizes the page claims, and what is
+      below the fold is the groups under them. Any group added to the column
+      says which line of the column's height it spends from.
 - [ ] Layers use flat-vs-group consistently; rows have identical affordances.
 - [ ] Every glyph is an `.ic-*` from the one library; zero ascii/emoji/mixed
       styles.

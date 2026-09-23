@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 120,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-16T12:22:49.127Z",
-  "updated": "2026-09-22T15:32:25.868Z",
+  "updated": "2026-09-23T02:14:19.676Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-09-16 design review, and the evidence is two rough lines the panel-sections task wrote about its own work (queue/audits/2026-09-15-panel-sections.json):\n\n  \"The panel is still over-subscribed by a factor, not by a few points. With a piece of text picked in a three layer document it wants 1052 points and the tallest window this display gives it is 968. Nothing was made shorter; the change only decides which sections are allowed to ask.\"\n  \"Appearance pays for it. At 1200 by 720 with text picked it now runs 497 to 720 in a 688 point panel, so its last 32 points are below the fold where they used to be on screen. With an arrow picked it is 382 points tall and lands at 681 in a 688 point panel.\"\n  \"This partly walks back what the user asked for on 2026-09-07, that Appearance and Effects are the two sections that must never need scrolling to. It is a real trade and the evaluate list above asks about it directly rather than hiding it.\"\n\nWhy this is filed as its own task rather than folded: the panel's height has now been attacked seven separate times with local fixes, every one of them done (the-panel-stops-explaining-itself-in-paragraphs, picking-a-text-layer-leaves-its-settings-below-t, position-and-size-leave-the-panel, one-row-for-a-number-that-has-four-sides, the-panel-shows-the-panes-that-matter, position-and-size-stays-on-screen-when-you-pick, the-h-field-in-the-text-section-can-be-out-of-re), and the panel still asks for 1052 in a 968. Each of those bought back points. None of them changed the fact that the sections together want more than any window has, which is why the next feature that wants room takes it from Appearance again.\n\nRelated and NOT the same thing: photograph-the-sections-row-and-measure-what-it (nobody has seen the Sections row drawn or measured what turning a section off really buys) and the-motion-section-sits-directly-under-effects-w (Motion is eleven sections below Effects). Do those two first if all three are open: this one needs their numbers.",
@@ -165,10 +165,43 @@
     {
       "t": "2026-09-22T15:32:25.867Z",
       "note": "Also true in the video mocks now. Putting the Layers group back into the fourteen video clickthrough pages (2026-09-22) costs each dock about 130 points, and on video-transition-wt the Properties group scrolls with a row cut in half at the fold: measured in a real browser, gProps body is 264px visible of 364px wanted, in a 661px dock that itself does not overflow. That is exactly the arithmetic video-surface.md §4 names (968 point panel, 733 left once the strip is open, 189 over), so it is not a new bug, but the video pages are now a second place to see it. Screenshots: queue/audits/2026-09-22-video-layers-1.png and -2.png."
+    },
+    {
+      "t": "2026-09-23T00:59:10.646Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T01:36:05.732Z",
+      "note": "REPRODUCED first, before touching anything: Scripts/playtest.sh Scripts/playtest/dock-picked-first-walk.json -> 'step 74 (waitFor): sectionInView(\"Appearance\") did not happen within 4.0s'. Its own readings at dockViewport 661 (1200x720), from log.json: an ARROW picked gives bodies color=465 effects=35 layers=200 motion=48 measurements=54, drawn as Layers 6-169, Appearance 169-667, Effects 667-735, Motion 735-816, Measurements 816-903. A piece of TEXT gives color=250 effects=339, drawn as Layers 6-169, Text 169-367, Appearance 367-650, Effects 650-975, Motion 975-1056, Measurements 1056-1143. So the panel asked for 1143 of 661 and Effects' last 314 points were below the fold."
+    },
+    {
+      "t": "2026-09-23T01:36:14.322Z",
+      "note": "ADVERSARIAL REVIEW of the answer before building it. The decision says Appearance scrolls inside itself, and on its own that is NOT enough: I worked it through and with text picked the pair's own floors come to 404 points of a 222 point share (Appearance 112 + Effects 292, where 292 is the room that draws the open drop shadow whole). So a second thing was needed: the budget has to be allowed to squeeze the PROMISED pair under their own floors when that is what the fold costs, and to push what sits below them off the bottom instead. Also rejected: reporting Appearance's parts as PANES so its floor keeps one whole part. It buys nothing in any measured case (the water line hands it 164 where the pane floor would have asked 126) and in the measurement case it made the dock WORSE, trading Motion and Measurements away entirely to give Appearance 82 more points. Shortest version that delivers the value wins."
+    },
+    {
+      "t": "2026-09-23T02:13:06.322Z",
+      "note": "SHIPPED. Two mechanisms, both needed. (1) DockMetrics.scrollingSections now includes Appearance, so the budget may shorten it: it is a LIST of the parts a thing is made of, not a form, and calling it a form is why it was the one promised section the budget could never touch. That alone fits a rectangle, an arrow and a measurement. (2) DockHeightBudget gains promisedSections and foldRescue: when the ordinary pass leaves one of the promised pair hanging past the bottom edge, it re-shares the dock down to the LAST promised section, letting the pair go under their own floors as far as foldFloor (74), and lets everything below them go below the fold. That is what fits a piece of text with its shadow open, where the pair's own floors came to 404 points of a 222 point share. A promised section holding room for a pane you JUST OPENED drops out of the promise, so the opened effect is still drawn whole - the mitigation the decision card offered. Measured after, off dock-picked-first-walk at viewport 661: text drawn Layers 6-170, Text 170-368, Appearance 368-514, Effects 514-660 (was 650-975); arrow drawn Layers 6-224, Appearance 224-424, Effects 424-492, Motion 492-573, Measurements 573-660, so the whole panel fits for the first time. dockInView lists Appearance and Effects in every one of the twelve dock states that walk records."
+    },
+    {
+      "t": "2026-09-23T02:13:18.040Z",
+      "note": "Two things fixed on the way, both found by walks going red rather than by reading. (a) A walk reaching a control inside a shortened section picked its scroller BY GEOMETRY - every scroller whose scrolled length covered that patch of window - because a press target is a point and a box rather than a view. With two shortened sections in the panel that is wrong: Appearance's unseen tail covers the stretch of window the Effects list had scrolled a Border into, so the reveal turned Appearance's wheel and reported the Border 'covered by something other than a scroll'. PlaytestPressTarget now carries the clips that really hold it, off the view tree (PlaytestPanelPress.scrollClips). Broke appearance-list-walk, effects-open-into-view-walk and effects-room-for-the-one-you-opened-walk; all green after. (b) scrollEdgeFade was a BRANCH around the scroller, so a list crossing the shortened threshold got a brand new scroller - losing where it was scrolled to, and in separate-whole-screenshot-walk losing the rows themselves (the panel held no rows at all after two undos took the list from shortened to whole). It is a flag inside the modifier now."
+    },
+    {
+      "t": "2026-09-23T02:13:18.090Z",
+      "note": "VERIFIED: 68 walks green locally - Scripts/playtest-all.sh over dock, appearance, effects, panel, section (13 + 22), then layers, shelf, library, separate, position (33). dock-picked-first-walk, which this task owns and which was failing on exactly this, now completes all 78 steps with 6 real window captures. Scripts/test.sh 9105 tests in 726 suites, the only red being the known flake the-export-size-test-fails-about-one-run-in-thre (AnimatedExportWeighTests, passes on its own: verified with Scripts/test.sh --filter AnimatedExportWeigh). A full sweep is requested, with the reason being the press change, which every walk goes through."
+    },
+    {
+      "t": "2026-09-23T02:13:28.742Z",
+      "note": "Follow-ups filed, and what was left rough instead. FILED: the-panel-keeps-its-promise-on-a-video-document (the one case the guarantee does NOT cover: the timing strip takes 235 points off the dock, which leaves 99 for the pair however it is shared, so on a laptop video document the panel drops the guarantee and scrolls as before - reproduction is a test that passes, DockFoldGuaranteeTests.aDockTooShortForThePairIsLeftToScrollRatherThanStarved) and the-section-you-are-using-is-the-one-you-scroll (the four ORDER complaints this task collected but did not fix: Sound's Level fader lowest in the dock, Speed six sections down, Time under Reframe and Motion, a title's Fade below the fold - rule 5 now says everything below the pair MAY be pushed, so which sections deserve to be up there is its own question). LEFT ROUGH, not filed: the fade on a squeezed Appearance is subtle in the text case - the section simply ends under Blending and the 14 point gradient reads more like padding than a cut; it is clearer wherever the cut lands mid-row, and the audit asks the user about it rather than my guessing. Also left rough: PartsInspector's Opacity row scrolls away with the rest of Appearance when it could have been pinned as non-scrolling chrome the way the layers list pins its count line; it needs the section split into a fixed head and a scrolling body, which CollapsibleSection does not offer, and nothing measured says it is worth that."
+    },
+    {
+      "t": "2026-09-23T02:14:19.674Z",
+      "note": "The fold is guaranteed: Appearance and Effects are both whole in the panel on every layer. Appearance joined the sections the budget may shorten (it is a list of parts, not a form), and DockHeightBudget.foldRescue re-shares the dock down to the last promised section when the ordinary pass leaves one of them hanging, pushing what sits below them below the fold instead; a pane you just opened is exempt, so an opened effect is still drawn whole. Measured at 1200x720 (dock 661): text was Appearance 367-650 / Effects 650-975 and is now 368-514 / 514-660; an arrow was Appearance 169-667 with three sections under it off screen and now the whole panel fits 6-660. Rule written into UX-PATTERNS section 3 (height rule 5, rule 2 corrected, rule 4 widened, section 9 gate) and the HEIGHT section of InspectorDockLayout.swift. Also: a cut layers list now fades its edge, and two harness faults found by red walks are fixed. 11 new core tests in DockFoldGuaranteeTests; 68 walks green including dock-picked-first-walk, which this task owned and which was failing on exactly this; Scripts/test.sh green but for the known export-size flake. Audit queue/audits/2026-09-22-guarantee-the-fold.json."
     }
   ],
-  "started": "2026-09-16T16:42:58.097Z",
+  "started": "2026-09-23T00:59:10.645Z",
   "walks": [
     "dock-picked-first-walk"
-  ]
+  ],
+  "completed": "2026-09-23T02:14:19.675Z"
 }

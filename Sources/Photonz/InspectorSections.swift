@@ -365,6 +365,20 @@ struct SectionFileDrop: DropDelegate {
 /// and the Library shelf). One idiom, so a cut means the same thing wherever
 /// the panel cuts.
 private struct ScrollEdgeFade: ViewModifier {
+    /// Whether this body has been shortened at all. A body drawn at its own
+    /// full height fades nothing: there is nothing past either edge, and the
+    /// scroll geometry that would say so has not landed on the first frame.
+    ///
+    /// A FLAG rather than two branches around the modifier. Choosing between
+    /// a masked scroller and a bare one changes the view's identity, so
+    /// SwiftUI tears the scroller down and builds a new one every time a list
+    /// crosses the threshold — which loses where it was scrolled to, and on
+    /// 2026-09-22 lost the rows themselves: with the fade put on the layers
+    /// list, `separate-whole-screenshot-walk` undid two runs, the list went
+    /// from shortened to whole, and the panel then held no rows at all for a
+    /// walk to read.
+    var isShortened = true
+
     /// Which way a shortened body has more to show. Starts as "more below",
     /// which is what being shortened means, so the cue is right on the first
     /// frame rather than one scroll later.
@@ -381,11 +395,11 @@ private struct ScrollEdgeFade: ViewModifier {
         VStack(spacing: 0) {
             LinearGradient(colors: [.black.opacity(0), .black],
                            startPoint: .top, endPoint: .bottom)
-                .frame(height: overflow.above ? DockMetrics.bodyEdgeFade : 0)
+                .frame(height: isShortened && overflow.above ? DockMetrics.bodyEdgeFade : 0)
             Rectangle()
             LinearGradient(colors: [.black, .black.opacity(0)],
                            startPoint: .top, endPoint: .bottom)
-                .frame(height: overflow.below ? DockMetrics.bodyEdgeFade : 0)
+                .frame(height: isShortened && overflow.below ? DockMetrics.bodyEdgeFade : 0)
         }
     }
 
@@ -410,14 +424,14 @@ extension View {
     /// Fades this scroller's top or bottom edge whenever it is showing less
     /// than it holds. See `ScrollEdgeFade`.
     ///
-    /// - Parameter isShortened: false leaves the view exactly as it was. A
-    ///   scroller drawn at its own content's height has nothing past either
-    ///   edge, and a mask it does not need is a layer drawn for nothing — and
-    ///   for one frame, before the first scroll geometry lands, a bottom edge
-    ///   faded on a complete list.
-    @ViewBuilder
+    /// - Parameter isShortened: false fades nothing. A scroller drawn at its
+    ///   own content's height has nothing past either edge, and for one frame,
+    ///   before the first scroll geometry lands, it would otherwise fade a
+    ///   bottom edge on a complete list. It is a flag INSIDE the modifier and
+    ///   not a branch around it, so a list crossing the threshold keeps the
+    ///   same scroller: see `ScrollEdgeFade.isShortened`.
     func scrollEdgeFade(isShortened: Bool = true) -> some View {
-        if isShortened { modifier(ScrollEdgeFade()) } else { self }
+        modifier(ScrollEdgeFade(isShortened: isShortened))
     }
 }
 

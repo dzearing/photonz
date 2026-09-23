@@ -392,6 +392,19 @@ struct LayersListView: View {
                 guard CACurrentMediaTime() >= scroll.followingUntil else { return }
                 firstVisibleRow = row
             }
+            // A list showing fewer rows than the document has fades its cut
+            // edge, the way every other shortened body in the dock does. It
+            // used to end on a clean cut, and a clean cut reads as the whole
+            // document: after Separate into Layers on 2026-09-18 the document
+            // held 24 layers, the list showed five rows, and nothing on screen
+            // said so (`queue/audits/2026-09-18-separate-2-layers-list.png`).
+            // This is the other half of the fold rule — what the dock OWES a
+            // section it has cut short (`UX-PATTERNS.md` §3).
+            //
+            // Before the overlay under it on purpose: the one line the list
+            // says while a style is over a row is chrome, not content, so it
+            // must not fade with the rows.
+            .scrollEdgeFade(isShortened: viewport < reserved - PanelAreaResize.tolerance)
             // The one line the list says while a saved style is over a row:
             // what letting go there would do, and why it would do nothing when
             // it would do nothing. Over the list rather than at the foot of the

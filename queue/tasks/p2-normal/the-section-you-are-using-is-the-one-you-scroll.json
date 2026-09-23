@@ -1,0 +1,29 @@
+{
+  "id": "the-section-you-are-using-is-the-one-you-scroll",
+  "title": "The section you are using is the one you scroll to",
+  "goal": "The right hand panel puts its sections in a fixed order, so whatever shipped most recently lands lowest whatever it is for. On a video document that means the controls you are actually using while you watch - how fast the clip plays, when a title arrives and leaves, how loud a sound is - are the furthest things down the panel, under several sections you are not touching. Order the panel by what the layer is being used for, so the answer to the question you are asking is near the top.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 3110,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T02:12:52.046Z",
+  "updated": "2026-09-23T02:12:52.049Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Carried out of appearance-is-below-the-fold-again-because-the-p, which fixed the HEIGHT problem (Appearance and Effects are now guaranteed whole) and explicitly did not fix the ORDER problem. UX-PATTERNS section 3 height rule 5 now says everything below the promised pair may be pushed below the fold, so this task is about which sections deserve to be up there at all.\n\nThe four cases the other task recorded, each seen in an audit:\n- Sound sits under Motion, so the Level fader - the most reached control a sound layer has - is the lowest thing in the dock (queue/audits/2026-09-21-video-audio).\n- Speed sits under Layers, Appearance, Effects, Reframe, Motion and Transition, so you scroll past six sections to change the one property of the clip you are most likely to change (queue/audits/2026-09-21-video-speed.json, speed-2-the-same-take-at-four-times-sc.png shows it cut off at the bottom edge).\n- Time, holding a frame, is below Reframe, Motion and Transition, so freezing the frame you are looking at costs a scroll before the first click (hold-on-a-frame, 2026-09-21).\n- With a title picked, Time holds when the words arrive and leave and the Fade choices, under Text, Appearance, Effects and Motion, so Fade is below the fold in a 1080 window (queue/audits/2026-09-21-title-4-fades-on-sc.png).\n\nThe order lives in Sources/Photonz/InspectorPanel.swift as loadOrder plus numbered migrations, and the rule it follows is written at the top of Sources/Photonz/InspectorDockLayout.swift: what you picked, then where it sits, then what it looks like. That rule has nothing to say about a document with time, which is why the video sections all arrived in a run at the bottom.",
+  "acceptance": [
+    "With a clip picked on a video document, the section holding its speed and its freeze is above Motion and Reframe rather than below them",
+    "With a piece of sound picked, the Level fader is on screen without scrolling at 1200 by 720",
+    "With a title picked, the Fade choices are on screen without scrolling at 1200 by 720",
+    "The order follows a written rule about what the layer is FOR, not a hand-kept list, so the next section added does not have to be placed by hand",
+    "A walk reads the order back for a clip, a title and a sound, so the rule is checked rather than described"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T02:12:52.048Z",
+      "note": "created (manual)"
+    }
+  ]
+}

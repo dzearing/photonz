@@ -19073,3 +19073,84 @@ its own floor.
 
 Next: the standing video set. Audit for this one:
 `queue/audits/2026-09-22-turned-card-pivot.json`.
+
+## 2026-09-22 — The fold the panel guarantees
+
+**Appearance and Effects are now always both whole inside the right panel.**
+The user asked for that on 2026-09-07, it was walked back seven times, and on
+2026-09-20 they chose "Guarantee the fold" from four drawn answers. Built
+today, and `dock-picked-first-walk` — which had been left red on purpose
+because the walk was right and the app was not — passes all 78 steps again.
+
+Two mechanisms, and both were needed:
+
+1. **Appearance is a LIST, not a form.** `DockMetrics.scrollingSections` now
+   includes it, so the budget may shorten it. It is the parts a thing is made
+   of, every switched-on part unfolds its own settings, and it measured 250
+   points over a rectangle, 465 over an arrow and 515 over a measurement
+   against a 649 point dock. Nobody designed those numbers, which is the whole
+   test for a list, and while it was called a form it was the one promised
+   section the budget could never touch — so it was the section every new
+   feature's room came out of.
+2. **`DockHeightBudget.foldRescue`.** When the ordinary pass leaves one of the
+   promised pair hanging past the bottom edge, a second pass re-shares the dock
+   down to the last promised section, lets the pair go under their own floors as
+   far as `foldFloor`, and lets everything below them go below the fold. That is
+   what fits a piece of text with its shadow open, where the pair's own floors
+   came to 404 points of a 222 point share. A section holding room for a pane
+   you JUST opened drops out of the promise, so an opened effect is still drawn
+   whole: that was the mitigation the decision card offered, and four walks
+   watch for it.
+
+Measured at 1200 by 720 (dock viewport 661), off the walk's own readings.
+Text picked, before: `Layers 6-169, Text 169-367, Appearance 367-650, Effects
+650-975, Motion 975-1056, Measurements 1056-1143`. After: `Layers 6-170, Text
+170-368, Appearance 368-514, Effects 514-660, Motion 660-741, Measurements
+741-828`. Arrow picked, before: `Appearance 169-667` in a 661 point dock with
+Effects, Motion and Measurements entirely below it. After: the whole panel
+fits, 6 to 660, for the first time. The arithmetic for all four selections the
+walk reads is pinned in `DockFoldGuaranteeTests` (PhotonzCore, 11 tests) off
+heights measured on the running app rather than guessed.
+
+The rule is written where the next section will be read against it: `UX-PATTERNS.md`
+§3 gains height rule 5 (which groups the fold is promised to, what it owes the
+one it pushes, and that a new group has to say **which line of the column's
+height it spends from** — "from Appearance's" is not an answer), rule 2 is
+corrected to stop calling Appearance a form, rule 4 now binds the groups that
+bound themselves, and §9 gains an audit gate. The same rule for a compiler is
+the HEIGHT section of `InspectorDockLayout.swift`.
+
+Two things fixed on the way, both found by walks going red rather than by
+reading code:
+
+- **A reveal picked a control's scroller by geometry** — every scroller whose
+  scrolled length covered that patch of window — because a press target is a
+  point and a box, not a view. With two shortened sections in the panel that is
+  wrong: Appearance's unseen tail covers the stretch of window the Effects list
+  had scrolled a Border into, so the reveal turned Appearance's wheel and then
+  reported the Border "covered by something other than a scroll".
+  `PlaytestPressTarget.clips` now carries the scrollers that really hold it, off
+  the view tree.
+- **`scrollEdgeFade` was a branch AROUND the scroller**, so a list crossing the
+  shortened threshold got a brand new scroller: it lost where it was scrolled
+  to, and in `separate-whole-screenshot-walk` it lost the rows themselves. It is
+  a flag inside the modifier now. Which is also what let the layers list finally
+  wear the fade — a cut list used to end on a clean cut and read as the whole
+  document, which after Separate into Layers meant five rows standing for
+  twenty-four.
+
+68 walks green locally (dock, panel, appearance, effects, section, layers,
+shelf, library, separate, position); `Scripts/test.sh` 9105 tests in 726
+suites, the only red being the known flake
+`the-export-size-test-fails-about-one-run-in-thre`. A full sweep is requested,
+because the press change is on the path of every walk that presses anything.
+
+Filed: `the-panel-keeps-its-promise-on-a-video-document` (the one case the
+guarantee does not cover: the timing strip takes 235 points off the dock, which
+leaves 99 points for the pair however it is shared) and
+`the-section-you-are-using-is-the-one-you-scroll` (the four ORDER complaints
+this task collected and did not fix — Sound's Level fader lowest in the dock,
+Speed six sections down, a title's Fade below the fold).
+
+Next: the standing video set. Audit for this one:
+`queue/audits/2026-09-22-guarantee-the-fold.json`.

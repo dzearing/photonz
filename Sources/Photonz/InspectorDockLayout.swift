@@ -100,8 +100,7 @@ import SwiftUI
 //    LIST of the parts a thing is made of, and every switched-on part unfolds
 //    all of its settings at once (`PartsInspector`, `ShapePartSettings`). An
 //    arrow is 447pt of it and a measurement 489pt; the tallest recorded is
-//    **669pt, which is more than the whole 621pt dock**. `scrollingSections`
-//    below still calls it a form, so the budget may never shorten it.
+//    **669pt, which is more than the whole 621pt dock**.
 // 2. **No ordering fixes this.** Ordering only decides which section is the one
 //    left below the fold. It has now been re-ordered six times (the migrations
 //    in `InspectorPanel`) and the total has not moved.
@@ -110,10 +109,43 @@ import SwiftUI
 // grow, without saying which line of that table it spends from.** If the answer
 // is "from Appearance's", it is not an answer.
 //
-// How the promise gets KEPT is an open question with the user as of
-// 2026-09-16: see the task `appearance-is-below-the-fold-again-because-the-p`
-// and its decision card. Until it is answered this comment is the measurement,
-// not the fix.
+// MARK: - ...and so, THE FOLD THE DOCK GUARANTEES
+//
+// The user answered the question above on 2026-09-20, choosing "Guarantee the
+// fold" over three other panels. It is two sentences:
+//
+// > **Appearance and Effects are always whole inside the dock.** When what they
+// > want does not fit, THEY are shortened and scroll inside themselves, and
+// > what goes below the fold is the sections under them.
+//
+// Which makes the answer to "which line of the table does a new section spend
+// from" simple, and says it once for every section that will ever be added:
+// **a new section spends from ITS OWN line and from nothing above it.** Put
+// above the pair, it takes room out of the pair's share and the pair gets
+// shorter; put below the pair — which is where anything new goes unless it is
+// named after the thing you picked — it spends from what is left after the
+// pair, and on a full dock that is a scroll. That is allowed, and it is the
+// honest cost of adding a section. What is no longer possible is the thing that
+// happened seven times: a new section quietly taking Appearance's place on
+// screen.
+//
+// Two mechanisms, and both are needed:
+//
+// 1. `scrollingSections` now includes Appearance, so the budget may shorten it
+//    at all. That alone fits a rectangle, an arrow and a measurement.
+// 2. `promisedSections` names the pair to `DockHeightBudget`, which re-shares
+//    the dock down to the last promised section when the ordinary pass leaves
+//    one of them hanging past the bottom edge. That is what fits a piece of
+//    text with its shadow open, where the pair's own floors came to 404pt of a
+//    222pt share.
+//
+// The worked before-and-after arithmetic for all four selections is in
+// `DockFoldGuaranteeTests` (PhotonzCore), off heights measured on the running
+// app; the rule written for a reader is `UX-PATTERNS.md` §3, under "When a
+// column wants more height than the window has". It is not kept in every
+// window: with the timing strip at its ceiling a laptop dock is 235pt short of
+// ever fitting the pair, and there the dock scrolls exactly as it always did
+// rather than drawing six peepholes.
 /// The numbers every section in the dock is measured in.
 enum DockMetrics {
     /// One section header's row: the height `CollapsibleSection` pins its
@@ -166,10 +198,35 @@ enum DockMetrics {
     /// round, two shadows squeezed Appearance until its Width and Corner Radius
     /// rows were scrolled out of sight, which is the opposite of what the dock
     /// is for.
+    /// Appearance is on this list too, since 2026-09-22, and that is the whole
+    /// mechanism of the fold the dock now guarantees (see the HEIGHT rule
+    /// above). It was called a form because with the split on it reads like one
+    /// — opacity, fill, outline, corner radius — but it is not one: it is a
+    /// list of the PARTS a thing is made of, and every switched-on part unfolds
+    /// its own settings, so its height is whatever the document happens to
+    /// make it. Measured on the running app at 1200 by 720: 250 points over a
+    /// rectangle, 465 over an arrow, 515 over a measurement, against a 649
+    /// point dock. Nobody designed those numbers, which is the test for a
+    /// list, and while the budget could not shorten it, it was the section
+    /// every new feature's room came out of.
     @MainActor static var scrollingSections: Set<InspectorSectionID> {
         var sections: Set<InspectorSectionID> = [.layers, .measurements, .library]
-        sections.insert(Experiments.shared.shapePartsEnabled ? .effects : .color)
+        sections.insert(.color)
+        if Experiments.shared.shapePartsEnabled { sections.insert(.effects) }
         return sections
+    }
+
+    /// The sections the dock PROMISES are whole on screen, whatever it costs
+    /// the ones under them: Appearance and Effects, the two touched on every
+    /// single layer (the user, 2026-09-07). `DockHeightBudget.foldRescue` is
+    /// what keeps it; the two of them being squeezable at all is what makes
+    /// that possible.
+    ///
+    /// Only with the split on. Without it these two are a different pair of
+    /// sections — Color is the list and Effects is four sliders — and the
+    /// promise was made about the split panel.
+    @MainActor static var promisedSections: Set<InspectorSectionID> {
+        Experiments.shared.shapePartsEnabled ? [.color, .effects] : []
     }
 }
 
@@ -246,7 +303,8 @@ struct DockBudgetScratch: Equatable {
                                           flexible: scrolls ? body : 0,
                                           floor: squeezeFloor(for: id, room: room))
         }
-        let heights = DockHeightBudget.flexibleHeights(groups, viewport: room)
+        let heights = DockHeightBudget.flexibleHeights(
+            groups, viewport: room, promised: promised(in: sections))
         var ceilings: [InspectorSectionID: CGFloat] = [:]
         for id in sections {
             let natural = budget.bodies[id] ?? 0
@@ -274,6 +332,40 @@ struct DockBudgetScratch: Equatable {
             ceilings[id] = height
         }
         return ceilings
+    }
+
+    /// The sections the fold is promised to, out of the ones the dock is
+    /// drawing right now.
+    ///
+    /// **A section holding room for a pane you JUST OPENED is not one of
+    /// them.** The fold is about the panel at rest: it is the promise that you
+    /// never have to go looking for Appearance or Effects. Opening an effect is
+    /// not the panel at rest — it is you asking for one thing, and the one
+    /// thing you asked for is drawn whole, even when that pushes the rest of
+    /// its own section past the bottom edge, which is why the dock then scrolls
+    /// to it (`InspectorDockReveal`). That is the mitigation the user was
+    /// offered with the answer they chose: "the thing under your hand is always
+    /// shown in full, and what scrolls away is the parts you are not touching."
+    ///
+    /// Squeezing it anyway cuts a slider across the middle, which is the fault
+    /// the user reported on 2026-09-08 and which four walks still watch for
+    /// (`effects-fit-one-open-walk` and the three beside it).
+    private func promised(in sections: [InspectorSectionID]) -> Set<String> {
+        Set(DockMetrics.promisedSections
+            .intersection(sections)
+            .filter { !isHoldingAnOpenedPane($0) }
+            .map(\.rawValue))
+    }
+
+    /// Whether this section is keeping room for a pane the reader has just
+    /// opened. A stale focus — an effect since removed, or folded shut again —
+    /// is not one, so the promise comes back the moment the reason for the
+    /// exemption is gone.
+    private func isHoldingAnOpenedPane(_ id: InspectorSectionID) -> Bool {
+        guard let focus = budget.listFocus[id], let panes = budget.listPanes[id],
+              panes.indices.contains(focus)
+        else { return false }
+        return panes[focus].isOpen
     }
 
     /// How short a list section may be squeezed.
