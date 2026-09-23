@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/tutorial-export-a-recording-walk",
-  "setup": { "forget": ["tutorials"] },
+  "setup": { "flags": { "next-a-recording-is-a-document": false }, "forget": ["tutorials"] },
   "steps": [
     { "do": "startGuide", "guide": "export-a-recording" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "three-ways-out", "timeout": 25 },

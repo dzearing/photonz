@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/tutorial-trim-a-recording-skipped-walk",
-  "setup": {
+  "setup": { "flags": { "next-a-recording-is-a-document": false },
     "forget": ["tutorials"],
     "expectNoControl": ["trim-a-recording/saving-writes-it-in"]
   },

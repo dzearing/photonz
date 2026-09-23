@@ -1448,13 +1448,14 @@ final class EditorState {
         // A recording opened as a document has nowhere to be saved TO yet:
         // writing it back as a picture would destroy the video, and writing it
         // as a package would write a clip whose frames cannot be found again.
-        // `nothingToSave` is the one answer that dims Save and stops the close
-        // sheet asking a question nothing can answer.
-        if isRecordingDocument { return .nothingToSave }
-        return .forDocument(isLoaded: document != nil,
+        // So Save stays dimmed, and an EDITED one still stops the close: the
+        // sheet says the edits will not be kept and offers Export, which is
+        // the one door that keeps them (`changesOnlyExportKeeps`).
+        .forDocument(isLoaded: document != nil,
                      hasChanges: ClosePrompt.needsSavePrompt(current: document,
                                                              savedBaseline: savedDocument),
-                     isSaving: false)
+                     isSaving: false,
+                     canSaveInPlace: !isRecordingDocument)
     }
 
     /// The document was persisted somewhere the user considers safe (package

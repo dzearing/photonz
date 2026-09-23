@@ -19400,3 +19400,27 @@ looks drawn, 4 to 6 held a frame up to 3 back.
 
 **Next:** the walk sets `next-a-recording-is-a-document`, which is still off at
 Next defaults; that is the pending task to make a recording open in the editor.
+
+## 2026-09-23 · A recording opens in the video editor at Next defaults
+
+`next-a-recording-is-a-document` is on by default in Next, so opening,
+dropping or capturing a recording lands in the editor with the timeline. The
+catalog now records what a flag needs (`Definition.needs`,
+`FeatureCatalog.dependencies(of:)`), and `FeatureDependencyTests` fails when a
+flag on by default needs one that is off. The ten timeline flags declare that
+they need the editor.
+
+Closing an edited recording used to drop the edits without a word
+(`nothingToSave`). New `SaveAffordance.changesOnlyExportKeeps`: Save stays
+dimmed, closing asks "Your changes to X will not be kept" with Export…, Don't
+Keep, Cancel. A finished export counts as kept (`keptByExport`).
+
+The two Video-track guides taught the old window, so they carry
+`retiredBy: [next-a-recording-is-a-document]` and are hidden in Next until
+`the-video-guides-teach-the-editor-that-exists` lands. The 20 old-window walks
+set the flag false until `trim-becomes-a-tool-and-the-recording-window-ret`
+retires that window. The 24 editor walks no longer force the flag. New walk:
+`a-recording-opens-in-the-editor-at-defaults-walk` (new actions `askToClose`,
+`answerCloseFirst`, `exportVideoAsTheSheetDoes`).
+
+**Next:** the Command S decision; video guides for the editor.

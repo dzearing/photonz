@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/trim-handle-freed-from-a-cut-walk",
-  "setup": {
+  "setup": { "flags": { "next-a-recording-is-a-document": false },
     "forget": [
       "all"
     ]

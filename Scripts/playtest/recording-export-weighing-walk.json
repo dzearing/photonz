@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/recording-export-weighing-walk",
-  "setup": {
+  "setup": { "flags": { "next-a-recording-is-a-document": false },
     "forget": [
       "all"
     ]

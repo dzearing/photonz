@@ -3,7 +3,6 @@
   "setup": {
     "forget": ["all"],
     "flags": {
-      "next-a-recording-is-a-document": true,
       "next-cut-a-recording": true,
       "next-motion": true,
       "next-punch-in-and-hold": true

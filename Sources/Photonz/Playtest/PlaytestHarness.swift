@@ -1999,6 +1999,47 @@ private final class Run {
                  "pressed \"\(pressed)\"; the hub is \(TutorialHubProbe.window() == nil ? "closed" : "STILL OPEN") "
                  + "and the guide is \(TutorialController.shared.isRunning ? "running" : "NOT running")")
 
+        // The question closing asks. Driven through `performClose`, the same
+        // call the red button and Command W make, so the window's own close
+        // guard decides whether to ask and what; the walk only reads what came
+        // up. The alert is attached as a sheet, so its words and its buttons
+        // are read off the sheet window itself.
+        case .action(.askToClose):
+            let closing = try requireWindow()
+            closing.performClose(nil)
+            try await poll("the close to ask something", within: 5) { closing.attachedSheet != nil }
+            let words = Self.alertWords(on: closing)
+            note(number, step.name, "askToClose: the window stopped and asked. \(words)",
+                 state: describe())
+
+        case .action(.answerCloseFirst):
+            let closing = try requireWindow()
+            guard let sheet = closing.attachedSheet,
+                  let first = Self.alertButtons(in: sheet).first else {
+                throw Failure(description: "there is no close question on the window to answer")
+            }
+            let title = first.title
+            first.performClick(nil)
+            await sleep(0.8)
+            let exporting = editor?.isExportDialogPresented == true
+            note(number, step.name,
+                 "answered \"\(title)\": the window is \(closing.isVisible ? "still open" : "closed")"
+                     + (exporting ? ", with the Export sheet up" : ""),
+                 state: describe())
+
+        case .action(.exportVideoAsTheSheetDoes):
+            let editor = try requireEditor()
+            let url = FileManager.default.temporaryDirectory
+                .appendingPathComponent("photonz-walk-export-\(UUID().uuidString).mp4")
+            editor.startVideoExport(format: .mp4, quality: .standard, to: url)
+            try await poll("the export to land", within: 120) { editor.videoExport == nil }
+            let landed = FileManager.default.fileExists(atPath: url.path)
+            try? FileManager.default.removeItem(at: url)
+            guard landed else { throw Failure(description: "the export finished without writing a file") }
+            note(number, step.name,
+                 "exported as MP4; the window is \(editor.hasUnsavedChanges ? "STILL edited" : "no longer edited")",
+                 state: describe())
+
         case .action(let action) where action == .closeDocument:
             let closing = try requireWindow()
             closing.close()
@@ -4125,7 +4166,7 @@ private final class Run {
                 if let id = editor.selectedLayerID {
                     editor.setContentPlacement(id: id, horizontal: .stretch)
                 }
-            case .closeDocument:
+            case .closeDocument, .askToClose, .answerCloseFirst, .exportVideoAsTheSheetDoes:
                 break  // handled above, where there is still a window to close
             case .closeSheets:
                 editor.isExportDialogPresented = false
@@ -10394,6 +10435,45 @@ private final class Run {
     /// not popovers.
     private static func isPopover(_ window: NSWindow) -> Bool {
         String(describing: type(of: window)).contains("Popover")
+    }
+
+    /// An alert sheet's buttons, in the order the alert was given them (the
+    /// first is the default). Read off the view tree, because a sheet's alert
+    /// object is not reachable from its window.
+    static func alertButtons(in sheet: NSWindow) -> [NSButton] {
+        func buttons(in view: NSView) -> [NSButton] {
+            view.subviews.flatMap { sub -> [NSButton] in
+                if let button = sub as? NSButton, button.bezelStyle == .push, !button.title.isEmpty {
+                    return [button]
+                }
+                return buttons(in: sub)
+            }
+        }
+        let found = sheet.contentView.map(buttons(in:)) ?? []
+        // The default button first, then the rest in the order they stand.
+        return found.sorted { lhs, rhs in
+            let lhsDefault = lhs.keyEquivalent == "\r", rhsDefault = rhs.keyEquivalent == "\r"
+            if lhsDefault != rhsDefault { return lhsDefault }
+            return lhs.frame.minX > rhs.frame.minX || lhs.frame.minY > rhs.frame.minY
+        }
+    }
+
+    /// The words on the question sheet attached to `window`, and its buttons.
+    static func alertWords(on window: NSWindow) -> String {
+        guard let sheet = window.attachedSheet, let content = sheet.contentView else {
+            return "no sheet"
+        }
+        func texts(in view: NSView) -> [String] {
+            view.subviews.flatMap { sub -> [String] in
+                if let field = sub as? NSTextField, !field.isEditable, !field.stringValue.isEmpty {
+                    return [field.stringValue]
+                }
+                return texts(in: sub)
+            }
+        }
+        let words = texts(in: content).map { "\"\($0)\"" }.joined(separator: " ")
+        let buttons = alertButtons(in: sheet).map { "[\($0.title)]" }.joined(separator: " ")
+        return "It says \(words), with \(buttons)"
     }
 
     /// Whether this press is somebody typing rather than a shortcut, by the

@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/saving-a-recording-says-so-walk",
-  "setup": { "forget": ["all"], "flags": { "next-saving-a-recording-says-so": true } },
+  "setup": { "forget": ["all"], "flags": { "next-a-recording-is-a-document": false, "next-saving-a-recording-says-so": true } },
   "steps": [
     { "do": "action", "action": "openSampleRecording" },
     { "do": "action", "action": "videoPause" },

@@ -25,11 +25,16 @@ protocol SaveableEditor: AnyObject {
     /// `completion(false)` when the save was cancelled, failed, or could not
     /// run at all.
     func performSave(completion: @escaping @MainActor (Bool) -> Void)
+    /// What the close confirmation's Export button runs where Save has nowhere
+    /// to write the changes (`SaveAffordance.changesOnlyExportKeeps`).
+    func exportToKeepChanges()
 }
 
 extension SaveableEditor {
     /// Whether closing this window would lose work.
     var hasUnsavedChanges: Bool { saveAffordance.asksBeforeClosing }
+
+    func exportToKeepChanges() {}
 }
 
 extension EditorState: SaveableEditor {
@@ -41,6 +46,10 @@ extension EditorState: SaveableEditor {
         saveDocument()
         // A cancelled Save-As panel leaves the document dirty.
         completion(!hasUnsavedChanges)
+    }
+
+    func exportToKeepChanges() {
+        isExportDialogPresented = true
     }
 }
 
@@ -189,6 +198,10 @@ private final class CloseGuardDelegate: NSObject, NSWindowDelegate {
             completion?(true)
             return
         }
+        if editorState.saveAffordance.closingOffersExport {
+            presentExportConfirmation(on: window, editorState: editorState, completion: completion)
+            return
+        }
         let alert = NSAlert()
         alert.messageText = "Do you want to save the changes made to “\(editorState.windowTitle)”?"
         alert.informativeText = "Your changes will be lost if you don't save them."
@@ -214,6 +227,37 @@ private final class CloseGuardDelegate: NSObject, NSWindowDelegate {
                     }
                 }
             case .alertThirdButtonReturn: // Don't Save
+                window.close()
+                completion?(true)
+            default: // Cancel
+                completion?(false)
+            }
+        }
+    }
+
+    /// The same question for changes Save has nowhere to write: a recording
+    /// opened as a document, until the Command S question is answered. It says
+    /// plainly the edits will not be kept and offers Export, the door that does
+    /// keep them. Export leaves the window open with the export sheet on it,
+    /// so the close is cancelled rather than guessed at.
+    private func presentExportConfirmation(on window: NSWindow, editorState: any SaveableEditor,
+                                           completion: (@MainActor (Bool) -> Void)?) {
+        let alert = NSAlert()
+        alert.messageText = "Your changes to “\(editorState.windowTitle)” will not be kept."
+        alert.informativeText = "A recording can’t be saved with its edits yet. Export it to keep them."
+        alert.addButton(withTitle: "Export…")
+        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: "Don’t Keep")
+        alert.beginSheetModal(for: window) { [weak self] response in
+            guard let self, let editorState = self.editorState else {
+                completion?(true)
+                return
+            }
+            switch response {
+            case .alertFirstButtonReturn: // Export
+                editorState.exportToKeepChanges()
+                completion?(false)
+            case .alertThirdButtonReturn: // Don't Keep
                 window.close()
                 completion?(true)
             default: // Cancel

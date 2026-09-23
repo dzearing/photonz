@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/trim-keeps-the-piece-you-picked-walk",
-  "setup": { "forget": ["all"] },
+  "setup": { "flags": { "next-a-recording-is-a-document": false }, "forget": ["all"] },
   "steps": [
     { "do": "action", "action": "openSampleRecording" },
     { "do": "action", "action": "videoPause" },

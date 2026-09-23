@@ -4,7 +4,6 @@
   "setup": {
     "forget": ["all"],
     "flags": {
-      "next-a-recording-is-a-document": true,
       "next-cut-a-recording": true,
       "next-a-title-has-an-in-and-an-out": true
     }

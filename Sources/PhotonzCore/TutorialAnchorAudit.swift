@@ -152,10 +152,19 @@ public enum TutorialFlagRules {
     /// Everything wrong with how the catalogue answers to flags.
     public static func problems(in guides: [TutorialGuide] = TutorialCatalog.guides) -> [String] {
         var found: [String] = []
-        let everything = TutorialCatalog.guides(enabled: { _ in true }, from: guides)
         for guide in guides {
+            // Everything switched on except what retired it: a guide the
+            // catalogue has retired is meant to go when that flag comes on.
+            let everything = TutorialCatalog.guides(enabled: { !guide.retiredBy.contains($0) },
+                                                    from: guides)
             if !everything.contains(where: { $0.id == guide.id }) {
                 found.append("\(guide.id) is not offered even with everything switched on")
+            }
+            for flag in guide.retiredBy {
+                if TutorialCatalog.guides(enabled: { $0 == flag }, from: guides)
+                    .contains(where: { $0.id == guide.id }) {
+                    found.append("\(guide.id) is retired by \(flag) and is still offered with it on")
+                }
             }
             for flag in guide.requires {
                 let offered = TutorialCatalog.guides(enabled: { $0 != flag }, from: guides)

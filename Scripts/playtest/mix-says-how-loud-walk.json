@@ -5,7 +5,6 @@
       "all"
     ],
     "flags": {
-      "next-a-recording-is-a-document": true,
       "next-cut-a-recording": true,
       "next-sound-on-the-timeline": true,
       "next-the-mix-says-how-loud-it-is": true

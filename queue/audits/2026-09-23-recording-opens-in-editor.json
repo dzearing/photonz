@@ -1,0 +1,27 @@
+{
+  "feature": "A recording opens in the video editor",
+  "epic": "video-editing",
+  "summary": "Opening, dropping or capturing a recording in Next now lands in the full editor, with the clip in the layers list, a timeline and a transport, and no hidden setting to turn on. Closing a recording you changed now asks first and offers Export, since Save can't keep those edits yet.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. If you turned 'A recording opens in the editor you already know' on by hand earlier, it is now on for everyone anyway.",
+  "try": [
+    { "do": "Open a recording from capture history (Shift Command 6, or File then Open on an .mp4).", "shot": "2026-09-23-recording-opens-in-editor-1.png" },
+    { "do": "Put the playhead in the middle and press B to cut it in two.", "shot": "2026-09-23-recording-opens-in-editor-2.png" },
+    { "do": "Close the window with Command W.", "shot": "2026-09-23-recording-opens-in-editor-3.png" },
+    { "do": "Press Export… in the question that comes up.", "shot": "2026-09-23-recording-opens-in-editor-4.png" },
+    { "do": "Export it as MP4, then close the window again: it closes without asking." },
+    { "do": "Open Help then Tutorials and look for the Video track." }
+  ],
+  "evaluate": [
+    "Does every recording you open now land in the editor with the timeline, never the small play-and-shorten window?",
+    "Does the close question read right: 'Your changes will not be kept', with Export, Don't Keep and Cancel?",
+    "After you export, is it right that closing stops asking, or should it still ask?",
+    "Is hiding the two old video tutorials until new ones exist better than showing guides for a window you can no longer reach?"
+  ],
+  "rough": [
+    "Save stays dimmed on a recording. What Command S should do is still your open question on the Trim becomes a tool task; until then Export is the only way to keep edits.",
+    "The Video tutorial track is gone from Next for now: both old guides taught the small window. New guides for the editor are on 'The video guides teach the editor that exists'.",
+    "The close question names the window as 'Tutorial Sample.mp4 (Next)', with the release tag, the same way the existing Save question does.",
+    "The old small window still exists for anyone who turns the setting off in Experiments. Its walks now turn it off on purpose, until the Trim becomes a tool task retires it.",
+    "Next to the mock (video-entry-wt): the recording opens into the editor with its timeline as drawn, but trim is still not a tool on the timeline. That gap belongs to the Trim becomes a tool task."
+  ]
+}

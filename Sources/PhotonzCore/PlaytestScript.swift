@@ -604,6 +604,19 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// proof needs a second walk, and a walk that only passes when another one
     /// ran first is not a walk that can be trusted.
     case closeDocument
+    /// Ask the editor window this walk is driving to close, exactly as the
+    /// red button or Command W does, and read the question it stops to ask.
+    /// Fails when nothing asks: the point is proving work is never dropped
+    /// without a word. The sheet stays up for a snapshot and an answer.
+    case askToClose
+    /// Answer that question with its first button (Save, or Export where Save
+    /// cannot write the changes) and say what happened to the window.
+    case answerCloseFirst
+    /// Export the document that has time as an MP4 through the same path the
+    /// Export sheet's button runs, into the walk's scratch folder, and wait
+    /// for it to land. What an export changes about the window (a recording
+    /// that cannot be saved counts as kept once exported) is then checkable.
+    case exportVideoAsTheSheetDoes
     /// Open the New Canvas sheet, so a walk can photograph it. A snapshot
     /// taken while a sheet is up photographs the sheet.
     /// The guided tutorials, driven from a walk (`TutorialController`).

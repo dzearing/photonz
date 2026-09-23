@@ -4,7 +4,6 @@
     "forget": ["all"],
     "flags": {
       "next-opening-a-recording": true,
-      "next-a-recording-is-a-document": true,
       "next-cut-a-recording": true
     }
   },

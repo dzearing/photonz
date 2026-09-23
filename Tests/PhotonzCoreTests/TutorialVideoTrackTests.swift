@@ -20,7 +20,7 @@ struct TutorialVideoTrackTests {
         // Data, and nothing else edited: the track has guides on it, so it is
         // a shelf the menu and the hub both build.
         #expect(TutorialCatalog.populatedTracks.contains(.video))
-        #expect(TutorialCatalog.guides(enabled: { _ in true })
+        #expect(TutorialCatalog.guides(enabled: { $0 != FeatureCatalog.recordingIsADocumentFlag })
             .contains { $0.track == .video })
     }
 
@@ -117,6 +117,20 @@ struct TutorialVideoTrackTests {
         }
         #expect(TutorialCatalog.guides(enabled: { _ in false })
             .filter { $0.track == .video }.count == 2)
+    }
+
+    // Both guides teach the small recording window: its scissors, its
+    // handles, its Save that writes the trim into the file. Once a recording
+    // opens in the editor instead (on by default in Next since 2026-09-23)
+    // none of those controls is on screen, so a guide pointing at them waits
+    // for a window that never comes. They are not offered while it is on.
+    @Test func neitherGuideIsOfferedWhenARecordingOpensInTheEditor() {
+        for guide in video {
+            #expect(guide.retiredBy == [FeatureCatalog.recordingIsADocumentFlag], "\(guide.id)")
+        }
+        let editorOn = TutorialCatalog.guides(enabled: { $0 == FeatureCatalog.recordingIsADocumentFlag })
+        #expect(!editorOn.contains { $0.track == .video })
+        #expect(!TutorialCatalog.populatedTracks(in: editorOn).contains(.video))
     }
 
     // MARK: What each guide is for

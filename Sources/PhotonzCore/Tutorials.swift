@@ -759,10 +759,16 @@ public struct TutorialGuide: Identifiable, Hashable, Codable, Sendable {
     /// out of the window entirely. Empty means it teaches something everybody
     /// has.
     public let requires: [String]
+    /// The features that took this guide's controls away, by flag name. A
+    /// guide teaching a window a flag replaced points at controls that are no
+    /// longer on screen while that flag is on, so it is left out then the same
+    /// way `requires` leaves one out. Empty means nothing replaced it.
+    public let retiredBy: [String]
     public let steps: [TutorialStep]
 
     public init(id: String, track: TutorialTrack, title: String, summary: String,
                 minutes: Int, sample: TutorialSample?, requires: [String] = [],
+                retiredBy: [String] = [],
                 steps: [TutorialStep]) {
         self.id = id
         self.track = track
@@ -771,6 +777,7 @@ public struct TutorialGuide: Identifiable, Hashable, Codable, Sendable {
         self.minutes = minutes
         self.sample = sample
         self.requires = requires
+        self.retiredBy = retiredBy
         self.steps = steps
     }
 
@@ -893,7 +900,7 @@ public enum TutorialCatalog {
     /// test hands it a made up one.
     public static func guides(enabled isEnabled: (String) -> Bool,
                               from list: [TutorialGuide] = TutorialCatalog.guides) -> [TutorialGuide] {
-        list.filter { $0.requires.allSatisfy(isEnabled) }
+        list.filter { $0.requires.allSatisfy(isEnabled) && !$0.retiredBy.contains(where: isEnabled) }
     }
 
     /// The tracks that actually have something on them, in track order. What

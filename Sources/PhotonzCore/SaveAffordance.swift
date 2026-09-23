@@ -16,7 +16,8 @@ import Foundation
 /// a window on screen.
 public enum SaveAffordance: String, Sendable, Equatable, CaseIterable, Codable {
     /// Nothing is loaded in this window yet — an empty window, or a recording
-    /// still reading its own length. Save is dimmed and closing asks nothing.
+    /// still reading its own length — or it holds something untouched that
+    /// has nowhere to be saved to. Save is dimmed and closing asks nothing.
     case nothingToSave
     /// Loaded, and what is on disk already matches. Save stays live, exactly as
     /// it does in any Mac app with an open unedited document: pressing it is a
@@ -30,13 +31,24 @@ public enum SaveAffordance: String, Sendable, Equatable, CaseIterable, Codable {
     /// disagree; pressing either one now waits on the commit already in flight
     /// instead of starting a second.
     case saving
+    /// Loaded, with edits, in a window that has nowhere to save them in place:
+    /// a recording opened as a document, until the Command S question is
+    /// answered. Save stays dimmed, and closing still asks, because the edits
+    /// are work: the sheet says they will not be kept and offers Export, the
+    /// one door that keeps them.
+    case changesOnlyExportKeeps
 
     /// The whole affordance from the three facts a window knows about itself.
     ///
     /// `isLoaded` is "there is something here to save into": a document for an
     /// image window, a recording whose length has been read for a video one.
-    public static func forDocument(isLoaded: Bool, hasChanges: Bool, isSaving: Bool) -> SaveAffordance {
+    ///
+    /// `canSaveInPlace` is false where Save has nowhere safe to write this
+    /// window's contents at all.
+    public static func forDocument(isLoaded: Bool, hasChanges: Bool, isSaving: Bool,
+                                   canSaveInPlace: Bool = true) -> SaveAffordance {
         guard isLoaded else { return .nothingToSave }
+        guard canSaveInPlace else { return hasChanges ? .changesOnlyExportKeeps : .nothingToSave }
         if isSaving { return .saving }
         return hasChanges ? .unsavedChanges : .upToDate
     }
@@ -45,13 +57,19 @@ public enum SaveAffordance: String, Sendable, Equatable, CaseIterable, Codable {
     ///
     /// Deliberately not "there are changes": a live Save on an unchanged
     /// document is the Mac idiom, and, more importantly, it means this can only
-    /// ever be false when there is nothing to lose. That is what makes the
-    /// invariant below hold.
-    public var isSaveEnabled: Bool { self != .nothingToSave }
+    /// ever be false when there is nothing to lose, or when closing stops to
+    /// offer Export instead. That is what makes the invariant below hold.
+    public var isSaveEnabled: Bool { self != .nothingToSave && self != .changesOnlyExportKeeps }
 
-    /// Whether closing this window has to ask "do you want to save the
-    /// changes" before it goes.
-    public var asksBeforeClosing: Bool { self == .unsavedChanges || self == .saving }
+    /// Whether closing this window has to stop and ask before it goes.
+    public var asksBeforeClosing: Bool { closingOffersSave || closingOffersExport }
+
+    /// Whether that question is "do you want to save the changes", with Save.
+    public var closingOffersSave: Bool { self == .unsavedChanges || self == .saving }
+
+    /// Whether that question is instead "these changes will not be kept", with
+    /// Export, because Save has nowhere to write them.
+    public var closingOffersExport: Bool { self == .changesOnlyExportKeeps }
 
     /// Whether pressing Save has real work to do, as opposed to reporting an
     /// immediate success. A save with nothing to write must still report

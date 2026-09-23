@@ -2114,6 +2114,7 @@ public enum TutorialGuides {
         summary: "Cut a recording down to the part worth watching, and know what saving does to it.",
         minutes: 2,
         sample: .sampleRecording,
+        retiredBy: [FeatureCatalog.recordingIsADocumentFlag],
         steps: [
             TutorialStep(
                 id: "what-you-have",
@@ -2173,6 +2174,7 @@ public enum TutorialGuides {
         summary: "Pick the shape a recording leaves in, or put it straight on the clipboard.",
         minutes: 1,
         sample: .sampleRecording,
+        retiredBy: [FeatureCatalog.recordingIsADocumentFlag],
         steps: [
             TutorialStep(
                 id: "three-ways-out",

@@ -17,14 +17,25 @@ struct SaveAffordanceTests {
         for isLoaded in [true, false] {
             for hasChanges in [true, false] {
                 for isSaving in [true, false] {
-                    let affordance = SaveAffordance.forDocument(isLoaded: isLoaded,
-                                                               hasChanges: hasChanges,
-                                                               isSaving: isSaving)
-                    if affordance.asksBeforeClosing {
-                        #expect(affordance.isSaveEnabled,
-                                "\(affordance) asks before closing but dims Save")
-                        #expect(affordance.savesSomething,
-                                "\(affordance) asks before closing but Save has nothing to do")
+                    for canSaveInPlace in [true, false] {
+                        let affordance = SaveAffordance.forDocument(isLoaded: isLoaded,
+                                                                   hasChanges: hasChanges,
+                                                                   isSaving: isSaving,
+                                                                   canSaveInPlace: canSaveInPlace)
+                        if affordance.closingOffersSave {
+                            #expect(affordance.isSaveEnabled,
+                                    "\(affordance) offers Save on the way out but dims Save")
+                            #expect(affordance.savesSomething,
+                                    "\(affordance) offers Save on the way out but Save has nothing to do")
+                        }
+                        // A close that asks offers exactly one way to keep the
+                        // work: Save, or Export where Save cannot write it.
+                        if affordance.asksBeforeClosing {
+                            #expect(affordance.closingOffersSave != affordance.closingOffersExport,
+                                    "\(affordance) asks before closing but offers no one way to keep it")
+                        } else {
+                            #expect(!affordance.closingOffersSave && !affordance.closingOffersExport)
+                        }
                     }
                 }
             }
@@ -32,12 +43,17 @@ struct SaveAffordanceTests {
     }
 
     // The other half of the same promise: a dimmed Save has to mean there is
-    // genuinely nothing to lose, so nothing is ever dropped quietly.
-    @Test("Save is only ever dimmed when there is nothing loaded at all")
+    // genuinely nothing to lose, or that closing stops and says how to keep it,
+    // so nothing is ever dropped quietly.
+    @Test("A dimmed Save never lets work go without a word")
     func dimmedSaveMeansNothingToLose() {
         for affordance in SaveAffordance.allCases where !affordance.isSaveEnabled {
-            #expect(affordance == .nothingToSave)
-            #expect(!affordance.asksBeforeClosing)
+            if affordance == .nothingToSave {
+                #expect(!affordance.asksBeforeClosing)
+            } else {
+                #expect(affordance.asksBeforeClosing && affordance.closingOffersExport,
+                        "\(affordance) dims Save and would close without asking")
+            }
         }
     }
 
@@ -85,5 +101,30 @@ struct SaveAffordanceTests {
     func aSaveInFlightWinsOverUpToDate() {
         #expect(SaveAffordance.forDocument(isLoaded: true, hasChanges: false, isSaving: true)
             == .saving)
+    }
+
+    // A recording opened as a document has nowhere to be saved TO until the
+    // Command S question is answered: writing it back would throw away the
+    // video, and a package would hold a clip whose frames it cannot find. The
+    // edits are still work, so closing asks, says they will not be kept, and
+    // offers Export, the one door that does keep them (2026-09-23).
+    @Test("Edits nothing can save in place ask before closing and offer Export")
+    func editsOnlyExportKeepsAskAndOfferExport() {
+        let affordance = SaveAffordance.forDocument(isLoaded: true, hasChanges: true,
+                                                   isSaving: false, canSaveInPlace: false)
+        #expect(affordance == .changesOnlyExportKeeps)
+        #expect(!affordance.isSaveEnabled)
+        #expect(affordance.asksBeforeClosing)
+        #expect(affordance.closingOffersExport)
+        #expect(!affordance.closingOffersSave)
+        #expect(!affordance.savesSomething)
+    }
+
+    @Test("An untouched window with nowhere to save closes without asking")
+    func untouchedWithNowhereToSaveClosesQuietly() {
+        let affordance = SaveAffordance.forDocument(isLoaded: true, hasChanges: false,
+                                                   isSaving: false, canSaveInPlace: false)
+        #expect(affordance == .nothingToSave)
+        #expect(!affordance.asksBeforeClosing)
     }
 }

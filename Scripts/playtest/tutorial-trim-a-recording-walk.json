@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/tutorial-trim-a-recording-walk",
-  "setup": { "forget": ["tutorials"] },
+  "setup": { "flags": { "next-a-recording-is-a-document": false }, "forget": ["tutorials"] },
   "steps": [
     { "do": "startGuide", "guide": "trim-a-recording" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "what-you-have", "timeout": 25 },

@@ -228,6 +228,11 @@ public enum FeatureCatalog {
         let releases: Set<Release>
         /// Releases it starts switched on in.
         let enabledByDefaultIn: Set<Release>
+        /// Flags this one does nothing without, because what it changes only
+        /// exists inside what they open. A flag on by default in a release
+        /// must find everything it needs on by default there too
+        /// (`FeatureDependencyTests`).
+        var needs: Set<String> = []
     }
 
     private static func definitions(for release: Release) -> [Definition] {
@@ -703,7 +708,7 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: []),
+                enabledByDefaultIn: [.next]),
             Definition(
                 flag: FeatureFlag(
                     name: videoExportFlag,
@@ -713,7 +718,8 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next]),
+                enabledByDefaultIn: [.next],
+                needs: [recordingIsADocumentFlag]),
             Definition(
                 flag: FeatureFlag(
                     name: timelineZoomFlag,
@@ -723,7 +729,8 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next]),
+                enabledByDefaultIn: [.next],
+                needs: [recordingIsADocumentFlag]),
             Definition(
                 flag: FeatureFlag(
                     name: transitionsAtACutFlag,
@@ -733,7 +740,8 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next]),
+                enabledByDefaultIn: [.next],
+                needs: [recordingIsADocumentFlag]),
             Definition(
                 flag: FeatureFlag(
                     name: punchInFlag,
@@ -743,7 +751,8 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next]),
+                enabledByDefaultIn: [.next],
+                needs: [recordingIsADocumentFlag]),
             Definition(
                 flag: FeatureFlag(
                     name: titleOnTheTimelineFlag,
@@ -753,7 +762,8 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next]),
+                enabledByDefaultIn: [.next],
+                needs: [recordingIsADocumentFlag]),
             Definition(
                 flag: FeatureFlag(
                     name: captionsFromTheSoundFlag,
@@ -763,7 +773,8 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next]),
+                enabledByDefaultIn: [.next],
+                needs: [recordingIsADocumentFlag]),
             Definition(
                 flag: FeatureFlag(
                     name: componentOnTheTimelineFlag,
@@ -773,7 +784,8 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next]),
+                enabledByDefaultIn: [.next],
+                needs: [recordingIsADocumentFlag]),
             Definition(
                 flag: FeatureFlag(
                     name: soundOnTheTimelineFlag,
@@ -783,7 +795,8 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next]),
+                enabledByDefaultIn: [.next],
+                needs: [recordingIsADocumentFlag]),
             Definition(
                 flag: FeatureFlag(
                     name: scrubAuditionFlag,
@@ -793,7 +806,8 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next]),
+                enabledByDefaultIn: [.next],
+                needs: [recordingIsADocumentFlag]),
             Definition(
                 flag: FeatureFlag(
                     name: mixLoudnessFlag,
@@ -803,7 +817,8 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next]),
+                enabledByDefaultIn: [.next],
+                needs: [recordingIsADocumentFlag]),
             Definition(
                 flag: FeatureFlag(
                     name: motionStripFlag,
@@ -1228,6 +1243,16 @@ public enum FeatureCatalog {
                 flag.isEnabled = definition.enabledByDefaultIn.contains(release)
                 return flag
             }
+    }
+
+    /// The flags `name` does nothing without, whichever release asks.
+    public static func dependencies(of name: String) -> Set<String> {
+        for release in Release.allCases {
+            if let definition = definitions(for: release).first(where: { $0.flag.name == name }) {
+                return definition.needs
+            }
+        }
+        return []
     }
 
     /// A fresh, untouched state for one release.

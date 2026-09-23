@@ -91,6 +91,7 @@ extension EditorState {
         // Already written, to answer what it would weigh: move it into place
         // and there is nothing to watch.
         if let weighed, AppCoordinator.putWeighedFileInPlace(weighed, at: url) {
+            keptByExport()
             raiseCanvasNotice(.videoWritten(file: url.lastPathComponent))
             return
         }
@@ -105,6 +106,7 @@ extension EditorState {
                 }
                 videoExport = nil
                 videoExportTask = nil
+                keptByExport()
                 raiseCanvasNotice(.videoWritten(file: url.lastPathComponent))
             } catch is CancellationError {
                 // Stopped on purpose, and `DocumentMovieWriter` took the
@@ -119,6 +121,14 @@ extension EditorState {
                 raiseCanvasNotice(.videoWritten(file: nil))
             }
         }
+    }
+
+    /// A recording that cannot be saved in place is kept by exporting it, so
+    /// what was just written out is the new clean baseline: closing stops
+    /// asking about edits that are now safely in a file. Anything that CAN be
+    /// saved keeps its own baseline, because an export is a copy, not a save.
+    func keptByExport() {
+        if isRecordingDocument { markSaved() }
     }
 
     // MARK: One frame of it, as a picture

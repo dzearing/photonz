@@ -1,10 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/playing-a-recording-never-blinks-walk",
   "setup": {
-    "forget": ["all"],
-    "flags": {
-      "next-a-recording-is-a-document": true
-    }
+    "forget": ["all"]
   },
   "steps": [
     { "do": "open", "file": "fixtures/Full screen Retina recording 3456x2234.mp4", "width": 1440, "height": 900 },

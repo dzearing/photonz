@@ -3,7 +3,7 @@
   "seed": "Under a recording sits a row of eight pictures with no word beside any of them, and until now resting on one raised the system help tag: a box macOS draws in its own style, on its own schedule, looking like nothing else in Photonz. The person using it said so twice: \"tooltips don't look like any other tooltip. I don't know what the buttons do.\" This walk proves the row now answers in the app's OWN tooltip, the same plate a tool in the floating bar answers with, and that the pictures are the app's own: Trim wears the Trim TOOL's glyph instead of scissors, and Export wears an arrow going out instead of the one that means bringing a file in.",
   "setup": {
     "forget": ["all"],
-    "flags": { "next-cut-a-recording": true, "next-tool-tips": true },
+    "flags": { "next-a-recording-is-a-document": false, "next-cut-a-recording": true, "next-tool-tips": true },
     "captures": ["sample-recording"]
   },
   "steps": [
