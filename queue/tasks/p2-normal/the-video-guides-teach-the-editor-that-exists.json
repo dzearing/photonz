@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:54:04.593Z",
-  "updated": "2026-09-23T12:19:02.256Z",
+  "updated": "2026-09-23T14:02:27.840Z",
   "deps": [
     "the-timeline-is-the-one-in-the-mock",
     "bring-in-a-second-clip-and-cut-between-clips",
@@ -22,7 +22,8 @@
   "acceptance": [
     "Every video guide step anchors to a control that exists at Next defaults",
     "Guides cover cut, second clip, title with motion, transition, captions, export",
-    "Their walks pass at Next defaults"
+    "Their walks pass at Next defaults",
+    "At Next defaults, with no flag changed, Help and the Tutorials window offer a Video track again, and every guide on it runs in the editor a recording now opens in"
   ],
   "log": [
     {
@@ -44,6 +45,10 @@
     {
       "t": "2026-09-23T12:19:02.255Z",
       "note": "manager 2026-09-23: given deps on the five rebuild tasks whose controls these guides teach (timeline, second clip, moving title, transition tiles, captions). Without them it was claimable today and a runner would have anchored every step to the strip and panel the rebuild replaces. Priority and seq unchanged."
+    },
+    {
+      "t": "2026-09-23T14:02:27.839Z",
+      "note": "2026-09-23: a recording now opens in the editor by default in Next, so both old guides (trim-a-recording, export-a-recording) waited 20s for a window that never came. They now carry retiredBy: [next-a-recording-is-a-document] (TutorialGuide.retiredBy, Tutorials.swift) and are not offered at Next defaults, so Next has NO Video track in Help or the Tutorials window until this task ships guides for the editor. Their walks are pinned to the old window with the flag false."
     }
   ]
 }

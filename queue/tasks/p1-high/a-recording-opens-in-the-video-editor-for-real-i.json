@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:42:39.064Z",
-  "updated": "2026-09-23T12:44:49.648Z",
+  "updated": "2026-09-23T14:19:28.359Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): About twenty video features (timeline, split, transitions, speed, punch-in, titles, captions, sound as a layer, video export) are on by default in Next, but all of them live in the editor that next-a-recording-is-a-document opens, and that flag is OFF by default. So a person opening a recording got the old play-and-shorten window and none of the work. Walks set the flag themselves, so nothing caught it. The user found this on 2026-09-23 and was furious: 'I can't create a layer, do transitions, split audio out'.\n\nRoot cause found in the intake window: PhotonzApp.swift:161 routes .video to ReleaseExperience.videoEditor when the flag is off. The user's dev app has the flag turned on by hand as of 2026-09-23 04:50.",
@@ -48,6 +48,47 @@
     {
       "t": "2026-09-23T12:44:49.647Z",
       "note": "when next-a-recording-is-a-document goes on by default, take the flag out of Scripts/playtest/playing-a-recording-never-blinks-walk.json: it only sets it because the editor path is off at Next defaults today"
+    },
+    {
+      "t": "2026-09-23T13:15:05.498Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T14:02:27.974Z",
+      "note": "owns these walks: a-recording-opens-in-the-editor-at-defaults-walk"
+    },
+    {
+      "t": "2026-09-23T14:19:21.000Z",
+      "note": "pre-build review: the only door to the old window is EditorRootView (PhotonzApp.swift); capture, history, Open and drop all go through .video window ids, so flipping the flag covers every route. Current is untouched (flag only offered in Next). Found that turning it on hides nothing but breaks two user-facing tutorials (trim-a-recording, export-a-recording wait 20s for the old window): reproduced by running tutorial-trim-a-recording-walk and tutorial-export-a-recording-walk at the new default, both failed at startGuide."
+    },
+    {
+      "t": "2026-09-23T14:19:21.000Z",
+      "note": "reproduced before fixing: all 20 old-window walks failed at the new default (0 passed, 20 failed) because they reach the editor instead."
+    },
+    {
+      "t": "2026-09-23T14:19:21.000Z",
+      "note": "shipped: flag on by default in Next; FeatureCatalog Definition.needs + dependencies(of:) + FeatureDependencyTests; ten timeline flags need the editor; SaveAffordance.changesOnlyExportKeeps + close sheet with Export…/Don't Keep/Cancel (WindowCloseConfirmation.swift); keptByExport after a finished export; TutorialGuide.retiredBy hides the two old-window guides; 20 old-window walks pinned with the flag false; 24 editor walks stop forcing it."
+    },
+    {
+      "t": "2026-09-23T14:19:21.000Z",
+      "note": "verified: a-recording-opens-in-the-editor-at-defaults-walk (no flags) ok with 4 real captures, sheet read back as 'Your changes to “Tutorial Sample.mp4 (Next)” will not be kept.' with [Export…] [Don’t Keep] [Cancel]; Export leaves the window open with the Export sheet; after a real export expectEdited false. 20/20 old-window walks ok pinned, 25/25 editor walks ok at defaults, 3/3 tutorial shelf walks ok. Scripts/test.sh green (9222). Load flakes in export-size tests logged on the-export-size-test-fails-about-one-run-in-thre."
+    },
+    {
+      "t": "2026-09-23T14:19:21.000Z",
+      "note": "left rough (not filed): the close sheet names the window with the release tag ('Tutorial Sample.mp4 (Next)'), same as the existing Save sheet; a nit only."
+    },
+    {
+      "t": "2026-09-23T14:19:21.000Z",
+      "note": "folded: Video track guides missing in Next -> the-video-guides-teach-the-editor-that-exists (acceptance added); pinned walks -> trim-becomes-a-tool-and-the-recording-window-ret log."
+    },
+    {
+      "t": "2026-09-23T14:19:28.357Z",
+      "note": "A recording opens in the editor with timeline at Next defaults (flag on by default in Next). Flag dependencies recorded in FeatureCatalog with a test that fails when a default-on flag needs a default-off one; ten timeline flags need the editor. Closing an edited recording asks, says the edits will not be kept and offers Export (SaveAffordance.changesOnlyExportKeeps); a finished export counts as kept. Old-window tutorials retired while the editor is on; old-window walks pinned off. Verified: new walk a-recording-opens-in-the-editor-at-defaults-walk with no flags (4 real captures, sheet read back, export clears edited), 20 old-window + 25 editor + 3 tutorial walks ok, Scripts/test.sh green. Audit queue/audits/2026-09-23-recording-opens-in-editor.json. Commit 71b217f7."
     }
-  ]
+  ],
+  "started": "2026-09-23T13:15:05.497Z",
+  "walks": [
+    "a-recording-opens-in-the-editor-at-defaults-walk"
+  ],
+  "completed": "2026-09-23T14:19:28.358Z"
 }
