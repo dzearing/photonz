@@ -14,8 +14,9 @@
 #                         tasks are ready to claim. Default 3; 0 disables it.
 #   PHOTONZ_MANAGER_COOLDOWN   seconds between manager passes. Default 1200.
 #   PHOTONZ_RUNNER_MODEL  model every runner (task, manager, digest) runs on.
-#                         Default claude-opus-5: the user asked on 2026-09-01
-#                         that the loop run on Opus 5 with high thinking.
+#                         Default claude-opus-5-5: the user asked on 2026-09-23
+#                         that the loop run on Opus 5.5 (was Opus 5 since
+#                         2026-09-01) with high thinking.
 #   PHOTONZ_RUNNER_EFFORT effort level for those runners. Default high.
 #   PHOTONZ_AUTO_REFRESH  0 to stop the loop rebuilding and relaunching the
 #                         user's dev app after a task lands app code. Default 1.
@@ -52,7 +53,7 @@ mkdir -p "$QDIR/digests" "$QDIR/leftovers"
 LEFTOVERS_BEFORE="$QDIR/leftovers/.before.json"
 # stream-json + the formatter give this window a live feed of what each runner
 # is doing (tool by tool), instead of dead air until a task ends.
-RUNNER_MODEL="${PHOTONZ_RUNNER_MODEL:-claude-opus-5}"
+RUNNER_MODEL="${PHOTONZ_RUNNER_MODEL:-claude-opus-5-5}"
 RUNNER_EFFORT="${PHOTONZ_RUNNER_EFFORT:-high}"
 CLAUDE_FLAGS=(--dangerously-skip-permissions --output-format stream-json --verbose
               --model "$RUNNER_MODEL" --effort "$RUNNER_EFFORT")
