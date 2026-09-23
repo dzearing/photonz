@@ -1,0 +1,33 @@
+{
+  "id": "playing-a-recording-never-blinks",
+  "title": "Playing a recording never blinks",
+  "goal": "Playback of an untouched full-screen Retina recording flickers (user, 2026-09-23). Root cause, proven by a renderer test in the intake window: (1) MovieClip.swift:193-197 playing(atTimeMS:) swaps the clip to the new frame's ref whether or not it is decoded, and DocumentRenderer.swift:833 drops a layer whose ref is not in ImageStore, so a late frame draws as transparent instead of holding the last frame (video.md claims it holds; no code does). (2) movieFrameLanded (EditorState+Time.swift:210-223) resubmits an identical document, RenderDiff sees no change and renderInteractive (DocumentRenderer.swift:283-287) returns the cached blank frame, so the blank persists for the whole 33ms slot. A timing replay on a real 3456x2234 recording had 22 of 91 ticks blank, alternating 16 times; a 1696x1118 one was fine, so full-size Retina decode cannot keep up.",
+  "epic": "",
+  "priority": "p1-high",
+  "seq": 0.05,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T11:50:37.468Z",
+  "updated": "2026-09-23T11:50:41.039Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User: 'When I play back, it's flickering the video! not even edited.'",
+  "acceptance": [
+    "Renderer test: a recording document at a moment whose frame is not decoded, drawn right after one that was, shows the earlier frame's pixels, never transparent",
+    "Renderer test: after the missing frame is filed and the landing redraw runs, the new frame's pixels show (the landing redraw is not a no-op)",
+    "Core test: given the set of decoded frames, the drawn document uses the newest decoded frame at or before the moment",
+    "Playback decodes at preview/canvas size (AVAssetImageGenerator maximumSize or equivalent) and looks ahead enough that a 3456x2234 recording plays with no blank tick in a replay of the real decoder",
+    "A walk plays a full-screen Retina recording for 3 seconds, photographs at least 20 moments, and fails if any has the clip area empty"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T11:50:37.470Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-23T11:50:41.038Z",
+      "note": "seq 350 -> 0.05"
+    }
+  ]
+}
