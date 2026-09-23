@@ -11,6 +11,7 @@
 #if PHOTONZ_PLAYTEST
 import AVFoundation
 import AppKit
+import UniformTypeIdentifiers
 import ScreenCaptureKit
 import PhotonzCore
 import PhotonzMedia
@@ -1778,6 +1779,11 @@ private final class Run {
 
         case .expectLayers(let atLeast, let atMost):
             note(number, step.name, try checkLayers(atLeast: atLeast, atMost: atMost),
+                 state: describe())
+
+        case .expectPlaybackNeverBlank(let name, let seconds, let moments):
+            note(number, step.name,
+                 try await checkPlaybackNeverBlank(name: name, seconds: seconds, moments: moments),
                  state: describe())
 
         case .expectBox(let layer, let at, let size, let corner, let onScreen, let reachable, let within):
@@ -6190,6 +6196,102 @@ private final class Run {
         return "the pill says \"\(reading)\", carrying \"\(says)\" as claimed" + about
     }
 
+    /// Plays the document from the start and looks at the picture the canvas
+    /// was handed `moments` times along the way (`expectPlaybackNeverBlank`).
+    ///
+    /// Each look is shrunk to a quarter on the spot and written out only once
+    /// the playing stops: encoding a full-screen PNG on the main actor while
+    /// it plays would stall the very clock and frame landings being watched.
+    private func checkPlaybackNeverBlank(name: String, seconds: Double, moments: Int) async throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.shownDocument, document.hasTime,
+              let clip = document.allLayers.first(where: \.isClip), let movie = clip.movie else {
+            throw Failure(description: "there is no recording in this document to play")
+        }
+        editor.goToDocumentStart()
+        await sleep(0.3)
+        editor.playDocument()
+        let started = Date()
+        var looks: [CGImage] = []
+        var empty: [Int] = []
+        var late = 0
+        var worstLag = 0
+        for moment in 1...moments {
+            let due = seconds * Double(moment) / Double(moments)
+            let wait = due - Date().timeIntervalSince(started)
+            if wait > 0 { await sleep(wait) }
+            let playhead = editor.documentTimeMS
+            if let wanted = clip.movieFrameSourceMS(atTimeMS: playhead) {
+                let index = movie.frameIndex(atSourceMS: wanted)
+                let shown = editor.movieFrames.inHand.frameIndexToShow(index, of: movie.id)
+                if shown != index { late += 1 }
+                if let shown { worstLag = max(worstLag, abs(index - shown)) }
+            }
+            guard let picture = editor.renderedImage,
+                  let look = Self.quarter(of: picture) else {
+                empty.append(moment)
+                continue
+            }
+            looks.append(look)
+            let scale = CGFloat(look.width) / max(1, document.canvasSize.width)
+            let area = CGRect(x: clip.frame.minX * scale, y: clip.frame.minY * scale,
+                              width: clip.frame.width * scale, height: clip.frame.height * scale)
+            if Self.transparentShare(of: look, in: area) > 0.9 { empty.append(moment) }
+        }
+        editor.pauseDocument()
+        for (index, look) in looks.enumerated() {
+            try writePNG(look, name: "\(name)-\(index + 1)")
+        }
+        let lateness = late == 0
+            ? "every frame was read before the playhead reached it"
+            : "\(late) caught a frame still being read and held one \(worstLag) frame(s) back instead"
+        guard empty.isEmpty else {
+            throw Failure(description: "the clip area was EMPTY at \(empty.count) of \(moments) moments "
+                + "(\(empty.map(String.init).joined(separator: ", "))) while playing; \(lateness)")
+        }
+        return "played \(seconds)s of a \(Int(movie.pixelSize.width))x\(Int(movie.pixelSize.height)) recording, "
+            + "looked \(moments) times (\(name)-1.png to \(name)-\(looks.count).png), the clip was drawn in every one; "
+            + lateness
+    }
+
+    /// A picture at a quarter of its size, or nil where it could not be drawn.
+    private static func quarter(of image: CGImage) -> CGImage? {
+        let width = max(1, image.width / 4)
+        let height = max(1, image.height / 4)
+        guard let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8,
+                                      bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        context.interpolationQuality = .low
+        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        return context.makeImage()
+    }
+
+    /// How much of `area` (top-left origin, in the picture's pixels) is fully
+    /// see-through, read on a 24 by 24 grid.
+    private static func transparentShare(of image: CGImage, in area: CGRect) -> Double {
+        let width = image.width, height = image.height
+        var bytes = [UInt8](repeating: 0, count: width * height * 4)
+        guard let context = CGContext(data: &bytes, width: width, height: height, bitsPerComponent: 8,
+                                      bytesPerRow: width * 4, space: CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return 1 }
+        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        let box = area.intersection(CGRect(x: 0, y: 0, width: width, height: height))
+        guard !box.isNull, box.width >= 1, box.height >= 1 else { return 1 }
+        var clear = 0, total = 0
+        for row in 0..<24 {
+            for column in 0..<24 {
+                let x = Int(box.minX + (CGFloat(column) + 0.5) * box.width / 24)
+                let y = Int(box.minY + (CGFloat(row) + 0.5) * box.height / 24)
+                guard x < width, y < height else { continue }
+                total += 1
+                if bytes[(y * width + x) * 4 + 3] == 0 { clear += 1 }
+            }
+        }
+        return total == 0 ? 1 : Double(clear) / Double(total)
+    }
+
     private func checkLayers(atLeast: Int?, atMost: Int?) throws -> String {
         let editor = try requireEditor()
         let layers = editor.document?.allLayers ?? []
@@ -8378,6 +8480,22 @@ private final class Run {
         // The menu-bar scene hands the coordinator its openWindow action a
         // beat after launch.
         try await poll("the app's window opener", within: 5) { coordinator.openWindowAction != nil }
+        // A movie opens the way the app opens one, as a document where a
+        // recording is one (`next-a-recording-is-a-document`), so a walk can
+        // play any recording in its fixtures rather than only the sample.
+        if Experiments.shared.recordingIsADocument,
+           (UTType(filenameExtension: url.pathExtension)?.conforms(to: .movie)) == true {
+            let wanted = url.standardizedFileURL
+            coordinator.openRecording(wanted)
+            var landed: EditorState?
+            try await poll("\(url.lastPathComponent) to open as a document", within: 20) {
+                landed = PlaytestHarness.readyEditors.last { $0.recordingURL?.standardizedFileURL == wanted }
+                return landed != nil
+            }
+            guard let landed else { throw Failure(description: "no editor opened \(url.lastPathComponent)") }
+            try await adopt(landed, window: size, step: "open", subject: url.lastPathComponent, number: number)
+            return
+        }
         let before = Set(PlaytestHarness.readyEditors.map { ObjectIdentifier($0) })
         coordinator.openWindowAction?(.file(url))
         // Wait for the window this file opened, and NOTHING else. Reaching for

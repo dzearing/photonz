@@ -87,21 +87,42 @@ final class MovieLibrary {
 /// The one place an `AVAssetImageGenerator` lives.
 ///
 /// An actor rather than a lock, because a generator is neither `Sendable` nor
-/// cheap to make: one per recording, kept here, and every decode runs off the
+/// cheap to make: a few per recording, kept here, and every decode runs off the
 /// main actor so a frame landing never stalls a drag.
 actor MovieDecoder {
     static let shared = MovieDecoder()
 
-    private var generators: [UUID: AVAssetImageGenerator] = [:]
+    /// How many generators read one recording at one size side by side.
+    ///
+    /// One generator reads one frame at a time, and a frame of a full-screen
+    /// Retina recording costs about 40ms to seek to and read, which is longer
+    /// than the 33ms it is on screen for: playing one fell further behind with
+    /// every frame and flickered. Measured on a real 3456x2234 recording
+    /// (2026-09-23): one generator read 60 frames in about 2.4s, four side by
+    /// side read them in 0.36s. Reading smaller does not help, the time is in
+    /// the decode, so the answer is more hands, not smaller frames.
+    static let lanes = 4
+
+    private struct Key: Hashable {
+        let movie: UUID
+        let width: Int
+        let height: Int
+    }
+
+    private var generators: [Key: [AVAssetImageGenerator]] = [:]
+    private var nextLane: [Key: Int] = [:]
 
     /// One frame of one recording, or nil where the file will not give it up.
+    ///
+    /// `size` is the most it is worth reading the frame at, the recording's
+    /// own size when left out, which is what writing a file wants.
     ///
     /// The callback form rather than the `async` one on purpose: a generator is
     /// not `Sendable`, and awaiting a method ON it would carry it across an
     /// isolation boundary. This way it never leaves the actor and only the
     /// finished picture comes back.
-    func frame(of movie: MovieRef, at url: URL, sourceMS: Int) async -> CGImage? {
-        let generator = generator(for: movie, at: url)
+    func frame(of movie: MovieRef, at url: URL, sourceMS: Int, size: CGSize? = nil) async -> CGImage? {
+        let generator = generator(for: movie, at: url, size: size ?? movie.pixelSize)
         let time = CMTime(value: CMTimeValue(sourceMS), timescale: 1000)
         return await withCheckedContinuation { continuation in
             generator.generateCGImageAsynchronously(for: time) { image, _, _ in
@@ -110,8 +131,31 @@ actor MovieDecoder {
         }
     }
 
-    private func generator(for movie: MovieRef, at url: URL) -> AVAssetImageGenerator {
-        if let known = generators[movie.id] { return known }
+    /// The next generator in line for this recording at this size, made the
+    /// first time one is asked for.
+    private func generator(for movie: MovieRef, at url: URL, size: CGSize) -> AVAssetImageGenerator {
+        let key = Key(movie: movie.id, width: Int(size.width.rounded()), height: Int(size.height.rounded()))
+        if generators[key] == nil {
+            // A zoom moved the size frames are read at: the lanes for the size
+            // before it are done with. The recording's own size stays, since
+            // that is what writing a file out reads at.
+            let full = Key(movie: movie.id, width: Int(movie.pixelSize.width.rounded()),
+                           height: Int(movie.pixelSize.height.rounded()))
+            for stale in generators.keys where stale.movie == movie.id && stale != full {
+                generators[stale] = nil
+                nextLane[stale] = nil
+            }
+        }
+        let lanes = generators[key] ?? (0..<Self.lanes).map { _ in
+            Self.makeGenerator(url: url, size: size)
+        }
+        generators[key] = lanes
+        let lane = nextLane[key, default: 0]
+        nextLane[key] = (lane + 1) % lanes.count
+        return lanes[lane]
+    }
+
+    private static func makeGenerator(url: URL, size: CGSize) -> AVAssetImageGenerator {
         let generator = AVAssetImageGenerator(asset: AVURLAsset(url: url))
         generator.appliesPreferredTrackTransform = true
         // Half a frame either way: exact seeking makes every frame a full
@@ -120,10 +164,10 @@ actor MovieDecoder {
         let slop = CMTime(value: CMTimeValue(MovieRef.frameStepMS / 2), timescale: 1000)
         generator.requestedTimeToleranceBefore = slop
         generator.requestedTimeToleranceAfter = slop
-        // The canvas draws the frame at whatever size the picture is, so
-        // decoding it larger than the recording buys nothing.
-        generator.maximumSize = movie.pixelSize
-        generators[movie.id] = generator
+        // Read at the size it is shown, never bigger than the recording: a
+        // full-screen Retina frame is 30MB, and a window showing it at half
+        // size has no use for three quarters of that.
+        generator.maximumSize = size
         return generator
     }
 }
@@ -142,9 +186,21 @@ final class MovieFrameFetcher {
     /// 130MB, which is the most a preview is worth.
     static let frameBudget = 16
 
+    /// How far ahead of the playhead frames are read while it plays. A
+    /// quarter of a second: enough that the four lanes of `MovieDecoder` are
+    /// always busy, and well inside `frameBudget` so a frame read ahead is
+    /// never dropped before it is shown.
+    static let playAheadFrames = 8
+
+    private struct Resident {
+        let ref: ImageRef
+        let movie: UUID
+        let frameIndex: Int
+    }
+
     private let store: ImageStore
     /// Decoded frames, oldest first, so the one to drop is always at the front.
-    private var resident: [ImageRef] = []
+    private var resident: [Resident] = []
     private var inFlight: Set<UUID> = []
 
     /// Called on the main actor whenever a frame lands, so the canvas can
@@ -158,43 +214,66 @@ final class MovieFrameFetcher {
     /// Whether this frame is already decoded and filed.
     func has(_ ref: ImageRef) -> Bool { store.image(for: ref) != nil }
 
-    /// Ask for everything a moment needs. Frames already filed cost nothing;
-    /// the rest are decoded in the background and land one by one.
-    func fetch(_ requests: [MovieFrameRequest]) {
-        for request in requests where !has(request.ref) && !inFlight.contains(request.ref.id) {
+    /// Every frame this window has read and still holds, which is what the
+    /// canvas draws a late moment with (`MovieFramesInHand.swift`). Read off
+    /// the store rather than remembered, so a frame something else took back
+    /// out of it is never offered as one to show.
+    var inHand: MovieFramesInHand {
+        var hand = MovieFramesInHand()
+        for frame in resident where has(frame.ref) {
+            hand.insert(movie: frame.movie, frameIndex: frame.frameIndex)
+        }
+        return hand
+    }
+
+    /// Ask for everything a moment needs, each frame read at the size it comes
+    /// back from `size`. Frames already filed at least that big cost nothing; a
+    /// frame filed smaller (the canvas was zoomed in since) is read again, and
+    /// the smaller one keeps showing until the bigger one lands.
+    func fetch(_ requests: [MovieFrameRequest], size: (MovieFrameRequest) -> CGSize) {
+        for request in requests where !inFlight.contains(request.ref.id) {
+            let wanted = size(request)
+            if let filed = store.image(for: request.ref),
+               CGFloat(filed.width) >= wanted.width - 1 { continue }
             guard let url = MovieLibrary.shared.url(for: request.movie) else { continue }
             inFlight.insert(request.ref.id)
             Task { [weak self] in
                 let image = await MovieDecoder.shared.frame(of: request.movie, at: url,
-                                                            sourceMS: request.sourceMS)
+                                                            sourceMS: request.sourceMS, size: wanted)
                 guard let self else { return }
                 inFlight.remove(request.ref.id)
                 guard let image else { return }
-                file(image, as: request.ref)
+                file(image, for: request)
                 onFrameLanded?()
             }
         }
     }
 
-    /// Decode one frame and wait for it. Used where there is nothing sensible
-    /// to draw without it — measuring what a frame costs, writing one out —
-    /// never on the way to putting a picture on screen.
+    /// Decode one frame at the recording's own size and wait for it. Used
+    /// where there is nothing sensible to draw without it — measuring what a
+    /// frame costs, writing one out — never on the way to putting a picture on
+    /// screen.
     @discardableResult
     func frame(_ request: MovieFrameRequest) async -> CGImage? {
-        if let already = store.image(for: request.ref) { return already }
+        if let already = store.image(for: request.ref),
+           CGFloat(already.width) >= request.movie.pixelSize.width - 1 { return already }
         guard let url = MovieLibrary.shared.url(for: request.movie) else { return nil }
         guard let image = await MovieDecoder.shared.frame(of: request.movie, at: url,
                                                           sourceMS: request.sourceMS)
         else { return nil }
-        file(image, as: request.ref)
+        file(image, for: request)
         return image
     }
 
-    private func file(_ image: CGImage, as ref: ImageRef) {
-        store.register(image, as: ref)
-        resident.append(ref)
+    private func file(_ image: CGImage, for request: MovieFrameRequest) {
+        store.register(image, as: request.ref)
+        // A frame read again at a bigger size is the same frame: it moves to
+        // the back of the line rather than taking two places in it.
+        resident.removeAll { $0.ref.id == request.ref.id }
+        resident.append(Resident(ref: request.ref, movie: request.movie.id,
+                                 frameIndex: request.movie.frameIndex(atSourceMS: request.sourceMS)))
         while resident.count > Self.frameBudget {
-            store.remove(resident.removeFirst())
+            store.remove(resident.removeFirst().ref)
         }
     }
 }

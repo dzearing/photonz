@@ -19377,3 +19377,26 @@ that a corner rounds and its lever pulls, and that undo puts each back.
 pen, reshape, join, close, boolean and Turn Into Path walk in the set. The
 biggest thing in the audit to disagree with is the upright sweep band on a
 turned shape.
+
+## 2026-09-23 — Playing a recording never blinks
+
+The user's full-screen Retina recording flickered on play with nothing edited.
+Reproduced three ways before fixing: two renderer tests (a frame that lands
+under a reference the document already points at was answered from the
+incremental cache as the empty frame, and a frame read again bigger likewise),
+a timing benchmark of the app's own decoder on a real 3456x2234 recording
+(about 40ms per frame, up to 100ms on the fixture, against a 33ms frame, and
+reading smaller made no difference), and the new walk run against the old
+behaviour: the clip was EMPTY at 15 of 24 looks.
+
+Fixed: `MovieFramesInHand` (PhotonzCore) stands the newest decoded frame in for
+one still being read, and the canvas draws with it; `renderInteractive` redraws
+when a picture it drew changes in the store; `MovieDecoder` reads with four
+generators per recording at the size the canvas shows (`decodePixelSize`,
+eighths); the fetcher reads 8 frames ahead while playing; an export always
+reads full size. New walk step `expectPlaybackNeverBlank`, and `open` now opens
+a movie as a document. Walk: `playing-a-recording-never-blinks-walk`, 24 of 24
+looks drawn, 4 to 6 held a frame up to 3 back.
+
+**Next:** the walk sets `next-a-recording-is-a-document`, which is still off at
+Next defaults; that is the pending task to make a recording open in the editor.

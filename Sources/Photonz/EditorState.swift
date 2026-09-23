@@ -350,6 +350,9 @@ final class EditorState {
             // Move the camera and the sharp copy of what you were looking at is
             // about the wrong place; draw the new framing.
             if viewport != oldValue { refreshCrispTile() }
+            // Zoomed in on a recording: the frame on screen was read for the
+            // old zoom and is worth reading again at the new one.
+            if viewport?.zoom != oldValue?.zoom { refetchMovieFramesForZoom() }
         }
     }
     /// The selected REGION (Photoshop-style) in document coordinates: any
@@ -3520,8 +3523,12 @@ final class EditorState {
         // This is the whole of "what is drawn at a moment is what the renderer
         // composites for that moment" — the renderer itself is untouched,
         // because what it gets is an ordinary document full of pictures.
+        // A frame still being read is stood in for by the newest one the
+        // window has, so a decode that runs late holds the picture rather than
+        // blanking it (`MovieFramesInHand.swift`).
         if document.hasTime {
-            document = document.drawn(atTimeMS: documentTimeMS)
+            document = document.drawn(atTimeMS: documentTimeMS,
+                                      framesInHand: movieFramesStorage?.inHand)
         }
         // The inline editor overlay stands in for the layer being edited.
         if let id = editingTextLayerID {

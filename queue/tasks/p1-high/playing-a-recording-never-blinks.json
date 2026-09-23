@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:50:37.468Z",
-  "updated": "2026-09-23T12:20:41.681Z",
+  "updated": "2026-09-23T12:57:24.168Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): Playback of an untouched full-screen Retina recording flickers (user, 2026-09-23). Root cause, proven by a renderer test in the intake window: (1) MovieClip.swift:193-197 playing(atTimeMS:) swaps the clip to the new frame's ref whether or not it is decoded, and DocumentRenderer.swift:833 drops a layer whose ref is not in ImageStore, so a late frame draws as transparent instead of holding the last frame (video.md claims it holds; no code does). (2) movieFrameLanded (EditorState+Time.swift:210-223) resubmits an identical document, RenderDiff sees no change and renderInteractive (DocumentRenderer.swift:283-287) returns the cached blank frame, so the blank persists for the whole 33ms slot. A timing replay on a real 3456x2234 recording had 22 of 91 ticks blank, alternating 16 times; a 1696x1118 one was fine, so full-size Retina decode cannot keep up.\n\nUser: 'When I play back, it's flickering the video! not even edited.'",
@@ -40,7 +40,38 @@
     {
       "t": "2026-09-23T12:20:41.680Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T12:44:49.700Z",
+      "note": "owns these walks: playing-a-recording-never-blinks-walk"
+    },
+    {
+      "t": "2026-09-23T12:57:23.906Z",
+      "note": "reproduced: new renderer tests failed on the old renderer (a frame filed under a ref the document already points at, and one re-read bigger, both answered from the cache as the old picture). Timing: the app's decoder (one AVAssetImageGenerator, sequential) takes 39ms median, 59ms p90 per frame on the real 3456x2234 'Recording 2026-09-06 at 22.29.13.mp4', and maximumSize 1200 or 1728 makes NO difference (43ms, 40ms): the cost is the decode. 4 generators side by side read 60 frames in 363ms; AVAssetReader 90 in 376ms."
+    },
+    {
+      "t": "2026-09-23T12:57:23.960Z",
+      "note": "adversarial pass: a Premiere/QuickTime user expects a late frame to hold, never to blank, and a scrub backwards to keep a picture; both done (newest at-or-before, else nearest after). Export must never use a stand-in or a preview-sized frame: drawn() without framesInHand is unchanged, and DocumentFrames now re-reads full size if the window holds a smaller one. No mock covers playback smoothness; it is behaviour only."
+    },
+    {
+      "t": "2026-09-23T12:57:24.012Z",
+      "note": "fixed: MovieFramesInHand + drawn(atTimeMS:framesInHand:) in PhotonzCore; renderInteractive compares the bitmap identity of every visible picture layer before trusting RenderDiff; MovieDecoder has 4 lanes per (recording, size); fetcher reads at MovieRef.decodePixelSize(shownScale: zoom*backing*layer scale), 8 ahead while playing, re-reads on zoom. New walk step expectPlaybackNeverBlank; open step opens movies as documents."
+    },
+    {
+      "t": "2026-09-23T12:57:24.065Z",
+      "note": "verified: playing-a-recording-never-blinks-walk on a synthetic 3456x2234 60fps fixture (decodes at 107ms/frame, harsher than the real ones): 24 of 24 looks drawn, 4 then 6 held a frame up to 3 back. NEGATIVE CONTROL: with hold off, 1 lane, lookahead 3 and the old renderer cache, the same walk FAILED with the clip EMPTY at 15 of 24 looks. Neighbour walks ok: a-recording-is-a-document, hold-on-a-frame, a-frame-of-a-video-comes-out-as-a-picture, an-edited-recording-comes-out-as-a-video, cut-on-the-timeline, transitions-at-a-cut."
+    },
+    {
+      "t": "2026-09-23T12:57:24.115Z",
+      "note": "default config: the walk has to set next-a-recording-is-a-document, which is off at Next defaults (the user turned it on by hand; their dev app's flags confirm it). The default path is the old recording window, which plays through AVPlayerView and cannot blink this way. Making the editor path default is a-recording-opens-in-the-video-editor-for-real-i, noted there. Full test suite: red only on the known busy-machine export-size flake, also red on clean main (evidence on the-export-size-test-fails-about-one-run-in-thre)."
+    },
+    {
+      "t": "2026-09-23T12:57:24.167Z",
+      "note": "left rough: a frame can still be up to ~3 frames late under load (it holds, never blanks); AVAssetReader sequential decode would be faster still for straight playback but needs its own playback pipeline, not worth a task while holding covers it. Reframe section inset seen in the capture folded into the-video-properties-look-like-the-rest-of-the-d."
     }
   ],
-  "started": "2026-09-23T12:20:41.679Z"
+  "started": "2026-09-23T12:20:41.679Z",
+  "walks": [
+    "playing-a-recording-never-blinks-walk"
+  ]
 }

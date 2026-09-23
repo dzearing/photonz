@@ -6614,3 +6614,17 @@
 {"t":"2026-09-23T12:19:40.346Z","ev":"task_blocked","id":"a-recording-remembers-where-the-pointer-went-and","from":"pending","note":"waiting on the card: which pointer and click feature to build first, or not now"}
 {"t":"2026-09-23T12:19:40.396Z","ev":"task_resequenced","id":"a-recording-remembers-where-the-pointer-went-and","from":3160,"to":5}
 {"t":"2026-09-23T12:20:22.673Z","ev":"manager","filed":1,"readyBefore":26,"readyAfter":25,"report":"queue/manager/2026-09-23-0520.md"}
+{"t":"2026-09-23T12:20:41.632Z","ev":"manager_pass","exit":0,"ready":25}
+{"t":"2026-09-23T12:20:41.682Z","ev":"task_started","id":"playing-a-recording-never-blinks","title":"Playing a recording never blinks","priority":"p1-high"}
+{"t":"2026-09-23T12:32:02.208Z","ev":"task_created","id":"keyframe-anything-and-see-and-shape-the-keys-on","priority":"p1-high","title":"Keyframe anything, and see and shape the keys on the timeline"}
+{"t":"2026-09-23T12:32:02.280Z","ev":"task_resequenced","id":"keyframe-anything-and-see-and-shape-the-keys-on","from":350,"to":0.62}
+{"t":"2026-09-23T12:44:49.594Z","ev":"task_note","id":"the-video-properties-look-like-the-rest-of-the-d"}
+{"t":"2026-09-23T12:44:49.649Z","ev":"task_note","id":"a-recording-opens-in-the-video-editor-for-real-i"}
+{"t":"2026-09-23T12:44:49.702Z","ev":"task_walks","id":"playing-a-recording-never-blinks","walks":["playing-a-recording-never-blinks-walk"]}
+{"t":"2026-09-23T12:57:02.196Z","ev":"task_note","id":"the-export-size-test-fails-about-one-run-in-thre"}
+{"t":"2026-09-23T12:57:23.908Z","ev":"task_note","id":"playing-a-recording-never-blinks"}
+{"t":"2026-09-23T12:57:23.962Z","ev":"task_note","id":"playing-a-recording-never-blinks"}
+{"t":"2026-09-23T12:57:24.014Z","ev":"task_note","id":"playing-a-recording-never-blinks"}
+{"t":"2026-09-23T12:57:24.067Z","ev":"task_note","id":"playing-a-recording-never-blinks"}
+{"t":"2026-09-23T12:57:24.117Z","ev":"task_note","id":"playing-a-recording-never-blinks"}
+{"t":"2026-09-23T12:57:24.169Z","ev":"task_note","id":"playing-a-recording-never-blinks"}

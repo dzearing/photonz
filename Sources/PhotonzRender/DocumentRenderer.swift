@@ -257,6 +257,12 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// only `renderInteractive` touches this state.
     private var lastDocument: PhotonzDocument?
     private var lastFrame: CGImage?
+    /// Which bitmap each picture layer of `lastDocument` was drawn with, nil
+    /// for one that had none in the store yet. A clip's frame lands in the
+    /// store under the reference the document ALREADY points at, so the
+    /// document does not change when it arrives and `RenderDiff` alone would
+    /// hand back the empty frame drawn before it (`MovieFramesInHand.swift`).
+    private var lastPictures: [UUID: ObjectIdentifier?] = [:]
     private var frameBuffer: UnsafeMutableRawPointer?
     private var frameBufferCapacity = 0
     private var frameSize = (width: 0, height: 0)
@@ -280,8 +286,13 @@ public final class DocumentRenderer: @unchecked Sendable {
         interactiveLock.lock()
         defer { interactiveLock.unlock() }
 
+        let pictures = Self.pictures(in: document, store: store)
+        defer { lastPictures = pictures }
+        // A picture that arrived, went, or was read again at another size
+        // since the last frame changes pixels the document says nothing
+        // about, so the whole canvas is drawn again.
         if let lastDocument, let lastFrame, frameBuffer != nil,
-           frameSize == (width, height) {
+           frameSize == (width, height), pictures == lastPictures {
             switch RenderDiff.dirtyRegion(from: lastDocument, to: document) {
             case .none:
                 return lastFrame
@@ -296,6 +307,17 @@ public final class DocumentRenderer: @unchecked Sendable {
         }
         return renderLocked(document, store: store, region: nil,
                             width: width, height: height)
+    }
+
+    /// Which bitmap every visible picture layer would be drawn with right now.
+    private static func pictures(in document: PhotonzDocument,
+                                 store: ImageStore) -> [UUID: ObjectIdentifier?] {
+        var found: [UUID: ObjectIdentifier?] = [:]
+        for layer in document.allLayers where layer.isVisible {
+            guard case .image(let ref) = layer.content else { continue }
+            found[ref.id] = store.image(for: ref).map { ObjectIdentifier($0) }
+        }
+        return found
     }
 
     /// Renders `region` (or everything) of the composite into the persistent

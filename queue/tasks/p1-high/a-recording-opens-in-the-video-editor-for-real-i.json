@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:42:39.064Z",
-  "updated": "2026-09-23T12:18:51.285Z",
+  "updated": "2026-09-23T12:44:49.648Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): About twenty video features (timeline, split, transitions, speed, punch-in, titles, captions, sound as a layer, video export) are on by default in Next, but all of them live in the editor that next-a-recording-is-a-document opens, and that flag is OFF by default. So a person opening a recording got the old play-and-shorten window and none of the work. Walks set the flag themselves, so nothing caught it. The user found this on 2026-09-23 and was furious: 'I can't create a layer, do transitions, split audio out'.\n\nRoot cause found in the intake window: PhotonzApp.swift:161 routes .video to ReleaseExperience.videoEditor when the flag is off. The user's dev app has the flag turned on by hand as of 2026-09-23 04:50.",
@@ -44,6 +44,10 @@
     {
       "t": "2026-09-23T12:18:51.260Z",
       "note": "manager 2026-09-23: turning this on by default exposes every Next user to silent work loss. A recording document reports SaveAffordance.nothingToSave (EditorState.swift:1450), and nothingToSave.asksBeforeClosing is false (SaveAffordance.swift:54), so after this lands a person who cuts, titles or captions a recording and closes the window loses all of it without a word. The Save question itself stays with the Command S card on trim-becomes-a-tool-and-the-recording-window-ret, but not losing work silently is true under every answer on that card, so it is added to this task's acceptance. Also: the eleven trim walks listed on that task drive the old window through the harness's flag branch; expect them to move when the default flips."
+    },
+    {
+      "t": "2026-09-23T12:44:49.647Z",
+      "note": "when next-a-recording-is-a-document goes on by default, take the flag out of Scripts/playtest/playing-a-recording-never-blinks-walk.json: it only sets it because the editor path is off at Next defaults today"
     }
   ]
 }

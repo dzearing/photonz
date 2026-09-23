@@ -1,0 +1,25 @@
+{
+  "out": "/tmp/photonz-playtest/playing-a-recording-never-blinks-walk",
+  "setup": {
+    "forget": ["all"],
+    "flags": {
+      "next-a-recording-is-a-document": true
+    }
+  },
+  "steps": [
+    { "do": "open", "file": "fixtures/Full screen Retina recording 3456x2234.mp4", "width": 1440, "height": 900 },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "describe", "stage": "1-opened", "note": "a full-screen Retina recording, 3456 by 2234, opened in the ordinary editor with nothing done to it" },
+    { "do": "snapshot", "name": "1-opened" },
+
+    { "do": "expectPlaybackNeverBlank", "name": "playing", "seconds": 3, "moments": 24 },
+    { "do": "describe", "stage": "2-played", "note": "THE TEST: three seconds of playing, looked at 24 times, and the picture was there in every one. A frame still being read holds the one before it rather than going empty" },
+
+    { "do": "key", "key": "space" },
+    { "do": "wait", "seconds": 1.2, "onTheClock": true },
+    { "do": "snapshot", "name": "2-while-playing" },
+    { "do": "key", "key": "space" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "snapshot", "name": "3-paused" }
+  ]
+}

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-22T22:53:19.192Z",
-  "updated": "2026-09-23T12:12:09.967Z",
+  "updated": "2026-09-23T12:57:02.195Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): Running the test suite before a commit comes back red about a third of the time, on a video export test that nobody has touched. The rule is that the suite must be green before every commit, so a test that fails at random either stops honest work or teaches people to ignore a red suite. Make that test tell the truth every time it runs.\n\nReproduced 2026-09-22 while finishing resizing-one-piece-inside-a-turned-card-moves-th. Three back-to-back full runs of Scripts/test.sh on the same commit: run 1 failed with 1 issue, run 2 failed with 3 issues, run 3 passed with 9094 tests. The issue named each time:\n\n  x Test \"What lands is inside the budget it was given, and not far under it\" recorded an issue at VideoExportBudgetTests.swift:155:9: Expectation failed: (Self.bytes(of: tighter) -> 125039) < (landed -> 116723)\n\nTests/PhotonzMediaTests/VideoExportBudgetTests.swift:155 is the last line of theBudgetPredictsTheFile: it exports the same 3-second 1280x800 synthetic source at VideoExportQuality.standard and again at .small, and claims the .small file is the smaller of the two. Both land around 120KB, so on that source the hardware encoder is near its own floor and the bitrate ceiling is not what is deciding the size; which file comes out smaller is then down to the encoder, not to the recipe. Self.busySource(seconds:3,size:) is the source. Either give it a source with enough detail that both budgets actually bind, or make the claim about the recipe rather than about the bytes.",
@@ -51,6 +51,10 @@
     {
       "t": "2026-09-23T12:12:09.966Z",
       "note": "left rough (digest 2026-09-23, from queue/audits/2026-09-22-gif-weight.json): weighing a GIF or HEIC costs 0.10 to 0.62 times the recording's length and has no length at which it gives up, so a five minute recording at High is about three minutes and a few hundred megabytes in scratch, and pressing Export before the number lands starts the work again. Not its own task: nobody picks GIF for a five minute recording yet. File it if it shows up in the Premiere measurement."
+    },
+    {
+      "t": "2026-09-23T12:57:02.194Z",
+      "note": "2026-09-23 05:4x, three full Scripts/test.sh runs while the loop was busy, all red on this flake only: twice AnimatedExportWeighTests.swift:109 (285824 vs 186141 bytes, then 287981 vs 279472; the test took 133s against 20s when run alone, where it passed), and once on clean main with the blink work stashed, VideoExportBudgetTests.swift:155 (121102 not < 115242). Nothing else failed in 9214 tests. It is now what keeps a full run from being green at all on a busy machine."
     }
   ],
   "walks": []

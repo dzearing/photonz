@@ -207,11 +207,17 @@ extension PhotonzDocument {
     ///
     /// A document with no time in it is left to the motion path it has always
     /// taken, so nothing about a still picture or an icon changes.
-    public func drawn(atTimeMS ms: Int) -> PhotonzDocument {
+    ///
+    /// `framesInHand` is what the window has already read of each recording.
+    /// Given, a clip whose frame is still being read shows the newest frame
+    /// that has been, rather than nothing (`MovieFramesInHand.swift`). Left
+    /// out, every clip points at exactly the frame at the moment, which is
+    /// what an export wants: it waits for each frame it writes.
+    public func drawn(atTimeMS ms: Int, framesInHand: MovieFramesInHand? = nil) -> PhotonzDocument {
         guard hasTime else { return moved(toMotionTimeMS: ms) }
         let moment = min(max(0, ms), lastDrawableTimeMS)
         var shown = self
-        shown.layers = layers.map { $0.shownTree(atTimeMS: moment) }
+        shown.layers = layers.map { $0.shownTree(atTimeMS: moment, framesInHand: framesInHand) }
         // In a document that finishes, the lap IS the document: four seconds in
         // is four seconds in, never four seconds modulo something.
         let cycle = max(1, documentDurationMS)
@@ -223,7 +229,9 @@ extension PhotonzDocument {
         // (`ClipTransitions.swift`). Last, so a layer told to fade over the
         // shot is faded and THEN dissolved, rather than the dissolve being
         // overwritten by the fade.
-        shown.layers = shown.layers.flatMap { $0.withTransitionDrawn(atTimeMS: moment) }
+        shown.layers = shown.layers.flatMap {
+            $0.withTransitionDrawn(atTimeMS: moment, framesInHand: framesInHand)
+        }
         return shown
     }
 }
@@ -234,16 +242,16 @@ extension Layer {
     /// this moment hidden. A layer already hidden by hand stays hidden: the
     /// timeline decides when something COULD be on screen, and the eye in the
     /// layers list still decides whether it is.
-    func shownTree(atTimeMS ms: Int) -> Layer {
+    func shownTree(atTimeMS ms: Int, framesInHand: MovieFramesInHand? = nil) -> Layer {
         var shown = self
         if !isOnScreen(atTimeMS: ms) { shown.isVisible = false }
         // ...and whatever IS on screen and plays a recording shows the frame
         // this moment lands on, which is the whole of "what is drawn at a
         // moment is what the renderer composites for that moment"
         // (`MovieClip.swift`).
-        if shown.isVisible { shown = shown.playing(atTimeMS: ms) }
+        if shown.isVisible { shown = shown.playing(atTimeMS: ms, framesInHand: framesInHand) }
         if shown.isGroup {
-            shown.children = children.map { $0.shownTree(atTimeMS: ms) }
+            shown.children = children.map { $0.shownTree(atTimeMS: ms, framesInHand: framesInHand) }
         }
         return shown
     }

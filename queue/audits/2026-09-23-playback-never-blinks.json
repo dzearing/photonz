@@ -1,0 +1,26 @@
+{
+  "feature": "Playing a recording never blinks",
+  "epic": "video-editing",
+  "summary": "A full-screen Retina recording now plays without flickering. If a frame is late, the picture stays on the frame before it instead of going empty, and frames are read four at a time so they are rarely late.",
+  "setup": "Photonz Dev, release Next, with 'A recording opens in the editor you already know' on, as you already have it. That switch is off by default in Next, and turning it on by default is the task 'A recording opens in the video editor, for real, in Next'. With it off, a recording opens the older window, which plays through the system player and never had this flicker.",
+  "try": [
+    { "do": "Open a full-screen recording from History, one recorded on the built-in Retina screen.", "shot": "2026-09-23-playback-never-blinks-1.png" },
+    { "do": "Press space and watch the whole recording play without touching anything." },
+    { "do": "Press space again to pause part way through.", "shot": "2026-09-23-playback-never-blinks-2.png" },
+    { "do": "Press the right arrow a few times, then hold it down." },
+    { "do": "Drag the playhead quickly back and forth across the timeline." },
+    { "do": "Zoom in on the paused picture with Command and plus until it is bigger than 100%." }
+  ],
+  "evaluate": [
+    "Does a full-screen recording play from start to finish with no flash of an empty canvas?",
+    "When you drag the playhead quickly, does the picture always show something rather than going blank?",
+    "When you zoom in on a paused frame, does it sharpen within a moment of the zoom?",
+    "Does playing feel smooth, or does the picture visibly stick on one frame at times?"
+  ],
+  "rough": [
+    "A frame can still be late. It now holds the frame before it rather than going empty: in the walk, 4 to 6 of 24 looks over 3 seconds were showing a frame up to 3 frames (about a tenth of a second) behind the playhead. The fixture is harder to read than a real recording, taking 107ms a frame against 40 to 63ms, so a real recording should be late less often.",
+    "The walk's 24 looks are the picture the canvas was handed, shrunk to a quarter. They are not screen captures, because a real capture takes about 300ms and would stall the playback it is watching. The three -sc.png pictures are real captures of the window.",
+    "The walk plays a made-up test pattern at 3456 by 2234 rather than one of your own recordings, so that nothing from your screen is checked into the repo.",
+    "Frames are read at the size they are shown, so a frame read while zoomed out is soft for a moment after you zoom in, until the sharper one lands."
+  ]
+}

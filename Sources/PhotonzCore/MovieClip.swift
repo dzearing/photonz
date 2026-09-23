@@ -190,10 +190,14 @@ extension Layer {
     /// A clip somewhere else in time, or one switched off, comes back
     /// untouched — it is not being drawn, so which frame it would have shown is
     /// nobody's business.
-    func playing(atTimeMS ms: Int) -> Layer {
+    ///
+    /// A frame not yet read is stood in for by the newest one that has been,
+    /// when the caller says what has (`MovieFramesInHand.swift`).
+    func playing(atTimeMS ms: Int, framesInHand: MovieFramesInHand? = nil) -> Layer {
         guard let request = movieFrameRequest(atTimeMS: ms) else { return self }
         var shown = self
-        shown.content = .image(request.ref)
+        shown.content = .image(request.movie.frameRef(atSourceMS: request.sourceMS,
+                                                      holding: framesInHand))
         return shown
     }
 }

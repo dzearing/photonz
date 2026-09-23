@@ -2642,6 +2642,14 @@ public enum PlaytestStep: Sendable, Equatable {
     /// promises (`SeparateBudget`). `count` sets both to the same number when a
     /// walk really does know the answer exactly.
     case expectLayers(atLeast: Int?, atMost: Int?)
+    /// Plays the document for `seconds` and looks at what the canvas is
+    /// showing `moments` times along the way, writing each look to
+    /// `<name>-<n>.png`. Fails if the clip area is empty in any of them.
+    ///
+    /// A snapshot or two cannot see a frame that is empty for 33ms, which is
+    /// how playing a full-screen recording flickered while every walk that
+    /// played one passed (`playing-a-recording-never-blinks`).
+    case expectPlaybackNeverBlank(name: String, seconds: Double, moments: Int)
     /// Where a named layer's box must have landed, in the two spaces that
     /// matter.
     ///
@@ -2872,7 +2880,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectSharp", "expectStoredRecording", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectSharp", "expectStoredRecording", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo",
     ]
@@ -2948,6 +2956,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectNotice: "expectNotice"
         case .expectToast: "expectToast"
         case .expectLayers: "expectLayers"
+        case .expectPlaybackNeverBlank: "expectPlaybackNeverBlank"
         case .expectBox: "expectBox"
         case .expectField: "expectField"
         case .expectCaption: "expectCaption"
@@ -3687,6 +3696,19 @@ public enum PlaytestStep: Sendable, Equatable {
                     + "so no number of layers could ever pass")
             }
             self = .expectLayers(atLeast: atLeast.map { Int($0) }, atMost: atMost.map { Int($0) })
+        case "expectPlaybackNeverBlank":
+            let seconds = try f.optionalNumber("seconds") ?? 3
+            let moments = try f.optionalNumber("moments") ?? 20
+            guard seconds > 0, seconds <= 30 else {
+                throw f.invalid("seconds", "a playback is watched for more than nothing and "
+                    + "at most 30 seconds, not \(seconds)")
+            }
+            guard moments >= 2, moments == moments.rounded() else {
+                throw f.invalid("moments", "a playback is looked at a whole number of times, "
+                    + "at least twice, not \(moments)")
+            }
+            self = .expectPlaybackNeverBlank(name: try f.string("name"), seconds: seconds,
+                                             moments: Int(moments))
         case "expectCaption":
             func word<V: CaptionClaimWord>(_ field: String) throws -> V? {
                 guard let raw = try f.optionalString(field) else { return nil }

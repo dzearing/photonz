@@ -2219,6 +2219,46 @@ struct PlaytestScriptTests {
         #expect(PlaytestStep.names.contains("expectLayers"))
     }
 
+    // Playing a recording flickered while every walk that played one passed,
+    // because a snapshot or two cannot see a frame that is empty for 33ms.
+    // `expectPlaybackNeverBlank` plays the document and looks at what the
+    // canvas is showing at many moments (`playing-a-recording-never-blinks`).
+    @Test("An expectPlaybackNeverBlank step plays for a while and looks many times")
+    func expectPlaybackNeverBlankParses() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectPlaybackNeverBlank", "name": "play", "seconds": 3, "moments": 24 } ] }
+        """)
+        guard case .expectPlaybackNeverBlank(let name, let seconds, let moments) = script.steps[0] else {
+            Issue.record("expectPlaybackNeverBlank"); return
+        }
+        #expect(name == "play")
+        #expect(seconds == 3)
+        #expect(moments == 24)
+        #expect(script.steps[0].name == "expectPlaybackNeverBlank")
+        #expect(PlaytestStep.names.contains("expectPlaybackNeverBlank"))
+    }
+
+    @Test("An expectPlaybackNeverBlank step defaults to three seconds and twenty moments")
+    func expectPlaybackNeverBlankDefaults() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectPlaybackNeverBlank", "name": "play" } ] }
+        """)
+        guard case .expectPlaybackNeverBlank(_, let seconds, let moments) = script.steps[0] else {
+            Issue.record("expectPlaybackNeverBlank"); return
+        }
+        #expect(seconds == 3)
+        #expect(moments == 20)
+    }
+
+    @Test("An expectPlaybackNeverBlank step that looks fewer than twice is refused")
+    func expectPlaybackNeverBlankNeedsMoments() throws {
+        #expect(throws: (any Error).self) {
+            _ = try decode("""
+            { "steps": [ { "do": "expectPlaybackNeverBlank", "name": "play", "moments": 1 } ] }
+            """)
+        }
+    }
+
     @Test("An expectLayers step can name one exact number instead of a range")
     func expectLayersTakesACount() throws {
         let script = try decode("""

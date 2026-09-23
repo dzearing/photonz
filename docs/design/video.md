@@ -112,6 +112,32 @@ The canvas never waits on a decode. It draws the last frame it has and replaces
 it the instant the right one lands, which is what makes a scrub feel like a
 scrub rather than a slideshow.
 
+Until 2026-09-23 that paragraph was a promise no code kept: a clip pointed at
+the frame under the playhead whether or not it had been read, and a picture
+layer with nothing behind it draws nothing, so a full-screen Retina recording
+flickered every time the decoder was late (`playing-a-recording-never-blinks`).
+What keeps it now:
+
+4. **A late frame holds the last one.** The canvas draws
+   `drawn(atTimeMS:framesInHand:)` with `MovieFrameFetcher.inHand`, and a frame
+   not in hand is stood in for by the newest one that is, at or before the
+   moment (`MovieFramesInHand.swift`). An export leaves the hand out and waits
+   for every frame it writes. The renderer's incremental cache also notices a
+   picture that lands, or is read again bigger, under a reference the document
+   already pointed at, so the landing redraw is never answered with the old
+   frame.
+5. **Four decoders per recording, eight frames ahead.** One
+   `AVAssetImageGenerator` takes about 40ms (up to 100ms) to seek to and read a
+   3456x2234 frame, longer than the 33ms it is on screen, and reading smaller
+   does not help because the time is in the decode. `MovieDecoder.lanes` = 4
+   side by side read one every 14ms or so; `MovieFrameFetcher.playAheadFrames`
+   = 8 keeps them busy.
+6. **Frames are read at the size they are shown**, in eighths of the
+   recording's size (`MovieRef.decodePixelSize`), which is what lets the
+   16-frame budget stay small. Zooming in reads the frame on screen again; the
+   smaller one shows until the sharper one lands. Writing a file always reads
+   at the recording's own size.
+
 ---
 
 ## 4. What appears, and on what fact

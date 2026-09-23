@@ -192,18 +192,45 @@ extension EditorState {
         followAudio()
         let wanted = document.movieFrames(atTimeMS: documentTimeMS)
         if !wanted.isEmpty {
-            movieFrames.fetch(wanted)
-            // ...and the handful just ahead, so playing forward is decoding
+            let size = movieDecodeSize(in: document)
+            movieFrames.fetch(wanted, size: size)
+            // ...and the stretch just ahead, so playing forward is decoding
             // ahead of the playhead rather than behind it.
             if isDocumentPlaying {
-                for step in 1...3 {
+                for step in 1...MovieFrameFetcher.playAheadFrames {
                     let ahead = documentTimeMS + step * MovieRef.frameStepMS
                     guard ahead <= lastDocumentTimeMS else { break }
-                    movieFrames.fetch(document.movieFrames(atTimeMS: ahead))
+                    movieFrames.fetch(document.movieFrames(atTimeMS: ahead), size: size)
                 }
             }
         }
         submit(document)
+    }
+
+    /// The canvas zoomed: read the frames on screen again if the new zoom
+    /// shows them bigger than they were read. Nothing is redrawn here; the
+    /// sharper frame redraws the canvas when it lands, and until then the one
+    /// in hand keeps showing.
+    func refetchMovieFramesForZoom() {
+        guard documentHasTime, let document = shownDocument else { return }
+        let wanted = document.movieFrames(atTimeMS: documentTimeMS)
+        guard !wanted.isEmpty else { return }
+        movieFrames.fetch(wanted, size: movieDecodeSize(in: document))
+    }
+
+    /// How big each frame is worth reading: as many pixels as the canvas
+    /// shows it with, which for a full-screen Retina recording in a window is
+    /// usually well under its own size (`MovieRef.decodePixelSize`).
+    private func movieDecodeSize(in document: PhotonzDocument) -> (MovieFrameRequest) -> CGSize {
+        let screen = zoom * (hostWindow?.backingScaleFactor ?? 2)
+        return { request in
+            // A clip punched in on is drawn bigger than the recording, so its
+            // frames are worth that much more. The second picture of a
+            // dissolve has no layer of its own and reads like the first.
+            let movieWidth = max(1, request.movie.pixelSize.width)
+            let drawnWidth = document.layer(id: request.layerID)?.frame.width ?? movieWidth
+            return request.movie.decodePixelSize(shownScale: screen * drawnWidth / movieWidth)
+        }
     }
 
     /// A frame arrived that the canvas did not have when it last drew.

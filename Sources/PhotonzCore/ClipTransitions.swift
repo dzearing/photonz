@@ -357,10 +357,12 @@ extension Layer {
     /// the renderer draws a transition without having been told transitions
     /// exist — the same trick that let a clip be a picture layer in the first
     /// place (`MovieClip.swift`).
-    func withTransitionDrawn(atTimeMS ms: Int) -> [Layer] {
+    func withTransitionDrawn(atTimeMS ms: Int, framesInHand: MovieFramesInHand? = nil) -> [Layer] {
         var drawn = self
         if isGroup {
-            drawn.children = children.flatMap { $0.withTransitionDrawn(atTimeMS: ms) }
+            drawn.children = children.flatMap {
+                $0.withTransitionDrawn(atTimeMS: ms, framesInHand: framesInHand)
+            }
         }
         guard isVisible, let movie, let moment = clipMoment(atTimeMS: ms),
               moment.isMidTransition else { return [drawn] }
@@ -371,7 +373,8 @@ extension Layer {
             // dissolve where only one side had the corner radius would be a
             // dissolve into a different-shaped picture.
             var over = Layer(id: Layer.transitionPartnerID(of: id), name: drawn.name,
-                             content: .image(movie.frameRef(atSourceMS: incoming)),
+                             content: .image(movie.frameRef(atSourceMS: incoming,
+                                                            holding: framesInHand)),
                              frame: drawn.frame, crop: drawn.crop, transform: drawn.transform,
                              style: drawn.style, isVisible: true, isLocked: true,
                              placement: drawn.placement)

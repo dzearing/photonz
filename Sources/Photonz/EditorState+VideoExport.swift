@@ -280,13 +280,19 @@ final class DocumentFrames: @unchecked Sendable {
     /// fetched first.
     func frame(atMS ms: Int) async -> CGImage? {
         for request in document.movieFrames(atTimeMS: ms) {
-            guard store.image(for: request.ref) == nil,
-                  let url = movieURLs[request.movie.id],
+            // The window reads frames at the size it SHOWS them, so one it is
+            // holding may be smaller than the recording: a file is written
+            // from the recording's own size, never from the preview.
+            let filed = store.image(for: request.ref)
+            if let filed, CGFloat(filed.width) >= request.movie.pixelSize.width - 1 { continue }
+            guard let url = movieURLs[request.movie.id],
                   let picture = await MovieDecoder.shared.frame(of: request.movie, at: url,
                                                                 sourceMS: request.sourceMS)
             else { continue }
             store.register(picture, as: request.ref)
-            borrowed.append(request.ref)
+            // One the window already held stays the window's, now sharper;
+            // only a frame this export brought in is taken back out.
+            if filed == nil { borrowed.append(request.ref) }
         }
         let shown = document.drawn(atTimeMS: ms)
         // Nothing on screen at this moment is a PICTURE — an empty one — not a
