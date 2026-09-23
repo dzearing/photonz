@@ -1,0 +1,28 @@
+{
+  "id": "a-mistyped-status-command-stops-wiping-a-tasks-s",
+  "title": "A mistyped status command stops wiping a tasks status",
+  "goal": "A person or a runner who types the status command and forgets to say which status wants to READ the task. Right now the queue quietly rewrites the task as having no status at all, which takes it off every list on the dashboard and out of every count, and nothing says it happened. It should print what the task is and change nothing.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 3130,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T04:13:00.322Z",
+  "updated": "2026-09-23T04:13:00.325Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced on 2026-09-23 while finishing a-walk-can-reach-a-control-that-is-plainly-on-sc.\n\nRan:\n  node queue/bin/queue.mjs status a-walk-can-reach-a-control-that-is-plainly-on-sc\n(meaning: show me this task). It printed only the id and exited 0.\n\nqueue/history.jsonl then carried:\n  {\"t\":\"2026-09-23T04:12:29.782Z\",\"ev\":\"task_undefined\",\"id\":\"a-walk-can-reach-a-control-that-is-plainly-on-sc\",\"from\":\"done\"}\n\nand the task file had lost its status key entirely:\n  python3 -c \"import json;t=json.load(open(...));print(list(t.keys()))\"\n  -> no status in the list\n\nPut back by running the full status done command again. The fix is in queue/bin/queue.mjs: the status verb should require its second argument, and with only an id it should print the task rather than write undefined into it. An unknown status word should be refused the same way, with the list of the ones that are allowed.",
+  "acceptance": [
+    "Running the status command with only a task id prints that task and leaves its status exactly as it was",
+    "A task never ends up with no status field at all through this command",
+    "The history gets no event for a command that changed nothing"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T04:13:00.324Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": []
+}

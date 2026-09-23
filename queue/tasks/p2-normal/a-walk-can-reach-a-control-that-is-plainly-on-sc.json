@@ -5,11 +5,10 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 150,
-  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T02:48:31.608Z",
-  "updated": "2026-09-23T04:02:10.262Z",
+  "updated": "2026-09-23T04:12:42.232Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-21 on main at de8ba4e4 plus this task's changes, twice, with the probe app.\n\nRun:\n  Scripts/playtest.sh Scripts/playtest/component-on-the-timeline-walk.json --no-build\nwith a step { \"do\": \"reveal\", \"control\": \"Time section\" } immediately after insertPickedComponent.\n\nOutput:\n  [16 reveal] FAILED: scrolled 0pt and \"Time section\" is still not where a person could press it: it is already inside the part of the window a press can reach, so something other than a scroll is covering or cutting it. The window may be too short for the section it is in.\n\nThe snapshot taken by the step immediately BEFORE it (component-1-on-the-film-sc.png, copied to queue/audits/2026-09-22-components-on-the-timeline-1.png is the same layout) shows the Time section header, its reading, Start Here, End Here and the Fade rows all on screen, unobscured, about a third of the way down the panel.\n\nSo isInReach(landed) in PlaytestHarness (Sources/Photonz/Playtest/PlaytestHarness.swift, around line 4460-4505) is answering false for a control a person could press. It only shows up on a LONG panel: title-on-the-timeline-walk reveals the same control with a text layer picked and passes, because with a component picked the panel also carries Component, Layout and Library. Suspect the geometry it measures against (the dock clip view versus the window) rather than the scroll itself: it reports scrolling 0pt and then that nothing more can be done.\n\nThe walk ships without the reveal step (the expect on the Time reading field works without it), so nothing is blocked; what is lost is a walk being able to prove a person could SEE the row it is reading.\n\n--- 2026-09-23, the runner that did the work ---\n\nThe reported failure does NOT reproduce on main. Putting the step back\n  { \"do\": \"reveal\", \"control\": \"Time section\" }\nafter the component-1-on-the-film snapshot and running\n  Scripts/playtest.sh Scripts/playtest/component-on-the-timeline-walk.json\npasses, and logs:\n  [16 reveal] \"Time section\" in a dock section header was already where a\n  person could press it; nothing scrolled\nThe clips-off-the-view-tree change in 16eec232 (2026-09-22) is what covers it:\nits own commit message describes a reveal turning the wrong section's wheel and\nthen reporting \"something other than a scroll is covering\".\n\nWhat landed anyway is the reason the two answers could differ at all.\nPlaytestReach (Sources/PhotonzCore/PlaytestReach.swift, 12 tests) is the one\ngeometry: the window narrowed by every scrolling area the control REALLY sits\nin, which is the same rectangle bringIntoReach measures its distance against.\nisInReach is now reachTrouble(_:) == nil, and reachTrouble says which of three\nthings is in the way with the overhang in points. Every press site, the reveal,\nand the panel listing (new \"whyNot\" field beside \"inWindow\") say the same\nsentence. Sub-point overhang no longer counts as out of reach.\n\nThe verdict deliberately uses only target.clips and never the geometric\nfallback in scrollableClips: a guessed scroller may misdirect a scroll and be\ncorrected on the next round, but it must not decide a control cannot be\npressed.",
@@ -38,10 +37,26 @@
     {
       "t": "2026-09-23T04:02:10.261Z",
       "note": "All 30 walks that use a reveal step run: 29 green, including component-on-the-timeline-walk with the new reveal of the Time section. The 30th, hold-pushes-the-sound-walk, fails at step 22 because no control called 'Hold for 5s' is in the panel at all (the press of Hold This Frame before it never settled) -- a known failure already on walks-that-fail-in-the-full-sweep-5, not this change."
+    },
+    {
+      "t": "2026-09-23T04:12:26.839Z",
+      "note": "Landed in cdd8f2ba. No audit file: this is walk-harness infrastructure with nothing in the app for the user to try, so there is no feature to playtest. Asked for a full sweep with --now, because a reach rule touches every walk that presses anything."
+    },
+    {
+      "t": "2026-09-23T04:12:26.889Z",
+      "note": "left rough: the third answer ('something in the window is cutting it off') still reads AppKit's visibleRect, so it only knows about the VIEW tree -- a control covered by another window, say a popover over the panel, is not what it means, and is said so in the harness doc. Could not stage a live case of any of the three genuinely-unreachable endings: at 860x400 and at 1100x400 every control the panel listing called out of reach was reached by a reveal, which is the app behaving. The three endings are covered by the 12 PlaytestReach tests and by the same sentence printed live in 'whyNot' for 25 real out-of-reach controls with numbers that match the screenshot. Did not earn a task."
+    },
+    {
+      "t": "2026-09-23T04:12:42.230Z",
+      "note": "One geometry now decides whether a walk can reach a control (PlaytestReach in PhotonzCore, 12 tests), and a refused press or reveal says which of three things is in the way with the overhang in points; a panel step prints the same sentence in a new whyNot. component-on-the-timeline-walk asks for the Time section by name and passes. Verified: Scripts/test.sh 9124 tests green, 29 of 30 reveal walks green (the 30th already failing on another task). cdd8f2ba, pushed.",
+      "since": "2026-09-23T04:12:26.937Z",
+      "count": 2
     }
   ],
   "walks": [
     "component-on-the-timeline-walk"
   ],
-  "started": "2026-09-23T03:34:58.924Z"
+  "started": "2026-09-23T03:34:58.924Z",
+  "completed": "2026-09-23T04:12:42.231Z",
+  "status": "done"
 }
