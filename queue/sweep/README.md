@@ -44,7 +44,7 @@ Drills: `node queue/bin/sweep-schedule-drill.mjs`, `node queue/bin/loop-day-dril
 | `requested.json` | a task runner, via `queue/bin/sweep.sh request` | who asked for a sweep and why. Several asks before the next sweep collapse into the one run that serves them all. Asking does not start one: see the schedule above. |
 | `rotation.json` | the loop, via `queue/bin/sweep.sh slice` | where the rotating check has got to in the set, and the commit it last checked. |
 | `last-slice.json` | the same | what the last rotating check ran and found. Never the state of the walk set. |
-| `latest.json` | the loop, via `queue/bin/sweep.sh run` | the last sweep: how long it took, how many walks passed, and the name of every walk that failed. Only runs that could SEE land here: a run that went blind does not, so this stays the last run that really covered the set. |
+| `latest.json` | the loop, via `queue/bin/sweep.sh run` | the last sweep: how long it took, how many walks passed, and the name of every walk that failed. Only runs that could SEE land here: a run that went blind does not, so this stays the last run that really covered the set. **It only ever moves forward**, see below. |
 | `blind.json` | the same | the last run that WENT BLIND, if there was one: where the app stopped launching, how many walks that cost, and what it did answer before it. `sweep.sh status` leads with it while it is newer than `latest.json`. |
 | `<date>-<time>.log` | the same run | the full output, one line per walk. The last ten are kept. |
 | `.claimed.json` | `sweep.sh run`, at the moment it starts | the requests this run is serving, plus who is running it, when it began, which log it is writing and how big the set is. Deleted when the run is written down. One left behind means a run that never finished. |
@@ -156,3 +156,35 @@ seconds:
 Scripts/playtest.sh Scripts/playtest/<name>.json --no-build
 Scripts/playtest-all.sh --no-build <name-fragment>
 ```
+
+
+## `latest.json` only ever moves forward
+
+Nothing older than the run already recorded is written over it, whoever is
+writing and for whatever reason. Two different things read this one file, and
+that is why the rule lives inside `queue/bin/sweep-record.mjs` rather than at
+each caller:
+
+* the dashboard and `sweep.sh status` read it for **what the walk set last
+  said**;
+* `queue/bin/sweep-schedule.mjs` counts its twelve hour floor from `began`,
+  which is **when the loop last spent two hours on the whole set**.
+
+Move the record back to fix the first and you silently reset the second. On
+2026-09-22 a runner repairing a poisoned record replayed the whole-set run of
+2026-09-21T06:47Z through `recordSweep()` by hand. It was right about the walks
+and it moved `began` back nineteen hours, so seven seconds after that task
+ended the loop started a full sweep (`queue/loop.log`, 01:30:55 local) twenty
+two minutes after a rotating check had correctly printed "6.4h since the last
+whole-set run". That sweep then went blind, which bought a third one at 10:12Z:
+one backwards write cost about 3.3 hours of a day the schedule had just been
+built to protect.
+
+A genuine repair that must move the record back deletes `latest.json` first,
+which says out loud that the floor is being reset too. `sweep-record.mjs` says
+so itself when it refuses one.
+
+The loop's log now prints the reason beside every full sweep it starts
+(`walk sweep due (20.5h since the last whole-set run)`), so a sweep that fires
+on a floor that has been reset no longer reads the same as one that fires on a
+full twelve hours.

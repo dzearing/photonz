@@ -160,7 +160,6 @@ const { result, recorded, older, handedBack } = recordSweep({
   interrupted: true,
   total: Number(claim.total) || 0,
   head: claim.head || null,
-  onlyIfNewer: true,
 });
 
 for (const line of sweepSentences(result)) say('   ' + line);

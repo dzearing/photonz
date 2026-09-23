@@ -29,10 +29,6 @@ export function recordSweep({
   timedOut = false, interrupted = false, total = 0, head = null,
   // Where a run that went blind is written down instead of latest.json.
   blindFile = null,
-  // Only write latest.json if this run is newer than what is already there.
-  // The recovery path reads a run that ended hours ago, and a stale record
-  // written over a fresh one would be worse than the silence it is fixing.
-  onlyIfNewer = false,
 }) {
   const r = parseSweepLog(logText, { total: Number(total) || 0, timedOut, interrupted });
 
@@ -91,13 +87,32 @@ export function recordSweep({
     writeFileSync(where, JSON.stringify(result, null, 2) + '\n');
   }
 
+  // latest.json ONLY EVER MOVES FORWARD. Nothing older than what is already
+  // recorded is written over it, whoever is writing and for whatever reason.
+  //
+  // Two different things read this one file, and that is why the rule has to
+  // live here rather than at each caller. The dashboard reads it for WHAT THE
+  // WALK SET LAST SAID; queue/bin/sweep-schedule.mjs counts its twelve hour
+  // floor from `began`, which is WHEN THE LOOP LAST SPENT TWO HOURS ON THE
+  // WHOLE SET. Move the record back to fix the first and you silently reset
+  // the second, and the next decision finds the floor long since passed.
+  //
+  // That is not hypothetical. On 2026-09-22 a runner repairing a poisoned
+  // record replayed the whole-set run of 2026-09-21T06:47Z through here by
+  // hand. It was right about the walks and it moved `began` back nineteen
+  // hours, so seven seconds after that task ended the loop started a full
+  // sweep (queue/loop.log, 01:30:55 local) twenty two minutes after a rotating
+  // check had correctly printed "6.4h since the last whole-set run". That run
+  // then went blind, which bought a third sweep at 10:12Z. One backwards write
+  // cost about 3.3 hours of a day the schedule had just been built to protect.
+  //
+  // A genuine repair that MUST move the record back deletes latest.json first,
+  // which says out loud that the floor is being reset too.
   let older = false;
-  if (onlyIfNewer) {
-    try {
-      const was = JSON.parse(readFileSync(latest, 'utf8'));
-      older = Boolean(was.ended && ended && Date.parse(was.ended) >= Date.parse(ended));
-    } catch { /* nothing recorded yet */ }
-  }
+  try {
+    const was = JSON.parse(readFileSync(latest, 'utf8'));
+    older = Boolean(was.ended && ended && Date.parse(was.ended) >= Date.parse(ended));
+  } catch { /* nothing recorded yet */ }
   const recorded = !nothingToSay && !older && !wentBlind;
   if (recorded) writeFileSync(latest, JSON.stringify(result, null, 2) + '\n');
 
@@ -127,7 +142,7 @@ if (invokedDirectly) {
   const [logFile, latest, claimed, req, began, ended, seconds, runlogRel, timedOut, total, head, interrupted] =
     process.argv.slice(2);
 
-  const { result, recorded, handedBack, blind } = recordSweep({
+  const { result, recorded, older, handedBack, blind } = recordSweep({
     logText: existsSync(logFile) ? readFileSync(logFile, 'utf8') : '',
     latest, claimed, req, began, ended, seconds, runlogRel,
     timedOut: timedOut === '1', interrupted: interrupted === '1',
@@ -138,6 +153,11 @@ if (invokedDirectly) {
     console.log('==> This run WENT BLIND, so it is not written down as the state of the walk set: '
       + 'the last run that really covered the set stays the record. What it did answer is in '
       + 'queue/sweep/blind.json.');
+  } else if (older) {
+    console.log(`==> This run ended ${ended}, which is NOT after the run already recorded, so it is not `
+      + 'written over it. The record only ever moves forward, because the schedule counts its twelve '
+      + 'hour floor from it and a backwards write hands the loop a free full sweep. If you really do '
+      + `mean to replace it with an older run, delete ${latest} first and run this again.`);
   } else if (!recorded) {
     console.log('==> Not one walk answered and nothing was refused, so this run is not written down: '
       + 'the last recorded sweep stays the last recorded sweep.');

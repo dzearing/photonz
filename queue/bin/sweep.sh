@@ -33,6 +33,8 @@
 #   queue/bin/sweep.sh slice-due              exit 0 when a rotating check is due
 #   queue/bin/sweep.sh slice                  run it: ~10 minutes of walks
 #   queue/bin/sweep.sh schedule               when the full set runs, in words
+#   queue/bin/sweep.sh why                    the reason on its own, for a log line
+#   queue/bin/sweep.sh why-not                the whole decision in one sentence
 #
 # ASKING IS NOT STARTING. Until 2026-09-21 a request started a sweep, and since
 # a runner asks after every task the whole set ran after every task: thirteen
@@ -135,6 +137,19 @@ slice-due)
 # -------------------------------------------------------------- schedule ----
 schedule)
   queue/bin/sweep-schedule.mjs
+  ;;
+
+# -------------------------------------------------------------------- why ----
+# Just the reason, with no "full:" or "slice:" in front of it, for a line that
+# has already said which one is happening. A full sweep is two hours and until
+# 2026-09-22 the loop's line for it said only "due", so one that fired on a
+# floor that had been reset read exactly like one that fired on a full twelve
+# hours: see the comment in queue/bin/sweep-record.mjs.
+why)
+  LOCKED_FLAG=""
+  screen_locked && LOCKED_FLAG="--locked"
+  queue/bin/sweep-schedule.mjs --decide $LOCKED_FLAG 2>/dev/null \
+    | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).why)}catch{console.log("the schedule could not be read")}})'
   ;;
 
 # ---------------------------------------------------------------- why-not ----

@@ -42,6 +42,8 @@ Create `queue/digests/<YYYY-MM-DD>.md` (today's date) with exactly these five se
 ## Summary
 What happened in the last 24 hours: tasks completed (with one line each on what shipped), tasks started or blocked, decisions opened and resolved, notable commits (check `git log --since="24 hours ago" --oneline`). Lead with the single most important development. If nothing happened, say so plainly and why (loop stopped, everything blocked, etc).
 
+End this section with **where the day went**, from `node queue/bin/loop-day.mjs --hours 24`: paste its four numbers and say in one sentence whether building was the majority of the day. Overhead nobody measures grows, which is how re-running walks reached 58 per cent of the loop's wall clock by 2026-09-21 before anybody noticed. Two things are worth calling out when you see them, because each costs about two hours: **more than two full-set runs** in the window (the floor is twelve hours, so a third one means something reset it, and `queue/loop.log` now prints the reason beside every sweep it starts), and **a run that went blind** (`queue/sweep/blind.json`), which answers nothing and buys a re-run. Either one gets a sentence here rather than a task.
+
 ## Reflections
 Forward-looking and honest: feature ideas worth queueing, ways to improve this process (loop, queue, dashboard), and ways to improve the Photonz app itself. When an idea is strong, actually queue it (`queue.mjs add`) and reference the task id here.
 

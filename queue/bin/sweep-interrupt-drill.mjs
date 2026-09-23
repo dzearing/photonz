@@ -27,6 +27,7 @@ import { fileURLToPath } from 'node:url';
 import { parseSweepLog, sweepSentences } from './sweep-parse.mjs';
 import { recordSweep } from './sweep-record.mjs';
 import { machineBlock, previousFailures } from './sweep-notes.mjs';
+import { decide } from './sweep-schedule.mjs';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 let failures = 0;
@@ -149,11 +150,44 @@ claimWith([REQUEST]);
 out = recordSweep({
   logText: KILLED, latest: sw('latest.json'), claimed: sw('.claimed.json'), req: sw('requested.json'),
   began: '2026-09-18T10:00:00Z', ended: '2026-09-18T11:00:00Z', seconds: 3600,
-  runlogRel: 'queue/sweep/old.log', interrupted: true, total: 532, onlyIfNewer: true,
+  runlogRel: 'queue/sweep/old.log', interrupted: true, total: 532,
 });
 check('a run older than what is recorded is not written over it',
   out.recorded === false && out.older === true, out);
 check('its request still goes back on the pile', out.handedBack === 1, out);
+
+// ---- 4b. and it holds with no flag asked for, which is the whole point ------
+//
+// On 2026-09-22 a runner repairing a poisoned record replayed a GOOD, COMPLETE
+// whole-set run from nineteen hours earlier straight through recordSweep(). It
+// was right about the walks. It also moved `began` back nineteen hours, and
+// seven seconds after that task ended the loop started a full sweep that was
+// not due for another five: the schedule counts its floor from the same field.
+// So the rule cannot be something a caller opts into.
+console.log('an old run replayed by hand, with nothing opted into');
+const RECOVERED_GOOD = 'a-box-says-what-it-picks-walk              7s  ok\n'
+  + 'arrow-parts-walk                          11s  ok\n\n==> 2 passed, 0 failed\n';
+const floorBefore = JSON.parse(readFileSync(sw('latest.json'), 'utf8')).began;
+claimWith([REQUEST]);
+out = recordSweep({
+  logText: RECOVERED_GOOD, latest: sw('latest.json'), claimed: sw('.claimed.json'), req: sw('requested.json'),
+  began: '2026-09-17T06:47:03Z', ended: '2026-09-17T08:40:00Z', seconds: 6777,
+  runlogRel: 'queue/sweep/repair.log', total: 2, head: 'olderhead',
+});
+check('a complete older run is refused too, with no flag passed',
+  out.recorded === false && out.older === true, out);
+check('so the floor the schedule counts from does not move backwards',
+  JSON.parse(readFileSync(sw('latest.json'), 'utf8')).began === floorBefore,
+  JSON.parse(readFileSync(sw('latest.json'), 'utf8')).began);
+
+// The cost the rule exists to stop, stated as the schedule sees it: with the
+// record left alone a sweep is not due, and with it moved back it is.
+const nineHoursOn = Date.parse('2026-09-18T15:09:00Z') + 9 * 3600 * 1000;
+const asRecorded = JSON.parse(readFileSync(sw('latest.json'), 'utf8'));
+check('nine hours after the recorded run the whole set is not due',
+  decide({ now: nineHoursOn, requests: [REQUEST], latest: asRecorded, head: 'newhead' }).run !== 'full');
+check('...and it WOULD have been, had the older run been written over it',
+  decide({ now: nineHoursOn, requests: [REQUEST], latest: { ...asRecorded, began: '2026-09-17T06:47:03Z' }, head: 'newhead' }).run === 'full');
 
 // ---- 5. the notes on the standing task --------------------------------------
 console.log('what the standing task is told');

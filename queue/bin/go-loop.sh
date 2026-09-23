@@ -396,7 +396,13 @@ sweep_pass() {
     if screen_locked; then
       what="the part of the walk sweep a locked screen cannot touch (about $part minutes)"
     fi
-    echo "[go-loop] $(date +%T) walk sweep due; running $what before the next task" | tee -a "$LOG"
+    # Say WHY, in the same sentence the rotating check prints. A full sweep is
+    # two hours, and until 2026-09-22 this line said only "due", so a sweep
+    # that fired on a collapsed floor looked exactly like one that fired on a
+    # full twelve hours. It took two runner passes to find that the 01:30 sweep
+    # of 2026-09-22 ran twenty two minutes after a check had said "6.4h"; the
+    # reason was in the decision the whole time and nothing printed it.
+    echo "[go-loop] $(date +%T) walk sweep due ($(queue/bin/sweep.sh why)); running $what before the next task" | tee -a "$LOG"
     Q busy "running $what before the next task"
     banner "**Go loop** running $what. No task is claimed while it runs."
     state busy

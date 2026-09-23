@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 130,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-21T15:55:54.511Z",
-  "updated": "2026-09-22T12:17:53.054Z",
+  "updated": "2026-09-23T02:33:10.971Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Before the change, measured 2026-09-21T15:41Z over 24h: tasks 597m (41.4%), sweeps 834m (57.9%), between 9m (0.6%), 13 full-set runs, 8 tasks. Over 48h: tasks 36.2%, sweeps 63.0%, 28 full-set runs.\n\nThe projection in queue/audits/2026-09-21-sweep-schedule.json is 21 to 27 per cent on walk checks. The knob is PHOTONZ_SWEEP_FLOOR_HOURS (default 12, queue/bin/sweep-schedule.mjs) and PHOTONZ_SLICE_MINUTES (default 10).\n\nIf the share is still bad, the two likeliest causes are the rotating check costing more than budgeted (a cold probe build is minutes, and it is not in the ten minute budget) and the full sweep having grown past 113 minutes.",
@@ -34,6 +34,39 @@
     {
       "t": "2026-09-22T12:17:53.053Z",
       "note": "seq 3020 -> 130"
+    },
+    {
+      "t": "2026-09-23T02:27:30.057Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T02:32:47.992Z",
+      "note": "MEASURED 2026-09-23T02:27Z. node queue/bin/loop-day.mjs --hours 24 (window 2026-09-22T02:27Z to 2026-09-23T02:27Z): tasks 861m 59.8% over 24 tasks, sweeps 320m 22.2% over 3 full-set runs, slices 229m 15.9% over 21 rotating checks, between 30m 2.1%. Against 2026-09-21's 41.4% building and 57.9% sweeping, and against yesterday's 57.5%. Acceptance 1 and 2 are met: building is the majority of the day and still climbing. Acceptance 3 is met on the rotating-check half (21, written down) and NOT on the sweep count: 3 full-set runs against a ceiling of 2."
+    },
+    {
+      "t": "2026-09-23T02:32:53.933Z",
+      "note": "CAUSE FOUND AND FIXED, and it is the same 08:30Z run yesterday's pass could not explain. It was never the schedule's arithmetic. queue/loop.log lines 246594-246605: the task a-sweep-that-goes-blind-says-so-instead-of-faili exited 0 at 01:30:48 local and the loop started a full sweep SEVEN SECONDS later, twenty two minutes after a rotating check had correctly printed '6.4h since the last whole-set run'. That runner had repaired a poisoned latest.json by replaying the whole-set run of 2026-09-21T06:47:03Z through recordSweep() by hand (loop.log 246512-246514: 'cp queue/sweep/latest.json /tmp/latest-poisoned-backup.json', then recordSweep, then 'git log --until=2026-09-21T06:47:03Z'). It was right about the walks and it moved latest.began back nineteen hours. sweep-schedule.mjs counts its twelve hour floor from that same field, so the floor collapsed."
+    },
+    {
+      "t": "2026-09-23T02:33:10.745Z",
+      "note": "REPRODUCED before and after, by replaying that exact repair against a temp sweep dir with latest.json as it stood at 01:47Z. Before (git show HEAD:queue/bin/sweep-record.mjs): '-> latest.began is now: 2026-09-21T06:47:03Z' and decide() at 2026-09-22T08:30:55Z returns 'full: 25.7h since the last whole-set run', which is the line the loop acted on. After: '==> This run ended 2026-09-21T08:39:00Z, which is NOT after the run already recorded, so it is not written over it...', began stays 2026-09-22T01:47:41Z, and decide() returns 'nothing'."
+    },
+    {
+      "t": "2026-09-23T02:33:10.800Z",
+      "note": "THE FIX, three parts. (1) queue/bin/sweep-record.mjs: latest.json only ever moves forward. The newer-than check was an opt-in parameter (onlyIfNewer) that only sweep-recover.mjs passed, and the hand-repair path is exactly the one that did not; it is now unconditional and the parameter is gone. The CLI says so when it refuses, and names deleting latest.json as the way to mean it. (2) queue/bin/go-loop.sh: the full-sweep line now prints the reason, via a new 'sweep.sh why' verb, so it reads 'walk sweep due (20.5h since the last whole-set run)'. Until now it said only 'due', which is why this took two passes to find: a sweep on a collapsed floor looked identical to one on a full twelve hours. (3) queue/bin/digest-prompt.md: the daily digest now ends its Summary with loop-day.mjs numbers and calls out a third full sweep or a blind run, so the share self-measures instead of needing a task to check it."
+    },
+    {
+      "t": "2026-09-23T02:33:10.855Z",
+      "note": "VERIFIED. New drill scenario 4b in queue/bin/sweep-interrupt-drill.mjs (already in CI, .github/workflows/ci.yml line 51) proves a complete older run is refused with no flag passed, that began does not move, and closes the loop to the cost: decide() says not-due with the record left alone and 'full' with it moved back. All drills green: sweep-interrupt, sweep-parse, sweep-notes, sweep-line, sweep-schedule, sweep-blind, loop-day, sweep-size. sweep.sh and go-loop.sh checked with the interpreters on their own shebang lines (bash and zsh respectively), and the new line rendered end to end against a fake sweep dir."
+    },
+    {
+      "t": "2026-09-23T02:33:10.910Z",
+      "note": "WHAT THE THIRD SWEEP COST, and what is left. The three runs were 08:30Z (blind, 79m, thrown away), 10:12Z (118m) and 22:56Z (122m). Only 08:30Z was wrong; 10:12Z follows from it deliberately, because a blind run is kept out of latest.json on purpose so it does not buy itself half a day of nobody looking. So the backwards write cost about 3.3 hours of the day, and with it gone the window should hold 2 full sweeps. Acceptance 3 is now fixed at its cause rather than verified in a clean window, and the digest line is what verifies it from tomorrow on without another task."
+    },
+    {
+      "t": "2026-09-23T02:33:10.970Z",
+      "note": "left rough: a blind run still costs the day twice, 79 minutes thrown away plus a 118 minute re-run 1.7h later. That is the deliberate trade made on 2026-09-22 (a blind run must not buy half a day of nobody looking) and it is the right call while blindness is rare, so it is not filed. If blind runs stop being rare the answer is to make the re-run resume from where the probe died rather than restart the set."
     }
-  ]
+  ],
+  "started": "2026-09-23T02:27:30.056Z"
 }
