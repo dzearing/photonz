@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 210,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-15T15:03:35.089Z",
-  "updated": "2026-09-23T10:44:22.722Z",
+  "updated": "2026-09-23T10:44:51.417Z",
   "deps": [
     "every-pane-says-what-it-is-for-in-words-somebody",
     "a-copy-of-a-component-is-configured-not-authored"
@@ -124,10 +124,15 @@
     {
       "t": "2026-09-23T10:44:22.721Z",
       "note": "left rough: the versionName(at:) fallback in componentVersions(of:) still spells an unnamed drawing 'Variant N' rather than after the property, because that path only fires for a document whose version names were never settled and it sits in a function called from everywhere. Not worth the lookup in a hot path."
+    },
+    {
+      "t": "2026-09-23T10:44:51.415Z",
+      "note": "The four-state journey works end to end and the app calls it one thing throughout. Built: ComponentVariantWording in PhotonzCore, so renaming a component's Variant property to State renames it in the Add menu, the Layer menu, the menu bar, the button that carries one edit to the other drawings, the canvas notices, the Library tile and the names new drawings arrive under. Verified in the probe, screen unlocked and Screen Recording granted, with a new walk (button-states-journey-walk) leaving 8 real window captures; 9185 tests green; 22 component, 45 tutorial and 6 library walks pass. Audit: queue/audits/2026-09-23-button-states.json. The open matrix question is settled without a prototype (the model and the panel already read a list, so a second look-changing property is an addition, not a rewrite) and the four DRAWINGS not reading as a set is filed as the-looks-of-one-component-stay-together-as-a-se."
     }
   ],
   "started": "2026-09-23T09:49:12.906Z",
   "walks": [
     "button-states-journey-walk"
-  ]
+  ],
+  "completed": "2026-09-23T10:44:51.416Z"
 }
