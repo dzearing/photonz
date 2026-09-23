@@ -124,9 +124,9 @@ private struct PropertyKeyRow: View {
     }
 }
 
-/// The diamond: the stopwatch and the key readout in one 8pt mark
-/// (`video.html`, `.kfkey`). Three states, told apart by weight: a dim
-/// outline, a coloured outline, a filled diamond.
+/// The diamond: the stopwatch and the key readout in one mark, drawn by the
+/// video kit (`VideoKit.KeyDiamond`, the mock's `.kfkey`). Three states, told
+/// apart by weight: a dim outline, a coloured outline, a filled diamond.
 private struct KeyDiamondButton: View {
     @Environment(EditorState.self) private var editorState
     let property: KeyedProperty
@@ -138,18 +138,9 @@ private struct KeyDiamondButton: View {
         Button {
             editorState.toggleKeying(property)
         } label: {
-            ZStack {
-                Rectangle()
-                    .fill(state == .onKey ? KeyDiamondButton.tint : Color.clear)
-                Rectangle()
-                    .strokeBorder(stroke, lineWidth: 1.5)
-            }
-            .frame(width: 8, height: 8)
-            .rotationEffect(.degrees(45))
-            .frame(width: 18, height: 18)
-            .background(RoundedRectangle(cornerRadius: 4)
-                .fill(isHovering ? Color.primary.opacity(0.08) : Color.clear))
-            .contentShape(Rectangle())
+            VideoKit.KeyDiamond(state: kitState, isHovering: isHovering)
+                .frame(width: 18, height: 18)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .playtestHover("Key \(property.title)") { isHovering = $0 }
@@ -159,10 +150,11 @@ private struct KeyDiamondButton: View {
         .playtestControl("Key", detail: word)
     }
 
-    private var stroke: Color {
+    private var kitState: VideoKit.KeyState {
         switch state {
-        case .dormant: isHovering ? Color.primary : Color.secondary.opacity(0.55)
-        case .betweenKeys, .onKey: KeyDiamondButton.tint
+        case .dormant: .dormant
+        case .betweenKeys: .armed
+        case .onKey: .onKey
         }
     }
 
@@ -179,14 +171,6 @@ private struct KeyDiamondButton: View {
         case .onKey: "on a key"
         }
     }
-
-    /// The component violet the mock keys with (`--comp`), lighter on a dark
-    /// panel so it reads at 8pt.
-    static let tint = Color(nsColor: NSColor(name: nil) { appearance in
-        let dark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        return dark ? NSColor(srgbRed: 0xB9 / 255, green: 0x8C / 255, blue: 0xFF / 255, alpha: 1)
-                    : NSColor(srgbRed: 0x9A / 255, green: 0x5C / 255, blue: 0xFF / 255, alpha: 1)
-    })
 }
 
 /// The value at the playhead, in the editor its kind wants: a number box, two

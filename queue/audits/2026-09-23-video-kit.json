@@ -1,0 +1,24 @@
+{
+  "feature": "The video kit: the pieces the video mocks are made of",
+  "epic": "video-editing",
+  "summary": "The transport, clip bars, track headers, ruler, playhead, picker tiles, dropdown row and key diamond from the video mocks now exist once in the app, drawn to the mock's tokens. The timeline and transition tasks build from these instead of drawing their own.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Only the key diamond is on screen today; the other pieces are seen on the comparison page until the timeline task puts them in the window.",
+  "try": [
+    { "do": "Open http://127.0.0.1:8791/shared/video-kit/index.html. Each row is the mock's own drawing on the left and the app's piece on the right, same data, same width.", "shot": "2026-09-23-video-kit-side-by-side.png" },
+    { "do": "Compare the timeline row: ruler, V1/TITLE/AUDIO headers, clips with key marks, the 2x badge, the transition on the cut, the red playhead.", "shot": "2026-09-23-video-kit-timeline.png" },
+    { "do": "In Photonz Dev, open a document with time, pick a text layer, and open the Animating section of the panel." },
+    { "do": "Click the diamond beside Scale, move the playhead, and change Scale: the diamond goes from a dim outline, to a violet outline, to a filled diamond on a key.", "shot": "2026-09-23-video-kit-key-diamond-sc.png" }
+  ],
+  "evaluate": [
+    "Does each piece on the right read as the same thing as the mock on the left?",
+    "Is the system blue for selection and play right, or should the video pieces use the mock's softer lavender blue?",
+    "Is the not-yet-animating diamond (dim outline) visible enough on the real panel, or too quiet?",
+    "Do the stand-in icons (speaker, skip, photo, waveform) read as the mock's icons?"
+  ],
+  "rough": [
+    "Nothing but the key diamond is in the window yet: the transport, tracks and clips arrive with the task that builds the timeline from these pieces.",
+    "Accent is the system blue, not the mock's lavender, so the app never shows two blues. That is a change from the mock, and it is the second evaluate question.",
+    "Icons are SF Symbols standing in for the mock's own icon set; the transition icon is drawn from the mock's own shape.",
+    "The dropdown row's menu cannot be photographed offscreen by the renderer, so its picture comes from a hosted window render instead."
+  ]
+}

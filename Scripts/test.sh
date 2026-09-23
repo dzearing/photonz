@@ -95,4 +95,16 @@ WHY
   fi
 fi
 
+# The video kit (Sources/Photonz/VideoKit) must stand on its own: every video
+# surface assembles it, and the gallery that draws it beside the mocks compiles
+# it with nothing else. A typecheck of the kit alone is the guard that it never
+# starts reading app state (`Scripts/video-kit-gallery.sh`).
+if (( status == 0 )); then
+  if ! swiftc -typecheck -parse-as-library -swift-version 6 \
+      Sources/Photonz/VideoKit/*.swift Scripts/video-kit-gallery.swift; then
+    echo "==> The video kit no longer compiles on its own: a piece in Sources/Photonz/VideoKit reaches into the app."
+    status=1
+  fi
+fi
+
 exit "$status"

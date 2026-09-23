@@ -2855,6 +2855,41 @@ Canonical pages: `pages/video.html` (the whole editor, five tracks),
 `pages/video-audio.html` (audio tracks with mute and solo),
 `pages/comp-video.html` (the clip, the edit point, the overlap, and trimming).
 
+#### The video kit: these pieces, built once in the app
+
+Every piece the video pages are drawn with has ONE SwiftUI counterpart in
+`Sources/Photonz/VideoKit/`, with the tokens copied from `tokens.css`,
+`glass.css`, `inspector.css`, `overlays.css` and `video.css`. A video feature
+assembles these; it does not draw its own clip bar, ruler or playhead. They take
+values and hand back clicks and drags, and read no app state, so any surface can
+use them. `Scripts/video-kit-gallery.sh` compiles them with nothing else and
+draws each one; `shared/video-kit/index.html`
+(http://127.0.0.1:8791/shared/video-kit/index.html) puts every render beside
+the same data drawn with these classes, and is where to look when either side
+changes.
+
+| Mock class | Kit piece | Notes |
+| --- | --- | --- |
+| `.transport`, `.transport .tc` | `VideoKit.TransportBar`, `Timecode` | volume, skip back, play, skip forward, time, scrubber, length; only the scrubber grows |
+| `.btn.ghost.icon.sm`, `.btn.primary.icon` on the transport | `VideoKit.TransportButton` (`.ghost`, `.primary`) | 24pt and 32pt rounds |
+| `.scrub`, `.fill`, `.knob`, `.mark` | `VideoKit.Scrubber` | 6pt drawn, 24pt grabbable, 26x18 thumb, reports began, changed, ended |
+| `.track` | `VideoKit.TrackRow` | header, 8pt gap, lane; 34pt lanes, 28pt in `video.html`'s timeline |
+| `.track .tl`, `.trk-auto` | `VideoKit.TrackHeader` | 58pt upper case by default; width and case are parameters for `video.html`'s 84pt |
+| `.ruler`, `.tk`, `.tk.end` | `VideoKit.TimeRuler`, `RulerTick` | ticks are fractions of the lane, the caller decides what time they are |
+| `.playhead` | `VideoKit.Playhead` | red 2pt line with a triangle head, laid over the lanes' column |
+| `.clip.v1/.v2/.comp/.ov/.txt/.aud`, `.sel`, `.trimming` | `VideoKit.ClipBar`, `ClipKind` | with `.lbl`, `.speed`, `.edge` (hover or trimming) and `.wave` |
+| `.clip .kfm` | `VideoKit.KeyMark` | read-only 7pt white diamond on a clip |
+| `.clip .wave` | `VideoKit.Waveform` | spans the whole clip |
+| `.xband`, `.xband.blk`, `.gr` | `VideoKit.TransitionBand` | sits on the cut; a dip is an outline |
+| `.libgrid` | `VideoKit.TileGrid` | as many 96pt-or-wider columns as fit, or a pinned count |
+| `.libtile`, `.libtile.tt`, `.th-diss/-dip/-slide/-push/-morph/-cut` | `VideoKit.Tile`, `TransitionThumbnail` | accent, component or amber (a cut) when picked |
+| `.kfkey`, `.armed`, `.on` | `VideoKit.KeyDiamond`, `KeyState` | drawn 11pt in a 16pt box; the Animating section's diamonds use it |
+| `.irow` | `VideoKit.FieldRow` | 76pt label column |
+| `.select`, `.select.sm`, `.select.comp` | `VideoKit.SelectFace`, `DropdownRow` | the face on a real menu |
+
+One deliberate difference: the kit's accent is the app's system accent, not
+`--accent`, so a window never shows two blues.
+
 **What was withdrawn with the old D18**: numbered rows being "wrong", a row per
 layer, a row named after its layer, a 92px lowercase label column, a clip's
 sound drawn inside the clip instead of on an audio track, and "Layers never
