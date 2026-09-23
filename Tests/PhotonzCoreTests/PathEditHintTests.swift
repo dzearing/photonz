@@ -95,16 +95,13 @@ struct PathEditHintTests {
         #expect(PathEditHint.justTurned(paths: 1) != PathEditHint.opening)
     }
 
-    /// A turned path cannot be reshaped, and until now it said nothing at all:
-    /// the points simply were not there. The line has to name the way back.
-    @Test func aTurnedPathSaysWhyItsPointsAreNotThere() {
-        #expect(PathEditHint.turned.contains("turned"))
-        #expect(PathEditHint.turned.contains("Set A back to 0"),
-                "the field that straightens it")
-        #expect(PathEditHint.turned.contains("Position and Size"),
-                "named the way the command that opens the field is named (ExactPlacement.menuItem)")
-        #expect(PathEditHint.turned.contains("Layer menu"),
-                "and where to find it, since it is no longer a section sitting open in the panel")
-        #expect(PathEditHint.turned != PathEditHint.opening)
+    /// A turned path used to carry a line of its own saying its points could
+    /// not be dragged, and naming the field that straightened it. They can be
+    /// dragged now (`PathEditSpace`), so there is nothing special to say about
+    /// a turned shape and it gets the same lines every other shape gets.
+    @Test func aTurnedPathIsToldTheSameThingsAsAnyOther() {
+        #expect(PathEditHint.opening.contains("Drag a point"))
+        #expect(!PathEditHint.opening.lowercased().contains("cannot"))
+        #expect(!PathEditHint.penOpening.lowercased().contains("cannot"))
     }
 }

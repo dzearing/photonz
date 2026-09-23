@@ -1,0 +1,437 @@
+{
+  "out": "/tmp/photonz-playtest/turned-path-keeps-its-points",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "p"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "pen"
+    },
+    {
+      "do": "click",
+      "at": [
+        250,
+        500
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.2
+    },
+    {
+      "do": "click",
+      "at": [
+        650,
+        500
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.2
+    },
+    {
+      "do": "click",
+      "at": [
+        650,
+        240
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.2
+    },
+    {
+      "do": "click",
+      "at": [
+        253,
+        503
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "select",
+      "timeout": 2
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Path"
+      ]
+    },
+    {
+      "do": "expectPath",
+      "anchors": 3,
+      "closed": true,
+      "anchor": 0,
+      "near": [
+        250,
+        500
+      ],
+      "within": 4
+    },
+    {
+      "do": "describe",
+      "stage": "1-drawn",
+      "note": "a closed three point shape drawn with the Pen: corners at (250,500), (650,500) and (650,240), so its box is 400 by 260 with its middle at (450,370)"
+    },
+    {
+      "do": "action",
+      "action": "positionAndSize"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "focus",
+      "field": "A"
+    },
+    {
+      "do": "type",
+      "text": "30"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "A",
+      "reads": "30°"
+    },
+    {
+      "do": "describe",
+      "stage": "2-turned",
+      "note": "turned 30 degrees with the A field. Until today the points vanished the instant A stopped being 0 and the chip said they could not be dragged; they have to be on the drawing now, in the places the turn put them"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-turned-with-its-points"
+    },
+    {
+      "do": "expectPath",
+      "anchors": 3,
+      "anchor": 0,
+      "near": [
+        211.8,
+        382.6
+      ],
+      "within": 4
+    },
+    {
+      "do": "expectPath",
+      "anchors": 3,
+      "anchor": 1,
+      "near": [
+        558.2,
+        582.6
+      ],
+      "within": 4
+    },
+    {
+      "do": "expectPath",
+      "anchors": 3,
+      "anchor": 2,
+      "near": [
+        688.2,
+        357.4
+      ],
+      "within": 4
+    },
+    {
+      "do": "describe",
+      "stage": "3-points-through-the-turn",
+      "note": "the three corners are where a 30 degree turn about (450,370) puts them, worked out by hand: (211.8,382.6), (558.2,582.6) and (688.2,357.4)"
+    },
+    {
+      "do": "drag",
+      "from": [
+        150,
+        300
+      ],
+      "to": [
+        750,
+        450
+      ],
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectPath",
+      "anchors": 3,
+      "picked": 2
+    },
+    {
+      "do": "describe",
+      "stage": "3a-swept",
+      "note": "a box swept from clear canvas across the upper half took the two corners it went round on screen, at (211.8,382.6) and (688.2,357.4), and left the low one at (558.2,582.6). The band is the upright box the hand dragged, not one leaning with the shape"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-two-points-swept-on-a-turned-shape"
+    },
+    {
+      "do": "click",
+      "at": [
+        558,
+        583
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectPath",
+      "anchors": 3,
+      "picked": 1
+    },
+    {
+      "do": "describe",
+      "stage": "3b-one-instead",
+      "note": "clicking the low corner, the one the box did NOT take, replaces the two with just that one. Clicking a point that was already picked would have KEPT all of them, which is what lets you drag a group by grabbing any member of it"
+    },
+    {
+      "do": "click",
+      "at": [
+        212,
+        383
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectPath",
+      "anchors": 3,
+      "picked": 1
+    },
+    {
+      "do": "describe",
+      "stage": "4-a-point-picked",
+      "note": "a click where the left corner actually SITS takes it: the hit test reads the press through the turn rather than against the shape's stored numbers"
+    },
+    {
+      "do": "drag",
+      "from": [
+        212,
+        383
+      ],
+      "to": [
+        212,
+        500
+      ],
+      "steps": 14
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "expectChrome",
+      "within": 3
+    },
+    {
+      "do": "expectPath",
+      "anchors": 3,
+      "anchor": 0,
+      "near": [
+        212,
+        500
+      ],
+      "within": 8
+    },
+    {
+      "do": "expectPath",
+      "anchors": 3,
+      "anchor": 1,
+      "near": [
+        558.2,
+        582.6
+      ],
+      "within": 3
+    },
+    {
+      "do": "expectPath",
+      "anchors": 3,
+      "anchor": 2,
+      "near": [
+        688.2,
+        357.4
+      ],
+      "within": 3
+    },
+    {
+      "do": "expect",
+      "field": "A",
+      "reads": "30°"
+    },
+    {
+      "do": "describe",
+      "stage": "5-dragged",
+      "note": "that corner dragged 117 points straight down the canvas. It landed where the hand left it, the other two corners have not moved at all, and A still reads 30: the box grew under the drag without taking the drawing with it"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-point-dragged-on-a-turned-shape"
+    },
+    {
+      "do": "click",
+      "at": [
+        688,
+        357
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectPath",
+      "anchors": 3,
+      "curves": 2,
+      "smooth": 1
+    },
+    {
+      "do": "describe",
+      "stage": "5a-rounded-a-corner",
+      "note": "two clicks on the far corner of the turned shape curved it, and its two levers came up in the places the turn puts them. This is the gesture the whole task is about: rounding a corner of an angled piece without straightening it first"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-corner-rounded-on-a-turned-shape"
+    },
+    {
+      "do": "drag",
+      "from": [
+        526,
+        320
+      ],
+      "to": [
+        470,
+        250
+      ],
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "expectChrome",
+      "within": 3
+    },
+    {
+      "do": "expectPath",
+      "anchors": 3,
+      "curves": 2,
+      "anchor": 2,
+      "near": [
+        688.2,
+        357.4
+      ],
+      "within": 4
+    },
+    {
+      "do": "expect",
+      "field": "A",
+      "reads": "30°"
+    },
+    {
+      "do": "describe",
+      "stage": "5b-lever-pulled",
+      "note": "one of that corner's levers pulled out on the turned shape: the curve deepens, the point itself has not moved and the turn is still 30. Pulling a lever is how a corner gets the radius you actually want"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-lever-pulled-on-a-turned-shape"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectPath",
+      "anchors": 3,
+      "curves": 0,
+      "smooth": 0
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "expectPath",
+      "anchors": 3,
+      "anchor": 0,
+      "near": [
+        211.8,
+        382.6
+      ],
+      "within": 4
+    },
+    {
+      "do": "expect",
+      "field": "A",
+      "reads": "30°"
+    },
+    {
+      "do": "describe",
+      "stage": "6-undo",
+      "note": "one undo step puts the corner back where it was, and the turn is untouched"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-undone"
+    }
+  ]
+}

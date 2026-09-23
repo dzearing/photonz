@@ -24,9 +24,14 @@ struct PathAnchorDrag {
     /// coordinates. Every frame of the drag is worked out from THIS rather
     /// than from the last frame, so a drag cannot drift.
     let original: PathContent
-    /// The layer's box when the button went down, which is what the new box is
-    /// measured from as the shape grows past its old edges.
-    let originalFrame: CGRect
+    /// Where the shape's own coordinates sat when the button went down: the
+    /// box the new box is measured from as the shape grows past its old edges,
+    /// and the turn every frame of the drag is read through.
+    ///
+    /// Taken at the PRESS and held, because both move as the shape grows: a
+    /// drag that re-read them each frame would chase its own tail, the same
+    /// reason `original` is the shape as it was rather than as it is.
+    let space: PathEditSpace
     let target: PathEditTarget
     /// Where the press landed and where the pointer is now, both in the layer's
     /// own untransformed space.
@@ -62,9 +67,10 @@ struct PathAnchorDrag {
 /// across the points you want and take them all at once.
 struct PathPointSweepDrag {
     let layerID: UUID
-    /// The layer's corner when the press landed, so the box can be read in the
-    /// shape's own coordinates.
-    let origin: CGPoint
+    /// Where the shape's own coordinates sat when the press landed, so the
+    /// points can be asked where they are ON SCREEN and matched against the
+    /// box the hand actually drew.
+    let space: PathEditSpace
     /// ⇧: the catch is added to what was already picked.
     let adding: Bool
     /// What was picked when the press landed, which is what an abandoned
@@ -112,17 +118,20 @@ extension CanvasNSView {
     /// offer it (`PathEditHint.penOpening`).
     ///
     /// A path inside a copy offers nothing, like every other layer that offers
-    /// no handles (`offersOwnHandles`). Neither does one on a SLANT: reshaping
-    /// moves the box the shape sits in, a turn is measured about the middle of
-    /// that box, and a point dragged out on a turned path would therefore swing
-    /// the whole shape round under the hand. Straighten it with the A field and
-    /// the points come back — which the chip now SAYS rather than leaving the
-    /// points quietly missing (`PathEditHint.turned`).
+    /// no handles (`offersOwnHandles`).
+    ///
+    /// A path on a SLANT used to offer nothing either, and the reason was real:
+    /// reshaping moves the box the shape sits in, a turn is measured about the
+    /// middle of that box, so growing the box moved the point the shape swings
+    /// about and took the drawing with it. An icon is full of pieces at an
+    /// angle, which made the one shape you most want to round a corner on the
+    /// one shape you could not touch. It is answered now rather than refused:
+    /// the press is read through the turn, and the new box is placed to cancel
+    /// exactly the slide the old pivot caused (`PathEditSpace`).
     var editablePath: (id: UUID, layer: Layer, content: PathContent)? {
         guard Experiments.shared.reshapePathEnabled, toolCanReshapeAPath,
               let id = selectedLayerID, let layer = document?.canvasLayer(id: id),
-              let content = layer.path, offersOwnHandles(layer),
-              layer.transform.isIdentity else { return nil }
+              let content = layer.path, offersOwnHandles(layer) else { return nil }
         return (id, layer, content)
     }
 
@@ -131,9 +140,18 @@ extension CanvasNSView {
         tool == .select || (tool == .pen && Experiments.shared.penEnabled)
     }
 
-    /// A press in the layer's own coordinates, measured from its corner.
+    /// Where a layer's own coordinates sit on the canvas: its corner, its own
+    /// turn, and the turn of any card it is inside. The one place this file
+    /// asks the question, so a press, a drawn point and a refitted box cannot
+    /// disagree about where the shape is.
+    func pathEditSpace(of layer: Layer) -> PathEditSpace {
+        PathEditSpace(layer: layer, inheritedTurn: inheritedTurn(of: layer.id))
+    }
+
+    /// A press in the layer's own coordinates, measured from its corner and
+    /// through whatever has turned it.
     private func pathLocalPoint(_ p: CGPoint, layer: Layer) -> CGPoint {
-        CGPoint(x: p.x - layer.frame.minX, y: p.y - layer.frame.minY)
+        pathEditSpace(of: layer).local(p)
     }
 
     // MARK: - The gesture
@@ -186,7 +204,8 @@ extension CanvasNSView {
             }
             pathAnchorDrag = PathAnchorDrag(
                 layerID: picked.id, original: picked.content,
-                originalFrame: picked.layer.frame, target: target, start: local, current: local,
+                space: pathEditSpace(of: picked.layer),
+                target: target, start: local, current: local,
                 moving: pathAnchorSelection.isEmpty ? [index] : pathAnchorSelection,
                 breaking: option, moved: false)
             applyGrabCursor(.closedHand)
@@ -204,7 +223,8 @@ extension CanvasNSView {
             }
             pathAnchorDrag = PathAnchorDrag(
                 layerID: picked.id, original: picked.content,
-                originalFrame: picked.layer.frame, target: target, start: local, current: local,
+                space: pathEditSpace(of: picked.layer),
+                target: target, start: local, current: local,
                 moving: [index], breaking: option, moved: false)
             applyGrabCursor(.closedHand)
         case .segment:
@@ -251,11 +271,9 @@ extension CanvasNSView {
 
     func pathEditMouseDragged(to p: CGPoint, event: NSEvent) {
         guard let viewport, var drag = pathAnchorDrag else { return }
-        // The layer's box travels with the shape, so the press point has to be
-        // measured against the box it was taken in rather than the one under
-        // the pointer now.
-        let origin = drag.originalFrame.origin
-        drag.current = CGPoint(x: p.x - origin.x, y: p.y - origin.y)
+        // The layer's box travels with the shape, so the pointer is read in the
+        // space the press was taken in rather than the one under it now.
+        drag.current = drag.space.local(p)
         if hypot(drag.current.x - drag.start.x, drag.current.y - drag.start.y)
             * viewport.zoom >= CanvasNSView.pathEditDragThreshold {
             drag.moved = true
@@ -266,10 +284,10 @@ extension CanvasNSView {
         let content = drag.reshaped()
         // The box follows the shape while the drag is in flight, or a point
         // dragged out past the old edge would be drawn cut off and then jump
-        // back into place on release.
-        selectedLayerFrame = CGRect(origin: CGPoint(x: origin.x + content.bounds.minX,
-                                                    y: origin.y + content.bounds.minY),
-                                    size: content.bounds.size)
+        // back into place on release. On a turned shape it is placed so the
+        // rest of the drawing does not slide with it (`steadyFrame`), which is
+        // the same box the commit will land on.
+        selectedLayerFrame = drag.space.steadyFrame(contentBounds: content.bounds)
         onPathPreview(drag.layerID, content)
         refreshOverlays()
         // The reading is taken at the END of the frame, after every refresh
@@ -326,7 +344,7 @@ extension CanvasNSView {
         guard Experiments.shared.reshapePathEnabled, tool == .select, event.clickCount == 1,
               pressWouldDrawABand(at: p) else { return false }
         pathPointSweep = PathPointSweepDrag(
-            layerID: picked.id, origin: picked.layer.frame.origin,
+            layerID: picked.id, space: pathEditSpace(of: picked.layer),
             adding: event.modifierFlags.contains(.shift),
             before: pathAnchorSelection,
             level: pathPointSweepLevel(at: p),
@@ -486,14 +504,12 @@ extension CanvasNSView {
         return true
     }
 
-    /// The points inside the box right now, asked in the shape's own
-    /// coordinates.
+    /// The points inside the box right now: the band is the upright box the
+    /// hand drew, and it takes the points it visibly goes round, so a turned
+    /// shape answers a sweep the same way a straight one does.
     private func pathPointSweepCatch(_ sweep: PathPointSweepDrag) -> Set<Int> {
         guard let content = document?.canvasLayer(id: sweep.layerID)?.path else { return [] }
-        let box = pathPointSweepRect(sweep)
-        return content.anchorIndices(in: CGRect(x: box.minX - sweep.origin.x,
-                                                y: box.minY - sweep.origin.y,
-                                                width: box.width, height: box.height))
+        return content.anchorIndices(in: pathPointSweepRect(sweep), of: sweep.space)
     }
 
     /// The box on the canvas right now, in document coordinates.
@@ -535,7 +551,11 @@ extension CanvasNSView {
     func pathEditNudge(by delta: CGPoint) -> Bool {
         guard let picked = editablePath, !pathAnchorSelection.isEmpty else { return false }
         var content = picked.content
-        content.moveAnchors(pathAnchorSelection, by: delta)
+        // The key means the way it points, on the canvas: a point of a shape
+        // turned thirty degrees goes UP when you press up, rather than up the
+        // shape's own grain, which on a turn is up and sideways at once.
+        content.moveAnchors(pathAnchorSelection,
+                            by: pathEditSpace(of: picked.layer).localVector(delta))
         commitPathEdit(picked.id, content)
         return true
     }
@@ -553,10 +573,10 @@ extension CanvasNSView {
 
     private func commitPathEdit(_ id: UUID, _ content: PathContent) {
         guard let layer = document?.canvasLayer(id: id) else { return }
-        let box = content.bounds
-        selectedLayerFrame = CGRect(x: layer.frame.minX + box.minX,
-                                    y: layer.frame.minY + box.minY,
-                                    width: box.width, height: box.height)
+        // The same box the refit will give it, turned shape included, so the
+        // outline does not step sideways between here and the document coming
+        // back round (`PathBuilder.refit`).
+        selectedLayerFrame = pathEditSpace(of: layer).steadyFrame(contentBounds: content.bounds)
         onPathEditCommit(id, content)
         refreshPathEditChrome()
         announcePathEditHint(showing: content)
@@ -645,14 +665,15 @@ extension CanvasNSView {
         // points that never moved until the button came up (2026-09-14).
         let drag = pathAnchorDrag.flatMap { $0.layerID == picked.id ? $0 : nil }
         let content = drag?.reshaped() ?? picked.content
-        // Where the shape's own coordinates sit in the document. A committed
-        // path is normalised against its box (`PathBuilder.refit`), so it is
-        // the layer's corner; an in-flight one is still measured from the box
+        // Where the shape's own coordinates sit on the canvas. A committed path
+        // is normalised against its box (`PathBuilder.refit`), so it is the
+        // layer's own space; an in-flight one is still measured from the box
         // the button went down in, which is what the preview is refitted from.
-        let origin = drag?.originalFrame.origin ?? picked.layer.frame.origin
+        // Either way the turn on it is part of the answer, or the dots would
+        // sit in a straight square beside the shape they belong to.
+        let space = drag?.space ?? pathEditSpace(of: picked.layer)
         func chromePoint(_ local: CGPoint) -> CGPoint {
-            viewport.viewPoint(fromDocument: CGPoint(x: origin.x + local.x,
-                                                     y: origin.y + local.y))
+            viewport.viewPoint(fromDocument: space.document(local))
         }
         let accent = NSColor.controlAccentColor.cgColor
 
@@ -727,7 +748,7 @@ extension CanvasNSView {
         pathPickedAnchorsLayer.isHidden = pickedDots.isEmpty
 
         pathChromeShowing = content
-        pathChromeOrigin = origin
+        pathChromeSpace = space
         // The chip is told from here as well, because this is the one place
         // that runs whenever the shape changes for ANY REASON — an undo, a
         // redo, a change made from a panel — rather than only after a gesture
@@ -770,9 +791,8 @@ extension CanvasNSView {
             for (a, b) in [(anchor.point, drawn.point),
                            (anchor.controlIn, drawn.controlIn),
                            (anchor.controlOut, drawn.controlOut)] {
-                let here = CGPoint(x: drag.originalFrame.minX + a.x,
-                                   y: drag.originalFrame.minY + a.y)
-                let there = CGPoint(x: pathChromeOrigin.x + b.x, y: pathChromeOrigin.y + b.y)
+                let here = drag.space.document(a)
+                let there = pathChromeSpace.document(b)
                 worst = max(worst, hypot(here.x - there.x, here.y - there.y) * viewport.zoom)
             }
         }

@@ -1075,12 +1075,12 @@ final class CanvasNSView: NSView {
     let motionPivotLayer = CAShapeLayer()
     let motionPivotHaloLayer = CAShapeLayer()
     let motionPivotLabelLayer = CATextLayer()
-    /// The shape the points on screen were last drawn FROM, and the document
-    /// corner they were measured out from. Kept so a walk can ask, while the
-    /// button is still down, whether the chrome is on the shape the canvas is
-    /// drawing (`pathChromeDrift`).
+    /// The shape the points on screen were last drawn FROM, and the space they
+    /// were mapped out through. Kept so a walk can ask, while the button is
+    /// still down, whether the chrome is on the shape the canvas is drawing
+    /// (`pathChromeDrift`).
     var pathChromeShowing: PathContent?
-    var pathChromeOrigin: CGPoint = .zero
+    var pathChromeSpace = PathEditSpace(frame: .zero, transform: .identity, pivot: nil)
     /// The last line handed to the chip, so the same words are not published
     /// again on every overlay pass.
     var pathEditHintShowing: String?

@@ -398,13 +398,18 @@ extension PathBuilder {
     /// out past the edge has to move the corner as well as the point, or the
     /// selection outline would sit across the middle of the shape and the
     /// numbers in the Position panel would stop meaning anything.
+    ///
+    /// On a TURNED shape moving that corner also moves the point the turn is
+    /// about, which would slide the whole drawing sideways under the hand. The
+    /// box is placed to cancel exactly that, so the parts of the shape nobody
+    /// touched do not move and the turn itself is untouched
+    /// (`PathEditSpace.steadyFrame`). Straight on it is the corner plus the
+    /// box, which is what it has always been.
     public static func refit(_ layer: Layer, content: PathContent) -> Layer {
         let box = content.bounds
         var fitted = layer
         fitted.content = .path(content.offsetBy(dx: -box.origin.x, dy: -box.origin.y))
-        fitted.frame = CGRect(x: layer.frame.origin.x + box.origin.x,
-                              y: layer.frame.origin.y + box.origin.y,
-                              width: box.width, height: box.height)
+        fitted.frame = PathEditSpace(layer: layer).steadyFrame(contentBounds: box)
         return fitted
     }
 }
@@ -425,6 +430,28 @@ extension PathContent {
         var caught: Set<Int> = []
         for (index, anchor) in anchors.enumerated() {
             let p = anchor.point
+            guard p.x >= box.minX, p.x <= box.maxX, p.y >= box.minY, p.y <= box.maxY else {
+                continue
+            }
+            caught.insert(index)
+        }
+        return caught
+    }
+
+    /// The points inside a box drawn on the CANVAS, for a shape that may be
+    /// turned under it.
+    ///
+    /// The band stays the upright box the hand actually dragged, exactly as
+    /// every other band in the app is, and it takes the points it visibly goes
+    /// round: it is the points that are asked where they are on screen, not the
+    /// box that is bent onto the shape's grain. A band arriving on a slant
+    /// because the shape underneath happens to be turned would read as broken,
+    /// and no drawing tool has ever done it.
+    public func anchorIndices(in rect: CGRect, of space: PathEditSpace) -> Set<Int> {
+        let box = rect.standardized
+        var caught: Set<Int> = []
+        for (index, anchor) in anchors.enumerated() {
+            let p = space.document(anchor.point)
             guard p.x >= box.minX, p.x <= box.maxX, p.y >= box.minY, p.y <= box.maxY else {
                 continue
             }

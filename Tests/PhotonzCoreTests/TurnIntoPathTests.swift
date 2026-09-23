@@ -128,6 +128,36 @@ struct TurnIntoPathTests {
         #expect(after.style == before.style)
     }
 
+    /// A LINE is the one shape whose box really does change on the way through:
+    /// its frame is padded so round caps have somewhere to be drawn, and a path
+    /// pads itself, so the box closes in round the outline. That is the shape
+    /// of change that slides a TURNED drawing, since a turn is measured about
+    /// the middle of the box and closing the box in can move that middle.
+    ///
+    /// It does not here, because a line's padding is even on all four sides, so
+    /// the middle stays put and the line was already safe. This is written down
+    /// as the boundary rather than as a bug: the placement a reshape now uses
+    /// (`PathEditSpace.steadyFrame`) runs on this path too, and this says it
+    /// left the one case that was already right exactly where it was.
+    @Test("A turned line does not move when it becomes a path")
+    func aTurnedLineDoesNotMoveOnTheWayThrough() throws {
+        var before = lineLayer()
+        before.transform = LayerTransform(rotation: .pi / 5)
+        let after = try #require(before.turnedIntoPath())
+        #expect(after.transform == before.transform)
+        // The box really did close in, so this is the case that could slide.
+        #expect(after.frame != before.frame)
+        let annotation = try #require(before.annotation)
+        let path = try #require(after.path)
+        let wasSpace = PathEditSpace(layer: before)
+        let nowSpace = PathEditSpace(layer: after)
+        for (index, end) in [annotation.start, annotation.end].enumerated() {
+            let was = wasSpace.document(end)
+            let now = nowSpace.document(path.anchors[index].point)
+            #expect(near(was, now, 1e-6), "end \(index) slid from \(was) to \(now)")
+        }
+    }
+
     // MARK: - A rounded box
 
     @Test("A rounded box becomes eight points, the four curved ones half smooth")

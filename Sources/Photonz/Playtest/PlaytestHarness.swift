@@ -6338,14 +6338,17 @@ private final class Run {
         }
         // Where one named point ended up, asked in the space the walk wrote it
         // in. A path's anchors are stored against its own corner, so the claim
-        // is checked on the DOCUMENT point the person would have clicked.
+        // is checked on the DOCUMENT point the person would have clicked —
+        // which on a TURNED shape means through the turn as well as the
+        // corner, or a walk that drags a point to where it can see it would be
+        // told the point is somewhere it plainly is not (`PathEditSpace`).
         if let anchorAt {
             guard content.anchors.indices.contains(anchorAt.index) else {
                 throw Failure(description: "\(shape) — there is no point \(anchorAt.index) "
                     + "to be anywhere")
             }
-            let local = content.anchors[anchorAt.index].point
-            let here = CGPoint(x: layer.frame.minX + local.x, y: layer.frame.minY + local.y)
+            let placed = editor.document?.canvasLayer(id: layer.id) ?? layer
+            let here = PathEditSpace(layer: placed).document(content.anchors[anchorAt.index].point)
             let wanted = try documentPoint(anchorAt.near)
             let off = hypot(here.x - wanted.x, here.y - wanted.y)
             guard off <= anchorAt.within else {

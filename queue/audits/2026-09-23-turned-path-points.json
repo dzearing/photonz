@@ -1,0 +1,48 @@
+{
+  "feature": "A turned shape keeps its points",
+  "epic": "icon-vector",
+  "summary": "A path that has been turned now shows its points and reshapes like any other. Before today the dots vanished the moment the angle stopped being zero, so rounding one corner of an angled piece meant straightening the whole shape, editing it, and turning it back by hand.",
+  "setup": "Photonz Dev, release Next, Experiments window. Flags next-vector-paths, next-pen and next-reshape-a-path are on by default.",
+  "try": [
+    {
+      "do": "Press P and click three corners of a shape, then click the first one again to close it. The Pen hands back to Select and the points are on it."
+    },
+    {
+      "do": "Open Position and Size from the Layer menu and type 30 into the A field. The shape turns, and its points turn with it instead of disappearing.",
+      "shot": "2026-09-23-turned-path-points-1.png"
+    },
+    {
+      "do": "Drag a box from empty canvas across the upper half of the shape. The box is upright, the way you dragged it, and it takes the points it visibly went round.",
+      "shot": "2026-09-23-turned-path-points-4.png"
+    },
+    {
+      "do": "Click one dot and drag it well outside the old outline. Only it moves: the other corners stay exactly where they are and the drawing does not slide.",
+      "shot": "2026-09-23-turned-path-points-2.png"
+    },
+    {
+      "do": "Look at the A field. It still reads 30, and the dashed box has grown round the new shape rather than jumping."
+    },
+    {
+      "do": "Double click a corner to curve it, then drag one of its levers. This is the gesture the whole thing is for: rounding a corner of an angled piece without straightening it first.",
+      "shot": "2026-09-23-turned-path-points-3.png"
+    },
+    {
+      "do": "Press Command Z twice. Each of those comes back in one step and the turn is untouched."
+    },
+    {
+      "do": "Pick one point and press the up arrow a few times. It goes up the screen, not up the shape's own slant."
+    }
+  ],
+  "evaluate": [
+    "Dragging a point on a turned shape: does anything move that you did not touch?",
+    "The sweep box stays upright while the shape under it is at an angle. Does that read right, or did you expect the box to lean with the shape?",
+    "The arrow keys push a point the way the key points rather than along the shape's grain. Is that what your hand expected?",
+    "Now that the points are there at any angle, is there anything left that still makes you want to straighten a shape before editing it?",
+    "The dashed box round a turned shape stays an upright-in-its-own-space rectangle that grows as you drag. Is it helping, or is it noise you would rather not see mid-drag?"
+  ],
+  "rough": [
+    "A heavily SKEWED shape (not just turned) has an eight point grab radius that is a circle in the shape's own space and therefore an ellipse on screen, so one axis is a little easier to hit than the other. On a plain turn, which is the case this task is about, distances are preserved exactly and it does not arise.",
+    "Every reshape now goes through one box placement, and Turn Into Path goes through the same one. I looked for a turned shape it used to shift and could not produce one: a line's box does close in on the way through, but evenly on all four sides, so its middle does not move and it never slid. Written down as checked rather than fixed.",
+    "The Position and Size popover opens over the top-right corner of the shape in the walk's screenshots, so one of the three points is behind it in the first picture. That is where the popover lands, not something about the points."
+  ]
+}

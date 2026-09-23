@@ -41,17 +41,6 @@ public enum PathEditHint {
     public static let penOpening = "Drag a point to reshape this shape. "
         + "Double click a point to curve it. Click anywhere else to draw another."
 
-    /// A path that has been TURNED. Reshaping moves the box the shape sits in
-    /// and a turn is measured about the middle of that box, so a point dragged
-    /// out on a turned path would swing the whole shape round under the hand.
-    ///
-    /// It used to say nothing at all: the points simply were not drawn, with
-    /// no line, no pointer change and nothing to ask. Saying why, and naming
-    /// the one field that undoes it, is the difference between a limit and a
-    /// thing that looks broken.
-    public static let turned = "This path is turned, so its points cannot be dragged. "
-        + "Set A back to 0 under Position and Size, on the Layer menu, and they come back."
-
     /// A hard corner picked. It has no levers on it, so it is not told to drag
     /// one: the way forward is to curve it first.
     public static let cornerPicked = "This point is a hard corner. "

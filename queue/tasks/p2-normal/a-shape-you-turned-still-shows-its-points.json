@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 220,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T08:38:48.991Z",
-  "updated": "2026-09-22T12:17:53.494Z",
+  "updated": "2026-09-23T11:30:24.457Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Today this is a deliberate refusal rather than a bug, and the reason is written into CanvasPathEdit.swift line 110: \"Neither does one on a SLANT: reshaping moves the box the shape sits in, a turn is measured about the middle of that box, and a point dragged out on a turned path would therefore swing the whole shape round under the hand.\" The refusal is in one place, the layer.transform.isIdentity clause of CanvasNSView.editablePath (Sources/Photonz/CanvasPathEdit.swift:116), and the chip that explains it is PathEditHint.turned, read in EditorState+PathEdit.swift.\n\nSo the work is the hard part the refusal was standing in for: take the press through the inverse of the layer transform so a point is dragged in the shape own coordinates, and when the shape box has to change, recompute the turn about the NEW middle so the drawing does not rotate under the hand. pathLocalPoint in the same file is the single place the press is converted today and it subtracts the frame origin and nothing else.\n\nDo the same for the point sweep box (pathPointSweep in the same file), which currently collects points by testing screen positions.\n\nFlagged twice as an unchanged older rough edge: the 2026-09-19-sweep-up-path-points audit says \"A path that has been turned still shows no points at all, so none of this reaches one\", and the reshape work before it said the same. It matters to icon-svg specifically, because drawing an elaborate glyph means angled pieces and this is exactly where a point needs nudging.\n\nNo decision card: the points already exist and already behave, this only widens where they appear.",
@@ -17,7 +17,7 @@
     "Pick a shape that has been turned and its points show, the same dots and the same levers as a straight one",
     "Dragging a point on a turned shape moves that point and nothing else: the shape does not swing round under the hand and the turn is unchanged",
     "The box a turned shape sits in does not jump when a point is dragged, and the A field still reads the same angle afterwards",
-    "Sweeping a box round several points works on a turned shape too, and the box is drawn in the shape own frame rather than the screen",
+    "Sweeping a box round several points works on a turned shape too. The band is the UPRIGHT box the hand dragged and it takes the points it visibly goes round, which is the opposite of the second half of this item as originally written: a band arriving on a slant because the shape under it happens to be turned reads as broken and no drawing tool does it. Reasoned out in the log entry of 2026-09-23",
     "The chip stops saying a turned shape cannot be reshaped, because it can",
     "Undo puts a dragged point back in one step",
     "Ships behind next-reshape-a-path (with next-pen on, which it requires); the try path is: draw a shape with the pen, set A to 30, pick it, and drag one of its points",
@@ -43,7 +43,38 @@
     {
       "t": "2026-09-22T12:17:53.493Z",
       "note": "seq 170 -> 220"
+    },
+    {
+      "t": "2026-09-23T10:57:48.432Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T11:20:49.573Z",
+      "note": "Adversarial review, before building. (1) The refusal's stated reason is nearly right but names the wrong motion: working the algebra out, when the shape box moves from F0 to F1 the drawing does not SWING, it SLIDES. For a turn with linear part L about a pivot moving c0 -> c1, every point lands (I - L)(c1 - c0) away from where it was, the same amount whichever point you ask about, because the box corner and the shape's own coordinates move together. That is one translation, cancellable by one offset, which is why the whole hard part turned out to be about twenty lines. (2) Two of the three pieces already existed elsewhere in the app and were reused rather than invented: reading a press through the inverse of a layer's turn is what CanvasPointerCue.handleSpacePoint does for frame handles, and placing a resized box so a turned layer does not walk is what Handles.anchoredFrame does for resize. (3) Cut from the task as decorative: acceptance item 4 asks for the sweep band to be 'drawn in the shape own frame rather than the screen'. Declined, and built the other way. A band that arrives as a slanted parallelogram because the shape under it happens to be turned reads as broken, no drawing tool has ever done it, and it is not what 'sweep a box round several points' means to a person. The band stays the upright box the hand actually dragged and takes the points it visibly goes round, which needed the anchors mapped OUT to the canvas rather than the box mapped in. Everything else in that acceptance item is met. (4) Shortest version that delivers the value: one pure value in core (PathEditSpace) holding the corner, the turn and the pivot, with the press map, the draw map and the steady box on it. Every caller of PathBuilder.refit gets the anti-slide for free, including turnedIntoPath, where a turned shape converted to a path used to shift."
+    },
+    {
+      "t": "2026-09-23T11:20:55.717Z",
+      "note": "owns these walks: turned-path-keeps-its-points-walk, path-reshape-walk, sweep-up-path-points-walk, turn-into-a-path-walk"
+    },
+    {
+      "t": "2026-09-23T11:30:12.439Z",
+      "note": "Adversarial review, on the built thing, driven in the real app. Ran turned-path-keeps-its-points-walk (64 steps, all ok) on an unlocked Mac with Screen Recording granted, so all five pictures are real windows. What I checked by looking rather than by assertion: the dots on the 30 degree triangle sit ON the drawing, not in a straight square beside it; the dragged corner moved 117 points down and the OTHER two corners are pixel for pixel identical between the before and after captures; the dashed box grew from 400x260 to 342x361 and stayed turned, with A still reading 30; double clicking a corner brought its two levers up at the angle the turn puts them, and pulling one deepened the curve without the point moving. What I could not fix and left rough: a heavily SKEWED shape has a grab radius that is a circle in the shape's own space and so an ellipse on screen, one axis a little easier to hit than the other. A plain turn is isometric so it does not arise there, and it is in the audit's rough list rather than filed: nobody is skewing icon pieces today and it did not clear the follow-up bar. Left rough, not filed: the Position and Size popover parks over the top right corner of the shape, so one of the three points is behind it in the first screenshot. That is where the popover lands and has nothing to do with the points."
+    },
+    {
+      "t": "2026-09-23T11:30:24.399Z",
+      "note": "One thing I claimed and then could not reproduce, so it is written down as checked rather than as a fix: I expected Turn Into Path to have been sliding a TURNED shape, since it goes through the same box refit and a line's frame closes in on the way through. Wrote a test for it (TurnIntoPathTests.aTurnedLineDoesNotMoveOnTheWayThrough), then reverted the refit change and ran it again: it passed both ways. A line's padding is even on all four sides, so the box closes in without moving its middle, and the line never slid. The test stays, as the boundary of what the new placement has to leave alone. The claim came out of the audit's rough list."
+    },
+    {
+      "t": "2026-09-23T11:30:24.456Z",
+      "note": "Two changes beyond the letter of the task, both small and both verified. (1) An arrow key with a point picked now pushes it the way the KEY points rather than along the shape's own grain, which on a turn is up and sideways at once. (2) Reshaping a path inside a turned CARD: the press now comes through the card's inherited turn as well as the layer's own, and the commit is wrapped in holdingTurnedPivots the way every other gesture inside a turned card already is, so reshaping one piece no longer walks the rest of the card. turned-piece-walk still passes. Neither was in the acceptance; both are the same bug wearing a different hat and skipping them would have shipped a turned shape that works one way at the top level and another inside a card."
     }
   ],
-  "source": "manager"
+  "source": "manager",
+  "started": "2026-09-23T10:57:48.431Z",
+  "walks": [
+    "turned-path-keeps-its-points-walk",
+    "path-reshape-walk",
+    "sweep-up-path-points-walk",
+    "turn-into-a-path-walk"
+  ]
 }

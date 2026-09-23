@@ -17,7 +17,9 @@ extension EditorState {
     func previewPath(_ id: UUID, _ content: PathContent) {
         guard var doc = document else { return }
         discardDragPreview()
-        doc.updateLayer(id: id) { $0 = PathBuilder.refit($0, content: content) }
+        doc.holdingTurnedPivots(above: id) {
+            $0.updateLayer(id: id) { $0 = PathBuilder.refit($0, content: content) }
+        }
         // The box the shape occupies RIGHT NOW, in the one place everything
         // that reads a live box already looks. `submit` renders without
         // touching `document`, so without this the app holds the shape as it
@@ -35,7 +37,15 @@ extension EditorState {
         // The document is about to hold the real shape, so the stand-in goes.
         previewMoves = [:]
         discardDragPreview()
-        perform { $0.updateLayer(id: id) { $0 = PathBuilder.refit($0, content: content) } }
+        // A card on a slant swings about the middle of the box its contents
+        // make, so reshaping one piece inside it would walk every other piece
+        // a few points across the screen. Held, the same way a move or a
+        // resize inside a turned card already is (`holdingTurnedPivots`).
+        perform {
+            $0.holdingTurnedPivots(above: id) {
+                $0.updateLayer(id: id) { $0 = PathBuilder.refit($0, content: content) }
+            }
+        }
     }
 
     /// The picked path layer the chip is about, whatever state it is in, or
@@ -47,9 +57,9 @@ extension EditorState {
     ///
     /// The PEN counts as well as Select, because pressing P over a finished
     /// path is how somebody reaches for its points to round a corner
-    /// (`CanvasNSView.editablePath`). A TURNED path counts too, where it used
-    /// to be excluded: it cannot be reshaped, and the chip is the only thing
-    /// that can say so instead of leaving the points quietly missing.
+    /// (`CanvasNSView.editablePath`). A TURNED path counts like any other: it
+    /// shows its points and reshapes the same way, so the chip says the same
+    /// things about it.
     private var pathEditChipLayer: Layer? {
         guard pathEditChipIsAllowed,
               let id = selectedLayerID, let layer = document?.canvasLayer(id: id),
@@ -66,10 +76,6 @@ extension EditorState {
 
     /// The line on the chip under the canvas while a path's points are on show.
     /// Live state, never in the document.
-    ///
-    /// The turned case is read HERE rather than taken from the canvas, because
-    /// a turned path has no points and so the canvas has nothing to announce:
-    /// the line it last pushed is about the shape as it was before the turn.
     var pathEditHintText: String {
         // A line left behind by a join or a close speaks for the SELECTION,
         // and a join is only ever asked for with two or more paths picked —
@@ -78,10 +84,9 @@ extension EditorState {
         // never be read by anybody. Asking Join Paths on two runs that do not
         // meet then did nothing and said nothing, which is the one thing the
         // command promised not to do (`join-two-pen-paths-walk`, 2026-09-20).
-        guard let layer = pathEditChipLayer else {
+        guard pathEditChipLayer != nil else {
             return turnedIntoPathNotice ?? PathEditHint.opening
         }
-        guard layer.transform.isIdentity else { return PathEditHint.turned }
         // A shape that has JUST been turned says so first, because the question
         // that would have said it can be silenced and then nothing does.
         if let turnedIntoPathNotice { return turnedIntoPathNotice }
