@@ -1410,8 +1410,8 @@ private final class Run {
                     + ", offered to \(chain.map { "\(type(of: $0))" }.joined(separator: " then "))\(held)\(landed)\(after)",
                  state: describe())
 
-        case .dropOnTimeline(let file, let track, let seconds, let insert, let hold, let release, let says):
-            note(number, step.name, try await dropOnTimeline(file: file, track: track, seconds: seconds,
+        case .dropOnTimeline(let file, let tile, let track, let seconds, let insert, let hold, let release, let says):
+            note(number, step.name, try await dropOnTimeline(file: file, tile: tile, track: track, seconds: seconds,
                                                              insert: insert, hold: hold, release: release,
                                                              says: says),
                  state: describe())
@@ -4049,7 +4049,11 @@ private final class Run {
                     editor.selectLibraryItem(first.id)
                 }
             case .pickFirstMedia:
-                if let first = editor.documentMediaItems.first {
+                // The first tile on the shelf, which is a recording or sound
+                // when the document holds one: they come before the pictures.
+                if let first = editor.documentClipItems.first {
+                    editor.selectLibraryItem(first.id.uuidString)
+                } else if let first = editor.documentMediaItems.first {
                     editor.selectLibraryItem(first.id.uuidString)
                 }
             case .exportDialog: editor.isExportDialogPresented = true
@@ -11621,16 +11625,39 @@ extension Run {
     /// The point is worked out from where the timeline says its tracks are,
     /// so a walk names a track and a second rather than a place in the
     /// window, and does not break when the dock moves.
-    func dropOnTimeline(file: String, track: String, seconds: Double, insert: Bool,
+    func dropOnTimeline(file: String?, tile: String?, track: String, seconds: Double, insert: Bool,
                         hold: String?, release: Bool, says: String?) async throws -> String {
         let editor = try requireEditor()
         let window = try requireWindow()
+        let carried = tile.map { "the tile \($0)" } ?? file ?? "?"
         guard let document = editor.document, document.hasTime else {
-            throw Failure(description: "there is no document with a timeline open to drop \(file) on")
+            throw Failure(description: "there is no document with a timeline open to drop \(carried) on")
         }
-        let url = try fileURL(file)
-        guard FileManager.default.fileExists(atPath: url.path) else {
-            throw Failure(description: "there is no file at \(url.path) to drop")
+        // A file is written the way the Finder writes a file it is dragging: as
+        // a file URL, which is the one thing every Finder drag carries. A tile
+        // is written from the tile's own drag, the same closure a pointer
+        // pulls it up with, so a walk can never carry what a hand would not.
+        let board: NSPasteboard
+        let url: URL
+        if let tile {
+            let target = try await tileTarget(tile)
+            guard let payload = target.payload else {
+                throw Failure(description: "the tile \"\(tile)\" cannot be picked up")
+            }
+            board = try await PlaytestPanelDrag.pasteboard(from: payload(), named: "timelineTile")
+            guard let carriedURL = DragCargo.fileURL(on: board) else {
+                throw Failure(description: "the tile \"\(tile)\" carries no file to land: it carries "
+                    + (board.types ?? []).map(\.rawValue).joined(separator: ", "))
+            }
+            url = carriedURL
+        } else {
+            url = try fileURL(file ?? "")
+            guard FileManager.default.fileExists(atPath: url.path) else {
+                throw Failure(description: "there is no file at \(url.path) to drop")
+            }
+            board = NSPasteboard(name: NSPasteboard.Name("photonz.playtest.timelineFile"))
+            board.clearContents()
+            board.writeObjects([url as NSURL])
         }
         let tracks = document.timelineTracks
         guard let trackID = tracks.first(where: { $0.name == track })?.id else {
@@ -11653,11 +11680,6 @@ extension Run {
         }
         let frame = editor.timelineTracksFrame
         var (global, windowPoint) = try aim()
-        // Written the way the Finder writes a file it is dragging: as a file
-        // URL, which is the one thing every Finder drag carries.
-        let board = NSPasteboard(name: NSPasteboard.Name("photonz.playtest.timelineFile"))
-        board.clearContents()
-        board.writeObjects([url as NSURL])
         let info = PlaytestDraggingInfo(pasteboard: board, location: windowPoint, window: window)
         guard let content = window.contentView else {
             throw Failure(description: "the window has no content view")

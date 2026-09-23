@@ -53,3 +53,44 @@ extension EditorState {
         document.flatMap { DocumentMedia.item(id: id.uuidString, in: $0) }
     }
 }
+
+// MARK: - Recordings and sounds on the shelf
+
+// What a video document has been given sits on the same shelf as its pictures
+// (`video.html`, Library scope Media), and a tile goes onto the timeline the
+// way a file from the Finder does, because it hands over that very file.
+extension EditorState {
+
+    /// The recordings and sounds on the shelf, in the order they came in.
+    var documentClipItems: [DocumentClipItem] {
+        document.map { DocumentMedia.clips(in: $0) } ?? []
+    }
+
+    /// The recording or sound the picked tile stands for.
+    var selectedClipItem: DocumentClipItem? {
+        guard let id = selectedLibraryItemID, let document else { return nil }
+        return DocumentMedia.clip(id: id, in: document)
+    }
+
+    /// The file a tile stands for, which is what dragging it hands over. Nil
+    /// for a file this run of the app has not opened (a document written on
+    /// another day, whose media has not been found again yet).
+    func fileURL(of item: DocumentClipItem) -> URL? {
+        switch item.media {
+        case .recording(let movie): MovieLibrary.shared.url(for: movie)
+        case .sound(let sound): SoundLibrary.shared.url(for: sound)
+        }
+    }
+
+    /// Puts the tile's file on the timeline at the playhead, on the first
+    /// track with room for it: what double clicking a tile, and Add at
+    /// Playhead on its menu, do.
+    @discardableResult
+    func placeClipAtPlayhead(_ item: DocumentClipItem) async -> UUID? {
+        guard let url = fileURL(of: item), document?.hasTime == true else {
+            raiseCanvasNotice(.mediaWouldNotOpen(name: item.name))
+            return nil
+        }
+        return await placeTimelineFileAtPlayhead(url)
+    }
+}

@@ -150,7 +150,7 @@ extension EditorState {
     @discardableResult
     func dropTimelineFile(_ url: URL, at point: CGPoint, insert: Bool) async -> UUID? {
         guard Experiments.shared.droppingMedia, let kind = MediaFiles.kind(of: url) else { return nil }
-        var inAir = timelineFileInAir?.url == url ? timelineFileInAir ?? TimelineFileInAir(url: url, kind: kind)
+        let inAir = timelineFileInAir?.url == url ? timelineFileInAir ?? TimelineFileInAir(url: url, kind: kind)
                                                   : TimelineFileInAir(url: url, kind: kind)
         // It lands where the ghost said, read before the ghost and the room
         // made for it go, since taking the room away moves the lane under the
@@ -158,7 +158,36 @@ extension EditorState {
         let promised = timelineFileInAir?.url == url
             ? timelineLanding(for: inAir, at: point, insert: insert) : nil
         endTimelineFileHover()
-        switch kind {
+        return await landTimelineFile(inAir) { [weak self] inAir in
+            promised ?? self?.timelineLanding(for: inAir, at: point, insert: insert)
+        }
+    }
+
+    /// A file put on the timeline at the playhead rather than under a pointer:
+    /// a Library tile double clicked, or Add at Playhead on its menu. It goes
+    /// over what is there on the picked track, the way Premiere's Overwrite
+    /// does, and onto a track of its own when no track is picked, so nothing
+    /// already cut is ever covered by a double click.
+    @discardableResult
+    func placeTimelineFileAtPlayhead(_ url: URL) async -> UUID? {
+        guard Experiments.shared.droppingMedia, let kind = MediaFiles.kind(of: url) else { return nil }
+        let at = documentTimeMS
+        let picked = selectedTrackIDs.count == 1 ? selectedTrackIDs.first : nil
+        return await landTimelineFile(TimelineFileInAir(url: url, kind: kind)) { [weak self] inAir in
+            guard let document = self?.document, let length = inAir.lengthMS else { return nil }
+            return document.clipLanding(kind: inAir.trackKind, lengthMS: length, atMS: at,
+                                        over: picked.map { .onto($0) }, edit: .overwrite)
+        }
+    }
+
+    /// Reads the file if nobody has yet, and lands it where `landing` says.
+    /// The document remembers the file as it lands, under its own name, so it
+    /// stays on the Library shelf after its last clip is cut away.
+    private func landTimelineFile(_ inAir: TimelineFileInAir,
+                                  landing: (TimelineFileInAir) -> ClipLanding?) async -> UUID? {
+        var inAir = inAir
+        let url = inAir.url
+        switch inAir.kind {
         case .recording: if inAir.movie == nil { inAir.movie = await MovieLibrary.shared.movie(at: url) }
         case .sound: if inAir.sound == nil { inAir.sound = await SoundLibrary.shared.sound(at: url) }
         }
@@ -166,25 +195,28 @@ extension EditorState {
             raiseCanvasNotice(.mediaWouldNotOpen(name: url.lastPathComponent))
             return nil
         }
-        guard let landing = promised ?? timelineLanding(for: inAir, at: point, insert: insert),
-              landing.allowed else {
-            return nil
-        }
+        guard let landing = landing(inAir), landing.allowed else { return nil }
         var layer: Layer
+        let media: DocumentMediaSource.Media
         if let movie = inAir.movie {
             let frame = document.placementForIncomingImage(size: movie.pixelSize, at: nil)
             layer = Layer(name: inAir.name, content: .image(movie.frameRef(atSourceMS: 0)), frame: frame)
             layer.movie = movie
             layer.time = LayerTime(inMS: 0, outMS: length, sourceInMS: 0, sourceLengthMS: movie.durationMS)
+            media = .recording(movie)
         } else if let sound = inAir.sound {
             layer = Layer.sound(sound, name: inAir.name,
                                 time: LayerTime(inMS: 0, outMS: length, sourceLengthMS: sound.durationMS))
+            media = .sound(sound)
         } else {
             return nil
         }
         var landed: UUID?
         pauseDocument()
-        perform { landed = $0.land(layer, at: landing) }
+        perform {
+            landed = $0.land(layer, at: landing)
+            if landed != nil { $0.rememberMedia(media, named: url.lastPathComponent) }
+        }
         guard let landed else { return nil }
         selectLayer(landed)
         if let sound = inAir.sound { SoundLibrary.shared.loadWaveform(for: sound) }

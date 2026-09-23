@@ -83,7 +83,10 @@ extension EditorState {
         let at = documentTimeMS
         var landed: UUID?
         pauseDocument()
-        perform { landed = $0.addClip(movie, name: name, atMS: at, frame: frame) }
+        perform {
+            landed = $0.addClip(movie, name: name, atMS: at, frame: frame)
+            $0.rememberMedia(.recording(movie), named: url.lastPathComponent)
+        }
         if let landed { selectLayer(landed) }
         // Its own sound came with it: `MovieLibrary.movie(at:)` files a
         // recording's sound against the same file as it reads it, so the bar

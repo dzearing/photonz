@@ -19460,3 +19460,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Harness: `dropOnTimeline` (aims at a track and a second, carries a real file URL the way the Finder does, only counts drop areas that are on screen), `expectClip`; `scratch` takes `sample:recording as b-roll.mp4`.
 - Walk: `second-clip-on-the-timeline-walk`, no flags, 11 real captures. Audit: `queue/audits/2026-09-23-second-clip-on-the-timeline.json`.
 - Next: each clip's sound as its own segment (folded into the sound-from-open task), Library tiles for recordings (filed p1), edit point properties and transitions between clips (transition task).
+
+## 2026-09-23 — Recordings and sounds on the Library shelf, dragged onto a track
+
+- Core (tests first, `DocumentClipMediaTests`): `DocumentClipMedia.swift` gives the document a media pool (`PhotonzDocument.media`, `rememberMedia`, written only when non-empty) so a file stays on the shelf after its last clip is cut, like a Premiere bin. `DocumentMedia.clips` lists the pool, then any timeline media never remembered. Clip layers no longer show up as picture tiles.
+- App: `LibraryClipTile.swift` (poster frame or the mock's green sound well, length badge in the corner, drag carries the file URL to this app only, so the timeline lands it through the Finder path). Remembered on timeline drop, canvas clip drop, Add Sound and recording open. Double click / right-click / the picked section's Add at Playhead share `placeLibraryPick` -> `placeTimelineFileAtPlayhead`.
+- Harness: `dropOnTimeline` takes `tile` instead of `file`; `pickFirstMedia` picks clips first.
+- Walk: `library-clip-onto-a-track-walk`, no flags (View > Library turned on the way a person does), 7 real captures. Audit: `queue/audits/2026-09-23-library-clips.json`.
+- Open: decision card on whether a video document shows the Library without being asked; filling the Library without placing (Import, drop on the panel) filed p1.

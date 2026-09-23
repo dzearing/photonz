@@ -146,6 +146,10 @@ public enum DocumentMedia {
     /// they are pictures this document holds like any other, and a person who
     /// dropped four photos into a collage can put one of them down again.
     private static func pictures(of layer: Layer) -> [(ImageRef, String)] {
+        // A clip is a picture layer showing the frame under the playhead, and
+        // that frame is not a picture the document holds: the recording is
+        // its own tile (`DocumentMedia.clips`).
+        guard layer.movie == nil else { return [] }
         switch layer.content {
         case .image(let ref):
             return [(ref, layer.name)]

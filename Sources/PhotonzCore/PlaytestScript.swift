@@ -2043,7 +2043,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// which a walk cannot press while a drag is in the air. `hold` names a
     /// picture taken while it is still in the air, ghost and all, and `says`
     /// is what the ghost must be saying then.
-    case dropOnTimeline(file: String, track: String, seconds: Double, insert: Bool,
+    ///
+    /// `tile` carries a recording or sound off the Library shelf instead of a
+    /// file, by its name there, through the tile's own drag: exactly one of
+    /// `file` and `tile` is given.
+    case dropOnTimeline(file: String?, tile: String?, track: String, seconds: Double, insert: Bool,
                         hold: String?, release: Bool, says: String?)
     /// Where a clip on the timeline is, by its name, and FAIL when it is not
     /// so: which track it is on, when it starts and when it ends, in seconds,
@@ -3180,7 +3184,15 @@ public enum PlaytestStep: Sendable, Equatable {
                              leave: try f.optionalFlag("leave") ?? false,
                              says: try f.optionalString("says"))
         case "dropOnTimeline":
-            self = .dropOnTimeline(file: try f.string("file"), track: try f.string("track"),
+            let file = try f.optionalString("file")
+            let tile = try f.optionalString("tile")
+            guard (file == nil) != (tile == nil) else {
+                throw PlaytestScriptError.invalidField(
+                    index: index, step: name, field: file == nil ? "file" : "tile",
+                    reason: "a dropOnTimeline step carries either a \"file\" from disk or a \"tile\" "
+                        + "off the Library shelf, exactly one of them")
+            }
+            self = .dropOnTimeline(file: file, tile: tile, track: try f.string("track"),
                                    seconds: try f.number("seconds"),
                                    insert: try f.optionalFlag("insert") ?? false,
                                    hold: try f.optionalString("hold"),

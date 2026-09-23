@@ -1,0 +1,43 @@
+{
+  "feature": "Recordings and sounds on the Library shelf, dragged onto a track",
+  "epic": "video-editing",
+  "summary": "A video document's recordings and sounds now sit on the Library's Media shelf with their length in the corner, stay there after their last clip is deleted, and drag onto a track the same way a file from the Finder does.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The Library itself is off until View > Library is ticked, which is the app's rule for every document; whether video should show it without asking is a decision card on its own task.",
+  "try": [
+    {
+      "do": "Open a screen recording, then tick View > Library. The Media shelf shows the recording as a tile with its length in the corner.",
+      "shot": "2026-09-23-library-clips-1-recording-on-the-shelf-sc.png"
+    },
+    {
+      "do": "Drag a music file from the Finder onto the timeline, then press Delete. The Audio track is empty and the music is still on the shelf.",
+      "shot": "2026-09-23-library-clips-2-music-kept-on-the-shelf-sc.png"
+    },
+    {
+      "do": "Drag the music tile onto the empty Audio track, one second in. Watch the dashed ghost and the line over the tracks before you let go.",
+      "shot": "2026-09-23-library-clips-3-tile-in-the-air-sc.png"
+    },
+    {
+      "do": "Drag the recording's tile to just short of the end of V1. It snaps on so the two clips meet."
+    },
+    {
+      "do": "Hold Command and drag the recording's tile to three seconds on V1. It goes in and pushes everything after it along.",
+      "shot": "2026-09-23-library-clips-6-inserted-from-a-tile-sc.png"
+    },
+    {
+      "do": "Double click a tile, or right-click it and choose Add at Playhead. It lands at the playhead on the picked track, or on a new track when no track is picked."
+    }
+  ],
+  "evaluate": [
+    "Does a clip you deleted still being on the shelf feel like a Premiere bin, or like clutter?",
+    "Is the length in the corner of the picture readable, or do you want it on a line under the name as the mock draws it?",
+    "Are the tiles wide enough? Names like Tutorial Sample.mp4 are cut in the middle at today's width.",
+    "Should double click land on a new track when no track is picked, or overwrite on V1 at the playhead the way Premiere's Overwrite does?"
+  ],
+  "rough": [
+    "Differs from video.html's Library: the length is a corner badge inside the picture, not a second caption line, because every tile on the shelf is one height and the shelf is height capped. Premiere's icon view puts duration in the same corner.",
+    "Differs from video.html: tiles are 68 points wide, so longer file names are cut in the middle (Tutori...e.mp4). The mock's tiles are wider, with short names like b-roll.mov.",
+    "The Library is hidden until View > Library, while the mock keeps it in the dock for video. Filed as a decision card on its own task.",
+    "Nothing puts a file into the Library without also putting it on the timeline yet (the mock's Fill the Library step: Import, drop onto the panel, capture). Filed as its own p1 task.",
+    "A tile's drag stays inside the app: letting go of one on the Finder does nothing, so a tile can never move your source file out from under the document."
+  ]
+}

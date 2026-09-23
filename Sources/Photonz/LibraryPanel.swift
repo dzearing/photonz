@@ -188,6 +188,21 @@ struct LibraryPanel: View {
         }
     }
 
+    /// The recordings and sounds Media draws for what is typed, ahead of the
+    /// pictures and in the order they were brought in (`video.html`, Library
+    /// scope Media: intro.mov, demo.mov, b-roll.mov, music.wav).
+    private var visibleClips: [(entry: LibraryEntry, item: DocumentClipItem)] {
+        guard scope == .media else { return [] }
+        let items = editorState.documentClipItems
+        guard !items.isEmpty else { return [] }
+        let byID = Dictionary(items.map { ($0.id.uuidString, $0) },
+                              uniquingKeysWith: { first, _ in first })
+        let hits = LibrarySearch.filter(DocumentMedia.clipEntriesOf(items), query: query)
+        return hits.prefix(Self.maxTiles).compactMap { entry in
+            byID[entry.id].map { (entry, $0) }
+        }
+    }
+
     /// The tiles Components draws for what is typed: the mains in the open
     /// document and the starters it has not taken yet, each paired with the
     /// layer it stands for so the tile can draw a picture of it (Next,
@@ -260,14 +275,14 @@ struct LibraryPanel: View {
     /// Whether this scope has anything to show at all, whatever the search
     /// says. The empty state and the resize grabber both hang off this.
     private var isEmpty: Bool {
-        visibleMedia.isEmpty && visibleComponents.isEmpty && visibleStyles.isEmpty
+        visibleClips.isEmpty && visibleMedia.isEmpty && visibleComponents.isEmpty && visibleStyles.isEmpty
             && visibleTextStyles.isEmpty && visibleEffectStyles.isEmpty
     }
 
     /// How many tiles the shelf is showing right now, whatever scope they came
     /// from — the shelf only ever draws one scope at a time.
     private var tileCount: Int {
-        visibleMedia.count + visibleComponents.count + visibleStyles.count
+        visibleClips.count + visibleMedia.count + visibleComponents.count + visibleStyles.count
             + visibleTextStyles.count + visibleEffectStyles.count
     }
 
@@ -352,6 +367,9 @@ struct LibraryPanel: View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: LibraryShelfLayout.tileMinimumWidth),
                                     spacing: LibraryShelfLayout.tileSpacing)],
                   alignment: .leading, spacing: LibraryShelfLayout.tileSpacing) {
+            ForEach(visibleClips, id: \.entry.id) { pair in
+                LibraryClipTile(item: pair.entry, clip: pair.item)
+            }
             ForEach(visibleMedia, id: \.entry.id) { pair in
                 LibraryTile(item: pair.entry, media: pair.item)
             }
@@ -427,7 +445,10 @@ struct LibraryPanel: View {
     /// zero, or nil when it is not on this shelf at all. One index, not one per
     /// scope: the shelf only ever draws one scope at a time.
     private func shelfIndex(of id: String) -> Int? {
-        if let index = visibleMedia.firstIndex(where: { $0.entry.id == id }) { return index }
+        if let index = visibleClips.firstIndex(where: { $0.entry.id == id }) { return index }
+        if let index = visibleMedia.firstIndex(where: { $0.entry.id == id }) {
+            return visibleClips.count + index
+        }
         if let index = visibleComponents.firstIndex(where: { $0.entry.id == id }) { return index }
         if let index = visibleStyles.firstIndex(where: { $0.entry.id == id }) { return index }
         return nil
@@ -436,7 +457,9 @@ struct LibraryPanel: View {
     /// Return in the search field picks the first tile showing, so the shelf
     /// can be worked without the pointer.
     private func selectFirstTile() {
-        if let first = visibleMedia.first {
+        if let first = visibleClips.first {
+            editorState.selectLibraryItem(first.entry.id)
+        } else if let first = visibleMedia.first {
             editorState.selectLibraryItem(first.entry.id)
         } else if let first = visibleComponents.first {
             editorState.selectLibraryItem(first.entry.id)
@@ -583,7 +606,29 @@ struct LibraryItemInspector: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
-        if let item = editorState.selectedMediaItem {
+        if let clip = editorState.selectedClipItem {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(clip.name)
+                    .font(.subheadline.weight(.medium))
+                    .lineLimit(2)
+                    .truncationMode(.middle)
+                VStack(alignment: .leading, spacing: 2) {
+                    detail(clip.detail)
+                    if let movie = clip.movie {
+                        detail("\(Int(movie.pixelSize.width)) × \(Int(movie.pixelSize.height)) px")
+                    }
+                }
+                Button("Add at Playhead") {
+                    editorState.placeLibraryPick()
+                }
+                .controlSize(.small)
+                .disabled(editorState.document?.hasTime != true)
+                .panelHelp("Puts this on the timeline at the playhead")
+                .playtestControl("Add at Playhead", detail: "the picked Library tile")
+            }
+            .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
+            .padding(.vertical, 4)
+        } else if let item = editorState.selectedMediaItem {
             VStack(alignment: .leading, spacing: 8) {
                 Text(item.name)
                     .font(.subheadline.weight(.medium))

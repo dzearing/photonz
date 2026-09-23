@@ -1,0 +1,70 @@
+{
+  "out": "/tmp/photonz-playtest/library-clip-onto-a-track-walk",
+  "seed": "The recordings and sounds a video document has been given sit on the Library shelf, scope Media, as tiles with their name and length (video.html: b-roll.mov 0:04, music.wav 0:14). A tile stays on the shelf after its last clip is cut away, like a Premiere bin, and dragging it onto a track lands it at the moment and on the track under the pointer, with the same ghost, snapping and command-key insert as the file from the Finder. At Next defaults, no flag set.",
+  "setup": {
+    "forget": ["all"],
+    "scratch": [
+      "sample:music"
+    ]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "comment": "View > Library, the way a person turns the shelf on: the Library waits to be asked for.", "do": "action", "action": "showLibrary" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-recording-on-the-shelf", "note": "An eight second screen recording on V1. The Library's Media shelf already holds it, as Tutorial Sample.mp4 with 0:08 in the corner of its picture" },
+    { "do": "snapshot", "name": "1-recording-on-the-shelf" },
+
+    { "do": "dropOnTimeline", "file": "scratch/Sample Music.m4a", "track": "V1", "seconds": 4.0 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectClip", "clip": "Sample Music", "track": "Audio", "startsAt": 4.0, "count": 1 },
+    { "do": "key", "key": "delete" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "Sample Music", "count": 0 },
+    { "do": "reveal", "control": "Sample Music.m4a" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-music-kept-on-the-shelf", "note": "THE FIRST TEST: music brought in from the Finder and then deleted from the timeline. The Audio track is empty, and the music is still on the shelf as Sample Music.m4a, the way a Premiere bin keeps what the sequence no longer uses" },
+    { "do": "snapshot", "name": "2-music-kept-on-the-shelf" },
+
+    { "do": "dropOnTimeline", "tile": "Sample Music.m4a", "track": "Audio", "seconds": 1.0, "release": false, "hold": "3-tile-in-the-air", "says": "lands on Audio at 0:01" },
+    { "do": "describe", "stage": "3-tile-in-the-air", "note": "THE SECOND TEST: the music tile held over the empty Audio track one second in. The lane shows the same dashed ghost a file from the Finder draws, the length of the music" },
+    { "do": "dropOnTimeline", "tile": "Sample Music.m4a", "track": "Audio", "seconds": 1.0 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectClip", "clip": "Sample Music", "track": "Audio", "startsAt": 1.0, "count": 1 },
+    { "do": "snapshot", "name": "4-first-clip-from-the-library" },
+
+    { "do": "dropOnTimeline", "tile": "Tutorial Sample.mp4", "track": "V1", "seconds": 7.96 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 8.0, "endsAt": 16.0, "count": 2 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 8.0 },
+    { "do": "describe", "stage": "4-snapped-onto-the-end", "note": "THE THIRD TEST: the recording's own tile let go a few points short of the end of V1 snapped onto it, so the two clips butt together at eight seconds with an edit point between them" },
+    { "do": "snapshot", "name": "5-recording-twice" },
+
+    { "do": "dropOnTimeline", "tile": "Tutorial Sample.mp4", "track": "V1", "seconds": 3.0, "insert": true, "release": false, "says": "pushing what is after" },
+    { "do": "dropOnTimeline", "tile": "Tutorial Sample.mp4", "track": "V1", "seconds": 3.0, "insert": true },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 3.0, "endsAt": 11.0, "count": 4 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 11.0, "endsAt": 16.0 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 16.0, "endsAt": 24.0 },
+    { "do": "describe", "stage": "5-insert-from-a-tile", "note": "THE FOURTH TEST: with the command key held, the tile went in at three seconds and pushed everything after it along, exactly as a file from the Finder does" },
+    { "do": "snapshot", "name": "6-inserted-from-a-tile" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 8.0, "endsAt": 16.0, "count": 2 },
+    { "do": "describe", "stage": "6-undo", "note": "One Command Z takes the insert back whole" },
+
+    { "do": "action", "action": "pickFirstMedia" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "control": "Add at Playhead", "present": true },
+    { "do": "describe", "stage": "7-picked-tile", "note": "Picking the recording's tile opens its own section in the dock: its name, its length and how often the timeline uses it, its size, and Add at Playhead" },
+    { "do": "snapshot", "name": "7-picked-tile" },
+    { "do": "press", "control": "Add at Playhead" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "startsAt": 2.0, "endsAt": 10.0, "count": 3 },
+    { "do": "describe", "stage": "8-added-at-the-playhead", "note": "THE FIFTH TEST: Add at Playhead put the recording at the playhead, two seconds in, on V1 (the track picked when the last clip landed), over what was there" }
+  ]
+}

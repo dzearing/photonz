@@ -84,6 +84,10 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     public var tracks: [DocumentTrack] = []
     /// The groups tracks have been gathered into.
     public var trackGroups: [DocumentTrackGroup] = []
+    /// The recordings and sounds this document has been given, in the order
+    /// they came in: the Library's media pool (`DocumentClipMedia.swift`). A
+    /// file stays here after its last clip is cut away.
+    public var media: [DocumentMediaSource] = []
 
     public init(canvasSize: CGSize, layers: [Layer] = [], pixelScale: CGFloat = 1,
                 colorStyles: [ColorStyle] = [], textStyles: [TextStyle] = [],
@@ -102,7 +106,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case canvasSize, layers, pixelScale, colorStyles, textStyles, effectStyles, guides
         case gridOriginX, gridOriginY, motionCycleMS, readWords, durationMS
-        case tracks, trackGroups
+        case tracks, trackGroups, media
     }
 
     /// A document with no styles in it writes no styles key, so one saved
@@ -135,6 +139,9 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // recording saved before tracks existed is byte for byte what it was.
         if !tracks.isEmpty { try c.encode(tracks, forKey: .tracks) }
         if !trackGroups.isEmpty { try c.encode(trackGroups, forKey: .trackGroups) }
+        // A document given no recording or sound writes no media key, so every
+        // file saved before the shelf held them is byte for byte what it was.
+        if !media.isEmpty { try c.encode(media, forKey: .media) }
     }
 
     public init(from decoder: Decoder) throws {
@@ -171,6 +178,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         readWords = try c.decodeIfPresent(ReadWords.self, forKey: .readWords) ?? ReadWords()
         tracks = try c.decodeIfPresent([DocumentTrack].self, forKey: .tracks) ?? []
         trackGroups = try c.decodeIfPresent([DocumentTrackGroup].self, forKey: .trackGroups) ?? []
+        media = try c.decodeIfPresent([DocumentMediaSource].self, forKey: .media) ?? []
     }
 
     /// A new document built around a base image, which becomes the bottom layer.

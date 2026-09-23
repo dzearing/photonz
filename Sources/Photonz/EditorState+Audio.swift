@@ -81,7 +81,10 @@ extension EditorState {
         let name = url.deletingPathExtension().lastPathComponent
         var landed: UUID?
         pauseDocument()
-        perform { landed = $0.addSound(sound, name: name, atMS: max(0, ms)) }
+        perform {
+            landed = $0.addSound(sound, name: name, atMS: max(0, ms))
+            $0.rememberMedia(.sound(sound), named: url.lastPathComponent)
+        }
         if let landed { selectLayer(landed) }
         SoundLibrary.shared.loadWaveform(for: sound)
         documentMomentChanged()

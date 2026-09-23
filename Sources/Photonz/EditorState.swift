@@ -1278,7 +1278,11 @@ final class EditorState {
                 return
             }
             let name = url.deletingPathExtension().lastPathComponent
-            installDocument(.recording(movie, name: name), url: nil)
+            var opened = PhotonzDocument.recording(movie, name: name)
+            // The recording is the first thing on its Library shelf, under the
+            // name it has on disk.
+            opened.rememberMedia(.recording(movie), named: url.lastPathComponent)
+            installDocument(opened, url: nil)
             // After the install, which clears it: this window holds a
             // recording, and that is what dims Save (see `saveAffordance`).
             recordingURL = url
@@ -3104,6 +3108,11 @@ final class EditorState {
     /// file again (`EditorState+Media.swift`), so putting one tile down twice
     /// leaves two layers pointing at one bitmap.
     func placeLibraryPick() {
+        // A recording or a sound goes on the timeline at the playhead instead.
+        if let clip = selectedClipItem {
+            Task { await placeClipAtPlayhead(clip) }
+            return
+        }
         guard let item = selectedMediaItem else { return }
         placeMediaItem(item)
     }

@@ -2228,11 +2228,12 @@ struct PlaytestScriptTests {
         { "steps": [ { "do": "dropOnTimeline", "file": "scratch/b-roll.mp4", "track": "V1",
                        "seconds": 8, "insert": true, "hold": "in-the-air", "says": "lands on V1" } ] }
         """)
-        guard case .dropOnTimeline(let file, let track, let seconds, let insert, let hold,
+        guard case .dropOnTimeline(let file, let tile, let track, let seconds, let insert, let hold,
                                    let release, let says) = script.steps[0] else {
             Issue.record("dropOnTimeline"); return
         }
         #expect(file == "scratch/b-roll.mp4")
+        #expect(tile == nil)
         #expect(track == "V1")
         #expect(seconds == 8)
         #expect(insert)
@@ -2240,6 +2241,36 @@ struct PlaytestScriptTests {
         #expect(release)
         #expect(says == "lands on V1")
         #expect(PlaytestStep.names.contains("dropOnTimeline"))
+    }
+
+    // The mock's first clip comes off the Library: a tile dragged onto a track
+    // lands the way the same file from the Finder would.
+    @Test("A dropOnTimeline step can carry a Library tile instead of a file")
+    func dropOnTimelineCarriesATile() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dropOnTimeline", "tile": "b-roll.mov", "track": "V1", "seconds": 2 } ] }
+        """)
+        guard case .dropOnTimeline(let file, let tile, let track, let seconds, _, _, _, _) = script.steps[0] else {
+            Issue.record("dropOnTimeline"); return
+        }
+        #expect(file == nil)
+        #expect(tile == "b-roll.mov")
+        #expect(track == "V1")
+        #expect(seconds == 2)
+    }
+
+    @Test("A dropOnTimeline step carries a file or a tile, never both and never neither")
+    func dropOnTimelineNeedsOneThingToCarry() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "dropOnTimeline", "file": "a.mov", "tile": "a.mov", "track": "V1", "seconds": 2 } ] }
+            """)
+        }
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "dropOnTimeline", "track": "V1", "seconds": 2 } ] }
+            """)
+        }
     }
 
     @Test("A sample can be copied in under a name of the walk's own")
