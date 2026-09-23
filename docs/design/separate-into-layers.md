@@ -702,6 +702,28 @@ picture whose letters run into all four edges reads the edges as strokes.
 More than one line is refused rather than joined: a run of text is one line, and
 that is what makes this the step AFTER separating.
 
+#### A machine that will not read is not a picture with nothing in it
+
+Vision is a shared on-device service, and under enough load it answers with an
+ERROR rather than with words. Until 2026-09-22 that arrived at the caller the
+same way an empty picture did, and the two are not the same news at all: a
+switch has nothing written on it, while a busy Mac has plenty written on it and
+would not say what.
+
+`TextReader.reading` now says which of the two happened. A refused read is tried
+again twice, a tenth and then a fifth of a second later, because what is being
+waited out is the rest of the machine rather than anything about the picture; a
+refusal that survives all three goes into `TextReader.recogniserHealth`, a count
+and the last reason, readable from any thread.
+
+Nothing in the app behaves differently: a row whose picture would not read keeps
+the number it was given, which is what it did before. What changed is that
+anybody can now ask whether the machine was reading at all. The fixture suites
+do exactly that and SKIP with a reason instead of reporting eleven failures, one
+of which cost a runner most of an hour bisecting a regression that was never
+there. `PHOTONZ_RECOGNISER_REFUSES=1` makes every read refuse, so that path is
+something that gets run rather than something that got written.
+
 ### The size and the colour, measured
 
 The colour is the median of the pixels that are solidly inside a stroke — median

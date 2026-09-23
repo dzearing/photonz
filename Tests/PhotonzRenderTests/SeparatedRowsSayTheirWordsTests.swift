@@ -32,7 +32,37 @@ struct SeparatedRowsSayTheirWordsTests {
         /// The bitmaps the document points at, so the package can be written
         /// the way the app writes one.
         let store: ImageStore
+        /// How many of the reads the machine's text recogniser REFUSED to do,
+        /// and what it said. Not the same as finding nothing: see
+        /// `theRecogniserWasAnswering`.
+        let refusals: Int
+        let refusalReason: String?
     }
+
+    /// Whether this machine's text recogniser was answering at all while the
+    /// pane was being read.
+    ///
+    /// Everything below that checks what a row SAYS is gated on this, and it
+    /// is the whole point of the gate: the recogniser is a shared on-device
+    /// service, and on a machine already running a build and a few hundred
+    /// other readings it answers with an error rather than with words. Every
+    /// row then keeps the number it was given, eleven checks go red, and the
+    /// red says nothing whatever about the code, which cost one runner most of
+    /// an hour bisecting a regression that did not exist.
+    ///
+    /// A skip that names the reason is the honest answer, so that is what this
+    /// produces. On a machine that is reading, it is always true and nothing
+    /// skips.
+    /// Worked out once, because six checks ask it and one line saying the
+    /// machine would not read is the useful number of times to say it.
+    static let theRecogniserWasAnswering: Bool = {
+        guard let taken = settings, taken.refusals > 0 else { return true }
+        print("==> SKIPPED: this machine's text recogniser refused "
+              + "\(taken.refusals) of \(taken.runs) reads, so the rows below have "
+              + "nothing to say and checking what they say would report a busy "
+              + "machine as broken code. It said: \(taken.refusalReason ?? "nothing")")
+        return false
+    }()
 
     private static func takeApart(_ name: String, scale: CGFloat) -> Taken? {
         guard let image = capture(name) else { return nil }
@@ -87,20 +117,26 @@ struct SeparatedRowsSayTheirWordsTests {
         // background once the pieces have landed.
         let refs = document.allLayers.filter { $0.isARunOfText == true }.compactMap(\.imageRef)
         let t0 = Date()
+        let healthBefore = TextReader.recogniserHealth
         var words: [ImageRef: String] = [:]
         for ref in refs {
             guard let picture = store.image(for: ref) else { continue }
             words[ref] = TextReader.words(in: picture) ?? ""
         }
+        let healthAfter = TextReader.recogniserHealth
         return Taken(document: document, words: words, runs: refs.count,
-                     readMS: Date().timeIntervalSince(t0) * 1000, store: store)
+                     readMS: Date().timeIntervalSince(t0) * 1000, store: store,
+                     refusals: healthAfter.refusals - healthBefore.refusals,
+                     refusalReason: healthAfter.reason)
     }
 
     private static let settings = takeApart("settings-pane-2x", scale: 2)
 
     // MARK: - The list
 
-    @Test func everyRowSaysTheWordsInItsPicture() throws {
+    @Test(.enabled(if: SeparatedRowsSayTheirWordsTests.theRecogniserWasAnswering,
+                   "the recogniser on this machine would not answer, so there are no words to check"))
+    func everyRowSaysTheWordsInItsPicture() throws {
         let taken = try #require(Self.settings)
         let names = taken.document
             .layerRows(expanded: taken.document.openableGroupIDs, selected: [],
@@ -118,7 +154,9 @@ struct SeparatedRowsSayTheirWordsTests {
     /// The half of the list that is not words. A switch, a field and a button
     /// are boxes with nothing written on them, and every one of them on this
     /// pane sits inside or beside words a person can read.
-    @Test func everyBoxSaysTheWordsItHoldsOrSitsBeside() throws {
+    @Test(.enabled(if: SeparatedRowsSayTheirWordsTests.theRecogniserWasAnswering,
+                   "the recogniser on this machine would not answer, so there are no words to check"))
+    func everyBoxSaysTheWordsItHoldsOrSitsBeside() throws {
         let taken = try #require(Self.settings)
         let names = taken.document
             .layerRows(expanded: taken.document.openableGroupIDs, selected: [],
@@ -139,7 +177,9 @@ struct SeparatedRowsSayTheirWordsTests {
 
     /// The switch beside a row of words is reachable from the find field, and
     /// tellable from the words themselves once it is.
-    @Test func typingAWordReachesTheSwitchBesideIt() throws {
+    @Test(.enabled(if: SeparatedRowsSayTheirWordsTests.theRecogniserWasAnswering,
+                   "the recogniser on this machine would not answer, so there are no words to check"))
+    func typingAWordReachesTheSwitchBesideIt() throws {
         let taken = try #require(Self.settings)
         let hits = taken.document.layerRows(matching: "launch at login", selected: [],
                                             readWords: taken.words).map(\.name)
@@ -147,7 +187,9 @@ struct SeparatedRowsSayTheirWordsTests {
         #expect(Set(hits).count == hits.count, "two rows read the same: \(hits)")
     }
 
-    @Test func typingAWordYouCanSeeReachesThePieceHoldingIt() throws {
+    @Test(.enabled(if: SeparatedRowsSayTheirWordsTests.theRecogniserWasAnswering,
+                   "the recogniser on this machine would not answer, so there are no words to check"))
+    func typingAWordYouCanSeeReachesThePieceHoldingIt() throws {
         let taken = try #require(Self.settings)
         let hits = taken.document.layerRows(matching: "save ch", selected: [],
                                             readWords: taken.words)
@@ -174,7 +216,9 @@ struct SeparatedRowsSayTheirWordsTests {
 
     /// What the reading found IS written into the document, and comes back
     /// with it: that is the whole of `ReadWords`.
-    @Test func whatTheReadingFoundIsSavedWithTheFileAndOpensWithIt() throws {
+    @Test(.enabled(if: SeparatedRowsSayTheirWordsTests.theRecogniserWasAnswering,
+                   "the recogniser on this machine would not answer, so there are no words to check"))
+    func whatTheReadingFoundIsSavedWithTheFileAndOpensWithIt() throws {
         let taken = try #require(Self.settings)
         var document = taken.document
         document.readWords.remember(taken.words.map { ($0.key, $0.value) })
@@ -230,7 +274,9 @@ struct SeparatedRowsSayTheirWordsTests {
 
     /// Written and opened the way the app writes and opens a file: a .photonz
     /// package, with the bitmaps encoded as HEIC beside the model.
-    @Test func aSavedPackageOpensWithItsRowsAlreadySayingTheirWords() throws {
+    @Test(.enabled(if: SeparatedRowsSayTheirWordsTests.theRecogniserWasAnswering,
+                   "the recogniser on this machine would not answer, so there are no words to check"))
+    func aSavedPackageOpensWithItsRowsAlreadySayingTheirWords() throws {
         let taken = try #require(Self.settings)
         var document = taken.document
         document.readWords.remember(taken.words.map { ($0.key, $0.value) })

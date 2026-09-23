@@ -19188,3 +19188,37 @@ a task to check it.
 plus a full re-run soon after. That is the deliberate trade while blindness is
 rare; if it stops being rare the answer is to resume the re-run from where the
 probe died rather than restart the set.
+
+## 2026-09-22 — A red test run means something again
+
+Two different things made `SeparatedRowsSayTheirWordsTests` report failures on
+healthy code, and a person reading the red could not tell them apart or tell
+either from a real break.
+
+**A machine that will not read is not a picture with nothing in it.** Vision is
+a shared on-device service, and under load it answers with an error rather than
+with words. One line in `TextReader` flattened that into the same empty answer a
+switch or a patch of flat panel gives, so every row kept the number it was given
+and eleven checks went red. `TextReader.reading` now says which of the two
+happened, retries a refusal twice, and counts the ones that survive in
+`TextReader.recogniserHealth`. The six checks that assert what a row SAYS skip
+with the recogniser's own reason when it was not answering; the two that do not
+depend on the words still run, so the gate cannot hide a regression.
+
+**A build folder holding half-rebuilt pieces is not a bug either.** A run that
+dies on signal 10 or 11 is a process reading memory laid out differently from
+the way it was compiled to expect. `Scripts/test.sh` now says so in plain words,
+throws `.build` away, runs again from scratch, and tells you if it dies the same
+way twice, because then it is real.
+
+Neither cause could be reproduced on demand, so both got a drill:
+`PHOTONZ_RECOGNISER_REFUSES=1` makes every read refuse and
+`PHOTONZ_TEST_CRASH_DRILL=1` makes the wrapper act as though the helper just
+died. Against the suite as it was, the first drill produced exactly the 21
+issues this was filed about; against the suite as it is, one sentence and six
+named skips.
+
+Found on the way and filed: one timing test in `IconPreviewRenderTests` goes red
+again in a full run on a loaded machine, having been fixed once for that reason.
+
+Next: the export size test still fails about one run in three, on its own task.

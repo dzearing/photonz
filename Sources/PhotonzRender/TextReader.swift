@@ -606,8 +606,110 @@ public enum TextReader {
     /// icon and a patch of flat panel alike. The caller decides what more than
     /// one line means: putting words back on the canvas refuses, naming a row
     /// joins them.
+    ///
+    /// Empty is ALSO what comes back when the machine would not read at all,
+    /// and the two are not the same news. Use `reading(_:inkHeight:)` where
+    /// that difference matters; everything that reaches here has already
+    /// decided it does not, and a refusal is counted in `recogniserHealth` on
+    /// the way past so somebody can still find out.
     static func lines(_ mask: TextReading.Mask, inkHeight: CGFloat) -> [String] {
-        guard inkHeight > 0 else { return [] }
+        switch reading(mask, inkHeight: inkHeight) {
+        case .read(let lines):
+            return lines
+        case .refused(let why):
+            refusals.record(why)
+            return []
+        }
+    }
+
+    /// What one pass of the recogniser came back with: the lines it found, or
+    /// the reason it would not answer.
+    ///
+    /// The second case is the one this type exists for. Vision is a shared
+    /// on-device service, so a request can fail outright rather than read
+    /// nothing, and it does so exactly when the machine is busy: the same
+    /// picture that reads perfectly on an idle Mac comes back refused on one
+    /// running a build and a hundred other readings at once. Folded into an
+    /// empty answer, that is indistinguishable from a blank picture, and every
+    /// caller downstream reports it as the app having failed to read something
+    /// it can plainly read.
+    enum Reading: Equatable {
+        case read([String])
+        case refused(String)
+
+        /// The reason, when there was one.
+        var refusal: String? {
+            if case .refused(let why) = self { return why }
+            return nil
+        }
+    }
+
+    /// How many times the recogniser has refused to answer in this process,
+    /// and what it last said.
+    ///
+    /// A count rather than a flag because a single read is allowed to fail:
+    /// what a caller wants to know is whether the machine was reading AT ALL
+    /// while it was working. Tests that depend on real reading take this
+    /// before and after and skip instead of failing when it moved.
+    public struct RecogniserHealth: Equatable, Sendable {
+        var refusals: Int
+        var reason: String?
+    }
+
+    /// The running count, safe to read and add to from any thread. A whole
+    /// separation reads a dozen runs at once across every core.
+    final class RecogniserHealthCount: @unchecked Sendable {
+        private let lock = NSLock()
+        private var total = 0
+        private var last: String?
+
+        var snapshot: RecogniserHealth {
+            lock.withLock { RecogniserHealth(refusals: total, reason: last) }
+        }
+
+        func record(_ reason: String) {
+            lock.withLock {
+                total += 1
+                last = reason
+            }
+        }
+    }
+
+    static let refusals = RecogniserHealthCount()
+
+    /// Whether the machine has been answering, and what it said when it did
+    /// not. See `RecogniserHealth`.
+    public static var recogniserHealth: RecogniserHealth { refusals.snapshot }
+
+    /// How many more goes a refused read gets before it is counted as one.
+    ///
+    /// Two, with a short wait between them, because what is being waited out
+    /// is the rest of the machine rather than anything about the picture. An
+    /// ordinary read never reaches the retry, so this costs a run that is
+    /// working precisely nothing.
+    static let recogniserRetries = 2
+
+    /// A drill: every read comes back refused.
+    ///
+    /// There is no way to make the on-device recogniser refuse on demand, and
+    /// a refusal is rare enough that waiting for one is not a plan, so this
+    /// makes one happen. It is how the behaviour on a machine that will not
+    /// read gets checked on a machine that will:
+    ///
+    /// ```
+    /// PHOTONZ_RECOGNISER_REFUSES=1 Scripts/test.sh --filter SeparatedRowsSayTheirWords
+    /// ```
+    ///
+    /// Read once, so an ordinary run pays nothing for it.
+    static let recogniserAlwaysRefuses =
+        ProcessInfo.processInfo.environment["PHOTONZ_RECOGNISER_REFUSES"] == "1"
+
+    static func reading(_ mask: TextReading.Mask, inkHeight: CGFloat,
+                        refusing alwaysRefuses: Bool = recogniserAlwaysRefuses) -> Reading {
+        guard inkHeight > 0 else { return .read([]) }
+        if alwaysRefuses {
+            return .refused("PHOTONZ_RECOGNISER_REFUSES is set: this is a drill, not a real refusal")
+        }
         // Small ink is scaled up before it is read. A row label on a 1x capture
         // is thirteen pixels tall, which is near the floor of what text
         // recognition reads reliably.
@@ -617,37 +719,53 @@ public enum TextReader {
         let margin = Int((inkHeight * up / 2).rounded())
         let w = Int((CGFloat(mask.width) * up).rounded()) + margin * 2
         let h = Int((CGFloat(mask.height) * up).rounded()) + margin * 2
+        // Nothing here is the recogniser refusing: a page this code cannot
+        // draw is a picture with no reading in it, the same as a blank one.
         guard w > 0, h > 0, w < 20_000, h < 20_000,
               let space = CGColorSpace(name: CGColorSpace.sRGB),
               let context = CGContext(data: nil, width: w, height: h,
                                       bitsPerComponent: 8, bytesPerRow: w * 4,
                                       space: space,
                                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-        else { return [] }
+        else { return .read([]) }
         context.setFillColor(gray: 1, alpha: 1)
         context.fill(CGRect(x: 0, y: 0, width: w, height: h))
-        guard let inkImage = maskImage(mask) else { return [] }
+        guard let inkImage = maskImage(mask) else { return .read([]) }
         context.interpolationQuality = .high
         context.draw(inkImage, in: CGRect(x: CGFloat(margin), y: CGFloat(margin),
                                           width: CGFloat(mask.width) * up,
                                           height: CGFloat(mask.height) * up))
-        guard let page = context.makeImage() else { return [] }
+        guard let page = context.makeImage() else { return .read([]) }
 
-        let request = VNRecognizeTextRequest()
-        request.recognitionLevel = .accurate
-        // A label is a label, not a sentence. Correction turns "Photonz" into
-        // "Photons" and a product name into a word, which is exactly the kind
-        // of quiet wrongness this feature cannot afford.
-        request.usesLanguageCorrection = false
-        request.recognitionLanguages = ["en-US"]
-        let handler = VNImageRequestHandler(cgImage: page, options: [:])
-        guard (try? handler.perform([request])) != nil else { return [] }
-        return (request.results ?? []).compactMap {
-            guard let best = $0.topCandidates(1).first,
-                  !best.string.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            else { return nil }
-            return best.string
+        var refusal = "the recogniser gave no reason"
+        for attempt in 0...recogniserRetries {
+            let request = VNRecognizeTextRequest()
+            request.recognitionLevel = .accurate
+            // A label is a label, not a sentence. Correction turns "Photonz"
+            // into "Photons" and a product name into a word, which is exactly
+            // the kind of quiet wrongness this feature cannot afford.
+            request.usesLanguageCorrection = false
+            request.recognitionLanguages = ["en-US"]
+            let handler = VNImageRequestHandler(cgImage: page, options: [:])
+            do {
+                try handler.perform([request])
+            } catch {
+                refusal = "\(error)"
+                // Waiting is the point: what has to pass is the rest of the
+                // machine, not anything about this picture.
+                if attempt < recogniserRetries {
+                    Thread.sleep(forTimeInterval: 0.1 * Double(attempt + 1))
+                }
+                continue
+            }
+            return .read((request.results ?? []).compactMap {
+                guard let best = $0.topCandidates(1).first,
+                      !best.string.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                else { return nil }
+                return best.string
+            })
         }
+        return .refused(refusal)
     }
 
     /// Coverage as a black-on-transparent bitmap, so it can be drawn onto a
