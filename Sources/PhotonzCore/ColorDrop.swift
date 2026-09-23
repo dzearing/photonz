@@ -89,14 +89,15 @@ public enum ColorDrop {
         /// True when this is the very swatch the drag started from, where
         /// letting go can only put back what is already there.
         public var isSource: Bool
-        /// True when the part this stands for is not on the layer at all: a
-        /// box with no line round it, a shape with no fill.
+        /// True when what this stands for is not on the picture: a box with no
+        /// line round it, a shape with no fill, an effect whose eye is shut.
         ///
         /// The row still carries a colour underneath — a bare box remembers
-        /// what its outline was last painted — but nobody can see it, so it is
-        /// not what the row is WEARING and the no-op refusal must not fire on
-        /// it. Letting go there both switches the part on and paints it, which
-        /// is a real change even when the colour is the one already filed.
+        /// what its outline was last painted, and a switched-off border keeps
+        /// every one of its settings — but nobody can see it, so it is not what
+        /// the row is WEARING and the no-op refusal must not fire on it.
+        /// Letting go there both switches it on and paints it, which is a real
+        /// change even when the colour is the one already filed.
         public var isAbsent: Bool
         /// Whether this swatch can hold a ramp. The wells that are not part of
         /// a layer's colour set — a shadow, a backdrop — cannot, and neither

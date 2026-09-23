@@ -43,6 +43,13 @@ struct ColorSwatchDrag: ViewModifier {
     let welcomes: (ColorDrop.SavedColor) -> ColorDrop.StyleWelcome
     /// How many layers letting go here would paint.
     let reaches: () -> Int
+    /// True while the thing this swatch paints is there but NOT DRAWING: an
+    /// effect whose eye is shut keeps its swatch and every one of its settings,
+    /// so unlike a switched-off part in Appearance it still has something to
+    /// aim at. Letting go there switches it back on as well as painting it,
+    /// and the sentence says both halves before you let go — the same bargain
+    /// the off row above it already strikes (`OffPartColorDrop.swift`).
+    let switchedOff: () -> Bool
     /// Whether this swatch can hold a ramp.
     let acceptsGradient: Bool
     /// How round the ring is. Every swatch in the panel is a rounded square,
@@ -127,6 +134,7 @@ struct ColorSwatchDrag: ViewModifier {
                                 styleID: worn?.id,
                                 reaches: paint() == nil ? 1 : reaches(),
                                 isSource: !payload.source.isEmpty && payload.source == key,
+                                isAbsent: switchedOff(),
                                 acceptsGradient: acceptsGradient,
                                 welcome: payload.style.map(welcomes) ?? .neverWearsNames)
     }
@@ -215,12 +223,14 @@ extension View {
                          welcomes: @escaping (ColorDrop.SavedColor) -> ColorDrop.StyleWelcome
                              = { _ in .neverWearsNames },
                          reaches: @escaping () -> Int = { 1 },
+                         switchedOff: @escaping () -> Bool = { false },
                          acceptsGradient: Bool = false,
                          ringCornerRadius: CGFloat = 6,
                          onDrop: @escaping (ColorDrop.Landing) -> Void) -> some View {
         modifier(ColorSwatchDrag(key: key, part: part, paint: paint, style: style,
                                  welcomes: welcomes,
-                                 reaches: reaches, acceptsGradient: acceptsGradient,
+                                 reaches: reaches, switchedOff: switchedOff,
+                                 acceptsGradient: acceptsGradient,
                                  ringCornerRadius: ringCornerRadius, onDrop: onDrop))
     }
 }

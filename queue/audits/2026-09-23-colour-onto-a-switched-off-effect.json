@@ -1,0 +1,27 @@
+{
+  "feature": "A colour dropped on a switched-off effect",
+  "epic": "unmanned-loop",
+  "summary": "Carrying a colour onto a border, shadow or glow whose eye is shut now switches that effect back on wearing the colour, and says so before you let go. It used to take the colour, say it had painted it, and leave the picture unchanged.",
+  "setup": "Photonz Dev, Experiments window, release Next. Nothing to turn on.",
+  "try": [
+    { "do": "Draw a rectangle with the rectangle tool and click it with the select tool." },
+    { "do": "In Effects, press the plus and choose Border." },
+    { "do": "Click the eye at the end of the Border row, so the border stops drawing. Its settings stay on screen, a shade fainter." },
+    { "do": "Drag the Fill swatch in Appearance onto the Border's Color swatch and hold it there. Read the line beside it: it says the border will be turned ON and painted.", "shot": "2026-09-23-drop-on-off-effect-in-flight-sc.png" },
+    { "do": "Let go. The border is drawing again, in the colour you dropped, and its row is lit.", "shot": "2026-09-23-drop-on-off-effect-landed-sc.png" },
+    { "do": "Press Command-Z once. Both halves go back together: the colour AND the eye." },
+    { "do": "Do the same with a shadow, and then with the Fill row in Appearance switched off, to see the three cases now say and do the same thing." }
+  ],
+  "evaluate": [
+    "Dropping a colour on something switched off turns it on. Is that what you expect, or would you rather a dropped colour never changed whether a thing is drawing?",
+    "Does 'Turns Border on, painted with this colour.' tell you enough before you let go?",
+    "One undo puts back the colour and the eye together. Would you ever want to keep the colour and switch it off again in one move instead?",
+    "The Border's other settings, Width and Offset, still do nothing to whether it draws. Is a colour being the one setting that switches it on confusing?",
+    "The effect's swatch is a shade fainter while it is off. While a colour is over it you get an accent ring but not a preview of the arriving colour. Is the ring enough?"
+  ],
+  "rough": [
+    "Dragging an off effect's own colour straight back onto its own swatch is still refused, with 'This is where the colour came from.', so it does NOT switch the effect on. That is the existing rule for every swatch in the app and it reads right here, but it is the one place a drop can still change nothing.",
+    "A switched-off effect's Width, Offset and Style still change nothing you can see, by design: the reason you switch an effect off is usually that you are about to change one of them. Only a dropped colour is a gesture that promises to show up, which is what this is about.",
+    "The picture in this audit drops the fill's own colour onto the border, so the border is drawing but invisible against the fill it hugs. The panel tells the whole story; the canvas does not. That is the walk's choice of colour, not the app's."
+  ]
+}

@@ -465,7 +465,15 @@ private struct EffectColorRow: View {
                 ColorStyleRow(target: target, part: row.kind.title,
                               selection: editorState.colorStyleSelection(target),
                               isNaming: editorState.isNamingColorStyle(target),
-                              previewPaint: editorState.previewedPaint(target))
+                              previewPaint: editorState.previewedPaint(target),
+                              // An effect that is not drawing keeps this
+                              // swatch, so this is where a carried colour
+                              // lands rather than on the row's own band. It
+                              // has to mean what the band means: switch the
+                              // effect back on AND paint it. Painting
+                              // something nobody can see, and saying it had
+                              // painted it, is the bug this closes.
+                              switchedOff: !row.isOn)
                     .equatable()
                 Spacer(minLength: 0)
             }

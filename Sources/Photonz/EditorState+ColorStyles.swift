@@ -565,6 +565,41 @@ extension EditorState {
             }
         }
         rememberStyleDefault(of: ids)
+        // The colour is in your hand now, exactly as it is when the same drop
+        // lands on an effect that was already drawing, so it joins the recents
+        // the same way rather than being the one paint the list forgets.
+        recordRecentColor(hex: landing.paint.hex)
+    }
+
+    /// Letting a colour go on the SWATCH of an effect that is not drawing.
+    ///
+    /// An effect keeps its swatch and every one of its settings while its eye
+    /// is shut — the reason you switched it off is usually that you are about
+    /// to change one of them — so a colour carried over to it lands on the
+    /// swatch rather than on the row's own band, which is the only landing
+    /// spot a switched-off part in Appearance has. That difference used to
+    /// reach all the way through: the row switched the effect on and painted
+    /// it, the swatch quietly painted something nobody could see and said it
+    /// had painted it. Both go through the one move now.
+    ///
+    /// The row is looked up HERE, at the moment of the drop, rather than
+    /// carried in by the view: a selection can change under an open drag, and
+    /// the layers this paints have to be the ones on screen when the pointer
+    /// was let go (`ColorTarget.Source`).
+    func dropColorTurningOn(_ target: ColorTarget, landing: ColorDrop.Landing) {
+        guard let place = target.effectIndex,
+              let row = layerEffectRows.first(where: { $0.index == place }) else {
+            // Nothing else in the panel shows a swatch for something switched
+            // off, so there is nothing to switch on: paint it the ordinary way
+            // rather than dropping the colour on the floor.
+            if let brings = landing.brings {
+                useColorStyle(target, styleID: brings.id)
+            } else {
+                commitSelectionPaint(target, paint: landing.paint)
+            }
+            return
+        }
+        dropColorOnOffEffect(row, landing: landing)
     }
 
     /// The Corner Radius the Appearance panel shows: only the picked layers that

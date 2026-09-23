@@ -78,12 +78,12 @@
     {
       "do": "describe",
       "stage": "1-no-line",
-      "note": "the box has no line round it: the Border switch reads off and the row shows no colour. selectedColors must read fill #B0184A and stroke #FF3B30"
+      "note": "the box has no line round it: the Border switch reads off. The row keeps its swatch, so there is something to aim a colour at. selectedColors must read fill #B0184A and stroke #FF3B30"
     },
     {
       "do": "snapshot",
       "name": "offpart-1-no-line",
-      "note": "the box has a Border row with its switch off. An effect row keeps its swatch when it is off, so there is something to aim at. selectedColors must read fill #B0184A and stroke #FF3B30"
+      "note": "the box has a Border row with its switch off. An effect row keeps its swatch when it is off, so the swatch is what a colour lands on -- and letting go there has to mean what letting go on an off row means. selectedColors must read fill #B0184A and stroke #FF3B30"
     },
     {
       "do": "dragColor",
@@ -91,8 +91,8 @@
       "onto": "@border",
       "hold": "offpart-2-in-flight",
       "expect": "takes",
-      "says": "Paints Border with this colour",
-      "comment": "An effect that is switched OFF keeps its swatch and its settings, so the colour lands on the swatch and the row says exactly what that does: it paints the Border. It does NOT promise to switch it on, and the next step holds it to that."
+      "says": "Turns Border on, painted with this colour",
+      "comment": "An effect that is switched OFF keeps its swatch, so the colour lands on the swatch rather than on the row. It promises both halves of what letting go does, exactly as the Fill row lower down does: the Border comes back ON wearing the colour. A colour you drop always shows up."
     },
     {
       "do": "wait",
@@ -102,12 +102,12 @@
       "do": "expect",
       "control": "Switch",
       "in": "@border",
-      "reads": "off"
+      "reads": "on"
     },
     {
       "do": "describe",
       "stage": "2-landed",
-      "note": "the Border took the colour and stayed off: stroke must read #B0184A and the Border switch must still read off. Painting a part is not the same as switching it on."
+      "note": "letting go switched the Border back on wearing the colour: stroke must read #B0184A and the Border switch must now read on. A colour dropped on something switched off turns it on as well as painting it."
     },
     {
       "do": "snapshot",
@@ -122,9 +122,15 @@
       "seconds": 0.6
     },
     {
+      "do": "expect",
+      "control": "Switch",
+      "in": "@border",
+      "reads": "off"
+    },
+    {
       "do": "describe",
       "stage": "3-one-undo",
-      "note": "ONE undo took the paint back: stroke is #FF3B30 again and the switch is still off"
+      "note": "ONE undo took back BOTH halves: stroke is #FF3B30 again and the Border switch reads off again"
     },
     {
       "do": "snapshot",
@@ -151,7 +157,7 @@
     {
       "do": "describe",
       "stage": "4-shadow-off",
-      "note": "a shadow added and then switched off. It keeps its five settings and its colour, so its swatch is what a colour lands on."
+      "note": "a shadow added and then switched off. It keeps its five settings and its colour, so its swatch is what a colour lands on -- and letting go there brings the shadow back"
     },
     {
       "do": "dragColor",
@@ -159,16 +165,22 @@
       "onto": "@shadow",
       "hold": "offpart-5-onto-shadow",
       "expect": "takes",
-      "says": "Paints Shadow with this colour"
+      "says": "Turns Shadow on, painted with this colour"
     },
     {
       "do": "wait",
       "seconds": 0.6
     },
     {
+      "do": "expect",
+      "control": "Switch",
+      "in": "@shadow",
+      "reads": "on"
+    },
+    {
       "do": "describe",
       "stage": "5-shadow",
-      "note": "the same gesture works on an effect that is switched off: the shadow wears the fill colour"
+      "note": "the same gesture works on any effect that is switched off: the shadow is back on, wearing the fill colour"
     },
     {
       "do": "snapshot",

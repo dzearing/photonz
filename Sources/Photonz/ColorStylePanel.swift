@@ -535,6 +535,12 @@ struct ColorStyleRow: View, Equatable {
     /// chip keeps up with the canvas instead of sitting on the old colour for a
     /// whole pull and jumping. Nil the rest of the time.
     let previewPaint: Paint?
+    /// True while what this row paints is there but NOT DRAWING — an effect
+    /// whose eye is shut, which keeps its swatch and its settings. A colour let
+    /// go on the swatch then switches it back on as well as painting it, so the
+    /// swatch and the row above it promise the same thing
+    /// (`OffPartColorDrop.swift`).
+    var switchedOff: Bool = false
 
     @State private var draft = ""
     @FocusState private var nameFocused: Bool
@@ -546,6 +552,9 @@ struct ColorStyleRow: View, Equatable {
     nonisolated static func == (a: ColorStyleRow, b: ColorStyleRow) -> Bool {
         a.target.shape == b.target.shape && a.part == b.part && a.isNaming == b.isNaming
             && a.selection.appearance == b.selection.appearance
+            // What a drop here would DO is part of what the row draws: the
+            // sentence beside it changes the moment the effect's eye does.
+            && a.switchedOff == b.switchedOff
             && Paint.draws(a.previewPaint, sameAs: b.previewPaint)
     }
 
@@ -603,7 +612,8 @@ struct ColorStyleRow: View, Equatable {
     @ViewBuilder private func readout(_ selection: ColorStyleSelection) -> some View {
         if !selection.isEmpty {
             SelectionColorWell(target: target, part: part,
-                               selection: selection, previewPaint: previewPaint)
+                               selection: selection, previewPaint: previewPaint,
+                               switchedOff: switchedOff)
                 .equatable()
         }
     }
@@ -671,12 +681,18 @@ struct SelectionColorWell: View, Equatable {
     /// The colour in flight while one is being dragged, so the chip keeps up
     /// with the canvas. Nil the rest of the time.
     let previewPaint: Paint?
+    /// True while what this well paints is switched off but still on show: an
+    /// effect that is not drawing keeps its swatch, so a colour carried over
+    /// lands here rather than on the row, and letting go has to do the same
+    /// thing the row would — switch it on AND paint it, in one undo step.
+    var switchedOff: Bool = false
 
     @State private var isHovering = false
 
     nonisolated static func == (a: SelectionColorWell, b: SelectionColorWell) -> Bool {
         a.target.shape == b.target.shape && a.part == b.part
             && a.selection.appearance == b.selection.appearance
+            && a.switchedOff == b.switchedOff
             && Paint.draws(a.previewPaint, sameAs: b.previewPaint)
     }
 
@@ -723,8 +739,17 @@ struct SelectionColorWell: View, Equatable {
                              style: { boundStyle.map { editorState.savedColor($0) } },
                              welcomes: { editorState.styleWelcome(target, styleID: $0.id) },
                              reaches: { selection.count },
+                             switchedOff: { switchedOff },
                              acceptsGradient: target.acceptsGradient,
                              onDrop: { landing in
+                // A colour let go on the swatch of something that is not
+                // drawing switches it on wearing that colour, in one step one
+                // undo puts back: the swatch promised both halves while the
+                // colour was in the air, and a colour you drop has to show up.
+                if switchedOff {
+                    editorState.dropColorTurningOn(target, landing: landing)
+                    return
+                }
                 // A colour that arrived under a NAME goes down the very path
                 // the row's own menu takes when that name is picked: the row
                 // wears the name afterwards and follows it the day the colour
