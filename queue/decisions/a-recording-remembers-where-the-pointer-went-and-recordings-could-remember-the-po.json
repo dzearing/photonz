@@ -1,0 +1,65 @@
+{
+  "id": "a-recording-remembers-where-the-pointer-went-and-recordings-could-remember-the-po",
+  "taskId": "a-recording-remembers-where-the-pointer-went-and",
+  "question": "Recordings could remember the pointer and every click. What should that give you first?",
+  "context": "Screen recording tools keep the pointer and the clicks as something you can edit after recording. Photonz only has them burned into the picture, so none of that is possible, and a recording made today can never gain it later.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Clicks light up",
+      "summary": "Every click in a recording shows as a soft ring where it happened, on a track of its own, so a viewer can follow what was pressed. Turn it off per recording or drag a ring to a different moment.",
+      "pros": [
+        "The thing viewers of a how-to video miss most",
+        "Works on every recording with no setup",
+        "Small and easy to judge on sight"
+      ],
+      "cons": [
+        "Only helps recordings made after this lands"
+      ],
+      "mitigation": "Older recordings open exactly as they do now; nothing is guessed for them."
+    },
+    {
+      "id": "b",
+      "label": "The picture follows the clicks",
+      "summary": "Opening a recording offers to zoom in toward each click and ease back out, the way Screen Studio does. Each zoom is an ordinary punch-in on the timeline you can move, stretch or delete.",
+      "pros": [
+        "The most noticeable thing screen recording tools do that Premiere does not",
+        "Builds on the punch-in that already ships"
+      ],
+      "cons": [
+        "Automatic zooms can feel busy if the guess is wrong",
+        "Bigger to build than a ring"
+      ],
+      "mitigation": "Zooms are ordinary, visible keys on the timeline, so a wrong one is a delete away."
+    },
+    {
+      "id": "c",
+      "label": "A clean pointer",
+      "summary": "The pointer is no longer part of the picture: it is drawn on top, where it can be smoothed so it glides instead of jittering, made bigger, or hidden for the whole recording.",
+      "pros": [
+        "Fixes the shaky pointer every raw recording has",
+        "Hiding the pointer becomes possible at all"
+      ],
+      "cons": [
+        "Changes how recordings are captured, so a recording opened in another app has no pointer in it"
+      ],
+      "mitigation": "Export always draws the pointer back in unless you hid it."
+    },
+    {
+      "id": "d",
+      "label": "Not now",
+      "summary": "Recordings keep burning the pointer into the picture and nothing else is kept. The video queue carries on without it.",
+      "pros": [
+        "Nothing new to review while the timeline is being rebuilt"
+      ],
+      "cons": [
+        "Every recording made until then can never have any of this"
+      ],
+      "mitigation": "Recording the pointer data can be revisited any time; only the recordings made in between miss out.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-23T12:19:26.431Z"
+}

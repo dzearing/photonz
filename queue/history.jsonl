@@ -6605,3 +6605,12 @@
 {"t":"2026-09-23T12:12:09.968Z","ev":"task_note","id":"the-export-size-test-fails-about-one-run-in-thre"}
 {"t":"2026-09-23T12:12:17.477Z","ev":"task_note","id":"panel-copy-and-flag-descriptions-have-a-length-b"}
 {"t":"2026-09-23T12:13:19.152Z","ev":"digest","file":"2026-09-23.md"}
+{"t":"2026-09-23T12:18:51.262Z","ev":"task_note","id":"a-recording-opens-in-the-video-editor-for-real-i"}
+{"t":"2026-09-23T12:18:57.360Z","ev":"task_note","id":"trim-becomes-a-tool-and-the-recording-window-ret"}
+{"t":"2026-09-23T12:18:57.411Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-5"}
+{"t":"2026-09-23T12:19:02.257Z","ev":"task_note","id":"the-video-guides-teach-the-editor-that-exists"}
+{"t":"2026-09-23T12:19:16.063Z","ev":"task_created","id":"a-recording-remembers-where-the-pointer-went-and","priority":"p2-normal","title":"A recording remembers where the pointer went and what it clicked"}
+{"t":"2026-09-23T12:19:26.432Z","ev":"decision_opened","id":"a-recording-remembers-where-the-pointer-went-and-recordings-could-remember-the-po","taskId":"a-recording-remembers-where-the-pointer-went-and","question":"Recordings could remember the pointer and every click. What should that give you first?"}
+{"t":"2026-09-23T12:19:40.346Z","ev":"task_blocked","id":"a-recording-remembers-where-the-pointer-went-and","from":"pending","note":"waiting on the card: which pointer and click feature to build first, or not now"}
+{"t":"2026-09-23T12:19:40.396Z","ev":"task_resequenced","id":"a-recording-remembers-where-the-pointer-went-and","from":3160,"to":5}
+{"t":"2026-09-23T12:20:22.673Z","ev":"manager","filed":1,"readyBefore":26,"readyAfter":25,"report":"queue/manager/2026-09-23-0520.md"}

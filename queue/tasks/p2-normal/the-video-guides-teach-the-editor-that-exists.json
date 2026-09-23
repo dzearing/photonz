@@ -9,8 +9,14 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:54:04.593Z",
-  "updated": "2026-09-23T12:12:09.456Z",
-  "deps": [],
+  "updated": "2026-09-23T12:19:02.256Z",
+  "deps": [
+    "the-timeline-is-the-one-in-the-mock",
+    "bring-in-a-second-clip-and-cut-between-clips",
+    "move-a-layer-from-a-to-b-grow-it-shrink-it-fade",
+    "click-a-cut-and-pick-a-transition-from-tiles",
+    "captions-write-themselves-from-the-speech"
+  ],
   "blockedBy": [],
   "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): TutorialGuides.swift trim-a-recording and export-a-recording still describe the retired recording window (click the scissors, Done throws the ends away). Rewrite the video track of guides for the rebuilt timeline: cut a recording down, add a clip, a title that moves, a transition, captions, export.\n\nFiled from the 2026-09-23 video audit.",
   "acceptance": [
@@ -34,6 +40,10 @@
     {
       "t": "2026-09-23T12:12:09.455Z",
       "note": "seq 70 -> 80"
+    },
+    {
+      "t": "2026-09-23T12:19:02.255Z",
+      "note": "manager 2026-09-23: given deps on the five rebuild tasks whose controls these guides teach (timeline, second clip, moving title, transition tiles, captions). Without them it was claimable today and a runner would have anchored every step to the strip and panel the rebuild replaces. Priority and seq unchanged."
     }
   ]
 }

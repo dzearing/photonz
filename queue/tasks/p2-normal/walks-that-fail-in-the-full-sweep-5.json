@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-23T00:59:10.437Z",
-  "updated": "2026-09-23T12:12:09.151Z",
+  "updated": "2026-09-23T12:18:57.410Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-23T06:16:47Z: 563 of 568 walks passed in 123 minutes.\n\nFailing walks (5): hold-pushes-the-sound-walk, punch-in-and-hold-walk, speed-a-stretch-walk, save-is-live-after-a-trim-walk, switch-says-mixed-walk\n\nThe app DIED in 2 of those, which is not a walk running slowly. Fix these first:\n  save-is-live-after-a-trim-walk: the app quit part way through and left no crash report\n  switch-says-mixed-walk: the app quit part way through and left no crash report\nCrash reports: ~/Library/Logs/DiagnosticReports. Read one with\nnode Scripts/crash-report.mjs --file \"<report>.ips\".\n\nAlready named by another open task, so read that one before re-diagnosing (1):\n  save-is-live-after-a-trim-walk -> trim-becomes-a-tool-and-the-recording-window-ret (that task says it owns this walk)\n\nThis task owns the other 4: hold-pushes-the-sound-walk, punch-in-and-hold-walk, speed-a-stretch-walk, switch-says-mixed-walk\n\nStopped failing since the last sweep (1): dock-picked-first-walk\n\nFull output: queue/sweep/2026-09-22-211335.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: appearance-is-below-the-fold-again-because-the-p: The dock height budget changed shape (Appearance became a squeezable list and the budget now guarantees a fold), and the playtest press machinery now finds a control's scroller off the view tree rather than by geometry, which every walk that presses anything goes through. 68 walks run locally green (dock, panel, appearance, effects, layers, shelf, library, separate, position, sections) but the whole set is the only honest check on the press change.; a-walk-can-reach-a-control-that-is-plainly-on-sc: The walk harness itself changed: every press, right click and reveal in all 568 walks now decides reach through one geometry (PlaytestReach) instead of AppKit's visibleRect, and sub-point overhang no longer counts as out of reach. 29 of the 30 reveal walks are green locally, but a reach rule touches every walk that presses anything.\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -38,6 +38,10 @@
     {
       "t": "2026-09-23T12:12:09.150Z",
       "note": "seq 20 -> 20"
+    },
+    {
+      "t": "2026-09-23T12:18:57.409Z",
+      "note": "manager 2026-09-23 12:15Z, probe built 04:54 on HEAD 7012adbc, each walk run on its own with Scripts/playtest.sh --no-build: speed-a-stretch-walk passed first time. punch-in-and-hold-walk FAILED once (step 18: Scale reading reads 100%, not 200%) then passed on the next run. hold-pushes-the-sound-walk stopped after step 7 of 44 with no done.json and no crash report (step 6 wait: never went quiet, main thread longest 760ms after soundDetach), then passed all 44 steps on the next run. So the three video walks are intermittent, not broken: one reads a value before it lands, one loses the app part way. The second is the same no-crash-report death the sweep names for save-is-live-after-a-trim and switch-says-mixed."
     }
   ],
   "standing": "walk-sweep"

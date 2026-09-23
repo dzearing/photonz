@@ -1,0 +1,40 @@
+{
+  "id": "a-recording-remembers-where-the-pointer-went-and",
+  "title": "A recording remembers where the pointer went and what it clicked",
+  "goal": "Screen recording tools people switch from (Screen Studio, ScreenFlow, CleanShot) keep the pointer and every click as something you can edit afterwards: ring a click so a viewer sees it, hide or smooth a jittery pointer, or let the picture zoom in where the click happened. Photonz burns the pointer into the pixels and keeps nothing else, so every recording made today can never have any of that. Record the pointer path and the clicks alongside the video, and build the first thing the user picks on the card that uses them.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 5,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T12:19:16.059Z",
+  "updated": "2026-09-23T12:19:40.395Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence: Sources/Photonz/Capture/ScreenRecorder.swift:59 sets streamConfig.showsCursor = true and nothing in Capture/ records pointer or click events, so the pointer exists only as pixels. Competitor gap named by the manager passes of 2026-09-19 and 2026-09-20 as an open thread (cursor and click highlighting) and deferred while nine cards were pending; one card is pending today. It is time sensitive in a way the rest of the video queue is not: data not recorded now cannot be recovered later. Sits behind the p1 rebuild chain on purpose; nothing here should jump the user tasks. Hiding the pointer after the fact needs it NOT burned in, which is a capture change with its own cost; the card asks what the user wants first rather than deciding that here.",
+  "acceptance": [
+    "The card on this task is answered before anything visible is built",
+    "A recording made in Next keeps the pointer position over time and each click (where, when, which button) beside the video file, in the pure core, tested first; older recordings without it open exactly as today",
+    "The first feature the card picks ships in Next, on by default, reachable from the recording without a switch turned on by hand: try path is record a window for five seconds clicking twice, open it, and see the answer the card chose",
+    "A walk at Next defaults records or opens a recording with clicks and photographs the result",
+    "Side by side with the matching mock frame if one exists, differences listed; if no mock draws it, say so in the audit",
+    "Audit written under queue/audits/",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T12:19:16.061Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-23T12:19:40.343Z",
+      "note": "waiting on the card: which pointer and click feature to build first, or not now"
+    },
+    {
+      "t": "2026-09-23T12:19:40.394Z",
+      "note": "seq 3160 -> 5"
+    }
+  ],
+  "source": "manager"
+}
