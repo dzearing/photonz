@@ -22,6 +22,9 @@ struct TimelineTrackRowModel: Identifiable {
     /// Switched off, or left out by another track being soloed: its clips are
     /// drawn faint, because the picture or the mix is going on without them.
     let isOff: Bool
+    /// On an audio track: the clips whose own sound is drawn here, linked to
+    /// them, so every one is that clip's bar a second time, as sound.
+    var linked: [MotionStripGroup] = []
 
     var id: UUID { track.id }
 
@@ -58,20 +61,36 @@ extension EditorState {
         let tracks = document.timelineTracks
         let soloPicture = tracks.contains { $0.kind != .audio && $0.isSolo }
         let soloSound = tracks.contains { $0.kind == .audio && $0.isSolo }
+        let linkedByTrack = document.linkedSoundsByTrack
+        let linkedClips = Set(linkedByTrack.values.joined())
         return tracks.map { track in
             var clips: [MotionStripGroup] = []
             var inner: [MotionStripGroup] = []
             for id in document.clipIDs(onTrack: track.id) {
-                if let group = byLayer[id] { clips.append(group) }
+                if var group = byLayer[id] {
+                    // A clip whose sound is on an audio track of its own is
+                    // drawn as picture only: its waveform and level line are
+                    // on the segment under it.
+                    if linkedClips.contains(id) { group.isSound = false }
+                    clips.append(group)
+                }
                 guard let layer = document.layer(id: id) else { continue }
                 for part in layer.selfAndDescendants.dropFirst() {
                     if let group = byLayer[part.id] { inner.append(group) }
                 }
             }
+            let linked = (linkedByTrack[track.id] ?? []).compactMap { id -> MotionStripGroup? in
+                guard var group = byLayer[id] else { return nil }
+                group.isSound = true
+                group.trackKind = .audio
+                group.lanes = []
+                return group
+            }
             let isOff = track.kind == .audio
                 ? track.isMuted || (soloSound && !track.isSolo)
                 : track.isHidden || (soloPicture && !track.isSolo)
-            return TimelineTrackRowModel(track: track, clips: clips, inner: inner, isOff: isOff)
+            return TimelineTrackRowModel(track: track, clips: clips, inner: inner, isOff: isOff,
+                                         linked: linked)
         }
     }
 

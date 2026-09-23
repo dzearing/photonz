@@ -20,7 +20,7 @@
 
     { "do": "dropOnTimeline", "file": "scratch/Sample Music.m4a", "track": "V1", "seconds": 4.0 },
     { "do": "wait", "seconds": 1.0 },
-    { "do": "expectClip", "clip": "Sample Music", "track": "Audio", "startsAt": 4.0, "count": 1 },
+    { "do": "expectClip", "clip": "Sample Music", "track": "Audio 2", "startsAt": 4.0, "count": 1 },
     { "do": "key", "key": "delete" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectClip", "clip": "Sample Music", "count": 0 },

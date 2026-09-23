@@ -61,6 +61,7 @@ struct TimelineTrackRow: View {
     private var isPicked: Bool {
         editorState.selectedTrackIDs.contains(track.id)
             || row.clips.contains { $0.layerID == editorState.selectedLayerID }
+            || row.linked.contains { $0.layerID == editorState.selectedLayerID }
     }
 
     // MARK: The header
@@ -122,7 +123,8 @@ struct TimelineTrackRow: View {
         if track.isSolo { flags.append("solo") }
         if track.isLocked { flags.append("locked") }
         if !flags.isEmpty { said += ": " + flags.joined(separator: ", ") }
-        return said + " (\(row.clips.count) clip\(row.clips.count == 1 ? "" : "s"))"
+        let count = row.clips.count + row.linked.count
+        return said + " (\(count) clip\(count == 1 ? "" : "s"))"
     }
 
     private var nameField: some View {
@@ -205,6 +207,7 @@ struct TimelineTrackRow: View {
     /// the track itself while it is empty.
     private var symbol: String {
         if let first = row.clips.first { return Self.symbol(first.trackKind) }
+        if !row.linked.isEmpty { return Self.symbol(.audio) }
         switch track.kind {
         case .video: return "photo"
         case .audio: return "music.note"
@@ -232,6 +235,18 @@ struct TimelineTrackRow: View {
                     .playtestField("Timing \(clip.layerName)")
                 if isBlade, !track.isLocked {
                     TimelineBlade(group: clip, laneWidth: laneWidth)
+                }
+            }
+            // A clip's own sound: the clip's bar a second time, as sound, so
+            // every drag on it is a drag on the clip and the two never part
+            // until Detach Audio.
+            ForEach(row.linked) { clip in
+                TimelineClipView(group: clip, laneWidth: laneWidth, height: laneHeight,
+                                 isLinkedSound: true)
+                    .allowsHitTesting(!track.isLocked)
+                    .playtestField("Timing \(clip.layerName) sound")
+                if isBlade, !track.isLocked {
+                    TimelineBlade(group: clip, laneWidth: laneWidth, isLinkedSound: true)
                 }
             }
             if !isBlade {
@@ -444,18 +459,22 @@ struct TimelineClipView: View {
     let laneWidth: CGFloat
     let height: CGFloat
     var alternate = false
+    /// This bar is a clip's own sound on the audio track under it.
+    var isLinkedSound = false
 
     var body: some View {
         let ruler = editorState.motionStripRuler
         let own = TimelineTrackRow.clipKind(group.trackKind)
         let kind = alternate && own == .video ? VideoKit.ClipKind.videoAlternate : own
         if let bar = group.bar {
-            if editorState.trimmingLayerID == group.layerID {
+            // The trim session is drawn once, on the picture; the linked
+            // sound under it follows the trim as it is shown.
+            if editorState.trimmingLayerID == group.layerID, !isLinkedSound {
                 ClipTrimBar(bar: bar, layerName: group.layerName, laneWidth: laneWidth, height: height)
             } else {
                 ClipPiecesBar(layerID: group.layerID, layerName: group.layerName,
                               bar: bar, laneWidth: laneWidth, isSound: group.isSound,
-                              kind: kind, height: height)
+                              kind: kind, height: height, isLinkedSound: isLinkedSound)
             }
         } else {
             // A layer that is there the whole way through: one clip the
@@ -478,6 +497,9 @@ struct TimelineBlade: View {
     @Environment(EditorState.self) private var editorState
     let group: MotionStripGroup
     let laneWidth: CGFloat
+    var isLinkedSound = false
+
+    private var name: String { isLinkedSound ? "\(group.layerName) sound" : group.layerName }
 
     var body: some View {
         let ruler = editorState.motionStripRuler
@@ -495,10 +517,10 @@ struct TimelineBlade: View {
                 editorState.dragPlayhead(toMS: Int(ms.rounded()))
                 editorState.splitClipAtPlayhead()
             }
-            .playtestHover("Blade \(group.layerName)") { inside in
+            .playtestHover("Blade \(name)") { inside in
                 if inside { NSCursor.crosshair.push() } else { NSCursor.pop() }
             }
-            .playtestControl("Blade \(group.layerName)", detail: "Timeline")
+            .playtestControl("Blade \(name)", detail: "Timeline")
             .offset(x: x0)
     }
 }
@@ -671,7 +693,7 @@ struct TimelineGroupRow: View {
         ZStack(alignment: .leading) {
             if isCollapsed {
                 RoundedRectangle(cornerRadius: 5).fill(VideoKit.Palette.glassThin)
-                ForEach(tracks.flatMap(\.clips)) { clip in
+                ForEach(tracks.flatMap { $0.clips + $0.linked }) { clip in
                     let start = Double(clip.bar?.inMS ?? 0)
                     let end = Double(clip.bar?.outMS ?? editorState.documentLengthMS)
                     let x0 = laneWidth * ruler.fraction(ofMS: start)

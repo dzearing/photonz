@@ -37,6 +37,23 @@ struct ClipPiecesBar: View {
     var kind: VideoKit.ClipKind?
     /// The lane's height, where the dock sets one.
     var height: CGFloat?
+    /// This bar is a clip's own sound, drawn on the audio track under the
+    /// clip and LINKED to it: every drag on it is a drag on the clip, so the
+    /// two move, trim and cut as one until Detach Audio parts them.
+    var isLinkedSound = false
+
+    /// What a walk and the help call this bar's parts: the clip's name, or
+    /// "<clip> sound" for its linked sound, so the two are never confused.
+    private var fieldName: String { isLinkedSound ? "\(layerName) sound" : layerName }
+
+    @State private var isHovered = false
+    /// A fade handle in the hand: which end, and how long the fade would be.
+    @State private var fadeDrag: FadeDrag?
+
+    private struct FadeDrag: Equatable {
+        let isIn: Bool
+        var ms: Int
+    }
 
     /// How tall the bar is drawn. A sound's is taller, because a waveform
     /// squeezed into eighteen points is a smear and a level line needs room to
@@ -108,6 +125,9 @@ struct ClipPiecesBar: View {
             }
             if isSound {
                 levelLine(pieces, x0: x0, ruler: ruler)
+                if kind != nil, isPicked || isHovered {
+                    fadeHandles(pieces, x0: x0, ruler: ruler)
+                }
             }
             if let snap = editorState.clipBarSnap, isBeingDragged {
                 snapLine(atMS: snap.ms, ruler: ruler)
@@ -118,6 +138,7 @@ struct ClipPiecesBar: View {
             }
         }
         .frame(width: laneWidth, alignment: .leading)
+        .playtestHover("\(fieldName) bar") { inside in if kind != nil, isSound { isHovered = inside } }
         .panelReadout(readoutText)
     }
 
@@ -232,7 +253,8 @@ struct ClipPiecesBar: View {
                     SoundWaveform(columns: wave.columns(
                         count: Int(shown.width),
                         fromSourceMS: item.sourceInMS + Int(file * Double(shown.startFraction)),
-                        toSourceMS: item.sourceInMS + Int(file * Double(shown.endFraction))))
+                        toSourceMS: item.sourceInMS + Int(file * Double(shown.endFraction))),
+                        color: kind.map { $0.ink.opacity(0.7) } ?? .white.opacity(0.55))
                         .padding(.vertical, 2)
                 }
             }
@@ -268,7 +290,10 @@ struct ClipPiecesBar: View {
                 editorState.selectClipPiece(layerID: layerID,
                                             index: pieces.count > 1 ? index : nil)
             }
-            .playtestField(Self.pieceName(layerName: layerName, index: index, of: pieces.count))
+            .contextMenu {
+                if kind != nil { TimelineClipMenu(layerID: layerID) }
+            }
+            .playtestField(Self.pieceName(layerName: fieldName, index: index, of: pieces.count))
             .panelHelp(Self.help(pieces, index: index))
         }
     }
@@ -302,7 +327,9 @@ struct ClipPiecesBar: View {
                            // scale rather than off a bar wider than the Mac.
                            fromMS: Int(Double(pieces.totalLengthMS) * Double(shown.startFraction)),
                            toMS: Int(Double(pieces.totalLengthMS) * Double(shown.endFraction)),
-                           width: shown.width, height: barHeight)
+                           width: shown.width, height: barHeight,
+                           lineColor: kind == nil ? .white.opacity(0.95)
+                               : Color(red: 0xBF / 255, green: 0xF3 / 255, blue: 0xE4 / 255))
                 .offset(x: shown.x)
         }
     }
@@ -325,14 +352,17 @@ struct ClipPiecesBar: View {
                         .padding(.horizontal, cornerRadius / 2)
                     Spacer(minLength: 0)
                 }
-                if width - hiddenLeading > 40 {
+                // A clip's own sound is named by the picture right above it,
+                // and the mock's sound segment carries no words.
+                if width - hiddenLeading > 40, !isLinkedSound {
                     Text(layerName)
                         .font(.system(size: isSound ? 9 : 9.5, weight: .semibold))
                         .foregroundStyle(kind.ink)
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .shadow(color: .black.opacity(0.35), radius: 1)
-                        .padding(.horizontal, 8)
+                        .padding(.leading, isSound ? 14 : 8)
+                        .padding(.trailing, 8)
                         .padding(.top, isSound ? 3 : 0)
                         .frame(maxWidth: width - hiddenLeading - 4, alignment: .leading)
                         .padding(.leading, hiddenLeading)
@@ -433,13 +463,72 @@ struct ClipPiecesBar: View {
         return "Piece \(index + 1) of \(pieces.count). Drag it somewhere else in the order."
     }
 
+    // MARK: The fades
+
+    /// A handle at each top corner of a sound's segment: drag the left one in
+    /// to fade in, the right one in to fade out. The level line draws the
+    /// fade itself, because a fade IS the level falling to silence.
+    @ViewBuilder
+    private func fadeHandles(_ pieces: ClipPieces, x0: CGFloat,
+                             ruler: MotionStripRuler) -> some View {
+        let length = pieces.totalLengthMS
+        let level = editorState.document?.layer(id: layerID)?.soundLevel ?? AudioLevel()
+        let fadeIn = fadeDrag.flatMap { $0.isIn ? $0.ms : nil } ?? level.fadeInMS
+        let fadeOut = fadeDrag.flatMap { $0.isIn ? nil : $0.ms } ?? level.fadeOutMS(lengthMS: length)
+        let whole = laneWidth * ruler.fraction(spanningMS: Double(length))
+        let inWidth = laneWidth * ruler.fraction(spanningMS: Double(fadeIn))
+        let outWidth = laneWidth * ruler.fraction(spanningMS: Double(fadeOut))
+        if whole >= Self.smallestGrabbablePiece * 2 {
+            if let drag = fadeDrag {
+                // The fade the hand is making, before it is let go.
+                FadeWedge(isIn: drag.isIn)
+                    .fill(Color.black.opacity(0.35))
+                    .frame(width: drag.isIn ? inWidth : outWidth, height: barHeight)
+                    .offset(x: drag.isIn ? x0 : x0 + whole - outWidth)
+                    .allowsHitTesting(false)
+                capsule(ClipBarCopy.length(drag.ms), x: drag.isIn ? x0 + inWidth : x0 + whole - outWidth - 90)
+                    .frame(height: barHeight)
+            }
+            fadeHandle(isIn: true, fromMS: level.fadeInMS, lengthMS: length, ruler: ruler)
+                .offset(x: min(x0 + whole - 9, x0 + max(1, inWidth - 4)))
+            fadeHandle(isIn: false, fromMS: level.fadeOutMS(lengthMS: length), lengthMS: length, ruler: ruler)
+                .offset(x: max(x0, x0 + whole - max(9, outWidth + 4)))
+        }
+    }
+
+    private func fadeHandle(isIn: Bool, fromMS: Int, lengthMS: Int,
+                            ruler: MotionStripRuler) -> some View {
+        RoundedRectangle(cornerRadius: 2)
+            .fill(Color.white)
+            .overlay { RoundedRectangle(cornerRadius: 2).strokeBorder(Color.black.opacity(0.35), lineWidth: 0.5) }
+            .frame(width: 8, height: 8)
+            .padding(.top, 1)
+            .contentShape(Rectangle().inset(by: -4))
+            .gesture(DragGesture(minimumDistance: 1)
+                .onChanged { value in
+                    let moved = Self.ms(value.translation.width, laneWidth: laneWidth, ruler: ruler)
+                    let ms = min(max(0, fromMS + (isIn ? moved : -moved)), lengthMS)
+                    fadeDrag = FadeDrag(isIn: isIn, ms: ms)
+                }
+                .onEnded { _ in
+                    if let drag = fadeDrag {
+                        editorState.selectLayer(layerID)
+                        editorState.setSoundFade(onLayer: layerID, fadeIn: drag.isIn, ms: drag.ms)
+                    }
+                    fadeDrag = nil
+                })
+            .playtestField("\(fieldName) fade \(isIn ? "in" : "out")")
+            .panelHelp(isIn ? "Fade in: drag right" : "Fade out: drag left")
+    }
+
     // MARK: The band over a cut
 
     /// The cuts worth drawing something on: the ones carrying a transition.
     /// An untouched cut draws nothing and takes no width, because nothing is
     /// there.
     private func shownCuts(_ pieces: ClipPieces) -> [ClipCut] {
-        guard Experiments.shared.transitionsAtACutEnabled else { return [] }
+        // A transition is drawn once, on the picture it dissolves.
+        guard Experiments.shared.transitionsAtACutEnabled, !isLinkedSound else { return [] }
         return pieces.cuts.filter { $0.drawnTransition != nil }
     }
 
@@ -546,7 +635,7 @@ struct ClipPiecesBar: View {
                     guard edge > 0, edge < pieces.count else { return }
                     editorState.selectClipCut(layerID: layerID, index: edge)
                 }
-                .playtestField(Self.gripName(layerName: layerName, edge: edge, of: pieces.count))
+                .playtestField(Self.gripName(layerName: fieldName, edge: edge, of: pieces.count))
                 .panelHelp(edge == 0
                            ? "Where the clip starts. Drag it: nothing is thrown away."
                            : (edge == pieces.count
@@ -626,7 +715,9 @@ struct ClipPiecesBar: View {
                 editorState.updateClipBarDrag(
                     byMS: Self.ms(value.translation.width, laneWidth: laneWidth,
                                   ruler: editorState.motionStripRuler))
-                if kind != nil {
+                // A linked sound goes where its clip goes, along time only:
+                // up or down would be a picture landing on a sound track.
+                if kind != nil, !isLinkedSound {
                     editorState.updateClipTrackDrop(pointerY: value.location.y,
                                                     travelledY: value.translation.height)
                 }
@@ -683,7 +774,7 @@ struct ClipPiecesBar: View {
     /// numbers a drag in flight is making.
     private var readoutText: String {
         let pieces = shownPieces
-        var words = "\(layerName) \(bar.inMS) to \(bar.outMS) ms"
+        var words = "\(fieldName) \(bar.inMS) to \(bar.outMS) ms"
         if pieces.count > 1 { words += ", \(pieces.count) pieces" }
         for index in 0..<pieces.count {
             if let badge = Self.badge(pieces.piece(at: index)) {
@@ -695,6 +786,13 @@ struct ClipPiecesBar: View {
             words += ", \(transition.kind.title.lowercased()) "
                 + "\(ClipTransitionCopy.length(transition.lengthMS)) at join \(cut.index)"
         }
+        if isSound, let level = editorState.document?.layer(id: layerID)?.soundLevel {
+            if level.gain != AudioLevel.unityGain { words += ", level \(level.label)" }
+            let fadeIn = level.fadeInMS
+            let fadeOut = level.fadeOutMS(lengthMS: pieces.totalLengthMS)
+            if fadeIn > 0 { words += ", fade in \(ClipBarCopy.length(fadeIn))" }
+            if fadeOut > 0 { words += ", fade out \(ClipBarCopy.length(fadeOut))" }
+        }
         if let readout = editorState.clipBarReadout, isBeingDragged {
             words += ", dragging \(readout)"
             if let snap = editorState.clipBarSnap { words += ", \(ClipBarCopy.caught(on: snap))" }
@@ -704,5 +802,50 @@ struct ClipPiecesBar: View {
             words += ", dragging the transition to \(readout)"
         }
         return words
+    }
+}
+
+/// The shape a fade in flight is drawn with: the part of the segment the fade
+/// takes the sound out of.
+private struct FadeWedge: Shape {
+    let isIn: Bool
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        if isIn {
+            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+        } else {
+            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        }
+        path.closeSubpath()
+        return path
+    }
+}
+
+/// What a right-click on a clip on the timeline offers.
+struct TimelineClipMenu: View {
+    @Environment(EditorState.self) private var editorState
+    let layerID: UUID
+
+    var body: some View {
+        if editorState.document?.canDetachSound(ofLayer: layerID) == true {
+            Button("Detach Audio") {
+                editorState.selectLayer(layerID)
+                editorState.detachSound()
+            }
+            Divider()
+        }
+        Button("Split at Playhead") {
+            editorState.selectLayer(layerID)
+            editorState.splitClipAtPlayhead()
+        }
+        Button("Delete") {
+            editorState.selectLayer(layerID)
+            editorState.deleteSelectedLayers()
+        }
     }
 }

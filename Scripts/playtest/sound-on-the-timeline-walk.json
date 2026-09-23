@@ -17,7 +17,7 @@
 
     { "do": "action", "action": "soundDetach" },
     { "do": "wait", "seconds": 1.2 },
-    { "do": "describe", "stage": "2-sound-taken-off-the-picture", "note": "Detach Sound. The picture keeps its place and goes quiet; its sound is now a layer of its own directly above it, in step, with the same length and the same waveform. Two rows on the timeline where there was one, and two rows in the layers list, the sound one wearing a waveform where a thumbnail would be" },
+    { "do": "describe", "stage": "2-sound-taken-off-the-picture", "note": "Detach Audio. The picture keeps its place and goes quiet; its sound is now a layer of its own directly above it, in step, with the same length and the same waveform. Two rows on the timeline where there was one, and two rows in the layers list, the sound one wearing a waveform where a thumbnail would be" },
     { "do": "snapshot", "name": "2-sound-taken-off-the-picture" },
 
     { "do": "action", "action": "videoSeekMiddle" },

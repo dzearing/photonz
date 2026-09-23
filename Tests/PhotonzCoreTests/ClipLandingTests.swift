@@ -64,27 +64,46 @@ struct ClipLandingTests {
         #expect(landing.trackName == "V1")
     }
 
-    @Test("A sound let go over a picture track lands on the nearest sound track instead")
+    @Test("A sound let go over a picture track lands on the nearest sound track instead, past the recording's own")
     func soundOverPictureGoesToSound() throws {
-        let (doc, _, _, _) = Self.edit()
+        let (doc, _, _, music) = Self.edit()
         let v1 = try #require(Self.track(named: "V1", in: doc))
-        let audio = try #require(Self.track(named: "Audio", in: doc))
+        // Audio carries the recording's own sound there, so the music's track
+        // is the nearest one free to take it.
+        let musicTrack = try #require(doc.trackID(ofClip: music))
         let landing = doc.clipLanding(kind: .audio, lengthMS: 3000, atMS: 2500,
                                       over: .onto(v1), edit: .overwrite)
-        #expect(landing.target == .onto(audio))
+        #expect(landing.target == .onto(musicTrack))
         #expect(landing.startMS == 2500)
-        #expect(landing.trackName == "Audio")
+        #expect(landing.trackName == "Audio 2")
     }
 
-    @Test("A sound with no sound track to go to makes one under the picture")
+    @Test("A sound over a recording whose own sound fills the Audio track makes a track under it")
     func soundMakesATrack() throws {
         let doc = PhotonzDocument.recording(Self.take, name: "take")
         let v1 = try #require(Self.track(named: "V1", in: doc))
         let landing = doc.clipLanding(kind: .audio, lengthMS: 3000, atMS: 1000,
                                       over: .onto(v1), edit: .overwrite)
-        #expect(landing.target == .newTrack(at: 1))
-        #expect(landing.trackName == "Audio")
+        #expect(landing.target == .newTrack(at: 2))
+        #expect(landing.trackName == "Audio 2")
         #expect(landing.allowed)
+    }
+
+    @Test("A sound over a silent recording lands on the Audio track waiting under it")
+    func soundLandsOnTheWaitingTrack() throws {
+        let silent = MovieRef(pixelSize: CGSize(width: 100, height: 100), durationMS: 8000)
+        var doc = PhotonzDocument.recording(silent, name: "take")
+        let v1 = try #require(Self.track(named: "V1", in: doc))
+        let audio = try #require(Self.track(named: "Audio", in: doc))
+        let landing = doc.clipLanding(kind: .audio, lengthMS: 3000, atMS: 1000,
+                                      over: .onto(v1), edit: .overwrite)
+        #expect(landing.target == .onto(audio))
+        let sound = Layer.sound(SoundRef(durationMS: 3000), name: "music",
+                                time: LayerTime(inMS: 0, outMS: 3000, sourceLengthMS: 3000))
+        let landedID = doc.land(sound, at: landing)
+        let landed = try #require(landedID)
+        #expect(doc.trackID(ofClip: landed) == audio)
+        #expect(doc.timelineTracks.map(\.name) == ["V1", "Audio"])
     }
 
     @Test("A locked track takes nothing, and says it is the lock")
@@ -198,7 +217,7 @@ struct ClipLandingTests {
     @Test("A sound let go on the Audio track overwrites the music under it only")
     func soundOverwritesSound() throws {
         var (doc, _, _, music) = Self.edit()
-        let audio = try #require(Self.track(named: "Audio", in: doc))
+        let audio = try #require(doc.trackID(ofClip: music))
         let landing = doc.clipLanding(kind: .audio, lengthMS: 2000, atMS: 4000,
                                       over: .onto(audio), edit: .overwrite)
         let sound = Layer.sound(SoundRef(durationMS: 2000), name: "swoosh",

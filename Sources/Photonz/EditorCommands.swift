@@ -481,10 +481,10 @@ struct EditorCommands: Commands {
             // name it, switch it off, undo any of it — is what the timeline
             // already does to a layer (`docs/design/video-audio.md`).
             if Experiments.shared.soundOnTheTimelineEnabled {
-                // No key on Detach Sound: it is done once per clip, and a key
+                // No key on Detach Audio: it is done once per clip, and a key
                 // that close to ⌘D would be a key somebody presses by accident
                 // on a take they have already cut.
-                Button("Detach Sound") { editor?.detachSound() }
+                Button("Detach Audio") { editor?.detachSound() }
                     .disabled(!(editor?.canDetachSound ?? false))
                 Button("Add Sound…") { editor?.addSoundFromFile() }
                     .disabled(!(editor?.documentHasTime ?? false))

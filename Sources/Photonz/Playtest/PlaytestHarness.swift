@@ -1309,6 +1309,34 @@ private final class Run {
                  "\(url.lastPathComponent) let go at \(short(at.point)) \(at.space.rawValue) = view \(short(viewPoint))\(held)",
                  state: describe())
 
+        case .windowDrag(let from, let to, let steps):
+            let window = try requireWindow()
+            let a = try windowPoint(from), b = try windowPoint(to)
+            var stamp = ProcessInfo.processInfo.systemUptime
+            func post(_ type: NSEvent.EventType, at point: CGPoint, pressure: Float) {
+                stamp += 0.016
+                guard let event = NSEvent.mouseEvent(
+                        with: type, location: point, modifierFlags: [], timestamp: stamp,
+                        windowNumber: window.windowNumber, context: nil, eventNumber: 0,
+                        clickCount: 1, pressure: pressure) else { return }
+                NSApp.postEvent(event, atStart: false)
+            }
+            // The pointer arrives first, as it does under a hand, or SwiftUI
+            // has nothing to begin a gesture from (`pickUpTile`).
+            post(.mouseMoved, at: a, pressure: 0)
+            await sleep(0.15)
+            post(.leftMouseDown, at: a, pressure: 1)
+            await sleep(0.1)
+            for i in 1...steps {
+                let t = CGFloat(i) / CGFloat(steps)
+                post(.leftMouseDragged, at: CGPoint(x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t),
+                     pressure: 1)
+                await sleep(0.04)
+            }
+            post(.leftMouseUp, at: b, pressure: 0)
+            await sleep(0.3)
+            note(number, "windowDrag", "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue), "
+                 + "posted to the window in \(steps) moves")
         case .dragFile(let file, let at, let hold, let release, let leave, let says):
             // A file held over the canvas with the button still down, so the
             // step can write down the answer the pointer is showing. It is the
@@ -11713,7 +11741,10 @@ extension Run {
             taker.draggingExited(info)
             throw Failure(description: "\(url.lastPathComponent) held over \(track) at \(seconds)s drew no "
                 + "ghost on the timeline after 3s; \(type(of: taker)) at "
-                + "\(short(taker.convert(taker.bounds, to: nil).origin)) took the drag, carrying "
+                + "\(short(taker.convert(taker.bounds, to: nil).origin)) "
+                + "(\(Int(taker.bounds.width))x\(Int(taker.bounds.height)), showing "
+                + "\(taker.convert(taker.visibleRect, to: nil)), under "
+                + "\(taker.superview.map { "\(type(of: $0))" } ?? "nothing")) took the drag, carrying "
                 + "\((board.types ?? []).map(\.rawValue).joined(separator: " ")), at window "
                 + "\(short(windowPoint)) (global \(short(global)), tracks at \(short(frame.origin)) "
                 + "\(Int(frame.width))x\(Int(frame.height))); the file in the air: "
@@ -11764,7 +11795,12 @@ extension Run {
     static func visibleDestinations(at windowPoint: CGPoint, in content: NSView) -> [NSView] {
         var found: [NSView] = []
         func walk(_ view: NSView) {
+            // The view's own box as well as what it says is showing: a
+            // SwiftUI drop view in the side panel has been seen answering the
+            // whole window for its visible rect while being 264 points wide,
+            // and it took a timeline drop the timeline never heard about.
             if !view.isHidden, !view.registeredDraggedTypes.isEmpty,
+               view.convert(view.bounds, to: nil).contains(windowPoint),
                view.convert(view.visibleRect, to: nil).contains(windowPoint) {
                 found.append(view)
             }

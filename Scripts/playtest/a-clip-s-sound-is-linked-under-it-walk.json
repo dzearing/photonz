@@ -1,0 +1,47 @@
+{
+  "out": "/tmp/photonz-playtest/a-clip-s-sound-is-linked-under-it-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-opened", "note": "At defaults: the recording on V1, its own sound as a green segment with a waveform on the Audio track under it, both ringed as one pick" },
+    { "do": "panel", "stage": "1-opened" },
+    { "do": "snapshot", "name": "1-opened" },
+
+    { "do": "windowDrag", "from": [691, 943], "to": [864, 943], "steps": 10 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-sound-dragged", "note": "The sound segment dragged along: the picture came with it, because they are linked" },
+    { "do": "panel", "stage": "2-sound-dragged" },
+    { "do": "snapshot", "name": "2-sound-dragged" },
+    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "windowDrag", "from": [1123, 926], "to": [1123, 933], "steps": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-volume-down", "note": "The level line dragged down: the whole line drops, the clip plays quieter" },
+    { "do": "panel", "stage": "3-volume-down" },
+    { "do": "snapshot", "name": "3-volume-down" },
+
+    { "do": "windowDrag", "from": [110, 919], "to": [250, 919], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-faded-in", "note": "The handle at the segment's top left corner dragged right: the sound fades in" },
+    { "do": "panel", "stage": "4-faded-in" },
+    { "do": "snapshot", "name": "4-faded-in" },
+
+    { "do": "rightClick", "at": [691, 943], "space": "window", "choose": "Detach Audio" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-detached", "note": "Right-click, Detach Audio: the same sound on the same track, now its own clip" },
+    { "do": "panel", "stage": "5-detached" },
+    { "do": "snapshot", "name": "5-detached" },
+
+    { "do": "windowDrag", "from": [691, 943], "to": [864, 943], "steps": 10 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-detached-moves-alone", "note": "Dragged again: now only the sound moves, the picture stays at the start" },
+    { "do": "panel", "stage": "6-detached-moves-alone" },
+    { "do": "snapshot", "name": "6-detached-moves-alone" }
+  ]
+}

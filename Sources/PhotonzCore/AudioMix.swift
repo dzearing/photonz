@@ -121,6 +121,54 @@ public struct AudioLevel: Hashable, Codable, Sendable {
     /// is what decides whether it is written down at all.
     public var isUntouched: Bool { gain == Self.unityGain && points.isEmpty }
 
+    // MARK: - Fades
+
+    /// How long the sound takes to rise out of silence at its start: silence
+    /// pinned at the very start and the next point up at the level. Nought
+    /// where it starts at its level.
+    public var fadeInMS: Int {
+        guard points.count >= 2, points[0].atMS == 0, points[0].gain == 0, points[1].gain > 0
+        else { return 0 }
+        return points[1].atMS
+    }
+
+    /// How long the sound takes to fall into silence at its end, for a layer
+    /// `lengthMS` long: silence pinned at (or past) the end, and the point
+    /// before it up at the level.
+    public func fadeOutMS(lengthMS: Int) -> Int {
+        guard points.count >= 2, let last = points.last, last.gain == 0, last.atMS >= lengthMS
+        else { return 0 }
+        let before = points[points.count - 2]
+        guard before.gain > 0 else { return 0 }
+        return max(0, lengthMS - before.atMS)
+    }
+
+    /// Fade in over `ms`, which is two points: silence at the start and the
+    /// level the shape already had at `ms`, so a duck after it is kept.
+    /// Nought takes the fade away. It never runs into the fade out.
+    public mutating func setFadeIn(_ ms: Int, lengthMS: Int) {
+        let fadeOut = fadeOutMS(lengthMS: lengthMS)
+        if fadeInMS > 0 { points.removeFirst(2) }
+        let length = min(max(0, ms), max(0, lengthMS - fadeOut))
+        guard length > 0 else { return }
+        let top = shape(atLayerMS: length)
+        points = Self.tidied(points.filter { $0.atMS > length }
+            + [AudioLevelPoint(atMS: 0, gain: 0), AudioLevelPoint(atMS: length, gain: top)])
+    }
+
+    /// Fade out over the last `ms` of a layer `lengthMS` long: the level the
+    /// shape had there, falling to silence at the end.
+    public mutating func setFadeOut(_ ms: Int, lengthMS: Int) {
+        let fadeIn = fadeInMS
+        if fadeOutMS(lengthMS: lengthMS) > 0 { points.removeLast(2) }
+        let length = min(max(0, ms), max(0, lengthMS - fadeIn))
+        guard length > 0 else { return }
+        let start = lengthMS - length
+        let top = shape(atLayerMS: start)
+        points = Self.tidied(points.filter { $0.atMS < start }
+            + [AudioLevelPoint(atMS: start, gain: top), AudioLevelPoint(atMS: lengthMS, gain: 0)])
+    }
+
     // MARK: - Saying it out loud
 
     /// A level in decibels, or nil for silence, which has no number.

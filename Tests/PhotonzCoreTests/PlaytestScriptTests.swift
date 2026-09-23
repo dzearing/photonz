@@ -334,6 +334,26 @@ struct PlaytestScriptTests {
         #expect(script.steps[0].name == "dragComponent")
     }
 
+    @Test("A windowDrag step is a press, a pull and a let go anywhere in the window, in window points")
+    func windowDragStep() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "windowDrag", "from": [691, 943], "to": [864, 943], "steps": 6 },
+                     { "do": "windowDrag", "from": [10, 20], "to": [30, 40] } ] }
+        """)
+        guard case .windowDrag(let from, let to, let steps) = script.steps[0],
+              case .windowDrag(let from2, _, let steps2) = script.steps[1] else {
+            Issue.record("windowDrag"); return
+        }
+        #expect(from.point == CGPoint(x: 691, y: 943))
+        #expect(from.space == .window)
+        #expect(to.point == CGPoint(x: 864, y: 943))
+        #expect(steps == 6)
+        #expect(from2.space == .window)
+        #expect(steps2 == PlaytestStep.defaultDragSteps)
+        #expect(script.steps[0].name == "windowDrag")
+        #expect(PlaytestStep.names.contains("windowDrag"))
+    }
+
     @Test("A dragFile step holds a file over a point and records what the canvas answered")
     func dragFileStepHoldsAFileInTheAir() throws {
         let script = try decode("""

@@ -88,15 +88,10 @@ struct SoundInspector: View {
     // MARK: Taking the sound off the picture
 
     private var detach: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("This clip's sound is still on its picture, so a cut to one is a cut to both.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Button("Detach Sound") { editorState.detachSound() }
-                .controlSize(.small)
-                .disabled(!editorState.canDetachSound)
-                .playtestField("Detach Sound")
-                .panelHelp("Put this clip's sound on a layer of its own, in step and with the same cuts.")
-        }
+        Button("Detach Audio") { editorState.detachSound() }
+            .controlSize(.small)
+            .disabled(!editorState.canDetachSound)
+            .playtestField("Detach Audio")
+            .panelHelp("Unlink this clip's sound from its picture so each moves on its own.")
     }
 }

@@ -131,6 +131,13 @@ extension PhotonzDocument {
         let soundLayerID = layer.id
 
         var after = self
+        // It lands on the very audio track its linked segment was drawn on,
+        // so the only thing that changes on the timeline is the link. That
+        // track is written down first, or it would go with the link.
+        if let track = linkedSoundTrackID(ofClip: id) {
+            after.materializeTracks()
+            layer.trackID = track
+        }
         after.updateLayer(id: id) { $0.soundDetached = true }
         if path.count == 1 {
             after.addLayer(layer, at: path[0] + 1)

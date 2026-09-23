@@ -138,8 +138,14 @@ extension PhotonzDocument {
             if tracks[index].kind.accepts(kind) {
                 chosen = tracks[index]
             } else {
-                // The nearest track that takes it, and that is not locked.
-                let fits = tracks.indices.filter { tracks[$0].kind.accepts(kind) && !tracks[$0].isLocked }
+                // The nearest track that takes it, that is not locked, and
+                // that is not carrying a clip's own sound at that moment: a
+                // sound let go over the picture is new sound, not a
+                // replacement for the recording's.
+                let fits = tracks.indices.filter {
+                    tracks[$0].kind.accepts(kind) && !tracks[$0].isLocked
+                        && !linkedSound(onTrack: tracks[$0].id, overlapsMS: ms..<(ms + max(1, lengthMS)))
+                }
                 guard let nearest = fits.min(by: { abs($0 - index) < abs($1 - index) }) else {
                     return newTrack(at: defaultPlace)
                 }

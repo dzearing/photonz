@@ -35,11 +35,13 @@ struct DocumentTracksTests {
     func implicitTracks() {
         let (doc, recording, title, music) = Self.cut()
         let tracks = doc.timelineTracks
-        #expect(tracks.map(\.name) == ["V2", "V1", "Audio"])
-        #expect(tracks.map(\.kind) == [.video, .video, .audio])
+        // The recording's own sound on Audio, and the music on its own track.
+        #expect(tracks.map(\.name) == ["V2", "V1", "Audio", "Audio 2"])
+        #expect(tracks.map(\.kind) == [.video, .video, .audio, .audio])
         #expect(doc.clipIDs(onTrack: tracks[0].id) == [title])
         #expect(doc.clipIDs(onTrack: tracks[1].id) == [recording])
-        #expect(doc.clipIDs(onTrack: tracks[2].id) == [music])
+        #expect(doc.linkedSoundClipIDs(onTrack: tracks[2].id) == [recording])
+        #expect(doc.clipIDs(onTrack: tracks[3].id) == [music])
         // Reading them writes nothing: a file nobody edited saves as it was.
         #expect(doc.tracks.isEmpty)
         #expect(doc.layers.allSatisfy { $0.trackID == nil })
@@ -80,7 +82,7 @@ struct DocumentTracksTests {
         var (doc, _, _, _) = Self.cut()
         let audio = doc.addTrack(.audio)
         #expect(doc.timelineTracks.last?.id == audio)
-        #expect(doc.timelineTracks.last?.name == "Audio 2")
+        #expect(doc.timelineTracks.last?.name == "Audio 3")
         let captions = doc.addTrack(.captions)
         #expect(doc.timelineTracks.first?.id == captions)
         #expect(doc.timelineTracks.first?.name == "Captions")
@@ -112,7 +114,7 @@ struct DocumentTracksTests {
         doc.deleteTrack(id)
         #expect(doc.layer(id: title) == nil)
         #expect(!doc.timelineTracks.contains { $0.id == id })
-        #expect(doc.timelineTracks.map(\.name) == ["V1", "Audio"])
+        #expect(doc.timelineTracks.map(\.name) == ["V1", "Audio", "Audio 2"])
     }
 
     // MARK: - Hide, mute, solo, lock
@@ -142,18 +144,20 @@ struct DocumentTracksTests {
     }
 
     @Test("A muted track is not heard")
-    func muteTrack() {
+    func muteTrack() throws {
         var (doc, recording, _, music) = Self.cut()
-        doc.updateTrack(doc.timelineTracks[2].id) { $0.isMuted = true }
+        let musicTrack = try #require(doc.trackID(ofClip: music))
+        doc.updateTrack(musicTrack) { $0.isMuted = true }
         let mix = doc.audioMix()
         #expect(!mix.contains { $0.layerID == music })
         #expect(mix.contains { $0.layerID == recording })
     }
 
     @Test("Soloing a sound track silences everything else, the recording's own sound included")
-    func soloSound() {
+    func soloSound() throws {
         var (doc, recording, _, music) = Self.cut()
-        doc.updateTrack(doc.timelineTracks[2].id) { $0.isSolo = true }
+        let musicTrack = try #require(doc.trackID(ofClip: music))
+        doc.updateTrack(musicTrack) { $0.isSolo = true }
         let mix = doc.audioMix()
         #expect(mix.contains { $0.layerID == music })
         #expect(!mix.contains { $0.layerID == recording })
@@ -182,7 +186,7 @@ struct DocumentTracksTests {
         #expect(doc.trackID(ofClip: title) == v1)
         #expect(Set(doc.clipIDs(onTrack: v1)) == [recording, title])
         // The track it left was written down and stays, empty, where it was.
-        #expect(doc.timelineTracks.count == 3)
+        #expect(doc.timelineTracks.count == 4)
     }
 
     @Test("A clip cannot land where it would cover another clip on that track")
@@ -256,7 +260,7 @@ struct DocumentTracksTests {
         let group = try #require(grouped)
         let tracks = doc.timelineTracks
         // Gathered next to the top one, in their order.
-        #expect(tracks.map(\.id) == [ids[0], ids[2], ids[1]])
+        #expect(tracks.map(\.id) == [ids[0], ids[2], ids[1], ids[3]])
         #expect(tracks[0].groupID == group && tracks[1].groupID == group)
         #expect(tracks[2].groupID == nil)
         #expect(doc.trackGroups.first?.name == "Group 1")

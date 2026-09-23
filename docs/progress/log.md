@@ -19468,3 +19468,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Harness: `dropOnTimeline` takes `tile` instead of `file`; `pickFirstMedia` picks clips first.
 - Walk: `library-clip-onto-a-track-walk`, no flags (View > Library turned on the way a person does), 7 real captures. Audit: `queue/audits/2026-09-23-library-clips.json`.
 - Open: decision card on whether a video document shows the Library without being asked; filling the Library without placing (Import, drop on the panel) filed p1.
+
+## 2026-09-23 — A clip's sound is on the timeline from the moment it opens
+
+- Core (tests first, `LinkedSoundTests`, `SoundFadeTests`): the track layout places every clip's own sound as a LINKED segment on an audio track under the picture (first fit, bottom picture first, Audio 2 on overlap, sound layers win the lane), plus an empty Audio track under a silent recording. Detach lands on the segment's track; mute/solo/delete on that track act on the clip's sound. A sound let go over the picture skips tracks carrying a clip's own sound. `AudioLevel` fades (`fadeInMS`, `setFadeIn/Out`) are two points each.
+- App: `TimelineTrackRows` draws linked segments with `ClipPiecesBar(isLinkedSound:)`, so every drag is the clip's. Picture clips no longer carry a waveform. Level line hit area is the line (vertical drag is the fader, one undo step); fade handles at the top corners; `TimelineClipMenu` right-click (Detach Audio, Split at Playhead, Delete). Mock colours for the wave (#8fe at .7) and line (#bff3e4). Detach Sound renamed Detach Audio.
+- Harness: `windowDrag` step posts real mouse events to the window (timeline gestures were unreachable by `drag`). `visibleDestinations` also requires a view's own frame to contain the point: a panel view reported the whole window as its visible rect and took a timeline drop.
+- Walks: new `a-clip-s-sound-is-linked-under-it-walk` (no flags, 6 captures); `second-clip` and `library-clip` expectations moved music to Audio 2 where the recording's sound now sits on Audio. 26 related walks green. Audit: `queue/audits/2026-09-23-linked-sound.json`.
+- Next: carry a linked segment to another audio track; overwrite (not bump) a clip's sound when music lands on it, if the user wants Premiere's behaviour (asked in the audit).

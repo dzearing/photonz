@@ -2034,6 +2034,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// landing box, and a refusal that names no reason is the thing those words
     /// exist to stop (`MediaDrop`). Matched loosely, so a walk can name the
     /// half of the sentence it cares about.
+    /// A press, a pull and a let go posted to the WINDOW rather than handed
+    /// to the canvas, so it reaches whatever is under the pointer the way a
+    /// hand does: a clip on the timeline, the level line on a sound, a fade
+    /// handle. Points are window points, top left, unless `space` says other.
+    case windowDrag(from: PlaytestPoint, to: PlaytestPoint, steps: Int)
     case dragFile(file: String, at: PlaytestPoint, hold: String?, release: Bool, leave: Bool,
                   says: String?)
     /// A file carried from the Finder onto the TIMELINE, over the lane of the
@@ -2927,8 +2932,8 @@ public enum PlaytestStep: Sendable, Equatable {
         "dropComponent",
         "dropImage", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectSharp", "expectStoredRecording", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
-        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo",
-    ]
+        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag",
+    ].sorted()
 
     /// The `do` name this step answers to.
     public var name: String {
@@ -2958,6 +2963,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .dragComponent: "dragComponent"
         case .dropImage: "dropImage"
         case .dragFile: "dragFile"
+        case .windowDrag: "windowDrag"
         case .dropOnTimeline: "dropOnTimeline"
         case .expectClip: "expectClip"
         case .dragOver: "dragOver"
@@ -3177,6 +3183,15 @@ public enum PlaytestStep: Sendable, Equatable {
         case "dropImage":
             self = .dropImage(file: try f.string("file"), at: try f.point("at"),
                               hold: try f.optionalString("hold"))
+        case "windowDrag":
+            let steps = try f.optionalNumber("steps").map { Int($0) } ?? Self.defaultDragSteps
+            let windowed = fields["space"] == nil
+            var from = try f.point("from"), to = try f.point("to")
+            if windowed {
+                from.space = .window
+                to.space = .window
+            }
+            self = .windowDrag(from: from, to: to, steps: max(1, steps))
         case "dragFile":
             self = .dragFile(file: try f.string("file"), at: try f.point("at"),
                              hold: try f.optionalString("hold"),

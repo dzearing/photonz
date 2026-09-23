@@ -121,6 +121,29 @@ extension EditorState {
         writeSoundLevel(level, onLayer: id)
     }
 
+    /// Set how loud one layer plays, from its level line on the timeline: the
+    /// line dragged up or down as a whole, which is the fader.
+    func setSoundGain(_ gain: Double, onLayer id: UUID) {
+        guard let layer = document?.layer(id: id), layer.sound != nil else { return }
+        var level = layer.soundLevel ?? AudioLevel()
+        guard level.gain != AudioLevel.bounded(gain) else { return }
+        level.gain = AudioLevel.bounded(gain)
+        writeSoundLevel(level, onLayer: id)
+    }
+
+    /// Fade a layer's sound in at its start, or out at its end, over `ms`,
+    /// from the handle at that top corner of its segment. Nought takes the
+    /// fade away.
+    func setSoundFade(onLayer id: UUID, fadeIn: Bool, ms: Int) {
+        guard let layer = document?.layer(id: id), layer.sound != nil else { return }
+        let length = layer.clipPieces?.totalLengthMS ?? layer.time?.lengthMS ?? 0
+        var level = layer.soundLevel ?? AudioLevel()
+        let before = level
+        if fadeIn { level.setFadeIn(ms, lengthMS: length) } else { level.setFadeOut(ms, lengthMS: length) }
+        guard level != before else { return }
+        writeSoundLevel(level, onLayer: id)
+    }
+
     /// Put the level back to flat, keeping the fader where it is.
     func clearSoundLevelPoints() {
         guard let id = soundLayerInHand?.id, !soundLevelInHand.points.isEmpty else { return }

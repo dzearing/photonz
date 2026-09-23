@@ -669,6 +669,7 @@ settled, and `pickUpTile` is the step that settles it:
 
 | Step | Arguments | What it does |
 | --- | --- | --- |
+| `windowDrag` | `from`, `to` (window points, top left, unless `space` says other), optional `steps` | A press, a pull and a let go posted to the WINDOW's event queue rather than handed to the canvas, so it reaches whatever SwiftUI view is under the pointer: a clip on the timeline, the level line on a sound, a fade handle. `drag` cannot do this, because it talks to the canvas view directly. Refused under a locked screen until somebody watches it run there. |
 | `pickUpTile` | `tile`, `to`, optional `space` | Presses a tile on the Library shelf with the mouse and pulls it towards a point on the picture, and FAILS if no drag came of it. The press and the pull are real mouse events posted to the app's queue, so what is being proved is the tile's own handle: that pulling on THIS view starts a drag carrying the right payload. The log line says what came away and what it was carrying. |
 
 Two walks read it, and they answer the question for both kinds of tile:

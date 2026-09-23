@@ -1,0 +1,31 @@
+{
+  "feature": "A clip's sound is on the timeline from the moment it opens",
+  "epic": "video-audio",
+  "summary": "Every clip with sound now shows it as its own segment with a waveform on an Audio track under the picture, linked the way Premiere links a clip's audio: drag either one and both move. Drag the line to set the volume, drag a top corner handle to fade, and right-click, Detach Audio to unlink them.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    { "do": "Open a screen recording that has sound, then press V for Select. The sound sits on an Audio track under V1.", "shot": "2026-09-23-linked-sound-1-opened-sc.png" },
+    { "do": "Drag the green sound segment to the right. The picture above comes with it.", "shot": "2026-09-23-linked-sound-2-sound-dragged-sc.png" },
+    { "do": "Press Cmd-Z, then drag the pale line on the sound segment down a little. The whole line drops and the clip plays quieter.", "shot": "2026-09-23-linked-sound-3-volume-down-sc.png" },
+    { "do": "Drag the small square at the segment's top left corner to the right. The line now rises out of silence: a fade in.", "shot": "2026-09-23-linked-sound-4-faded-in-sc.png" },
+    { "do": "Right-click the sound segment and choose Detach Audio.", "shot": "2026-09-23-linked-sound-5-detached-sc.png" },
+    { "do": "Drag the sound segment again. Now only the sound moves; the picture stays put.", "shot": "2026-09-23-linked-sound-6-detached-moves-alone-sc.png" },
+    { "do": "Drop a second recording and some music onto the timeline. Each clip, and both halves of one an insert split, has its own sound under it; the music gets Audio 2.", "shot": "2026-09-23-linked-sound-7-every-clip-sc.png" }
+  ],
+  "evaluate": [
+    "Does a Premiere editor find the clip's audio where they expect it, on A1 under V1?",
+    "Is it clear enough that the picture and its sound are one thing until you detach them, from the shared highlight alone?",
+    "Is the line easy to catch for a volume drag without grabbing the clip by mistake?",
+    "Are the fade handles findable when they only show on a picked or hovered segment?",
+    "When music is dropped straight onto the Audio track, is it right that the recording's own sound steps down to a new track, rather than being overwritten as Premiere would?"
+  ],
+  "rough": [
+    "A sound's waveform appears about a second after it lands, while the file is read; until then its segment is a plain green bar.",
+    "A linked segment moves only along time. Carrying it up or down to another audio track is not built.",
+    "Dropping music onto the track holding a recording's sound moves the recording's sound down a track instead of overwriting it the way Premiere would.",
+    "Deleting the Audio track under a clip takes that clip's sound away and keeps its picture, as deleting A1 does in Premiere.",
+    "The mock's small 'duck -8 dB' tag on the audio clip is not drawn; the level shows as the line only.",
+    "The right-click menu on a clip holds Detach Audio, Split at Playhead and Delete only. The full clip menu is the open task on right-click everywhere on the timeline.",
+    "The Detach Audio button in the panel is still there alongside the right-click."
+  ]
+}

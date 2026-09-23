@@ -17,6 +17,8 @@ import SwiftUI
 /// sound read as a block growing up from the floor reads as a bar chart.
 struct SoundWaveform: View {
     let columns: [Float]
+    /// The mock's `.wave i` on the dock (the audio ink at .7), white elsewhere.
+    var color: Color = .white.opacity(0.55)
 
     var body: some View {
         Canvas { context, size in
@@ -33,7 +35,7 @@ struct SoundWaveform: View {
                 path.addRect(CGRect(x: x, y: middle - half,
                                     width: max(0.75, step - 0.35), height: half * 2))
             }
-            context.fill(path, with: .color(.white.opacity(0.55)))
+            context.fill(path, with: .color(color))
         }
         .allowsHitTesting(false)
     }
@@ -60,9 +62,20 @@ struct SoundLevelLine: View {
     let toMS: Int
     let width: CGFloat
     let height: CGFloat
+    /// The mock's duck line colour on the dock, white on the icon strip.
+    var lineColor: Color = .white.opacity(0.95)
+
+    /// The fader while the line is being dragged up or down, before it is
+    /// let go, so the whole drag is one step to undo.
+    @State private var draggedGain: Double?
+    /// Where along the line the hand took hold, which is where the line stays
+    /// under the pointer while it moves.
+    @State private var heldAtMS: Int?
 
     /// How big the dot you drag is.
     private static let dotSize: CGFloat = 9
+    /// How far either side of the line still counts as on it.
+    private static let bandWidth: CGFloat = 12
     /// Room left at the top and the bottom so a dot at either extreme is drawn
     /// whole rather than sliced in half by the edge of the bar.
     private static var inset: CGFloat { dotSize / 2 + 1 }
@@ -75,10 +88,11 @@ struct SoundLevelLine: View {
             }
         }
         .frame(width: width, height: height, alignment: .topLeading)
-        // A click anywhere on the bar that is not on a dot pins the level
-        // there, which is the whole of "add a point": there is no add button
-        // and no mode, because the line is the control.
-        .contentShape(Rectangle())
+        // Only the line itself is the control, the way Premiere's volume
+        // line is: the rest of the segment picks the clip up and moves it.
+        // A click on the line pins the level there, and a drag up or down
+        // moves the whole line, which is the fader.
+        .contentShape(LevelBand(points: shape, width: Self.bandWidth))
         .onTapGesture { location in
             guard editorState.selectedLayerID == layerID else {
                 editorState.selectLayer(layerID)
@@ -87,6 +101,36 @@ struct SoundLevelLine: View {
             editorState.setSoundLevelPoint(atLayerMS: ms(atX: location.x),
                                            gain: gain(atY: location.y))
         }
+        .gesture(fader)
+        .playtestField("\(layerName) level line")
+        .panelHelp("The volume. Drag the line up or down; click it to pin the level there.")
+    }
+
+    /// The level as drawn: the fader in the hand, while there is one.
+    private var shownLevel: AudioLevel {
+        guard let draggedGain else { return level }
+        var shown = level
+        shown.gain = draggedGain
+        return shown
+    }
+
+    private var fader: some Gesture {
+        DragGesture(minimumDistance: 2)
+            .onChanged { value in
+                let held = heldAtMS ?? ms(atX: value.startLocation.x)
+                heldAtMS = held
+                let shape = level.shape(atLayerMS: held)
+                guard shape > 0 else { return }
+                draggedGain = AudioLevel.bounded(gain(atY: value.location.y) / shape)
+            }
+            .onEnded { _ in
+                if let draggedGain {
+                    editorState.selectLayer(layerID)
+                    editorState.setSoundGain(draggedGain, onLayer: layerID)
+                }
+                draggedGain = nil
+                heldAtMS = nil
+            }
     }
 
     /// The points inside the stretch on screen. One off the side of the
@@ -103,7 +147,7 @@ struct SoundLevelLine: View {
             path.move(to: first)
             for point in points.dropFirst() { path.addLine(to: point) }
         }
-        .stroke(.white.opacity(0.95), style: StrokeStyle(lineWidth: 2, lineJoin: .round))
+        .stroke(lineColor, style: StrokeStyle(lineWidth: 2, lineJoin: .round))
         .shadow(color: .black.opacity(0.6), radius: 1.5)
         .allowsHitTesting(false)
     }
@@ -114,7 +158,7 @@ struct SoundLevelLine: View {
         guard lengthMS > 0, width > 0 else { return [] }
         var moments = [fromMS] + level.points.map(\.atMS) + [toMS]
         moments = Array(Set(moments)).sorted().filter { $0 >= fromMS && $0 <= toMS }
-        return moments.map { CGPoint(x: x(atMS: $0), y: y(forGain: level.gain(atLayerMS: $0))) }
+        return moments.map { CGPoint(x: x(atMS: $0), y: y(forGain: shownLevel.gain(atLayerMS: $0))) }
     }
 
     private func dot(_ point: AudioLevelPoint) -> some View {
@@ -123,7 +167,7 @@ struct SoundLevelLine: View {
             .overlay(Circle().strokeBorder(.white.opacity(0.9), lineWidth: 1.5))
             .frame(width: Self.dotSize, height: Self.dotSize)
             .position(x: x(atMS: point.atMS),
-                      y: y(forGain: level.gain(atLayerMS: point.atMS)))
+                      y: y(forGain: shownLevel.gain(atLayerMS: point.atMS)))
             .gesture(drag(point))
             // A dot you cannot get rid of is a dot you regret putting down.
             .onTapGesture(count: 2) {
@@ -185,5 +229,20 @@ struct SoundLevelLine: View {
         guard usable > 0 else { return AudioLevel.unityGain }
         let through = 1 - Double(min(max(0, y - Self.inset), usable)) / Double(usable)
         return AudioLevel.bounded(through * through * AudioLevel.loudestGain)
+    }
+}
+
+/// The strip either side of the level line that a click or a drag takes hold
+/// of: the line, fattened, so the rest of the segment is left to the clip.
+private struct LevelBand: Shape {
+    let points: [CGPoint]
+    let width: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        var line = Path()
+        guard let first = points.first else { return line }
+        line.move(to: first)
+        for point in points.dropFirst() { line.addLine(to: point) }
+        return line.strokedPath(StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round))
     }
 }
