@@ -1,12 +1,14 @@
 {
-  "updated": "2026-09-18T15:14:01.744Z",
+  "updated": "2026-09-23",
   "focus": "video-editing",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
     "One focus at a time. A feature is not done when it compiles, it is done when it is playtestable and has an audit report the user can act on.",
-    "The mocks are proposals, not gospel. Every feature passes an adversarial review before it is built and again before it is called ready: what does not flow, what is confusing, what would a first-time user get wrong.",
+    "The user's mocks are the design floor. They are ideas to build on, which means a runner may go further than a mock, never below it or away from it: its look, layout, controls, copy length and interactions are what ships. A departure is a decision card, never a quiet rewrite, and a mock page is never edited to match the code.",
     "Delight and ease are acceptance criteria, not aspirations. If a feature works but feels clumsy, it is not done.",
-    "Only epics staged now may hold open tasks. Anything serving a later epic waits, so we ship something finished instead of everything half-built."
+    "Only epics staged now may hold open tasks. Anything serving a later epic waits, so we ship something finished instead of everything half-built.",
+    "Ask the grown-up-tool question every time: would someone who knows Premiere (for video) or Photoshop (for pictures) find this where they expect it, and is it easier here? Actions live where you click: a right-click menu on the thing, not a tool or a panel button for everything.",
+    "A feature exists only if a person running Next with default settings can reach it. A walk that forces a flag proves nothing about what the user sees."
   ],
   "epics": [
     {
@@ -63,36 +65,65 @@
           "title": "Cutting and arranging: blade, trim, and place clips with confidence",
           "note": "Promoted to now on 2026-09-15 with its parent: the answered card names cutting a recording into pieces as where video starts.",
           "stage": "now",
-          "children": []
+          "children": [],
+          "success": [
+            "Multiple clips and multiple video and audio tracks in one document; add, rename (double-click), group and collapse, hide, mute, lock a track",
+            "Drag a clip along a track and onto another track, with snapping to clips, the playhead and markers",
+            "Blade at the playhead (B, and right-click), ripple delete, trim edges, J/K/L shuttle, I/O marks, frame step with arrows, timeline zoom",
+            "Right-click menus on a clip, a cut, a track header and the scrub bar carry the actions for that thing"
+          ]
         },
         {
           "id": "video-transitions-motion",
           "title": "Transitions and motion: keyframes, zooms, and freezes that feel direct",
           "note": "",
           "stage": "now",
-          "children": []
+          "children": [],
+          "success": [
+            "Click a cut and pick a transition from thumbnail tiles at the cut, as the mock draws it",
+            "Any layer, text included, moves from A to B, grows or shrinks, rotates and fades by dragging it on the canvas at two moments; the keys show on its track and can be dragged",
+            "Speed and freeze are a dropdown and a right-click action, not a panel of radios"
+          ]
         },
         {
           "id": "video-titles-graphics",
           "title": "Titles, captions, and graphics on the timeline",
           "note": "",
           "stage": "now",
-          "children": []
+          "children": [],
+          "success": [
+            "Press T over a video, type, and the text is a layer on its own track with an in and an out you drag",
+            "A title animates in and out with presets and with keys, Photoshop-style styling applies (font, colour, shadow, stroke)"
+          ]
         },
         {
           "id": "video-audio",
           "title": "Audio you can see and shape",
           "note": "",
           "stage": "now",
-          "children": []
+          "children": [],
+          "success": [
+            "A recording's own sound is visible under its picture as an audio segment with a waveform, from the moment it opens",
+            "Detach, move, trim, fade, and set the volume of any audio segment; bring in music on its own track",
+            "Captions are extracted from the speech automatically, on this Mac, land on a captions track, can be edited in place and styled, and export burned in or as SRT"
+          ]
         },
         {
           "id": "video-share",
           "title": "Fast, predictable export and share",
           "note": "",
           "stage": "now",
-          "children": []
+          "children": [],
+          "success": [
+            "Export MP4, GIF, HEIC and a single frame through the one Export sheet, with size shown before exporting"
+          ]
         }
+      ],
+      "success": [
+        "A Premiere or Final Cut editor can cut a 5 minute screen recording to 90 seconds, add a second clip and a music bed, a title that flies in, captions, a transition, and export MP4, without being taught, in less time than in Premiere",
+        "The timeline, transport, clips, tracks, transition picker and properties match the video mocks (video.html, video-shell.html, comp-video.html) side by side",
+        "Playback of a full-screen Retina recording never blinks or stutters",
+        "Everything is reachable in Next with default settings"
       ]
     },
     {

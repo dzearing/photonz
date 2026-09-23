@@ -8,7 +8,11 @@ You are one iteration of the Photonz go loop, executing exactly ONE task, unmann
 
 Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and its goal must say which feature and how. Only epics staged `now` may hold open tasks; if your task serves a `later` epic, say so in the log and drop it rather than doing it.
 
-**The mocks are proposals, not gospel.** The design study is a sketch of what the app could be, drawn quickly and often without a user in mind. Building it literally is how we ship something that technically works and feels wrong.
+**The user's mocks are the target.** The pages under `docs/design/mocks/pages/` are the look, the layout and the interactions the user asked for: build what they show, at their fidelity, with their colours, spacing, controls and copy length. Where the app cannot yet deliver what a mock assumes (a track model, a second clip, a popover), that gap is a task to file and build first, never a reason to build a smaller thing that looks different. You may disagree with a mock only through a decision card (`queue.mjs decision`); until the user answers, build the mock. **Never edit a mock page to match the code.** On 2026-09-19 a design pass rewrote the video mocks "against the app that exists", deleted the user's tracks, and invented a rule (UX-PATTERNS D18) to justify it; four days of video work then drifted into a panel of paragraphs and a timing strip the user called garbage.
+
+**Would someone who knows the grown-up tool get this, and is it easier?** Before and after every feature, ask it in those words. For video: would a Premiere or Final Cut editor find tracks, clips, the blade, the transport and the transition picker where they expect them, with the keys they expect (J/K/L, I/O, B, V, space, arrows)? Is it quicker than Premiere for a screen recording? And does it bring what Photoshop users have for free into time: a text layer, moved from A to B, grown or shrunk, faded in, with a transition, all by direct manipulation on the canvas and the timeline, never a form. If the honest answer is no, it is not done.
+
+**Actions live where you click.** Not every action needs a tool or a panel button. Right-click on a clip, a cut, a track header, the scrub bar, a layer or the canvas opens the actions for that thing, the way Premiere and Photoshop do. When you add an action, add it to the right-click menu of the thing it acts on first; a panel control is for values you tune, not verbs you do once.
 
 **Delight and ease are acceptance criteria.** A feature that works but is clumsy is not done.
 
@@ -292,12 +296,17 @@ the answer in this run rather than blocking at all.
 
 - Walk the flow as a first-time user who has never seen the mock. Where do they stop? What do they have to already know?
 - What does the mock assume that the app cannot deliver (state it does not have, a gesture that collides with an existing one, a control that has no home in the shell)?
-- What is decorative rather than useful? Cut it.
-- What is the SHORTEST version that delivers the same value? Prefer it.
+- What does a Premiere/Final Cut (for video) or Photoshop (for pictures) user expect here, and does this meet or beat it?
 
-Write the findings into the task log. If the mock is wrong, say so and build the better thing; if the disagreement is a UX judgment the user should make, open a decision instead of guessing. "The mock says so" is never a reason.
+Write the findings into the task log. A mock assumption the app cannot deliver becomes a filed prerequisite task (p1, sequenced ahead of this one), not a cut. If you believe the mock itself is wrong, open a decision card and build the mock until it is answered.
+
+**UI text is a label, not an explanation.** A panel row is a short label and a value or control. No sentence in the panel explains the model ("A freeze is not a new kind of object..."); explanations belong in docs, the tutorial, or nowhere. At most one short hint line per section, only when a person would otherwise be stuck. Choose the control the mock uses: a list of more than three exclusive options is a dropdown, not a radio column.
 
 **Before you call it ready**, review the built thing the same way, on the real app: run it, use it as a person would, and be honest about what feels clumsy. Fix what you can, and record what you could not.
+
+**Two checks every UI task must pass before `done`:**
+1. **Default config.** At least one walk reaches the feature with NO `flags` in its setup, i.e. exactly as a person running Next gets it. A walk that forces a flag proves nothing about what the user sees.
+2. **Side by side with the mock.** Put a picture of the shipped surface next to the matching mock frame (name the page and section) and list every difference in the audit. Differences in layout, colour, control type, spacing or copy length are defects to fix in this task or to file as p1, not notes. A criterion that needs a person's judgement becomes a decision card for the user; a runner never ticks it.
 
 ## When a feature is ready: write its audit
 
@@ -310,7 +319,7 @@ A feature is not done when it compiles. It is done when the user can try it and 
   "feature": "Measure and redline",
   "epic": "measure-redline",
   "summary": "One or two plain sentences: what you can now do that you could not before.",
-  "setup": "Photonz Dev, Experiments window, release Next. Flags are on by default.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. If a step needs a flag turned on by hand, the feature is not reachable and the task is not done.",
   "try": [
     { "do": "One short imperative step. Name the exact key, menu item or gesture.", "shot": "2026-08-23-measure-1.png", "shotNote": "Only when the picture was taken under a lock: the line the walk handed you." },
     { "do": "The next step. Aim for five to eight steps total, not twenty." }
