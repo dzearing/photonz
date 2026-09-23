@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 180,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T06:51:24.741Z",
-  "updated": "2026-09-23T07:44:26.967Z",
+  "updated": "2026-09-23T07:44:49.039Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-22 while finishing a-copy-of-a-component-is-configured-not-authored. Command: Scripts/playtest.sh Scripts/playtest/component-drag-lands-a-copy-walk.json --no-build. The walk s own panel reading at stage 1-copy: dockSections [Layers -366--203, Component -203--32, Appearance -32-215, Effects 215-283, Motion 283-364, Layout 364-623, Library 623-841], dockViewport 841, dockInView [Effects, Motion, Layout, Library]. The Component section spans -203 to -32, entirely above the visible top. Cause is EditorState.askForLibraryAfterFetching (EditorState.swift:276), called by insertStarterComponent and insertSharedComponent after a drop so the shelf stays where you left it; it sets pendingLibraryReveal, which scrolls the dock to the Library. Pre-dates the drag-lands-a-copy change: the same reveal ran when the first drop was the original. Related to appearance-is-below-the-fold-again-because-the-p, which is about the panel wanting more height than the window has; this one is about where the panel chooses to scroll.",
@@ -51,10 +51,15 @@
     {
       "t": "2026-09-23T07:44:26.966Z",
       "note": "left rough, not filed: (a) the panel scrolls the layers list clean off the top to put the new component's section at the dock top, which is not new but is still a list disappearing unasked; (b) the shelf's top tile row is cut across the middle where it meets the bottom edge, which is the scroller doing what the shelf's own squeeze floor exists to avoid; (c) the standing question of whether the shelf should live at the foot of the panel outside the scroller, where it would never move and both ends of the rule would always hold. All three are in the audit's rough list, where the user reacts to them, rather than filed as tasks against a look nobody has chosen yet. The other three cases from the 2026-09-22 widening (captions, the Time section, dock-picked-first-walk) now have the rule written down but not the code; dock-picked-first-walk passes on this tree."
+    },
+    {
+      "t": "2026-09-23T07:44:49.037Z",
+      "note": "The shelf reveal after a fetch is now capped by the section the fetch produced (DockReveal.reveal in PhotonzCore, 11 new tests; EditorState.sectionTheFetchProduced names it; rule 4 in InspectorDockLayout and the same rule in UX-PATTERNS.md beside the dock rules). At 1240x900 the Component section lands 0-171, whole and at the top, with the Library head, tabs, search and the top of its tiles under it; it used to land -101-70. Verified by running the walks: component-drag-lands-a-copy and starter-shelf now read the dock offsets back after every drop, 33 library/shelf/dock/component walks pass, Scripts/test.sh green at 9134 tests. Audit queue/audits/2026-09-23-panel-after-a-drop.json, with the cost said out loud: on a Nav Bar the shelf head stops 4pt under the bottom edge, because the two cannot both be whole."
     }
   ],
   "walks": [
     "component-drag-lands-a-copy-walk"
   ],
-  "started": "2026-09-23T07:03:28.850Z"
+  "started": "2026-09-23T07:03:28.850Z",
+  "completed": "2026-09-23T07:44:49.038Z"
 }
