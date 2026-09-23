@@ -1,0 +1,36 @@
+{
+  "id": "a-recording-opens-in-the-video-editor-for-real-i",
+  "title": "A recording opens in the video editor, for real, in Next",
+  "goal": "About twenty video features (timeline, split, transitions, speed, punch-in, titles, captions, sound as a layer, video export) are on by default in Next, but all of them live in the editor that next-a-recording-is-a-document opens, and that flag is OFF by default. So a person opening a recording got the old play-and-shorten window and none of the work. Walks set the flag themselves, so nothing caught it. The user found this on 2026-09-23 and was furious: 'I can't create a layer, do transitions, split audio out'.",
+  "epic": "",
+  "priority": "p1-high",
+  "seq": 0.1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T11:42:39.064Z",
+  "updated": "2026-09-23T11:42:51.780Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Root cause found in the intake window: PhotonzApp.swift:161 routes .video to ReleaseExperience.videoEditor when the flag is off. The user's dev app has the flag turned on by hand as of 2026-09-23 04:50.",
+  "acceptance": [
+    "next-a-recording-is-a-document is enabledByDefaultIn [.next], and a person with no stored override opening a recording in Next gets the editor with the timeline",
+    "A unit test over FeatureCatalog fails when a flag enabled by default in a release depends on a flag that is off by default in that release; video flags declare that they depend on next-a-recording-is-a-document",
+    "A walk opens a recording WITHOUT setting any flag and photographs the timeline, the layers list with the clip in it, and the transport",
+    "The old small video window is not what any Next user reaches from opening, dropping or capturing a recording"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T11:42:39.066Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-23T11:42:51.730Z",
+      "note": "Overlaps trim-becomes-a-tool-and-the-recording-window-ret (blocked on the Command S decision). Kept separate on purpose: turning the editor on by default must not wait for the Save question, the user wants to edit video now. Save/trim/window retirement stay in that task."
+    },
+    {
+      "t": "2026-09-23T11:42:51.779Z",
+      "note": "seq 350 -> 0.1"
+    }
+  ]
+}

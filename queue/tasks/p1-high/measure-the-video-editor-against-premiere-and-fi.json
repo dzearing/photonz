@@ -1,0 +1,32 @@
+{
+  "id": "measure-the-video-editor-against-premiere-and-fi",
+  "title": "Measure the video editor against Premiere, and file every gap",
+  "goal": "The user's goal for video is to be better than Premiere at editing recordings, and today it is a first pass at each feature, never judged as a whole. Do a real editing session on real recordings in the probe app with no flags forced beyond Next defaults (after the task that turns the editor on lands): cut a 5 minute screen recording down to 90 seconds, split the audio off, add a second clip and a music bed, put a transition on a cut, add titles and captions, punch in on a detail, export MP4. Write down every place it is slower, clumsier, missing or uglier than Premiere Pro (and than Final Cut / ScreenFlow / Screen Studio for screen recordings), with pictures.",
+  "epic": "",
+  "priority": "p1-high",
+  "seq": 0.2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T11:42:39.137Z",
+  "updated": "2026-09-23T11:42:51.829Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User on 2026-09-23: 'I want the video editing with the timeline and the whole goal to be better than premiere and this is the most basic shit possible'. Depends on: a-recording-opens-in-the-video-editor-for-real-in-next.",
+  "acceptance": [
+    "A written gap report in docs/design/video-vs-premiere.md: each gap has what Premiere does, what Photonz does, a picture, and a severity",
+    "Every gap that matters is filed as its own p1 task with source user, sequenced by how much it blocks a real edit",
+    "A standing objective in queue/objectives.json: better than Premiere at editing screen recordings, with measurable success criteria the manager pass files work against",
+    "Basic editing (blade/split at playhead, ripple delete, J/K/L shuttle, drag clips between tracks, add a layer over video, detach audio, snapping, undo) is checked first and anything missing from that list is filed ahead of the polish gaps"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T11:42:39.139Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-23T11:42:51.828Z",
+      "note": "seq 360 -> 0.2"
+    }
+  ]
+}
