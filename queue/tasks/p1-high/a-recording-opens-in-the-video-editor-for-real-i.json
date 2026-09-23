@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:42:39.064Z",
-  "updated": "2026-09-23T14:19:28.359Z",
+  "updated": "2026-09-23T14:46:27.115Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): About twenty video features (timeline, split, transitions, speed, punch-in, titles, captions, sound as a layer, video export) are on by default in Next, but all of them live in the editor that next-a-recording-is-a-document opens, and that flag is OFF by default. So a person opening a recording got the old play-and-shorten window and none of the work. Walks set the flag themselves, so nothing caught it. The user found this on 2026-09-23 and was furious: 'I can't create a layer, do transitions, split audio out'.\n\nRoot cause found in the intake window: PhotonzApp.swift:161 routes .video to ReleaseExperience.videoEditor when the flag is off. The user's dev app has the flag turned on by hand as of 2026-09-23 04:50.",
@@ -84,6 +84,10 @@
     {
       "t": "2026-09-23T14:19:28.357Z",
       "note": "A recording opens in the editor with timeline at Next defaults (flag on by default in Next). Flag dependencies recorded in FeatureCatalog with a test that fails when a default-on flag needs a default-off one; ten timeline flags need the editor. Closing an edited recording asks, says the edits will not be kept and offers Export (SaveAffordance.changesOnlyExportKeeps); a finished export counts as kept. Old-window tutorials retired while the editor is on; old-window walks pinned off. Verified: new walk a-recording-opens-in-the-editor-at-defaults-walk with no flags (4 real captures, sheet read back, export clears edited), 20 old-window + 25 editor + 3 tutorial walks ok, Scripts/test.sh green. Audit queue/audits/2026-09-23-recording-opens-in-editor.json. Commit 71b217f7."
+    },
+    {
+      "t": "2026-09-23T14:46:27.114Z",
+      "note": "Manager pass 2026-09-23 07:44: audit rough lines checked. Save dimmed belongs to the Command S card on trim-becomes-a-tool; the retired Video tutorial track to the-video-guides-teach-the-editor-that-exists; the old window to trim-becomes-a-tool. The '(Next)' in the close question's window name is the same as the existing Save question and nobody has reported it: left rough, no task."
     }
   ],
   "started": "2026-09-23T13:15:05.497Z",

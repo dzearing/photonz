@@ -122,7 +122,7 @@
       ],
       "success": [
         "A Premiere or Final Cut editor can cut a 5 minute screen recording to 90 seconds, add a second clip and a music bed, a title that flies in, captions, a transition, and export MP4, without being taught, in less time than in Premiere",
-        "The timeline, transport, clips, tracks, transition picker and properties match the video mocks (video.html, video-shell.html, comp-video.html) side by side",
+        "The timeline, transport, clips, tracks, transition picker and properties match the video mocks (video.html and its video-*.html walkthroughs, comp-video.html) side by side",
         "Playback of a full-screen Retina recording never blinks or stutters",
         "Everything is reachable in Next with default settings"
       ]

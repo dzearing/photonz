@@ -9,10 +9,10 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.081Z",
-  "updated": "2026-09-23T12:10:30.822Z",
+  "updated": "2026-09-23T14:43:36.748Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): Commit 72a2a75c (2026-09-19, 'Video, drawn against the app that exists') and the later fourteen-pages task rewrote the user's video mocks to fit the code the loop already had: tracks removed, the Layers group argued away, and UX-PATTERNS D18 invented to replace tracks with layer rows. The user rejected the result on 2026-09-23 and wants real tracks. Restore the user's intent before anything else is built against these pages. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?\n\nFiled from the 2026-09-23 video audit in the intake window.",
+  "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): Commit 72a2a75c (2026-09-19, 'Video, drawn against the app that exists') and the later fourteen-pages task rewrote the user's video mocks to fit the code the loop already had: tracks removed, the Layers group argued away, and UX-PATTERNS D18 invented to replace tracks with layer rows. The user rejected the result on 2026-09-23 and wants real tracks. Restore the user's intent before anything else is built against these pages. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?\n\nFiled from the 2026-09-23 video audit in the intake window.\n\nWHAT THE TWO PASSES CHANGED, AND WHAT HAPPENED TO EACH (2026-09-23)\n72a2a75c (2026-09-19, \"Video, drawn against the app that exists\"):\n- video.html: track rows Title/V1/V2/CAP/Audio renamed to layer names (Lower-third, Story, b-roll · PiP, Captions, music); walkthrough steps 1/3/4 lost their V1 and Audio tracks (\"no rows yet, because a row is a layer\"); the \"Resolved: what the dock is for\" caption (no Layers group where there is a timeline) rewritten as \"Corrected: Layers does not leave\"; local .tlbar CSS moved to the shared file; label column 58 -> 92. REVERTED.\n- video-audio, video-captions, video-compositing, video-cut-wt, video-entry-wt, video-freeze-wt, video-move-wt, video-speed, video-title-wt, video-transition-wt, video-transitions, video-zoom-wt: track labels (V1, V2, V3, V4, Gfx, Audio, Time) renamed to layer names, empty Audio tracks removed, the label column widened, video-move-wt/video-zoom-wt keyframe lanes (.track.kft) turned into .track.sub. REVERTED.\n- comp-video.html: new section 07 \"The row, and what it is called\" (a row is a layer, no numbered tracks). REVERTED. Section 08 \"Trimming a clip\" (added 2026-09-20 by 66ac017f, answering the user's trim card) KEPT, renumbered 07, its track labelled V1.\n- video-shell.html: whole page created (the surface drawn with layer rows, block 03 \"the correction\" showing the user's Gfx/V2/V1/Audio tracks as the wrong answer, \"almost no new chrome\"). DELETED, with its index entry; the trim answer it drew lives on in comp-video 07, UX-PATTERNS D20 and video-surface.md section 10.\n- time-compare.html: link to video-shell pointed at video.html instead (its note that the separate video editor went away is a user decision and stays).\n- shared/components/inspector.css: .track .tl widened 58 -> 92 and lowercase, .track.sub added. REVERTED to 58px uppercase (kept as --tl-label so ruler and playhead still derive from it); .track.sub removed; the shared .tlbar and the full-width waveform fix kept (no page loses anything).\n- UX-PATTERNS D18 \"a timeline row is a LAYER\". REWRITTEN (below).\n7cb506b1 (2026-09-22, the fourteen-pages task \"The video pages and the video design now say one thing\"):\n- all fourteen video pages: a Layers group added as the first dock group (and a Layers rail tab), built from the same list as the strip. REVERTED (the user drew these docks without Layers).\n- video-transition-wt: V1 track renamed Story. REVERTED.\n- video-title-wt: title and component instance split into two layer rows named after themselves. REVERTED to Gfx and Title tracks.\n- video-speed: Source/Retimed before-and-after rows pulled off the timeline into a diagram. REVERTED.\n- video-captions: recording row added, Captions made a layer, Words a property lane. REVERTED.\n- video-cut-wt: the empty voice-over/Audio track removed. REVERTED.\n- video-compositing: FG/BG names unified and V2 taken out of the collapsed summary. REVERTED.\n- every page: in/out/duration field grids and explanatory panel paragraphs removed. REVERTED with the rest (whole-page restore). See the log for why.\n- dock.js/dock.css: a required pane is listed without a switch. KEPT (shared, harmless, true of the app); comments no longer cite D18.\n- UX-PATTERNS D18 \"fourteen pages conform\" addendum and video-surface.md section 7 \"done\" rows. REMOVED or REWRITTEN.\nLater, unrelated: 5a5a8db2's freeze-wt caption (the open question answered and built) re-applied on top of the restore.",
   "acceptance": [
     "Every change 72a2a75c and the fourteen-pages task made to docs/design/mocks/pages/video*.html, video-shell.html and comp-video.html is listed, and each one that removed or weakened something the user drew (tracks, track headers, grouping, audio lanes, the Layers group, the transport row) is reverted",
     "UX-PATTERNS D18 is rewritten: a document with time has real tracks (video, audio, captions, titles), named, renamable, groupable, each holding many clips, and a layer can move between them",
@@ -35,6 +35,37 @@
     {
       "t": "2026-09-23T12:10:30.821Z",
       "note": "seq 0.2 -> 30"
+    },
+    {
+      "t": "2026-09-23T14:36:05.665Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T14:43:10.952Z",
+      "note": "Restored the 14 video*.html pages and comp-video.html to their state before 72a2a75c (git checkout 72a2a75c^), re-applied the two later edits that were not part of the rewrite (the comp-video trim section, the freeze-wt answered caption), deleted video-shell.html, put the shared label column back to 58px uppercase, rewrote D18 around tracks, marked the track-less parts of video-surface.md withdrawn, and pointed video.md at the mocks. Full list of changes in notes."
+    },
+    {
+      "t": "2026-09-23T14:43:11.008Z",
+      "note": "Adversarial check: a Premiere editor opening video.html now sees what they expect (V1/V2 stacked video, Title, Caption and Audio tracks, a transport with a scrubber, a red playhead). Pre-build questions a runner will hit, already filed: tracks you can add/rename/group (tracks-you-can-add-...), the mock's timeline dock (the-timeline-is-the-one-in-the-mock), the shared pieces (the-design-system-has-the-pieces-...). Nothing new to file."
+    },
+    {
+      "t": "2026-09-23T14:43:11.063Z",
+      "note": "Left rough, no task (not new, and the user owns the call): the restored pages carry what 7cb506b1 had taken out. Some panels type a clip's in/out/duration into boxes (video-entry-wt), and some panel sections open with a sentence explaining themselves. The runner rules say panel text is a label, and video-surface.md section 2 says time is never a number in the panel. Whole-page restore was chosen because the task asks for the user's pages back, not a merge. A runner building a panel from these pages should keep the fields' values but not ship the explanatory sentences. Also: 3 track labels spill past the 58px column (Voiceover in video-audio, Retimed in video-speed, Graphic in modes). They spilled the same way before 2026-09-19."
+    },
+    {
+      "t": "2026-09-23T14:43:36.224Z",
+      "note": "runner failed (exit 0, attempt 1): The only busy process is my own test run. I'll pick up again when it finishes."
+    },
+    {
+      "t": "2026-09-23T14:43:36.747Z",
+      "note": "ran out of turn with 25 file(s) still changed: docs/design/mocks/index.html, docs/design/mocks/pages/comp-video.html, docs/design/mocks/pages/time-compare.html, docs/design/mocks/pages/video-audio.html, docs/design/mocks/pages/video-captions.html, docs/design/mocks/pages/video-compositing.html, docs/design/mocks/pages/video-cut-wt.html, docs/design/mocks/pages/video-entry-wt.html, docs/design/mocks/pages/video-freeze-wt.html, docs/design/mocks/pages/video-motion.html, docs/design/mocks/pages/video-move-wt.html, docs/design/mocks/pages/video-shell.html, docs/design/mocks/pages/video-speed.html, docs/design/mocks/pages/video-title-wt.html, docs/design/mocks/pages/video-transition-wt.html, docs/design/mocks/pages/video-transitions.html, docs/design/mocks/pages/video-zoom-wt.html, docs/design/mocks/pages/video.html, docs/design/mocks/shared/UX-PATTERNS.md, docs/design/mocks/shared/components/dock.css, docs/design/mocks/shared/components/dock.js, docs/design/mocks/shared/components/inspector.css, docs/design/video-surface.md, docs/design/video.md, docs/progress/log.md. Put aside so the next task started clean; restore with `git stash apply 73e6f69664d17c7b7b3624a5e5c6fc0d80319f7a` before carrying on."
     }
-  ]
+  ],
+  "started": "2026-09-23T14:36:05.664Z",
+  "failures": 1,
+  "lastError": {
+    "at": "2026-09-23T14:43:36.223Z",
+    "exit": 0,
+    "message": "The only busy process is my own test run. I'll pick up again when it finishes."
+  }
 }

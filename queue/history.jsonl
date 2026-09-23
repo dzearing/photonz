@@ -6653,3 +6653,31 @@
 {"t":"2026-09-23T14:02:27.976Z","ev":"task_walks","id":"a-recording-opens-in-the-video-editor-for-real-i","walks":["a-recording-opens-in-the-editor-at-defaults-walk"]}
 {"t":"2026-09-23T14:19:03.256Z","ev":"task_note","id":"the-export-size-test-fails-about-one-run-in-thre"}
 {"t":"2026-09-23T14:19:28.360Z","ev":"task_done","id":"a-recording-opens-in-the-video-editor-for-real-i","from":"in_progress","note":"A recording opens in the editor with timeline at Next defaults (flag on by default in Next). Flag dependencies recorded in FeatureCatalog with a test that fails when a default-on flag needs a default-off one; ten timeline flags need the editor. Closing an edited recording asks, says the edits will not be kept and offers Export (SaveAffordance.changesOnlyExportKeeps); a finished export counts as kept. Old-window tutorials retired while the editor is on; old-window walks pinned off. Verified: new walk a-recording-opens-in-the-editor-at-defaults-walk with no flags (4 real captures, sheet read back, export clears edited), 20 old-window + 25 editor + 3 tutorial walks ok, Scripts/test.sh green. Audit queue/audits/2026-09-23-recording-opens-in-editor.json. Commit 71b217f7."}
+{"t":"2026-09-23T14:36:05.544Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":842,"of":574,"rotating":true}
+{"t":"2026-09-23T14:36:05.667Z","ev":"task_started","id":"the-video-mocks-are-the-user-s-again-and-d18-is","title":"The video mocks are the user's again, and D18 is gone","priority":"p1-high"}
+{"t":"2026-09-23T14:42:39.219Z","ev":"task_note","id":"tracks-you-can-add-rename-group-hide-mute-lock-a"}
+{"t":"2026-09-23T14:42:39.336Z","ev":"task_note","id":"the-timeline-is-the-one-in-the-mock"}
+{"t":"2026-09-23T14:42:39.465Z","ev":"task_note","id":"the-design-system-has-the-pieces-the-video-mocks"}
+{"t":"2026-09-23T14:42:39.601Z","ev":"task_note","id":"a-clip-s-sound-is-on-the-timeline-from-the-momen"}
+{"t":"2026-09-23T14:42:39.718Z","ev":"task_note","id":"an-editing-session-walk-runs-at-next-defaults-an"}
+{"t":"2026-09-23T14:42:39.842Z","ev":"task_note","id":"bring-in-a-second-clip-and-cut-between-clips"}
+{"t":"2026-09-23T14:42:39.963Z","ev":"task_note","id":"captions-write-themselves-from-the-speech"}
+{"t":"2026-09-23T14:42:40.079Z","ev":"task_note","id":"click-a-cut-and-pick-a-transition-from-tiles"}
+{"t":"2026-09-23T14:42:40.183Z","ev":"task_note","id":"move-a-layer-from-a-to-b-grow-it-shrink-it-fade"}
+{"t":"2026-09-23T14:42:40.299Z","ev":"task_note","id":"premiere-s-keys-work-on-the-timeline"}
+{"t":"2026-09-23T14:42:40.425Z","ev":"task_note","id":"right-click-does-what-you-would-expect-everywher"}
+{"t":"2026-09-23T14:42:40.596Z","ev":"task_note","id":"the-video-properties-look-like-the-rest-of-the-d"}
+{"t":"2026-09-23T14:42:40.715Z","ev":"task_note","id":"every-panel-follows-the-design-system"}
+{"t":"2026-09-23T14:42:40.837Z","ev":"task_note","id":"panel-copy-and-flag-descriptions-have-a-length-b"}
+{"t":"2026-09-23T14:42:40.953Z","ev":"task_note","id":"trim-becomes-a-tool-and-the-recording-window-ret"}
+{"t":"2026-09-23T14:42:41.068Z","ev":"task_note","id":"every-objective-says-what-done-looks-like"}
+{"t":"2026-09-23T14:43:10.954Z","ev":"task_note","id":"the-video-mocks-are-the-user-s-again-and-d18-is"}
+{"t":"2026-09-23T14:43:11.010Z","ev":"task_note","id":"the-video-mocks-are-the-user-s-again-and-d18-is"}
+{"t":"2026-09-23T14:43:11.065Z","ev":"task_note","id":"the-video-mocks-are-the-user-s-again-and-d18-is"}
+{"t":"2026-09-23T14:43:36.229Z","ev":"runner_failed","id":"the-video-mocks-are-the-user-s-again-and-d18-is","kind":"task","exit":0,"consecutive":1,"outcome":"failed","environment":false,"signIn":false,"reason":null,"error":"The only busy process is my own test run. I'll pick up again when it finishes."}
+{"t":"2026-09-23T14:43:36.719Z","ev":"leftovers","id":"the-video-mocks-are-the-user-s-again-and-d18-is","task":"the-video-mocks-are-the-user-s-again-and-d18-is","state":"stashed","count":25,"stash":"73e6f69664d17c7b7b3624a5e5c6fc0d80319f7a"}
+{"t":"2026-09-23T14:46:20.775Z","ev":"task_created","id":"a-runner-never-stops-to-wait-for-its-own-test-ru","priority":"p2-normal","title":"A runner never stops to wait for its own test run"}
+{"t":"2026-09-23T14:46:27.013Z","ev":"task_resequenced","id":"a-runner-never-stops-to-wait-for-its-own-test-ru","from":3160,"to":25}
+{"t":"2026-09-23T14:46:27.064Z","ev":"task_note","id":"a-task-is-not-done-while-its-feature-needs-a-swi"}
+{"t":"2026-09-23T14:46:27.116Z","ev":"task_note","id":"a-recording-opens-in-the-video-editor-for-real-i"}
+{"t":"2026-09-23T14:46:58.561Z","ev":"manager","filed":1,"readyBefore":23,"readyAfter":24,"report":"queue/manager/2026-09-23-0744.md"}

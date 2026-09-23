@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:47.139Z",
-  "updated": "2026-09-23T12:10:31.590Z",
+  "updated": "2026-09-23T14:42:41.067Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): The video epic and all five children had empty success criteria for five days while the loop built against them (fixed for video on 2026-09-23 in the intake window). Other now epics may be the same. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?\n\nFiled from the 2026-09-23 video audit in the intake window.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-09-23T12:10:31.589Z",
       "note": "seq 0.95 -> 180"
+    },
+    {
+      "t": "2026-09-23T14:42:41.066Z",
+      "note": "video-shell.html was deleted on 2026-09-23 (task the-video-mocks-are-the-user-s-again-and-d18-is): it was the loop's own study arguing against tracks. The target is now pages/video.html, the video-*.html walkthroughs and comp-video.html, restored as the user drew them, plus UX-PATTERNS D18 (rewritten: a document with time has tracks). Where this task mentions video-shell, read video.html."
     }
   ]
 }

@@ -1,0 +1,26 @@
+{
+  "feature": "The video mocks are yours again",
+  "epic": "video-editing",
+  "summary": "The fourteen video pages and the video component page are back exactly as you drew them, with real tracks (V1 to V4, Title, Gfx, Caption, Audio) and no Layers list in the video dock. The design rule that argued tracks away (D18) now says a document with time has tracks.",
+  "setup": "The design dashboard at http://127.0.0.1:8791, Project section, video pages. No app code changed, so there is nothing to run in Photonz.",
+  "try": [
+    { "do": "Open the Video editing page and scroll to the editor window.", "shot": "2026-09-23-video-mocks-restored-2.png" },
+    { "do": "Check the timeline's track headers read Title, V1, V2, Caption, Audio, and the dock on the right has no Layers group." },
+    { "do": "Open the New video walkthrough at the top and step 1: the blank project shows an empty V1 and Audio track.", "shot": "2026-09-23-video-mocks-restored-1.png" },
+    { "do": "Open Video compositing and check it stacks V4, V3, V2, V1." },
+    { "do": "Open Video component library and read section 07, Trimming a clip, drawn on a V1 track." },
+    { "do": "Read UX-PATTERNS D18 in docs/design/mocks/shared/UX-PATTERNS.md." }
+  ],
+  "evaluate": [
+    "Is every video page back to what you drew, with nothing of yours missing?",
+    "Does the new D18 say what you mean by tracks: four kinds, named, renamable, groupable, many clips each, and clips that move between tracks?",
+    "Is it right that a video document shows no Layers list in the dock because the timeline is the layer list, as your video page says?",
+    "Should the Trim answer stay as section 07 of the component page, now that the page it was drawn on is gone?"
+  ],
+  "rough": [
+    "The page 'Video, in the window you already have' is deleted. It was the loop's own study, and it argued against tracks. The one part of it you had answered (Trim is a tool, like Crop) lives on in the component page and in D20.",
+    "Restoring whole pages also brought back what the September 22 pass had removed: in and out typed into boxes on some panels, and panel sections that open with a sentence explaining themselves. The runner rules say panel text is a label, so a runner building from these pages should keep the values and drop the sentences.",
+    "Three track names spill past the 58 point header column (Voiceover, Retimed, and Graphic on the modes page). They spilled the same way before the rewrite.",
+    "The pictures are browser screenshots of the mock pages. That is what these pages are, since no app was run."
+  ]
+}

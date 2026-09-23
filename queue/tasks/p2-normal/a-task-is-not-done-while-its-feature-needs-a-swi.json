@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-23T12:12:00.509Z",
-  "updated": "2026-09-23T12:12:09.204Z",
+  "updated": "2026-09-23T14:46:27.063Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence, checked 2026-09-23 by the digest pass: Sources/PhotonzCore/FeatureCatalog.swift, the recordingIsADocumentFlag entry (next-a-recording-is-a-document) has enabledByDefaultIn: [] while the video features under it (next-sound-on-the-timeline, next-open-out-the-timeline, next-hear-the-scrub, next-export-the-video and more) are enabledByDefaultIn: [.next]. The 2026-09-22 digest told the user video cutting was genuinely tryable end to end. runner-prompt.md now says it in prose (Default config, section around line 308); prose was not enough last time. The fix for the flag itself is a-recording-opens-in-the-video-editor-for-real-i; this task is the gate so the next parent switch cannot hide a feature the same way. Walk setups carry flags in their JSON (see a-walk-can-switch-a-feature-off-before-it-runs, done).",
@@ -27,6 +27,10 @@
     {
       "t": "2026-09-23T12:12:09.203Z",
       "note": "seq 25 -> 30"
+    },
+    {
+      "t": "2026-09-23T14:46:27.062Z",
+      "note": "Manager pass 2026-09-23 07:44: half of this landed with 71b217f7 (A recording opens in the video editor at Next defaults). FeatureCatalog now records what a flag needs, and Tests/PhotonzCoreTests/FeatureDependencyTests.swift fails when a flag on by default in Next needs one that is off. Build the done-check on that list rather than a second one; what is still missing is the queue side: refusing done when the task's walks force a flag on, and the audit recording which switches its setup changed."
     }
   ]
 }

@@ -1,0 +1,33 @@
+{
+  "id": "a-runner-never-stops-to-wait-for-its-own-test-ru",
+  "title": "A runner never stops to wait for its own test run",
+  "goal": "A runner sometimes finishes the work, starts the test run in the background, says it will carry on when the tests finish, and ends its turn. In this loop ending the turn ends the task: the work is put aside, the task counts as failed and goes back to the queue, and the next runner has to pick the pieces up. On 2026-09-23 this happened to the task the whole video rebuild waits on, with its audit already written. Make it stop happening, and make it cost nothing when it does.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 25,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T14:46:20.771Z",
+  "updated": "2026-09-23T14:46:27.012Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence, from queue/history.jsonl runner_failed events with exit 0, not reproduced by running (it is a record of four real runs):\n- 2026-09-08T15:40 find-out-whether-a-tool-letter-fires-while-an-in: \"Waiting on the walk suite to finish before the final rebuild, screenshot, audit, and commit.\"\n- 2026-09-08T17:04 thirteen-scripted-walks-still-look-for-an-outlin: \"The suite is at walk 58 of 307. I'll continue when the background poller reports.\"\n- 2026-09-16T12:18 separate-finds-the-boxes-in-a-dark-window-too-no: \"Waiting on the full suite. While it runs, here's where the task stands.\"\n- 2026-09-23T14:43 the-video-mocks-are-the-user-s-again-and-d18-is: \"The only busy process is my own test run. I'll pick up again when it finishes.\" 25 files went to stash 73e6f696, audit already written.\nThe two September 8 ones were the whole walk sweep, since fixed by the sweep rule in runner-prompt.md (around line 83). The live form is Scripts/test.sh started in the background. The runner rule about background work is about the sweep only; nothing says ending the turn ends the task.\nWhere: queue/bin/runner-prompt.md (test rule), queue/bin/go-loop.sh run_runner and the runner-exit handling in queue/bin/queue.mjs (runner-exit prints OUTCOME). A resume could use the CLI's resume of the runner's own session id if go-loop.sh keeps it; check before building.\nFiled by the manager pass 2026-09-23 07:44.",
+  "acceptance": [
+    "The time a full Scripts/test.sh run takes today is measured and written in this task's log, so the rule below is set against a real number",
+    "The runner rules say plainly that ending a turn ends the task, and say how to run the test run so it finishes inside the turn (in the foreground with a long enough timeout, or the named way that fits the measured time)",
+    "When a runner exits 0 with its task still in progress and its last words say it is waiting for something to finish, the loop gives that same session one more turn to finish instead of recording a failure, at most once per task, and the log says it did",
+    "A drill or test feeds the loop's exit handling a waiting last line like the four recorded ones and sees the resume rather than a failure",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T14:46:20.773Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-23T14:46:27.011Z",
+      "note": "seq 3160 -> 25"
+    }
+  ]
+}
