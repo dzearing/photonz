@@ -19154,3 +19154,37 @@ Speed six sections down, a title's Fade below the fold).
 
 Next: the standing video set. Audit for this one:
 `queue/audits/2026-09-22-guarantee-the-fold.json`.
+
+## 2026-09-23 — The sweep schedule worked, and the one sweep that beat it
+
+Measured the day the sweep floor was meant to buy back. `loop-day.mjs --hours 24`
+over 2026-09-22T02:27Z to 2026-09-23T02:27Z: **tasks 861m (59.8%)** across 24
+tasks, sweeps 320m (22.2%) across 3 full-set runs, rotating checks 229m (15.9%)
+across 21, between 30m (2.1%). The day before the floor landed it was 41.4%
+building and 57.9% re-running walks, so building is now the majority of the day
+and climbing.
+
+Three full-set runs against a ceiling of two. The extra one was the 08:30Z sweep
+the previous pass could not explain, and it was never the schedule's arithmetic:
+the runner of the blind-sweep task repaired a poisoned `latest.json` by replaying
+a nineteen-hour-old whole-set run through `recordSweep()` by hand. Right about
+the walks, and it moved `began` back nineteen hours. The schedule counts its
+twelve hour floor from that same field, so seven seconds after that task ended
+the loop started a full sweep, twenty two minutes after a rotating check had
+correctly printed "6.4h since the last whole-set run". That run went blind, which
+bought a third sweep: about 3.3 hours of the day.
+
+Fixed in `6274ee44`. `latest.json` only ever moves forward, whoever is writing
+and for whatever reason — the newer-than check was an opt-in parameter that only
+the recovery path passed, and the hand-repair path is exactly the one that did
+not. The loop's log now prints the reason beside every full sweep it starts
+("walk sweep due (20.5h since the last whole-set run)"), because saying only
+"due" is why this took two passes to find. And the daily digest now ends its
+Summary with the loop-day numbers, so the share self-measures instead of needing
+a task to check it.
+
+**Next:** the digest is what verifies the sweep count lands at 2 from tomorrow on.
+**Open question:** a blind run still costs the day twice, 79 minutes thrown away
+plus a full re-run soon after. That is the deliberate trade while blindness is
+rare; if it stops being rare the answer is to resume the re-run from where the
+probe died rather than restart the set.
