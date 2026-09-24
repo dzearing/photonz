@@ -1,0 +1,32 @@
+{
+  "id": "a-right-click-on-a-timeline-clip-shows-the-whole",
+  "title": "A right-click on a timeline clip shows the whole menu, not three rows and a scroll arrow",
+  "goal": "Right-clicking a clip on the timeline opens its menu at the foot of the screen, where only the first three rows show and the rest hide behind a scroll arrow. A Premiere editor expects the whole menu to open upward and be readable at a glance.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 3320,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T21:34:56.817Z",
+  "updated": "2026-09-24T21:35:01.355Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-09-24 in Scripts/playtest.sh Scripts/playtest/ripple-trim-from-the-clip-menu-walk.json --no-build (screen unlocked, probe Screen Recording granted): /tmp/photonz-playtest/ripple-trim-from-the-clip-menu-walk/0-clip-menu-with-ripple-trim-sc.png shows Split at Playhead, Ripple Trim Start to Playhead, Ripple Trim End to Playhead and then a scroll chevron at the bottom of the screen. The Extract/Lift commit (c21c0fc1) already worked around the same thing on the ruler by moving rows to the top. Copy in queue/audits/2026-09-24-ripple-trim-menu-sc.png.",
+  "acceptance": [
+    "Right-clicking a clip on V1 with the editor window filling the screen shows every row of the clip menu without scrolling",
+    "The same holds for the ruler menu",
+    "A walk captures the open clip menu and every row is visible in the picture"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T21:34:56.819Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-24T21:35:01.354Z",
+      "note": "walks ripple-trim-from-the-clip-menu-walk -> none"
+    }
+  ],
+  "walks": []
+}

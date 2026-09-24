@@ -84,6 +84,18 @@ struct TimelineKeysTests {
         #expect(command(.letter("m"), focused: false) == nil)   // the marquee
     }
 
+    @Test("Q and W ripple trim to the playhead on a focused timeline")
+    func qAndWTrim() {
+        #expect(command(.letter("q")) == .rippleTrimToPlayhead(.start))
+        #expect(command(.letter("w")) == .rippleTrimToPlayhead(.end))
+        // On the canvas W is still the magic wand, and ⌘Q still quits.
+        #expect(command(.letter("w"), focused: false) == nil)
+        #expect(command(.letter("q"), focused: false) == nil)
+        #expect(command(.letter("q"), .command) == nil)
+        // A held Q is one trim, not thirty.
+        #expect(command(.letter("q"), repeating: true) == nil)
+    }
+
     @Test("Command-K splits at the playhead wherever the keyboard is")
     func commandKSplits() {
         #expect(command(.letter("k"), .command) == .splitAtPlayhead)

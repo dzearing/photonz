@@ -91,6 +91,10 @@ public enum TimelineKeyCommand: Hashable, Sendable {
     /// Premiere's Extract (') and Lift (;): what the In and the Out enclose
     /// comes out of every track, closing the gap or leaving it.
     case extractMarked, liftMarked
+    /// Premiere's Q and W: the piece under the playhead loses everything from
+    /// its start up to the playhead, or from the playhead to its end, and the
+    /// gap closes on every track (`RippleTrim.swift`).
+    case rippleTrimToPlayhead(RippleTrimEnd)
     case selectTool, bladeTool, trackSelectForwardTool
     case zoomIn, zoomOut, zoomToFit
 }
@@ -151,6 +155,8 @@ public enum TimelineKeys {
         case "m": return .addMarker
         case "'": return .extractMarked
         case ";": return .liftMarked
+        case "q": return .rippleTrimToPlayhead(.start)
+        case "w": return .rippleTrimToPlayhead(.end)
         case "v": return .selectTool
         case "b": return .bladeTool
         case "a": return .trackSelectForwardTool

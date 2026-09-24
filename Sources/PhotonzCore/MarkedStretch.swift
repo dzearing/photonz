@@ -106,18 +106,22 @@ extension PhotonzDocument {
         guard let range = markedRangeMS,
               extractStretch(fromMS: range.lowerBound, toMS: range.upperBound) else { return false }
         let length = range.upperBound - range.lowerBound
-        var seen: Set<Int> = []
-        markers = markers.compactMap { marker in
-            var moved = marker
-            if marker.atMS >= range.upperBound {
-                moved.atMS -= length
-            } else if marker.atMS > range.lowerBound {
-                moved.atMS = range.lowerBound
-            }
-            return seen.insert(moved.atMS).inserted ? moved : nil
+        moveMarkers { at in
+            at >= range.upperBound ? at - length : min(at, range.lowerBound)
         }
         clearMarkInOut()
         return true
+    }
+
+    /// Move every marker to where `move` says, keeping one where two land on
+    /// the same frame: two markers on one frame are one marker drawn twice.
+    mutating func moveMarkers(_ move: (Int) -> Int) {
+        var seen: Set<Int> = []
+        markers = markers.compactMap { marker in
+            var moved = marker
+            moved.atMS = move(marker.atMS)
+            return seen.insert(moved.atMS).inserted ? moved : nil
+        }
     }
 
     // MARK: Lift

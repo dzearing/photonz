@@ -5,14 +5,14 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 60,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:16:31.682Z",
-  "updated": "2026-09-24T12:40:38.152Z",
+  "updated": "2026-09-24T21:35:01.409Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24); gap report docs/design/video-vs-premiere.md. Reproduced: q and w with the timeline focused are taken by nobody (five-minute walk log steps 23, 24). TimelineKeys.swift has no such command. Q is also Photoshop's quick mask, which the canvas does not use; confirm the canvas has no Q/W tool first.",
+  "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24); gap report docs/design/video-vs-premiere.md. Reproduced: q and w with the timeline focused are taken by nobody (five-minute walk log steps 23, 24). TimelineKeys.swift has no such command. Q is also Photoshop's quick mask, which the canvas does not use; confirm the canvas has no Q/W tool first. | Built 2026-09-24: PhotonzCore/RippleTrim.swift (rippleTrimClip, rippleTrimStretch, rippleTrim; reuses extractStretch so every unlocked track loses the stretch, markers and In/Out squeeze with the picture; marker move factored into moveMarkers in MarkedStretch.swift). TimelineKeys: .rippleTrimToPlayhead(.start/.end) on q/w when the timeline is focused, not on repeat. App: EditorState+TimelineMenus (rippleTrimToPlayhead, clip menu rows under Split at Playhead, enabled only on the piece holding the playhead), Video menu rows with Q/W printed only when the timeline has the keyboard. Tests: RippleTrimTests, TimelineKeysTests.qAndWTrim. Walks: ripple-trim-to-playhead-walk (lock-safe), ripple-trim-from-the-clip-menu-walk (right-click, needs an unlocked screen).",
   "acceptance": [
     "Q removes everything from the start of the clip under the playhead up to the playhead and closes the gap, on every linked track",
     "W removes everything from the playhead to the end of that clip and closes the gap",
@@ -29,6 +29,35 @@
     {
       "t": "2026-09-24T12:40:38.151Z",
       "note": "seq 193 -> 60"
+    },
+    {
+      "t": "2026-09-24T21:18:21.509Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T21:30:00.000Z",
+      "note": "adversarial pre-check: canvas has no Q tool; W is the Magic Wand on the canvas, so Q/W mean trim only while the timeline has the keyboard (same rule as I/O). Premiere's Q/W go to the previous/next edit on targeted tracks; here that is the piece under the playhead, which is what a screen recording has. Chose Extract semantics (every unlocked track loses the stretch) over ripple-delete semantics (music under it left alone) so a detached sound stays in sync, which is Premiere with sync lock on. A trim that would leave a sliver under 10ms is refused rather than silently taking the whole piece."
+    },
+    {
+      "t": "2026-09-24T21:55:00.000Z",
+      "note": "verified: RippleTrimTests + key tests green; Scripts/test.sh green on the second run (first run hit the known export-size flake, logged on its task). Both walks ok on the probe with real captures, screen unlocked, no flags. Audit queue/audits/2026-09-24-ripple-trim-to-playhead.json."
+    },
+    {
+      "t": "2026-09-24T21:56:00.000Z",
+      "note": "left rough, not filed: the clip right-click menu opens at the foot of the screen and scrolls after three rows (two more rows make it scroll sooner); the ruler-menu commit already noted this, and the user sees it in the audit capture. Menu rows act on the playhead's piece, so they go dim on other pieces: by design."
+    },
+    {
+      "t": "2026-09-24T21:34:45.374Z",
+      "note": "owns these walks: ripple-trim-to-playhead-walk, ripple-trim-from-the-clip-menu-walk"
+    },
+    {
+      "t": "2026-09-24T21:35:01.408Z",
+      "note": "filed a-right-click-on-a-timeline-clip-shows-the-whole (p2) for the clip menu scrolling after three rows at the foot of the screen"
     }
+  ],
+  "started": "2026-09-24T21:18:21.508Z",
+  "walks": [
+    "ripple-trim-to-playhead-walk",
+    "ripple-trim-from-the-clip-menu-walk"
   ]
 }

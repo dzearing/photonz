@@ -39,6 +39,9 @@ extension EditorState {
         /// Premiere's Extract and Lift, on the same two keys.
         static let extract = MenuShortcut(key: "'", modifiers: [])
         static let lift = MenuShortcut(key: ";", modifiers: [])
+        /// Premiere's Ripple Trim Previous and Next Edit to Playhead.
+        static let rippleTrimStart = MenuShortcut(key: "q", modifiers: [])
+        static let rippleTrimEnd = MenuShortcut(key: "w", modifiers: [])
     }
 
     // MARK: A clip
@@ -70,6 +73,20 @@ extension EditorState {
             self.selectLayer(layerID)
             self.splitClipAtPlayhead()
         })
+        // Q and W reach the piece the playhead is standing in, so the rows
+        // are offered live only on that piece.
+        let playheadPiece = pieces.pieceIndex(atMS: documentTimeMS - time.inMS)
+        if layer.movie != nil || layer.sound != nil {
+            for end in [RippleTrimEnd.start, .end] {
+                let enabled = underPlayhead && playheadPiece == index
+                    && canRippleTrimToPlayhead(end, clip: layerID)
+                rows.append(.command(end == .start ? "Ripple Trim Start to Playhead" : "Ripple Trim End to Playhead",
+                                     end == .start ? TimelineMenuKeys.rippleTrimStart : TimelineMenuKeys.rippleTrimEnd,
+                                     enabled: enabled) {
+                    self.rippleTrimToPlayhead(end, clip: layerID)
+                })
+            }
+        }
         if layer.movie != nil {
             rows.append(freezeFrameMenuRow(layerID: layerID, piece: index, enabled: underPlayhead))
             rows.append(contentsOf: punchInMenuRows(layerID: layerID, around: nil))
@@ -472,6 +489,39 @@ extension EditorState {
         perform { _ = edit(&$0) }
         selectedClipPieceIndex = nil
         documentTimeMS = min(max(0, range.lowerBound), lastDocumentTimeMS)
+        documentMomentChanged()
+        return true
+    }
+
+    // MARK: Q and W
+
+    /// The clip Q and W would trim: the picked one where the playhead is on
+    /// it, else the topmost clip under the playhead (`RippleTrim.swift`).
+    var rippleTrimClipID: UUID? {
+        document?.rippleTrimClip(pickedLayerID: selectedLayerID, atMS: documentTimeMS)
+    }
+
+    func canRippleTrimToPlayhead(_ end: RippleTrimEnd, clip: UUID? = nil) -> Bool {
+        guard Experiments.shared.cutRecordingEnabled, documentHasTime,
+              let id = clip ?? rippleTrimClipID else { return false }
+        return document?.rippleTrimStretch(clip: id, atMS: documentTimeMS, end) != nil
+    }
+
+    /// Q and W, Premiere's Ripple Trim Previous and Next Edit to Playhead:
+    /// the piece under the playhead loses everything from its start up to the
+    /// playhead, or from the playhead to its end, and the gap closes on every
+    /// unlocked track. One undo step. The playhead lands on the join, which is
+    /// where the next Q or W, or a look at what now plays, starts from.
+    @discardableResult
+    func rippleTrimToPlayhead(_ end: RippleTrimEnd, clip: UUID? = nil) -> Bool {
+        endTrimBeforeCutting()
+        let at = documentTimeMS
+        guard canRippleTrimToPlayhead(end, clip: clip), let id = clip ?? rippleTrimClipID,
+              let stretch = document?.rippleTrimStretch(clip: id, atMS: at, end) else { return false }
+        pauseDocument()
+        perform { _ = $0.rippleTrim(clip: id, atMS: at, end) }
+        selectedClipPieceIndex = nil
+        documentTimeMS = min(max(0, stretch.lowerBound), lastDocumentTimeMS)
         documentMomentChanged()
         return true
     }

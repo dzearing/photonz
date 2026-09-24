@@ -471,6 +471,15 @@ struct EditorCommands: Commands {
                     }
                     .keyboardShortcut("k", modifiers: [.command, .shift])
                     .disabled(!(editor?.canSplitEverythingAtPlayhead ?? false))
+                    // Premiere's Q and W. Plain letters, like I and O: the
+                    // timeline answers them while it has the keyboard, and on
+                    // the canvas W is still the Magic Wand.
+                    Button("Ripple Trim Start to Playhead") { editor?.rippleTrimToPlayhead(.start) }
+                        .keyboardShortcut(timelineKeys ? KeyboardShortcut("q", modifiers: []) : nil)
+                        .disabled(!(editor?.canRippleTrimToPlayhead(.start) ?? false))
+                    Button("Ripple Trim End to Playhead") { editor?.rippleTrimToPlayhead(.end) }
+                        .keyboardShortcut(timelineKeys ? KeyboardShortcut("w", modifiers: []) : nil)
+                        .disabled(!(editor?.canRippleTrimToPlayhead(.end) ?? false))
                 }
                 // A freeze is not a special object: it is a piece whose in and
                 // out are the same frame, so it drops onto the timeline like

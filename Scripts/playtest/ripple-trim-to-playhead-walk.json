@@ -1,0 +1,45 @@
+{
+  "out": "/tmp/photonz-playtest/ripple-trim-to-playhead-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "playheadMS": 2000, "lengthMS": 8000, "keyboard": "timeline" },
+    { "do": "expectClip", "clip": "Tutorial Sample", "startsAt": 0.0, "endsAt": 8.0, "count": 1 },
+    { "do": "describe", "stage": "0-parked", "note": "the eight second sample recording at Next defaults, the playhead parked two seconds into the clip, where the good part starts" },
+    { "do": "snapshot", "name": "0-parked-two-seconds-in" },
+
+    { "do": "key", "key": "q" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTimeline", "lengthMS": 6000, "playheadMS": 0 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "startsAt": 0.0, "endsAt": 6.0, "count": 1 },
+    { "do": "describe", "stage": "1-q", "note": "one press of Q, Premiere's Ripple Trim Previous Edit to Playhead: the first two seconds are gone, the clip still starts at nought and is two seconds shorter, and the playhead sits on the new first frame" },
+    { "do": "snapshot", "name": "1-q-trimmed-the-first-two-seconds" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTimeline", "lengthMS": 8000 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "startsAt": 0.0, "endsAt": 8.0, "count": 1 },
+    { "do": "describe", "stage": "2-undone", "note": "one undo puts the two seconds back: the trim was one step" },
+
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "key", "key": "w" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTimeline", "lengthMS": 5000 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "startsAt": 0.0, "endsAt": 5.0, "count": 1 },
+    { "do": "describe", "stage": "3-w", "note": "the playhead at five seconds and one press of W, Ripple Trim Next Edit to Playhead: everything after the playhead is gone and the recording reads five seconds" },
+    { "do": "snapshot", "name": "3-w-trimmed-the-last-three-seconds" }
+  ]
+}

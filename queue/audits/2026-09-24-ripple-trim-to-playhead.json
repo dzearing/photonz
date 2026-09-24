@@ -1,0 +1,27 @@
+{
+  "feature": "Q and W trim the clip under the playhead up to it",
+  "epic": "video-cutting",
+  "summary": "Park the playhead where the good part starts and press Q, or where it ends and press W: the piece under the playhead loses everything up to (or after) the playhead and the gap closes on every track, in one key instead of a cut, a click and a Delete.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any recording; the timeline has the keyboard as soon as it opens.",
+  "try": [
+    { "do": "Open the sample recording and drag the playhead to two seconds.", "shot": "2026-09-24-ripple-trim-0-parked-sc.png" },
+    { "do": "Press Q.", "shot": "2026-09-24-ripple-trim-1-q-sc.png" },
+    { "do": "Press Command Z, and check the two seconds come back in one step." },
+    { "do": "Put the playhead at five seconds and press W.", "shot": "2026-09-24-ripple-trim-3-w-sc.png" },
+    { "do": "Undo, park the playhead inside the clip, right-click the clip and choose Ripple Trim Start to Playhead.", "shot": "2026-09-24-ripple-trim-menu-sc.png" },
+    { "do": "Split a clip with Command K, park inside the second piece and press Q: only that piece loses its head." },
+    { "do": "Click the canvas and press W: it picks the Magic Wand, not a trim." }
+  ],
+  "evaluate": [
+    "After Q, is it right that the playhead jumps to the new first frame of the piece, the way Premiere does?",
+    "Should Q and W also cut music on another track that runs under the trimmed stretch (they do now, to keep everything in sync), or leave the music alone?",
+    "Are Ripple Trim Start to Playhead and Ripple Trim End to Playhead the right names, or would Premiere's Previous Edit and Next Edit read better to you?",
+    "Is it clear enough that Q and W only mean trim while the timeline has the keyboard?"
+  ],
+  "rough": [
+    "No mock draws Q and W or the clip's right-click menu; the nearest, the video page's overflow menu, only has Split at playhead. The rows follow Premiere's names and sit right under Split at Playhead.",
+    "The clip's right-click menu opens at the foot of the screen and now scrolls sooner: in the capture only its first three rows show before the scroll arrow. The ruler menu already had this problem.",
+    "Q and W act on the piece under the playhead, not on the piece you right-clicked, so the menu rows go dim on any piece the playhead is not in.",
+    "In the walk, the Command Z step runs through the harness's undo action, because a walk's menu bar is frozen. Undo was not pressed on the real key."
+  ]
+}

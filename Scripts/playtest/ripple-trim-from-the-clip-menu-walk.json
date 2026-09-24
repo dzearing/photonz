@@ -1,0 +1,21 @@
+{
+  "out": "/tmp/photonz-playtest/ripple-trim-from-the-clip-menu-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "playheadMS": 2000, "lengthMS": 8000 },
+    { "do": "rightClick", "at": [900, 893], "space": "window", "shot": "0-clip-menu-with-ripple-trim", "choose": "Ripple Trim Start to Playhead" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTimeline", "lengthMS": 6000, "playheadMS": 0 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "startsAt": 0.0, "endsAt": 6.0, "count": 1 },
+    { "do": "describe", "stage": "1-trimmed-from-the-menu", "note": "right-click the clip, Ripple Trim Start to Playhead: the same edit as Q, and the menu prints Q beside it" },
+    { "do": "snapshot", "name": "1-trimmed-from-the-menu" }
+  ]
+}
