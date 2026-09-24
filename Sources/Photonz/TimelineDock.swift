@@ -84,7 +84,7 @@ struct TimelineDock: View {
             .panelHelp("Go to the end (End)")
             .playtestControl("Go to End", detail: "Transport")
         } scrubber: {
-            VideoKit.Scrubber(fraction: documentFraction) { fraction, phase in
+            TransportScrubber { fraction, phase in
                 scrub(toDocumentFraction: fraction, phase: phase)
             }
             .playtestControl("Scrub", detail: "Transport")
@@ -317,18 +317,14 @@ struct TimelineDock: View {
     }
 
     /// `.rlane`: "Time" in the gutter and the seconds over the lanes. A press
-    /// or a drag anywhere on it puts the playhead there.
+    /// or a drag anywhere on it puts the playhead there; a right click offers
+    /// the markers, the In and Out, and a cut through everything
+    /// (`TimelineRulerRow`).
     private func rulerRow(laneWidth: CGFloat) -> some View {
-        let ruler = editorState.motionStripRuler
-        return HStack(spacing: Self.gap) {
+        HStack(spacing: Self.gap) {
             VideoKit.TrackHeader(title: "Time", width: Self.gutter, uppercase: false)
-            VideoKit.TimeRuler(ticks: ruler.secondTicks.map {
-                VideoKit.RulerTick(fraction: ruler.fraction(ofMS: $0.ms), label: $0.label)
-            }, height: Self.rulerHeight)
-            .frame(width: laneWidth)
-            .contentShape(Rectangle())
-            .gesture(rulerScrub(laneWidth: laneWidth))
-            .playtestField("Timeline ruler")
+            TimelineRulerRow(laneWidth: laneWidth, height: Self.rulerHeight,
+                             scrub: rulerScrub(laneWidth: laneWidth))
         }
         .frame(height: Self.rulerHeight)
     }
@@ -467,5 +463,168 @@ private struct TimelineWheel: NSViewRepresentable {
         }
 
         override func hitTest(_ point: NSPoint) -> NSView? { nil }
+    }
+}
+
+
+// MARK: - The ruler and the scrub bar, with their marks and their menu
+
+/// The ruler over the lanes: the seconds, the markers, the In and Out, and
+/// the right-click menu that sets them.
+///
+/// Its own view, so following the pointer along it redraws the ruler and
+/// nothing else.
+private struct TimelineRulerRow<Scrub: Gesture>: View {
+    @Environment(EditorState.self) private var editorState
+    let laneWidth: CGFloat
+    let height: CGFloat
+    let scrub: Scrub
+    /// Where the pointer last was over the ruler, which is where a right click
+    /// acts. The playhead, where nothing has hovered yet.
+    @State private var pointerMS: Int?
+
+    var body: some View {
+        let ruler = editorState.motionStripRuler
+        let x = { (ms: Int) in laneWidth * ruler.fraction(ofMS: Double(ms)) }
+        VideoKit.TimeRuler(ticks: ruler.secondTicks.map {
+            VideoKit.RulerTick(fraction: ruler.fraction(ofMS: $0.ms), label: $0.label)
+        }, height: height)
+        .frame(width: laneWidth)
+        .overlay(alignment: .topLeading) {
+            ZStack(alignment: .topLeading) {
+                if let range = editorState.document?.markedRangeMS {
+                    TimelineInOutSpan(x0: x(range.lowerBound), x1: x(range.upperBound), height: height,
+                                      hasIn: editorState.document?.markInMS != nil,
+                                      hasOut: editorState.document?.markOutMS != nil)
+                }
+                ForEach(editorState.document?.markers ?? []) { marker in
+                    TimelineMarkerFlag()
+                        .offset(x: x(marker.atMS) - TimelineMarkerFlag.width / 2)
+                }
+            }
+            .frame(width: laneWidth, height: height, alignment: .topLeading)
+            .clipped()
+            .allowsHitTesting(false)
+        }
+        .contentShape(Rectangle())
+        .gesture(scrub)
+        .onContinuousHover { phase in
+            if case .active(let point) = phase {
+                let fraction = min(max(0, point.x / max(1, laneWidth)), 1)
+                pointerMS = Int(ruler.ms(atFraction: Double(fraction)).rounded())
+            }
+        }
+        .contextMenu {
+            TimelineRulerMenu(atMS: pointerMS, reachMS: Int(ruler.ms(atFraction: Double(6 / max(1, laneWidth)))
+                                                             - ruler.ms(atFraction: 0)))
+        }
+        .playtestField("Timeline ruler")
+        .panelReadout(TimelineRulerMenu.readout(editorState.document))
+    }
+}
+
+/// The transport's scrub bar with the In and Out drawn on it, the way the mock
+/// draws them, and the same right-click menu the ruler has.
+private struct TransportScrubber: View {
+    @Environment(EditorState.self) private var editorState
+    let onScrub: (Double, VideoKit.ScrubPhase) -> Void
+    @State private var pointerMS: Int?
+    @State private var width: CGFloat = 1
+
+    var body: some View {
+        let length = Double(max(1, editorState.documentLengthMS))
+        let marks = [editorState.document?.markInMS, editorState.document?.markOutMS]
+            .compactMap { $0.map { Double($0) / length } }
+        VideoKit.Scrubber(fraction: Double(editorState.documentTimeMS) / length, marks: marks,
+                          onScrub: onScrub)
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+            .onContinuousHover { phase in
+                if case .active(let point) = phase {
+                    pointerMS = Int((min(max(0, point.x / max(1, width)), 1) * length).rounded())
+                }
+            }
+            .contextMenu {
+                TimelineRulerMenu(atMS: pointerMS, reachMS: Int(length * 6 / Double(max(1, width))))
+            }
+    }
+}
+
+/// What a right click on the ruler or the scrub bar offers
+/// (`EditorState+TimelineMenus`).
+struct TimelineRulerMenu: View {
+    @Environment(EditorState.self) private var editorState
+    /// Where the right click landed, or nil to act at the playhead.
+    let atMS: Int?
+    /// How near a marker the click has to be to be ON it.
+    let reachMS: Int
+
+    var body: some View {
+        let ms = atMS ?? editorState.documentTimeMS
+        let marker = editorState.document?.markers
+            .filter { abs($0.atMS - ms) <= max(1, reachMS) }
+            .min { abs($0.atMS - ms) < abs($1.atMS - ms) }
+        MenuRowsView(rows: editorState.timelineRulerMenuRows(atMS: ms, markerHere: marker?.id))
+    }
+
+    /// What a walk reads off the ruler: where its markers and marks are.
+    static func readout(_ document: PhotonzDocument?) -> String {
+        guard let document else { return "ruler" }
+        var words = "ruler: " + (document.markers.isEmpty ? "no markers"
+            : "markers at " + document.markers.map { "\($0.atMS)ms" }.joined(separator: ", "))
+        if let mark = document.markInMS { words += ", in at \(mark)ms" }
+        if let mark = document.markOutMS { words += ", out at \(mark)ms" }
+        return words
+    }
+}
+
+/// A marker on the ruler: a small tab hanging from its top edge.
+private struct TimelineMarkerFlag: View {
+    static let width: CGFloat = 8
+
+    var body: some View {
+        MarkerTab()
+            .fill(VideoKit.Palette.warn)
+            .frame(width: Self.width, height: 9)
+            .overlay(alignment: .top) {
+                Rectangle().fill(VideoKit.Palette.warn).frame(width: 1, height: 16)
+            }
+    }
+
+    private struct MarkerTab: Shape {
+        func path(in rect: CGRect) -> Path {
+            var path = Path()
+            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY * 0.6))
+            path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY * 0.6))
+            path.closeSubpath()
+            return path
+        }
+    }
+}
+
+/// The stretch between In and Out, washed on the ruler with a bracket at each
+/// mark that is set, in the colour the scrub bar's marks wear.
+private struct TimelineInOutSpan: View {
+    let x0: CGFloat
+    let x1: CGFloat
+    let height: CGFloat
+    let hasIn: Bool
+    let hasOut: Bool
+
+    var body: some View {
+        ZStack(alignment: .leading) {
+            Rectangle().fill(VideoKit.Palette.good.opacity(0.18))
+            if hasIn {
+                Rectangle().fill(VideoKit.Palette.good).frame(width: 2)
+            }
+            if hasOut {
+                Rectangle().fill(VideoKit.Palette.good).frame(width: 2)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+        }
+        .frame(width: max(2, x1 - x0), height: height)
+        .offset(x: x0)
     }
 }

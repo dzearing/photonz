@@ -19,7 +19,7 @@
     { "do": "panel", "stage": "1-the-frame-worth-holding" },
     { "do": "snapshot", "name": "hold-1-the-frame-worth-holding" },
 
-    { "do": "press", "control": "Hold This Frame" },
+    { "do": "press", "control": "Freeze Frame" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "2-held", "note": "THE FIRST TEST: one click and the clip splits at the playhead with a two second still between the halves. It is an ordinary piece of the clip, badged hold on the bar, and the panel says what it is rather than showing a speed it does not have. The cut is two seconds longer, because holding a frame INSERTS time" },
     { "do": "expect", "field": "Held reading", "reads": "A held frame, not a speed." },

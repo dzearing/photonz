@@ -1,0 +1,52 @@
+{
+  "feature": "Right-click menus on the timeline",
+  "epic": "video-cutting",
+  "summary": "Right-click a clip, a join, a track header, the ruler or the scrub bar and the actions for that thing are there, with the key beside each one the app answers to. Markers and an In and Out now exist on the ruler.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any screen recording.",
+  "try": [
+    {
+      "do": "Drag the playhead to 2s on the ruler, right-click the clip and choose Split at Playhead.",
+      "shot": "2026-09-23-right-click-3-split.png"
+    },
+    {
+      "do": "Right-click the join you just made and choose Add Transition, then Dip to black."
+    },
+    {
+      "do": "Move the playhead to 3s, right-click the band over the join and choose Roll Edit to Playhead.",
+      "shot": "2026-09-23-right-click-6-rolled.png"
+    },
+    {
+      "do": "Right-click the ruler at 1s and choose Set In, at 6s Set Out, and at 4s Add Marker.",
+      "shot": "2026-09-23-right-click-8-marks.png"
+    },
+    {
+      "do": "Right-click the first piece and choose Speed, then 2x Speed.",
+      "shot": "2026-09-23-right-click-12-first-piece-faster.png"
+    },
+    {
+      "do": "Right-click the second piece and choose Ripple Delete.",
+      "shot": "2026-09-23-right-click-13-ripple-deleted.png"
+    },
+    {
+      "do": "Press Option X to clear the In and Out, then right-click the clip, choose Rename, type a name and press Return.",
+      "shot": "2026-09-23-right-click-15-renamed.png"
+    },
+    {
+      "do": "Right-click the V1 track header and the transport scrub bar and read what they offer."
+    }
+  ],
+  "evaluate": [
+    "Did every right-click offer what you reached for first, under the name you expected from Premiere?",
+    "Is it clear that ruler and scrub bar rows act where you right-clicked, and that the playhead jumps there?",
+    "Do the green In and Out marks and the amber marker read at a glance on the ruler?",
+    "Is Delete (leaves the rest where it is) against Ripple Delete (pulls everything after it back) the split you expect?",
+    "Should Add Transition on a clip put the transition on both of its ends, as it does now?"
+  ],
+  "rough": [
+    "Add Marker, Set In, Set Out and Roll Edit to Playhead print no key yet: M, I, O and E are still Photoshop tool keys until the timeline owns the keyboard (noted on the Premiere keys task).",
+    "In and Out are marks only: export and play still use the whole video (filed as a follow-up).",
+    "A right-click does not pick the clip the moment the menu opens; it is picked when you choose a row.",
+    "The walk photographs the result of each row rather than the open menu: at the bottom of the screen the test harness opens menus downward and clips them. The menu rows were read and checked by the walk instead.",
+    "The mock draws no right-click menus; the names follow the cut clickthrough (Split at playhead B, Detach audio, Ripple delete) and Premiere. Hold This Frame is renamed Freeze Frame everywhere to match the freeze clickthrough."
+  ]
+}

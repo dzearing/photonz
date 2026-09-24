@@ -441,9 +441,10 @@ struct TimelineTrackMenu: View {
             Button("Ungroup") { editorState.ungroupTracks(group) }
         }
         Divider()
-        Button("Add Video Track") { editorState.addTrack(.video, at: index) }
-        Button("Add Audio Track") { editorState.addTrack(.audio, at: index + 1) }
-        Button("Add Captions Track") { editorState.addTrack(.captions, at: index) }
+        // A track like this one, either side of it: where Premiere's Add
+        // Track puts one. Another kind is the + at the foot of the gutter.
+        Button("Add Track Above") { editorState.addTrack(track.kind, at: index) }
+        Button("Add Track Below") { editorState.addTrack(track.kind, at: index + 1) }
         Divider()
         Button("Delete Track", role: .destructive) { editorState.deleteTrack(track.id) }
     }

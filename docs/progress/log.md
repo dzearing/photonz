@@ -19476,3 +19476,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Harness: `windowDrag` step posts real mouse events to the window (timeline gestures were unreachable by `drag`). `visibleDestinations` also requires a view's own frame to contain the point: a panel view reported the whole window as its visible rect and took a timeline drop.
 - Walks: new `a-clip-s-sound-is-linked-under-it-walk` (no flags, 6 captures); `second-clip` and `library-clip` expectations moved music to Audio 2 where the recording's sound now sits on Audio. 26 related walks green. Audit: `queue/audits/2026-09-23-linked-sound.json`.
 - Next: carry a linked segment to another audio track; overwrite (not bump) a clip's sound when music lands on it, if the user wants Premiere's behaviour (asked in the audit).
+
+## 2026-09-23 — Right-click menus on the timeline
+
+- Clip, cut, track header, ruler, scrub bar and canvas-over-a-clip right-click menus, built from `MenuRow` lists in `EditorState+TimelineMenus.swift`, printing only keys the app honours.
+- New core: markers and In/Out on the document (`TimelineMarks.swift`), Ripple Delete, Split Everything, Roll Edit to Playhead (`TimelineMenuEdits.swift`), tested in `TimelineMenuEditsTests`.
+- Gotcha: a SwiftUI `.contextMenu` added after `.offset` answers for the un-offset frame; put it before.
+- Next: export honouring In/Out (p2 task), and M/I/O/E keys via the Premiere keys task.

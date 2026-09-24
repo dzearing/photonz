@@ -1,0 +1,346 @@
+{
+  "out": "/tmp/photonz-playtest/timeline-right-click-walk",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "windowDrag",
+      "from": [
+        510,
+        860
+      ],
+      "to": [
+        516,
+        860
+      ],
+      "steps": 3
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-playhead-at-2s",
+      "note": "At defaults, a fresh recording, the playhead dragged to two seconds on the ruler"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-playhead-at-2s"
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        800,
+        400
+      ],
+      "space": "window",
+      "shot": "1b-canvas-menu"
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        900,
+        893
+      ],
+      "space": "window",
+      "shot": "2-clip-menu",
+      "choose": "Split at Playhead"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-split",
+      "note": "Right-click the clip, Split at Playhead: two pieces meeting at two seconds"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-split"
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        512,
+        893
+      ],
+      "space": "window",
+      "shot": "4-cut-menu",
+      "choose": "Add Transition > Dip to black"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-transition",
+      "note": "Right-click the join, Add Transition, Dip to black: a band over the cut"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-transition"
+    },
+    {
+      "do": "windowDrag",
+      "from": [
+        710,
+        860
+      ],
+      "to": [
+        717,
+        860
+      ],
+      "steps": 3
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        516,
+        893
+      ],
+      "space": "window",
+      "choose": "Roll Edit to Playhead"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "6-rolled",
+      "note": "Playhead to three seconds, right-click the band, Roll Edit to Playhead: the join and its band are at three seconds, the clip is still eight long"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-rolled"
+    },
+    {
+      "do": "windowDrag",
+      "from": [
+        310,
+        860
+      ],
+      "to": [
+        315,
+        860
+      ],
+      "steps": 3
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        315,
+        860
+      ],
+      "space": "window",
+      "shot": "7-ruler-menu",
+      "choose": "Set In"
+    },
+    {
+      "do": "windowDrag",
+      "from": [
+        1112,
+        860
+      ],
+      "to": [
+        1119,
+        860
+      ],
+      "steps": 3
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        1119,
+        860
+      ],
+      "space": "window",
+      "choose": "Set Out"
+    },
+    {
+      "do": "windowDrag",
+      "from": [
+        912,
+        860
+      ],
+      "to": [
+        918,
+        860
+      ],
+      "steps": 3
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        918,
+        860
+      ],
+      "space": "window",
+      "choose": "Add Marker"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "8-marks",
+      "note": "In at one second, Out at six, a marker at four: a green wash on the ruler between them, green marks on the scrub bar, an amber tab at four"
+    },
+    {
+      "do": "snapshot",
+      "name": "8-marks"
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        1200,
+        785
+      ],
+      "space": "window",
+      "shot": "9-scrub-menu"
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        35,
+        893
+      ],
+      "space": "window",
+      "shot": "10-track-menu"
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        300,
+        893
+      ],
+      "space": "window",
+      "shot": "11-first-piece-menu",
+      "choose": "Speed > 2x Speed"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "12-first-piece-faster",
+      "note": "Right-click the FIRST piece, Speed, 2x: only that piece is faster, the clip is shorter"
+    },
+    {
+      "do": "snapshot",
+      "name": "12-first-piece-faster"
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        1300,
+        893
+      ],
+      "space": "window",
+      "choose": "Ripple Delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "13-ripple-deleted",
+      "note": "Right-click the second piece, Ripple Delete: only the sped-up first piece is left"
+    },
+    {
+      "do": "snapshot",
+      "name": "13-ripple-deleted"
+    },
+    {
+      "do": "key",
+      "key": "x",
+      "modifiers": [
+        "option"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "14-marks-cleared",
+      "note": "Option X, Clear In and Out: the green wash and the scrub bar's marks are gone, the marker stays"
+    },
+    {
+      "do": "snapshot",
+      "name": "14-marks-cleared"
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        300,
+        893
+      ],
+      "space": "window",
+      "choose": "Rename\u2026"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "Intro"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "15-renamed",
+      "note": "Right-click, Rename, type Intro, Return: the clip and its layer row say Intro"
+    },
+    {
+      "do": "snapshot",
+      "name": "15-renamed"
+    }
+  ]
+}

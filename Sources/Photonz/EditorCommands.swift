@@ -417,6 +417,21 @@ struct EditorCommands: Commands {
                 .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuKeyEquivalent), modifiers: [])
                 .disabled(!(onTimeline ? (editor?.canDeleteClipPieceInHand ?? false)
                                        : (video?.canDeleteSelectedPiece ?? false)))
+                // Premiere's Ripple Delete, on its Mac key: what is picked goes
+                // and everything after it pulls back to close the gap, so a
+                // title stays over the frame it was put on
+                // (`EditorState+TimelineMenus`).
+                if onTimeline {
+                    Button("Ripple Delete") { editor?.rippleDeleteInHand() }
+                        .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuKeyEquivalent), modifiers: .option)
+                        .disabled(!(editor?.canRippleDeleteInHand ?? false))
+                    // Premiere's Add Edit to All Tracks.
+                    Button("Split Everything at Playhead") {
+                        if let editor { editor.splitEverything(atMS: editor.documentTimeMS) }
+                    }
+                    .keyboardShortcut("k", modifiers: [.command, .shift])
+                    .disabled(!(editor?.canSplitEverythingAtPlayhead ?? false))
+                }
                 // A freeze is not a special object: it is a piece whose in and
                 // out are the same frame, so it drops onto the timeline like
                 // any other piece and can be moved, lengthened and thrown away
@@ -424,7 +439,7 @@ struct EditorCommands: Commands {
                 // No key: ⇧F walks the Frame slot, ⌥F fills the flow, and a
                 // freeze is a thing you do once in a cut rather than forty
                 // times. The row is where you would look for it.
-                Button("Hold This Frame") { editor?.holdFrameAtPlayhead() }
+                Button("Freeze Frame") { editor?.holdFrameAtPlayhead() }
                     .disabled(!(editor?.canHoldFrameAtPlayhead ?? false))
                 // Retiming is a property of the piece you are on, so it is a
                 // list of speeds rather than a surface of its own
@@ -438,6 +453,18 @@ struct EditorCommands: Commands {
                     }
                 }
                 .disabled(editor?.clipSpeedInHand == nil)
+                Divider()
+            }
+            // The ruler's marks, at the playhead. The same rows the ruler's
+            // right click offers there; M, I and O stay Photoshop's tool keys
+            // until the timeline owns the keyboard, so only Clear carries one.
+            if editor?.documentHasTime ?? false {
+                Button("Add Marker") { if let editor { editor.addMarker(atMS: editor.documentTimeMS) } }
+                Button("Set In") { if let editor { editor.setMarkIn(atMS: editor.documentTimeMS) } }
+                Button("Set Out") { if let editor { editor.setMarkOut(atMS: editor.documentTimeMS) } }
+                Button("Clear In and Out") { editor?.clearMarkInOut() }
+                    .keyboardShortcut("x", modifiers: .option)
+                    .disabled(!(editor?.canClearMarkInOut ?? false))
                 Divider()
             }
             // Where the camera is pointed, and where it goes next
@@ -481,10 +508,11 @@ struct EditorCommands: Commands {
             // name it, switch it off, undo any of it — is what the timeline
             // already does to a layer (`docs/design/video-audio.md`).
             if Experiments.shared.soundOnTheTimelineEnabled {
-                // No key on Detach Audio: it is done once per clip, and a key
-                // that close to ⌘D would be a key somebody presses by accident
-                // on a take they have already cut.
+                // ⌃⇧D, the key the cut clickthrough's command menu prints for
+                // it (`video-cut-wt`): two modifiers away from ⌘D, so not a key
+                // anybody presses by accident on a take they have already cut.
                 Button("Detach Audio") { editor?.detachSound() }
+                    .keyboardShortcut("d", modifiers: [.control, .shift])
                     .disabled(!(editor?.canDetachSound ?? false))
                 Button("Add Sound…") { editor?.addSoundFromFile() }
                     .disabled(!(editor?.documentHasTime ?? false))

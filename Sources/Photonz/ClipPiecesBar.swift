@@ -136,6 +136,12 @@ struct ClipPiecesBar: View {
                 capsule(readout, x: x0)
                     .frame(height: barHeight)
             }
+            if editorState.renamingClipID == layerID, !isLinkedSound {
+                ClipNameField(layerID: layerID, name: layerName)
+                    .frame(width: max(90, min(180, laneWidth * ruler.fraction(spanningMS: Double(pieces.totalLengthMS)) - 8)))
+                    .frame(height: barHeight)
+                    .offset(x: max(0, x0) + 4)
+            }
         }
         .frame(width: laneWidth, alignment: .leading)
         .playtestHover("\(fieldName) bar") { inside in if kind != nil, isSound { isHovered = inside } }
@@ -283,7 +289,10 @@ struct ClipPiecesBar: View {
                         .allowsHitTesting(false)
                 }
             }
-            .offset(x: shown.x)
+            // Every hand on a piece, the right click included, is added
+            // BEFORE the offset, the order the band over a cut uses. Added
+            // after it, the right click answered for the lane's left edge and
+            // landed on whichever piece was drawn last (2026-09-23).
             .contentShape(Rectangle())
             .gesture(carry(pieces, index: index))
             .onTapGesture {
@@ -291,8 +300,9 @@ struct ClipPiecesBar: View {
                                             index: pieces.count > 1 ? index : nil)
             }
             .contextMenu {
-                if kind != nil { TimelineClipMenu(layerID: layerID) }
+                if kind != nil { TimelineClipMenu(layerID: layerID, piece: index) }
             }
+            .offset(x: shown.x)
             .playtestField(Self.pieceName(layerName: fieldName, index: index, of: pieces.count))
             .panelHelp(Self.help(pieces, index: index))
         }
@@ -564,6 +574,9 @@ struct ClipPiecesBar: View {
             .frame(width: max(3, min(width, laneWidth + TimelineSpan.slack * 2)), height: barHeight)
             .contentShape(Rectangle())
             .onTapGesture { editorState.selectClipCut(layerID: layerID, index: cut.index) }
+            .contextMenu {
+                if kind != nil { TimelineCutMenu(layerID: layerID, cut: cut.index) }
+            }
             .overlay(alignment: .leading) { bandGrip(cut, leading: true, width: width) }
             .overlay(alignment: .trailing) { bandGrip(cut, leading: false, width: width) }
             .offset(x: x)
@@ -622,9 +635,6 @@ struct ClipPiecesBar: View {
         if isPicked, room >= Self.smallestGrabbablePiece {
             gripFace(width: width)
                 .frame(width: width, height: barHeight)
-                // The first grip sits inside the bar and the rest hang off the
-                // join to its left, so a grip never covers the piece after it.
-                .offset(x: x - (edge == 0 ? 0 : width))
                 .contentShape(Rectangle().inset(by: -5))
                 .gesture(edgeDrag(pieces, edge: edge, ruler: ruler))
                 // A join is a CUT, and a cut is a thing you can pick: one click
@@ -635,6 +645,20 @@ struct ClipPiecesBar: View {
                     guard edge > 0, edge < pieces.count else { return }
                     editorState.selectClipCut(layerID: layerID, index: edge)
                 }
+                // A join is a cut, so its right click is the cut's menu; the
+                // bar's two ends are the clip's own and answer with the clip's.
+                .contextMenu {
+                    if kind != nil {
+                        if edge > 0, edge < pieces.count {
+                            TimelineCutMenu(layerID: layerID, cut: edge)
+                        } else {
+                            TimelineClipMenu(layerID: layerID, piece: edge == 0 ? 0 : pieces.count - 1)
+                        }
+                    }
+                }
+                // The first grip sits inside the bar and the rest hang off the
+                // join to its left, so a grip never covers the piece after it.
+                .offset(x: x - (edge == 0 ? 0 : width))
                 .playtestField(Self.gripName(layerName: fieldName, edge: edge, of: pieces.count))
                 .panelHelp(edge == 0
                            ? "Where the clip starts. Drag it: nothing is thrown away."
@@ -826,26 +850,60 @@ private struct FadeWedge: Shape {
     }
 }
 
-/// What a right-click on a clip on the timeline offers.
+/// What a right-click on a clip on the timeline offers
+/// (`EditorState+TimelineMenus`).
 struct TimelineClipMenu: View {
     @Environment(EditorState.self) private var editorState
     let layerID: UUID
+    var piece: Int = 0
 
     var body: some View {
-        if editorState.document?.canDetachSound(ofLayer: layerID) == true {
-            Button("Detach Audio") {
-                editorState.selectLayer(layerID)
-                editorState.detachSound()
+        MenuRowsView(rows: editorState.timelineClipMenuRows(layerID: layerID, piece: piece))
+    }
+}
+
+/// What a right-click on a join, or the transition over one, offers.
+struct TimelineCutMenu: View {
+    @Environment(EditorState.self) private var editorState
+    let layerID: UUID
+    let cut: Int
+
+    var body: some View {
+        MenuRowsView(rows: editorState.timelineCutMenuRows(layerID: layerID, cut: cut))
+    }
+}
+
+/// A clip's name, typed over its bar after Rename. Return keeps it, Escape or
+/// clicking away leaves the name as it was.
+private struct ClipNameField: View {
+    @Environment(EditorState.self) private var editorState
+    let layerID: UUID
+    let name: String
+    @State private var draft = ""
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        TextField("", text: $draft)
+            .textFieldStyle(.plain)
+            .font(.system(size: 10, weight: .semibold))
+            .padding(.horizontal, 4)
+            .frame(height: 18)
+            .background(RoundedRectangle(cornerRadius: 4).fill(VideoKit.Palette.panel))
+            .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(VideoKit.Palette.accent))
+            .focused($isFocused)
+            .onSubmit {
+                let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !trimmed.isEmpty, trimmed != name { editorState.renameLayer(id: layerID, to: trimmed) }
+                editorState.renamingClipID = nil
             }
-            Divider()
-        }
-        Button("Split at Playhead") {
-            editorState.selectLayer(layerID)
-            editorState.splitClipAtPlayhead()
-        }
-        Button("Delete") {
-            editorState.selectLayer(layerID)
-            editorState.deleteSelectedLayers()
-        }
+            .onExitCommand { editorState.renamingClipID = nil }
+            .onChange(of: isFocused) { _, focused in
+                if !focused { editorState.renamingClipID = nil }
+            }
+            .onAppear {
+                draft = name
+                isFocused = true
+            }
+            .playtestControl("Clip name", detail: "Timeline")
     }
 }

@@ -175,10 +175,10 @@ struct SpeedInspector: View {
     @ViewBuilder
     private func holdThisFrame() -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            Button("Hold This Frame") { editorState.holdFrameAtPlayhead() }
+            Button("Freeze Frame") { editorState.holdFrameAtPlayhead() }
                 .controlSize(.small)
                 .disabled(!editorState.canHoldFrameAtPlayhead)
-                .playtestControl("Hold This Frame", detail: "the Time section")
+                .playtestControl("Freeze Frame", detail: "the Time section")
                 .panelHelp("Stop on the frame under the playhead and hold it there. It drops "
                            + "onto the timeline as an ordinary piece: trim it, move it, draw "
                            + "over it.")

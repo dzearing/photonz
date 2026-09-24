@@ -36,6 +36,19 @@ enum LayerCommandList {
         let id = display.id
         var rows: [MenuRow] = []
 
+        // A recording or a sound in a document with time is a clip, and the
+        // first thing anybody does to a clip is cut it: the same Split at
+        // Playhead its bar on the timeline offers, on the same key.
+        if editorState.documentHasTime, let layer = editorState.document?.layer(id: id),
+           layer.time != nil, layer.movie != nil || layer.sound != nil {
+            rows.append(.command("Split at Playhead", EditorState.TimelineMenuKeys.split,
+                                 enabled: editorState.canSplitClip(id)) {
+                editorState.selectLayer(id)
+                editorState.splitClipAtPlayhead()
+            })
+            rows.append(.separator)
+        }
+
         rows.append(.command("Duplicate", .command("d")) { editorState.duplicateLayer(id: id) })
         // Where Photoshop keeps them, under the names it uses for the same
         // pair, so the two moves that make one shape match another are one

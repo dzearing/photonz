@@ -1050,6 +1050,9 @@ final class EditorState {
     var collapsedTrackGroupIDs: Set<UUID> = []
     /// The track whose name is being typed over in its header.
     var renamingTrackID: UUID?
+    /// The clip whose name is being typed over its bar on the timeline, after
+    /// its right-click menu's Rename.
+    var renamingClipID: UUID?
     /// Where the clip in hand would land if it were let go of now, while it is
     /// being carried up or down the timeline.
     var clipTrackDrop: ClipTrackDrop?

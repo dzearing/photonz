@@ -624,7 +624,7 @@ timeline draws it as a bar badged `hold` rather than as a second kind of object.
 
 Four things the surface adds to that model, and nothing else:
 
-- **The way in is where you are looking.** Hold This Frame is a button in the
+- **The way in is where you are looking.** Freeze Frame is a button in the
   Time section and a row in the Video menu; both hold the frame under the
   playhead, because the frame you are watching is the frame you mean.
 - **A chosen length**, from a short list — 1, 2, 3, 5 and 10 seconds
