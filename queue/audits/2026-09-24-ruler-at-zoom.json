@@ -1,0 +1,38 @@
+{
+  "feature": "The timeline ruler names the right time when zoomed in",
+  "epic": "video-cutting",
+  "summary": "Zoomed in, every number on the ruler now sits over the moment it names, so the playhead, the gridlines and the ruler agree and a cut lined up against a number lands on it. Before, at 4x every number was drawn about three seconds left of its moment.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. A recording a few minutes long makes it easiest to see.",
+  "try": [
+    {
+      "do": "Open a recording several minutes long and park the playhead on a round number, say 1:15."
+    },
+    {
+      "do": "Press 4x in the timeline's bar (or = twice with the timeline focused).",
+      "shot": "2026-09-24-ruler-at-zoom-1-four-x-sc.png"
+    },
+    {
+      "do": "Check that the red playhead line runs down through the tick of the ruler's 1:15."
+    },
+    {
+      "do": "Keep pressing = until the ruler counts in tenths of a second.",
+      "shot": "2026-09-24-ruler-at-zoom-2-deepest-sc.png"
+    },
+    {
+      "do": "Jump the playhead further along (click the scrub bar) and check the number under it is its time.",
+      "shot": "2026-09-24-ruler-at-zoom-3-further-sc.png"
+    },
+    {
+      "do": "Press Fit and check the numbers are where they always were."
+    }
+  ],
+  "evaluate": [
+    "At every zoom, is the number under the playhead the time the transport says?",
+    "Do the faint gridlines in the lanes start exactly at the ruler's ticks?",
+    "At Fit, does the ruler look exactly as it did before?"
+  ],
+  "rough": [
+    "The walk stands in for a long recording by sliding the eight second sample to the end of five minutes, so the pictures show an empty lane at 1:15; the ruler is what is under test.",
+    "The ruler still counts in plain seconds at the deepest zoom (75s, 75.2s) rather than frames, the way Premiere does; the Premiere comparison saw it and chose not to file it."
+  ]
+}

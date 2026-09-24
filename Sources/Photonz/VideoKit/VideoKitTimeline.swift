@@ -85,6 +85,12 @@ extension VideoKit {
         var body: some View {
             GeometryReader { geo in
                 ZStack(alignment: .topLeading) {
+                    // Pins the stack's left edge to the lane's. A ZStack is only
+                    // as wide as what is in it, so without this a zoomed ruler,
+                    // whose first number is somewhere in the middle, pulled
+                    // that number to the left edge and every number after it
+                    // along with it: seconds from the moments they named.
+                    Color.clear.frame(width: geo.size.width, height: height)
                     ForEach(ticks, id: \.self) { tick in
                         let isEnd = tick.fraction >= 0.999
                         let x = geo.size.width * min(max(0, tick.fraction), 1)
@@ -97,6 +103,7 @@ extension VideoKit {
                             .overlay(alignment: .leading) {
                                 if !isEnd { Rectangle().fill(Palette.line).frame(width: 1) }
                             }
+                            .playtestRulerMark(.label(tick.label, fraction: tick.fraction, atTrailingEdge: isEnd))
                             .alignmentGuide(.leading) { d in isEnd ? d.width - x : -x }
                     }
                 }
@@ -107,6 +114,7 @@ extension VideoKit {
             }
             .frame(height: height)
             .clipped()
+            .playtestRulerMark(.ruler)
         }
     }
 }
@@ -136,6 +144,7 @@ extension VideoKit {
                         .offset(y: -2)
                 }
                 .frame(width: 12, height: geo.size.height)
+                .playtestRulerMark(.playhead(fraction: fraction))
                 .offset(x: x - 6)
             }
             .allowsHitTesting(false)

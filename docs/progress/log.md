@@ -19567,3 +19567,9 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Basics all work (Command K, Blade, ripple delete, J/K/L, tracks, detach audio, snapping, undo). Ahead of Premiere: five minutes of captions in about 3 s, no blank frames, 1.3 s open.
 - Filed p1 (source user), most blocking first: the ruler's labels are off when zoomed (bug, cause in `VideoKit.TimeRuler`), timeline keys need a click before they work, no Extract/Lift of an In-Out stretch, 170-680 ms freezes per press on a captioned five minute timeline, Q/W ripple trim, a readable default title, a default transition key, an export size choice, an S snapping toggle; plus a decision card on pictures along clips.
 - New standing objective `video-beats-premiere` under video editing, with measurable criteria for the manager.
+
+## 2026-09-24: The timeline ruler names the right time when zoomed in (go loop, the-timeline-ruler-names-the-right-time-when-zoo)
+
+- Bug: zoomed in, every ruler number was drawn left of its moment by the x of the first visible tick (80.6 pt at 4x on five minutes). `VideoKit.TimeRuler` laid numbers out with alignment guides in a ZStack sized to its children; a clear full-width first child now pins the stack to the lane.
+- New walk check: `expectTimeline` takes `rulerMatches` and `rulerAtPlayhead`, read off probe-only markers on the ruler, each number and the playhead line (`Playtest/PlaytestRulerMark.swift`), so it measures where things were DRAWN, not the ruler's sums.
+- Walk `ruler-names-the-right-time-zoomed-walk` (Next defaults): Fit, 4x, deepest zoom, deepest further along, Fit again. Audit `queue/audits/2026-09-24-ruler-at-zoom.json`.

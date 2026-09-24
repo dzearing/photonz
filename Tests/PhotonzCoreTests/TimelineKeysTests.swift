@@ -329,6 +329,32 @@ struct ExpectTimelineStepTests {
         #expect(claim.keyboard == nil)
     }
 
+    @Test("It can claim the ruler is drawn where its numbers say, and which number is under the playhead")
+    func readsRulerClaims() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "steps": [ { "do": "expectTimeline", "rulerMatches": true, "rulerAtPlayhead": "1:15" } ] }
+        """.utf8))
+        guard case .expectTimeline(let claim) = script.steps[0] else {
+            Issue.record("expectTimeline"); return
+        }
+        #expect(claim.rulerMatches == true)
+        #expect(claim.rulerAtPlayhead == "1:15")
+        #expect(claim.claimsSomething)
+        #expect(claim.playheadMS == nil)
+    }
+
+    @Test("A ruler claim on its own is a claim")
+    func rulerAloneClaims() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "steps": [ { "do": "expectTimeline", "rulerAtPlayhead": "0:04" } ] }
+        """.utf8))
+        guard case .expectTimeline(let claim) = script.steps[0] else {
+            Issue.record("expectTimeline"); return
+        }
+        #expect(claim.rulerMatches == nil)
+        #expect(claim.claimsSomething)
+    }
+
     @Test("A step that claims nothing is refused")
     func claimsSomething() {
         #expect(throws: PlaytestScriptError.self) {

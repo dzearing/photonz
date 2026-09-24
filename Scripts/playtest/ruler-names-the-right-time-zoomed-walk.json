@@ -1,0 +1,48 @@
+{
+  "out": "/tmp/photonz-playtest/ruler-names-the-right-time-zoomed-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "timelineFiveMinutes" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTimeline", "playheadMS": 75000, "rulerMatches": true },
+    { "do": "describe", "stage": "0-fit", "note": "five minutes across the width, playhead at 1:15. The numbers sit where they always have" },
+    { "do": "snapshot", "name": "0-five-minutes-at-fit" },
+
+    { "do": "action", "action": "timelineZoomIn" },
+    { "do": "action", "action": "timelineZoomIn" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTimeline", "playheadMS": 75000, "rulerMatches": true, "rulerAtPlayhead": "1:15" },
+    { "do": "describe", "stage": "1-four-x", "note": "4x, opened out around the playhead. The ruler's 1:15 is drawn under the playhead line, and every other number is over the moment it names: this is where a label sat about four seconds left of its moment" },
+    { "do": "snapshot", "name": "1-four-x-playhead-on-1-15" },
+
+    { "do": "action", "action": "timelineZoomIn" },
+    { "do": "action", "action": "timelineZoomIn" },
+    { "do": "action", "action": "timelineZoomIn" },
+    { "do": "action", "action": "timelineZoomIn" },
+    { "do": "action", "action": "timelineZoomIn" },
+    { "do": "action", "action": "timelineZoomIn" },
+    { "do": "action", "action": "timelineZoomIn" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTimeline", "playheadMS": 75000, "rulerMatches": true, "rulerAtPlayhead": "75s" },
+    { "do": "describe", "stage": "2-deepest", "note": "as far in as the timeline goes, about a second across the width. The numbers count in tenths and each one is over its tenth, the 75s under the playhead" },
+    { "do": "snapshot", "name": "2-deepest-zoom-on-the-playhead" },
+
+    { "do": "action", "action": "videoSeekThreeQuarters" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectTimeline", "playheadMS": 225000, "rulerMatches": true, "rulerAtPlayhead": "225s" },
+    { "do": "describe", "stage": "3-deepest-elsewhere", "note": "still at the deepest zoom, three quarters of the way in: the window went with the playhead and the numbers are still over their moments" },
+    { "do": "snapshot", "name": "3-deepest-zoom-further-along" },
+
+    { "do": "action", "action": "timelineFit" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTimeline", "rulerMatches": true },
+    { "do": "describe", "stage": "4-fit-again", "note": "Fit puts the whole five minutes back, and the numbers are where they were at the start" },
+    { "do": "snapshot", "name": "4-back-to-fit" }
+  ]
+}

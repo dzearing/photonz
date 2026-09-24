@@ -9278,10 +9278,103 @@ private final class Run {
         if let want = claim.markers, want != (document?.markers.count ?? 0) {
             wrong.append("there are \(document?.markers.count ?? 0) markers, not \(want)")
         }
-        guard wrong.isEmpty else {
-            throw Failure(description: wrong.joined(separator: "; ") + " (\(reading))")
+        var drawn = ""
+        if claim.rulerMatches == true || claim.rulerAtPlayhead != nil {
+            let ruler = try readRuler()
+            drawn = ", ruler " + ruler.summary
+            if claim.rulerMatches == true {
+                wrong += ruler.labels.compactMap { label in
+                    abs(label.drawnX - label.namedX) <= Self.rulerSlack ? nil
+                        : "the ruler's \(label.text) is drawn at \(Self.pt(label.drawnX)) along the lane "
+                        + "but its moment is at \(Self.pt(label.namedX)), "
+                        + "\(Self.pt(abs(label.drawnX - label.namedX))) off"
+                }
+            }
+            if let want = claim.rulerAtPlayhead {
+                if let label = ruler.labels.first(where: { $0.text == want }) {
+                    if let playheadX = ruler.playheadX {
+                        if abs(label.drawnX - playheadX) > Self.rulerSlack {
+                            wrong.append("the ruler's \(want) is drawn at \(Self.pt(label.drawnX)) along the lane "
+                                + "and the playhead line at \(Self.pt(playheadX)), "
+                                + "\(Self.pt(abs(label.drawnX - playheadX))) apart")
+                        }
+                    } else {
+                        wrong.append("there is no playhead on screen to put \(want) under")
+                    }
+                } else {
+                    wrong.append("the ruler has no \(want) on it; it reads "
+                        + ruler.labels.map(\.text).joined(separator: " "))
+                }
+            }
         }
-        return reading + ", as claimed"
+        guard wrong.isEmpty else {
+            throw Failure(description: wrong.joined(separator: "; ") + " (\(reading)\(drawn))")
+        }
+        return reading + drawn + ", as claimed"
+    }
+
+    /// How far a number may sit from its moment and still be ON it: under a
+    /// point and a half, which is the tick's own hairline and the playhead's
+    /// two point line meeting.
+    private static let rulerSlack: CGFloat = 1.5
+
+    private static func pt(_ value: CGFloat) -> String { String(format: "%.1f pt", value) }
+
+    /// One number on the ruler: where it was drawn along the lane, and where
+    /// the moment it names is along the same lane.
+    private struct DrawnRulerLabel {
+        let text: String
+        let drawnX: CGFloat
+        let namedX: CGFloat
+    }
+
+    private struct DrawnRuler {
+        let width: CGFloat
+        let labels: [DrawnRulerLabel]
+        let playheadX: CGFloat?
+
+        var summary: String {
+            let numbers = labels.map { "\($0.text) at \(Int($0.drawnX.rounded()))" }.joined(separator: ", ")
+            let line = playheadX.map { "playhead line at \(Int($0.rounded()))" } ?? "no playhead line"
+            return "\(Int(width.rounded())) pt wide: \(numbers.isEmpty ? "no numbers" : numbers); \(line)"
+        }
+    }
+
+    /// Reads where the timeline's ruler, its numbers and the playhead really
+    /// landed in the window (`PlaytestRulerMark`), measured from the ruler's
+    /// left edge.
+    private func readRuler() throws -> DrawnRuler {
+        let window = try requireWindow()
+        guard let content = window.contentView else {
+            throw Failure(description: "the editor window has no content to read a ruler from")
+        }
+        let marks = Self.findAll(PlaytestRulerMarkView.self, in: content)
+            .filter { $0.window != nil && !$0.isHiddenOrHasHiddenAncestor }
+        let rulers = marks.filter { $0.role == .ruler }
+        guard rulers.count == 1, let rulerMark = rulers.first else {
+            throw Failure(description: rulers.isEmpty
+                ? "there is no timeline ruler on screen"
+                : "there are \(rulers.count) rulers on screen, and a walk can only read one")
+        }
+        let box = rulerMark.convert(rulerMark.bounds, to: nil)
+        var labels: [DrawnRulerLabel] = []
+        var playheadX: CGFloat?
+        for mark in marks {
+            let frame = mark.convert(mark.bounds, to: nil)
+            switch mark.role {
+            case .ruler:
+                break
+            case .label(let text, let fraction, let atTrailingEdge):
+                labels.append(DrawnRulerLabel(
+                    text: text,
+                    drawnX: (atTrailingEdge ? frame.maxX : frame.minX) - box.minX,
+                    namedX: box.width * min(max(0, fraction), 1)))
+            case .playhead:
+                playheadX = frame.midX - box.minX
+            }
+        }
+        return DrawnRuler(width: box.width, labels: labels.sorted { $0.namedX < $1.namedX },
+                          playheadX: playheadX)
     }
 
     private func checkRecording(pieces: Int?, picked: Int?, keeps: Int?,

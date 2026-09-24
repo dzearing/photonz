@@ -3910,11 +3910,13 @@ public enum PlaytestStep: Sendable, Equatable {
                 markOutMS: try f.optionalNumber("markOutMS").map { Int($0) },
                 hasIn: fields["hasIn"] as? Bool,
                 hasOut: fields["hasOut"] as? Bool,
-                markers: try f.optionalNumber("markers").map { Int($0) })
+                markers: try f.optionalNumber("markers").map { Int($0) },
+                rulerMatches: fields["rulerMatches"] as? Bool,
+                rulerAtPlayhead: try f.optionalString("rulerAtPlayhead"))
             guard claim.claimsSomething else {
                 throw f.invalid("playheadMS", "expectTimeline has to claim something: \"playheadMS\", "
                     + "\"keyboard\", \"rate\", \"blade\", \"markInMS\", \"markOutMS\", \"hasIn\", "
-                    + "\"hasOut\" or \"markers\"")
+                    + "\"hasOut\", \"markers\", \"rulerMatches\" or \"rulerAtPlayhead\"")
             }
             self = .expectTimeline(claim)
         case "expectPlaybackNeverBlank":
@@ -4159,10 +4161,18 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
     public var hasIn: Bool?
     public var hasOut: Bool?
     public var markers: Int?
+    /// Every number on the ruler is DRAWN over the moment it names, read off
+    /// where the numbers really landed on screen rather than off the ruler's
+    /// sums. Zoomed in on 2026-09-24 every number sat seconds left of its
+    /// moment while the sums were right.
+    public var rulerMatches: Bool?
+    /// This number is on the ruler and drawn under the playhead line.
+    public var rulerAtPlayhead: String?
 
     public init(playheadMS: Int? = nil, withinMS: Int = 0, keyboard: Keyboard? = nil, rate: Double? = nil,
                 blade: Bool? = nil, markInMS: Int? = nil, markOutMS: Int? = nil,
-                hasIn: Bool? = nil, hasOut: Bool? = nil, markers: Int? = nil) {
+                hasIn: Bool? = nil, hasOut: Bool? = nil, markers: Int? = nil,
+                rulerMatches: Bool? = nil, rulerAtPlayhead: String? = nil) {
         self.playheadMS = playheadMS
         self.withinMS = max(0, withinMS)
         self.keyboard = keyboard
@@ -4173,10 +4183,13 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
         self.hasIn = hasIn
         self.hasOut = hasOut
         self.markers = markers
+        self.rulerMatches = rulerMatches
+        self.rulerAtPlayhead = rulerAtPlayhead
     }
 
     public var claimsSomething: Bool {
         playheadMS != nil || keyboard != nil || rate != nil || blade != nil || markInMS != nil
             || markOutMS != nil || hasIn != nil || hasOut != nil || markers != nil
+            || rulerMatches != nil || rulerAtPlayhead != nil
     }
 }
