@@ -137,7 +137,9 @@ struct PanelNumberField: View {
             }
             box
             if let suffix {
-                Text(suffix).font(.caption2).foregroundStyle(.tertiary)
+                // A unit is one word and never wraps: in the narrowest dock
+                // "px" broke onto two lines beside its box (2026-09-24).
+                Text(suffix).font(.caption2).foregroundStyle(.tertiary).fixedSize()
             }
         }
         .modifier(OptionalPanelHelp(text: help))

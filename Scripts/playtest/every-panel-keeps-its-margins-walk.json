@@ -1,0 +1,303 @@
+{
+  "out": "/tmp/photonz-playtest/every-panel-keeps-its-margins-walk",
+  "seed": "Every section of the right hand panel keeps the panel's 14pt margin on both sides, and no section makes the panel wider than its dock, at Next defaults with no flag changed. Filed by the user on 2026-09-23: the video sections had no side margins and nothing compared a panel against the design rules. The panelMargins step reads every labelled row and control the panel registers for walks, and every word and control accessibility can see, by frame, and fails on any that comes closer than 14pt to an edge.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        340,
+        300
+      ],
+      "to": [
+        560,
+        460
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-a-rectangle",
+      "note": "A rectangle picked: Appearance, Effects and Motion. Every row and control keeps the panel's 14pt margin on both sides, and the panel is exactly as wide as its dock."
+    },
+    {
+      "do": "panelMargins",
+      "stage": "1-a-rectangle"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-a-rectangle"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-with-a-shadow",
+      "note": "A shadow added and open: its settings step in to the subsection margin, and nothing reaches either edge."
+    },
+    {
+      "do": "panelMargins",
+      "stage": "2-with-a-shadow"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-with-a-shadow"
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        150,
+        120
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Hello"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-a-text-layer",
+      "note": "A text layer picked: the Text section's font, size and alignment rows keep the margin."
+    },
+    {
+      "do": "panelMargins",
+      "stage": "3-a-text-layer"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-a-text-layer"
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        100,
+        500
+      ],
+      "to": [
+        300,
+        420
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-an-arrow",
+      "note": "An arrow picked: its line, ends and caption rows keep the margin."
+    },
+    {
+      "do": "panelMargins",
+      "stage": "4-an-arrow"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-an-arrow"
+    },
+    {
+      "do": "tool",
+      "tool": "measure"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-the-measure-tool",
+      "note": "The Measure tool's own section."
+    },
+    {
+      "do": "panelMargins",
+      "stage": "5-the-measure-tool"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-the-measure-tool"
+    },
+    {
+      "do": "tool",
+      "tool": "zoomCallout"
+    },
+    {
+      "do": "drag",
+      "from": [
+        620,
+        380
+      ],
+      "to": [
+        700,
+        450
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-a-lens",
+      "note": "A magnifier picked: the Lens section keeps the margin."
+    },
+    {
+      "do": "panelMargins",
+      "stage": "6-a-lens"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-a-lens"
+    },
+    {
+      "do": "tool",
+      "tool": "frame"
+    },
+    {
+      "do": "drag",
+      "from": [
+        40,
+        40
+      ],
+      "to": [
+        260,
+        220
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "7-a-screen",
+      "note": "A screen picked: Frame, Columns and Layout. Until 2026-09-24 the Layout section's Arrangement row was 12pt wider than the dock, and the dock centred it, so every section slid 6pt over the canvas and 6pt off the window. The Arrangement row is one line here."
+    },
+    {
+      "do": "panelMargins",
+      "stage": "7-a-screen"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-a-screen"
+    },
+    {
+      "do": "action",
+      "action": "dockNarrowest"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "8-a-screen-in-the-narrowest-dock",
+      "note": "The dock dragged in to its narrowest, 220pt. A row that cannot fit its label and control side by side puts the control under the label; nothing pushes the panel wider than the dock."
+    },
+    {
+      "do": "panelMargins",
+      "stage": "8-a-screen-in-the-narrowest-dock"
+    },
+    {
+      "do": "snapshot",
+      "name": "8-a-screen-in-the-narrowest-dock"
+    },
+    {
+      "do": "action",
+      "action": "selectCanvas"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "9-the-canvas",
+      "note": "The canvas picked, in the narrow dock."
+    },
+    {
+      "do": "panelMargins",
+      "stage": "9-the-canvas"
+    },
+    {
+      "do": "snapshot",
+      "name": "9-the-canvas"
+    },
+    {
+      "do": "action",
+      "action": "showLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "10-the-library",
+      "note": "The Library shelf opened in the narrow dock: its scope bar and search box keep the same 14pt margin as every other section. Until 2026-09-24 the shelf kept a 12pt of its own."
+    },
+    {
+      "do": "panelMargins",
+      "stage": "10-the-library"
+    },
+    {
+      "do": "snapshot",
+      "name": "10-the-library"
+    }
+  ]
+}

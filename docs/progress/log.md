@@ -19552,3 +19552,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - The rotating check runs `DEFAULTS.everyCheck` (this walk) first in every slice (`queue/bin/sweep-schedule.mjs`, drill updated). Named in the video epic's success criteria.
 - Fixed on the way: the right panel ran off the window's right edge in any document with captions, because the caption Style segmented bar sat beside a row label and cannot shrink. It now spans the section, as the mock's `#styleSeg` does.
 - Follow-ups: cutting-a-stretch-out-of-a-recording-takes-its-c (p1, captions do not follow a ripple delete), the-export-sheet-s-size-for-an-edited-video-is-c (p2, sheet said 9.6 MB, file was 0.7 MB).
+
+## 2026-09-24 — Every panel keeps its margins (go loop, every-panel-follows-the-design-system)
+
+- New `PanelMarginRule` (PhotonzCore, tested) and walk step `panelMargins`: every row and control in the panel keeps the 14pt margin on both sides, and the panel is never wider than its dock. New walk action `dockNarrowest` (220pt, put back when the walk ends).
+- Fixed what it found: a picked screen's Arrangement row pushed the panel 12pt wide; caption Style/Position bars 1.5pt; the Library shelf's own 12pt inset and its scope bar at the narrowest dock; Animating rows at the narrowest dock.
+- New kit pieces `VideoKit.Segmented` (the mock's `.seg.fill.sm`, falls back to a dropdown) and `VideoKit.Dropdown`; `kitControl` seam so walks press segments by name.
+- Walks: `every-panel-keeps-its-margins-walk`, `captions-panel-keeps-its-margins-walk`; strict checks added to `video-panel-order-walk` and `transition-picker-at-a-cut-walk`.
+- Next: `panel-row-labels-are-one-size-and-sit-in-one-col` (p1) brings the picture sections' labels to the mock's row.

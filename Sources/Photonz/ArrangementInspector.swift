@@ -109,6 +109,7 @@ struct ArrangementInspector: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
+            .controlSize(.small)
             .frame(maxWidth: 152)
             // A row of words with no segment lit reads as a control nobody has
             // set, so while the picked groups disagree it wears the same one
@@ -253,6 +254,7 @@ struct ArrangementInspector: View {
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
+                .controlSize(.small)
                 .frame(maxWidth: 152)
                 .opacity(contents.direction.isMixed ? MixedLook.controlOpacity : 1)
             }
@@ -601,6 +603,7 @@ struct ArrangementInspector: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
+            .controlSize(.small)
             .frame(maxWidth: 152)
             .opacity(reading.isMixed ? MixedLook.controlOpacity : 1)
             .panelHelp(hugs
@@ -760,29 +763,42 @@ struct ArrangementInspector: View {
         // So the label takes a line of its own and the control drops under it,
         // which is what the dock's other wide controls already do
         // (`LayersPanel.labelled`). Same control, same place, one line lower.
-        VStack(alignment: .leading, spacing: mixed ? 3 : 0) {
-            HStack(spacing: 8) {
-                if let chevron {
-                    foldHead(title, isOpen: open, help: chevronHelp,
-                             control: "Limits", detail: title, toggle: chevron)
-                } else {
-                    Text(title)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .fixedSize()
-                }
-                if mixed {
-                    MixedWord().fixedSize()
-                    Spacer(minLength: 4)
-                } else {
-                    Spacer(minLength: 8)
-                    control()
-                }
-            }
+        //
+        // The same holds without the word when the dock is simply too narrow
+        // for the label and the control side by side: the dock gives its
+        // sections a fixed width and centres one that will not fit, so an
+        // Arrangement row 12pt too wide pushed EVERY section 6pt over the
+        // canvas and 6pt off the window whenever a screen was picked (measured
+        // by `panelMargins`, 2026-09-24). One line when it fits, two when not.
+        Group {
             if mixed {
-                HStack(spacing: 8) {
-                    Spacer(minLength: 8)
-                    control()
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 8) {
+                        rowHead(title, chevron: chevron, open: open, chevronHelp: chevronHelp)
+                        MixedWord().fixedSize()
+                        Spacer(minLength: 4)
+                    }
+                    HStack(spacing: 8) {
+                        Spacer(minLength: 8)
+                        control()
+                    }
+                }
+            } else {
+                ViewThatFits(in: .horizontal) {
+                    // No stack spacing: it would count on both sides of the
+                    // spacer and make the least gap 24pt rather than 8.
+                    HStack(spacing: 0) {
+                        rowHead(title, chevron: chevron, open: open, chevronHelp: chevronHelp)
+                        Spacer(minLength: 8)
+                        control()
+                    }
+                    VStack(alignment: .leading, spacing: 3) {
+                        rowHead(title, chevron: chevron, open: open, chevronHelp: chevronHelp)
+                        HStack(spacing: 8) {
+                            Spacer(minLength: 0)
+                            control()
+                        }
+                    }
                 }
             }
         }
@@ -791,6 +807,21 @@ struct ArrangementInspector: View {
         // can share a WORD without sharing a name: Smallest sits under both
         // Width and Height, so each says which one it belongs to.
         .playtestField(field ?? title)
+    }
+
+    /// A row's word, or the twist that opens its limits.
+    @ViewBuilder
+    private func rowHead(_ title: String, chevron: (() -> Void)?, open: Bool,
+                         chevronHelp: String) -> some View {
+        if let chevron {
+            foldHead(title, isOpen: open, help: chevronHelp,
+                     control: "Limits", detail: title, toggle: chevron)
+        } else {
+            Text(title)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize()
+        }
     }
 
     private func number(_ title: String, reading: PlacementReading<CGFloat>,

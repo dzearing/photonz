@@ -93,7 +93,10 @@ struct LibraryPanel: View {
             tiles
             resizeHandle
         }
-        .padding(.horizontal, 12)
+        // The panel's one margin, like every other section: the shelf kept a
+        // 12 of its own, so its scope bar and search box stood 2pt proud of
+        // every row above and below them (`panelMargins`, 2026-09-24).
+        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.top, 2)
         // What the section costs the dock, split into the part that scrolls and
         // the part that must not. Measured as a whole and the shelf taken back
@@ -126,15 +129,14 @@ struct LibraryPanel: View {
     // MARK: Scope and search
 
     private var scopePicker: some View {
-        Picker("Scope", selection: $scopeRaw) {
-            ForEach(LibraryScope.allCases, id: \.self) { scope in
-                Text(scope.segmentTitle).tag(scope.rawValue)
-            }
-        }
-        .pickerStyle(.segmented)
-        .labelsHidden()
-        .controlSize(.small)
-        .panelHelp("What the shelf is showing")
+        // The kit's bar rather than the system's: a system segmented control
+        // cannot shrink below its own words, and in the narrowest dock this one
+        // made the panel 30pt wider than the dock, sliding every section over
+        // the canvas (`panelMargins`, 2026-09-24). The kit's bar becomes a
+        // dropdown when its words will not fit.
+        VideoKit.Segmented(options: LibraryScope.allCases.map { ($0, $0.segmentTitle) },
+                           selection: scope) { scopeRaw = $0.rawValue }
+            .panelHelp("What the shelf is showing")
     }
 
     private var searchField: some View {

@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 170,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.996Z",
-  "updated": "2026-09-23T14:42:40.714Z",
+  "updated": "2026-09-24T11:14:15.375Z",
   "deps": [
     "panel-copy-and-flag-descriptions-have-a-length-b"
   ],
@@ -39,6 +39,31 @@
     {
       "t": "2026-09-23T14:42:40.712Z",
       "note": "video-shell.html was deleted on 2026-09-23 (task the-video-mocks-are-the-user-s-again-and-d18-is): it was the loop's own study arguing against tracks. The target is now pages/video.html, the video-*.html walkthroughs and comp-video.html, restored as the user drew them, plus UX-PATTERNS D18 (rewritten: a document with time has tracks). Where this task mentions video-shell, read video.html."
+    },
+    {
+      "t": "2026-09-24T09:52:55.380Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T11:14:15.204Z",
+      "note": "owns these walks: every-panel-keeps-its-margins-walk, captions-panel-keeps-its-margins-walk"
+    },
+    {
+      "t": "2026-09-24T11:14:15.260Z",
+      "note": "Review before building: the video sections the user complained about were already fixed by the-video-properties-look-like-the-rest-of-the-d; what was missing was anything that COMPARES a panel to the rules. Reading 40 section views by eye cannot settle where a row lands, so the check had to be a measurement of the running app, at defaults, at the default and the narrowest dock."
+    },
+    {
+      "t": "2026-09-24T11:14:15.316Z",
+      "note": "Built: PanelMarginRule (PhotonzCore, 16 tests): every row/control keeps the 14pt margin both sides, and the panel is no wider than its dock (SwiftUI centres a too-wide section, so one rigid row slides EVERY section over the canvas). New walk step panelMargins (reads the PanelTargetView register plus accessibility frames, never names; report:true to survey) and action dockNarrowest (220pt, restored in finish()). Surveyed 9 picture states, 25 video states, tools, Library and components. Found and fixed: (1) a screen picked made the panel 276pt in a 264 dock: ArrangementInspector.row's HStack(spacing 8)+Spacer(min 8) made the least gap 24pt, and its segmented controls were regular size where every other panel segmented control is small; now small, one line when it fits, label-over-control when not (ViewThatFits). (2) captions made the panel 265.5-267pt: the system segmented Style bar cannot shrink below its words; new VideoKit.Segmented (the mock's .seg.fill.sm: natural widths plus an equal share, a raised plate that slides, a VideoKit.Dropdown when the words do not fit) for Style and Position. (3) Library shelf used its own 12pt inset: now panelEdgeInset; its scope bar made the narrowest dock 30pt too wide: now VideoKit.Segmented (walks press segments by name through a new kitControl seam). (4) Narrowest dock: Animating rows read 'P' for Position and px wrapped: rows drop the value under the name, units fixedSize. Control choice: no radio columns anywhere in the panel; every exclusive list over three options is already a dropdown."
+    },
+    {
+      "t": "2026-09-24T11:14:15.374Z",
+      "note": "Review after, on the probe at defaults: every-panel-keeps-its-margins-walk (10 states incl. 220pt dock and Library) and captions-panel-keeps-its-margins-walk (4 states) pass with strict panelMargins; strict steps also added to video-panel-order-walk (clip, title, sound) and transition-picker-at-a-cut-walk (dissolve). 40 walks touching arrangement, library, captions and Animating pass; keys-copy-between-layers-walk fails at step 77 exactly as in the 2026-09-24 08:57 sweep (owned by walks-that-fail-in-the-full-sweep-5). Filed: panel-row-labels-are-one-size-and-sit-in-one-col (p1, picture sections use 12pt stacked labels where the mock and video sections use 10.5pt in a 76pt column), the-captions-section-says-every-button-and-colou (p2, 'Write Ag...' and '#000000B3'). Left rough, not filed (no edge crossed, only tight): at 220pt Canvas's button reads 'Ca...' and Language 'English (e...'. panelMargins is not yet watched under a lock, so it is refused there by default. A mistaken task no-placeholder-task was created by a botched dry run and dropped at once."
     }
+  ],
+  "started": "2026-09-24T09:52:55.379Z",
+  "walks": [
+    "every-panel-keeps-its-margins-walk",
+    "captions-panel-keeps-its-margins-walk"
   ]
 }

@@ -23,6 +23,7 @@
     { "do": "panel", "stage": "1-a-clip" },
     { "do": "panelStart", "stage": "1-a-clip" },
     { "do": "snapshot", "name": "1-a-clip" },
+    { "do": "panelMargins", "stage": "1-a-clip" },
 
     { "do": "panelMenu", "menu": "Speed", "shot": "2-the-speed-dropdown", "choose": "2x Speed" },
     { "do": "wait", "seconds": 0.8 },
@@ -58,6 +59,7 @@
     { "do": "expect", "menu": "Fade", "reads": "0.50s" },
     { "do": "panel", "stage": "4-a-title" },
     { "do": "snapshot", "name": "4-a-title" },
+    { "do": "panelMargins", "stage": "4-a-title" },
 
     { "do": "action", "action": "videoSeekStart" },
     { "do": "action", "action": "soundAddSample" },
@@ -66,6 +68,7 @@
     { "do": "expectSections", "leading": ["Sound"] },
     { "do": "expectInView", "field": "Level" },
     { "do": "panel", "stage": "5-a-sound" },
-    { "do": "snapshot", "name": "5-a-sound" }
+    { "do": "snapshot", "name": "5-a-sound" },
+    { "do": "panelMargins", "stage": "5-a-sound" }
   ]
 }

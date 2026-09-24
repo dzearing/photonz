@@ -151,6 +151,9 @@ private final class Run {
     /// real answer about the app, and the pictures it takes are the real
     /// window; it is only labelled, not withheld.
     private var ranLockSafe = false
+    /// The panel width a `dockNarrowest` step replaced, put back by `finish`
+    /// so the next walk is not handed a narrow dock it never asked for.
+    private var dockWidthToRestore: Double?
 
     init(scriptURL: URL, coordinator: AppCoordinator) {
         self.scriptURL = scriptURL
@@ -464,6 +467,10 @@ private final class Run {
         if status == "ok", let missed = captures.failure(granted: granted) {
             status = "failed"
             error = missed
+        }
+        if let width = dockWidthToRestore {
+            UserDefaults.standard.set(width, forKey: EditorState.inspectorWidthKey)
+            dockWidthToRestore = nil
         }
         // Anything the setup lent goes back first, so a walk that failed
         // halfway leaves nothing of its own in a person's Screenshots folder.
@@ -1928,6 +1935,29 @@ private final class Run {
             let start = Self.readPanelStart()
             write(json: start, to: "panel-start-\(stage).json")
             note(number, step.name, Self.outlinePanelStart(start), state: start)
+
+        case .panelMargins(let stage, let reportOnly):
+            let (margins, breaches) = try readPanelMargins()
+            write(json: margins, to: "panel-margins-\(stage).json")
+            let measured = (margins["items"] as? [[String: Any]])?.count ?? 0
+            guard measured > 0 else {
+                throw Failure(description: "nothing in the panel carries a row or control marker, "
+                    + "so there was nothing to measure against its margin")
+            }
+            let dock = EditorState.persistedInspectorWidth
+            let over = PanelMarginRule.overflow(panelWidth: PanelEdgeProbe.shared.panel.width, dockWidth: dock)
+            var verdict = breaches.isEmpty
+                ? "all \(measured) rows and controls keep the panel's "
+                    + "\(Int(PanelMarginRule.margin))pt margin on both sides"
+                : "\(breaches.count) of them do NOT keep the panel's \(Int(PanelMarginRule.margin))pt "
+                    + "margin: " + breaches.map(\.sentence).joined(separator: "; ")
+            if let over {
+                verdict = PanelMarginRule.overflowSentence(over, dockWidth: dock) + "; " + verdict
+            }
+            if (!breaches.isEmpty || over != nil) && !reportOnly {
+                throw Failure(description: verdict)
+            }
+            note(number, step.name, verdict, state: margins)
 
         case .describe(let stage, let text):
             note(number, stage, text ?? "", state: describe())
@@ -3939,6 +3969,14 @@ private final class Run {
                     window.collectionBehavior.insert(.fullScreenPrimary)
                     window.toggleFullScreen(nil)
                 }
+            case .dockNarrowest:
+                let defaults = UserDefaults.standard
+                if dockWidthToRestore == nil {
+                    dockWidthToRestore = defaults.object(forKey: EditorState.inspectorWidthKey) as? Double
+                        ?? Double(EditorState.inspectorWidthDefault)
+                }
+                defaults.set(InspectorResizeHandle.minWidth, forKey: EditorState.inspectorWidthKey)
+                actionDetail = "the panel is \(Int(InspectorResizeHandle.minWidth))pt wide"
             case .windowLaptop:
                 if let window = editor.hostWindow {
                     let visible = (window.screen ?? NSScreen.main)?.visibleFrame ?? window.frame
@@ -7370,6 +7408,104 @@ private final class Run {
                 "edgeInsets": insets.sorted(),
                 "spread": round2((insets.max() ?? 0) - (insets.min() ?? 0)),
                 "onOneLine": insets.count <= 1]
+    }
+
+    /// Every labelled row and control the dock is showing, measured against
+    /// the panel's side margin (`PanelMarginRule`).
+    ///
+    /// Read off the app's own register of what is in the panel rather than
+    /// through accessibility, so it reaches every section that names its rows
+    /// for a walk and answers the same on a locked screen.
+    private func readPanelMargins() throws -> ([String: Any], [PanelMarginRule.Breach]) {
+        let host = try requireWindow()
+        guard let content = host.contentView else { return ([:], []) }
+        let panel = PanelEdgeProbe.shared.panel
+        // A section header's marker covers the whole strip, because the whole
+        // strip is what you click to fold it; what is drawn IN it is measured
+        // by `panelStart`.
+        let markers = Self.findAll(PanelTargetView.self, in: content).filter { view in
+            (view.kind == .field || view.kind == .control)
+                && view.detail != "a dock section header"
+                && view.window === host && !view.isHiddenOrHasHiddenAncestor
+        }
+        var items: [PanelMarginRule.Item] = []
+        for view in markers {
+            // Into the content view's space, top left, which is SwiftUI's
+            // global space and so the panel frame's own.
+            var box = content.convert(view.bounds, from: view)
+            if !content.isFlipped { box.origin.y = content.bounds.height - box.maxY }
+            guard box.width > 0, box.height > 0, box.intersects(panel) else { continue }
+            let label = view.detail.isEmpty ? view.name : "\(view.name) (\(view.detail))"
+            items.append(PanelMarginRule.Item(name: label, frame: box))
+        }
+        items += Self.accessibleLeaves(in: content, window: host)
+            .filter { $0.frame.width > 0 && $0.frame.height > 0 && $0.frame.intersects(panel) }
+        items.sort { lhs, rhs in
+            lhs.frame.minY == rhs.frame.minY ? lhs.frame.minX < rhs.frame.minX
+                                             : lhs.frame.minY < rhs.frame.minY
+        }
+        let breaches = PanelMarginRule.breaches(of: items, in: panel)
+        var rows: [[String: Any]] = []
+        for item in items {
+            let leading: Double = Self.round2(item.frame.minX - panel.minX)
+            let trailing: Double = Self.round2(panel.maxX - item.frame.maxX)
+            let height: Double = Self.round2(item.frame.height)
+            let top: Double = Self.round2(item.frame.minY - panel.minY)
+            rows.append(["name": item.name, "leading": leading, "trailing": trailing,
+                         "height": height, "top": top])
+        }
+        var found: [[String: Any]] = []
+        for breach in breaches {
+            let inset: Double = Self.round2(breach.inset)
+            found.append(["name": breach.name, "side": breach.side.rawValue,
+                          "inset": inset, "says": breach.sentence])
+        }
+        let state: [String: Any] = [
+            "panelLeft": Self.round2(panel.minX), "panelWidth": Self.round2(panel.width),
+            "dockWidth": Double(EditorState.persistedInspectorWidth),
+            "margin": Double(PanelMarginRule.margin),
+            "items": rows,
+            "breaches": found,
+        ]
+        return (state, breaches)
+    }
+
+    /// Every word and control accessibility can see in the window, by its
+    /// FRAME, in the content view's top left space.
+    ///
+    /// The register only holds rows somebody named for a walk, and a section
+    /// that names none of them (a title's Time rows, for one) would pass the
+    /// margin check by saying nothing. Accessibility reaches every `Text` and
+    /// every control whether it was named or not. Only frames are read, never
+    /// names, which is the half of accessibility a locked screen keeps; the
+    /// role stands in for a name when there is none.
+    private static func accessibleLeaves(in content: NSView, window: NSWindow) -> [PanelMarginRule.Item] {
+        let roles: Set<NSAccessibility.Role> = [.staticText, .button, .popUpButton, .menuButton,
+                                                .slider, .textField, .checkBox, .radioButton,
+                                                .incrementor, .comboBox, .image]
+        var found: [PanelMarginRule.Item] = []
+        var seen = Set<ObjectIdentifier>()
+        func walk(_ element: Any, depth: Int) {
+            guard depth < 60, let object = element as? NSObject,
+                  seen.insert(ObjectIdentifier(object)).inserted,
+                  let reachable = object as? NSAccessibilityProtocol else { return }
+            // The dock's scroll bar lives on its edge by right, and so do its
+            // arrows and its thumb.
+            if reachable.accessibilityRole() == .scrollBar { return }
+            if let role = reachable.accessibilityRole(), roles.contains(role) {
+                let onScreen = reachable.accessibilityFrame()
+                var box = content.convert(window.convertFromScreen(onScreen), from: nil)
+                if !content.isFlipped { box.origin.y = content.bounds.height - box.maxY }
+                let words = [reachable.accessibilityLabel(), reachable.accessibilityValue() as? String]
+                    .compactMap { $0 }.first { !$0.isEmpty }
+                found.append(PanelMarginRule.Item(name: words ?? role.rawValue, frame: box))
+            }
+            for child in reachable.accessibilityChildren() ?? [] {
+                walk(child, depth: depth + 1)
+            }
+        }
+        walk(content, depth: 0)
+        return found
     }
 
     /// Everything inside the panel with a leading edge, with the numbers that

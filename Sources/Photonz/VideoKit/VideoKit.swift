@@ -77,6 +77,8 @@ extension VideoKit {
         static let warn = Tone(light: rgb(0xB7791F), dark: rgb(0xE0A53A))
         /// Marks on the scrubber (in and out).
         static let good = Tone(light: rgb(0x1A9E6A), dark: rgb(0x3ECF8E))
+        /// A raised plate: the selected segment (`--raised`).
+        static let raised = Tone(light: rgb(0xFFFFFF), dark: rgb(0x252A36))
         static let glassThin = Tone(light: rgb(0xFFFFFF, 0.58), dark: rgb(0x1E222D, 0.6))
         static let glassChrome = Tone(light: rgb(0xFAFBFD, 0.88), dark: rgb(0x161922, 0.78))
         static let edgeLo = Tone(light: rgb(0x161A2A, 0.10), dark: rgb(0x000000, 0.45))

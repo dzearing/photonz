@@ -177,6 +177,10 @@
       "name": "3-a-dissolve-between-two-clips"
     },
     {
+      "do": "panelMargins",
+      "stage": "3-a-dissolve-between-two-clips"
+    },
+    {
       "do": "action",
       "action": "clipTransitionDragLonger"
     },

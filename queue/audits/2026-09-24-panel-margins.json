@@ -1,0 +1,28 @@
+{
+  "feature": "Every panel keeps its margins",
+  "epic": "video-editing",
+  "summary": "Every section of the right hand panel now keeps the same 14pt margin on both sides, and no section can push the panel wider than its dock any more, at the normal width or dragged in to the narrowest. A walk measures this on every run, so a section that breaks it fails the day it lands.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    { "do": "Draw a screen with the Frame tool (F) and look at the Layout section: Arrangement, Free, Stack and Grid sit on one line inside the panel, and the section dividers stop at the panel's left edge.", "shot": "2026-09-24-panel-margins-1-screen.png" },
+    { "do": "Drag the panel's left edge in as far as it goes: Arrangement drops its Free, Stack, Grid bar under its label instead of pushing the panel wider.", "shot": "2026-09-24-panel-margins-2-narrow-screen.png" },
+    { "do": "Still narrow, open the Library (View menu): the Media, Comps, Styles, Systems bar becomes a Media dropdown.", "shot": "2026-09-24-panel-margins-3-narrow-library.png" },
+    { "do": "Open a recording with speech and let the captions write themselves: the Style bar (Caption, Lower third, Karaoke) and the Position bar fit inside the Captions section.", "shot": "2026-09-24-panel-margins-4-captions.png" },
+    { "do": "Pick Lower third: the raised plate slides to it." },
+    { "do": "Drag the panel in as far as it goes and look at Animating: Position, Corner radius and Shadow size put their values under the name, and px never wraps.", "shot": "2026-09-24-panel-margins-5-narrow-animating.png" }
+  ],
+  "evaluate": [
+    "With a screen picked, does the panel now line up with the window edge the way it does with a rectangle picked?",
+    "Is the caption Style bar in the app's capsule look close enough to the mock's bar, or should it be the system control?",
+    "In the narrowest panel, is a value dropping under its name better than a name cut to a letter?",
+    "Is a dropdown the right thing for the Library scope when the panel is too narrow for four words?"
+  ],
+  "rough": [
+    "The older picture sections (Appearance, Effects, Layout, Text) still use bigger labels stacked over their controls, where the mock and the video sections use small labels in a left column, so one video document shows both. Filed p1: panel-row-labels-are-one-size-and-sit-in-one-col.",
+    "Captions still reads \"Write Ag...\" on its Generate button, and after Lower third the Background row shows #000000B3 instead of a colour name. Filed p2: the-captions-section-says-every-button-and-colou.",
+    "The segments of the new bar keep 6pt either side of their words where the mock's small bar keeps 8, so Bottom, Middle and Top fit whole beside their label at the panel's normal width.",
+    "The mock (video-captions.html) shows caption Position as a line of text, not a control; the Position bar is the app's own and is kept.",
+    "In the narrowest panel the Canvas section's button reads \"Ca...\" and Language reads \"English (e...\". Nothing crosses the margin, it is just tight at 220pt.",
+    "The new check is not yet proven on a locked screen, so the walks that carry it are refused while the Mac is locked."
+  ]
+}

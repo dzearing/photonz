@@ -92,17 +92,22 @@ private struct PropertyKeyRow: View {
     private var isKeyed: Bool { diamond != .dormant }
 
     var body: some View {
-        HStack(spacing: 2) {
-            stepButton(forward: false)
-            KeyDiamondButton(property: property, state: diamond)
-            stepButton(forward: true)
-            Text(property.title)
-                .font(.system(size: 11))
-                .foregroundStyle(isKeyed ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
-                .lineLimit(1)
-                .padding(.leading, 4)
-            Spacer(minLength: 6)
-            PropertyKeyValue(property: property)
+        // One line, or the value under the name when the dock is too narrow
+        // for both: in the narrowest dock Position's two boxes left its name
+        // four points, and it read "P" (2026-09-24).
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 2) {
+                head
+                Spacer(minLength: 6)
+                PropertyKeyValue(property: property)
+            }
+            VStack(alignment: .trailing, spacing: 2) {
+                HStack(spacing: 2) {
+                    head
+                    Spacer(minLength: 0)
+                }
+                PropertyKeyValue(property: property)
+            }
         }
         .frame(minHeight: 24)
         .contentShape(Rectangle())
@@ -118,6 +123,20 @@ private struct PropertyKeyRow: View {
                 .disabled(diamond != .onKey)
             Divider()
             Button(isKeyed ? "Stop Animating" : "Animate") { editorState.toggleKeying(property) }
+        }
+    }
+
+    /// ‹ ◆ › and the name.
+    private var head: some View {
+        HStack(spacing: 2) {
+            stepButton(forward: false)
+            KeyDiamondButton(property: property, state: diamond)
+            stepButton(forward: true)
+            Text(property.title)
+                .font(.system(size: 11))
+                .foregroundStyle(isKeyed ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+                .lineLimit(1)
+                .padding(.leading, 4)
         }
     }
 

@@ -179,18 +179,13 @@ struct CaptionsInspector: View {
     @ViewBuilder private var style: some View {
         let look = editorState.captionLook
         // The mock's style bar spans the section (`#styleSeg`, width 100%).
-        // Beside a row label its three names are wider than the dock, and a
-        // segmented control never shrinks, so it pushed the whole panel past
-        // the window's right edge whenever a document had captions.
-        Picker("Style", selection: Binding(
-            get: { look.preset },
-            set: { editorState.pickCaptionPreset($0) })) {
-            ForEach(CaptionLook.Preset.allCases, id: \.self) { Text($0.title).tag($0) }
-        }
-        .labelsHidden()
-        .pickerStyle(.segmented)
-        .controlSize(.small)
-        .frame(maxWidth: .infinity)
+        // The system's segmented control cannot shrink below its own words,
+        // and its three names came out 1.5pt wider than the panel has, so the
+        // dock slid every section past both of its edges whenever a document
+        // had captions (`panelMargins`, 2026-09-24). The kit's bar shares out
+        // the width the row has.
+        VideoKit.Segmented(options: CaptionLook.Preset.allCases.map { ($0, $0.title) },
+                           selection: look.preset) { editorState.pickCaptionPreset($0) }
         .playtestControl("Caption style", detail: "the Captions section")
         .panelHelp("One look for every caption.")
         VideoKit.DropdownRow(label: "Font", value: look.fontName) {
@@ -219,14 +214,10 @@ struct CaptionsInspector: View {
             editorState.changeCaptionLook { $0.activeHex = hex }
         }
         VideoKit.FieldRow(label: "Position") {
-            Picker("Position", selection: Binding(
-                get: { look.position },
-                set: { position in editorState.changeCaptionLook { $0.position = position } })) {
-                ForEach(CaptionLook.Position.allCases, id: \.self) { Text($0.title).tag($0) }
+            VideoKit.Segmented(options: CaptionLook.Position.allCases.map { ($0, $0.title) },
+                               selection: look.position) { position in
+                editorState.changeCaptionLook { $0.position = position }
             }
-            .labelsHidden()
-            .pickerStyle(.segmented)
-            .controlSize(.small)
             .playtestControl("Caption position", detail: "the Captions section")
         }
     }

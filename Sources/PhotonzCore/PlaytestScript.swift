@@ -596,6 +596,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// (`InspectorDockLayout.swift`). For the walks that open the sample
     /// recording, which has no `width` and `height` of its own to ask for.
     case windowLaptop
+    /// Drag the right hand panel in to the narrowest the dock allows (220pt),
+    /// the width where a row too wide to fit shows first. Put back to what it
+    /// was when the walk ends, however it ends.
+    case dockNarrowest
     /// Undo and redo are menu chords too, so a walk that checks an undo step
     /// asks for it here.
     case undo, redo
@@ -2970,6 +2974,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// views in different files, so this is how a walk proves it rather than
     /// photographing it and hoping.
     case panelStart(stage: String)
+    /// Measure every labelled row and control in the panel against the
+    /// panel's side margin (`PanelMarginRule`), write them to
+    /// `panel-margins-<stage>.json`, and fail the walk if any of them comes
+    /// closer to either edge than the margin. `"report": true` writes the
+    /// numbers and passes, for a survey of a panel nobody has fixed yet.
+    case panelMargins(stage: String, reportOnly: Bool)
     /// Put the probe into light or dark for the shots that follow, so one walk
     /// can photograph a surface both ways. It changes THIS app only, never the
     /// machine's setting, so nothing outside the probe notices.
@@ -3024,7 +3034,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
         "dropImage", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
-        "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
+        "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag",
     ].sorted()
 
@@ -3126,6 +3136,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .toolBar: "toolBar"
         case .panelEdge: "panelEdge"
         case .panelStart: "panelStart"
+        case .panelMargins: "panelMargins"
         case .action: "action"
         }
     }
@@ -4004,6 +4015,8 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .panelEdge(stage: try f.string("stage"))
         case "panelStart":
             self = .panelStart(stage: try f.string("stage"))
+        case "panelMargins":
+            self = .panelMargins(stage: try f.string("stage"), reportOnly: try f.optionalFlag("report") ?? false)
         case "appearance":
             self = .appearance(try f.enumValue("value", PlaytestAppearance.self))
         case "action":

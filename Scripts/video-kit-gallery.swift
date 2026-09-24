@@ -21,6 +21,9 @@ extension View {
     func kitHover(_ name: String = "", perform: @escaping (Bool) -> Void) -> some View {
         onHover(perform: perform)
     }
+
+    // ...and `kitControl` is `playtestControl`, a name for a walk to press.
+    func kitControl(_ name: String, detail: String = "") -> some View { self }
 }
 
 // MARK: - The sheets, one per piece, with the mock page's data
@@ -163,6 +166,12 @@ struct ControlsSheet: View {
                                                                   endPoint: .bottomTrailing)))
             }
             K.FieldRow(label: "Variant") { K.SelectFace(value: "Name + role", isComponent: true) }
+            K.Segmented(options: [(0, "Caption"), (1, "Lower third"), (2, "Karaoke")],
+                        selection: 0) { _ in }
+            K.FieldRow(label: "Position") {
+                K.Segmented(options: [(0, "Bottom"), (1, "Middle"), (2, "Top")],
+                            selection: 0) { _ in }
+            }
         }
         .padding(12)
         .frame(width: 260, alignment: .leading)

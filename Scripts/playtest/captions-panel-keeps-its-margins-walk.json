@@ -1,0 +1,148 @@
+{
+  "out": "/tmp/photonz-playtest/captions-panel-keeps-its-margins-walk",
+  "seed": "The Captions section keeps the panel's margins and never makes the panel wider than its dock, at the default width and at the narrowest, with no flag changed.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleTalk"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "captionsWaitForThemselves"
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekQuarter"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-captions-written",
+      "note": "A talking recording with its captions written, at Next defaults. The Captions section's Style bar and Position bar fit the panel: until 2026-09-24 the system segmented control could not shrink below its words and pushed every section 1.5pt past both edges."
+    },
+    {
+      "do": "reveal",
+      "control": "Auto captions"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panelMargins",
+      "stage": "1-captions-written"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-captions-written"
+    },
+    {
+      "do": "action",
+      "action": "captionsStyleLowerThird"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-lower-third",
+      "note": "Lower third picked: the plate slides to it and nothing moves."
+    },
+    {
+      "do": "reveal",
+      "control": "Auto captions"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panelMargins",
+      "stage": "2-lower-third"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-lower-third"
+    },
+    {
+      "do": "action",
+      "action": "dockNarrowest"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3a-the-clip-in-the-narrowest-dock",
+      "note": "The clip's Time, Sound and Animating rows at 220pt: a value that cannot sit beside its name drops under it, so Position keeps its name and px never wraps."
+    },
+    {
+      "do": "reveal",
+      "control": "Key",
+      "in": "Position"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panelMargins",
+      "stage": "3a-the-clip-in-the-narrowest-dock"
+    },
+    {
+      "do": "snapshot",
+      "name": "3a-the-clip-in-the-narrowest-dock"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-the-narrowest-dock",
+      "note": "The dock at its narrowest, 220pt: the bars share what width there is and cut a label short before the panel grows."
+    },
+    {
+      "do": "reveal",
+      "control": "Auto captions"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panelMargins",
+      "stage": "3-the-narrowest-dock"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-the-narrowest-dock"
+    },
+    {
+      "do": "action",
+      "action": "captionsStyleCaption"
+    }
+  ]
+}

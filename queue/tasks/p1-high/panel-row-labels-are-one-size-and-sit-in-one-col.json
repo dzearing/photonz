@@ -1,0 +1,32 @@
+{
+  "id": "panel-row-labels-are-one-size-and-sit-in-one-col",
+  "title": "Panel row labels are one size and sit in one column in every section",
+  "goal": "In a video document the panel shows two kinds of row side by side: the video sections use small grey labels in a fixed left column with the control beside them, as the mocks draw every panel row, while the older sections (Appearance, Effects, Layout, Text) use bigger labels stacked over their controls. Make every section read like the mock rows, so the panel looks like one thing.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 420,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T11:13:27.990Z",
+  "updated": "2026-09-24T11:13:27.993Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by every-panel-follows-the-design-system (2026-09-24). Reproduce: Scripts/playtest.sh Scripts/playtest/captions-panel-keeps-its-margins-walk.json --no-build, picture 1-captions-written-sc.png (copied to queue/audits/2026-09-24-panel-margins-4-captions.png): Appearance Opacity/Blending labels are .callout (12pt) secondary stacked over full-width controls, Captions Language/Font/Size are VideoKit.FieldRow 10.5pt faint in a 76pt column. The mock uses .irow everywhere (docs/design/mocks/shared/components/inspector.css:314 and :343). The picture sections are the ones the user redlines with daily, so the restyle is large and visible: if it should stop short of the mock anywhere, that is a decision card, not a quiet choice. VideoKit.FieldRow is the piece to reuse; ColorPartLayout owns the Appearance rows. Rows that cannot fit their control beside the label should drop it under the label (ViewThatFits), as ArrangementInspector.row and PropertyKeyRow now do.",
+  "acceptance": [
+    "Every section row label uses the mock row label size and colour (inspector.css .irow>.rl: 10.5pt, faint) with the control beside it in the 76pt label column, or a written reason on the row why it stacks",
+    "Appearance, Effects, Layout and Text read the same as Time, Sound and Captions in one picture of a video document",
+    "every-panel-keeps-its-margins-walk and captions-panel-keeps-its-margins-walk still pass, at the default and the narrowest dock",
+    "Side by side with video.html PROPERTIES and one picture page in the audit"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T11:13:27.992Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "every-panel-keeps-its-margins-walk",
+    "captions-panel-keeps-its-margins-walk"
+  ]
+}
