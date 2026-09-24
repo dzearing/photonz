@@ -20,7 +20,8 @@ struct TimelineDock: View {
     @Environment(EditorState.self) private var editorState
 
     /// The Blade: a click on a clip cuts it there, rather than picking it.
-    @State private var isBlade = false
+    /// Kept by the editor, because B picks it from the keyboard.
+    private var isBlade: Bool { editorState.isTimelineBlade }
     /// How far a pinch in flight has got, so each move zooms by the CHANGE.
     @State private var pinchedTo: CGFloat?
 
@@ -47,6 +48,19 @@ struct TimelineDock: View {
             grid
         }
         .background(VideoKit.Palette.panel)
+        // A press anywhere in here hands the timeline the keyboard, and the
+        // keys reach it through here (`EditorState+TimelineKeys`).
+        .background { TimelineKeyboard(editorState: editorState) }
+        // Premiere's focused panel: a thin ring says which of the two, the
+        // picture or the timeline, the keys are talking to.
+        .overlay {
+            if editorState.timelineHasKeyboard {
+                Rectangle()
+                    .strokeBorder(VideoKit.Palette.accent.opacity(0.75), lineWidth: 1.5)
+                    .allowsHitTesting(false)
+            }
+        }
+        .panelReadout(editorState.timelineHasKeyboard ? "keyboard on the timeline" : "keyboard on the canvas")
         .tutorialAnchor(.timingStrip)
         .transition(.move(edge: .bottom).combined(with: .opacity))
     }
@@ -54,7 +68,8 @@ struct TimelineDock: View {
     // MARK: - The transport
 
     private var transport: some View {
-        VideoKit.TransportBar(current: editorState.documentTimecode,
+        VideoKit.TransportBar(current: editorState.documentTimecode
+                                  + (editorState.shuttleReading.map { "  \($0)" } ?? ""),
                               duration: editorState.documentLengthTimecode) {
             VideoKit.TransportButton(
                 symbol: editorState.isDocumentMuted ? "speaker.slash.fill" : "speaker.wave.2.fill",
@@ -120,11 +135,11 @@ struct TimelineDock: View {
     private var localBar: some View {
         HStack(spacing: 4) {
             toolButton("cursorarrow", name: "Select", help: "Select (V)", isOn: !isBlade) {
-                isBlade = false
+                editorState.isTimelineBlade = false
             }
-            toolButton("scissors", name: "Blade", help: "Blade: click a clip to cut it there (B cuts at the playhead)",
+            toolButton("scissors", name: "Blade", help: "Blade (B), split at playhead (⌘K)",
                        isOn: isBlade) {
-                isBlade.toggle()
+                editorState.isTimelineBlade.toggle()
             }
             if !editorState.timelineZoomSteps.isEmpty {
                 Rectangle().fill(VideoKit.Palette.line).frame(width: 1, height: 18)
@@ -247,7 +262,12 @@ struct TimelineDock: View {
     /// face when it is the one in hand.
     private func toolButton(_ symbol: String, name: String, help: String, isOn: Bool,
                             action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+        Button {
+            // A tool picked here is a press in the dock, so the keys that
+            // follow are the timeline's.
+            editorState.takeTimelineKeyboard()
+            action()
+        } label: {
             Image(systemName: symbol)
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(isOn ? AnyShapeStyle(Color.white) : AnyShapeStyle(VideoKit.Palette.dim))
@@ -704,5 +724,60 @@ private struct TimelineInOutSpan: View {
         }
         .frame(width: max(2, x1 - x0), height: height)
         .offset(x: x0)
+    }
+}
+
+
+/// Hands the timeline the keyboard on a press anywhere over the dock, takes it
+/// back on a press anywhere else in the window, and puts the window's presses
+/// through `TimelineKeyRouter` while the dock is up.
+///
+/// A monitor rather than a gesture, so no press is taken away from the clip,
+/// ruler or button it landed on: the dock only notices where it was.
+private struct TimelineKeyboard: NSViewRepresentable {
+    let editorState: EditorState
+
+    func makeNSView(context: Context) -> CatcherView {
+        let view = CatcherView()
+        view.editorState = editorState
+        return view
+    }
+
+    func updateNSView(_ view: CatcherView, context: Context) { view.editorState = editorState }
+
+    static func dismantleNSView(_ view: CatcherView, coordinator: ()) { view.stop() }
+
+    final class CatcherView: NSView {
+        weak var editorState: EditorState?
+        private var monitor: Any?
+        private weak var registeredWindow: NSWindow?
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            stop()
+            guard let window, let editorState else { return }
+            TimelineKeyRouter.register(editorState, in: window)
+            registeredWindow = window
+            monitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+                guard let self, let window = self.window, event.window === window else { return event }
+                let point = self.convert(event.locationInWindow, from: nil)
+                if self.bounds.contains(point) {
+                    self.editorState?.takeTimelineKeyboard()
+                } else {
+                    self.editorState?.releaseTimelineKeyboard()
+                }
+                return event
+            }
+        }
+
+        func stop() {
+            if let monitor { NSEvent.removeMonitor(monitor) }
+            monitor = nil
+            if let registeredWindow { TimelineKeyRouter.unregister(registeredWindow) }
+            registeredWindow = nil
+            editorState?.releaseTimelineKeyboard()
+        }
+
+        override func hitTest(_ point: NSPoint) -> NSView? { nil }
     }
 }

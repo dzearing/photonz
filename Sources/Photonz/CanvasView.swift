@@ -229,6 +229,9 @@ struct CanvasView: NSViewRepresentable {
     /// that repeats has a loop and no document has both.
     let onDocumentPlayToggle: () -> Void
     let onDocumentStepFrames: (Int) -> Void
+    /// A press on the picture: the canvas takes the keyboard back from the
+    /// timeline (`EditorState+TimelineKeys`).
+    let onCanvasPressed: () -> Void
     let documentHasTime: Bool
     /// Where the playhead is, in a document that has time. The chrome reads it
     /// to know whether the picked layer is on screen at all right now
@@ -417,6 +420,7 @@ struct CanvasView: NSViewRepresentable {
         view.canPlayMotion = canPlayMotion
         view.onDocumentPlayToggle = onDocumentPlayToggle
         view.onDocumentStepFrames = onDocumentStepFrames
+        view.onCanvasPressed = onCanvasPressed
         view.documentHasTime = documentHasTime
         view.documentTimeMS = documentTimeMS
         view.onPathEditHintChange = onPathEditHintChange
@@ -549,6 +553,7 @@ final class CanvasNSView: NSView {
     var canPlayMotion = false
     var onDocumentPlayToggle: (() -> Void) = {}
     var onDocumentStepFrames: ((Int) -> Void) = { _ in }
+    var onCanvasPressed: (() -> Void) = {}
     var documentHasTime = false
     var documentTimeMS = 0
     var onMeasureCommit: ((CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void) = { _, _, _, _ in }

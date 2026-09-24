@@ -14,6 +14,7 @@ extension CanvasNSView {
 
     override func mouseDown(with event: NSEvent) {
         guard let viewport else { return }
+        onCanvasPressed()
         // A fresh press, so whatever Escape called off belongs to the last
         // gesture. Cleared here rather than where the pivot is grabbed, so a
         // release that never arrived cannot leave the canvas swallowing every

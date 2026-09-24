@@ -19534,3 +19534,13 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Cues retype in place on their bar (double click) and on the canvas; the canvas no longer lets a caption or title that is not on screen take a click (`hidingWhatIsOffScreen`). A time document refits while nobody has moved the camera, so the picture's bottom is not under the tool bar.
 - Export: SRT or WebVTT from the panel/menus, and the video export sheet's Captions row (Burned in, SRT file, VTT file beside the film).
 - Walk: `captions-write-themselves-walk` at Next defaults. Follow-ups: captions-show-safe-area-guides-and-their-own-bar (p1), the-trim-bar-a-recording-opens-with-stays-clear (p2), trying-out-addjson-never-files-a-real-task (p2).
+
+## 2026-09-23: Premiere's keys work on the timeline (go loop)
+
+- The timeline has Premiere's panel focus: a press anywhere in the dock hands it the keyboard (thin accent ring), a press on the canvas takes it back. Photoshop tool letters keep working on the canvas.
+- Core `TimelineKeys.swift` (tested in `TimelineKeysTests`): the key map, J/K/L's `TimelineShuttle` ladder (1, 2, 4, 8, either way), `editPointMoments`/`neighbourEditPoint`, plus `clearMarkIn`/`clearMarkOut`.
+- App `EditorState+TimelineKeys.swift`: the commands, and `TimelineKeyRouter`, an app event monitor that gets a press to the timeline before the toolbar's single-letter key equivalents; the walk harness's `key` step offers presses to it the same way. The playback clock takes a rate (backwards too); sound only at 1x forward.
+- On the timeline B picks the Blade and ⌘K splits at the playhead (menu row and right-click rows print ⌘K); the recording window keeps B. Video menu gained Play Backward / Stop / Play Forward, Go to Previous / Next Edit, Clear In, Clear Out; I/O/M print on the rows while the timeline has the keyboard. Keys table in `docs/design/video.md`.
+- Walk step `expectTimeline` (playhead to the millisecond, keyboard, rate, tool, marks); walk keys `home`, `end`, `forwarddelete`.
+- Walk `premiere-keys-on-the-timeline-walk` at Next defaults; audit `queue/audits/2026-09-23-premiere-keys-on-the-timeline.json`.
+- Follow-up: a-picks-everything-after-a-clip-and-moves-it-as (A, Track Select Forward).

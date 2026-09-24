@@ -983,6 +983,19 @@ final class EditorState {
     /// dropped.
     @ObservationIgnored var documentPlaybackStartedAt: Date?
     @ObservationIgnored var documentPlaybackStartedAtMS: Int = 0
+    /// How fast, and which way, it is playing: 1 for Space and the Play
+    /// button, anything on J and L's ladder for a shuttle, negative backwards
+    /// (`EditorState+TimelineKeys`).
+    var documentPlaybackRate: Double = 1
+    /// J, K and L's ladder, and whether K is down right now.
+    @ObservationIgnored var timelineShuttle = TimelineShuttle()
+    @ObservationIgnored var isShuttleKHeld = false
+    /// The timeline has the keyboard: a press in the dock handed it over and
+    /// a press on the canvas takes it back. While it does, the Premiere keys
+    /// that are also Photoshop tool letters mean the timeline's thing.
+    var timelineHasKeyboard = false
+    /// The timeline's own tool: the Blade, or the Select arrow when false.
+    var isTimelineBlade = false
     /// Where a clip's pixels come from (`MovieFrames.swift`). Made on demand,
     /// so a window holding a screenshot never makes one.
     @ObservationIgnored var movieFramesStorage: MovieFrameFetcher?

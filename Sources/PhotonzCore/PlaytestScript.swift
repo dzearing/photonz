@@ -444,6 +444,8 @@ public struct PlaytestKey: Hashable, Sendable {
         "escape": ("\u{1B}", 53), "esc": ("\u{1B}", 53),
         "left": ("\u{F702}", 123), "right": ("\u{F703}", 124),
         "down": ("\u{F701}", 125), "up": ("\u{F700}", 126),
+        "home": ("\u{F729}", 115), "end": ("\u{F72B}", 119),
+        "forwarddelete": ("\u{F728}", 117),
     ]
 }
 
@@ -2768,6 +2770,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// promises (`SeparateBudget`). `count` sets both to the same number when a
     /// walk really does know the answer exactly.
     case expectLayers(atLeast: Int?, atMost: Int?)
+    /// What the timeline keys did (`TimelineKeys.swift`): where the playhead
+    /// is to the millisecond, whether the timeline or the canvas has the
+    /// keyboard, how fast it is playing, which of the timeline's tools is in
+    /// hand, and the In and Out marks. A picture cannot tell one frame from
+    /// the next, and `expectRecording`'s playhead is only good to a quarter
+    /// of a second.
+    case expectTimeline(PlaytestTimelineClaim)
     /// Plays the document for `seconds` and looks at what the canvas is
     /// showing `moments` times along the way, writing each look to
     /// `<name>-<n>.png`. Fails if the clip area is empty in any of them.
@@ -3014,7 +3023,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag",
     ].sorted()
@@ -3093,6 +3102,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectNotice: "expectNotice"
         case .expectToast: "expectToast"
         case .expectLayers: "expectLayers"
+        case .expectTimeline: "expectTimeline"
         case .expectPlaybackNeverBlank: "expectPlaybackNeverBlank"
         case .expectBox: "expectBox"
         case .expectField: "expectField"
@@ -3870,6 +3880,32 @@ public enum PlaytestStep: Sendable, Equatable {
                     + "so no number of layers could ever pass")
             }
             self = .expectLayers(atLeast: atLeast.map { Int($0) }, atMost: atMost.map { Int($0) })
+        case "expectTimeline":
+            let keyboard: PlaytestTimelineClaim.Keyboard?
+            switch try f.optionalString("keyboard") {
+            case nil: keyboard = nil
+            case "timeline": keyboard = .timeline
+            case "canvas": keyboard = .canvas
+            case let other?:
+                throw f.invalid("keyboard", "the keyboard is on the \"timeline\" or the \"canvas\", not \"\(other)\"")
+            }
+            let claim = PlaytestTimelineClaim(
+                playheadMS: try f.optionalNumber("playheadMS").map { Int($0) },
+                withinMS: Int(try f.optionalNumber("withinMS") ?? 0),
+                keyboard: keyboard,
+                rate: try f.optionalNumber("rate"),
+                blade: fields["blade"] as? Bool,
+                markInMS: try f.optionalNumber("markInMS").map { Int($0) },
+                markOutMS: try f.optionalNumber("markOutMS").map { Int($0) },
+                hasIn: fields["hasIn"] as? Bool,
+                hasOut: fields["hasOut"] as? Bool,
+                markers: try f.optionalNumber("markers").map { Int($0) })
+            guard claim.claimsSomething else {
+                throw f.invalid("playheadMS", "expectTimeline has to claim something: \"playheadMS\", "
+                    + "\"keyboard\", \"rate\", \"blade\", \"markInMS\", \"markOutMS\", \"hasIn\", "
+                    + "\"hasOut\" or \"markers\"")
+            }
+            self = .expectTimeline(claim)
         case "expectPlaybackNeverBlank":
             let seconds = try f.optionalNumber("seconds") ?? 3
             let moments = try f.optionalNumber("moments") ?? 20
@@ -4087,5 +4123,47 @@ extension PlaytestStep {
     static func isPathColourClaim(_ value: String, allowingNone: Bool) -> Bool {
         if allowingNone, value.caseInsensitiveCompare("none") == .orderedSame { return true }
         return RGBA(hex: value) != nil
+    }
+}
+
+
+/// What an `expectTimeline` step claims. Every field is optional; at least one
+/// is set.
+public struct PlaytestTimelineClaim: Hashable, Sendable {
+    public enum Keyboard: String, Hashable, Sendable { case timeline, canvas }
+
+    public var playheadMS: Int?
+    /// How far the playhead may be from `playheadMS`: nought, exactly there,
+    /// unless the step says otherwise.
+    public var withinMS: Int
+    public var keyboard: Keyboard?
+    /// How fast it is playing: nought stopped, 1 normal, negative backwards.
+    public var rate: Double?
+    /// The Blade in hand (true) or the Select arrow (false).
+    public var blade: Bool?
+    public var markInMS: Int?
+    public var markOutMS: Int?
+    public var hasIn: Bool?
+    public var hasOut: Bool?
+    public var markers: Int?
+
+    public init(playheadMS: Int? = nil, withinMS: Int = 0, keyboard: Keyboard? = nil, rate: Double? = nil,
+                blade: Bool? = nil, markInMS: Int? = nil, markOutMS: Int? = nil,
+                hasIn: Bool? = nil, hasOut: Bool? = nil, markers: Int? = nil) {
+        self.playheadMS = playheadMS
+        self.withinMS = max(0, withinMS)
+        self.keyboard = keyboard
+        self.rate = rate
+        self.blade = blade
+        self.markInMS = markInMS
+        self.markOutMS = markOutMS
+        self.hasIn = hasIn
+        self.hasOut = hasOut
+        self.markers = markers
+    }
+
+    public var claimsSomething: Bool {
+        playheadMS != nil || keyboard != nil || rate != nil || blade != nil || markInMS != nil
+            || markOutMS != nil || hasIn != nil || hasOut != nil || markers != nil
     }
 }

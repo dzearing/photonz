@@ -71,7 +71,7 @@ extension EditorState {
             // mid-play has to schedule it again from where the hand put the
             // playhead. Nothing is faded: a scrub is somebody looking for a
             // moment, and what they want to hear is that moment.
-            startAudio()
+            if playsSoundAtRate { startAudio() }
         }
         // ...and where the playhead is being DRAGGED, the sliver of sound
         // under it, so somebody hunting for a word can hear it go by
@@ -121,24 +121,45 @@ extension EditorState {
         isDocumentPlaying ? pauseDocument() : playDocument()
     }
 
-    func playDocument() {
-        guard documentHasTime, !isDocumentPlaying else { return }
+    /// Sound plays with the picture only at normal speed forwards. A shuttle
+    /// at double speed, or backwards, runs silent rather than garbled.
+    var playsSoundAtRate: Bool { documentPlaybackRate == 1 }
+
+    /// Play, at normal speed unless a shuttle asks for another
+    /// (`EditorState+TimelineKeys`). Asked again while it plays, it changes
+    /// speed where it is rather than starting over.
+    func playDocument(rate: Double = 1) {
+        guard documentHasTime, rate != 0 else { return }
+        if isDocumentPlaying {
+            guard rate != documentPlaybackRate else { return }
+            documentPlaybackRate = rate
+            timelineShuttle.playing(at: rate)
+            restartDocumentClock()
+            playsSoundAtRate ? startAudio() : stopAudio()
+            return
+        }
         // Playing from the last frame starts over, which is what pressing play
-        // at the end of something obviously means.
-        if documentTimeMS >= lastDocumentTimeMS { documentTimeMS = 0 }
+        // at the end of something obviously means. Backwards from the first
+        // frame there is nowhere to go.
+        if rate > 0, documentTimeMS >= lastDocumentTimeMS { documentTimeMS = 0 }
+        if rate < 0, documentTimeMS <= 0 { return }
+        documentPlaybackRate = rate
+        timelineShuttle.playing(at: rate)
         isDocumentPlaying = true
         // Anything left listening to a hand stands down: the whole mix is
         // about to play, and a scrub over the top of it is the same sound
         // twice (`ScrubAudition.swift`).
         endScrubAudition()
         restartDocumentClock()
-        startAudio()
+        if playsSoundAtRate { startAudio() }
     }
 
     func pauseDocument() {
         guard isDocumentPlaying else { return }
         noteRecordingPlace()
         isDocumentPlaying = false
+        documentPlaybackRate = 1
+        timelineShuttle.stopped()
         stopAudio()
         documentPlaybackTask?.cancel()
         documentPlaybackTask = nil
@@ -154,17 +175,24 @@ extension EditorState {
         documentPlaybackStartedAt = Date()
         documentPlaybackStartedAtMS = documentTimeMS
         let end = lastDocumentTimeMS
+        let rate = documentPlaybackRate
         documentPlaybackTask = Task { @MainActor [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(MovieRef.frameStepMS))
                 guard let self, isDocumentPlaying, let started = documentPlaybackStartedAt else { return }
-                let elapsed = Int(Date().timeIntervalSince(started) * 1000)
+                let elapsed = Int((Date().timeIntervalSince(started) * 1000 * rate).rounded())
                 let landing = documentPlaybackStartedAtMS + elapsed
                 if landing >= end {
                     // It finishes rather than looping: a recording has a last
                     // frame, and sitting on it is what having watched it looks
                     // like.
                     documentTimeMS = end
+                    pauseDocument()
+                    return
+                }
+                if landing <= 0 {
+                    // ...and backwards it stops on the first.
+                    documentTimeMS = 0
                     pauseDocument()
                     return
                 }

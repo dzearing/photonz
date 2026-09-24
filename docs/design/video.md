@@ -197,7 +197,44 @@ same thing down. No loop, because a recording finishes. A control that only
 promises a feature is a dead end.
 
 `space` plays and pauses. `←` and `→` step a frame, and only while nothing is
-picked, so they still nudge a layer somebody has taken hold of.
+picked, so they still nudge a layer somebody has taken hold of. That is the
+canvas's rule; the timeline's own keys are below.
+
+### Premiere's keys, and who has the keyboard
+
+Most of Premiere's timeline keys are Photoshop tool letters here too (K the
+Lens, L the Line, I Measure, O the Ellipse, A the Arrow, M the marquee). So the
+window has Premiere's panel focus: **the canvas has the keyboard until you press
+anywhere in the timeline dock**, which hands it to the timeline and draws a thin
+accent ring round the dock; a press on the canvas takes it back. The map is
+`Sources/PhotonzCore/TimelineKeys.swift` (tested), the doing is
+`EditorState+TimelineKeys.swift`, and `TimelineKeyRouter` gets a press there
+before the toolbar's single-letter key equivalents can take it.
+
+| Key | Timeline has the keyboard | Canvas has it |
+| --- | --- | --- |
+| Space | Play / pause | same |
+| J / K / L | Play backward / stop / play forward; J or L again goes 2x, 4x, 8x | tools |
+| K held + J / L | One frame back / on, and held it creeps | tools |
+| I / O | Set In / Set Out at the playhead | Measure / Ellipse |
+| ⌥I / ⌥O | Clear In / Clear Out | same |
+| M | Add Marker | marquee |
+| ⌘K | Split at Playhead (Premiere's Add Edit) | same |
+| ⇧⌘K | Split Everything at Playhead | same |
+| ⌫ | Lift: what is picked goes, nothing else moves | delete, as ever |
+| ⇧⌫ (and ⌥⌫) | Ripple Delete | ⌥⌫ only |
+| ← / → | One frame; ⇧ five | nudge a picked layer, else a frame |
+| ↑ / ↓ | Previous / next edit point (any in, out or cut) | nudge |
+| Home / End | Start / end | same |
+| V / B | Select / Blade, the timeline bar's two tools | Select / nothing |
+| = / - / \ | Zoom the timeline in / out / to fit | nothing |
+
+The Video menu prints these, and prints the plain letters only while the
+timeline has the keyboard, so it never promises a key the canvas is about to
+spend on a tool. A shuttle at anything but 1x forward runs silent; a frame step
+is silent too, as Premiere's is by default. A is Premiere's Track Select
+Forward and is not bound yet: it is only worth having once everything it picks
+can be carried as one.
 
 ### The clock is real time
 

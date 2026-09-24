@@ -385,9 +385,38 @@ struct EditorCommands: Commands {
         // on the focused video state so it disables in image windows.
         CommandMenu("Video") {
             let hasVideo = video?.isReady ?? false
-            Button((video?.isPlaying ?? false) ? "Pause" : "Play") { video?.togglePlayPause() }
+            // A document with time plays in the editor, not in a recording
+            // window, so the row plays whichever is in front of you.
+            let timed = editor?.documentHasTime ?? false
+            // The Premiere keys that are also Photoshop tool letters mean the
+            // timeline's thing only while the timeline has the keyboard, and
+            // the rows print them only then, so the menu never promises a key
+            // the canvas is about to spend on a tool (`EditorState+TimelineKeys`).
+            let timelineKeys = timed && (editor?.timelineHasKeyboard ?? false)
+            if timed {
+                Button((editor?.isDocumentPlaying ?? false) ? "Pause" : "Play") {
+                    editor?.toggleDocumentPlayback()
+                }
                 .keyboardShortcut(.space, modifiers: [])
-                .disabled(!hasVideo)
+                Button("Play Backward") { editor?.shuttle(.reverse) }
+                    .keyboardShortcut(timelineKeys ? KeyboardShortcut("j", modifiers: []) : nil)
+                Button("Stop") { editor?.shuttle(.stop) }
+                    .keyboardShortcut(timelineKeys ? KeyboardShortcut("k", modifiers: []) : nil)
+                    .disabled(!(editor?.isDocumentPlaying ?? false))
+                Button("Play Forward") { editor?.shuttle(.forward) }
+                    .keyboardShortcut(timelineKeys ? KeyboardShortcut("l", modifiers: []) : nil)
+                Divider()
+                Button("Go to Previous Edit") { editor?.goToEditPoint(forward: false) }
+                    .keyboardShortcut(timelineKeys ? KeyboardShortcut(.upArrow, modifiers: []) : nil)
+                    .disabled(!(editor?.canGoToEditPoint(forward: false) ?? false))
+                Button("Go to Next Edit") { editor?.goToEditPoint(forward: true) }
+                    .keyboardShortcut(timelineKeys ? KeyboardShortcut(.downArrow, modifiers: []) : nil)
+                    .disabled(!(editor?.canGoToEditPoint(forward: true) ?? false))
+            } else {
+                Button((video?.isPlaying ?? false) ? "Pause" : "Play") { video?.togglePlayPause() }
+                    .keyboardShortcut(.space, modifiers: [])
+                    .disabled(!hasVideo)
+            }
             Divider()
             if Experiments.shared.cutRecordingEnabled {
                 // One key, one meaning, two places it can land. A recording
@@ -397,10 +426,13 @@ struct EditorCommands: Commands {
                 // way to do the same thing: they are the same command reaching
                 // whichever surface is in front of you.
                 let onTimeline = editor?.documentHasTime ?? false
+                // Premiere's Add Edit, ⌘K, on the timeline, where B picks up
+                // the Blade; the recording window keeps its B.
                 Button("Split at Playhead") {
                     onTimeline ? editor?.splitClipAtPlayhead() : video?.cutAtPlayhead()
                 }
-                .keyboardShortcut("b", modifiers: [])
+                .keyboardShortcut(onTimeline ? KeyboardShortcut("k", modifiers: .command)
+                                             : KeyboardShortcut("b", modifiers: []))
                 .disabled(!(onTimeline ? (editor?.canSplitClipAtPlayhead ?? false)
                                        : (video?.canCutAtPlayhead ?? false)))
                 // Keys picked on a lane are the smaller and more recent thing
@@ -464,8 +496,8 @@ struct EditorCommands: Commands {
                 Divider()
             }
             // The ruler's marks, at the playhead. The same rows the ruler's
-            // right click offers there; M, I and O stay Photoshop's tool keys
-            // until the timeline owns the keyboard, so only Clear carries one.
+            // right click offers there; M, I and O are Photoshop's tool keys
+            // on the canvas and the timeline's marks while it has the keyboard.
             // The playhead from key to key, on the pair of keys the user
             // asked for. K alone is still the Lens and, once the timeline
             // owns the keyboard, Premiere's Stop; the chords are free of it.
@@ -480,8 +512,17 @@ struct EditorCommands: Commands {
             }
             if editor?.documentHasTime ?? false {
                 Button("Add Marker") { if let editor { editor.addMarker(atMS: editor.documentTimeMS) } }
+                    .keyboardShortcut(timelineKeys ? KeyboardShortcut("m", modifiers: []) : nil)
                 Button("Set In") { if let editor { editor.setMarkIn(atMS: editor.documentTimeMS) } }
+                    .keyboardShortcut(timelineKeys ? KeyboardShortcut("i", modifiers: []) : nil)
                 Button("Set Out") { if let editor { editor.setMarkOut(atMS: editor.documentTimeMS) } }
+                    .keyboardShortcut(timelineKeys ? KeyboardShortcut("o", modifiers: []) : nil)
+                Button("Clear In") { editor?.clearMarkIn() }
+                    .keyboardShortcut("i", modifiers: .option)
+                    .disabled(editor?.document?.markInMS == nil)
+                Button("Clear Out") { editor?.clearMarkOut() }
+                    .keyboardShortcut("o", modifiers: .option)
+                    .disabled(editor?.document?.markOutMS == nil)
                 Button("Clear In and Out") { editor?.clearMarkInOut() }
                     .keyboardShortcut("x", modifiers: .option)
                     .disabled(!(editor?.canClearMarkInOut ?? false))
@@ -571,15 +612,17 @@ struct EditorCommands: Commands {
                     .disabled(!(editor?.canExportCaptions ?? false))
                 Divider()
             }
+            // I and O belong to the recording window here; a document with
+            // time spends them on its marks, above.
             Button("Set Trim Start to Playhead") {
                 if let video { video.setTrimIn(video.currentTime) }
             }
-            .keyboardShortcut("i", modifiers: [])
+            .keyboardShortcut(timed ? nil : KeyboardShortcut("i", modifiers: []))
             .disabled(!hasVideo)
             Button("Set Trim End to Playhead") {
                 if let video { video.setTrimOut(video.currentTime) }
             }
-            .keyboardShortcut("o", modifiers: [])
+            .keyboardShortcut(timed ? nil : KeyboardShortcut("o", modifiers: []))
             .disabled(!hasVideo)
             Divider()
             Button((video?.isCropping ?? false) ? "Finish Crop" : "Crop to Region") {

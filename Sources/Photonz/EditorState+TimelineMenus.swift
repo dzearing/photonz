@@ -9,8 +9,9 @@ import PhotonzCore
 // clip: they right click it. So every verb the timeline has lives here, on the
 // thing it acts on, under Premiere's own names, with the key printed beside
 // every row the app answers to. A row never prints a key the app does not
-// honour: M, I, O and E are Photoshop's tool keys in this app until the
-// timeline owns the keyboard, so those rows print nothing yet.
+// honour: M, I and O are Photoshop's tool keys on the canvas, and the
+// timeline's marks while it has the keyboard, which a right click in the dock
+// has just handed it (`EditorState+TimelineKeys`).
 //
 // The rows are plain `MenuRow`s, the same list type the layer menus use, so a
 // row reads the same wherever it is drawn. Each one picks what it was opened
@@ -22,13 +23,19 @@ extension EditorState {
     // MARK: The keys the rows print
 
     enum TimelineMenuKeys {
-        static let split = MenuShortcut(key: "b", modifiers: [])
+        /// Premiere's Add Edit. B picks up the Blade.
+        static let split = MenuShortcut.command("k")
         static let delete = MenuShortcut(key: DeleteKeyCharacters.backwards, modifiers: [])
         static let rippleDelete = MenuShortcut(key: DeleteKeyCharacters.backwards, modifiers: .option)
         static let detachAudio = MenuShortcut(key: "d", modifiers: [.control, .shift])
         static let duplicate = MenuShortcut.command("j")
         static let clearInOut = MenuShortcut(key: "x", modifiers: .option)
         static let splitEverything = MenuShortcut.commandShift("k")
+        /// Premiere's marks. Plain letters, which the timeline answers while
+        /// it has the keyboard (`EditorState+TimelineKeys`).
+        static let addMarker = MenuShortcut(key: "m", modifiers: [])
+        static let markIn = MenuShortcut(key: "i", modifiers: [])
+        static let markOut = MenuShortcut(key: "o", modifiers: [])
     }
 
     // MARK: A clip
@@ -355,11 +362,11 @@ extension EditorState {
         if let markerHere {
             rows.append(.command("Remove Marker") { self.removeMarker(markerHere) })
         } else {
-            rows.append(.command("Add Marker") { self.addMarker(atMS: ms) })
+            rows.append(.command("Add Marker", TimelineMenuKeys.addMarker) { self.addMarker(atMS: ms) })
         }
         rows.append(.separator)
-        rows.append(.command("Set In") { self.setMarkIn(atMS: ms) })
-        rows.append(.command("Set Out") { self.setMarkOut(atMS: ms) })
+        rows.append(.command("Set In", TimelineMenuKeys.markIn) { self.setMarkIn(atMS: ms) })
+        rows.append(.command("Set Out", TimelineMenuKeys.markOut) { self.setMarkOut(atMS: ms) })
         if document.markInMS != nil || document.markOutMS != nil {
             rows.append(.command("Clear In and Out", TimelineMenuKeys.clearInOut) { self.clearMarkInOut() })
         }

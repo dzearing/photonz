@@ -123,6 +123,7 @@ struct EditorCanvasSurface: View {
                    canPlayMotion: editorState.canPlayMotion,
                    onDocumentPlayToggle: { editorState.toggleDocumentPlayback() },
                    onDocumentStepFrames: { editorState.stepDocument(byFrames: $0) },
+                   onCanvasPressed: { editorState.releaseTimelineKeyboard() },
                    documentHasTime: editorState.documentHasTime,
                    documentTimeMS: editorState.documentTimeMS,
                    onMeasureCommit: { editorState.addMeasure(from: $0, to: $1, mode: $2, headOffset: $3) },

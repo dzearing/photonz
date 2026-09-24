@@ -1820,6 +1820,9 @@ private final class Run {
             note(number, step.name, try checkLayers(atLeast: atLeast, atMost: atMost),
                  state: describe())
 
+        case .expectTimeline(let claim):
+            note(number, step.name, try checkTimeline(claim), state: describe())
+
         case .expectPlaybackNeverBlank(let name, let seconds, let moments):
             note(number, step.name,
                  try await checkPlaybackNeverBlank(name: name, seconds: seconds, moments: moments),
@@ -9073,6 +9076,53 @@ private final class Run {
     /// photographed. The video walks were written as describe-and-snapshot
     /// scripts, which means a run on a Mac that cannot photograph anything
     /// proves nothing at all; this is the step that fails.
+    /// What the timeline keys did, read off the editor itself.
+    private func checkTimeline(_ claim: PlaytestTimelineClaim) throws -> String {
+        guard let editor, editor.documentHasTime else {
+            throw Failure(description: "expectTimeline needs a document with time open, and there is none")
+        }
+        let document = editor.document
+        let rate = editor.isDocumentPlaying ? editor.documentPlaybackRate : 0
+        let keyboard: PlaytestTimelineClaim.Keyboard = editor.timelineHasKeyboard ? .timeline : .canvas
+        func mark(_ ms: Int?) -> String { ms.map { "\($0)ms" } ?? "none" }
+        let reading = "playhead \(editor.documentTimeMS)ms, keyboard on the \(keyboard.rawValue), "
+            + "rate \(rate), \(editor.isTimelineBlade ? "blade" : "select"), "
+            + "in \(mark(document?.markInMS)), out \(mark(document?.markOutMS)), "
+            + "\(document?.markers.count ?? 0) marker(s)"
+        var wrong: [String] = []
+        if let want = claim.playheadMS, abs(editor.documentTimeMS - want) > claim.withinMS {
+            wrong.append("the playhead is at \(editor.documentTimeMS)ms, not \(want)ms")
+        }
+        if let want = claim.keyboard, want != keyboard {
+            wrong.append("the keyboard is on the \(keyboard.rawValue), not the \(want.rawValue)")
+        }
+        if let want = claim.rate, abs(want - rate) > 0.001 {
+            wrong.append("it is playing at \(rate), not \(want)")
+        }
+        if let want = claim.blade, want != editor.isTimelineBlade {
+            wrong.append("the timeline's tool is \(editor.isTimelineBlade ? "the Blade" : "Select")")
+        }
+        if let want = claim.markInMS, document?.markInMS != want {
+            wrong.append("the In is \(mark(document?.markInMS)), not \(want)ms")
+        }
+        if let want = claim.markOutMS, document?.markOutMS != want {
+            wrong.append("the Out is \(mark(document?.markOutMS)), not \(want)ms")
+        }
+        if let want = claim.hasIn, want != (document?.markInMS != nil) {
+            wrong.append(want ? "there is no In" : "there is an In at \(mark(document?.markInMS))")
+        }
+        if let want = claim.hasOut, want != (document?.markOutMS != nil) {
+            wrong.append(want ? "there is no Out" : "there is an Out at \(mark(document?.markOutMS))")
+        }
+        if let want = claim.markers, want != (document?.markers.count ?? 0) {
+            wrong.append("there are \(document?.markers.count ?? 0) markers, not \(want)")
+        }
+        guard wrong.isEmpty else {
+            throw Failure(description: wrong.joined(separator: "; ") + " (\(reading))")
+        }
+        return reading + ", as claimed"
+    }
+
     private func checkRecording(pieces: Int?, picked: Int?, keeps: Int?,
                                 seconds: Double?, starts: Double? = nil,
                                 caught: Bool? = nil, playhead: Double? = nil) throws -> String {
@@ -10696,6 +10746,8 @@ private final class Run {
             // shortcut?" See `matchingEvent` for why it takes two.
             let matcher = Self.matchingEvent(key, flags: flags, down: down) ?? event
             if type == .keyUp {
+                // K coming up is what stops J and L creeping.
+                _ = TimelineKeyRouter.offer(event, in: window)
                 window.sendEvent(event)
             } else if Self.isTyping(in: window, flags: flags, typed: event.charactersIgnoringModifiers) {
                 // A letter typed into a field is TYPING, never a shortcut, and
@@ -10710,6 +10762,12 @@ private final class Run {
                 // (`--shortcut-diag`) is the run that settled it.
                 window.sendEvent(event)
                 takenBy = "the field being typed in"
+            } else if TimelineKeyRouter.offer(event, in: window) {
+                // A person's press passes an application event monitor before
+                // any key equivalent is offered, and a synthesized one never
+                // does, so the walk offers it to the timeline by hand, first,
+                // as the monitor would (`EditorState+TimelineKeys`).
+                takenBy = "timeline"
             } else if window.performKeyEquivalent(with: matcher) {
                 takenBy = "window"
             } else if NSApp.mainMenu?.performKeyEquivalent(with: matcher) == true {

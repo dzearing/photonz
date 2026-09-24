@@ -1,0 +1,29 @@
+{
+  "feature": "Premiere's keys on the timeline",
+  "epic": "video-cutting",
+  "summary": "Press anywhere in the timeline and it takes the keyboard, with a thin blue ring round the dock to show it: J/K/L shuttle, I and O mark, the arrows step frames and edit points, Command-K splits, Home and End go to the ends, B and V pick the Blade and Select. Click the picture and the canvas gets the keys back, so L is the Line tool again.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any screen recording.",
+  "try": [
+    { "do": "With the clip picked, press the right arrow. The picture nudges a point, because the canvas has the keyboard.", "shot": "2026-09-23-premiere-keys-0-canvas-has-the-keyboard-sc.png" },
+    { "do": "Press Command-Z, then click the Select arrow in the timeline's own bar. A blue ring goes round the dock. Press the right arrow three times: the playhead steps three frames and the picture stays put.", "shot": "2026-09-23-premiere-keys-2-timeline-has-the-keyboard-sc.png" },
+    { "do": "Press Command-K to cut at the playhead, then Home, then the down arrow. The playhead lands on the cut you just made." },
+    { "do": "Press I, then End, Shift-left and O, then M. The green In to Out stretch and a marker appear on the ruler. Option-I and Option-O clear them one at a time.", "shot": "2026-09-23-premiere-keys-5-in-out-and-a-marker-sc.png" },
+    { "do": "Press Home, then L twice: it plays at double speed and the transport says 2x. K stops, J plays backwards.", "shot": "2026-09-23-premiere-keys-6-l-twice-is-double-speed-sc.png" },
+    { "do": "Press B: the timeline's Blade lights up. V puts it back to Select.", "shot": "2026-09-23-premiere-keys-7-b-is-the-blade-sc.png" },
+    { "do": "Click the picture. The ring goes, and L picks the Line tool instead of playing.", "shot": "2026-09-23-premiere-keys-8-l-is-the-line-tool-again-sc.png" }
+  ],
+  "evaluate": [
+    "Is the thin ring round the dock enough to tell you which one the keys are talking to, or do you want it stronger?",
+    "Should the timeline take the keyboard by itself when a recording opens, so J/K/L work before any click?",
+    "Is Command-K for Split, with B picking up the Blade, the right trade now that B no longer cuts at the playhead on the timeline?",
+    "Does a silent shuttle at 2x and backwards bother you, or is picture-only fine for finding a moment?"
+  ],
+  "rough": [
+    "Sound only plays at normal speed forwards. Premiere plays pitched sound while shuttling at 2x and backwards; here those run silent.",
+    "A (Premiere's Track Select Forward) is not bound: the timeline cannot yet carry more than one clip in a drag. Filed as its own task; until then A on the timeline is still the Arrow tool.",
+    "E (Extend Edit) is not bound. Roll Edit to Playhead is on a cut's right-click menu.",
+    "The mock's K adds a key at the playhead; the task asked for K as Stop, so K is Stop on a focused timeline and Shift-K / Option-K still step between keys.",
+    "The focus ring is not in the mock. It is Premiere's focused-panel outline, added because the same letter now means two things.",
+    "The mock's transport has no speed readout; the 2x beside the time only shows while a shuttle runs faster, slower or backwards."
+  ]
+}

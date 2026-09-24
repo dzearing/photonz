@@ -83,6 +83,22 @@ extension PhotonzDocument {
         return true
     }
 
+    /// ⌥I, Premiere's Clear In: the Out stays where it is.
+    @discardableResult
+    public mutating func clearMarkIn() -> Bool {
+        guard markInMS != nil else { return false }
+        markInMS = nil
+        return true
+    }
+
+    /// ⌥O, Premiere's Clear Out.
+    @discardableResult
+    public mutating func clearMarkOut() -> Bool {
+        guard markOutMS != nil else { return false }
+        markOutMS = nil
+        return true
+    }
+
     /// The stretch the marks enclose, or nil where neither is set. Either one
     /// alone runs to the document's own end on its open side.
     public var markedRangeMS: Range<Int>? {
