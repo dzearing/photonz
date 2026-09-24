@@ -1467,17 +1467,37 @@ const OBJECTIVES = join(QUEUE, 'objectives.json');
 export function readObjectives() {
   return readJSON(OBJECTIVES, { updated: null, focus: null, principles: [], epics: [] });
 }
+const strings = (v) => (Array.isArray(v) ? v.map((s) => String(s).trim()).filter(Boolean) : []);
+// What the manager needs to know about a feature epic to measure the app
+// against it: the mock pages that are its target, the tools its users already
+// know, and the workflow a first-time user walks. Kept on the epic so that
+// changing the focus changes the brief with it (see focusBrief).
+const cleanSpec = (s) => {
+  if (!s || typeof s !== 'object') return null;
+  const spec = { mocks: strings(s.mocks), competitors: strings(s.competitors), workflow: s.workflow ? String(s.workflow).trim() : '' };
+  return spec.mocks.length || spec.competitors.length || spec.workflow ? spec : null;
+};
 export function writeObjectives(epics, meta = {}) {
   if (!Array.isArray(epics)) throw new Error('epics must be an array');
-  const clean = (list) => list.map((e) => ({
-    id: String(e.id || slug(e.title)),
-    title: String(e.title || 'Untitled'),
-    note: e.note ? String(e.note) : '',
-    // now | next | later. Stage is what stops the queue from working on
-    // everything at once: only `now` epics may hold open tasks.
-    stage: ['now', 'next', 'later'].includes(e.stage) ? e.stage : 'later',
-    children: Array.isArray(e.children) ? clean(e.children) : [],
-  }));
+  // Every field an epic carries has to be named here, because this rebuilds the
+  // tree from scratch. Until 2026-09-24 `success` was not, so one save from the
+  // dashboard's Objectives tab erased every epic's definition of done.
+  const clean = (list) => list.map((e) => {
+    const out = {
+      id: String(e.id || slug(e.title)),
+      title: String(e.title || 'Untitled'),
+      note: e.note ? String(e.note) : '',
+      // now | next | later. Stage is what stops the queue from working on
+      // everything at once: only `now` epics may hold open tasks.
+      stage: ['now', 'next', 'later'].includes(e.stage) ? e.stage : 'later',
+      children: Array.isArray(e.children) ? clean(e.children) : [],
+    };
+    const success = strings(e.success);
+    if (success.length) out.success = success;
+    const spec = cleanSpec(e.spec);
+    if (spec) out.spec = spec;
+    return out;
+  });
   const prev = readObjectives();
   const doc = {
     updated: now(),
@@ -1487,8 +1507,64 @@ export function writeObjectives(epics, meta = {}) {
     epics: clean(epics),
   };
   writeJSON(OBJECTIVES, doc);
-  appendEvent('objectives_updated', { count: doc.epics.length });
+  appendEvent('objectives_updated', { count: doc.epics.length, ...(meta.by ? { by: meta.by } : {}), ...(meta.change ? { change: meta.change } : {}) });
   return doc;
+}
+
+const flatEpics = (list, parent = null) => (list || []).flatMap((e) => [{ epic: e, parent }, ...flatEpics(e.children, e)]);
+
+// What the objectives leave unsaid that the loop needs said. A `now` epic or
+// sub-epic with no success list is one the loop can build against for days with
+// nothing to say when it is done (the video epic and all five children, until
+// 2026-09-23). A focus with no spec is a manager pass reading last focus's
+// mocks and competitors. Every gap is one plain line; none means clean.
+export function objectivesGaps(doc = readObjectives()) {
+  const gaps = [];
+  const all = flatEpics(doc.epics);
+  for (const { epic, parent } of all) {
+    const live = epic.stage === 'now' && (!parent || parent.stage === 'now');
+    if (live && !strings(epic.success).length) gaps.push(`${epic.id} is staged now and has no success criteria: write what done looks like, checkable by a walk or by the user`);
+  }
+  const focus = all.find(({ epic }) => epic.id === doc.focus);
+  if (!doc.focus) gaps.push('there is no focus: name the one feature epic the loop is working toward');
+  else if (!focus) gaps.push(`the focus ${doc.focus} is not an epic in the tree`);
+  else {
+    if (focus.epic.stage !== 'now') gaps.push(`the focus ${doc.focus} is staged ${focus.epic.stage}, not now`);
+    const spec = cleanSpec(focus.epic.spec) || {};
+    if (!spec.mocks?.length) gaps.push(`the focus ${doc.focus} names no mock pages in spec.mocks: the manager has nothing to put the app beside`);
+    if (!spec.competitors?.length) gaps.push(`the focus ${doc.focus} names no competitors in spec.competitors: the manager has no grown-up tool to measure against`);
+    if (!spec.workflow) gaps.push(`the focus ${doc.focus} has no spec.workflow: the manager has no first-time walk to count steps on`);
+  }
+  return gaps;
+}
+
+// The part of the manager's brief that depends on which epic is the focus. It is
+// generated from objectives.json on every pass rather than written into the
+// prompt, so the spec, competitor and workflow sections can never describe a
+// focus the loop has moved off (the prompt named video and redlining by hand
+// until 2026-09-24). Gaps come first, because a pass must fill them before it
+// files anything against the focus.
+export function focusBrief(doc = readObjectives()) {
+  const focus = flatEpics(doc.epics).find(({ epic }) => epic.id === doc.focus)?.epic;
+  const gaps = objectivesGaps(doc);
+  const L = ['## The focus, generated from queue/objectives.json for this pass', ''];
+  if (gaps.length) {
+    L.push('**The objectives have gaps. Filling them is the first thing this pass does**, before any task is filed: write each missing list into queue/objectives.json, then record it with `node queue/bin/queue.mjs event objectives_updated \'{"by":"manager","change":"..."}\'` and confirm `node queue/bin/queue.mjs objectives-check` prints nothing.', '');
+    for (const g of gaps) L.push(`- ${g}`);
+    L.push('');
+  }
+  if (!focus) return L.join('\n');
+  const spec = cleanSpec(focus.spec) || { mocks: [], competitors: [], workflow: '' };
+  L.push(`**Focus: ${focus.title}** (\`${focus.id}\`)`, '');
+  const list = (head, items) => { if (items.length) { L.push(head, ...items.map((s) => `- ${s}`), ''); } };
+  list('Done means (the focus success list, the spec you measure against first):', strings(focus.success));
+  for (const c of focus.children || []) {
+    if (c.stage === 'now') list(`Sub-epic \`${c.id}\`, ${c.title}, is done when:`, strings(c.success));
+  }
+  list('The mocks are the target (docs/design/mocks/pages/ unless a path says otherwise). Put the app beside them:', spec.mocks);
+  list('Competitors for this focus. Ask whether a person who knows them finds things where they expect, and whether it is easier here:', spec.competitors);
+  if (spec.workflow) L.push('The workflow to walk as a first-time user, at Next defaults with no flag changed:', '', spec.workflow, '');
+  return L.join('\n');
 }
 // Queue a p0 triage pass against the current objectives (used by the dashboard's
 // Retriage button). No-op if one is already waiting.

@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 180,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:47.139Z",
-  "updated": "2026-09-23T14:42:41.067Z",
+  "updated": "2026-09-24T11:44:12.392Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): The video epic and all five children had empty success criteria for five days while the loop built against them (fixed for video on 2026-09-23 in the intake window). Other now epics may be the same. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?\n\nFiled from the 2026-09-23 video audit in the intake window.",
@@ -38,6 +38,44 @@
     {
       "t": "2026-09-23T14:42:41.066Z",
       "note": "video-shell.html was deleted on 2026-09-23 (task the-video-mocks-are-the-user-s-again-and-d18-is): it was the loop's own study arguing against tracks. The target is now pages/video.html, the video-*.html walkthroughs and comp-video.html, restored as the user drew them, plus UX-PATTERNS D18 (rewritten: a document with time has tracks). Where this task mentions video-shell, read video.html."
+    },
+    {
+      "t": "2026-09-24T11:35:01.463Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T11:37:06.608Z",
+      "note": "Reproduced why criteria go missing: writeObjectives (the dashboard's Objectives save) rebuilds each epic as id/title/note/stage/children only, so one save erased all 6 success lists (scratch-copy run: 6 before, 0 after). Fixing that first, then a gap check, a generated focus brief for the manager, and criteria for every now epic."
+    },
+    {
+      "t": "2026-09-24T11:44:04.818Z",
+      "note": "Criteria written for all 10 now epics that had none (unmanned-loop; ui-building, ui-components, ui-layout; icon-svg, icon-grid, icon-vector, icon-animate, icon-export; measure-redline), each drawn from its mock walkthroughs (icon-draw-wt, icon-animate-wt, icon-loop-wt, icon-export-anim-wt, vector-wt, icon-gradient-wt, component-configure-wt, ui-entry-wt, ui-variants, ui-autolayout, redline, capture-wt, next-measure.md Done when). video-editing (focus), ui-building, icon-svg and measure-redline also carry a spec {mocks, competitors, workflow}, so a focus switch between them already has one."
+    },
+    {
+      "t": "2026-09-24T11:44:04.872Z",
+      "note": "Manager prompt: the hand-written video/redlining mock paths, competitors and workflows are gone; go-loop.sh appends 'queue.mjs focus-brief' (generated from objectives.json every pass: focus success, now sub-epic success, mocks, competitors, workflow, and any gaps first). Rule written in section 4: promote to now = write success in the same edit; change the focus = write its spec in the same edit; objectives-check must print nothing before a pass finishes. go-loop.sh takes effect the next time the loop restarts (zsh -n clean; the rendered prompt was printed and read)."
+    },
+    {
+      "t": "2026-09-24T11:44:04.925Z",
+      "note": "Stale review: no stage changed. Every now epic has had tasks done or open in the last week (ui-layout last done 09-22, icon-grid 09-20). icon-animate's note said video would inherit the icon strip, stale since D18 gave video its own tracks on 09-23: rewritten. epic-uehjr1 retitled from a raw request sentence to its outcome. Six objectives_updated events recorded, each with by/task/change."
+    },
+    {
+      "t": "2026-09-24T11:44:04.977Z",
+      "note": "Verified: node queue/bin/objectives-drill.mjs 26/26 (it fails on the old queue-lib); objectives-check exit 0 on the real file; a POST of the served tree to the live dashboard's /api/objectives kept 16/16 success lists and identical epics (dev-server reloads queue-lib by mtime, so the fix is live); Scripts/test.sh 9548 tests passed."
+    },
+    {
+      "t": "2026-09-24T11:44:05.029Z",
+      "note": "left rough: design-system and interaction-foundations are staged next but each holds two p3 tasks. Principle 5 says only now epics may hold open tasks while manager-prompt section 3 allows p3 work on next epics; the two rules disagree. Not filed: nobody using the app notices, and the manager pass owns staging."
+    },
+    {
+      "t": "2026-09-24T11:44:05.081Z",
+      "note": "left rough: the dashboard's Objectives tab shows neither success lists nor specs and cannot edit them; they survive a save now but are edited in the file. Not filed: the manager pass fills gaps and the check names them."
+    },
+    {
+      "t": "2026-09-24T11:44:12.390Z",
+      "note": "Every now epic in queue/objectives.json has success criteria (10 written, from their mocks) and the focus carries a spec; saving objectives from the dashboard no longer erases them (queue-lib writeObjectives kept only id/title/note/stage). The manager's spec, competitor and workflow sections are now generated from the focus epic every pass (queue.mjs focus-brief, appended by go-loop.sh), with the rule in manager-prompt section 4 and the check queue.mjs objectives-check. Stale notes fixed, six objectives_updated events. Verified by queue/bin/objectives-drill.mjs (26/26), a live dashboard save round trip, and Scripts/test.sh (9548 passed)."
     }
-  ]
+  ],
+  "started": "2026-09-24T11:35:01.462Z",
+  "completed": "2026-09-24T11:44:12.391Z"
 }

@@ -60,6 +60,14 @@
 //                                            why nothing is rebuilding it. Prints nothing when the
 //                                            app is current. Never touches the app or the lock
 //   node queue/bin/queue.mjs state           print aggregate dashboard state JSON
+//   node queue/bin/queue.mjs objectives-check
+//                                            print what the objectives leave unsaid (a now epic
+//                                            with no success criteria, a focus with no spec);
+//                                            prints nothing and exits 0 when there is nothing
+//   node queue/bin/queue.mjs focus-brief     the manager's focus section (success, mocks,
+//                                            competitors, workflow, and any gaps), generated
+//                                            from objectives.json; the go loop appends it to
+//                                            the manager prompt on every pass
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import * as q from './queue-lib.mjs';
@@ -277,6 +285,15 @@ try {
       break;
     case 'state':
       out(q.aggregateState());
+      break;
+    case 'objectives-check': {
+      const gaps = q.objectivesGaps();
+      for (const g of gaps) console.log(g);
+      if (gaps.length) process.exit(1);
+      break;
+    }
+    case 'focus-brief':
+      out(q.focusBrief());
       break;
     default:
       console.error('unknown command; see header of queue.mjs');

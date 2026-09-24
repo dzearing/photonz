@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-23",
+  "updated": "2026-09-24T11:40:20.271Z",
   "focus": "video-editing",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
@@ -126,7 +126,23 @@
         "Playback of a full-screen Retina recording never blinks or stutters",
         "One scripted editing session (an-editing-session-walk) runs at Next defaults in every rotating check: it opens a talking recording, cuts it, adds a second clip, a transition and a title moving from A to B, lets the captions write themselves, plays the whole edit looking 30 times for a blank frame, and exports the MP4",
         "Everything is reachable in Next with default settings"
-      ]
+      ],
+      "spec": {
+        "mocks": [
+          "video.html: the editor itself, with its tracks, clips, transport, transition picker and properties",
+          "the walkthroughs video-entry-wt.html, video-cut-wt.html, video-move-wt.html, video-title-wt.html, video-transition-wt.html, video-freeze-wt.html, video-zoom-wt.html",
+          "the topic pages video-transitions.html, video-motion.html, video-speed.html, video-audio.html, video-captions.html, video-compositing.html, time-compare.html",
+          "comp-video.html: the video controls as components",
+          "docs/design/mocks/shared/UX-PATTERNS.md D18: a document with time has tracks"
+        ],
+        "competitors": [
+          "Premiere Pro: tracks, the blade on B, J/K/L, I/O marks, ripple delete, a transition picked at the cut, right-click on every clip, cut and track header",
+          "Final Cut Pro: the magnetic timeline, skimming, connected clips, titles picked from a browser",
+          "Screen Studio and ScreenFlow: a raw screen recording to a polished share in minutes, zooms that follow the pointer",
+          "Photoshop, for anything drawn on the picture: a text layer moved from A to B, grown, faded and styled by dragging it, now over time"
+        ],
+        "workflow": "Open a five minute talking screen recording. Cut it to about ninety seconds, add a second clip and a music bed, put in a title that moves from A to B, let the captions write themselves, add a transition at a cut, and export an MP4. Count the steps, and note every place the screen does not say what to do next."
+      }
     },
     {
       "id": "design-system",
@@ -184,6 +200,13 @@
           "stage": "later",
           "children": []
         }
+      ],
+      "success": [
+        "A walk the full sweep reports failing also fails when run on its own; no reported failure is really a locked screen, an app that never started, or a flake",
+        "No runner in a day is terminated for running past its time limit, and none leaves a process burning CPU after its task ends (queue/loop.log and queue/history.jsonl)",
+        "Every task marked done has its work committed and pushed, and every finished feature has an audit the user can open from the dashboard",
+        "The dashboard agrees with the queue files: the running task, the ready list, open decisions and the last sweep read the same in both",
+        "Every now epic says what done looks like and the focus names its mocks, competitors and workflow: node queue/bin/queue.mjs objectives-check prints nothing"
       ]
     },
     {
@@ -197,14 +220,26 @@
           "title": "Component design: create once, reuse everywhere, override safely",
           "note": "",
           "stage": "now",
-          "children": []
+          "children": [],
+          "success": [
+            "Select a group and make it a component from the Layers header or its right-click menu; it wears the component ring and badge on the canvas and in Layers",
+            "Add a toggle or a variant property to a component, and every instance sets it from its own Properties",
+            "Drag a component from the Library onto the canvas as a linked instance; editing the main updates every instance, and a value overridden on one instance survives that edit",
+            "A fill inside a component can take a named Library style instead of a hex value, and changing the style changes every component that uses it"
+          ]
         },
         {
           "id": "ui-layout",
           "title": "Auto-layout and grids that behave like real UI",
           "note": "Moved up on 2026-09-03 by the decision \"Six audits in one day say nothing resizes to fit what is inside it. Should auto layout move up now?\" — answered \"Move auto layout up, start it next\".",
           "stage": "now",
-          "children": []
+          "children": [],
+          "success": [
+            "Turn a frame into a row or a column with a gap and padding; its children line up and the frame hugs them as they are added, removed or resized",
+            "Each child is fixed, hug or fill, and resizing the parent reflows them the way a browser would",
+            "Stacks nest, and a text layer inside one wraps at the width it is given",
+            "The auto-layout controls match ui-autolayout.html side by side"
+          ]
         },
         {
           "id": "ui-screens",
@@ -227,7 +262,28 @@
           "stage": "later",
           "children": []
         }
-      ]
+      ],
+      "success": [
+        "A person who knows Figma can start a UI canvas from New Window, drag a component from the Library into a frame, set its properties, and have the frame resize around what it holds, without being taught (ui-entry-wt.html)",
+        "The component, variant and auto-layout surfaces match their mocks side by side (component-configure-wt.html, ui-variants.html, ui-autolayout.html, components.html)",
+        "Everything is reachable in Next with default settings"
+      ],
+      "spec": {
+        "mocks": [
+          "ui-entry-wt.html",
+          "component-configure-wt.html",
+          "components.html",
+          "ui-variants.html",
+          "ui-autolayout.html",
+          "ui-nested.html",
+          "ui-grid.html"
+        ],
+        "competitors": [
+          "Figma: components, variants, instance overrides and auto layout with hug, fill and fixed",
+          "Sketch: symbols and smart layout"
+        ],
+        "workflow": "From New Window pick Design UI and open a UI canvas. Drag a Button from the Library into the login frame, make a settings row a component with a toggle and a variant property, place two instances, override one, change the main, and watch the frame grow and shrink around what it holds."
+      }
     },
     {
       "id": "icon-svg",
@@ -240,28 +296,49 @@
           "title": "Draw on the icon grid: keylines, snapping, live previews at every size",
           "note": "Moved to now on 2026-09-13 by the manager pass. There is nowhere to draw an icon: Frames.swift preset list is Desktop, Laptop, Tablet, Phone and Square, nothing under a thousand pixels. The first slice is icon sizes in New Frame plus seeing the icon at the size it will really be used.",
           "stage": "now",
-          "children": []
+          "children": [],
+          "success": [
+            "New Frame offers icon sizes, and a 24 unit artboard rules itself into units with the live area dashed",
+            "Square and circle keylines show from the Grid & snap group, and snapping to grid, keylines and geometry puts every point on a whole unit",
+            "The icon shows at 16, 24 and 48 beside the artboard and updates as you draw"
+          ]
         },
         {
           "id": "icon-vector",
           "title": "Vector tools tuned for icons: booleans, strokes, gradient paint",
           "note": "",
           "stage": "now",
-          "children": []
+          "children": [],
+          "success": [
+            "The pen places a hard corner with a click and a curve with a drag, every anchor and handle stays draggable, and ⇧⌘J closes the path",
+            "Union, subtract, intersect and exclude turn a selection into one path, from the Path section and from right-click",
+            "Stroke width, caps, joins and alignment are set in Properties, and fill and stroke each take a gradient from the paint editor",
+            "Mirror across center (⇧⌘M) copies a shape exactly about the artboard centre"
+          ]
         },
         {
           "id": "icon-animate",
           "title": "Animate SVG properties on the timeline, keyframes like any layer",
-          "note": "Moved to now on 2026-09-15 by the decision \"Animating an icon and editing a video: one surface or two?\", answered \"Motion is a property, and it opens into a cycle strip\". Five build tasks are filed against it: the motion model, the pivot, the timing strip, the looping preview at real sizes, and animated SVG export. Video is explicitly NOT moving; it inherits the curve list and the strip later.",
+          "note": "Moved to now on 2026-09-15 by the decision \"Animating an icon and editing a video: one surface or two?\", answered \"Motion is a property, and it opens into a cycle strip\". Five build tasks were filed against it: the motion model, the pivot, the timing strip, the looping preview at real sizes, and animated SVG export. That answer said video would not move and would inherit the curve list and the strip later; since 2026-09-23 video has tracks of its own (UX-PATTERNS D18), so the strip is the icon's alone.",
           "stage": "now",
-          "children": []
+          "children": [],
+          "success": [
+            "Add Rotation, Position, Scale or Opacity to a layer from the plus on its Motion list, type From and To, and it plays on the artboard at once",
+            "Move the pivot on the canvas, pick a curve from a list that draws each one or draw your own, and set Repeat to Forever",
+            "The timing strip shows a bar per moving layer that says which layer it is, and a spinner turning about the artboard loops with no stutter"
+          ]
         },
         {
           "id": "icon-export",
           "title": "Export clean SVG, static and animated, that works everywhere",
           "note": "Moved to now on 2026-09-13: the user asked for SVG export alongside the pen, so icons drawn in the app can be handed over.",
           "stage": "now",
-          "children": []
+          "children": [],
+          "success": [
+            "An exported SVG opens the same in a browser, Figma and Illustrator, with whole-unit coordinates and nothing behind the icon that was not drawn",
+            "An animated icon exports as SVG for a web page, and the sheet says before exporting what survives each destination and how big the file is",
+            "Copying an icon puts the same clean SVG on the clipboard"
+          ]
         },
         {
           "id": "icon-sets",
@@ -270,7 +347,29 @@
           "stage": "later",
           "children": []
         }
-      ]
+      ],
+      "success": [
+        "A person who knows Figma or Illustrator can draw a 24 unit icon on keylines, check it at real sizes, animate it and export clean SVG, without being taught (icon-draw-wt.html, icon-animate-wt.html, icon-export-anim-wt.html)",
+        "The icon surfaces match their mocks side by side",
+        "Everything is reachable in Next with default settings"
+      ],
+      "spec": {
+        "mocks": [
+          "icon-draw-wt.html",
+          "icon-gradient-wt.html",
+          "vector-wt.html",
+          "draw-boolean.html",
+          "icon-animate-wt.html",
+          "icon-loop-wt.html",
+          "icon-export-anim-wt.html",
+          "iconography.html"
+        ],
+        "competitors": [
+          "Figma and Illustrator: the pen, booleans, strokes and SVG export",
+          "SVGator and Lottie tools: animated SVG that plays on a web page"
+        ],
+        "workflow": "Start a 24 unit icon, turn on keylines and snapping, draw a cloud-download glyph from shapes and the pen, union it, give it a 1.75 round stroke, check it at 16, 24 and 48, make it swing or spin forever, and export an animated SVG for a web page."
+      }
     },
     {
       "id": "measure-redline",
@@ -287,7 +386,7 @@
         },
         {
           "id": "epic-uehjr1",
-          "title": "Using the arrow tool to point to something should make it easy to create a legible caption in a pill with a shadow, similar to the measure tool.",
+          "title": "Arrow captions: point at something and label it in a legible pill with a shadow, like the measure tool",
           "note": "Finished. Arrow captions landed and were audited on 2026-09-04; sent back to later on 2026-09-04 by the manager pass.",
           "stage": "later",
           "children": []
@@ -313,7 +412,25 @@
           "stage": "later",
           "children": []
         }
-      ]
+      ],
+      "success": [
+        "Capture a region, then measure a size and a gap on it with one click each, and the numbers are the pixel sizes a developer would type (Size, Gap and Distance as docs/design/next-measure.md \"Done when\" says)",
+        "Arrows, boxes and captions read as a redline: a caption sits in a pill with a shadow and stays legible on any background",
+        "Copy the spec list, or the picture with its measurements, and paste it into a chat or a doc in one step",
+        "A person who uses CleanShot X or Shottr gets from capture to a handed-off redline in no more steps than there"
+      ],
+      "spec": {
+        "mocks": [
+          "redline.html",
+          "capture-wt.html",
+          "docs/design/next-measure.md, section 12 \"Done when\""
+        ],
+        "competitors": [
+          "CleanShot X and Shottr: capture, annotate and measure in seconds",
+          "Figma and Sketch: measuring a design to hand it to a developer"
+        ],
+        "workflow": "Capture a region of a window, measure a button's size and the gap to its neighbour, add an arrow with a caption, redact a value, and copy the spec list and the picture to hand off."
+      }
     },
     {
       "id": "agent-drivable",

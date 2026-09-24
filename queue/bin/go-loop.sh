@@ -197,7 +197,10 @@ manager_pass() { # $1 = ready task count (for the log)
   banner "**Go loop** manager pass: assessing the app against the objectives and filing the next tasks"
   state busy
   touch "$MANAGER_STAMP"
-  run_runner "$(cat queue/bin/manager-prompt.md; echo; cat queue/bin/follow-up-bar.md)"
+  # The focus brief (success lists, mocks, competitors, workflow, and any gaps
+  # in the objectives) is generated from objectives.json on every pass, so the
+  # prompt can never go on describing a focus the loop has moved off.
+  run_runner "$(cat queue/bin/manager-prompt.md; echo; Q focus-brief; echo; cat queue/bin/follow-up-bar.md)"
   local rc=$?
   record_exit - "$rc"
   settle_leftovers manager - "$OUTCOME" "the manager pass"
