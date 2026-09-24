@@ -1,0 +1,52 @@
+{
+  "id": "clips-on-the-timeline-show-pictures-of-what-is-i-should-clips-on-the-timeline-sho",
+  "taskId": "clips-on-the-timeline-show-pictures-of-what-is-i",
+  "question": "Should clips on the timeline show small pictures of what is in them?",
+  "context": "Found while cutting a five minute recording at Next defaults: the clip is one gradient bar, so finding a moment means playing. The mock video.html draws clips as plain gradient bars; Premiere and Final Cut draw frames along each clip.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Pictures along every video clip",
+      "summary": "Each video clip shows a row of small frames from the recording along its length, with its name on top, the way Premiere and Final Cut draw them.",
+      "pros": [
+        "Find a moment in a long recording by looking, not by playing",
+        "What a Premiere or Final Cut editor expects to see"
+      ],
+      "cons": [
+        "Busier than the coloured bars in the mock",
+        "The colour that tells clips apart is mostly hidden"
+      ],
+      "mitigation": "Keep the coloured band along the top edge of each clip and the name in a pill over the pictures."
+    },
+    {
+      "id": "b",
+      "label": "Pictures only when zoomed in",
+      "summary": "At Fit the clips stay the coloured bars the mock draws; once zoomed far enough for a frame to be recognisable, pictures fade in.",
+      "pros": [
+        "Keeps the calm look of the mock at a glance",
+        "Pictures appear exactly when you are hunting for a moment"
+      ],
+      "cons": [
+        "A five minute recording at Fit is still one blank bar"
+      ],
+      "mitigation": "Scrubbing along the clip shows the frame under the pointer in the picture above."
+    },
+    {
+      "id": "c",
+      "label": "Keep plain coloured bars",
+      "summary": "Clips stay the coloured bars the mock draws. Finding a moment stays a job for scrubbing and playing.",
+      "pros": [
+        "Matches the mock exactly",
+        "Nothing to build"
+      ],
+      "cons": [
+        "Slower than Premiere for finding a moment in a long recording"
+      ],
+      "mitigation": "Captions and the waveform under the clip already show where speech is.",
+      "declines": true
+    }
+  ],
+  "recommended": "b",
+  "status": "pending",
+  "created": "2026-09-24T12:16:53.492Z"
+}

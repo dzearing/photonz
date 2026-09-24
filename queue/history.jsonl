@@ -6957,3 +6957,24 @@
 {"t":"2026-09-24T12:03:17.630Z","ev":"task_resequenced","id":"the-captions-section-says-every-button-and-colou","from":3310,"to":39}
 {"t":"2026-09-24T12:03:17.680Z","ev":"task_note","id":"recordings-and-sounds-can-go-into-the-library-wi"}
 {"t":"2026-09-24T12:04:03.239Z","ev":"manager","filed":2,"readyBefore":41,"readyAfter":43,"report":"queue/manager/2026-09-24-0503.md"}
+{"t":"2026-09-24T12:04:18.850Z","ev":"manager_pass","exit":0,"ready":43}
+{"t":"2026-09-24T12:04:18.909Z","ev":"task_started","id":"measure-the-video-editor-against-premiere-and-fi","title":"Measure the video editor against Premiere, and file every gap","priority":"p1-high"}
+{"t":"2026-09-24T12:15:48.388Z","ev":"task_created","id":"the-timeline-ruler-names-the-right-time-when-zoo","priority":"p1-high","title":"The timeline ruler names the right time when zoomed in"}
+{"t":"2026-09-24T12:16:31.416Z","ev":"task_created","id":"premiere-s-timeline-keys-work-the-moment-a-recor","priority":"p1-high","title":"Premiere's timeline keys work the moment a recording opens"}
+{"t":"2026-09-24T12:16:31.504Z","ev":"task_created","id":"marking-an-in-and-an-out-and-pressing-one-key-ta","priority":"p1-high","title":"Marking an In and an Out and pressing one key takes that stretch out"}
+{"t":"2026-09-24T12:16:31.594Z","ev":"task_created","id":"a-long-captioned-recording-edits-without-freezin","priority":"p1-high","title":"A long captioned recording edits without freezing"}
+{"t":"2026-09-24T12:16:31.686Z","ev":"task_created","id":"q-and-w-trim-the-clip-under-the-playhead-up-to-i","priority":"p1-high","title":"Q and W trim the clip under the playhead up to it, the Premiere way"}
+{"t":"2026-09-24T12:16:31.775Z","ev":"task_created","id":"a-title-typed-over-a-video-is-readable-without-r","priority":"p1-high","title":"A title typed over a video is readable without restyling it"}
+{"t":"2026-09-24T12:16:31.864Z","ev":"task_created","id":"one-key-puts-the-usual-transition-on-the-cut-at","priority":"p1-high","title":"One key puts the usual transition on the cut at the playhead"}
+{"t":"2026-09-24T12:16:31.960Z","ev":"task_created","id":"the-export-sheet-lets-you-pick-the-size-of-the-v","priority":"p1-high","title":"The Export sheet lets you pick the size of the video"}
+{"t":"2026-09-24T12:16:32.054Z","ev":"task_created","id":"s-switches-timeline-snapping-off-and-on","priority":"p1-high","title":"S switches timeline snapping off and on"}
+{"t":"2026-09-24T12:16:45.344Z","ev":"task_note","id":"on-a-video-the-tool-bar-holds-the-video-tools-an"}
+{"t":"2026-09-24T12:16:45.422Z","ev":"task_created","id":"clips-on-the-timeline-show-pictures-of-what-is-i","priority":"p1-high","title":"Clips on the timeline show pictures of what is in them"}
+{"t":"2026-09-24T12:16:53.493Z","ev":"decision_opened","id":"clips-on-the-timeline-show-pictures-of-what-is-i-should-clips-on-the-timeline-sho","taskId":"clips-on-the-timeline-show-pictures-of-what-is-i","question":"Should clips on the timeline show small pictures of what is in them?"}
+{"t":"2026-09-24T12:17:04.726Z","ev":"task_blocked","id":"clips-on-the-timeline-show-pictures-of-what-is-i","from":"pending","note":"waiting on the user: pictures on clips departs from the mock's plain bars"}
+{"t":"2026-09-24T12:18:10.525Z","ev":"task_note","id":"measure-the-video-editor-against-premiere-and-fi"}
+{"t":"2026-09-24T12:18:10.580Z","ev":"task_note","id":"measure-the-video-editor-against-premiere-and-fi"}
+{"t":"2026-09-24T12:18:10.631Z","ev":"task_note","id":"measure-the-video-editor-against-premiere-and-fi"}
+{"t":"2026-09-24T12:18:10.682Z","ev":"task_note","id":"the-trim-bar-a-recording-opens-with-stays-clear"}
+{"t":"2026-09-24T12:18:10.733Z","ev":"task_walks","id":"measure-the-video-editor-against-premiere-and-fi","walks":[]}
+{"t":"2026-09-24T12:21:43.955Z","ev":"task_done","id":"measure-the-video-editor-against-premiere-and-fi","from":"in_progress","note":"Gap report with 12 real captures in docs/design/video-vs-premiere.md. Basics checked first: all work. 9 gaps filed p1 source user, most blocking first (ruler labels off when zoomed, keys need a click, no Extract/Lift, 170-680 ms freezes on a captioned 5 min timeline, Q/W, readable title, default transition key, export size, S snapping) plus a decision card on pictures along clips. Standing objective video-beats-premiere added. Measured on a real 5 min 2880x1800 recording and the session walk, at Next defaults."}

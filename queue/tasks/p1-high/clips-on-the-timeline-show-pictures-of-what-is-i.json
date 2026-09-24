@@ -1,0 +1,31 @@
+{
+  "id": "clips-on-the-timeline-show-pictures-of-what-is-i",
+  "title": "Clips on the timeline show pictures of what is in them",
+  "goal": "On a five minute recording the clip is one long coloured bar, so the only way to find the moment you want is to play or scrub. Premiere and Final Cut draw small pictures along each clip. The user decides whether clips here show pictures, as the mock draws plain coloured bars.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 420.5,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T12:16:45.418Z",
+  "updated": "2026-09-24T12:17:04.725Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24); gap report docs/design/video-vs-premiere.md. Picture: docs/design/video-vs-premiere/five-minutes-at-fit.jpg. Mock video.html (timeline section) draws clips as gradient bars with no pictures, so this departs from the mock and needs the user s yes before building.",
+  "acceptance": [
+    "The user has answered the decision card on this task",
+    "If yes: a video clip on the timeline shows frames from its own recording along its length at every zoom, and a walk shows them on a five minute recording",
+    "If yes: a clip still reads as picked, and its name stays legible over the pictures"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T12:16:45.420Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-24T12:17:04.722Z",
+      "note": "waiting on the user: pictures on clips departs from the mock's plain bars"
+    }
+  ]
+}

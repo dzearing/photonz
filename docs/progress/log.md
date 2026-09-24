@@ -19560,3 +19560,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - New kit pieces `VideoKit.Segmented` (the mock's `.seg.fill.sm`, falls back to a dropdown) and `VideoKit.Dropdown`; `kitControl` seam so walks press segments by name.
 - Walks: `every-panel-keeps-its-margins-walk`, `captions-panel-keeps-its-margins-walk`; strict checks added to `video-panel-order-walk` and `transition-picker-at-a-cut-walk`.
 - Next: `panel-row-labels-are-one-size-and-sit-in-one-col` (p1) brings the picture sections' labels to the mock's row.
+
+## 2026-09-24: The video editor measured against Premiere (go loop, measure-the-video-editor-against-premiere-and-fi)
+
+- Ran the editing-session walk (passes) and three throwaway walks on a real five minute, 2880x1800 talking recording with a music bed, at Next defaults with real captures. Report with pictures: `docs/design/video-vs-premiere.md` (pictures in `docs/design/video-vs-premiere/`).
+- Basics all work (Command K, Blade, ripple delete, J/K/L, tracks, detach audio, snapping, undo). Ahead of Premiere: five minutes of captions in about 3 s, no blank frames, 1.3 s open.
+- Filed p1 (source user), most blocking first: the ruler's labels are off when zoomed (bug, cause in `VideoKit.TimeRuler`), timeline keys need a click before they work, no Extract/Lift of an In-Out stretch, 170-680 ms freezes per press on a captioned five minute timeline, Q/W ripple trim, a readable default title, a default transition key, an export size choice, an S snapping toggle; plus a decision card on pictures along clips.
+- New standing objective `video-beats-premiere` under video editing, with measurable criteria for the manager.

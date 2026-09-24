@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-24T11:40:20.271Z",
+  "updated": "2026-09-24T12:17:14.824Z",
   "focus": "video-editing",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
@@ -60,6 +60,20 @@
       "note": "From capture to cut to share without leaving the app. Mock-first: the video clickthroughs define the experience before Next builds it. Promoted to now on 2026-09-15 by the manager pass, acting on the user's answer to \"You moved video editing up the list this morning, above redlining. Should the loop start building it?\", which was \"Start video now\": the loop builds video editing in the app, beginning with cutting a recording into pieces, while icon and redlining work keep going around it. Focus from 2026-09-18: the user shifted priority to video. The clickthroughs are ideas to build on, not specs. The whole set turns on one thesis they all repeat: video is not a separate mode, it is the same document with time.",
       "stage": "now",
       "children": [
+        {
+          "id": "video-beats-premiere",
+          "title": "Better than Premiere at editing screen recordings",
+          "note": "Standing objective from the user (2026-09-23: \"better than premiere\"). Measured against Premiere Pro, Final Cut, ScreenFlow and Screen Studio on one workflow: a five minute talking screen recording cut to ninety seconds with a second clip, a music bed, a transition, a title, captions and an MP4. The gap report is docs/design/video-vs-premiere.md; re-run the session and update it whenever a gap closes. The manager files against the criteria below.",
+          "stage": "now",
+          "children": [],
+          "success": [
+            "Every Premiere key on the gap report does its Premiere job on a video document straight after it opens, with no click first: J K L, I O, M, B, V, Q W, apostrophe and semicolon, = - and backslash, S, Command K, Shift Delete, and a default transition key",
+            "The five minute workflow takes no more presses than Premiere: removing a marked stretch is at most three presses (I, O, one key), and the whole cut to ninety seconds is under 40 presses and drags",
+            "On a five minute recording with its captions written, no press on the timeline and no frame of playback keeps the main thread busy over 50 ms",
+            "Captions for five minutes of speech write themselves in under 10 seconds on this Mac (measured 2026-09-24: about 3 s, already ahead of Premiere)",
+            "The ruler, playhead, clips and captions agree to the frame at every zoom, and a title, the export size and the export sheet need no restyling or guessing to come out right for sharing at 1080p"
+          ]
+        },
         {
           "id": "video-cutting",
           "title": "Cutting and arranging: blade, trim, and place clips with confidence",

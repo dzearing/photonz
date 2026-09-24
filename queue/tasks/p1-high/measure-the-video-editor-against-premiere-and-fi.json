@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 190,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:42:39.137Z",
-  "updated": "2026-09-24T09:51:52.684Z",
+  "updated": "2026-09-24T12:21:43.954Z",
   "deps": [
     "tracks-you-can-add-rename-group-hide-mute-lock-a",
     "a-clip-s-sound-is-on-the-timeline-from-the-momen",
@@ -53,6 +53,33 @@
     {
       "t": "2026-09-24T09:51:52.683Z",
       "note": "manager 2026-09-24: all five deps are done, so this is claimable. Already filed from the editing-session walk, do not refile: captions not following a cut (cutting-a-stretch-out-of-a-recording-takes-its-c), export size estimate 14x high (the-export-sheet-s-size-for-an-edited-video-is-c), no way to save an edit (a-video-edit-can-be-saved-as-a-project-and-opene), sound hard-cutting at a transition (a-transition-carries-the-sound-across-the-cut-to). Also noted and not filed yet: sound is silent while shuttling at 2x or backwards (Premiere plays it pitched)."
+    },
+    {
+      "t": "2026-09-24T12:04:18.901Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T12:18:10.523Z",
+      "note": "Adversarial pass before measuring: the brief asks for a real 5 minute recording, but the only samples are 8 s and 17 s, so a 300 s 2880x1800 talking recording was built with say+ffmpeg in /tmp (not committed). Walks cannot hear, so audio gaps (shuttle sound) were not reproduced. A walk 'click' at window coordinates lands in the canvas view, not the SwiftUI timeline, so a first Blade click looked broken; pressing the Blade's own control cut fine. Not a bug."
+    },
+    {
+      "t": "2026-09-24T12:18:10.578Z",
+      "note": "Walks used (in /tmp/photonz-5min): five-min-walk (keys at open, zoom, S C Q W ' ; Cmd-D N R, I/O + Shift-Delete, 8 s playback, export sheet), five-min-walk-2 (ruler at 4x and deepest zoom, Add Track, music bed drop), five-min-walk-3 (hitch timings with and without captions, Blade control). All three ran green with real captures."
+    },
+    {
+      "t": "2026-09-24T12:18:10.629Z",
+      "note": "left rough, did not earn a task: no frames in the time readout (0:04 where Premiere shows 00:00:04:12; the playhead readout has 4.31 s); the picture shrinks 35% to 32% as tracks are added (Premiere scrolls the tracks instead); the title bar says Everything where the mock names the document (comes with project saving). Sound silent while shuttling at 2x/backwards was noted by the manager and NOT reproduced here (walks cannot listen), so not filed."
+    },
+    {
+      "t": "2026-09-24T12:18:10.731Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-09-24T12:21:43.952Z",
+      "note": "Gap report with 12 real captures in docs/design/video-vs-premiere.md. Basics checked first: all work. 9 gaps filed p1 source user, most blocking first (ruler labels off when zoomed, keys need a click, no Extract/Lift, 170-680 ms freezes on a captioned 5 min timeline, Q/W, readable title, default transition key, export size, S snapping) plus a decision card on pictures along clips. Standing objective video-beats-premiere added. Measured on a real 5 min 2880x1800 recording and the session walk, at Next defaults."
     }
-  ]
+  ],
+  "started": "2026-09-24T12:04:18.900Z",
+  "walks": [],
+  "completed": "2026-09-24T12:21:43.953Z"
 }

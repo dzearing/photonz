@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:02:57.060Z",
-  "updated": "2026-09-24T12:03:17.372Z",
+  "updated": "2026-09-24T12:16:45.343Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video.html lines 384-416 (FLOATING TOOL BAR, D4 video inventory, #toolOvf More menu holding Title / Text, Shape, Measure when narrow) and docs/design/mocks/shared/UX-PATTERNS.md D4 'Video: Select . Blade/split . Title/Text . Shape . Measure . Hand . Zoom. (The timeline has its own Select/Blade in its local toolbar; they mirror the same tools.)'. The app has no Hand or Zoom tool anywhere (space-drag and the zoom slider do those jobs), so leave them out and say so in the audit rather than inventing two tools. Seen in /tmp/photonz-playtest/an-editing-session-walk/5-dissolve-sc.png (2026-09-24 04:44, Next defaults): sixteen buttons, no Blade; the timeline bar's Select/Blade is TimelineDock.swift toolButton('scissors') on editorState.isTimelineBlade. Machinery that exists: ToolBarLayout (PhotonzCore, families and groups, tested), the measured-fit overflow menu and overflowShortcuts in EditorView.swift ~1073, which today only appear when the bar runs out of room; docs/design/modes.md section 2 already says folding by GROUP into a permanently visible overflow, never one tool out of a group, and section 3 lists the way back (the key still arms it, with a quiet line). Why not a mode: the mode is one app-wide setting (swap-the-window-into-a-mode-from-a-chip-beside-t left rough), so switching every window into Video because one recording opened would fold other windows' panels; tie this to the document having time, as the timeline is. Build the fold in core so a-mode-is-written-down-so-pixel-art-can-be-added (which needs the same fold by mode) reuses it. trim-becomes-a-tool-and-the-recording-window-ret plans Trim in Crop's slot on a document with time; the mock's inventory has no Trim, so whichever lands second says in its log where Trim sits.",
@@ -28,6 +28,10 @@
     {
       "t": "2026-09-24T12:03:17.371Z",
       "note": "seq 430 -> 415"
+    },
+    {
+      "t": "2026-09-24T12:16:45.342Z",
+      "note": "measure pass 2026-09-24: 'every folded tool still answers its key' collides with premiere-s-timeline-keys-work-the-moment-a-recor, which wants J/K/L/I/O/M/B to mean the timeline's thing the moment a recording opens (today L on open picks the Line tool). Whichever lands second must honour the other."
     }
   ]
 }

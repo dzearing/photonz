@@ -1,0 +1,28 @@
+{
+  "id": "q-and-w-trim-the-clip-under-the-playhead-up-to-i",
+  "title": "Q and W trim the clip under the playhead up to it, the Premiere way",
+  "goal": "The quickest way to tighten a talking recording in Premiere is to park the playhead where the good part starts and press Q (ripple trim the start to here) or W (ripple trim the end to here). Here the same trim needs a cut, a click and a delete. Add Q and W on the timeline.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 193,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T12:16:31.682Z",
+  "updated": "2026-09-24T12:16:31.685Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24); gap report docs/design/video-vs-premiere.md. Reproduced: q and w with the timeline focused are taken by nobody (five-minute walk log steps 23, 24). TimelineKeys.swift has no such command. Q is also Photoshop's quick mask, which the canvas does not use; confirm the canvas has no Q/W tool first.",
+  "acceptance": [
+    "Q removes everything from the start of the clip under the playhead up to the playhead and closes the gap, on every linked track",
+    "W removes everything from the playhead to the end of that clip and closes the gap",
+    "Both are one undo step and appear in the clip's right-click menu with their keys",
+    "A walk parks the playhead two seconds into a clip, presses Q, and the clip is two seconds shorter and starts where it did"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T12:16:31.684Z",
+      "note": "created (user)"
+    }
+  ]
+}

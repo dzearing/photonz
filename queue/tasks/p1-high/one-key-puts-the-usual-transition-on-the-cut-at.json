@@ -1,0 +1,28 @@
+{
+  "id": "one-key-puts-the-usual-transition-on-the-cut-at",
+  "title": "One key puts the usual transition on the cut at the playhead",
+  "goal": "In Premiere, Command D puts the default cross dissolve on the cut nearest the playhead, and Final Cut uses Command T. Here a transition needs a click on the cut and a pick from the tiles every time, and Command D deselects. Give the default transition a key, and let a person choose which transition that key uses.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 197,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T12:16:31.860Z",
+  "updated": "2026-09-24T12:16:31.863Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24); gap report docs/design/video-vs-premiere.md. Reproduced: command+d on the timeline 'taken by responder chain (Edit > Deselect carries this chord)'. Command T is already taken? Check before picking; the Premiere key is Command D, which collides with Deselect: say in the log which key won and why (Photoshop parity rule: default to Photoshop's for picture keys, Premiere's on the timeline). See also find-out-whether-the-layer-menu-promises-a-dupli (Command D confusion).",
+  "acceptance": [
+    "With the playhead on or near a cut, one key puts the default transition (cross dissolve unless changed) on it, one undo step",
+    "The key is printed in the cut's right-click menu and the transition picker",
+    "Right-click on a tile in the picker offers Set as Default",
+    "A walk cuts a clip, presses the key, and the cut carries a cross dissolve"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T12:16:31.862Z",
+      "note": "created (user)"
+    }
+  ]
+}
