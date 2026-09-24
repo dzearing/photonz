@@ -23,7 +23,8 @@ struct EditPointInspector: View {
                     CutField(key: "Spare before", value: spare(cut.cut.spareBeforeInMS))
                 }
             }
-            .padding(.vertical, 2)
+            .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
+            .padding(.vertical, 6)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
@@ -85,16 +86,8 @@ struct TransitionInspector: View {
                     length(inHand)
                     if transition.kind.needsOverlap, inHand.cut.drawnTransition != nil {
                         VideoKit.FieldRow(label: "Paid with") {
-                            Text(ClipTransitionCopy.paidWith(inHand.cut))
+                            VideoKit.ValueFace(value: ClipTransitionCopy.paidWith(inHand.cut))
                                 .panelReadout(ClipTransitionCopy.paidWith(inHand.cut))
-                                .font(.system(size: 11.5, weight: .medium))
-                                .monospacedDigit()
-                                .foregroundStyle(VideoKit.Palette.ink)
-                                .padding(.horizontal, 8)
-                                .frame(height: VideoKit.Metrics.controlSmall)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(RoundedRectangle(cornerRadius: 6).fill(VideoKit.Palette.panel))
-                                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(VideoKit.Palette.line))
                         }
                         .playtestField("Paid with")
                     }
@@ -120,7 +113,8 @@ struct TransitionInspector: View {
                         .playtestField("Transition warning")
                 }
             }
-            .padding(.vertical, 2)
+            .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
+            .padding(.vertical, 6)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
@@ -133,7 +127,8 @@ struct TransitionInspector: View {
             return "No spare left here, so this cut plays hard."
         }
         if let drawn = cut.drawnTransition, let asked = cut.transition, drawn.lengthMS < asked.lengthMS {
-            return "Playing at \(ClipTransitionCopy.seconds(drawn.lengthMS)): a trim took its spare."
+            let now = ClipTransitionCopy.seconds(drawn.lengthMS)
+            return "Playing at \(now): a trim took its spare."
         }
         if cut.isContinuous, cut.transition?.kind.needsOverlap ?? false {
             return "Both sides are the same frames, so this shows nothing."

@@ -480,3 +480,36 @@ struct ReframeRetimingTests {
         #expect(moved.timing == MotionTiming(startMS: 200, durationMS: 900))
     }
 }
+
+/// Punch In as a right-click preset: how far in, around where you clicked.
+@Suite("Punch In presets")
+struct PunchInPresetTests {
+    static let frame = CGRect(x: 0, y: 0, width: 1920, height: 1080)
+
+    @Test("A preset with no point punches in on the middle of the picture")
+    func middle() {
+        let box = ClipReframe.presetRegion(percent: 200, around: nil, in: Self.frame)
+        #expect(box == CGRect(x: 480, y: 270, width: 960, height: 540))
+        #expect(ClipReframe.scalePercent(fitting: box, into: Self.frame) == 200)
+    }
+
+    @Test("A preset around a point centres on it")
+    func aroundAPoint() {
+        let box = ClipReframe.presetRegion(percent: 200, around: CGPoint(x: 900, y: 500), in: Self.frame)
+        #expect(box.midX == 900)
+        #expect(box.midY == 500)
+    }
+
+    @Test("A point near the edge keeps the whole box on the picture")
+    func nearTheEdge() {
+        let box = ClipReframe.presetRegion(percent: 150, around: CGPoint(x: 1910, y: 5), in: Self.frame)
+        #expect(box.maxX == Self.frame.maxX)
+        #expect(box.minY == Self.frame.minY)
+        #expect(box.width == 1280)
+    }
+
+    @Test("The presets are the three the menu offers")
+    func presets() {
+        #expect(ClipReframe.punchInPresets == [125, 150, 200])
+    }
+}

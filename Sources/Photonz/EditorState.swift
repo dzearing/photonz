@@ -1735,6 +1735,10 @@ final class EditorState {
     /// observable it would re-run the canvas body on every right click, which
     /// is exactly what `EditorCanvasSurface` exists to stop.
     @ObservationIgnored var canvasMenuAim: CanvasMenuAim = .canvas
+    /// Where on the picture that right click landed, in document points, so a
+    /// row like Punch In can aim at the spot the pointer was on. Not watched,
+    /// for the same reason.
+    @ObservationIgnored var canvasMenuPoint: CGPoint?
 
     /// The mark ONE row in the layers list wears while a saved text style is
     /// held over it, and the deadline that takes it away when the drag ends

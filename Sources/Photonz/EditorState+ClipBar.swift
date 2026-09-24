@@ -173,11 +173,11 @@ extension EditorState {
     /// Hold on the frame under the playhead. It drops onto the timeline as an
     /// ordinary piece, which is the whole point: a freeze is not a special
     /// object, it is a piece whose in and out are the same frame.
-    func holdFrameAtPlayhead() {
+    func holdFrameAtPlayhead(forMS length: Int = ClipPieces.defaultHoldMS) {
         endTrimBeforeCutting()
         guard canHoldFrameAtPlayhead, let id = clipInHandID else { return }
         pauseDocument()
-        perform { $0.holdFrame(id, atMS: documentTimeMS, push: holdPushChoice) }
+        perform { $0.holdFrame(id, atMS: documentTimeMS, forMS: length, push: holdPushChoice) }
         if let time = document?.layer(id: id)?.time,
            let held = document?.layer(id: id)?.clipPieces?.pieceIndex(atMS: documentTimeMS - time.inMS) {
             selectClipPiece(layerID: id, index: held)

@@ -83,8 +83,9 @@ struct EditorCanvasSurface: View {
                        editorState.renameComponentVersion(componentID: $0, version: $1, to: $2)
                    },
                    onExitGroup: { editorState.exitGroupContext() },
-                   canvasMenu: { hit, context in
+                   canvasMenu: { hit, context, point in
                        editorState.aimCanvasMenu(at: hit, inside: context)
+                       editorState.canvasMenuPoint = point
                        return editorState.canvasMenuRows
                    },
                    onClickedNothing: { editorState.clearLibraryPick() },

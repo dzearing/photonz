@@ -1,0 +1,30 @@
+{
+  "feature": "The video properties look like the rest of the design",
+  "epic": "video-editing",
+  "summary": "The panel beside a clip, a title or a sound is now short label and value rows, inset like every other section, with no paragraphs. It leads with what you picked the thing for, and freezing and punching in moved to the right-click menu.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default, window at 1200 by 720 (the smallest the app allows).",
+  "try": [
+    { "do": "Open a screen recording and click its clip on the timeline.", "shot": "2026-09-24-video-panel-1-a-clip-sc.png" },
+    { "do": "Under Layers, open the Speed dropdown and pick 2x Speed.", "shot": "2026-09-24-video-panel-2-the-speed-dropdown-sc.png" },
+    { "do": "Right-click the picture and choose Punch In, then 150%.", "shot": "2026-09-24-video-panel-3-the-clip-menu-sc.png" },
+    { "do": "Right-click the picture and open Freeze Frame: pick a length, or what the rest does while it holds.", "shot": "2026-09-24-video-panel-freeze-menu-sc.png" },
+    { "do": "Type a title with the text tool, click away, then pick 0.50s in its Fade dropdown.", "shot": "2026-09-24-video-panel-4-a-title-sc.png" },
+    { "do": "Add a sound and click it: Level is the first row under Layers.", "shot": "2026-09-24-video-panel-5-a-sound-sc.png" },
+    { "do": "Compare the clip's panel with the mock's PROPERTIES pane (video.html).", "shot": "2026-09-24-video-panel-side-by-side.png" }
+  ],
+  "evaluate": [
+    "Does a Premiere editor find speed where they expect it, as one dropdown on the clip?",
+    "Is Freeze Frame on the right-click menu easier to find than the old Time section button was?",
+    "Is 'Sound: Silent' in orange enough warning without the old sentence, with the reason only on hover?",
+    "Is Punch In at 125, 150 or 200 percent around where you clicked the move you wanted, without drawing a box first?",
+    "Should the title's Start Here and End Here buttons move to a right-click on its bar, like the clip's verbs?"
+  ],
+  "rough": [
+    "The mock heads PROPERTIES with a clip line (name, in to out, length, speed); the app still has no such line, so those numbers are split between the Time rows and the timeline.",
+    "The mock's Animating lists only what is keyed with an Animate a property picker; the app lists every value with a diamond, so a clip's Animating section is long.",
+    "The mock's audio pane has Fades In and Out and a curve dropdown; a sound here has only Level, because a fade is the level line on the bar.",
+    "Start Here and End Here are still buttons in a title's Time section: a title's bar has no right-click menu yet.",
+    "The layer's own sections (Time, Sound, Animating) stay pinned under Layers in a document with time; dragging one of them elsewhere snaps back.",
+    "The Freeze Frame submenu in the picture is shown closed: the capture photographs the top level of the menu only."
+  ]
+}

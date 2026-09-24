@@ -1850,6 +1850,11 @@ private final class Run {
         case .expectSectionFits(let section):
             note(number, step.name, try checkSectionFits(section), state: describe())
 
+        case .expectSections(let leading):
+            note(number, step.name,
+                 try await patiently { try self.checkSections(leading: leading) },
+                 state: describe())
+
         case .expectInView(let field, let whole):
             note(number, step.name, try checkInView(field, whole: whole), state: describe())
 
@@ -3681,6 +3686,12 @@ private final class Run {
                     window.collectionBehavior.remove(.fullScreenNone)
                     window.collectionBehavior.insert(.fullScreenPrimary)
                     window.toggleFullScreen(nil)
+                }
+            case .windowLaptop:
+                if let window = editor.hostWindow {
+                    let visible = (window.screen ?? NSScreen.main)?.visibleFrame ?? window.frame
+                    window.setFrame(NSRect(x: visible.minX + 40, y: visible.maxY - 720 - 40,
+                                           width: 1200, height: 720), display: true)
                 }
             case .zoomIn: editor.zoomIn()
             case .zoomOut: editor.zoomOut()
@@ -6728,6 +6739,19 @@ private final class Run {
     /// The claim is about points, and the answer is in points, so a walk that
     /// fails here says by how much rather than leaving someone to measure a
     /// capture with a ruler.
+    /// Whether the dock's sections, top to bottom and with Layers aside,
+    /// start with `leading`.
+    private func checkSections(leading: [String]) throws -> String {
+        let probe = InspectorLayoutProbe.shared
+        let shown = probe.visible.map(\.title).filter { $0 != InspectorSectionID.layers.title }
+        guard Array(shown.prefix(leading.count)) == leading else {
+            throw Failure(description: "the panel starts \(shown.prefix(leading.count + 2).joined(separator: ", ")), "
+                + "not \(leading.joined(separator: ", ")); all of it: \(shown.joined(separator: ", "))")
+        }
+        return "the panel starts \(leading.joined(separator: ", "))"
+            + (shown.count > leading.count ? ", then \(shown.dropFirst(leading.count).joined(separator: ", "))" : "")
+    }
+
     private func checkSectionFits(_ title: String) throws -> String {
         let probe = InspectorLayoutProbe.shared
         let showing = probe.measured.map(\.title)

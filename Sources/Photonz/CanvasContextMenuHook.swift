@@ -20,7 +20,7 @@ extension CanvasNSView {
 
     override func menu(for event: NSEvent) -> NSMenu? {
         guard let aimed = contextMenuAim(at: event) else { return super.menu(for: event) }
-        let rows = canvasMenu(aimed.id, aimed.context)
+        let rows = canvasMenu(aimed.id, aimed.context, aimed.point)
         guard !rows.isEmpty else { return super.menu(for: event) }
         return NSMenu.rows(rows)
     }
@@ -34,13 +34,13 @@ extension CanvasNSView {
     /// nobody asked for. Same for every tool but Select: a tool that draws owns
     /// its own clicks in this app, and pulling a layer out from under a
     /// half-drawn stroke is not what the hand meant.
-    private func contextMenuAim(at event: NSEvent) -> (id: UUID?, context: UUID?)? {
+    private func contextMenuAim(at event: NSEvent) -> (id: UUID?, context: UUID?, point: CGPoint)? {
         guard Experiments.shared.canvasMenuEnabled,
               tool == .select,
               gridAdjust == nil, textSession == nil, canvasNameField == nil,
               let viewport else { return nil }
         let point = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
         let pick = groupAwarePick(at: point, zoom: viewport.zoom)
-        return (pick?.id, pick?.context)
+        return (pick?.id, pick?.context, point)
     }
 }

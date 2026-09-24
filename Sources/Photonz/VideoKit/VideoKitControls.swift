@@ -72,6 +72,28 @@ extension VideoKit {
         }
     }
 
+    /// A value you read rather than set (`.field .v`): the mock's filled box
+    /// with the value in it, the same height as a small dropdown so a column
+    /// of rows mixing the two lines up.
+    struct ValueFace: View {
+        let value: String
+        var tint: AnyShapeStyle?
+
+        var body: some View {
+            Text(value)
+                .font(.system(size: 11.5, weight: .medium))
+                .monospacedDigit()
+                .foregroundStyle(tint ?? AnyShapeStyle(Palette.ink))
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .padding(.horizontal, 8)
+                .frame(height: Metrics.controlSmall)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(RoundedRectangle(cornerRadius: 6).fill(Palette.panel))
+                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line))
+        }
+    }
+
     /// The face of a dropdown (`.select`): the value, an optional swatch in
     /// front of it, a chevron at the end, on a raised panel-coloured button.
     /// `DropdownRow` puts it on a menu; this is split out so the same face can
@@ -142,7 +164,11 @@ extension VideoKit {
                         Menu {
                             items
                         } label: {
-                            Text(value)
+                            // Clear, not just faint: the pop-up draws its own
+                            // title, and at 1% opacity it still showed as a
+                            // ghost of the value beside the face's own
+                            // (2026-09-24). A walk reads the title, so it stays.
+                            Text(value).foregroundStyle(Color.clear)
                         }
                         .menuStyle(.borderlessButton)
                         .menuIndicator(.hidden)

@@ -2886,6 +2886,7 @@ changes.
 | `.kfkey`, `.armed`, `.on` | `VideoKit.KeyDiamond`, `KeyState` | drawn 11pt in a 16pt box; the Animating section's diamonds use it |
 | `.irow` | `VideoKit.FieldRow` | 76pt label column |
 | `.select`, `.select.sm`, `.select.comp` | `VideoKit.SelectFace`, `DropdownRow` | the face on a real menu |
+| `.field .v` | `VideoKit.ValueFace` | a value you read, not set: the filled box, as tall as a small dropdown |
 
 One deliberate difference: the kit's accent is the app's system accent, not
 `--accent`, so a window never shows two blues.

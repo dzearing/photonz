@@ -57,7 +57,17 @@ public enum ClipSpeedSound: Hashable, Sendable {
         }
     }
 
-    /// The whole answer in one sentence, for the panel.
+    /// The answer as a panel value: what you would hear, in a word or two.
+    public var word: String {
+        switch self {
+        case .asRecorded: "As recorded"
+        case .pitchedUp: "Higher"
+        case .pitchedDown: "Lower"
+        case .silentTooFast, .silentTooSlow, .silentHeld: "Silent"
+        }
+    }
+
+    /// The whole answer in one sentence, for a tooltip.
     public var sentence: String {
         switch self {
         case .asRecorded:
@@ -139,6 +149,13 @@ public struct ClipSpeedReading: Hashable, Sendable {
             + "\(ClipSpeed.seconds(lengthMS))."
     }
 
+    /// The same two numbers as a panel value: `8s → 2s`, or just `3s` where
+    /// the recording plays at the length it was recorded.
+    public var lengthValue: String {
+        guard !isHeld, sourceLengthMS != lengthMS else { return ClipSpeed.seconds(lengthMS) }
+        return "\(ClipSpeed.seconds(sourceLengthMS)) \u{2192} \(ClipSpeed.seconds(lengthMS))"
+    }
+
     /// What it did about frames, said plainly, including what it did NOT do.
     public var framesSentence: String {
         switch frames {
@@ -201,6 +218,13 @@ public enum ClipSpeed {
         case let p where p < 100: return "\(p)% Speed"
         default: return "\(ratio(Double(percent) / 100))x Speed"
         }
+    }
+
+    /// A speed as a row of the Speed menu: its name, and "(silent)" where the
+    /// sound drops out, so the one fact worth knowing before you pick it is on
+    /// the row rather than a sentence under it.
+    public static func menuTitle(_ percent: Int) -> String {
+        isAudible(percent: percent) ? title(percent) : "\(title(percent)) (silent)"
     }
 
     /// A multiple written the way somebody would say it: `4`, not `4.0`, and

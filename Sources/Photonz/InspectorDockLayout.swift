@@ -49,6 +49,14 @@ import SwiftUI
 //    so far. Added 2026-09-23, after a drop scrolled the new component's own
 //    section off the top of the panel in order to show the shelf.
 //
+// 5. **IN A DOCUMENT WITH TIME, WHAT THE LAYER IS FOR COMES FIRST.** A clip is
+//    for playing, so Time, Sound and Animating sit straight under Layers; a
+//    title is for being read, so Time, Text and Animating; a sound is for being
+//    heard, so Sound then Time. It is a rule (`TimePanelOrder`, PhotonzCore,
+//    tested) applied as the dock is drawn, not another numbered move: every
+//    video section shipped at the bottom because each one was appended to the
+//    hand-kept order. Added 2026-09-24.
+//
 // The same rule written for a reader rather than for a compiler is in
 // `docs/design/mocks/shared/UX-PATTERNS.md`, section 3, under Reveal.
 //

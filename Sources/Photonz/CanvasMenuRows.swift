@@ -34,6 +34,7 @@ extension EditorState {
             offersMakeComponent: components && canMakeComponent,
             offersDetachInstance: components && canDetachInstance,
             beginRename: nil,
+            aimedAt: canvasMenuPoint,
             editorState: self)
     }
 

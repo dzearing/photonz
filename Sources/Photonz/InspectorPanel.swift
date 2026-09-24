@@ -692,11 +692,10 @@ struct InspectorPanel: View {
         if editorState.canRetimeAClip || editorState.placedLayerInHand != nil {
             set.insert(.speed)
         }
-        // Where the camera is pointed on the clip in hand (Next,
-        // `next-punch-in-and-hold`). Present only where there is a picture with
-        // time under it, which is what a camera can be moved on at all: a title
-        // has no frame to push in to and a sound draws nothing to push in on.
-        if editorState.canReframeAClip { set.insert(.reframe) }
+        // No Reframe section: a punch-in is the clip's own Scale and Position,
+        // keyed, so it reads in Animating like any other move, and the move
+        // itself is a right-click preset on the clip and the canvas
+        // (`timelineClipMenuRows`). The id stays for orders saved with it.
         // What is keyed on the picked layer, in a document with time
         // (`PropertyKeysInspector`). One layer, like Motion: a key is that
         // layer's own value at a moment.
@@ -865,7 +864,7 @@ struct InspectorPanel: View {
 
     private var orderedAvailableSections: [InspectorSectionID] {
         let available = availableSections
-        let inOrder = order.filter { available.contains($0) }
+        let inOrder = timeOrdered(order).filter { available.contains($0) }
         // ...and then the panel's own rule about which of the OPTIONAL sections
         // are worth showing at all (Next, `next-panel-sections`). The test
         // above says a section applies to what is picked; this one says the
@@ -880,6 +879,19 @@ struct InspectorPanel: View {
                                            choices: sectionVisibility.choices,
                                            in: situation)
         }
+    }
+
+    /// In a document with time, the saved order with what the picked layer is
+    /// FOR moved up under Layers (`TimePanelOrder`, rule 5 in
+    /// `InspectorDockLayout.swift`). Applied as it is drawn rather than written
+    /// back, so the saved order stays the person's own and a document without
+    /// time never sees it.
+    private func timeOrdered(_ order: [InspectorSectionID]) -> [InspectorSectionID] {
+        guard editorState.documentHasTime,
+              let layer = selectedLayer ?? editorState.soundLayerInHand,
+              let role = TimePanelOrder.role(of: layer) else { return order }
+        return TimePanelOrder.arrange(order.map(\.rawValue), for: role)
+            .compactMap(InspectorSectionID.init(rawValue:))
     }
 
     /// The optional sections this release actually builds, in the order the
@@ -1128,7 +1140,8 @@ struct InspectorPanel: View {
         case .keys:
             PropertyKeysInspector()
         case .reframe:
-            ReframeInspector()
+            // Never offered (see `availableSections`); kept for saved orders.
+            EmptyView()
         case .editPoint:
             EditPointInspector()
         case .transition:

@@ -589,6 +589,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// takes the title bar away, so anything that lives in the title bar has
     /// to be checked here rather than assumed.
     case toggleFullScreen
+    /// Size the editor window to the smallest one the app supports, 1200 by
+    /// 720, the laptop window every dock rule is measured against
+    /// (`InspectorDockLayout.swift`). For the walks that open the sample
+    /// recording, which has no `width` and `height` of its own to ask for.
+    case windowLaptop
     /// Undo and redo are menu chords too, so a walk that checks an undo step
     /// asks for it here.
     case undo, redo
@@ -2763,6 +2768,14 @@ public enum PlaytestStep: Sendable, Equatable {
     ///
     /// The section is named the way the dock names it: "Effects", "Layers".
     case expectSectionFits(section: String)
+    /// The sections the right hand panel shows, top to bottom, START with
+    /// these, in this order (Layers aside, since it heads every dock).
+    ///
+    /// How a walk reads back the rule about what a layer in a document with
+    /// time leads with (`TimePanelOrder`): a clip's Time, Sound, Animating; a
+    /// title's Time, Text, Animating; a sound's Sound, Time. Named the way the
+    /// dock titles them. The failure lists the order the dock really has.
+    case expectSections(leading: [String])
     /// The named thing in the right hand panel must be ALL on screen: inside
     /// the window, and inside whatever is scrolling it.
     ///
@@ -2930,7 +2943,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectSharp", "expectStoredRecording", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "dropImage", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag",
     ].sorted()
@@ -3014,6 +3027,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectField: "expectField"
         case .expectCaption: "expectCaption"
         case .expectSectionFits: "expectSectionFits"
+        case .expectSections: "expectSections"
         case .expectInView: "expectInView"
         case .expectOneUnit: "expectOneUnit"
         case .expectOneNumberPerName: "expectOneNumberPerName"
@@ -3818,6 +3832,12 @@ public enum PlaytestStep: Sendable, Equatable {
                                   caretHeight: caretHeight, outline: outline)
         case "expectSectionFits":
             self = .expectSectionFits(section: try f.string("section"))
+        case "expectSections":
+            let leading = try f.optionalStrings("leading")
+            guard !leading.isEmpty else {
+                throw f.invalid("leading", "expectSections has to name the sections the panel must start with, in order")
+            }
+            self = .expectSections(leading: leading)
         case "expectInView":
             self = .expectInView(field: try f.string("field"),
                                  whole: try f.optionalFlag("whole") ?? false)

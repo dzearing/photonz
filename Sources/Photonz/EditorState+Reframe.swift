@@ -28,18 +28,6 @@ extension EditorState {
         return id
     }
 
-    /// Whether the panel has a Reframe section to show at all.
-    var canReframeAClip: Bool { reframeClipID != nil }
-
-    /// How the clip is framed at the moment on screen: how far in, what is in
-    /// the middle, and how much of the recording's own detail is left.
-    var reframeReading: ReframeReading? {
-        guard let id = reframeClipID, let document = shownDocument,
-              let layer = document.layer(id: id) else { return nil }
-        return layer.reframeReading(atDocumentTimeMS: documentTimeMS,
-                                    documentCycleMS: max(1, document.documentDurationMS))
-    }
-
     /// The box the punch-in would go to, in document points: the marquee's
     /// bounds, clipped to the clip's own picture so a box dragged off the edge
     /// cannot ask for frames that were never recorded.
@@ -69,6 +57,62 @@ extension EditorState {
         selectLayer(id)
         isMotionStripOpen = true
         reframeChanged()
+    }
+
+    /// Whether a right-click Punch In preset can land on this clip.
+    func canPunchIn(layerID: UUID) -> Bool {
+        guard Experiments.shared.punchInEnabled, documentHasTime, !isClipLocked(layerID),
+              let layer = document?.layer(id: layerID), let time = layer.time else { return false }
+        return layer.takesAReframe && time.contains(ms: documentTimeMS)
+    }
+
+    /// Punch In as a preset: `percent` of the way in, around `point` (the
+    /// middle of the picture when nil), arriving at the playhead.
+    func punchIn(layerID: UUID, percent: Int, around point: CGPoint?) {
+        guard canPunchIn(layerID: layerID), let layer = document?.layer(id: layerID) else { return }
+        let region = ClipReframe.presetRegion(percent: percent, around: point, in: layer.frame)
+        let at = documentTimeMS
+        perform { $0.punchIn(layerID: layerID, onRegion: region, atTimeMS: at) }
+        selectLayer(layerID)
+        isMotionStripOpen = true
+        reframeChanged()
+    }
+
+    /// Pull back out on one clip, from the playhead.
+    func pullBackOut(layerID: UUID) {
+        guard canPunchIn(layerID: layerID), document?.layer(id: layerID)?.isReframed == true else { return }
+        let at = documentTimeMS
+        perform { $0.pullBackOut(layerID: layerID, atTimeMS: at) }
+        reframeChanged()
+    }
+
+    /// Put the camera back on the whole frame on one clip.
+    func resetReframe(layerID: UUID) {
+        guard document?.layer(id: layerID)?.isReframed == true else { return }
+        perform { $0.resetReframe(layerID: layerID) }
+        reframeChanged()
+    }
+
+    /// The Punch In submenu for a clip: the presets, the box you drew with M
+    /// when there is one, and the ways back out once it is in.
+    func punchInMenuRows(layerID: UUID, around point: CGPoint?) -> [MenuRow] {
+        guard Experiments.shared.punchInEnabled,
+              document?.layer(id: layerID)?.takesAReframe == true else { return [] }
+        let can = canPunchIn(layerID: layerID)
+        var rows: [MenuRow] = ClipReframe.punchInPresets.map { percent in
+            .command("\(percent)%", enabled: can) {
+                self.punchIn(layerID: layerID, percent: percent, around: point)
+            }
+        }
+        if reframeClipID == layerID, canPunchIn {
+            rows.append(.command("To the Box") { self.punchInOnRegion() })
+        }
+        if document?.layer(id: layerID)?.isReframed == true {
+            rows.append(.separator)
+            rows.append(.command("Pull Back Out", enabled: can) { self.pullBackOut(layerID: layerID) })
+            rows.append(.command("Reset") { self.resetReframe(layerID: layerID) })
+        }
+        return [.submenu("Punch In", rows)]
     }
 
     var canPullBackOut: Bool {
@@ -104,28 +148,5 @@ extension EditorState {
     func reframeChanged() {
         if documentHasTime { pauseMotionPreview() }
         documentMomentChanged()
-    }
-
-    // MARK: What the section says when it cannot do anything
-
-    /// The one line under the buttons, which always says the NEXT thing to do
-    /// rather than what is wrong.
-    var reframeHint: String {
-        guard let id = reframeClipID, let layer = document?.layer(id: id) else {
-            return "Pick a clip to move the camera on it."
-        }
-        if canPunchIn {
-            return "Punch In takes the camera to the box by the playhead, and holds it there."
-        }
-        if selection != nil {
-            return "That box is too small, or it is off the picture. "
-                + "Drag one round the part of the frame that should fill it."
-        }
-        if layer.isReframed {
-            return "Drag a box with M round the next thing to look at, or Pull Back Out "
-                + "to go wide from the playhead."
-        }
-        return "Drag a box with M round the part of the picture that should fill the frame, "
-            + "then Punch In."
     }
 }

@@ -59,10 +59,8 @@ extension EditorState {
             self.splitClipAtPlayhead()
         })
         if layer.movie != nil {
-            rows.append(.command("Freeze Frame", enabled: underPlayhead) {
-                self.selectLayer(layerID)
-                self.holdFrameAtPlayhead()
-            })
+            rows.append(freezeFrameMenuRow(layerID: layerID, piece: index, enabled: underPlayhead))
+            rows.append(contentsOf: punchInMenuRows(layerID: layerID, around: nil))
         }
         if let piece, !piece.isHeld {
             rows.append(.submenu("Speed", EditorState.clipSpeeds.map { percent in
@@ -101,6 +99,38 @@ extension EditorState {
             self.rippleDelete(layerID: layerID, piece: onePiece ? nil : index)
         })
         return rows
+    }
+
+    /// **Freeze Frame ▸**: hold the frame under the playhead for a length, and
+    /// say what the rest of the timeline does while it holds. On a piece that
+    /// is already a hold, the lengths and the choice change THAT hold.
+    ///
+    /// The choices used to be a column of radio buttons and three sentences in
+    /// the Time section; a freeze is a verb, so it lives on the clip.
+    func freezeFrameMenuRow(layerID: UUID, piece index: Int, enabled: Bool) -> MenuRow {
+        let piece = document?.layer(id: layerID)?.clipPieces?.piece(at: index)
+        let held = piece?.isHeld == true
+        var rows: [MenuRow] = ClipPieces.holdStopsMS.map { ms in
+            if held {
+                return .toggle("Hold for \(ClipPieces.holdTitle(ms))", isOn: piece?.lengthMS == ms) {
+                    self.selectClipPiece(layerID: layerID, index: index)
+                    self.setHoldLengthInHand(ms)
+                }
+            }
+            return .command("Freeze for \(ClipPieces.holdTitle(ms))", enabled: enabled) {
+                self.selectLayer(layerID)
+                self.holdFrameAtPlayhead(forMS: ms)
+            }
+        }
+        rows.append(.separator)
+        let shown = piece?.holdPush ?? holdPushChoice
+        rows.append(contentsOf: HoldPush.allCases.map { push in
+            .toggle(push.title, isOn: shown == push) {
+                if held { self.selectClipPiece(layerID: layerID, index: index) }
+                self.setHoldPush(push)
+            }
+        })
+        return .submenu("Freeze Frame", rows)
     }
 
     /// Whether the playhead runs through this clip somewhere a cut would

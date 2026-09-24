@@ -32,6 +32,7 @@ enum LayerCommandList {
                      offersMakeComponent: Bool,
                      offersDetachInstance: Bool,
                      beginRename: ((UUID, String) -> Void)?,
+                     aimedAt point: CGPoint? = nil,
                      editorState: EditorState) -> [MenuRow] {
         let id = display.id
         var rows: [MenuRow] = []
@@ -46,6 +47,15 @@ enum LayerCommandList {
                 editorState.selectLayer(id)
                 editorState.splitClipAtPlayhead()
             })
+            // ...and the two things you do to a PICTURE at a moment: hold it,
+            // and push in on it. On the canvas the push aims at the spot you
+            // right clicked.
+            if layer.movie != nil, let time = layer.time {
+                let piece = layer.clipPieces?.pieceIndex(atMS: editorState.documentTimeMS - time.inMS) ?? 0
+                rows.append(editorState.freezeFrameMenuRow(layerID: id, piece: piece,
+                                                           enabled: time.contains(ms: editorState.documentTimeMS)))
+                rows.append(contentsOf: editorState.punchInMenuRows(layerID: id, around: point))
+            }
             rows.append(.separator)
         }
 

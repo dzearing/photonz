@@ -19,11 +19,10 @@
     { "do": "panel", "stage": "1-the-frame-worth-holding" },
     { "do": "snapshot", "name": "hold-1-the-frame-worth-holding" },
 
-    { "do": "press", "control": "Freeze Frame" },
+    { "do": "rightClick", "at": [640, 400], "shot": "hold-1b-freeze-frame-menu", "choose": "Freeze Frame > Freeze for 2s" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "2-held", "note": "THE FIRST TEST: one click and the clip splits at the playhead with a two second still between the halves. It is an ordinary piece of the clip, badged hold on the bar, and the panel says what it is rather than showing a speed it does not have. The cut is two seconds longer, because holding a frame INSERTS time" },
-    { "do": "expect", "field": "Held reading", "reads": "A held frame, not a speed." },
-    { "do": "expect", "field": "Held length reading", "reads": "One frame, on screen for 2s." },
+    { "do": "expect", "menu": "Hold", "reads": "2s" },
     { "do": "panel", "stage": "2-held" },
     { "do": "snapshot", "name": "hold-2-a-frame-held" },
 
@@ -31,11 +30,10 @@
     { "do": "expect", "field": "Held frame badge", "reads": "Held frame · 0:04" },
     { "do": "snapshot", "name": "hold-3-the-canvas-says-which-frame" },
 
-    { "do": "reveal", "control": "Hold for 5s" },
-    { "do": "press", "control": "Hold for 5s" },
+    { "do": "panelMenu", "menu": "Hold", "choose": "5s" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "4-longer", "note": "THE THIRD TEST: a chosen length. One click holds the frame for five seconds instead of two, the bar grows, everything after it moves along, and the frame on screen is the same one it was" },
-    { "do": "expect", "field": "Held length reading", "reads": "One frame, on screen for 5s." },
+    { "do": "expect", "menu": "Hold", "reads": "5s" },
     { "do": "expect", "field": "Held frame badge", "reads": "Held frame · 0:04" },
     { "do": "panel", "stage": "4-longer" },
     { "do": "snapshot", "name": "hold-4-held-for-five-seconds" },

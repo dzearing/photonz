@@ -1,97 +1,63 @@
 import PhotonzCore
 import SwiftUI
 
-/// **Sound**: how loud the picked layer is, and what shapes it
-/// (`docs/design/video-audio.md`).
+/// **Sound**: how loud the picked layer is (`docs/design/video-audio.md`,
+/// `pages/video-audio.html`), as label and value rows.
 ///
-/// Three rows and no more. The mock draws a channel strip with mute, solo,
-/// volume, a fade in, a fade out and a curve picker, and most of that is the
-/// same idea said several times: a fade IS the level changing over time, and so
-/// is a duck, so this section has a fader and the bar has a line, and there is
-/// no fade control and no curve menu to keep in step with either.
-///
-/// Mute is absent for the same reason: a level pulled all the way down reads
-/// Silent and nothing is heard, so a second control that also means silent
-/// would be two switches for one fact.
+/// A fader and, once the level changes over time, how many points its line on
+/// the bar has, with Flatten beside it. A fade IS the level changing over time,
+/// and so is a duck, so both are the line on the bar rather than controls here.
+/// Detach Audio is a verb, so it is on the clip's right-click menu.
 struct SoundInspector: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if let layer = editorState.soundLayerInHand {
+        VStack(alignment: .leading, spacing: 6) {
+            if editorState.soundLayerInHand != nil {
                 level
                 if editorState.soundLevelInHand.changesOverTime {
-                    overTime
+                    points
                 }
-                if layer.isClip {
-                    detach
-                } else {
-                    Text("Drag its bar on the timeline to move it. Cut it with B, like anything else.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            } else {
-                Text("Nothing picked makes a sound.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
         }
-        .padding(.vertical, 2)
+        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
-
-    // MARK: The fader
 
     private var level: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack {
-                Text("Level")
-                    .font(.system(size: 11))
-                Spacer()
+        VideoKit.FieldRow(label: "Level") {
+            HStack(spacing: 8) {
+                Slider(value: Binding(
+                    get: { editorState.soundLevelInHand.gain },
+                    set: { editorState.setSoundGain($0) }
+                ), in: 0...AudioLevel.loudestGain)
+                .controlSize(.small)
+                .playtestField("Level")
+                .panelHelp("How loud this layer plays.")
                 Text(editorState.soundLevelInHand.label)
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 11, weight: .medium))
+                    .monospacedDigit()
+                    .foregroundStyle(VideoKit.Palette.ink)
+                    .fixedSize()
+                    .panelReadout(editorState.soundLevelInHand.label)
                     .playtestField("Level reading")
             }
-            Slider(value: Binding(
-                get: { editorState.soundLevelInHand.gain },
-                set: { editorState.setSoundGain($0) }
-            ), in: 0...AudioLevel.loudestGain)
-            .controlSize(.small)
-            .playtestField("Level")
-            .panelHelp("How loud this layer plays. It carries the whole shape of the level with it.")
         }
     }
 
-    // MARK: What the line on the bar is doing
-
-    private var overTime: some View {
-        HStack(spacing: 8) {
-            Text(summary)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(2)
-            Spacer(minLength: 4)
-            Button("Flatten") { editorState.clearSoundLevelPoints() }
-                .controlSize(.small)
-                .playtestField("Flatten Level")
-                .panelHelp("Take every point off the level line and leave the fader where it is.")
+    /// The level's line on the bar, counted, and the way to take it off.
+    private var points: some View {
+        let count = editorState.soundLevelInHand.points.count
+        return VideoKit.FieldRow(label: "Points") {
+            HStack(spacing: 6) {
+                VideoKit.ValueFace(value: "\(count) on the bar")
+                    .panelReadout("\(count) on the bar")
+                Button("Flatten") { editorState.clearSoundLevelPoints() }
+                    .controlSize(.small)
+                    .playtestField("Flatten Level")
+                    .panelHelp("Take every point off the level line.")
+            }
         }
-    }
-
-    private var summary: String {
-        let points = editorState.soundLevelInHand.points.count
-        return points == 1
-            ? "The level is pinned at one moment, on its bar in the timeline"
-            : "The level changes at \(points) moments, on its bar in the timeline"
-    }
-
-    // MARK: Taking the sound off the picture
-
-    private var detach: some View {
-        Button("Detach Audio") { editorState.detachSound() }
-            .controlSize(.small)
-            .disabled(!editorState.canDetachSound)
-            .playtestField("Detach Audio")
-            .panelHelp("Unlink this clip's sound from its picture so each moves on its own.")
     }
 }

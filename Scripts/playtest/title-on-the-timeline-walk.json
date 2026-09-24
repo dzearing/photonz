@@ -50,8 +50,7 @@
     { "do": "expect", "field": "Time reading", "reads": "0:03 to 0:08 · 5.0s" },
     { "do": "snapshot", "name": "title-3-both-ends-dragged" },
 
-    { "do": "reveal", "control": "Fade 0.50s" },
-    { "do": "press", "control": "Fade 0.50s" },
+    { "do": "panelMenu", "menu": "Fade", "choose": "0.50s" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "6-fades", "note": "THE FIFTH TEST: it comes on rather than snapping on, and what that IS is an ordinary Opacity animation on the layer. There is no fade property and no titles feature: the Motion list has it, with its own lane on the timeline, and it takes any curve" },
     { "do": "panel", "stage": "6-fades" },

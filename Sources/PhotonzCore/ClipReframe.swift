@@ -46,6 +46,22 @@ public enum ClipReframe {
     /// the hand, in document points.
     public static let smallestRegionPoints: CGFloat = 8
 
+    /// The punch-ins a clip's right-click menu offers in one click, in percent.
+    public static let punchInPresets = [125, 150, 200]
+
+    /// The box a preset punch-in goes to: `percent` of the way in, centred on
+    /// `point` (the middle of the picture when nil) and slid back inside the
+    /// picture where the point is too near an edge for the box to fit.
+    public static func presetRegion(percent: Int, around point: CGPoint?, in frame: CGRect) -> CGRect {
+        let outer = frame.standardized
+        let scale = Double(max(100, percent)) / 100
+        let size = CGSize(width: outer.width / scale, height: outer.height / scale)
+        let centre = point ?? CGPoint(x: outer.midX, y: outer.midY)
+        let x = min(max(centre.x - size.width / 2, outer.minX), outer.maxX - size.width)
+        let y = min(max(centre.y - size.height / 2, outer.minY), outer.maxY - size.height)
+        return CGRect(origin: CGPoint(x: x, y: y), size: size)
+    }
+
     /// The scale that makes `region` fill as much of `frame` as it can without
     /// any of it falling off the edge.
     ///

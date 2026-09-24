@@ -19491,3 +19491,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Walk: new `transition-picker-at-a-cut-walk` (no flags, 9 real captures); transitions/second-clip/cut/right-click walks green. Audit: `queue/audits/2026-09-23-transition-picker-at-a-cut.json`.
 - Found: render/export tests that share the static CIContext flip to failing in parallel runs on unrelated allocation changes (logged on the export-size flake task).
 - Next: before/across/after placement, hold on black, spare strips (p2 task filed).
+
+## 2026-09-24 — The video properties look like the rest of the design
+
+- The panel beside a clip, title or sound is label/value rows (VideoKit FieldRow, DropdownRow, new ValueFace) with the standard inset; no paragraphs. `VideoPanelCopyTests` fails any string over 60 characters in those sections.
+- Speed is one dropdown; Freeze Frame (lengths, what the rest does while held) and Punch In (125/150/200% around the click, To the Box, Pull Back Out, Reset) are submenus on the clip's right-click, timeline and canvas. The Reframe section is gone; a punch-in reads as Scale/Position in Animating.
+- `TimePanelOrder` (PhotonzCore): in a document with time the panel leads with what the layer is for. New walk step `expectSections`, new action `windowLaptop`, new walk `video-panel-order-walk` (no flags, 1200x720).
+- Next: clip line and keyed-only Animating (p1), sound fades (p1), title bar right-click (p2).
