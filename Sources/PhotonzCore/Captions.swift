@@ -570,15 +570,19 @@ extension PhotonzDocument {
     /// The layer's own in and out win over the words', because a person
     /// dragging a bar end is saying something the recogniser was not asked.
     public var captionCues: [CaptionCue] {
-        captionLayers.compactMap { layer in
-            guard let time = layer.time, let words = layer.captionWords else { return nil }
-            var cue = CaptionCue(words: words, inMS: time.inMS, outMS: time.outMS)
-            if case .text(let content) = layer.content {
-                cue = CaptionCue(words: wordsSaying(content.string, heard: words),
-                                 inMS: time.inMS, outMS: time.outMS)
-            }
-            return cue
+        captionLayers.compactMap(captionCue(of:))
+    }
+
+    /// The cue one caption layer is, read back off it: its own in and out, and
+    /// the words it says now with the timings they were heard at.
+    public func captionCue(of layer: Layer) -> CaptionCue? {
+        guard let time = layer.time, let words = layer.captionWords else { return nil }
+        var cue = CaptionCue(words: words, inMS: time.inMS, outMS: time.outMS)
+        if case .text(let content) = layer.content {
+            cue = CaptionCue(words: wordsSaying(content.string, heard: words),
+                             inMS: time.inMS, outMS: time.outMS)
         }
+        return cue
     }
 
     /// The words a corrected line is made of, keeping the timings the machine

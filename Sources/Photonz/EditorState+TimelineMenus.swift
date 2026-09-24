@@ -51,6 +51,8 @@ extension EditorState {
             }
             return rows
         }
+        // A caption's verbs are the words and the track they are on.
+        if layer.isCaption { return captionCueMenuRows(layerID: layerID) }
         let piece = pieces.piece(at: index)
         let underPlayhead = time.contains(ms: documentTimeMS)
 
@@ -230,6 +232,41 @@ extension EditorState {
             ?? layer.sound.flatMap { SoundLibrary.shared.url(for: $0) }
         guard let url, FileManager.default.fileExists(atPath: url.path) else { return nil }
         return url
+    }
+
+    /// The menu on one caption on the Captions track.
+    func captionCueMenuRows(layerID: UUID) -> [MenuRow] {
+        var rows: [MenuRow] = [
+            .command("Edit Words") { self.beginRenamingClip(layerID) },
+            .command("Start Here") {
+                self.selectLayer(layerID)
+                self.moveDocumentPlayhead(toMS: self.document?.layer(id: layerID)?.time?.inMS ?? 0)
+            },
+            .separator,
+        ]
+        rows.append(contentsOf: captionTrackMenuRows())
+        rows.append(.separator)
+        rows.append(.command("Delete", TimelineMenuKeys.delete, destructive: true) {
+            self.deleteFromTimeline(layerID: layerID, piece: nil)
+        })
+        return rows
+    }
+
+    /// What every place that is about captions as a whole offers: write them
+    /// again, move the lot, write them out, take them off.
+    func captionTrackMenuRows() -> [MenuRow] {
+        [
+            .command(hasCaptions ? "Write Captions Again" : "Write Captions",
+                     enabled: canWriteCaptions) { self.writeCaptions() },
+            .submenu("Timing", [
+                .command("Earlier", enabled: canNudgeCaptions) { self.nudgeCaptions(byMS: -Self.captionNudgeMS) },
+                .command("Later", enabled: canNudgeCaptions) { self.nudgeCaptions(byMS: Self.captionNudgeMS) },
+            ]),
+            .submenu("Export Subtitles", CaptionFileFormat.allCases.map { format in
+                .command(format.title + "…", enabled: canExportCaptions) { self.exportCaptions(as: format) }
+            }),
+            .command("Clear Captions", enabled: canClearCaptions, destructive: true) { self.clearCaptions() },
+        ]
     }
 
     /// Start typing a clip's name over its bar.

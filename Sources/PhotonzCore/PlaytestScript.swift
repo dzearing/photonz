@@ -675,6 +675,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// way into a recording window depends on the person having recorded
     /// something.
     case openSampleRecording
+    /// Open a screen recording with somebody TALKING in it, as a person would
+    /// open one: the sample picture with the Mac's own voice as its sound
+    /// (`TutorialSampleTalk`). What a walk of captions writing themselves
+    /// needs, since the sample recording's own sound has no words in it.
+    case openSampleTalk
     /// The other doors a recording is asked for through, so a walk can check
     /// that one which cannot be opened SAYS so rather than leaving a window
     /// with nothing in it (`RecordingDoor`).
@@ -841,6 +846,34 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Fail unless every caption's words still carry the timings they were
     /// heard with, which is what a correction must not cost.
     case captionsExpectTimingsKept
+    /// Wait, without pressing anything, for the captions to write themselves,
+    /// and fail unless they land. What opening a recording with speech in it
+    /// has to do at Next's defaults.
+    case captionsWaitForThemselves
+    /// Fail unless every caption is on ONE Captions track, side by side.
+    case captionsExpectOneTrack
+    /// Open the first caption's words for typing over its bar, the way a
+    /// double click on it does; `captionsCommitFirstWords` types the fix in.
+    case captionsEditFirstInPlace, captionsCommitFirstWords
+    /// Drag the first caption's right hand end in by a third of a second.
+    case captionsTrimFirstEnd
+    /// Pick one of the named caption styles, for every caption at once.
+    case captionsStyleCaption, captionsStyleLowerThird, captionsStyleKaraoke
+    /// Move every caption to the top of the picture, and back.
+    case captionsPositionTop, captionsPositionBottom
+    /// Fail unless the frame drawn at the playhead has the spoken word lit.
+    case captionsExpectLitWord
+    /// Write the captions out as SubRip and WebVTT into the walk's own
+    /// folder, and fail unless both files read back as what they claim.
+    case captionsExportFiles
+    /// Turn Auto off, and back on.
+    case captionsAutoOff, captionsAutoOn
+    /// Fail unless the words being typed on the canvas are a caption's: what a
+    /// double click on a caption on the picture has to open.
+    case captionsExpectEditingOnCanvas
+    /// Write the film with its picture clean and its captions as an SRT file
+    /// beside it, into the walk's own folder, and fail unless both land.
+    case captionsWriteFilmWithFileBeside
     /// Duck the picked layer: four points either side of a dip, which is all a
     /// duck is. It is a walk's stand-in for dragging four dots on the bar.
     case soundDuck
@@ -1005,7 +1038,12 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .captionsAddVoiceover, .captionsWrite, .captionsWriteHearingNothing,
              .captionsNudgeLater, .captionsNudgeEarlier,
              .captionsCorrectFirstWord, .captionsClear, .captionsExpectSound,
-             .captionsExpectTimingsKept,
+             .captionsExpectTimingsKept, .captionsWaitForThemselves, .captionsExpectOneTrack,
+             .captionsEditFirstInPlace, .captionsCommitFirstWords, .captionsTrimFirstEnd,
+             .captionsStyleCaption, .captionsStyleLowerThird, .captionsStyleKaraoke,
+             .captionsPositionTop, .captionsPositionBottom, .captionsExpectLitWord,
+             .captionsExportFiles, .captionsAutoOff, .captionsAutoOn, .captionsExpectEditingOnCanvas,
+             .captionsWriteFilmWithFileBeside,
              .soundExpectPlaying, .soundExportMix, .soundScrubAcrossIt,
              .soundExpectMixOver, .soundExpectMeterReads,
              .clipDragStartIn, .clipDragStartBackOut, .clipDragEndIn,

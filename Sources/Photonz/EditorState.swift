@@ -1009,6 +1009,9 @@ final class EditorState {
     /// (`EditorState+Captions`). It is what the Captions section's progress
     /// line is drawn from, so it is observed rather than ignored.
     var captionsBeingWritten: TranscriptionProgress?
+    /// Bumped when the app-wide caption settings (Auto, the language) change,
+    /// so a panel reading them draws again (`EditorState+Captions.swift`).
+    var captionSettingsTick = 0
     /// The job doing the listening, so Stop can stop it.
     @ObservationIgnored var captionsTask: Task<Void, Never>?
     /// The job walking its progress readings onto this actor.
@@ -1165,6 +1168,9 @@ final class EditorState {
     /// Last known canvas view size, so a document opened before/after the first
     /// layout pass can still be fit correctly.
     private var canvasViewSize: CGSize = .zero
+    /// The camera as the app last placed it on its own, so a resize can tell
+    /// whether anybody has moved it since.
+    @ObservationIgnored private var viewportTheAppPlaced: Viewport?
 
     var zoom: CGFloat { viewport?.zoom ?? 1 }
 
@@ -1336,6 +1342,10 @@ final class EditorState {
             // The first frame, fetched before anybody presses anything, so the
             // window opens on the picture rather than on nothing.
             documentMomentChanged()
+            // ...and the words, heard in the background, so a recording with
+            // somebody talking in it opens with its captions coming
+            // (`EditorState+Captions.swift`).
+            writeCaptionsByThemselves()
             // The fast lane (`docs/design/video-surface.md` §10.3): one clip,
             // nothing done to it yet, so trim-and-send is drag a handle, ⏎,
             // export — no click to pick the clip and none to pick the tool.
@@ -2591,15 +2601,23 @@ final class EditorState {
             let zoom = scale / max(1, document.pixelScale)
             viewport = Viewport(documentSize: document.canvasSize, viewSize: size,
                                 zoom: zoom, origin: .zero).clamped()
+            viewportTheAppPlaced = viewport
             takePendingFocus()
             revealHostWindowIfHidden()
             return
         }
         // The first real layout after opening re-fits; later resizes keep the
-        // user's framing (center-preserving).
-        viewport = hadNoSize
+        // user's framing (center-preserving). A document with time keeps
+        // fitting while nobody has moved the camera: its timeline arrives
+        // under the canvas a moment after the first layout, and a picture
+        // fitted to the taller view had its bottom, where captions sit,
+        // under the tool bar and the transport.
+        let untouched = viewportTheAppPlaced == current
+        let refit = hadNoSize || (documentHasTime && untouched)
+        viewport = refit
             ? .fit(documentSize: current.documentSize, in: size)
             : current.resized(viewSize: size)
+        viewportTheAppPlaced = refit ? viewport : nil
         takePendingFocus()
     }
 

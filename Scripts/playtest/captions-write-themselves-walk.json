@@ -1,0 +1,67 @@
+{
+  "out": "/tmp/photonz-playtest/captions-write-themselves-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleTalk" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-a-recording-with-somebody-talking-opens", "note": "A screen recording with a voice over it, opened as a person would open one, at Next's defaults with no flag touched. Nothing is pressed: the Captions section says it is listening, on this Mac" },
+    { "do": "snapshot", "name": "1-a-recording-with-somebody-talking-opens" },
+
+    { "do": "action", "action": "captionsWaitForThemselves" },
+    { "do": "action", "action": "captionsExpectOneTrack" },
+    { "do": "action", "action": "captionsExpectSound" },
+    { "do": "action", "action": "videoPause" },
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "captionsExpectLitWord" },
+    { "do": "reveal", "control": "Auto captions" },
+    { "do": "describe", "stage": "2-the-captions-wrote-themselves", "note": "THE POINT. Without a click, the words landed on ONE Captions track, every cue side by side, with a Words lane under it: one chip per word at the moment it was said, the word being said lit. On the picture the cue sits on a dark plate in the title-safe area with the same word lit in yellow" },
+    { "do": "snapshot", "name": "2-the-captions-wrote-themselves" },
+
+    { "do": "action", "action": "captionsEditFirstInPlace" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-typing-over-a-cue-on-its-track", "note": "A double click on a cue opens its words for typing right on its bar, the way Premiere edits a caption on its track" },
+    { "do": "snapshot", "name": "3-typing-over-a-cue-on-its-track" },
+    { "do": "action", "action": "captionsCommitFirstWords" },
+    { "do": "action", "action": "captionsExpectTimingsKept" },
+
+    { "do": "action", "action": "captionsTrimFirstEnd" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-retimed-by-its-end", "note": "The first cue's words now read Photonz, and its right hand end was dragged in: a cue is retimed by its edges on the track" },
+    { "do": "snapshot", "name": "4-retimed-by-its-end" },
+
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "click", "at": [640, 700], "count": 2 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "captionsExpectEditingOnCanvas" },
+    { "do": "describe", "stage": "4b-typing-on-the-picture", "note": "A double click on the caption on the picture opens the same words for typing where they are drawn, the way a Premiere caption is edited in the Program monitor" },
+    { "do": "snapshot", "name": "4b-typing-on-the-picture" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "captionsStyleKaraoke" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "captionsExpectLitWord" },
+    { "do": "describe", "stage": "5-karaoke-for-every-caption", "note": "Karaoke, picked once in the panel, dresses every caption: no plate, bigger words, and every word said so far stays lit" },
+    { "do": "snapshot", "name": "5-karaoke-for-every-caption" },
+
+    { "do": "action", "action": "captionsStyleLowerThird" },
+    { "do": "action", "action": "captionsPositionTop" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-lower-third-at-the-top", "note": "Lower third, left aligned on its own plate, then Position: Top, and every caption moves to the top of the title-safe area" },
+    { "do": "snapshot", "name": "6-lower-third-at-the-top" },
+    { "do": "action", "action": "captionsPositionBottom" },
+    { "do": "action", "action": "captionsStyleCaption" },
+
+    { "do": "action", "action": "captionsExportFiles" },
+    { "do": "action", "action": "captionsWriteFilmWithFileBeside" },
+    { "do": "writeVideo", "name": "7-burned-into-the-picture", "format": "mp4", "seconds": 17.3, "within": 1.5, "sound": true, "copied": false },
+    { "do": "describe", "stage": "7-out-as-a-film-and-as-subtitles", "note": "The same captions written out three ways: burned into an MP4, and as SubRip and WebVTT files for a player that would rather switch them off" },
+
+    { "do": "action", "action": "captionsAutoOff" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "8-auto-off", "note": "The one switch: with Auto off, a recording opens without listening. Put back on at the end, so the walk leaves the app as it found it" },
+    { "do": "snapshot", "name": "8-auto-off" },
+    { "do": "action", "action": "captionsAutoOn" }
+  ]
+}

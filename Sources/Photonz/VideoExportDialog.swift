@@ -31,6 +31,9 @@ struct VideoExportDialog: View {
 
     @State private var choice: RecordingExport.Choice = .video(.mp4)
     @State private var quality: VideoExportQuality = .standard
+    /// Words on the picture, or in a file beside it. Offered only on a film
+    /// with captions in it.
+    @State private var captions: CaptionExport = .burnedIn
     /// Everything the lines are worked out from, read once when the sheet
     /// opens: nothing can edit the document while its own window is behind a
     /// sheet.
@@ -92,6 +95,16 @@ struct VideoExportDialog: View {
                         .labelsHidden()
                         purpose
                     }
+                }
+            }
+            if editor.hasCaptions, choice == .video(.mp4) {
+                ExportSheetRow("Captions") {
+                    Picker("Captions", selection: $captions) {
+                        ForEach(CaptionExport.choices, id: \.self) { Text($0.title).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .playtestControl("Export captions", detail: captions.title)
                 }
             }
             VStack(alignment: .leading, spacing: 4) {
@@ -205,7 +218,8 @@ struct VideoExportDialog: View {
         let weighed = choice.format.flatMap { weigh.take(format: $0, quality: quality) }
         dismiss()
         if let format = choice.format {
-            editor.exportVideo(format: format, quality: quality, weighed: weighed)
+            editor.exportVideo(format: format, quality: quality, weighed: weighed,
+                               captions: format == .mp4 ? captions : .burnedIn)
         } else {
             editor.exportStillFrame(atMS: momentMS, weighed: stillFile)
         }

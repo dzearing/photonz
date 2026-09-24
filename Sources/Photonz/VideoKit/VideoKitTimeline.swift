@@ -163,7 +163,7 @@ extension VideoKit {
     /// `.ov`, `.txt`, `.aud`). Colour says which track a clip came from and
     /// nothing else; retiming, keys and trimming are drawn on top.
     enum ClipKind: CaseIterable {
-        case video, videoAlternate, component, overlay, text, audio
+        case video, videoAlternate, component, overlay, text, audio, caption
 
         var fill: AnyShapeStyle {
             switch self {
@@ -172,6 +172,8 @@ extension VideoKit {
             case .component: AnyShapeStyle(Self.diagonal(0x9A5CFF, 0xC56CFF))
             case .overlay: AnyShapeStyle(Self.diagonal(0x1B7A8C, 0x12C2E9))
             case .text: AnyShapeStyle(rgb(0x2A2F45))
+            // `.clip.cue`: the mock's lavender at a fifth, over the lane.
+            case .caption: AnyShapeStyle(rgb(0xB98CFF).opacity(0.2))
             case .audio: AnyShapeStyle(LinearGradient(colors: [rgb(0x26463A), rgb(0x1C3A30)],
                                                       startPoint: .top, endPoint: .bottom))
             }
@@ -179,9 +181,21 @@ extension VideoKit {
 
         /// The one kind that draws a border, because its fill is close to the
         /// panel it sits on.
-        var border: Color? { self == .text ? rgb(0x3D456A) : nil }
+        var border: Color? {
+            switch self {
+            case .text: rgb(0x3D456A)
+            case .caption: rgb(0x3D2F63)
+            default: nil
+            }
+        }
 
-        var ink: Color { self == .audio ? rgb(0x88FFEE) : .white }
+        var ink: Color {
+            switch self {
+            case .audio: rgb(0x88FFEE)
+            case .caption: rgb(0xB98CFF)
+            default: .white
+            }
+        }
 
         /// A 135 degree gradient, top left to bottom right.
         private static func diagonal(_ from: UInt32, _ to: UInt32) -> LinearGradient {

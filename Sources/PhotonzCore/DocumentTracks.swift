@@ -113,7 +113,7 @@ extension Layer {
     /// The kind of track this layer's clip belongs on.
     public var clipTrackKind: DocumentTrack.Kind {
         if timelineTrackKind == .audio { return .audio }
-        if isCaption { return .captions }
+        if isCaption || isCaptionGroup { return .captions }
         return .video
     }
 

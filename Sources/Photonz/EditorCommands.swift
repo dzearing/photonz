@@ -565,7 +565,9 @@ struct EditorCommands: Commands {
                 .disabled(!(editor?.canNudgeCaptions ?? false))
                 Button("Clear Captions") { editor?.clearCaptions() }
                     .disabled(!(editor?.canClearCaptions ?? false))
-                Button("Export Captions…") { editor?.exportCaptions() }
+                Button("Export Captions as SRT…") { editor?.exportCaptions(as: .srt) }
+                    .disabled(!(editor?.canExportCaptions ?? false))
+                Button("Export Captions as WebVTT…") { editor?.exportCaptions(as: .vtt) }
                     .disabled(!(editor?.canExportCaptions ?? false))
                 Divider()
             }

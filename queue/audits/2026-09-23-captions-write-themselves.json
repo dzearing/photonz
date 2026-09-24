@@ -1,0 +1,53 @@
+{
+  "feature": "Captions write themselves from the speech",
+  "epic": "video-audio",
+  "summary": "Open a screen recording with somebody talking and the captions write themselves on this Mac, with no click, onto one Captions track with a Words lane. You fix a cue by typing on its bar or on the picture, set one look for every caption, and export burned in or as an SRT or VTT file.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Auto is on by default in the Captions section.",
+  "try": [
+    {
+      "do": "Open a screen recording with talking in it (File > Open, or drop it on the app). Press nothing. Wait a few seconds.",
+      "shot": "2026-09-23-captions-write-themselves-2-the-captions-wrote-themselves.png"
+    },
+    {
+      "do": "Press Space and watch the word being said light up yellow on the picture and on the Words lane."
+    },
+    {
+      "do": "Double-click a cue on the Captions track and fix a word, then press Return.",
+      "shot": "2026-09-23-captions-write-themselves-3-typing-over-a-cue-on-its-track.png"
+    },
+    {
+      "do": "Double-click the caption on the picture and fix a word there instead.",
+      "shot": "2026-09-23-captions-write-themselves-4b-typing-on-the-picture.png"
+    },
+    {
+      "do": "Drag the right end of a cue to retime it."
+    },
+    {
+      "do": "In the Captions section pick Style: Karaoke, then Lower third, then Position: Top.",
+      "shot": "2026-09-23-captions-write-themselves-5-karaoke-for-every-caption.png"
+    },
+    {
+      "do": "File > Export, keep MP4, set Captions to Burned in or SRT file or VTT file, and export.",
+      "shot": "2026-09-23-captions-write-themselves-7-burned-in-frame.png"
+    },
+    {
+      "do": "Turn Auto off in the Captions section and open another recording: nothing is written until you press Auto captions.",
+      "shot": "2026-09-23-captions-write-themselves-8-auto-off.png"
+    }
+  ],
+  "evaluate": [
+    "Is opening a recording and finding captions already there what you expected, or would you rather be asked first?",
+    "Is double-clicking a cue on the track the way you would expect to fix a word, the way Premiere does it?",
+    "Is the Words lane useful at full-length zoom, where short words show as empty chips until you zoom in?",
+    "Do Caption, Lower third and Karaoke look different enough, and are the plate and yellow word right?",
+    "Is a Captions row in the export sheet (Burned in, SRT file, VTT file) the place you would look for subtitles?"
+  ],
+  "rough": [
+    "Side by side with video-captions.html (2026-09-23-captions-write-themselves-mock.png): the cue bars, the Words lane, the plate and the yellow word match; the panel has an Auto switch the mock does not draw, since the mock only has the Auto captions button, and Font, Size, Colour, Background, Active and Position are dropdowns where the mock lists them as read-only lines.",
+    "The Captions options sit low in the panel, under Effects, not at the top of Properties as the mock draws them.",
+    "The mock's Guides row (title and action safe areas drawn on the canvas), the AUTO \u00b7 EN badge and the timeline's own caption bar (Active word, Clear, Reset) are not built yet.",
+    "A recording opens with the trim bar up, and that bar sits over the bottom caption until you pick another tool.",
+    "At full-length zoom most word chips are too short to show their word; zoom in (2x, 4x) and they read.",
+    "The recogniser hears the app's own name as Fodons: correcting it is one double-click, but it will happen with names every time."
+  ]
+}

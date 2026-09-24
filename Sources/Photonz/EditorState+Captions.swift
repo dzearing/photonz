@@ -16,9 +16,12 @@ import UniformTypeIdentifiers
 // dragging its bar. Deleting one is ⌫. All of it undoes, because all of it goes
 // through `perform`.
 //
-// The five things that ARE here, and nothing else:
+// The things that ARE here, and nothing else:
 //
+// - Listening by itself when a recording with speech opens, once per sound,
+//   unless the Auto toggle is off.
 // - Which sound gets listened to, and where its words land on the timeline.
+// - The one look every caption wears, and retyping a cue in place.
 // - Saying how far along it is, and stopping it without losing what it heard.
 // - Nudging the whole track when the machine ran late.
 // - Taking them all off again.
@@ -84,6 +87,48 @@ extension EditorState {
 
     // MARK: - Listening
 
+    // MARK: - Listening by itself
+
+    /// **Auto.** Whether captions write themselves when a recording with
+    /// speech opens. One switch for the whole app, on until somebody turns it
+    /// off.
+    static var captionsWriteThemselves: Bool {
+        get { UserDefaults.standard.object(forKey: captionsAutoKey) as? Bool ?? true }
+        set { UserDefaults.standard.set(newValue, forKey: captionsAutoKey) }
+    }
+    private static let captionsAutoKey = "captions.writeThemselves"
+
+    /// The language captions are heard in, as a locale identifier.
+    static var captionsLanguage: String {
+        get { UserDefaults.standard.string(forKey: captionsLanguageKey) ?? "en-US" }
+        set { UserDefaults.standard.set(newValue, forKey: captionsLanguageKey) }
+    }
+    private static let captionsLanguageKey = "captions.language"
+
+    /// Auto or the language changed: draw again, and where Auto just came on,
+    /// listen now rather than on the next open.
+    func captionsSettingsChanged() {
+        captionSettingsTick += 1
+        writeCaptionsByThemselves()
+    }
+
+    /// Listen, without being asked, when this document has a sound it has
+    /// never listened to and no captions yet. Quiet: it does not stop
+    /// playback, does not take the selection, and says nothing when it hears
+    /// nothing, because nobody asked it a question.
+    func writeCaptionsByThemselves() {
+        guard Experiments.shared.captionsFromTheSoundEnabled, SpeechTranscription.isAvailable,
+              !isWritingCaptions, let document else { return }
+        let sound = captionableSound
+        guard CaptionAutoRun.shouldListen(isOn: Self.captionsWriteThemselves,
+                                          hasTime: documentHasTime,
+                                          soundID: sound.url == nil ? nil : sound.sound?.id,
+                                          listenedTo: document.captionsListenedTo,
+                                          hasCaptions: document.hasCaptions)
+        else { return }
+        writeCaptions(quietly: true)
+    }
+
     /// **Write Captions.** Listen to the recording and put the words on the
     /// timeline at the moments they were said.
     ///
@@ -91,27 +136,28 @@ extension EditorState {
     /// rather than dribbling in: a document that changes under you four hundred
     /// times while you watch is a document you cannot undo out of, and the
     /// progress line is already saying it is getting somewhere.
-    func writeCaptions() {
+    func writeCaptions(quietly: Bool = false) {
         guard canWriteCaptions else { return }
         let subject = captionableSound
         guard let sound = subject.sound, let url = subject.url else {
-            raiseCanvasNotice(.captionsCameTo(Captions.nothingToHear))
+            if !quietly { raiseCanvasNotice(.captionsCameTo(Captions.nothingToHear)) }
             return
         }
-        pauseDocument()
+        if !quietly { pauseDocument() }
         captionsBeingWritten = TranscriptionProgress(listenedToMS: 0, ofMS: sound.durationMS,
                                                      words: [])
         let landing = CaptionLanding()
+        let locale = Locale(identifier: Self.captionsLanguage)
         captionsTask = Task { [weak self] in
             do {
-                let heard = try await SpeechTranscription.words(of: url,
-                                                                locale: Locale(identifier: "en-US")) {
+                let heard = try await SpeechTranscription.words(of: url, locale: locale) {
                     landing.note($0)
                 }
-                await MainActor.run { self?.captionsLanded(heard, of: sound) }
+                await MainActor.run { self?.captionsLanded(heard, of: sound, quietly: quietly) }
             } catch {
                 await MainActor.run {
                     self?.captionsBeingWritten = nil
+                    guard !quietly else { return }
                     self?.raiseCanvasNotice(.captionsCameTo(
                         (error as? LocalizedError)?.errorDescription
                             ?? "The recording could not be listened to."))
@@ -148,12 +194,17 @@ extension EditorState {
 
     /// What happens when the listening finishes, whether it ran out of
     /// recording or somebody stopped it.
-    private func captionsLanded(_ heard: HeardWords, of sound: SoundRef) {
+    private func captionsLanded(_ heard: HeardWords, of sound: SoundRef, quietly: Bool) {
         captionsBeingWritten = nil
         captionsTask = nil
         captionsWatcher?.cancel()
         captionsWatcher = nil
         guard let document else { return }
+        // Listened to, whatever came of it: opening this again does not listen
+        // again. Not an undo step and not an edit, because nobody did it.
+        if !heard.wasStopped {
+            applyWithoutMarkingEdited { $0.noteCaptionsListened(to: sound.id) }
+        }
 
         // The recogniser heard a FILE. The timeline is not the file: a trim, a
         // cut or a change of speed moves every word after it, and a piece
@@ -161,35 +212,33 @@ extension EditorState {
         let placed = CaptionTiming.onTheTimeline(heard.words, of: sound, in: document.audioMix())
         let cues = CaptionCues.cues(from: placed)
         guard !cues.isEmpty else {
+            guard !quietly else { return }
             raiseCanvasNotice(.captionsCameTo(heard.wasStopped
                 ? CaptionProgress.stopped(doneMS: heard.listenedToMS, ofMS: heard.ofMS, words: 0)
                 : Captions.heardNothing))
             return
         }
 
-        let canvas = document.canvasSize
         perform { doc in
             // Writing captions again replaces the last lot rather than laying a
             // second track over the first, which is what a second press
-            // obviously means and what stops two copies of every line.
-            doc.clearCaptions()
-            var ids: Set<UUID> = []
-            for layer in CaptionLayers.layers(for: cues, in: canvas) {
-                doc.addLayer(layer)
-                ids.insert(layer.id)
-            }
-            // One row in the layers list rather than four hundred. Each caption
-            // still gets its own bar on the timeline, because the strip walks
-            // into groups.
-            _ = doc.groupLayers(ids: ids, name: CaptionLayers.groupName)
+            // obviously means and what stops two copies of every line. They
+            // land as one Captions group: one row in the layers list, and one
+            // Captions track on the timeline with every cue side by side.
+            doc.landCaptions(cues)
+            doc.noteCaptionsListened(to: sound.id)
         }
         // Read back off the document the edit LANDED in, not the one captured
         // before it: the captured one has no captions in it, so this quietly
         // selected nothing and left whatever was picked before still picked.
-        selectLayer(self.document?.captionLayers.first?.id)
+        // Captions that wrote themselves leave the selection where it was.
+        if !quietly { selectLayer(self.document?.captionLayers.first?.id) }
         documentMomentChanged()
 
-        if heard.wasStopped {
+        if quietly {
+            raiseCanvasNotice(.captionsWritten(words: placed.count, cues: cues.count,
+                                               ofMS: heard.ofMS))
+        } else if heard.wasStopped {
             raiseCanvasNotice(.captionsCameTo(
                 CaptionProgress.stopped(doneMS: heard.listenedToMS, ofMS: heard.ofMS,
                                         words: placed.count)))
@@ -247,23 +296,119 @@ extension EditorState {
         Experiments.shared.captionsFromTheSoundEnabled && hasCaptions
     }
 
-    /// **Export Captions…** Write the same words out as a subtitle file.
-    func exportCaptions() {
+    /// **Export Captions…** Write the same words out as a subtitle file, SRT
+    /// or WebVTT, beside the recording.
+    func exportCaptions(as format: CaptionFileFormat = .srt) {
         guard canExportCaptions, let cues = document?.captionCues, !cues.isEmpty else {
             raiseCanvasNotice(.captionsFileWritten(file: nil))
             return
         }
         let panel = NSSavePanel()
-        panel.allowedContentTypes = [UTType(filenameExtension: CaptionsSRT.fileExtension) ?? .plainText]
-        panel.nameFieldStringValue = captionsFileName + "." + CaptionsSRT.fileExtension
-        panel.message = "Write the captions out as a subtitle file"
+        panel.allowedContentTypes = [UTType(filenameExtension: format.fileExtension) ?? .plainText]
+        panel.nameFieldStringValue = captionsFileName + "." + format.fileExtension
+        // Beside the film it belongs to, where a player looks for it.
+        if let folder = recordingURL?.deletingLastPathComponent() { panel.directoryURL = folder }
+        panel.message = "Save the captions as a subtitle file"
         guard panel.runModal() == .OK, let url = panel.url else { return }
+        writeCaptionsFile(cues, as: format, to: url)
+    }
+
+    /// Write the subtitle file, and say so. Where a walk writes one, it names
+    /// the file itself rather than going through the save panel.
+    @discardableResult
+    func writeCaptionsFile(_ cues: [CaptionCue]? = nil, as format: CaptionFileFormat, to url: URL) -> Bool {
+        guard let cues = cues ?? document?.captionCues, !cues.isEmpty else { return false }
         do {
-            try CaptionsSRT.text(cues).write(to: url, atomically: true, encoding: .utf8)
+            try format.text(cues).write(to: url, atomically: true, encoding: .utf8)
             raiseCanvasNotice(.captionsFileWritten(file: url.lastPathComponent))
+            return true
         } catch {
             raiseCanvasNotice(.captionsFileWritten(file: nil))
+            return false
         }
+    }
+
+    /// When a video is exported with a subtitle file beside it: the same name
+    /// as the film, with the subtitle's own extension.
+    func writeCaptionsBeside(film url: URL, as format: CaptionFileFormat) {
+        guard hasCaptions else { return }
+        writeCaptionsFile(as: format, to: url.deletingPathExtension().appendingPathExtension(format.fileExtension))
+    }
+
+    // MARK: - One look for every caption
+
+    /// The look every caption wears now.
+    var captionLook: CaptionLook { document?.captionLook ?? .standard }
+
+    /// Dress every caption in a new look, as one undo step.
+    func setCaptionLook(_ look: CaptionLook) {
+        guard hasCaptions || document?.captionLook != look else { return }
+        perform { $0.applyCaptionLook(look) }
+        documentMomentChanged()
+    }
+
+    /// Change one thing about the look, keeping the rest.
+    func changeCaptionLook(_ change: (inout CaptionLook) -> Void) {
+        var look = captionLook
+        change(&look)
+        guard look != captionLook else { return }
+        setCaptionLook(look)
+    }
+
+    /// Pick one of the named styles. It keeps the font the person chose, where
+    /// they chose one, and takes everything else from the style.
+    func pickCaptionPreset(_ preset: CaptionLook.Preset) {
+        var look = CaptionLook.preset(preset)
+        look.position = captionLook.position
+        setCaptionLook(look)
+    }
+
+    // MARK: - A cue, in place
+
+    /// The words a caption says, or nil for a layer that is not a caption.
+    func captionWords(of id: UUID) -> String? {
+        guard let layer = document?.layer(id: id), layer.isCaption,
+              case .text(let content) = layer.content else { return nil }
+        return content.string
+    }
+
+    /// Retype a caption where it is, keeping when it is on screen.
+    func setCaptionText(id: UUID, to string: String) {
+        guard let document, captionWords(of: id) != nil else { return }
+        var probe = document
+        guard probe.setCaptionText(id: id, to: string) else { return }
+        perform { _ = $0.setCaptionText(id: id, to: string) }
+        documentMomentChanged()
+    }
+
+    /// Every word under these cues, where it now sits in time, for the Words
+    /// lane.
+    func captionWordChips(cueIDs: [UUID]) -> [TranscribedWord] {
+        guard let document = shownDocument else { return [] }
+        return cueIDs.flatMap { id -> [TranscribedWord] in
+            guard let layer = document.layer(id: id), let time = layer.time,
+                  let cue = document.captionCue(of: layer) else { return [] }
+            return CaptionCue.words(cue.words, fittedTo: time)
+        }
+    }
+
+    /// Put the playhead on a moment, the way a click on the ruler does.
+    func moveDocumentPlayhead(toMS ms: Int) {
+        pauseDocument()
+        documentTimeMS = min(max(0, ms), lastDocumentTimeMS)
+        documentMomentChanged()
+    }
+
+    /// The cue under the playhead, or the one picked: what the panel's Cue
+    /// section talks about.
+    var captionCueInFocus: (index: Int, of: Int, layer: Layer)? {
+        guard let captions = document?.captionLayers, !captions.isEmpty else { return nil }
+        if let picked = selectedLayerID, let index = captions.firstIndex(where: { $0.id == picked }) {
+            return (index, captions.count, captions[index])
+        }
+        let now = documentTimeMS
+        let index = captions.lastIndex { ($0.time?.inMS ?? 0) <= now } ?? 0
+        return (index, captions.count, captions[index])
     }
 
     /// What the subtitle file is called before anybody renames it: the

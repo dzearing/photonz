@@ -58,7 +58,7 @@ extension EditorState {
     ///   every time, so that file IS the export and is moved into place rather
     ///   than written again.
     func exportVideo(format: RecordingFormat, quality: VideoExportQuality,
-                     weighed: URL? = nil) {
+                     weighed: URL? = nil, captions: CaptionExport = .burnedIn) {
         guard let document, document.hasTime else { return }
         RecordingExportMemory.remember(format: format, quality: quality)
         let panel = NSSavePanel()
@@ -71,7 +71,8 @@ extension EditorState {
             if let weighed { try? FileManager.default.removeItem(at: weighed) }
             return
         }
-        startVideoExport(format: format, quality: quality, to: url, weighed: weighed)
+        startVideoExport(format: format, quality: quality, to: url, weighed: weighed,
+                         captions: captions)
     }
 
     /// What the file is called before anybody renames it: the document's own
@@ -86,11 +87,11 @@ extension EditorState {
     /// compositing, and a playhead running through it would be fighting for the
     /// same frames.
     func startVideoExport(format: RecordingFormat, quality: VideoExportQuality, to url: URL,
-                          weighed: URL? = nil) {
+                          weighed: URL? = nil, captions: CaptionExport = .burnedIn) {
         guard videoExport == nil else { return }
         // Already written, to answer what it would weigh: move it into place
         // and there is nothing to watch.
-        if let weighed, AppCoordinator.putWeighedFileInPlace(weighed, at: url) {
+        if captions == .burnedIn, let weighed, AppCoordinator.putWeighedFileInPlace(weighed, at: url) {
             keptByExport()
             raiseCanvasNotice(.videoWritten(file: url.lastPathComponent))
             return
@@ -101,13 +102,17 @@ extension EditorState {
         videoExportTask = Task { [weak self] in
             guard let self else { return }
             do {
-                try await writeVideo(format: format, quality: quality, to: url) { done in
+                try await writeVideo(format: format, quality: quality, to: url,
+                                     captions: captions) { done in
                     Task { @MainActor in run.fraction = done }
                 }
                 videoExport = nil
                 videoExportTask = nil
                 keptByExport()
                 raiseCanvasNotice(.videoWritten(file: url.lastPathComponent))
+                // The words as a file beside the film, named after it, where
+                // a player looks for them.
+                if let file = captions.file { writeCaptionsBeside(film: url, as: file) }
             } catch is CancellationError {
                 // Stopped on purpose, and `DocumentMovieWriter` took the
                 // half-written file with it. The sheet going away is the whole
@@ -197,8 +202,10 @@ extension EditorState {
     /// the file that actually lands rather than trusting what the app says it
     /// wrote.
     func writeVideo(format: RecordingFormat, quality: VideoExportQuality, to url: URL,
+                    captions: CaptionExport = .burnedIn,
                     onProgress: (@Sendable (Double) -> Void)? = nil) async throws {
-        guard let document, document.hasTime else { throw CocoaError(.fileNoSuchFile) }
+        guard let document = document?.forExport(captions: captions), document.hasTime
+        else { throw CocoaError(.fileNoSuchFile) }
 
         // The recording nobody has touched is already the answer: copy the file
         // rather than photographing it back into existence. Only at the top

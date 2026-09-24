@@ -28,6 +28,10 @@ struct TimelineTrackRowModel: Identifiable {
 
     var id: UUID { track.id }
 
+    /// A Captions track: its cues side by side in one lane, and the words
+    /// under them (`CaptionLook.swift`).
+    var isCaptions: Bool { track.kind == .captions }
+
     /// A lane with sound on it is the kit's taller lane, because its level
     /// line needs somewhere to be dragged.
     var carriesSound: Bool { track.kind == .audio || clips.contains(where: \.isSound) }
@@ -66,6 +70,13 @@ extension EditorState {
         return tracks.map { track in
             var clips: [MotionStripGroup] = []
             var inner: [MotionStripGroup] = []
+            // A captions track draws every cue on its one lane, side by side,
+            // rather than the group as one bar with a row per cue under it.
+            if track.kind == .captions {
+                let cues = document.captionCueIDs(onTrack: track.id).compactMap { byLayer[$0] }
+                let isOff = track.isHidden || (soloPicture && !track.isSolo)
+                return TimelineTrackRowModel(track: track, clips: cues, inner: [], isOff: isOff)
+            }
             for id in document.clipIDs(onTrack: track.id) {
                 if var group = byLayer[id] {
                     // A clip whose sound is on an audio track of its own is

@@ -153,6 +153,7 @@ extension EditorState {
         guard let document else { return nil }
         guard documentHasTime else { return document }
         return document.posedForCanvas(atTimeMS: documentTimeMS)
+            .hidingWhatIsOffScreen(atTimeMS: documentTimeMS)
     }
 
     /// The canvas edit `mutate` makes to layer `id`, with every change to a

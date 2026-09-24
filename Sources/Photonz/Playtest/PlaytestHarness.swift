@@ -2488,6 +2488,23 @@ private final class Run {
         // A recording window with no guide in front of it, on the sample clip
         // the video guides bring. The walk moves into it, exactly as it would
         // into the window a guide opened.
+        // A recording with somebody talking in it, opened as a person would.
+        case .action(.openSampleTalk):
+            guard let url = await TutorialSampleTalk.fresh() else {
+                throw Failure(description: "couldn't write the talking sample")
+            }
+            coordinator.openWindow(.video(standardizing: url))
+            var landed: EditorState?
+            try await poll("the talking sample to open as a document", within: 30) {
+                landed = PlaytestHarness.readyEditors.last {
+                    $0.recordingURL?.lastPathComponent == TutorialSampleTalk.fileName
+                }
+                return landed != nil
+            }
+            guard let landed else { throw Failure(description: "no editor opened the talking sample") }
+            try await adopt(landed, window: nil, step: step.name,
+                            subject: "a recording with somebody talking in it", number: number)
+
         case .action(let action) where action == .openSampleRecording:
             guard let url = TutorialSampleRecording.fresh() else {
                 throw Failure(description: "couldn't write the sample recording")
@@ -2920,6 +2937,140 @@ private final class Run {
                 }
                 note(number, step.name,
                      "captions: every line's words still carry the moments they were heard at",
+                     state: describe())
+            case .captionsWaitForThemselves:
+                // Nothing pressed: the captions have to arrive on their own.
+                try await poll("the captions to write themselves", within: 180) {
+                    editor.hasCaptions && !editor.isWritingCaptions
+                }
+                note(number, step.name,
+                     "captions wrote themselves: \(editor.captionsReading)", state: describe())
+            case .captionsExpectOneTrack:
+                guard let document = editor.document else { throw Failure(description: "no document") }
+                let tracks = document.timelineTracks.filter { $0.kind == .captions }
+                guard tracks.count == 1, let track = tracks.first else {
+                    throw Failure(description: "the captions are on \(tracks.count) Captions tracks, "
+                        + "not one")
+                }
+                let onIt = document.captionCueIDs(onTrack: track.id)
+                guard onIt.count == document.captionLayers.count, !onIt.isEmpty else {
+                    throw Failure(description: "\(onIt.count) of \(document.captionLayers.count) "
+                        + "captions are on the Captions track")
+                }
+                let rows = editor.timelineTrackRows.filter(\.isCaptions)
+                guard rows.count == 1, rows[0].clips.count == onIt.count, rows[0].inner.isEmpty else {
+                    throw Failure(description: "the timeline does not draw the cues side by side on "
+                        + "one lane")
+                }
+                note(number, step.name, "captions: \(onIt.count) cues on the one \(track.name) track",
+                     state: describe())
+            case .captionsEditFirstInPlace:
+                guard let first = editor.document?.captionLayers.first else {
+                    throw Failure(description: "there is no caption to edit")
+                }
+                editor.clearKeySelection()
+                editor.selectLayer(first.id)
+                editor.beginRenamingClip(first.id)
+            case .captionsCommitFirstWords:
+                guard let first = editor.document?.captionLayers.first,
+                      let words = editor.captionWords(of: first.id) else {
+                    throw Failure(description: "there is no caption to fix")
+                }
+                var pieces = words.split(whereSeparator: \.isWhitespace).map(String.init)
+                pieces[0] = "Photonz"
+                let fixed = pieces.joined(separator: " ")
+                editor.setCaptionText(id: first.id, to: fixed)
+                editor.renamingClipID = nil
+                guard editor.captionWords(of: first.id) == fixed,
+                      editor.document?.layer(id: first.id)?.time == first.time else {
+                    throw Failure(description: "the words did not change, or the caption moved")
+                }
+                note(number, step.name, "captions: the first cue now reads \(fixed)", state: describe())
+            case .captionsTrimFirstEnd:
+                guard let first = editor.document?.captionLayers.first, let was = first.time else {
+                    throw Failure(description: "there is no caption to retime")
+                }
+                editor.beginClipBarDrag(layerID: first.id, grab: .seam(after: 0))
+                guard editor.clipBarDrag != nil else {
+                    throw Failure(description: "the first caption's end could not be taken hold of")
+                }
+                editor.updateClipBarDrag(byMS: -300)
+                editor.commitClipBarDrag()
+                guard let now = editor.document?.layer(id: first.id)?.time,
+                      now.outMS < was.outMS, now.inMS == was.inMS else {
+                    throw Failure(description: "dragging the first caption's end in did not move it")
+                }
+                note(number, step.name, "captions: the first cue now ends at \(now.outMS) ms, "
+                     + "was \(was.outMS) ms", state: describe())
+            case .captionsStyleCaption, .captionsStyleLowerThird, .captionsStyleKaraoke:
+                let preset: CaptionLook.Preset = action == .captionsStyleCaption ? .caption
+                    : action == .captionsStyleLowerThird ? .lowerThird : .karaoke
+                editor.pickCaptionPreset(preset)
+                let dressed = editor.document?.captionLayers.allSatisfy { layer in
+                    guard case .text(let content) = layer.content else { return false }
+                    return content.weight == CaptionLook.preset(preset).weight
+                        && content.alignment == CaptionLook.preset(preset).alignment
+                } ?? false
+                guard editor.captionLook.preset == preset, dressed else {
+                    throw Failure(description: "picking \(preset.title) did not dress every caption")
+                }
+            case .captionsPositionTop, .captionsPositionBottom:
+                let position: CaptionLook.Position = action == .captionsPositionTop ? .top : .bottom
+                editor.changeCaptionLook { $0.position = position }
+                guard editor.captionLook.position == position else {
+                    throw Failure(description: "the captions did not move to the \(position.title)")
+                }
+            case .captionsExpectLitWord:
+                guard let shown = editor.document?.drawn(atTimeMS: editor.documentTimeMS),
+                      let lit = shown.allLayers.first(where: { $0.isCaption && $0.isVisible }),
+                      case .text(let content) = lit.content else {
+                    throw Failure(description: "no caption is on screen at \(editor.documentTimeMS) ms")
+                }
+                guard let highlight = content.highlight else {
+                    throw Failure(description: "the caption on screen has no word lit")
+                }
+                let utf16 = Array(content.string.utf16)
+                let end = min(utf16.count, highlight.location + highlight.length)
+                let word = String(utf16CodeUnits: Array(utf16[min(highlight.location, end)..<end]),
+                                  count: end - min(highlight.location, end))
+                note(number, step.name, "captions: \"\(word)\" is lit in \(highlight.colorHex) "
+                     + "at \(editor.documentTimeMS) ms", state: describe())
+            case .captionsExportFiles:
+                for format in CaptionFileFormat.allCases {
+                    let url = out.appendingPathComponent("captions.\(format.fileExtension)")
+                    guard editor.writeCaptionsFile(as: format, to: url),
+                          let text = try? String(contentsOf: url, encoding: .utf8) else {
+                        throw Failure(description: "the \(format.title) file was not written")
+                    }
+                    let first = editor.document?.captionCues.first?.text ?? ""
+                    let head = format == .vtt ? "WEBVTT" : "1\n"
+                    guard text.hasPrefix(head), text.contains(first) else {
+                        throw Failure(description: "the \(format.title) file does not read as one")
+                    }
+                    note(number, step.name, "captions: wrote \(url.lastPathComponent), "
+                         + "\(text.count) characters", state: describe())
+                }
+            case .captionsAutoOff, .captionsAutoOn:
+                EditorState.captionsWriteThemselves = action == .captionsAutoOn
+                editor.captionsSettingsChanged()
+            case .captionsWriteFilmWithFileBeside:
+                let film = out.appendingPathComponent("film-with-subtitles-beside.mp4")
+                try await editor.writeVideo(format: .mp4, quality: .standard, to: film,
+                                            captions: .file(.srt))
+                editor.writeCaptionsBeside(film: film, as: .srt)
+                let beside = film.deletingPathExtension().appendingPathExtension("srt")
+                guard FileManager.default.fileExists(atPath: film.path),
+                      FileManager.default.fileExists(atPath: beside.path) else {
+                    throw Failure(description: "the film or its subtitle file beside it did not land")
+                }
+                note(number, step.name, "captions: wrote \(film.lastPathComponent) and "
+                     + "\(beside.lastPathComponent) beside it", state: describe())
+            case .captionsExpectEditingOnCanvas:
+                guard let id = editor.editingTextLayerID,
+                      editor.document?.layer(id: id)?.isCaption == true else {
+                    throw Failure(description: "no caption's words are open for typing on the canvas")
+                }
+                note(number, step.name, "captions: typing into \(editor.captionWords(of: id) ?? "")",
                      state: describe())
             case .soundExpectPlaying:
                 guard editor.isDocumentPlaying else {
@@ -3729,7 +3880,13 @@ private final class Run {
             case .captionsAddVoiceover, .captionsWrite, .captionsWriteHearingNothing,
                  .captionsNudgeLater,
                  .captionsNudgeEarlier, .captionsCorrectFirstWord, .captionsClear,
-                 .captionsExpectSound, .captionsExpectTimingsKept: break
+                 .captionsExpectSound, .captionsExpectTimingsKept, .captionsWaitForThemselves,
+                 .captionsExpectOneTrack, .captionsEditFirstInPlace, .captionsCommitFirstWords,
+                 .captionsTrimFirstEnd, .captionsStyleCaption, .captionsStyleLowerThird,
+                 .captionsStyleKaraoke, .captionsPositionTop, .captionsPositionBottom,
+                 .captionsExpectLitWord, .captionsExportFiles, .captionsAutoOff,
+                 .captionsAutoOn, .captionsExpectEditingOnCanvas,
+                 .captionsWriteFilmWithFileBeside: break
             case .copySpecList: editor.copyMeasureSpecList()
             case .copyImage: editor.copyCompositeToClipboard()
             // Keys picked on a lane go first, as Edit ▸ Copy and Cut do.
@@ -4363,7 +4520,7 @@ private final class Run {
                  .videoExportSheetCancel, .videoExportBegin, .videoExportWeighed,
                  .videoExportStop,
                  .videoCropMiddle,
-                 .openSampleRecording, .openRecordingFromDisk, .openMissingRecording,
+                 .openSampleRecording, .openSampleTalk, .openRecordingFromDisk, .openMissingRecording,
                  .openLandingRecording, .reopenSampleRecording, .editLastCapture:
                 break  // handled above, in the branch that asks for a recording
             case .clipSplit, .clipDeletePiece, .clipHoldFrame,

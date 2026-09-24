@@ -246,6 +246,26 @@ extension PhotonzDocument {
     }
 }
 
+extension PhotonzDocument {
+
+    /// The document with everything that is not on screen at `ms` hidden and
+    /// nothing else changed: what the canvas clicks against, so a caption or
+    /// a title still to come never takes a click meant for what is showing.
+    public func hidingWhatIsOffScreen(atTimeMS ms: Int) -> PhotonzDocument {
+        guard hasTime else { return self }
+        let moment = min(max(0, ms), lastDrawableTimeMS)
+        func hide(_ layer: Layer) -> Layer {
+            var shown = layer
+            if !layer.isOnScreen(atTimeMS: moment) { shown.isVisible = false }
+            if shown.isVisible, shown.isGroup { shown.children = layer.children.map(hide) }
+            return shown
+        }
+        var shown = self
+        shown.layers = layers.map(hide)
+        return shown
+    }
+}
+
 extension Layer {
 
     /// This layer and everything inside it, with whatever is not on screen at
@@ -260,6 +280,8 @@ extension Layer {
         // moment is what the renderer composites for that moment"
         // (`MovieClip.swift`).
         if shown.isVisible { shown = shown.playing(atTimeMS: ms, framesInHand: framesInHand) }
+        // ...and a caption lights the word being said (`CaptionLook.swift`).
+        if shown.isVisible, shown.isCaption { shown = shown.withSpokenWordLit(atTimeMS: ms) }
         if shown.isGroup {
             shown.children = children.map { $0.shownTree(atTimeMS: ms, framesInHand: framesInHand) }
         }

@@ -1,3 +1,4 @@
+import AppKit
 import PhotonzCore
 import SwiftUI
 
@@ -338,6 +339,12 @@ struct ClipPiecesBar: View {
                 editorState.clearKeySelection()
                 editorState.selectClipPiece(layerID: layerID,
                                             index: pieces.count > 1 ? index : nil)
+                // A double click on a caption opens its words for typing, in
+                // place, the way Premiere edits a caption on its track.
+                if (NSApp.currentEvent?.clickCount ?? 1) >= 2,
+                   editorState.document?.layer(id: layerID)?.isCaption == true {
+                    editorState.beginRenamingClip(layerID)
+                }
             }
             .contextMenu {
                 if kind != nil { TimelineClipMenu(layerID: layerID, piece: index) }
@@ -394,6 +401,9 @@ struct ClipPiecesBar: View {
                                       hiddenLeading: CGFloat) -> some View {
         if let kind {
             ZStack(alignment: isSound ? .topLeading : .leading) {
+                if let border = kind.border {
+                    RoundedRectangle(cornerRadius: cornerRadius).strokeBorder(border)
+                }
                 if piece?.isHeld == true {
                     Color.black.opacity(0.4)
                 }
@@ -996,19 +1006,26 @@ private struct ClipNameField: View {
             .background(RoundedRectangle(cornerRadius: 4).fill(VideoKit.Palette.panel))
             .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(VideoKit.Palette.accent))
             .focused($isFocused)
-            .onSubmit {
-                let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !trimmed.isEmpty, trimmed != name { editorState.renameLayer(id: layerID, to: trimmed) }
-                editorState.renamingClipID = nil
-            }
+            .onSubmit { commit() }
             .onExitCommand { editorState.renamingClipID = nil }
             .onChange(of: isFocused) { _, focused in
                 if !focused { editorState.renamingClipID = nil }
             }
             .onAppear {
-                draft = name
+                draft = editorState.captionWords(of: layerID) ?? name
                 isFocused = true
             }
             .playtestControl("Clip name", detail: "Timeline")
+    }
+
+    /// A caption's field edits its words; any other clip's, its name.
+    private func commit() {
+        let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        if editorState.captionWords(of: layerID) != nil {
+            editorState.setCaptionText(id: layerID, to: trimmed)
+        } else if !trimmed.isEmpty, trimmed != name {
+            editorState.renameLayer(id: layerID, to: trimmed)
+        }
+        editorState.renamingClipID = nil
     }
 }

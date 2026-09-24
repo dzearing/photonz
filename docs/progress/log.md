@@ -19525,3 +19525,12 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Level line: a point drag is one undo step on the dot's own layer, shows its dB while dragged, and a click adds a point at the right height with the fader not at 0 dB.
 - Walk `keys-copy-between-layers-walk`; audit `queue/audits/2026-09-23-keys-copy-between-layers.json`.
 - Next: premiere-s-keys-work-on-the-timeline keeps ⇧K/⌥K when K becomes Stop.
+
+## 2026-09-23: Captions write themselves from the speech (go loop)
+
+- Opening a recording with speech (or laying a voiceover on one) now writes its captions on this Mac with no click, once per sound (`PhotonzDocument.captionsListenedTo`), unless the Auto switch in the Captions section is off.
+- Captions land as one Captions group that the timeline reads as ONE Captions track, cues side by side, with a Words lane of per-word chips; the spoken word is lit on the lane and on the picture (`CaptionActiveWord`, applied in `shownTree`).
+- One look for every caption (`CaptionLook`: Caption / Lower third / Karaoke plus font, size, colour, plate, lit word, position); text layers gained a plate and a highlight (`TextContent.plateHex`, `.highlight`, drawn by `TextRasterizer`).
+- Cues retype in place on their bar (double click) and on the canvas; the canvas no longer lets a caption or title that is not on screen take a click (`hidingWhatIsOffScreen`). A time document refits while nobody has moved the camera, so the picture's bottom is not under the tool bar.
+- Export: SRT or WebVTT from the panel/menus, and the video export sheet's Captions row (Burned in, SRT file, VTT file beside the film).
+- Walk: `captions-write-themselves-walk` at Next defaults. Follow-ups: captions-show-safe-area-guides-and-their-own-bar (p1), the-trim-bar-a-recording-opens-with-stays-clear (p2), trying-out-addjson-never-files-a-real-task (p2).

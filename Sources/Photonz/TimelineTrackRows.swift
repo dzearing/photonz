@@ -41,6 +41,13 @@ struct TimelineTrackRow: View {
             }
             .frame(height: laneHeight)
             .playtestField("Track \(track.name)")
+            if row.isCaptions, !row.clips.isEmpty {
+                HStack(spacing: TimelineDock.gap) {
+                    CaptionWordsLane.header(indent: indent)
+                    CaptionWordsLane(cueIDs: row.clips.map(\.layerID), laneWidth: laneWidth)
+                }
+                .frame(height: CaptionWordsLane.height)
+            }
             ForEach(row.clips) { clip in
                 // A keyed value is a lane of keys, opened and closed by the
                 // arrow on the header (`KeyLanesView`); anything else that
@@ -98,7 +105,11 @@ struct TimelineTrackRow: View {
                     // room: the switches already say what kind of track it is.
                     VideoKit.TrackHeader(title: track.name, symbol: showsAllSwitches ? nil : symbol,
                                          width: TimelineDock.gutter - indent - switchesWidth - twistWidth,
-                                         uppercase: false, isSelected: isPicked)
+                                         uppercase: false,
+                                         // Written by the app off the sound: the
+                                         // mock's sparkle and lavender.
+                                         isAutomatic: row.isCaptions && !showsAllSwitches,
+                                         isSelected: isPicked)
                         .padding(.leading, indent + twistWidth)
                         .frame(height: laneHeight)
                         .contentShape(Rectangle())
@@ -274,7 +285,7 @@ struct TimelineTrackRow: View {
             let alternates = alternateClips
             ForEach(row.clips) { clip in
                 TimelineClipView(group: clip, laneWidth: laneWidth, height: laneHeight,
-                                 alternate: alternates.contains(clip.id))
+                                 alternate: alternates.contains(clip.id), isCaptionCue: row.isCaptions)
                     .allowsHitTesting(!track.isLocked)
                     .playtestField("Timing \(clip.layerName)")
                 if isBlade, !track.isLocked {
@@ -468,6 +479,10 @@ struct TimelineTrackMenu: View {
 
     var body: some View {
         let acted = editorState.tracksActedOn(from: track.id)
+        if track.kind == .captions {
+            MenuRowsView(rows: editorState.captionTrackMenuRows())
+            Divider()
+        }
         Button("Rename…") { editorState.beginRenamingTrack(track.id) }
         Divider()
         if track.kind == .audio {
@@ -504,12 +519,14 @@ struct TimelineClipView: View {
     let laneWidth: CGFloat
     let height: CGFloat
     var alternate = false
+    /// This bar is a cue on a Captions track.
+    var isCaptionCue = false
     /// This bar is a clip's own sound on the audio track under it.
     var isLinkedSound = false
 
     var body: some View {
         let ruler = editorState.motionStripRuler
-        let own = TimelineTrackRow.clipKind(group.trackKind)
+        let own = isCaptionCue ? .caption : TimelineTrackRow.clipKind(group.trackKind)
         let kind = alternate && own == .video ? VideoKit.ClipKind.videoAlternate : own
         if let bar = group.bar {
             // The trim session is drawn once, on the picture; the linked

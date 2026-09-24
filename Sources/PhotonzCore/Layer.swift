@@ -54,6 +54,20 @@ public struct TextContent: Hashable, Codable, Sendable {
     /// box stays exactly one line tall, and a title too long for the room ends
     /// in an ellipsis where the room ran out, the way a real one does.
     public var staysOnOneLine: Bool?
+    /// A rounded plate drawn behind the lines, hugging them, or nil for words
+    /// straight on whatever is under them. A caption's background
+    /// (`CaptionLook.swift`); nil on every piece of text written before it.
+    public var plateHex: String?
+    /// The colour the word being said lights up in, for a caption whose look
+    /// lights one. Nil for everything else.
+    public var activeWordHex: String?
+    /// True where every word said so far stays lit (Karaoke), not just the
+    /// one being said.
+    public var activeWordSung: Bool?
+    /// Characters drawn in another colour. Never saved by anything: it is set
+    /// on the frame drawn at a moment, the way a clip carries the frame of its
+    /// recording, so the document itself never has a word lit.
+    public var highlight: TextHighlight?
 
     public init(string: String, fontName: String = "SF Pro", fontSize: CGFloat = 24,
                 colorHex: String = "#FFFFFF", weight: TextWeight = .regular,
@@ -83,6 +97,26 @@ public struct TextContent: Hashable, Codable, Sendable {
         // And so does this: text saved before it wraps, which is the answer a
         // missing key has always meant.
         staysOnOneLine = try container.decodeIfPresent(Bool.self, forKey: .staysOnOneLine)
+        // Captions' plate and lit word postdate all of it; text from before
+        // has neither.
+        plateHex = try container.decodeIfPresent(String.self, forKey: .plateHex)
+        activeWordHex = try container.decodeIfPresent(String.self, forKey: .activeWordHex)
+        activeWordSung = try container.decodeIfPresent(Bool.self, forKey: .activeWordSung)
+        highlight = try container.decodeIfPresent(TextHighlight.self, forKey: .highlight)
+    }
+}
+
+/// A stretch of a text layer's characters drawn in another colour, counted in
+/// UTF-16 units the way text layout counts them.
+public struct TextHighlight: Hashable, Codable, Sendable {
+    public var location: Int
+    public var length: Int
+    public var colorHex: String
+
+    public init(location: Int, length: Int, colorHex: String) {
+        self.location = location
+        self.length = length
+        self.colorHex = colorHex
     }
 }
 

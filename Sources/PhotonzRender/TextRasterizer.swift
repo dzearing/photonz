@@ -107,9 +107,72 @@ public enum TextRasterizer {
                                       borderColorHex: outline.colorHex))
             }
         }
-        draw(attributedString(text))
+        // A caption's plate goes under everything, hugging the lines
+        // (`CaptionLook.swift`).
+        if let plateHex = text.plateHex {
+            drawPlate(for: text, hex: plateHex, laidOutIn: path, bounds: box, in: context)
+        }
+        draw(lit(attributedString(text), text))
 
         return context.makeImage()
+    }
+
+    /// One rounded plate behind all the lines, as wide as the widest of them
+    /// plus a little air, the way the mock's caption box hugs its words.
+    private static func drawPlate(for text: TextContent, hex: String, laidOutIn path: CGPath,
+                                  bounds box: CGRect, in context: CGContext) {
+        guard text.fontSize > 0, !text.string.isEmpty,
+              let rgba = RGBA(hex: hex) else { return }
+        let frame = CTFramesetterCreateFrame(
+            CTFramesetterCreateWithAttributedString(attributedString(text)),
+            CFRange(location: 0, length: 0), path, nil)
+        guard let lines = CTFrameGetLines(frame) as? [CTLine], !lines.isEmpty else { return }
+        var origins = [CGPoint](repeating: .zero, count: lines.count)
+        CTFrameGetLineOrigins(frame, CFRange(location: 0, length: 0), &origins)
+        let base = path.boundingBox.origin
+        var union = CGRect.null
+        for (line, origin) in zip(lines, origins) {
+            var ascent: CGFloat = 0, descent: CGFloat = 0, leading: CGFloat = 0
+            let full = CGFloat(CTLineGetTypographicBounds(line, &ascent, &descent, &leading))
+            let width = full - CGFloat(CTLineGetTrailingWhitespaceWidth(line))
+            guard width > 0 else { continue }
+            // A centred or right-aligned line is pushed along by the frame; the
+            // pen offset is how far, for the width it actually inks.
+            let flush: CGFloat = switch text.alignment ?? .left {
+            case .left: 0
+            case .center: 0.5
+            case .right: 1
+            }
+            let pen = CGFloat(CTLineGetPenOffsetForFlush(line, flush, Double(path.boundingBox.width)))
+            let x = base.x + (text.alignment == nil || text.alignment == .left ? origin.x : pen)
+            let rect = CGRect(x: x, y: base.y + origin.y - descent, width: width, height: ascent + descent)
+            union = union.union(rect)
+        }
+        guard !union.isNull else { return }
+        let plate = union.insetBy(dx: -text.fontSize * 0.45, dy: -text.fontSize * 0.2)
+            .intersection(box)
+        guard !plate.isEmpty else { return }
+        let radius = min(text.fontSize * 0.28, plate.height / 2)
+        context.saveGState()
+        context.setFillColor(CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a))
+        context.addPath(CGPath(roundedRect: plate, cornerWidth: radius, cornerHeight: radius, transform: nil))
+        context.fillPath()
+        context.restoreGState()
+    }
+
+    /// The words with the lit stretch drawn in its own colour. A stretch that
+    /// runs past the words (a line retyped shorter) is cut to them.
+    private static func lit(_ attributed: NSAttributedString, _ text: TextContent) -> NSAttributedString {
+        guard let highlight = text.highlight, let rgba = RGBA(hex: highlight.colorHex) else { return attributed }
+        let length = attributed.length
+        let start = min(max(0, highlight.location), length)
+        let end = min(max(start, highlight.location + highlight.length), length)
+        guard end > start else { return attributed }
+        let mutable = NSMutableAttributedString(attributedString: attributed)
+        mutable.addAttribute(NSAttributedString.Key(kCTForegroundColorAttributeName as String),
+                             value: CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a),
+                             range: NSRange(location: start, length: end - start))
+        return mutable
     }
 
     /// The words as ONE outline, in the layer's own top-left coordinates.

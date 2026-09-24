@@ -94,6 +94,12 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// Where the In and Out marks sit on the ruler, where they have been set.
     public internal(set) var markInMS: Int?
     public internal(set) var markOutMS: Int?
+    /// How every caption in this document looks, once captions have landed or
+    /// somebody has picked a look (`CaptionLook.swift`).
+    public var captionLook: CaptionLook?
+    /// The sounds the app has already listened to for captions, so opening
+    /// the document again never listens again behind somebody's back.
+    public internal(set) var captionsListenedTo: [UUID] = []
 
     public init(canvasSize: CGSize, layers: [Layer] = [], pixelScale: CGFloat = 1,
                 colorStyles: [ColorStyle] = [], textStyles: [TextStyle] = [],
@@ -113,6 +119,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         case canvasSize, layers, pixelScale, colorStyles, textStyles, effectStyles, guides
         case gridOriginX, gridOriginY, motionCycleMS, readWords, durationMS
         case tracks, trackGroups, media, markers, markInMS, markOutMS
+        case captionLook, captionsListenedTo
     }
 
     /// A document with no styles in it writes no styles key, so one saved
@@ -152,6 +159,9 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         if !markers.isEmpty { try c.encode(markers, forKey: .markers) }
         if let markInMS { try c.encode(markInMS, forKey: .markInMS) }
         if let markOutMS { try c.encode(markOutMS, forKey: .markOutMS) }
+        // ...and for captions' look and what was listened to.
+        if let captionLook { try c.encode(captionLook, forKey: .captionLook) }
+        if !captionsListenedTo.isEmpty { try c.encode(captionsListenedTo, forKey: .captionsListenedTo) }
     }
 
     public init(from decoder: Decoder) throws {
@@ -192,6 +202,8 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         markers = try c.decodeIfPresent([TimelineMarker].self, forKey: .markers) ?? []
         markInMS = try c.decodeIfPresent(Int.self, forKey: .markInMS)
         markOutMS = try c.decodeIfPresent(Int.self, forKey: .markOutMS)
+        captionLook = try c.decodeIfPresent(CaptionLook.self, forKey: .captionLook)
+        captionsListenedTo = try c.decodeIfPresent([UUID].self, forKey: .captionsListenedTo) ?? []
     }
 
     /// A new document built around a base image, which becomes the bottom layer.
