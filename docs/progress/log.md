@@ -19618,3 +19618,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Fixed: a draft typed in any family-matched font (Georgia, Helvetica Neue) was invisible until Return. `NSFont(descriptor:textTransform:)` drops the size for those faces; `draftFont` now checks the point size and retries with the size in the transform. Shared file, so Current gets it too.
 - Walks: new `a-title-reads-over-a-video-walk` (still 24 px Regular SF Pro, title 80 px Bold Georgia, a size picked carries to the next title, still again after). `an-editing-session-walk`'s title drag shortened so the bigger title stays in frame (B now 700, 400); that walk still stops at step 34 on the transition picker, owned by the sweep task.
 - Open: white words over a white part of the frame are still hard to read, and the draft has no shadow.
+
+## 2026-09-24: Command T puts the default transition on the cut (go loop, one-key-puts-the-usual-transition-on-the-cut-at)
+
+- Key choice: Final Cut's ⌘T. Premiere's ⌘D stays Photoshop's Deselect; ⌘T was unused (⌥⌘T is Show Timing). Works wherever the keyboard is, like ⌘K (`TimelineKeys.applyDefaultTransition`).
+- `PhotonzCore/DefaultTransition.swift` (tested in `DefaultTransitionTests`): `transitionCuts`, `defaultTransitionPlan`, `ClipCut.fitted`, `DefaultTransitionRefusal`. `setTransition` and `addTransition` now use `fitted` instead of their own copies of the clamp.
+- App: `DefaultTransitionStore` (preference), `EditorState.applyDefaultTransition(at:)` / `setDefaultTransition`, canvas notices for refusals and for a new default, Apply Default Transition ⌘T in the join menu, the edit point menu and the Video menu, and a right click on a picker tile to Set as Default Transition with a ⌘T keycap on the default tile.
+- Walk `default-transition-key-walk` (no flags): refusal far from the cut, ⌘T puts a dissolve on, one undo, keycap on Cross dissolve, Push set as default, ⌘T puts a push on, cut menu shows ⌘T. Audit `queue/audits/2026-09-24-default-transition-key.json`.
+- Filed: `one-step-puts-a-transition-on-every-cut` (the mock's Apply to every cut). `transition-picker-at-a-cut-walk` and `premiere-keys-on-the-timeline-walk` fail at the same steps as the 21:18 sweep, before this change; owned by the sweep task.

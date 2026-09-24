@@ -234,3 +234,26 @@ the user's mock draws (`pages/video-transition-wt.html`).
 - **Not yet:** the mock's "The overlap sits" and "Hold on black" rows, and the
   dashed spare strips (task `a-transition-can-sit-before-across-or-after-the`).
   Sound still cuts hard at an edit point.
+
+## 10. One key: the default transition (2026-09-24)
+
+Final Cut's **⌘T** puts the default transition on the cut that is picked, else
+on the cut the playhead is standing on (within `clipCutReachMS`), as one undo
+step. Premiere's ⌘D was not taken: it is Photoshop's Deselect here, and the app
+follows Photoshop for the keys a picture uses. ⌘T was free (⌥⌘T is Show Timing,
+T alone is the Text tool). The key works wherever the keyboard is, like ⌘K.
+
+- The decision is `PhotonzCore/DefaultTransition.swift`:
+  `PhotonzDocument.transitionCuts()` (every join in a clip with a recording and
+  every edit point on a picture track, in time order),
+  `defaultTransitionPlan(_:picked:atMS:reachMS:)` (picked cut first, else the
+  nearest free cut in reach; locked tracks skipped) and `ClipCut.fitted(_:)`
+  (the length there, else the usual one, clamped; nil when it cannot pay).
+- A refusal ("There is no cut at the playhead", "Cross dissolve needs spare
+  frames either side of this cut") is a canvas notice, never a silent key.
+- The default is an app preference (`DefaultTransitionStore`,
+  `video.defaultTransition`), forgotten with a walk's `motion` memory. A right
+  click on any picker tile offers Set as Default Transition; the default tile
+  wears a ⌘T keycap.
+- Apply Default Transition ⌘T is at the top of the right-click menu on a join
+  and on an edit point, and in the Video menu.

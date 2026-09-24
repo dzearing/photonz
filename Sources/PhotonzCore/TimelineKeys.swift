@@ -8,7 +8,8 @@ import Foundation
 // press means the timeline's thing only while the timeline has the keyboard,
 // which is Premiere's own rule: a key acts on the panel that has focus. The
 // keys no tool wants (Space, Home, End, ⌘K, ⌥I, ⌥O) work wherever the keyboard
-// is, because there is nothing for them to be mistaken for.
+// is, because there is nothing for them to be mistaken for. ⌘T is Final Cut's
+// Add Cross Dissolve rather than Premiere's ⌘D, which is Photoshop's Deselect.
 //
 // Everything here is the decision; the app turns an `NSEvent` into a
 // `TimelineKeyPress` and a `TimelineKeyCommand` into the edit.
@@ -95,6 +96,9 @@ public enum TimelineKeyCommand: Hashable, Sendable {
     /// its start up to the playhead, or from the playhead to its end, and the
     /// gap closes on every track (`RippleTrim.swift`).
     case rippleTrimToPlayhead(RippleTrimEnd)
+    /// Final Cut's ⌘T, Premiere's ⌘D: the default transition on the cut at
+    /// the playhead (`DefaultTransition.swift`).
+    case applyDefaultTransition
     case selectTool, bladeTool, trackSelectForwardTool
     case zoomIn, zoomOut, zoomToFit
 }
@@ -121,6 +125,8 @@ public enum TimelineKeys {
         case (.home, []): return .goToStart
         case (.end, []): return .goToEnd
         case (.letter("k"), [.command]): return .splitAtPlayhead
+        // Final Cut's key, since Premiere's ⌘D is Photoshop's Deselect here.
+        case (.letter("t"), [.command]): return .applyDefaultTransition
         case (.letter("i"), [.option]): return .clearIn
         case (.letter("o"), [.option]): return .clearOut
         default: break

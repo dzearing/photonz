@@ -1,0 +1,28 @@
+{
+  "id": "one-step-puts-a-transition-on-every-cut",
+  "title": "One step puts a transition on every cut",
+  "goal": "The transitions mock offers Apply to every cut on a transition, so a person who wants a dissolve on each of the twenty cuts in a screen recording does it once instead of twenty times. Premiere has the same thing: select the clips and press its default-transition key.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 3340,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T22:58:17.649Z",
+  "updated": "2026-09-24T22:58:17.652Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-transitions.html #efxMenu (Apply to every cut / Set as the default transition). Building blocks from one-key-puts-the-usual-transition-on-the-cut-at: PhotonzDocument.transitionCuts(), ClipCut.fitted(_:), DefaultTransitionStore, EditorState.applyDefaultTransition. Several cuts as one step: see addTransition(_:layerID:atCuts:) which already batches joins of one clip.",
+  "acceptance": [
+    "Right click on a tile in the transition picker offers Apply to Every Cut, and it puts that transition on every cut on the timeline that can pay for it, as one undo step",
+    "Cuts that cannot pay for it are left hard, and the canvas says how many were skipped",
+    "Command T with several clips picked puts the default transition on every cut between and inside them",
+    "A walk at Next defaults proves it and an audit carries a real picture"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T22:58:17.651Z",
+      "note": "created (manual)"
+    }
+  ]
+}

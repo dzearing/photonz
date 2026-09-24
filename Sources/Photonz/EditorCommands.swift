@@ -480,6 +480,14 @@ struct EditorCommands: Commands {
                     Button("Ripple Trim End to Playhead") { editor?.rippleTrimToPlayhead(.end) }
                         .keyboardShortcut(timelineKeys ? KeyboardShortcut("w", modifiers: []) : nil)
                         .disabled(!(editor?.canRippleTrimToPlayhead(.end) ?? false))
+                    // Final Cut's ⌘T: the default transition on the cut
+                    // picked, else the cut at the playhead. Premiere's ⌘D is
+                    // Photoshop's Deselect here, and the canvas keeps it.
+                    if Experiments.shared.transitionsAtACutEnabled {
+                        Button("Apply Default Transition") { editor?.applyDefaultTransition() }
+                            .keyboardShortcut("t", modifiers: .command)
+                            .disabled(!(editor?.canApplyDefaultTransition() ?? false))
+                    }
                 }
                 // A freeze is not a special object: it is a piece whose in and
                 // out are the same frame, so it drops onto the timeline like

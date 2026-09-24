@@ -90,6 +90,8 @@ extension EditorState {
             return liftMarkedStretch()
         case .rippleTrimToPlayhead(let end):
             return rippleTrimToPlayhead(end)
+        case .applyDefaultTransition:
+            return applyDefaultTransition()
         case .selectTool:
             // Premiere's V and Photoshop's V are the same arrow, so the
             // timeline puts the Blade down and the press carries on to the

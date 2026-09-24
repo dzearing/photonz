@@ -50,6 +50,7 @@ struct TransitionPicker: View {
     private func tile(_ kind: ClipTransitionKind, cut: ClipCut?) -> some View {
         let afford = cut?.canAfford(kind) ?? false
         let isOn = cut?.transition?.kind == kind
+        let isDefault = editorState.defaultTransitionKind == kind
         Button {
             editorState.setTransition(kind, at: place)
             editorState.closeTransitionPicker()
@@ -60,11 +61,38 @@ struct TransitionPicker: View {
                           thumbnailHeight: 26) {
                 VideoKit.AnimatedTransitionThumbnail(style: Self.style(kind))
             }
+            .overlay(alignment: .topTrailing) {
+                if isDefault { Self.defaultKeycap(kind) }
+            }
         }
         .buttonStyle(.plain)
         .disabled(!afford)
+        // Premiere's right click on a transition in the Effects panel. On the
+        // tile, not in a panel row, because it is a verb you do once.
+        .contextMenu {
+            Button("Set as Default Transition") { editorState.setDefaultTransition(kind) }
+                .disabled(isDefault)
+        }
         .playtestControl(kind.title, detail: "At this cut")
-        .panelHelp(afford ? kind.title : "Not enough spare frames either side of this cut")
+        .panelHelp(afford ? (isDefault ? "\(kind.title), \u{2318}T" : kind.title)
+                          : "Not enough spare frames either side of this cut")
+    }
+
+    /// ⌘T on the corner of the tile the key puts on a cut: the key and which
+    /// one is the default, said at once where the tiles already are.
+    private static func defaultKeycap(_ kind: ClipTransitionKind) -> some View {
+        Text("\u{2318}T")
+            .font(.system(size: 9, weight: .semibold, design: .rounded))
+            .foregroundStyle(VideoKit.Palette.ink)
+            .padding(.horizontal, 4)
+            .padding(.vertical, 1)
+            .background(Capsule().fill(VideoKit.Palette.glassChrome))
+            .overlay(Capsule().strokeBorder(VideoKit.Palette.edgeLo, lineWidth: 1))
+            .padding(4)
+            .allowsHitTesting(false)
+            // Named as a control rather than a field because the walk reads a
+            // popover's controls and not its fields; nothing presses it.
+            .playtestControl("Default transition \(kind.title)", detail: "At this cut")
     }
 
     static func style(_ kind: ClipTransitionKind) -> VideoKit.TransitionThumbnail.Style {

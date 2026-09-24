@@ -1,0 +1,252 @@
+{
+  "out": "/tmp/photonz-playtest/default-transition-key-walk",
+  "seed": "Final Cut's Command T puts the default transition on the cut at the playhead, one undo step, with no click on the cut and no pick from the tiles. Premiere's Command D stays Photoshop's Deselect. A right click on a tile in the picker makes it the default, and the tile carrying the key says Command T on its corner. At Next defaults, no flag set.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "videoSeekQuarter"
+    },
+    {
+      "do": "action",
+      "action": "clipSplit"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekMiddle"
+    },
+    {
+      "do": "action",
+      "action": "clipSplit"
+    },
+    {
+      "do": "action",
+      "action": "clipDeletePiece"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "0-a-jump-cut",
+      "note": "two cuts and the middle thrown away: one clip in two pieces, with a join at 0:02 whose two sides are two seconds apart in the recording, so a dissolve there shows something"
+    },
+    {
+      "do": "key",
+      "key": "end"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "t",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-nowhere-near-a-cut",
+      "note": "the playhead at the end, far from the join: Command T puts nothing on and the canvas says There is no cut at the playhead, rather than the key doing nothing"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-no-cut-at-the-playhead"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "key",
+      "key": "down"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectTimeline",
+      "playheadMS": 2000,
+      "withinMS": 40
+    },
+    {
+      "do": "key",
+      "key": "t",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Cross dissolve"
+    },
+    {
+      "do": "expect",
+      "menu": "Length",
+      "reads": "0.4s"
+    },
+    {
+      "do": "describe",
+      "stage": "2-command-t",
+      "note": "THE FIRST TEST: the down arrow took the playhead to the join and Command T put a cross dissolve on it, drawn as a band over the join, with no click on the cut and no pick from the tiles. The panel is talking about the cut, and the canvas is on it, half one shot and half the other"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-command-t-dissolve"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Transition header",
+      "reads": "None"
+    },
+    {
+      "do": "describe",
+      "stage": "3-one-undo",
+      "note": "one Command Z and the cut is hard again: the key was one step to undo"
+    },
+    {
+      "do": "press",
+      "control": "Add transition"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Push",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Default transition Cross dissolve",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "4-the-picker",
+      "note": "Add transition in the panel opens the tiles, and Cross dissolve carries Command T on its corner: the key, and which tile it puts on, said where the tiles already are"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-picker-says-command-t"
+    },
+    {
+      "do": "rightClick",
+      "on": "Push",
+      "shot": "5-set-as-default-menu",
+      "choose": "Set as Default Transition"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Default transition Push",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Default transition Cross dissolve",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "5-push-is-the-default",
+      "note": "THE SECOND TEST: right click on Push, Set as Default Transition. Command T moved to the Push tile, and the canvas says Command T now puts Push on a cut"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-push-is-the-default"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "t",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Push"
+    },
+    {
+      "do": "describe",
+      "stage": "6-command-t-pushes",
+      "note": "the same key on the same cut now puts a push on it"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-command-t-push"
+    },
+    {
+      "do": "rightClick",
+      "on": "Tutorial Sample join 1",
+      "shot": "7-the-cut-menu"
+    },
+    {
+      "do": "describe",
+      "stage": "7-the-cut-menu",
+      "note": "the right click on the cut offers Apply Default Transition with Command T printed beside it"
+    }
+  ]
+}

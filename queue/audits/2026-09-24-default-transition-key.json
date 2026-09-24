@@ -1,0 +1,29 @@
+{
+  "feature": "One key puts the default transition on the cut",
+  "epic": "video-transitions-motion",
+  "summary": "Command T puts the default transition (cross dissolve until you pick another) on the cut that is picked, or the cut the playhead is standing on, as one undo step. A right click on any tile in the transition picker makes it the default, and the tile that is the default wears Command T on its corner.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    { "do": "Open a recording, cut it twice with Command K and delete the middle piece, so there is a jump cut.", "shot": "2026-09-24-default-transition-1-no-cut-at-the-playhead-sc.png" },
+    { "do": "With the playhead far from the cut, press Command T. The canvas says there is no cut at the playhead." },
+    { "do": "Press Down arrow to land on the cut, then Command T. A cross dissolve lands on it.", "shot": "2026-09-24-default-transition-2-command-t-dissolve-sc.png" },
+    { "do": "Press Command Z once. The cut is hard again." },
+    { "do": "Click Add transition in the panel. Cross dissolve wears Command T on its corner.", "shot": "2026-09-24-default-transition-4-picker-says-command-t-sc.png" },
+    { "do": "Right click Push and choose Set as Default Transition.", "shot": "2026-09-24-default-transition-5-set-as-default-menu-sc.png" },
+    { "do": "Close the picker and press Command T on the same cut. It is a push now.", "shot": "2026-09-24-default-transition-6-command-t-push-sc.png" },
+    { "do": "Right click the cut on the timeline: Apply Default Transition is at the top with Command T beside it.", "shot": "2026-09-24-default-transition-7-the-cut-menu-sc.png" }
+  ],
+  "evaluate": [
+    "Is Command T (Final Cut's key) the right call, given Command D stays Deselect the way Photoshop has it?",
+    "Is the playhead being within about a second of a cut the right reach for the key to find it?",
+    "Does the Command T badge on the default tile read as which transition the key uses, without a word of explanation?",
+    "When the key cannot do anything, is the line on the canvas enough, or should it do something else?"
+  ],
+  "rough": [
+    "The mock's menus use sentence case (Apply default transition, Set as the default transition); the app's menus are Title Case like Premiere's, so the rows read Apply Default Transition and Set as Default Transition.",
+    "The mock puts Set as the default transition on a tile in an Effects panel; that panel does not exist in the app, so it lives on the picker's tiles, which is where the task asked for it.",
+    "The mock's Apply to every cut is not built here; filed as its own task.",
+    "Command T on a cut made by one blade press with nothing trimmed puts a dissolve on it that shows nothing, because both sides are the same frames. Premiere does the same; the panel says so under Transition.",
+    "The Video menu row Apply Default Transition could not be photographed working: a walk's menu bar stays frozen, so the key was checked through the timeline, which takes it first."
+  ]
+}

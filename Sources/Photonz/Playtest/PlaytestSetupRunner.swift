@@ -84,7 +84,10 @@ extension PlaytestMemory {
             // The playhead each recording was left on, too: a walk that opens
             // the sample recording must start it at the top, not wherever the
             // walk before it stopped watching (`RecordingPlaces`).
-            [EditorState.motionStripOpenKey, RecordingPlaceStore.defaultsKey]
+            // And which transition ⌘T puts on a cut: a walk that picked Push
+            // as the default would otherwise hand every later walk a push.
+            [EditorState.motionStripOpenKey, RecordingPlaceStore.defaultsKey,
+             DefaultTransitionStore.defaultsKey]
         case .shelf:
             // Not a setting at all: the shared shelf is a file, emptied in
             // `perform` beside the settings it names.
@@ -151,7 +154,10 @@ struct PlaytestSetupRunner {
                 PanelSectionVisibilityStore.shared.reload()
                 WindowModeStore.shared.reload()
             }
-            if setup.forget.contains(.motion) { RecordingPlaceStore.shared.reload() }
+            if setup.forget.contains(.motion) {
+                RecordingPlaceStore.shared.reload()
+                DefaultTransitionStore.shared.reload()
+            }
             if setup.forget.contains(.tutorials) { TutorialController.shared.forgetAllProgress() }
             // The shared shelf is a file rather than a setting, so it is
             // emptied here by hand. The shelf it had is already on record

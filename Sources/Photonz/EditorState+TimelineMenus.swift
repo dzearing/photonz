@@ -42,6 +42,9 @@ extension EditorState {
         /// Premiere's Ripple Trim Previous and Next Edit to Playhead.
         static let rippleTrimStart = MenuShortcut(key: "q", modifiers: [])
         static let rippleTrimEnd = MenuShortcut(key: "w", modifiers: [])
+        /// Final Cut's Add Cross Dissolve. Premiere's ⌘D is Photoshop's
+        /// Deselect here, which the canvas keeps.
+        static let applyDefaultTransition = MenuShortcut.command("t")
     }
 
     // MARK: A clip
@@ -189,11 +192,8 @@ extension EditorState {
         guard Experiments.shared.transitionsAtACutEnabled,
               let pieces = document?.layer(id: layerID)?.clipPieces else { return }
         let planned: [(Int, ClipTransition)] = indices.compactMap { index in
-            guard let cut = pieces.cut(at: index) else { return nil }
-            let longest = cut.longestMS(of: kind)
-            guard longest >= ClipTransition.shortestMS else { return nil }
-            let asked = cut.transition?.lengthMS ?? ClipTransition.defaultLengthMS
-            return (index, ClipTransition(kind: kind, lengthMS: min(max(ClipTransition.shortestMS, asked), longest)))
+            guard let transition = pieces.cut(at: index)?.fitted(kind) else { return nil }
+            return (index, transition)
         }
         guard !planned.isEmpty else { return }
         endTrimBeforeCutting()
@@ -311,6 +311,11 @@ extension EditorState {
               let cut = layer.clipPieces?.cut(at: index), !isClipLocked(layerID) else { return [] }
         var rows: [MenuRow] = []
         if Experiments.shared.transitionsAtACutEnabled {
+            let place = TimelineCutPlace.join(clip: layerID, index: index)
+            rows.append(.command("Apply Default Transition", TimelineMenuKeys.applyDefaultTransition,
+                                 enabled: canApplyDefaultTransition(at: place)) {
+                self.applyDefaultTransition(at: place)
+            })
             rows.append(.submenu("Add Transition", ClipTransitionKind.allCases.map { kind -> MenuRow in
                 if cut.transition?.kind == kind {
                     return .toggle(kind.title, isOn: true) {}
@@ -343,6 +348,10 @@ extension EditorState {
               let cut = document?.documentCut(at: place)?.cut,
               !isClipLocked(point.incoming), !isClipLocked(point.outgoing) else { return [] }
         var rows: [MenuRow] = [
+            .command("Apply Default Transition", TimelineMenuKeys.applyDefaultTransition,
+                     enabled: canApplyDefaultTransition(at: place)) {
+                self.applyDefaultTransition(at: place)
+            },
             .submenu("Add Transition", ClipTransitionKind.allCases.map { kind -> MenuRow in
                 if cut.transition?.kind == kind { return .toggle(kind.title, isOn: true) {} }
                 return .command(kind.title, enabled: cut.canAfford(kind)) {

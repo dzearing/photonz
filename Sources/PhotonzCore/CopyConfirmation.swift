@@ -177,6 +177,13 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// rarely where a person just let go, so without a word a clip that
         /// arrives somewhere else in time reads as a drop that did nothing.
         case clipAdded(name: String)
+        /// ⌘T put nothing on (`DefaultTransition.swift`). A key that does
+        /// nothing reads as a key that is broken, so it says why.
+        case defaultTransitionRefused(DefaultTransitionRefusal)
+        /// A tile was made the one ⌘T puts on a cut. Nothing on the canvas
+        /// changes when it is, so without a word it reads as a menu row that
+        /// did nothing.
+        case defaultTransitionSet(ClipTransitionKind)
         /// A sound or a recording let go on the TIMELINE landed on a track at
         /// the moment it was let go at (`ClipLanding`), which is not the
         /// playhead, so the words say where.
@@ -318,6 +325,8 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .soundDetached: return "Sound taken off"
         case .soundAdded: return "Sound added"
         case .clipAdded: return "Clip added"
+        case .defaultTransitionRefused: return "No transition added"
+        case .defaultTransitionSet: return "Default transition"
         case .landedOnTrack(_, _, _, let isSound): return isSound ? "Sound added" : "Clip added"
         case .mediaWouldNotOpen: return "Not added"
         case .mixWritten(let file): return file == nil ? "Not written" : "Mix written"
@@ -367,6 +376,10 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "\(clip) keeps its picture. Its sound is a layer of its own now"
         case .soundAdded(let name):
             return "\(name) is on the timeline"
+        case .defaultTransitionRefused(let refusal):
+            return refusal.detail
+        case .defaultTransitionSet(let kind):
+            return "\u{2318}T now puts \(kind.title) on a cut"
         case .clipAdded(let name):
             return "\(name) is on the timeline at the playhead"
         case .landedOnTrack(let name, let track, let ms, _):

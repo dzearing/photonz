@@ -135,11 +135,8 @@ extension EditorState {
             documentMomentChanged()
             return
         }
-        let longest = cut.longestMS(of: kind)
-        guard longest >= ClipTransition.shortestMS else { return }
-        let asked = cut.transition?.lengthMS ?? ClipTransition.defaultLengthMS
-        let length = min(max(ClipTransition.shortestMS, asked), longest)
-        perform { $0.setTransition(ClipTransition(kind: kind, lengthMS: length), at: place) }
+        guard let transition = cut.fitted(kind) else { return }
+        perform { $0.setTransition(transition, at: place) }
         pickCut(place)
         // The playhead goes to the cut, so the canvas shows what was just put
         // on it: both shots at once, or the colour it dips through.
@@ -186,6 +183,59 @@ extension EditorState {
                       .first(where: { $0.outgoing == outgoing && $0.incoming == incoming }) else { return }
             if selectedEditPoint != point { pickEditPoint(point) }
         }
+    }
+
+    // MARK: One key: the default transition
+
+    /// What ⌘T puts on a cut: cross dissolve until somebody picks another
+    /// (`DefaultTransitionStore`).
+    var defaultTransitionKind: ClipTransitionKind { DefaultTransitionStore.shared.kind }
+
+    /// Make `kind` the one ⌘T puts on a cut, in every document from now on.
+    func setDefaultTransition(_ kind: ClipTransitionKind) {
+        DefaultTransitionStore.shared.kind = kind
+        raiseCanvasNotice(.defaultTransitionSet(kind))
+    }
+
+    /// The cut that is picked, when a cut is what is picked.
+    private var pickedCutPlace: TimelineCutPlace? {
+        if let point = selectedEditPoint {
+            return .edit(outgoing: point.outgoing, incoming: point.incoming)
+        }
+        guard let id = clipInHandID, let index = selectedClipCutIndex else { return nil }
+        return .join(clip: id, index: index)
+    }
+
+    /// What ⌘T would do now, or at one cut when a menu on that cut asks: the
+    /// cut picked, else the one the playhead is standing on
+    /// (`DefaultTransition.swift`). Nil where transitions are not reachable.
+    func defaultTransitionPlan(at place: TimelineCutPlace? = nil) -> DefaultTransitionPlan? {
+        guard Experiments.shared.transitionsAtACutEnabled, documentHasTime, let document else { return nil }
+        return document.defaultTransitionPlan(defaultTransitionKind, picked: place ?? pickedCutPlace,
+                                              atMS: documentTimeMS, reachMS: clipCutReachMS)
+    }
+
+    func canApplyDefaultTransition(at place: TimelineCutPlace? = nil) -> Bool {
+        guard case .put = defaultTransitionPlan(at: place) else { return false }
+        return true
+    }
+
+    /// Final Cut's ⌘T, Premiere's ⌘D: the default transition on the cut
+    /// picked, else the cut at the playhead, as one step to undo. Where there
+    /// is no cut, or the cut cannot pay for it, the canvas says so rather than
+    /// the key doing nothing. False only where transitions are not reachable,
+    /// so the press carries on.
+    @discardableResult
+    func applyDefaultTransition(at place: TimelineCutPlace? = nil) -> Bool {
+        guard let plan = defaultTransitionPlan(at: place) else { return false }
+        switch plan {
+        case .refused(let why):
+            raiseCanvasNotice(.defaultTransitionRefused(why))
+        case .put(let transition, let place):
+            closeTransitionPicker()
+            setTransition(transition.kind, at: place)
+        }
+        return true
     }
 
     // MARK: The picker at the cut
