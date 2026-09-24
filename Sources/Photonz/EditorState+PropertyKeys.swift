@@ -66,9 +66,11 @@ extension EditorState {
     func toggleKeying(_ property: KeyedProperty) {
         guard let layer = keyLayer else { return }
         let time = documentTimeMS
+        let ease = newKeyEaseToWrite
+        activeKeyProperty = property
         switch keyCount(property) {
         case 0:
-            perform { $0.startKeying(layerID: layer.id, property, atDocumentTimeMS: time) }
+            perform { $0.startKeying(layerID: layer.id, property, atDocumentTimeMS: time, ease: ease) }
         case 1:
             perform { $0.stopKeying(layerID: layer.id, property, atDocumentTimeMS: time) }
         default:
@@ -96,7 +98,9 @@ extension EditorState {
     func setKeyedValue(_ value: MotionValue, for property: KeyedProperty) {
         guard let layer = keyLayer else { return }
         let time = documentTimeMS
-        perform { $0.setKeyedValue(value, layerID: layer.id, property, atDocumentTimeMS: time) }
+        let ease = newKeyEaseToWrite
+        activeKeyProperty = property
+        perform { $0.setKeyedValue(value, layerID: layer.id, property, atDocumentTimeMS: time, ease: ease) }
     }
 
     /// Right-click, Add Key Here: a key holding the value it has now, which
@@ -105,11 +109,13 @@ extension EditorState {
         guard let layer = keyLayer, keyDiamond(property) != .onKey,
               let value = keyedValue(property) else { return }
         let time = documentTimeMS
+        let ease = newKeyEaseToWrite
+        activeKeyProperty = property
         perform { document in
             if document.keyCount(layerID: layer.id, property) == 0 {
-                document.startKeying(layerID: layer.id, property, atDocumentTimeMS: time)
+                document.startKeying(layerID: layer.id, property, atDocumentTimeMS: time, ease: ease)
             } else {
-                document.setKeyedValue(value, layerID: layer.id, property, atDocumentTimeMS: time)
+                document.setKeyedValue(value, layerID: layer.id, property, atDocumentTimeMS: time, ease: ease)
             }
         }
     }
@@ -124,6 +130,7 @@ extension EditorState {
     /// The arrows: put the playhead on the key before or after it.
     func stepToKey(_ property: KeyedProperty, forward: Bool) {
         guard let moment = neighbourKey(property, forward: forward) else { return }
+        activeKeyProperty = property
         if isDocumentPlaying { pauseDocument() }
         scrubDocument(toMS: moment)
     }
@@ -162,6 +169,23 @@ extension EditorState {
         let time = documentTimeMS
         let posed = document.posedForCanvas(atTimeMS: time).layer(id: id) ?? stored
         mutate(&document)
-        document.foldEditIntoKeys(layerID: id, before: posed, restoring: stored, atDocumentTimeMS: time)
+        document.foldEditIntoKeys(layerID: id, before: posed, restoring: stored,
+                                  atDocumentTimeMS: time, ease: newKeyEaseToWrite)
+    }
+
+    // MARK: The timeline bar
+
+    /// The ease a new key is written with. Ease In and Out is what a key
+    /// nobody eased already is (it follows its motion's curve, and the key's
+    /// right-click ticks it as Ease In and Out), so the default writes nothing
+    /// and every key made before this dropdown plays exactly as it did.
+    var newKeyEaseToWrite: KeyEase? { newKeyEase == .easeInAndOut ? nil : newKeyEase }
+
+    /// What the timeline bar says after "Playhead": the value last touched
+    /// on the picked layer, or its first keyed one, and its reading here.
+    var keyReadout: String? {
+        guard let layer = keyLayer, let document else { return nil }
+        return document.keyReadout(layerID: layer.id, preferring: activeKeyProperty,
+                                   atDocumentTimeMS: documentTimeMS)
     }
 }

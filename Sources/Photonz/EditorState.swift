@@ -888,6 +888,19 @@ final class EditorState {
     /// A lit key diamond was clicked on a value with more than one key, and
     /// the panel is asking whether to lose them (`EditorState+PropertyKeys`).
     var keyStopQuestion: KeyedProperty?
+    /// The value last keyed, typed or stepped through, which the timeline
+    /// bar's readout names ("Playhead Opacity 100% @ 4.12s", `video.html`).
+    var activeKeyProperty: KeyedProperty?
+    /// The curve a NEW key is given: the timeline bar's Easing dropdown
+    /// (`video.html`, `#easeSel`). Kept between launches, like Premiere's own
+    /// default keyframe interpolation.
+    var newKeyEase: KeyEase = EditorState.newKeyEaseDefault {
+        didSet { UserDefaults.standard.set(newKeyEase.rawValue, forKey: Self.newKeyEaseKey) }
+    }
+    static let newKeyEaseKey = "next.video.newKeyEase"
+    static var newKeyEaseDefault: KeyEase {
+        UserDefaults.standard.string(forKey: newKeyEaseKey).flatMap(KeyEase.init(rawValue:)) ?? .easeInAndOut
+    }
 
     // MARK: Motion (`next-motion`)
 

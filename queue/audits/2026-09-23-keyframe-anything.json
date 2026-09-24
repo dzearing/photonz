@@ -1,0 +1,27 @@
+{
+  "feature": "Keyframe anything",
+  "epic": "video-transitions-motion",
+  "summary": "You can now key a clip's crop edge by edge, the way Premiere's Crop effect works, and a glow's size too. The timeline bar reads the keyed value under the playhead and has an Easing menu that sets the curve new keys get. This closes the keyframe set: diamonds, lanes, eases, copy and paste, and volume points.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    { "do": "Open a recording, click on the canvas with the Text tool one second in, type a title, and press Command Return." },
+    { "do": "In the timeline bar, open Easing and choose Ease Out." },
+    { "do": "In Animating, click the diamonds beside Position, Scale and Blur, step one second on, and type new values for all three.", "shot": "2026-09-23-keyframe-anything-1-title-lanes-sc.png" },
+    { "do": "Step back half a second and watch the bar's Playhead readout and the title part way there.", "shot": "2026-09-23-keyframe-anything-2-half-way-sc.png" },
+    { "do": "Click the recording, then key Volume and Crop left at one second. Type -18 dB at two seconds, then 0 dB and Crop left 30% at three seconds.", "shot": "2026-09-23-keyframe-anything-3-dip-and-crop-sc.png" },
+    { "do": "Play it from the start." },
+    { "do": "Compare the timeline bar with the video mock's timeline dock.", "shot": "2026-09-23-keyframe-anything-mock.png" }
+  ],
+  "evaluate": [
+    "Does a crop that wipes in from one edge, with the handles still round the whole picture, feel like Premiere's Crop?",
+    "Does the Playhead readout on the timeline bar tell you something you would otherwise look for in the panel?",
+    "Is Easing on the timeline bar where you would go to set how new keys move, or would you rather set it on each key only?",
+    "Four Crop rows now show on every clip, whether or not you use them. Is the Animating list getting too long to scan?"
+  ],
+  "rough": [
+    "Side by side with the mock (video.html, the timeline dock): layout, order, mono readout pill and the EASING label match. Four differences are left. The ease names are Premiere's six (Linear, Ease In, Ease Out, Ease In and Out, Hold, Bezier) where the mock offers its own curve list with a hand-drawn curve; the name reads 'Ease In and Out', not 'Ease in out'; the accent is the app's blue, not lavender; and a clip lists every value it can key, where the mock lists only what is animating plus an 'Animate a property' picker.",
+    "A cropped clip turns about the middle of what is left, not the middle of the whole picture, so turning a clip while its crop animates makes it wobble slightly. Growing it is correct.",
+    "Crop is a percent of each edge, like Premiere. The Crop tool on the canvas still makes a permanent crop and does not key.",
+    "A glow's size can be keyed only on a layer that already has a glow. Its colour, softness and strength cannot be keyed yet."
+  ]
+}

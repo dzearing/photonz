@@ -42,6 +42,17 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     case shadow
     /// How big its type is, in document points. Words only.
     case textSize
+    /// How far the first glow in its Effects list reaches, in document points:
+    /// an effect's amount, keyed like any other length.
+    case glow
+    /// How much of a picture or a clip is cut away from each edge, as a
+    /// percent of the picture: Premiere's Crop effect, whose four edges are
+    /// keyed one at a time. The picture that is kept stays where it was drawn
+    /// (`KeyedCrop.swift`).
+    case cropLeft
+    case cropTop
+    case cropRight
+    case cropBottom
 
     /// What the menu item and the row are called.
     public var title: String {
@@ -56,7 +67,24 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
         case .cornerRadius: "Corner radius"
         case .shadow: "Shadow size"
         case .textSize: "Text size"
+        case .glow: "Glow size"
+        case .cropLeft: "Crop left"
+        case .cropTop: "Crop top"
+        case .cropRight: "Crop right"
+        case .cropBottom: "Crop bottom"
         }
+    }
+
+    /// The four edges of a keyed crop.
+    public static let cropEdges: [MotionProperty] = [.cropLeft, .cropTop, .cropRight, .cropBottom]
+
+    /// One of the four edges of a keyed crop.
+    public var isCrop: Bool { Self.cropEdges.contains(self) }
+
+    /// A distance in document points, which the panel writes in the app's one
+    /// word for a length (`DocumentUnit`).
+    public var isLength: Bool {
+        [.strokeWidth, .blur, .cornerRadius, .shadow, .glow, .textSize].contains(self)
     }
 
     /// The order the menu offers them in: where it is, how big, how turned,
@@ -80,10 +108,16 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     ///
     /// Corner, shadow and type size sit innermost with the line, for the same
     /// reason: they are lengths the growth multiplies, so they are set before
-    /// it rather than after.
+    /// it rather than after. A glow's size is one more of those lengths.
+    ///
+    /// The crop is innermost of all: Premiere crops the picture first and
+    /// moves, turns and grows what is left, so a crop is a cut in the picture
+    /// the growth then magnifies, and the growth keeps its middle where the
+    /// whole picture's middle is (`applied`, the scale case).
     public static let nestingOrder: [MotionProperty] =
         [.opacity, .blur, .position, .rotation, .scale, .color, .strokeWidth,
-         .cornerRadius, .shadow, .textSize]
+         .cornerRadius, .shadow, .glow, .textSize,
+         .cropLeft, .cropTop, .cropRight, .cropBottom]
 
     /// One item of the plus's menu: a property, the value the layer is wearing
     /// now, and whether this layer is already animating it.
@@ -158,6 +192,12 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
             return .number(Double(shadow.radius))
         case .textSize:
             return layer.text.map { .number(Double($0.fontSize)) }
+        case .glow:
+            return layer.style.glowEffects.first.map { .number(Double($0.size)) }
+        case .cropLeft, .cropTop, .cropRight, .cropBottom:
+            // Nothing cut away: a keyed crop is measured from the picture as
+            // it is drawn, whatever the Crop tool already took off it.
+            return layer.supportsContentCrop ? .number(0) : nil
         }
     }
 
@@ -187,9 +227,13 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
         case let (.rotation, .number(degrees)): return "\(MotionNumber.text(degrees))°"
         case let (.scale, .number(percent)): return "\(MotionNumber.text(percent))%"
         case let (.opacity, .number(percent)): return "\(MotionNumber.text(percent))%"
+        case let (.cropLeft, .number(percent)), let (.cropTop, .number(percent)),
+             let (.cropRight, .number(percent)), let (.cropBottom, .number(percent)):
+            return "\(MotionNumber.text(percent))%"
         case let (.strokeWidth, .number(points)): return "\(MotionNumber.text(points)) pt"
         case let (.blur, .number(points)), let (.cornerRadius, .number(points)),
-             let (.shadow, .number(points)), let (.textSize, .number(points)):
+             let (.shadow, .number(points)), let (.textSize, .number(points)),
+             let (.glow, .number(points)):
             return "\(MotionNumber.text(points)) pt"
         case let (.position, .point(point)):
             return "\(MotionNumber.text(Double(point.x))), \(MotionNumber.text(Double(point.y)))"
@@ -1045,6 +1089,18 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
             return LayerMotion(property: property, from: .number(now), to: .number(to),
                                timing: MotionTiming(startMS: 0, durationMS: 600),
                                curve: .easeInOut, repeats: plays)
+        case .glow:
+            // Grows the glow it has by half, the same as the lengths above.
+            let now = if case let .number(number) = current ?? .number(0) { number } else { 0.0 }
+            let to = now > 0 ? (now * 1.5 * 10).rounded() / 10 : Double(GlowEffect.startingSize)
+            return LayerMotion(property: .glow, from: .number(now), to: .number(to),
+                               timing: MotionTiming(startMS: 0, durationMS: 600),
+                               curve: .easeInOut, repeats: plays)
+        case .cropLeft, .cropTop, .cropRight, .cropBottom:
+            // A wipe in from that edge: nothing cut away, then a quarter.
+            return LayerMotion(property: property, from: .number(0), to: .number(25),
+                               timing: MotionTiming(startMS: 0, durationMS: 600),
+                               curve: .easeInOut, repeats: plays)
         }
     }
 }
@@ -1154,7 +1210,14 @@ extension MotionProperty {
             // contents make rather than its own anchor: a group's frame is a
             // corner to measure its children from, and swelling about that
             // corner would send the drawing off across the canvas.
-            let middle = moved.group == nil ? moved.frame.standardized : moved.localBounds
+            //
+            // A picture with a keyed crop grows about the middle of the WHOLE
+            // picture, the way Premiere grows about its anchor whatever is
+            // cropped: about the middle of what is left, the part kept would
+            // slide across the screen as the crop moved.
+            let middle = moved.group == nil
+                ? (moved.hasKeyedCrop ? authored.frame.standardized : moved.frame.standardized)
+                : moved.localBounds
             moved = moved.drawnLarger(by: CGFloat(percent) / 100,
                                       about: CGPoint(x: middle.midX, y: middle.midY))
         case let (.rotation, .number(degrees)):
@@ -1205,6 +1268,14 @@ extension MotionProperty {
             let grownBox = CGSize(width: box.width * factor, height: box.height * factor)
             moved.frame = CGRect(x: box.midX - grownBox.width / 2, y: box.midY - grownBox.height / 2,
                                  width: grownBox.width, height: grownBox.height)
+        case let (.glow, .number(points)):
+            // The first glow's reach. A key never brings a glow in: the row is
+            // only offered where one is already there.
+            guard let index = moved.style.effects.firstIndex(where: { $0.kind == .glow }) else { break }
+            moved.style.updateGlowEffect(at: index) { $0.size = CGFloat(max(0, points)) * grown }
+        case let (.cropLeft, .number(percent)), let (.cropTop, .number(percent)),
+             let (.cropRight, .number(percent)), let (.cropBottom, .number(percent)):
+            moved = moved.croppedByKey(self, percent: percent, authored: authored)
         default:
             break
         }

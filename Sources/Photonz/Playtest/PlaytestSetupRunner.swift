@@ -47,7 +47,11 @@ extension PlaytestMemory {
             // Nothing in the app was wrong and nothing in the walk said so.
             EditorState.toolMemoryKeys
                 + [EditorState.wandToleranceKey,
-                   EditorState.lensToolKey, EditorState.lensToolKindKey]
+                   EditorState.lensToolKey, EditorState.lensToolKindKey,
+                   // The timeline bar's Easing, the curve new keys are given:
+                   // left behind, a walk's keys would ease however the last
+                   // walk to touch it left them.
+                   EditorState.newKeyEaseKey]
         case .groups:
             [EditorState.openGroupsKey]
         case .panel:

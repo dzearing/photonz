@@ -118,13 +118,16 @@ extension LayerMotion {
         return shaped
     }
 
-    /// A property keyed for the first time, with one key.
+    /// A property keyed for the first time, with one key, eased `ease` when
+    /// that is given (the timeline bar's Easing) and by the curve otherwise.
     public static func keyed(_ property: MotionProperty, atMS ms: Int,
-                             value: MotionValue) -> LayerMotion {
-        LayerMotion(property: property, from: value, to: value,
-                    timing: MotionTiming(startMS: max(0, ms), durationMS: 1),
-                    curve: PropertyKeys.curve, repeats: .once,
-                    pivot: property == .rotation ? .centre : nil)
+                             value: MotionValue, ease: KeyEase? = nil) -> LayerMotion {
+        let made = LayerMotion(property: property, from: value, to: value,
+                               timing: MotionTiming(startMS: max(0, ms), durationMS: 1),
+                               curve: PropertyKeys.curve, repeats: .once,
+                               pivot: property == .rotation ? .centre : nil)
+        guard let ease else { return made }
+        return made.easing(key: 0, ease)
     }
 
     /// The key within `PropertyKeys.nearMS` of a moment, if there is one.
@@ -137,14 +140,20 @@ extension LayerMotion {
     /// This motion with a key at `ms` holding `value`. A key already that
     /// close is rewritten where it stands rather than joined by a second one a
     /// few milliseconds away.
-    public func settingKey(atMS ms: Int, value: MotionValue) -> LayerMotion {
+    ///
+    /// A NEW key is eased `ease` when that is given; a key rewritten keeps the
+    /// ease it had, because typing a value is not asking for a different curve.
+    public func settingKey(atMS ms: Int, value: MotionValue, ease: KeyEase? = nil) -> LayerMotion {
         var list = keyframes
         if let index = keyIndex(near: ms) {
             list[index].value = value
-        } else {
-            list.append(MotionStop(atMS: max(0, ms), value: value))
+            return rebuilt(from: list)
         }
-        return rebuilt(from: list)
+        let at = max(0, ms)
+        list.append(MotionStop(atMS: at, value: value))
+        let made = rebuilt(from: list)
+        guard let ease, let index = made.keyframes.firstIndex(where: { $0.atMS == at }) else { return made }
+        return made.easing(key: index, ease)
     }
 
     /// This motion without the key near `ms`, or nil when that was its last.
@@ -199,7 +208,8 @@ extension Layer {
         var list: [KeyedProperty] = []
         if !isSoundOnly {
             let order: [MotionProperty] = [.position, .scale, .rotation, .opacity, .cornerRadius,
-                                           .strokeWidth, .color, .blur, .shadow, .textSize]
+                                           .strokeWidth, .color, .blur, .shadow, .glow, .textSize]
+                + MotionProperty.cropEdges
             for property in order where keyStill(property) != nil {
                 list.append(.motion(property))
             }
@@ -337,7 +347,7 @@ extension PhotonzDocument {
     /// or the layer has no such value.
     @discardableResult
     public mutating func startKeying(layerID: UUID, _ property: KeyedProperty,
-                                     atDocumentTimeMS ms: Int) -> Bool {
+                                     atDocumentTimeMS ms: Int, ease: KeyEase? = nil) -> Bool {
         guard let layer = layer(id: layerID), keyCount(layerID: layerID, property) == 0,
               layer.keyableProperties.contains(property) else { return false }
         let clock = keyClock(of: layer, property, atDocumentTimeMS: ms)
@@ -346,7 +356,7 @@ extension PhotonzDocument {
             guard let value = layer.keyStill(motion) else { return false }
             updateLayer(id: layerID) { edited in
                 var motions = edited.motions ?? []
-                motions.append(.keyed(motion, atMS: clock, value: value))
+                motions.append(.keyed(motion, atMS: clock, value: value, ease: ease))
                 edited.motions = motions
             }
         case .volume:
@@ -395,26 +405,28 @@ extension PhotonzDocument {
     /// layer's own value, which is what every value in the app was before
     /// keys: the diamond is the only thing that starts keying.
     ///
-    /// Scale is the one exception, because a layer has no scale of its own to
-    /// hold: a scale typed into a row nobody has keyed starts keying it, with
-    /// its one key holding what was typed.
+    /// Scale and the crop are the exceptions, because a layer has no scale or
+    /// keyed crop of its own to hold: one typed into a row nobody has keyed
+    /// starts keying it, with its one key holding what was typed.
+    ///
+    /// A key that is NEW is eased `ease` when that is given.
     @discardableResult
     public mutating func setKeyedValue(_ value: MotionValue, layerID: UUID,
                                        _ property: KeyedProperty,
-                                       atDocumentTimeMS ms: Int) -> Bool {
+                                       atDocumentTimeMS ms: Int, ease: KeyEase? = nil) -> Bool {
         guard let layer = layer(id: layerID), layer.keyableProperties.contains(property) else { return false }
         let clock = keyClock(of: layer, property, atDocumentTimeMS: ms)
         switch property {
         case let .motion(motion):
             if let keyed = layer.keyedMotion(motion) {
-                let next = keyed.settingKey(atMS: clock, value: value)
+                let next = keyed.settingKey(atMS: clock, value: value, ease: ease)
                 updateLayer(id: layerID) { edited in
                     edited.motions = (edited.motions ?? []).map { $0.id == keyed.id ? next : $0 }
                 }
-            } else if motion == .scale {
+            } else if motion == .scale || motion.isCrop {
                 updateLayer(id: layerID) { edited in
                     var motions = edited.motions ?? []
-                    motions.append(.keyed(.scale, atMS: clock, value: value))
+                    motions.append(.keyed(motion, atMS: clock, value: value, ease: ease))
                     edited.motions = motions
                 }
             } else {
@@ -506,7 +518,7 @@ extension PhotonzDocument {
     /// against the pose, and what goes back is what was stored.
     @discardableResult
     public mutating func foldEditIntoKeys(layerID: UUID, before: Layer, restoring stored: Layer? = nil,
-                                          atDocumentTimeMS ms: Int) -> Bool {
+                                          atDocumentTimeMS ms: Int, ease: KeyEase? = nil) -> Bool {
         let stored = stored ?? before
         guard let after = layer(id: layerID), after.hasMotion else { return false }
         let keyed = Set((after.motions ?? []).map(\.property))
@@ -552,7 +564,7 @@ extension PhotonzDocument {
             restored.transform.rotation = stored.transform.rotation
         }
         for property in [MotionProperty.opacity, .color, .blur, .strokeWidth,
-                         .cornerRadius, .shadow, .textSize] where keyed.contains(property) {
+                         .cornerRadius, .shadow, .glow, .textSize] where keyed.contains(property) {
             guard let value = property.current(of: after), value != property.current(of: before),
                   let old = stored.keyStill(property) else { continue }
             keys.append((property, value))
@@ -561,7 +573,7 @@ extension PhotonzDocument {
         if restored != after { updateLayer(id: layerID) { $0 = restored } }
         guard !keys.isEmpty else { return false }
         for (property, value) in keys {
-            setKeyedValue(value, layerID: layerID, .motion(property), atDocumentTimeMS: ms)
+            setKeyedValue(value, layerID: layerID, .motion(property), atDocumentTimeMS: ms, ease: ease)
         }
         return true
     }
@@ -576,6 +588,10 @@ extension PhotonzDocument {
     /// is wherever its keys have taken it, and a drag would grab empty canvas.
     /// Only the box and the turn: that is all a handle needs, and it keeps
     /// this cheap enough to ask on every redraw.
+    ///
+    /// A keyed crop is left out of the pose: Premiere keeps a cropped clip's
+    /// box round the whole picture, and a drag on it moves the picture rather
+    /// than folding the cut into its stored box.
     public func posedForCanvas(atTimeMS ms: Int) -> PhotonzDocument {
         let posing: Set<MotionProperty> = [.position, .scale, .rotation]
         guard hasTime, layers.contains(where: { layer in
@@ -586,7 +602,9 @@ extension PhotonzDocument {
         posed.layers = layers.map { layer in
             guard (layer.motions ?? []).contains(where: { posing.contains($0.property) }) else { return layer }
             let clock = layer.motionClockMS(atDocumentTimeMS: ms)
-            let moved = layer.moved(toMotionTimeMS: clock,
+            var uncut = layer
+            if layer.hasKeyedCrop { uncut.motions = layer.motions?.filter { !$0.property.isCrop } }
+            let moved = uncut.moved(toMotionTimeMS: clock,
                                     cycleMS: layer.motionCycleMS(documentCycleMS: cycle))
             var pose = layer
             pose.frame = moved.frame
@@ -594,5 +612,37 @@ extension PhotonzDocument {
             return pose
         }
         return posed
+    }
+}
+
+// MARK: - The timeline bar's readout
+
+extension PhotonzDocument {
+
+    /// What the timeline bar says after "Playhead": a keyed value's name and
+    /// its reading at `ms` (`video.html`, `.kfread`: "Opacity 100%"). The value
+    /// asked for when it is keyed, which is the one last touched; otherwise
+    /// the first keyed value in the panel's order; nil when nothing is keyed.
+    public func keyReadout(layerID: UUID, preferring preferred: KeyedProperty?,
+                           atDocumentTimeMS ms: Int) -> String? {
+        guard let layer = layer(id: layerID) else { return nil }
+        let keyed = layer.keyableProperties.filter { keyCount(layerID: layerID, $0) > 0 }
+        guard let property = keyed.first(where: { $0 == preferred }) ?? keyed.first,
+              let value = keyedValue(layerID: layerID, property, atDocumentTimeMS: ms) else { return nil }
+        let reading: String
+        switch (property, value) {
+        case let (.volume, .number(decibels)): reading = "\(MotionNumber.text(decibels)) dB"
+        case let (.motion(motion), .number(number)) where motion.isLength:
+            // The panel's own word for a length beside it, never a second one.
+            reading = "\(MotionNumber.text(number)) \(DocumentUnit.word)"
+        case let (.motion(motion), value): reading = motion.format(value)
+        default: return nil
+        }
+        return "\(property.title) \(reading)"
+    }
+
+    /// The playhead as the bar writes it: seconds, two decimals ("4.12s").
+    public static func playheadSeconds(_ ms: Int) -> String {
+        String(format: "%.2fs", Double(max(0, ms)) / 1000)
     }
 }

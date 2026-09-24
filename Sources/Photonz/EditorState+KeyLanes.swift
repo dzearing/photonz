@@ -92,6 +92,9 @@ extension EditorState {
     /// to what is picked, or takes it out.
     func pickKey(layerID: UUID, _ ref: KeyRef, atMS ms: Int, extending: Bool) {
         if selectedLayerID != layerID { selectLayer(layerID) }
+        if let property = document?.layer(id: layerID)?.motions?.first(where: { $0.id == ref.motionID })?.property {
+            activeKeyProperty = .motion(property)
+        }
         if extending {
             var refs = pickedKeys(layerID: layerID)
             if refs.contains(ref) { refs.remove(ref) } else { refs.insert(ref) }

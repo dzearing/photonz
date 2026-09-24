@@ -1,0 +1,462 @@
+{
+ "out": "/tmp/photonz-playtest/keyframe-anything-walk",
+ "seed": "Keyframe anything. At Next defaults with no flag changed, this walk sets the timeline bar's Easing to Ease Out, types a title on a recording and keys its Position, Scale and Blur at one and two seconds from the panel's diamonds, reads the bar's Playhead readout, photographs the lanes and the title half way, then picks the recording, dips its volume to -18 dB at two seconds and back, and keys a crop wiping in from the left, photographing the level line and the crop lane.",
+ "setup": {
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "action",
+   "action": "videoSeekStart"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "tool",
+   "tool": "text"
+  },
+  {
+   "do": "click",
+   "at": [
+    620,
+    330
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "type",
+   "text": "Ship it faster"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "menu": "Easing",
+   "reads": "Ease In and Out"
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Easing",
+   "choose": "Ease Out"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "menu": "Easing",
+   "reads": "Ease Out"
+  },
+  {
+   "do": "expect",
+   "field": "Playhead Readout",
+   "reads": "Playhead no animated property @ 1.00s"
+  },
+  {
+   "do": "reveal",
+   "control": "Animating section"
+  },
+  {
+   "do": "press",
+   "control": "Key",
+   "in": "Position"
+  },
+  {
+   "do": "press",
+   "control": "Key",
+   "in": "Scale"
+  },
+  {
+   "do": "press",
+   "control": "Key",
+   "in": "Blur"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Position X Value"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "900"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Scale Value"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "140"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Blur Value"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "8"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "describe",
+   "stage": "1-title-keyed",
+   "note": "THE FIRST TEST: with Easing on the timeline bar set to Ease Out, the title's Position, Scale and Blur keyed at one and two seconds from the panel's diamonds. One lane per keyed value opens under the Title track, and the bar reads the value last touched under the playhead"
+  },
+  {
+   "do": "expect",
+   "field": "Playhead Readout",
+   "reads": "Playhead Blur 8 px @ 2.00s"
+  },
+  {
+   "do": "expect",
+   "control": "Key Position 2",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "Key Scale 2",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "Key Blur 2",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "Key",
+   "in": "Blur",
+   "reads": "on a key"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-title-lanes"
+  },
+  {
+   "do": "action",
+   "action": "videoStepBackOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepQuarterSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepQuarterSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "2-half-way",
+   "note": "THE SECOND TEST: half way between the keys the title is on its way but only about a third of the way there, because Ease Out on the key it leaves starts the move slowly, as Premiere's Ease Out does; part grown and part blurred"
+  },
+  {
+   "do": "expect",
+   "control": "Key",
+   "in": "Scale",
+   "reads": "between keys"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-half-way"
+  },
+  {
+   "do": "render",
+   "name": "2-half-way-canvas"
+  },
+  {
+   "do": "click",
+   "at": [
+    900,
+    620
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "videoSeekStart"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "reveal",
+   "control": "Animating section"
+  },
+  {
+   "do": "press",
+   "control": "Key",
+   "in": "Volume"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Key",
+   "in": "Crop left"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Volume Value"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "-18"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Volume Value"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "0"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Crop left Value"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "30"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "describe",
+   "stage": "3-recording",
+   "note": "THE THIRD TEST: the recording picked; its Volume keyed at one second, dipped to -18 dB at two and back to 0 dB at three, drawn as points on the level line of its sound; its Crop left keyed from nothing at one second to 30% at three, a lane of its own under the track, and the picture wiped in from the left"
+  },
+  {
+   "do": "expect",
+   "control": "Key",
+   "in": "Volume",
+   "reads": "on a key"
+  },
+  {
+   "do": "expect",
+   "control": "Key",
+   "in": "Crop left",
+   "reads": "on a key"
+  },
+  {
+   "do": "panel",
+   "stage": "3-recording"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-dip-and-crop"
+  },
+  {
+   "do": "render",
+   "name": "3-cropped-canvas"
+  }
+ ]
+}

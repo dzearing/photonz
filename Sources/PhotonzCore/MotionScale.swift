@@ -52,7 +52,10 @@ extension Layer {
 
         var out = self
         out.style = style.magnified(by: factor)
-        out.crop = crop?.magnified(by: factor)
+        // A crop is counted in the picture's OWN pixels (`cropContent`), which
+        // growing the box does not change: magnifying it cut a region twice
+        // as big off a picture grown to 200%, and the crop vanished.
+        out.crop = supportsContentCrop ? crop : crop?.magnified(by: factor)
         // The lengths stated in points, multiplied BEFORE the geometry is
         // re-fitted: a label's box is as tall as its words need, so the words
         // have to be their new size before anybody measures the box, and an
