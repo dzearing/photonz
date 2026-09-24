@@ -7055,3 +7055,6 @@
 {"t":"2026-09-24T12:40:40.486Z","ev":"task_resequenced","id":"experiments-switches-say-what-they-do-in-a-sente","from":3290,"to":250}
 {"t":"2026-09-24T12:41:01.978Z","ev":"triage","summary":"open 59 -> 57 (p1 25->26, p2 28->25, p3 6->6). merged 1 (export estimate into export size row), dropped 1 (pixel art mode: later epic), moved 1 (runner waits for its own tests p2->p1), reset 0, leftovers 0, reproduced 1 new p1 bug (captions do not follow a cut), 12 findings folded into existing tasks, 3 acceptance lists widened, 2 deps added, p1 and p2 renumbered, runner rule on mock copy clarified"}
 {"t":"2026-09-24T12:42:00.017Z","ev":"digest","file":"2026-09-24.md"}
+{"t":"2026-09-24T12:44:48.503Z","ev":"task_created","id":"count-the-ninety-second-cut-against-premiere-aga","priority":"p1-high","title":"Count the ninety second cut against Premiere again, once the key gaps close"}
+{"t":"2026-09-24T12:44:52.734Z","ev":"task_resequenced","id":"count-the-ninety-second-cut-against-premiere-aga","from":350,"to":115}
+{"t":"2026-09-24T12:45:16.550Z","ev":"manager","filed":1,"readyBefore":47,"readyAfter":47,"report":"queue/manager/2026-09-24-0544.md"}

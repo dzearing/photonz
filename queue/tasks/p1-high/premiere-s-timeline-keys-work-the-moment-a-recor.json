@@ -18,7 +18,9 @@
     "I and O set the In and Out, and B picks the Blade, straight after opening",
     "Picture tools are still reachable on a video document by some means a Photoshop user would find (the tool bar, or their key once the canvas is clicked), and the walk shows which",
     "A walk opens a recording and presses L as its very first act, and the transport reads playing",
-    "UX-PATTERNS (D18 or D4) says in one place which letters a document with time gives the timeline, and how the picture tools those letters used to pick are reached"
+    "UX-PATTERNS (D18 or D4) says in one place which letters a document with time gives the timeline, and how the picture tools those letters used to pick are reached",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

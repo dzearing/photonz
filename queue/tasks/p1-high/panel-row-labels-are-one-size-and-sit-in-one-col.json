@@ -17,7 +17,8 @@
     "Every section row label uses the mock row label size and colour (inspector.css .irow>.rl: 10.5pt, faint) with the control beside it in the 76pt label column, or a written reason on the row why it stacks",
     "Appearance, Effects, Layout and Text read the same as Time, Sound and Captions in one picture of a video document",
     "every-panel-keeps-its-margins-walk and captions-panel-keeps-its-margins-walk still pass, at the default and the narrowest dock",
-    "Side by side with video.html PROPERTIES and one picture page in the audit"
+    "Side by side with video.html PROPERTIES and one picture page in the audit",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

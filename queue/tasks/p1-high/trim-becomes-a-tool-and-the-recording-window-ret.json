@@ -27,7 +27,8 @@
     "next-a-recording-is-a-document is on by default in Next, or is deleted and the document path becomes the only path",
     "VideoEditorState, VideoEditorView, TrimTimeline and PlaybackScrubber are deleted, and the audit says so",
     "The tutorial copy moves with the chrome: TutorialGuides.swift step 'keep-whats-between' at .video(.trimDone) says \"Done throws the ends away and leaves you the middle\", which is both the wrong button name and against the model, since a trim leaves the frames outside the in and out in the document",
-    "Saving a recording from the editor leaves you as close to where you were as the shorter file allows, and says so in a line under the canvas when it cannot keep your place at all"
+    "Saving a recording from the editor leaves you as close to where you were as the shorter file allows, and says so in a line under the canvas when it cannot keep your place at all",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

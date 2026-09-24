@@ -17,7 +17,9 @@
     "With the playhead at 1:15 and the timeline at 4x, the playhead line sits on the ruler label 1:15, not four seconds from it",
     "At the deepest zoom, scrolled anywhere, each ruler label sits over the frame it names (checked against the playhead readout)",
     "At Fit, labels sit where they sit today",
-    "A walk zooms a long recording in, parks the playhead on a labelled second and checks the label is under it"
+    "A walk zooms a long recording in, parks the playhead on a labelled second and checks the label is under it",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

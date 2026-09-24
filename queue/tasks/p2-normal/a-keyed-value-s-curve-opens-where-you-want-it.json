@@ -16,7 +16,9 @@
   "acceptance": [
     "The user has chosen between the curve in the lane and the Graph panel on the right",
     "The chosen place is the only place the curve opens, at Next defaults",
-    "A walk with no flags opens the curve there and drags a Bezier handle"
+    "A walk with no flags opens the curve there and drags a Bezier handle",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

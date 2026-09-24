@@ -23,7 +23,9 @@
     "Every video guide step anchors to a control that exists at Next defaults",
     "Guides cover cut, second clip, title with motion, transition, captions, export",
     "Their walks pass at Next defaults",
-    "At Next defaults, with no flag changed, Help and the Tutorials window offer a Video track again, and every guide on it runs in the editor a recording now opens in"
+    "At Next defaults, with no flag changed, Help and the Tutorials window offer a Video track again, and every guide on it runs in the editor a recording now opens in",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

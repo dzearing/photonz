@@ -20,7 +20,9 @@
     "Semicolon removes the stretch and leaves the gap",
     "Right-click on the marked stretch of the ruler offers both, with their keys",
     "Captions and titles inside the stretch go with it (or the task that makes cuts carry captions is named as the dependency)",
-    "A walk marks 1:15 to 2:30 on a five minute recording, extracts it, and the timeline reads 3:45"
+    "A walk marks 1:15 to 2:30 on a five minute recording, extracts it, and the timeline reads 3:45",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

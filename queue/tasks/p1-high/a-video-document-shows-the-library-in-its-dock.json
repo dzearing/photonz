@@ -15,7 +15,9 @@
   "notes": "Found by recordings-and-sounds-in-a-document-sit-on-the-l (2026-09-23): its walk has to run the showLibrary action (the same as View > Library) before any tile exists. Rule lives in PanelSectionVisibility.isShownAutomatically (case library: situation.isLibraryAskedFor, with the user quote) and InspectorPanel (isLibraryVisible gate). Mock: video.html line ~62 (Library keeps its header, the media pool is still one click away) and #gLibrary collapsed at line ~528.",
   "acceptance": [
     "The user has answered the decision card on this task",
-    "A walk at Next defaults opens a recording and finds the Library where the answer says it is"
+    "A walk at Next defaults opens a recording and finds the Library where the answer says it is",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

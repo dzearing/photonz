@@ -16,7 +16,9 @@
   "acceptance": [
     "With a sound picked, the panel has Fades In and Out values and a Curve dropdown as pages/video-audio.html draws them",
     "Changing a fade changes the level line on the sound bar and what you hear, as one undo step",
-    "A walk with no flags sets a fade in on the sample music and reads it back"
+    "A walk with no flags sets a fade in on the sample music and reads it back",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

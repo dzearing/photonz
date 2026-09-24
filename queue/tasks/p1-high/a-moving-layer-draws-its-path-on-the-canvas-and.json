@@ -17,7 +17,9 @@
     "A layer with two or more position keys shows a dashed path between them on the canvas while it is picked",
     "Dragging the handle in the middle of a segment bends it into an arc; the layer follows the arc when played and exported",
     "The panel says whether the path is Straight or Curved, and setting Straight puts it back",
-    "A walk at Next defaults keys a title at two places, bends the path, and photographs it part way along"
+    "A walk at Next defaults keys a title at two places, bends the path, and photographs it part way along",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

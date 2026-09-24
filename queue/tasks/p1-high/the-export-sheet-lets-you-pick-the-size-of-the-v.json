@@ -19,7 +19,9 @@
     "The choice is remembered for the next export",
     "A walk exports the five minute recording at 1080p and the file is 1728x1080 (aspect kept)",
     "For an edited video made of screen recordings, the size the sheet shows is within a factor of two of the file written at the same setting, and still says about",
-    "an-editing-session-walk's export step logs a sheet size and a written size that agree within that factor"
+    "an-editing-session-walk's export step logs a sheet size and a written size that agree within that factor",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

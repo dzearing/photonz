@@ -1,0 +1,39 @@
+{
+  "id": "count-the-ninety-second-cut-against-premiere-aga",
+  "title": "Count the ninety second cut against Premiere again, once the key gaps close",
+  "goal": "When the ruler, the keys on open, one-key extract, Q and W and the long-recording freeze are fixed, do the five minute edit again at Next defaults and count every press and drag it takes to reach ninety seconds, so the user knows whether Photonz is now as quick as Premiere at the job it is meant to beat it at. Anything slower than Premiere becomes a task.",
+  "epic": "video-beats-premiere",
+  "priority": "p1-high",
+  "seq": 115,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T12:44:48.499Z",
+  "updated": "2026-09-24T12:44:52.733Z",
+  "deps": [
+    "the-timeline-ruler-names-the-right-time-when-zoo",
+    "premiere-s-timeline-keys-work-the-moment-a-recor",
+    "marking-an-in-and-an-out-and-pressing-one-key-ta",
+    "a-long-captioned-recording-edits-without-freezin",
+    "q-and-w-trim-the-clip-under-the-playhead-up-to-i"
+  ],
+  "blockedBy": [],
+  "notes": "Success lines of video-beats-premiere: 'removing a marked stretch is at most three presses' and 'the whole cut to ninety seconds is under 40 presses and drags'. Nothing measures the second one today. The 2026-09-24 digest reflection asks for the Premiere measurement to be re-run after this batch closes rather than filing from guesses. Re-running recipe: 'Re-running this' section of docs/design/video-vs-premiere.md (say + ffmpeg recording, open step). deps: ruler, keys on open, extract/lift, long-recording freeze, Q/W. Probe app only.",
+  "acceptance": [
+    "The five minute talking recording from docs/design/video-vs-premiere.md is cut to about ninety seconds at Next defaults, with no switch turned on, by pressing keys and dragging only",
+    "The count of presses and drags is written into docs/design/video-vs-premiere.md beside Premiere's count for the same cut, and it is under 40",
+    "Removing one marked stretch is counted separately and is at most three presses (I, O, one key)",
+    "Every step slower or clumsier than Premiere is filed as a task if it clears the follow-up bar, and written into this task's log if it does not",
+    "The Gaps table in that doc says which of the ten gaps are closed, with a fresh picture for each one that is"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T12:44:48.501Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-24T12:44:52.732Z",
+      "note": "seq 350 -> 115"
+    }
+  ]
+}

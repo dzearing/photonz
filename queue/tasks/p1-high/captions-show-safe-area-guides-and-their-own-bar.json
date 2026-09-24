@@ -18,7 +18,9 @@
     "The canvas carries the mock AUTO · EN badge while captions are automatic",
     "A bar over the Captions track reads the active word and the playhead time, with Clear and Reset, as video-captions.html draws it",
     "With a caption picked, the Captions options are the first section under Layers",
-    "A walk with no flags photographs the guides, the badge and the bar"
+    "A walk with no flags photographs the guides, the badge and the bar",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

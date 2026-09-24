@@ -17,7 +17,9 @@
     "Deleting a piece of a clip removes the captions that sat only inside it and moves every later caption earlier by the length removed",
     "A caption that straddles the removed stretch is shortened, never left running over the join",
     "Titles and sounds that start after the removed stretch move earlier with it, and one undo puts everything back",
-    "an-editing-session-walk claims the last caption ends with the recording after its cut, and passes"
+    "an-editing-session-walk claims the last caption ends with the recording after its cut, and passes",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

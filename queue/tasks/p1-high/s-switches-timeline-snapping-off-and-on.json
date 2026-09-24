@@ -16,7 +16,9 @@
   "acceptance": [
     "S with the timeline focused switches snapping, and a magnet button in the timeline bar shows and switches the same state",
     "With snapping off, a clip dragged near the playhead lands where it is let go",
-    "A walk switches snapping off, drags a clip to 0.1 s from the playhead and it lands there"
+    "A walk switches snapping off, drags a clip to 0.1 s from the playhead and it lands there",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

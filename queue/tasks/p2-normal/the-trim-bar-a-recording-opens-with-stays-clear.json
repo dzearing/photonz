@@ -17,7 +17,9 @@
     "With a recording just opened and its captions written, the bottom caption is fully visible with the trim bar up",
     "A walk with no flags opens a talking recording and photographs the caption clear of the trim bar",
     "A notice raised on the canvas (Sound added, Clip added, a refusal) is readable end to end while the trim bar is up and while a caption is on screen: nothing covers anything",
-    "A walk photographs the trim bar, a notice and a caption at once and the picture shows three separate things"
+    "A walk photographs the trim bar, a notice and a caption at once and the picture shows three separate things",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

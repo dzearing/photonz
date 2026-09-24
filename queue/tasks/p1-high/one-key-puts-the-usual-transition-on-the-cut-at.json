@@ -17,7 +17,9 @@
     "With the playhead on or near a cut, one key puts the default transition (cross dissolve unless changed) on it, one undo step",
     "The key is printed in the cut's right-click menu and the transition picker",
     "Right-click on a tile in the picker offers Set as Default",
-    "A walk cuts a clip, presses the key, and the cut carries a cross dissolve"
+    "A walk cuts a clip, presses the key, and the cut carries a cross dissolve",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

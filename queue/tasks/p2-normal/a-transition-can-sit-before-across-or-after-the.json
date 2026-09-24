@@ -18,7 +18,9 @@
     "Each position spends spare only from the side it needs, and a cut with spare on one side only can take a dissolve placed on that side",
     "A dip shows a Hold on black row; choosing a length inserts that much black between the clips, the clips after it move along, and undo puts it back",
     "A walk at Next defaults sets each row and claims what moved",
-    "While an edit point between two clips is picked, the spare frames either side are drawn as dashed strips outside the clips with their lengths (comp-video.html section 03, .xspare), as the mock's first step shows"
+    "While an edit point between two clips is picked, the spare frames either side are drawn as dashed strips outside the clips with their lengths (comp-video.html section 03, .xspare), as the mock's first step shows",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

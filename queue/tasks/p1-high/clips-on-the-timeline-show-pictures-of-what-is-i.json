@@ -16,7 +16,9 @@
   "acceptance": [
     "The user has answered the decision card on this task",
     "If yes: a video clip on the timeline shows frames from its own recording along its length at every zoom, and a walk shows them on a five minute recording",
-    "If yes: a clip still reads as picked, and its name stays legible over the pictures"
+    "If yes: a clip still reads as picked, and its name stays legible over the pictures",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

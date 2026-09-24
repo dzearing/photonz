@@ -17,7 +17,9 @@
     "Q removes everything from the start of the clip under the playhead up to the playhead and closes the gap, on every linked track",
     "W removes everything from the playhead to the end of that clip and closes the gap",
     "Both are one undo step and appear in the clip's right-click menu with their keys",
-    "A walk parks the playhead two seconds into a clip, presses Q, and the clip is two seconds shorter and starts where it did"
+    "A walk parks the playhead two seconds into a clip, presses Q, and the clip is two seconds shorter and starts where it did",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

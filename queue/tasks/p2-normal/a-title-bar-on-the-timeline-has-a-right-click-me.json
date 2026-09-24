@@ -16,7 +16,9 @@
   "acceptance": [
     "Right-clicking a title bar on the timeline opens a menu with Start at Playhead, End at Playhead, a Fade submenu, Duplicate and Delete",
     "The Start Here and End Here buttons leave the Time section",
-    "A walk right-clicks a title bar, chooses End at Playhead, and reads the On screen row back"
+    "A walk right-clicks a title bar, chooses End at Playhead, and reads the On screen row back",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

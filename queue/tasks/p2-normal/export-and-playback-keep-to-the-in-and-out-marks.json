@@ -17,7 +17,9 @@
     "With In and Out set, Export writes a file exactly as long as the marked stretch, starting at the In",
     "The export sheet says it is exporting the marked stretch and offers the whole video instead",
     "With no marks set, export is unchanged",
-    "A walk sets marks from the ruler right-click menu, exports, and checks the file length"
+    "A walk sets marks from the ruler right-click menu, exports, and checks the file length",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

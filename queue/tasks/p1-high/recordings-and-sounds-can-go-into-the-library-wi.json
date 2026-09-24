@@ -17,7 +17,9 @@
     "A recording or sound dropped from the Finder onto the Library shelf becomes a tile there and lands nowhere else",
     "The Library header has the mock's add button with Import, which puts the chosen files on the shelf",
     "File > Import Media… (Shift Command I, as the mock's File menu) is there at Next defaults with the Library folded, and what it imports is visible afterwards because the Library opens to show it",
-    "A walk at Next defaults drops a file onto the Library, then drags its tile onto an empty track"
+    "A walk at Next defaults drops a file onto the Library, then drags its tile onto an empty track",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

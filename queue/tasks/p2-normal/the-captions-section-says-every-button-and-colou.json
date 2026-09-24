@@ -18,7 +18,9 @@
     "After picking Lower third, Background reads a colour name from its own list, not a hex code",
     "captions-panel-keeps-its-margins-walk checks both readings and passes at the default and the narrowest dock",
     "The Easing menu in the timeline bar reads its whole name at the default window size",
-    "No label in the video chrome (timeline bar, track headers, panel sections, Library tiles, transition rows) is cut off with an ellipsis at the default window size, checked by one walk step that reads them all"
+    "No label in the video chrome (timeline bar, track headers, panel sections, Library tiles, transition rows) is cut off with an ellipsis at the default window size, checked by one walk step that reads them all",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

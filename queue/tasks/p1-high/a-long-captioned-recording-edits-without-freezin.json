@@ -16,7 +16,9 @@
   "acceptance": [
     "On a five minute recording with its captions written, I, the arrows, = and backslash each leave the main thread busy under 50 ms (walk wait notes, longest pass)",
     "Opening that recording has no single stall over 100 ms once captions land",
-    "A walk opens a long captioned recording, presses those keys and fails when the longest pass exceeds the bound"
+    "A walk opens a long captioned recording, presses those keys and fails when the longest pass exceeds the bound",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

@@ -17,7 +17,9 @@
     "With the timeline holding the keyboard, A picks up a Track Select Forward tool in the timeline bar, and V puts it down",
     "A click on a clip with that tool picks it and every clip that starts at or after it, on every track (Shift-A: that track only)",
     "Dragging any picked clip moves every picked clip by the same amount, in one undo step",
-    "A walk with no flags set presses A, clicks a clip, drags, and claims where each clip landed"
+    "A walk with no flags set presses A, clicks a clip, drags, and claims where each clip landed",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

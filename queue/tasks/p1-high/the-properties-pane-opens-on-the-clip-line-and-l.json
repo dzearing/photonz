@@ -17,7 +17,8 @@
     "With a clip, title or sound picked, the first thing under Layers is one line: name, in to out, length and speed, as video.html PROPERTIES draws it",
     "Animating shows only keyed values, with an Animate a property button that opens a picker of the rest, as the mock draws it",
     "A walk with no flags reads the clip line and the Animating count back for a clip and a title",
-    "The audit puts the shipped pane beside video.html PROPERTIES"
+    "The audit puts the shipped pane beside video.html PROPERTIES",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

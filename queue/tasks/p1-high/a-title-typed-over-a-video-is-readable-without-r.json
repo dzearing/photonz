@@ -16,7 +16,9 @@
   "acceptance": [
     "A title typed over a video at Next defaults is white (or picks a colour that reads against the frame under it), bold, and sized to the picture (about a twentieth of its height)",
     "Text typed on a still picture keeps the look it has today",
-    "The editing-session walk's title picture shows the words readable at a glance"
+    "The editing-session walk's title picture shows the words readable at a glance",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {

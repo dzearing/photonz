@@ -20,7 +20,9 @@
     "With a clip picked on a video document at 1200 by 720, with the timing strip open at its full height, Appearance and Effects are both whole inside the panel without scrolling",
     "The same is true with a title picked, because a title asks for a Text section as well",
     "The panel asked-for height and the height it is given are measured and reported before and after, at a named window size and strip height",
-    "DockWithTimeTests and DockFoldGuaranteeTests are updated so the arithmetic that says it fits is pinned"
+    "DockWithTimeTests and DockFoldGuaranteeTests are updated so the arithmetic that says it fits is pinned",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
     {
