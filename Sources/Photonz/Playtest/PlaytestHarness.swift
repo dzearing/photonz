@@ -3280,7 +3280,7 @@ private final class Run {
             case .clipTransitionDissolve, .clipTransitionDipToBlack:
                 let kind: ClipTransitionKind =
                     action == .clipTransitionDissolve ? .dissolve : .dipToBlack
-                guard let cut = editor.clipCutInHand else {
+                guard let cut = editor.cutInHand?.cut else {
                     throw Failure(description: "there is no cut in hand to put a \(kind.title) on")
                 }
                 guard cut.canAfford(kind) else {
@@ -3288,33 +3288,31 @@ private final class Run {
                         + ClipTransitionCopy.spare(cut))
                 }
                 editor.setClipTransitionInHand(kind)
-                guard editor.clipCutInHand?.transition?.kind == kind else {
+                guard editor.cutInHand?.cut.transition?.kind == kind else {
                     throw Failure(description: "the \(kind.title) did not land on the cut")
                 }
             case .clipTransitionHardCut:
-                guard editor.clipCutInHand?.transition != nil else {
+                guard editor.cutInHand?.cut.transition != nil else {
                     throw Failure(description: "this cut is already hard, so there is nothing "
                         + "to take off it")
                 }
                 editor.setClipTransitionInHand(nil)
             case .clipTransitionDragLonger:
-                guard let id = editor.clipInHandID, let cut = editor.clipCutInHand,
-                      let was = cut.drawnTransition else {
+                guard let inHand = editor.cutInHand, let was = inHand.cut.drawnTransition else {
                     throw Failure(description: "there is no transition on the cut in hand to "
                         + "drag longer")
                 }
-                editor.beginClipTransitionDrag(layerID: id, cutIndex: cut.index,
-                                               leadingEdge: false)
+                editor.beginClipTransitionDrag(place: inHand.place, leadingEdge: false)
                 guard editor.clipTransitionDrag != nil else {
                     throw Failure(description: "could not take hold of the band over the cut")
                 }
                 editor.updateClipTransitionDrag(byMS: step8)
                 editor.commitClipTransitionDrag()
-                guard let now = editor.clipCutInHand?.drawnTransition,
+                guard let now = editor.cutInHand?.cut.drawnTransition,
                       now.lengthMS > was.lengthMS else {
                     throw Failure(description: "the band was dragged out by \(step8) ms and the "
                         + "transition is still \(was.lengthMS) ms; the cut's longest is "
-                        + "\(cut.longestMS(of: was.kind)) ms")
+                        + "\(inHand.cut.longestMS(of: was.kind)) ms")
                 }
             case .clipBlurComesOn:
                 guard let id = editor.clipInHandID else {
@@ -3418,9 +3416,9 @@ private final class Run {
                  + ", showing \(editor.timelineWindowReading)"
                  + ", the clip is in \(pieces?.count ?? 0) piece(s)"
                  + (editor.selectedClipPieceIndex.map { ", piece \($0 + 1) picked" } ?? "")
-                 + (editor.clipCutInHand.map { cut in
-                        ", cut \(cut.index) "
-                        + (cut.drawnTransition.map {
+                 + (editor.cutInHand.map { inHand in
+                        ", cut from \(inHand.outgoingName) to \(inHand.incomingName) "
+                        + (inHand.cut.drawnTransition.map {
                                "\($0.kind.title.lowercased()) \($0.lengthMS) ms" } ?? "hard")
                     } ?? "")
                  + ", playhead \(editor.documentTimeMS) ms",

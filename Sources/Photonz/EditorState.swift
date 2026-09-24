@@ -1078,6 +1078,13 @@ final class EditorState {
     /// The cut between two clips on one track that is picked
     /// (`comp-video.html` §02). Picking a layer lets it go.
     var selectedEditPoint: TimelineEditPoint?
+    /// The cut whose transition picker is open, nil while none is
+    /// (`EditorState+ClipTransitions`, "At this cut").
+    var transitionPickerPlace: TimelineCutPlace?
+    /// Whether that picker hangs off the panel's Add transition button rather
+    /// than off the cut on the timeline. One picker, two places it can grow
+    /// out of, and only the one that was clicked opens.
+    var transitionPickerFromPanel = false
     /// The Escape watch armed for exactly as long as a clip's bar is in hand.
     @ObservationIgnored var clipBarEscapeWatch: Any?
     /// ...and the one armed while a transition's band is.

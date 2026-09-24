@@ -19483,3 +19483,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - New core: markers and In/Out on the document (`TimelineMarks.swift`), Ripple Delete, Split Everything, Roll Edit to Playhead (`TimelineMenuEdits.swift`), tested in `TimelineMenuEditsTests`.
 - Gotcha: a SwiftUI `.contextMenu` added after `.offset` answers for the un-offset frame; put it before.
 - Next: export honouring In/Out (p2 task), and M/I/O/E keys via the Premiere keys task.
+
+## 2026-09-23 — Click a cut and pick a transition from tiles
+
+- Core (tests first, `EditPointTransitionTests`, three new cases in `TransitionRenderTests`): transitions on the cut BETWEEN two clips (`Layer.arrivalTransition`, `EditPointTransitions.swift`, `TimelineCutPlace`/`DocumentCut`), and six kinds (Push, Wipe, Blur through added). Push and wipe draw through clipping frame groups rather than crops.
+- App: `TransitionPicker` popover at the cut (edit point click, join click, band double click, or the panel's Add transition); `EditPointInspector` + rewritten `TransitionInspector` as label/value rows with kit dropdowns; band with drag grips on edit points; edit point right-click menu; a picked cut shows only its two sections. `VideoKit.DropdownRow` now lays a real pop-up button over the mock face so walks can drive it.
+- Walk: new `transition-picker-at-a-cut-walk` (no flags, 9 real captures); transitions/second-clip/cut/right-click walks green. Audit: `queue/audits/2026-09-23-transition-picker-at-a-cut.json`.
+- Found: render/export tests that share the static CIContext flip to failing in parallel runs on unrelated allocation changes (logged on the export-size flake task).
+- Next: before/across/after placement, hold on black, spare strips (p2 task filed).

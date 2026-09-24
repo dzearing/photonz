@@ -1,191 +1,176 @@
 import PhotonzCore
 import SwiftUI
 
-/// **Transition**: what happens at the cut you have picked
-/// (`docs/design/video-transitions.md`).
-///
-/// The section is about a CUT, not about a clip, which is the whole thesis said
-/// in the panel: it names the two pieces either side, says what spare media
-/// each of them has, and shows the bill for whatever is on it. Nothing here
-/// moves anything on the timeline, and the copy says so, because the first
-/// question anybody has about a dissolve is whether it just pushed the rest of
-/// their edit along.
-///
-/// What the study drew and this does not: the six behaviours are three (the
-/// study's own open question asks whether to ship the honest few), "the overlap
-/// sits before / across / after" is gone because a dissolve means across, and
-/// "hold on black" is gone because inserting real black is inserting a PIECE,
-/// not putting something on a cut.
+// The cut in the panel (`video-transition-wt.html`, `#propsCut`): two
+// sections, Edit point and Transition, made of short labels and values. A cut
+// is not a layer, so this is the one place it speaks for itself, including
+// what it can afford.
+
+/// **Edit point**: which clip goes out, which comes in, and the spare media
+/// either side, the frames an overlap would be paid for with.
+struct EditPointInspector: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        if let cut = editorState.cutInHand {
+            VStack(alignment: .leading, spacing: 7) {
+                HStack(spacing: 7) {
+                    CutField(key: "Out", value: cut.outgoingName)
+                    CutField(key: "In", value: cut.incomingName)
+                }
+                HStack(spacing: 7) {
+                    CutField(key: "Spare after", value: spare(cut.cut.spareAfterOutMS))
+                    CutField(key: "Spare before", value: spare(cut.cut.spareBeforeInMS))
+                }
+            }
+            .padding(.vertical, 2)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func spare(_ ms: Int?) -> String {
+        ms.map(ClipTransitionCopy.seconds) ?? "any"
+    }
+
+    /// What the section's header says on its right: where the cut is on the
+    /// document's clock, the number the ruler and the transport show.
+    static func headerNote(_ editorState: EditorState) -> String? {
+        editorState.cutInHand.map { "at \(CaptionProgress.clock($0.atMS))" }
+    }
+}
+
+/// One `.field` of the mock: a small key on the left and its value on the
+/// right, in a box.
+private struct CutField: View {
+    let key: String
+    let value: String
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text(key)
+                .font(.system(size: 10))
+                .foregroundStyle(VideoKit.Palette.faint)
+                .lineLimit(1)
+                .layoutPriority(1)
+            Spacer(minLength: 4)
+            Text(value)
+                .font(.system(size: 11.5, weight: .medium))
+                .monospacedDigit()
+                .foregroundStyle(VideoKit.Palette.ink)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .panelReadout(value)
+        }
+        .padding(.horizontal, 8)
+        .frame(height: 26)
+        .frame(maxWidth: .infinity)
+        .background(RoundedRectangle(cornerRadius: 7).fill(VideoKit.Palette.panel))
+        .overlay(RoundedRectangle(cornerRadius: 7).strokeBorder(VideoKit.Palette.line))
+        .accessibilityElement(children: .combine)
+        .playtestField(key)
+    }
+}
+
+/// **Transition**: what is on the cut in hand. Nothing yet is one button that
+/// opens the tiles; something is a Type and a Length, and for the kinds that
+/// overlap, what it is paid with.
 struct TransitionInspector: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if let cut = editorState.clipCutInHand {
-                where_(cut)
-                kinds(cut)
-                if cut.transition != nil { length(cut) }
-                bill(cut)
-            } else {
-                Text("No cut is picked. Click a join on a clip's bar in the timeline, "
-                     + "or stand the playhead on one.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .padding(.vertical, 2)
-        // The panel decides how wide this is, never the words in it: a section
-        // that asked for the width of its longest sentence pushed its own
-        // numbers off both edges of the dock (seen on the first walk).
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    // MARK: Which cut, and what it has to spend
-
-    @ViewBuilder
-    private func where_(_ cut: ClipCut) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack {
-                Text("At the cut")
-                    .font(.system(size: 11))
-                Spacer()
-                Text(cutTimecode(cut))
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(.secondary)
-                    .playtestField("Cut reading")
-            }
-            Text("Piece \(cut.index) goes out, piece \(cut.index + 1) comes in.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Text(ClipTransitionCopy.spare(cut))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            if cut.isContinuous {
-                // The one case where a dissolve would do nothing at all, said
-                // before it is chosen rather than after it looks broken.
-                Text(ClipTransitionCopy.continuousCut)
-                    .font(.caption)
-                    .foregroundStyle(.orange)
-                        .playtestField("Cut warning")
-            }
-        }
-    }
-
-    /// Where the cut is on the DOCUMENT's own clock, which is the number the
-    /// transport and the ruler are showing: the panel and the playhead say the
-    /// same thing about the same moment.
-    private func cutTimecode(_ cut: ClipCut) -> String {
-        let start = editorState.clipInHandID
-            .flatMap { editorState.document?.layer(id: $0)?.time?.inMS } ?? 0
-        return EditorState.timecode(ms: start + cut.atMS)
-    }
-
-    // MARK: What can go on it
-
-    @ViewBuilder
-    private func kinds(_ cut: ClipCut) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Type")
-                .font(.system(size: 11))
-            // A row of choices rather than a menu: there are four answers
-            // including the hard cut, each with a reason it is or is not on
-            // offer, and a menu would hide both the reason and the fact that
-            // one of them is unavailable until it was opened.
-            VStack(alignment: .leading, spacing: 3) {
-                choice(title: "Hard cut", isOn: cut.transition == nil, canAfford: true) {
-                    editorState.setClipTransitionInHand(nil)
-                }
-                ForEach(ClipTransitionKind.allCases, id: \.self) { kind in
-                    let afford = cut.canAfford(kind)
-                    choice(title: kind.title, isOn: cut.transition?.kind == kind,
-                           canAfford: afford) {
-                        editorState.setClipTransitionInHand(kind)
+        if let inHand = editorState.cutInHand {
+            VStack(alignment: .leading, spacing: 7) {
+                if let transition = inHand.cut.transition {
+                    type(inHand, current: transition.kind)
+                    length(inHand)
+                    if transition.kind.needsOverlap, inHand.cut.drawnTransition != nil {
+                        VideoKit.FieldRow(label: "Paid with") {
+                            Text(ClipTransitionCopy.paidWith(inHand.cut))
+                                .panelReadout(ClipTransitionCopy.paidWith(inHand.cut))
+                                .font(.system(size: 11.5, weight: .medium))
+                                .monospacedDigit()
+                                .foregroundStyle(VideoKit.Palette.ink)
+                                .padding(.horizontal, 8)
+                                .frame(height: VideoKit.Metrics.controlSmall)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(RoundedRectangle(cornerRadius: 6).fill(VideoKit.Palette.panel))
+                                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(VideoKit.Palette.line))
+                        }
+                        .playtestField("Paid with")
                     }
-                    .panelHelp(afford
-                               ? "\(kind.title): \(kind.needsOverlap ? "both pieces on screen together, paid for with spare frames either side" : "each piece fades inside the time it already has")"
-                               : ClipTransitionCopy.cannotAfford(kind, at: cut))
+                } else {
+                    VideoKit.FieldRow(label: "At the cut") {
+                        Button {
+                            editorState.openTransitionPicker(at: inHand.place, fromPanel: true)
+                        } label: {
+                            Label("Add transition", systemImage: "rectangle.righthalf.inset.filled.arrow.right")
+                                .font(.system(size: 11, weight: .medium))
+                        }
+                        .controlSize(.small)
+                        .playtestControl("Add transition", detail: "Transition")
+                        .transitionPicker(at: inHand.place, fromPanel: true, editorState: editorState)
+                    }
+                    .playtestField("At the cut")
+                }
+                if let warning = warning(inHand.cut) {
+                    Text(warning)
+                        .font(.system(size: 10.5))
+                        .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .playtestField("Transition warning")
                 }
             }
-            // The distinction said ONCE, under the list, rather than as a tag
-            // on every row. Four tags down the right hand edge is four things
-            // to read to learn one thing.
-            Text("Cross dissolve puts both pieces on screen together, so it spends spare media. "
-                 + "The dips do not: each piece fades inside the time it already has.")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
+            .padding(.vertical, 2)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
-    private func choice(title: String, isOn: Bool, canAfford: Bool,
-                        pick: @escaping () -> Void) -> some View {
-        Button(action: pick) {
-            HStack(spacing: 6) {
-                Image(systemName: isOn ? "largecircle.fill.circle" : "circle")
-                    .foregroundStyle(isOn ? Color.accentColor : .secondary)
-                Text(title)
-                    .font(.system(size: 11))
-                Spacer(minLength: 4)
-                // Only the refusal is written down the edge: a row that says
-                // nothing is a row this cut can take.
-                if !canAfford {
-                    Text("no spare")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.tertiary)
-                }
-            }
-            .contentShape(Rectangle())
+    /// The one hint this section ever shows, and only when something is off:
+    /// a later trim took the spare a transition was spending, or both sides
+    /// read the same frames so a dissolve would show nothing.
+    private func warning(_ cut: ClipCut) -> String? {
+        if cut.transition != nil, cut.drawnTransition == nil {
+            return "No spare left here, so this cut plays hard."
         }
-        .buttonStyle(.plain)
-        .disabled(!canAfford)
-        .playtestField(title)
+        if let drawn = cut.drawnTransition, let asked = cut.transition, drawn.lengthMS < asked.lengthMS {
+            return "Playing at \(ClipTransitionCopy.seconds(drawn.lengthMS)): a trim took its spare."
+        }
+        if cut.isContinuous, cut.transition?.kind.needsOverlap ?? false {
+            return "Both sides are the same frames, so this shows nothing."
+        }
+        return nil
     }
 
-    // MARK: How long
-
-    @ViewBuilder
-    private func length(_ cut: ClipCut) -> some View {
-        let kind = cut.transition?.kind ?? .dissolve
-        let longest = cut.longestMS(of: kind)
-        VStack(alignment: .leading, spacing: 2) {
-            HStack {
-                Text("Length")
-                    .font(.system(size: 11))
-                Spacer()
-                Text(ClipTransitionCopy.length(cut.drawnTransition?.lengthMS ?? 0))
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(.secondary)
-                    .playtestField("Length reading")
+    private func type(_ inHand: DocumentCut, current: ClipTransitionKind) -> some View {
+        VideoKit.DropdownRow(label: "Type", value: current.title) {
+            ForEach(ClipTransitionKind.allCases, id: \.self) { kind in
+                Toggle(kind.title, isOn: Binding(
+                    get: { kind == current },
+                    set: { _ in editorState.setTransition(kind, at: inHand.place) }))
+                    .disabled(!inHand.cut.canAfford(kind))
             }
-            Slider(value: Binding(
-                get: { Double(cut.drawnTransition?.lengthMS ?? ClipTransition.shortestMS) },
-                set: { editorState.setClipTransitionLength(Int($0.rounded())) }
-            ), in: Double(ClipTransition.shortestMS)...Double(max(longest, ClipTransition.shortestMS + 1)))
-            .controlSize(.small)
-            .playtestField("Length")
-            .panelHelp("How long the transition takes, measured across the cut. "
-                       + "The band on the bar in the timeline is the same number: drag either "
-                       + "end of it and this follows.")
-            Text("The longest this cut can take is \(ClipTransitionCopy.length(longest)).")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
+            Divider()
+            Button("Hard cut") { editorState.setTransition(nil, at: inHand.place) }
         }
+        .playtestField("Type")
     }
 
-    // MARK: What it costs
-
-    @ViewBuilder
-    private func bill(_ cut: ClipCut) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(ClipTransitionCopy.bill(cut))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .playtestField("Transition bill")
-            if let shortened = ClipTransitionCopy.shortened(cut) {
-                Text(shortened)
-                    .font(.caption)
-                    .foregroundStyle(.orange)
-                        .playtestField("Transition shortened")
+    private func length(_ inHand: DocumentCut) -> some View {
+        let now = inHand.cut.drawnTransition?.lengthMS ?? 0
+        return VideoKit.DropdownRow(label: "Length", value: ClipTransitionCopy.seconds(now)) {
+            ForEach(editorState.clipTransitionLengthOffers, id: \.self) { ms in
+                Toggle(ClipTransitionCopy.seconds(ms), isOn: Binding(
+                    get: { ms == now },
+                    set: { _ in editorState.setClipTransitionLength(ms) }))
             }
         }
+        .playtestField("Length")
+    }
+
+    /// What the section's header says on its right: the kind on the cut, or
+    /// None.
+    static func headerNote(_ editorState: EditorState) -> String? {
+        guard let inHand = editorState.cutInHand else { return nil }
+        return inHand.cut.drawnTransition?.kind.title ?? "None"
     }
 }

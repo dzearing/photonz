@@ -120,6 +120,10 @@ enum InspectorSectionID: String, CaseIterable {
     // the only section in the panel whose subject is not a layer at all: a cut
     // is the moment one piece stops and the next starts
     // (`docs/design/video-transitions.md`).
+    //
+    // Edit point comes first, as the mock draws them (`video-transition-wt`):
+    // which clips meet here and what spare each side has, then what is on it.
+    case editPoint
     case transition
     // What the picked PIECE does with time: how fast it plays
     // (`next-speed-a-stretch`), and holding one of its frames
@@ -184,6 +188,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .keys: "Animating"
         case .motion: "Motion"
         case .reframe: "Reframe"
+        case .editPoint: "Edit point"
         case .transition: "Transition"
         case .speed: "Time"
         case .sound: "Sound"

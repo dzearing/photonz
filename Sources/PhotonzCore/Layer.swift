@@ -1590,6 +1590,16 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// `time` is where the row sits and how long it runs for.
     public internal(set) var cuts: ClipPieces?
 
+    /// How this clip arrives from the clip that ends where it starts on its
+    /// track (`EditPointTransitions.swift`): the transition on the cut between
+    /// two clips. Nil is a hard cut, which is every clip in every document
+    /// written before this existed.
+    ///
+    /// Carried by the arriving clip for the reason a join's transition is
+    /// carried by the arriving piece: a cut has no object of its own. It is
+    /// only drawn while the two clips actually meet.
+    public internal(set) var arrivalTransition: ClipTransition?
+
     /// The recording this layer plays, for a layer that plays one
     /// (`MovieClip.swift`). Nil is every layer in every document written
     /// before this existed, and every layer in every screenshot ever.

@@ -1,0 +1,28 @@
+{
+  "feature": "Click a cut and pick a transition from tiles",
+  "epic": "video-transitions-motion",
+  "summary": "Click the cut between two clips, or a join inside one, and a picker opens right at the cut with six playing tiles. Pick one and it lands on the cut as a band over both clips; Properties shows Edit point and Transition as short rows with Type and Length dropdowns.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. A screen recording with a second clip butted onto it on V1, both with a little trimmed off at the cut so each side has spare frames.",
+  "try": [
+    { "do": "Click the thin line where the two clips meet on V1.", "shot": "2026-09-23-transition-picker-2-picker-at-the-cut-sc.png" },
+    { "do": "Watch the tiles play, then click Cross dissolve.", "shot": "2026-09-23-transition-picker-3-a-dissolve-between-two-clips-sc.png" },
+    { "do": "Drag either end of the band on the timeline outwards." },
+    { "do": "In Properties, open Type and pick Push, with the playhead on the cut.", "shot": "2026-09-23-transition-picker-5-a-push-sc.png" },
+    { "do": "Open Type again and pick Dip to black.", "shot": "2026-09-23-transition-picker-6-a-dip-to-black-sc.png" },
+    { "do": "Split a clip with B, move the playhead away, and click the join inside it.", "shot": "2026-09-23-transition-picker-8-the-picker-on-a-join-sc.png" },
+    { "do": "Right-click the band and choose Remove Transition." }
+  ],
+  "evaluate": [
+    "Does the picker open where your eye already is, at the cut, and close out of the way once you pick?",
+    "Do the playing tiles tell the six apart at a glance, or do you still read the names?",
+    "Is 'needs overlap' and 'no spare' on a tile enough to know why a dissolve is greyed out?",
+    "Would a Premiere editor find Type and Length where they expect, and is it quicker than Effect Controls?",
+    "Is double-clicking the band the right way back into the picker once a transition is on?"
+  ],
+  "rough": [
+    "A clip dropped fresh onto the timeline reads its file from the first frame, so it has no spare before its in point and every overlapping tile says no spare until you trim its head. Premiere solves this by letting the transition sit before or after the cut; that row and Hold on black from the mock are not built yet (filed as a-transition-can-sit-before-across-or-after-the).",
+    "The mock's picker ends with a line explaining overlap; left out under the labels-not-explanations rule.",
+    "Clicking a join that the playhead is standing on hits the playhead, not the join; the walk moves the playhead away first.",
+    "Transitions between clips only change the picture: the sound still cuts hard at the edit point."
+  ]
+}

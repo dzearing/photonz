@@ -298,6 +298,9 @@ extension Layer {
         guard hi - lo >= LayerTime.shortestMS else { return nil }
         if lo == time.inMS, hi == time.outMS { return self }
         var part = self
+        // Only the part that still starts where the clip started arrives at
+        // the cut the clip arrived at; a later part arrives at nothing yet.
+        if lo > time.inMS { part.arrivalTransition = nil }
         // Words, a shape, an arrow: a place in time and nothing to read.
         guard holdsMedia, let pieces = clipPieces else {
             part.time = LayerTime(inMS: lo, outMS: hi)

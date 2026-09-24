@@ -24,12 +24,9 @@ import Foundation
 
 /// What happens at a cut.
 ///
-/// Three, not the six the study drew. The study's own open question asks
-/// whether to ship the honest few or the full shelf, and the three here are the
-/// ones that answer a real question: is this a hard cut, do the two shots melt
-/// into each other, or does the picture go through a colour on the way. Push,
-/// wipe and morph are moves rather than answers, and each of them wants
-/// geometry the cut has no opinion about.
+/// The six the picker draws (`video-transition-wt.html`): two dips that need
+/// nothing but the time each shot already has, and four that put both shots
+/// on screen together and so spend spare media either side of the cut.
 public enum ClipTransitionKind: String, CaseIterable, Hashable, Codable, Sendable {
     /// Both shots on screen together, one coming up as the other goes down.
     case dissolve
@@ -37,12 +34,22 @@ public enum ClipTransitionKind: String, CaseIterable, Hashable, Codable, Sendabl
     case dipToBlack
     /// ...and through white.
     case dipToWhite
+    /// The incoming shot slides in from the right and pushes the outgoing one
+    /// off to the left.
+    case push
+    /// The incoming shot is uncovered from the left edge across.
+    case wipe
+    /// A dissolve that goes out of focus on the way through and comes back.
+    case blurThrough
 
     public var title: String {
         switch self {
         case .dissolve: "Cross dissolve"
         case .dipToBlack: "Dip to black"
         case .dipToWhite: "Dip to white"
+        case .push: "Push"
+        case .wipe: "Wipe"
+        case .blurThrough: "Blur through"
         }
     }
 
@@ -50,15 +57,15 @@ public enum ClipTransitionKind: String, CaseIterable, Hashable, Codable, Sendabl
     /// overlap put both pieces on screen together, so they spend spare media.
     /// The dips do not: each piece plays the frames it already had and the
     /// picture fades through a colour between them.
-    public var needsOverlap: Bool { self == .dissolve }
+    public var needsOverlap: Bool { dipColorHex == nil }
 
     /// The colour the picture goes through, or nil where it goes through no
     /// colour at all.
     public var dipColorHex: String? {
         switch self {
-        case .dissolve: nil
         case .dipToBlack: "#000000"
         case .dipToWhite: "#FFFFFF"
+        case .dissolve, .push, .wipe, .blurThrough: nil
         }
     }
 
@@ -96,6 +103,26 @@ public struct ClipTransition: Hashable, Codable, Sendable {
     /// always add back up to the length somebody asked for.
     public var beforeMS: Int { lengthMS / 2 }
     public var afterMS: Int { lengthMS - beforeMS }
+
+    /// How far through a transition on a cut at `cutAtMS` a moment is, nought
+    /// at its first frame and one at the frame after its last.
+    public static func progress(atMS ms: Int, cutAtMS: Int, _ transition: ClipTransition) -> Double {
+        let raw = Double(ms - (cutAtMS - transition.beforeMS)) / Double(max(1, transition.lengthMS))
+        return min(max(raw, 0), 1)
+    }
+
+    /// How much of a dip's colour is up at a moment: rising to all of it on
+    /// the cut and falling away again after.
+    public static func dipAmount(atMS ms: Int, cutAtMS: Int, _ transition: ClipTransition) -> Double {
+        let amount = ms < cutAtMS
+            ? Double(ms - (cutAtMS - transition.beforeMS)) / Double(max(1, transition.beforeMS))
+            : 1 - Double(ms - cutAtMS) / Double(max(1, transition.afterMS))
+        return min(max(amount, 0), 1)
+    }
+
+    /// The lengths the Length dropdown offers, before a cut says how long it
+    /// can afford.
+    public static let lengthStopsMS = [200, 400, 600, 800, 1000, 1500, 2000, 3000]
 }
 
 /// One cut of a clip, and everything it can afford.
@@ -119,9 +146,13 @@ public struct ClipCut: Hashable, Sendable {
     public let spareAfterOutMS: Int?
     /// Frames the recording has before the incoming piece's first one.
     public let spareBeforeInMS: Int?
+    /// Whether both sides read one recording. Always so inside one clip;
+    /// between two clips only when they are two stretches of the same file.
+    public let readsOneRecording: Bool
 
     public init(index: Int, atMS: Int, outgoing: ClipPiece, incoming: ClipPiece,
-                spareAfterOutMS: Int?, spareBeforeInMS: Int?) {
+                spareAfterOutMS: Int?, spareBeforeInMS: Int?, readsOneRecording: Bool = true) {
+        self.readsOneRecording = readsOneRecording
         self.index = index
         self.atMS = atMS
         self.outgoing = outgoing
@@ -141,7 +172,7 @@ public struct ClipCut: Hashable, Sendable {
     /// Said out loud rather than quietly allowed, because a feature that looks
     /// broken on the first press is worse than one that is not there.
     public var isContinuous: Bool {
-        !outgoing.isHeld && !incoming.isHeld
+        readsOneRecording && !outgoing.isHeld && !incoming.isHeld
             && outgoing.speedPercent == incoming.speedPercent
             && outgoing.sourceOutMS == incoming.sourceInMS
     }
@@ -213,14 +244,22 @@ public struct ClipMoment: Hashable, Sendable {
     public let dipColorHex: String?
     /// How far through it, nought to one, one being all the way.
     public let dipOpacity: Double
+    /// Which transition is running, and how far through it, nought at its
+    /// first frame and one at the frame after its last. Nil and nought when
+    /// none is.
+    public let kind: ClipTransitionKind?
+    public let progress: Double
 
     public init(sourceMS: Int, incomingSourceMS: Int? = nil, incomingOpacity: Double = 0,
-                dipColorHex: String? = nil, dipOpacity: Double = 0) {
+                dipColorHex: String? = nil, dipOpacity: Double = 0,
+                kind: ClipTransitionKind? = nil, progress: Double = 0) {
         self.sourceMS = sourceMS
         self.incomingSourceMS = incomingSourceMS
         self.incomingOpacity = incomingOpacity
         self.dipColorHex = dipColorHex
         self.dipOpacity = dipOpacity
+        self.kind = kind
+        self.progress = progress
     }
 
     /// Whether anything at all is happening here beyond one frame playing.
@@ -303,7 +342,7 @@ extension ClipPieces {
         }
         // How far through the transition we are, nought at its first frame and
         // one at the frame after its last.
-        let progress = Double(moment - (cut.atMS - transition.beforeMS)) / Double(transition.lengthMS)
+        let progress = ClipTransition.progress(atMS: moment, cutAtMS: cut.atMS, transition)
         if transition.kind.needsOverlap {
             // Both pieces are playing, each from its own clock. Before the cut
             // the INCOMING one is reading early, out of the spare before its in
@@ -312,16 +351,14 @@ extension ClipPieces {
             let out = readingOn(piece: cut.index - 1, atMS: moment)
             let into = readingOn(piece: cut.index, atMS: moment)
             return ClipMoment(sourceMS: out, incomingSourceMS: into,
-                              incomingOpacity: min(max(progress, 0), 1))
+                              incomingOpacity: progress, kind: transition.kind, progress: progress)
         }
         // A dip spends nothing: each piece plays the frames it already had, and
         // the picture goes through a colour and comes back. All the way through
         // at the cut itself.
-        let amount = progress <= 0.5
-            ? Double(moment - (cut.atMS - transition.beforeMS)) / Double(max(1, transition.beforeMS))
-            : 1 - Double(moment - cut.atMS) / Double(max(1, transition.afterMS))
         return ClipMoment(sourceMS: plain, dipColorHex: transition.kind.dipColorHex,
-                          dipOpacity: min(max(amount, 0), 1))
+                          dipOpacity: ClipTransition.dipAmount(atMS: moment, cutAtMS: cut.atMS, transition),
+                          kind: transition.kind, progress: progress)
     }
 
     /// Where in the recording a piece is reading at a moment of the clip, with
@@ -366,40 +403,128 @@ extension Layer {
         }
         guard isVisible, let movie, let moment = clipMoment(atTimeMS: ms),
               moment.isMidTransition else { return [drawn] }
-        if let incoming = moment.incomingSourceMS {
-            // The same layer, wearing the other frame and part way up. It
-            // carries the clip's own look — its corners, its effects, its blend
-            // mode — because it IS the clip, on a different frame, and a
-            // dissolve where only one side had the corner radius would be a
-            // dissolve into a different-shaped picture.
-            var over = Layer(id: Layer.transitionPartnerID(of: id), name: drawn.name,
-                             content: .image(movie.frameRef(atSourceMS: incoming,
-                                                            holding: framesInHand)),
-                             frame: drawn.frame, crop: drawn.crop, transform: drawn.transform,
-                             style: drawn.style, isVisible: true, isLocked: true,
-                             placement: drawn.placement)
-            over.style.opacity = drawn.style.opacity * moment.incomingOpacity
-            return [drawn, over]
+        if let incoming = moment.incomingSourceMS, let kind = moment.kind {
+            // The same layer, wearing the other frame. It carries the clip's
+            // own look — its corners, its effects, its blend mode — because it
+            // IS the clip, on a different frame, and a dissolve where only one
+            // side had the corner radius would be a dissolve into a
+            // different-shaped picture.
+            let over = drawn.transitionPartner(standingFor: id,
+                                               showing: .image(movie.frameRef(atSourceMS: incoming,
+                                                                              holding: framesInHand)))
+            return Layer.transitionDrawn(kind, progress: moment.progress,
+                                         outgoing: drawn, incoming: over)
         }
         guard let hex = moment.dipColorHex else { return [drawn] }
-        // Its two corners are stated in the layer's OWN coordinates, which is
-        // where a shape's box lives (`AnnotationRasterizer`): a rectangle whose
-        // start and end are both nought is a rectangle of no size, and nothing
-        // at all is drawn. That is not a theory — it shipped that way for one
-        // walk, and the frame on the cut came out as the incoming shot rather
-        // than as black.
+        return [drawn, drawn.dipPanel(hex: hex, amount: moment.dipOpacity)]
+    }
+
+    /// This layer as the second picture of a transition: the same look and
+    /// the same place, showing `content`, under the partner id of the layer
+    /// on screen (`transitionPartnerID`). Locked and timeless, since it exists
+    /// for one frame of one render and nobody can pick it.
+    func transitionPartner(standingFor onScreen: UUID, showing content: LayerContent) -> Layer {
+        Layer(id: Layer.transitionPartnerID(of: onScreen), name: name, content: content,
+              frame: frame, crop: crop, transform: transform, style: style,
+              isVisible: true, isLocked: true, placement: placement)
+    }
+
+    /// A panel of colour over this layer and nothing else, `amount` of the
+    /// way up: what a dip draws. A title over the picture is still over the
+    /// picture while the picture dips.
+    ///
+    /// Its two corners are stated in the layer's OWN coordinates, which is
+    /// where a shape's box lives (`AnnotationRasterizer`): a rectangle whose
+    /// start and end are both nought is a rectangle of no size, and nothing at
+    /// all is drawn. That is not a theory — it shipped that way for one walk,
+    /// and the frame on the cut came out as the incoming shot rather than as
+    /// black.
+    func dipPanel(hex: String, amount: Double) -> Layer {
         var dip = Layer(id: Layer.transitionPartnerID(of: id),
                         name: "\(name) dip",
                         content: .annotation(AnnotationContent(
                             shape: .rectangle, strokeWidth: 0,
                             start: .zero,
-                            end: CGPoint(x: drawn.frame.width, y: drawn.frame.height),
+                            end: CGPoint(x: frame.width, y: frame.height),
                             fillColorHex: hex)),
-                        frame: drawn.frame)
-        dip.style.opacity = moment.dipOpacity
-        // It covers the clip and nothing else: a title over the picture is
-        // still over the picture while the picture dips.
-        return [drawn, dip]
+                        frame: frame)
+        dip.style.opacity = amount
+        return dip
+    }
+
+    /// **The two pictures of a transition that needs an overlap, drawn**: the
+    /// outgoing shot and the incoming one, `progress` of the way from the
+    /// first to the second. One answer for a cut inside a clip and a cut
+    /// between two clips, so the four behaviours look the same wherever the
+    /// cut is.
+    ///
+    /// Everything comes back as ordinary layers, in the order they are drawn,
+    /// to stand where the one on screen stood. A push and a wipe are drawn
+    /// through windows, so neither shot ever spills past the frame it had.
+    static func transitionDrawn(_ kind: ClipTransitionKind, progress p: Double,
+                                outgoing: Layer, incoming: Layer) -> [Layer] {
+        let p = min(max(p, 0), 1)
+        switch kind {
+        case .dissolve, .dipToBlack, .dipToWhite:
+            var into = incoming
+            into.style.opacity = incoming.style.opacity * p
+            return [outgoing, into]
+        case .blurThrough:
+            // Softest on the cut, sharp at both ends.
+            let peak = 1 - abs(2 * p - 1)
+            var out = outgoing, into = incoming
+            out.style.blurRadius = max(out.style.blurRadius, Self.blurThroughRadius(out.frame) * peak)
+            into.style.blurRadius = max(into.style.blurRadius, Self.blurThroughRadius(into.frame) * peak)
+            into.style.opacity = incoming.style.opacity * p
+            return [out, into]
+        case .push:
+            // The outgoing shot slides off to the left and the incoming one
+            // follows it in from the right, each cut off where it leaves the
+            // frame.
+            return [outgoing.slice(from: p, to: 1, shiftedBy: -p * outgoing.frame.width),
+                    incoming.slice(from: 0, to: p, shiftedBy: (1 - p) * incoming.frame.width)]
+                .compactMap { $0 }
+        case .wipe:
+            return [outgoing] + [incoming.slice(from: 0, to: p, shiftedBy: 0)].compactMap { $0 }
+        }
+    }
+
+    /// How soft blur through gets on the cut: a few percent of the picture,
+    /// enough that the two shots melt rather than cross.
+    static func blurThroughRadius(_ frame: CGRect) -> CGFloat {
+        max(4, min(frame.width, frame.height) * 0.03)
+    }
+
+    /// The part of this layer between two fractions of its width, moved `dx`
+    /// along: the whole layer, shifted, inside a window that cuts off the rest.
+    /// Nil for a part too thin to draw.
+    ///
+    /// A window rather than a crop, because a crop is measured in the units of
+    /// whatever the layer's picture was drawn at, which a transition has no
+    /// business knowing; a window that clips what leaves it is the same
+    /// picture however it was drawn, and the layer inside keeps its own box,
+    /// corners and turn.
+    func slice(from a: Double, to b: Double, shiftedBy dx: CGFloat) -> Layer? {
+        let a = CGFloat(min(max(a, 0), 1)), b = CGFloat(min(max(b, 0), 1))
+        guard (b - a) * frame.width >= 0.5 else { return nil }
+        let window = CGRect(x: frame.minX + a * frame.width + dx, y: frame.minY,
+                            width: (b - a) * frame.width, height: frame.height)
+        var inside = self
+        inside.frame = frame.offsetBy(dx: dx - window.minX, dy: -window.minY)
+        return Layer(id: Layer.transitionWindowID(of: id), name: name,
+                     content: .group(GroupContent(children: [inside], isFrame: true)),
+                     frame: window, isVisible: true, isLocked: true)
+    }
+
+    /// The id the window round a slice of a transition is drawn under.
+    static func transitionWindowID(of id: UUID) -> UUID {
+        var bytes = withUnsafeBytes(of: id.uuid) { Array($0) }
+        bytes[1] ^= 0x5A
+        bytes[14] ^= 0x5A
+        return UUID(uuid: (bytes[0], bytes[1], bytes[2], bytes[3],
+                           bytes[4], bytes[5], bytes[6], bytes[7],
+                           bytes[8], bytes[9], bytes[10], bytes[11],
+                           bytes[12], bytes[13], bytes[14], bytes[15]))
     }
 
     /// The id the second picture of a transition is drawn under.
@@ -422,6 +547,24 @@ extension Layer {
 // MARK: - The few words the surface says
 
 public enum ClipTransitionCopy {
+
+    /// A length the way the panel's rows and the picker say it: seconds, to
+    /// one place (`video-transition-wt.html`, "0.6s", "spare 2.0s / 1.5s").
+    public static func seconds(_ ms: Int) -> String {
+        String(format: "%.1fs", Double(ms) / 1000)
+    }
+
+    /// What a cut has to spend, the few words along the top of the picker.
+    /// A side with nothing stopping it says "any".
+    public static func spareShort(_ cut: ClipCut) -> String {
+        "spare \(cut.spareAfterOutMS.map(seconds) ?? "any") / \(cut.spareBeforeInMS.map(seconds) ?? "any")"
+    }
+
+    /// What the transition on a cut is spending, for the Paid with row.
+    public static func paidWith(_ cut: ClipCut) -> String {
+        let each = seconds(cut.spentEachSideMS)
+        return "\(each) + \(each) of spare"
+    }
 
     /// A length, said the way somebody would say it.
     public static func length(_ ms: Int) -> String {

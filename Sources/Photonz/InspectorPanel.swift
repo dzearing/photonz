@@ -675,7 +675,10 @@ struct InspectorPanel: View {
         // Present only where there is a cut to be on: a clip somebody has split
         // at least once. A recording nobody has cut has no join, and a section
         // about a join that is not there would be a section about nothing.
-        if editorState.canWorkWithClipTransitions { set.insert(.transition) }
+        if editorState.canWorkWithClipTransitions, editorState.cutInHand != nil {
+            set.insert(.editPoint)
+            set.insert(.transition)
+        }
         // How fast the piece in hand plays (Next, `next-speed-a-stretch`).
         // Present wherever there is a piece to retime at all, which is a clip
         // with time under it: unlike Transition it does NOT need the clip to
@@ -842,6 +845,14 @@ struct InspectorPanel: View {
         if editorState.selectedComponentPiece != nil {
             set.subtract(Self.sectionsAPieceDoesNotOwn)
         }
+        // A CUT picked is the one thing in hand, the way a transition picked
+        // in Premiere fills Effect Controls: the panel speaks for the cut and
+        // nothing else, so its two sections are at the top rather than under
+        // everything the clip either side has (`video-transition-wt.html`).
+        if editorState.selectedEditPoint != nil || editorState.selectedClipCutIndex != nil,
+           set.contains(.editPoint) {
+            set.formIntersection([.layers, .editPoint, .transition, .library])
+        }
         return set
     }
 
@@ -925,6 +936,16 @@ struct InspectorPanel: View {
             })
         case .measurements:
             return AnyView(MeasurementsSectionAccessory())
+        case .editPoint, .transition:
+            // The mock's `.sec-h .mut`: where the cut is, and what is on it.
+            let note = id == .editPoint ? EditPointInspector.headerNote(editorState)
+                                        : TransitionInspector.headerNote(editorState)
+            guard let note else { return nil }
+            return AnyView(Text(note)
+                .font(.system(size: 10.5, weight: .medium))
+                .foregroundStyle(VideoKit.Palette.faint)
+                .panelReadout(note)
+                .playtestField("\(id.title) header"))
         case .keys:
             return AnyView(PropertyKeysSectionAccessory())
         case .library:
@@ -1108,6 +1129,8 @@ struct InspectorPanel: View {
             PropertyKeysInspector()
         case .reframe:
             ReframeInspector()
+        case .editPoint:
+            EditPointInspector()
         case .transition:
             TransitionInspector()
         case .speed:

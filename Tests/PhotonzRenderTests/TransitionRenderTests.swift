@@ -113,4 +113,77 @@ struct TransitionRenderTests {
         let onTheCut = try Self.middlePixel(document, store: store, atMS: 3000)
         #expect(onTheCut.r > 240 && onTheCut.g > 240 && onTheCut.b > 240)
     }
+
+    // MARK: - Between two clips
+
+    /// A red recording from 0 to 4s with a blue one butted on from 4s to 8s,
+    /// each with spare either side of the cut.
+    static func twoClips() throws -> (document: PhotonzDocument, red: MovieRef, blue: MovieRef) {
+        let red = MovieRef(pixelSize: canvas, durationMS: 6000)
+        let blue = MovieRef(pixelSize: canvas, durationMS: 6000)
+        var document = PhotonzDocument.recording(red, name: "red")
+        let first = document.layers[0].id
+        document.updateLayer(id: first) {
+            $0.time = LayerTime(inMS: 0, outMS: 4000, sourceInMS: 0, sourceLengthMS: 6000)
+        }
+        let v1 = try #require(document.timelineTracks.first { $0.name == "V1" }?.id)
+        var clip = Layer(name: "blue", content: .image(blue.frameRef(atSourceMS: 1000)),
+                         frame: CGRect(origin: .zero, size: canvas))
+        clip.movie = blue
+        clip.time = LayerTime(inMS: 0, outMS: 4000, sourceInMS: 1000, sourceLengthMS: 6000)
+        let landing = document.clipLanding(kind: .video, lengthMS: 4000, atMS: 4000,
+                                           over: .onto(v1), edit: .overwrite)
+        let landed = document.land(clip, at: landing)
+        let second = try #require(landed)
+        #expect(document.editPoints(onTrack: v1).count == 1)
+        _ = second
+        return (document, red, blue)
+    }
+
+    static func pixels(_ document: PhotonzDocument, red: MovieRef,
+                       atMS ms: Int, xs: [Double]) throws -> [(r: Int, g: Int, b: Int)] {
+        let store = ImageStore()
+        for request in document.movieFrames(atTimeMS: ms) {
+            let hex = request.movie == red ? "#FF0000" : "#0000FF"
+            store.register(try #require(SolidImage.make(size: canvas, hex: hex)), as: request.ref)
+        }
+        let image = try #require(DocumentRenderer().render(document.drawn(atTimeMS: ms), store: store))
+        return try xs.map { try pixel(image, x: Int(Double(image.width) * $0), y: image.height / 2) }
+    }
+
+    @Test("Half way through a push between two clips, the left is the outgoing shot and the right the incoming")
+    func aPushBetweenTwoClips() throws {
+        var (document, red, _) = try Self.twoClips()
+        let place = TimelineCutPlace.edit(outgoing: document.layers[0].id,
+                                          incoming: try #require(document.layers.last).id)
+        let put = document.setTransition(ClipTransition(kind: .push, lengthMS: 1000), at: place)
+        #expect(put)
+        let seen = try Self.pixels(document, red: red, atMS: 4000, xs: [0.25, 0.75])
+        #expect(seen[0].r > 200 && seen[0].b < 40)
+        #expect(seen[1].b > 200 && seen[1].r < 40)
+    }
+
+    @Test("A quarter of the way through a wipe, only the left quarter is the incoming shot")
+    func aWipeBetweenTwoClips() throws {
+        var (document, red, _) = try Self.twoClips()
+        let place = TimelineCutPlace.edit(outgoing: document.layers[0].id,
+                                          incoming: try #require(document.layers.last).id)
+        let put = document.setTransition(ClipTransition(kind: .wipe, lengthMS: 1000), at: place)
+        #expect(put)
+        let seen = try Self.pixels(document, red: red, atMS: 3750, xs: [0.1, 0.5])
+        #expect(seen[0].b > 200 && seen[0].r < 40)
+        #expect(seen[1].r > 200 && seen[1].b < 40)
+    }
+
+    @Test("On the cut of a dissolve between two clips, both shots are on screen")
+    func aDissolveBetweenTwoClips() throws {
+        var (document, red, _) = try Self.twoClips()
+        let place = TimelineCutPlace.edit(outgoing: document.layers[0].id,
+                                          incoming: try #require(document.layers.last).id)
+        let put = document.setTransition(ClipTransition(kind: .dissolve, lengthMS: 1000), at: place)
+        #expect(put)
+        let seen = try Self.pixels(document, red: red, atMS: 4000, xs: [0.5])
+        #expect(seen[0].r > 120 && seen[0].r < 230)
+        #expect(seen[0].b > 120 && seen[0].b < 230)
+    }
 }

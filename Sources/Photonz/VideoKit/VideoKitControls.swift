@@ -132,16 +132,25 @@ extension VideoKit {
 
         var body: some View {
             FieldRow(label: label) {
-                Menu {
-                    items
-                } label: {
-                    SelectFace(value: value, swatch: swatch, size: size)
-                }
-                .menuStyle(.button)
-                .buttonStyle(.plain)
-                .menuIndicator(.hidden)
-                .accessibilityLabel(label)
-                .accessibilityValue(value)
+                // The mock's face, with a real pop-up button laid over it to
+                // take the click. A borderless menu is the one AppKit builds as
+                // a real pop-up button, which a walk can open and choose from
+                // like any other menu in the panel, and it cannot wear a
+                // face of its own, so it wears this one.
+                SelectFace(value: value, swatch: swatch, size: size)
+                    .overlay {
+                        Menu {
+                            items
+                        } label: {
+                            Text(value)
+                        }
+                        .menuStyle(.borderlessButton)
+                        .menuIndicator(.hidden)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .opacity(0.011)
+                        .accessibilityLabel(label)
+                        .accessibilityValue(value)
+                    }
             }
         }
     }

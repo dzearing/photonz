@@ -236,6 +236,30 @@ extension EditorState {
         return rows
     }
 
+    /// The menu on the edit point between two clips, or on the transition
+    /// drawn over one.
+    func timelineEditPointMenuRows(_ point: TimelineEditPoint) -> [MenuRow] {
+        let place = TimelineCutPlace.edit(outgoing: point.outgoing, incoming: point.incoming)
+        guard Experiments.shared.transitionsAtACutEnabled,
+              let cut = document?.documentCut(at: place)?.cut,
+              !isClipLocked(point.incoming), !isClipLocked(point.outgoing) else { return [] }
+        var rows: [MenuRow] = [
+            .submenu("Add Transition", ClipTransitionKind.allCases.map { kind -> MenuRow in
+                if cut.transition?.kind == kind { return .toggle(kind.title, isOn: true) {} }
+                return .command(kind.title, enabled: cut.canAfford(kind)) {
+                    self.setTransition(kind, at: place)
+                }
+            })
+        ]
+        if cut.transition != nil {
+            rows.append(.command("Remove Transition") {
+                self.pickCut(place)
+                self.setTransition(nil, at: place)
+            })
+        }
+        return rows
+    }
+
     /// Roll a join to where the playhead is: the piece before it grows by what
     /// the piece after it gives up, and the clip stays the length it was.
     func rollCutToPlayhead(layerID: UUID, cut index: Int) {

@@ -491,15 +491,15 @@ struct EditorCommands: Commands {
             if Experiments.shared.transitionsAtACutEnabled {
                 Menu("Transition at Cut") {
                     Button("Hard Cut") { editor?.setClipTransitionInHand(nil) }
-                        .disabled(editor?.clipCutInHand?.transition == nil)
+                        .disabled(editor?.cutInHand?.cut.transition == nil)
                     Divider()
                     ForEach(ClipTransitionKind.allCases, id: \.self) { kind in
                         Button(kind.title) { editor?.setClipTransitionInHand(kind) }
-                            .disabled(!(editor?.clipCutInHand?.canAfford(kind) ?? false))
+                            .disabled(!(editor?.cutInHand?.cut.canAfford(kind) ?? false))
                     }
                 }
                 .disabled(!(editor?.canWorkWithClipTransitions ?? false)
-                          || editor?.clipCutInHand == nil)
+                          || editor?.cutInHand == nil)
                 Divider()
             }
             // Sound rides the same time axis as the picture, so there is no

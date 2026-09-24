@@ -240,7 +240,9 @@ extension PhotonzDocument {
         shown.layers = shown.layers.flatMap {
             $0.withTransitionDrawn(atTimeMS: moment, framesInHand: framesInHand)
         }
-        return shown
+        // ...and so does a cut between two clips (`EditPointTransitions.swift`).
+        guard hasEditPointTransitions else { return shown }
+        return withEditPointTransitionsDrawn(shown, atMS: moment, framesInHand: framesInHand)
     }
 }
 

@@ -123,6 +123,17 @@ struct ClipPiecesBar: View {
             ForEach(0...pieces.count, id: \.self) { edge in
                 grip(pieces, edge: edge, x0: x0, ruler: ruler)
             }
+            // What the tiles at a join grow out of: a point on the cut, apart
+            // from the grip, which is redrawn as the cut is picked.
+            if kind != nil, !isLinkedSound, Experiments.shared.transitionsAtACutEnabled {
+                ForEach(pieces.cutIndices, id: \.self) { index in
+                    Color.clear
+                        .frame(width: 1, height: barHeight)
+                        .allowsHitTesting(false)
+                        .transitionPicker(at: .join(clip: layerID, index: index), editorState: editorState)
+                        .offset(x: x0 + laneWidth * ruler.fraction(spanningMS: Double(pieces.startMS(ofPiece: index))))
+                }
+            }
             if isSound {
                 levelLine(pieces, x0: x0, ruler: ruler)
                 if kind != nil, isPicked || isHovered {
@@ -554,7 +565,7 @@ struct ClipPiecesBar: View {
             let picked = editorState.selectedClipCutIndex == cut.index && isPicked
             ZStack {
                 if kind != nil {
-                    VideoKit.TransitionBand(isDip: transition.kind != .dissolve,
+                    VideoKit.TransitionBand(isDip: !transition.kind.needsOverlap,
                                             isSelected: picked, height: barHeight)
                 } else {
                 RoundedRectangle(cornerRadius: 3)
@@ -573,6 +584,10 @@ struct ClipPiecesBar: View {
             }
             .frame(width: max(3, min(width, laneWidth + TimelineSpan.slack * 2)), height: barHeight)
             .contentShape(Rectangle())
+            // One click picks the cut; two open its tiles, to change what is on it.
+            .onTapGesture(count: 2) {
+                editorState.openTransitionPicker(at: .join(clip: layerID, index: cut.index))
+            }
             .onTapGesture { editorState.selectClipCut(layerID: layerID, index: cut.index) }
             .contextMenu {
                 if kind != nil { TimelineCutMenu(layerID: layerID, cut: cut.index) }
@@ -641,9 +656,14 @@ struct ClipPiecesBar: View {
                 // and the panel is talking about what happens there. Dragging
                 // the same grip still trims, because the two gestures are told
                 // apart by whether the hand moved.
+                // With transitions on, the click also opens the tiles right at
+                // the cut (`video-transition-wt.html`, "At this cut").
                 .onTapGesture {
                     guard edge > 0, edge < pieces.count else { return }
                     editorState.selectClipCut(layerID: layerID, index: edge)
+                    if kind != nil, !isLinkedSound {
+                        editorState.openTransitionPicker(at: .join(clip: layerID, index: edge))
+                    }
                 }
                 // A join is a cut, so its right click is the cut's menu; the
                 // bar's two ends are the clip's own and answer with the clip's.
@@ -656,10 +676,15 @@ struct ClipPiecesBar: View {
                         }
                     }
                 }
+                // Pressable by a walk by the same name, marked before the
+                // offset below so the mark moves with the grip.
+                .playtestControl(Self.gripName(layerName: fieldName, edge: edge, of: pieces.count),
+                                 detail: "Timeline")
                 // The first grip sits inside the bar and the rest hang off the
                 // join to its left, so a grip never covers the piece after it.
                 .offset(x: x - (edge == 0 ? 0 : width))
                 .playtestField(Self.gripName(layerName: fieldName, edge: edge, of: pieces.count))
+
                 .panelHelp(edge == 0
                            ? "Where the clip starts. Drag it: nothing is thrown away."
                            : (edge == pieces.count

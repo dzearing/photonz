@@ -17,8 +17,7 @@ import PhotonzCore
 /// The band under a hand: which cut it is on, what it was when it was grabbed,
 /// and how long the hand has made it.
 struct ClipTransitionDragSession: Equatable {
-    let layerID: UUID
-    let cutIndex: Int
+    let place: TimelineCutPlace
     /// Which end is in the hand. Both ends do the same thing — the band grows
     /// or shrinks about the cut — because a transition is measured ACROSS the
     /// join and never sits to one side of it.
@@ -26,6 +25,10 @@ struct ClipTransitionDragSession: Equatable {
     let startedAtMS: Int
     /// What the length would be if you let go now.
     var landingMS: Int
+
+    /// The clip whose bar the band is drawn on: the clip itself for a join,
+    /// the arriving clip for a cut between two.
+    var layerID: UUID { place.arrivingClip }
 }
 
 extension EditorState {
@@ -81,35 +84,54 @@ extension EditorState {
 
     // MARK: What can go on it
 
-    /// Whether transitions are reachable at all: the switch is on, the document
-    /// has time, and the clip in hand has been cut at least once. A recording
-    /// nobody has cut has no join to put anything on, and saying so by having
-    /// no command is better than a command that explains itself afterwards.
-    var canWorkWithClipTransitions: Bool {
-        Experiments.shared.transitionsAtACutEnabled && documentHasTime && !clipCutsInHand.isEmpty
+    /// **The cut the panel, the picker and the commands act on**, wherever it
+    /// is: the edit point between two clips when one is picked, else the join
+    /// of the clip in hand (`clipCutInHand`).
+    var cutInHand: DocumentCut? {
+        guard let document else { return nil }
+        if let point = selectedEditPoint {
+            return document.documentCut(at: .edit(outgoing: point.outgoing, incoming: point.incoming))
+        }
+        guard let id = clipInHandID, let cut = clipCutInHand else { return nil }
+        return document.documentCut(at: .join(clip: id, index: cut.index))
     }
 
-    /// What the cut in hand can take, in the order the panel offers them: every
-    /// kind, each with whether this cut can pay for it and why not.
+    /// Whether transitions are reachable at all: the switch is on, the document
+    /// has time, and there is a cut to put one on — an edit point picked
+    /// between two clips, or a clip in hand that has been cut at least once.
+    var canWorkWithClipTransitions: Bool {
+        guard Experiments.shared.transitionsAtACutEnabled, documentHasTime else { return false }
+        if selectedEditPoint != nil { return cutInHand != nil }
+        return !clipCutsInHand.isEmpty
+    }
+
+    /// What the cut in hand can take, in the order the picker offers them:
+    /// every kind, each with whether this cut can pay for it.
     var clipTransitionOffers: [(kind: ClipTransitionKind, canAfford: Bool, longestMS: Int)] {
-        guard let cut = clipCutInHand else { return [] }
+        guard let cut = cutInHand?.cut else { return [] }
         return ClipTransitionKind.allCases.map {
             ($0, cut.canAfford($0), cut.longestMS(of: $0))
         }
     }
 
     /// Put a transition on the cut in hand, or take one off with nil.
+    func setClipTransitionInHand(_ kind: ClipTransitionKind?) {
+        guard canWorkWithClipTransitions, let place = cutInHand?.place else { return }
+        setTransition(kind, at: place)
+    }
+
+    /// Put a transition on a cut, or take one off with nil.
     ///
     /// The length is the one that was there, kept where the new kind can pay
-    /// for it, else what the panel offers by default. **Clamped here, at the
-    /// gesture, and refused by the model**: the surface knows what was meant
-    /// and can say what it did; the model never guesses.
-    func setClipTransitionInHand(_ kind: ClipTransitionKind?) {
-        guard canWorkWithClipTransitions, let cut = clipCutInHand,
-              let id = clipInHandID else { return }
+    /// for it, else the usual length. **Clamped here, at the gesture, and
+    /// refused by the model**: the surface knows what was meant and can say
+    /// what it did; the model never guesses.
+    func setTransition(_ kind: ClipTransitionKind?, at place: TimelineCutPlace) {
+        guard Experiments.shared.transitionsAtACutEnabled,
+              let cut = document?.documentCut(at: place)?.cut else { return }
         pauseDocument()
         guard let kind else {
-            perform { $0.setClipTransition(id, atCut: cut.index, to: nil) }
+            perform { $0.setTransition(nil, at: place) }
             documentMomentChanged()
             return
         }
@@ -117,42 +139,91 @@ extension EditorState {
         guard longest >= ClipTransition.shortestMS else { return }
         let asked = cut.transition?.lengthMS ?? ClipTransition.defaultLengthMS
         let length = min(max(ClipTransition.shortestMS, asked), longest)
-        perform {
-            $0.setClipTransition(id, atCut: cut.index,
-                                 to: ClipTransition(kind: kind, lengthMS: length))
+        perform { $0.setTransition(ClipTransition(kind: kind, lengthMS: length), at: place) }
+        pickCut(place)
+        // The playhead goes to the cut, so the canvas shows what was just put
+        // on it: both shots at once, or the colour it dips through.
+        if let at = document?.documentCut(at: place)?.atMS {
+            documentTimeMS = min(max(0, at), lastDocumentTimeMS)
         }
-        selectClipCut(layerID: id, index: cut.index)
         documentMomentChanged()
     }
 
     /// How long the transition on the cut in hand is asked to be.
     func setClipTransitionLength(_ ms: Int) {
-        guard canWorkWithClipTransitions, let cut = clipCutInHand,
-              let existing = cut.transition, let id = clipInHandID else { return }
-        let longest = cut.longestMS(of: existing.kind)
+        guard canWorkWithClipTransitions, let inHand = cutInHand,
+              let existing = inHand.cut.transition else { return }
+        let longest = inHand.cut.longestMS(of: existing.kind)
         let length = min(max(ClipTransition.shortestMS, ms), longest)
         guard length != existing.lengthMS else { return }
         pauseDocument()
         perform {
-            $0.setClipTransition(id, atCut: cut.index,
-                                 to: ClipTransition(kind: existing.kind, lengthMS: length))
+            $0.setTransition(ClipTransition(kind: existing.kind, lengthMS: length), at: inHand.place)
         }
         documentMomentChanged()
+    }
+
+    /// The lengths the Length dropdown offers at the cut in hand: the usual
+    /// stops this cut can pay for, the one it has now, and the longest it can
+    /// take, in order.
+    var clipTransitionLengthOffers: [Int] {
+        guard let inHand = cutInHand, let kind = inHand.cut.transition?.kind else { return [] }
+        let longest = inHand.cut.longestMS(of: kind)
+        var stops = Set(ClipTransition.lengthStopsMS.filter { $0 <= longest })
+        if let now = inHand.cut.drawnTransition?.lengthMS { stops.insert(now) }
+        if longest >= ClipTransition.shortestMS, longest < 10_000 { stops.insert(longest) }
+        return stops.sorted()
+    }
+
+    /// Pick a cut wherever it is, the way a click on it does.
+    func pickCut(_ place: TimelineCutPlace) {
+        switch place {
+        case let .join(clip, index):
+            selectClipCut(layerID: clip, index: index)
+        case let .edit(outgoing, incoming):
+            guard let trackID = document?.trackID(ofClip: incoming),
+                  let point = document?.editPoints(onTrack: trackID)
+                      .first(where: { $0.outgoing == outgoing && $0.incoming == incoming }) else { return }
+            if selectedEditPoint != point { pickEditPoint(point) }
+        }
+    }
+
+    // MARK: The picker at the cut
+
+    /// Open the tiles at a cut (`video-transition-wt.html`, "At this cut").
+    /// Picking the cut comes first, so the panel is already talking about the
+    /// cut the picker is.
+    func openTransitionPicker(at place: TimelineCutPlace, fromPanel: Bool = false) {
+        guard Experiments.shared.transitionsAtACutEnabled, documentHasTime,
+              document?.documentCut(at: place) != nil else { return }
+        pickCut(place)
+        transitionPickerFromPanel = fromPanel
+        transitionPickerPlace = place
+    }
+
+    /// Put the tiles away.
+    func closeTransitionPicker() {
+        if transitionPickerPlace != nil { transitionPickerPlace = nil }
     }
 
     // MARK: The band under a hand
 
     /// Take hold of one end of the band drawn over a cut.
-    func beginClipTransitionDrag(layerID: UUID, cutIndex: Int, leadingEdge: Bool) {
-        guard let cut = document?.layer(id: layerID)?.clipPieces?.cut(at: cutIndex),
-              let drawn = cut.drawnTransition else { return }
+    func beginClipTransitionDrag(place: TimelineCutPlace, leadingEdge: Bool) {
+        guard let drawn = document?.documentCut(at: place)?.cut.drawnTransition else { return }
         pauseDocument()
-        selectClipCut(layerID: layerID, index: cutIndex)
-        clipTransitionDrag = ClipTransitionDragSession(layerID: layerID, cutIndex: cutIndex,
+        closeTransitionPicker()
+        pickCut(place)
+        clipTransitionDrag = ClipTransitionDragSession(place: place,
                                                        grabbedLeadingEdge: leadingEdge,
                                                        startedAtMS: drawn.lengthMS,
                                                        landingMS: drawn.lengthMS)
         watchForClipTransitionEscape()
+    }
+
+    /// Take hold of one end of the band over one of a clip's own joins.
+    func beginClipTransitionDrag(layerID: UUID, cutIndex: Int, leadingEdge: Bool) {
+        beginClipTransitionDrag(place: .join(clip: layerID, index: cutIndex), leadingEdge: leadingEdge)
     }
 
     /// The hand moved. Nothing is written down: the bar and the canvas both
@@ -165,7 +236,7 @@ extension EditorState {
     /// transition is measured across the join.
     func updateClipTransitionDrag(byMS delta: Int) {
         guard var session = clipTransitionDrag,
-              let cut = document?.layer(id: session.layerID)?.clipPieces?.cut(at: session.cutIndex),
+              let cut = document?.documentCut(at: session.place)?.cut,
               let kind = cut.transition?.kind else { return }
         let travelled = session.grabbedLeadingEdge ? -delta : delta
         let longest = cut.longestMS(of: kind)
@@ -181,11 +252,9 @@ extension EditorState {
         guard let session = clipTransitionDrag else { return }
         clipTransitionDrag = nil
         guard session.landingMS != session.startedAtMS,
-              let cut = document?.layer(id: session.layerID)?.clipPieces?.cut(at: session.cutIndex),
-              let kind = cut.transition?.kind else { return }
+              let kind = document?.documentCut(at: session.place)?.cut.transition?.kind else { return }
         perform {
-            $0.setClipTransition(session.layerID, atCut: session.cutIndex,
-                                 to: ClipTransition(kind: kind, lengthMS: session.landingMS))
+            $0.setTransition(ClipTransition(kind: kind, lengthMS: session.landingMS), at: session.place)
         }
         documentMomentChanged()
     }
@@ -203,17 +272,17 @@ extension EditorState {
     func withDraggedClipTransition(_ document: PhotonzDocument) -> PhotonzDocument {
         guard let session = clipTransitionDrag else { return document }
         var document = document
-        guard let kind = document.layer(id: session.layerID)?
-            .clipPieces?.transition(atCut: session.cutIndex)?.kind else { return document }
-        document.setClipTransition(session.layerID, atCut: session.cutIndex,
-                                   to: ClipTransition(kind: kind, lengthMS: session.landingMS))
+        guard let kind = document.documentCut(at: session.place)?.cut.transition?.kind else {
+            return document
+        }
+        document.setTransition(ClipTransition(kind: kind, lengthMS: session.landingMS), at: session.place)
         return document
     }
 
     /// What the capsule over the band says while it is being dragged.
     var clipTransitionReadout: String? {
         guard let session = clipTransitionDrag else { return nil }
-        return ClipTransitionCopy.length(session.landingMS)
+        return ClipTransitionCopy.seconds(session.landingMS)
     }
 
     private func watchForClipTransitionEscape() {

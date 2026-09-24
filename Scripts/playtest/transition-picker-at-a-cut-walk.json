@@ -1,0 +1,350 @@
+{
+  "out": "/tmp/photonz-playtest/transition-picker-at-a-cut-walk",
+  "seed": "Click the cut between two clips and a picker opens right there, AT THIS CUT, with six animated tiles that each say whether they need an overlap; the ones the cut cannot pay for say no spare. Picking one puts it on the cut as a band over both clips, and Properties shows Edit point and Transition as short label and value rows with Type and Length dropdowns. At Next defaults, no flag set.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "scratch": [
+      "sample:recording as b-roll.mp4"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "clipDragEndIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 7.0,
+      "count": 1
+    },
+    {
+      "do": "dropOnTimeline",
+      "file": "scratch/b-roll.mp4",
+      "track": "V1",
+      "seconds": 6.95
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "track": "V1",
+      "startsAt": 7.0,
+      "count": 1
+    },
+    {
+      "do": "action",
+      "action": "clipDragStartIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "track": "V1",
+      "startsAt": 7.0,
+      "count": 1
+    },
+    {
+      "do": "describe",
+      "stage": "1-two-clips",
+      "note": "The recording trimmed to seven seconds with b-roll butted on at 0:07, its first couple of seconds trimmed off. Both sides of the cut now have spare frames: the recording runs on past its out point and b-roll has frames before its in point"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-two-clips-meet"
+    },
+    {
+      "do": "press",
+      "control": "Edit point Tutorial Sample to b-roll"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Cross dissolve",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Blur through",
+      "present": true
+    },
+    {
+      "do": "panel",
+      "stage": "2-the-picker"
+    },
+    {
+      "do": "describe",
+      "stage": "2-picker-at-the-cut",
+      "note": "THE FIRST TEST: one click on the cut and the picker opens right there, AT THIS CUT, with what this cut can spend along its top and six playing tiles, each saying whether it needs an overlap. Properties already shows the cut: Out, In, and the spare either side"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-picker-at-the-cut"
+    },
+    {
+      "do": "expect",
+      "field": "Out",
+      "reads": "Tutorial Sample"
+    },
+    {
+      "do": "expect",
+      "field": "In",
+      "reads": "b-roll"
+    },
+    {
+      "do": "expect",
+      "field": "Spare after",
+      "reads": "1.0s"
+    },
+    {
+      "do": "expect",
+      "field": "Transition header",
+      "reads": "None"
+    },
+    {
+      "do": "press",
+      "control": "Cross dissolve",
+      "in": "At this cut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Transition Tutorial Sample to b-roll",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Cross dissolve"
+    },
+    {
+      "do": "expect",
+      "menu": "Length",
+      "reads": "0.4s"
+    },
+    {
+      "do": "expect",
+      "field": "Paid with",
+      "reads": "0.2s + 0.2s of spare"
+    },
+    {
+      "do": "panel",
+      "stage": "3-dissolve"
+    },
+    {
+      "do": "describe",
+      "stage": "3-a-dissolve-between-two-clips",
+      "note": "THE SECOND TEST: a cross dissolve between two different clips, drawn as a band over both of them, and nothing moved. The panel reads Type and Length as dropdowns and says what the overlap is paid with. The playhead is on the cut, so the canvas shows both shots at once"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-a-dissolve-between-two-clips"
+    },
+    {
+      "do": "action",
+      "action": "clipTransitionDragLonger"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-longer",
+      "note": "THE THIRD TEST: the band's end dragged outwards and the dissolve is longer: the band is wider and the Length row and Paid with row keep up"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-dragged-longer"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Type",
+      "choose": "Push"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-push",
+      "note": "THE FOURTH TEST: the Type dropdown changed it to a push. On the cut the outgoing shot is half way off to the left and b-roll half way in from the right, each cropped inside the frame"
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Push"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-a-push"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Type",
+      "choose": "Dip to black"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Paid with",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "6-dip",
+      "note": "A dip needs no overlap, so Paid with goes away and the band is drawn as an outline. The frame on the cut is black"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-a-dip-to-black"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Edit point Tutorial Sample to b-roll",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "7-undone",
+      "note": "Four undos take the dip, the push, the longer drag and the dissolve back one at a time, and the cut is hard again"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-a-hard-cut-again"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekThreeQuarters"
+    },
+    {
+      "do": "action",
+      "action": "clipSplit"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "press",
+      "control": "b-roll join 1"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "8-the-picker-on-a-join"
+    },
+    {
+      "do": "expect",
+      "field": "Out",
+      "reads": "Piece 1"
+    },
+    {
+      "do": "expect",
+      "control": "Wipe",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "8-a-join-inside-one-clip",
+      "note": "THE FIFTH TEST: b-roll cut in two with the blade, and a click on the join inside it opens the same picker at that cut. Its two sides are pieces of one clip, and the panel says Piece 1 and Piece 2"
+    },
+    {
+      "do": "press",
+      "control": "Wipe",
+      "in": "At this cut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Wipe"
+    },
+    {
+      "do": "snapshot",
+      "name": "9-a-wipe-inside-one-clip"
+    }
+  ]
+}

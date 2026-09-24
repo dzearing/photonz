@@ -196,3 +196,41 @@ finishes; an icon repeats.
 - **A blur is the only effect on offer over time.** It is the one the video work
   needs and the one the task named. A glow or a shadow changing over a shot is
   one case each in `MotionProperty`, added the day somebody wants it.
+
+## 9. Between two clips, six kinds, and the picker at the cut (2026-09-23)
+
+The first version lived only on joins inside one clip and offered three
+kinds. It now reaches the cut an editor actually makes and the six tiles
+the user's mock draws (`pages/video-transition-wt.html`).
+
+- **Between two clips.** Where one clip ends on a picture track and the next
+  starts on the same millisecond (`TimelineEditPoint`), the transition is
+  written on the arriving clip (`Layer.arrivalTransition`), for the same
+  reason a join's is written on the arriving piece. It is only drawn while the
+  two clips meet; part them and nothing is drawn. The arithmetic is the join's
+  own, asked of the outgoing clip's last piece and the incoming clip's first
+  (`EditPointTransitions.swift`, `editPointCut`). One place type,
+  `TimelineCutPlace` (`.join` or `.edit`), and one `DocumentCut`, so the panel,
+  the picker, the band and the menus never ask which kind of cut they have.
+  An overwrite that splits a clip clears the arrival on the later part.
+- **Six kinds.** Cross dissolve, Dip to black, Dip to white, Push, Wipe, Blur
+  through. The four without a dip colour need an overlap. All four are drawn by
+  `Layer.transitionDrawn` from an outgoing and an incoming picture, for a join
+  and for an edit point alike. Push and wipe are drawn through clipping windows
+  (a frame group round the shifted shot), never through `crop`, whose units
+  depend on how the picture was drawn: a crop-based push came out squeezed on
+  the real canvas while its unit test passed.
+- **Rendering.** `drawn(atTimeMS:)` replaces the clip on screen with the
+  transition's pictures; `movieFrames(atTimeMS:)` asks for the borrowed clip's
+  frame read into its spare. Both return early when no clip carries an arrival.
+- **The surface.** A click on an edit point, or on a join inside a clip, picks
+  the cut and opens `TransitionPicker` there ("At this cut", spare along the
+  top, six `AnimatedTransitionThumbnail` tiles saying needs overlap, no overlap
+  or no spare). A double click on a band reopens it. With a cut picked, the
+  panel shows only Edit point (Out, In, Spare after, Spare before) and
+  Transition (Add transition, or Type and Length dropdowns and Paid with).
+  Putting a transition on moves the playhead to the cut; picking a cut does not,
+  as in Premiere.
+- **Not yet:** the mock's "The overlap sits" and "Hold on black" rows, and the
+  dashed spare strips (task `a-transition-can-sit-before-across-or-after-the`).
+  Sound still cuts hard at an edit point.
