@@ -1802,6 +1802,24 @@ cluster] → [measure/crop] → Hand → Zoom`.
   mirror the same tools.)
 - **Draw:** Select · Pen · Brush · Eraser · Shape · Text · Measure · Hand · Zoom.
 
+**Which letters a document with time gives the timeline** (added 2026-09-24).
+The keyboard lives in one of two places, the timeline or the canvas, and a thin
+accent ring round the timeline dock says when it is the timeline.
+
+- **The timeline has it from the moment it appears**: a recording opening, a
+  clip dropped into a picture. A press anywhere in the dock hands it back.
+  Premiere's rule: the timeline has the keys unless you are drawing or typing.
+- **While the timeline has it:** J / K / L shuttle (K+J/L a frame), I and O
+  mark, M adds a marker, V Select, B Blade, `=` `-` `\` zoom, ← → a frame
+  (⇧ five), ↑ ↓ edit points, ⌫ lift, ⇧⌫ ripple delete.
+- **Everywhere, wherever the keyboard is:** Space, Home, End, ⌘K split, ⌥I / ⌥O
+  clear the marks. No picture tool wants them.
+- **The picture tools those letters would pick** (K Lens, L Line, I Measure, O
+  Ellipse, M Marquee, A Arrow) are reached from the tool bar, always, and by
+  their letter once the canvas has the keyboard: a press on the canvas (or
+  anywhere else outside the dock) gives it to the canvas and the ring goes. A letter the timeline does not use still
+  reaches its tool from either place. Typing in a field keeps every key.
+
 App-specific tools slot between the create cluster and the view cluster (Hand/
 Zoom). If an app lacks a shared tool (e.g. no Measure), omit it — never re-slot
 the ones it has.

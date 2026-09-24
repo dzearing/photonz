@@ -19573,3 +19573,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Bug: zoomed in, every ruler number was drawn left of its moment by the x of the first visible tick (80.6 pt at 4x on five minutes). `VideoKit.TimeRuler` laid numbers out with alignment guides in a ZStack sized to its children; a clear full-width first child now pins the stack to the lane.
 - New walk check: `expectTimeline` takes `rulerMatches` and `rulerAtPlayhead`, read off probe-only markers on the ruler, each number and the playhead line (`Playtest/PlaytestRulerMark.swift`), so it measures where things were DRAWN, not the ruler's sums.
 - Walk `ruler-names-the-right-time-zoomed-walk` (Next defaults): Fit, 4x, deepest zoom, deepest further along, Fit again. Audit `queue/audits/2026-09-24-ruler-at-zoom.json`.
+
+## 2026-09-24: Premiere's timeline keys work the moment a recording opens (go loop, premiere-s-timeline-keys-work-the-moment-a-recor)
+
+- The timeline takes the keyboard the moment the dock appears (`TimelineDock.swift` CatcherView calls `takeTimelineKeyboard()` on joining the window), so L plays, K stops, J reverses, I/O mark, M marks and B picks the Blade with no click first. A press anywhere outside the dock still hands the letters back to the picture tools; letters the timeline does not use (P, T, U...) pick their tools from either place.
+- Rule written once: UX-PATTERNS D4 "Which letters a document with time gives the timeline"; `docs/design/video.md` and the Premiere gap report updated (Gap 2 closed).
+- New walk `timeline-keys-on-open-walk` (Next defaults, L is its first act); `premiere-keys-on-the-timeline-walk` now expects the timeline to hold the keys on open and clicks the picture before its canvas steps. Audit `queue/audits/2026-09-24-timeline-keys-on-open.json` with real captures.
+- Also fixed: 2271b8e8 had broken `Scripts/test.sh`'s video-kit-stands-alone typecheck; the ruler's walk markers moved to `VideoKit/VideoKitRulerMark.swift` (no-op outside probe builds).
+- Open: the export-size load flake failed 4 of 6 full test runs today; logged on its p2 task.

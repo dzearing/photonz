@@ -990,8 +990,9 @@ final class EditorState {
     /// J, K and L's ladder, and whether K is down right now.
     @ObservationIgnored var timelineShuttle = TimelineShuttle()
     @ObservationIgnored var isShuttleKHeld = false
-    /// The timeline has the keyboard: a press in the dock handed it over and
-    /// a press on the canvas takes it back. While it does, the Premiere keys
+    /// The timeline has the keyboard: it has it the moment the timeline
+    /// shows up, a press anywhere else in the window takes it away and a
+    /// press in the dock hands it back. While it does, the Premiere keys
     /// that are also Photoshop tool letters mean the timeline's thing.
     var timelineHasKeyboard = false
     /// The timeline's own tool: the Blade, or the Select arrow when false.

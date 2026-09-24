@@ -7,7 +7,11 @@
 // hang an invisible marker behind themselves, and `expectTimeline` reads the
 // markers' frames, which are where a person sees them.
 //
-// Probe builds only; the shipping app compiles the no-op at the bottom.
+// Probe builds only; the shipping app compiles the no-op at the bottom. It
+// lives in the video kit, not with the rest of the walk harness, because the
+// kit's ruler wears it and the kit has to compile on its own (the gallery and
+// `Scripts/test.sh` typecheck it with nothing else), where the no-op is what
+// it gets.
 import SwiftUI
 
 /// What a marker stands behind.

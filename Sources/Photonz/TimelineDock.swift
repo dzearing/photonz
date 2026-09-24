@@ -758,6 +758,10 @@ private struct TimelineKeyboard: NSViewRepresentable {
             guard let window, let editorState else { return }
             TimelineKeyRouter.register(editorState, in: window)
             registeredWindow = window
+            // The timeline shows up holding the keyboard, so a recording plays
+            // on L the moment it opens, as in Premiere. A press on the canvas
+            // is what hands the picture tools their letters back.
+            editorState.takeTimelineKeyboard()
             monitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
                 guard let self, let window = self.window, event.window === window else { return event }
                 let point = self.convert(event.locationInWindow, from: nil)

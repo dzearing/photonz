@@ -1,0 +1,27 @@
+{
+  "feature": "Premiere's timeline keys work the moment a recording opens",
+  "epic": "video-cutting",
+  "summary": "Open a recording and J, K, L, I, O, M and B do what they do in Premiere straight away, with no click on the timeline first. A click on the picture still gives Photoshop's letters back to the picture tools.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    { "do": "Open any screen recording and press L before touching anything.", "shot": "2026-09-24-timeline-keys-on-open-1.png" },
+    { "do": "Press L again for double speed, K to stop, J to play backwards, K to stop." },
+    { "do": "Press I, move the playhead with Shift and the right arrow, press O, then M.", "shot": "2026-09-24-timeline-keys-on-open-2.png" },
+    { "do": "Press B: the timeline's Blade lights. Press V to put it down." },
+    { "do": "Press P: the Pen still picks up, because the timeline has no use for P." },
+    { "do": "Click the picture, then press L: the blue ring round the timeline goes and the Line tool lights.", "shot": "2026-09-24-timeline-keys-on-open-3.png" },
+    { "do": "Click anywhere in the timeline and press L: it plays again." }
+  ],
+  "evaluate": [
+    "Does L playing the moment a recording opens feel like Premiere, with nothing to learn first?",
+    "When you want the Line or Measure tool on a video, is clicking the picture first (or the tool bar) a way you would find on your own?",
+    "Is the thin blue ring round the timeline enough to tell you which of the two the keys are talking to?",
+    "Does a click on the inspector or the tool bar taking the keys away from the timeline ever surprise you mid-edit?"
+  ],
+  "rough": [
+    "Any press outside the timeline, including the inspector and the Layers list, hands the keys to the picture, which is stricter than Premiere, where J, K and L keep working in most panels. Kept so the arrow keys and Delete still reach a list you clicked into.",
+    "The tool bar's hover tips still say Line (L), Measure (I) and so on, and on a video those letters only pick the tool after a click on the picture.",
+    "The blue ring round the timeline is not in video.html; it was added by the earlier keys task because one letter now means two things, and it is what tells you where the keys are.",
+    "A recording still opens with the Trim bar up over the picture; that is the trim task's to settle, and J, K and L work through it."
+  ]
+}

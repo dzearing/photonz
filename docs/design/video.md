@@ -204,9 +204,13 @@ canvas's rule; the timeline's own keys are below.
 
 Most of Premiere's timeline keys are Photoshop tool letters here too (K the
 Lens, L the Line, I Measure, O the Ellipse, A the Arrow, M the marquee). So the
-window has Premiere's panel focus: **the canvas has the keyboard until you press
-anywhere in the timeline dock**, which hands it to the timeline and draws a thin
-accent ring round the dock; a press on the canvas takes it back. The map is
+window has Premiere's panel focus: **the timeline has the keyboard from the
+moment it appears** (a recording opening, a clip dropped into a picture), shown
+by a thin accent ring round the dock, so L plays with no click first. A press
+anywhere outside the dock gives it to the canvas and the ring goes; a press in
+the dock hands it back. (Until 2026-09-24 the canvas had it first, and L on a
+fresh recording picked the Line tool.) The rule for every document with time is
+UX-PATTERNS D4, "Which letters a document with time gives the timeline". The map is
 `Sources/PhotonzCore/TimelineKeys.swift` (tested), the doing is
 `EditorState+TimelineKeys.swift`, and `TimelineKeyRouter` gets a press there
 before the toolbar's single-letter key equivalents can take it.

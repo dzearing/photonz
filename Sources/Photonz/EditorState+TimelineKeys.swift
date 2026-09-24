@@ -5,15 +5,16 @@ import PhotonzCore
 // Premiere's keys on the timeline (`TimelineKeys.swift` decides what a press
 // means; this does it).
 //
-// The timeline has the keyboard after a press anywhere in the dock and until a
-// press on the canvas, Premiere's own panel focus. While it does, J/K/L
+// The timeline has the keyboard from the moment it shows up (a recording
+// opening, a clip dropped into a picture) and after any press in the dock, and
+// loses it to a press anywhere else, Premiere's own panel focus. While it does, J/K/L
 // shuttle, I and O mark, the arrows step frames and edit points, and V, B and
 // the zoom keys pick the timeline's tools, where the same letters on the canvas
 // are Photoshop's tools. `TimelineKeyRouter` gets a press here before the
 // toolbar or the menu bar can take it.
 extension EditorState {
 
-    /// A press in the dock: the timeline has the keyboard now.
+    /// The timeline showed up, or a press in the dock: it has the keyboard now.
     func takeTimelineKeyboard() {
         guard documentHasTime, !timelineHasKeyboard else { return }
         timelineHasKeyboard = true

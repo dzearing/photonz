@@ -24,7 +24,7 @@ clumsier than Premiere, **Low** is a nicety a Premiere user would miss.
 | --- | --- | --- | --- |
 | Blade at the playhead | Command K, C for the razor | Command K anywhere, B then a click on a clip, right-click Split at Playhead ([picture](video-vs-premiere/blade-cut.jpg)) | Works |
 | Ripple delete | Shift Delete | Shift Delete with the timeline focused, right-click Ripple Delete; plain Delete closes the gap too | Works |
-| J, K, L shuttle | Works on the timeline | Works, up to 8x, **only after the timeline's own Select button is clicked**; on open, L picks the Line tool | **Gap 2** |
+| J, K, L shuttle | Works on the timeline | Works, up to 8x, **only after the timeline's own Select button is clicked**; on open, L picks the Line tool | **Gap 2**, closed 2026-09-24: J K L, I O, M and B work the moment a recording opens |
 | Drag clips between tracks | Drag up or down | Carry up onto the track above, or past the top for a new track (tracks walk) | Works |
 | A layer over video | Type tool, Essential Graphics | T and a click makes a title on its own track, keyable Position | Works, but **Gap 5** on its look |
 | Detach audio | Unlink | Right-click Detach Audio | Works |
