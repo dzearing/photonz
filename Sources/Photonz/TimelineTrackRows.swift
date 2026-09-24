@@ -597,7 +597,8 @@ enum TimelineLaneScrub {
             .onChanged { value in
                 if !editorState.isAuditioningScrub { editorState.beginPlayheadDrag() }
                 let fraction = min(max(0, value.location.x / laneWidth), 1)
-                editorState.dragPlayhead(toMS: Int(ruler.ms(atFraction: Double(fraction)).rounded()))
+                editorState.dragPlayhead(toMS: Int(ruler.ms(atFraction: Double(fraction)).rounded()),
+                                         snappingWithinMS: editorState.keySnapReachMS(laneWidth: laneWidth))
             }
             .onEnded { _ in editorState.endPlayheadDrag() }
     }

@@ -1,0 +1,543 @@
+{
+ "out": "/tmp/photonz-playtest/keys-copy-between-layers-walk",
+ "seed": "Keys copy between layers and the playhead lands on them. At Next defaults with no flag changed, this walk keys a title's Scale and Opacity, copies all four keys with Command C, types a second title and pastes them at the playhead with Command V, then drags the playhead near a key and watches it snap, steps key to key with Shift K and Option K, and dips the recording's sound under the second title by clicking three points onto its level line and dragging the middle one down. One undo puts the whole drag back.",
+ "setup": {
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "action",
+   "action": "videoSeekStart"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "tool",
+   "tool": "text"
+  },
+  {
+   "do": "click",
+   "at": [
+    620,
+    330
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "type",
+   "text": "Ship it faster"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "reveal",
+   "control": "Animating section"
+  },
+  {
+   "do": "press",
+   "control": "Key",
+   "in": "Scale"
+  },
+  {
+   "do": "press",
+   "control": "Key",
+   "in": "Opacity"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Scale Value"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "160"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Opacity Value"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "40"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "1-keyed",
+   "note": "A title on a recording, Scale and Opacity keyed at one and two seconds through the panel's diamonds, at Next defaults with no flag changed"
+  },
+  {
+   "do": "action",
+   "action": "keyLanesPickAll"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "shortcut",
+   "key": "c",
+   "modifiers": [
+    "command"
+   ],
+   "menuItem": "Copy"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "text"
+  },
+  {
+   "do": "click",
+   "at": [
+    620,
+    520
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "type",
+   "text": "Half the clicks"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "field": "Key lane Half the clicks Scale",
+   "present": false
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "shortcut",
+   "key": "v",
+   "modifiers": [
+    "command"
+   ],
+   "menuItem": "Paste"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "2-pasted",
+   "note": "THE FIRST TEST: the four keys picked on the first title, copied with Command C; a second title typed, the playhead moved to three seconds, Command V. The second title now has a Scale lane and an Opacity lane with the keys starting at the playhead, a second apart as they were, and picked"
+  },
+  {
+   "do": "expect",
+   "field": "Key lane Half the clicks Scale",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "field": "Key lane Half the clicks Opacity",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "Key",
+   "in": "Scale",
+   "reads": "on a key"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-keys-pasted"
+  },
+  {
+   "do": "windowDrag",
+   "from": [
+    600,
+    750
+   ],
+   "to": [
+    690,
+    750
+   ],
+   "steps": 8
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Key",
+   "in": "Scale",
+   "reads": "between keys"
+  },
+  {
+   "do": "windowDrag",
+   "from": [
+    600,
+    750
+   ],
+   "to": [
+    702,
+    750
+   ],
+   "steps": 8
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "3-snapped",
+   "note": "THE SECOND TEST: the playhead dragged along the ruler to seven points short of the second title's first key is pulled onto it (the Scale diamond reads on a key); dragged to nineteen points short, out of reach, it is not"
+  },
+  {
+   "do": "expect",
+   "control": "Key",
+   "in": "Scale",
+   "reads": "on a key"
+  },
+  {
+   "do": "shortcut",
+   "key": "k",
+   "modifiers": [
+    "shift"
+   ],
+   "menuItem": "Go to Next Key"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "describe",
+   "stage": "4-next-key",
+   "note": "THE THIRD TEST: Shift K, the playhead on the next key, at four seconds"
+  },
+  {
+   "do": "expect",
+   "control": "Key",
+   "in": "Scale",
+   "reads": "on a key"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-next-key"
+  },
+  {
+   "do": "shortcut",
+   "key": "k",
+   "modifiers": [
+    "option"
+   ],
+   "menuItem": "Go to Previous Key"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "control": "Key",
+   "in": "Scale",
+   "reads": "on a key"
+  },
+  {
+   "do": "shortcut",
+   "key": "k",
+   "modifiers": [
+    "shift"
+   ],
+   "menuItem": "Go to Next Key"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "action",
+   "action": "keyLanesToggle"
+  },
+  {
+   "do": "click",
+   "at": [
+    620,
+    330
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "action",
+   "action": "keyLanesToggle"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "windowDrag",
+   "from": [
+    806,
+    884
+   ],
+   "to": [
+    806,
+    884
+   ],
+   "steps": 1
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "windowDrag",
+   "from": [
+    606,
+    884
+   ],
+   "to": [
+    606,
+    884
+   ],
+   "steps": 1
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "windowDrag",
+   "from": [
+    806,
+    884
+   ],
+   "to": [
+    806,
+    884
+   ],
+   "steps": 1
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "windowDrag",
+   "from": [
+    1006,
+    884
+   ],
+   "to": [
+    1006,
+    884
+   ],
+   "steps": 1
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "5-points",
+   "note": "With both titles' lanes closed by their arrows, the recording's sound shows under it. A click picks it, then three clicks on its level line put three points on it under the second title"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-level-points"
+  },
+  {
+   "do": "windowDrag",
+   "from": [
+    806,
+    884
+   ],
+   "to": [
+    806,
+    900
+   ],
+   "steps": 8
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "shortcut",
+   "key": "k",
+   "modifiers": [
+    "option"
+   ],
+   "menuItem": "Go to Previous Key"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "describe",
+   "stage": "6-dipped",
+   "note": "THE FOURTH TEST: the middle point dragged down: the sound dips under the second title and comes back. Option K from four seconds steps back onto that point, so volume points are keys too, and the panel's Volume row reads the dip"
+  },
+  {
+   "do": "panel",
+   "stage": "6-dipped"
+  },
+  {
+   "do": "expect",
+   "control": "Key",
+   "in": "Volume",
+   "reads": "on a key"
+  },
+  {
+   "do": "snapshot",
+   "name": "4-volume-dipped"
+  },
+  {
+   "do": "key",
+   "key": "z",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "describe",
+   "stage": "7-undone",
+   "note": "THE FIFTH TEST: one undo puts the whole drag back: the point sits on the line again, not a few pixels higher"
+  },
+  {
+   "do": "panel",
+   "stage": "7-undone"
+  },
+  {
+   "do": "snapshot",
+   "name": "5-dip-undone"
+  }
+ ]
+}

@@ -1,0 +1,31 @@
+{
+  "feature": "Keys copy between layers, the playhead lands on keys, and the sound's level line takes points",
+  "epic": "video-transitions-motion",
+  "summary": "You can copy a title's keys and paste them onto a second title at the playhead, the playhead catches keys as you drag it and steps key to key with Shift K and Option K, and a clip's sound dips where you click points onto its level line and drag one down, undone in one step.",
+  "setup": "Photonz Probe built from this commit, release Next, no flag changed from its default. The walk is Scripts/playtest/keys-copy-between-layers-walk.json.",
+  "try": [
+    { "do": "Open a recording, type a title, key its Scale and Opacity at two moments with the panel's diamonds." },
+    { "do": "Drag a box round all four keys on its lanes and press Command C." },
+    { "do": "Type a second title, move the playhead a second later and press Command V.", "shot": "2026-09-23-keys-copy-1-keys-pasted-sc.png" },
+    { "do": "Drag the playhead along the ruler to just short of a key and let go: it lands on the key." },
+    { "do": "Press Shift K, then Option K, to step to the next key and back.", "shot": "2026-09-23-keys-copy-2-next-key-sc.png" },
+    { "do": "Click the recording's sound, then click its level line three times under the second title.", "shot": "2026-09-23-keys-copy-3-level-points-sc.png" },
+    { "do": "Drag the middle point down to dip the sound under the title.", "shot": "2026-09-23-keys-copy-4-volume-dipped-sc.png" },
+    { "do": "Press Command Z once: the whole drag goes back.", "shot": "2026-09-23-keys-copy-5-dip-undone-sc.png" }
+  ],
+  "evaluate": [
+    "When you paste keys, is it clear they landed where the playhead was, and on the second title rather than the first?",
+    "Does the playhead catching a key feel helpful, or does it get in the way when you want a moment just beside one?",
+    "Is Shift K and Option K the pair you want for next and previous key?",
+    "Is the level dip easy enough to shape by clicking points and dragging, or do you want a one-step duck like the mock's duck -8 dB tag?",
+    "While you drag a point, the level in dB shows beside it: is that enough to hit a number you have in mind?"
+  ],
+  "rough": [
+    "The sound track is thin (about 32 points), so a deep dip is a short drag and a precise one is fiddly.",
+    "The mock's music segment carries a standing duck -8 dB tag; here the dB only shows while a point is being dragged.",
+    "Level points are drawn as accent-blue dots; the mock draws the duck as a plain mint line with no dots.",
+    "Volume points copy and paste nowhere yet: Command C takes the keys on a layer's lanes, and the sound's points are not on a lane.",
+    "Keys pasted so late that they run past the second title's end are kept, as in Premiere, but are not drawn anywhere.",
+    "With both titles' lanes open the sound scrolls below the dock; the walk closes the lanes with their arrows to reach it."
+  ]
+}

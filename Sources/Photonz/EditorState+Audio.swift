@@ -121,6 +121,28 @@ extension EditorState {
         writeSoundLevel(level, onLayer: id)
     }
 
+    /// A point on one layer's level line put down, or let go after a drag,
+    /// as one step to undo however far the hand travelled. `fromMS` is where
+    /// a dragged point started, which it leaves; nil for a new point.
+    func setSoundLevelPoint(onLayer id: UUID, fromMS: Int?, to point: AudioLevelPoint) {
+        guard let layer = document?.layer(id: id), layer.sound != nil else { return }
+        var level = layer.soundLevel ?? AudioLevel()
+        let before = level
+        if let fromMS, fromMS != point.atMS { level.removePoint(atMS: fromMS) }
+        level.setPoint(atMS: point.atMS, gain: point.gain)
+        guard level != before else { return }
+        if selectedLayerID != id { selectLayer(id) }
+        writeSoundLevel(level, onLayer: id)
+    }
+
+    /// A point on one layer's level line double clicked away.
+    func removeSoundLevelPoint(onLayer id: UUID, atLayerMS ms: Int) {
+        guard var level = document?.layer(id: id)?.soundLevel,
+              level.points.contains(where: { $0.atMS == ms }) else { return }
+        level.removePoint(atMS: ms)
+        writeSoundLevel(level, onLayer: id)
+    }
+
     /// Set how loud one layer plays, from its level line on the timeline: the
     /// line dragged up or down as a whole, which is the fader.
     func setSoundGain(_ gain: Double, onLayer id: UUID) {

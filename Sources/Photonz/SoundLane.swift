@@ -71,6 +71,10 @@ struct SoundLevelLine: View {
     /// Where along the line the hand took hold, which is where the line stays
     /// under the pointer while it moves.
     @State private var heldAtMS: Int?
+    /// A dot being dragged: where it started, and where the hand has it now.
+    /// Drawn there until it is let go, which writes it once, so the whole
+    /// drag is one step to undo.
+    @State private var movingPoint: (fromMS: Int, to: AudioLevelPoint)?
 
     /// How big the dot you drag is.
     private static let dotSize: CGFloat = 9
@@ -86,6 +90,7 @@ struct SoundLevelLine: View {
             ForEach(shownPoints, id: \.atMS) { point in
                 dot(point)
             }
+            if let movingPoint { readout(movingPoint.to) }
         }
         .frame(width: width, height: height, alignment: .topLeading)
         // Only the line itself is the control, the way Premiere's volume
@@ -98,8 +103,9 @@ struct SoundLevelLine: View {
                 editorState.selectLayer(layerID)
                 return
             }
-            editorState.setSoundLevelPoint(atLayerMS: ms(atX: location.x),
-                                           gain: gain(atY: location.y))
+            editorState.setSoundLevelPoint(onLayer: layerID, fromMS: nil,
+                                           to: AudioLevelPoint(atMS: ms(atX: location.x),
+                                                               gain: shapeGain(atY: location.y)))
         }
         .gesture(fader)
         .playtestField("\(layerName) level line")
@@ -108,10 +114,38 @@ struct SoundLevelLine: View {
 
     /// The level as drawn: the fader in the hand, while there is one.
     private var shownLevel: AudioLevel {
-        guard let draggedGain else { return level }
         var shown = level
-        shown.gain = draggedGain
+        if let draggedGain { shown.gain = draggedGain }
+        if let movingPoint {
+            shown.removePoint(atMS: movingPoint.fromMS)
+            shown.setPoint(atMS: movingPoint.to.atMS, gain: movingPoint.to.gain)
+        }
         return shown
+    }
+
+    /// How loud the dot in the hand makes it, beside the dot, the way
+    /// Premiere says the level while a keyframe is dragged. Styled as the
+    /// mock's `.ducktag`.
+    private func readout(_ point: AudioLevelPoint) -> some View {
+        let heard = shownLevel.gain(atLayerMS: point.atMS)
+        let words = AudioLevel(gain: heard).label
+        let x = x(atMS: point.atMS)
+        return Text(words)
+            .font(.system(size: 9, design: .monospaced))
+            .foregroundStyle(Color(red: 0xBF / 255, green: 0xF3 / 255, blue: 0xE4 / 255))
+            .padding(.horizontal, 4)
+            .padding(.vertical, 1)
+            .background(.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 3))
+            .fixedSize()
+            .position(x: min(max(x + 26, 24), max(24, width - 24)), y: 8)
+            .allowsHitTesting(false)
+            .playtestField("\(layerName) level readout")
+    }
+
+    /// Where a stored point is drawn: under the hand while it is dragged.
+    private func drawn(_ point: AudioLevelPoint) -> AudioLevelPoint {
+        guard let movingPoint, movingPoint.fromMS == point.atMS else { return point }
+        return movingPoint.to
     }
 
     private var fader: some Gesture {
@@ -156,22 +190,23 @@ struct SoundLevelLine: View {
     /// which is exactly what `AudioLevel.gain(atLayerMS:)` describes.
     private var shape: [CGPoint] {
         guard lengthMS > 0, width > 0 else { return [] }
-        var moments = [fromMS] + level.points.map(\.atMS) + [toMS]
+        var moments = [fromMS] + shownLevel.points.map(\.atMS) + [toMS]
         moments = Array(Set(moments)).sorted().filter { $0 >= fromMS && $0 <= toMS }
         return moments.map { CGPoint(x: x(atMS: $0), y: y(forGain: shownLevel.gain(atLayerMS: $0))) }
     }
 
-    private func dot(_ point: AudioLevelPoint) -> some View {
-        Circle()
+    private func dot(_ stored: AudioLevelPoint) -> some View {
+        let point = drawn(stored)
+        return Circle()
             .fill(Color.accentColor)
             .overlay(Circle().strokeBorder(.white.opacity(0.9), lineWidth: 1.5))
             .frame(width: Self.dotSize, height: Self.dotSize)
             .position(x: x(atMS: point.atMS),
                       y: y(forGain: shownLevel.gain(atLayerMS: point.atMS)))
-            .gesture(drag(point))
+            .gesture(drag(stored))
             // A dot you cannot get rid of is a dot you regret putting down.
             .onTapGesture(count: 2) {
-                editorState.removeSoundLevelPoint(atLayerMS: point.atMS)
+                editorState.removeSoundLevelPoint(onLayer: layerID, atLayerMS: stored.atMS)
             }
             .playtestField("\(layerName) level at \(EditorState.timecode(ms: point.atMS))")
             .panelHelp("The level here. Drag it up or down, or along. Double click to take it out.")
@@ -182,17 +217,28 @@ struct SoundLevelLine: View {
     private func drag(_ point: AudioLevelPoint) -> some Gesture {
         DragGesture(minimumDistance: 1)
             .onChanged { value in
-                move(point, to: value.location)
+                movingPoint = (point.atMS, landing(at: value.location))
             }
             .onEnded { value in
-                move(point, to: value.location)
+                movingPoint = nil
+                editorState.setSoundLevelPoint(onLayer: layerID, fromMS: point.atMS,
+                                               to: landing(at: value.location))
             }
     }
 
-    private func move(_ point: AudioLevelPoint, to location: CGPoint) {
-        let landing = ms(atX: location.x)
-        if landing != point.atMS { editorState.removeSoundLevelPoint(atLayerMS: point.atMS) }
-        editorState.setSoundLevelPoint(atLayerMS: landing, gain: gain(atY: location.y))
+    /// The point a dot let go at `location` makes: its moment, and the
+    /// shape that puts the line under the hand with the fader where it is.
+    private func landing(at location: CGPoint) -> AudioLevelPoint {
+        AudioLevelPoint(atMS: ms(atX: location.x), gain: shapeGain(atY: location.y))
+    }
+
+    /// The point's own number for a height on the bar. The points are the
+    /// shape under the fader, so the line only lands under the hand when the
+    /// fader is divided back out.
+    private func shapeGain(atY y: CGFloat) -> Double {
+        let heard = gain(atY: y)
+        guard level.gain > 0 else { return heard }
+        return AudioLevel.bounded(heard / level.gain)
     }
 
     // MARK: Where a number is on the bar

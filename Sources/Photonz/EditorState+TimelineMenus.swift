@@ -86,6 +86,8 @@ extension EditorState {
         }
         // A title, a piece of clip art: how it comes on and goes off.
         rows.append(contentsOf: titleAnimationMenuRows(layerID: layerID))
+        // Keys copied off another layer land here at the playhead.
+        if keysOnClipboard != nil { rows.append(pasteKeysRow(layerID: layerID)) }
         rows.append(.separator)
         rows.append(.command("Rename…") { self.beginRenamingClip(layerID) })
         rows.append(.command("Duplicate", TimelineMenuKeys.duplicate) { self.duplicateLayer(id: layerID) })

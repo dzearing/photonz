@@ -335,7 +335,8 @@ struct TimelineDock: View {
                 if !editorState.isAuditioningScrub { editorState.beginPlayheadDrag() }
                 let fraction = min(max(0, value.location.x / laneWidth), 1)
                 let ms = editorState.motionStripRuler.ms(atFraction: Double(fraction))
-                editorState.dragPlayhead(toMS: Int(ms.rounded()))
+                editorState.dragPlayhead(toMS: Int(ms.rounded()),
+                                         snappingWithinMS: editorState.keySnapReachMS(laneWidth: laneWidth))
             }
             .onEnded { _ in editorState.endPlayheadDrag() }
     }

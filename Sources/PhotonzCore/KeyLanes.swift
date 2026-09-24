@@ -84,12 +84,12 @@ extension PhotonzDocument {
     private static let laneOrder: [MotionProperty] = [.position, .scale, .rotation, .opacity, .cornerRadius,
                                                       .strokeWidth, .color, .blur, .shadow, .textSize]
 
-    private static func laneRank(_ property: MotionProperty) -> Int {
+    static func laneRank(_ property: MotionProperty) -> Int {
         laneOrder.firstIndex(of: property) ?? laneOrder.count
     }
 
     /// The keyed values of a layer, in the panel's order.
-    private func laneMotions(of layer: Layer) -> [LayerMotion] {
+    func laneMotions(of layer: Layer) -> [LayerMotion] {
         keyedMotions(of: layer).sorted { Self.laneRank($0.property) < Self.laneRank($1.property) }
     }
 
@@ -116,7 +116,7 @@ extension PhotonzDocument {
     }
 
     /// The indices of the picked keys on each motion of a layer.
-    private func picked(_ refs: Set<KeyRef>, on layer: Layer) -> [(LayerMotion, [Int])] {
+    func picked(_ refs: Set<KeyRef>, on layer: Layer) -> [(LayerMotion, [Int])] {
         laneMotions(of: layer).compactMap { motion in
             let indices = motion.keyframes.indices.filter {
                 refs.contains(KeyRef(motionID: motion.id, clockMS: motion.keyframes[$0].atMS))

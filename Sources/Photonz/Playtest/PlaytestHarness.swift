@@ -3327,6 +3327,15 @@ private final class Run {
                 let ease: KeyEase = action == .keyLanesPickedHold ? .hold : .bezier
                 editor.easeKeys(layerID: picked.layerID, picked.refs, ease)
                 actionDetail = "\(ease.title) on \(picked.refs.count) key(s)"
+            case .goToNextKey, .goToPreviousKey:
+                let forward = action == .goToNextKey
+                guard editor.canGoToKey(forward: forward) else {
+                    throw Failure(description: "there is no key " + (forward ? "after" : "before")
+                        + " the playhead (" + MotionStripRuler.timecode(Double(editor.documentTimeMS)) + ")")
+                }
+                editor.goToKey(forward: forward)
+                actionDetail = "the playhead is on the key at "
+                    + MotionStripRuler.timecode(Double(editor.documentTimeMS))
             case .keyLanesHandleLater:
                 guard let picked = editor.keySelection, let document = editor.document else {
                     throw Failure(description: "keyLanesHandleLater needs keys picked on a lane")
@@ -3723,9 +3732,10 @@ private final class Run {
                  .captionsExpectSound, .captionsExpectTimingsKept: break
             case .copySpecList: editor.copyMeasureSpecList()
             case .copyImage: editor.copyCompositeToClipboard()
-            case .copy: editor.copySelectedLayer()
+            // Keys picked on a lane go first, as Edit ▸ Copy and Cut do.
+            case .copy: if !editor.copyPickedKeys() { editor.copySelectedLayer() }
             case .copyMerged: editor.copyMerged()
-            case .cut: editor.cutSelectedLayer()
+            case .cut: if !editor.cutPickedKeys() { editor.cutSelectedLayer() }
             case .hideAllMeasurements: editor.setAllMeasurementsVisible(false)
             case .showAllMeasurements: editor.setAllMeasurementsVisible(true)
             case .forgetThumbnails: editor.forgetLayerThumbnails()
@@ -4367,7 +4377,7 @@ private final class Run {
                  .titleDragStartEarlier, .titleDragEndLater, .clipKeyAtPlayheadLater,
                  .keyLanesToggle, .keyLanesPickAtPlayhead, .keyLanesPickAll,
                  .keyLanesPickedLater, .keyLanesPickedCopyLater, .keyLanesPickedHold,
-                 .keyLanesPickedBezier, .keyLanesHandleLater,
+                 .keyLanesPickedBezier, .keyLanesHandleLater, .goToNextKey, .goToPreviousKey,
                  .timelineZoomIn, .timelineZoomOut, .timelineFit, .timelineFiveMinutes:
                 break  // handled above, in the branch that drives the timeline
             }

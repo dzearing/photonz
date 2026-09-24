@@ -19517,3 +19517,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - In a document with time the Motion section keeps only motions that loop; keyed values are shown once, in Animating. `component-on-the-timeline-walk` and `punch-in-and-hold-walk` moved onto key diamonds and lanes.
 - Core first: `KeyLanes.swift`, `KeyLanesTests` (27 tests). New walks `key-lanes-walk` (no flags, lock-safe, 8 captures) and `key-lanes-menu-walk`; new walk actions `keyLanes*`. Audit `queue/audits/2026-09-23-key-lanes.json`.
 - Next: the canvas motion path (a-moving-layer-draws-its-path-on-the-canvas-and); the curve placement decision.
+
+## 2026-09-23 — Keys copy between layers and the playhead lands on them
+
+- Core `KeyClipboard.swift` (tested in `KeyClipboardTests`): `CopiedKeys`, `copyKeys`/`canPasteKeys`/`pasteKeys`, `keyMoments`, `neighbourKeyMoment`, `KeySnap`.
+- App: Edit Cut/Copy/Paste take picked lane keys before the layer; Copy/Paste Keys rows on the key, lane and clip menus; the ruler and bare-lane scrubs snap the playhead to keys (8pt); Video > Go to Next Key (⇧K) / Previous Key (⌥K), with walk stand-ins.
+- Level line: a point drag is one undo step on the dot's own layer, shows its dB while dragged, and a click adds a point at the right height with the fader not at 0 dB.
+- Walk `keys-copy-between-layers-walk`; audit `queue/audits/2026-09-23-keys-copy-between-layers.json`.
+- Next: premiere-s-keys-work-on-the-timeline keeps ⇧K/⌥K when K becomes Stop.

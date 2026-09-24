@@ -466,6 +466,18 @@ struct EditorCommands: Commands {
             // The ruler's marks, at the playhead. The same rows the ruler's
             // right click offers there; M, I and O stay Photoshop's tool keys
             // until the timeline owns the keyboard, so only Clear carries one.
+            // The playhead from key to key, on the pair of keys the user
+            // asked for. K alone is still the Lens and, once the timeline
+            // owns the keyboard, Premiere's Stop; the chords are free of it.
+            if editor?.documentHasTime ?? false {
+                Button("Go to Next Key") { editor?.goToKey(forward: true) }
+                    .keyboardShortcut("k", modifiers: .shift)
+                    .disabled(!(editor?.canGoToKey(forward: true) ?? false))
+                Button("Go to Previous Key") { editor?.goToKey(forward: false) }
+                    .keyboardShortcut("k", modifiers: .option)
+                    .disabled(!(editor?.canGoToKey(forward: false) ?? false))
+                Divider()
+            }
             if editor?.documentHasTime ?? false {
                 Button("Add Marker") { if let editor { editor.addMarker(atMS: editor.documentTimeMS) } }
                 Button("Set In") { if let editor { editor.setMarkIn(atMS: editor.documentTimeMS) } }
@@ -624,12 +636,23 @@ struct EditorCommands: Commands {
         // meaning, so the actions forward to the field editor.
         CommandGroup(replacing: .pasteboard) {
             Button("Cut") {
-                if let fieldEditor { fieldEditor.cut(nil) } else { editor?.cutSelectedLayer() }
+                // Keys picked on a lane are the smaller, more recent thing in
+                // hand, so ⌘X, ⌘C and ⌘V take those before the layer
+                // (`EditorState+KeyLanes`, Premiere's keyframe clipboard).
+                if let fieldEditor {
+                    fieldEditor.cut(nil)
+                } else if editor?.cutPickedKeys() != true {
+                    editor?.cutSelectedLayer()
+                }
             }
             .keyboardShortcut("x", modifiers: .command)
             .disabled(editor == nil && fieldEditor == nil)
             Button("Copy") {
-                if let fieldEditor { fieldEditor.copy(nil) } else { editor?.copySelectedLayer() }
+                if let fieldEditor {
+                    fieldEditor.copy(nil)
+                } else if editor?.copyPickedKeys() != true {
+                    editor?.copySelectedLayer()
+                }
             }
             .keyboardShortcut("c", modifiers: .command)
             .disabled(editor == nil && fieldEditor == nil)
@@ -642,7 +665,11 @@ struct EditorCommands: Commands {
                     .disabled(editor?.document == nil)
             }
             Button("Paste") {
-                if let fieldEditor { fieldEditor.paste(nil) } else { editor?.paste() }
+                if let fieldEditor {
+                    fieldEditor.paste(nil)
+                } else if editor?.pasteKeysAtPlayhead() != true {
+                    editor?.paste()
+                }
             }
             .keyboardShortcut("v", modifiers: .command)
             .disabled(editor == nil && fieldEditor == nil)

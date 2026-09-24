@@ -88,5 +88,9 @@ public enum PlaytestMenuStandIn {
         Chord(key: "]", modifiers: [.command]): .bringForward,
         Chord(key: "[", modifiers: [.command]): .sendBackward,
         Chord(key: "[", modifiers: [.command, .shift]): .sendToBack,
+        // Video ▸ Go to Next Key and Go to Previous Key, the playhead from key
+        // to key. Window-scoped like undo, so dimmed for the whole of a walk.
+        Chord(key: "k", modifiers: [.shift]): .goToNextKey,
+        Chord(key: "k", modifiers: [.option]): .goToPreviousKey,
     ]
 }

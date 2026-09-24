@@ -939,6 +939,9 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// of the way along its stretch: a strong ease out. Fails where no picked
     /// key has a stretch after it.
     case keyLanesHandleLater
+    /// Video ▸ Go to Next Key (⇧K) and Go to Previous Key (⌥K): the playhead
+    /// to the picked layer's next or previous key. Fails where there is none.
+    case goToNextKey, goToPreviousKey
 
     // MARK: What happens at a cut (`ClipTransitions.swift`)
 
@@ -1014,7 +1017,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .titleDragStartEarlier, .titleDragEndLater, .clipKeyAtPlayheadLater,
              .keyLanesToggle, .keyLanesPickAtPlayhead, .keyLanesPickAll,
              .keyLanesPickedLater, .keyLanesPickedCopyLater, .keyLanesPickedHold,
-             .keyLanesPickedBezier, .keyLanesHandleLater,
+             .keyLanesPickedBezier, .keyLanesHandleLater, .goToNextKey, .goToPreviousKey,
              .timelineZoomIn, .timelineZoomOut, .timelineFit, .timelineFiveMinutes: true
         default: false
         }

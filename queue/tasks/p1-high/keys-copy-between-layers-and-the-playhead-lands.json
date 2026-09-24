@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 0.615,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T13:13:48.656Z",
-  "updated": "2026-09-23T13:14:07.386Z",
+  "updated": "2026-09-24T04:26:45.660Z",
   "deps": [
     "a-layer-s-track-opens-into-one-lane-per-keyed-va",
     "a-clip-s-sound-is-on-the-timeline-from-the-momen"
@@ -35,7 +35,31 @@
     {
       "t": "2026-09-23T13:14:07.385Z",
       "note": "seq 122 -> 0.615"
+    },
+    {
+      "t": "2026-09-24T03:54:44.141Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T04:26:45.448Z",
+      "note": "Before building: the mock gives no copy/paste surface for keys, so Premiere's is the target: Edit Copy/Paste take picked keys first (keys picked on lanes are the smaller, more recent thing in hand, same rule as Delete), plus Copy Keys / Paste Keys rows on the key, lane and clip right-click menus. Paste goes onto the picked layer at the playhead, earliest key first, spacing and eases kept; a value the target lacks (text size on a box) is left out. A playhead off the target clip pastes at the clip's nearer end so nothing lands invisible. Volume level points already existed as a line with draggable points and click-to-add on the sound segment, but reproduced two problems in the probe: a point drag wrote an undo step per mouse move (one Cmd-Z only moved it back a sliver) and acted on the PICKED layer's sound rather than the dot's own. Both fixed."
+    },
+    {
+      "t": "2026-09-24T04:26:45.502Z",
+      "note": "Keys: Shift-K / Option-K as the user wrote. K alone is this app's Lens tool (a one-tool slot, so no Shift-K cycling) and, once premiere-s-keys-work-on-the-timeline lands, Premiere's Stop; the chords do not collide with either. I could not confirm Premiere's own default for Go to Next/Previous Keyframe from here, so kept the user's pair as the task note says. Jump steps across the picked layer's keys (all values and volume points), or every layer when nothing is picked. Snap reach is 8pt on the ruler and bare lanes, to every key on the timeline."
+    },
+    {
+      "t": "2026-09-24T04:26:45.553Z",
+      "note": "left rough (log only, under the bar or already covered): the dB readout beside a dragged level point is not photographed because a walk cannot hold a window drag mid-air; volume points are not copyable (not on a lane); keys pasted past a clip end are kept but not drawn (Premiere does the same); level dots are accent blue vs the mock's plain mint line; the standing duck -8 dB tag was already left rough by the linked-sound task; a walk's click step goes to the canvas, so taps on the timeline are zero-length windowDrag steps."
+    },
+    {
+      "t": "2026-09-24T04:26:45.659Z",
+      "note": "owns these walks: keys-copy-between-layers-walk"
     }
   ],
-  "source": "user"
+  "source": "user",
+  "started": "2026-09-24T03:54:44.140Z",
+  "walks": [
+    "keys-copy-between-layers-walk"
+  ]
 }
