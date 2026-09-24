@@ -5,11 +5,11 @@
   "epic": "icon-svg",
   "priority": "p2-normal",
   "seq": 160,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T07:08:14.121Z",
-  "updated": "2026-09-24T12:03:17.475Z",
+  "updated": "2026-09-24T12:39:47.704Z",
   "deps": [
     "swap-the-window-into-a-mode-from-a-chip-beside-t"
   ],
@@ -47,6 +47,14 @@
     {
       "t": "2026-09-24T12:03:17.474Z",
       "note": "manager 2026-09-24 05:05: the fold of tool groups into a permanent More is being built for documents with time by on-a-video-the-tool-bar-holds-the-video-tools-an, in core so it can be reused here. Reuse it for a mode's tool groups rather than building a second fold."
+    },
+    {
+      "t": "2026-09-24T12:39:47.648Z",
+      "note": "digest 2026-09-24: dropped. Pixel art is drawing work (image editing, staged later), not icon SVG, so it waits until that epic is staged; the spec stays in docs/design/modes.md section 4 and the reusable fold note went to on-a-video-the-tool-bar-holds-the-video-tools-an."
+    },
+    {
+      "t": "2026-09-24T12:39:47.703Z",
+      "note": "serves image editing (staged later); fold note moved to on-a-video-the-tool-bar-holds-the-video-tools-an"
     }
   ]
 }

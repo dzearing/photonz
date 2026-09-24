@@ -4,12 +4,12 @@
   "goal": "Five tasks titled x were filed on 2026-09-23 by runners trying the filing command out, and each one shows on the dashboard as real work until somebody drops it. Filing should refuse a title that says nothing, and a dry run should file nothing.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 55,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "infra",
   "created": "2026-09-24T06:03:10.650Z",
-  "updated": "2026-09-24T09:52:01.189Z",
+  "updated": "2026-09-24T12:40:39.505Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-23 23:02: node queue/bin/queue.mjs addjson {\"title\":\"x\"} --dry-run wrote queue/tasks/p2-normal/x-5.json (status pending), dropped by hand. Earlier ones: x.json 2026-09-23T21:34, x-2 00:14, x-3 01:31, x-4 03:00 (all created stamps, all dropped).",
@@ -30,6 +30,14 @@
     {
       "t": "2026-09-24T09:52:01.188Z",
       "note": "seq 3270 -> 55"
+    },
+    {
+      "t": "2026-09-24T12:39:47.862Z",
+      "note": "digest 2026-09-24: six stray tasks in the last 24 hours (x, x-2, x-3, x-4, x-5, no-placeholder-task), each dropped by hand; a runner probing addjson --dry-run filed x-5 because the flag is not honoured. Moved up in p2."
+    },
+    {
+      "t": "2026-09-24T12:40:39.504Z",
+      "note": "seq 55 -> 60"
     }
   ]
 }

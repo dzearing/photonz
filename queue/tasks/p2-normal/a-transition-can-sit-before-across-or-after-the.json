@@ -4,12 +4,12 @@
   "goal": "The transition mock gives a picked transition two more rows the app does not have yet: where the overlap sits (before the cut, across it, or after it, as Premiere offers), and for a dip, how long to hold on black, which inserts real time and moves the clips after it.",
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
-  "seq": 36,
+  "seq": 110,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T01:31:01.041Z",
-  "updated": "2026-09-24T09:52:01.010Z",
+  "updated": "2026-09-24T12:40:39.760Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-transition-wt.html #rowAlign, #rowHold, steps 7-8. Model today: ClipTransition has lengthMS only; beforeMS/afterMS are fixed at half each (ClipTransitions.swift). Alignment means storing an alignment on ClipTransition and changing beforeMS/afterMS and ClipCut.longestMS (spend from one side). Hold on black moves time, so it is an insert (rippleTime) plus a black piece or gap, not a property of the cut alone. Left out of click-a-cut-and-pick-a-transition-from-tiles because neither is in its acceptance. Also note: today a freshly dropped clip reads its file from the first frame, so it has no spare before its in point and cannot take any overlapping transition until its head is trimmed; Before/After placement is what lets that common case work, as it does in Premiere.",
@@ -36,6 +36,14 @@
     {
       "t": "2026-09-24T09:52:01.009Z",
       "note": "seq 3210 -> 36"
+    },
+    {
+      "t": "2026-09-24T12:40:08.909Z",
+      "note": "digest 2026-09-24: the transition picker audit (2026-09-23-transition-picker-at-a-cut.json) left out the mock's closing line explaining overlap, citing the labels-not-explanations rule. Text the user's mock draws is part of the floor, so put that line back while adding the overlap rows (queue/bin/runner-prompt.md now says so)."
+    },
+    {
+      "t": "2026-09-24T12:40:39.759Z",
+      "note": "seq 36 -> 110"
     }
   ]
 }

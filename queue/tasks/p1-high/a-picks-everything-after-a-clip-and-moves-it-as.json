@@ -4,12 +4,12 @@
   "goal": "A Premiere editor presses A (Track Select Forward) to grab a clip and everything after it, then drags the lot to open or close a gap. Today A on the timeline is still the Arrow tool, because the timeline cannot yet carry more than one clip in a single drag.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 410,
+  "seq": 230,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T06:42:36.666Z",
-  "updated": "2026-09-24T06:42:36.669Z",
+  "updated": "2026-09-24T12:40:39.032Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of premiere-s-keys-work-on-the-timeline (2026-09-23). The key map already returns .trackSelectForwardTool for A on a focused timeline (Sources/PhotonzCore/TimelineKeys.swift); EditorState+TimelineKeys.perform(timelineCommand:) returns false for it so A falls through to the Arrow tool. Needs: multi-clip carry in ClipPiecesBar.carry / EditorState clipBarDrag (one layer today), and a third tool beside Select and Blade in TimelineDock.localBar (isTimelineBlade becomes a tool enum). The mock (docs/design/mocks/pages/video.html) draws only Select and Blade, so a third button goes beyond it; keep it the same size and face.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-24T06:42:36.668Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-24T12:40:39.031Z",
+      "note": "seq 410 -> 230"
     }
   ],
   "walks": []

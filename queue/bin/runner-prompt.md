@@ -300,7 +300,7 @@ the answer in this run rather than blocking at all.
 
 Write the findings into the task log. A mock assumption the app cannot deliver becomes a filed prerequisite task (p1, sequenced ahead of this one), not a cut. If you believe the mock itself is wrong, open a decision card and build the mock until it is answered.
 
-**UI text is a label, not an explanation.** A panel row is a short label and a value or control. No sentence in the panel explains the model ("A freeze is not a new kind of object..."); explanations belong in docs, the tutorial, or nowhere. At most one short hint line per section, only when a person would otherwise be stuck. Choose the control the mock uses: a list of more than three exclusive options is a dropdown, not a radio column.
+**UI text is a label, not an explanation.** A panel row is a short label and a value or control. No sentence in the panel explains the model ("A freeze is not a new kind of object..."); explanations belong in docs, the tutorial, or nowhere. At most one short hint line per section, only when a person would otherwise be stuck. Choose the control the mock uses: a list of more than three exclusive options is a dropdown, not a radio column. This rule trims text the app adds, never text the user's mock draws: a line printed in the mock is part of the floor and ships as drawn (on 2026-09-23 the transition picker dropped the mock's closing line about overlap under this rule; that was a quiet departure, not a trim).
 
 **Before you call it ready**, review the built thing the same way, on the real app: run it, use it as a person would, and be honest about what feels clumsy. Fix what you can, and record what you could not.
 

@@ -4,12 +4,12 @@
   "goal": "A Retina screen recording is 2880 by 1800 or larger, and the Export sheet can only write it at that size: a five minute edit was estimated at 678 MB. Premiere and every share tool offer 1080p and 720p, which is what people post. Add a size choice to video export.",
   "epic": "video-share",
   "priority": "p1-high",
-  "seq": 199,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:16:31.956Z",
-  "updated": "2026-09-24T12:16:31.959Z",
+  "updated": "2026-09-24T12:40:38.315Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24); gap report docs/design/video-vs-premiere.md. Reproduced: five-minute walk exportDialogAsVideo on a 2880x1800 recording: rows are Format, Quality, Captions only; footer '2880 x 1800 px, 30 fps, 5:00, about 678 MB' (export-sheet-5-min.jpg). Rows live in Sources/Photonz/VideoExportDialog.swift. The size estimate itself being off is the-export-sheet-s-size-for-an-edited-video-is-c; do not fix that here.",
@@ -17,12 +17,22 @@
     "The Export sheet for MP4 (and GIF) has a Size row: Full, 1080p, 720p, and the full size is named in pixels",
     "Picking a smaller size changes the size estimate and the written file's pixel size",
     "The choice is remembered for the next export",
-    "A walk exports the five minute recording at 1080p and the file is 1728x1080 (aspect kept)"
+    "A walk exports the five minute recording at 1080p and the file is 1728x1080 (aspect kept)",
+    "For an edited video made of screen recordings, the size the sheet shows is within a factor of two of the file written at the same setting, and still says about",
+    "an-editing-session-walk's export step logs a sheet size and a written size that agree within that factor"
   ],
   "log": [
     {
       "t": "2026-09-24T12:16:31.958Z",
       "note": "created (user)"
+    },
+    {
+      "t": "2026-09-24T12:39:47.429Z",
+      "note": "digest 2026-09-24: folded in the-export-sheet-s-size-for-an-edited-video-is-c. The sheet told a person an edited 21 second video would be about 9.6 MB and the MP4 came out at 0.7 MB (an-editing-session-walk export step, queue/audits/2026-09-24-editing-session-walk.json). The 678 MB estimate for five minutes in this task's goal may be inflated by the same fault, so fix the estimate while adding the size row: one sheet, one number people can trust."
+    },
+    {
+      "t": "2026-09-24T12:40:38.314Z",
+      "note": "seq 199 -> 90"
     }
   ]
 }

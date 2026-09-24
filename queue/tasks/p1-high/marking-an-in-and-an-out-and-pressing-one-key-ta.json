@@ -4,13 +4,15 @@
   "goal": "Cutting a five minute recording to ninety seconds is mostly throwing away long stretches. In Premiere you mark an In and an Out and press the apostrophe (Extract) and the stretch is gone with the gap closed, or semicolon (Lift) to leave a gap. Here the marks can be set but nothing removes what they enclose, so each stretch costs two cuts, a click on the piece and Delete.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 190.3,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:16:31.500Z",
-  "updated": "2026-09-24T12:16:31.503Z",
-  "deps": [],
+  "updated": "2026-09-24T12:40:38.048Z",
+  "deps": [
+    "cutting-a-stretch-out-of-a-recording-takes-its-c"
+  ],
   "blockedBy": [],
   "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24); gap report docs/design/video-vs-premiere.md. Reproduced: five-minute walk, videoSeekQuarter, i, videoSeekMiddle, o (both taken by timeline, green span drawn: in-out-marked.jpg), then shift+delete: 'taken by responder chain', nothing removed (after-shift-delete.jpg). No Extract or Lift exists in Sources (grep). TimelineKeyCommand has lift/rippleDelete for the PICKED clip only. Pairs with cutting-a-stretch-out-of-a-recording-takes-its-c (captions following a cut).",
   "acceptance": [
@@ -24,6 +26,14 @@
     {
       "t": "2026-09-24T12:16:31.502Z",
       "note": "created (user)"
+    },
+    {
+      "t": "2026-09-24T12:39:47.373Z",
+      "note": "digest 2026-09-24: cutting-a-stretch-out-of-a-recording-takes-its-c now runs first and is a dependency, so Extract and Lift inherit captions, titles and sounds following the removed stretch instead of solving it twice."
+    },
+    {
+      "t": "2026-09-24T12:40:38.047Z",
+      "note": "seq 190.3 -> 40"
     }
   ]
 }

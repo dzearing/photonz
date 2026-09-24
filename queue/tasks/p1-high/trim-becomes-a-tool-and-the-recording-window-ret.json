@@ -4,12 +4,12 @@
   "goal": "A recording now opens in the ordinary editor, but only if you switch it on, because the small video window is still the only place you can trim, crop, save or export one. Finish the move: make trimming a tool you pick in the editor, give the editor the save, the export and the revert the old window had, and then take the old window away so there is one way to open a recording and not two.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 198,
+  "seq": 150,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T19:20:02.577Z",
-  "updated": "2026-09-24T12:03:17.423Z",
+  "updated": "2026-09-24T12:40:38.622Z",
   "deps": [
     "a-video-edit-can-be-saved-as-a-project-and-opene",
     "command-s-on-a-video-edit-does-what-the-user-pic"
@@ -117,6 +117,14 @@
     {
       "t": "2026-09-24T12:03:17.422Z",
       "note": "manager 2026-09-24 05:05: on-a-video-the-tool-bar-holds-the-video-tools-an (p1) gives a document with time the mock's D4 video tool bar (Select, Blade, Title, Shape, Measure, rest under More). That inventory has no Trim, and this task puts Trim in Crop's slot. Whichever lands second says in its log where Trim sits on a video."
+    },
+    {
+      "t": "2026-09-24T12:40:09.170Z",
+      "note": "digest 2026-09-24: when Trim becomes a tool, the trim bar that floats over the picture on open goes with it, which also settles the-trim-bar-a-recording-opens-with-stays-clear. Until then that task keeps the bar off the captions."
+    },
+    {
+      "t": "2026-09-24T12:40:38.621Z",
+      "note": "seq 198 -> 150"
     }
   ],
   "walks": [

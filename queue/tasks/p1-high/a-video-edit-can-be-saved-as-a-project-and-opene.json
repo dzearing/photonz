@@ -4,12 +4,12 @@
   "goal": "Today an edited video cannot be saved at all: Save and Save As are dimmed, and closing the window offers only Export, so an hour of cutting, a second clip, music, titles and captions is gone the moment the window closes. A Premiere editor saves a project and comes back to it tomorrow. Make File > Save As write a Photonz project that holds the whole edit and points at the recordings and sounds it uses, and make opening that project bring every track, clip, key, title and caption back exactly as it was.",
   "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 196,
+  "seq": 130,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T09:50:49.641Z",
-  "updated": "2026-09-24T09:51:32.540Z",
+  "updated": "2026-09-24T12:40:38.518Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: EditorState.swift ~2359 saveDocument returns early when isRecordingDocument, saveDocumentAs has guard !isRecordingDocument, and saveAffordance passes canSaveInPlace: !isRecordingDocument so SaveAffordance.changesOnlyExportKeeps dims Save and the close sheet offers only Export. The comment says a package write 'would write a clip whose frames cannot be found again': MovieRef (Sources/PhotonzCore/MovieClip.swift) is an id plus size plus length, no path. So the core work is a media table in the package (MovieRef/sound id -> security-scoped bookmark or path) that PackageIO writes and reads, and EditorState re-registering those files with its movie/sound libraries on open (see DocumentClipMedia.swift, rememberMedia). Split out of trim-becomes-a-tool-and-the-recording-window-ret, whose Command S card (2026-09-20) was withdrawn by the manager on 2026-09-24 because it asked about one trimmed recording and a video document is now many clips. Command S is the next task's card. No new visible control: Save As already exists in the File menu, it is only dimmed.",
@@ -32,6 +32,10 @@
     {
       "t": "2026-09-24T09:51:32.539Z",
       "note": "seq 430 -> 196"
+    },
+    {
+      "t": "2026-09-24T12:40:38.517Z",
+      "note": "seq 196 -> 130"
     }
   ],
   "source": "manager"

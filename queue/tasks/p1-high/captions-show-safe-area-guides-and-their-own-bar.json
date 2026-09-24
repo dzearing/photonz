@@ -4,12 +4,12 @@
   "goal": "The captions mock shows three things the app does not have yet: title-safe and action-safe guides you can switch on over the picture, a small badge on the picture saying captions are automatic and in which language, and a bar above the Captions track with the word being said, the time, Clear and Reset. The captions options also sit at the top of the panel in the mock, not under Effects.",
   "epic": "video-audio",
   "priority": "p1-high",
-  "seq": 400,
+  "seq": 220,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T06:02:42.624Z",
-  "updated": "2026-09-24T09:51:52.584Z",
+  "updated": "2026-09-24T12:40:38.980Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left from captions-write-themselves-from-the-speech (2026-09-23). Mock: docs/design/mocks/pages/video-captions.html (#safeBtn, AUTO · EN chip on the stage, the .captrack header row: CAPTION TRACK auto · word level, Clear, Reset, Active word <w>, 1.30s / 6.00s). Captions panel is Sources/Photonz/CaptionsInspector.swift; the look and track model live in Sources/PhotonzCore/CaptionLook.swift; the Captions track row and Words lane are TimelineTrackRows.swift + CaptionWordsLane.swift. Section order is InspectorPanel.swift availableSections.",
@@ -28,6 +28,14 @@
     {
       "t": "2026-09-24T09:51:52.583Z",
       "note": "manager 2026-09-24: also from queue/audits/2026-09-24-editing-session-walk.json: the Captions panel's Generate row squeezes its button to 'Write Ag...' beside '10 captions'. Fix it while moving the Captions options to the top of the panel."
+    },
+    {
+      "t": "2026-09-24T12:40:08.858Z",
+      "note": "digest 2026-09-24: the 'Write Ag...' button is owned by the-captions-section-says-every-button-and-colou, which checks every cut-off label in the video chrome; moving the Captions options to the top of the panel should not re-solve it here."
+    },
+    {
+      "t": "2026-09-24T12:40:38.979Z",
+      "note": "seq 400 -> 220"
     }
   ]
 }

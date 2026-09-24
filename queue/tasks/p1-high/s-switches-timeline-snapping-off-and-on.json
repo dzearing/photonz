@@ -4,12 +4,12 @@
   "goal": "Clips snap to the playhead, cuts and each other while you drag them, which is right most of the time, but there is no way to turn it off for a fine placement. Premiere and Final Cut both switch snapping with S and show a magnet that says whether it is on.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 425,
+  "seq": 100,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:16:32.050Z",
-  "updated": "2026-09-24T12:16:32.053Z",
+  "updated": "2026-09-24T12:40:38.366Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24); gap report docs/design/video-vs-premiere.md. Reproduced: s with the timeline focused is taken by nobody (five-minute walk step 21). No toggle exists in Sources (grep 'snapping' in the timeline files only finds the key snap reach). Holding a modifier to suspend snapping while dragging is fine as well, if the walk shows it.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-24T12:16:32.052Z",
       "note": "created (user)"
+    },
+    {
+      "t": "2026-09-24T12:40:38.365Z",
+      "note": "seq 425 -> 100"
     }
   ]
 }

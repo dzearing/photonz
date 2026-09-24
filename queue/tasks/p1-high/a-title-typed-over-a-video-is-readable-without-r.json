@@ -4,12 +4,12 @@
   "goal": "Press T over a recording and type, and the title comes out as small black regular text, 24 points on a 1280 wide picture, which disappears on the dark screen recordings people make. Premiere and Final Cut both start a title large, white and bold enough to read. The first title should read on video before anybody touches the Text section.",
   "epic": "video-titles-graphics",
   "priority": "p1-high",
-  "seq": 194,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:16:31.771Z",
-  "updated": "2026-09-24T12:16:31.774Z",
+  "updated": "2026-09-24T12:40:38.209Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24); gap report docs/design/video-vs-premiere.md. Seen in an-editing-session-walk 6-title-at-b-sc.png (docs/design/video-vs-premiere/title-default-look.jpg): 'Ship it faster' 24 px SF Pro Regular, black, on the dark Sample Talk frame. foregroundFill #000000 in walk state. Mock video.html draws the title large, white, serif bold ('Ship it faster.').",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-24T12:16:31.773Z",
       "note": "created (user)"
+    },
+    {
+      "t": "2026-09-24T12:40:38.208Z",
+      "note": "seq 194 -> 70"
     }
   ]
 }

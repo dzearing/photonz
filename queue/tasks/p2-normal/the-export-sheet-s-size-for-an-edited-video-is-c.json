@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 31,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T09:43:07.566Z",
-  "updated": "2026-09-24T09:52:00.755Z",
+  "updated": "2026-09-24T12:39:47.538Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-24, Scripts/playtest.sh Scripts/playtest/an-editing-session-walk.json --no-build, step writeVideo: 'the-edit.mp4 is 693 KB (709860 bytes) ... it runs 20.94s at 1280 x 800 px, with sound on it; made frame by frame from the document; the sheet said \"MP4 Video · about 9.6 MB\"' (sheet default High, 8-export-sheet-sc.png). RecordingExport.weight takes min(budget, measuredCost); an assembled document (two recordings, a cut, a dissolve, a title, captions) evidently has no measured cost so it falls back to the recipe's ceiling (bits per second x length). Measuring off the clips' own source files (bytes per second per pixel, weighted by how long each plays) would give an answer for the edited case too.",
@@ -26,6 +26,14 @@
     {
       "t": "2026-09-24T09:52:00.754Z",
       "note": "seq 3300 -> 31"
+    },
+    {
+      "t": "2026-09-24T12:39:47.483Z",
+      "note": "digest 2026-09-24: folded into the-export-sheet-lets-you-pick-the-size-of-the-v (p1). Same sheet and the same number: a size row changes the estimate, so the estimate has to be right in the same pass. Acceptance items carried across."
+    },
+    {
+      "t": "2026-09-24T12:39:47.537Z",
+      "note": "folded into the-export-sheet-lets-you-pick-the-size-of-the-v"
     }
   ]
 }

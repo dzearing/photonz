@@ -4,12 +4,12 @@
   "goal": "The scripted walks are the app driving itself, and some of them no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on. This serves the focus because the sweep is the only thing that tells a focus runner whether the change it just made broke anything: a sweep with failures nobody has named cannot say that, so every focus feature ships on a weaker claim than it should.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 20,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-09-23T00:59:10.437Z",
-  "updated": "2026-09-24T11:55:23.943Z",
+  "updated": "2026-09-24T12:40:39.346Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-24T08:57:07Z: 588 of 590 walks passed in 133 minutes.\n\nFailing walks (2): keys-copy-between-layers-walk, panel-grip-walk\n\nStopped failing since the last sweep (2): layers-lazy-rows-walk, motion-pivot-in-a-corner-walk\n\nFull output: queue/sweep/2026-09-23-234413.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: premiere-s-keys-work-on-the-timeline: the walk harness's key step now offers every press to the timeline key router first; the timeline keys change what B, arrows and letters do on documents with time\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -62,6 +62,18 @@
     {
       "t": "2026-09-24T11:55:23.942Z",
       "note": "rotating check 2026-09-24T11:55:23Z: panel-grip-walk failing out of the 49 walks it ran (295 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-24T12:33:24.222Z",
+      "note": "rotating check 2026-09-24T12:33:24Z: playing-a-recording-never-blinks-walk failing out of the 50 walks it ran (344 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-24T12:35:22.405Z",
+      "note": "digest 2026-09-24: ran playing-a-recording-never-blinks-walk alone six times with Scripts/playtest.sh --no-build, status ok every time. The rotating check's miss (1 of 24 moments empty at moment 18, 10 held back) happened with 49 other walks running; treat it as a blank frame under load, not a flake to rerun away. If it shows again in a slice, it earns its own p1 bug against video playback."
+    },
+    {
+      "t": "2026-09-24T12:40:39.345Z",
+      "note": "seq 20 -> 30"
     }
   ],
   "standing": "walk-sweep"

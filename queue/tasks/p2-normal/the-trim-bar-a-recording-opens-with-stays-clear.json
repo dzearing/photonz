@@ -4,12 +4,12 @@
   "goal": "A screen recording opens with the trim bar floating over the bottom of the picture, and once its captions have written themselves that bar sits right on top of the bottom caption, so the first thing you see of your captions is half of one hidden.",
   "epic": "video-audio",
   "priority": "p2-normal",
-  "seq": 33,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T06:02:48.695Z",
-  "updated": "2026-09-24T12:18:10.681Z",
+  "updated": "2026-09-24T12:40:39.557Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-23: Scripts/playtest.sh Scripts/playtest/captions-write-themselves-walk.json, picture 2-the-captions-wrote-themselves-sc.png (queue/audits/2026-09-23-captions-write-themselves-2-the-captions-wrote-themselves.png): the In 0:00 · Out 0:17 · Cancel · Trim capsule covers the middle of the caption line The transport bar and the timeline appear. The capsule comes from document.opensWithTrimInHand (EditorState.openRecordingAsDocument sets .trim). Options: lift the capsule above the caption band, or drop the fast-lane trim once the document has captions.",
@@ -35,6 +35,10 @@
     {
       "t": "2026-09-24T12:18:10.680Z",
       "note": "measure pass 2026-09-24: also seen on a 5 minute .mov opened from disk: the trim bar 'In 0:00 · Out 5:00 · Cancel · Trim' sits over the first caption (docs/design/video-vs-premiere/ five-minutes-at-fit.jpg source 2-captions-sc.png)."
+    },
+    {
+      "t": "2026-09-24T12:40:39.556Z",
+      "note": "seq 33 -> 70"
     }
   ]
 }

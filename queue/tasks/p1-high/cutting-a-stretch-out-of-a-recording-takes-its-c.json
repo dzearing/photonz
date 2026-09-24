@@ -4,12 +4,12 @@
   "goal": "When you cut a piece out of a talking recording and the gap closes, the captions stay where they were, so every line after the cut is shown over the wrong words and lines for speech you threw away still play over black or over the next clip. Cutting should take the captions (and the titles and sounds after it) along with the picture, the way a Premiere editor with sync lock on expects.",
   "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 195,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T09:42:58.763Z",
-  "updated": "2026-09-24T09:52:00.706Z",
+  "updated": "2026-09-24T12:40:37.998Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-24 with Scripts/playtest.sh Scripts/playtest/an-editing-session-walk.json --no-build (screen unlocked, real captures): openSampleTalk (17.25s, 10 captions), Command K at 8.63s and 4.31s, Delete. V1 becomes two pieces ending at 12.94s, but the Captions track still runs to 17.25s: see /tmp/photonz-playtest/an-editing-session-walk/2-cut-sc.png and 3-second-clip-sc.png, and playing-19.png / playing-20.png where the cue 'layer that happens to have a start and an' plays over the b-roll. Cause: EditorState.deleteClipPieceInHand calls PhotonzDocument.removeClipPiece, which edits only that clip's ClipPieces (ClipPieces.swift editClip); nothing else in the document moves. rippleTime(atMS:byMS:exceptLayer:) in HoldPush.swift already moves every other layer for a hold that pushes everything and can shorten a straddling layer; it does not yet drop a layer wholly inside a removed stretch. Captions are text layers with their own LayerTime inside the Captions group (Captions.swift CaptionLayers.layers), so moving them is ordinary layer time. Decide with the user only if a Premiere-style per-track sync lock is wanted; the default behaviour should be ripple everything.",
@@ -27,6 +27,14 @@
     {
       "t": "2026-09-24T09:52:00.705Z",
       "note": "seq 420 -> 195"
+    },
+    {
+      "t": "2026-09-24T12:39:47.320Z",
+      "note": "digest 2026-09-24: reproduced. Ran Scripts/playtest.sh Scripts/playtest/an-editing-session-walk.json --no-build (status ok). log.json after the cut and b-roll: 'Sample Talk on V1 0.00s to 12.94s; b-roll on V1 12.94s to 20.94s', and 3-second-clip-sc.png shows the caption cues running on to about 17 s, over the b-roll. Stays p1, and now runs just before the Extract task, whose acceptance needs captions to follow a removed stretch."
+    },
+    {
+      "t": "2026-09-24T12:40:37.997Z",
+      "note": "seq 195 -> 30"
     }
   ],
   "walks": []

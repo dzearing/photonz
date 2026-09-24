@@ -4,12 +4,12 @@
   "goal": "Zoom the timeline in and scroll along, and every number on the ruler is drawn seconds away from the moment it names: at 4x the label 1:15 sits about four seconds left of 1:15, so an editor lining a cut up against the ruler cuts in the wrong place. The ruler has to agree with the playhead, the clips and the captions at every zoom.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 190.1,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:15:48.384Z",
-  "updated": "2026-09-24T12:15:48.387Z",
+  "updated": "2026-09-24T12:40:37.893Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24), gap report docs/design/video-vs-premiere.md. Reproduced: open a 5 minute recording, videoSeekQuarter (75 s), give the timeline the keyboard, press = twice. Readout says 0:56 to 2:11, playhead at 1:15 draws at x 587 of the lane, the 1:15 label at x 497 (24.9 pt a second, so about 3.6 s off). Another view (0:01 to 1:16) put 0:15 at the lane start, about 14 s off. Pictures: docs/design/video-vs-premiere/ruler-at-4x.jpg, ruler-at-max-zoom.jpg. Cause, read in code: VideoKit.TimeRuler (Sources/Photonz/VideoKit/VideoKitTimeline.swift ~line 86) lays labels in a ZStack with .alignmentGuide(.leading) { -x }; a ZStack of alignment-guided children is sized to its children, so the leftmost visible tick is pulled to x 0 and every label shifts left by that tick s x. At Fit the first tick is at 0 so nothing shows. Fix is to place labels with .offset/.position in a fixed frame, the way TimelineGridlines does.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-24T12:15:48.386Z",
       "note": "created (user)"
+    },
+    {
+      "t": "2026-09-24T12:40:37.892Z",
+      "note": "seq 190.1 -> 10"
     }
   ]
 }

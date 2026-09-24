@@ -4,12 +4,12 @@
   "goal": "The video guides still teach the old recording window that is being retired. Rewrite them for the new timeline: cut a recording down, add a clip, a moving title, a transition, captions, and export.",
   "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 192,
+  "seq": 110,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:54:04.593Z",
-  "updated": "2026-09-24T09:52:00.656Z",
+  "updated": "2026-09-24T12:40:38.416Z",
   "deps": [
     "the-timeline-is-the-one-in-the-mock",
     "bring-in-a-second-clip-and-cut-between-clips",
@@ -61,6 +61,14 @@
     {
       "t": "2026-09-24T09:52:00.655Z",
       "note": "manager 2026-09-24: p2 -> p1 seq 192. It was filed by the user (created (user)) and user asks are p1; its five deps have all landed, and Next has no Video track in Help at all until it ships."
+    },
+    {
+      "t": "2026-09-24T12:40:09.116Z",
+      "note": "digest 2026-09-24: guide steps that point at the tool bar will move when on-a-video-the-tool-bar-holds-the-video-tools-an lands, and steps that press J K L I O will change when premiere-s-timeline-keys-work-the-moment-a-recor lands (earlier in p1). Anchor steps to the timeline's own controls where possible."
+    },
+    {
+      "t": "2026-09-24T12:40:38.415Z",
+      "note": "seq 192 -> 110"
     }
   ]
 }

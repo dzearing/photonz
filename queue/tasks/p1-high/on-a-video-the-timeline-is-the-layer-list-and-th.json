@@ -4,12 +4,12 @@
   "goal": "When a document has a timeline, the panel beside it lists the same clips a second time in a Layers list, above the settings for the clip you picked. The user's video design leaves Layers out there, because the timeline already is that list, and opens the panel straight onto the picked clip. Do the same, and bring Layers back whenever the timeline is folded away, so a document is never left with no list of what is in it.",
   "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 365,
+  "seq": 180,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:02:25.045Z",
-  "updated": "2026-09-24T12:02:33.297Z",
+  "updated": "2026-09-24T12:40:38.776Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video.html line 468, the comment NO LAYERS GROUP IN THE VIDEO LENS ('where there is a timeline, the timeline is the layer list'), and the Resolved paragraph at line 647. The mocks are the user's again as of 823fc26d (the-video-mocks-are-the-user-s-again-and-d18-is); UX-PATTERNS D18 v2.2 withdraws the old claim that docks without a Layers group were wrong. Line 645's 'the row in Layers' is stale text on the same page; the comment and line 647 are the decision. Seen in /tmp/photonz-playtest/an-editing-session-walk/5-dissolve-sc.png (2026-09-24 04:44, Next defaults): Layers (Captions, b-roll, Sample Talk, Canvas) takes the top third of the dock on a video. Rule today: layers is not in PanelSectionVisibility.optionalSections and docs/design/modes.md section 2 says a MODE may never fold it; this is not a mode, it follows from the document having time exactly as the timeline does (modes.md: 'The timeline appears because the document has time, never because of a mode'), so write it as its own rule beside that one with a test in PhotonzCore, not as a mode preset. Check what the Layers rows carry that timeline track headers do not (the Canvas row with its size, the find-a-layer field, lock and eye) before removing. Order after it: the-properties-pane-opens-on-the-clip-line-and-l (seq 370) puts the clip line at the top of what is then the first section.",
@@ -28,6 +28,10 @@
     {
       "t": "2026-09-24T12:02:33.296Z",
       "note": "seq 430 -> 365"
+    },
+    {
+      "t": "2026-09-24T12:40:38.775Z",
+      "note": "seq 365 -> 180"
     }
   ]
 }

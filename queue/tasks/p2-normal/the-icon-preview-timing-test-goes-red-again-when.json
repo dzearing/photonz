@@ -4,12 +4,12 @@
   "goal": "One timing test reports a failure when the whole test suite runs on a machine that is also doing something else. It was fixed once for exactly this reason and has started doing it again. Every time it happens somebody has to work out for themselves whether the app got slower or the machine was busy, and a red run that means nothing is how a real slowdown gets ignored.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 40,
+  "seq": 140,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T03:21:57.696Z",
-  "updated": "2026-09-24T03:01:06.331Z",
+  "updated": "2026-09-24T12:40:39.915Z",
   "deps": [],
   "blockedBy": [],
   "notes": "SEEN 2026-09-22, once, in a full run under deliberate load (12 spin processes plus a 24-thread on-device text recognition load, load average 16):\n\n  Scripts/test.sh, 9112 tests, 728 suites, 215.0s, 2 issues\n  X Test \"A whole strip of moving previews fits inside one frame of the loop\" recorded an issue at IconPreviewRenderTests.swift:249:38: Issue recorded\n\nNOT reproduced on demand. The same test run on its own under the same load passes with room to spare:\n\n  [perf] budget: moving icon previews, whole strip of 4 - 6.4ms on the calibration machine clock against a budget of 20ms (baseline 5.0ms x 2.5 tolerance). Read 8.2ms here beside a filter graph yardstick reading 10.1ms against its own 8.0ms, over 15 interleaved rounds\n\nAnd the same full suite run idle, twice, reports only the separately filed export size flake. So it needs the whole suite AND a loaded machine together.\n\nHISTORY: this exact test was fixed for this exact reason by the done task two-timing-tests-only-fail-when-the-whole-suite (shipped 8279e9b9, MachineSpeed.normalizedMS + checkInterleaved, Tests/PhotonzRenderTests/IconPreviewRenderTests.swift). Read that task log first: it records that a 5ms baseline plus the flat 8ms jitterSlackMS means this test only trips on a regression of about 4x, so whatever is moving here is moving a long way. That note is the obvious place to start.\n\nRELATED, and a worked example of the shape of answer wanted: the-test-suite-stops-reporting-failures-that-are gave the text reading a way to say \"this machine would not read\" and made its suite skip with a reason instead of going red (Sources/PhotonzRender/TextReader.swift, recogniserHealth).",
@@ -42,6 +42,10 @@
     {
       "t": "2026-09-24T03:01:06.330Z",
       "note": "seen again 2026-09-23 in a full Scripts/test.sh run: 'moving icon previews, whole strip of 4' read 29.2ms against 20ms; alone it reads 6.1ms and 6.3ms, and the next full run was green (9423 tests)."
+    },
+    {
+      "t": "2026-09-24T12:40:39.914Z",
+      "note": "seq 40 -> 140"
     }
   ],
   "walks": []

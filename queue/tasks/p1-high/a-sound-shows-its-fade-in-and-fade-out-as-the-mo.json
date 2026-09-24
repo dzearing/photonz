@@ -4,12 +4,12 @@
   "goal": "The panel for a piece of sound shows how long it fades in and out, and the curve, as the audio mock draws them, instead of only a level fader.",
   "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 380,
+  "seq": 200,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T02:23:06.697Z",
-  "updated": "2026-09-24T02:23:06.700Z",
+  "updated": "2026-09-24T12:40:38.879Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-audio.html, #propBody Fades section (grid2 In/Out fields, Curve select). App: SoundInspector has only Level and Points/Flatten; its header comment argued fades are the level line, which departs from the mock (found in the-video-properties-look-like-the-rest-of-the-d). A fade can be written as level points at the ends so the model stays one line.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-24T02:23:06.699Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-24T12:40:38.878Z",
+      "note": "seq 380 -> 200"
     }
   ]
 }

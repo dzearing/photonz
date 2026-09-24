@@ -4,12 +4,12 @@
   "goal": "In the Captions section the button that writes the captions again reads \"Write Ag...\" at the panel's normal width, and after picking the Lower third look the Background row shows a code (#000000B3) instead of a colour name. Both should read as words a person understands.",
   "epic": "video-editing",
   "priority": "p2-normal",
-  "seq": 39,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T11:13:36.648Z",
-  "updated": "2026-09-24T12:03:17.629Z",
+  "updated": "2026-09-24T12:40:39.239Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by every-panel-follows-the-design-system (2026-09-24). Reproduce: Scripts/playtest.sh Scripts/playtest/captions-write-themselves-walk.json --no-build; 2-the-captions-wrote-themselves-sc.png shows the Generate button as \"Write Ag...\" beside \"10 captions\"; 6-lower-third-at-the-top-sc.png shows Background as \"#000000B3\". CaptionsInspector.generate puts a borderedProminent button with label \"Write Again\" and the count in a 148pt column; colourRow names a value only when it is one of Self.plates, and the Lower third preset (CaptionLook.Preset) sets a plate that is not in that list. In the narrowest dock the button reads \"W...\".",
@@ -17,7 +17,8 @@
     "At the dock's default width the Generate row shows its button label whole, next to the caption count",
     "After picking Lower third, Background reads a colour name from its own list, not a hex code",
     "captions-panel-keeps-its-margins-walk checks both readings and passes at the default and the narrowest dock",
-    "The Easing menu in the timeline bar reads its whole name at the default window size"
+    "The Easing menu in the timeline bar reads its whole name at the default window size",
+    "No label in the video chrome (timeline bar, track headers, panel sections, Library tiles, transition rows) is cut off with an ellipsis at the default window size, checked by one walk step that reads them all"
   ],
   "log": [
     {
@@ -31,6 +32,14 @@
     {
       "t": "2026-09-24T12:03:17.628Z",
       "note": "seq 3310 -> 39"
+    },
+    {
+      "t": "2026-09-24T12:40:08.807Z",
+      "note": "digest 2026-09-24: cut-off words are the most repeated fault in the video audits this week, so this task owns all of them: 'Write Ag...' on the Captions Generate button, 'Ease In and...' in the timeline bar, 'Spare before' reading '...' for 8.6s on a jump cut (editing-session audit), Library tiles cut to 'Tutori...e.mp4' (library-clips audit), the Canvas button reading 'Ca...' in the narrowest panel (panel-margins audit), and a picked track's name cut to one letter by its three switches (video-tracks audit). The walk step that checks it should read every label in the video chrome, not these six by name. Moved to the front of p2."
+    },
+    {
+      "t": "2026-09-24T12:40:39.238Z",
+      "note": "seq 39 -> 10"
     }
   ],
   "walks": [

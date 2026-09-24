@@ -4,12 +4,12 @@
   "goal": "The Icons guide Start on an icon frame has a card that says to choose Show Icon Keylines in the View menu. Keylines are on from the start for everybody, so the menu row actually reads Hide Icon Keylines and following the card switches them off. The card should say what is true for the person reading it.",
   "epic": "icon-svg",
   "priority": "p2-normal",
-  "seq": 140,
+  "seq": 200,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T13:50:33.520Z",
-  "updated": "2026-09-23T12:12:09.763Z",
+  "updated": "2026-09-24T12:40:40.226Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found 2026-09-22 while fixing tutorial-start-on-an-icon-frame-walk. IconKeylinesStore.swift:40 defaults isVisible to true (\"On until somebody turns it off\"), so TutorialHost.tutorialIsAlreadyTrue(.keylinesShown) is true the moment the show-the-keylines step comes up, and TutorialController.beginStep marks it stepWasAlreadyTrue: the card shows Next rather than waiting. Nothing is stuck, so this is wording and not a hang. The body is TutorialGuides.swift:1614: \"Show Icon Keylines, in the View menu, draws the margin every icon in a set keeps to\" - and the row in the View menu says Hide.\n\nShown by: Scripts/playtest.sh Scripts/playtest/tutorial-start-on-an-icon-frame-walk.json --no-build, before the fix -> \"step 36 (waitFor): tutorialStep(\\\"what-the-frame-knows\\\") did not happen within 6.0s\", with the walk's own reading at the step before it: iconKeylines = \"Frame 24 live 20x20 margin 2 square 18 circle 20 - drawn\", tutorial = \"start-on-an-icon-frame/show-the-keylines 6 of 7\". Drawn already, and the walk was waiting for a switch it could not throw. The walk now switches them off before it starts the guide, which is a walk arranging the case it wants to test, not a fix for the card.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-09-23T12:12:09.762Z",
       "note": "seq 130 -> 140"
+    },
+    {
+      "t": "2026-09-24T12:40:40.225Z",
+      "note": "seq 140 -> 200"
     }
   ],
   "walks": []

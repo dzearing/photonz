@@ -4,12 +4,12 @@
   "goal": "Once a video edit can be saved as a project, Command S has to mean one thing on it. The user picks whether it always saves the project, or writes a plain trim of one recording back over that recording as the old recording window did, and this task builds that answer.",
   "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 197,
+  "seq": 140,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T09:50:56.575Z",
-  "updated": "2026-09-24T09:51:32.592Z",
+  "updated": "2026-09-24T12:40:38.569Z",
   "deps": [
     "a-video-edit-can-be-saved-as-a-project-and-opene"
   ],
@@ -34,6 +34,10 @@
     {
       "t": "2026-09-24T09:51:32.591Z",
       "note": "seq 440 -> 197"
+    },
+    {
+      "t": "2026-09-24T12:40:38.568Z",
+      "note": "seq 197 -> 140"
     }
   ],
   "source": "manager"

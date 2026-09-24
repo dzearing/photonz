@@ -4,12 +4,12 @@
   "goal": "On a five minute talking recording, whose captions write themselves into 173 captions, every press on the timeline freezes the app for between a sixth and two thirds of a second: setting an In, stepping a frame, zooming, adding a track. With the captions cleared the same presses take a thirtieth of a second. Premiere does not stutter on a five minute timeline, and a screen recording with captions is exactly what people will edit here.",
   "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 190.4,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:16:31.590Z",
-  "updated": "2026-09-24T12:16:31.593Z",
+  "updated": "2026-09-24T12:40:38.099Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24); gap report docs/design/video-vs-premiere.md. Reproduced: /tmp/photonz-5min/five-min-walk-3.json on a 300 s 2880x1800 H.264 with 1018 spoken words (made with say + ffmpeg). With captions: key i longest pass 173.9 ms, backslash 445 ms, earlier runs 537 to 677 ms after I/O and 598 ms after zoom keys, 559 ms after Add Track. After captionsClear, the same four keys: longest 30.9 ms. The 17 s Sample Talk also logs an 833 ms pass right after open. Suspect every caption cue and word is its own layer and view on the Captions and Words rows (the document held 175 layers), rebuilt on each change. Needs a perf note per CLAUDE.md if it touches the composite path.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-24T12:16:31.592Z",
       "note": "created (user)"
+    },
+    {
+      "t": "2026-09-24T12:40:38.098Z",
+      "note": "seq 190.4 -> 50"
     }
   ]
 }

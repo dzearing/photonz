@@ -4,14 +4,15 @@
   "goal": "On a document with time, the strip along the bottom takes its height off the right hand panel as well as off the picture, so on a laptop window there is not enough room left for Appearance and Effects to both be on screen, and the panel goes back to scrolling. Make the two sections nobody should have to scroll to fit on a video document as well as on a still one.",
   "epic": "video-editing",
   "priority": "p2-normal",
-  "seq": 38,
+  "seq": 130,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T02:12:33.004Z",
-  "updated": "2026-09-24T12:02:33.245Z",
+  "updated": "2026-09-24T12:40:39.863Z",
   "deps": [
-    "the-timeline-is-the-one-in-the-mock"
+    "the-timeline-is-the-one-in-the-mock",
+    "on-a-video-the-timeline-is-the-layer-list-and-th"
   ],
   "blockedBy": [],
   "notes": "Found while building appearance-is-below-the-fold-again-because-the-p on 2026-09-22, and it is the one case the fold guarantee shipped there does NOT cover. The guarantee drops itself rather than starving both sections into slivers, which is honest but leaves video editing on a laptop with the old behaviour.\n\nReproduction, arithmetic the test suite runs rather than a claim. Tests/PhotonzCoreTests/DockFoldGuaranteeTests.swift, test aDockTooShortForThePairIsLeftToScrollRatherThanStarved: the same selection that fits at a 661 point dock viewport is handed 426 once the strip takes 235 (docs/design/video-surface.md section 4, pinned in Tests/PhotonzCoreTests/DockWithTimeTests.swift), and DockHeightBudget.flexibleHeights then returns exactly the heights it would with no promise at all:\n\n  Scripts/test.sh --filter DockFoldGuaranteeTests\n  -> aDockTooShortForThePairIsLeftToScrollRatherThanStarved() passed\n\nWhat has to give is not the budget. The fixed cost above the pair is 315 points for a piece of text picked (the layers list at its floor, 51 of its chrome, and a 198 point Text form) against 414 points of room, which leaves 99 for the pair however cleverly it is shared. Candidates, none of them costed yet: the strip collapsing to its rail while the panel is being used; the layers list moving out of the column (option c on the original decision card, which hands back 163 points); the pick own section and Appearance sharing one scroller. This is a UX question with visible consequences, so it probably wants a decision card rather than a runner picking one.",
@@ -49,6 +50,14 @@
     {
       "t": "2026-09-24T12:02:33.244Z",
       "note": "manager 2026-09-24 05:05: on-a-video-the-timeline-is-the-layer-list-and-th (p1) takes the Layers list out of the dock while a timeline shows, as video.html draws it. That is the 'layers list at its floor' in the 315 point fixed cost above, so re-measure once it lands before choosing among the candidates here."
+    },
+    {
+      "t": "2026-09-24T12:40:09.221Z",
+      "note": "digest 2026-09-24: now depends on on-a-video-the-timeline-is-the-layer-list-and-th, so the panel is re-measured after Layers leaves a video's dock, as the manager note above asks."
+    },
+    {
+      "t": "2026-09-24T12:40:39.862Z",
+      "note": "seq 38 -> 130"
     }
   ],
   "walks": []

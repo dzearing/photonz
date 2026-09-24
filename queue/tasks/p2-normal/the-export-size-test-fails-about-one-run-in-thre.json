@@ -4,12 +4,12 @@
   "goal": "The video and animated picture export size tests go red about one run in three when the machine is busy, because the encoders hand back different sizes for the same frames. A red run that means nothing blocks honest commits, and if the size really moves, the Export sheet may be promising a size it cannot keep.",
   "epic": "video-share",
   "priority": "p2-normal",
-  "seq": 10,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T22:53:19.192Z",
-  "updated": "2026-09-24T09:18:51.245Z",
+  "updated": "2026-09-24T12:40:39.292Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): Running the test suite before a commit comes back red about a third of the time, on a video export test that nobody has touched. The rule is that the suite must be green before every commit, so a test that fails at random either stops honest work or teaches people to ignore a red suite. Make that test tell the truth every time it runs.\n\nReproduced 2026-09-22 while finishing resizing-one-piece-inside-a-turned-card-moves-th. Three back-to-back full runs of Scripts/test.sh on the same commit: run 1 failed with 1 issue, run 2 failed with 3 issues, run 3 passed with 9094 tests. The issue named each time:\n\n  x Test \"What lands is inside the budget it was given, and not far under it\" recorded an issue at VideoExportBudgetTests.swift:155:9: Expectation failed: (Self.bytes(of: tighter) -> 125039) < (landed -> 116723)\n\nTests/PhotonzMediaTests/VideoExportBudgetTests.swift:155 is the last line of theBudgetPredictsTheFile: it exports the same 3-second 1280x800 synthetic source at VideoExportQuality.standard and again at .small, and claims the .small file is the smaller of the two. Both land around 120KB, so on that source the hardware encoder is near its own floor and the bitrate ceiling is not what is deciding the size; which file comes out smaller is then down to the encoder, not to the recipe. Self.busySource(seconds:3,size:) is the source. Either give it a source with enough detail that both budgets actually bind, or make the claim about the recipe rather than about the bytes.",
@@ -107,6 +107,10 @@
     {
       "t": "2026-09-24T09:18:51.244Z",
       "note": "2026-09-24 02:2x: two full runs in a row each failed one export size test on an otherwise green suite: VideoExportBudgetTests 'inside the budget it was given' (tighter 121102 < landed 117739), then AnimatedExportWeighTests 'written twice... same size' (176240 vs 285824). Both passed alone straight after (3/3 and 1/1)."
+    },
+    {
+      "t": "2026-09-24T12:40:39.291Z",
+      "note": "seq 10 -> 20"
     }
   ],
   "walks": []

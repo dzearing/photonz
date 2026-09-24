@@ -4,12 +4,12 @@
   "goal": "The video mock fills the Library first (Import, a file dropped onto the Library, a new capture) and only then drags a first clip onto an empty track. Today a recording or sound only reaches the Library by landing on the timeline, so a blank video project cannot be started the way the mock shows.",
   "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 350,
+  "seq": 160,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T21:55:30.418Z",
-  "updated": "2026-09-24T12:03:17.679Z",
+  "updated": "2026-09-24T12:40:38.673Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video.html onboarding step 2 (Fill the Library, line ~326, view ~691) and the Library header + button (data-menu #libMenu, line ~530). The pool exists since recordings-and-sounds-in-a-document-sit-on-the-l: PhotonzDocument.media + rememberMedia (Sources/PhotonzCore/DocumentClipMedia.swift); adding to the shelf is perform { $0.rememberMedia(...) } after MovieLibrary/SoundLibrary read the file. The shelf already takes colour drops (LibraryColorDrop.swift), so a file drop must be added alongside without breaking that. Capture landing new recordings in the Library is the third way in the mock; decide in the task whether it belongs here.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-09-24T12:03:17.678Z",
       "note": "manager 2026-09-24 05:05: workflow walk at Next defaults: the only ways to bring a second clip in are a Finder drag onto the window or the Library, and the Library is folded until View > Library (its card is still unanswered). Add Sound... takes only a movie's sound. The mock's File menu has 'Import media' on Shift Command I (video.html), which is where Premiere and Final Cut people look (Command I in both). Acceptance widened: that menu row puts files on the shelf and shows the Library, since importing is asking for it."
+    },
+    {
+      "t": "2026-09-24T12:40:38.672Z",
+      "note": "seq 350 -> 160"
     }
   ]
 }

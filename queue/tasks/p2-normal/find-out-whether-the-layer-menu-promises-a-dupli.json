@@ -4,12 +4,12 @@
   "goal": "The right-click menu on a layer prints Command D beside Duplicate, but Command D is Deselect in the menu bar, so a person who learns the key from the menu may get the wrong thing. Check what pressing it really does and make the printed key and the real key agree.",
   "epic": "video-cutting",
   "priority": "p2-normal",
-  "seq": 37,
+  "seq": 120,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T00:14:57.434Z",
-  "updated": "2026-09-24T09:52:01.062Z",
+  "updated": "2026-09-24T12:40:39.811Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Not reproduced, only read: LayerCommandMenu.swift appends .command(\"Duplicate\", .command(\"d\")); EditorCommands.swift binds Deselect to keyboardShortcut(\"d\", modifiers: .command) with a comment that Duplicate Layer has no key and Cmd-J duplicates when nothing is marqueed. The timeline clip menu (EditorState+TimelineMenus.swift) prints Cmd-J for Duplicate for this reason. Found 2026-09-23 by the right-click task.",
@@ -25,6 +25,14 @@
     {
       "t": "2026-09-24T09:52:01.061Z",
       "note": "seq 3200 -> 37"
+    },
+    {
+      "t": "2026-09-24T12:40:09.013Z",
+      "note": "digest 2026-09-24: Command D is also in play for one-key-puts-the-usual-transition-on-the-cut-at (Premiere's default transition key). Command D is Deselect in Photoshop, and the user wants Photoshop keys by default, so settle this first and hand the transition task a key that collides with nothing."
+    },
+    {
+      "t": "2026-09-24T12:40:39.810Z",
+      "note": "seq 37 -> 120"
     }
   ]
 }

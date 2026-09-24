@@ -4,12 +4,12 @@
   "goal": "The quickest way to tighten a talking recording in Premiere is to park the playhead where the good part starts and press Q (ripple trim the start to here) or W (ripple trim the end to here). Here the same trim needs a cut, a click and a delete. Add Q and W on the timeline.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 193,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:16:31.682Z",
-  "updated": "2026-09-24T12:16:31.685Z",
+  "updated": "2026-09-24T12:40:38.152Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24); gap report docs/design/video-vs-premiere.md. Reproduced: q and w with the timeline focused are taken by nobody (five-minute walk log steps 23, 24). TimelineKeys.swift has no such command. Q is also Photoshop's quick mask, which the canvas does not use; confirm the canvas has no Q/W tool first.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-24T12:16:31.684Z",
       "note": "created (user)"
+    },
+    {
+      "t": "2026-09-24T12:40:38.151Z",
+      "note": "seq 193 -> 60"
     }
   ]
 }
