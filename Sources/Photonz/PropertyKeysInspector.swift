@@ -55,11 +55,31 @@ struct PropertyKeysSectionAccessory: View {
 
     var body: some View {
         let keyed = editorState.keyedRowCount
-        Text(keyed == 0 ? "None keyed" : "\(keyed) keyed")
-            .font(.caption)
-            .foregroundStyle(.tertiary)
-            .panelReadout(keyed == 0 ? "None keyed" : "\(keyed) keyed")
-            .playtestField("Animating Count")
+        HStack(spacing: 8) {
+            Text(keyed == 0 ? "None keyed" : "\(keyed) keyed")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+                .panelReadout(keyed == 0 ? "None keyed" : "\(keyed) keyed")
+                .playtestField("Animating Count")
+            // The mock's Graph link (`video.html`, `#graphOpen`): the picked
+            // layer's first curve, opened on its lane in the timeline.
+            if canGraph {
+                Button("Graph") { editorState.openGraphForPickedLayer() }
+                    .buttonStyle(.plain)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(VideoKit.Palette.accent)
+                    .help("Show the curve on the timeline")
+                    .playtestControl("Graph", detail: "Animating")
+            }
+        }
+    }
+
+    private var canGraph: Bool {
+        guard editorState.documentHasTime, let id = editorState.selectedLayerID,
+              let document = editorState.document else { return false }
+        return editorState.keyLanes(layerID: id).contains {
+            document.keyGraph(layerID: id, motionID: $0.motionID) != nil
+        }
     }
 }
 

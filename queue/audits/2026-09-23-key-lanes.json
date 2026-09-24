@@ -1,0 +1,50 @@
+{
+  "feature": "A layer's track opens into one lane per keyed value",
+  "epic": "video-transitions-motion",
+  "summary": "Every keyed value now has its own lane under its track, one diamond per key. You can pick keys, drag them, copy them with Option, delete them with Delete, give each key an ease (including Hold and Bezier), and open a lane into its curve to drag Bezier handles.",
+  "setup": "Photonz Probe, release Next, no flag changed from its default. A recording open, a title typed on it at 0:01.",
+  "try": [
+    {
+      "do": "With the title picked, click the Scale and Opacity diamonds in Animating, step a second later, type 160 in Scale and 40 in Opacity. Two lanes appear under the Title track.",
+      "shot": "2026-09-23-key-lanes-1-lanes-open-sc.png"
+    },
+    {
+      "do": "Click the arrow before Title on the track header to close the lanes, and again to open them.",
+      "shot": "2026-09-23-key-lanes-2-lanes-closed-sc.png"
+    },
+    {
+      "do": "Drag a box round both keys at 0:01, then drag one of them half a second later. Press Command-Z. (Picture: the lanes beside the mock's Position lane.)",
+      "shot": "2026-09-23-key-lanes-mock-side-by-side.png"
+    },
+    {
+      "do": "Option-drag the same two keys half a second later: copies land and the originals stay. Press Delete to remove the copies.",
+      "shot": "2026-09-23-key-lanes-5-keys-copied-sc.png"
+    },
+    {
+      "do": "Right-click a key at 0:01 and choose Hold. Scrub to 0:01.5: nothing has grown or faded yet.",
+      "shot": "2026-09-23-key-lanes-key-menu-sc.png"
+    },
+    {
+      "do": "Right-click it again and choose Bezier, then click Graph on the Animating header.",
+      "shot": "2026-09-23-key-lanes-8-curve-open-sc.png"
+    },
+    {
+      "do": "Drag the key's right-hand handle toward the next key and scrub: the grow starts slowly and snaps up late.",
+      "shot": "2026-09-23-key-lanes-9-handle-dragged-sc.png"
+    }
+  ],
+  "evaluate": [
+    "Should the lanes be open by default, as they are now (the mock shows the lane as soon as a value is keyed), or closed until you click the arrow, as in Premiere?",
+    "Does opening the curve inside the lane, on the timeline's own clock, work for you, or do you want the separate Graph panel on the right that video.html draws?",
+    "Can you tell Linear, eased, Hold and Bezier apart on the keys at a glance (sharp corner, softened corner, square side, hourglass)?",
+    "For Position, is a curve of distance travelled a clear way to show how the move eases?",
+    "Is it right that a click on a bare lane moves the playhead, while a drag on it draws a selection box?"
+  ],
+  "rough": [
+    "Side by side with video-move-wt step 6 (2026-09-23-key-lanes-mock-side-by-side.png): the layout, lane height, diamonds and joining line match. The keys use the app's accent blue rather than the mock's lavender, as every other accent in the app does.",
+    "The curve opens inside the lane rather than in the collapsed Graph group in the right-hand panel that video.html draws. The task asked for the curve on a lane; the evaluate list asks which one you want.",
+    "A key menu photographed by a walk runs off the bottom of the screen with a scroll arrow. That is the walk opening the menu at a fixed point; a real right-click opens it upward so it fits.",
+    "Escape does not call off a key drag halfway through, as it did on the old timing bars.",
+    "In a document with time, the Motion section only appears for motions that loop. Everything that plays once is edited through Animating and the lanes."
+  ]
+}

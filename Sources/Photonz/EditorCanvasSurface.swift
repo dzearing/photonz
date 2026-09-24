@@ -149,7 +149,12 @@ struct EditorCanvasSurface: View {
                                                      placement: $2, keepTool: $3)
                    },
                    onCaptionCancel: { editorState.cancelCaptionEdit() },
-                   onDeleteLayer: { editorState.deleteLayer(id: $0) },
+                   // ⌫ with keys picked on the layer's lanes takes the keys
+                   // and leaves the layer (`EditorState+KeyLanes`).
+                   onDeleteLayer: { id in
+                       if editorState.keySelection?.layerID == id, editorState.deletePickedKeys() { return }
+                       editorState.deleteLayer(id: id)
+                   },
                    onDeleteLayers: { editorState.deleteLayers(ids: $0) },
                    onDropImageURL: { editorState.addImageLayerOrOpen(at: $0, droppedAt: $1) },
                    onDropMediaURL: { editorState.dropMedia(at: $0, droppedAt: $1) },

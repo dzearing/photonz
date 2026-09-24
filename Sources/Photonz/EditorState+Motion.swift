@@ -97,6 +97,11 @@ extension EditorState {
     /// (`EditorState+MotionStrip`).
     var motionRows: [LayerMotion] {
         var rows = motionLayer?.motions ?? []
+        // In a document with time a value that plays once is a KEYED value:
+        // Animating shows it, and its curve is set on its keys on the
+        // timeline, so a From and a To here would say it twice
+        // (`a-layer-s-track-opens-into-one-lane-per-keyed-va`).
+        if documentHasTime { rows.removeAll { $0.repeats == .once && $0.isOn } }
         if let drag = motionTimingDrag,
            let index = rows.firstIndex(where: { $0.id == drag.motionID }) {
             rows[index] = rows[index].retimed(to: drag.timing)

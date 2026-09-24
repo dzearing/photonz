@@ -333,6 +333,9 @@ struct ClipPiecesBar: View {
             .contentShape(Rectangle())
             .gesture(carry(pieces, index: index))
             .onTapGesture {
+                // A click on the clip takes it rather than any keys picked on
+                // its lanes, so ⌫ afterwards means the clip.
+                editorState.clearKeySelection()
                 editorState.selectClipPiece(layerID: layerID,
                                             index: pieces.count > 1 ? index : nil)
             }

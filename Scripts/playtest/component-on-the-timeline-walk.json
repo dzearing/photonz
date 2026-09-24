@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/component-on-the-timeline-walk",
-  "seed": "What you draw and what you edit are the same document, so a component you built goes on a video timeline without being exported, converted or imported first. This walk opens a recording, puts a component on it from the Library shelf, checks that it arrives at the playhead and leaves three seconds later rather than standing over the whole film, drops a second copy, repaints the original to show both copies follow it, animates one of them with the ordinary Motion list so it gets a lane on the timeline where it actually happens, and writes the file out.",
+  "seed": "What you draw and what you edit are the same document, so a component you built goes on a video timeline without being exported, converted or imported first. This walk opens a recording, puts a component on it from the Library shelf, checks that it arrives at the playhead and leaves three seconds later rather than standing over the whole film, drops a second copy, repaints the original to show both copies follow it, animates one of them with the ordinary key diamonds so it gets a lane on the timeline where it actually happens, and writes the file out.",
   "setup": {
     "forget": [
       "all"
@@ -143,9 +143,48 @@
       "name": "component-3-two-copies"
     },
     {
-      "do": "panelMenu",
-      "menu": "Add Motion",
-      "choose": "Rotation"
+      "do": "reveal",
+      "control": "Animating section"
+    },
+    {
+      "do": "press",
+      "control": "Key",
+      "in": "Rotation"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Rotation Value"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "30"
+    },
+    {
+      "do": "key",
+      "key": "return"
     },
     {
       "do": "wait",
@@ -154,7 +193,7 @@
     {
       "do": "describe",
       "stage": "5-it-animates",
-      "note": "THE FOURTH TEST: it animates with the machinery everything else animates with. The ordinary Motion list, the same plus, the same curve, the same undo. The lane lands on the timeline at four seconds, where the badge actually is, rather than at the start of the film"
+      "note": "THE FOURTH TEST: it animates with the keys everything else animates with: the Rotation diamond in Animating at four seconds and thirty degrees a second later, the same undo. Its lane lands on the timeline at four seconds, where the badge actually is, rather than at the start of the film"
     },
     {
       "do": "panel",
@@ -229,6 +268,14 @@
     {
       "do": "wait",
       "seconds": 0.9
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
     },
     {
       "do": "describe",

@@ -1,7 +1,9 @@
 {
   "out": "/tmp/photonz-playtest/punch-in-and-hold-walk",
   "setup": {
-    "forget": ["all"],
+    "forget": [
+      "all"
+    ],
     "flags": {
       "next-cut-a-recording": true,
       "next-motion": true,
@@ -9,84 +11,318 @@
     }
   },
   "steps": [
-    { "do": "action", "action": "openSampleRecording" },
-    { "do": "wait", "seconds": 2.0 },
-    { "do": "action", "action": "videoPause" },
-    { "do": "tool", "tool": "select" },
-    { "do": "action", "action": "videoSeekStart" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "1-wide", "note": "the sample recording, wide, framed the way it was captured. There is no Reframe section: the clip's Scale and Position are rows in Animating, like any layer's, reading 100% and nothing keyed" },
-    { "do": "snapshot", "name": "1-wide" },
-
-    { "do": "action", "action": "videoSeekQuarter" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "tool", "tool": "rectSelect" },
-    { "do": "drag", "from": [36, 100], "to": [356, 500], "space": "document", "steps": 8 },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "describe", "stage": "2-pointed-at-it", "note": "THE FIRST TEST: where it pushes in to is POINTED AT, not typed. A box dragged round the tile in the recording, the one thing in it worth looking at, with the playhead on the moment that part matters. The panel's hint now says what Punch In will do with it, and Punch In has come alive" },
-    { "do": "snapshot", "name": "2-a-box-round-the-detail" },
-
-    { "do": "tool", "tool": "select" },
-    { "do": "rightClick", "at": [196, 300], "space": "document", "shot": "2b-punch-in-menu", "choose": "Punch In > To the Box" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "expect", "field": "Scale", "reads": "200" },
-    { "do": "describe", "stage": "3-arrived", "note": "THE SECOND TEST: the camera ARRIVED at the playhead. Right-click, Punch In, To the Box, and the canvas is already showing what was pointed at, filling the frame, because the move leaned in over the second before this moment rather than setting off from it. The box is gone: it said what it had to say. Two lanes appeared on the timing strip, Scale and Position, because a punch-in is those two properties and not a zoom tool" },
-    { "do": "snapshot", "name": "3-punched-in" },
-
-    { "do": "action", "action": "videoSeekStart" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "expect", "field": "Scale", "reads": "100" },
-    { "do": "describe", "stage": "4-still-wide-before", "note": "back at the first frame and the picture is wide again. Nothing was baked in: the framing is worked out for whatever moment is on screen, the same bargain every other piece of styling in the app strikes" },
-    { "do": "snapshot", "name": "4-wide-before-the-move" },
-
-    { "do": "action", "action": "videoSeekMiddle" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "expect", "field": "Scale", "reads": "200" },
-    { "do": "describe", "stage": "5-holding", "note": "THE THIRD TEST: it HELD. Well past the move, with nothing asked for and nothing keyed, the frame has not budged off what it was pointed at. A hold is what a property does after its last key, so nobody has to ask for one" },
-    { "do": "snapshot", "name": "5-holding-where-it-landed" },
-
-    { "do": "rightClick", "at": [640, 400], "space": "document", "choose": "Punch In > Pull Back Out" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "6-leaving", "note": "THE FOURTH TEST: pull back out, setting off from the playhead. Everything between the punch-in's last key and this one is now the hold, and it was never asked for. The Scale lane on the strip runs from the first move to this one as a single bar, because it is one property with four keys on it rather than two motions fighting over one answer" },
-    { "do": "snapshot", "name": "6-pulling-back-out" },
-
-    { "do": "describe", "stage": "6b-the-keys-are-on-the-bar", "note": "THE FIFTH TEST: the bar says what happens ON it. The Scale lane is no longer four seconds of plain blue: there is a mark at the moment the camera arrives and another at the moment it starts to leave, and the stretch between the two is the hold, drawn as itself. Before this the strip said that something happened over four seconds and nothing about where it got to or how long it stayed." },
-    { "do": "expect", "control": "Timing Key", "present": true },
-    { "do": "snapshot", "name": "6b-keys-on-the-bar" },
-
-    { "do": "dragMotionKey", "bar": "Tutorial Sample Scale", "key": 2, "byMS": 700,
-      "hold": "6c-lengthening-the-hold" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "6c-a-longer-hold", "note": "THE SIXTH TEST, and the one the strip could not say at all before: the second mark is carried later, so the camera SITS THERE longer before it pulls out. The bar's two ends have not moved a millisecond, which is the whole difference between this and dragging the bar: one says the move happens later, this says it arrives in the same place and stays." },
-    { "do": "expect", "field": "Scale Summary", "reads": "100% → 200% → 200% → 100% over 4.4s, after 0.8s" },
-    { "do": "snapshot", "name": "6c-a-longer-hold" },
-
-    { "do": "action", "action": "undo" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "6d-undone", "note": "one undo takes the whole key drag back, not one frame of it" },
-
-    { "do": "dragMotionKey", "bar": "Tutorial Sample Scale", "key": 1, "byMS": 9000, "cancel": true },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "describe", "stage": "6e-called-off", "note": "and a key carried far past the mark beside it, then let go of without keeping it, leaves the move exactly as it found it" },
-
-    { "do": "action", "action": "videoSeekThreeQuarters" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "expect", "field": "Scale", "reads": "100" },
-    { "do": "describe", "stage": "7-wide-again", "note": "and at the end it is wide again, on the whole picture, exactly where it started" },
-    { "do": "snapshot", "name": "7-wide-again" },
-
-    { "do": "rightClick", "at": [640, 400], "space": "document", "choose": "Punch In > Reset" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "action", "action": "videoSeekMiddle" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "expect", "field": "Scale", "reads": "100" },
-    { "do": "describe", "stage": "8-reset", "note": "Reset gives the whole frame back and takes both lanes off the strip. Every one of these is an ordinary history step" },
-    { "do": "snapshot", "name": "8-reset" },
-
-    { "do": "action", "action": "undo" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "expect", "field": "Scale", "reads": "200" },
-    { "do": "describe", "stage": "9-undone", "note": "one press of undo and the move is back, at the size it had landed on. Nothing here has its own undo stack" },
-    { "do": "snapshot", "name": "9-undone" }
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-wide",
+      "note": "the sample recording, wide, framed the way it was captured. There is no Reframe section: the clip's Scale and Position are rows in Animating, like any layer's, reading 100% and nothing keyed"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-wide"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekQuarter"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "rectSelect"
+    },
+    {
+      "do": "drag",
+      "from": [
+        36,
+        100
+      ],
+      "to": [
+        356,
+        500
+      ],
+      "space": "document",
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-pointed-at-it",
+      "note": "THE FIRST TEST: where it pushes in to is POINTED AT, not typed. A box dragged round the tile in the recording, the one thing in it worth looking at, with the playhead on the moment that part matters. The panel's hint now says what Punch In will do with it, and Punch In has come alive"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-a-box-round-the-detail"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        196,
+        300
+      ],
+      "space": "document",
+      "shot": "2b-punch-in-menu",
+      "choose": "Punch In > To the Box"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Scale",
+      "reads": "200"
+    },
+    {
+      "do": "describe",
+      "stage": "3-arrived",
+      "note": "THE SECOND TEST: the camera ARRIVED at the playhead. Right-click, Punch In, To the Box, and the canvas is already showing what was pointed at, filling the frame, because the move leaned in over the second before this moment rather than setting off from it. The box is gone: it said what it had to say. Two lanes appeared on the timing strip, Scale and Position, because a punch-in is those two properties and not a zoom tool"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-punched-in"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Scale",
+      "reads": "100"
+    },
+    {
+      "do": "describe",
+      "stage": "4-still-wide-before",
+      "note": "back at the first frame and the picture is wide again. Nothing was baked in: the framing is worked out for whatever moment is on screen, the same bargain every other piece of styling in the app strikes"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-wide-before-the-move"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekMiddle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Scale",
+      "reads": "200"
+    },
+    {
+      "do": "describe",
+      "stage": "5-holding",
+      "note": "THE THIRD TEST: it HELD. Well past the move, with nothing asked for and nothing keyed, the frame has not budged off what it was pointed at. A hold is what a property does after its last key, so nobody has to ask for one"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-holding-where-it-landed"
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        640,
+        400
+      ],
+      "space": "document",
+      "choose": "Punch In > Pull Back Out"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-leaving",
+      "note": "THE FOURTH TEST: pull back out, setting off from the playhead. Everything between the punch-in's last key and this one is now the hold, and it was never asked for. The Scale lane on the strip runs from the first move to this one as a single bar, because it is one property with four keys on it rather than two motions fighting over one answer"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-pulling-back-out"
+    },
+    {
+      "do": "describe",
+      "stage": "6b-the-keys-are-on-the-lanes",
+      "note": "THE FIFTH TEST: the lanes say what happens on them. Under V1 the Scale lane has a diamond at each of its four keys, the moment it sets off, the moment the camera arrives, the moment it starts to leave and the moment it is wide again, and the stretch between the middle two is the hold, drawn as itself"
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 4",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "6b-keys-on-the-lanes"
+    },
+    {
+      "do": "action",
+      "action": "keyLanesPickAtPlayhead"
+    },
+    {
+      "do": "action",
+      "action": "keyLanesPickedLater"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6c-a-longer-hold",
+      "note": "THE SIXTH TEST: the keys where it starts to leave are carried half a second later, so the camera SITS THERE longer before it pulls out, and the keys either side have not moved a millisecond. The playhead where it used to leave is now inside the hold"
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Scale",
+      "reads": "between keys"
+    },
+    {
+      "do": "expect",
+      "field": "Scale",
+      "reads": "200"
+    },
+    {
+      "do": "snapshot",
+      "name": "6c-a-longer-hold"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "6d-undone",
+      "note": "one undo takes the whole key drag back"
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Scale",
+      "reads": "on a key"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekThreeQuarters"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Scale",
+      "reads": "100"
+    },
+    {
+      "do": "describe",
+      "stage": "7-wide-again",
+      "note": "and at the end it is wide again, on the whole picture, exactly where it started"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-wide-again"
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        640,
+        400
+      ],
+      "space": "document",
+      "choose": "Punch In > Reset"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "videoSeekMiddle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Scale",
+      "reads": "100"
+    },
+    {
+      "do": "describe",
+      "stage": "8-reset",
+      "note": "Reset gives the whole frame back and takes both lanes off the strip. Every one of these is an ordinary history step"
+    },
+    {
+      "do": "snapshot",
+      "name": "8-reset"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Scale",
+      "reads": "200"
+    },
+    {
+      "do": "describe",
+      "stage": "9-undone",
+      "note": "one press of undo and the move is back, at the size it had landed on. Nothing here has its own undo stack"
+    },
+    {
+      "do": "snapshot",
+      "name": "9-undone"
+    }
   ]
 }

@@ -921,6 +921,25 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// (`ClipKeys.swift`). Fails where no diamond sits at the playhead.
     case clipKeyAtPlayheadLater
 
+    // MARK: Key lanes (`KeyLanes.swift`)
+
+    /// The arrow on the picked layer's track header: its lanes open or close.
+    case keyLanesToggle
+    /// Pick every lane key on the picked layer that sits at the playhead, the
+    /// way a box drawn down through the playhead does.
+    case keyLanesPickAtPlayhead
+    /// Pick every lane key on the picked layer: a box drawn round them all.
+    case keyLanesPickAll
+    /// Drag the picked keys half a second later, or with Option held, copy
+    /// them there.
+    case keyLanesPickedLater, keyLanesPickedCopyLater
+    /// Right-click a picked key and choose Hold, or Bezier.
+    case keyLanesPickedHold, keyLanesPickedBezier
+    /// Drag the leaving handle of the first picked key, on its open curve, most
+    /// of the way along its stretch: a strong ease out. Fails where no picked
+    /// key has a stretch after it.
+    case keyLanesHandleLater
+
     // MARK: What happens at a cut (`ClipTransitions.swift`)
 
     /// Pick the cut in hand: the join the playhead is standing on. Fails the
@@ -993,6 +1012,9 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .clipPickCut, .clipPickFirstCut, .clipTransitionDissolve, .clipTransitionDipToBlack,
              .clipTransitionHardCut, .clipTransitionDragLonger, .clipBlurComesOn,
              .titleDragStartEarlier, .titleDragEndLater, .clipKeyAtPlayheadLater,
+             .keyLanesToggle, .keyLanesPickAtPlayhead, .keyLanesPickAll,
+             .keyLanesPickedLater, .keyLanesPickedCopyLater, .keyLanesPickedHold,
+             .keyLanesPickedBezier, .keyLanesHandleLater,
              .timelineZoomIn, .timelineZoomOut, .timelineFit, .timelineFiveMinutes: true
         default: false
         }

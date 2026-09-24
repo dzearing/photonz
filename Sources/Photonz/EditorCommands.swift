@@ -403,8 +403,16 @@ struct EditorCommands: Commands {
                 .keyboardShortcut("b", modifiers: [])
                 .disabled(!(onTimeline ? (editor?.canSplitClipAtPlayhead ?? false)
                                        : (video?.canCutAtPlayhead ?? false)))
-                Button("Delete This Piece") {
-                    onTimeline ? editor?.deleteClipPieceInHand() : video?.deleteSelectedPiece()
+                // Keys picked on a lane are the smaller and more recent thing
+                // in hand, so ⌫ takes those and leaves the clip alone
+                // (`EditorState+KeyLanes`).
+                let keysPicked = onTimeline && (editor?.canDeletePickedKeys ?? false)
+                Button(keysPicked ? "Delete Keys" : "Delete This Piece") {
+                    if keysPicked {
+                        editor?.deletePickedKeys()
+                    } else {
+                        onTimeline ? editor?.deleteClipPieceInHand() : video?.deleteSelectedPiece()
+                    }
                 }
                 // A MENU ROW carries U+0008 for ⌫, which is not the U+007F
                 // the key sends: AppKit normalises the press to backspace
@@ -415,8 +423,8 @@ struct EditorCommands: Commands {
                 // for the measurement, including the half that says a text
                 // field with the keyboard still keeps the key.
                 .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuKeyEquivalent), modifiers: [])
-                .disabled(!(onTimeline ? (editor?.canDeleteClipPieceInHand ?? false)
-                                       : (video?.canDeleteSelectedPiece ?? false)))
+                .disabled(!(keysPicked || (onTimeline ? (editor?.canDeleteClipPieceInHand ?? false)
+                                                      : (video?.canDeleteSelectedPiece ?? false))))
                 // Premiere's Ripple Delete, on its Mac key: what is picked goes
                 // and everything after it pulls back to close the gap, so a
                 // title stays over the frame it was put on

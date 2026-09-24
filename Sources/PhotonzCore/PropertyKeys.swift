@@ -89,8 +89,33 @@ extension LayerMotion {
     public func easing(key index: Int, _ ease: KeyEase) -> LayerMotion {
         var list = keyframes
         guard list.indices.contains(index) else { return self }
+        if ease == .bezier, list[index].handles == nil || list[index].ease != .bezier {
+            // Bezier starts from the shape the key already makes, so choosing
+            // it changes nothing until a handle is dragged.
+            let now = list[index].ease ?? KeyEase(following: curve)
+            list[index].handles = KeyHandles.implied(by: now == .bezier ? .easeInAndOut : now)
+        } else if ease != .bezier {
+            // Only a Bezier key keeps handles: any other ease draws its own.
+            list[index].handles = nil
+        }
         list[index].ease = ease
         return rebuilt(from: list)
+    }
+
+    /// This motion with one handle of key `index` (of `keyframes`) moved to
+    /// `point`, in the unit square of the stretch that handle shapes. The key
+    /// becomes a Bezier key, the way dragging a handle does in Premiere.
+    public func settingHandle(key index: Int, _ side: KeyHandleSide, to point: CGPoint) -> LayerMotion {
+        var shaped = easing(key: index, .bezier)
+        var list = shaped.keyframes
+        guard list.indices.contains(index), var handles = list[index].handles else { return self }
+        switch side {
+        case .arriving: handles.arriving = point
+        case .leaving: handles.leaving = point
+        }
+        list[index].handles = KeyHandles(arriving: handles.arriving, leaving: handles.leaving)
+        shaped = shaped.rebuilt(from: list)
+        return shaped
     }
 
     /// A property keyed for the first time, with one key.
@@ -140,15 +165,18 @@ extension LayerMotion {
         guard let first = sorted.first, let last = sorted.last else { return made }
         made.from = first.value
         made.fromEase = first.ease
+        made.fromHandles = first.handles
         if sorted.count == 1 {
             made.to = first.value
             made.toEase = first.ease
+            made.toHandles = first.handles
             made.timing = MotionTiming(startMS: first.atMS, durationMS: 1)
             made.stops = nil
             return made
         }
         made.to = last.value
         made.toEase = last.ease
+        made.toHandles = last.handles
         made.timing = MotionTiming(startMS: first.atMS, durationMS: max(1, last.atMS - first.atMS))
         let middle = Array(sorted.dropFirst().dropLast())
         made.stops = middle.isEmpty ? nil : middle

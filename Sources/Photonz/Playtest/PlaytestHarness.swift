@@ -3285,6 +3285,69 @@ private final class Run {
                 actionDetail = "carried the key at " + MotionStripRuler.timecode(Double(mark.documentMS))
                     + " (" + mark.properties.map(\.title).joined(separator: ", ") + ") half a second later"
 
+            // The lanes under a layer's track (`EditorState+KeyLanes`). The
+            // gestures on them are SwiftUI's and a synthetic pointer cannot
+            // reach them, so each lands exactly where the gesture's own end
+            // does.
+            case .keyLanesToggle:
+                guard let id = editor.selectedLayerID, let track = editor.document?.trackID(ofClip: id) else {
+                    throw Failure(description: "keyLanesToggle needs a layer on a track picked")
+                }
+                guard editor.trackHasKeyLanes([id]) else {
+                    throw Failure(description: "the picked layer has nothing keyed, so its track has no arrow")
+                }
+                editor.toggleKeyTrack(track)
+                actionDetail = "the lanes are " + (editor.isKeyTrackOpen(track) ? "open" : "closed")
+            case .keyLanesPickAtPlayhead, .keyLanesPickAll:
+                guard let id = editor.selectedLayerID else {
+                    throw Failure(description: "\(action.rawValue) needs a layer picked")
+                }
+                let here = editor.documentTimeMS
+                let keys = editor.keyLanes(layerID: id).flatMap(\.keys).filter {
+                    action == .keyLanesPickAll || abs($0.documentMS - here) <= PropertyKeys.nearMS
+                }
+                guard !keys.isEmpty else {
+                    throw Failure(description: "no lane key to pick"
+                        + (action == .keyLanesPickAll ? "" : " at the playhead ("
+                           + MotionStripRuler.timecode(Double(here)) + ")"))
+                }
+                editor.pickKeys(layerID: id, Set(keys.map(\.ref)), extending: false)
+                actionDetail = "picked \(keys.count) key(s)"
+            case .keyLanesPickedLater, .keyLanesPickedCopyLater:
+                guard let picked = editor.keySelection, !picked.refs.isEmpty else {
+                    throw Failure(description: "\(action.rawValue) needs keys picked on a lane")
+                }
+                let copying = action == .keyLanesPickedCopyLater
+                editor.moveKeys(layerID: picked.layerID, picked.refs, byMS: 500, copying: copying)
+                actionDetail = (copying ? "copied " : "carried ") + "\(picked.refs.count) key(s) half a second later"
+            case .keyLanesPickedHold, .keyLanesPickedBezier:
+                guard let picked = editor.keySelection, !picked.refs.isEmpty else {
+                    throw Failure(description: "\(action.rawValue) needs keys picked on a lane")
+                }
+                let ease: KeyEase = action == .keyLanesPickedHold ? .hold : .bezier
+                editor.easeKeys(layerID: picked.layerID, picked.refs, ease)
+                actionDetail = "\(ease.title) on \(picked.refs.count) key(s)"
+            case .keyLanesHandleLater:
+                guard let picked = editor.keySelection, let document = editor.document else {
+                    throw Failure(description: "keyLanesHandleLater needs keys picked on a lane")
+                }
+                let found = picked.refs.sorted { $0.clockMS < $1.clockMS }.lazy.compactMap { ref -> (KeyRef, KeyGraph, Int)? in
+                    guard let graph = document.keyGraph(layerID: picked.layerID, motionID: ref.motionID),
+                          let index = graph.keys.firstIndex(where: { $0.ref == ref }),
+                          index + 1 < graph.keys.count, graph.keys[index].leaving != nil else { return nil }
+                    return (ref, graph, index)
+                }.first
+                guard let (ref, graph, index) = found else {
+                    throw Failure(description: "no picked key has a curve leaving it")
+                }
+                let key = graph.keys[index], next = graph.keys[index + 1]
+                let point = CGPoint(x: Double(key.documentMS) + 0.8 * Double(next.documentMS - key.documentMS),
+                                    y: key.value)
+                editor.graphedKeyLanes.insert(ref.motionID)
+                editor.setKeyHandle(layerID: picked.layerID, ref, .leaving, toGraphPoint: point)
+                actionDetail = "dragged the handle leaving the key at "
+                    + MotionStripRuler.timecode(Double(key.documentMS)) + " most of the way along"
+
             // What happens at a cut (`EditorState+ClipTransitions`). Each one
             // refuses out loud, because the refusals ARE the feature: a cut
             // that cannot pay for a dissolve says so rather than making a
@@ -4302,6 +4365,9 @@ private final class Run {
                  .clipPickCut, .clipPickFirstCut, .clipTransitionDissolve, .clipTransitionDipToBlack,
                  .clipTransitionHardCut, .clipTransitionDragLonger, .clipBlurComesOn,
                  .titleDragStartEarlier, .titleDragEndLater, .clipKeyAtPlayheadLater,
+                 .keyLanesToggle, .keyLanesPickAtPlayhead, .keyLanesPickAll,
+                 .keyLanesPickedLater, .keyLanesPickedCopyLater, .keyLanesPickedHold,
+                 .keyLanesPickedBezier, .keyLanesHandleLater,
                  .timelineZoomIn, .timelineZoomOut, .timelineFit, .timelineFiveMinutes:
                 break  // handled above, in the branch that drives the timeline
             }

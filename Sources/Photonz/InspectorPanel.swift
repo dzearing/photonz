@@ -652,7 +652,10 @@ struct InspectorPanel: View {
         // why it has nothing to show. Vanishing was the confusing part: the
         // section directly above it speaks for everything picked, so the second
         // click looked like it had broken something (2026-09-16 design review).
-        if editorState.motionLayer != nil || editorState.motionNeedsOneLayer {
+        // In a document with time only a motion that loops earns the section:
+        // everything that plays once is a keyed value, shown in Animating.
+        if editorState.motionLayer != nil || editorState.motionNeedsOneLayer,
+           !editorState.documentHasTime || !editorState.motionRows.isEmpty {
             set.insert(.motion)
         }
         // How loud the picked layer plays (Next, `next-sound-on-the-timeline`).

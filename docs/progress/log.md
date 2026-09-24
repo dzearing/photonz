@@ -19507,3 +19507,13 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - A title's own track is called Title, as in the mock; V numbers are for the rest. A title's clip menu no longer offers Speed.
 - New walk `title-flies-in-grows-and-fades-out-walk` (no flags); new walk actions `clipKeyAtPlayheadLater`, `videoStepQuarterSecond`. Audit `queue/audits/2026-09-23-motion-a-to-b.json`.
 - Next: lanes as diamonds joined by a line (a-layer-s-track-opens-into-one-lane-per-keyed-va), the canvas motion path and arc (a-moving-layer-draws-its-path-on-the-canvas-and).
+
+## 2026-09-23 — A layer's track opens into one lane per keyed value
+
+- Under a track, one lane per keyed value (`KeyLanesView.swift`), each key a diamond joined to the next by a faint line, as video-move-wt draws it. An arrow on the track header closes and opens them (open by default, so a value keyed for the first time shows its lane at once).
+- On a lane: click picks a key and moves the playhead to it, Shift/Command-click adds, a drag on the bare lane draws a box, dragging a key carries every picked key (snaps to the playhead), Option-drag copies, ⌫ deletes picked keys (the Video menu's ⌫ row reads Delete Keys then), a click on the clip lets the keys go. Each is one undo step.
+- `KeyEase` gains Hold (value stays until the next key) and Bezier (the key's own `KeyHandles`, unit-square control points per stretch, on `MotionStop.handles` / `LayerMotion.fromHandles/toHandles`). Choosing Bezier starts from the shape the key already had; dragging a handle turns a key into a Bezier key. The glyph shows the ease: sharp or softened corners, square side for Hold, hourglass for Bezier.
+- A lane opens into its curve on the timeline's own clock (`PhotonzDocument.keyGraph`, `setKeyHandle(...toGraphPoint:)`): numbers plot as themselves, Position as distance travelled, colours have no curve. Animating's header has the mock's Graph link. Whether the curve should live in the lane or the mock's right-hand Graph panel is a decision card on `a-keyed-value-s-curve-opens-where-you-want-it`.
+- In a document with time the Motion section keeps only motions that loop; keyed values are shown once, in Animating. `component-on-the-timeline-walk` and `punch-in-and-hold-walk` moved onto key diamonds and lanes.
+- Core first: `KeyLanes.swift`, `KeyLanesTests` (27 tests). New walks `key-lanes-walk` (no flags, lock-safe, 8 captures) and `key-lanes-menu-walk`; new walk actions `keyLanes*`. Audit `queue/audits/2026-09-23-key-lanes.json`.
+- Next: the canvas motion path (a-moving-layer-draws-its-path-on-the-canvas-and); the curve placement decision.

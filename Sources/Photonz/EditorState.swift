@@ -736,6 +736,9 @@ final class EditorState {
                 if selectedClipCutIndex != nil { selectedClipCutIndex = nil }
                 // ...and so does a cut between two clips.
                 if selectedLayerID != nil, selectedEditPoint != nil { selectedEditPoint = nil }
+                // ...and so do keys picked on another layer's lanes, so ⌫ can
+                // never throw away keys nobody is looking at.
+                if let keys = keySelection, keys.layerID != selectedLayerID { keySelection = nil }
                 // The chip that says what a path's points do belongs to the
                 // path that was picked; the canvas lets those points go at the
                 // same moment (`CanvasNSView.selectedLayerID`), so the line
@@ -1018,6 +1021,17 @@ final class EditorState {
     var selectedClipPieceIndex: Int? {
         didSet { noteSelectionForHistory() }
     }
+    /// The keys picked on a layer's lanes (`EditorState+KeyLanes`).
+    var keySelection: KeySelection?
+    /// The tracks whose lanes somebody has closed with the arrow on the
+    /// header. Open is the default, so a value keyed for the first time shows
+    /// its lane at once, the way the mock draws it (`video-move-wt.html`).
+    var closedKeyTracks: Set<UUID> = []
+    /// The lanes opened into their curve, by the motion each one draws.
+    var graphedKeyLanes: Set<UUID> = []
+    /// Picked keys on their way somewhere else in time, drawn where the hand
+    /// has them until it lets go.
+    var keyLaneDrag: KeyLaneDrag?
     /// What the NEXT hold will push (`HoldPush.swift`): the whole document, so
     /// a voice stays with the shot it belongs to, or the picture alone, so it
     /// runs on under the frozen frame.

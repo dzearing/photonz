@@ -588,12 +588,63 @@ public struct MotionStop: Hashable, Codable, Sendable {
     /// said (`KeyEase`). Nil follows the motion's own curve, which is every
     /// key written before keys could be eased, so those read back unchanged.
     public var ease: KeyEase?
+    /// Where this key's Bezier handles are, once somebody has drawn them
+    /// (`KeyHandles`). Nil on every key nobody has, so those encode nothing new.
+    public var handles: KeyHandles?
 
-    public init(atMS: Int, value: MotionValue, ease: KeyEase? = nil) {
+    public init(atMS: Int, value: MotionValue, ease: KeyEase? = nil, handles: KeyHandles? = nil) {
         self.atMS = atMS
         self.value = value
         self.ease = ease
+        self.handles = handles
     }
+
+    /// The control point of the stretch LEAVING this key, in that stretch's
+    /// unit square: `x1, y1` of its cubic Bezier.
+    func leavingHandle(_ fallback: KeyEase) -> CGPoint {
+        let ease = self.ease ?? fallback
+        if ease == .bezier, let handles { return handles.leaving }
+        return KeyHandles.implied(by: ease == .bezier ? .easeInAndOut : ease).leaving
+    }
+
+    /// The control point of the stretch ARRIVING at this key, in that
+    /// stretch's unit square: `x2, y2` of its cubic Bezier.
+    func arrivingHandle(_ fallback: KeyEase) -> CGPoint {
+        let ease = self.ease ?? fallback
+        if ease == .bezier, let handles { return handles.arriving }
+        return KeyHandles.implied(by: ease == .bezier ? .easeInAndOut : ease).arriving
+    }
+}
+
+/// A key's two Bezier handles (task `a-layer-s-track-opens-into-one-lane-per-
+/// keyed-va`): the curve view's handles, one either side of the key.
+///
+/// Each is stated in the unit square of the stretch it shapes, the way CSS
+/// states `cubic-bezier`: `leaving` is `x1, y1` of the stretch that leaves this
+/// key, `arriving` is `x2, y2` of the stretch that arrives at it. So a handle
+/// stays the same shape when its keys are dragged further apart or given new
+/// values, and time never runs backwards: `x` is kept between 0 and 1.
+public struct KeyHandles: Hashable, Codable, Sendable {
+    public var arriving: CGPoint
+    public var leaving: CGPoint
+
+    public init(arriving: CGPoint, leaving: CGPoint) {
+        self.arriving = CGPoint(x: min(max(arriving.x, 0), 1), y: arriving.y)
+        self.leaving = CGPoint(x: min(max(leaving.x, 0), 1), y: leaving.y)
+    }
+
+    /// Where the handles of a key eased any other way sit: exactly the curves
+    /// `EasingCurve` already plays for those eases, so turning a key into a
+    /// Bezier one changes nothing until a handle is dragged.
+    public static func implied(by ease: KeyEase) -> KeyHandles {
+        KeyHandles(arriving: ease.easesIn ? CGPoint(x: 0.2, y: 1) : CGPoint(x: 1, y: 1),
+                   leaving: ease.easesOut ? CGPoint(x: 0.4, y: 0) : CGPoint(x: 0, y: 0))
+    }
+}
+
+/// Which of a key's two handles.
+public enum KeyHandleSide: String, Hashable, Sendable {
+    case arriving, leaving
 }
 
 /// How a value moves through one key: a key's right-click in Premiere
@@ -610,6 +661,11 @@ public enum KeyEase: String, Hashable, Codable, Sendable, CaseIterable {
     case easeIn
     case easeOut
     case easeInAndOut
+    /// The value stays where this key puts it until the next key, and then
+    /// jumps: Premiere's Hold.
+    case hold
+    /// Shaped by the key's own handles in the curve view (`KeyHandles`).
+    case bezier
 
     public var title: String {
         switch self {
@@ -617,6 +673,8 @@ public enum KeyEase: String, Hashable, Codable, Sendable, CaseIterable {
         case .easeIn: "Ease In"
         case .easeOut: "Ease Out"
         case .easeInAndOut: "Ease In and Out"
+        case .hold: "Hold"
+        case .bezier: "Bezier"
         }
     }
 
@@ -639,6 +697,7 @@ public enum KeyEase: String, Hashable, Codable, Sendable, CaseIterable {
     /// easing in. A curve with no such reading (a bounce, steps) counts as
     /// easing both ways, the nearest of the four.
     public init(following curve: EasingCurve) {
+        // (`hold` and `bezier` are only ever chosen, never read off a curve.)
         switch curve {
         case .linear, .steps: self = .linear
         case .easeIn: self = .easeOut
@@ -683,6 +742,10 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
     /// those keys (`KeyEase`). The keys in between carry their own.
     public var fromEase: KeyEase?
     public var toEase: KeyEase?
+    /// The Bezier handles of From and To, where somebody has drawn them
+    /// (`KeyHandles`). The keys in between carry their own.
+    public var fromHandles: KeyHandles?
+    public var toHandles: KeyHandles?
     public var repeats: MotionRepeat
     /// What a TURN turns around, and nil on everything else: a fade and a
     /// slide have no axis, and a pivot sitting unused on one would be a number
@@ -701,10 +764,13 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
                 timing: MotionTiming, curve: EasingCurve = .linear,
                 repeats: MotionRepeat = .foreverThereAndBack, isOn: Bool = true,
                 pivot: MotionPivot? = nil, stops: [MotionStop]? = nil,
-                fromEase: KeyEase? = nil, toEase: KeyEase? = nil) {
+                fromEase: KeyEase? = nil, toEase: KeyEase? = nil,
+                fromHandles: KeyHandles? = nil, toHandles: KeyHandles? = nil) {
         self.id = id
         self.fromEase = fromEase
         self.toEase = toEase
+        self.fromHandles = fromHandles
+        self.toHandles = toHandles
         self.property = property
         self.from = from
         self.to = to
@@ -731,7 +797,9 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
         let stretch = Double(timing.durationMS) / Double(self.timing.durationMS)
         moved.stops = stops.map {
             let along = Double($0.atMS - self.timing.startMS) * stretch
-            return MotionStop(atMS: timing.startMS + Int(along.rounded()), value: $0.value, ease: $0.ease)
+            var stop = $0
+            stop.atMS = timing.startMS + Int(along.rounded())
+            return stop
         }
         return moved
     }
@@ -782,12 +850,12 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
     /// and silently piling several onto the last millisecond would draw one key
     /// where there were three.
     public var keys: [MotionStop] {
-        var list = [MotionStop(atMS: timing.startMS, value: from, ease: fromEase)]
+        var list = [MotionStop(atMS: timing.startMS, value: from, ease: fromEase, handles: fromHandles)]
         for stop in (stops ?? []).sorted(by: { $0.atMS < $1.atMS })
         where stop.atMS > timing.startMS && stop.atMS < timing.endMS {
             list.append(stop)
         }
-        list.append(MotionStop(atMS: timing.endMS, value: to, ease: toEase))
+        list.append(MotionStop(atMS: timing.endMS, value: to, ease: toEase, handles: toHandles))
         return list
     }
 
@@ -847,7 +915,17 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
     func segmentCurve(leaving left: MotionStop, arriving right: MotionStop) -> EasingCurve {
         if left.ease == nil, right.ease == nil { return curve }
         let fallback = KeyEase(following: curve)
-        return KeyEase.curve(leaving: left.ease ?? fallback, arriving: right.ease ?? fallback)
+        let leaving = left.ease ?? fallback
+        let arriving = right.ease ?? fallback
+        // A held key keeps its value for the whole stretch and the next key's
+        // value arrives on the next key's own frame.
+        if leaving == .hold { return .steps(1) }
+        if leaving == .bezier || arriving == .bezier {
+            let a = left.leavingHandle(fallback)
+            let b = right.arrivingHandle(fallback)
+            return .custom(x1: Double(a.x), y1: Double(a.y), x2: Double(b.x), y2: Double(b.y))
+        }
+        return KeyEase.curve(leaving: leaving, arriving: arriving)
     }
 
     /// True once this motion has stopped moving for good, so the preview can

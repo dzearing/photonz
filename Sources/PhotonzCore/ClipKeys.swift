@@ -32,7 +32,7 @@ extension PhotonzDocument {
     /// The keyed motions of a layer: every property somebody keyed, which in a
     /// document with time is every motion that plays once. A motion that loops
     /// is an icon's, and has no moments to draw.
-    private func keyedMotions(of layer: Layer) -> [LayerMotion] {
+    func keyedMotions(of layer: Layer) -> [LayerMotion] {
         (layer.motions ?? []).filter { $0.repeats == .once && $0.isOn }
     }
 

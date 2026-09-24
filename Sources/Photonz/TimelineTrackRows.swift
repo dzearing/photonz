@@ -42,7 +42,15 @@ struct TimelineTrackRow: View {
             .frame(height: laneHeight)
             .playtestField("Track \(track.name)")
             ForEach(row.clips) { clip in
-                ForEach(clip.lanes) { lane in
+                // A keyed value is a lane of keys, opened and closed by the
+                // arrow on the header (`KeyLanesView`); anything else that
+                // moves keeps its timing bar.
+                let keyed = Set(editorState.keyLanes(layerID: clip.layerID).map(\.motionID))
+                if !keyed.isEmpty, editorState.isKeyTrackOpen(track.id) {
+                    KeyLanesView(layerID: clip.layerID, layerName: clip.layerName, laneWidth: laneWidth,
+                                 indent: indent, isLocked: track.isLocked)
+                }
+                ForEach(clip.lanes.filter { !keyed.contains($0.motionID) }) { lane in
                     MotionStripLaneView(lane: lane, layerName: clip.layerName, laneWidth: laneWidth)
                 }
             }
@@ -89,9 +97,9 @@ struct TimelineTrackRow: View {
                     // While the switches are up the icon gives the name its
                     // room: the switches already say what kind of track it is.
                     VideoKit.TrackHeader(title: track.name, symbol: showsAllSwitches ? nil : symbol,
-                                         width: TimelineDock.gutter - indent - switchesWidth,
+                                         width: TimelineDock.gutter - indent - switchesWidth - twistWidth,
                                          uppercase: false, isSelected: isPicked)
-                        .padding(.leading, indent)
+                        .padding(.leading, indent + twistWidth)
                         .frame(height: laneHeight)
                         .contentShape(Rectangle())
                 }
@@ -101,6 +109,7 @@ struct TimelineTrackRow: View {
             }
         }
         .frame(width: TimelineDock.gutter, height: laneHeight, alignment: .leading)
+        .overlay(alignment: .leading) { twist.padding(.leading, indent) }
         .background {
             if editorState.selectedTrackIDs.contains(track.id) {
                 RoundedRectangle(cornerRadius: 5).fill(VideoKit.Palette.accent.opacity(0.14))
@@ -114,6 +123,41 @@ struct TimelineTrackRow: View {
     }
 
     private var indent: CGFloat { inGroup ? 10 : 0 }
+
+    // MARK: The arrow that opens the lanes
+
+    /// Whether anything on this track has a value keyed, which is what earns
+    /// the header its arrow.
+    private var hasKeyLanes: Bool {
+        editorState.trackHasKeyLanes(row.clips.map(\.layerID))
+    }
+
+    private var twistWidth: CGFloat { hasKeyLanes ? 12 : 0 }
+
+    /// The arrow before the name, the way Premiere and After Effects open a
+    /// track into its keyed values: pointing right while closed, down while
+    /// open.
+    @ViewBuilder private var twist: some View {
+        if hasKeyLanes {
+            let open = editorState.isKeyTrackOpen(track.id)
+            Button {
+                withAnimation(.snappy(duration: 0.18)) { editorState.toggleKeyTrack(track.id) }
+            } label: {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(VideoKit.Palette.faint)
+                    .rotationEffect(.degrees(open ? 90 : 0))
+                    .frame(width: 12, height: laneHeight)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help(open ? "Hide the keyed values" : "Show the keyed values")
+            .accessibilityLabel(open ? "Hide the keyed values of \(track.name)"
+                                     : "Show the keyed values of \(track.name)")
+            .playtestControl("Key Lanes \(track.name)", detail: "Timeline")
+            .panelReadout("\(track.name) keyed values \(open ? "open" : "closed")")
+        }
+    }
 
     private var readout: String {
         var said = "track \(track.name)"

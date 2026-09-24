@@ -1,0 +1,464 @@
+{
+  "out": "/tmp/photonz-playtest/key-lanes-walk",
+  "seed": "A layer's track opens into one lane per keyed value. At Next defaults with no flag changed, this walk types a title on a recording, keys its Scale and Opacity with the panel's diamonds, and then works the keys on the lanes under its Title track: the header arrow closes and opens them, keys at one moment are picked together and dragged later, undone, copied with Option, deleted with ⌫, given Hold, then Bezier, and the Graph link opens a lane into its curve where a handle is dragged. It photographs the lanes open, closed, dragged, copied, held and curved.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        620,
+        330
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Ship it faster"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "reveal",
+      "control": "Animating section"
+    },
+    {
+      "do": "press",
+      "control": "Key",
+      "in": "Scale"
+    },
+    {
+      "do": "press",
+      "control": "Key",
+      "in": "Opacity"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Scale Value"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "160"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Opacity Value"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "40"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-lanes",
+      "note": "THE FIRST TEST: Scale and Opacity keyed at one and two seconds through the panel's diamonds. Under the Title track, with no flag changed, one lane per keyed value, each key a diamond joined to the next by a faint line, the way video-move-wt draws its Position lane"
+    },
+    {
+      "do": "expect",
+      "control": "Key Lanes Title",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 1",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 2",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key Opacity 2",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Motion section",
+      "present": false
+    },
+    {
+      "do": "snapshot",
+      "name": "1-lanes-open"
+    },
+    {
+      "do": "action",
+      "action": "keyLanesToggle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-closed",
+      "note": "THE SECOND TEST: the arrow on the track's header closes the lanes; the clip keeps its own diamonds"
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 1",
+      "present": false
+    },
+    {
+      "do": "snapshot",
+      "name": "2-lanes-closed"
+    },
+    {
+      "do": "action",
+      "action": "keyLanesToggle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 1",
+      "present": true
+    },
+    {
+      "do": "action",
+      "action": "videoStepBackOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "keyLanesPickAtPlayhead"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "keyLanesPickedLater"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-dragged",
+      "note": "THE THIRD TEST: both keys at one second, picked together as a box down through the playhead would, dragged half a second later as one move. The playhead at one second is no longer on a key"
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Scale",
+      "reads": "between keys"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-keys-dragged-later"
+    },
+    {
+      "do": "key",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-undone",
+      "note": "one undo puts both keys back at one second"
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Scale",
+      "reads": "on a key"
+    },
+    {
+      "do": "action",
+      "action": "keyLanesPickAtPlayhead"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "keyLanesPickedCopyLater"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-copied",
+      "note": "THE FOURTH TEST: Option-drag copies the picked keys half a second later and leaves the originals: three keys on each lane"
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 3",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key Opacity 3",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "5-keys-copied"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-deleted",
+      "note": "THE FIFTH TEST: ⌫ with the copies picked takes the copies and leaves the title"
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 3",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Track Title",
+      "present": true
+    },
+    {
+      "do": "action",
+      "action": "keyLanesPickAtPlayhead"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "keyLanesPickedHold"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "7-held",
+      "note": "THE SIXTH TEST: Hold on the keys at one second. Half a second later the title has not grown or faded at all: it jumps at two seconds. The keys at one second are drawn square on their leaving side"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-held"
+    },
+    {
+      "do": "action",
+      "action": "videoStepBackOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "keyLanesPickAtPlayhead"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "keyLanesPickedBezier"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Graph"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "8-graph",
+      "note": "THE SEVENTH TEST: Bezier on the keys at one second, and the Animating header's Graph link opens the Scale lane into its curve on the timeline's own clock"
+    },
+    {
+      "do": "snapshot",
+      "name": "8-curve-open"
+    },
+    {
+      "do": "action",
+      "action": "keyLanesHandleLater"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "9-handle",
+      "note": "THE EIGHTH TEST: the handle leaving the Scale key at one second dragged most of the way to the next key: the grow now starts slowly and snaps up late, and the curve shows it"
+    },
+    {
+      "do": "snapshot",
+      "name": "9-handle-dragged"
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "10-half-way-eased"
+    }
+  ]
+}
