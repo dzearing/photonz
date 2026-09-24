@@ -54,9 +54,11 @@ The schedule now:
   only when code has landed since the last one. Requests pile up in between and
   the next run serves them all.
 * **In between, after any task that lands code, a rotating check**: about ten
-  minutes of walks, made of every walk whose script changed since the last check
-  plus the next chunk of the set, carrying on where it stopped. Over a day the
-  rotation covers the whole set anyway, in ten minute pieces.
+  minutes of walks, made of the end-to-end walks every check runs
+  (`an-editing-session-walk`: a whole video edit at Next defaults, failing on
+  any blank frame while it plays), every walk whose script changed since the
+  last check, and the next chunk of the set, carrying on where it stopped. Over
+  a day the rotation covers the whole set anyway, in ten minute pieces.
 * **A rotating check is not a sweep.** It never closes the standing walk task,
   and fifty walks passing is never the state of five hundred. A walk it finds
   broken is written onto the standing walk task the same day.

@@ -1,0 +1,29 @@
+{
+  "feature": "An editing session, end to end, checked on every rotating check",
+  "epic": "video-editing",
+  "summary": "One scripted session now does a whole edit the way you get it in Next: it cuts a talking recording, adds a clip, a dissolve and a moving title, plays the edit while checking 30 frames for blanks, and exports the MP4. It runs in every rotating check. It also turned up a panel bug, now fixed: the right panel ran off the window whenever a document had captions.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The walk is Scripts/playtest/an-editing-session-walk.json and sets no flags.",
+  "try": [
+    { "do": "Open a screen recording with somebody talking and wait for the captions to write themselves.", "shot": "2026-09-24-editing-session-captions-panel-fits-sc.png" },
+    { "do": "Put the playhead at 0:08 and press Command K, then at 0:04 and press Command K, then press Delete.", "shot": "2026-09-24-editing-session-2-cut-sc.png" },
+    { "do": "Drag a second recording onto the end of V1." },
+    { "do": "Click the recording, click the join the delete left, and pick Cross dissolve.", "shot": "2026-09-24-editing-session-4-picker-sc.png" },
+    { "do": "At 0:01 press T, click the picture, type a title, press Command Return, then click the Position diamond." },
+    { "do": "Step one second on and drag the title somewhere else on the canvas.", "shot": "2026-09-24-editing-session-6-title-at-b-sc.png" },
+    { "do": "Press Home, then Space, and watch the whole edit play through.", "shot": "2026-09-24-editing-session-playback-looks.png" },
+    { "do": "Open Export, keep MP4, and export.", "shot": "2026-09-24-editing-session-8-export-sheet-sc.png" }
+  ],
+  "evaluate": [
+    "Is this the session you would do yourself in a first sitting, or is something a Premiere editor does in every edit missing from it?",
+    "Once the captions are written, does the right panel now sit inside the window with nothing cut off on its right edge?",
+    "Does the caption Style bar spanning the whole panel, as the mock draws it, read better than when it sat beside a label?",
+    "After the cut, do the captions over the b-roll look as wrong to you as they do to me?"
+  ],
+  "rough": [
+    "The captions do not follow the cut: after Delete closes the gap they stay where they were, so lines play over the wrong words and over the b-roll. Filed as a p1 task (Cutting a stretch out of a recording takes its captions along). The walk does not claim this yet, so it stays green until that task adds the claim.",
+    "The Export sheet said about 9.6 MB and the MP4 came out at 693 KB. Filed as a p2 task.",
+    "On the jump cut the Edit point section's Spare before box is too narrow and shows '...' instead of 8.6s. Added to the transition placement task.",
+    "The Captions Generate row squeezes its button to 'Write Ag...' beside '10 captions'.",
+    "The blink check reads the picture the canvas is handed while it plays. It cannot see a blink that happens only on the screen after that point, such as a frame the window draws late."
+  ]
+}

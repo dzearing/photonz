@@ -178,18 +178,21 @@ struct CaptionsInspector: View {
 
     @ViewBuilder private var style: some View {
         let look = editorState.captionLook
-        VideoKit.FieldRow(label: "Style") {
-            Picker("Style", selection: Binding(
-                get: { look.preset },
-                set: { editorState.pickCaptionPreset($0) })) {
-                ForEach(CaptionLook.Preset.allCases, id: \.self) { Text($0.title).tag($0) }
-            }
-            .labelsHidden()
-            .pickerStyle(.segmented)
-            .controlSize(.small)
-            .playtestControl("Caption style", detail: "the Captions section")
-            .panelHelp("One look for every caption.")
+        // The mock's style bar spans the section (`#styleSeg`, width 100%).
+        // Beside a row label its three names are wider than the dock, and a
+        // segmented control never shrinks, so it pushed the whole panel past
+        // the window's right edge whenever a document had captions.
+        Picker("Style", selection: Binding(
+            get: { look.preset },
+            set: { editorState.pickCaptionPreset($0) })) {
+            ForEach(CaptionLook.Preset.allCases, id: \.self) { Text($0.title).tag($0) }
         }
+        .labelsHidden()
+        .pickerStyle(.segmented)
+        .controlSize(.small)
+        .frame(maxWidth: .infinity)
+        .playtestControl("Caption style", detail: "the Captions section")
+        .panelHelp("One look for every caption.")
         VideoKit.DropdownRow(label: "Font", value: look.fontName) {
             ForEach(Self.fonts, id: \.self) { font in
                 Toggle(font, isOn: Binding(get: { look.fontName == font },

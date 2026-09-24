@@ -124,6 +124,7 @@
         "A Premiere or Final Cut editor can cut a 5 minute screen recording to 90 seconds, add a second clip and a music bed, a title that flies in, captions, a transition, and export MP4, without being taught, in less time than in Premiere",
         "The timeline, transport, clips, tracks, transition picker and properties match the video mocks (video.html and its video-*.html walkthroughs, comp-video.html) side by side",
         "Playback of a full-screen Retina recording never blinks or stutters",
+        "One scripted editing session (an-editing-session-walk) runs at Next defaults in every rotating check: it opens a talking recording, cuts it, adds a second clip, a transition and a title moving from A to B, lets the captions write themselves, plays the whole edit looking 30 times for a blank frame, and exports the MP4",
         "Everything is reachable in Next with default settings"
       ]
     },

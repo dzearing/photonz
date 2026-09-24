@@ -6583,10 +6583,20 @@ private final class Run {
     /// Each look is shrunk to a quarter on the spot and written out only once
     /// the playing stops: encoding a full-screen PNG on the main actor while
     /// it plays would stall the very clock and frame landings being watched.
+    ///
+    /// The area checked at each look is the clips ON at that moment, whichever
+    /// they are: an edited document plays a piece of one recording, then a
+    /// second clip, then back, and the first clip in the list is off screen for
+    /// most of that. A moment with no clip on at all (a gap somebody left in
+    /// the timeline) is black by design, so it is counted and said, never
+    /// failed; a run that never once had a clip on is refused.
     private func checkPlaybackNeverBlank(name: String, seconds: Double, moments: Int) async throws -> String {
         let editor = try requireEditor()
-        guard let document = editor.shownDocument, document.hasTime,
-              let clip = document.allLayers.first(where: \.isClip), let movie = clip.movie else {
+        guard let document = editor.shownDocument, document.hasTime else {
+            throw Failure(description: "there is no recording in this document to play")
+        }
+        let clips = document.allLayers.filter { $0.isClip && $0.isVisible }
+        guard !clips.isEmpty else {
             throw Failure(description: "there is no recording in this document to play")
         }
         editor.goToDocumentStart()
@@ -6595,14 +6605,20 @@ private final class Run {
         let started = Date()
         var looks: [CGImage] = []
         var empty: [Int] = []
+        var gaps = 0
         var late = 0
         var worstLag = 0
+        var seen = Set<String>()
         for moment in 1...moments {
             let due = seconds * Double(moment) / Double(moments)
             let wait = due - Date().timeIntervalSince(started)
             if wait > 0 { await sleep(wait) }
             let playhead = editor.documentTimeMS
-            if let wanted = clip.movieFrameSourceMS(atTimeMS: playhead) {
+            let on = clips.filter { $0.movieFrameSourceMS(atTimeMS: playhead) != nil }
+            for clip in on {
+                guard let movie = clip.movie, let wanted = clip.movieFrameSourceMS(atTimeMS: playhead)
+                else { continue }
+                seen.insert(clip.name)
                 let index = movie.frameIndex(atSourceMS: wanted)
                 let shown = editor.movieFrames.inHand.frameIndexToShow(index, of: movie.id)
                 if shown != index { late += 1 }
@@ -6614,9 +6630,11 @@ private final class Run {
                 continue
             }
             looks.append(look)
+            guard !on.isEmpty else { gaps += 1; continue }
             let scale = CGFloat(look.width) / max(1, document.canvasSize.width)
-            let area = CGRect(x: clip.frame.minX * scale, y: clip.frame.minY * scale,
-                              width: clip.frame.width * scale, height: clip.frame.height * scale)
+            let frame = on.dropFirst().reduce(on[0].frame) { $0.union($1.frame) }
+            let area = CGRect(x: frame.minX * scale, y: frame.minY * scale,
+                              width: frame.width * scale, height: frame.height * scale)
             if Self.transparentShare(of: look, in: area) > 0.9 { empty.append(moment) }
         }
         editor.pauseDocument()
@@ -6630,9 +6648,16 @@ private final class Run {
             throw Failure(description: "the clip area was EMPTY at \(empty.count) of \(moments) moments "
                 + "(\(empty.map(String.init).joined(separator: ", "))) while playing; \(lateness)")
         }
-        return "played \(seconds)s of a \(Int(movie.pixelSize.width))x\(Int(movie.pixelSize.height)) recording, "
-            + "looked \(moments) times (\(name)-1.png to \(name)-\(looks.count).png), the clip was drawn in every one; "
-            + lateness
+        guard !seen.isEmpty else {
+            throw Failure(description: "no clip was on at any of the \(moments) moments looked at, "
+                + "so nothing was checked")
+        }
+        let sizes = Set(clips.compactMap(\.movie).map { "\(Int($0.pixelSize.width))x\(Int($0.pixelSize.height))" })
+        let gapNote = gaps == 0 ? "" : "; \(gaps) look(s) fell in a gap with no clip on, which is black by design"
+        return "played \(seconds)s (\(sizes.sorted().joined(separator: ", "))), "
+            + "looked \(moments) times (\(name)-1.png to \(name)-\(looks.count).png), "
+            + "the clip on screen was drawn in every one (\(seen.sorted().joined(separator: ", "))); "
+            + lateness + gapNote
     }
 
     /// A picture at a quarter of its size, or nil where it could not be drawn.

@@ -88,6 +88,20 @@ s = pickSlice({ walks: walks.slice(0, 10), cursor: 0, changed: [], minutes: 10 }
 check('a set smaller than the budget runs once through and no more',
   s.walks.length === 10, s.walks.length);
 
+console.log('walks every rotating check runs');
+s = pickSlice({ walks, cursor: 10, changed: ['walk-091'], always: ['walk-050'], minutes: 10, perWalkSeconds: 12 });
+check('a walk named for every check runs first, ahead of the changed ones and the cursor',
+  s.walks[0] === 'walk-050' && s.walks[1] === 'walk-091', s.walks.slice(0, 3));
+check('and it is counted inside the budget, not on top of it', s.walks.length === 50, s.walks.length);
+check('and it says which ones were there for that reason', JSON.stringify(s.always) === '["walk-050"]', s.always);
+s = pickSlice({ walks, cursor: 40, changed: [], always: ['walk-050'], minutes: 10, perWalkSeconds: 12 });
+check('the rotation reaching it as well does not run it twice',
+  s.walks.filter((w) => w === 'walk-050').length === 1, s.walks.length);
+s = pickSlice({ walks, cursor: 0, changed: [], always: ['gone-walk'], minutes: 10, perWalkSeconds: 12 });
+check('a name that is no longer a walk in the set is left out', !s.walks.includes('gone-walk') && s.always.length === 0, s.always);
+check('the end to end editing session walk is in every check',
+  DEFAULTS.everyCheck.includes('an-editing-session-walk'), DEFAULTS.everyCheck);
+
 console.log('defaults');
 check('the floor is twelve hours', DEFAULTS.floorHours === 12, DEFAULTS.floorHours);
 check('a rotating check is budgeted at ten minutes', DEFAULTS.sliceMinutes === 10, DEFAULTS.sliceMinutes);

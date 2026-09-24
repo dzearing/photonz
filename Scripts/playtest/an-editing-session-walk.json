@@ -1,0 +1,367 @@
+{
+  "out": "/tmp/photonz-playtest/an-editing-session-walk",
+  "seed": "One editing session, end to end, exactly as a person running Next gets it with no flag touched: a talking screen recording opens and its captions write themselves, a stretch is cut out of the middle with Command K twice and Delete, a second clip is let go on the end of V1, a cross dissolve goes on the jump cut from the picker at the cut, a title typed on the picture moves from A to B by keying Position and dragging it a second later, the whole edit plays through while the canvas is looked at 30 times and the walk fails if the clip area is ever empty, and the edit is written out as an MP4 with its sound. It runs in every rotating check.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "scratch": [
+      "sample:recording as b-roll.mp4"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleTalk"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "captionsWaitForThemselves"
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectOneTrack"
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Talk",
+      "track": "V1",
+      "startsAt": 0.0,
+      "count": 1
+    },
+    {
+      "do": "describe",
+      "stage": "1-opened",
+      "note": "A 17 second screen recording with somebody talking, opened at Next defaults. Nothing was pressed: the captions wrote themselves onto one Captions track, the recording is on V1 with its sound under it"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-opened"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekMiddle"
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "action",
+      "action": "videoSeekQuarter"
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "row": "Sample Talk",
+      "reads": "layer, 3 pieces"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "row": "Sample Talk",
+      "reads": "layer, 2 pieces"
+    },
+    {
+      "do": "describe",
+      "stage": "2-cut",
+      "note": "THE CUT: Command K at 0:08 and at 0:04, Premiere's Add Edit, then Delete throws the middle piece away and closes the gap. V1 is two pieces of the recording, 12.9 seconds long"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-cut"
+    },
+    {
+      "do": "dropOnTimeline",
+      "file": "scratch/b-roll.mp4",
+      "track": "V1",
+      "seconds": 12.9
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "track": "V1",
+      "startsAt": 12.94,
+      "within": 0.1,
+      "count": 1
+    },
+    {
+      "do": "describe",
+      "stage": "3-second-clip",
+      "note": "THE SECOND CLIP: b-roll let go on V1 just short of the end snaps on at 0:12.9, with its sound on the Audio track under it"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-second-clip"
+    },
+    {
+      "do": "selectRow",
+      "row": "Sample Talk"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Sample Talk join 1"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-picker",
+      "note": "THE TRANSITION: the recording picked, a click on the jump cut left by the delete opens the picker AT THIS CUT with its six playing tiles"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-picker"
+    },
+    {
+      "do": "press",
+      "control": "Cross dissolve",
+      "in": "At this cut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Cross dissolve"
+    },
+    {
+      "do": "describe",
+      "stage": "5-dissolve",
+      "note": "A cross dissolve on the jump cut, paid for with the frames the delete threw away, drawn as a band over the join"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-dissolve"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        620,
+        330
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Ship it faster"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "control": "Track Title",
+      "present": true
+    },
+    {
+      "do": "reveal",
+      "control": "Animating section"
+    },
+    {
+      "do": "press",
+      "control": "Key",
+      "in": "Position"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Position",
+      "reads": "on a key"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "drag",
+      "from": [
+        720,
+        350
+      ],
+      "to": [
+        900,
+        420
+      ],
+      "space": "document",
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Position",
+      "reads": "on a key"
+    },
+    {
+      "do": "describe",
+      "stage": "6-title-at-b",
+      "note": "THE TITLE: T and a click at one second, Ship it faster typed, Position keyed from its diamond, and a second later the title dragged on the canvas: a second key, drawn on the title's Position lane. It moves from A at 0:01 to B at 0:02"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-title-at-b"
+    },
+    {
+      "do": "expect",
+      "field": "Playhead Readout",
+      "reads": "Playhead Position 800, 385.5 @ 2.00s"
+    },
+    {
+      "do": "action",
+      "action": "videoStepBackOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Playhead Readout",
+      "reads": "Playhead Position 620, 330 @ 1.00s"
+    },
+    {
+      "do": "describe",
+      "stage": "7-plays",
+      "note": "THE BLINK TEST: the whole 21 second edit plays from the start and the canvas is looked at 30 times, through the dissolve and onto the b-roll. It fails if the clip on screen is ever drawn empty"
+    },
+    {
+      "do": "expectPlaybackNeverBlank",
+      "name": "playing",
+      "seconds": 21,
+      "moments": 30
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "action",
+      "action": "exportDialogAsVideo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "8-export-sheet"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "8-exported",
+      "note": "THE EXPORT: the Export sheet on MP4, then the edit written out as an MP4 from the document, 20.94 seconds with its sound"
+    },
+    {
+      "do": "writeVideo",
+      "name": "the-edit",
+      "format": "mp4",
+      "seconds": 20.94,
+      "within": 0.6,
+      "sound": true,
+      "copied": false
+    }
+  ]
+}

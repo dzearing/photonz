@@ -43,6 +43,13 @@ export const DEFAULTS = {
   sliceMinutes: 10,
   // Only a default; sweep-size.mjs measures the real one off the history.
   perWalkSeconds: 12,
+  // Walks EVERY rotating check runs, ahead of the rest. Kept to the few that
+  // drive a whole experience end to end the way a person gets it, because a
+  // regression anywhere along that path shows up in them first:
+  // an-editing-session-walk opens a talking recording at Next defaults, cuts
+  // it, adds a clip, a transition and a moving title, plays it through
+  // looking for a blank frame, and writes the MP4 (asked for on 2026-09-23).
+  everyCheck: ['an-editing-session-walk'],
 };
 
 const HOUR = 3600 * 1000;
@@ -108,17 +115,19 @@ export function decide({
   return out('slice', `${hoursSince.toFixed(1)}h since the last whole-set run, so the rotating check runs instead`);
 }
 
-// Which walks a rotating check covers: everything whose script changed, then
-// the next chunk of the set in rotation, up to the time budget.
+// Which walks a rotating check covers: the walks named for every check, then
+// everything whose script changed, then the next chunk of the set in rotation,
+// up to the time budget.
 export function pickSlice({
   walks = [],
   cursor = 0,
   changed = [],
+  always = DEFAULTS.everyCheck,
   minutes = DEFAULTS.sliceMinutes,
   perWalkSeconds = DEFAULTS.perWalkSeconds,
 } = {}) {
   const set = walks.slice();
-  if (!set.length) return { walks: [], nextCursor: 0, changed: [], rotated: [], lap: false, budget: 0 };
+  if (!set.length) return { walks: [], nextCursor: 0, changed: [], always: [], rotated: [], lap: false, budget: 0 };
 
   const per = Number(perWalkSeconds) > 0 ? Number(perWalkSeconds) : DEFAULTS.perWalkSeconds;
   const budget = Math.max(1, Math.floor((Number(minutes) * 60) / per));
@@ -129,6 +138,11 @@ export function pickSlice({
   // cursor is.
   const picked = [];
   const seen = new Set();
+  const alwaysPicked = [];
+  for (const name of always || []) {
+    if (!inSet.has(name) || seen.has(name) || picked.length >= budget) continue;
+    seen.add(name); picked.push(name); alwaysPicked.push(name);
+  }
   const changedPicked = [];
   for (const name of changed) {
     if (!inSet.has(name) || seen.has(name)) continue;
@@ -149,7 +163,7 @@ export function pickSlice({
     if (i === 0) lap = true;
   }
 
-  return { walks: picked, nextCursor: i, changed: changedPicked, rotated, lap, budget };
+  return { walks: picked, nextCursor: i, changed: changedPicked, always: alwaysPicked, rotated, lap, budget };
 }
 
 // ---------------------------------------------------------------- the CLI ----
@@ -260,9 +274,10 @@ if (isMain) {
   requests pile up and the next run serves them all.
 
   In between, after any task that lands code, the loop runs a rotating check of
-  about ${DEFAULTS.sliceMinutes} minutes: every walk whose script changed since the last check,
-  then the next chunk of the set in rotation, carrying on where it stopped. Over
-  a day the rotation covers the whole set anyway, in pieces.
+  about ${DEFAULTS.sliceMinutes} minutes: the walks every check runs (${DEFAULTS.everyCheck.join(', ')}),
+  every walk whose script changed since the last check, then the next chunk of
+  the set in rotation, carrying on where it stopped. Over a day the rotation
+  covers the whole set anyway, in pieces.
 
   A rotating check is not a sweep. It never closes the standing walk task and
   its green is never the state of the walk set.

@@ -19544,3 +19544,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Walk step `expectTimeline` (playhead to the millisecond, keyboard, rate, tool, marks); walk keys `home`, `end`, `forwarddelete`.
 - Walk `premiere-keys-on-the-timeline-walk` at Next defaults; audit `queue/audits/2026-09-23-premiere-keys-on-the-timeline.json`.
 - Follow-up: a-picks-everything-after-a-clip-and-moves-it-as (A, Track Select Forward).
+
+## 2026-09-24: An editing session walk runs at Next defaults and fails on any blink (go loop)
+
+- New walk `an-editing-session-walk`, no flags: a talking recording opens and captions itself, ⌘K twice and Delete cut the middle out, b-roll goes on the end of V1, a cross dissolve goes on the jump cut from the picker, a title moves A to B by a Position key and a canvas drag, the 21s edit plays while `expectPlaybackNeverBlank` looks 30 times, and the MP4 is written (20.94s, sound). About 55s, 7 real captures.
+- `expectPlaybackNeverBlank` now checks the clips ON at each moment instead of the first clip in the list, counts gaps as black by design, and refuses a run where no clip was ever on.
+- The rotating check runs `DEFAULTS.everyCheck` (this walk) first in every slice (`queue/bin/sweep-schedule.mjs`, drill updated). Named in the video epic's success criteria.
+- Fixed on the way: the right panel ran off the window's right edge in any document with captions, because the caption Style segmented bar sat beside a row label and cannot shrink. It now spans the section, as the mock's `#styleSeg` does.
+- Follow-ups: cutting-a-stretch-out-of-a-recording-takes-its-c (p1, captions do not follow a ripple delete), the-export-sheet-s-size-for-an-edited-video-is-c (p2, sheet said 9.6 MB, file was 0.7 MB).

@@ -181,6 +181,7 @@ slice)
   OF=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).of)' "$SLICE_JSON")
   FROM=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).from)' "$SLICE_JSON")
   CHANGED=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).changed.length)' "$SLICE_JSON")
+  ALWAYS=$(node -e 'console.log((JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).always || []).length)' "$SLICE_JSON")
   if (( N == 0 )); then
     echo "==> Rotating check: no walks to run."
     exit 0
@@ -189,7 +190,7 @@ slice)
   RUNLOG="$SDIR/slice-$stamp.log"
   began_s=$SECONDS
   began=$(now)
-  echo "==> Rotating check: $N of $OF walks, from $FROM in the rotation, $CHANGED of them because their script changed."
+  echo "==> Rotating check: $N of $OF walks, from $FROM in the rotation, $ALWAYS run in every check, $CHANGED because their script changed."
   echo "    This is NOT the full sweep. What it does not run is unknown, not passing."
   Q note "rotating walk check: $N of $OF walks" >/dev/null 2>&1
   AWAKE_PIDFILE="$SDIR/.awake.pid"
