@@ -68,11 +68,12 @@ struct MotionListInspector: View {
             .fixedSize(horizontal: false, vertical: true)
             .playtestField("Motion One Layer")
             .panelReadout(Self.oneAtATime)
+            .panelHelp(Self.oneAtATimeHelp)
             .panelStartProbe(.row, owner: "Motion one layer")
     }
 
-    private static let oneAtATime = "Motion is set on one layer at a time, because the numbers it "
-        + "animates are that layer's own. Pick a single layer to add one."
+    private static let oneAtATime = "Pick one layer to add motion."
+    private static let oneAtATimeHelp = "What moves is one layer's own numbers, so motion is set on one layer at a time."
 }
 
 /// One entry: a switch, the property's name, its curve drawn small, the

@@ -254,9 +254,9 @@ public enum LayerMatte: String, Hashable, Codable, Sendable, CaseIterable {
     public var explanation: String {
         switch self {
         case .shape:
-            "Shows this layer only where the layer below has something drawn, edges and all."
+            "Shows this layer only where the layer below is drawn."
         case .brightness:
-            "Shows this layer where the layer below is light and hides it where it is dark, so a fade below fades this one."
+            "Shows this layer where the layer below is light."
         }
     }
 

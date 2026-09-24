@@ -73,23 +73,20 @@ struct KeyRows: View {
                         .playtestControl("Key it again", detail: "Key")
                 }
                 .opacity(isOn ? 1 : 0.45)
-                slider("Tolerance", read: { $0.key?.tolerance ?? 0 }) { $0.key?.tolerance = $1 }
-                slider("Softness", read: { $0.key?.softness ?? 0 }) { $0.key?.softness = $1 }
-                slider("Spill", read: { $0.key?.spill ?? 0 }) { $0.key?.spill = $1 }
-                Text("Tolerance is how much of the colour goes. Softness is how gently the edge "
-                     + "fades. Spill pulls the colour back out of what is left, which is what "
-                     + "takes a green rim off a shoulder.")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-                    .fixedSize(horizontal: false, vertical: true)
+                slider("Tolerance", help: "How much of the colour goes",
+                       read: { $0.key?.tolerance ?? 0 }) { $0.key?.tolerance = $1 }
+                slider("Softness", help: "How gently the edge fades",
+                       read: { $0.key?.softness ?? 0 }) { $0.key?.softness = $1 }
+                slider("Spill", help: "Pulls the colour back out of what is left, which takes a green rim off a shoulder",
+                       read: { $0.key?.spill ?? 0 }) { $0.key?.spill = $1 }
             }
             if noWall {
-                Text("The edges of this picture are not one colour, so there is nothing to key. "
-                     + "Scrub to a moment where the backdrop shows and try again.")
+                Text("Nothing to key here. Scrub to the backdrop.")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
                     .panelReadout("nothing to key")
+                    .panelHelp("The edges of this picture are not one colour. Scrub to a moment where the backdrop shows and key it again.")
             }
         }
         .playtestField("Key")
@@ -100,12 +97,13 @@ struct KeyRows: View {
         noWall = !editorState.keyOutTheWall(ids: selection.layerIDs)
     }
 
-    private func slider(_ label: String,
+    private func slider(_ label: String, help: String,
                         read: @escaping (LayerStyle) -> Double,
                         apply: @escaping (inout LayerStyle, Double) -> Void) -> some View {
         LayerStyleSlider(layerIDs: selection.layerIDs, label: label,
                          reading: selection.reading(read), range: 0...1,
                          typing: .percent, apply: apply)
+            .panelHelp(help)
             .opacity(isOn ? 1 : 0.45)
             .disabled(!isOn)
     }
@@ -180,7 +178,7 @@ struct MaskedByRow: View {
     private var list: some View {
         VStack(alignment: .leading, spacing: 0) {
             choice(nil, title: MaskedByRow.nothing,
-                   explanation: "This layer draws its whole self, and the layer under it draws too.")
+                   explanation: "Draws all of this layer, and the layer under it too.")
             ForEach(LayerMatte.allCases, id: \.self) { kind in
                 choice(kind, title: kind.title, explanation: sentence(for: kind))
             }
@@ -226,9 +224,9 @@ struct MaskedByRow: View {
         guard let name = editorState.matteSourceName else { return matte.explanation }
         switch matte {
         case .shape:
-            return "Shows this layer only where \(name) has something drawn, edges and all."
+            return "Shows this layer only where \(name) is drawn."
         case .brightness:
-            return "Shows this layer where \(name) is light and hides it where it is dark."
+            return "Shows this layer where \(name) is light."
         }
     }
 }
