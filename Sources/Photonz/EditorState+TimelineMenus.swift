@@ -62,7 +62,7 @@ extension EditorState {
             rows.append(freezeFrameMenuRow(layerID: layerID, piece: index, enabled: underPlayhead))
             rows.append(contentsOf: punchInMenuRows(layerID: layerID, around: nil))
         }
-        if let piece, !piece.isHeld {
+        if let piece, !piece.isHeld, layer.hasMediaBehindIt {
             rows.append(.submenu("Speed", EditorState.clipSpeeds.map { percent in
                 .toggle(ClipSpeed.title(percent), isOn: piece.speedPercent == percent) {
                     self.selectClipPiece(layerID: layerID, index: index)
@@ -84,6 +84,8 @@ extension EditorState {
                 self.detachSound()
             })
         }
+        // A title, a piece of clip art: how it comes on and goes off.
+        rows.append(contentsOf: titleAnimationMenuRows(layerID: layerID))
         rows.append(.separator)
         rows.append(.command("Rename…") { self.beginRenamingClip(layerID) })
         rows.append(.command("Duplicate", TimelineMenuKeys.duplicate) { self.duplicateLayer(id: layerID) })

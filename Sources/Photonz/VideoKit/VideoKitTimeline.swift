@@ -299,10 +299,15 @@ extension VideoKit {
     /// A key on a clip (`.kfm`): a 7pt white diamond with a dark hairline so
     /// it reads on any clip colour.
     struct KeyMark: View {
+        /// Eased rather than linear: its corners soften, the way Premiere
+        /// draws an eased key rounder than a linear one.
+        var isEased = false
+
         var body: some View {
-            Rectangle()
+            let shape = RoundedRectangle(cornerRadius: isEased ? 2.5 : 0)
+            shape
                 .fill(Color.white)
-                .overlay(Rectangle().strokeBorder(Color.black.opacity(0.25), lineWidth: 1))
+                .overlay(shape.strokeBorder(Color.black.opacity(0.25), lineWidth: 1))
                 .frame(width: 7, height: 7)
                 .rotationEffect(.degrees(45))
         }

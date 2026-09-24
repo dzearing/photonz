@@ -273,7 +273,7 @@ struct ClipLandingTests {
     @Test("Insert leaves a locked track exactly where it was")
     func insertSkipsLockedTracks() throws {
         var (doc, _, title, _) = Self.edit()
-        let v2 = try #require(Self.track(named: "V2", in: doc))
+        let v2 = try #require(Self.track(named: "Title", in: doc))
         let v1 = try #require(Self.track(named: "V1", in: doc))
         doc.updateTrack(v2) { $0.isLocked = true }
         let landing = doc.clipLanding(kind: .video, lengthMS: 4000, atMS: 3000,
@@ -290,12 +290,13 @@ struct ClipLandingTests {
         var (doc, _, _, _) = Self.edit()
         let landing = doc.clipLanding(kind: .video, lengthMS: 4000, atMS: 1000,
                                       over: .newTrack(at: 1), edit: .overwrite)
-        #expect(landing.trackName == "V3")
+        // V1 is the take; the title's track is called Title.
+        #expect(landing.trackName == "V2")
         let idLanded = doc.land(Self.clip(), at: landing)
         let id = try #require(idLanded)
         let track = try #require(doc.trackID(ofClip: id))
         #expect(doc.timelineTracks.map(\.id).firstIndex(of: track) == 1)
-        #expect(doc.track(id: track)?.name == "V3")
+        #expect(doc.track(id: track)?.name == "V2")
     }
 
     @Test("A clip on a track under another is further back in the picture")

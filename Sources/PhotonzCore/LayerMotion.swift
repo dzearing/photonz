@@ -584,10 +584,77 @@ public enum MotionRepeat: Hashable, Codable, Sendable {
 public struct MotionStop: Hashable, Codable, Sendable {
     public var atMS: Int
     public var value: MotionValue
+    /// How the value arrives at this key and leaves it, where somebody has
+    /// said (`KeyEase`). Nil follows the motion's own curve, which is every
+    /// key written before keys could be eased, so those read back unchanged.
+    public var ease: KeyEase?
 
-    public init(atMS: Int, value: MotionValue) {
+    public init(atMS: Int, value: MotionValue, ease: KeyEase? = nil) {
         self.atMS = atMS
         self.value = value
+        self.ease = ease
+    }
+}
+
+/// How a value moves through one key: a key's right-click in Premiere
+/// (Temporal Interpolation), under Premiere's names and with Premiere's
+/// meaning. **Ease In is how it ARRIVES at the key, Ease Out is how it LEAVES**,
+/// so a move that should settle into place gets Ease In on the key it lands on.
+///
+/// Each stretch between two keys is shaped by both of them: it leaves slowly
+/// where the left key eases out, and arrives slowly where the right key eases
+/// in. That is what makes the choice per key rather than per stretch, and it
+/// is why the last key can be eased at all.
+public enum KeyEase: String, Hashable, Codable, Sendable, CaseIterable {
+    case linear
+    case easeIn
+    case easeOut
+    case easeInAndOut
+
+    public var title: String {
+        switch self {
+        case .linear: "Linear"
+        case .easeIn: "Ease In"
+        case .easeOut: "Ease Out"
+        case .easeInAndOut: "Ease In and Out"
+        }
+    }
+
+    /// Slows as it arrives at the key.
+    public var easesIn: Bool { self == .easeIn || self == .easeInAndOut }
+    /// Slows as it leaves the key.
+    public var easesOut: Bool { self == .easeOut || self == .easeInAndOut }
+
+    public init(easesIn: Bool, easesOut: Bool) {
+        switch (easesIn, easesOut) {
+        case (true, true): self = .easeInAndOut
+        case (true, false): self = .easeIn
+        case (false, true): self = .easeOut
+        case (false, false): self = .linear
+        }
+    }
+
+    /// What a key nobody has eased does under a motion's curve: the curve's
+    /// slow start is the left key easing out, its slow end the right key
+    /// easing in. A curve with no such reading (a bounce, steps) counts as
+    /// easing both ways, the nearest of the four.
+    public init(following curve: EasingCurve) {
+        switch curve {
+        case .linear, .steps: self = .linear
+        case .easeIn: self = .easeOut
+        case .easeOut: self = .easeIn
+        default: self = .easeInAndOut
+        }
+    }
+
+    /// The curve a stretch runs on, from how its two keys say to move.
+    static func curve(leaving left: KeyEase, arriving right: KeyEase) -> EasingCurve {
+        switch (left.easesOut, right.easesIn) {
+        case (true, true): .easeInOut
+        case (true, false): .easeIn
+        case (false, true): .easeOut
+        case (false, false): .linear
+        }
     }
 }
 
@@ -612,6 +679,10 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
     /// middle reads back byte for byte the same (`MotionStop`).
     public var stops: [MotionStop]?
     public var curve: EasingCurve
+    /// How the value moves through From and To, where somebody has eased
+    /// those keys (`KeyEase`). The keys in between carry their own.
+    public var fromEase: KeyEase?
+    public var toEase: KeyEase?
     public var repeats: MotionRepeat
     /// What a TURN turns around, and nil on everything else: a fade and a
     /// slide have no axis, and a pivot sitting unused on one would be a number
@@ -629,8 +700,11 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
                 from: MotionValue, to: MotionValue,
                 timing: MotionTiming, curve: EasingCurve = .linear,
                 repeats: MotionRepeat = .foreverThereAndBack, isOn: Bool = true,
-                pivot: MotionPivot? = nil, stops: [MotionStop]? = nil) {
+                pivot: MotionPivot? = nil, stops: [MotionStop]? = nil,
+                fromEase: KeyEase? = nil, toEase: KeyEase? = nil) {
         self.id = id
+        self.fromEase = fromEase
+        self.toEase = toEase
         self.property = property
         self.from = from
         self.to = to
@@ -657,7 +731,7 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
         let stretch = Double(timing.durationMS) / Double(self.timing.durationMS)
         moved.stops = stops.map {
             let along = Double($0.atMS - self.timing.startMS) * stretch
-            return MotionStop(atMS: timing.startMS + Int(along.rounded()), value: $0.value)
+            return MotionStop(atMS: timing.startMS + Int(along.rounded()), value: $0.value, ease: $0.ease)
         }
         return moved
     }
@@ -708,12 +782,12 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
     /// and silently piling several onto the last millisecond would draw one key
     /// where there were three.
     public var keys: [MotionStop] {
-        var list = [MotionStop(atMS: timing.startMS, value: from)]
+        var list = [MotionStop(atMS: timing.startMS, value: from, ease: fromEase)]
         for stop in (stops ?? []).sorted(by: { $0.atMS < $1.atMS })
         where stop.atMS > timing.startMS && stop.atMS < timing.endMS {
             list.append(stop)
         }
-        list.append(MotionStop(atMS: timing.endMS, value: to))
+        list.append(MotionStop(atMS: timing.endMS, value: to, ease: toEase))
         return list
     }
 
@@ -750,7 +824,8 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
     func value(atProgress progress: Double) -> MotionValue {
         let list = keys
         guard list.count > 2 else {
-            return from.blended(to: to, progress: curve.value(at: progress)) ?? from
+            let shaped = segmentCurve(leaving: list[0], arriving: list[list.count - 1])
+            return from.blended(to: to, progress: shaped.value(at: progress)) ?? from
         }
         let at = Double(timing.startMS) + progress * Double(timing.durationMS)
         for index in 0..<(list.count - 1) {
@@ -760,9 +835,19 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
             let span = Double(right.atMS - left.atMS)
             guard span > 0 else { return right.value }
             let local = min(max((at - Double(left.atMS)) / span, 0), 1)
-            return left.value.blended(to: right.value, progress: curve.value(at: local)) ?? left.value
+            let shaped = segmentCurve(leaving: left, arriving: right)
+            return left.value.blended(to: right.value, progress: shaped.value(at: local)) ?? left.value
         }
         return to
+    }
+
+    /// The curve the stretch between two keys runs on: the motion's own where
+    /// neither key has been eased, which is every motion made before keys
+    /// could be, and otherwise what the two keys say (`KeyEase`).
+    func segmentCurve(leaving left: MotionStop, arriving right: MotionStop) -> EasingCurve {
+        if left.ease == nil, right.ease == nil { return curve }
+        let fallback = KeyEase(following: curve)
+        return KeyEase.curve(leaving: left.ease ?? fallback, arriving: right.ease ?? fallback)
     }
 
     /// True once this motion has stopped moving for good, so the preview can

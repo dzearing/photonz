@@ -1,0 +1,383 @@
+{
+  "out": "/tmp/photonz-playtest/title-flies-in-grows-and-fades-out-walk",
+  "seed": "Move a layer from A to B, grow it, fade it, Photoshop-style. At Next defaults with no flag changed, this walk types a title on a recording, right-clicks its clip for Animate In, Slide and Animate Out, Fade, keys its scale growing at two moments, then works the keys on the title's own track: a diamond for every keyed moment, one right-clicked for Ease In and Out, one dragged later, and undo putting it back. It photographs the title flying in from the left, grown, and fading out.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        620,
+        330
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Ship it faster"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "1-a-title",
+      "note": "THE FIRST TEST: T over the video and typing makes a text layer on its own track called Title, arriving at the playhead (one second) and leaving three seconds later, with an in and an out on its bar"
+    },
+    {
+      "do": "expect",
+      "control": "Track Title",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "field": "Time reading",
+      "reads": "0:01 to 0:04 · 3.0s"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-a-title-on-its-track"
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        600,
+        860
+      ],
+      "space": "window",
+      "shot": "2-animate-in-menu",
+      "choose": "Animate In > Slide"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        690,
+        345
+      ],
+      "space": "document",
+      "shot": "2b-canvas-menu",
+      "choose": "Animate Out > Fade"
+    },
+    {
+      "do": "action",
+      "action": "videoStepBackOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-presets",
+      "note": "THE SECOND TEST: right-click the title's clip, Animate In, Slide; then at two seconds right-click the title on the canvas, Animate Out, Fade: the same two rows in both places. Each writes ordinary keys, drawn as diamonds on the clip: where it starts off the left edge, where it lands, where the fade starts and where it ends"
+    },
+    {
+      "do": "expect",
+      "control": "Key 4",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key 5",
+      "present": false
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "reveal",
+      "control": "Animating section"
+    },
+    {
+      "do": "press",
+      "control": "Key",
+      "in": "Scale"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Scale Value"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "160"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-grows",
+      "note": "THE THIRD TEST: the grow is the panel's own stopwatch, Scale keyed at two seconds and 160% typed at three. Two more diamonds on the clip, six in all"
+    },
+    {
+      "do": "expect",
+      "control": "Key 6",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Scale",
+      "reads": "on a key"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-grown-at-three-seconds"
+    },
+    {
+      "do": "rightClick",
+      "on": "Key 4",
+      "shot": "4-key-menu",
+      "choose": "Ease In and Out",
+      "ticked": []
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-eased",
+      "note": "THE FOURTH TEST: right-click the diamond at three seconds, where the grow lands: Premiere's four (Linear, Ease In, Ease Out, Ease In and Out), Go to Key and Delete Key. Ease In and Out settles the grow into its last size"
+    },
+    {
+      "do": "rightClick",
+      "on": "Key 4",
+      "ticked": [
+        "Ease In and Out"
+      ]
+    },
+    {
+      "do": "action",
+      "action": "videoStepBackOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "clipKeyAtPlayheadLater"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-dragged",
+      "note": "THE FIFTH TEST: the diamond at two seconds dragged half a second later, so the grow starts later and runs quicker. The playhead at two seconds is between keys now"
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Scale",
+      "reads": "between keys"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-key-dragged-later"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-flying-in",
+      "note": "a quarter second after it arrives, the title is on its way in from the left edge"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-flying-in-from-the-left"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "7-grown",
+      "note": "at three and a quarter seconds it has landed and grown to 160%"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-landed-and-grown"
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "8-fading",
+      "note": "at three and three quarter seconds it is half faded out, still grown"
+    },
+    {
+      "do": "snapshot",
+      "name": "8-fading-out"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "9-undone",
+      "note": "THE SIXTH TEST: one undo puts the dragged key back at two seconds, so the playhead there is on a key again"
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Scale",
+      "reads": "on a key"
+    }
+  ]
+}

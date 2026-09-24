@@ -205,7 +205,10 @@ extension PhotonzDocument {
         var picture: [DocumentTrack] = []
         for layer in loosePicture.reversed() {
             let kind = layer.clipTrackKind
-            let name = Self.freeTrackName(kind, used: used)
+            // Words get a track called Title, the way the mock names the
+            // track a title lands on; everything else is numbered V1, V2.
+            let name = layer.isTitleText ? Self.freeTitleTrackName(used: used)
+                : Self.freeTrackName(kind, used: used)
             used.insert(name)
             picture.insert(DocumentTrack(id: layer.id, name: name, kind: kind), at: 0)
             clips[layer.id] = [layer.id]
@@ -323,6 +326,14 @@ extension PhotonzDocument {
     }
 
     /// V1, V2...; Audio, Audio 2...; Captions, Captions 2...
+    /// "Title", then "Title 2", for the tracks words land on by themselves.
+    static func freeTitleTrackName(used: Set<String>) -> String {
+        if !used.contains("Title") { return "Title" }
+        var n = 2
+        while used.contains("Title \(n)") { n += 1 }
+        return "Title \(n)"
+    }
+
     static func freeTrackName(_ kind: DocumentTrack.Kind, used: Set<String>) -> String {
         switch kind {
         case .video:
@@ -606,5 +617,14 @@ public enum TrackDrop: Hashable, Sendable {
             return .onto(row.trackID)
         }
         return .newTrack(at: rows.count)
+    }
+}
+
+extension Layer {
+    /// Words placed in time: a title.
+    var isTitleText: Bool {
+        guard isPlacedInTime, clipTrackKind == .video else { return false }
+        if case .text = content { return true }
+        return false
     }
 }

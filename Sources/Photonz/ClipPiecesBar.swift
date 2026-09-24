@@ -55,6 +55,14 @@ struct ClipPiecesBar: View {
         var ms: Int
     }
 
+    /// A key diamond in the hand: where it was, and where it would land.
+    @State private var keyDrag: KeyDrag?
+
+    private struct KeyDrag: Equatable {
+        let fromMS: Int
+        var toMS: Int
+    }
+
     /// How tall the bar is drawn. A sound's is taller, because a waveform
     /// squeezed into eighteen points is a smear and a level line needs room to
     /// be dragged up and down in.
@@ -132,6 +140,24 @@ struct ClipPiecesBar: View {
                         .allowsHitTesting(false)
                         .transitionPicker(at: .join(clip: layerID, index: index), editorState: editorState)
                         .offset(x: x0 + laneWidth * ruler.fraction(spanningMS: Double(pieces.startMS(ofPiece: index))))
+                }
+            }
+            // A diamond for every moment something on the layer is keyed
+            // (`ClipKeys.swift`): drag it in time, right-click it to ease it.
+            if kind != nil, !isLinkedSound {
+                let marks = editorState.clipKeyMarks(layerID: layerID)
+                ForEach(Array(marks.enumerated()), id: \.element.documentMS) { index, mark in
+                    // Only the diamonds in the window: the rest are scrolled
+                    // off, and padding cannot place one off the left edge.
+                    let x = laneWidth * ruler.fraction(ofMS: Double(mark.documentMS))
+                    if x >= 0, x <= laneWidth + 6 {
+                        keyDiamond(mark, index: index, ruler: ruler)
+                    }
+                }
+                if let keyDrag {
+                    capsule(MotionStripRuler.timecode(Double(keyDrag.toMS)),
+                            x: laneWidth * ruler.fraction(ofMS: Double(keyDrag.toMS)) + 10)
+                        .frame(height: barHeight)
                 }
             }
             if isSound {
@@ -540,6 +566,57 @@ struct ClipPiecesBar: View {
                 })
             .playtestField("\(fieldName) fade \(isIn ? "in" : "out")")
             .panelHelp(isIn ? "Fade in: drag right" : "Fade out: drag left")
+    }
+
+    // MARK: Keys
+
+    /// How near the playhead, in points, a dragged key has to come to land on it.
+    private static let keySnap: CGFloat = 6
+
+    /// One key diamond on the clip. Drag it along to move every key at that
+    /// moment; click it to put the playhead on it; right-click it for how it
+    /// eases, and to delete it.
+    private func keyDiamond(_ mark: ClipKeyMark, index: Int, ruler: MotionStripRuler) -> some View {
+        let dragging = keyDrag?.fromMS == mark.documentMS
+        let ms = dragging ? (keyDrag?.toMS ?? mark.documentMS) : mark.documentMS
+        let x = laneWidth * ruler.fraction(ofMS: Double(ms))
+        let ease = editorState.document?.clipKeyEase(layerID: layerID, atMS: mark.documentMS)
+        let eased = ease.map { $0 != .linear } ?? true
+        let names = mark.properties.map(\.title).joined(separator: ", ")
+        return VideoKit.KeyMark(isEased: eased)
+            .scaleEffect(dragging ? 1.35 : 1)
+            // A small square to hold, not the bar's full height: a key at the
+            // very start or end of a clip sits on its trim grip, and the grip
+            // stays in reach above and below it.
+            .frame(width: 12, height: 12)
+            .contentShape(Rectangle())
+            .gesture(DragGesture(minimumDistance: 2)
+                .onChanged { value in
+                    let moved = Self.ms(value.translation.width, laneWidth: laneWidth, ruler: ruler)
+                    var landing = mark.documentMS + moved
+                    // It lands on the playhead when it comes near, the way a
+                    // clip's edge does.
+                    let playhead = editorState.documentTimeMS
+                    let gap = laneWidth * ruler.fraction(spanningMS: Double(abs(landing - playhead)))
+                    if gap <= Self.keySnap { landing = playhead }
+                    keyDrag = KeyDrag(fromMS: mark.documentMS, toMS: landing)
+                }
+                .onEnded { _ in
+                    if let drag = keyDrag {
+                        editorState.moveClipKeys(layerID: layerID, fromMS: drag.fromMS, toMS: drag.toMS)
+                    }
+                    keyDrag = nil
+                })
+            .onTapGesture { editorState.pickClipKey(layerID: layerID, atMS: mark.documentMS) }
+            .contextMenu {
+                MenuRowsView(rows: editorState.clipKeyMenuRows(layerID: layerID, atMS: mark.documentMS))
+            }
+            .playtestControl("Key \(index + 1)", detail: layerName)
+            .panelHelp("\(MotionStripRuler.timecode(Double(mark.documentMS))): \(names)")
+            // Placed by padding rather than an offset, so the diamond's frame
+            // is where it is drawn and a walk's right click lands on it.
+            .padding(.leading, max(0, x - 6))
+            .padding(.top, (barHeight - 12) / 2)
     }
 
     // MARK: The band over a cut

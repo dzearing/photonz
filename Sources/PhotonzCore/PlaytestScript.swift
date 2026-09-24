@@ -705,6 +705,8 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// BETWEEN two moments the fractions above land on, which is where a
     /// keyed value is on its way (`every-value-in-the-panel-has-a-key-diamond`).
     case videoStepOneSecond, videoStepBackOneSecond
+    /// A quarter second later: in between two keys half a second apart.
+    case videoStepQuarterSecond
     /// Cutting a recording into pieces: put a cut where the playhead is, throw
     /// away the piece the playhead is in, and take the last one back.
     case videoCut, videoDeletePiece, videoUndoEdit
@@ -914,6 +916,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// PICKED, so they refuse loudly where what is picked is a clip.
     case titleDragStartEarlier, titleDragEndLater
 
+    /// Drag the key diamond under the playhead, on the picked layer's clip,
+    /// half a second later: the same move a hand makes on the timeline
+    /// (`ClipKeys.swift`). Fails where no diamond sits at the playhead.
+    case clipKeyAtPlayheadLater
+
     // MARK: What happens at a cut (`ClipTransitions.swift`)
 
     /// Pick the cut in hand: the join the playhead is standing on. Fails the
@@ -985,7 +992,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .clipCarryUpATrackHeld, .clipCarryToNewTrackOnTopHeld, .tracksGroupPicked,
              .clipPickCut, .clipPickFirstCut, .clipTransitionDissolve, .clipTransitionDipToBlack,
              .clipTransitionHardCut, .clipTransitionDragLonger, .clipBlurComesOn,
-             .titleDragStartEarlier, .titleDragEndLater,
+             .titleDragStartEarlier, .titleDragEndLater, .clipKeyAtPlayheadLater,
              .timelineZoomIn, .timelineZoomOut, .timelineFit, .timelineFiveMinutes: true
         default: false
         }
@@ -1033,7 +1040,8 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
         case .videoBeginTrim, .videoTrimStart, .videoTrimEnd, .videoTrimDone,
              .videoTrimCancel, .videoTrimReset, .videoPlay, .videoPause,
              .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters,
-             .videoSeekStart, .videoStepOneSecond, .videoStepBackOneSecond: true
+             .videoSeekStart, .videoStepOneSecond, .videoStepBackOneSecond,
+             .videoStepQuarterSecond: true
         default: false
         }
     }

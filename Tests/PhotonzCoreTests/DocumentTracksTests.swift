@@ -36,7 +36,7 @@ struct DocumentTracksTests {
         let (doc, recording, title, music) = Self.cut()
         let tracks = doc.timelineTracks
         // The recording's own sound on Audio, and the music on its own track.
-        #expect(tracks.map(\.name) == ["V2", "V1", "Audio", "Audio 2"])
+        #expect(tracks.map(\.name) == ["Title", "V1", "Audio", "Audio 2"])
         #expect(tracks.map(\.kind) == [.video, .video, .audio, .audio])
         #expect(doc.clipIDs(onTrack: tracks[0].id) == [title])
         #expect(doc.clipIDs(onTrack: tracks[1].id) == [recording])
@@ -73,7 +73,8 @@ struct DocumentTracksTests {
         var (doc, _, _, _) = Self.cut()
         let id = doc.addTrack(.video)
         #expect(doc.timelineTracks.first?.id == id)
-        #expect(doc.timelineTracks.first?.name == "V3")
+        // V1 is the recording; the title's track is called Title.
+        #expect(doc.timelineTracks.first?.name == "V2")
         #expect(doc.clipIDs(onTrack: id).isEmpty)
     }
 

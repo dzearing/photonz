@@ -58,6 +58,13 @@ enum LayerCommandList {
             }
             rows.append(.separator)
         }
+        // Words, clip art or a component placed in time: how it comes on and
+        // goes off, the same two rows its bar on the timeline offers.
+        let animate = editorState.titleAnimationMenuRows(layerID: id)
+        if !animate.isEmpty {
+            rows.append(contentsOf: animate)
+            rows.append(.separator)
+        }
 
         rows.append(.command("Duplicate", .command("d")) { editorState.duplicateLayer(id: id) })
         // Where Photoshop keeps them, under the names it uses for the same

@@ -3267,6 +3267,24 @@ private final class Run {
                 editor.updateClipBarDrag(byMS: action == .titleDragEndLater ? step8 : -step8)
                 editor.commitClipBarDrag()
 
+            // A key diamond on the picked layer's clip, dragged along
+            // (`ClipKeys.swift`). SwiftUI's drag cannot be reached by a
+            // synthetic pointer, so this lets go exactly where the gesture's
+            // own end does.
+            case .clipKeyAtPlayheadLater:
+                guard let id = editor.selectedLayerID else {
+                    throw Failure(description: "clipKeyAtPlayheadLater needs a layer picked")
+                }
+                let here = editor.documentTimeMS
+                guard let mark = editor.clipKeyMarks(layerID: id)
+                    .first(where: { abs($0.documentMS - here) <= PropertyKeys.nearMS }) else {
+                    throw Failure(description: "no key diamond sits at the playhead ("
+                        + MotionStripRuler.timecode(Double(here)) + ") on the picked layer's clip")
+                }
+                editor.moveClipKeys(layerID: id, fromMS: mark.documentMS, toMS: mark.documentMS + 500)
+                actionDetail = "carried the key at " + MotionStripRuler.timecode(Double(mark.documentMS))
+                    + " (" + mark.properties.map(\.title).joined(separator: ", ") + ") half a second later"
+
             // What happens at a cut (`EditorState+ClipTransitions`). Each one
             // refuses out loud, because the refusals ARE the feature: a cut
             // that cannot pay for a dissolve says so rather than making a
@@ -3449,6 +3467,7 @@ private final class Run {
                 editor.scrubDocument(toMS: editor.documentLengthMS * 3 / 4)
             case .videoStepOneSecond: editor.scrubDocument(toMS: editor.documentTimeMS + 1000)
             case .videoStepBackOneSecond: editor.scrubDocument(toMS: editor.documentTimeMS - 1000)
+            case .videoStepQuarterSecond: editor.scrubDocument(toMS: editor.documentTimeMS + 250)
             case .videoTrimStart, .videoTrimEnd:
                 guard let session = editor.trimSession,
                       let start = editor.trimmedClipStartMS else {
@@ -4261,7 +4280,7 @@ private final class Run {
                  .videoTrimReset,
                  .videoCopyGIF,
                  .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters, .videoSeekStart,
-                 .videoStepOneSecond, .videoStepBackOneSecond,
+                 .videoStepOneSecond, .videoStepBackOneSecond, .videoStepQuarterSecond,
                  .videoCut, .videoDeletePiece, .videoUndoEdit, .videoPlay, .videoPause,
                  .videoDragTrimNearCut, .videoDragTrimJustPastCut, .videoDragTrimClearOfCut,
                  .videoDragTrimFreedNearCut,
@@ -4282,7 +4301,7 @@ private final class Run {
                  .clipCarryUpATrackHeld, .clipCarryToNewTrackOnTopHeld, .tracksGroupPicked,
                  .clipPickCut, .clipPickFirstCut, .clipTransitionDissolve, .clipTransitionDipToBlack,
                  .clipTransitionHardCut, .clipTransitionDragLonger, .clipBlurComesOn,
-                 .titleDragStartEarlier, .titleDragEndLater,
+                 .titleDragStartEarlier, .titleDragEndLater, .clipKeyAtPlayheadLater,
                  .timelineZoomIn, .timelineZoomOut, .timelineFit, .timelineFiveMinutes:
                 break  // handled above, in the branch that drives the timeline
             }

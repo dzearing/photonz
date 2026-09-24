@@ -1,0 +1,30 @@
+{
+  "feature": "Move a title from A to B, grow it, fade it",
+  "epic": "video-transitions-motion",
+  "summary": "A title can fly in, grow and fade out with no forms: Animate In and Animate Out on its right-click menu, keys as white diamonds on its clip that you drag in time, and Premiere's four eases on a key's right-click.",
+  "setup": "Photonz Probe, release Next, no flag changed from its default. A recording open, playhead at 0:01.",
+  "try": [
+    { "do": "Press T, click on the frame, type a title, press Command-Return. It lands on a track called Title.", "shot": "2026-09-23-motion-a-to-b-1-a-title-on-its-track-sc.png" },
+    { "do": "Right-click the title's clip on the timeline and choose Animate In, Slide.", "shot": "2026-09-23-motion-a-to-b-2-animate-in-menu-sc.png" },
+    { "do": "At 0:02, right-click the title on the canvas and choose Animate Out, Fade.", "shot": "2026-09-23-motion-a-to-b-2b-canvas-menu-sc.png" },
+    { "do": "Click the Scale diamond in Animating, step a second later, type 160 in Scale." },
+    { "do": "Right-click the diamond on the clip where the grow lands and choose Ease In and Out.", "shot": "2026-09-23-motion-a-to-b-4-key-menu-sc.png" },
+    { "do": "Drag the diamond where the grow starts half a second later." },
+    { "do": "Scrub from 0:01 to 0:04 and watch it fly in, grow and fade.", "shot": "2026-09-23-motion-a-to-b-6-flying-in-from-the-left-sc.png" }
+  ],
+  "evaluate": [
+    "Is right-click on the clip or the canvas where you would look for Animate In and Animate Out?",
+    "Do Fade, Slide, Pop and Scale feel like the four you want, and is half a second the right length?",
+    "Is one diamond per moment on the clip (all values keyed there together) right, or do you want one per value?",
+    "Does Ease In meaning 'slows as it arrives at this key' (Premiere's meaning) match what you expect?",
+    "Is a key at the very start of a clip, half hidden under the trim grip, easy enough to grab?"
+  ],
+  "rough": [
+    "The mock draws key marks on a clip as read-only; the task asked for diamonds you drag and right-click, so they are draggable here.",
+    "The lanes under the title (Position, Opacity, Scale) are still the old timing bars, not the mock's diamonds joined by a line (video-move-wt step 5); that is the next keyframe task's work.",
+    "The mock's 'Between the keys' easing and Straight or Curved path controls in the panel are not built; easing lives on the key's right-click.",
+    "There is no diamond on the track header to arm keying: the panel's diamond is the one stopwatch.",
+    "A preset's Out keys stay where they were written if the title is later made longer, as keys do in Premiere, so the fade can end before the title does.",
+    "A key drag between tracks or a real pointer drag of a diamond cannot be driven by a walk; the walk moves it through the app, and the gesture was checked by building it, not by hand."
+  ]
+}

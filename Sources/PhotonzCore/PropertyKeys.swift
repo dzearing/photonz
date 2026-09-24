@@ -84,6 +84,15 @@ extension LayerMotion {
         return list
     }
 
+    /// This motion with key `index` (of `keyframes`) eased the way a right
+    /// click on it says. Nothing else about it changes.
+    public func easing(key index: Int, _ ease: KeyEase) -> LayerMotion {
+        var list = keyframes
+        guard list.indices.contains(index) else { return self }
+        list[index].ease = ease
+        return rebuilt(from: list)
+    }
+
     /// A property keyed for the first time, with one key.
     public static func keyed(_ property: MotionProperty, atMS ms: Int,
                              value: MotionValue) -> LayerMotion {
@@ -130,13 +139,16 @@ extension LayerMotion {
         made.repeats = .once
         guard let first = sorted.first, let last = sorted.last else { return made }
         made.from = first.value
+        made.fromEase = first.ease
         if sorted.count == 1 {
             made.to = first.value
+            made.toEase = first.ease
             made.timing = MotionTiming(startMS: first.atMS, durationMS: 1)
             made.stops = nil
             return made
         }
         made.to = last.value
+        made.toEase = last.ease
         made.timing = MotionTiming(startMS: first.atMS, durationMS: max(1, last.atMS - first.atMS))
         let middle = Array(sorted.dropFirst().dropLast())
         made.stops = middle.isEmpty ? nil : middle

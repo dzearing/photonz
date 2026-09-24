@@ -19498,3 +19498,12 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Speed is one dropdown; Freeze Frame (lengths, what the rest does while held) and Punch In (125/150/200% around the click, To the Box, Pull Back Out, Reset) are submenus on the clip's right-click, timeline and canvas. The Reframe section is gone; a punch-in reads as Scale/Position in Animating.
 - `TimePanelOrder` (PhotonzCore): in a document with time the panel leads with what the layer is for. New walk step `expectSections`, new action `windowLaptop`, new walk `video-panel-order-walk` (no flags, 1200x720).
 - Next: clip line and keyed-only Animating (p1), sound fades (p1), title bar right-click (p2).
+
+## 2026-09-23 — Move a layer from A to B, grow it, fade it (keys on the clip, title presets)
+
+- Every clip on the timeline carries a white diamond per keyed moment (`ClipKeys.swift`, `ClipPiecesBar.keyDiamond`): drag it in time (snaps to the playhead), click puts the playhead on it, right-click gives Linear / Ease In / Ease Out / Ease In and Out, Go to Key, Delete Key. One diamond stands for every value keyed at that moment.
+- Per-key ease: `KeyEase` on `MotionStop.ease` and `LayerMotion.fromEase/toEase`, Premiere's meaning (Ease In = slows arriving). A motion nobody eased plays exactly as before and writes no new fields.
+- Animate In / Animate Out ▸ Fade, Slide, Pop, Scale on the clip's and the canvas's right-click for anything placed in time; they write ordinary keys (half a second, or half a short clip).
+- A title's own track is called Title, as in the mock; V numbers are for the rest. A title's clip menu no longer offers Speed.
+- New walk `title-flies-in-grows-and-fades-out-walk` (no flags); new walk actions `clipKeyAtPlayheadLater`, `videoStepQuarterSecond`. Audit `queue/audits/2026-09-23-motion-a-to-b.json`.
+- Next: lanes as diamonds joined by a line (a-layer-s-track-opens-into-one-lane-per-keyed-va), the canvas motion path and arc (a-moving-layer-draws-its-path-on-the-canvas-and).
