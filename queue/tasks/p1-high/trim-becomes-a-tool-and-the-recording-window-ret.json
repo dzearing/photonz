@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-20T19:20:02.577Z",
-  "updated": "2026-09-24T09:51:32.642Z",
+  "updated": "2026-09-24T12:03:17.423Z",
   "deps": [
     "a-video-edit-can-be-saved-as-a-project-and-opene",
     "command-s-on-a-video-edit-does-what-the-user-pic"
@@ -113,6 +113,10 @@
     {
       "t": "2026-09-24T09:51:32.641Z",
       "note": "seq 200 -> 198"
+    },
+    {
+      "t": "2026-09-24T12:03:17.422Z",
+      "note": "manager 2026-09-24 05:05: on-a-video-the-tool-bar-holds-the-video-tools-an (p1) gives a document with time the mock's D4 video tool bar (Select, Blade, Title, Shape, Measure, rest under More). That inventory has no Trim, and this task puts Trim in Crop's slot. Whichever lands second says in its log where Trim sits on a video."
     }
   ],
   "walks": [

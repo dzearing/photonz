@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-23T00:59:10.437Z",
-  "updated": "2026-09-24T08:57:07.523Z",
+  "updated": "2026-09-24T11:55:23.943Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-24T08:57:07Z: 588 of 590 walks passed in 133 minutes.\n\nFailing walks (2): keys-copy-between-layers-walk, panel-grip-walk\n\nStopped failing since the last sweep (2): layers-lazy-rows-walk, motion-pivot-in-a-corner-walk\n\nFull output: queue/sweep/2026-09-23-234413.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: premiere-s-keys-work-on-the-timeline: the walk harness's key step now offers every press to the timeline key router first; the timeline keys change what B, arrows and letters do on documents with time\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -54,6 +54,14 @@
     {
       "t": "2026-09-24T08:57:07.522Z",
       "note": "sweep 2026-09-24T08:57:07Z: 2 failing (keys-copy-between-layers-walk, panel-grip-walk); stopped failing: layers-lazy-rows-walk, motion-pivot-in-a-corner-walk"
+    },
+    {
+      "t": "2026-09-24T11:35:01.228Z",
+      "note": "rotating check 2026-09-24T11:35:01Z: keys-copy-between-layers-walk failing out of the 50 walks it ran (270 onward in the rotation). keys-copy-between-layers-walk had its own script changed since the last check. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-24T11:55:23.942Z",
+      "note": "rotating check 2026-09-24T11:55:23Z: panel-grip-walk failing out of the 49 walks it ran (295 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
     }
   ],
   "standing": "walk-sweep"

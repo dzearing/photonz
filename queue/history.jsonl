@@ -6940,3 +6940,20 @@
 {"t":"2026-09-24T11:44:05.031Z","ev":"task_note","id":"every-objective-says-what-done-looks-like"}
 {"t":"2026-09-24T11:44:05.083Z","ev":"task_note","id":"every-objective-says-what-done-looks-like"}
 {"t":"2026-09-24T11:44:12.393Z","ev":"task_done","id":"every-objective-says-what-done-looks-like","from":"in_progress","note":"Every now epic in queue/objectives.json has success criteria (10 written, from their mocks) and the focus carries a spec; saving objectives from the dashboard no longer erases them (queue-lib writeObjectives kept only id/title/note/stage). The manager's spec, competitor and workflow sections are now generated from the focus epic every pass (queue.mjs focus-brief, appended by go-loop.sh), with the rule in manager-prompt section 4 and the check queue.mjs objectives-check. Stale notes fixed, six objectives_updated events. Verified by queue/bin/objectives-drill.mjs (26/26), a live dashboard save round trip, and Scripts/test.sh (9548 passed)."}
+{"t":"2026-09-24T11:44:31.267Z","ev":"loop_reloaded","from":"2bea43b14ec2","to":"d0e8eadc2f26"}
+{"t":"2026-09-24T11:44:31.377Z","ev":"loop_started","pid":56010}
+{"t":"2026-09-24T11:44:31.423Z","ev":"loop_awake","held":true,"pid":56023,"screenLocked":false}
+{"t":"2026-09-24T11:55:23.944Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-5"}
+{"t":"2026-09-24T11:55:24.031Z","ev":"slice_pass","walks":49,"passed":48,"failed":1,"seconds":651,"of":593,"rotating":true}
+{"t":"2026-09-24T12:02:25.049Z","ev":"task_created","id":"on-a-video-the-timeline-is-the-layer-list-and-th","priority":"p1-high","title":"On a video, the timeline is the layer list and the panel starts with the clip"}
+{"t":"2026-09-24T12:02:33.246Z","ev":"task_note","id":"the-panel-keeps-its-promise-on-a-video-document"}
+{"t":"2026-09-24T12:02:33.298Z","ev":"task_resequenced","id":"on-a-video-the-timeline-is-the-layer-list-and-th","from":430,"to":365}
+{"t":"2026-09-24T12:02:57.064Z","ev":"task_created","id":"on-a-video-the-tool-bar-holds-the-video-tools-an","priority":"p1-high","title":"On a video, the tool bar holds the video tools and the rest wait under More"}
+{"t":"2026-09-24T12:03:17.373Z","ev":"task_resequenced","id":"on-a-video-the-tool-bar-holds-the-video-tools-an","from":430,"to":415}
+{"t":"2026-09-24T12:03:17.424Z","ev":"task_note","id":"trim-becomes-a-tool-and-the-recording-window-ret"}
+{"t":"2026-09-24T12:03:17.477Z","ev":"task_note","id":"a-mode-is-written-down-so-pixel-art-can-be-added"}
+{"t":"2026-09-24T12:03:17.529Z","ev":"task_note","id":"the-properties-pane-opens-on-the-clip-line-and-l"}
+{"t":"2026-09-24T12:03:17.580Z","ev":"task_note","id":"the-captions-section-says-every-button-and-colou"}
+{"t":"2026-09-24T12:03:17.630Z","ev":"task_resequenced","id":"the-captions-section-says-every-button-and-colou","from":3310,"to":39}
+{"t":"2026-09-24T12:03:17.680Z","ev":"task_note","id":"recordings-and-sounds-can-go-into-the-library-wi"}
+{"t":"2026-09-24T12:04:03.239Z","ev":"manager","filed":2,"readyBefore":41,"readyAfter":43,"report":"queue/manager/2026-09-24-0503.md"}

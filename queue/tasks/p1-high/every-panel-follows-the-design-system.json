@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 170,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.996Z",
-  "updated": "2026-09-24T11:14:15.375Z",
+  "updated": "2026-09-24T11:16:37.211Z",
   "deps": [
     "panel-copy-and-flag-descriptions-have-a-length-b"
   ],
@@ -59,11 +59,16 @@
     {
       "t": "2026-09-24T11:14:15.374Z",
       "note": "Review after, on the probe at defaults: every-panel-keeps-its-margins-walk (10 states incl. 220pt dock and Library) and captions-panel-keeps-its-margins-walk (4 states) pass with strict panelMargins; strict steps also added to video-panel-order-walk (clip, title, sound) and transition-picker-at-a-cut-walk (dissolve). 40 walks touching arrangement, library, captions and Animating pass; keys-copy-between-layers-walk fails at step 77 exactly as in the 2026-09-24 08:57 sweep (owned by walks-that-fail-in-the-full-sweep-5). Filed: panel-row-labels-are-one-size-and-sit-in-one-col (p1, picture sections use 12pt stacked labels where the mock and video sections use 10.5pt in a 76pt column), the-captions-section-says-every-button-and-colou (p2, 'Write Ag...' and '#000000B3'). Left rough, not filed (no edge crossed, only tight): at 220pt Canvas's button reads 'Ca...' and Language 'English (e...'. panelMargins is not yet watched under a lock, so it is refused there by default. A mistaken task no-placeholder-task was created by a botched dry run and dropped at once."
+    },
+    {
+      "t": "2026-09-24T11:16:37.209Z",
+      "note": "Panels now measured against the design rules on every run: PanelMarginRule (core, tested) + walk step panelMargins (every row/control keeps the 14pt margin both sides, panel never wider than its dock) + action dockNarrowest. Surveyed every section reachable at Next defaults (picture, video, captions, transitions, tools, Library) at the default and narrowest dock. Fixed: screen picked pushed the panel 12pt wide (Arrangement row), captions 1.5-3pt (new VideoKit.Segmented), Library 12pt inset and narrow-dock overflow, Animating rows at 220pt. Control choice: no radio columns anywhere. Verified with every-panel-keeps-its-margins-walk, captions-panel-keeps-its-margins-walk, strict checks in video-panel-order and transition-picker walks, 40 related walks, Scripts/test.sh 9548 green. Audit queue/audits/2026-09-24-panel-margins.json. Filed: panel-row-labels-are-one-size-and-sit-in-one-col (p1), the-captions-section-says-every-button-and-colou (p2). Commit d3768951."
     }
   ],
   "started": "2026-09-24T09:52:55.379Z",
   "walks": [
     "every-panel-keeps-its-margins-walk",
     "captions-panel-keeps-its-margins-walk"
-  ]
+  ],
+  "completed": "2026-09-24T11:16:37.210Z"
 }

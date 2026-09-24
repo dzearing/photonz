@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-22T07:08:14.121Z",
-  "updated": "2026-09-23T12:12:09.862Z",
+  "updated": "2026-09-24T12:03:17.475Z",
   "deps": [
     "swap-the-window-into-a-mode-from-a-chip-beside-t"
   ],
@@ -43,6 +43,10 @@
     {
       "t": "2026-09-23T12:12:09.861Z",
       "note": "seq 150 -> 160"
+    },
+    {
+      "t": "2026-09-24T12:03:17.474Z",
+      "note": "manager 2026-09-24 05:05: the fold of tool groups into a permanent More is being built for documents with time by on-a-video-the-tool-bar-holds-the-video-tools-an, in core so it can be reused here. Reuse it for a mode's tool groups rather than building a second fold."
     }
   ]
 }

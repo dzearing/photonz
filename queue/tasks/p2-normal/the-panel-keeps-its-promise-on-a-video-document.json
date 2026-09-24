@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-23T02:12:33.004Z",
-  "updated": "2026-09-24T09:52:01.117Z",
+  "updated": "2026-09-24T12:02:33.245Z",
   "deps": [
     "the-timeline-is-the-one-in-the-mock"
   ],
@@ -45,6 +45,10 @@
     {
       "t": "2026-09-24T09:52:01.116Z",
       "note": "seq 70 -> 38"
+    },
+    {
+      "t": "2026-09-24T12:02:33.244Z",
+      "note": "manager 2026-09-24 05:05: on-a-video-the-timeline-is-the-layer-list-and-th (p1) takes the Layers list out of the dock while a timeline shows, as video.html draws it. That is the 'layers list at its floor' in the 315 point fixed cost above, so re-measure once it lands before choosing among the candidates here."
     }
   ],
   "walks": []

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-24T02:23:06.624Z",
-  "updated": "2026-09-24T05:00:06.303Z",
+  "updated": "2026-09-24T12:03:17.528Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the side by side for the-video-properties-look-like-the-rest-of-the-d (queue/audits/2026-09-24-video-panel-side-by-side.png). Mock: docs/design/mocks/pages/video.html renderProps, .cliphead and the Animating .prow.anim rows plus #addProp. App: PropertyKeysInspector lists every keyRow; the Time section (SpeedInspector) now holds Speed/Length/Sound rows and a title On screen row, which the clip line would partly replace. Order rule is TimePanelOrder (PhotonzCore).",
@@ -27,6 +27,10 @@
     {
       "t": "2026-09-24T05:00:06.302Z",
       "note": "from keyframe-anything (2026-09-23): a picture or clip now also offers Crop left/top/right/bottom, and a glowing layer offers Glow size, so the full list is 15 rows on a clip; the mock's list-only-what-animates plus Animate a property picker is what shortens it"
+    },
+    {
+      "t": "2026-09-24T12:03:17.527Z",
+      "note": "manager 2026-09-24 05:05: the first acceptance line says 'the first thing under Layers'. on-a-video-the-timeline-is-the-layer-list-and-th (seq 365, before this) takes Layers out of a video's dock as video.html draws it, so read that line as 'the first thing in the panel' once it has landed."
     }
   ]
 }

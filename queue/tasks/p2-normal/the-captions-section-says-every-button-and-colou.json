@@ -4,24 +4,33 @@
   "goal": "In the Captions section the button that writes the captions again reads \"Write Ag...\" at the panel's normal width, and after picking the Lower third look the Background row shows a code (#000000B3) instead of a colour name. Both should read as words a person understands.",
   "epic": "video-editing",
   "priority": "p2-normal",
-  "seq": 3310,
+  "seq": 39,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T11:13:36.648Z",
-  "updated": "2026-09-24T11:13:36.651Z",
+  "updated": "2026-09-24T12:03:17.629Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by every-panel-follows-the-design-system (2026-09-24). Reproduce: Scripts/playtest.sh Scripts/playtest/captions-write-themselves-walk.json --no-build; 2-the-captions-wrote-themselves-sc.png shows the Generate button as \"Write Ag...\" beside \"10 captions\"; 6-lower-third-at-the-top-sc.png shows Background as \"#000000B3\". CaptionsInspector.generate puts a borderedProminent button with label \"Write Again\" and the count in a 148pt column; colourRow names a value only when it is one of Self.plates, and the Lower third preset (CaptionLook.Preset) sets a plate that is not in that list. In the narrowest dock the button reads \"W...\".",
   "acceptance": [
     "At the dock's default width the Generate row shows its button label whole, next to the caption count",
     "After picking Lower third, Background reads a colour name from its own list, not a hex code",
-    "captions-panel-keeps-its-margins-walk checks both readings and passes at the default and the narrowest dock"
+    "captions-panel-keeps-its-margins-walk checks both readings and passes at the default and the narrowest dock",
+    "The Easing menu in the timeline bar reads its whole name at the default window size"
   ],
   "log": [
     {
       "t": "2026-09-24T11:13:36.650Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-24T12:03:17.578Z",
+      "note": "manager 2026-09-24 05:05: same fault in the timeline's own bar: the Easing menu reads 'Ease In and...' at full window width (/tmp/photonz-playtest/an-editing-session-walk/5-dissolve-sc.png, 04:44). The mock's menu reads 'Ease in out' whole (video.html line 620). Acceptance widened: every label in the video chrome reads whole at the default window size."
+    },
+    {
+      "t": "2026-09-24T12:03:17.628Z",
+      "note": "seq 3310 -> 39"
     }
   ],
   "walks": [
