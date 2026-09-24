@@ -173,13 +173,27 @@ extension CanvasNSView {
     /// the resolved system face has no name AppKit will answer to
     /// (".SFNS-Regular" resolves to nothing), so the old name lookup fell back
     /// to the plain system font and typed a bold label in regular.
+    ///
+    /// AppKit reads the transform two ways. The system face multiplies it by
+    /// the descriptor's size; a face found by family name (Georgia, Helvetica
+    /// Neue) takes it as the WHOLE matrix and drops the size, so a zoom of 0.74
+    /// set every Georgia draft at 0.74pt and the words typed were invisible.
+    /// So the zoom alone is tried first, and a face that came out at the wrong
+    /// size is built again with the size carried in the transform.
     private static func draftFont(_ content: TextContent, zoom: CGFloat) -> NSFont {
         let descriptor = (TextRasterizer.faceDescriptor(for: content) as NSFontDescriptor)
             .withSize(content.fontSize)
-        var transform = AffineTransform()
-        transform.scale(zoom)
-        return NSFont(descriptor: descriptor, textTransform: transform)
-            ?? NSFont.systemFont(ofSize: content.fontSize * zoom)
+        let wanted = content.fontSize * zoom
+        for scale in [zoom, wanted] {
+            var transform = AffineTransform()
+            transform.scale(scale)
+            if let font = NSFont(descriptor: descriptor, textTransform: transform),
+               abs(font.pointSize - wanted) < 0.5 {
+                return font
+            }
+        }
+        return NSFont(descriptor: descriptor, size: wanted)
+            ?? NSFont.systemFont(ofSize: wanted)
     }
 
     /// Applies font/color to the editor, scaled to the current zoom so the

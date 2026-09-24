@@ -1,0 +1,39 @@
+{
+  "feature": "A title typed over a video reads without restyling",
+  "epic": "video-titles-graphics",
+  "summary": "Press T over a recording and type, and the words come out as a title: white, bold Georgia, a tenth of the picture tall, with a soft shadow, like the mock's 'Ship it faster.'. Text on a still picture still comes out as it always has. The words you type now also show while you type them in Georgia; before, a Georgia draft was invisible until you pressed Return.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    {
+      "do": "Open a dark screen recording."
+    },
+    {
+      "do": "Press T, click on the picture and type a few words.",
+      "shot": "2026-09-24-title-look-typing.png"
+    },
+    {
+      "do": "Press Command Return, then V. The Text section reads Georgia, 80 px, Bold on a 1280 by 800 recording.",
+      "shot": "2026-09-24-title-look-at-b.png"
+    },
+    {
+      "do": "Change the Size to 48 px, then press T and type a second title. It comes out at 48 px."
+    },
+    {
+      "do": "Open a screenshot, press T and type. It is 24 px regular in your foreground colour, as before.",
+      "shot": "2026-09-24-title-look-still.png"
+    }
+  ],
+  "evaluate": [
+    "Does the first title read at a glance on your own recordings without touching the Text section?",
+    "Is a tenth of the picture height the right starting size? The mock and Premiere both land there; the task guessed a twentieth, which is the size captions already use.",
+    "Is Georgia the right face, or would you rather titles start in SF Pro Bold? The mock asks for the system serif, which the app cannot draw, so Georgia stands in.",
+    "When you pick a foreground colour while a video is open, should the next title really follow it, the way Photoshop's type tool does?"
+  ],
+  "rough": [
+    "Side by side with the video mock's 'Ship it faster.' title: same white, bold weight, soft dark shadow and size (a tenth of the height, the mock is 26 of 248). The face differs: the mock asks for the system serif, the app draws Georgia. The mock's title sits top left; ours lands where you click.",
+    "White words over a white part of the frame (the sample's card) are still hard to read: the soft shadow from the mock is not enough there. The app does not pick a colour from the frame under the words.",
+    "While typing, the draft has no shadow, so white words over a light area are hard to see until Return.",
+    "The Text section does not show while the text tool is merely held over a video, so you only see the title's size and font after the first title is placed.",
+    "The editing-session walk still stops at its cross dissolve step, before its title picture, because of a transition picker failure another task owns. The title part was checked with a copy of that walk that skips the transition."
+  ]
+}

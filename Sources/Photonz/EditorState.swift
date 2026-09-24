@@ -670,9 +670,14 @@ final class EditorState {
     /// Styling for new annotations, set from the style popover. Persisted so
     /// the user's color/width survive relaunches.
     var annotationStyles: AnnotationStyles = EditorState.loadAnnotationStyles()
-    /// Styling for new text blocks, set from the font picker. Persisted like
-    /// annotation styles.
-    var textStyles: TextStyles = EditorState.loadTextStyles()
+    /// Styling for new text blocks on a still, set from the font picker.
+    /// Persisted like annotation styles. Read it through `textStyles`, which
+    /// hands a document with time its title look instead.
+    var stillTextStyles: TextStyles = EditorState.loadTextStyles()
+    /// The text tool's type for titles on the open video, once anybody has set
+    /// any; nil means a new title still wears `TitleLook`. Per document and
+    /// never saved, because the look is sized to this one picture.
+    var titleTextStyles: TextStyles?
     /// The measure tool's persisted memory: colors, thickness, label size, unit.
     /// Every measure setter writes it back to UserDefaults, so the next caliper —
     /// this session or after a relaunch — starts where the last one left off.
@@ -1712,7 +1717,15 @@ final class EditorState {
     /// Photoshop-style foreground/background fill pair, shared across windows
     /// via UserDefaults. Defaults: black over white, like Photoshop's D.
     var foregroundFillHex: String = UserDefaults.standard.string(forKey: EditorState.foregroundFillKey) ?? "#000000" {
-        didSet { UserDefaults.standard.set(foregroundFillHex, forKey: Self.foregroundFillKey) }
+        didSet {
+            UserDefaults.standard.set(foregroundFillHex, forKey: Self.foregroundFillKey)
+            // Over a video a title starts white rather than in the foreground
+            // colour, but a colour picked while the video is open is still the
+            // colour the next title types in, as it is in Photoshop.
+            if foregroundFillHex != oldValue, usesTitleLook, textStyles.colorHex != foregroundFillHex {
+                textStyles.colorHex = foregroundFillHex
+            }
+        }
     }
     var backgroundFillHex: String = UserDefaults.standard.string(forKey: EditorState.backgroundFillKey) ?? "#FFFFFF" {
         didSet { UserDefaults.standard.set(backgroundFillHex, forKey: Self.backgroundFillKey) }
@@ -2211,6 +2224,7 @@ final class EditorState {
         dragPreview = nil
         editingTextLayerID = nil
         editingCaptionLayerID = nil
+        titleTextStyles = nil
         stylePreview = nil
         paintPreview = nil
         knobPaintPreview = nil

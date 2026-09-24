@@ -21,7 +21,7 @@ struct FlagDescriptionBudgetTests {
         "next-a-row-says-its-words": 232,
         "next-a-separated-row-says-its-words": 290,
         "next-a-separation-arrives-shut": 173,
-        "next-a-title-has-an-in-and-an-out": 281,
+        "next-a-title-has-an-in-and-an-out": 276,
         "next-align-layers": 113,
         "next-arrow-captions": 53,
         "next-auto-layout": 520,

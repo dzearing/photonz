@@ -19610,3 +19610,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Keys: Q and W while the timeline has the keyboard (W stays the Magic Wand on the canvas). Clip right-click menu rows "Ripple Trim Start/End to Playhead" under Split at Playhead, live only on the piece holding the playhead; the Video menu has both too.
 - Walks: `ripple-trim-to-playhead-walk` (2 s in, Q, clip reads 0 to 6; undo; W at 5 s reads 5), `ripple-trim-from-the-clip-menu-walk`. Audit `queue/audits/2026-09-24-ripple-trim-to-playhead.json`.
 - Open: whether Q/W should cut music on other tracks (they do, like Extract); the clip menu scrolls after three rows at the foot of the screen (filed p2).
+
+## 2026-09-24: A title typed over a video reads without restyling (go loop, a-title-typed-over-a-video-is-readable-without-r)
+
+- `PhotonzCore/TitleLook.swift` (tested in `TitleLookTests`): white, bold Georgia, a tenth of the picture height (never under 24), and the mock's soft shadow scaled to the type. The mock and Premiere both start a title at about a tenth; captions already sit at 4.5%, so the task's guess of a twentieth would have looked like a caption.
+- `EditorState.textStyles` is now a computed switch: `stillTextStyles` (saved, what it always was) or, in a document with time on Next (`titleOnTheTimelineEnabled`), `titleTextStyles ?? TitleLook.styles(in:)`, in memory and reset in `installDocument`. New titles skip the foreground colour until one is picked while the video is open (mirrored in `foregroundFillHex.didSet`). `saveTextStyles` saves only the still type.
+- Fixed: a draft typed in any family-matched font (Georgia, Helvetica Neue) was invisible until Return. `NSFont(descriptor:textTransform:)` drops the size for those faces; `draftFont` now checks the point size and retries with the size in the transform. Shared file, so Current gets it too.
+- Walks: new `a-title-reads-over-a-video-walk` (still 24 px Regular SF Pro, title 80 px Bold Georgia, a size picked carries to the next title, still again after). `an-editing-session-walk`'s title drag shortened so the bigger title stays in frame (B now 700, 400); that walk still stops at step 34 on the transition picker, owned by the sweep task.
+- Open: white words over a white part of the frame are still hard to read, and the draft has no shadow.

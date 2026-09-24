@@ -13,6 +13,27 @@ import UniformTypeIdentifiers
 extension EditorState {
     // MARK: - Text styling & inline editing
 
+    /// Whether new text is a title over a video: Next, a document with time.
+    /// Such text starts in `TitleLook` (large, white, bold) rather than in the
+    /// still-picture type, so the first title reads on a dark recording.
+    var usesTitleLook: Bool {
+        Experiments.shared.titleOnTheTimelineEnabled && document?.hasTime == true
+    }
+
+    /// The text tool's type: the title look over a video, else the remembered
+    /// still-picture type. Every control that reads or sets the new-text type
+    /// goes through here, so the Text section shows what a title will wear and
+    /// a size picked over a video never leaks into the next screenshot.
+    var textStyles: TextStyles {
+        get {
+            guard usesTitleLook, let size = document?.canvasSize else { return stillTextStyles }
+            return titleTextStyles ?? TitleLook.styles(in: size)
+        }
+        set {
+            if usesTitleLook { titleTextStyles = newValue } else { stillTextStyles = newValue }
+        }
+    }
+
     /// Styled (empty) content for the current text style; the canvas's inline
     /// editor mirrors it so what you type matches what commit rasterizes.
     var activeTextContent: TextContent {
@@ -20,11 +41,13 @@ extension EditorState {
         // NEW text types in the current foreground color; re-edits keep the
         // layer's own color (the session seeds the styles). A tool holding a
         // saved style is the exception: the block comes out in that style,
-        // colour and all, so what you type looks like what you get.
+        // colour and all, so what you type looks like what you get. A title
+        // over a video wears the title's own colour, which follows the
+        // foreground only once somebody picks one.
         if editingTextLayerID == nil {
             if let treatment = armedTextTreatment {
                 content.setTreatment(treatment)
-            } else {
+            } else if !usesTitleLook {
                 content.colorHex = foregroundFillHex
             }
         }
@@ -285,15 +308,22 @@ extension EditorState {
             // style re-sets this block too. Worked out before the measure, so
             // the box is measured at the type the words actually land in.
             var content = content
+            let isTitle = usesTitleLook
             if let treatment = armedTextTreatment {
                 content.setTreatment(treatment)
-            } else {
+            } else if !isTitle {
                 content.colorHex = foregroundFillHex
             }
             let size = TextBlockMetrics.frameSize(for: content, maxWidth: maxWidth,
                                                   hugsShortWords: hugsShortWords)
             var layer = wearingArmedTextStyle(
                 TextBuilder.layer(content: content, at: origin, naturalSize: size))
+            // A title throws the mock's big soft shadow rather than the tight
+            // halo a callout wears, so it lifts off whatever frame is under it.
+            if isTitle {
+                layer.style.shadow = TitleLook.shadow(forColorHex: content.colorHex,
+                                                      fontSize: content.fontSize)
+            }
             let moment = documentTimeMS
             // **A title is text that knows when it is on screen**
             // (`next-a-title-has-an-in-and-an-out`). In a document with time,
@@ -332,7 +362,9 @@ extension EditorState {
     /// Not private: the Style row arms these the same way the Font and Size
     /// menus do, from `EditorState+TextStyles.swift`.
     func saveTextStyles() {
-        if let data = try? JSONEncoder().encode(textStyles) {
+        // Only the still-picture type outlives the window: a title's type is
+        // sized to the one video it was set on.
+        if let data = try? JSONEncoder().encode(stillTextStyles) {
             UserDefaults.standard.set(data, forKey: Self.textStylesKey)
         }
     }

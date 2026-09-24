@@ -275,7 +275,7 @@
         350
       ],
       "to": [
-        900,
+        800,
         420
       ],
       "space": "document",
@@ -303,7 +303,7 @@
     {
       "do": "expect",
       "field": "Playhead Readout",
-      "reads": "Playhead Position 800, 385.5 @ 2.00s"
+      "reads": "Playhead Position 700, 400 @ 2.00s"
     },
     {
       "do": "action",

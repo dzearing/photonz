@@ -1,0 +1,315 @@
+{
+  "out": "/tmp/photonz-playtest/a-title-reads-over-a-video-walk",
+  "seed": "Words typed over a recording come out as a title, not as a screenshot callout: large, white, bold serif with a soft shadow, a tenth of the picture tall, the way the video mock draws 'Ship it faster.' and the way Premiere and Final Cut start one. It runs exactly as a person running Next gets it, no flag touched. Text typed on a still picture keeps its own look, before AND after a video has been titled, so a size picked for a title never leaks into the next screenshot.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1200,
+      "canvasHeight": 800,
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "A callout"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "1-still",
+      "note": "text on a still picture: the text tool's own look, unchanged by this work"
+    },
+    {
+      "do": "expect",
+      "menu": "Size",
+      "reads": "24 px"
+    },
+    {
+      "do": "expect",
+      "menu": "Weight",
+      "reads": "Regular"
+    },
+    {
+      "do": "expect",
+      "menu": "Font",
+      "reads": "SF Pro"
+    },
+    {
+      "do": "action",
+      "action": "openSampleTalk"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        120,
+        110
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Ship it faster."
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "snapshot",
+      "name": "1-typing-a-title"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "3-title",
+      "note": "THE TEST: the first title typed over a dark screen recording reads at a glance with nothing restyled. White, bold, a tenth of the 800 tall picture, with a soft shadow under it"
+    },
+    {
+      "do": "expect",
+      "menu": "Size",
+      "reads": "80 px"
+    },
+    {
+      "do": "expect",
+      "menu": "Weight",
+      "reads": "Bold"
+    },
+    {
+      "do": "expect",
+      "menu": "Font",
+      "reads": "Georgia"
+    },
+    {
+      "do": "expect",
+      "control": "Track Title",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "2-a-title-over-the-recording"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Size",
+      "choose": "48 px"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        500,
+        500
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "A second title"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "4-second-title",
+      "note": "a size picked in the Text section over a video is what the next title wears: the title look is a starting point, not a rule"
+    },
+    {
+      "do": "expect",
+      "menu": "Size",
+      "reads": "48 px"
+    },
+    {
+      "do": "expect",
+      "menu": "Weight",
+      "reads": "Bold"
+    },
+    {
+      "do": "expect",
+      "menu": "Font",
+      "reads": "Georgia"
+    },
+    {
+      "do": "blank",
+      "canvasWidth": 1200,
+      "canvasHeight": 800,
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "Back to a still"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "5-still-again",
+      "note": "a still picture after a video was titled: its text is the text tool's own look again, not the title's"
+    },
+    {
+      "do": "expect",
+      "menu": "Size",
+      "reads": "24 px"
+    },
+    {
+      "do": "expect",
+      "menu": "Weight",
+      "reads": "Regular"
+    },
+    {
+      "do": "expect",
+      "menu": "Font",
+      "reads": "SF Pro"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-a-still-keeps-its-look"
+    }
+  ]
+}
