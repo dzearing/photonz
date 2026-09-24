@@ -1,0 +1,39 @@
+{
+  "out": "/tmp/photonz-playtest/extract-a-marked-stretch-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "clipHoldToFiveMinutes" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTimeline", "lengthMS": 300000, "keyboard": "timeline" },
+
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "key", "key": "i" },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "key", "key": "o" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectTimeline", "markInMS": 75000, "markOutMS": 150000, "lengthMS": 300000 },
+    { "do": "describe", "stage": "0-marked", "note": "a five minute recording at Next defaults, with I pressed at 1:15 and O at 2:30: the stretch between them is shaded on the ruler" },
+    { "do": "snapshot", "name": "0-marked-1-15-to-2-30" },
+
+    { "do": "key", "key": "'" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTimeline", "lengthMS": 225000, "playheadMS": 75000, "hasIn": false, "hasOut": false },
+    { "do": "describe", "stage": "1-extracted", "note": "one press of the apostrophe, Premiere's Extract: the minute and a quarter between the marks is gone from the recording, the gap closed, and the timeline reads 3:45. The playhead sits on the join and the marks are spent" },
+    { "do": "snapshot", "name": "1-extracted-reads-3-45" },
+
+    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTimeline", "lengthMS": 300000, "markInMS": 75000, "markOutMS": 150000 },
+    { "do": "describe", "stage": "2-undone", "note": "one Command Z puts the whole stretch and both marks back: the extract was one step" },
+
+    { "do": "key", "key": ";" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTimeline", "lengthMS": 300000, "hasIn": false, "hasOut": false },
+    { "do": "describe", "stage": "3-lifted", "note": "the semicolon, Premiere's Lift, on the same marks: the stretch is taken out and the gap left where it was, so the recording is now two clips on one track with a hole between them and still five minutes long" },
+    { "do": "snapshot", "name": "3-lifted-leaves-the-gap" }
+  ]
+}

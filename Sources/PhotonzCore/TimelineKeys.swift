@@ -88,6 +88,9 @@ public enum TimelineKeyCommand: Hashable, Sendable {
     /// Premiere's Delete: what is picked goes and nothing else moves.
     case lift
     case rippleDelete
+    /// Premiere's Extract (') and Lift (;): what the In and the Out enclose
+    /// comes out of every track, closing the gap or leaving it.
+    case extractMarked, liftMarked
     case selectTool, bladeTool, trackSelectForwardTool
     case zoomIn, zoomOut, zoomToFit
 }
@@ -146,6 +149,8 @@ public enum TimelineKeys {
         case "i": return .markIn
         case "o": return .markOut
         case "m": return .addMarker
+        case "'": return .extractMarked
+        case ";": return .liftMarked
         case "v": return .selectTool
         case "b": return .bladeTool
         case "a": return .trackSelectForwardTool

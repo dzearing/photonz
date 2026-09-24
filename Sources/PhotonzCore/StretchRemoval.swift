@@ -36,13 +36,20 @@ extension PhotonzDocument {
     /// are: locking is saying so.
     @discardableResult
     public mutating func removeTime(fromMS start: Int, toMS end: Int, exceptLayer keep: UUID?) -> Bool {
+        removeTime(fromMS: start, toMS: end, exceptLayers: keep.map { [$0] } ?? [])
+    }
+
+    /// The same, leaving alone every layer in `keep`: the ones the caller has
+    /// already cut for itself (`MarkedStretch.swift`).
+    @discardableResult
+    public mutating func removeTime(fromMS start: Int, toMS end: Int, exceptLayers keep: Set<UUID>) -> Bool {
         let length = end - start
         guard start >= 0, length > 0 else { return false }
         let squeeze = { (ms: Int) -> Int in ms < start ? ms : (ms >= end ? ms - length : start) }
         var gone: Set<UUID> = []
         var changed = false
         for layer in allLayers {
-            guard layer.id != keep, !layer.isLocked, let time = layer.time,
+            guard !keep.contains(layer.id), !layer.isLocked, let time = layer.time,
                   time.outMS > start, !isClipOnLockedTrack(layer.id) else { continue }
             if time.inMS >= end {
                 updateLayer(id: layer.id) { moved in
@@ -67,16 +74,20 @@ extension PhotonzDocument {
             }
             changed = true
         }
-        if !gone.isEmpty {
-            removeLayers(ids: gone)
-            // A Captions group whose every line went is not a track anybody
-            // wants left on the timeline with nothing on it.
-            let empty = allLayers.filter {
-                $0.name == CaptionLayers.groupName && $0.group?.children.isEmpty == true
-            }
-            removeLayers(ids: Set(empty.map(\.id)))
-        }
+        removeLayersEmptyingCaptions(gone)
         if changed { refreshDuration() }
         return changed
+    }
+
+    /// Take layers a stretch took with it away, and a Captions group whose
+    /// every line went with them: that is not a track anybody wants left on
+    /// the timeline with nothing on it.
+    mutating func removeLayersEmptyingCaptions(_ gone: Set<UUID>) {
+        guard !gone.isEmpty else { return }
+        removeLayers(ids: gone)
+        let empty = allLayers.filter {
+            $0.name == CaptionLayers.groupName && $0.group?.children.isEmpty == true
+        }
+        removeLayers(ids: Set(empty.map(\.id)))
     }
 }

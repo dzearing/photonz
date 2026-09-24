@@ -1037,6 +1037,13 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// minutes does not.
     case timelineFiveMinutes
 
+    /// **Make the take itself five minutes long**, for a walk that has to cut
+    /// INTO a five minute recording rather than into empty time before one.
+    /// Also a stand-in, for the same reason: the frame at four seconds is held
+    /// until the clip runs to five minutes, so the whole ruler is one real
+    /// clip with the sample's own eight seconds either side of the hold.
+    case clipHoldToFiveMinutes
+
     /// Whether this action drives the TIMELINE in the ordinary editor: cutting,
     /// arranging and retiming what is on it. Answered by the editor, never by
     /// the old recording window, which has its own ids above.
@@ -1066,7 +1073,8 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .keyLanesToggle, .keyLanesPickAtPlayhead, .keyLanesPickAll,
              .keyLanesPickedLater, .keyLanesPickedCopyLater, .keyLanesPickedHold,
              .keyLanesPickedBezier, .keyLanesHandleLater, .goToNextKey, .goToPreviousKey,
-             .timelineZoomIn, .timelineZoomOut, .timelineFit, .timelineFiveMinutes: true
+             .timelineZoomIn, .timelineZoomOut, .timelineFit, .timelineFiveMinutes,
+             .clipHoldToFiveMinutes: true
         default: false
         }
     }
@@ -3916,11 +3924,12 @@ public enum PlaytestStep: Sendable, Equatable {
                 hasOut: fields["hasOut"] as? Bool,
                 markers: try f.optionalNumber("markers").map { Int($0) },
                 rulerMatches: fields["rulerMatches"] as? Bool,
-                rulerAtPlayhead: try f.optionalString("rulerAtPlayhead"))
+                rulerAtPlayhead: try f.optionalString("rulerAtPlayhead"),
+                lengthMS: try f.optionalNumber("lengthMS").map { Int($0) })
             guard claim.claimsSomething else {
                 throw f.invalid("playheadMS", "expectTimeline has to claim something: \"playheadMS\", "
                     + "\"keyboard\", \"rate\", \"blade\", \"markInMS\", \"markOutMS\", \"hasIn\", "
-                    + "\"hasOut\", \"markers\", \"rulerMatches\" or \"rulerAtPlayhead\"")
+                    + "\"hasOut\", \"markers\", \"rulerMatches\", \"rulerAtPlayhead\" or \"lengthMS\"")
             }
             self = .expectTimeline(claim)
         case "expectPlaybackNeverBlank":
@@ -4172,11 +4181,13 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
     public var rulerMatches: Bool?
     /// This number is on the ruler and drawn under the playhead line.
     public var rulerAtPlayhead: String?
+    /// How long the document runs for, which is what the transport counts to.
+    public var lengthMS: Int?
 
     public init(playheadMS: Int? = nil, withinMS: Int = 0, keyboard: Keyboard? = nil, rate: Double? = nil,
                 blade: Bool? = nil, markInMS: Int? = nil, markOutMS: Int? = nil,
                 hasIn: Bool? = nil, hasOut: Bool? = nil, markers: Int? = nil,
-                rulerMatches: Bool? = nil, rulerAtPlayhead: String? = nil) {
+                rulerMatches: Bool? = nil, rulerAtPlayhead: String? = nil, lengthMS: Int? = nil) {
         self.playheadMS = playheadMS
         self.withinMS = max(0, withinMS)
         self.keyboard = keyboard
@@ -4189,11 +4200,12 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
         self.markers = markers
         self.rulerMatches = rulerMatches
         self.rulerAtPlayhead = rulerAtPlayhead
+        self.lengthMS = lengthMS
     }
 
     public var claimsSomething: Bool {
         playheadMS != nil || keyboard != nil || rate != nil || blade != nil || markInMS != nil
             || markOutMS != nil || hasIn != nil || hasOut != nil || markers != nil
-            || rulerMatches != nil || rulerAtPlayhead != nil
+            || rulerMatches != nil || rulerAtPlayhead != nil || lengthMS != nil
     }
 }

@@ -1,0 +1,26 @@
+{
+  "out": "/tmp/photonz-playtest/extract-from-the-ruler-menu-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "clipHoldToFiveMinutes" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "key", "key": "i" },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "key", "key": "o" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectTimeline", "markInMS": 75000, "markOutMS": 150000, "lengthMS": 300000 },
+
+    { "do": "key", "key": "left" },
+    { "do": "describe", "stage": "0-on-the-stretch", "note": "a walk's right click cannot put the pointer over the ruler (nothing synthesized reaches the ruler's hover), so the menu acts at the playhead, the ruler's own fallback. The playhead is stepped one frame back inside the stretch so the click really is on it" },
+    { "do": "rightClick", "at": [750, 860], "space": "window", "shot": "0-ruler-menu-on-the-marked-stretch", "choose": "Extract" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTimeline", "lengthMS": 225000, "playheadMS": 75000, "hasIn": false },
+    { "do": "describe", "stage": "1-extracted-from-the-menu", "note": "right-click on the shaded stretch of the ruler, Extract: the same edit as the apostrophe, and the menu names the key beside it" },
+    { "do": "snapshot", "name": "1-extracted-from-the-menu" }
+  ]
+}

@@ -526,6 +526,14 @@ struct EditorCommands: Commands {
                 Button("Clear In and Out") { editor?.clearMarkInOut() }
                     .keyboardShortcut("x", modifiers: .option)
                     .disabled(!(editor?.canClearMarkInOut ?? false))
+                // Premiere's Extract and Lift. Plain keys, like I and O: the
+                // timeline answers them while it has the keyboard.
+                Button("Extract") { editor?.extractMarkedStretch() }
+                    .keyboardShortcut(timelineKeys ? KeyboardShortcut("'", modifiers: []) : nil)
+                    .disabled(!(editor?.canTakeOutMarkedStretch ?? false))
+                Button("Lift") { editor?.liftMarkedStretch() }
+                    .keyboardShortcut(timelineKeys ? KeyboardShortcut(";", modifiers: []) : nil)
+                    .disabled(!(editor?.canTakeOutMarkedStretch ?? false))
                 Divider()
             }
             // Where the camera is pointed, and where it goes next

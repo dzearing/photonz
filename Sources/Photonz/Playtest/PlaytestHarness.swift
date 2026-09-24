@@ -3704,6 +3704,21 @@ private final class Run {
                     throw Failure(description: "the document is \(editor.documentLengthMS) ms "
                         + "long and should be \(wanted)")
                 }
+            case .clipHoldToFiveMinutes:
+                let wanted = 5 * 60 * 1000
+                guard let clip = editor.document?.layers.first(where: \.isClip),
+                      let time = clip.time, time.lengthMS < wanted else {
+                    throw Failure(description: "there is no clip shorter than five minutes to hold")
+                }
+                // Four seconds in, or halfway through a take shorter than eight.
+                let at = time.inMS + min(4000, time.lengthMS / 2)
+                editor.perform { $0.holdFrame(clip.id, atMS: at, forMS: wanted - time.lengthMS) }
+                editor.selectClipPiece(layerID: clip.id, index: nil)
+                editor.documentMomentChanged()
+                guard editor.documentLengthMS == wanted else {
+                    throw Failure(description: "the document is \(editor.documentLengthMS) ms "
+                        + "long and should be \(wanted)")
+                }
             default: break
             }
             await sleep(0.35)
@@ -4596,7 +4611,8 @@ private final class Run {
                  .keyLanesToggle, .keyLanesPickAtPlayhead, .keyLanesPickAll,
                  .keyLanesPickedLater, .keyLanesPickedCopyLater, .keyLanesPickedHold,
                  .keyLanesPickedBezier, .keyLanesHandleLater, .goToNextKey, .goToPreviousKey,
-                 .timelineZoomIn, .timelineZoomOut, .timelineFit, .timelineFiveMinutes:
+                 .timelineZoomIn, .timelineZoomOut, .timelineFit, .timelineFiveMinutes,
+                 .clipHoldToFiveMinutes:
                 break  // handled above, in the branch that drives the timeline
             }
             await sleep(0.2)
@@ -9269,8 +9285,11 @@ private final class Run {
         let reading = "playhead \(editor.documentTimeMS)ms, keyboard on the \(keyboard.rawValue), "
             + "rate \(rate), \(editor.isTimelineBlade ? "blade" : "select"), "
             + "in \(mark(document?.markInMS)), out \(mark(document?.markOutMS)), "
-            + "\(document?.markers.count ?? 0) marker(s)"
+            + "\(document?.markers.count ?? 0) marker(s), runs \(editor.documentLengthMS)ms"
         var wrong: [String] = []
+        if let want = claim.lengthMS, editor.documentLengthMS != want {
+            wrong.append("the timeline runs \(editor.documentLengthMS)ms, not \(want)ms")
+        }
         if let want = claim.playheadMS, abs(editor.documentTimeMS - want) > claim.withinMS {
             wrong.append("the playhead is at \(editor.documentTimeMS)ms, not \(want)ms")
         }

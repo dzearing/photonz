@@ -36,6 +36,9 @@ extension EditorState {
         static let addMarker = MenuShortcut(key: "m", modifiers: [])
         static let markIn = MenuShortcut(key: "i", modifiers: [])
         static let markOut = MenuShortcut(key: "o", modifiers: [])
+        /// Premiere's Extract and Lift, on the same two keys.
+        static let extract = MenuShortcut(key: "'", modifiers: [])
+        static let lift = MenuShortcut(key: ";", modifiers: [])
     }
 
     // MARK: A clip
@@ -360,6 +363,17 @@ extension EditorState {
     func timelineRulerMenuRows(atMS ms: Int, markerHere: UUID?) -> [MenuRow] {
         guard let document, documentHasTime else { return [] }
         var rows: [MenuRow] = []
+        // What the marks are for: the stretch they enclose, out in one key.
+        // A click ON the marked stretch is about that stretch, so the two
+        // lead; the ruler sits at the foot of the screen, where a long menu
+        // scrolls and its last rows are out of sight.
+        let takesOut = canTakeOutMarkedStretch
+        let onTheStretch = takesOut && document.markedRangeMS.map { ($0.lowerBound...$0.upperBound).contains(ms) } == true
+        let extractAndLift: [MenuRow] = [
+            .command("Extract", TimelineMenuKeys.extract) { self.extractMarkedStretch() },
+            .command("Lift", TimelineMenuKeys.lift) { self.liftMarkedStretch() },
+        ]
+        if onTheStretch { rows += extractAndLift + [.separator] }
         if let markerHere {
             rows.append(.command("Remove Marker") { self.removeMarker(markerHere) })
         } else {
@@ -371,6 +385,7 @@ extension EditorState {
         if document.markInMS != nil || document.markOutMS != nil {
             rows.append(.command("Clear In and Out", TimelineMenuKeys.clearInOut) { self.clearMarkInOut() })
         }
+        if takesOut, !onTheStretch { rows += [.separator] + extractAndLift }
         rows.append(.separator)
         var trial = document
         rows.append(.command("Split Everything Here", TimelineMenuKeys.splitEverything,
@@ -425,6 +440,41 @@ extension EditorState {
     func clearMarkInOut() {
         guard canClearMarkInOut else { return }
         perform { $0.clearMarkInOut() }
+    }
+
+    /// Whether Extract and Lift have anything to take: an In or an Out is
+    /// set and something unlocked runs into the stretch they enclose.
+    var canTakeOutMarkedStretch: Bool {
+        guard Experiments.shared.cutRecordingEnabled, documentHasTime,
+              var trial = document, trial.markedRangeMS != nil else { return false }
+        return trial.liftMarkedStretch()
+    }
+
+    /// ', Premiere's Extract: what the In and the Out enclose comes out of
+    /// every unlocked track and the gap closes, captions and titles and all
+    /// (`MarkedStretch.swift`). One undo step. The playhead lands on the join.
+    @discardableResult
+    func extractMarkedStretch() -> Bool {
+        takeOutMarkedStretch { $0.extractMarkedStretch() }
+    }
+
+    /// ;, Premiere's Lift: the same stretch out, and the gap left where it
+    /// was, so nothing after it moves.
+    @discardableResult
+    func liftMarkedStretch() -> Bool {
+        takeOutMarkedStretch { $0.liftMarkedStretch() }
+    }
+
+    private func takeOutMarkedStretch(_ edit: @escaping (inout PhotonzDocument) -> Bool) -> Bool {
+        guard canTakeOutMarkedStretch, var trial = document,
+              let range = trial.markedRangeMS, edit(&trial) else { return false }
+        endTrimBeforeCutting()
+        pauseDocument()
+        perform { _ = edit(&$0) }
+        selectedClipPieceIndex = nil
+        documentTimeMS = min(max(0, range.lowerBound), lastDocumentTimeMS)
+        documentMomentChanged()
+        return true
     }
 
     var canSplitEverythingAtPlayhead: Bool {

@@ -1,0 +1,29 @@
+{
+  "feature": "Extract and Lift a marked stretch",
+  "epic": "video-cutting",
+  "summary": "Mark an In and an Out on a recording and one key takes the stretch between them out of every track: the apostrophe closes the gap (Extract), the semicolon leaves it (Lift). Captions, titles, music and markers in the stretch go with it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    { "do": "Open a long screen recording. Put the playhead at 1:15 and press I, then at 2:30 and press O.", "shot": "2026-09-24-extract-and-lift-1.png" },
+    { "do": "Right-click on the shaded stretch of the ruler.", "shot": "2026-09-24-extract-and-lift-2.png" },
+    { "do": "Press the apostrophe ( ' ). The stretch is gone, the gap is closed and the total reads 1:15 shorter.", "shot": "2026-09-24-extract-and-lift-3.png" },
+    { "do": "Press Command Z once. The stretch and both marks come back." },
+    { "do": "Press the semicolon ( ; ). The same stretch goes but leaves a gap, and the clip is now two clips on one track.", "shot": "2026-09-24-extract-and-lift-4.png" },
+    { "do": "Add captions to a talking recording, mark a stretch across a few lines and press the apostrophe. Captions inside go, and the ones across either end are trimmed to the join." },
+    { "do": "Find Extract and Lift in the Mark menu too, with the same keys." }
+  ],
+  "evaluate": [
+    "Is the apostrophe and semicolon pairing what your hands expect coming from Premiere?",
+    "After Extract, is the playhead on the join where you want to keep working?",
+    "Should the marks be cleared after Extract or Lift (Premiere clears them), or kept so you can press again?",
+    "After Lift, should the second half keep the clip's own name instead of 'Tutorial Sample copy'?",
+    "Is Extract cutting music under the stretch the right call, or should a sound across the whole stretch be left alone as a single-piece delete does?"
+  ],
+  "rough": [
+    "Lift names the second half '<name> copy' in Layers and on the timeline, following the app's rule that two layers are told apart. Premiere keeps the same name on both halves.",
+    "No mock page draws Extract or Lift. The nearest frame is the timeline ruler in video.html, and the shaded In to Out span and the menu use the look the ruler already has.",
+    "The test recording is a stand-in: the eight second sample with its frame at four seconds held until the clip runs five minutes, because no five minute file ships in the repo. The cut lands inside a real clip, but inside a held frame.",
+    "The walk's right-click cannot hover the ruler, so the menu picture is taken with the playhead one frame inside the stretch. The menu's own fallback puts the click there.",
+    "Motion keys on a layer that Lift cuts in two replay from the start of the second half. Nothing shifts them yet, as with other clip cuts."
+  ]
+}

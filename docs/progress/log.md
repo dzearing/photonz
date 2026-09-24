@@ -19587,3 +19587,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Delete on a piece of a clip now takes that stretch out of the whole document (`PhotonzDocument.removeTime` in `StretchRemoval.swift`, called by `rippleDeleteClipPiece`, which Delete now uses). Captions only inside the stretch go, everything after moves up with its caption words, words and shapes across either end are shortened, a sound starting inside lands on the join, and a sound across the whole stretch stays put (the cut mock's detached voiceover). One undo step.
 - New walk action `captionsExpectEndWithRecording`, run by `an-editing-session-walk` after its cut: the last caption ends at 12.94s with the recording (it was 17.25s). Audit `queue/audits/2026-09-24-captions-follow-cut.json` with real captures.
 - Next: Extract (In/Out plus one key) can call `removeTime` once after cutting every clip at In and Out; noted on that task. Open: nothing shows which tracks a delete moves (the cut mock's own open question).
+
+## 2026-09-24 — Extract and Lift a marked stretch
+
+- Mark In and Out, then `'` (Extract) takes the stretch out of every unlocked track and closes the gap; `;` (Lift) leaves the gap. One undo step; marks spent; playhead on the join. Captions, titles and markers follow (`Sources/PhotonzCore/MarkedStretch.swift`).
+- Ruler right-click on the marked stretch leads with Extract and Lift; the Mark menu has both.
+- Walks: `extract-a-marked-stretch-walk` (five minute take, 1:15 to 2:30, reads 3:45), `extract-from-the-ruler-menu-walk`. Audit `queue/audits/2026-09-24-extract-and-lift.json`.
+- Open: Lift's second half is named "copy"; whether marks should survive an Extract.
