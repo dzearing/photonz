@@ -1882,6 +1882,18 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         [self] + children.flatMap(\.selfAndDescendants)
     }
 
+    /// Whether this layer or any layer inside it answers yes, without building
+    /// the flattened list `selfAndDescendants` would: asked of every layer on
+    /// every redraw of a long timeline, the copying was the cost.
+    public func containsSelfOrDescendant(where test: (Layer) -> Bool) -> Bool {
+        if test(self) { return true }
+        guard case .group(let group) = content else { return false }
+        for index in group.children.indices where group.children[index].containsSelfOrDescendant(where: test) {
+            return true
+        }
+        return false
+    }
+
     /// The box this layer occupies in its PARENT'S coordinate space. A leaf is
     /// just its frame. A group is the union of its children's boxes shifted by
     /// the group's origin, so the box is always derived and never stored; an

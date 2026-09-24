@@ -95,6 +95,18 @@ extension PhotonzDocument {
 
     /// Whether a layer has any value keyed, which is what earns its track the
     /// arrow that opens it.
+    /// Whether any of these layers has a lane of keys: a track's arrow asks
+    /// for every clip on it, and a Captions track has 170. One pass over the
+    /// document rather than a search per clip.
+    public func hasKeyLanes(anyOf ids: Set<UUID>) -> Bool {
+        var found = false
+        forEachLayer { layer in
+            guard !found, ids.contains(layer.id) else { return }
+            found = !keyedMotions(of: layer).isEmpty
+        }
+        return found
+    }
+
     public func hasKeyLanes(layerID: UUID) -> Bool {
         guard let layer = layer(id: layerID) else { return false }
         return !keyedMotions(of: layer).isEmpty

@@ -40,7 +40,9 @@ extension CanvasNSView {
     /// and the name of a copy is already in the layers list and the dock.
     var markedComponentInstances: [Layer] {
         guard componentsEnabled, let document else { return [] }
-        return document.allLayers.filter { $0.isComponentInstance && $0.isVisible }
+        var found: [Layer] = []
+        document.forEachLayer { if $0.isComponentInstance && $0.isVisible { found.append($0) } }
+        return found
     }
 
     func refreshComponentChrome() {

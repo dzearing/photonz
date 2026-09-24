@@ -238,11 +238,12 @@ extension PhotonzDocument {
     public func movieFrames(atTimeMS ms: Int) -> [MovieFrameRequest] {
         guard hasTime else { return [] }
         let moment = min(max(0, ms), lastDrawableTimeMS)
-        let own = allLayers.flatMap { $0.movieFrameRequests(atTimeMS: moment) }
+        var own: [MovieFrameRequest] = []
+        forEachLayer { own += $0.movieFrameRequests(atTimeMS: moment) }
         guard hasEditPointTransitions else { return own }
         return own + editPointFrameRequests(atMS: moment)
     }
 
     /// Whether anything in this document plays a recording.
-    public var hasMovies: Bool { allLayers.contains(where: \.isClip) }
+    public var hasMovies: Bool { layers.contains { $0.containsSelfOrDescendant(where: \.isClip) } }
 }

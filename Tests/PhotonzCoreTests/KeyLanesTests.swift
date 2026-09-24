@@ -71,6 +71,10 @@ struct KeyLanesTests {
         #expect(!doc.hasKeyLanes(layerID: id))
         let (keyed, keyedID) = Self.keyed()
         #expect(keyed.hasKeyLanes(layerID: keyedID))
+        // A track asks for all its clips at once, in one pass.
+        #expect(!doc.hasKeyLanes(anyOf: [id]))
+        #expect(keyed.hasKeyLanes(anyOf: [UUID(), keyedID]))
+        #expect(!keyed.hasKeyLanes(anyOf: [UUID()]))
     }
 
     @Test func aKeyReadsWhatItsMotionsCurveDoesWhereNobodyEasedIt() {

@@ -48,9 +48,10 @@ extension PhotonzDocument {
         let squeeze = { (ms: Int) -> Int in ms < start ? ms : (ms >= end ? ms - length : start) }
         var gone: Set<UUID> = []
         var changed = false
+        let locked = layerIDsOnLockedTracks()
         for layer in allLayers {
             guard !keep.contains(layer.id), !layer.isLocked, let time = layer.time,
-                  time.outMS > start, !isClipOnLockedTrack(layer.id) else { continue }
+                  time.outMS > start, !locked.contains(layer.id) else { continue }
             if time.inMS >= end {
                 updateLayer(id: layer.id) { moved in
                     moved.time = time.moved(toInMS: time.inMS - length)

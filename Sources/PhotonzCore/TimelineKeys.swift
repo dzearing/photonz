@@ -207,8 +207,8 @@ extension PhotonzDocument {
     /// goes out, and every cut inside a clip. Sorted, each once.
     public func editPointMoments() -> [Int] {
         var moments = Set<Int>()
-        for layer in allLayers {
-            guard let time = layer.time else { continue }
+        forEachLayer { layer in
+            guard let time = layer.time else { return }
             moments.insert(time.inMS)
             moments.insert(time.outMS)
             if let pieces = layer.clipPieces, pieces.count > 1 {

@@ -101,7 +101,7 @@ extension Layer {
 extension PhotonzDocument {
 
     /// Whether anything in this document makes a sound.
-    public var hasAudio: Bool { allLayers.contains { $0.sound != nil } }
+    public var hasAudio: Bool { layers.contains { $0.containsSelfOrDescendant { $0.sound != nil } } }
 
     /// Whether this layer's sound can be taken off its picture: it is a clip,
     /// its recording has a sound track, and nobody has taken it off already.

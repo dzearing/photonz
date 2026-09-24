@@ -1330,7 +1330,9 @@ extension PhotonzDocument {
     /// How long the lap would be if nobody had written one down: as long as the
     /// last thing to finish. Nought where nothing moves.
     public var automaticMotionCycleLengthMS: Int {
-        allLayers.map(\.motionEndMS).max() ?? 0
+        var longest = 0
+        forEachLayer { longest = max(longest, $0.motionEndMS) }
+        return longest
     }
 
     /// Whether the lap simply follows the longest motion, which is what it does

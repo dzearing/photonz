@@ -37,6 +37,14 @@ final class ViewBuildMeter {
         /// cannot tell "rebuilt cheaply" from "not rebuilt" once the row is
         /// small (`ColorStyleRow`).
         case colorRow
+        /// One clip's bar on the timeline, a caption cue included. A long
+        /// talk has 170 of them, so a key that rebuilds every one is a key
+        /// that freezes (`a-long-captioned-recording-walk`).
+        case clipBar
+        /// The Words lane under a Captions track: one body draws every word.
+        case wordsLane
+        /// One track of the timeline, header and lane.
+        case trackRow
     }
 
     private var counts: [Subject: Int] = [:]

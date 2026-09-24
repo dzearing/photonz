@@ -672,9 +672,8 @@ extension EditorState {
     /// command acts on, ordered, so a row over several copies reads the same
     /// way twice running and one undo step lands the same way every time.
     var orderedSelectedLayerIDs: [UUID] {
-        let picked = actionableLayerIDs
-        guard !picked.isEmpty, let document else { return [] }
-        return document.allLayers.map(\.id).filter { picked.contains($0) }
+        // The same reading as the style rows' targets, one pick without a walk.
+        colorStyleTargetIDs
     }
 
     /// What the Component section shows for what is picked: the copies it

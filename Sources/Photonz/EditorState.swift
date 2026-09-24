@@ -23,7 +23,17 @@ import UniformTypeIdentifiers
 @MainActor
 @Observable
 final class EditorState {
-    private(set) var history: History?
+    private(set) var history: History? {
+        didSet {
+            let has = history != nil
+            if hasDocument != has { hasDocument = has }
+        }
+    }
+    /// Whether a document is open, changing only when that answer does. The
+    /// window's shell asks this in a dozen places; asking `document != nil`
+    /// instead made every edit (a mark, a nudge) re-run the whole editor
+    /// body and everything under it (`a-long-captioned-recording-walk`).
+    private(set) var hasDocument = false
     let store = ImageStore()
     /// Per-image detected UI edges, computed lazily on first use and reused for
     /// every measure-corner snap. Keyed by `ImageRef`, so it survives undo/redo.
@@ -952,6 +962,11 @@ final class EditorState {
     /// reason: the whole drag is one step to undo
     /// (`EditorState+MotionStrip`).
     var motionStopDrag: MotionStopDragState?
+    /// The timeline's tracks as last worked out, and the document they were
+    /// worked out from (`timelineTrackRows`). The dock asks for them three or
+    /// four times per draw, and on a talk with 170 captions each asking laid
+    /// every track out again.
+    @ObservationIgnored var timelineTrackRowsMemo: (document: PhotonzDocument, rows: [TimelineTrackRowModel])?
     /// How far the timeline is opened out, and which stretch of the document
     /// is on screen (`EditorState+TimelineZoom`). Not in the document: how you
     /// are looking at a recording is not part of the recording, so it is
@@ -1087,6 +1102,11 @@ final class EditorState {
     /// grabbed, and where it has got to. Kept out of the document so a whole
     /// drag is one step to undo, exactly like the timing drag next door.
     var clipBarDrag: ClipBarDragSession?
+    /// The caption cue whose drag began on its light bar (`CaptionCueBar`).
+    /// The drag picks the cue, and a picked cue is drawn as the full bar, so
+    /// without this the view holding the gesture would be swapped out under
+    /// the hand and the drag never let go.
+    var carriedCaptionCueID: UUID?
     /// The tracks picked in the timeline's gutter (`EditorState+Tracks`).
     var selectedTrackIDs: Set<UUID> = []
     /// Track groups folded shut in this window. How you are looking at the

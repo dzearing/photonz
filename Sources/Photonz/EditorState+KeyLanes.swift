@@ -34,7 +34,7 @@ extension EditorState {
     /// Whether any clip on a track has a value keyed: the arrow on its header.
     func trackHasKeyLanes(_ layerIDs: [UUID]) -> Bool {
         guard documentHasTime, let document else { return false }
-        return layerIDs.contains { document.hasKeyLanes(layerID: $0) }
+        return document.hasKeyLanes(anyOf: Set(layerIDs))
     }
 
     func isKeyTrackOpen(_ trackID: UUID) -> Bool { !closedKeyTracks.contains(trackID) }

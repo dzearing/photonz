@@ -279,7 +279,12 @@ extension EditorState {
     var colorStyleTargetIDs: [UUID] {
         let picked = actionableLayerIDs
         guard !picked.isEmpty, let document else { return [] }
-        return document.allLayers.map(\.id).filter { picked.contains($0) }
+        // One pick has no order to keep, so it needs no walk of the document:
+        // the Keys rows ask this several times each per draw.
+        if picked.count == 1, let only = picked.first {
+            return document.layer(id: only) == nil ? [] : [only]
+        }
+        return document.allLayerIDs.filter { picked.contains($0) }
     }
 
     /// What the Effects and Shadow rows show: the picked layers that can be

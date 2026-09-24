@@ -84,6 +84,9 @@ struct ClipPiecesBar: View {
     private static let smallestGrabbablePiece: CGFloat = 14
 
     var body: some View {
+        #if PHOTONZ_PLAYTEST
+        let _ = ViewBuildMeter.shared.built(.clipBar)
+        #endif
         let ruler = editorState.motionStripRuler
         let pieces = shownPieces
         // While the bar's left end is being dragged the whole bar is drawn
@@ -182,9 +185,18 @@ struct ClipPiecesBar: View {
             }
         }
         .frame(width: laneWidth, alignment: .leading)
-        .playtestHover("\(fieldName) bar") { inside in if kind != nil, isSound { isHovered = inside } }
-        .panelReadout(readoutText)
+        .modifier(BarWatch(on: carriesWalkNames, name: "\(fieldName) bar", readout: readoutText) { inside in
+            if kind != nil, isSound { isHovered = inside }
+        })
     }
+
+    /// Whether this bar wears the names a walk finds it by. A caption cue does
+    /// not: a five minute talk has 170 of them, and each name is a view of its
+    /// own in the probe, five per bar, that the app a person runs never has.
+    /// Zooming such a timeline out built 870 of them in one pass and froze the
+    /// probe for 450ms where the app took 70 (`a-long-captioned-recording-walk`).
+    /// Walks reach a cue through the editor's own caption actions instead.
+    private var carriesWalkNames: Bool { kind != .caption }
 
     // MARK: What is on the bar
 
@@ -350,8 +362,9 @@ struct ClipPiecesBar: View {
                 if kind != nil { TimelineClipMenu(layerID: layerID, piece: index) }
             }
             .offset(x: shown.x)
-            .playtestField(Self.pieceName(layerName: fieldName, index: index, of: pieces.count))
-            .panelHelp(Self.help(pieces, index: index))
+            .modifier(WalkNames(on: carriesWalkNames,
+                                field: Self.pieceName(layerName: fieldName, index: index, of: pieces.count),
+                                help: Self.help(pieces, index: index)))
         }
     }
 
@@ -878,6 +891,11 @@ struct ClipPiecesBar: View {
     /// is drawn over the top of this one: without the band there, a catch on
     /// the playhead would be invisible at exactly the moment it mattered most.
     private func snapLine(atMS ms: Int, ruler: MotionStripRuler) -> some View {
+        Self.snapLine(atMS: ms, ruler: ruler, laneWidth: laneWidth, barHeight: barHeight)
+    }
+
+    static func snapLine(atMS ms: Int, ruler: MotionStripRuler, laneWidth: CGFloat,
+                         barHeight: CGFloat) -> some View {
         ZStack {
             Capsule()
                 .fill(Color.green.opacity(0.35))
@@ -897,6 +915,11 @@ struct ClipPiecesBar: View {
     /// On the row it is always whole, and it is only there while the hand is
     /// down.
     private func capsule(_ text: String, x: CGFloat) -> some View {
+        Self.capsule(text, x: x, laneWidth: laneWidth)
+    }
+
+    /// The numbers a drag is making, in a capsule beside the bar.
+    static func capsule(_ text: String, x: CGFloat, laneWidth: CGFloat) -> some View {
         Text(text)
             .font(.system(size: 10, design: .monospaced))
             .foregroundStyle(.primary)
@@ -1027,5 +1050,38 @@ private struct ClipNameField: View {
             editorState.renameLayer(id: layerID, to: trimmed)
         }
         editorState.renamingClipID = nil
+    }
+}
+
+/// A piece's walk name and its help, or for a caption cue only the help: the
+/// tooltip is the app's, the name is the probe's (`carriesWalkNames`).
+private struct WalkNames: ViewModifier {
+    let on: Bool
+    let field: String
+    let help: String
+
+    func body(content: Content) -> some View {
+        if on {
+            content.playtestField(field).panelHelp(help)
+        } else {
+            content.help(help)
+        }
+    }
+}
+
+/// The bar's hover and its readout for a walk. A caption cue has neither: its
+/// hover changes nothing, and its readout is only ever read by a walk.
+private struct BarWatch: ViewModifier {
+    let on: Bool
+    let name: String
+    let readout: String
+    let hover: (Bool) -> Void
+
+    func body(content: Content) -> some View {
+        if on {
+            content.playtestHover(name, perform: hover).panelReadout(readout)
+        } else {
+            content
+        }
     }
 }

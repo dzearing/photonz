@@ -48,9 +48,10 @@ extension PhotonzDocument {
     /// because locking a track is saying exactly that.
     private mutating func closeGap(endingAtMS end: Int, lengthMS: Int, except: UUID) {
         guard lengthMS > 0 else { return }
+        let locked = layerIDsOnLockedTracks()
         for layer in allLayers {
             guard layer.id != except, let time = layer.time, time.inMS >= end,
-                  !isClipOnLockedTrack(layer.id) else { continue }
+                  !locked.contains(layer.id) else { continue }
             updateLayer(id: layer.id) { $0.time = time.moved(toInMS: max(0, time.inMS - lengthMS)) }
         }
         refreshDuration()
@@ -63,12 +64,27 @@ extension PhotonzDocument {
     ///
     /// Only clips, meaning layers that play a recording or a sound. A title
     /// has no frames to cut between, and a piece of one would mean nothing.
+    /// Whether `splitEveryClip` would cut anything at `ms`, without cutting:
+    /// the menu bar asks on every step of the playhead, and cutting a copy of
+    /// the document to find out was most of a millisecond per clip.
+    public func canSplitEveryClip(atMS ms: Int) -> Bool {
+        let locked = layerIDsOnLockedTracks()
+        var found = false
+        forEachLayer { layer in
+            guard !found, layer.holdsMedia, let time = layer.time, ms > time.inMS, ms < time.outMS,
+                  !locked.contains(layer.id), var pieces = layer.clipPieces else { return }
+            found = pieces.split(atMS: ms - time.inMS)
+        }
+        return found
+    }
+
     @discardableResult
     public mutating func splitEveryClip(atMS ms: Int) -> Int {
         var cut = 0
+        let locked = layerIDsOnLockedTracks()
         for layer in allLayers where layer.holdsMedia {
             guard let time = layer.time, ms > time.inMS, ms < time.outMS,
-                  !isClipOnLockedTrack(layer.id) else { continue }
+                  !locked.contains(layer.id) else { continue }
             if splitClip(layer.id, atMS: ms) { cut += 1 }
         }
         return cut

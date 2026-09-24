@@ -239,11 +239,18 @@ extension PhotonzDocument {
     /// The cues on a captions track, earliest first: every caption inside the
     /// caption groups on it.
     public func captionCueIDs(onTrack id: UUID) -> [UUID] {
-        clipIDs(onTrack: id)
-            .compactMap { layer(id: $0) }
-            .flatMap { $0.isCaption ? [$0] : $0.selfAndDescendants.filter(\.isCaption) }
-            .sorted { ($0.time?.inMS ?? 0) < ($1.time?.inMS ?? 0) }
-            .map(\.id)
+        // The captions under this track's clips, in time order, read in place:
+        // a Captions group holds every cue, and copying each out to sort it
+        // was most of the cost of drawing a long captioned timeline.
+        let clips = Set(clipIDs(onTrack: id))
+        var cues: [(id: UUID, inMS: Int)] = []
+        func collect(_ layer: Layer) {
+            if layer.isCaption { cues.append((layer.id, layer.time?.inMS ?? 0)); return }
+            guard case .group(let group) = layer.content else { return }
+            for index in group.children.indices { collect(group.children[index]) }
+        }
+        for index in layers.indices where clips.contains(layers[index].id) { collect(layers[index]) }
+        return cues.sorted { $0.inMS < $1.inMS }.map(\.id)
     }
 
     /// Put these cues on the document as its captions, replacing any it had,

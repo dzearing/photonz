@@ -233,7 +233,7 @@ struct EditorView: View {
             // The title bar is outside this view's tree, so the state it reads
             // is handed over rather than inherited.
             .background {
-                if editorState.document != nil {
+                if editorState.hasDocument {
                     TitlebarPanelToggleInstaller(editorState: editorState)
                 }
             }
@@ -243,7 +243,7 @@ struct EditorView: View {
             // an empty window has no panel to fold, so a chip that swapped a
             // mode would change nothing anybody could see.
             .background {
-                if editorState.document != nil, Experiments.shared.windowModesEnabled {
+                if editorState.hasDocument, Experiments.shared.windowModesEnabled {
                     TitlebarModeChipInstaller()
                 }
             }
@@ -262,7 +262,7 @@ struct EditorView: View {
             // loads (the same pass that inserts the pane at its opening state),
             // so that first insertion is instant but every change thereafter
             // springs.
-            .onChange(of: editorState.document != nil, initial: true) { _, hasDoc in
+            .onChange(of: editorState.hasDocument, initial: true) { _, hasDoc in
                 guard hasDoc, !inspectorAnimationEnabled else { return }
                 DispatchQueue.main.async { inspectorAnimationEnabled = true }
             }
@@ -346,7 +346,7 @@ struct EditorView: View {
             // sheet behave the same.
             NewCanvasDialog(onCreate: { editorState.createBlankCanvas(size: $0) },
                             opensNewWindow: BlankCanvas.destination(
-                                windowHasDocument: editorState.document != nil) == .newWindow)
+                                windowHasDocument: editorState.hasDocument) == .newWindow)
         }
         .sheet(isPresented: $editorState.isNewFrameDialogPresented) {
             NewFrameDialog()
@@ -355,7 +355,7 @@ struct EditorView: View {
 
     @ViewBuilder
     private var canvas: some View {
-        if editorState.document != nil {
+        if editorState.hasDocument {
             EditorCanvasSurface()
                 .overlay(alignment: .bottom) {
                     // One slot: the "Copied" notice and the Measure mode hint
@@ -871,7 +871,7 @@ struct EditorView: View {
             get: {
                 editorState.isGridSettingsPresented
                     && Experiments.shared.canvasGridEnabled
-                    && editorState.document != nil
+                    && editorState.hasDocument
                     && EditorChromeLayout.gridSettingsAnchor(
                         canvasWidth: canvasContentWidth) == anchor
             },
@@ -910,7 +910,7 @@ struct EditorView: View {
         let parts = EditorChromeLayout.gridChipParts(
             canvasWidth: canvasContentWidth,
             isGridVisible: editorState.canvasGrid.isVisible)
-        if Experiments.shared.canvasGridEnabled, editorState.document != nil,
+        if Experiments.shared.canvasGridEnabled, editorState.hasDocument,
            !parts.isEmpty {
             let showing = editorState.canvasGrid.isVisible
             HStack(spacing: 8) {
@@ -1158,7 +1158,7 @@ struct EditorView: View {
         ToolCommand(title: "Resize Image…",
                     symbol: "arrow.down.right.and.arrow.up.left.rectangle",
                     shortcut: KeyboardShortcut("i", modifiers: [.command, .option]),
-                    isEnabled: editorState.document != nil) {
+                    isEnabled: editorState.hasDocument) {
             editorState.isResizeDialogPresented = true
         }
     }
@@ -1172,7 +1172,7 @@ struct EditorView: View {
                 .font(.system(size: 15, weight: .medium))
         }
         .buttonStyle(.tool())
-        .disabled(editorState.document == nil)
+        .disabled(!editorState.hasDocument)
         .toolTip("Resize Image", key: "⌥⌘I")
     }
 
@@ -1874,7 +1874,7 @@ struct EditorView: View {
             // after that, so the second click would land inside the menu.
             // `ZoomReadoutClickLid` explains the wait that buys.
             .overlay {
-                ZoomReadoutClickLid(isLive: editorState.document != nil) {
+                ZoomReadoutClickLid(isLive: editorState.hasDocument) {
                     editorState.zoomToActualSize()
                 }
             }
@@ -1885,7 +1885,7 @@ struct EditorView: View {
         .glassEffect(.regular, in: .capsule)
         .contentShape(.capsule)
         .toolBarGroupProbe("Zoom")
-        .disabled(editorState.document == nil)
+        .disabled(!editorState.hasDocument)
     }
 
     /// Wand tolerance: how far a color may drift (0–255 Euclidean RGBA) and
@@ -2949,4 +2949,11 @@ extension Tool {
     /// product decision and lives in PhotonzCore, where a test holds it still;
     /// this is only the type conversion.
     var keyEquivalent: KeyEquivalent? { shortcutKey.map { KeyEquivalent($0) } }
+}
+
+/// The editor has no inputs: everything it draws it reads from the window's
+/// state and the environment, and SwiftUI redraws it when those change. So two
+/// of them are always the same editor (`ImageEditorRootView`).
+extension EditorView: Equatable {
+    nonisolated static func == (lhs: EditorView, rhs: EditorView) -> Bool { true }
 }

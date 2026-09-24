@@ -560,10 +560,12 @@ extension PhotonzDocument {
     /// Every caption in this document, top-level or inside the group they
     /// landed in, oldest moment first.
     public var captionLayers: [Layer] {
-        allLayers.filter { $0.isCaption }.sorted { ($0.time?.inMS ?? 0) < ($1.time?.inMS ?? 0) }
+        var found: [Layer] = []
+        forEachLayer { if $0.isCaption { found.append($0) } }
+        return found.sorted { ($0.time?.inMS ?? 0) < ($1.time?.inMS ?? 0) }
     }
 
-    public var hasCaptions: Bool { allLayers.contains { $0.isCaption } }
+    public var hasCaptions: Bool { layers.contains { $0.containsSelfOrDescendant(where: \.isCaption) } }
 
     /// The cues this document's captions are, read back off the layers.
     ///
@@ -598,6 +600,14 @@ extension PhotonzDocument {
         let pieces = string.split(whereSeparator: \.isWhitespace).map(String.init)
         guard !pieces.isEmpty else { return heard }
         if pieces.count == heard.count {
+            // Nobody retyped it: the words are the ones heard, and there is no
+            // matching to do. The common case, asked for every cue each time
+            // the document changes.
+            if zip(pieces, heard).allSatisfy({ $0 == $1.text }) {
+                return heard.map {
+                    TranscribedWord($0.text, startMS: $0.startMS, endMS: $0.endMS, confidence: $0.confidence)
+                }
+            }
             return zip(pieces, heard).map {
                 TranscribedWord($0, startMS: $1.startMS, endMS: $1.endMS,
                                 confidence: Captions.spine(of: $0) == $1.spine ? $1.confidence : nil)

@@ -23,7 +23,7 @@ struct CaptionsInspector: View {
             auto
             if editorState.isWritingCaptions { listening } else { generate }
             if editorState.hasCaptions && !editorState.isWritingCaptions {
-                cue
+                CaptionCueInFocusRows()
                 Divider().padding(.vertical, 2)
                 style
                 timing
@@ -131,48 +131,11 @@ struct CaptionsInspector: View {
         }
     }
 
-    // MARK: - The cue in focus
-
-    @ViewBuilder private var cue: some View {
-        if let focus = editorState.captionCueInFocus, let time = focus.layer.time {
-            VideoKit.FieldRow(label: "Cue") {
-                Text("\(focus.index + 1) of \(focus.of)")
-                    .font(.system(size: 10.5, weight: .medium))
-                    .foregroundStyle(VideoKit.Palette.dim)
-                    .panelReadout("cue \(focus.index + 1) of \(focus.of)")
-            }
-            let words = focus.layer.captionWords?.count ?? 0
-            Grid(horizontalSpacing: 6, verticalSpacing: 6) {
-                GridRow {
-                    field("In", Self.seconds(time.inMS))
-                    field("Out", Self.seconds(time.outMS))
-                }
-                GridRow {
-                    field("Dur", Self.seconds(time.outMS - time.inMS))
-                    field("Words", "\(words)")
-                }
-            }
-            .playtestField("Cue")
-        }
-    }
-
     /// `2.43s`, the mock's reading.
     static func seconds(_ ms: Int) -> String {
         String(format: "%.2fs", Double(ms) / 1000)
     }
 
-    private func field(_ key: String, _ value: String) -> some View {
-        HStack(spacing: 6) {
-            Text(key).font(.system(size: 10)).foregroundStyle(VideoKit.Palette.faint)
-            Spacer(minLength: 0)
-            Text(value).font(.system(size: 11, weight: .medium)).monospacedDigit()
-                .foregroundStyle(VideoKit.Palette.ink)
-        }
-        .padding(.horizontal, 8)
-        .frame(height: 24)
-        .background(RoundedRectangle(cornerRadius: 6).fill(VideoKit.Palette.glassThin))
-        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(VideoKit.Palette.edgeLo))
-    }
 
     // MARK: - One look for every caption
 
@@ -301,5 +264,50 @@ struct CaptionsInspector: View {
             }
             .controlSize(.small)
         }
+    }
+}
+
+/// The cue under the playhead (or the one picked): which of how many, and its
+/// in, out, length and words. A view of its own because it is the one part of
+/// the section that follows the playhead: inside the section's body, every
+/// step of an arrow key re-read every cue's words for the count above it
+/// (`a-long-captioned-recording-walk`).
+private struct CaptionCueInFocusRows: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        if let focus = editorState.captionCueInFocus, let time = focus.layer.time {
+            VideoKit.FieldRow(label: "Cue") {
+                Text("\(focus.index + 1) of \(focus.of)")
+                    .font(.system(size: 10.5, weight: .medium))
+                    .foregroundStyle(VideoKit.Palette.dim)
+                    .panelReadout("cue \(focus.index + 1) of \(focus.of)")
+            }
+            let words = focus.layer.captionWords?.count ?? 0
+            Grid(horizontalSpacing: 6, verticalSpacing: 6) {
+                GridRow {
+                    field("In", CaptionsInspector.seconds(time.inMS))
+                    field("Out", CaptionsInspector.seconds(time.outMS))
+                }
+                GridRow {
+                    field("Dur", CaptionsInspector.seconds(time.outMS - time.inMS))
+                    field("Words", "\(words)")
+                }
+            }
+            .playtestField("Cue")
+        }
+    }
+
+    private func field(_ key: String, _ value: String) -> some View {
+        HStack(spacing: 6) {
+            Text(key).font(.system(size: 10)).foregroundStyle(VideoKit.Palette.faint)
+            Spacer(minLength: 0)
+            Text(value).font(.system(size: 11, weight: .medium)).monospacedDigit()
+                .foregroundStyle(VideoKit.Palette.ink)
+        }
+        .padding(.horizontal, 8)
+        .frame(height: 24)
+        .background(RoundedRectangle(cornerRadius: 6).fill(VideoKit.Palette.glassThin))
+        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(VideoKit.Palette.edgeLo))
     }
 }

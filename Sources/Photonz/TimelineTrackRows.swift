@@ -34,6 +34,9 @@ struct TimelineTrackRow: View {
     private var track: DocumentTrack { row.track }
 
     var body: some View {
+        #if PHOTONZ_PLAYTEST
+        let _ = ViewBuildMeter.shared.built(.trackRow)
+        #endif
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: TimelineDock.gap) {
                 header
@@ -67,6 +70,22 @@ struct TimelineTrackRow: View {
             }
         }
         .playtestHover("Track \(track.name)") { isHovered = $0 }
+    }
+
+    /// The cues on a Captions track that nobody is working on: not picked
+    /// (unless its drag began on the painted layer), not being retyped or
+    /// trimmed, and nothing keyed or drifting on it that the full bar draws.
+    private var paintedCues: [MotionStripGroup] {
+        guard row.isCaptions, row.cuesArePlain else { return [] }
+        let carried = editorState.carriedCaptionCueID
+        let picked = editorState.selectedLayerID
+        let renaming = editorState.renamingClipID
+        let trimming = editorState.trimmingLayerID
+        return row.clips.filter { clip in
+            guard clip.bar != nil, clip.lanes.isEmpty else { return false }
+            if clip.layerID == carried { return true }
+            return clip.layerID != picked && clip.layerID != renaming && clip.layerID != trimming
+        }
     }
 
     private var laneHeight: CGFloat {
@@ -283,12 +302,25 @@ struct TimelineTrackRow: View {
                 .gesture(TimelineLaneScrub.gesture(editorState, ruler: ruler, laneWidth: laneWidth))
                 .contextMenu { TimelineTrackMenu(track: track, index: index) }
             let alternates = alternateClips
-            ForEach(row.clips) { clip in
+            // A Captions track paints the cues nobody is working on as one
+            // layer (`CaptionCuesLayer`) and draws only the rest as bars.
+            let painted = paintedCues
+            if !painted.isEmpty {
+                CaptionCuesLayer(cues: painted.compactMap { group in
+                    group.bar.map { CaptionCuesLayer.Cue(layerID: group.layerID, name: group.layerName, bar: $0) }
+                }, ruler: ruler, laneWidth: laneWidth, height: laneHeight)
+                .equatable()
+                .allowsHitTesting(!track.isLocked)
+            }
+            let paintedIDs = Set(painted.map(\.id))
+            ForEach(row.clips.filter { !paintedIDs.contains($0.id) }) { clip in
                 TimelineClipView(group: clip, laneWidth: laneWidth, height: laneHeight,
                                  alternate: alternates.contains(clip.id), isCaptionCue: row.isCaptions)
                     .allowsHitTesting(!track.isLocked)
-                    .playtestField("Timing \(clip.layerName)")
-                if isBlade, !track.isLocked {
+                    .modifier(TimingName(on: !row.isCaptions, name: "Timing \(clip.layerName)"))
+            }
+            if isBlade, !track.isLocked {
+                ForEach(row.clips) { clip in
                     TimelineBlade(group: clip, laneWidth: laneWidth)
                 }
             }
@@ -817,5 +849,16 @@ struct TimelineAddTrackRow: View {
         Button("Video Track") { editorState.addTrack(.video) }
         Button("Audio Track") { editorState.addTrack(.audio) }
         Button("Captions Track") { editorState.addTrack(.captions) }
+    }
+}
+
+/// A clip's "Timing" name for a walk, left off a caption cue for the reason
+/// `ClipPiecesBar.carriesWalkNames` gives.
+private struct TimingName: ViewModifier {
+    let on: Bool
+    let name: String
+
+    func body(content: Content) -> some View {
+        if on { content.playtestField(name) } else { content }
     }
 }

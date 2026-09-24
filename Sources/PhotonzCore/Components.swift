@@ -77,7 +77,9 @@ extension PhotonzDocument {
 
     /// Every main in the document, in the order the tree holds them.
     public var mainComponents: [Layer] {
-        allLayers.filter(\.isMainComponent)
+        var found: [Layer] = []
+        forEachLayer { if $0.isMainComponent { found.append($0) } }
+        return found
     }
 
     /// What each component is called, from mains already in hand: the name a

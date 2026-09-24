@@ -1,0 +1,42 @@
+{
+  "feature": "A long captioned recording edits without freezing",
+  "epic": "video-editing",
+  "summary": "On a five minute talk whose captions wrote themselves (about 190 captions, 1,100 words), stepping a frame, setting an In or Out and zooming now cost 20 to 47ms each in the probe on a quiet Mac, where they froze for 170 to 485ms before. The words landing hold the window for about 60 to 70ms.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any screen recording of five minutes or more with somebody talking, and let the captions write themselves.",
+  "try": [
+    {
+      "do": "Open a five minute screen recording with talking in it and wait for the Captions and Words rows to fill.",
+      "shot": "2026-09-24-long-captioned-timeline-1.png"
+    },
+    {
+      "do": "Hold the right arrow for a few seconds."
+    },
+    {
+      "do": "Press I, step on a few frames with the right arrow, then press O."
+    },
+    {
+      "do": "Press = three times to zoom in, then \\ to fit the whole recording again.",
+      "shot": "2026-09-24-long-captioned-timeline-2.png"
+    },
+    {
+      "do": "Drag one caption along its track, then right-click another one."
+    },
+    {
+      "do": "Click a caption, then double-click it to retype a word."
+    }
+  ],
+  "evaluate": [
+    "Does holding the right arrow on a long captioned recording feel as smooth as on one with no captions?",
+    "Do I, O, = and \\ answer at once, with no beat before the timeline catches up?",
+    "Do the caption bars and word chips look exactly as they did before, at every zoom?",
+    "Does dragging a caption, and its right-click menu, still behave the way it did?"
+  ],
+  "rough": [
+    "Picking or retyping a caption still takes 120 to 190ms, on a ten caption talk as much as on a five minute one: the panel switching to the caption's settings and the name field opening. Filed as its own task.",
+    "The walk that guards this fails at 80ms a key and 150ms for the landing, not the 50 and 100 asked for: on a quiet Mac every key was 20 to 47ms, but with another window keeping the Mac busy the same presses read 40 to 60ms, and a guard that goes red on a busy machine sends runners after nothing.",
+    "The caption bars nobody has picked are now painted as one layer. A real click on one could not be proved by a walk today: the probe could not become the front app (a system alert held the front), and then no timeline control built this way takes a click, the Blade's included. The walk that checks it is written and waiting for the next sweep.",
+    "Side by side with the Captions track and Words lane in pages/video-captions.html: no difference in layout, colour, control or copy from before. The painted bars and chips use the same colours, corner, border, type and ellipsis the bars did.",
+    "Opening a long Retina recording holds the window for 200 to 400ms a few times before any caption exists. Not caption work, so noted here rather than fixed.",
+    "Numbers are from the probe build, which carries extra views for the walks; the app you run is a little quicker than these."
+  ]
+}

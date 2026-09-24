@@ -362,6 +362,7 @@ extension EditorState {
         stopWatchingForClipBarEscape()
         guard let session = clipBarDrag else { return }
         clipBarDrag = nil
+        carriedCaptionCueID = nil
         let landing = session.landing
         let id = session.layerID
         switch session.grab {
@@ -405,6 +406,7 @@ extension EditorState {
         clipTrackDrop = nil
         guard clipBarDrag != nil else { return }
         clipBarDrag = nil
+        carriedCaptionCueID = nil
         documentMomentChanged()
     }
 

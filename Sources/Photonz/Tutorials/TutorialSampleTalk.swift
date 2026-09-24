@@ -30,7 +30,12 @@ enum TutorialSampleTalk {
         return await merge(picture: picture, voice: voice, into: url) ? url : nil
     }
 
-    private static func merge(picture: URL, voice: URL, into url: URL) async -> Bool {
+    /// The picture played round until the voice has had its say, written as
+    /// one file. `preset` and `type` let a long talk be written without
+    /// encoding five minutes of picture again (`PlaytestLongTalk`).
+    static func merge(picture: URL, voice: URL, into url: URL,
+                      preset: String = AVAssetExportPresetHighestQuality,
+                      as type: AVFileType = .mp4) async -> Bool {
         let pictureAsset = AVURLAsset(url: picture)
         let voiceAsset = AVURLAsset(url: voice)
         guard let videoTrack = try? await pictureAsset.loadTracks(withMediaType: .video).first,
@@ -56,11 +61,10 @@ enum TutorialSampleTalk {
         }
         guard (try? audio.insertTimeRange(CMTimeRange(start: .zero, duration: voiceLength),
                                           of: voiceTrack, at: .zero)) != nil,
-              let session = AVAssetExportSession(asset: composition,
-                                                 presetName: AVAssetExportPresetHighestQuality)
+              let session = AVAssetExportSession(asset: composition, presetName: preset)
         else { return false }
         do {
-            try await session.export(to: url, as: .mp4)
+            try await session.export(to: url, as: type)
             return true
         } catch {
             return false

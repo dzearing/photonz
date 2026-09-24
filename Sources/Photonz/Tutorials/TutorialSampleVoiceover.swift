@@ -61,8 +61,15 @@ enum TutorialSampleVoiceover {
     /// so the whole thing is one continuation that finishes when a buffer of
     /// nothing arrives, which is how `AVSpeechSynthesizer` says it has stopped.
     private static func write(to url: URL) async -> Bool {
+        await speak(script, to: url)
+    }
+
+    /// Speak any words into a file, the way the sample's own are: the long
+    /// talk a walk times the timeline on is spoken by this too
+    /// (`PlaytestLongTalk`).
+    static func speak(_ words: String, to url: URL) async -> Bool {
         let synthesizer = AVSpeechSynthesizer()
-        let utterance = AVSpeechUtterance(string: script)
+        let utterance = AVSpeechUtterance(string: words)
         // A shade under the default, which lands nearer the pace somebody
         // narrating their own screen recording actually talks at.
         utterance.rate = AVSpeechUtteranceDefaultSpeechRate * 0.92

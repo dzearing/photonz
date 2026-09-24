@@ -124,7 +124,7 @@ extension Layer {
     /// Whether this layer puts anything on the timeline: a stretch of time or
     /// something moving, on itself or anywhere inside it.
     var isOnTheTimeline: Bool {
-        selfAndDescendants.contains { $0.occupiesTime || $0.hasMotion }
+        containsSelfOrDescendant { $0.occupiesTime || $0.hasMotion }
     }
 }
 
@@ -166,7 +166,25 @@ extension PhotonzDocument {
     }
 
     func topLevelLayer(containing id: UUID) -> Layer? {
-        layers.first { layer in layer.id == id || layer.selfAndDescendants.contains { $0.id == id } }
+        layers.first { layer in layer.containsSelfOrDescendant { $0.id == id } }
+    }
+
+    /// Every layer on a locked track, the clips and everything inside them,
+    /// from ONE laying out of the tracks. A loop over every layer asks this
+    /// once instead of `isClipOnLockedTrack` per layer, which lays the tracks
+    /// out twice for every question: on a talk with 170 captions that was most
+    /// of a second (`LongTimelineCostTests`).
+    func layerIDsOnLockedTracks() -> Set<UUID> {
+        let locked = tracks.filter(\.isLocked)
+        guard !locked.isEmpty else { return [] }
+        let layout = trackLayout()
+        var clips = Set<UUID>()
+        for track in locked { clips.formUnion(layout.clips[track.id] ?? []) }
+        var ids = Set<UUID>()
+        for layer in layers where clips.contains(layer.id) {
+            ids.formUnion(layer.selfAndDescendants.map(\.id))
+        }
+        return ids
     }
 
     /// The tracks, what is on each, and which audio track each clip's own

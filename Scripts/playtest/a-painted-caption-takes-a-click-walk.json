@@ -1,0 +1,48 @@
+{
+  "out": "/tmp/photonz-playtest/a-painted-caption-takes-a-click-walk",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "describe",
+      "stage": "why",
+      "note": "On a Captions track the cues nobody is working on are painted as one layer rather than drawn as a bar each (a five minute talk has 190 of them, and a bar each froze the timeline). A real click on one, through the window, must still pick that one caption, which then comes back as the full bar with its grips. Needs the probe to be the active app: a click on an inactive window only activates it, for this and for the Blade alike."
+    },
+    {
+      "do": "action",
+      "action": "openSampleTalk"
+    },
+    {
+      "do": "action",
+      "action": "captionsWaitForThemselves"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "press",
+      "control": "Captions cues",
+      "across": 0.3
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectOnePicked"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-a-cue-picked"
+    }
+  ]
+}

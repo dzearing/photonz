@@ -607,7 +607,7 @@ private final class Run {
             let url = try fileURL(file)
             try await open(url, size: size, number: number)
 
-        case .wait(let seconds, let onTheClock):
+        case .wait(let seconds, let onTheClock, let longestUnderMS):
             // On the clock, the whole time is spent: a walk waiting out
             // something that leaves BY ITSELF is not waiting for the app to
             // finish anything, and an app with nothing to do goes quiet in a
@@ -619,7 +619,16 @@ private final class Run {
             } else {
                 said = await settle(for: seconds)
             }
-            note(number, step.name, "\(said); \(MainThreadMeter.shared.report)")
+            // A guarded wait also says what was rebuilt, so a freeze names
+            // the views that cost it rather than only its length.
+            note(number, step.name, "\(said); \(MainThreadMeter.shared.report)"
+                 + (longestUnderMS == nil ? "" : "; \(ViewBuildMeter.shared.report)"))
+            if let longestUnderMS, MainThreadMeter.shared.longestMS >= longestUnderMS {
+                throw Failure(description: String(
+                    format: "the main thread froze for %.1fms in one pass, and this walk allows under %.0fms: "
+                        + "a pass that long is a frame the app did not draw while somebody waited on it",
+                    MainThreadMeter.shared.longestMS, longestUnderMS))
+            }
 
         case .key(let key, let modifiers):
             // A sheet is a window of its own sitting on the editor's, and it is
@@ -634,6 +643,13 @@ private final class Run {
             // just been ticked or unticked reports its new state and the log
             // describes the wrong thing.
             let destination = modifiers.isEmpty ? nil : Self.menuItem(carrying: key, modifiers: modifiers)
+            // Zeroed so the `wait` after a key reports that key's own cost,
+            // the way a click's does. It used to carry everything since the
+            // last press, so four keys in a row read as the slowest of them
+            // and no walk could say which key froze the app.
+            MainThreadMeter.shared.install()
+            MainThreadMeter.shared.reset()
+            ViewBuildMeter.shared.reset()
             let takenBy = press(key, modifiers: modifiers, in: window)
             await sleep(0.05)
             try await requireAnsweredSheet(key, modifiers: modifiers, aimedAt: window, takenBy: takenBy)
@@ -2538,6 +2554,25 @@ private final class Run {
             try await adopt(landed, window: nil, step: step.name,
                             subject: "a recording with somebody talking in it", number: number)
 
+        // Five minutes of it, for timing the timeline once 170 captions have
+        // written themselves. Written once per Mac, which takes a minute or so
+        // the first time; every walk after that opens a fresh copy.
+        case .action(.openLongTalk):
+            guard let url = await PlaytestLongTalk.fresh() else {
+                throw Failure(description: "couldn't write the five minute talk")
+            }
+            coordinator.openWindow(.video(standardizing: url))
+            var landed: EditorState?
+            try await poll("the five minute talk to open as a document", within: 30) {
+                landed = PlaytestHarness.readyEditors.last {
+                    $0.recordingURL?.lastPathComponent == PlaytestLongTalk.fileName
+                }
+                return landed != nil
+            }
+            guard let landed else { throw Failure(description: "no editor opened the five minute talk") }
+            try await adopt(landed, window: nil, step: step.name,
+                            subject: "a five minute recording with somebody talking in it", number: number)
+
         case .action(let action) where action == .openSampleRecording:
             guard let url = TutorialSampleRecording.fresh() else {
                 throw Failure(description: "couldn't write the sample recording")
@@ -2750,6 +2785,14 @@ private final class Run {
         // never landed.
         case .action(let action) where action.drivesTheTimeline:
             let editor = try requireEditor()
+            // Zeroed the way every other action zeroes them, so the wait after
+            // a timeline action reports that action's own cost. These never
+            // were, so the wait after Write Captions carried the recording's
+            // own opening and could not say whether the words landing froze
+            // anything (`a-long-captioned-recording-walk`).
+            MainThreadMeter.shared.install()
+            MainThreadMeter.shared.reset()
+            ViewBuildMeter.shared.reset()
             guard editor.documentHasTime else {
                 throw Failure(description: "\(action.rawValue) needs a document that runs for a "
                     + "length of time, and this one does not")
@@ -2837,13 +2880,13 @@ private final class Run {
                 try await poll("the spoken sample to land on the timeline", within: 20) {
                     landed != nil && (editor.document?.allLayers.count ?? 0) > before
                 }
-            case .captionsWrite:
+            case .captionsWrite, .captionsWriteQuietly:
                 guard editor.canWriteCaptions else {
                     throw Failure(description: "there is nothing to caption: this document has no "
                         + "time in it, nothing in it makes a sound, or the listening is already "
                         + "running")
                 }
-                editor.writeCaptions()
+                editor.writeCaptions(quietly: action == .captionsWriteQuietly)
                 // It listens about ninety times faster than the sound runs, so
                 // a minute of voiceover is a second or so. The ceiling is for
                 // the first run on a Mac, which may have to fetch the
@@ -2978,6 +3021,16 @@ private final class Run {
                 }
                 note(number, step.name,
                      "captions wrote themselves: \(editor.captionsReading)", state: describe())
+            case .captionsExpectOnePicked:
+                let captions = Set(editor.document?.captionLayers.map(\.id) ?? [])
+                let picked = editor.actionableLayerIDs
+                guard picked.count == 1, let id = picked.first, captions.contains(id) else {
+                    throw Failure(description: "\(picked.count) layer(s) picked, and "
+                        + "\(picked.filter(captions.contains).count) of them a caption: a click on a "
+                        + "caption's bar should pick that one caption")
+                }
+                note(number, step.name, "captions: one caption picked, "
+                     + "\"\(editor.document?.layer(id: id)?.name ?? "")\"", state: describe())
             case .captionsExpectOneTrack:
                 guard let document = editor.document else { throw Failure(description: "no document") }
                 let tracks = document.timelineTracks.filter { $0.kind == .captions }
@@ -3948,7 +4001,8 @@ private final class Run {
                  .captionsNudgeLater,
                  .captionsNudgeEarlier, .captionsCorrectFirstWord, .captionsClear,
                  .captionsExpectSound, .captionsExpectTimingsKept, .captionsWaitForThemselves,
-                 .captionsExpectOneTrack, .captionsExpectEndWithRecording,
+                 .captionsExpectOneTrack, .captionsExpectOnePicked, .captionsWriteQuietly,
+                 .captionsExpectEndWithRecording,
                  .captionsEditFirstInPlace, .captionsCommitFirstWords,
                  .captionsTrimFirstEnd, .captionsStyleCaption, .captionsStyleLowerThird,
                  .captionsStyleKaraoke, .captionsPositionTop, .captionsPositionBottom,
@@ -4596,7 +4650,8 @@ private final class Run {
                  .videoExportSheetCancel, .videoExportBegin, .videoExportWeighed,
                  .videoExportStop,
                  .videoCropMiddle,
-                 .openSampleRecording, .openSampleTalk, .openRecordingFromDisk, .openMissingRecording,
+                 .openSampleRecording, .openSampleTalk, .openLongTalk, .openRecordingFromDisk,
+                 .openMissingRecording,
                  .openLandingRecording, .reopenSampleRecording, .editLastCapture:
                 break  // handled above, in the branch that asks for a recording
             case .clipSplit, .clipDeletePiece, .clipHoldFrame,
@@ -12198,6 +12253,10 @@ final class MainThreadMeter {
     func exclude(_ seconds: CFTimeInterval) {
         if activeSince != nil { excludedInPass += seconds } else { busy -= seconds; sinceAsked -= seconds }
     }
+
+    /// The longest whole pass since the meter was last zeroed. The pass the
+    /// harness is standing in right now is not over, and is mostly its own.
+    var longestMS: Double { longest * 1000 }
 
     var report: String {
         var total = busy

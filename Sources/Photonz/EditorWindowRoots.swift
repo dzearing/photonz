@@ -15,7 +15,13 @@ struct ImageEditorRootView: View {
     @State private var editorState = EditorState()
 
     var body: some View {
+        // Equal to itself: the editor takes nothing from here but what it
+        // reads for itself, and it redraws on exactly that. Without this every
+        // edit re-ran the whole editor, because this body (which re-runs on
+        // every edit, for the Save menu below) handed it a fresh value
+        // (`a-long-captioned-recording-walk`).
         EditorView()
+            .equatable()
             .environment(editorState)
             .focusedSceneValue(\.editorState, editorState)
             // What Save means in this window, recomputed here — inside a view

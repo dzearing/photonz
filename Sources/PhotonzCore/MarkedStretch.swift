@@ -80,7 +80,8 @@ extension PhotonzDocument {
         // Clips and sounds lose the stretch out of their own pieces first.
         // One wholly inside is left for `removeTime`, which drops it.
         var cut: Set<UUID> = []
-        for layer in allLayers where layer.holdsMedia && takesPart(layer, fromMS: from, toMS: end) {
+        let locked = layerIDsOnLockedTracks()
+        for layer in allLayers where layer.holdsMedia && takesPart(layer, fromMS: from, toMS: end, locked: locked) {
             guard let time = layer.time, time.inMS < from || time.outMS > end,
                   let pieces = layer.clipPieces,
                   let left = pieces.removingStretch(fromMS: from - time.inMS, toMS: end - time.inMS)
@@ -129,7 +130,8 @@ extension PhotonzDocument {
     public mutating func liftStretch(fromMS start: Int, toMS end: Int) -> Bool {
         let from = max(0, start)
         guard end > from else { return false }
-        let hit = allLayers.filter { takesPart($0, fromMS: from, toMS: end) }
+        let locked = layerIDsOnLockedTracks()
+        let hit = allLayers.filter { takesPart($0, fromMS: from, toMS: end, locked: locked) }
         guard !hit.isEmpty else { return false }
         // A clip cut in two stays on its own track only once the tracks are
         // written down: a clip on no track is given one of its own.
@@ -164,13 +166,35 @@ extension PhotonzDocument {
         return true
     }
 
+    // MARK: Whether there is anything to take
+
+    /// Whether Extract or Lift would take anything out of the stretch: some
+    /// unlocked layer on an unlocked track runs into it. The same answer a
+    /// trial Lift gives, from one pass over the layers and without copying
+    /// the document, because the menu bar asks it on every redraw.
+    public func canTakeOutStretch(fromMS start: Int, toMS end: Int) -> Bool {
+        let from = max(0, start)
+        guard end > from else { return false }
+        let locked = layerIDsOnLockedTracks()
+        return layers.contains { top in
+            top.containsSelfOrDescendant { takesPart($0, fromMS: from, toMS: end, locked: locked) }
+        }
+    }
+
+    /// The same for what the In and the Out enclose. False with nothing marked.
+    public var canTakeOutMarkedStretch: Bool {
+        guard let range = markedRangeMS else { return false }
+        return canTakeOutStretch(fromMS: range.lowerBound, toMS: range.upperBound)
+    }
+
     // MARK: Pieces of the work
 
     /// Whether a layer is touched by a stretch: it runs into it, and nothing
-    /// has locked it.
-    private func takesPart(_ layer: Layer, fromMS from: Int, toMS end: Int) -> Bool {
+    /// has locked it. `locked` is `layerIDsOnLockedTracks()`, asked once by
+    /// the caller rather than once per layer.
+    private func takesPart(_ layer: Layer, fromMS from: Int, toMS end: Int, locked: Set<UUID>) -> Bool {
         guard !layer.isLocked, let time = layer.time, time.inMS < end, time.outMS > from else { return false }
-        return !isClipOnLockedTrack(layer.id)
+        return !locked.contains(layer.id)
     }
 
     /// Cut a layer down to the part of it between two moments of the

@@ -15,10 +15,19 @@ extension EditorState {
     /// document that runs for a length of time. A key is a value at a moment,
     /// and a document without moments has nowhere to put one.
     var keyLayer: Layer? {
-        guard documentHasTime,
-              let id = soleLayerID(layerStyleSelection.layerIDs),
-              let layer = document?.layer(id: id), !layer.isLocked else { return nil }
-        return layer
+        // The one picked layer the style rows would speak for: they speak for
+        // every picked layer that is not locked. Read straight off the picks
+        // rather than through the whole style reading, because every row of
+        // the Keys section asks this several times per draw, and on a long
+        // captioned talk that reading was a scan of every layer each time.
+        guard documentHasTime, let document else { return nil }
+        var sole: Layer?
+        for id in colorStyleTargetIDs {
+            guard let layer = document.layer(id: id), !layer.isLocked else { continue }
+            guard sole == nil else { return nil }
+            sole = layer
+        }
+        return sole
     }
 
     /// The values it lists, keyed or not, in the mock's order.

@@ -225,6 +225,34 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         layers.flatMap(\.selfAndDescendants)
     }
 
+    /// Visit every layer in `allLayers` order without building the list. A
+    /// question asked once per bar on a long timeline has to be one pass
+    /// that copies nothing, or a hundred bars make it a hundred squared.
+    public func forEachLayer(_ body: (Layer) throws -> Void) rethrows {
+        func walk(_ list: [Layer]) throws {
+            for index in list.indices {
+                try body(list[index])
+                if case .group(let group) = list[index].content { try walk(group.children) }
+            }
+        }
+        try walk(layers)
+    }
+
+    /// The ids of `allLayers`, in the same order, without copying a layer:
+    /// a caption carries its every word, so a list of 170 of them is a lot to
+    /// build just to read their ids.
+    public var allLayerIDs: [UUID] {
+        var ids: [UUID] = []
+        func walk(_ list: [Layer]) {
+            for index in list.indices {
+                ids.append(list[index].id)
+                if case .group(let group) = list[index].content { walk(group.children) }
+            }
+        }
+        walk(layers)
+        return ids
+    }
+
     /// Every layer in the document **in the order the layers panel reads them**:
     /// topmost first, with a group's contents directly under it.
     ///
@@ -247,10 +275,15 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// Finds a layer anywhere in the tree, inside groups included. For a
     /// document with no groups this is exactly the flat lookup it always was.
     public func layer(id: UUID) -> Layer? {
+        // By index, so each layer walked past is read in place rather than
+        // copied out: a caption carries its every word, and every bar on a
+        // long timeline asks this several times as it draws.
         func search(_ list: [Layer]) -> Layer? {
-            for layer in list {
-                if layer.id == id { return layer }
-                if layer.isGroup, let found = search(layer.children) { return found }
+            for index in list.indices {
+                if list[index].id == id { return list[index] }
+                if case .group(let group) = list[index].content, let found = search(group.children) {
+                    return found
+                }
             }
             return nil
         }
@@ -267,10 +300,13 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// so `[1, 0]` is the bottom layer of the second top-level layer's group.
     /// Nil when the id is not in the document.
     public func path(of id: UUID) -> [Int]? {
+        // By index, so the layers walked past are read in place, not copied.
         func search(_ list: [Layer], _ prefix: [Int]) -> [Int]? {
-            for (i, layer) in list.enumerated() {
-                if layer.id == id { return prefix + [i] }
-                if layer.isGroup, let found = search(layer.children, prefix + [i]) { return found }
+            for i in list.indices {
+                if list[i].id == id { return prefix + [i] }
+                if case .group(let group) = list[i].content, let found = search(group.children, prefix + [i]) {
+                    return found
+                }
             }
             return nil
         }

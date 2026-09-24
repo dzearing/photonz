@@ -686,6 +686,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// (`TutorialSampleTalk`). What a walk of captions writing themselves
     /// needs, since the sample recording's own sound has no words in it.
     case openSampleTalk
+    /// The same, five minutes long: talked the whole way through, so its
+    /// captions write themselves into about a hundred and seventy cues
+    /// (`PlaytestLongTalk`). What a walk timing the timeline on a long
+    /// captioned recording needs (`a-long-captioned-recording-walk`).
+    case openLongTalk
     /// The other doors a recording is asked for through, so a walk can check
     /// that one which cannot be opened SAYS so rather than leaving a window
     /// with nothing in it (`RecordingDoor`).
@@ -858,6 +863,14 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case captionsWaitForThemselves
     /// Fail unless every caption is on ONE Captions track, side by side.
     case captionsExpectOneTrack
+    /// Fail unless exactly one caption is picked: what a real click on a cue
+    /// of the Captions track must do (`CaptionCuesLayer`).
+    case captionsExpectOnePicked
+    /// Write the captions the way they write themselves when a talking
+    /// recording opens: quietly, the selection left where it was. For timing
+    /// the words landing apart from the recording opening
+    /// (`a-long-captioned-recording-walk`).
+    case captionsWriteQuietly
     /// Fail unless no caption runs on past the end of the recording it was
     /// heard in: after a stretch is cut out, the lines for the words that went
     /// have to go with them rather than play over what comes next.
@@ -1056,7 +1069,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .captionsNudgeLater, .captionsNudgeEarlier,
              .captionsCorrectFirstWord, .captionsClear, .captionsExpectSound,
              .captionsExpectTimingsKept, .captionsWaitForThemselves, .captionsExpectOneTrack,
-             .captionsExpectEndWithRecording, .captionsEditFirstInPlace, .captionsCommitFirstWords, .captionsTrimFirstEnd,
+             .captionsExpectOnePicked, .captionsWriteQuietly, .captionsExpectEndWithRecording, .captionsEditFirstInPlace, .captionsCommitFirstWords, .captionsTrimFirstEnd,
              .captionsStyleCaption, .captionsStyleLowerThird, .captionsStyleKaraoke,
              .captionsPositionTop, .captionsPositionBottom, .captionsExpectLitWord,
              .captionsExportFiles, .captionsAutoOff, .captionsAutoOn, .captionsExpectEditingOnCanvas,
@@ -1980,7 +1993,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// leaves after six seconds of an app doing nothing at all, so a walk that
     /// waits for quiet is back in a tenth of a second and has proved nothing
     /// about the six.
-    case wait(seconds: Double, onTheClock: Bool)
+    ///
+    /// `longestUnderMS` makes the wait a guard against a freeze: the walk
+    /// fails when the longest single pass of the main thread since the press,
+    /// key or action before it ran past that many milliseconds. That pass is
+    /// the frame the app did not draw while somebody waited on it.
+    case wait(seconds: Double, onTheClock: Bool, longestUnderMS: Double?)
     /// Press and release a key, through the window (or the app, for chords so
     /// menu shortcuts are found).
     case key(PlaytestKey, [PlaytestModifier])
@@ -3180,8 +3198,13 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .blank(canvas: canvas, window: window, card: try f.optionalString("card"),
                           pixelScale: CGFloat(scale))
         case "wait":
+            let bound = try f.optionalNumber("longestUnderMS")
+            if let bound, !(bound > 0 && bound.isFinite) {
+                throw f.invalid("longestUnderMS", "must be a positive number of milliseconds")
+            }
             self = .wait(seconds: try f.number("seconds"),
-                         onTheClock: try f.optionalFlag("onTheClock") ?? false)
+                         onTheClock: try f.optionalFlag("onTheClock") ?? false,
+                         longestUnderMS: bound)
         case "key":
             let keyName = try f.string("key")
             guard let key = PlaytestKey(keyName) else {

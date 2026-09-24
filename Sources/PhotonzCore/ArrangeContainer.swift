@@ -75,9 +75,13 @@ extension PhotonzDocument {
             guard let bounds = canvasContentBounds(of: parentID) else { return nil }
             return ArrangeContainer(id: parentID, bounds: bounds)
         }
+        // Every sibling shares this layer's parent, so one origin places them
+        // all: `canvasContentBounds` per sibling searched the whole document
+        // for each, and a caption has 170 siblings.
+        guard let origin = parentOrigin(of: id) else { return nil }
         var union: CGRect?
         for child in group.children where child.id != id {
-            guard let sibling = canvasContentBounds(of: child.id) else { continue }
+            let sibling = child.withoutSlack(child.localBounds.offsetBy(dx: origin.x, dy: origin.y))
             union = union.map { $0.union(sibling) } ?? sibling
         }
         guard let bounds = union else { return nil }

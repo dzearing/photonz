@@ -296,14 +296,17 @@ extension PhotonzDocument {
     public func audioMix() -> [AudioMixSegment] {
         // A muted or outsoloed track is not heard (`DocumentTracks.swift`).
         let silenced = layersSilencedByTrack()
-        return allLayers.flatMap { layer -> [AudioMixSegment] in
+        // Visited rather than flattened: asked on every step of the playhead,
+        // and a captioned talk has 170 layers with no sound to copy past.
+        var mix: [AudioMixSegment] = []
+        forEachLayer { layer in
             guard let sound = layer.sound, layer.isVisible, !silenced.contains(layer.id),
                   let time = layer.time,
                   let pieces = layer.clipPieces
-            else { return [] }
+            else { return }
             let level = layer.soundLevel ?? AudioLevel()
-            guard !level.isSilent else { return [] }
-            return pieces.playback.compactMap { piece in
+            guard !level.isSilent else { return }
+            mix += pieces.playback.compactMap { piece in
                 guard piece.playsSound else { return nil }
                 let start = time.inMS + piece.startMS
                 return AudioMixSegment(
@@ -315,6 +318,7 @@ extension PhotonzDocument {
                                       layerInMS: time.inMS))
             }
         }
+        return mix
     }
 
     /// What can be heard at a moment: everything laid over it, which is what a

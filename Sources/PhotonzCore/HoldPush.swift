@@ -210,11 +210,24 @@ extension PhotonzDocument {
     /// Only a layer the hold lands INSIDE drifts. A sound dropped on the
     /// timeline after the freeze was put where somebody wanted it, so there is
     /// nothing to warn them about.
+    /// Whether any hold anywhere pushed the picture alone, which is the only
+    /// thing that can give a bar a drift mark. Asked once per draw of the
+    /// timeline, so the 170 bars of a captioned talk need not each ask
+    /// `holdDrifts` when the answer is none.
+    public var hasPictureOnlyHolds: Bool {
+        var found = false
+        forEachLayer { layer in
+            guard !found, let pieces = layer.clipPieces else { return }
+            found = (0..<pieces.count).contains { pieces.piece(at: $0)?.holdPush == .pictureOnly }
+        }
+        return found
+    }
+
     public func holdDrifts(forLayer id: UUID) -> [HoldDrift] {
         guard let time = layer(id: id)?.time else { return [] }
         var holds: [(atMS: Int, lengthMS: Int)] = []
-        for other in allLayers where other.id != id {
-            guard let theirTime = other.time, let pieces = other.clipPieces else { continue }
+        forEachLayer { other in
+            guard other.id != id, let theirTime = other.time, let pieces = other.clipPieces else { return }
             for index in 0..<pieces.count {
                 guard let piece = pieces.piece(at: index), piece.holdPush == .pictureOnly,
                       let range = pieces.rangeMS(ofPiece: index) else { continue }

@@ -75,18 +75,22 @@ extension PhotonzDocument {
     /// two clips stacked, the one you are looking at is the one on top.
     public func heldFrame(atTimeMS ms: Int) -> HeldFrame? {
         guard hasTime else { return nil }
-        for layer in allLayers.reversed() {
+        // Visited in order and the LAST hold kept, which is the topmost: the
+        // same answer as searching the flattened list backwards, without
+        // copying every layer to make it.
+        var found: HeldFrame?
+        forEachLayer { layer in
             guard let time = layer.time, time.contains(ms: ms),
-                  let pieces = layer.clipPieces else { continue }
+                  let pieces = layer.clipPieces else { return }
             let offset = ms - time.inMS
             guard let index = pieces.pieceIndex(atMS: offset),
                   let piece = pieces.piece(at: index), piece.isHeld,
-                  let range = pieces.rangeMS(ofPiece: index) else { continue }
-            return HeldFrame(layerID: layer.id, pieceIndex: index,
-                             inMS: time.inMS + range.start, outMS: time.inMS + range.end,
-                             sourceMS: piece.sourceInMS)
+                  let range = pieces.rangeMS(ofPiece: index) else { return }
+            found = HeldFrame(layerID: layer.id, pieceIndex: index,
+                              inMS: time.inMS + range.start, outMS: time.inMS + range.end,
+                              sourceMS: piece.sourceInMS)
         }
-        return nil
+        return found
     }
 
     /// A layer drawn on the picture at a moment: `addLayerDrawnOnFrame`, plus

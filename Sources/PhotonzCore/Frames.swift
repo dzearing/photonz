@@ -149,7 +149,7 @@ extension PhotonzDocument {
     /// annotations on it answers false, which is how every surface that grows
     /// frame furniture knows to stay out of the way.
     public var hasFrames: Bool {
-        layers.contains { $0.selfAndDescendants.contains(where: \.isFrame) }
+        layers.contains { $0.containsSelfOrDescendant(where: \.isFrame) }
     }
 
     /// A name no layer is using yet: "Frame", then "Frame 2", "Frame 3"… so

@@ -25,6 +25,10 @@ struct TimelineTrackRowModel: Identifiable {
     /// On an audio track: the clips whose own sound is drawn here, linked to
     /// them, so every one is that clip's bar a second time, as sound.
     var linked: [MotionStripGroup] = []
+    /// On a Captions track: no hold anywhere pushed the picture alone, so no
+    /// cue can carry a drift mark and an unpicked one can be drawn as the
+    /// light `CaptionCueBar`.
+    var cuesArePlain = false
 
     var id: UUID { track.id }
 
@@ -60,6 +64,17 @@ extension EditorState {
     /// Every track, top to bottom, with what is on it.
     var timelineTrackRows: [TimelineTrackRowModel] {
         guard let document = shownDocument else { return [] }
+        // Worked out once per document: the height, the grid and the rows all
+        // ask. Not while a bar on the strip is under a hand, since that draws
+        // the drag over the document without changing it.
+        let steady = motionTimingDrag == nil && motionStopDrag == nil
+        if steady, let memo = timelineTrackRowsMemo, memo.document == document { return memo.rows }
+        let rows = timelineTrackRows(of: document)
+        if steady { timelineTrackRowsMemo = (document, rows) }
+        return rows
+    }
+
+    private func timelineTrackRows(of document: PhotonzDocument) -> [TimelineTrackRowModel] {
         let groups = motionStripGroups
         let byLayer = Dictionary(groups.map { ($0.layerID, $0) }, uniquingKeysWith: { a, _ in a })
         let tracks = document.timelineTracks
@@ -75,7 +90,9 @@ extension EditorState {
             if track.kind == .captions {
                 let cues = document.captionCueIDs(onTrack: track.id).compactMap { byLayer[$0] }
                 let isOff = track.isHidden || (soloPicture && !track.isSolo)
-                return TimelineTrackRowModel(track: track, clips: cues, inner: [], isOff: isOff)
+                var row = TimelineTrackRowModel(track: track, clips: cues, inner: [], isOff: isOff)
+                row.cuesArePlain = !document.hasPictureOnlyHolds
+                return row
             }
             for id in document.clipIDs(onTrack: track.id) {
                 if var group = byLayer[id] {

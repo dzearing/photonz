@@ -445,9 +445,8 @@ extension EditorState {
     /// Whether Extract and Lift have anything to take: an In or an Out is
     /// set and something unlocked runs into the stretch they enclose.
     var canTakeOutMarkedStretch: Bool {
-        guard Experiments.shared.cutRecordingEnabled, documentHasTime,
-              var trial = document, trial.markedRangeMS != nil else { return false }
-        return trial.liftMarkedStretch()
+        guard Experiments.shared.cutRecordingEnabled, documentHasTime, let document else { return false }
+        return document.canTakeOutMarkedStretch
     }
 
     /// ', Premiere's Extract: what the In and the Out enclose comes out of
@@ -478,8 +477,8 @@ extension EditorState {
     }
 
     var canSplitEverythingAtPlayhead: Bool {
-        guard Experiments.shared.cutRecordingEnabled, documentHasTime, var trial = document else { return false }
-        return trial.splitEveryClip(atMS: documentTimeMS) > 0
+        guard Experiments.shared.cutRecordingEnabled, documentHasTime, let document else { return false }
+        return document.canSplitEveryClip(atMS: documentTimeMS)
     }
 
     /// ⇧⌘K, Premiere's Add Edit to All Tracks: every clip the moment runs
