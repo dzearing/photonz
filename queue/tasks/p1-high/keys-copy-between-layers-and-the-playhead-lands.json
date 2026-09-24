@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 0.615,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T13:13:48.656Z",
-  "updated": "2026-09-24T04:26:45.660Z",
+  "updated": "2026-09-24T04:27:13.005Z",
   "deps": [
     "a-layer-s-track-opens-into-one-lane-per-keyed-va",
     "a-clip-s-sound-is-on-the-timeline-from-the-momen"
@@ -55,11 +55,16 @@
     {
       "t": "2026-09-24T04:26:45.659Z",
       "note": "owns these walks: keys-copy-between-layers-walk"
+    },
+    {
+      "t": "2026-09-24T04:27:13.003Z",
+      "note": "Shipped in 1f093261. Command C/V copy picked lane keys onto another layer (or the same one) at the playhead on matching values, spacing and eases kept; Copy/Paste Keys on the key, lane and clip right-click menus. Playhead snaps to keys within 8pt on the ruler and lanes; Shift-K / Option-K go to next/previous key. Sound level line: click adds a point, dragging a point is one undo step on its own layer with a dB readout. Verified: Scripts/test.sh 9464/9464, keys-copy-between-layers-walk at Next defaults with 5 real captures, plus 7 related walks. Audit queue/audits/2026-09-23-keys-copy-between-layers.json."
     }
   ],
   "source": "user",
   "started": "2026-09-24T03:54:44.140Z",
   "walks": [
     "keys-copy-between-layers-walk"
-  ]
+  ],
+  "completed": "2026-09-24T04:27:13.004Z"
 }

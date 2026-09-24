@@ -1,0 +1,95 @@
+{
+  "id": "recordings-and-sounds-in-a-document-sit-on-the-l",
+  "title": "Recordings and sounds in a document sit on the Library shelf and drag onto the timeline",
+  "goal": "The video mock fills the Library with the clips and sounds you brought in (b-roll.mov, music) and drops a first clip by dragging a Library tile onto a track. Today the Library only holds pictures, so the only way to put b-roll on the timeline is from the Finder. Put every recording and sound the document holds on the Library shelf, and let a tile be dragged onto a track the same way a file from the Finder is.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 75,
+  "status": "done",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T21:34:36.443Z",
+  "updated": "2026-09-23T22:26:10.896Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed by bring-in-a-second-clip-and-cut-between-clips (2026-09-23). The timeline drop is TimelineFileDropDelegate + EditorState+TimelineDrop (dropTimelineFile takes a URL; a tile should hand the same landing a MovieRef/SoundRef it already holds rather than a file). DocumentMedia.swift lists pictures only; MovieRef/SoundRef live on layers (layer.movie, content .sound). Mock: docs/design/mocks/pages/video.html lines ~326-327 and ~547 (libtile b-roll.mov), ~695. Walk step dropOnTimeline shows how a walk aims at a track and a second.",
+  "acceptance": [
+    "A recording or sound brought into a video document appears as a tile on the Library shelf with its name and length, as video.html draws b-roll.mov 0:04",
+    "Dragging that tile onto a track lands it at the moment and on the track under the pointer, with the same ghost, snapping and command-key insert as a file from the Finder",
+    "The mock onboarding step Drop a first clip (drag a tile from Library onto an empty track) works at Next defaults",
+    "A walk at defaults drags a Library tile onto V1 and claims where it landed"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T21:34:36.445Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-23T21:34:52.034Z",
+      "note": "seq 350 -> 75"
+    },
+    {
+      "t": "2026-09-23T21:34:52.134Z",
+      "note": "walks none -> none"
+    },
+    {
+      "t": "2026-09-23T21:41:26.765Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T21:46:56.672Z",
+      "note": "Pre-build review: (1) Today the shelf is derived from layers only, so a clip's FRAME showed up as a picture tile and deleting the last clip of b-roll would take it off the shelf, unlike a Premiere bin. So the document gets a media pool (document.media) that remembers every recording/sound brought in, by file name (b-roll.mov as the mock captions it); the shelf is pool + anything on the timeline never remembered. (2) The shelf is height-capped and tile height is arithmetic (LibraryShelfLayout), so the length goes as a corner badge in the thumbnail (where Premiere's icon view puts duration) rather than a second caption line as video.html draws it: listed as a mock difference in the audit. (3) A tile drag hands over the file itself (own-process file URL), so the timeline lands it through exactly the Finder path: same ghost, snapping, cmd-insert, and MovieLibrary returns the same ref for the same file so nothing is read twice. Own-process only, so a tile can never be dropped on the Finder and move the user's source file. (4) Filling the Library by dropping a file ON the panel (mock step 2) is not in this task's acceptance; checking the queue before filing."
+    },
+    {
+      "t": "2026-09-23T21:50:14.681Z",
+      "note": "walks none -> library-clip-onto-a-track-walk"
+    },
+    {
+      "t": "2026-09-23T22:12:16.391Z",
+      "note": "Built: document media pool (PhotonzDocument.media, rememberMedia; DocumentClipMedia.swift, 13 tests) remembered on every timeline landing, canvas clip drop, Add Sound and recording open; DocumentMedia.clips lists pool then unremembered timeline media; clip layers no longer show as picture tiles. LibraryClipTile.swift: poster frame or mock green waveform well, length corner badge, drag hands over the file URL own-process so the timeline lands it through the Finder path; double click, right-click Add at Playhead and the picked section's Add at Playhead all go through placeLibraryPick -> placeTimelineFileAtPlayhead (overwrite on the one picked track, else a new track). Harness: dropOnTimeline takes tile instead of file (parse tests added); pickFirstMedia picks clips first."
+    },
+    {
+      "t": "2026-09-23T22:12:16.444Z",
+      "note": "Walk library-clip-onto-a-track-walk at defaults (View > Library via showLibrary, no flag): ok, 7 real window captures. Tile onto EMPTY Audio track lands at 1.00s; recording tile snaps onto V1 end at 8.00s; cmd-insert at 3s pushes along; undo; Add at Playhead overwrites 2-10s on V1."
+    },
+    {
+      "t": "2026-09-23T22:12:16.496Z",
+      "note": "Follow-ups: filed recordings-and-sounds-can-go-into-the-library-wi (p1, mock step Fill the Library: Import / drop on panel); filed a-video-document-shows-the-library-in-its-dock with a decision card (Library hidden until View > Library per the user's own rule vs the mock's always-present group). Left rough, not filed: (1) on a long video dock the picked tile's own section lands below the fold, the same as a picked picture tile does; (2) 68pt tiles cut longer file names in the middle (in the audit's rough, user can react); (3) a movie with its sound detached counts both layers as uses."
+    },
+    {
+      "t": "2026-09-23T22:12:36.179Z",
+      "note": "runner failed (exit 0, attempt 1): Full tests are still running. I'll commit and close the task once they come back green."
+    },
+    {
+      "t": "2026-09-23T22:12:36.723Z",
+      "note": "ran out of turn with 16 file(s) still changed: Sources/Photonz/EditorState+Audio.swift, Sources/Photonz/EditorState+Media.swift, Sources/Photonz/EditorState+MediaDrop.swift, Sources/Photonz/EditorState+TimelineDrop.swift, Sources/Photonz/EditorState.swift, Sources/Photonz/LibraryPanel.swift, Sources/Photonz/Playtest/PlaytestHarness.swift, Sources/PhotonzCore/Document.swift, Sources/PhotonzCore/DocumentMedia.swift, Sources/PhotonzCore/PlaytestScript.swift, Tests/PhotonzCoreTests/PlaytestScriptTests.swift, docs/progress/log.md, Scripts/playtest/library-clip-onto-a-track-walk.json, Sources/Photonz/LibraryClipTile.swift, Sources/PhotonzCore/DocumentClipMedia.swift, Tests/PhotonzCoreTests/DocumentClipMediaTests.swift. Put aside so the next task started clean; restore with `git stash apply 3b9d4c1a53363f7c7cd7322e89f9026c9154fbfb` before carrying on."
+    },
+    {
+      "t": "2026-09-23T22:13:07.842Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T22:13:07.848Z",
+      "note": "a previous attempt at this task left 16 file(s) changed; they are set aside. Restore them with `git stash apply 3b9d4c1a53363f7c7cd7322e89f9026c9154fbfb` and carry on, or start over and leave the stash alone."
+    },
+    {
+      "t": "2026-09-23T22:26:02.612Z",
+      "note": "Restored stash; full test run caught twoClipsOfOneRecordingAreOneTile (a cut's second half named the tile). Fixed: the piece that plays first names it. Suites green; one full run later hit only the tracked export-size flake (logged on its task), green alone. Walk re-run at defaults: ok, 7 real captures, screen unlocked. Pushed c58d9419."
+    },
+    {
+      "t": "2026-09-23T22:26:02.662Z",
+      "note": "Library Media shelf now holds every recording and sound a video document is given (document media pool, kept after the last clip is cut) as tiles with length badges; a tile drags onto a track through the Finder drop path (ghost, snapping, cmd-insert), and double click / Add at Playhead overwrite at the playhead. Verified by DocumentClipMediaTests + PlaytestScriptTests and library-clip-onto-a-track-walk at defaults (7 real captures). Audit queue/audits/2026-09-23-library-clips.json. Commit c58d9419."
+    }
+  ],
+  "walks": [
+    "library-clip-onto-a-track-walk"
+  ],
+  "started": "2026-09-23T22:13:07.841Z",
+  "failures": 0,
+  "lastError": {
+    "at": "2026-09-23T22:12:36.178Z",
+    "exit": 0,
+    "message": "Full tests are still running. I'll commit and close the task once they come back green."
+  },
+  "completed": "2026-09-23T22:26:02.663Z"
+}

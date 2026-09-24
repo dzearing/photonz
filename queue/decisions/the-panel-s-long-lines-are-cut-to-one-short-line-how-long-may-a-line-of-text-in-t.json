@@ -1,0 +1,38 @@
+{
+  "id": "the-panel-s-long-lines-are-cut-to-one-short-line-how-long-may-a-line-of-text-in-t",
+  "taskId": "the-panel-s-long-lines-are-cut-to-one-short-line",
+  "question": "How long may a line of text in the right hand panel be?",
+  "context": "The design rules settled on 2026-09-14 that a panel section says at most one short line, about 40 characters at the default width. Tests now hold every panel line to 60, and list the 32 lines already over it. This decides which number the rewrite aims for.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Up to 60 characters",
+      "summary": "A panel line may wrap onto a second line at the panel's default width, but never becomes a paragraph. 32 lines across the app need cutting today.",
+      "pros": [
+        "Room for a name inside the line, like 'Shows this layer where Title is light.'",
+        "Already the rule the video sections are held to"
+      ],
+      "cons": [
+        "At the default width a line can wrap to two"
+      ],
+      "mitigation": "Writers still aim for about 40; 60 is only the wall the tests hold."
+    },
+    {
+      "id": "b",
+      "label": "Up to 40 characters",
+      "summary": "Every panel line fits on one line at the default width. 62 lines across the app need cutting today, the video sections included again.",
+      "pros": [
+        "Matches the design rule's 'one sentence, one line' exactly",
+        "The panel never wraps"
+      ],
+      "cons": [
+        "Twice the rewriting",
+        "A line that names a layer runs out of room fast"
+      ],
+      "mitigation": "Long names can move into the section header, which costs no line."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-24T09:07:32.133Z"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "x-4",
+  "title": "x",
+  "goal": "x",
+  "epic": "x",
+  "priority": "p3-low",
+  "seq": 1340,
+  "status": "dropped",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T03:00:43.363Z",
+  "updated": "2026-09-24T03:01:06.175Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "",
+  "acceptance": [
+    "x"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T03:00:43.365Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-24T03:01:06.174Z",
+      "note": "filed by mistake by the runner on move-a-layer-from-a-to-b-grow-it-shrink-it-fade (a stray placeholder command); there is no work here"
+    }
+  ]
+}

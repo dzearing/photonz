@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 0.62,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T12:32:02.204Z",
-  "updated": "2026-09-23T13:14:07.488Z",
+  "updated": "2026-09-24T05:07:59.592Z",
   "deps": [
     "keys-copy-between-layers-and-the-playhead-lands"
   ],
@@ -44,7 +44,48 @@
     {
       "t": "2026-09-23T13:14:07.487Z",
       "note": "manager 2026-09-23 06:10: split into three ordered slices because this is several runner sessions and its lanes need the timeline the rebuild has not built yet: every-value-in-the-panel-has-a-key-diamond (after the editor is on at defaults and the mocks are restored), a-layer-s-track-opens-into-one-lane-per-keyed-va (after move-a-layer puts keys on the new track), keys-copy-between-layers-and-the-playhead-lands (after sound segments). All keep this task's place at the front of p1. This task stays as written and closes the set: its walk and every acceptance line are checked when the three land."
+    },
+    {
+      "t": "2026-09-23T15:48:59.978Z",
+      "note": "Slice one landed (every-value-in-the-panel-has-a-key-diamond): diamonds on position, scale, rotation, opacity, corner radius, border width, colour, blur, shadow size, text size and volume (volume keys ARE the mixer's AudioLevel points, so playback and export already follow them). NOT done there: crop (needs a rectangle value type; Layer.crop is CGRect in layer space) and glow amount (not in the mock's catalogue). Both remain this task's to close."
+    },
+    {
+      "t": "2026-09-23T19:17:34.102Z",
+      "note": "from the timeline dock (2026-09-23): video.html's timeline bar carries 'Playhead Opacity 100% @ 4.12s' and an Easing dropdown after the zoom; the new dock (TimelineDock.swift localBar) does not draw them. Key marks on clips (VideoKit.ClipBar keys) are not wired into ClipPiecesBar yet either."
+    },
+    {
+      "t": "2026-09-24T04:27:36.408Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T04:40:26.090Z",
+      "note": "owns these walks: keyframe-anything-walk"
+    },
+    {
+      "t": "2026-09-24T05:00:06.356Z",
+      "note": "Adversarial pre-build: the three slices shipped every acceptance line except crop, effect amounts past blur and shadow, and the closing walk; the mock's timeline bar also carries a Playhead readout and an Easing dropdown nobody had built (logged here 2026-09-23). Crop keyed as Premiere's Crop effect: four percent edges, each its own row and lane, the kept picture staying where it was (a wipe, not a squash). The handles stay round the whole picture, as Premiere draws them. The picture grows about the whole picture's middle, not the middle of what is left. Glow size is the effect amount: blur and shadow were already keyed, and the app has no saturation."
+    },
+    {
+      "t": "2026-09-24T05:00:06.407Z",
+      "note": "Reproduced and fixed along the way: a scale key on a picture cropped with the Crop tool magnified its pixel crop (800x900 became 1600x1800), so the crop vanished while it grew. KeyedCropRenderTests fails without the MotionScale fix: red where only green should be."
+    },
+    {
+      "t": "2026-09-24T05:00:06.460Z",
+      "note": "Built: core KeyedCrop.swift, MotionProperty.glow and cropLeft/Top/Right/Bottom, a new-key ease threaded through startKeying, setKeyedValue and foldEditIntoKeys, and keyReadout/playheadSeconds (KeyAnythingTests 13, KeyedCropRenderTests 2). App: the timeline bar reads 'Playhead <value> @ 2.00s' (or 'no animated property') and has an EASING dropdown with the key menu's six eases, kept between launches under next.video.newKeyEase and forgotten by walk setup. Ease In and Out writes no ease, so existing keys play exactly as before. Walk keyframe-anything-walk at Next defaults: ok, 3 real captures, screen unlocked. Neighbour walks ok: key-lanes, key-lanes-menu, keys-copy-between-layers, key-a-title-s-scale, punch-in-and-hold, component-on-the-timeline, video-panel-order, a-recording-opens-in-the-editor-at-defaults, title-on-the-timeline, transitions-at-a-cut. Scripts/test.sh 9479/9479."
+    },
+    {
+      "t": "2026-09-24T05:00:06.513Z",
+      "note": "left rough (log only, under the bar): a cropped clip turns about the middle of what is left (rotation is drawn about the frame's centre at render time), so turning while the crop animates wobbles; the Crop tool still makes a permanent crop and does not key; only glow size is keyable, not its colour, softness or strength; the readout drops out when the bar is too narrow, as the mock does at narrow widths. Mock differences, eases as Premiere's six named per the task's own acceptance and the app-wide blue accent, were left as they are. The long Animating list was folded into the-properties-pane-opens-on-the-clip-line-and-l."
+    },
+    {
+      "t": "2026-09-24T05:07:59.590Z",
+      "note": "Closes the keyframe set. Crop keys, Premiere-style: four percent edges on pictures and clips, each its own diamond and lane, a wipe with handles round the whole picture. Glow size is keyable. The timeline bar reads 'Playhead <value> @ time' and has an EASING dropdown for new keys, as in video.html. Fixed a scale key dropping a hand-made crop. Earlier slices already covered diamonds, lanes, eases, copy and paste, Shift-K/Option-K and volume points. Verified: Scripts/test.sh 9479/9479 (KeyAnythingTests, KeyedCropRenderTests), keyframe-anything-walk at Next defaults with 3 real captures (title position/scale/blur on Ease Out, volume dip, crop lane), ten neighbouring walks ok. Commit f5873483. Audit queue/audits/2026-09-23-keyframe-anything.json."
     }
   ],
-  "source": "user"
+  "source": "user",
+  "started": "2026-09-24T04:27:36.407Z",
+  "walks": [
+    "keyframe-anything-walk"
+  ],
+  "completed": "2026-09-24T05:07:59.591Z"
 }

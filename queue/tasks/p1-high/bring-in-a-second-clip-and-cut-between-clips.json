@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.292Z",
-  "updated": "2026-09-23T14:42:39.841Z",
+  "updated": "2026-09-23T21:41:02.039Z",
   "deps": [
     "the-timeline-is-the-one-in-the-mock"
   ],
@@ -48,6 +48,31 @@
     {
       "t": "2026-09-23T14:42:39.840Z",
       "note": "video-shell.html was deleted on 2026-09-23 (task the-video-mocks-are-the-user-s-again-and-d18-is): it was the loop's own study arguing against tracks. The target is now pages/video.html, the video-*.html walkthroughs and comp-video.html, restored as the user drew them, plus UX-PATTERNS D18 (rewritten: a document with time has tracks). Where this task mentions video-shell, read video.html."
+    },
+    {
+      "t": "2026-09-23T20:35:28.280Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T20:40:03.798Z",
+      "note": "pre-build review: (1) A second recording CAN already land today, but only by letting go over the picture: at the playhead, on top, on a track of its own. The timeline takes no drop, so a Premiere editor dragging b-roll to a spot on V1 gets nothing. (2) Premiere's default drag is overwrite and Cmd-drag is insert; that is what ships here, read off the held keys since a drop carries none. (3) Clips on one track may not overlap (canPlace), so overwrite has to trim, split or remove what it lands on, and a split of a clip across the landing has to become TWO layers because a clip's pieces cannot hold a hole. (4) A sound let go over a picture track has nowhere to go on that track; Premiere puts it on the matching audio track, so it lands on the first unlocked sound track, or a new one, at the moment under the pointer, and the ghost is drawn where it really lands. (5) Mock assumption the app cannot deliver: the Library's Media shelf holds pictures only, so 'drag b-roll.mov off the Library' has no tile to drag. Filing that as its own p1. (6) 'Each clip keeps its own sound as a segment under it' is exactly task a-clip-s-sound-is-on-the-timeline-from-the-momen (next in line): here the sound rides with the clip and moves, trims and splits with it; the separate segment is that task's."
+    },
+    {
+      "t": "2026-09-23T21:34:52.084Z",
+      "note": "owns these walks: second-clip-on-the-timeline-walk"
+    },
+    {
+      "t": "2026-09-23T21:41:01.986Z",
+      "note": "left rough (no task earned): the lanes shrink once when a file arrives because the timeline makes room past its end for it; an insert does not preview later clips moving; a picked edit point clears the layer pick but leaves the picked track's properties in the panel (edit point properties are the transition task's)."
+    },
+    {
+      "t": "2026-09-23T21:41:02.037Z",
+      "note": "A video or sound let go on the timeline lands at the moment and on the track under the pointer: overwrite by default (trim/split into two layers/remove), insert with Command (split + push along), sound retargeted to a sound track, snapping, a dashed ghost while in the air with room past the end, edit points between butted clips (comp-video 02), clips alternating the mock's two colours; a drop over the picture still lands at the playhead. Core ClipLanding.swift (ClipLandingTests 19), app TimelineLaneDrop.swift + EditorState+TimelineDrop.swift, harness dropOnTimeline/expectClip. Verified by second-clip-on-the-timeline-walk at Next defaults (recording + b-roll + outro, music let go at 4s with the playhead at 2s, Command insert, edit point picked, undo, picture drop at playhead; 11 real captures) and timeline/tracks/drop/sound walks re-run green. 'Each clip keeps its own sound as a segment under it' folded into a-clip-s-sound-is-on-the-timeline-from-the-momen (acceptance added); Library tiles filed p1 as recordings-and-sounds-in-a-document-sit-on-the-l. Commit 198140c6. Audit queue/audits/2026-09-23-second-clip-on-the-timeline.json."
     }
-  ]
+  ],
+  "started": "2026-09-23T20:35:28.279Z",
+  "walks": [
+    "second-clip-on-the-timeline-walk"
+  ],
+  "completed": "2026-09-23T21:41:02.038Z"
 }

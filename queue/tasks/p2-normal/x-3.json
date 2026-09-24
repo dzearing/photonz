@@ -1,0 +1,27 @@
+{
+  "id": "x-3",
+  "title": "x",
+  "goal": "",
+  "epic": "",
+  "priority": "p2-normal",
+  "seq": 3220,
+  "status": "dropped",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T01:31:04.019Z",
+  "updated": "2026-09-24T01:31:14.959Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-09-24T01:31:04.021Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-24T01:31:14.958Z",
+      "note": "created by mistake by the runner on click-a-cut-and-pick-a-transition-from-tiles (a stray command); not a task"
+    }
+  ]
+}

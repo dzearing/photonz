@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-22T22:53:19.192Z",
-  "updated": "2026-09-23T14:19:03.253Z",
+  "updated": "2026-09-24T09:18:51.245Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): Running the test suite before a commit comes back red about a third of the time, on a video export test that nobody has touched. The rule is that the suite must be green before every commit, so a test that fails at random either stops honest work or teaches people to ignore a red suite. Make that test tell the truth every time it runs.\n\nReproduced 2026-09-22 while finishing resizing-one-piece-inside-a-turned-card-moves-th. Three back-to-back full runs of Scripts/test.sh on the same commit: run 1 failed with 1 issue, run 2 failed with 3 issues, run 3 passed with 9094 tests. The issue named each time:\n\n  x Test \"What lands is inside the budget it was given, and not far under it\" recorded an issue at VideoExportBudgetTests.swift:155:9: Expectation failed: (Self.bytes(of: tighter) -> 125039) < (landed -> 116723)\n\nTests/PhotonzMediaTests/VideoExportBudgetTests.swift:155 is the last line of theBudgetPredictsTheFile: it exports the same 3-second 1280x800 synthetic source at VideoExportQuality.standard and again at .small, and claims the .small file is the smaller of the two. Both land around 120KB, so on that source the hardware encoder is near its own floor and the bitrate ceiling is not what is deciding the size; which file comes out smaller is then down to the encoder, not to the recipe. Self.busySource(seconds:3,size:) is the source. Either give it a source with enough detail that both budgets actually bind, or make the claim about the recipe rather than about the bytes.",
@@ -67,6 +67,46 @@
     {
       "t": "2026-09-23T14:19:03.252Z",
       "note": "2026-09-23 follow-up: across six full Scripts/test.sh runs on a load-5 machine the animated weigh test failed four times (all with the recording-editor change, which touches no export code), and a baseline run WITHOUT that change failed on IconPreviewRenderTests 'A whole strip of moving previews fits inside one frame of the loop' instead. Load is the common factor."
+    },
+    {
+      "t": "2026-09-23T14:51:49.133Z",
+      "note": "Seen again 2026-09-23 ~15:00 in a full Scripts/test.sh run (docs-only change, Swift at HEAD bc523224): VideoExportBudgetTests.swift:155 small preset 119820 bytes vs standard 118829. Same suite passed 3/3 run alone (--filter VideoExportBudgetTests)."
+    },
+    {
+      "t": "2026-09-23T15:49:00.079Z",
+      "note": "Seen again 2026-09-23 under a full Scripts/test.sh: AnimatedExportWeighTests 'written twice, an animated export lands at the same size' (115210 vs 234401 bytes), green alone straight after. Same load family."
+    },
+    {
+      "t": "2026-09-23T21:34:12.392Z",
+      "note": "Seen again 2026-09-23 ~21:00 (second-clip task, touches no export code): AnimatedExportWeighTests 306614 vs 293546, then 285824 vs 186141, and VideoExportBudgetTests:155 once (122809 vs 121096) across three full Scripts/test.sh runs; both suites green alone straight after."
+    },
+    {
+      "t": "2026-09-23T22:22:28.608Z",
+      "note": "Seen again 2026-09-23 ~22:30 (Library clip tiles task, no export code): AnimatedExportWeighTests:128 standard < high false in a full Scripts/test.sh; green alone straight after (--filter AnimatedExportWeigh), and green in the full run just before."
+    },
+    {
+      "t": "2026-09-23T23:32:33.050Z",
+      "note": "also seen 2026-09-23 in a full Scripts/test.sh run on an audio-track change that touches no export code: 'written twice, an animated export lands at the same size' (300245 vs 217712 bytes) and 'What lands is inside the budget it was given' (120286 < 119394) failed together; the very next full run passed 9345/9345."
+    },
+    {
+      "t": "2026-09-24T01:31:15.009Z",
+      "note": "seen 2026-09-23 on click-a-cut-and-pick-a-transition-from-tiles: render and export tests that pass alone flipped to failing in parallel runs (TransitionRenderTests with FramesInHandTests, 5 of 5 runs; TransitionExportTests with ComponentOnTheTimelineExportTests) after nothing more than an extra array concatenation in PhotonzDocument.movieFrames, and passed again when it was put behind an early return. The pictures were right when checked alone (instrumented, same test). Suspect: renders across tests share DocumentRenderer.sharedContext (static CIContext, cacheIntermediates on) and a CGImage-backed CIImage cached by address, reused by another test's freshly allocated same-size image. Might be the same root as this flake."
+    },
+    {
+      "t": "2026-09-24T03:49:24.349Z",
+      "note": "2026-09-23 (key lanes runner): seen again twice in full Scripts/test.sh runs, passing alone both times. 'longer gif came out 639231/666520/236753 bytes at High/Standard/Small' (AnimatedExportWeighTests.swift:128) and once VideoExportBudgetTests.swift:155 (tighter 121102 vs landed 114736). Filtered run: Scripts/test.sh --filter 'VideoExportBudgetTests|AnimatedExportWeighTests' -> 8 tests passed."
+    },
+    {
+      "t": "2026-09-24T05:04:06.059Z",
+      "note": "seen again 2026-09-23 22:05 during keyframe-anything's full run: VideoExportBudgetTests 'inside the budget... not far under it' tighter 121102 !< landed 117016; passed twice straight after when run alone"
+    },
+    {
+      "t": "2026-09-24T06:13:19.222Z",
+      "note": "seen again 2026-09-23 23:15 during captions-write-themselves full run: VideoExportBudgetTests tighter 121102 !< landed 116881 (and 115242 on the run before); passes alone (--filter VideoExportBudgetTests, 14 tests green)."
+    },
+    {
+      "t": "2026-09-24T09:18:51.244Z",
+      "note": "2026-09-24 02:2x: two full runs in a row each failed one export size test on an otherwise green suite: VideoExportBudgetTests 'inside the budget it was given' (tighter 121102 < landed 117739), then AnimatedExportWeighTests 'written twice... same size' (176240 vs 285824). Both passed alone straight after (3/3 and 1/1)."
     }
   ],
   "walks": []

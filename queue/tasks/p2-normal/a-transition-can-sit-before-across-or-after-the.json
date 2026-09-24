@@ -1,0 +1,41 @@
+{
+  "id": "a-transition-can-sit-before-across-or-after-the",
+  "title": "A transition can sit before, across or after the cut, and a dip can hold on black",
+  "goal": "The transition mock gives a picked transition two more rows the app does not have yet: where the overlap sits (before the cut, across it, or after it, as Premiere offers), and for a dip, how long to hold on black, which inserts real time and moves the clips after it.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 36,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T01:31:01.041Z",
+  "updated": "2026-09-24T09:52:01.010Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-transition-wt.html #rowAlign, #rowHold, steps 7-8. Model today: ClipTransition has lengthMS only; beforeMS/afterMS are fixed at half each (ClipTransitions.swift). Alignment means storing an alignment on ClipTransition and changing beforeMS/afterMS and ClipCut.longestMS (spend from one side). Hold on black moves time, so it is an insert (rippleTime) plus a black piece or gap, not a property of the cut alone. Left out of click-a-cut-and-pick-a-transition-from-tiles because neither is in its acceptance. Also note: today a freshly dropped clip reads its file from the first frame, so it has no spare before its in point and cannot take any overlapping transition until its head is trimmed; Before/After placement is what lets that common case work, as it does in Premiere.",
+  "acceptance": [
+    "A transition that needs an overlap shows an \"The overlap sits\" row with Before the cut, Across it and After it, and the band on the timeline moves to match",
+    "Each position spends spare only from the side it needs, and a cut with spare on one side only can take a dissolve placed on that side",
+    "A dip shows a Hold on black row; choosing a length inserts that much black between the clips, the clips after it move along, and undo puts it back",
+    "A walk at Next defaults sets each row and claims what moved",
+    "While an edit point between two clips is picked, the spare frames either side are drawn as dashed strips outside the clips with their lengths (comp-video.html section 03, .xspare), as the mock's first step shows"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T01:31:01.043Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-24T01:31:37.851Z",
+      "note": "also: the dashed spare strips (.xspare) either side of a picked edit point are not drawn yet; added to acceptance, since they show the budget the before/across/after choice spends"
+    },
+    {
+      "t": "2026-09-24T09:43:07.647Z",
+      "note": "also seen 2026-09-24 in an-editing-session-walk (4-picker-sc.png): the Edit point section's 'Spare before' value on a jump cut inside one recording reads '...' because the box is too narrow for 8.6s; fix alongside the Edit point rows"
+    },
+    {
+      "t": "2026-09-24T09:52:01.009Z",
+      "note": "seq 3210 -> 36"
+    }
+  ]
+}

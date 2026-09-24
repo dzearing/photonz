@@ -1,0 +1,30 @@
+{
+  "id": "find-out-whether-the-layer-menu-promises-a-dupli",
+  "title": "Find out whether the layer menu promises a Duplicate key that deselects instead",
+  "goal": "The right-click menu on a layer prints Command D beside Duplicate, but Command D is Deselect in the menu bar, so a person who learns the key from the menu may get the wrong thing. Check what pressing it really does and make the printed key and the real key agree.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 37,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T00:14:57.434Z",
+  "updated": "2026-09-24T09:52:01.062Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Not reproduced, only read: LayerCommandMenu.swift appends .command(\"Duplicate\", .command(\"d\")); EditorCommands.swift binds Deselect to keyboardShortcut(\"d\", modifiers: .command) with a comment that Duplicate Layer has no key and Cmd-J duplicates when nothing is marqueed. The timeline clip menu (EditorState+TimelineMenus.swift) prints Cmd-J for Duplicate for this reason. Found 2026-09-23 by the right-click task.",
+  "acceptance": [
+    "Pressing the key printed beside Duplicate in the layer right-click menu duplicates the layer",
+    "A walk reads the row and presses its key"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T00:14:57.436Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-24T09:52:01.061Z",
+      "note": "seq 3200 -> 37"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "the-export-sheet-s-size-for-an-edited-video-is-c",
+  "title": "The Export sheet's size for an edited video is close to what comes out",
+  "goal": "The Export sheet told a person an edited 21 second video would be about 9.6 MB, and the MP4 it wrote was 0.7 MB. A size fourteen times too big makes people pick a smaller setting they did not need; the number shown before exporting should be near the file that lands.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 31,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T09:43:07.566Z",
+  "updated": "2026-09-24T09:52:00.755Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-24, Scripts/playtest.sh Scripts/playtest/an-editing-session-walk.json --no-build, step writeVideo: 'the-edit.mp4 is 693 KB (709860 bytes) ... it runs 20.94s at 1280 x 800 px, with sound on it; made frame by frame from the document; the sheet said \"MP4 Video · about 9.6 MB\"' (sheet default High, 8-export-sheet-sc.png). RecordingExport.weight takes min(budget, measuredCost); an assembled document (two recordings, a cut, a dissolve, a title, captions) evidently has no measured cost so it falls back to the recipe's ceiling (bits per second x length). Measuring off the clips' own source files (bytes per second per pixel, weighted by how long each plays) would give an answer for the edited case too.",
+  "acceptance": [
+    "For an edited document made of screen recordings, the MP4 size the sheet shows is within a factor of two of the file written at the same setting",
+    "The line still says about, and an untouched recording still shows its exact size",
+    "an-editing-session-walk's export step logs a sheet size and a written size that agree within that factor"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T09:43:07.568Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-24T09:52:00.754Z",
+      "note": "seq 3300 -> 31"
+    }
+  ]
+}

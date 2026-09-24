@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.081Z",
-  "updated": "2026-09-23T14:43:36.748Z",
+  "updated": "2026-09-23T14:55:50.636Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): Commit 72a2a75c (2026-09-19, 'Video, drawn against the app that exists') and the later fourteen-pages task rewrote the user's video mocks to fit the code the loop already had: tracks removed, the Layers group argued away, and UX-PATTERNS D18 invented to replace tracks with layer rows. The user rejected the result on 2026-09-23 and wants real tracks. Restore the user's intent before anything else is built against these pages. Target: the user's mocks (docs/design/mocks/pages/video.html, video-shell.html, comp-video.html and the page named here) at their fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask throughout: would a Premiere editor get this, and is it easier here?\n\nFiled from the 2026-09-23 video audit in the intake window.\n\nWHAT THE TWO PASSES CHANGED, AND WHAT HAPPENED TO EACH (2026-09-23)\n72a2a75c (2026-09-19, \"Video, drawn against the app that exists\"):\n- video.html: track rows Title/V1/V2/CAP/Audio renamed to layer names (Lower-third, Story, b-roll · PiP, Captions, music); walkthrough steps 1/3/4 lost their V1 and Audio tracks (\"no rows yet, because a row is a layer\"); the \"Resolved: what the dock is for\" caption (no Layers group where there is a timeline) rewritten as \"Corrected: Layers does not leave\"; local .tlbar CSS moved to the shared file; label column 58 -> 92. REVERTED.\n- video-audio, video-captions, video-compositing, video-cut-wt, video-entry-wt, video-freeze-wt, video-move-wt, video-speed, video-title-wt, video-transition-wt, video-transitions, video-zoom-wt: track labels (V1, V2, V3, V4, Gfx, Audio, Time) renamed to layer names, empty Audio tracks removed, the label column widened, video-move-wt/video-zoom-wt keyframe lanes (.track.kft) turned into .track.sub. REVERTED.\n- comp-video.html: new section 07 \"The row, and what it is called\" (a row is a layer, no numbered tracks). REVERTED. Section 08 \"Trimming a clip\" (added 2026-09-20 by 66ac017f, answering the user's trim card) KEPT, renumbered 07, its track labelled V1.\n- video-shell.html: whole page created (the surface drawn with layer rows, block 03 \"the correction\" showing the user's Gfx/V2/V1/Audio tracks as the wrong answer, \"almost no new chrome\"). DELETED, with its index entry; the trim answer it drew lives on in comp-video 07, UX-PATTERNS D20 and video-surface.md section 10.\n- time-compare.html: link to video-shell pointed at video.html instead (its note that the separate video editor went away is a user decision and stays).\n- shared/components/inspector.css: .track .tl widened 58 -> 92 and lowercase, .track.sub added. REVERTED to 58px uppercase (kept as --tl-label so ruler and playhead still derive from it); .track.sub removed; the shared .tlbar and the full-width waveform fix kept (no page loses anything).\n- UX-PATTERNS D18 \"a timeline row is a LAYER\". REWRITTEN (below).\n7cb506b1 (2026-09-22, the fourteen-pages task \"The video pages and the video design now say one thing\"):\n- all fourteen video pages: a Layers group added as the first dock group (and a Layers rail tab), built from the same list as the strip. REVERTED (the user drew these docks without Layers).\n- video-transition-wt: V1 track renamed Story. REVERTED.\n- video-title-wt: title and component instance split into two layer rows named after themselves. REVERTED to Gfx and Title tracks.\n- video-speed: Source/Retimed before-and-after rows pulled off the timeline into a diagram. REVERTED.\n- video-captions: recording row added, Captions made a layer, Words a property lane. REVERTED.\n- video-cut-wt: the empty voice-over/Audio track removed. REVERTED.\n- video-compositing: FG/BG names unified and V2 taken out of the collapsed summary. REVERTED.\n- every page: in/out/duration field grids and explanatory panel paragraphs removed. REVERTED with the rest (whole-page restore). See the log for why.\n- dock.js/dock.css: a required pane is listed without a switch. KEPT (shared, harmless, true of the app); comments no longer cite D18.\n- UX-PATTERNS D18 \"fourteen pages conform\" addendum and video-surface.md section 7 \"done\" rows. REMOVED or REWRITTEN.\nLater, unrelated: 5a5a8db2's freeze-wt caption (the open question answered and built) re-applied on top of the restore.",
@@ -59,13 +59,35 @@
     {
       "t": "2026-09-23T14:43:36.747Z",
       "note": "ran out of turn with 25 file(s) still changed: docs/design/mocks/index.html, docs/design/mocks/pages/comp-video.html, docs/design/mocks/pages/time-compare.html, docs/design/mocks/pages/video-audio.html, docs/design/mocks/pages/video-captions.html, docs/design/mocks/pages/video-compositing.html, docs/design/mocks/pages/video-cut-wt.html, docs/design/mocks/pages/video-entry-wt.html, docs/design/mocks/pages/video-freeze-wt.html, docs/design/mocks/pages/video-motion.html, docs/design/mocks/pages/video-move-wt.html, docs/design/mocks/pages/video-shell.html, docs/design/mocks/pages/video-speed.html, docs/design/mocks/pages/video-title-wt.html, docs/design/mocks/pages/video-transition-wt.html, docs/design/mocks/pages/video-transitions.html, docs/design/mocks/pages/video-zoom-wt.html, docs/design/mocks/pages/video.html, docs/design/mocks/shared/UX-PATTERNS.md, docs/design/mocks/shared/components/dock.css, docs/design/mocks/shared/components/dock.js, docs/design/mocks/shared/components/inspector.css, docs/design/video-surface.md, docs/design/video.md, docs/progress/log.md. Put aside so the next task started clean; restore with `git stash apply 73e6f69664d17c7b7b3624a5e5c6fc0d80319f7a` before carrying on."
+    },
+    {
+      "t": "2026-09-23T14:47:16.047Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T14:47:16.052Z",
+      "note": "a previous attempt at this task left 25 file(s) changed; they are set aside. Restore them with `git stash apply 73e6f69664d17c7b7b3624a5e5c6fc0d80319f7a` and carry on, or start over and leave the stash alone."
+    },
+    {
+      "t": "2026-09-23T14:47:55.088Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-09-23T14:55:42.143Z",
+      "note": "Attempt 2: applied the stash, verified every page against 72a2a75c^ (13 video pages identical; freeze-wt differs only by the answered caption; comp-video only by the kept trim section), all 16 pages serve 200, trim CSS still in shared video.css, no page added since 72a2a75c uses the timeline, no Swift touched. Scripts/test.sh 9221/9222 twice; the one red is the known VideoExportBudgetTests:155 load flake (folded into the-export-size-test-fails-about-one-run-in-thre), 3/3 green alone. Committed 823fc26d. No audit: docs-only, no feature to playtest."
+    },
+    {
+      "t": "2026-09-23T14:55:42.194Z",
+      "note": "The user's video mocks are back as drawn (14 video pages + comp-video restored to pre-72a2a75c, real tracks, no Layers group in video docks; video-shell.html deleted; shared track column 58px uppercase). UX-PATTERNS D18 rewritten around tracks; video-surface.md and video.md point at the mocks and withdraw 'almost no new chrome'. Docs only, commit 823fc26d. Verified by diffing every page against 72a2a75c^ and loading each on the dashboard (200). Tests 9221/9222, the one red is the known export-size load flake."
     }
   ],
-  "started": "2026-09-23T14:36:05.664Z",
-  "failures": 1,
+  "started": "2026-09-23T14:47:16.046Z",
+  "failures": 0,
   "lastError": {
     "at": "2026-09-23T14:43:36.223Z",
     "exit": 0,
     "message": "The only busy process is my own test run. I'll pick up again when it finishes."
-  }
+  },
+  "walks": [],
+  "completed": "2026-09-23T14:55:42.195Z"
 }

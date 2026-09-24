@@ -1,0 +1,51 @@
+{
+  "id": "command-s-on-a-video-edit-does-what-the-user-pic-you-cut-a-recording-dropped-in-a",
+  "taskId": "command-s-on-a-video-edit-does-what-the-user-pic",
+  "question": "You cut a recording, dropped in a second clip, music and a title. What should Command S do?",
+  "context": "A video edit is now many clips, sounds, titles and captions on tracks, not one trimmed recording. Save As will write a project you can reopen (being built now). The question is only what the Command S key does on a video.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Command S saves the project",
+      "summary": "Command S always saves your edit as a Photonz project you can open again. The recordings you used are never changed. Export is how you get a video file to send.",
+      "pros": [
+        "Works the same for one clip or twenty",
+        "Your original recordings are never written over",
+        "It is what Premiere and Final Cut do, so an editor never has to learn it"
+      ],
+      "cons": [
+        "Trim a recording and send it now takes an Export, where the old recording window did it with one Command S"
+      ],
+      "mitigation": "Export stays in the File menu and on the close sheet, so trim and send is two steps, never a hunt."
+    },
+    {
+      "id": "b",
+      "label": "A plain trim writes the recording",
+      "summary": "If all you did is trim one recording, Command S writes the shorter recording back over the file, as the old recording window did, with the original kept beside it. Anything more (a second clip, a title, captions, music) saves a project.",
+      "pros": [
+        "Trim and send stays one press",
+        "Nothing about a bigger edit is ever lost"
+      ],
+      "cons": [
+        "Command S means two different things depending on what you did, and the window has to say which one it is about to do"
+      ],
+      "mitigation": "The title bar and the File menu name what Save will write before you press it."
+    },
+    {
+      "id": "c",
+      "label": "Not now",
+      "summary": "Keep Command S dimmed on a video. Save As writes a project, and Export writes a video, and nothing else changes.",
+      "pros": [
+        "Nothing new to learn"
+      ],
+      "cons": [
+        "Command S does nothing on the thing you spend longest on"
+      ],
+      "mitigation": "Save As is in the File menu and on the close sheet.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-24T09:51:07.756Z"
+}

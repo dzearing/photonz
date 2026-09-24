@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 0.61,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T13:13:48.580Z",
-  "updated": "2026-09-23T13:14:07.333Z",
+  "updated": "2026-09-24T03:54:15.116Z",
   "deps": [
     "every-value-in-the-panel-has-a-key-diamond",
     "move-a-layer-from-a-to-b-grow-it-shrink-it-fade"
@@ -21,6 +21,7 @@
     "Drag a key in time; drag a box round several and move them together; Option-drag copies; Delete removes; each is one undo step",
     "Right-click a key: Linear, Ease In, Ease Out, Ease In and Out, Hold, Bezier; the choice shows on the key and in playback",
     "A curve view on a lane shows the value over time, and dragging a bezier handle reshapes the ease between two keys",
+    "In a document with time, the Motion section's From/To rows are gone: a keyed value is shown once, in Animating, and its curve is set on its keys",
     "Reachable at Next defaults with no flag changed: a walk with no flags opens a title's lanes, drags a key and eases it, and photographs the lanes beside the mock frame; audit written under queue/audits/",
     "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
@@ -36,7 +37,53 @@
     {
       "t": "2026-09-23T13:14:07.332Z",
       "note": "seq 121 -> 0.61"
+    },
+    {
+      "t": "2026-09-23T15:48:59.902Z",
+      "note": "From every-value-in-the-panel-has-a-key-diamond: the panel now has an Animating section (key diamond, prev/next arrows, value at the playhead) and keys are LayerMotions that play once (Sources/PhotonzCore/PropertyKeys.swift). In a video the old Motion section still shows the same keyed value as From/To/Start/Over rows, so the panel says one thing twice; it stayed only because it is the one place a curve is chosen. Once a curve is set on the key itself, retire Motion's rows in documents with time (the mock's video pane has only Animating) and move the mock's Graph link onto the Animating header."
+    },
+    {
+      "t": "2026-09-24T03:01:06.277Z",
+      "note": "from move-a-layer-from-a-to-b-grow-it-shrink-it-fade (2026-09-23): a clip now carries one white diamond per keyed moment (ClipKeys.swift, drawn in ClipPiecesBar.keyDiamond) that drags, eases by right-click (KeyEase, Premiere meaning: Ease In = slow arriving) and deletes. Per-key ease lives on MotionStop.ease / LayerMotion.fromEase/toEase. The lanes under a layer (Position, Opacity, Scale) are still the old timing bars; the mock (video-move-wt.html step 5, queue/audits/2026-09-23-motion-a-to-b-mock.png) draws diamonds joined by a line there. Hold and Bezier are not in KeyEase yet."
+    },
+    {
+      "t": "2026-09-24T03:04:16.601Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T03:07:50.696Z",
+      "note": "Adversarial review before building. (1) Mock: video-move-wt step 5 draws a keyed value as a lane under the layer's track, accent diamonds joined by a faint line (.kfd/.kfseg); video.html puts the value graph in a collapsed Graph group in the right dock and says itself it cannot line up with the timeline. The task's acceptance asks for the curve ON a lane, so the graph opens inside the lane, on the timeline's own time axis; the Animating header gets the mock's Graph link, which opens it. (2) Premiere editor expectations: twirl arrow on the track header, one row per property, click/shift-click/marquee keys, Option-drag copies (Premiere uses Alt-drag), Delete removes, right-click key gives Temporal Interpolation (Linear, Bezier, Hold, Ease In, Ease Out). Hold here = the value stays until the next key; Bezier = draggable handles in the graph; dragging a handle of any key turns it into Bezier, as Premiere does. (3) Collisions: a bare-lane drag used to scrub; inside an open key lane it now draws a selection box (Premiere), a click still moves the playhead. (4) Position has two numbers; the graph plots distance travelled along the path so one curve still shows the ease; colour has no axis, so no graph (the mock says the same). (5) Motion section in a video: rows for keyed values go, since Animating shows them once and the curve is on the keys."
+    },
+    {
+      "t": "2026-09-24T03:21:15.483Z",
+      "note": "owns these walks: key-lanes-walk"
+    },
+    {
+      "t": "2026-09-24T03:25:28.478Z",
+      "note": "walks key-lanes-walk -> key-lanes-walk, key-lanes-menu-walk"
+    },
+    {
+      "t": "2026-09-24T03:53:46.185Z",
+      "note": "Shared vs new: the icon strip's MotionStripLaneView draws a timing BAR per motion, not keys, so key lanes are a new view (KeyLanesView). Shared with it: MotionStripRuler (time to x), TimelineEdgeClip, the gutter and gap constants, and MotionStripLaneView itself still draws any motion that loops. Walks: key-lanes-walk and key-lanes-menu-walk added; component-on-the-timeline-walk moved from Motion > Add Motion to the Rotation key diamond; punch-in-and-hold-walk tests 5-6 moved from timing-bar marks to lanes (its Escape-cancels-a-mark-drag check went with the bar)."
+    },
+    {
+      "t": "2026-09-24T03:53:46.238Z",
+      "note": "Seen once, not reproduced: key-lanes-menu-walk reported CRASHED ('the app quit part way through and left no crash report') in a playtest-all batch of six. Rerun alone twice and in a batch of three: ok every time, no report in ~/Library/Logs/DiagnosticReports. Not filed; if it recurs it earns a task."
+    },
+    {
+      "t": "2026-09-24T03:53:46.291Z",
+      "note": "Audit rough items, where each went: curve in lane vs mock's Graph panel -> filed a-keyed-value-s-curve-opens-where-you-want-it with a decision card. Accent blue vs mock lavender -> left rough (app-wide accent, not this task's). Walk menu shot scroll arrow -> harness placement (popUp(positioning:at:)), not what a person sees; left here. Escape does not cancel a key drag -> left rough: Premiere does not either. Motion section loops-only in time docs -> the acceptance item itself."
+    },
+    {
+      "t": "2026-09-24T03:54:15.114Z",
+      "note": "Shipped in 9120fdc8. A layer's track has an arrow that opens one lane per keyed value (KeyLanesView); keys pick, box-select, drag, Option-copy, Delete, and ease by right-click including new Hold and Bezier (KeyEase, KeyHandles); a lane opens into its curve with draggable Bezier handles (keyGraph/setKeyHandle), also from Animating's Graph link; Motion section keeps only looping motions in documents with time. Verified: Scripts/test.sh 9449/9449, key-lanes-walk at Next defaults (8 real captures), key-lanes-menu-walk, plus component-on-the-timeline, punch-in-and-hold, title walks. Audit queue/audits/2026-09-23-key-lanes.json. Curve placement (lane vs mock's Graph panel) is a decision card on a-keyed-value-s-curve-opens-where-you-want-it."
     }
   ],
-  "source": "user"
+  "source": "user",
+  "started": "2026-09-24T03:04:16.600Z",
+  "walks": [
+    "key-lanes-walk",
+    "key-lanes-menu-walk"
+  ],
+  "completed": "2026-09-24T03:54:15.115Z"
 }

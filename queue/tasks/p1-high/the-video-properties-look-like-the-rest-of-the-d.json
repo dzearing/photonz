@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 110,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.642Z",
-  "updated": "2026-09-23T14:42:40.595Z",
+  "updated": "2026-09-24T02:23:42.916Z",
   "deps": [
     "click-a-cut-and-pick-a-transition-from-tiles"
   ],
@@ -52,6 +52,48 @@
     {
       "t": "2026-09-23T14:42:40.594Z",
       "note": "video-shell.html was deleted on 2026-09-23 (task the-video-mocks-are-the-user-s-again-and-d18-is): it was the loop's own study arguing against tracks. The target is now pages/video.html, the video-*.html walkthroughs and comp-video.html, restored as the user drew them, plus UX-PATTERNS D18 (rewritten: a document with time has tracks). Where this task mentions video-shell, read video.html."
+    },
+    {
+      "t": "2026-09-23T15:49:00.028Z",
+      "note": "Side by side from every-value-in-the-panel-has-a-key-diamond (audit 2026-09-23-key-diamonds): the new Animating rows use 52pt number boxes, where the mock's PROPERTIES draws a wide dark filled box per value, and the mock heads the pane with a clip line (name, in -> out, length, speed) that the app keeps in the Time section. Same look pass as this task."
+    },
+    {
+      "t": "2026-09-23T16:29:32.959Z",
+      "note": "The video kit now has the mock's panel row pieces: VideoKit.FieldRow (76pt label column, .irow), SelectFace/DropdownRow (.select on a real menu), KeyDiamond (.kfkey, already used by the Animating section). See UX-PATTERNS D18 'The video kit'."
+    },
+    {
+      "t": "2026-09-24T01:36:31.421Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T02:23:20.129Z",
+      "note": "Review before building: a Premiere editor looks for speed in one place (Speed/Duration) and freeze/zoom on the clip's right-click, so Speed became one dropdown and Freeze Frame and Punch In became clip submenus. The mock heads PROPERTIES with a clip line and lists only keyed values; neither exists yet (filed). Titles have no bar right-click yet, so Start Here/End Here stay in Time as a Playhead row (filed p2)."
+    },
+    {
+      "t": "2026-09-24T02:23:20.183Z",
+      "note": "Built: TimePanelOrder (PhotonzCore, tested) orders a time document's panel by what the layer is for (clip: Time, Sound, Animating; title: Time, Text, Animating; sound: Sound, Time), applied at draw time in InspectorPanel.timeOrdered and written as rule 5 in InspectorDockLayout. Time/Sound/Captions/Transition sections rebuilt from VideoKit.FieldRow/DropdownRow/ValueFace with the panel inset; Reframe section and ReframeInspector removed; Freeze Frame ▸ (lengths + Everything waits / The rest carries on) and Punch In ▸ (125/150/200% around the right-click point, To the Box, Pull Back Out, Reset) on the clip's timeline and canvas menus. VideoPanelCopyTests reads the section sources and fails any string over 60 characters or glued literals. Fixed on the way: DropdownRow's overlay menu drew a ghost of its value beside the face."
+    },
+    {
+      "t": "2026-09-24T02:23:20.235Z",
+      "note": "Review after: at 1200x720 with defaults, video-panel-order-walk reads the order back for a clip, a title and a sound, and Speed, Level and Fade are all on screen without scrolling. Left rough (not filed, did not clear the bar): in a time document the lead sections are pinned under Layers, so dragging one elsewhere snaps back. The first Scripts/test.sh run had one failure lost in truncated output; the rerun of all 9404 passed, likely the known flaky export-size test."
+    },
+    {
+      "t": "2026-09-24T02:23:20.286Z",
+      "note": "owns these walks: video-panel-order-walk, speed-a-stretch-walk, hold-on-a-frame-walk, hold-pushes-the-sound-walk, punch-in-and-hold-walk, title-on-the-timeline-walk"
+    },
+    {
+      "t": "2026-09-24T02:23:42.914Z",
+      "note": "Shipped in 246ab1e9: video sections are inset label/value rows with no paragraphs (VideoPanelCopyTests enforces 60 chars); Speed is one dropdown; Freeze Frame and Punch In are clip right-click submenus; Reframe section removed; TimePanelOrder leads the panel with what the layer is for. Verified by video-panel-order-walk (no flags, 1200x720: order read back for clip/title/sound, Speed/Level/Fade in view), 10 other touched walks green, Scripts/test.sh 9404 passing. Audit queue/audits/2026-09-24-video-panel-look.json with side by side against video.html PROPERTIES; mock gaps filed as follow-ups."
     }
-  ]
+  ],
+  "started": "2026-09-24T01:36:31.420Z",
+  "walks": [
+    "video-panel-order-walk",
+    "speed-a-stretch-walk",
+    "hold-on-a-frame-walk",
+    "hold-pushes-the-sound-walk",
+    "punch-in-and-hold-walk",
+    "title-on-the-timeline-walk"
+  ],
+  "completed": "2026-09-24T02:23:42.915Z"
 }

@@ -1,0 +1,31 @@
+{
+  "id": "recordings-and-sounds-can-go-into-the-library-wi",
+  "title": "Recordings and sounds can go into the Library without going onto the timeline",
+  "goal": "The video mock fills the Library first (Import, a file dropped onto the Library, a new capture) and only then drags a first clip onto an empty track. Today a recording or sound only reaches the Library by landing on the timeline, so a blank video project cannot be started the way the mock shows.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 350,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-23T21:55:30.418Z",
+  "updated": "2026-09-24T09:51:52.633Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video.html onboarding step 2 (Fill the Library, line ~326, view ~691) and the Library header + button (data-menu #libMenu, line ~530). The pool exists since recordings-and-sounds-in-a-document-sit-on-the-l: PhotonzDocument.media + rememberMedia (Sources/PhotonzCore/DocumentClipMedia.swift); adding to the shelf is perform { $0.rememberMedia(...) } after MovieLibrary/SoundLibrary read the file. The shelf already takes colour drops (LibraryColorDrop.swift), so a file drop must be added alongside without breaking that. Capture landing new recordings in the Library is the third way in the mock; decide in the task whether it belongs here.",
+  "acceptance": [
+    "A recording or sound dropped from the Finder onto the Library shelf becomes a tile there and lands nowhere else",
+    "The Library header has the mock's add button with Import, which puts the chosen files on the shelf",
+    "A walk at Next defaults drops a file onto the Library, then drags its tile onto an empty track"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T21:55:30.420Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-24T09:51:52.632Z",
+      "note": "manager 2026-09-24: also from queue/audits/2026-09-23-library-clips.json: tiles are 68 points wide so names cut in the middle (Tutori...e.mp4) where the mock's tiles are wider. Compare against video.html's Library while touching the shelf."
+    }
+  ]
+}

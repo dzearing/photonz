@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 140,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.505Z",
-  "updated": "2026-09-23T14:42:40.298Z",
+  "updated": "2026-09-24T06:43:43.885Z",
   "deps": [
     "the-timeline-is-the-one-in-the-mock"
   ],
@@ -49,6 +49,43 @@
     {
       "t": "2026-09-23T14:42:40.297Z",
       "note": "video-shell.html was deleted on 2026-09-23 (task the-video-mocks-are-the-user-s-again-and-d18-is): it was the loop's own study arguing against tracks. The target is now pages/video.html, the video-*.html walkthroughs and comp-video.html, restored as the user drew them, plus UX-PATTERNS D18 (rewritten: a document with time has tracks). Where this task mentions video-shell, read video.html."
+    },
+    {
+      "t": "2026-09-23T19:17:34.152Z",
+      "note": "from the timeline dock (2026-09-23): the transport scrubber (VideoKit.Scrubber) takes 'marks' for in and out, drawn green as in video.html; nothing feeds it yet. Home/End are named in the Go to Start/End help but not bound."
+    },
+    {
+      "t": "2026-09-24T00:14:35.375Z",
+      "note": "from the right-click task (2026-09-23): the timeline's right-click menus now carry Add Marker, Set In, Set Out, Remove Marker (ruler and scrub bar) and Roll Edit to Playhead (a cut), with no key printed because M, I, O and E are still Photoshop tool keys. When this task gives the timeline M / I / O / E (Premiere: Add Marker, Mark In, Mark Out, Extend Edit), add them to EditorState.TimelineMenuKeys (EditorState+TimelineMenus.swift) and pass them to those rows so the menus print them, and to the Video menu bar rows of the same names. Already wired here: ⌥⌫ Ripple Delete, ⇧⌘K Split Everything at Playhead, ⌥X Clear In and Out, ⌃⇧D Detach Audio, B Split."
+    },
+    {
+      "t": "2026-09-24T04:26:45.604Z",
+      "note": "from keys-copy-between-layers (2026-09-23): Video > Go to Next Key is Shift-K and Go to Previous Key is Option-K (the user's pair). When K becomes Stop for J/K/L, keep those two chords as they are; they are separate from plain K."
+    },
+    {
+      "t": "2026-09-24T06:16:06.959Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T06:21:16.490Z",
+      "note": "Adversarial review before building: (1) nearly every Premiere key collides with a Photoshop tool letter here (K lens, L line, I measure, O ellipse, A arrow, M marquee), so the timeline needs a real notion of keyboard focus. Decision: the canvas holds the keyboard by default, so a Photoshop user pressing L still gets a line; any press in the timeline dock hands the keyboard to the timeline (a thin accent ring on the dock says so), and a press on the canvas takes it back. That is Premiere's own panel-focus model. Keys with no Photoshop meaning (Space, Home, End, Cmd-K, Opt-I, Opt-O) work whichever has focus. (2) The mock's K adds a key; the task's K is Stop for J/K/L. The user's task is newer and explicit, so K is Stop on a focused timeline; Shift-K / Opt-K keep stepping keys. (3) B: Premiere's B is the Razor, the mock's B is the Blade tool, so on a document with time B picks the Blade and Cmd-K splits at the playhead (Premiere's Add Edit); the old recording window keeps B = cut. (4) The playback clock only runs at 1x forward: J/K/L needs a rate, including backwards; sound plays only at 1x forward (a shuttle at 2x/-1x is silent), which is a known gap against Premiere's pitched shuttle audio. (5) Clip pieces cannot hold a gap, so Delete (lift) on a piece shortens that clip and moves nothing else; Shift-Delete ripples. (6) A key step does not play the sound under the playhead (the open question from the scrub-audio task): Premiere's frame step is silent by default, so this matches it. (7) The DocumentTransportBar with Previous/Next Frame buttons is not reachable for a document with time any more (the dock's transport is Start / Play / End, as the mock draws); those buttons' tooltips promise Home and End, which this task binds."
+    },
+    {
+      "t": "2026-09-24T06:42:57.138Z",
+      "note": "owns these walks: premiere-keys-on-the-timeline-walk"
+    },
+    {
+      "t": "2026-09-24T06:43:43.829Z",
+      "note": "Side by side with video.html (transport + .tlbar): matches the mock's Select/Blade bar and B = Blade, V = Select. Departures: the focus ring round the dock (not in the mock; Premiere's focused-panel outline, needed because one letter now means two things); a 2x/-1x readout beside the time only while shuttling; the mock's K adds a key, here K is Stop as the task asks. Left rough (in the audit, not filed): silent shuttle away from 1x; E (Extend Edit) not bound. Filed a-picks-everything-after-a-clip-and-moves-it-as for A. Asked for a full sweep (harness key step now offers presses to the timeline router first). Tests: 9514 green; 8 neighbouring timeline walks green."
+    },
+    {
+      "t": "2026-09-24T06:43:43.883Z",
+      "note": "Shipped in 839f2106: the timeline takes the keyboard on a press in the dock (accent ring), canvas takes it back. J/K/L shuttle with a 1-2-4-8 ladder and K+J/L frame steps, I/O and Opt-I/Opt-O, M, Cmd-K split, Delete lift, Shift-Delete ripple, arrows one/five frames, Up/Down edit points, Home/End, V/B tools, = - \\ zoom. With a clip picked the right arrow steps the playhead when the timeline has the keyboard and nudges the layer when the canvas does; screenshots still nudge. Verified by TimelineKeysTests + full suite (9514 green) and premiere-keys-on-the-timeline-walk at Next defaults (real captures). A is filed as its own task."
     }
-  ]
+  ],
+  "started": "2026-09-24T06:16:06.958Z",
+  "walks": [
+    "premiere-keys-on-the-timeline-walk"
+  ],
+  "completed": "2026-09-24T06:43:43.884Z"
 }

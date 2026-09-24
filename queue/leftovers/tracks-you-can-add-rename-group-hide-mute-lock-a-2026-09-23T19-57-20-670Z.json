@@ -1,0 +1,33 @@
+{
+  "id": "tracks-you-can-add-rename-group-hide-mute-lock-a-2026-09-23T19-57-20-670Z",
+  "task": "tracks-you-can-add-rename-group-hide-mute-lock-a",
+  "kind": "task",
+  "label": "Tracks you can add, rename, group, hide, mute, lock, and move clips between",
+  "title": "Tracks you can add, rename, group, hide, mute, lock, and move clips between",
+  "outcome": "failed",
+  "at": "2026-09-23T19:57:20.670Z",
+  "files": [
+    "Sources/Photonz/ClipPiecesBar.swift",
+    "Sources/Photonz/EditorState+ClipBar.swift",
+    "Sources/Photonz/EditorState.swift",
+    "Sources/Photonz/Playtest/PlaytestHarness.swift",
+    "Sources/Photonz/Playtest/PlaytestPanelMenu.swift",
+    "Sources/Photonz/TimelineDock.swift",
+    "Sources/PhotonzCore/AudioMix.swift",
+    "Sources/PhotonzCore/Document.swift",
+    "Sources/PhotonzCore/DocumentTime.swift",
+    "Sources/PhotonzCore/Layer.swift",
+    "Sources/PhotonzCore/PlaytestScript.swift",
+    "Scripts/playtest/tracks-you-can-add-rename-group-walk.json",
+    "Sources/Photonz/EditorState+Tracks.swift",
+    "Sources/Photonz/TimelineTrackRows.swift",
+    "Sources/PhotonzCore/DocumentTracks.swift",
+    "Tests/PhotonzCoreTests/DocumentTracksTests.swift"
+  ],
+  "count": 16,
+  "state": "stashed",
+  "stash": "e640b6fc08fa04824a2fa06648cde0b3e281e57d",
+  "restore": "git stash apply e640b6fc08fa04824a2fa06648cde0b3e281e57d",
+  "why": "",
+  "handed": "2026-09-23T19:57:51.762Z"
+}

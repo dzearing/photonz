@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.221Z",
-  "updated": "2026-09-23T14:42:39.218Z",
+  "updated": "2026-09-23T20:35:15.500Z",
   "deps": [
     "the-timeline-is-the-one-in-the-mock"
   ],
@@ -42,6 +42,69 @@
     {
       "t": "2026-09-23T14:42:39.217Z",
       "note": "video-shell.html was deleted on 2026-09-23 (task the-video-mocks-are-the-user-s-again-and-d18-is): it was the loop's own study arguing against tracks. The target is now pages/video.html, the video-*.html walkthroughs and comp-video.html, restored as the user drew them, plus UX-PATTERNS D18 (rewritten: a document with time has tracks). Where this task mentions video-shell, read video.html."
+    },
+    {
+      "t": "2026-09-23T19:17:33.998Z",
+      "note": "from the timeline dock (2026-09-23): the dock's track rows are built in TimelineDock.swift (TimelineTrackRow) from motionStripGroups, one per timed layer, named after the layer with the kind's icon (TimelineTrackKind in PhotonzCore). Real tracks should replace the group list there so headers read V1/V2/Audio as video.html does."
+    },
+    {
+      "t": "2026-09-23T19:23:14.637Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T19:31:24.768Z",
+      "note": "Core landed test-first: DocumentTracks.swift (DocumentTrack, DocumentTrackGroup, Layer.trackID, implicit tracks per clip until first edit, add/rename/delete/group/hide/mute/solo/lock, move clip to track / new track with overlap + kind + lock rules, restack by tracks, TrackDrop.resolve). drawn(atTimeMS:) and audioMix() honour hide/solo/mute. 23 tests green. Adversarial pre-review: mock headers are icon+name only (no toggles), so toggles show on hover and stay visible while on; mock has no + so it goes at the foot of the gutter; Premiere names V1 at the bottom."
+    },
+    {
+      "t": "2026-09-23T19:57:20.203Z",
+      "note": "runner failed (exit 0, attempt 1): Twelve right-click walks are running in the background to check the harness fix; I'll pick up when they finish."
+    },
+    {
+      "t": "2026-09-23T19:57:20.695Z",
+      "note": "ran out of turn with 16 file(s) still changed: Sources/Photonz/ClipPiecesBar.swift, Sources/Photonz/EditorState+ClipBar.swift, Sources/Photonz/EditorState.swift, Sources/Photonz/Playtest/PlaytestHarness.swift, Sources/Photonz/Playtest/PlaytestPanelMenu.swift, Sources/Photonz/TimelineDock.swift, Sources/PhotonzCore/AudioMix.swift, Sources/PhotonzCore/Document.swift, Sources/PhotonzCore/DocumentTime.swift, Sources/PhotonzCore/Layer.swift, Sources/PhotonzCore/PlaytestScript.swift, Scripts/playtest/tracks-you-can-add-rename-group-walk.json, Sources/Photonz/EditorState+Tracks.swift, Sources/Photonz/TimelineTrackRows.swift, Sources/PhotonzCore/DocumentTracks.swift, Tests/PhotonzCoreTests/DocumentTracksTests.swift. Put aside so the next task started clean; restore with `git stash apply e640b6fc08fa04824a2fa06648cde0b3e281e57d` before carrying on."
+    },
+    {
+      "t": "2026-09-23T19:57:51.758Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T19:57:51.763Z",
+      "note": "a previous attempt at this task left 16 file(s) changed; they are set aside. Restore them with `git stash apply e640b6fc08fa04824a2fa06648cde0b3e281e57d` and carry on, or start over and leave the stash alone."
+    },
+    {
+      "t": "2026-09-23T20:34:34.333Z",
+      "note": "owns these walks: tracks-you-can-add-rename-group-walk"
+    },
+    {
+      "t": "2026-09-23T20:34:34.384Z",
+      "note": "restored stash e640b6fc and carried on. Fixed: the header used .onHover directly (PlaytestHoverIsReachableTests failed), now .playtestHover. Changed: switches show on hover only (plus any that are on), not when a track is picked: in the mock's 84pt gutter three switches cut a picked 'Overlay' to 'O...'. Walk updated to rest the pointer before pressing a switch, and extended with Cmd-Z twice (ungroup, then the new track undone). tracksSpace made nonisolated (Swift 6 warning in the geometry closure)."
+    },
+    {
+      "t": "2026-09-23T20:34:34.433Z",
+      "note": "verified: Scripts/test.sh green (9284 tests; the export-size flake failed once in the first run, it has its own task). tracks walk ok, 91 steps, 12 real captures at Next defaults. The PlaytestPanelMenu hitTest fix (superview space) re-checked against all 20 other rightClick walks: all ok. 19 timeline/clip walks: all ok."
+    },
+    {
+      "t": "2026-09-23T20:34:34.486Z",
+      "note": "adversarial review after: the carry between tracks is driven in walks through EditorState (clipCarryUpATrackHeld / clipCarryToNewTrackOnTopHeld); a real pointer drag could not be driven because the drag step reaches only the canvas and synthetic events do not reach SwiftUI gestures (PlaytestPointer.swift notes). The gesture path is ClipPiecesBar.carry -> updateClipTrackDrop with rows' frames in the same named space; TrackDrop.resolve is unit tested. Said so in the audit's rough."
+    },
+    {
+      "t": "2026-09-23T20:34:34.536Z",
+      "note": "mock side by side (video.html timeline, lines 687-709): matches icon + name headers, V1/Audio naming, several clips on one track. Differences: (1) mock always shows an empty Audio track: folded into a-clip-s-sound-is-on-the-timeline-from-the-momen; (2) mock names a title's track 'Title', here V2 until renamed (Premiere naming), left in audit rough for the user to react to; (3) mock headers have no switches, here they appear on hover, left in audit rough; (4) the + at the gutter's foot is not in the mock (acceptance asks for it)."
+    },
+    {
+      "t": "2026-09-23T20:35:06.324Z",
+      "note": "Tracks landed in 63fc06b1. Core: DocumentTracks.swift (tracks, groups, hide/mute/solo/lock, move a clip to a track or a new one, TrackDrop), tested first. App: TimelineTrackRows.swift and EditorState+Tracks.swift (hover switches, rename on double click, right-click menu, + row, folding groups, carry between tracks), all undoable. Verified: Scripts/test.sh green; tracks walk ok at Next defaults (91 steps, 12 real captures, undo included); the 20 other rightClick walks and 19 timeline walks ok. Audit queue/audits/2026-09-23-video-tracks.json. A real pointer drag between tracks can't be driven by a walk, which the audit says."
     }
-  ]
+  ],
+  "started": "2026-09-23T19:57:51.757Z",
+  "failures": 0,
+  "lastError": {
+    "at": "2026-09-23T19:57:20.202Z",
+    "exit": 0,
+    "message": "Twelve right-click walks are running in the background to check the harness fix; I'll pick up when they finish."
+  },
+  "walks": [
+    "tracks-you-can-add-rename-group-walk"
+  ],
+  "completed": "2026-09-23T20:35:06.325Z"
 }

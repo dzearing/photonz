@@ -1,0 +1,33 @@
+{
+  "id": "recordings-and-sounds-in-a-document-sit-on-the-l-2026-09-23T22-12-36-698Z",
+  "task": "recordings-and-sounds-in-a-document-sit-on-the-l",
+  "kind": "task",
+  "label": "Recordings and sounds in a document sit on the Library shelf and drag onto the timeline",
+  "title": "Recordings and sounds in a document sit on the Library shelf and drag onto the timeline",
+  "outcome": "failed",
+  "at": "2026-09-23T22:12:36.698Z",
+  "files": [
+    "Sources/Photonz/EditorState+Audio.swift",
+    "Sources/Photonz/EditorState+Media.swift",
+    "Sources/Photonz/EditorState+MediaDrop.swift",
+    "Sources/Photonz/EditorState+TimelineDrop.swift",
+    "Sources/Photonz/EditorState.swift",
+    "Sources/Photonz/LibraryPanel.swift",
+    "Sources/Photonz/Playtest/PlaytestHarness.swift",
+    "Sources/PhotonzCore/Document.swift",
+    "Sources/PhotonzCore/DocumentMedia.swift",
+    "Sources/PhotonzCore/PlaytestScript.swift",
+    "Tests/PhotonzCoreTests/PlaytestScriptTests.swift",
+    "docs/progress/log.md",
+    "Scripts/playtest/library-clip-onto-a-track-walk.json",
+    "Sources/Photonz/LibraryClipTile.swift",
+    "Sources/PhotonzCore/DocumentClipMedia.swift",
+    "Tests/PhotonzCoreTests/DocumentClipMediaTests.swift"
+  ],
+  "count": 16,
+  "state": "stashed",
+  "stash": "3b9d4c1a53363f7c7cd7322e89f9026c9154fbfb",
+  "restore": "git stash apply 3b9d4c1a53363f7c7cd7322e89f9026c9154fbfb",
+  "why": "",
+  "handed": "2026-09-23T22:13:07.847Z"
+}

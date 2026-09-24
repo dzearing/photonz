@@ -1,0 +1,38 @@
+{
+  "id": "a-video-edit-can-be-saved-as-a-project-and-opene",
+  "title": "A video edit can be saved as a project and opened again",
+  "goal": "Today an edited video cannot be saved at all: Save and Save As are dimmed, and closing the window offers only Export, so an hour of cutting, a second clip, music, titles and captions is gone the moment the window closes. A Premiere editor saves a project and comes back to it tomorrow. Make File > Save As write a Photonz project that holds the whole edit and points at the recordings and sounds it uses, and make opening that project bring every track, clip, key, title and caption back exactly as it was.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 196,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T09:50:49.641Z",
+  "updated": "2026-09-24T09:51:32.540Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence: EditorState.swift ~2359 saveDocument returns early when isRecordingDocument, saveDocumentAs has guard !isRecordingDocument, and saveAffordance passes canSaveInPlace: !isRecordingDocument so SaveAffordance.changesOnlyExportKeeps dims Save and the close sheet offers only Export. The comment says a package write 'would write a clip whose frames cannot be found again': MovieRef (Sources/PhotonzCore/MovieClip.swift) is an id plus size plus length, no path. So the core work is a media table in the package (MovieRef/sound id -> security-scoped bookmark or path) that PackageIO writes and reads, and EditorState re-registering those files with its movie/sound libraries on open (see DocumentClipMedia.swift, rememberMedia). Split out of trim-becomes-a-tool-and-the-recording-window-ret, whose Command S card (2026-09-20) was withdrawn by the manager on 2026-09-24 because it asked about one trimmed recording and a video document is now many clips. Command S is the next task's card. No new visible control: Save As already exists in the File menu, it is only dimmed.",
+  "acceptance": [
+    "At Next defaults, open the sample talk recording, cut it, drop the b-roll, add a title and let the captions write themselves, then File > Save As writes a .photonz project",
+    "Closing and reopening that project restores every track, clip piece, transition, key, title, caption and sound level, and it plays and exports the same MP4 as before the save",
+    "The recordings and sounds are referenced where they are, never copied into the project and never changed; a project whose recording has moved opens and says which file it cannot find, rather than failing",
+    "The close sheet on an edited video offers Save As beside Export, and once saved the window closes with no question until the next change",
+    "Command S itself is NOT changed here: that is the card on the follow-on task",
+    "PackageIO round-trip tests for a document with movie and sound clips are written before the code",
+    "A walk saves, closes, reopens and exports; it passes at Next defaults",
+    "audit written under queue/audits/",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T09:50:49.643Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-24T09:51:32.539Z",
+      "note": "seq 430 -> 196"
+    }
+  ],
+  "source": "manager"
+}

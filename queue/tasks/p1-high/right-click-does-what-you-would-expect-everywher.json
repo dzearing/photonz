@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 90,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.431Z",
-  "updated": "2026-09-23T14:42:40.424Z",
+  "updated": "2026-09-24T00:19:34.342Z",
   "deps": [
     "the-timeline-is-the-one-in-the-mock",
     "tracks-you-can-add-rename-group-hide-mute-lock-a"
@@ -44,6 +44,35 @@
     {
       "t": "2026-09-23T14:42:40.422Z",
       "note": "video-shell.html was deleted on 2026-09-23 (task the-video-mocks-are-the-user-s-again-and-d18-is): it was the loop's own study arguing against tracks. The target is now pages/video.html, the video-*.html walkthroughs and comp-video.html, restored as the user drew them, plus UX-PATTERNS D18 (rewritten: a document with time has tracks). Where this task mentions video-shell, read video.html."
+    },
+    {
+      "t": "2026-09-23T23:36:08.484Z",
+      "note": "from the linked-sound task (2026-09-23): a first clip right-click menu exists now, TimelineClipMenu in ClipPiecesBar.swift, on picture clips and on their linked sound segments: Detach Audio (when there is sound to detach), Split at Playhead, Delete. Extend it there rather than starting a second menu."
+    },
+    {
+      "t": "2026-09-23T23:36:57.649Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T23:41:32.587Z",
+      "note": "Adversarial pass before building. (1) The mock draws no right-click menus; the acceptance list is the spec, and video-cut-wt's command menu fixes three names and keys: Split at playhead B, Detach audio ⌃⇧D, Ripple delete ⌥⌫. (2) The app has no markers and no In/Out on the document timeline, so the ruler menu would be hollow: building a small core model here (markers + in/out, drawn on the ruler and as the transport scrubber's in/out marks the mock already draws) rather than shipping rows that do nothing. Export honouring In/Out is a separate follow-up. (3) Roll Edit from a menu has no gesture to drive, so it is Premiere's own menu verb: Roll Edit to Playhead (Extend Edit, E). (4) Shortcuts: a menu only prints a key the app honours. M, I, O, E conflict with Photoshop tool keys and the premiere-keys task owns timeline-focus routing, so those rows print no key until that lands (noted on that task). Keys wired here where free: ⌥⌫ ripple delete, ⌃⇧D detach, ⌥X clear in/out, ⇧⌘K split everything. (5) A Premiere editor right-clicks a clip and expects it picked: SwiftUI context menus cannot pick on open, so each row picks the piece it was opened on before acting."
+    },
+    {
+      "t": "2026-09-24T00:19:13.914Z",
+      "note": "owns these walks: timeline-right-click-walk"
+    },
+    {
+      "t": "2026-09-24T00:19:13.967Z",
+      "note": "Built: clip menu (Split at Playhead B, Freeze Frame, Speed submenu, Add Transition submenu at both ends of the piece, Detach Audio ⌃⇧D, Rename inline on the bar, Duplicate ⌘J, Reveal in Finder, Delete ⌫, Ripple Delete ⌥⌫; a clip on a locked track offers Unlock Track instead); cut menu on the join grip and the band (Add Transition, Remove Transition, Roll Edit to Playhead); track header Add Track Above/Below; ruler and scrub bar menu acting where you right-clicked (Add/Remove Marker, Set In, Set Out, Clear In and Out ⌥X, Split Everything Here ⇧⌘K, Clear All Markers) with markers (amber tabs) and In/Out (green wash + brackets on the ruler, green marks on the scrub bar as the mock draws); canvas layer menu gains Split at Playhead on a clip. Core: TimelineMarks.swift, TimelineMenuEdits.swift (ripple delete, split every clip, roll a cut), 18 tests. Video menu bar gets the same rows and keys; Hold This Frame renamed Freeze Frame to match the freeze mock. Found and fixed on the way: a SwiftUI context menu added after .offset hangs on the un-offset layout frame, so piece menus answered for the wrong piece and the join menu never opened; menus now go before the offset. Verified: Scripts/test.sh 9363 tests green; timeline-right-click-walk at defaults (no flags) ok with 16 real captures; 17 neighbouring clip/track/transition walks ok. Left rough (logged, not filed): the ruler's 'here' comes from hover, which the walk harness cannot drive, so the walk drags the playhead there first; open menus photograph clipped at the screen's bottom edge in the harness. Filed: export-and-playback-keep-to-the-in-and-out-marks (p2), find-out-whether-the-layer-menu-promises-a-dupli (p2). Folded key follow-up into premiere-s-keys-work-on-the-timeline."
+    },
+    {
+      "t": "2026-09-24T00:19:34.340Z",
+      "note": "Right-click menus on clip, join, track header, ruler, scrub bar and canvas-over-a-clip, with Premiere names and the keys the app honours; markers and In/Out added to the document; Ripple Delete, Split Everything, Roll Edit to Playhead in core with 18 tests. Verified by Scripts/test.sh (9363 green), timeline-right-click-walk at Next defaults (ok, 16 real captures) and 17 neighbouring walks. Audit: queue/audits/2026-09-23-right-click-menus.json. Commit f3f8604a."
     }
-  ]
+  ],
+  "started": "2026-09-23T23:36:57.648Z",
+  "walks": [
+    "timeline-right-click-walk"
+  ],
+  "completed": "2026-09-24T00:19:34.341Z"
 }

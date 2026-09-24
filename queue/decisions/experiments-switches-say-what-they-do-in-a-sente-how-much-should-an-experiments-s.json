@@ -1,0 +1,51 @@
+{
+  "id": "experiments-switches-say-what-they-do-in-a-sente-how-much-should-an-experiments-s",
+  "taskId": "experiments-switches-say-what-they-do-in-a-sente",
+  "question": "How much should an Experiments switch say under its name?",
+  "context": "The Experiments window lists every feature switch with a description. 92 of 95 run over 40 words (median 179, longest 557). A test now stops any of them growing; this decides how short the rewrite makes them.",
+  "options": [
+    {
+      "id": "a",
+      "label": "One sentence, about 25 words",
+      "summary": "Each switch says what it changes in one plain sentence, like 'Adds the release name to editor window titles.' Nothing more in the window.",
+      "pros": [
+        "Reads at a glance down a long list",
+        "Forces the point to the front"
+      ],
+      "cons": [
+        "No room to say what Off means"
+      ],
+      "mitigation": "Off is only spelled out where the switch's name leaves it unclear, as a second clause."
+    },
+    {
+      "id": "b",
+      "label": "Two short sentences, up to 40 words",
+      "summary": "What the switch changes, then what Off means. For example: 'The toast after a capture shows an Edit button and its key. Off means Edit only appears while the pointer is over the toast.'",
+      "pros": [
+        "Says both sides of the switch",
+        "Matches the 40 words the budget was first filed with"
+      ],
+      "cons": [
+        "A list of 95 two-sentence descriptions is still a lot to scan"
+      ],
+      "mitigation": "The window's search still finds a switch by any word in it."
+    },
+    {
+      "id": "c",
+      "label": "Leave them as they are",
+      "summary": "Descriptions keep their full detail, up to 557 words. The test still stops any from growing and any new switch from going over 40.",
+      "pros": [
+        "No rewriting",
+        "Every detail stays in the window"
+      ],
+      "cons": [
+        "Median description is 179 words; nobody reads them"
+      ],
+      "mitigation": "None: this keeps the paragraphs.",
+      "declines": true
+    }
+  ],
+  "recommended": "b",
+  "status": "pending",
+  "created": "2026-09-24T09:07:39.602Z"
+}

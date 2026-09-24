@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 120,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.711Z",
-  "updated": "2026-09-23T14:42:40.182Z",
+  "updated": "2026-09-24T03:01:36.322Z",
   "deps": [
     "tracks-you-can-add-rename-group-hide-mute-lock-a"
   ],
@@ -46,6 +46,39 @@
     {
       "t": "2026-09-23T14:42:40.181Z",
       "note": "video-shell.html was deleted on 2026-09-23 (task the-video-mocks-are-the-user-s-again-and-d18-is): it was the loop's own study arguing against tracks. The target is now pages/video.html, the video-*.html walkthroughs and comp-video.html, restored as the user drew them, plus UX-PATTERNS D18 (rewritten: a document with time has tracks). Where this task mentions video-shell, read video.html."
+    },
+    {
+      "t": "2026-09-24T02:24:08.203Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T02:28:03.743Z",
+      "note": "Adversarial pre-build: (1) keys already exist (panel diamonds, canvas drags fold into keys, commit 7d42ef58); what is missing is seeing them on the timeline, moving them, easing them and one-click title animations. (2) The mock (comp-video.html .kfm, video-kit css) draws key marks on a clip as READ-ONLY, the user's acceptance here asks for diamonds you drag and right-click: building the acceptance (the user's own words, newer), listing it as a mock difference in the audit. (3) Easing: the mock's key card says the curve LEAVING a key; a Premiere editor's right-click on a key says Ease In = slow arriving, Ease Out = slow leaving, and it works on the last key too. Building Premiere's meaning, since the acceptance names Premiere's four items; stored per key, a segment eases where either of its keys says so, and a motion nobody has eased plays exactly as it does today. (4) A clip bar shows one diamond per MOMENT (the union of every keyed value there), as the mock's .kfm does; dragging or easing it acts on every value keyed at that moment. (5) The acceptance's 'diamond on the track header to arm keying' conflicts with the manager's note (do not add a second arming control): the panel diamond stays the one stopwatch, the header gets nothing. (6) Presets write ordinary keys (Animate In / Animate Out on the clip's and the layer's right-click menu), so everything they make is draggable and easable, and Undo takes one away in one step. (7) Walks cannot drag a SwiftUI bar with a real pointer (tracks task notes), so the key drag is driven through EditorState in walks; the gesture is exercised by hand in the probe."
+    },
+    {
+      "t": "2026-09-24T03:01:06.225Z",
+      "note": "owns these walks: title-flies-in-grows-and-fades-out-walk"
+    },
+    {
+      "t": "2026-09-24T03:01:06.383Z",
+      "note": "Built: core ClipKeys.swift (clipKeyMarks, moveClipKeys, easeClipKeys, removeClipKeys, animateIn/animateOut with Fade/Slide/Pop/Scale) + per-key KeyEase on LayerMotion (a motion nobody eased plays byte-for-byte as before), tested first in ClipKeyMarksTests (21). A title's own track is now named Title (mock), V numbers are for everything else; DocumentTracks/ClipLanding tests updated. App: diamonds on every clip in ClipPiecesBar (drag with playhead snap and a time readout, click = playhead to key, right-click = Linear/Ease In/Ease Out/Ease In and Out, Go to Key, Delete Key), Animate In/Out on the clip's and the canvas's right-click (EditorState+ClipKeys.swift). Fixed on the way: a title's clip menu offered Speed, which means nothing without media (TitleTime's own rule); it now needs media behind it. Walk actions clipKeyAtPlayheadLater and videoStepQuarterSecond added."
+    },
+    {
+      "t": "2026-09-24T03:01:06.436Z",
+      "note": "Verified: Scripts/test.sh 9423/9423 (a first full run hit the known icon-preview timing flake under load, logged on its task; alone 6ms). Walk title-flies-in-grows-and-fades-out-walk, NO flags: 81 steps ok, 9 real captures, screen unlocked, Screen Recording granted. Neighbours ok: title-on-the-timeline, key-a-title-s-scale, timeline-right-click, tracks-you-can-add-rename-group, component-on-the-timeline, second-clip-on-the-timeline."
+    },
+    {
+      "t": "2026-09-24T03:01:06.487Z",
+      "note": "Mock side by side (video-move-wt.html step 6, video.html .kfm, video-title-wt.html): matches white 7pt diamonds on the clip, a Title track, keys written by moving the playhead and changing the thing. Differences: (1) mock key marks are read-only, these drag and right-click (the task's acceptance); (2) lanes under the clip are the old bars, not the mock's diamonds joined by a line: folded into a-layer-s-track-opens-into-one-lane-per-keyed-va; (3) mock's canvas dashed path and bend-into-arc not built: filed a-moving-layer-draws-its-path-on-the-canvas-and (p1); (4) mock's panel 'Between the keys' easing dropdown not built, easing is on the key's right-click (Premiere's place), left in audit rough; (5) no arming diamond on the track header, per the manager's 06:10 note, in audit rough. Adversarial review after: the first key of a slide sits under the clip's left trim grip; the diamond's hit box was cut to 12x12 so the grip is still reachable above and below it. Left rough (no task): Out keys do not follow a title lengthened later (Premiere does the same), in audit rough."
+    },
+    {
+      "t": "2026-09-24T03:01:36.320Z",
+      "note": "Shipped in 4760f7d7. A clip carries a white diamond per keyed moment you drag in time, click to go to, and right-click for Linear/Ease In/Ease Out/Ease In and Out and Delete Key (per-key KeyEase, Premiere's meaning). Animate In/Out (Fade, Slide, Pop, Scale) on the clip's and the canvas's right-click write ordinary keys. A title lands on a track called Title. Verified: Scripts/test.sh 9423/9423, walk title-flies-in-grows-and-fades-out-walk at Next defaults (81 steps, 9 real captures), six neighbour walks ok. Audit queue/audits/2026-09-23-motion-a-to-b.json. Not done: a diamond on the track header to arm keying (the manager's note says the panel's diamond stays the only one). Follow-up filed: the canvas motion path and arc."
     }
-  ]
+  ],
+  "started": "2026-09-24T02:24:08.202Z",
+  "walks": [
+    "title-flies-in-grows-and-fades-out-walk"
+  ],
+  "completed": "2026-09-24T03:01:36.321Z"
 }

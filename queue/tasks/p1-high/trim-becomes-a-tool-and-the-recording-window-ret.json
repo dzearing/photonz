@@ -4,13 +4,16 @@
   "goal": "A recording now opens in the ordinary editor, but only if you switch it on, because the small video window is still the only place you can trim, crop, save or export one. Finish the move: make trimming a tool you pick in the editor, give the editor the save, the export and the revert the old window had, and then take the old window away so there is one way to open a recording and not two.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 200,
-  "status": "blocked",
+  "seq": 198,
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T19:20:02.577Z",
-  "updated": "2026-09-23T14:42:40.952Z",
-  "deps": [],
+  "updated": "2026-09-24T09:51:32.642Z",
+  "deps": [
+    "a-video-edit-can-be-saved-as-a-project-and-opene",
+    "command-s-on-a-video-edit-does-what-the-user-pic"
+  ],
   "blockedBy": [],
   "notes": "SPLIT OUT of a-document-can-have-time on 2026-09-20, by the runner that built the first half. Read docs/design/video.md 7 before anything else: it says exactly what is still standing and why.\n\nWHAT LANDED, so this task does not rebuild it. PhotonzCore gained MovieRef and Layer.movie (MovieClip.swift): which recording a layer plays, an id plus a picture size plus a length, no pixels and no path. PhotonzDocument.recording(_:name:cutList:) opens a recording as an ordinary document with one clip layer. drawn(atTimeMS:) swaps each clip's ImageRef for the frame at that moment, so DocumentRenderer draws video without one line of change. App side: MovieLibrary (id to URL), MovieDecoder (an actor owning the AVAssetImageGenerators) and MovieFrameFetcher (decode, file in ImageStore, 16 frame budget) in MovieFrames.swift; EditorState+Time.swift holds the playhead, play, pause, step and scrub; the transport and the draggable playhead are in MotionStripView.swift. Window routing is in PhotonzApp.EditorRootView, gated on Experiments.shared.recordingIsADocument.\n\nWHY THE FLAG IS OFF. Trim, crop, save, export and Revert to Original all live in VideoEditorState and none of them work on the document path. Turning it on today would take them away from anybody who opened a recording. So the flag is off, the old window is still the default, and this task is what turns it on.\n\nWHAT TRIM IS, already settled and drawn: docs/design/video-surface.md 10, UX-PATTERNS D20, pages/video-shell.html block 05, pages/comp-video.html 08. Crop and Trim become a ToolGroup so no slot moves; the letter c belongs to the FAMILY (ToolGroup.tools(answeringTo:)) rather than to either tool, which means Tool.crop.shortcutKey becomes nil and anything printing Crop's key reads it off the family. The family's ring is filtered to the members this document can use before it is walked, which is the one thing ToolGroup does not do today. trimBeforeSession, resetTrimSelection, commitTrim and cancelTrim are kept as they are, renamed to the tool's session.\n\nTHE WALKS drive through action ids (videoTrimDone, not a button called Done), so the ids survive the move; what does not survive is every step that opens the separate window and reads its strip. PlaytestHarness already branches openSampleRecording on the flag and adopts an EditorState when it is on, so the walks have somewhere to land.\n\nSAVE IS THE FIRST THING TO FIX, and there is a trap in it. The first build of this set had the window adopt the .mp4 as its sourceCaptureURL, which is 'Save writes the flattened picture back over the file this came from' — Command S would have replaced an eight second recording with a PNG of one frame of it. That is gone: EditorState.isRecordingDocument now makes saveAffordance report nothingToSave, which dims Save and stops the close sheet asking a question nothing can answer. The cost is that styling a clip and closing loses it silently. Two things have to be decided when this is picked up: what Save MEANS for a recording document (the recording window's Save writes the trimmed mp4 through VideoAssetCommit, and that is probably still the right answer), and whether a recording document can be written as a .photonz at all, since MovieRef deliberately carries no path and a package would reopen with a clip whose frames cannot be found.",
   "acceptance": [
@@ -94,6 +97,22 @@
     {
       "t": "2026-09-23T14:42:40.951Z",
       "note": "video-shell.html was deleted on 2026-09-23 (task the-video-mocks-are-the-user-s-again-and-d18-is): it was the loop's own study arguing against tracks. The target is now pages/video.html, the video-*.html walkthroughs and comp-video.html, restored as the user drew them, plus UX-PATTERNS D18 (rewritten: a document with time has tracks). Where this task mentions video-shell, read video.html."
+    },
+    {
+      "t": "2026-09-24T09:50:15.145Z",
+      "note": "the question \"You trimmed a recording and drew an arrow on it. What should Command S do?\" was taken down without an answer: Overtaken: it asks about one trimmed recording with an arrow on it. Since 2026-09-23 a video document holds several clips, music, titles and captions, so there is no single recording to write back over. Reframed as a new card on the task that makes a video edit savable (manager 2026-09-24).. Nobody chose anything, so nothing here was decided."
+    },
+    {
+      "t": "2026-09-24T09:50:15.152Z",
+      "note": "waiting, but every question on this task was taken down without an answer. Nothing returns a task to the queue except an answer, so this will sit here until someone opens a new question."
+    },
+    {
+      "t": "2026-09-24T09:51:32.490Z",
+      "note": "manager 2026-09-24: the Command S card was withdrawn as overtaken (it asked about one trimmed recording). Saving is split out: a-video-edit-can-be-saved-as-a-project-and-opene builds Save As and reopen, command-s-on-a-video-edit-does-what-the-user-pic carries the reframed card. This task now depends on both and keeps the rest: trim as a tool, revert, and retiring the old recording window and its 20 walks."
+    },
+    {
+      "t": "2026-09-24T09:51:32.641Z",
+      "note": "seq 200 -> 198"
     }
   ],
   "walks": [

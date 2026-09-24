@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:42:39.137Z",
-  "updated": "2026-09-23T13:14:07.589Z",
+  "updated": "2026-09-24T09:51:52.684Z",
   "deps": [
     "tracks-you-can-add-rename-group-hide-mute-lock-a",
     "a-clip-s-sound-is-on-the-timeline-from-the-momen",
@@ -49,6 +49,10 @@
     {
       "t": "2026-09-23T13:14:07.588Z",
       "note": "manager 2026-09-23 06:10: keyframing (Premiere's Effect Controls) is owned by keyframe-anything-and-see-and-shape-the-keys-on and its three slices. If they have not landed when this runs, name the gap and point at them rather than filing it again."
+    },
+    {
+      "t": "2026-09-24T09:51:52.683Z",
+      "note": "manager 2026-09-24: all five deps are done, so this is claimable. Already filed from the editing-session walk, do not refile: captions not following a cut (cutting-a-stretch-out-of-a-recording-takes-its-c), export size estimate 14x high (the-export-sheet-s-size-for-an-edited-video-is-c), no way to save an edit (a-video-edit-can-be-saved-as-a-project-and-opene), sound hard-cutting at a transition (a-transition-carries-the-sound-across-the-cut-to). Also noted and not filed yet: sound is silent while shuttling at 2x or backwards (Premiere plays it pitched)."
     }
   ]
 }

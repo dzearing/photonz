@@ -1,0 +1,40 @@
+{
+  "id": "command-s-on-a-video-edit-does-what-the-user-pic",
+  "title": "Command S on a video edit does what the user picks",
+  "goal": "Once a video edit can be saved as a project, Command S has to mean one thing on it. The user picks whether it always saves the project, or writes a plain trim of one recording back over that recording as the old recording window did, and this task builds that answer.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 197,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T09:50:56.575Z",
+  "updated": "2026-09-24T09:51:32.592Z",
+  "deps": [
+    "a-video-edit-can-be-saved-as-a-project-and-opene"
+  ],
+  "blockedBy": [],
+  "notes": "Replaces the withdrawn card on trim-becomes-a-tool-and-the-recording-window-ret (2026-09-20), which asked about one trimmed recording with an arrow on it. Depends on a-video-edit-can-be-saved-as-a-project-and-opene for the project format. Code: EditorState.saveDocument / saveAffordance / SaveAffordance.forDocument (PhotonzCore). The old recording window's write-back path lives in the recording window code that trim-becomes-a-tool retires; option b reuses it for the one-untouched-clip case.",
+  "acceptance": [
+    "Command S on an edited video does what the answered card says, at Next defaults, with no switch changed",
+    "The File menu, the edited dot and the close sheet agree with it (SaveAffordance stays the one answer they all read)",
+    "A walk presses Command S on a cut, multi-clip edit and on a plain trim of one recording, and checks what landed on disk",
+    "audit written under queue/audits/",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T09:50:56.577Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-24T09:51:32.438Z",
+      "note": "Waiting on the card: what Command S does on a video edit"
+    },
+    {
+      "t": "2026-09-24T09:51:32.591Z",
+      "note": "seq 440 -> 197"
+    }
+  ],
+  "source": "manager"
+}

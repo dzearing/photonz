@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 80,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.361Z",
-  "updated": "2026-09-23T14:42:39.600Z",
+  "updated": "2026-09-23T23:36:33.317Z",
   "deps": [
     "the-timeline-is-the-one-in-the-mock"
   ],
@@ -19,7 +19,8 @@
     "Every clip with sound shows a linked audio segment with a waveform on an audio track under it, from open",
     "Right-click, Detach Audio unlinks it so it moves on its own; linked clips move together",
     "Trim, fade handles on the segment corners, volume by dragging the level line, music on its own track",
-    "The mix meter moves into the transport area as the mock places volume"
+    "The mix meter moves into the transport area as the mock places volume",
+    "A clip dropped onto the timeline after the first (b-roll, outro) shows its own linked sound segment under it too, and so do both halves of a clip an overwrite or insert split"
   ],
   "log": [
     {
@@ -41,6 +42,47 @@
     {
       "t": "2026-09-23T14:42:39.599Z",
       "note": "video-shell.html was deleted on 2026-09-23 (task the-video-mocks-are-the-user-s-again-and-d18-is): it was the loop's own study arguing against tracks. The target is now pages/video.html, the video-*.html walkthroughs and comp-video.html, restored as the user drew them, plus UX-PATTERNS D18 (rewritten: a document with time has tracks). Where this task mentions video-shell, read video.html."
+    },
+    {
+      "t": "2026-09-23T19:17:34.052Z",
+      "note": "from the timeline dock (2026-09-23): a recording still carrying its own sound draws its waveform and level line INSIDE its video clip on the new dock, which pushes the clip's name to the top and reads nothing like video.html's V1 clip. Splitting the sound out under the picture fixes both."
+    },
+    {
+      "t": "2026-09-23T20:34:34.282Z",
+      "note": "from the tracks task (2026-09-23): tracks now exist (DocumentTracks.swift). video.html shows an EMPTY Audio track under V1 even before any sound (mock lines 687-688); today an Audio track appears only once a sound clip is on the timeline, because implicit tracks are one per clip (PhotonzDocument.trackLayout). Put a recording's own sound on an Audio track from open, and show an empty Audio track when there is none."
+    },
+    {
+      "t": "2026-09-23T21:34:52.184Z",
+      "note": "from bring-in-a-second-clip (2026-09-23): a second recording now lands on the timeline (at a moment, on a track, overwrite or insert) and its own sound rides INSIDE its clip exactly like the first recording's. The second-clip task's item 'each clip keeps its own sound as an audio segment under it' is this task: split every clip's sound (the first recording AND ones dropped later, including the halves an overwrite or insert splits into two layers) out to a linked segment under it. ClipLanding.land() / clipPart() keep movie + soundLevel on both halves."
+    },
+    {
+      "t": "2026-09-23T22:26:23.804Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T22:29:45.934Z",
+      "note": "Adversarial review before building: (1) A Premiere editor expects a clip's audio as a LINKED segment on A1 under V1: move/trim the picture and the audio follows, Unlink/Detach splits them. Today the sound is drawn INSIDE the video clip, so they do not find it. (2) Model choice: the linked segment is a view of the clip itself (its time, cuts, level), not a second layer, so every existing clip edit (move, trim, blade, ripple, landing split, speed) keeps them in step for free; Detach Audio turns it into a real sound layer on the same track. (3) Overlapping clips with sound (V1 and a V2 picture-in-picture) cannot share one audio lane, so linked segments are placed first-fit on audio tracks and get Audio 2 when they would overlap. (4) Music dropped where a linked segment sits wins the lane and the linked segment moves down a track rather than overlapping: Premiere would overwrite the clip audio instead; noted as rough. (5) Fades: the level model already expresses a fade as points; corner handles write exactly those points, no second fade model. (6) Carrying a linked segment up/down to another audio track is not built in this pass; it moves along time only."
+    },
+    {
+      "t": "2026-09-23T23:36:08.429Z",
+      "note": "owns these walks: a-clip-s-sound-is-linked-under-it"
+    },
+    {
+      "t": "2026-09-23T23:36:08.537Z",
+      "note": "left rough (no task, in the audit's rough list for the user to react to): waveform appears ~1s after a sound lands while the file is read; linked segment moves along time only (no carry to another audio track); music dropped on a recording's sound track bumps the linked sound down rather than overwriting it; no 'duck -8 dB' tag. The mix meter item was already met by the timeline dock task (meter beside Volume in the transport), verified in 1-opened-sc.png."
+    },
+    {
+      "t": "2026-09-23T23:36:17.478Z",
+      "note": "walks a-clip-s-sound-is-linked-under-it -> a-clip-s-sound-is-linked-under-it-walk"
+    },
+    {
+      "t": "2026-09-23T23:36:33.315Z",
+      "note": "Shipped in 0127d85b. Every clip with sound shows a linked audio segment with a waveform on an Audio track under it from open (core LinkedSoundTests; walk a-clip-s-sound-is-linked-under-it-walk at defaults, 6 real captures). Dragging the segment moves the clip (verified with the new windowDrag step); right-click Detach Audio unlinks it onto the same track, after which it moves alone. Trim/blade act on both; fade handles on the top corners and dragging the level line for volume both work in the probe; music lands on its own track (Audio 2). The mix meter already sits beside Volume in the transport. A second clip, b-roll, outro, and both halves of an insert split each get their own linked sound (second-clip walk, 11 captures). Full Scripts/test.sh green (9345), 26 related walks green. Audit: queue/audits/2026-09-23-linked-sound.json."
     }
-  ]
+  ],
+  "started": "2026-09-23T22:26:23.803Z",
+  "walks": [
+    "a-clip-s-sound-is-linked-under-it-walk"
+  ],
+  "completed": "2026-09-23T23:36:33.316Z"
 }

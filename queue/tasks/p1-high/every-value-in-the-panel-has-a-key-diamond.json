@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 0.6,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T13:13:33.766Z",
-  "updated": "2026-09-23T13:13:55.632Z",
+  "updated": "2026-09-23T15:53:11.288Z",
   "deps": [
     "a-recording-opens-in-the-video-editor-for-real-i",
     "the-video-mocks-are-the-user-s-again-and-d18-is"
@@ -33,7 +33,36 @@
     {
       "t": "2026-09-23T13:13:55.631Z",
       "note": "seq 350 -> 0.6"
+    },
+    {
+      "t": "2026-09-23T15:07:39.383Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T15:19:34.355Z",
+      "note": "Adversarial pre-build: (1) the mock's diamond removes the key under the playhead when filled, while this task's acceptance (the user's words) makes the diamond Premiere's stopwatch, where clicking a lit one turns keying off after asking; built the acceptance, with add/remove-one-key on the row's right-click menu, and listed it as a mock difference. (2) A keyed position is absolute, so a canvas drag has to be folded into a key live and on mouse-up or the layer would not follow the hand. (3) The canvas handles are drawn at the layer's own frame, not the animated one: a keyed layer's handles can sit away from its picture between keys (checked below). (4) Volume already has keyed level points that playback and export follow, so the volume diamond writes those, not a second curve. (5) Crop has no animatable value type yet (a rectangle) and glow is not in the mock's catalogue: crop left for a follow-up."
+    },
+    {
+      "t": "2026-09-23T15:19:34.410Z",
+      "note": "Core landed test-first: Sources/PhotonzCore/PropertyKeys.swift (KeyedProperty, KeyDiamond, start/stop keying, setKeyedValue, removeKey, neighbourKeyTime, foldEditIntoKeys) + MotionProperty gains cornerRadius, shadow (size), textSize. 20 tests in PropertyKeysTests green, 277 across the motion/title/reframe/audio suites."
+    },
+    {
+      "t": "2026-09-23T15:52:48.870Z",
+      "note": "owns these walks: key-a-title-s-scale-walk"
+    },
+    {
+      "t": "2026-09-23T15:52:48.921Z",
+      "note": "App: Animating section (Sources/Photonz/PropertyKeysInspector.swift, EditorState+PropertyKeys.swift), ordered above Reframe/Motion by migration 9. The canvas is handed keyed layers posed at the playhead (PhotonzDocument.posedForCanvas) so handles sit round the picture; move/resize/turn previews and commits fold into keys (foldEditIntoKeys, restoring the stored layer). New walk actions videoStepOneSecond/videoStepBackOneSecond. Walk key-a-title-s-scale-walk, no flags: 94 steps ok, 8 real captures, screen unlocked, Screen Recording granted. Neighbour walks green: title-on-the-timeline, punch-in-and-hold, transitions-at-a-cut, component-on-the-timeline, a-recording-opens-in-the-editor-at-defaults, motion-swings-a-layer, motion-pivot, motion-one-play-rule, turned-piece, turned-words, turn-a-group, nudge-stays-sharp, turned-path-keeps-its-points. Render test KeyedValueRenderTests and export test KeyedValueExportTests (writes an mp4, reads frames back) green; Scripts/test.sh 9251/9251. Mock picture beside the audit: queue/audits/2026-09-23-key-diamonds-mock.png. Folded: curve on the key + Motion rows retiring in video -> a-layer-s-track-opens-into-one-lane-per-keyed-va (acceptance added); crop/glow -> keyframe-anything-and-see-and-shape-the-keys-on; value box width + clip head line -> the-video-properties-look-like-the-rest-of-the-d; AnimatedExportWeighTests load flake -> the-export-size-test-fails-about-one-run-in-thre. Stopwatch vs mock's click-removes-key asked in the audit's evaluate list rather than a blocking card, since the task's own acceptance chose the stopwatch."
+    },
+    {
+      "t": "2026-09-23T15:53:11.286Z",
+      "note": "Animating section at Next defaults: a key diamond (Premiere stopwatch) beside position, scale, rotation, opacity, corner radius, border width, colour, blur, shadow size, text size and volume; panel edits and canvas drags on a keyed value add keys; filled/hollow states; prev/next arrows; undo per key; lit diamond asks before removing keys. Model in PhotonzCore/PropertyKeys.swift over the existing LayerMotion and AudioLevel points. Verified by PropertyKeysTests (25), KeyedValueRenderTests, KeyedValueExportTests (mp4 read back), full suite 9251/9251, and key-a-title-s-scale-walk with no flags (94 steps, 8 real captures) plus 13 neighbour walks. Audit queue/audits/2026-09-23-key-diamonds.json. Commit 7d42ef58. Crop and glow left on keyframe-anything-and-see-and-shape-the-keys-on."
     }
   ],
-  "source": "user"
+  "source": "user",
+  "started": "2026-09-23T15:07:39.382Z",
+  "walks": [
+    "key-a-title-s-scale-walk"
+  ],
+  "completed": "2026-09-23T15:53:11.287Z"
 }

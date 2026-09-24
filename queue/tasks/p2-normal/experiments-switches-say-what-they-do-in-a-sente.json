@@ -1,0 +1,31 @@
+{
+  "id": "experiments-switches-say-what-they-do-in-a-sente",
+  "title": "Experiments switches say what they do in a sentence or two",
+  "goal": "The descriptions under the switches in the Experiments window run to 179 words on average and 557 at worst, so nobody reads them. Rewrite each to say what the switch changes in a sentence or two, within the word budget the user picks.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 3290,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T09:07:24.604Z",
+  "updated": "2026-09-24T09:07:55.902Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed by panel-copy-and-flag-descriptions-have-a-length-b (2026-09-24). Gate: Tests/PhotonzCoreTests/FlagDescriptionBudgetTests.swift, budget CopyBudget.flagDescriptionWords (40). `allowed` holds 92 of the 95 switches at their word count of 2026-09-24; none may grow, and one brought inside the budget must be struck off. Descriptions live in Sources/PhotonzCore/FeatureCatalog.swift. Longest: Turn Into Path 557, then 538, 520. Detail cut from a description belongs in docs/design or the tutorial, not the window. The Experiments window search reads descriptions (FeatureFlag search haystack), so keep the words someone would search for. Big job: fine to land in batches, lowering the allowance as each batch goes.",
+  "acceptance": [
+    "Every switch description is within the word budget the user picked on this task's card",
+    "The allowance list in the switch description test is empty",
+    "Each description still says what Off means where that is not obvious"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T09:07:24.606Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-24T09:07:55.900Z",
+      "note": "Waiting on the card: how many words a switch description gets"
+    }
+  ]
+}

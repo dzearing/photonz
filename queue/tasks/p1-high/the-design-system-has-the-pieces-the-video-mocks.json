@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:47.067Z",
-  "updated": "2026-09-23T14:42:39.464Z",
+  "updated": "2026-09-23T16:30:00.781Z",
   "deps": [
     "the-video-mocks-are-the-user-s-again-and-d18-is"
   ],
@@ -40,6 +40,39 @@
     {
       "t": "2026-09-23T14:42:39.463Z",
       "note": "video-shell.html was deleted on 2026-09-23 (task the-video-mocks-are-the-user-s-again-and-d18-is): it was the loop's own study arguing against tracks. The target is now pages/video.html, the video-*.html walkthroughs and comp-video.html, restored as the user drew them, plus UX-PATTERNS D18 (rewritten: a document with time has tracks). Where this task mentions video-shell, read video.html."
+    },
+    {
+      "t": "2026-09-23T16:05:37.684Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-23T16:08:01.268Z",
+      "note": "Inventory (mock piece -> what the app has): TRANSPORT (overlays.css .transport/.scrub) -> DocumentTransportBar is glyph buttons + timecodes, no scrubber, no volume, no primary round play; PlaybackScrubber is the old QuickTime-neutral bar (white fill, no marks). Missing. CLIP BAR (.clip + video.css .lbl/.speed/.edge/.kfm/.wave) -> MotionStripBar is a private accent-gradient timing bar; ClipPiecesBar draws recording pieces. Missing. TRACK HEADER (.track .tl) -> nothing; MotionStrip draws layer hairlines. Missing. RULER (.ruler) -> MotionStripRulerView, private, ms ticks, 15pt. Partial. PLAYHEAD (.playhead, red, triangle head) -> DocumentPlayheadView is private, accent circle + 1.5pt line. Missing. TILE PICKER (.libgrid/.libtile, .libtile.tt transition thumbs) -> LibraryTile is private to LibraryPanel; transitions picked from a radio list. Missing. DROPDOWN ROW (.irow + .select) -> SelectionMenu is caption-above + native pop-up, not the 76pt label column + raised select face. Missing. KEY DIAMOND (.kfkey) -> KeyDiamondButton, private to PropertyKeysInspector. Exists, not shared. Also TRANSITION BAND (.xband) -> nothing."
+    },
+    {
+      "t": "2026-09-23T16:08:01.318Z",
+      "note": "Adversarial review before building: (1) the risk is building a second, unused library while the timeline task draws its own again, so every piece is a plain value-in/closure-out SwiftUI view with no EditorState, which is what lets the-timeline-is-the-one-in-the-mock assemble them directly. (2) A snapshot of a copy proves nothing, so the gallery script compiles the SHIPPED kit files with swiftc and renders them; the kit must stay free of app types for that to work, and the script failing to compile is the guard. (3) Menus are AppKit-backed and ImageRenderer cannot draw them, so the dropdown row is split into a face (drawn) and a Menu wrapper. (4) Accent: the app maps --accent to the system accent everywhere, so the kit does too; every other token is the mock's hex, light and dark. (5) video.html's timeline overrides the shared track header (84pt, not uppercase) while inspector.css is 58pt uppercase; the header takes both as parameters rather than picking one."
+    },
+    {
+      "t": "2026-09-23T16:29:32.850Z",
+      "note": "owns these walks: key-a-title-s-scale-walk"
+    },
+    {
+      "t": "2026-09-23T16:29:50.006Z",
+      "note": "Built: Sources/Photonz/VideoKit (VideoKit.swift tokens+metrics, VideoKitTransport, VideoKitTimeline, VideoKitPicker, VideoKitControls), Sources/Photonz/VideoKitHover.swift (the kitHover seam -> playtestHover, forced by PlaytestHoverIsReachableTests). Snapshots: Scripts/video-kit-gallery.sh compiles ONLY the kit + gallery with swiftc and ImageRenders each piece into docs/design/mocks/shared/video-kit/kit-*.png; index.html there draws the same data with the mock's CSS beside each render (side-by-side.png). Differences found and fixed on the comparison: key diamond 8->11pt (mock's .kfkey is content-box + 1.5px border), push thumbnail widened its tile (now a Canvas), automatic track header keeps its case. Remaining deliberate difference: system accent instead of --accent. Scripts/test.sh now typechecks the kit alone. Migrated: the Animating section's KeyDiamondButton draws VideoKit.KeyDiamond; key-a-title-s-scale-walk passes at default config (no flags) with 8 real captures. UX-PATTERNS D18 gained 'The video kit' table (mock class -> kit piece)."
+    },
+    {
+      "t": "2026-09-23T16:29:50.058Z",
+      "note": "left rough (not filed): SF Symbols stand in for the mock's icon set (skip, volume, track kinds); the rest of the app's icons are SF Symbols too, so this is the house choice rather than a defect. Accent choice is an evaluate question in the audit for the user to react to. Test run 1 also hit the export-size budget flake, already owned by the-export-size-test-fails-about-one-run-in-thre; run 2 was fully green."
+    },
+    {
+      "t": "2026-09-23T16:30:00.779Z",
+      "note": "Shared video kit in Sources/Photonz/VideoKit (transport, scrubber, track row/header, ruler, playhead, clip bar with key marks/speed/grips/waveform, transition band, picker tiles/grid/transition thumbnails, key diamond, field row, dropdown) on the mock's tokens. Each piece rendered by ImageRenderer from the shipped source (Scripts/video-kit-gallery.sh) beside the mock's own CSS at /shared/video-kit/index.html; UX-PATTERNS D18 lists them. Animating section's diamond now uses the kit; key-a-title-s-scale-walk green at default config; Scripts/test.sh green (9251 tests + kit-alone typecheck). Audit queue/audits/2026-09-23-video-kit.json. Commit 04fe0528."
     }
-  ]
+  ],
+  "started": "2026-09-23T16:05:37.683Z",
+  "walks": [
+    "key-a-title-s-scale-walk"
+  ],
+  "completed": "2026-09-23T16:30:00.780Z"
 }

@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 100,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.574Z",
-  "updated": "2026-09-23T14:42:40.078Z",
+  "updated": "2026-09-24T01:36:03.189Z",
   "deps": [
     "bring-in-a-second-clip-and-cut-between-clips"
   ],
@@ -41,6 +41,32 @@
     {
       "t": "2026-09-23T14:42:40.077Z",
       "note": "video-shell.html was deleted on 2026-09-23 (task the-video-mocks-are-the-user-s-again-and-d18-is): it was the loop's own study arguing against tracks. The target is now pages/video.html, the video-*.html walkthroughs and comp-video.html, restored as the user drew them, plus UX-PATTERNS D18 (rewritten: a document with time has tracks). Where this task mentions video-shell, read video.html."
+    },
+    {
+      "t": "2026-09-24T00:20:00.517Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T00:24:31.331Z",
+      "note": "pre-build review: (1) Transitions exist today only on joins INSIDE one clip (pieces), stored on the arriving piece; the first piece of a clip deliberately drops any arrival, so a cut BETWEEN two clips (two layers butted on a track, which the second-clip task made real) needs its own home: the incoming clip carries how it arrives. (2) Only three kinds exist (dissolve, dip black/white); the mock's picker has six (adds Push, Wipe, Blur through, all needing overlap), so the renderer needs those three: push and wipe done with crop+frame so nothing spills outside the clip's frame, blur through as a dissolve with a blur peaking at the cut. (3) A Premiere editor clicks a cut, gets the transition on it, and sees it in Effect Controls; here clicking an edit point opens the AT THIS CUT picker right at the cut (native popover, walks can press inside popovers), and the panel shows Edit point + Transition as label/value rows with Type and Length dropdowns, as video-transition-wt.html draws. (4) Band edges drag the length, as the within-clip band already does; the between-clip band is new. (5) Mock rows I will NOT build here: 'The overlap sits before/across/after' and 'Hold on black' (inserting real black moves clips). Neither is in acceptance; will search the queue and file/fold. (6) Risk: an overwrite drop that splits a clip into two layers must not copy the arrival transition onto the second half."
+    },
+    {
+      "t": "2026-09-24T01:31:27.501Z",
+      "note": "owns these walks: transition-picker-at-a-cut-walk, transitions-at-a-cut-walk"
+    },
+    {
+      "t": "2026-09-24T01:36:03.134Z",
+      "note": "side by side with the mock (video-transition-wt.html #transPick, #propsCut; comp-video.html 03): picker header, spare line, 2x3 tiles with needs overlap / no overlap / no spare match; tiles PLAY rather than the mock's still gradients (acceptance asked for animated); the mock's closing explanation line left out (labels, not explanations); Properties Edit point grid2 fields and Transition Type/Length dropdowns + Paid with match. Differences filed as a-transition-can-sit-before-across-or-after-the: The overlap sits row, Hold on black row, dashed spare strips. left rough (no task): sound cuts hard at an edit point with a transition; clicking a join the playhead stands on hits the playhead; the dock's right edge clips the dropdown chevrons and value boxes (pre-existing, the Reframe numbers clip the same way)."
+    },
+    {
+      "t": "2026-09-24T01:36:03.187Z",
+      "note": "Clicking an edit point between two clips, or a join inside one, opens an At this cut picker with six playing tiles (dissolve, dip black/white, push, wipe, blur through) saying needs overlap / no overlap / no spare; a picked cut's Properties shows Edit point (Out, In, Spare after/before) and Transition (Type and Length dropdowns, Paid with) as label/value rows; the band over the cut drags its length; works between two different clips (Layer.arrivalTransition, EditPointTransitions.swift). Verified: EditPointTransitionTests + TransitionRenderTests (pixel checks), Scripts/test.sh green 9382, transition-picker-at-a-cut-walk at Next defaults with 9 real captures, neighbouring walks green. Audit queue/audits/2026-09-23-transition-picker-at-a-cut.json. Commit a2eb9780. Follow-up p2: a-transition-can-sit-before-across-or-after-the."
     }
-  ]
+  ],
+  "started": "2026-09-24T00:20:00.516Z",
+  "walks": [
+    "transition-picker-at-a-cut-walk",
+    "transitions-at-a-cut-walk"
+  ],
+  "completed": "2026-09-24T01:36:03.188Z"
 }

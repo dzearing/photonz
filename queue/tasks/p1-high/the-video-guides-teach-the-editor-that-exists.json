@@ -3,13 +3,13 @@
   "title": "The video guides teach the editor that exists",
   "goal": "The video guides still teach the old recording window that is being retired. Rewrite them for the new timeline: cut a recording down, add a clip, a moving title, a transition, captions, and export.",
   "epic": "video-editing",
-  "priority": "p2-normal",
-  "seq": 80,
+  "priority": "p1-high",
+  "seq": 192,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:54:04.593Z",
-  "updated": "2026-09-23T14:02:27.840Z",
+  "updated": "2026-09-24T09:52:00.656Z",
   "deps": [
     "the-timeline-is-the-one-in-the-mock",
     "bring-in-a-second-clip-and-cut-between-clips",
@@ -49,6 +49,18 @@
     {
       "t": "2026-09-23T14:02:27.839Z",
       "note": "2026-09-23: a recording now opens in the editor by default in Next, so both old guides (trim-a-recording, export-a-recording) waited 20s for a window that never came. They now carry retiredBy: [next-a-recording-is-a-document] (TutorialGuide.retiredBy, Tutorials.swift) and are not offered at Next defaults, so Next has NO Video track in Help or the Tutorials window until this task ships guides for the editor. Their walks are pinned to the old window with the flag false."
+    },
+    {
+      "t": "2026-09-24T09:52:00.554Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-09-24T09:52:00.605Z",
+      "note": "seq 80 -> 192"
+    },
+    {
+      "t": "2026-09-24T09:52:00.655Z",
+      "note": "manager 2026-09-24: p2 -> p1 seq 192. It was filed by the user (created (user)) and user asks are p1; its five deps have all landed, and Next has no Video track in Help at all until it ships."
     }
   ]
 }

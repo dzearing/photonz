@@ -1,0 +1,28 @@
+{
+  "id": "a-moving-layer-draws-its-path-on-the-canvas-and",
+  "title": "A moving layer draws its path on the canvas, and dragging the path bends it into an arc",
+  "goal": "When a layer moves from one place to another over time, the canvas shows the route it will travel as a dashed line, and dragging the middle of that line bends the straight move into a curve, as the video move walkthrough mock shows.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 390,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T03:00:40.487Z",
+  "updated": "2026-09-24T03:00:40.490Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From move-a-layer-from-a-to-b-grow-it-shrink-it-fade (2026-09-23): docs/design/mocks/pages/video-move-wt.html steps 5, 7 and 8 draw the dashed path and the arc; nothing in the app draws or bends a motion path yet. Position keys are LayerMotion .point values blended linearly (MotionValue.blended); a curved segment needs a control point per segment (on MotionStop, beside the new per-key ease in PropertyKeys/ClipKeys). Easing between keys already exists from the key right-click (KeyEase).",
+  "acceptance": [
+    "A layer with two or more position keys shows a dashed path between them on the canvas while it is picked",
+    "Dragging the handle in the middle of a segment bends it into an arc; the layer follows the arc when played and exported",
+    "The panel says whether the path is Straight or Curved, and setting Straight puts it back",
+    "A walk at Next defaults keys a title at two places, bends the path, and photographs it part way along"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T03:00:40.489Z",
+      "note": "created (manual)"
+    }
+  ]
+}

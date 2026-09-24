@@ -1,0 +1,33 @@
+{
+  "id": "cutting-a-stretch-out-of-a-recording-takes-its-c",
+  "title": "Cutting a stretch out of a recording takes its captions along",
+  "goal": "When you cut a piece out of a talking recording and the gap closes, the captions stay where they were, so every line after the cut is shown over the wrong words and lines for speech you threw away still play over black or over the next clip. Cutting should take the captions (and the titles and sounds after it) along with the picture, the way a Premiere editor with sync lock on expects.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 195,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T09:42:58.763Z",
+  "updated": "2026-09-24T09:52:00.706Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-24 with Scripts/playtest.sh Scripts/playtest/an-editing-session-walk.json --no-build (screen unlocked, real captures): openSampleTalk (17.25s, 10 captions), Command K at 8.63s and 4.31s, Delete. V1 becomes two pieces ending at 12.94s, but the Captions track still runs to 17.25s: see /tmp/photonz-playtest/an-editing-session-walk/2-cut-sc.png and 3-second-clip-sc.png, and playing-19.png / playing-20.png where the cue 'layer that happens to have a start and an' plays over the b-roll. Cause: EditorState.deleteClipPieceInHand calls PhotonzDocument.removeClipPiece, which edits only that clip's ClipPieces (ClipPieces.swift editClip); nothing else in the document moves. rippleTime(atMS:byMS:exceptLayer:) in HoldPush.swift already moves every other layer for a hold that pushes everything and can shorten a straddling layer; it does not yet drop a layer wholly inside a removed stretch. Captions are text layers with their own LayerTime inside the Captions group (Captions.swift CaptionLayers.layers), so moving them is ordinary layer time. Decide with the user only if a Premiere-style per-track sync lock is wanted; the default behaviour should be ripple everything.",
+  "acceptance": [
+    "Deleting a piece of a clip removes the captions that sat only inside it and moves every later caption earlier by the length removed",
+    "A caption that straddles the removed stretch is shortened, never left running over the join",
+    "Titles and sounds that start after the removed stretch move earlier with it, and one undo puts everything back",
+    "an-editing-session-walk claims the last caption ends with the recording after its cut, and passes"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T09:42:58.765Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-24T09:52:00.705Z",
+      "note": "seq 420 -> 195"
+    }
+  ],
+  "walks": []
+}

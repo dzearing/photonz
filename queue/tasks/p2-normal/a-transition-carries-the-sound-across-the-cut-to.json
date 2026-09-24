@@ -1,0 +1,35 @@
+{
+  "id": "a-transition-carries-the-sound-across-the-cut-to",
+  "title": "A transition carries the sound across the cut too",
+  "goal": "Put a dissolve between two clips and the picture blends, but the sound still jumps from one clip to the next at the edit point, so the exported video has a hard audio cut, often a click, right in the middle of a smooth picture change. A Final Cut editor expects the dissolve to cross-fade the sound as well, and a Premiere editor applies both with one key. Make a transition on a cut blend the two clips' own sound over the same stretch, in playback and in the exported file.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 34,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T09:51:41.666Z",
+  "updated": "2026-09-24T09:52:00.909Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the audit rough line in queue/audits/2026-09-23-transition-picker-at-a-cut.json: 'Transitions between clips only change the picture: the sound still cuts hard at the edit point.' Checked by reading, 2026-09-24: ClipTransitions.swift (PhotonzCore) is picture only, and AudioMix.swift / DocumentAudioPlayer.swift / DocumentMovieWriter.swift never mention a transition. Not reproduced by ear (the probe cannot listen), so this is a gap to build, not a p1 bug. Linked sound segments come from a-clip-s-sound-is-on-the-timeline-from-the-momen; volume ramps already exist in AudioMix. No new control: the existing transition drives it.",
+  "acceptance": [
+    "At Next defaults, open the sample talk, cut it, drop the b-roll after it, click the join and pick Dissolve: playing across the join, the sound of the first clip fades out while the second fades in over the transition's length, instead of switching at the edit point",
+    "The exported MP4 has the same blend (a test reads the mixed samples either side of the edit point and finds no step)",
+    "A cut with no transition still cuts the sound where it cuts the picture, and a dip to black dips the sound with it",
+    "Sound on its own track that is not linked to either clip (music) is not touched",
+    "Tests on the mix plan are written before the code",
+    "audit written under queue/audits/",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T09:51:41.668Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-09-24T09:52:00.908Z",
+      "note": "seq 3310 -> 34"
+    }
+  ]
+}

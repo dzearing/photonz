@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 160,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.858Z",
-  "updated": "2026-09-23T14:42:39.717Z",
+  "updated": "2026-09-24T09:46:54.103Z",
   "deps": [
     "tracks-you-can-add-rename-group-hide-mute-lock-a",
     "a-clip-s-sound-is-on-the-timeline-from-the-momen",
@@ -44,6 +44,40 @@
     {
       "t": "2026-09-23T14:42:39.716Z",
       "note": "video-shell.html was deleted on 2026-09-23 (task the-video-mocks-are-the-user-s-again-and-d18-is): it was the loop's own study arguing against tracks. The target is now pages/video.html, the video-*.html walkthroughs and comp-video.html, restored as the user drew them, plus UX-PATTERNS D18 (rewritten: a document with time has tracks). Where this task mentions video-shell, read video.html."
+    },
+    {
+      "t": "2026-09-24T09:26:48.582Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T09:43:40.574Z",
+      "note": "owns these walks: an-editing-session-walk, playing-a-recording-never-blinks-walk"
+    },
+    {
+      "t": "2026-09-24T09:45:31.744Z",
+      "note": "adversarial review before: a Premiere editor's first edit is cut, add b-roll, smooth a jump cut, a title, captions, export; the walk does exactly that with Premiere's keys (Cmd K, Delete) and the picker at the cut. The existing blink check only watched the first clip in the list, which is off screen for most of an edited document, so it was rewritten to follow whichever clips are on at each look."
+    },
+    {
+      "t": "2026-09-24T09:45:31.799Z",
+      "note": "found and fixed: any document with captions pushed the right panel ~26pt past the window's right edge (Style segmented bar beside a row label cannot shrink); it now spans the section as the mock's #styleSeg does. Checked in captions-write-themselves-walk capture."
+    },
+    {
+      "t": "2026-09-24T09:45:31.854Z",
+      "note": "found and filed: captions do not follow a ripple delete (cutting-a-stretch-out-of-a-recording-takes-its-c, p1); export sheet said 9.6 MB for a 0.7 MB MP4 (the-export-sheet-s-size-for-an-edited-video-is-c, p2); Edit point 'Spare before' shows '...' (folded into a-transition-can-sit-before-across-or-after-the)."
+    },
+    {
+      "t": "2026-09-24T09:45:31.909Z",
+      "note": "left rough: the Captions Generate row squeezes its button to 'Write Ag...' beside '10 captions' (CaptionsInspector generate row); a label nit, did not earn a task. Also left rough: the blink check reads the picture handed to the canvas, not the screen itself."
+    },
+    {
+      "t": "2026-09-24T09:46:54.101Z",
+      "note": "Shipped in 48bd8826. New walk an-editing-session-walk at Next defaults with no flags: talking recording captions itself, Cmd K x2 + Delete cut, b-roll onto V1, cross dissolve from the picker on the jump cut, title keyed A to B by a canvas drag, 21s of playback looked at 30 times (expectPlaybackNeverBlank now follows whichever clips are on), MP4 written 20.94s with sound. ~55s, 7 real captures, screen unlocked. It runs first in every rotating check (sweep-schedule everyCheck + drill) and is named in the video epic's success criteria. Fixed: captioned documents pushed the right panel off the window (caption Style bar now spans the section like the mock). Scripts/test.sh 9534/9534; neighbour walks ok (playing-a-recording-never-blinks, captions-write-themselves, captions-from-the-sound, transition-picker-at-a-cut, second-clip-on-the-timeline, key-a-title-s-scale). Audit queue/audits/2026-09-24-editing-session-walk.json. Follow-ups: cutting-a-stretch-out-of-a-recording-takes-its-c (p1), the-export-sheet-s-size-for-an-edited-video-is-c (p2)."
     }
-  ]
+  ],
+  "started": "2026-09-24T09:26:48.581Z",
+  "walks": [
+    "an-editing-session-walk",
+    "playing-a-recording-never-blinks-walk"
+  ],
+  "completed": "2026-09-24T09:46:54.102Z"
 }

@@ -1,0 +1,32 @@
+{
+  "id": "the-properties-pane-opens-on-the-clip-line-and-l",
+  "title": "The Properties pane opens on the clip line and lists only what is animating",
+  "goal": "The panel beside a clip, title or sound starts with one line saying its name, where it starts and ends, how long it is and its speed, the way the mock draws it, and Animating lists only the values that are actually animating, with one button to animate another.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 370,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T02:23:06.624Z",
+  "updated": "2026-09-24T05:00:06.303Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found in the side by side for the-video-properties-look-like-the-rest-of-the-d (queue/audits/2026-09-24-video-panel-side-by-side.png). Mock: docs/design/mocks/pages/video.html renderProps, .cliphead and the Animating .prow.anim rows plus #addProp. App: PropertyKeysInspector lists every keyRow; the Time section (SpeedInspector) now holds Speed/Length/Sound rows and a title On screen row, which the clip line would partly replace. Order rule is TimePanelOrder (PhotonzCore).",
+  "acceptance": [
+    "With a clip, title or sound picked, the first thing under Layers is one line: name, in to out, length and speed, as video.html PROPERTIES draws it",
+    "Animating shows only keyed values, with an Animate a property button that opens a picker of the rest, as the mock draws it",
+    "A walk with no flags reads the clip line and the Animating count back for a clip and a title",
+    "The audit puts the shipped pane beside video.html PROPERTIES"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T02:23:06.626Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-24T05:00:06.302Z",
+      "note": "from keyframe-anything (2026-09-23): a picture or clip now also offers Crop left/top/right/bottom, and a glowing layer offers Glow size, so the full list is 15 rows on a clip; the mock's list-only-what-animates plus Animate a property picker is what shortens it"
+    }
+  ]
+}

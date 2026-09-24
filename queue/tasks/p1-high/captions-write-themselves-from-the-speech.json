@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 130,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.781Z",
-  "updated": "2026-09-23T14:42:39.962Z",
+  "updated": "2026-09-24T06:14:36.873Z",
   "deps": [
     "tracks-you-can-add-rename-group-hide-mute-lock-a"
   ],
@@ -42,6 +42,32 @@
     {
       "t": "2026-09-23T14:42:39.961Z",
       "note": "video-shell.html was deleted on 2026-09-23 (task the-video-mocks-are-the-user-s-again-and-d18-is): it was the loop's own study arguing against tracks. The target is now pages/video.html, the video-*.html walkthroughs and comp-video.html, restored as the user drew them, plus UX-PATTERNS D18 (rewritten: a document with time has tracks). Where this task mentions video-shell, read video.html."
+    },
+    {
+      "t": "2026-09-24T05:08:24.326Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T05:12:19.423Z",
+      "note": "Pre-build review. Today: Write button in the panel, captions land as a group whose timeline draws ONE ROW PER CAPTION (a staircase down the dock, see /tmp walk 4-a-caption-on-the-picture-sc.png), white text with shadow only, SRT only, nothing automatic. Mock (video-captions.html): one Caption track row of cues side by side plus a Words lane of chips with the active word lit; Properties has Language dropdown, Generate: Auto captions, Cue section (In/Out/Dur/Words), Caption style segmented Caption / Lower third / Karaoke; canvas cue on a dark plate with the active word yellow. Premiere test: Premiere puts captions on one captions track, edits text in place on the track and the Program monitor, restyles all via track style, exports sidecar SRT or burn-in. Gaps the app can deliver in this task: auto-run on open, one-track layout (caption group reads as a captions-track clip, children drawn side by side), per-word highlight at render time, text plate (background), style presets applied to all, VTT, inline edit on the timeline bar. Risks: auto-run on every open of a doc someone cleared (must remember it listened), auto-run on music makes noise (auto runs stay quiet when nothing heard), long recordings (existing chunked, stoppable listener)."
+    },
+    {
+      "t": "2026-09-24T06:14:00.731Z",
+      "note": "owns these walks: captions-write-themselves-walk, captions-from-the-sound-walk"
+    },
+    {
+      "t": "2026-09-24T06:14:36.820Z",
+      "note": "Rough items, where they went: safe-area guides, AUTO · EN badge, the timeline caption bar and panel order -> filed captions-show-safe-area-guides-and-their-own-bar (p1). Trim capsule over the bottom caption -> filed the-trim-bar-a-recording-opens-with-stays-clear (p2, reproduced in walk picture 2). Word chips unreadable at full-length zoom and the recogniser mishearing Photonz -> left rough here (zooming the timeline reads them; correcting is one double click). Panel content running past the window's right edge in the probe (Out 6.30s, Karaoke clipped) is not new to this task -> left rough here. Also filed trying-out-addjson-never-files-a-real-task after this run's own probe filed x-5 (dropped)."
+    },
+    {
+      "t": "2026-09-24T06:14:36.871Z",
+      "note": "Captions write themselves when a talking recording opens (Auto switch turns it off), land on one Captions track with a Words lane and a lit word, retype in place on the track or the picture, retime by their edges, take one look (Caption/Lower third/Karaoke + font, size, colour, plate, lit word, position), and export burned in or as SRT/VTT beside the film. Commit f72accee. Verified: CaptionTrackTests 24 + CaptionPlateRenderTests 4, full suite green but the known export-size flake; captions-write-themselves-walk at Next defaults with 8 real captures; 12 neighbouring walks ok. Audit queue/audits/2026-09-23-captions-write-themselves.json."
     }
-  ]
+  ],
+  "started": "2026-09-24T05:08:24.325Z",
+  "walks": [
+    "captions-write-themselves-walk",
+    "captions-from-the-sound-walk"
+  ],
+  "completed": "2026-09-24T06:14:36.872Z"
 }

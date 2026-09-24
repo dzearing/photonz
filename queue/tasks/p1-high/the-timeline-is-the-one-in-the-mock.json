@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 50,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.150Z",
-  "updated": "2026-09-23T19:17:34.303Z",
+  "updated": "2026-09-23T19:21:36.889Z",
   "deps": [
     "the-video-mocks-are-the-user-s-again-and-d18-is"
   ],
@@ -67,10 +67,15 @@
     {
       "t": "2026-09-23T19:17:34.302Z",
       "note": "verified: new walk the-timeline-is-the-one-in-the-mock-walk at defaults (5 real captures, blade cut gives 2 pieces); 42 recording walks + 12 timeline/icon walks green; Scripts/test.sh green except AnimatedExportWeighTests, which passed on rerun (already the p2 task the-export-size-test-fails-about-one-run-in-thre). Audit queue/audits/2026-09-23-timeline-dock.json with the mock side by side. Rough items folded into the tracks, sound-on-the-timeline, keyframe and Premiere keys tasks."
+    },
+    {
+      "t": "2026-09-23T19:21:36.887Z",
+      "note": "TimelineDock (Sources/Photonz/TimelineDock.swift) replaces the icon strip under recordings: kit transport with mute and scrubber, Select/Blade + Fit/2x/4x/8x bar, seconds ruler, named tracks with kit-coloured clips, red playhead, pinch/scroll zoom and pan. Verified by the-timeline-is-the-one-in-the-mock-walk at defaults plus 54 existing walks and Scripts/test.sh; audit 2026-09-23-timeline-dock with the mock side by side. Commit cdb6dd89."
     }
   ],
   "started": "2026-09-23T18:37:14.442Z",
   "walks": [
     "the-timeline-is-the-one-in-the-mock-walk"
-  ]
+  ],
+  "completed": "2026-09-23T19:21:36.888Z"
 }

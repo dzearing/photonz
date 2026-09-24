@@ -1,0 +1,51 @@
+{
+  "id": "a-video-document-shows-the-library-in-its-dock-should-a-video-document-show-the",
+  "taskId": "a-video-document-shows-the-library-in-its-dock",
+  "question": "Should a video document show the Library in the dock without being asked?",
+  "context": "The Library shelf now holds a video document's recordings and sounds, and a tile drags onto a track. It is hidden until View > Library, because of your note that the Library would almost never be used. The video mock keeps it in the dock.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Show it, folded, for video",
+      "summary": "Any document with a timeline shows the Library header at the bottom of the dock, folded. One click opens the shelf with your clips. Pictures keep it hidden until View > Library.",
+      "pros": [
+        "Matches the video mock: the media pool is one click away",
+        "A Premiere editor finds their bin without hunting through the View menu",
+        "Screenshots and redlines are untouched"
+      ],
+      "cons": [
+        "One more header in a dock that is already long on a recording"
+      ],
+      "mitigation": "It sits folded at the bottom, so it costs one row until opened."
+    },
+    {
+      "id": "b",
+      "label": "Show it open for video",
+      "summary": "A document with a timeline shows the Library open, tiles and all, the moment it opens.",
+      "pros": [
+        "Your clips are visible straight away, nothing to click"
+      ],
+      "cons": [
+        "Pushes the other sections down on every recording, even when you only want to trim one clip"
+      ],
+      "mitigation": "The shelf remembers if you fold it."
+    },
+    {
+      "id": "c",
+      "label": "Keep it behind View > Library",
+      "summary": "Nothing changes: the Library appears only after View > Library, for pictures and video alike.",
+      "pros": [
+        "One rule for every document",
+        "The dock stays as short as it is today"
+      ],
+      "cons": [
+        "Someone who knows Premiere will not find the bin, and dragging a clip off it is how the mock starts a project"
+      ],
+      "mitigation": "A hint on the empty timeline could point at View > Library.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-23T21:55:43.686Z"
+}

@@ -1,0 +1,53 @@
+{
+  "id": "a-keyed-value-s-curve-opens-where-you-want-it-where-should-a-keyed-value-s-cur",
+  "taskId": "a-keyed-value-s-curve-opens-where-you-want-it",
+  "question": "Where should a keyed value's curve open: inside its lane on the timeline, or in a Graph panel on the right as the video mock draws it?",
+  "context": "Built in the lane because the task asked for a curve view on a lane. The video mock puts it in a Graph group on the right.",
+  "options": [
+    {
+      "id": "a",
+      "label": "In the lane",
+      "summary": "Click the curve button on a lane, or Graph in Animating, and that lane grows taller and shows the curve right on the timeline, lined up with the clip and the playhead. This is what is built now.",
+      "pros": [
+        "The curve lines up with the ruler, the clip and the playhead",
+        "Nothing extra to open on the right",
+        "The way After Effects shows curves in its timeline"
+      ],
+      "cons": [
+        "The timeline gets taller and may need scrolling",
+        "Differs from the video mock"
+      ],
+      "mitigation": "The lane opens only when asked, and closes with the same button."
+    },
+    {
+      "id": "b",
+      "label": "Graph panel on the right",
+      "summary": "The curve lives in a collapsed Graph group at the bottom of the Properties panel, as video.html draws it. It shows the picked value across the clip, and clicking a value name in Animating chooses which one it plots.",
+      "pros": [
+        "Matches the video mock",
+        "The timeline stays compact"
+      ],
+      "cons": [
+        "The curve cannot line up with the timeline, so times have to be read off its own labels",
+        "The panel is narrow, about 210 points, so the curve is small"
+      ],
+      "mitigation": "Label the start, middle and end times under the curve, as the mock does."
+    },
+    {
+      "id": "c",
+      "label": "Both",
+      "summary": "Keep the curve in the lane and also add the mock's Graph panel on the right, each showing the same curve.",
+      "pros": [
+        "Everyone finds it where they look"
+      ],
+      "cons": [
+        "Two places to learn for one thing",
+        "More to build and keep in step"
+      ],
+      "mitigation": "Both draw from the same curve, so they never disagree."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-24T03:53:18.513Z"
+}

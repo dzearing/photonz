@@ -1,0 +1,27 @@
+{
+  "id": "x-2",
+  "title": "x",
+  "goal": "",
+  "epic": "",
+  "priority": "p2-normal",
+  "seq": 3180,
+  "status": "dropped",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T00:14:38.870Z",
+  "updated": "2026-09-24T00:14:47.899Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-09-24T00:14:38.872Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-24T00:14:47.898Z",
+      "note": "filed by mistake by the right-click runner (a stray test of addjson); nothing to do"
+    }
+  ]
+}

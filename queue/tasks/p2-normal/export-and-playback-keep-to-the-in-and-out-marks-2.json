@@ -1,0 +1,27 @@
+{
+  "id": "export-and-playback-keep-to-the-in-and-out-marks-2",
+  "title": "Export and playback keep to the In and Out marks",
+  "goal": "",
+  "epic": "",
+  "priority": "p2-normal",
+  "seq": 3190,
+  "status": "dropped",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T00:14:38.924Z",
+  "updated": "2026-09-24T00:14:47.951Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-09-24T00:14:38.926Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-24T00:14:47.950Z",
+      "note": "duplicate filed by mistake; the real one is export-and-playback-keep-to-the-in-and-out-marks"
+    }
+  ]
+}

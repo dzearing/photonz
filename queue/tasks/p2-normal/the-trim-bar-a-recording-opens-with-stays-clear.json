@@ -1,0 +1,36 @@
+{
+  "id": "the-trim-bar-a-recording-opens-with-stays-clear",
+  "title": "The trim bar a recording opens with stays clear of its captions",
+  "goal": "A screen recording opens with the trim bar floating over the bottom of the picture, and once its captions have written themselves that bar sits right on top of the bottom caption, so the first thing you see of your captions is half of one hidden.",
+  "epic": "video-audio",
+  "priority": "p2-normal",
+  "seq": 33,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T06:02:48.695Z",
+  "updated": "2026-09-24T09:52:00.857Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-23: Scripts/playtest.sh Scripts/playtest/captions-write-themselves-walk.json, picture 2-the-captions-wrote-themselves-sc.png (queue/audits/2026-09-23-captions-write-themselves-2-the-captions-wrote-themselves.png): the In 0:00 · Out 0:17 · Cancel · Trim capsule covers the middle of the caption line The transport bar and the timeline appear. The capsule comes from document.opensWithTrimInHand (EditorState.openRecordingAsDocument sets .trim). Options: lift the capsule above the caption band, or drop the fast-lane trim once the document has captions.",
+  "acceptance": [
+    "With a recording just opened and its captions written, the bottom caption is fully visible with the trim bar up",
+    "A walk with no flags opens a talking recording and photographs the caption clear of the trim bar",
+    "A notice raised on the canvas (Sound added, Clip added, a refusal) is readable end to end while the trim bar is up and while a caption is on screen: nothing covers anything",
+    "A walk photographs the trim bar, a notice and a caption at once and the picture shows three separate things"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T06:02:48.697Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-24T09:51:52.734Z",
+      "note": "manager 2026-09-24: folded in a-word-the-canvas-says-is-readable-when-a-trim-i (same capsule, same band at the bottom of the canvas: a notice like Sound added lands under the trim bar). Also seen 2026-09-24 in /tmp/photonz-playtest/an-editing-session-walk/3-second-clip-sc.png: the Clip added notice sits on top of the bottom caption. The fix is one layout for the bottom of the canvas: trim capsule, notice and caption line never overlap."
+    },
+    {
+      "t": "2026-09-24T09:52:00.856Z",
+      "note": "seq 3250 -> 33"
+    }
+  ]
+}

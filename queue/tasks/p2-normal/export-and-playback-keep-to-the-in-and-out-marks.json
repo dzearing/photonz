@@ -1,0 +1,32 @@
+{
+  "id": "export-and-playback-keep-to-the-in-and-out-marks",
+  "title": "Export and playback keep to the In and Out marks",
+  "goal": "A person can now mark an In and an Out on the timeline, but exporting still writes the whole video and play still runs to the end. Make Export write only the marked stretch when marks are set (with a way to export everything), the way Premiere does, so the marks are worth setting.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 32,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T00:14:35.425Z",
+  "updated": "2026-09-24T09:52:00.807Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Marks live on PhotonzDocument (markInMS, markOutMS, markedRangeMS in Sources/PhotonzCore/TimelineMarks.swift), set from the ruler/scrub-bar right-click menu and the Video menu (EditorState+TimelineMenus.swift). Export plans frames from 0..documentDurationMS in DocumentVideoExport.plan and writeVideo (EditorState+VideoExport.swift); the audio mix would need the same offset. untouchedRecording fast path must be skipped when a range is marked.",
+  "acceptance": [
+    "With In and Out set, Export writes a file exactly as long as the marked stretch, starting at the In",
+    "The export sheet says it is exporting the marked stretch and offers the whole video instead",
+    "With no marks set, export is unchanged",
+    "A walk sets marks from the ruler right-click menu, exports, and checks the file length"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T00:14:35.427Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-24T09:52:00.806Z",
+      "note": "seq 3170 -> 32"
+    }
+  ]
+}
