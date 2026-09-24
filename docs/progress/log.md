@@ -19581,3 +19581,9 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - New walk `timeline-keys-on-open-walk` (Next defaults, L is its first act); `premiere-keys-on-the-timeline-walk` now expects the timeline to hold the keys on open and clicks the picture before its canvas steps. Audit `queue/audits/2026-09-24-timeline-keys-on-open.json` with real captures.
 - Also fixed: 2271b8e8 had broken `Scripts/test.sh`'s video-kit-stands-alone typecheck; the ruler's walk markers moved to `VideoKit/VideoKitRulerMark.swift` (no-op outside probe builds).
 - Open: the export-size load flake failed 4 of 6 full test runs today; logged on its p2 task.
+
+## 2026-09-24: Cutting a stretch out of a recording takes its captions along (go loop, cutting-a-stretch-out-of-a-recording-takes-its-c)
+
+- Delete on a piece of a clip now takes that stretch out of the whole document (`PhotonzDocument.removeTime` in `StretchRemoval.swift`, called by `rippleDeleteClipPiece`, which Delete now uses). Captions only inside the stretch go, everything after moves up with its caption words, words and shapes across either end are shortened, a sound starting inside lands on the join, and a sound across the whole stretch stays put (the cut mock's detached voiceover). One undo step.
+- New walk action `captionsExpectEndWithRecording`, run by `an-editing-session-walk` after its cut: the last caption ends at 12.94s with the recording (it was 17.25s). Audit `queue/audits/2026-09-24-captions-follow-cut.json` with real captures.
+- Next: Extract (In/Out plus one key) can call `removeTime` once after cutting every clip at In and Out; noted on that task. Open: nothing shows which tracks a delete moves (the cut mock's own open question).
