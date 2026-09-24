@@ -146,9 +146,10 @@ extension EditorState {
         return pieces.canRemove(at: index)
     }
 
-    /// ⌫ on a piece of a clip: this piece goes and the join closes. Everything
-    /// after it slides back, which is the one ripple rule the whole timeline
-    /// obeys.
+    /// ⌫ on a piece of a clip: this piece goes and the join closes, and the
+    /// same stretch comes out of everything else, so the captions, titles and
+    /// sounds after it slide back with the picture and the ones for what was
+    /// thrown away go with it (`StretchRemoval.swift`). One undo step.
     func deleteClipPieceInHand() {
         endTrimBeforeCutting()
         guard canDeleteClipPieceInHand, let id = clipInHandID,
@@ -156,7 +157,7 @@ extension EditorState {
         pauseDocument()
         let landing = document?.layer(id: id)?.clipPieces?.startMS(ofPiece: index) ?? 0
         let start = document?.layer(id: id)?.time?.inMS ?? 0
-        perform { $0.removeClipPiece(id, at: index) }
+        perform { $0.rippleDeleteClipPiece(id, at: index) }
         // The playhead lands on the join the delete just closed, which is the
         // frame that now plays where the thrown-away piece used to start.
         selectClipPiece(layerID: id, index: nil)

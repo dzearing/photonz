@@ -2997,6 +2997,25 @@ private final class Run {
                 }
                 note(number, step.name, "captions: \(onIt.count) cues on the one \(track.name) track",
                      state: describe())
+            case .captionsExpectEndWithRecording:
+                guard let document = editor.document else { throw Failure(description: "no document") }
+                let recording = document.allLayers.first {
+                    document.captionsListenedTo.contains($0.id) && $0.time != nil
+                } ?? document.allLayers.first { $0.movie != nil && $0.time != nil }
+                guard let end = recording?.time?.outMS else {
+                    throw Failure(description: "there is no recording the captions were heard in")
+                }
+                guard let last = document.captionLayers.compactMap(\.time?.outMS).max() else {
+                    throw Failure(description: "there are no captions")
+                }
+                guard last <= end else {
+                    throw Failure(description: "the last caption ends at \(String(format: "%.2fs", Double(last) / 1000)), "
+                        + "after the recording it was heard in ends at \(String(format: "%.2fs", Double(end) / 1000)): "
+                        + "lines for words that were cut out are still playing")
+                }
+                note(number, step.name,
+                     "captions: the last one ends at \(String(format: "%.2fs", Double(last) / 1000)), the recording at "
+                        + "\(String(format: "%.2fs", Double(end) / 1000))", state: describe())
             case .captionsEditFirstInPlace:
                 guard let first = editor.document?.captionLayers.first else {
                     throw Failure(description: "there is no caption to edit")
@@ -3914,7 +3933,8 @@ private final class Run {
                  .captionsNudgeLater,
                  .captionsNudgeEarlier, .captionsCorrectFirstWord, .captionsClear,
                  .captionsExpectSound, .captionsExpectTimingsKept, .captionsWaitForThemselves,
-                 .captionsExpectOneTrack, .captionsEditFirstInPlace, .captionsCommitFirstWords,
+                 .captionsExpectOneTrack, .captionsExpectEndWithRecording,
+                 .captionsEditFirstInPlace, .captionsCommitFirstWords,
                  .captionsTrimFirstEnd, .captionsStyleCaption, .captionsStyleLowerThird,
                  .captionsStyleKaraoke, .captionsPositionTop, .captionsPositionBottom,
                  .captionsExpectLitWord, .captionsExportFiles, .captionsAutoOff,

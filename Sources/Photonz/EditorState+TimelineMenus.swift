@@ -186,8 +186,9 @@ extension EditorState {
     }
 
     /// Delete from the timeline: the piece, when the clip is cut, and the whole
-    /// clip when it is not. Nothing else moves, so a gap is left where a whole
-    /// clip was, which is Premiere's Delete.
+    /// clip when it is not. A piece takes its stretch out of everything with it
+    /// (`deleteClipPieceInHand`); a whole clip leaves a gap where it was, which
+    /// is Premiere's Delete.
     func deleteFromTimeline(layerID: UUID, piece index: Int?) {
         if let index {
             selectClipPiece(layerID: layerID, index: index)

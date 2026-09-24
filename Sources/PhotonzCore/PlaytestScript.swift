@@ -858,6 +858,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case captionsWaitForThemselves
     /// Fail unless every caption is on ONE Captions track, side by side.
     case captionsExpectOneTrack
+    /// Fail unless no caption runs on past the end of the recording it was
+    /// heard in: after a stretch is cut out, the lines for the words that went
+    /// have to go with them rather than play over what comes next.
+    case captionsExpectEndWithRecording
     /// Open the first caption's words for typing over its bar, the way a
     /// double click on it does; `captionsCommitFirstWords` types the fix in.
     case captionsEditFirstInPlace, captionsCommitFirstWords
@@ -1045,7 +1049,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .captionsNudgeLater, .captionsNudgeEarlier,
              .captionsCorrectFirstWord, .captionsClear, .captionsExpectSound,
              .captionsExpectTimingsKept, .captionsWaitForThemselves, .captionsExpectOneTrack,
-             .captionsEditFirstInPlace, .captionsCommitFirstWords, .captionsTrimFirstEnd,
+             .captionsExpectEndWithRecording, .captionsEditFirstInPlace, .captionsCommitFirstWords, .captionsTrimFirstEnd,
              .captionsStyleCaption, .captionsStyleLowerThird, .captionsStyleKaraoke,
              .captionsPositionTop, .captionsPositionBottom, .captionsExpectLitWord,
              .captionsExportFiles, .captionsAutoOff, .captionsAutoOn, .captionsExpectEditingOnCanvas,

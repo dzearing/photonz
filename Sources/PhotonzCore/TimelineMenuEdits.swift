@@ -11,20 +11,22 @@ extension PhotonzDocument {
 
     // MARK: Ripple delete
 
-    /// Throw a piece of a clip away and pull everything that comes after it
-    /// back by the piece's length, so the rest of the document stays in step
+    /// Throw a piece of a clip away and take the same stretch out of the rest
+    /// of the document (`StretchRemoval.swift`), so everything stays in step
     /// with the picture: a title over the fifth second of a take is still over
-    /// the same frame once a stretch before it has gone.
+    /// the same frame once a stretch before it has gone, and the captions for
+    /// the words that went go with them.
     ///
-    /// A plain delete (`removeClipPiece`) closes the join inside the clip and
-    /// moves nothing else, which is Premiere's Delete leaving a gap behind it.
+    /// `removeClipPiece` on its own closes the join inside the clip and moves
+    /// nothing else; nothing a person presses reaches it any more, because a
+    /// talking recording cut that way leaves every caption after the cut over
+    /// the wrong words.
     @discardableResult
     public mutating func rippleDeleteClipPiece(_ id: UUID, at index: Int) -> Bool {
         guard let time = layer(id: id)?.time,
               let range = layer(id: id)?.clipPieces?.rangeMS(ofPiece: index) else { return false }
-        let end = time.inMS + range.end
         guard removeClipPiece(id, at: index) else { return false }
-        closeGap(endingAtMS: end, lengthMS: range.end - range.start, except: id)
+        removeTime(fromMS: time.inMS + range.start, toMS: time.inMS + range.end, exceptLayer: id)
         return true
     }
 

@@ -1,0 +1,26 @@
+{
+  "feature": "Cutting a stretch out takes the captions along",
+  "epic": "video-editing",
+  "summary": "Deleting a piece of a recording now takes the same stretch out of the whole timeline: captions for the words that went are gone, captions, titles and sounds after the cut move up with the picture, and a caption across the join is shortened. One undo puts it all back.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    { "do": "Open a screen recording with somebody talking and wait for the captions to write themselves." },
+    { "do": "Put the playhead in the middle and press Command K, then at a quarter and press Command K again." },
+    { "do": "Press Delete to throw the middle piece away.", "shot": "2026-09-24-captions-follow-cut-1.png" },
+    { "do": "Look at the Captions track: it now ends where V1 ends, with no lines left for the words you cut." },
+    { "do": "Drop a second clip on the end of V1 and play across the join.", "shot": "2026-09-24-captions-follow-cut-2.png" },
+    { "do": "Press Command Z once.", "shot": "2026-09-24-captions-follow-cut-3.png" }
+  ],
+  "evaluate": [
+    "After the delete, does every caption still sit over the words it says?",
+    "Is it right that the caption across the join keeps its whole line of text, just for less time?",
+    "Is it right that a separate sound running under the whole cut (music, a detached voiceover) stays where it was?",
+    "Do you ever want Delete on a piece to leave the rest of the timeline alone, the way Premiere's plain Delete does?"
+  ],
+  "rough": [
+    "A caption across the join keeps all of its words on screen, including any that were said inside the stretch you cut; only its time is shortened, the way Premiere trims a caption clip.",
+    "A sound running across the whole cut is left as it was, as the cut mock says for a detached voiceover. If that sound is speech, it is now out of step with the picture after the join, and nothing on the timeline says so.",
+    "Nothing on screen says which tracks a delete moved. The cut mock asks this as an open question; there is no per-track sync lock yet.",
+    "Delete and Ripple Delete on a piece of a clip now do the same thing. They still differ on a whole clip: Delete leaves a gap, Ripple Delete closes it."
+  ]
+}
