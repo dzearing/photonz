@@ -965,9 +965,14 @@ struct InspectorPanel: View {
             return AnyView(PropertyKeysSectionAccessory())
         case .library:
             let scope = LibraryScope(rawValue: libraryScopeRaw) ?? .media
-            return AnyView(Text(scope.title)
-                .font(.caption)
-                .foregroundStyle(.secondary))
+            return AnyView(HStack(spacing: 6) {
+                Text(scope.title)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                // The mock's `.dgrp-h` plus: the ways something gets onto the
+                // shelf (`video.html`, #libMenu).
+                if editorState.canImportMedia { LibraryAddMenu() }
+            })
         case .arrange:
             // What these buttons line up AGAINST, when it is not the selection
             // itself. That is the one thing about this section you cannot work

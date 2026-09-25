@@ -338,12 +338,26 @@ struct SectionFileDrop: DropDelegate {
         DropProposal(operation: offerFile(info))
     }
 
-    func dropExited(info: DropInfo) { editorState.endPanelDrop(from: item) }
+    func dropExited(info: DropInfo) {
+        editorState.endPanelDrop(from: item)
+        editorState.isLibraryTakingFiles = false
+    }
 
     func performDrop(info: DropInfo) -> Bool {
         let landing = editorState.incomingDropOnTop
         editorState.endPanelDrop(from: item)
+        if keepsOnShelf(info) {
+            editorState.isLibraryTakingFiles = false
+            return FileDrop.keepOnShelf(info, into: editorState)
+        }
         return FileDrop.accept(info, into: editorState, landingAt: landing)
+    }
+
+    /// The Library is a bin: a recording or a sound let go on it goes on the
+    /// shelf and nowhere else, where anywhere else in the panel it lands on
+    /// the timeline (`video.html`, "Fill the Library").
+    private func keepsOnShelf(_ info: DropInfo) -> Bool {
+        item == .library && editorState.canImportMedia && FileDrop.carriesMedia(info)
     }
 
     /// Tells the panel what it is about to do with the file in the air, and
@@ -353,6 +367,13 @@ struct SectionFileDrop: DropDelegate {
     @discardableResult
     private func offerFile(_ info: DropInfo) -> DropOperation {
         guard FileDrop.isAboutAFile(info) else { return .forbidden }
+        // The shelf rings itself, so the whole panel does not light up as if
+        // the file were landing in the picture.
+        if keepsOnShelf(info) {
+            editorState.endPanelDrop(from: item)
+            editorState.isLibraryTakingFiles = true
+            return .copy
+        }
         guard FileDrop.carriesUsableFile(info, into: editorState) else {
             editorState.offerPanelDrop(.refuses, from: item)
             return .forbidden

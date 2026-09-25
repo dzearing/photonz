@@ -95,6 +95,21 @@ enum FileDrop {
         return true
     }
 
+    /// Puts every recording and sound the drag carries on the Library shelf,
+    /// and nothing anywhere else (`EditorState.importMedia`).
+    static func keepOnShelf(_ info: DropInfo, into editorState: EditorState) -> Bool {
+        let providers = info.itemProviders(for: [.fileURL])
+        guard !providers.isEmpty else { return false }
+        Task { @MainActor in
+            var urls: [URL] = []
+            for provider in providers {
+                if let url = await fileURL(from: provider) { urls.append(url) }
+            }
+            await editorState.importMedia(urls)
+        }
+        return true
+    }
+
     /// The file a drag is carrying. The provider answers on a queue of its own,
     /// so this waits for it rather than blocking the pointer. Nil when the item
     /// turns out not to be a file after all, which is the same as dropping

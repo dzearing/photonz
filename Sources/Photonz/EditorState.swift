@@ -157,6 +157,9 @@ final class EditorState {
     /// inside a sheet to pick it (`PlaytestAction.exportDialogAsSVG`). Compiled
     /// out of every shipping build.
     var playtestOpensExportOnSVG = false
+    /// Probe only: the files Import Media… hands back instead of showing its
+    /// Open panel, which a walk cannot click inside.
+    var playtestImportPicks: [URL]?
     /// Probe only: where the Export sheet says the file is going, for the same
     /// reason. Nil leaves the sheet on whatever was last picked.
     var playtestExportDestination: SVGHandoff.Destination?
@@ -260,6 +263,10 @@ final class EditorState {
     /// so what happens next lives there (`DockReveal` decides whether anything
     /// needs to move at all).
     private(set) var pendingLibraryReveal = false
+
+    /// A recording or a sound is held over the Library shelf, which will keep
+    /// it: the shelf wears its ring while this is true.
+    var isLibraryTakingFiles = false
 
     func libraryRevealHandled() {
         pendingLibraryReveal = false
@@ -1447,6 +1454,9 @@ final class EditorState {
     /// has been let go on it and knows this is not the place for it, and
     /// nothing about opening a second window belongs in here.
     @ObservationIgnored var openRecordingInItsOwnWindow: ((URL) -> Void)?
+    /// Opens Capture History (⇧⌘H), for the Library's "From Capture History".
+    /// Set by the window root: History is the app's, not this window's.
+    @ObservationIgnored var showCaptureHistory: (() -> Void)?
 
     /// Answers the New Canvas sheet, from whichever route opened it. An empty
     /// window fills itself; a window already holding a picture keeps it and the

@@ -124,6 +124,23 @@ struct LibraryPanel: View {
         // The one place in the app a dropped colour is KEPT rather than
         // painted with.
         .libraryColorDrop()
+        // ...and a recording or a sound: the section's own drop target takes
+        // it (`SectionFileDrop`), and the shelf wears the ring a kept colour
+        // gets, so it is plain the file is going HERE and not onto the picture.
+        .overlay {
+            if editorState.isLibraryTakingFiles {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.accentColor.opacity(0.12))
+                    .overlay(RoundedRectangle(cornerRadius: 8)
+                        .strokeBorder(Color.accentColor, lineWidth: 2))
+                    .allowsHitTesting(false)
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeOut(duration: 0.12), value: editorState.isLibraryTakingFiles)
+        // Named so a walk can let a file go on the shelf through the section's
+        // own drop target.
+        .playtestTarget("Library shelf", kind: .row, detail: scope.title)
     }
 
     // MARK: Scope and search
@@ -654,5 +671,36 @@ struct LibraryItemInspector: View {
 
     private func detail(_ text: String) -> some View {
         Text(text).font(.caption).foregroundStyle(.secondary)
+    }
+}
+
+// MARK: - The plus on the Library header
+
+/// The ways something gets onto the shelf, on the Library header's plus
+/// (`video.html`, `#libMenu`): Import Media, From Capture History, Add
+/// Selection to Library.
+struct LibraryAddMenu: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        Menu {
+            // The key the File row answers to, on the same terms: it is
+            // Invert Selection while a marquee is up.
+            Button("Import Media…") { editorState.importMediaFromPanel() }
+                .keyboardShortcut(editorState.selection == nil
+                                  ? KeyboardShortcut("i", modifiers: [.command, .shift]) : nil)
+            Button("From Capture History") { editorState.showCaptureHistory?() }
+            Button("Add Selection to Library") { editorState.makeComponent() }
+                .disabled(!editorState.canMakeComponent)
+        } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 11, weight: .medium))
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .accessibilityLabel("Add to Library")
+        .panelHelp("Add to Library")
+        .playtestControl("Add to Library", detail: "the plus on the Library header")
     }
 }

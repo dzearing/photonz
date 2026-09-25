@@ -1,0 +1,52 @@
+{
+  "out": "/tmp/photonz-playtest/library-import-walk",
+  "seed": "Recordings and sounds go into the Library without going onto the timeline (video.html, onboarding step 2, Fill the Library: Import, drag and drop onto the panel). File > Import Media (Shift Command I) puts files on the shelf and opens the Library to show them; a file let go on the shelf becomes a tile there and lands nowhere else; the Library header's plus has Import Media too; then a tile dragged onto the empty Audio track lands there (step 3, Drop a first clip). At Next defaults, no flag set, the Library hidden as a new install has it.",
+  "setup": {
+    "forget": ["all"],
+    "scratch": [
+      "sample:music",
+      "sample:recording as b-roll.mp4"
+    ]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "describe", "stage": "1-no-library", "note": "An eight second screen recording on V1, the Audio track empty, and the Library hidden, as it is on a new install" },
+    { "do": "snapshot", "name": "1-no-library" },
+
+    { "do": "importPicks", "files": ["scratch/b-roll.mp4"] },
+    { "comment": "Shift Command I, the mock's File row, with no marquee up so the key is Import rather than Invert Selection.", "do": "key", "key": "i", "modifiers": ["command", "shift"] },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "expectNotice", "says": "b-roll.mp4 is in the Library" },
+    { "do": "expectClip", "clip": "b-roll", "count": 0 },
+    { "do": "expect", "control": "b-roll.mp4", "present": true },
+    { "do": "describe", "stage": "2-imported", "note": "THE FIRST TEST: File > Import Media put b-roll.mp4 on the Library shelf and nowhere else. The Library, hidden a moment ago, is open on Media with the new tile in view, and the timeline still holds one clip" },
+    { "do": "snapshot", "name": "2-imported" },
+
+    { "do": "dropOnLibrary", "file": "scratch/Sample Music.m4a", "release": false, "hold": "3-music-over-the-shelf" },
+    { "do": "describe", "stage": "3-music-over-the-shelf", "note": "THE SECOND TEST: music from the Finder held over the Library. The shelf wears the accent ring that says it will keep it; the rest of the panel stays quiet" },
+    { "do": "dropOnLibrary", "file": "scratch/Sample Music.m4a" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectNotice", "says": "Sample Music.m4a is in the Library" },
+    { "do": "expectClip", "clip": "Sample Music", "count": 0 },
+    { "do": "expect", "control": "Sample Music.m4a", "present": true },
+    { "do": "describe", "stage": "4-music-on-the-shelf", "note": "Let go, the music is a tile on the shelf and not a clip on any track" },
+    { "do": "snapshot", "name": "4-music-on-the-shelf" },
+
+    { "do": "dropOnTimeline", "tile": "Sample Music.m4a", "track": "Audio", "seconds": 1.0, "release": false, "hold": "5-tile-over-the-empty-track", "says": "lands on Audio at 0:01" },
+    { "do": "dropOnTimeline", "tile": "Sample Music.m4a", "track": "Audio", "seconds": 1.0 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectClip", "clip": "Sample Music", "track": "Audio", "startsAt": 1.0, "count": 1 },
+    { "do": "describe", "stage": "6-first-clip-from-the-shelf", "note": "THE THIRD TEST: the music tile dragged onto the empty Audio track landed there one second in, the mock's step 3" },
+    { "do": "snapshot", "name": "6-first-clip-from-the-shelf" },
+
+    { "do": "panelMenu", "menu": "Add to Library", "shot": "7-plus-menu" },
+    { "do": "importPicks", "files": ["scratch/Sample Music.m4a"] },
+    { "do": "panelMenu", "menu": "Add to Library", "choose": "Import Media…" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectNotice", "says": "already in the Library" },
+    { "do": "describe", "stage": "7-plus-menu-import", "note": "THE FOURTH TEST: the plus on the Library header has Import Media. Importing the music a second time keeps one tile and says it is already there" }
+  ]
+}

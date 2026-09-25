@@ -1,0 +1,30 @@
+{
+  "feature": "Recordings and sounds go into the Library without going onto the timeline",
+  "epic": "video-editing",
+  "summary": "You can fill the Library before you cut: File > Import Media (Shift Command I), the plus on the Library header, or a file dropped on the shelf puts recordings and sounds there as tiles, and nothing lands on the timeline until you drag a tile onto a track.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a screen recording; the Library can be hidden.",
+  "try": [
+    { "do": "With the Library hidden, press Shift Command I and pick a recording or a sound.", "shot": "2026-09-25-library-import-2-imported-sc.png" },
+    { "do": "Drag a sound from the Finder over the Library shelf and hold it there.", "shot": "2026-09-25-library-import-3-music-over-the-shelf-sc.png" },
+    { "do": "Let go. Check the timeline: nothing new is on it." },
+    { "do": "Drag the new tile onto the Audio track, one second in.", "shot": "2026-09-25-library-import-6-first-clip-from-the-shelf-sc.png" },
+    { "do": "Click the plus on the Library header.", "shot": "2026-09-25-library-import-7-plus-menu-sc.png" },
+    { "do": "Choose Import Media and pick the same sound again." },
+    { "do": "Draw a marquee on a picture and press Shift Command I." }
+  ],
+  "evaluate": [
+    "When Import opens a hidden Library, does your eye find the new tile straight away?",
+    "Does the ring on the shelf make it plain the file is going into the Library and not onto the picture?",
+    "Is Shift Command I the key you would reach for, or would Command I (Premiere and Final Cut) be better?",
+    "Does 'Already in Library' read as helpful or as noise when you import the same file twice?",
+    "Are From Capture History and Add Selection to Library worth their rows on the plus?"
+  ],
+  "rough": [
+    "The tiles are still 68 points wide, so names are cut in the middle (Tutor....mp4). The mock draws them at least 96 wide, two to a row. Filed as its own task.",
+    "The mock's first step, a new empty video with nothing on it, does not exist yet, so this starts from a recording. Filed as its own task.",
+    "With a marquee up, Shift Command I stays Invert Selection, the Photoshop key. Import only takes the key when there is nothing to invert.",
+    "The mock's menu rows carry icons; these are plain macOS menu rows.",
+    "Dropping the music on Audio moved the recording's own sound down to a new Audio 2 track. That is how the timeline already treats a clip landing there, not new with this change.",
+    "A capture landing straight in the Library, the mock's third way in, is not here: a new capture opens its own window. From Capture History on the plus opens History instead."
+  ]
+}

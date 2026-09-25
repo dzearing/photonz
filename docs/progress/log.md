@@ -19674,3 +19674,12 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Walks: `a-video-edit-saves-as-a-project-walk` (the whole editing session, saved, closed, reopened equal to the saved document, played with no blank frame, exported 20.94 s with sound again, Command S in place), `a-project-whose-files-moved-walk` with fixture `a-project-whose-files-moved.photonz`, and Save As from the close sheet added to `a-recording-opens-in-the-editor-at-defaults-walk`. New probe actions `saveProjectAs`, `answerCloseExport`, `expectReopenedAsSaved`, `expectMissingMedia`.
 - Full suite 9699 green. Audit `queue/audits/2026-09-25-video-project.json`.
 - Filed: the title bar line the video mocks draw (name · size · length · saved). Next: the Command S card.
+
+## 2026-09-25 — Recordings and sounds go into the Library without the timeline
+
+- File > Import Media… (Shift Command I) and the Library header's new plus (Import Media…, From Capture History, Add Selection to Library, the mock's `#libMenu`) put recordings and sounds on the Media shelf and open the Library on the new tile, hidden or folded. A recording or sound let go on the Library section goes on the shelf and nowhere else, with the shelf wearing an accent ring while it is in the air; anywhere else in the panel it still lands on the timeline.
+- Shift Command I is Photoshop's Invert Selection too: the Import row carries the key only while there is no marquee, so with one up the key stays Invert (walk `import-key-leaves-invert-selection-walk` pins the inverted region).
+- Core: `PhotonzDocument.bringIntoLibrary` and `LibraryImport` (what came in, what was already there, what would not open, and the pill's words), `CopyConfirmation.Subject.broughtIntoLibrary`. Tests `LibraryImportTests`. App: `EditorState+LibraryImport.swift`, `SectionFileDrop` keeps media for `.library`, `FileDrop.keepOnShelf`.
+- Walk steps `dropOnLibrary` and `importPicks` (docs/design/playtest-harness.md). Walk `library-import-walk` at Next defaults: import, shelf drop, tile onto the Audio track, plus-menu import of a file already there. 28 neighbouring walks green; full suite 9710 green (the export-size flake failed twice first, logged on its task).
+- Audit `queue/audits/2026-09-25-library-import.json`. Filed: Library tiles as wide as the mock (68 vs 96 points, names cut), and a new empty video (the mock's step 1).
+

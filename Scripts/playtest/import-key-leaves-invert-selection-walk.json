@@ -1,0 +1,89 @@
+{
+  "out": "/tmp/photonz-playtest/import-key-leaves-invert-selection-walk",
+  "seed": "Shift Command I is two commands: File > Import Media (the video mock's key) and Photoshop's Edit > Invert Selection. With a marquee drawn on a picture it must stay Invert Selection and import nothing. At Next defaults, no flag set.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "comment": "A recording first: it is what gives the probe a live menu bar in this set, and the key has to reach the menu to prove anything.",
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "tool",
+      "tool": "rectSelect"
+    },
+    {
+      "do": "drag",
+      "from": [
+        300,
+        200
+      ],
+      "to": [
+        600,
+        400
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectRegion",
+      "reads": "300,200 300x200"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-marquee"
+    },
+    {
+      "comment": "The log line names which menu row took the chord: it must be Edit > Invert Selection.",
+      "do": "key",
+      "key": "i",
+      "modifiers": [
+        "command",
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectNotice",
+      "absent": true
+    },
+    {
+      "comment": "Inverted: everything but the marquee, whose outline's box is now the whole picture.",
+      "do": "expectRegion",
+      "reads": "0,0 1440x960"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-inverted"
+    },
+    {
+      "do": "describe",
+      "stage": "2-inverted",
+      "note": "With a marquee up, Shift Command I inverted the selection, as in Photoshop, and imported nothing"
+    }
+  ]
+}

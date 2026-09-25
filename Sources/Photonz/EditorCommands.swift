@@ -275,6 +275,17 @@ struct EditorCommands: Commands {
                 .keyboardShortcut("n", modifiers: [.command, .option])
             Button("Open…") { coordinator.presentOpenPanel() }
                 .keyboardShortcut("o", modifiers: .command)
+            // Recordings and sounds onto the Library shelf and nowhere else,
+            // the mock's File row (`video.html`) and where Premiere and Final
+            // Cut people look for it. ⇧⌘I is Photoshop's Invert Selection too,
+            // so the key is Import only while there is no marquee to invert;
+            // with one up it stays Invert and Photoshop hands never notice.
+            if Experiments.shared.libraryEnabled && Experiments.shared.droppingMedia {
+                Button("Import Media…") { editor?.importMediaFromPanel() }
+                    .keyboardShortcut(editor?.selection == nil
+                                      ? KeyboardShortcut("i", modifiers: [.command, .shift]) : nil)
+                    .disabled(!(editor?.canImportMedia ?? false))
+            }
             Divider()
             // ⌘S means the same thing in both editors: commit back to where
             // the media came from. For an image that's the flattened composite

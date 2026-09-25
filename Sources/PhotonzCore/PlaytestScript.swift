@@ -2196,6 +2196,14 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `file` and `tile` is given.
     case dropOnTimeline(file: String?, tile: String?, track: String, seconds: Double, insert: Bool,
                         hold: String?, release: Bool, says: String?)
+    /// A file carried from the Finder onto the Library shelf, through the
+    /// shelf's own drop target, and let go there unless `release` is false. A
+    /// recording or a sound lands on the shelf and nowhere else. `hold` names
+    /// a picture taken while it is still in the air, ring and all.
+    case dropOnLibrary(file: String, hold: String?, release: Bool)
+    /// The files the next Import Media… hands back, standing in for the Open
+    /// panel a walk cannot click inside. Relative to the script, like `open`.
+    case importPicks(files: [String])
     /// One click on the timeline's ruler at `seconds`, which puts the playhead
     /// there the way the ruler's own gesture does. The ruler is SwiftUI and a
     /// walk's `click` reaches the canvas, so this is how a walk that COUNTS an
@@ -3103,7 +3111,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "clickRuler", "dropImage", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "clickRuler", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag",
     ].sorted()
@@ -3138,6 +3146,8 @@ public enum PlaytestStep: Sendable, Equatable {
         case .dragFile: "dragFile"
         case .windowDrag: "windowDrag"
         case .dropOnTimeline: "dropOnTimeline"
+        case .dropOnLibrary: "dropOnLibrary"
+        case .importPicks: "importPicks"
         case .clickRuler: "clickRuler"
         case .expectClip: "expectClip"
         case .dragOver: "dragOver"
@@ -3395,6 +3405,16 @@ public enum PlaytestStep: Sendable, Equatable {
                                    hold: try f.optionalString("hold"),
                                    release: try f.optionalFlag("release") ?? true,
                                    says: try f.optionalString("says"))
+        case "dropOnLibrary":
+            self = .dropOnLibrary(file: try f.string("file"), hold: try f.optionalString("hold"),
+                                  release: try f.optionalFlag("release") ?? true)
+        case "importPicks":
+            let files = try f.optionalStrings("files")
+            guard !files.isEmpty else {
+                throw PlaytestScriptError.invalidField(index: index, step: name, field: "files",
+                                                       reason: "an importPicks step names at least one file")
+            }
+            self = .importPicks(files: files)
         case "clickRuler":
             let seconds = try f.number("seconds")
             guard seconds >= 0 else {

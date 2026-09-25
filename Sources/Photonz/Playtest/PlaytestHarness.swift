@@ -1469,6 +1469,20 @@ private final class Run {
                                                              says: says),
                  state: describe())
 
+        case .dropOnLibrary(let file, let hold, let release):
+            note(number, step.name, try await dropOnLibrary(file: file, hold: hold, release: release),
+                 state: describe())
+
+        case .importPicks(let files):
+            let editor = try requireEditor()
+            let urls = try files.map { try fileURL($0) }
+            for url in urls where !FileManager.default.fileExists(atPath: url.path) {
+                throw Failure(description: "there is no file at \(url.path) to import")
+            }
+            editor.playtestImportPicks = urls
+            note(number, step.name, "the next Import Media… hands back "
+                 + urls.map(\.lastPathComponent).joined(separator: ", "), state: describe())
+
         // The ruler's own gesture, pressed and let go at one moment: what a
         // click on the ruler does (`TimelineDock.rulerScrub`), less its snap
         // onto a key, since a walk counting presses names the moment it wants.
@@ -12673,6 +12687,83 @@ extension Run {
         return "\(url.lastPathComponent) let go over \(track) at \(seconds)s (\(insert ? "⌘ held" : "no keys")), "
             + "saying \"\(sentence)\"\(held); the document now holds "
             + "\(editor.document?.allLayers.count ?? 0) layers, was \(before)"
+    }
+
+    /// Carries a file from the Finder onto the Library shelf and lets go
+    /// there unless told not to, through whichever of the panel's drop areas
+    /// under the shelf takes a file first, the way a pointer's drag is
+    /// offered to them.
+    func dropOnLibrary(file: String, hold: String?, release: Bool) async throws -> String {
+        let editor = try requireEditor()
+        let window = try requireWindow()
+        guard let content = window.contentView else {
+            throw Failure(description: "the window has no content view")
+        }
+        let url = try fileURL(file)
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            throw Failure(description: "there is no file at \(url.path) to drop")
+        }
+        let shelf = try panelTargets().first { $0.name == "Library shelf" }
+        guard let shelf else {
+            throw Failure(description: "the Library shelf is not on screen: is the Library shown and unfolded?")
+        }
+        let frame = shelf.convert(shelf.bounds, to: nil)
+        let windowPoint = CGPoint(x: frame.midX, y: frame.midY)
+        let board = NSPasteboard(name: NSPasteboard.Name("photonz.playtest.libraryFile"))
+        board.clearContents()
+        board.writeObjects([url as NSURL])
+        let info = PlaytestDraggingInfo(pasteboard: board, location: windowPoint, window: window)
+        // Offered smallest first until one takes it. SwiftUI registers every
+        // drop area for any data and sorts out the types itself, so a colour's
+        // area over the same point answers a file with nothing and the next
+        // one is asked, as under a pointer.
+        let chain = Self.visibleDestinations(at: windowPoint, in: content)
+        var taker: NSView?
+        for view in chain where view.draggingEntered(info) != [] {
+            taker = view
+            break
+        }
+        guard let taker else {
+            let all = Self.visibleDestinations(at: windowPoint, in: content)
+            throw Failure(description: "nothing on the Library shelf takes \(url.lastPathComponent) at window "
+                + "\(short(windowPoint)); offered to "
+                + chain.map { "\(type(of: $0))" }.joined(separator: " then ")
+                + "; under the point: " + all.map { view in
+                    "\(type(of: view)) \(Int(view.bounds.width))x\(Int(view.bounds.height)) ["
+                        + view.registeredDraggedTypes.map(\.rawValue).joined(separator: " ") + "]"
+                }.joined(separator: "; ")
+                + "; carrying " + (board.types ?? []).map(\.rawValue).joined(separator: " ")
+                + "; drop areas: " + Self.dropAreas(in: content).joined(separator: ", "))
+        }
+        for _ in 0..<3 {
+            _ = taker.draggingUpdated(info)
+            await sleep(0.06)
+        }
+        let lit = editor.isLibraryTakingFiles
+        var held = ""
+        if let hold {
+            try snapshot(content, name: hold)
+            await screenCapture(window, name: hold)
+            held = ", held \(hold).png"
+        }
+        guard release else {
+            taker.draggingExited(info)
+            await sleep(0.1)
+            return "\(url.lastPathComponent) held over the Library shelf, which \(lit ? "lit up" : "stayed dark")\(held)"
+        }
+        let clipsBefore = editor.documentClipItems.count
+        let layersBefore = editor.document?.allLayers.count ?? 0
+        guard taker.performDragOperation(info) else {
+            throw Failure(description: "the Library shelf would not take \(url.lastPathComponent)")
+        }
+        var waited = 0.0
+        while editor.documentClipItems.count == clipsBefore, waited < 4 {
+            await sleep(0.1)
+            waited += 0.1
+        }
+        return "\(url.lastPathComponent) let go on the Library shelf, which \(lit ? "lit up" : "stayed dark")\(held); "
+            + "the shelf holds \(editor.documentClipItems.count) recordings and sounds, was \(clipsBefore), "
+            + "and the document \(editor.document?.allLayers.count ?? 0) layers, was \(layersBefore)"
     }
 
     /// The views that take drops under a point, smallest first, counting
