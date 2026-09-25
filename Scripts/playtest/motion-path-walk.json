@@ -1,0 +1,391 @@
+{
+ "out": "/tmp/photonz-playtest/motion-path-walk",
+ "seed": "A moving layer draws its path on the canvas. At Next defaults with no flag changed, this walk types a title on the sample recording, keys its Position at (120, 380) at one second and (820, 380) at three from the panel, reads Path Straight, photographs the dashed route, drags the square in the middle of the route up to bend it into an arc, reads Path Curved, photographs the title part way along the arc at two seconds, sets Straight and Curved from the panel, and double-clicks the square to straighten it again.",
+ "setup": {
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "action",
+   "action": "videoSeekStart"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "tool",
+   "tool": "text"
+  },
+  {
+   "do": "click",
+   "at": [
+    620,
+    330
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "type",
+   "text": "Ship it"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "reveal",
+   "control": "Properties section"
+  },
+  {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position",
+   "in": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position X Value"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "120"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position Y Value"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "380"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "field": "Path",
+   "present": false
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Position X Value"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "820"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position Y Value"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "380"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "describe",
+   "stage": "1-straight",
+   "note": "THE FIRST TEST: a title keyed at (120, 380) at one second and (820, 380) at three. With it picked, the canvas draws the route it travels as a dashed line through its middle, a ring on each key and a square half way along; Properties says Path Straight under Position"
+  },
+  {
+   "do": "expect",
+   "field": "Path",
+   "reads": "Path Straight"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-straight-path"
+  },
+  {
+   "do": "move",
+   "at": [
+    604,
+    425
+   ]
+  },
+  {
+   "do": "expectCue",
+   "says": "grab"
+  },
+  {
+   "do": "drag",
+   "from": [
+    604,
+    425
+   ],
+   "to": [
+    604,
+    215
+   ],
+   "steps": 24
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "describe",
+   "stage": "2-bent",
+   "note": "THE SECOND TEST: the square dragged up by about two hundred points. The straight run becomes an arc through where the square was let go, the keys stay where they were, and the Path control flips to Curved"
+  },
+  {
+   "do": "expect",
+   "field": "Path",
+   "reads": "Path Curved"
+  },
+  {
+   "do": "expect",
+   "field": "Playhead Readout",
+   "reads": "Playhead Position 820, 380 @ 3.00s"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-bent-path"
+  },
+  {
+   "do": "action",
+   "action": "videoStepBackOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "3-part-way",
+   "note": "THE THIRD TEST: the playhead back at two seconds, half way in time. The title sits up on the arc, well above the line it used to run along, and the Position readout is its value there"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-part-way-along"
+  },
+  {
+   "do": "render",
+   "name": "3-part-way-canvas"
+  },
+  {
+   "do": "press",
+   "control": "Straight"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "field": "Path",
+   "reads": "Path Straight"
+  },
+  {
+   "do": "press",
+   "control": "Curved"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "field": "Path",
+   "reads": "Path Curved"
+  },
+  {
+   "do": "snapshot",
+   "name": "4-curved-from-the-panel"
+  },
+  {
+   "do": "click",
+   "at": [
+    604,
+    250
+   ],
+   "count": 2
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "5-double-click",
+   "note": "THE FOURTH TEST: Curved from the panel arcs the path up by a quarter of its length; a double-click on the square puts it back on its line"
+  },
+  {
+   "do": "expect",
+   "field": "Path",
+   "reads": "Path Straight"
+  },
+  {
+   "do": "rightClick",
+   "at": [
+    604,
+    425
+   ],
+   "ticked": [
+    "Straight"
+   ],
+   "unticked": [
+    "Curved"
+   ],
+   "shot": "5-path-menu"
+  },
+  {
+   "do": "rightClick",
+   "at": [
+    604,
+    425
+   ],
+   "choose": "Curved"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "field": "Path",
+   "reads": "Path Curved"
+  }
+ ]
+}

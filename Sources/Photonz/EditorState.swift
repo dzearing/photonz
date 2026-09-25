@@ -903,6 +903,11 @@ final class EditorState {
     /// one step to undo rather than forty.
     var motionPivotPreview: (motionID: UUID, pivot: MotionPivot)?
 
+    /// The middle of a motion path under the hand while its handle on the
+    /// canvas is being dragged (`EditorState+MotionPath`). Kept out of the
+    /// document for the pivot's reason: the whole bend is one step to undo.
+    var motionPathPreview: MotionPathBendPreview?
+
     /// The colour under the hand while a motion's From or To is being chosen
     /// in the picker (`next-motion`). Kept out of the document for the reason
     /// the pivot drag is: sliding the hue wheel would otherwise write one undo
@@ -3799,6 +3804,10 @@ final class EditorState {
         // the swing you are watching is painted the colour under your hand
         // rather than the one still written down (`EditorState+Motion`).
         document = withPreviewedMotionValue(document)
+        // ...and a path handle under a hand, before the moment below is
+        // worked out, so a layer part way along the path rides the arc as it
+        // bends (`EditorState+MotionPath`).
+        document = withPreviewedMotionPath(document)
         if Experiments.shared.motionEnabled, isMotionPlaying, document.hasMotion {
             document = document.moved(toMotionTimeMS: motionPlayheadMS)
         }

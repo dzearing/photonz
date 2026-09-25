@@ -29,14 +29,19 @@ public struct CopiedKeys: Hashable, Codable, Sendable {
         public var ease: KeyEase
         /// A Bezier key's handles.
         public var handles: KeyHandles?
+        /// How the path bends on its way to the next COPIED key of the same
+        /// move (`MotionStop.bend`). Nil on the last one: its next key is
+        /// whatever the paste lands before, which the arc was never drawn to.
+        public var bend: CGPoint?
 
         public init(property: MotionProperty, offsetMS: Int, value: MotionValue,
-                    ease: KeyEase, handles: KeyHandles? = nil) {
+                    ease: KeyEase, handles: KeyHandles? = nil, bend: CGPoint? = nil) {
             self.property = property
             self.offsetMS = offsetMS
             self.value = value
             self.ease = ease
             self.handles = handles
+            self.bend = bend
         }
     }
 
@@ -90,9 +95,11 @@ extension PhotonzDocument {
             }
         }
         guard let earliest = found.map(\.ms).min() else { return nil }
+        let lastOfEach = Dictionary(found.map { ($0.property, $0.ms) }, uniquingKeysWith: max)
         let keys = found.map { item in
             CopiedKeys.Key(property: item.property, offsetMS: item.ms - earliest, value: item.stop.value,
-                           ease: item.ease, handles: item.ease == .bezier ? item.stop.handles : nil)
+                           ease: item.ease, handles: item.ease == .bezier ? item.stop.handles : nil,
+                           bend: lastOfEach[item.property] == item.ms ? nil : item.stop.bend)
         }
         .sorted {
             ($0.property == $1.property) ? $0.offsetMS < $1.offsetMS
@@ -133,7 +140,8 @@ extension PhotonzDocument {
             for key in incoming {
                 let clock = clipKeyClock(layer, atDocumentMS: ms + key.offsetMS)
                 list.removeAll { abs($0.atMS - clock) <= PropertyKeys.nearMS }
-                list.append(MotionStop(atMS: clock, value: key.value, ease: key.ease, handles: key.handles))
+                list.append(MotionStop(atMS: clock, value: key.value, ease: key.ease, handles: key.handles,
+                                       bend: key.bend))
                 landed.insert(KeyRef(motionID: base.id, clockMS: clock))
             }
             made.append(base.rebuilt(from: list))

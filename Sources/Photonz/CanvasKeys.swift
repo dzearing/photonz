@@ -246,6 +246,11 @@ extension CanvasNSView {
             // where it was and the swing goes back with it. Before everything
             // else here because a crosshair in hand owns the gesture, the same
             // way it owns the press that started it.
+            if motionPathEscape() {
+                motionPathCancelled = true
+                refreshOverlays()
+                return
+            }
             if motionPivotDrag != nil {
                 motionPivotDrag = nil
                 motionPivotCancelled = true

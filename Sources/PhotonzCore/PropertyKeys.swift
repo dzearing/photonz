@@ -150,7 +150,14 @@ extension LayerMotion {
             return rebuilt(from: list)
         }
         let at = max(0, ms)
-        list.append(MotionStop(atMS: at, value: value))
+        // A key landing part way along an arc splits the arc rather than
+        // flattening it (`bendsSplitting`).
+        if let split = bendsSplitting(atMS: at, value: value) {
+            list[split.index].bend = split.left
+            list.append(MotionStop(atMS: at, value: value, bend: split.right))
+        } else {
+            list.append(MotionStop(atMS: at, value: value))
+        }
         let made = rebuilt(from: list)
         guard let ease, let index = made.keyframes.firstIndex(where: { $0.atMS == at }) else { return made }
         return made.easing(key: index, ease)
@@ -175,6 +182,7 @@ extension LayerMotion {
         made.from = first.value
         made.fromEase = first.ease
         made.fromHandles = first.handles
+        made.fromBend = sorted.count > 1 ? first.bend : nil
         if sorted.count == 1 {
             made.to = first.value
             made.toEase = first.ease

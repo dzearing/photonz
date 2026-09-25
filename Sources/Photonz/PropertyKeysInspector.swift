@@ -35,6 +35,12 @@ struct PropertyKeysInspector: View {
             }
             ForEach(rows, id: \.self) { property in
                 PropertyKeyRow(property: property)
+                // Where it travels sits under where it is: the mock's Path
+                // control, Straight or Curved, once a move has two keys
+                // (`video-move-wt.html`, "Between the keys").
+                if property == .motion(.position), let shape = editorState.motionPathShape {
+                    MotionPathRow(shape: shape)
+                }
             }
             AnimatePropertyButton()
                 .padding(.top, 4)
@@ -65,6 +71,25 @@ struct PropertyKeysInspector: View {
     private var stopMessage: String {
         guard let property = editorState.keyStopQuestion else { return "" }
         return "Its \(editorState.keyCount(property)) keys go, and it keeps the value it has now."
+    }
+}
+
+/// `Path  [Straight | Curved]`: the mock's Path control. Straight puts every
+/// stretch back on its line; Curved arcs a straight path up and over, which is
+/// a place to drag the handle on the canvas from.
+private struct MotionPathRow: View {
+    @Environment(EditorState.self) private var editorState
+    let shape: MotionPathShape
+
+    var body: some View {
+        VideoKit.FieldRow(label: "Path") {
+            VideoKit.Segmented(options: MotionPathShape.allCases.map { ($0, $0.title) },
+                               selection: shape) { editorState.setMotionPathShape($0) }
+        }
+        .frame(minHeight: 24)
+        .panelReadout("Path \(shape.title)")
+        .playtestField("Path")
+        .help("Drag the square on the path in the canvas to bend it. Double-click it to straighten.")
     }
 }
 

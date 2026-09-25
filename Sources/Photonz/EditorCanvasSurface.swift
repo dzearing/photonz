@@ -84,6 +84,11 @@ struct EditorCanvasSurface: View {
                    },
                    onExitGroup: { editorState.exitGroupContext() },
                    canvasMenu: { hit, context, point in
+                       // The square on a moving layer's path answers first, and
+                       // BEFORE the click is aimed: aiming picks whatever is
+                       // under the pointer, which would take the moving layer
+                       // (and its path) out of the picks (`EditorState+MotionPath`).
+                       if let rows = editorState.motionPathMenuRows(at: point) { return rows }
                        editorState.aimCanvasMenu(at: hit, inside: context)
                        editorState.canvasMenuPoint = point
                        return editorState.canvasMenuRows
@@ -119,6 +124,11 @@ struct EditorCanvasSurface: View {
                    onMotionPivotMove: { editorState.previewMotionPivot(at: $0) },
                    onMotionPivotCommit: { editorState.commitMotionPivot() },
                    onMotionPivotCancel: { editorState.cancelMotionPivot() },
+                   motionPath: editorState.motionPathOverlay,
+                   onMotionPathBendPreview: { editorState.previewMotionPathBend(layerID: $0, segment: $1, to: $2) },
+                   onMotionPathBendCommit: { editorState.commitMotionPathBend() },
+                   onMotionPathBendCancel: { editorState.cancelMotionPathBend() },
+                   onMotionPathStraighten: { editorState.straightenMotionPath(layerID: $0, segment: $1) },
                    onMotionPlayToggle: { editorState.toggleMotionPreview() },
                    canPlayMotion: editorState.canPlayMotion,
                    onDocumentPlayToggle: { editorState.toggleDocumentPlayback() },

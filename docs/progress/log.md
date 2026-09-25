@@ -19702,3 +19702,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Walks: 17 moved from the dormant diamond to the picker, from Time/Length readings to `Clip line`, and to the new leading sections; new `properties-pane-walk` at Next defaults. All green except the two already failing before this (keys-copy-between-layers, punch-in-and-hold, same steps). Suite 9735 green.
 - Audit `queue/audits/2026-09-25-properties-pane.json`. Filed: the dock headers match the mock (small caps, chip, panel menu).
 
+
+## 2026-09-25 — A moving layer draws its path, and the path bends into an arc
+
+- A layer keyed at two places or more shows, while picked, the route it travels as a dashed line through its middle, a ring on each key and a square half way along each stretch (`video-move-wt.html` steps 5, 7, 8). Dragging the square bends that stretch into an arc through where it is let go; double-click puts it back; Escape cancels. The layer rides the arc when scrubbed, played and exported, at a flat rate along the arc under Linear keys.
+- Properties: a **Path** row (Straight | Curved) under Position. Right-click on the square offers the same two.
+- Core: `MotionPath.swift` (`MotionPathSegment`, `MotionPathShape`, `LayerMotion.pathSegments/bending/shapingPath`, `PhotonzDocument.motionPath/bendMotionPath`), `MotionStop.bend` + `LayerMotion.fromBend` (nil when straight). A key added part way along an arc splits it. Tests `MotionPathTests`. App: `CanvasMotionPath.swift`, `EditorState+MotionPath.swift`.
+- Walk `motion-path-walk` at Next defaults. Audit `queue/audits/2026-09-25-motion-path.json`. Filed: Between the keys section and Animate command menu from the move mock (p1); an order-dependent motion render test (p2).

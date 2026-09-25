@@ -44,10 +44,11 @@ extension CanvasNSView {
                canvasGuides: [CanvasGuide],
                selectedGuideID: UUID?,
                gridAdjust: CGPoint?,
-               motionPivot: MotionPivotHandle?) {
+               motionPivot: MotionPivotHandle?, motionPath: MotionPathOnCanvas?) {
         // Not drawn from here: `refreshOverlays` at the end of this pass draws
         // the crosshair, along with every other piece of chrome.
         self.motionPivot = motionPivot
+        self.motionPath = motionPath
         self.canvasGrid = canvasGrid
         self.iconKeylines = iconKeylines
         self.canvasGridOrigin = canvasGridOrigin
@@ -345,6 +346,7 @@ extension CanvasNSView {
         refreshDrawLanding()
         refreshPathEditChrome()
         refreshMotionPivotChrome()
+        refreshMotionPathChrome()
         // After the selection chrome, which takes the outline and the handles
         // away for the whole of a resize, and before the reading: the box a
         // stack is being dragged to is the only thing left saying what the

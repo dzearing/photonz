@@ -216,6 +216,13 @@ struct CanvasView: NSViewRepresentable {
     let onMotionPivotMove: (CGPoint) -> Void
     let onMotionPivotCommit: () -> Void
     let onMotionPivotCancel: () -> Void
+    /// The picked layer's path, and the moments of bending one stretch of it
+    /// and of putting one back on its line (`CanvasMotionPath.swift`).
+    let motionPath: MotionPathOnCanvas?
+    let onMotionPathBendPreview: (UUID, Int, CGPoint) -> Void
+    let onMotionPathBendCommit: () -> Void
+    let onMotionPathBendCancel: () -> Void
+    let onMotionPathStraighten: (UUID, Int) -> Void
     /// Space: watch it loop, or stop watching. Answered by the canvas rather
     /// than by a menu because the only other Space in the app belongs to the
     /// video transport, in a window this one never shares.
@@ -362,7 +369,7 @@ struct CanvasView: NSViewRepresentable {
                    canvasGridOrigin: canvasGridOrigin,
                    canvasGuides: canvasGuides, selectedGuideID: selectedGuideID,
                    gridAdjust: gridAdjust,
-                   motionPivot: motionPivot)
+                   motionPivot: motionPivot, motionPath: motionPath)
         view.applyCrispTile(crispTile, viewport: crispTileViewport)
     }
 
@@ -416,6 +423,10 @@ struct CanvasView: NSViewRepresentable {
         view.onMotionPivotMove = onMotionPivotMove
         view.onMotionPivotCommit = onMotionPivotCommit
         view.onMotionPivotCancel = onMotionPivotCancel
+        view.onMotionPathBendPreview = onMotionPathBendPreview
+        view.onMotionPathBendCommit = onMotionPathBendCommit
+        view.onMotionPathBendCancel = onMotionPathBendCancel
+        view.onMotionPathStraighten = onMotionPathStraighten
         view.onMotionPlayToggle = onMotionPlayToggle
         view.canPlayMotion = canPlayMotion
         view.onDocumentPlayToggle = onDocumentPlayToggle
@@ -549,6 +560,12 @@ final class CanvasNSView: NSView {
     var onMotionPivotMove: ((CGPoint) -> Void) = { _ in }
     var onMotionPivotCommit: (() -> Void) = {}
     var onMotionPivotCancel: (() -> Void) = {}
+    /// A path handle under the hand, let go, let go without moving, and
+    /// double-clicked.
+    var onMotionPathBendPreview: ((UUID, Int, CGPoint) -> Void) = { _, _, _ in }
+    var onMotionPathBendCommit: (() -> Void) = {}
+    var onMotionPathBendCancel: (() -> Void) = {}
+    var onMotionPathStraighten: ((UUID, Int) -> Void) = { _, _ in }
     var onMotionPlayToggle: (() -> Void) = {}
     var canPlayMotion = false
     var onDocumentPlayToggle: (() -> Void) = {}
@@ -1082,6 +1099,20 @@ final class CanvasNSView: NSView {
     let motionPivotLayer = CAShapeLayer()
     let motionPivotHaloLayer = CAShapeLayer()
     let motionPivotLabelLayer = CATextLayer()
+    /// The picked layer's path (`CanvasMotionPath.swift`), echoed from the
+    /// editor: nil whenever the picked layer does not travel.
+    var motionPath: MotionPathOnCanvas?
+    /// A handle on it, while it is under the hand.
+    var motionPathDrag: MotionPathDrag?
+    /// Escape called the bend off with the button still down: the rest of
+    /// that gesture belongs to nobody, as with the pivot.
+    var motionPathCancelled = false
+    /// The dashed route and its rim, the rings on the keys, the squares on
+    /// the middles.
+    let motionPathLineLayer = CAShapeLayer()
+    let motionPathHaloLayer = CAShapeLayer()
+    let motionPathKeysLayer = CAShapeLayer()
+    let motionPathHandlesLayer = CAShapeLayer()
     /// The shape the points on screen were last drawn FROM, and the space they
     /// were mapped out through. Kept so a walk can ask, while the button is
     /// still down, whether the chrome is on the shape the canvas is drawing
@@ -2074,6 +2105,7 @@ final class CanvasNSView: NSView {
         setUpPenChrome()
         setUpDrawLandingChrome()
         setUpMotionPivotChrome()
+        setUpMotionPathChrome()
         setUpPathEditChrome()
 
         // Selection handles and the snap dot sit above every other overlay.

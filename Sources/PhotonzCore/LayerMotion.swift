@@ -635,12 +635,19 @@ public struct MotionStop: Hashable, Codable, Sendable {
     /// Where this key's Bezier handles are, once somebody has drawn them
     /// (`KeyHandles`). Nil on every key nobody has, so those encode nothing new.
     public var handles: KeyHandles?
+    /// How the path LEAVING this key bends on its way to the next one, where
+    /// somebody has bent it (`MotionPathSegment.bend`). Only a move has a
+    /// path; nil is a straight run, which is every key nobody has bent, so
+    /// those encode nothing new.
+    public var bend: CGPoint?
 
-    public init(atMS: Int, value: MotionValue, ease: KeyEase? = nil, handles: KeyHandles? = nil) {
+    public init(atMS: Int, value: MotionValue, ease: KeyEase? = nil, handles: KeyHandles? = nil,
+                bend: CGPoint? = nil) {
         self.atMS = atMS
         self.value = value
         self.ease = ease
         self.handles = handles
+        self.bend = bend
     }
 
     /// The control point of the stretch LEAVING this key, in that stretch's
@@ -790,6 +797,9 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
     /// (`KeyHandles`). The keys in between carry their own.
     public var fromHandles: KeyHandles?
     public var toHandles: KeyHandles?
+    /// How the path leaving From bends (`MotionStop.bend`). To has no path
+    /// leaving it, and the keys in between carry their own.
+    public var fromBend: CGPoint?
     public var repeats: MotionRepeat
     /// What a TURN turns around, and nil on everything else: a fade and a
     /// slide have no axis, and a pivot sitting unused on one would be a number
@@ -894,7 +904,8 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
     /// and silently piling several onto the last millisecond would draw one key
     /// where there were three.
     public var keys: [MotionStop] {
-        var list = [MotionStop(atMS: timing.startMS, value: from, ease: fromEase, handles: fromHandles)]
+        var list = [MotionStop(atMS: timing.startMS, value: from, ease: fromEase, handles: fromHandles,
+                               bend: fromBend)]
         for stop in (stops ?? []).sorted(by: { $0.atMS < $1.atMS })
         where stop.atMS > timing.startMS && stop.atMS < timing.endMS {
             list.append(stop)
@@ -937,7 +948,7 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
         let list = keys
         guard list.count > 2 else {
             let shaped = segmentCurve(leaving: list[0], arriving: list[list.count - 1])
-            return from.blended(to: to, progress: shaped.value(at: progress)) ?? from
+            return travelled(from: list[0], to: list[list.count - 1], progress: shaped.value(at: progress)) ?? from
         }
         let at = Double(timing.startMS) + progress * Double(timing.durationMS)
         for index in 0..<(list.count - 1) {
@@ -948,7 +959,7 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
             guard span > 0 else { return right.value }
             let local = min(max((at - Double(left.atMS)) / span, 0), 1)
             let shaped = segmentCurve(leaving: left, arriving: right)
-            return left.value.blended(to: right.value, progress: shaped.value(at: local)) ?? left.value
+            return travelled(from: left, to: right, progress: shaped.value(at: local)) ?? left.value
         }
         return to
     }

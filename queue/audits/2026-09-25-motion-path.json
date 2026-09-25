@@ -1,0 +1,27 @@
+{
+  "feature": "A moving layer draws its path, and the path bends into an arc",
+  "epic": "video-transitions-motion",
+  "summary": "Once a layer is keyed at two places, picking it shows the route it travels as a dashed line on the canvas. Dragging the square in the middle of that line bends the move into an arc, and the layer follows the arc when it plays and when it is exported.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording from the Tutorials window (or any video).",
+  "try": [
+    { "do": "Type a title on the video at 0:01, pick it, and choose Position from + Animate a property." },
+    { "do": "Move the playhead to 0:03 and drag the title somewhere else on the canvas (or type new X and Y).", "shot": "2026-09-25-motion-path-1-straight-path-sc.png" },
+    { "do": "Drag the small square in the middle of the dashed line upward.", "shot": "2026-09-25-motion-path-2-bent-path-sc.png" },
+    { "do": "Drag the playhead back to 0:02 and watch the title ride the arc.", "shot": "2026-09-25-motion-path-3-part-way-along-sc.png" },
+    { "do": "In Properties, click Straight under Position, then Curved.", "shot": "2026-09-25-motion-path-4-curved-from-the-panel-sc.png" },
+    { "do": "Double-click the square to put the path back on its line." },
+    { "do": "Right-click the square: Straight and Curved are there too." }
+  ],
+  "evaluate": [
+    "Is the dashed line easy enough to see over a busy recording, including over white parts of the screen?",
+    "Does grabbing the square in the middle feel like bending the line, or would you rather grab the curve anywhere along it?",
+    "When you press Curved on a straight path, is an arc bowing upward the shape you expected?",
+    "Does the title's speed along the arc feel even with Linear keys, and does the ease still read as an ease on a curve?"
+  ],
+  "rough": [
+    "The move walkthrough mock puts Path in a 'Between the keys' section with a Curve dropdown and a note line; the app puts a Path row under Position in Animating, which follows the main video mock's panel, and easing stays on the timeline bar and the key's right-click. Filed as a follow-up.",
+    "The mock's Animate command menu ('Key at playhead', 'Curve the path', 'Easing') is not built; the path's own right-click offers Straight and Curved instead.",
+    "Only one handle per stretch, at its middle: there are no Bezier handles on the keys themselves, the way After Effects draws them. A lopsided arc is not possible yet.",
+    "While the title sits on its last key, its selection box covers the ring drawn on that key."
+  ]
+}

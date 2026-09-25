@@ -20,6 +20,7 @@ extension CanvasNSView {
         // release that never arrived cannot leave the canvas swallowing every
         // drag after it.
         motionPivotCancelled = false
+        motionPathCancelled = false
         // Adjusting the grid owns the whole canvas: nothing on it can be picked
         // up, selected or edited by accident. A press means one of three
         // things, in this order — grab the zero point by its knob or its two
@@ -418,6 +419,13 @@ extension CanvasNSView {
         // only ever answers while a turning layer is picked, so the rest of
         // the time there is nothing here at all.
         if motionPivotMouseDown(at: p, event: event) { return }
+        // The square on the middle of a moving layer's path: small, and only
+        // there while that layer is picked, so it is read before the press
+        // that would pick up whatever is under it (`CanvasMotionPath.swift`).
+        if motionPathMouseDown(at: p, event: event) {
+            refreshOverlays()
+            return
+        }
         // Rotate knob, floated off the selected layer's top edge.
         if let id = selectedLayerID, let layer = selectedLayer, offersRotation(layer),
            let knob = layer.rotateKnobPoint(zoom: viewport.zoom),
@@ -736,6 +744,10 @@ extension CanvasNSView {
         // falling through to the shape the crosshair was sitting on.
         if motionPivotDrag != nil || motionPivotCancelled {
             motionPivotMouseDragged(to: p, event: event)
+            return
+        }
+        if motionPathDrag != nil || motionPathCancelled {
+            motionPathMouseDragged(to: p)
             return
         }
         // The pointer as the layer under the hand reads it. On a piece inside a
@@ -1125,6 +1137,11 @@ extension CanvasNSView {
         }
         if motionPivotDrag != nil || motionPivotCancelled {
             motionPivotMouseUp()
+            return
+        }
+        if motionPathDrag != nil || motionPathCancelled {
+            motionPathCancelled = false
+            motionPathMouseUp()
             return
         }
         // The measure tool advances its placement on mouse-up (click/click) or on
