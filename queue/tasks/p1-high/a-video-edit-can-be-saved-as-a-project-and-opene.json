@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 130,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T09:50:49.641Z",
-  "updated": "2026-09-24T12:40:38.518Z",
+  "updated": "2026-09-25T03:50:02.674Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: EditorState.swift ~2359 saveDocument returns early when isRecordingDocument, saveDocumentAs has guard !isRecordingDocument, and saveAffordance passes canSaveInPlace: !isRecordingDocument so SaveAffordance.changesOnlyExportKeeps dims Save and the close sheet offers only Export. The comment says a package write 'would write a clip whose frames cannot be found again': MovieRef (Sources/PhotonzCore/MovieClip.swift) is an id plus size plus length, no path. So the core work is a media table in the package (MovieRef/sound id -> security-scoped bookmark or path) that PackageIO writes and reads, and EditorState re-registering those files with its movie/sound libraries on open (see DocumentClipMedia.swift, rememberMedia). Split out of trim-becomes-a-tool-and-the-recording-window-ret, whose Command S card (2026-09-20) was withdrawn by the manager on 2026-09-24 because it asked about one trimmed recording and a video document is now many clips. Command S is the next task's card. No new visible control: Save As already exists in the File menu, it is only dimmed.",
@@ -36,7 +36,34 @@
     {
       "t": "2026-09-24T12:40:38.517Z",
       "note": "seq 196 -> 130"
+    },
+    {
+      "t": "2026-09-25T03:15:38.739Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-25T03:49:47.645Z",
+      "note": "owns these walks: a-video-edit-saves-as-a-project-walk, a-project-whose-files-moved-walk, a-recording-opens-in-the-editor-at-defaults-walk"
+    },
+    {
+      "t": "2026-09-25T03:49:47.696Z",
+      "note": "adversarial pass before building: a Premiere editor expects File > Save As to keep a project that points at the footage, and Command S to save in place once it is one; both hold now. Mock check: no mock draws a save box or a missing-media sheet (both are standard macOS); the video mocks do draw name · size · length · saved in the title bar, which the app lacks, filed as a-video-window-says-its-name-size-length-and-whe (p1). Found on the way: Save As was never dimmed as the task said, it was live and did nothing (saveDocumentAs guarded on isRecordingDocument)."
+    },
+    {
+      "t": "2026-09-25T03:49:47.747Z",
+      "note": "left rough, not filed: (1) no Locate button for a moved file, only put it back or beside the project; wait for the user's answer to the audit question before building one. (2) a reopened project starts at 0:00 with the timeline fitted, not where the playhead and zoom were; RecordingPlaces keys on the recording URL, not the project. (3) two exports of the same edit are never byte-identical (encoder), measured: two exports of the same unsaved edit differ in 795k bytes, so 'same MP4' is checked as same length, size and sound plus exact document equality."
+    },
+    {
+      "t": "2026-09-25T03:50:02.672Z",
+      "note": "File > Save As on a video writes a .photonz project (document + media.json pointing at recordings and sounds, nothing copied); opening re-links every file under its saved id and names any it cannot find on a sheet; the close sheet offers Save As beside Export. Verified: ProjectMedia + PackageIO + SaveAffordance tests written first, full suite 9699 green; walks a-video-edit-saves-as-a-project-walk (reopened doc equals saved, plays without blank frames, exports 20.94s with sound, Cmd S in place), a-project-whose-files-moved-walk, a-recording-opens-in-the-editor-at-defaults-walk, plus the save/close walks, all ok at Next defaults with real captures. Audit queue/audits/2026-09-25-video-project.json."
     }
   ],
-  "source": "manager"
+  "source": "manager",
+  "started": "2026-09-25T03:15:38.738Z",
+  "walks": [
+    "a-video-edit-saves-as-a-project-walk",
+    "a-project-whose-files-moved-walk",
+    "a-recording-opens-in-the-editor-at-defaults-walk"
+  ],
+  "completed": "2026-09-25T03:50:02.673Z"
 }

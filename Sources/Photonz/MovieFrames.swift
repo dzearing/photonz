@@ -62,6 +62,18 @@ final class MovieLibrary {
 
     func url(for movie: MovieRef) -> URL? { urls[movie.id] }
 
+    /// File a reference a saved project already holds against the file its
+    /// media table found for it (`ProjectMedia`), so the project's clips play
+    /// under the ids they were saved with. Nothing is read off the file: the
+    /// project already knows its size and length. A file this run has opened
+    /// under another reference keeps that one for anybody opening it afresh.
+    func adopt(_ movie: MovieRef, at url: URL) {
+        let standardized = url.standardizedFileURL
+        urls[movie.id] = standardized
+        if refsByURL[standardized] == nil { refsByURL[standardized] = movie }
+        if let sound = movie.soundRef { SoundLibrary.shared.link(sound, to: standardized) }
+    }
+
     /// The same question asked with an id on its own, which is what a
     /// recording's SOUND has: a clip's sound shares the recording's identity
     /// because it is the same file (`SoundClip.swift`).

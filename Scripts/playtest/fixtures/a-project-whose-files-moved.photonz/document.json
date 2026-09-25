@@ -1,0 +1,1140 @@
+{
+  "canvasSize" : [
+    1280,
+    800
+  ],
+  "captionLook" : {
+    "activeHex" : "#FFD76A",
+    "alignment" : "center",
+    "backgroundHex" : "#00000099",
+    "colorHex" : "#FFFFFF",
+    "fontName" : "SF Pro",
+    "position" : "bottom",
+    "preset" : "caption",
+    "weight" : "semibold"
+  },
+  "captionsListenedTo" : [
+    "7969F5A5-B679-4E0F-B753-D9411ED46C0E"
+  ],
+  "durationMS" : 20940,
+  "layers" : [
+    {
+      "content" : {
+        "image" : {
+          "_0" : {
+            "id" : "7969F5A5-B679-4E0F-B753-D9411ED46C0E",
+            "pixelSize" : [
+              1280,
+              800
+            ]
+          }
+        }
+      },
+      "cuts" : {
+        "pieces" : [
+          {
+            "lengthMS" : 4313,
+            "sourceInMS" : 4313
+          },
+          {
+            "lengthMS" : 8627,
+            "sourceInMS" : 8626,
+            "transitionIn" : {
+              "kind" : "dissolve",
+              "lengthMS" : 400
+            }
+          }
+        ],
+        "sourceLengthMS" : 17253
+      },
+      "frame" : [
+        [
+          0,
+          0
+        ],
+        [
+          1280,
+          800
+        ]
+      ],
+      "id" : "CB650402-06ED-4884-BC9D-30B5DEFD40AF",
+      "isLocked" : false,
+      "isVisible" : true,
+      "movie" : {
+        "durationMS" : 17253,
+        "hasSound" : true,
+        "id" : "7969F5A5-B679-4E0F-B753-D9411ED46C0E",
+        "pixelSize" : [
+          1280,
+          800
+        ]
+      },
+      "name" : "Sample Talk",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "time" : {
+        "inMS" : 0,
+        "outMS" : 12940,
+        "sourceInMS" : 4313,
+        "sourceLengthMS" : 17253
+      },
+      "trackID" : "CB650402-06ED-4884-BC9D-30B5DEFD40AF",
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    },
+    {
+      "content" : {
+        "image" : {
+          "_0" : {
+            "id" : "3F3BC0C9-37E1-4004-A375-E7E7FABEC82D",
+            "pixelSize" : [
+              1280,
+              800
+            ]
+          }
+        }
+      },
+      "frame" : [
+        [
+          0,
+          0
+        ],
+        [
+          1280,
+          800
+        ]
+      ],
+      "id" : "6DEC4912-A828-4F5A-BE61-C06192BAE8CF",
+      "isLocked" : false,
+      "isVisible" : true,
+      "movie" : {
+        "durationMS" : 8000,
+        "hasSound" : true,
+        "id" : "3F3BC0C9-37E1-4004-A375-E7E7FABEC82D",
+        "pixelSize" : [
+          1280,
+          800
+        ]
+      },
+      "name" : "b-roll",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "time" : {
+        "inMS" : 12940,
+        "outMS" : 20940,
+        "sourceLengthMS" : 8000
+      },
+      "trackID" : "CB650402-06ED-4884-BC9D-30B5DEFD40AF",
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    },
+    {
+      "content" : {
+        "group" : {
+          "_0" : {
+            "children" : [
+              {
+                "captionWordsStorage" : [
+                  {
+                    "confidence" : 0.814,
+                    "endMS" : 127,
+                    "startMS" : 0,
+                    "text" : "The"
+                  },
+                  {
+                    "confidence" : 0.993,
+                    "endMS" : 607,
+                    "startMS" : 127,
+                    "text" : "transport"
+                  },
+                  {
+                    "confidence" : 0.901,
+                    "endMS" : 907,
+                    "startMS" : 607,
+                    "text" : "bar"
+                  },
+                  {
+                    "confidence" : 0.969,
+                    "endMS" : 1147,
+                    "startMS" : 907,
+                    "text" : "and"
+                  },
+                  {
+                    "confidence" : 0.995,
+                    "endMS" : 1267,
+                    "startMS" : 1147,
+                    "text" : "the"
+                  },
+                  {
+                    "confidence" : 0.993,
+                    "endMS" : 1627,
+                    "startMS" : 1267,
+                    "text" : "timeline"
+                  },
+                  {
+                    "confidence" : 1,
+                    "endMS" : 1987,
+                    "startMS" : 1627,
+                    "text" : "appear"
+                  }
+                ],
+                "content" : {
+                  "text" : {
+                    "_0" : {
+                      "activeWordHex" : "#FFD76A",
+                      "alignment" : "center",
+                      "colorHex" : "#FFFFFF",
+                      "fontName" : "SF Pro",
+                      "fontSize" : 36,
+                      "plateHex" : "#00000099",
+                      "staysOnOneLine" : false,
+                      "string" : "The transport bar and the timeline appear",
+                      "verticalAlignment" : "bottom",
+                      "weight" : "semibold"
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    128,
+                    626.4
+                  ],
+                  [
+                    1024,
+                    93.60000000000001
+                  ]
+                ],
+                "id" : "EA62C817-4AEC-4706-9CFC-531F819107CE",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "The transport bar and the timel…",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "time" : {
+                  "inMS" : 0,
+                  "outMS" : 1987
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              },
+              {
+                "captionWordsStorage" : [
+                  {
+                    "confidence" : 0.998,
+                    "endMS" : 2167,
+                    "startMS" : 1987,
+                    "text" : "under"
+                  },
+                  {
+                    "confidence" : 0.998,
+                    "endMS" : 2407,
+                    "startMS" : 2167,
+                    "text" : "the"
+                  },
+                  {
+                    "confidence" : 0.907,
+                    "endMS" : 3067,
+                    "startMS" : 2407,
+                    "text" : "canvas."
+                  }
+                ],
+                "content" : {
+                  "text" : {
+                    "_0" : {
+                      "activeWordHex" : "#FFD76A",
+                      "alignment" : "center",
+                      "colorHex" : "#FFFFFF",
+                      "fontName" : "SF Pro",
+                      "fontSize" : 36,
+                      "plateHex" : "#00000099",
+                      "staysOnOneLine" : false,
+                      "string" : "under the canvas.",
+                      "verticalAlignment" : "bottom",
+                      "weight" : "semibold"
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    128,
+                    626.4
+                  ],
+                  [
+                    1024,
+                    93.60000000000001
+                  ]
+                ],
+                "id" : "C0D5E37D-A197-4953-9422-EA6CC37EDD83",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "under the canvas.",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "time" : {
+                  "inMS" : 1987,
+                  "outMS" : 3127
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              },
+              {
+                "captionWordsStorage" : [
+                  {
+                    "confidence" : 0.844,
+                    "endMS" : 3487,
+                    "startMS" : 3127,
+                    "text" : "You"
+                  },
+                  {
+                    "confidence" : 0.999,
+                    "endMS" : 3607,
+                    "startMS" : 3487,
+                    "text" : "can"
+                  },
+                  {
+                    "confidence" : 1,
+                    "endMS" : 3726,
+                    "startMS" : 3607,
+                    "text" : "cut"
+                  },
+                  {
+                    "confidence" : 0.999,
+                    "endMS" : 3907,
+                    "startMS" : 3726,
+                    "text" : "a"
+                  },
+                  {
+                    "confidence" : 1,
+                    "endMS" : 4147,
+                    "startMS" : 3907,
+                    "text" : "clip"
+                  },
+                  {
+                    "confidence" : 0.999,
+                    "endMS" : 4327,
+                    "startMS" : 4147,
+                    "text" : "with"
+                  },
+                  {
+                    "confidence" : 0.998,
+                    "endMS" : 4447,
+                    "startMS" : 4327,
+                    "text" : "the"
+                  },
+                  {
+                    "confidence" : 0.732,
+                    "endMS" : 4867,
+                    "startMS" : 4447,
+                    "text" : "blade,"
+                  },
+                  {
+                    "confidence" : 0.905,
+                    "endMS" : 5107,
+                    "startMS" : 4867,
+                    "text" : "or"
+                  },
+                  {
+                    "confidence" : 1,
+                    "endMS" : 5467,
+                    "startMS" : 5107,
+                    "text" : "drag"
+                  }
+                ],
+                "content" : {
+                  "text" : {
+                    "_0" : {
+                      "activeWordHex" : "#FFD76A",
+                      "alignment" : "center",
+                      "colorHex" : "#FFFFFF",
+                      "fontName" : "SF Pro",
+                      "fontSize" : 36,
+                      "plateHex" : "#00000099",
+                      "staysOnOneLine" : false,
+                      "string" : "You can cut a clip with the blade, or drag",
+                      "verticalAlignment" : "bottom",
+                      "weight" : "semibold"
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    128,
+                    626.4
+                  ],
+                  [
+                    1024,
+                    93.60000000000001
+                  ]
+                ],
+                "id" : "0B1AFBFE-D6CB-4444-A4E2-0DD9262971E0",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "You can cut a clip with the bla…",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "time" : {
+                  "inMS" : 3127,
+                  "outMS" : 5467
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              },
+              {
+                "captionWordsStorage" : [
+                  {
+                    "confidence" : 0.997,
+                    "endMS" : 5647,
+                    "startMS" : 5467,
+                    "text" : "either"
+                  },
+                  {
+                    "confidence" : 0.992,
+                    "endMS" : 5887,
+                    "startMS" : 5647,
+                    "text" : "end"
+                  },
+                  {
+                    "confidence" : 0.998,
+                    "endMS" : 6067,
+                    "startMS" : 5887,
+                    "text" : "to"
+                  },
+                  {
+                    "confidence" : 0.998,
+                    "endMS" : 6367,
+                    "startMS" : 6067,
+                    "text" : "trim"
+                  },
+                  {
+                    "confidence" : 0.838,
+                    "endMS" : 6667,
+                    "startMS" : 6367,
+                    "text" : "it,"
+                  },
+                  {
+                    "confidence" : 0.844,
+                    "endMS" : 6967,
+                    "startMS" : 6667,
+                    "text" : "a"
+                  },
+                  {
+                    "confidence" : 0.997,
+                    "endMS" : 7267,
+                    "startMS" : 6967,
+                    "text" : "title"
+                  },
+                  {
+                    "confidence" : 0.998,
+                    "endMS" : 7507,
+                    "startMS" : 7267,
+                    "text" : "is"
+                  },
+                  {
+                    "confidence" : 0.997,
+                    "endMS" : 7567,
+                    "startMS" : 7507,
+                    "text" : "a"
+                  },
+                  {
+                    "confidence" : 0.993,
+                    "endMS" : 7747,
+                    "startMS" : 7567,
+                    "text" : "text"
+                  }
+                ],
+                "content" : {
+                  "text" : {
+                    "_0" : {
+                      "activeWordHex" : "#FFD76A",
+                      "alignment" : "center",
+                      "colorHex" : "#FFFFFF",
+                      "fontName" : "SF Pro",
+                      "fontSize" : 36,
+                      "plateHex" : "#00000099",
+                      "staysOnOneLine" : false,
+                      "string" : "either end to trim it, a title is a text",
+                      "verticalAlignment" : "bottom",
+                      "weight" : "semibold"
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    128,
+                    626.4
+                  ],
+                  [
+                    1024,
+                    93.60000000000001
+                  ]
+                ],
+                "id" : "0DE2177B-60A6-4490-A9CB-DC75EB47720E",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "either end to trim it, a title …",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "time" : {
+                  "inMS" : 5467,
+                  "outMS" : 7747
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              },
+              {
+                "captionWordsStorage" : [
+                  {
+                    "confidence" : 0.998,
+                    "endMS" : 8167,
+                    "startMS" : 7747,
+                    "text" : "layer"
+                  },
+                  {
+                    "confidence" : 0.969,
+                    "endMS" : 8347,
+                    "startMS" : 8167,
+                    "text" : "that"
+                  },
+                  {
+                    "confidence" : 0.999,
+                    "endMS" : 8527,
+                    "startMS" : 8347,
+                    "text" : "happens"
+                  },
+                  {
+                    "confidence" : 0.996,
+                    "endMS" : 8767,
+                    "startMS" : 8527,
+                    "text" : "to"
+                  },
+                  {
+                    "confidence" : 0.999,
+                    "endMS" : 8947,
+                    "startMS" : 8767,
+                    "text" : "have"
+                  },
+                  {
+                    "confidence" : 0.998,
+                    "endMS" : 9067,
+                    "startMS" : 8947,
+                    "text" : "a"
+                  },
+                  {
+                    "confidence" : 0.173,
+                    "endMS" : 9247,
+                    "startMS" : 9067,
+                    "text" : "start"
+                  },
+                  {
+                    "confidence" : 0.704,
+                    "endMS" : 9607,
+                    "startMS" : 9247,
+                    "text" : "and"
+                  },
+                  {
+                    "confidence" : 0.97,
+                    "endMS" : 9847,
+                    "startMS" : 9607,
+                    "text" : "an"
+                  }
+                ],
+                "content" : {
+                  "text" : {
+                    "_0" : {
+                      "activeWordHex" : "#FFD76A",
+                      "alignment" : "center",
+                      "colorHex" : "#FFFFFF",
+                      "fontName" : "SF Pro",
+                      "fontSize" : 36,
+                      "plateHex" : "#00000099",
+                      "staysOnOneLine" : false,
+                      "string" : "layer that happens to have a start and an",
+                      "verticalAlignment" : "bottom",
+                      "weight" : "semibold"
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    128,
+                    626.4
+                  ],
+                  [
+                    1024,
+                    93.60000000000001
+                  ]
+                ],
+                "id" : "5062FC3C-1F63-463A-9BD3-3C4E3E6FC603",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "layer that happens to have a st…",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "time" : {
+                  "inMS" : 7747,
+                  "outMS" : 9847
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              },
+              {
+                "captionWordsStorage" : [
+                  {
+                    "confidence" : 0.673,
+                    "endMS" : 10147,
+                    "startMS" : 9847,
+                    "text" : "end."
+                  }
+                ],
+                "content" : {
+                  "text" : {
+                    "_0" : {
+                      "activeWordHex" : "#FFD76A",
+                      "alignment" : "center",
+                      "colorHex" : "#FFFFFF",
+                      "fontName" : "SF Pro",
+                      "fontSize" : 36,
+                      "plateHex" : "#00000099",
+                      "staysOnOneLine" : false,
+                      "string" : "end.",
+                      "verticalAlignment" : "bottom",
+                      "weight" : "semibold"
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    128,
+                    626.4
+                  ],
+                  [
+                    1024,
+                    93.60000000000001
+                  ]
+                ],
+                "id" : "8D7A1800-74C9-49EA-99C3-4C8AC14C3FEC",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "end.",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "time" : {
+                  "inMS" : 9847,
+                  "outMS" : 10207
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              },
+              {
+                "captionWordsStorage" : [
+                  {
+                    "confidence" : 0.379,
+                    "endMS" : 10507,
+                    "startMS" : 10207,
+                    "text" : "Nothing"
+                  },
+                  {
+                    "confidence" : 0.997,
+                    "endMS" : 10747,
+                    "startMS" : 10507,
+                    "text" : "about"
+                  },
+                  {
+                    "confidence" : 0.997,
+                    "endMS" : 10927,
+                    "startMS" : 10747,
+                    "text" : "the"
+                  },
+                  {
+                    "confidence" : 0.998,
+                    "endMS" : 11227,
+                    "startMS" : 10927,
+                    "text" : "window"
+                  },
+                  {
+                    "confidence" : 0.998,
+                    "endMS" : 11647,
+                    "startMS" : 11227,
+                    "text" : "changes"
+                  },
+                  {
+                    "confidence" : 0.981,
+                    "endMS" : 12007,
+                    "startMS" : 11647,
+                    "text" : "to"
+                  },
+                  {
+                    "confidence" : 0.997,
+                    "endMS" : 12127,
+                    "startMS" : 12007,
+                    "text" : "edit"
+                  },
+                  {
+                    "confidence" : 0.998,
+                    "endMS" : 12367,
+                    "startMS" : 12127,
+                    "text" : "a"
+                  }
+                ],
+                "content" : {
+                  "text" : {
+                    "_0" : {
+                      "activeWordHex" : "#FFD76A",
+                      "alignment" : "center",
+                      "colorHex" : "#FFFFFF",
+                      "fontName" : "SF Pro",
+                      "fontSize" : 36,
+                      "plateHex" : "#00000099",
+                      "staysOnOneLine" : false,
+                      "string" : "Nothing about the window changes to edit a",
+                      "verticalAlignment" : "bottom",
+                      "weight" : "semibold"
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    128,
+                    626.4
+                  ],
+                  [
+                    1024,
+                    93.60000000000001
+                  ]
+                ],
+                "id" : "A2BB7CF7-3DE5-4F9A-A511-38A2E93A9D8D",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "Nothing about the window change…",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "time" : {
+                  "inMS" : 10207,
+                  "outMS" : 12367
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              },
+              {
+                "captionWordsStorage" : [
+                  {
+                    "confidence" : 0.839,
+                    "endMS" : 12667,
+                    "startMS" : 12367,
+                    "text" : "video."
+                  }
+                ],
+                "content" : {
+                  "text" : {
+                    "_0" : {
+                      "activeWordHex" : "#FFD76A",
+                      "alignment" : "center",
+                      "colorHex" : "#FFFFFF",
+                      "fontName" : "SF Pro",
+                      "fontSize" : 36,
+                      "plateHex" : "#00000099",
+                      "staysOnOneLine" : false,
+                      "string" : "video.",
+                      "verticalAlignment" : "bottom",
+                      "weight" : "semibold"
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    128,
+                    626.4
+                  ],
+                  [
+                    1024,
+                    93.60000000000001
+                  ]
+                ],
+                "id" : "6997C27D-27CB-47D0-A12E-11BB9FF906EC",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "video.",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "time" : {
+                  "inMS" : 12367,
+                  "outMS" : 12940
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              }
+            ]
+          }
+        }
+      },
+      "frame" : [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "id" : "125269C6-C8E2-4161-8A36-9B9410F2C591",
+      "isLocked" : false,
+      "isVisible" : true,
+      "name" : "Captions",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "trackID" : "125269C6-C8E2-4161-8A36-9B9410F2C591",
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    },
+    {
+      "content" : {
+        "text" : {
+          "_0" : {
+            "colorHex" : "#FFFFFF",
+            "fontName" : "Georgia",
+            "fontSize" : 80,
+            "string" : "Ship it faster",
+            "weight" : "bold"
+          }
+        }
+      },
+      "frame" : [
+        [
+          619.9999999999999,
+          329.99999999999994
+        ],
+        [
+          532,
+          95
+        ]
+      ],
+      "id" : "2A9BF1D9-710C-4197-922E-F54184F39E99",
+      "isLocked" : false,
+      "isVisible" : true,
+      "motions" : [
+        {
+          "curve" : {
+            "easeInOut" : {
+
+            }
+          },
+          "from" : {
+            "point" : {
+              "_0" : [
+                619.9999999999999,
+                329.99999999999994
+              ]
+            }
+          },
+          "id" : "FE7D031A-0F2A-4C3F-B76E-BF600D0B01D1",
+          "isOn" : true,
+          "property" : "position",
+          "repeats" : {
+            "once" : {
+
+            }
+          },
+          "timing" : {
+            "durationMS" : 1000,
+            "startMS" : 0
+          },
+          "to" : {
+            "point" : {
+              "_0" : [
+                699.9999999999999,
+                399.9999999999999
+              ]
+            }
+          }
+        }
+      ],
+      "name" : "Text",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "effects" : [
+          {
+            "kind" : "shadow",
+            "shadow" : {
+              "colorHex" : "#000000",
+              "offset" : [
+                0,
+                6.153846153846154
+              ],
+              "opacity" : 0.45,
+              "radius" : 18.46153846153846,
+              "spread" : 0
+            }
+          }
+        ],
+        "opacity" : 1,
+        "ringIsAnEffect" : true,
+        "shadow" : {
+          "colorHex" : "#000000",
+          "offset" : [
+            0,
+            6.153846153846154
+          ],
+          "opacity" : 0.45,
+          "radius" : 18.46153846153846,
+          "spread" : 0
+        }
+      },
+      "time" : {
+        "inMS" : 1000,
+        "outMS" : 4000
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    },
+    {
+      "content" : {
+        "sound" : {
+          "_0" : {
+            "durationMS" : 14000,
+            "id" : "B80201C3-F914-42CC-8018-5BFB12CF972B"
+          }
+        }
+      },
+      "frame" : [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "id" : "64CE65DC-9D11-4778-B22A-2409D9C557C6",
+      "isLocked" : false,
+      "isVisible" : true,
+      "name" : "Sample Music",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "time" : {
+        "inMS" : 0,
+        "outMS" : 14000,
+        "sourceLengthMS" : 14000
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    }
+  ],
+  "media" : [
+    {
+      "media" : {
+        "recording" : {
+          "_0" : {
+            "durationMS" : 17253,
+            "hasSound" : true,
+            "id" : "7969F5A5-B679-4E0F-B753-D9411ED46C0E",
+            "pixelSize" : [
+              1280,
+              800
+            ]
+          }
+        }
+      },
+      "name" : "Sample Talk.mp4"
+    },
+    {
+      "media" : {
+        "recording" : {
+          "_0" : {
+            "durationMS" : 8000,
+            "hasSound" : true,
+            "id" : "3F3BC0C9-37E1-4004-A375-E7E7FABEC82D",
+            "pixelSize" : [
+              1280,
+              800
+            ]
+          }
+        }
+      },
+      "name" : "b-roll.mp4"
+    },
+    {
+      "media" : {
+        "sound" : {
+          "_0" : {
+            "durationMS" : 14000,
+            "id" : "B80201C3-F914-42CC-8018-5BFB12CF972B"
+          }
+        }
+      },
+      "name" : "Sample Music.m4a"
+    }
+  ],
+  "pixelScale" : 1,
+  "tracks" : [
+    {
+      "id" : "125269C6-C8E2-4161-8A36-9B9410F2C591",
+      "kind" : "captions",
+      "name" : "Captions"
+    },
+    {
+      "id" : "CB650402-06ED-4884-BC9D-30B5DEFD40AF",
+      "kind" : "video",
+      "name" : "V1"
+    },
+    {
+      "id" : "91650402-06ED-4884-BC9D-30B5DEFD40AF",
+      "kind" : "audio",
+      "name" : "Audio"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "feature": "Save a video edit as a project and open it again",
+  "epic": "video-editing",
+  "summary": "An edited video can now be kept. File > Save As writes a .photonz project that holds the whole edit and points at the recordings and sounds where they sit, and opening it brings every track, cut, transition, key, title, caption and sound back exactly as saved.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    { "do": "Open a talking screen recording and let the captions write themselves. Cut a stretch out with Command K twice and Delete, drop a second clip on the end of V1, and drop a piece of music on the picture.", "shot": "2026-09-25-video-project-edit-sc.png" },
+    { "do": "Press Command W. The question now offers Save As… beside Export….", "shot": "2026-09-25-video-project-close-sheet-sc.png" },
+    { "do": "Choose Save As…, pick a folder and a name, and press Save. The window closes once the project is written." },
+    { "do": "Open the project with File > Open….", "shot": "2026-09-25-video-project-reopened-sc.png" },
+    { "do": "Press space and watch it play through, then export it with Shift Command E." },
+    { "do": "Cut once more and press Command S. It saves in place, with no box." },
+    { "do": "Quit, move the music file somewhere else, and open the project again.", "shot": "2026-09-25-video-project-missing-sc.png" }
+  ],
+  "evaluate": [
+    "Does Save As… as the first button, beside Export…, read as the way to keep an edit you want to come back to?",
+    "Is it right that the project points at your recordings rather than copying them in, the way a Premiere project does?",
+    "When a file has moved, is a sheet naming it enough, or do you want a way to point at its new place from inside the app?",
+    "Does the reopened project feel exactly like the edit you left, including where the playhead and the timeline zoom are?"
+  ],
+  "rough": [
+    "Command S on a recording that has never been saved is still dimmed and does nothing. What it should do is the question on the Command S task, not this one.",
+    "The window's title bar does not show the project's name, length or whether it is saved, which the video mocks draw. Filed as its own task.",
+    "A moved file can only be found again by putting it back where it was, or in the same place beside the project. There is no Locate button yet.",
+    "The reopened project starts at the first frame with the timeline fitted, not where you left the playhead or the zoom.",
+    "Two exports of the same edit are never byte for byte the same file (the video encoder does not repeat itself), so the walk checks the reopened edit is the saved document exactly and exports the same length, size and sound."
+  ]
+}

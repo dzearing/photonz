@@ -103,12 +103,12 @@ struct SaveAffordanceTests {
             == .saving)
     }
 
-    // A recording opened as a document has nowhere to be saved TO until the
-    // Command S question is answered: writing it back would throw away the
-    // video, and a package would hold a clip whose frames it cannot find. The
-    // edits are still work, so closing asks, says they will not be kept, and
-    // offers Export, the one door that does keep them (2026-09-23).
-    @Test("Edits nothing can save in place ask before closing and offer Export")
+    // A recording opened as a document has nowhere to be saved IN PLACE until
+    // the Command S question is answered: writing it back would throw away the
+    // video. The edits are still work, so closing asks, and offers the two
+    // doors that keep them: Save As, which writes a project pointing at the
+    // recording (2026-09-24), and Export, which writes a video (2026-09-23).
+    @Test("Edits nothing can save in place ask before closing and offer Save As and Export")
     func editsOnlyExportKeepsAskAndOfferExport() {
         let affordance = SaveAffordance.forDocument(isLoaded: true, hasChanges: true,
                                                    isSaving: false, canSaveInPlace: false)
@@ -116,6 +116,7 @@ struct SaveAffordanceTests {
         #expect(!affordance.isSaveEnabled)
         #expect(affordance.asksBeforeClosing)
         #expect(affordance.closingOffersExport)
+        #expect(affordance.closingOffersSaveAs)
         #expect(!affordance.closingOffersSave)
         #expect(!affordance.savesSomething)
     }
@@ -126,5 +127,12 @@ struct SaveAffordanceTests {
                                                    isSaving: false, canSaveInPlace: false)
         #expect(affordance == .nothingToSave)
         #expect(!affordance.asksBeforeClosing)
+    }
+
+    @Test("Save As is offered on the way out only where Save itself cannot write")
+    func saveAsIsOfferedOnlyWhereSaveCannot() {
+        for affordance in SaveAffordance.allCases where affordance != .changesOnlyExportKeeps {
+            #expect(!affordance.closingOffersSaveAs, "\(affordance) offers Save As on close")
+        }
     }
 }

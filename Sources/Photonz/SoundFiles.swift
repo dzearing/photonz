@@ -61,6 +61,12 @@ final class SoundLibrary {
         urls[ref.id] ?? MovieLibrary.shared.url(forID: ref.id)
     }
 
+    /// The same question asked with an id on its own, which is what saving a
+    /// project has for every file it points at (`ProjectMedia`).
+    func url(forID id: UUID) -> URL? {
+        urls[id] ?? MovieLibrary.shared.url(forID: id)
+    }
+
     /// Every sound in a document, against the file it plays: what an export
     /// needs and the only thing it needs from the app.
     func urls(for mix: [AudioMixSegment]) -> [UUID: URL] {

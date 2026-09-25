@@ -630,6 +630,21 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// for it to land. What an export changes about the window (a recording
     /// that cannot be saved counts as kept once exported) is then checkable.
     case exportVideoAsTheSheetDoes
+    /// Save the document as a project, exactly as File > Save As and a place
+    /// picked in the save box would, into `project.photonz` in the walk's own
+    /// output folder. The walk opens it again with an `open` step naming that
+    /// path, after a `closeDocument`.
+    case saveProjectAs
+    /// Answer the close question with its Export button, where it has one,
+    /// rather than its first.
+    case answerCloseExport
+    /// Fail unless the document in the window now is exactly the one the last
+    /// `saveProjectAs` wrote: every track, clip piece, transition, key, title,
+    /// caption and sound level.
+    case expectReopenedAsSaved
+    /// Fail unless the project in the window opened without some of its
+    /// files AND says which, on a sheet on its window.
+    case expectMissingMedia
     /// Open the New Canvas sheet, so a walk can photograph it. A snapshot
     /// taken while a sheet is up photographs the sheet.
     /// The guided tutorials, driven from a walk (`TutorialController`).

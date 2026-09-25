@@ -1,0 +1,23 @@
+[
+  {
+    "id": "7969F5A5-B679-4E0F-B753-D9411ED46C0E",
+    "kind": "recording",
+    "name": "Sample Talk.mp4",
+    "path": "/Volumes/A disk that is not plugged in/Footage/Sample Talk.mp4",
+    "relativePath": "Footage/Sample Talk.mp4"
+  },
+  {
+    "id": "3F3BC0C9-37E1-4004-A375-E7E7FABEC82D",
+    "kind": "recording",
+    "name": "b-roll.mp4",
+    "path": "/Volumes/A disk that is not plugged in/Footage/b-roll.mp4",
+    "relativePath": "Footage/b-roll.mp4"
+  },
+  {
+    "id": "B80201C3-F914-42CC-8018-5BFB12CF972B",
+    "kind": "sound",
+    "name": "Sample Music.m4a",
+    "path": "/Volumes/A disk that is not plugged in/Footage/Sample Music.m4a",
+    "relativePath": "Footage/Sample Music.m4a"
+  }
+]

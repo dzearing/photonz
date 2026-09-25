@@ -415,6 +415,37 @@ Stopping takes the half-written file with it.
 
 ---
 
+## 8a. Keeping an edit: the project
+
+File > Save As on a video writes a `.photonz` package like any other document:
+`document.json` holds the whole edit (tracks, pieces, transitions, keys, titles,
+captions, sound levels). It never holds a frame: a clip layer's picture is the
+frame under the playhead, fetched from the recording, so `PackageIO` skips clip
+layers when it collects bitmaps. Beside it, `media.json` (`ProjectMedia`, core,
+tested) lists each recording and sound the edit plays or holds on its shelf,
+by the id the document knows it by, with its full path and its path relative to
+the project's folder. Recordings are pointed at, never copied in and never
+changed, the way a Premiere project points at its footage.
+
+Opening a project resolves every row, first where it was saved, then the same
+place relative to wherever the project is now (a folder moved whole to another
+disk still opens whole), and files each found one back with `MovieLibrary.adopt`
+/ `SoundLibrary.link` under its saved id BEFORE the document is installed. A row
+found in neither place leaves its clips blank and is named on a sheet on the
+window; the project still opens.
+
+Command S on a recording that has never been saved stays dimmed: what it should
+do there is the Command S task's question. The close sheet on an edited
+recording offers Save As… first, then Export…. Once saved, the window is an
+ordinary package and Command S saves it in place.
+
+Walks: `a-video-edit-saves-as-a-project-walk` (edit, export, save, close,
+reopen, the document must equal the saved one, play, export again, Command S),
+`a-project-whose-files-moved-walk`, and the close sheet in
+`a-recording-opens-in-the-editor-at-defaults-walk`.
+
+---
+
 ## 8b. The way in: one door, and it tells you when it cannot take you
 
 *Built 2026-09-21, `next-opening-a-recording`.*

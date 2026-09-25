@@ -1,0 +1,13 @@
+{
+  "out": "/tmp/photonz-playtest/a-project-whose-files-moved-walk",
+  "seed": "A saved video project whose recordings and music are no longer where it was saved, nor beside it, opened at Next defaults with no flag touched. It must open rather than fail, and say on a sheet which files it cannot find.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "open", "file": "fixtures/a-project-whose-files-moved.photonz" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "action", "action": "expectMissingMedia" },
+    { "do": "describe", "stage": "1-files-missing", "note": "THE TEST: the project opens, its tracks, title and captions all there, and a sheet names the talk, the b-roll and the music as files it cannot find, with where to put them back" },
+    { "do": "snapshot", "name": "1-files-missing" },
+    { "do": "expectEdited", "edited": false }
+  ]
+}

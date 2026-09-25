@@ -34,8 +34,10 @@ public enum SaveAffordance: String, Sendable, Equatable, CaseIterable, Codable {
     /// Loaded, with edits, in a window that has nowhere to save them in place:
     /// a recording opened as a document, until the Command S question is
     /// answered. Save stays dimmed, and closing still asks, because the edits
-    /// are work: the sheet says they will not be kept and offers Export, the
-    /// one door that keeps them.
+    /// are work: the sheet offers the two doors that keep them, Save As, which
+    /// writes a project pointing at the recording, and Export, which writes a
+    /// video. (The name predates Save As reaching recordings; it is kept
+    /// because walks and logs read it.)
     case changesOnlyExportKeeps
 
     /// The whole affordance from the three facts a window knows about itself.
@@ -67,9 +69,13 @@ public enum SaveAffordance: String, Sendable, Equatable, CaseIterable, Codable {
     /// Whether that question is "do you want to save the changes", with Save.
     public var closingOffersSave: Bool { self == .unsavedChanges || self == .saving }
 
-    /// Whether that question is instead "these changes will not be kept", with
-    /// Export, because Save has nowhere to write them.
+    /// Whether that question instead offers Export, because Save has nowhere
+    /// to write the changes in place.
     public var closingOffersExport: Bool { self == .changesOnlyExportKeeps }
+
+    /// Whether that same question offers Save As beside Export: somewhere new
+    /// is always a place the changes can go, even where Save has none.
+    public var closingOffersSaveAs: Bool { self == .changesOnlyExportKeeps }
 
     /// Whether pressing Save has real work to do, as opposed to reporting an
     /// immediate success. A save with nothing to write must still report

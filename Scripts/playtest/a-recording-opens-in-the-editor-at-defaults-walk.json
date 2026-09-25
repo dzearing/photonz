@@ -16,10 +16,10 @@
 
     { "do": "action", "action": "askToClose" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "describe", "stage": "3-closing-asks", "note": "THE OTHER TEST: closing an edited recording stops and says the changes will not be kept, and offers Export, instead of dropping the cut without a word" },
+    { "do": "describe", "stage": "3-closing-asks", "note": "THE OTHER TEST: closing an edited recording stops and asks whether to keep the changes, offering Save As (a project that points at the recording) beside Export, instead of dropping the cut without a word" },
     { "do": "snapshot", "name": "3-closing-asks" },
 
-    { "do": "action", "action": "answerCloseFirst" },
+    { "do": "action", "action": "answerCloseExport" },
     { "do": "wait", "seconds": 1.0 },
     { "do": "describe", "stage": "4-export-offered", "note": "Export in that question keeps the window open and puts the Export sheet on it, so the edit can leave as a video" },
     { "do": "snapshot", "name": "4-export-sheet" },
@@ -29,6 +29,22 @@
     { "do": "expectEdited", "edited": true },
     { "do": "action", "action": "exportVideoAsTheSheetDoes" },
     { "do": "expectEdited", "edited": false },
-    { "do": "describe", "stage": "5-kept-by-export", "note": "once the edit has gone out as a video it is kept, so closing no longer has anything to warn about" }
+    { "do": "describe", "stage": "5-kept-by-export", "note": "once the edit has gone out as a video it is kept, so closing no longer has anything to warn about" },
+
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectEdited", "edited": true },
+    { "do": "action", "action": "askToClose" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "answerCloseFirst" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "6-saved-and-closed", "note": "a second cut, then Save As from the same question: the edit is saved as a project where the save box pointed and the window closes with nothing more to ask" },
+    { "do": "open", "file": "/tmp/photonz-playtest/a-recording-opens-in-the-editor-at-defaults-walk/project.photonz" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "action", "action": "expectReopenedAsSaved" },
+    { "do": "expectEdited", "edited": false },
+    { "do": "snapshot", "name": "6-the-project-reopened" }
   ]
 }

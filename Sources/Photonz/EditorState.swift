@@ -1073,6 +1073,12 @@ final class EditorState {
     /// It is what Save, Export and Revert to Original act on, and it is how the
     /// window knows there is an untouched file behind the clip.
     var recordingURL: URL?
+
+    /// The files a project opened without, by name, because they were not
+    /// where it was saved or beside it (`ProjectMedia`). Empty for everything
+    /// else.
+    var missingMediaNames: [String] = []
+
     /// Which PIECE of the picked clip is in hand, where the clip is cut into
     /// more than one (`EditorState+ClipBar`). Nil means the clip as a whole:
     /// a recording nobody has cut has no piece to pick.
@@ -1612,12 +1618,14 @@ final class EditorState {
     /// other (`SaveAffordance`). An image save is synchronous, so there is no
     /// commit in flight to report.
     var saveAffordance: SaveAffordance {
-        // A recording opened as a document has nowhere to be saved TO yet:
-        // writing it back as a picture would destroy the video, and writing it
-        // as a package would write a clip whose frames cannot be found again.
-        // So Save stays dimmed, and an EDITED one still stops the close: the
-        // sheet says the edits will not be kept and offers Export, which is
-        // the one door that keeps them (`changesOnlyExportKeeps`).
+        // A recording opened as a document has nowhere to be saved IN PLACE
+        // yet: writing it back as a picture would destroy the video, and what
+        // Command S should do to it is the next task's question. So Save stays
+        // dimmed, and an EDITED one still stops the close: the sheet offers
+        // Save As, which writes a project pointing at the recording, and
+        // Export, which writes a video (`changesOnlyExportKeeps`). Once saved
+        // as a project it is an ordinary package and Save works as it does on
+        // any other.
         .forDocument(isLoaded: document != nil,
                      hasChanges: ClosePrompt.needsSavePrompt(current: document,
                                                              savedBaseline: savedDocument),
@@ -2442,9 +2450,19 @@ final class EditorState {
         }
     }
 
-    /// ⇧⌘S.
+    /// ⇧⌘S. A recording opened as a document saves as a project: the whole
+    /// edit in a package that points at the recordings and sounds it plays
+    /// where they sit, and copies none of them (`ProjectMedia`).
     func saveDocumentAs() {
-        guard document != nil, !isRecordingDocument else { return }
+        guard document != nil else { return }
+        #if PHOTONZ_PLAYTEST
+        // A walk cannot answer a save box, so it says where the box would have
+        // been pointed and the save goes there instead.
+        if let url = Self.playtestSaveAsURL {
+            save(to: url)
+            return
+        }
+        #endif
         let panel = NSSavePanel()
         panel.allowedContentTypes = [Self.photonzType]
         panel.nameFieldStringValue = documentURL?.lastPathComponent
@@ -2458,7 +2476,12 @@ final class EditorState {
     private func save(to url: URL) {
         guard let document else { return }
         do {
-            try PackageIO.write(document, store: store, to: url)
+            // Where each recording and sound is, so opening the project finds
+            // them again. A picture has none and writes exactly what it did.
+            let media = ProjectMedia.table(for: document, project: url) {
+                SoundLibrary.shared.url(forID: $0)
+            }
+            try PackageIO.write(document, store: store, media: media, to: url)
             documentURL = url
             markSaved()
             // Saved under a new name: the open groups belong to the new file
@@ -2472,10 +2495,58 @@ final class EditorState {
     func openPackage(at url: URL) {
         do {
             let document = try PackageIO.read(from: url, into: store)
+            // A saved video: every recording and sound goes back on file under
+            // the id the project holds it by, BEFORE the install, so the first
+            // frame asked for already knows where to come from. One that is
+            // nowhere to be found leaves its clips blank and is named, rather
+            // than the whole project refusing to open.
+            let found = ProjectMedia.resolve((try? PackageIO.readMedia(from: url)) ?? [],
+                                             project: url) {
+                FileManager.default.fileExists(atPath: $0.path)
+            }
+            for media in ProjectMedia.references(in: document) {
+                switch media {
+                case .recording(let movie):
+                    if let file = found.located[movie.id] { MovieLibrary.shared.adopt(movie, at: file) }
+                case .sound(let sound):
+                    if let file = found.located[sound.id] { SoundLibrary.shared.link(sound, to: file) }
+                }
+            }
             installDocument(document, url: url)
+            missingMediaNames = found.missing.map(\.name)
+            if document.hasTime {
+                // The first frame, fetched before anybody presses anything,
+                // exactly as a recording opened on its own does.
+                documentMomentChanged()
+            }
+            tellAboutMissingMedia()
         } catch {
             presentError("Couldn't open the document.", error)
         }
+    }
+
+    #if PHOTONZ_PLAYTEST
+    /// Where Save As writes while a walk is driving (see `saveDocumentAs`).
+    static var playtestSaveAsURL: URL?
+    #endif
+
+    /// Say which of a project's files could not be found, once, as a sheet on
+    /// its window: a clip with nothing in it is otherwise a mystery. Waits for
+    /// the window, which a project that has just been opened may not have yet.
+    private func tellAboutMissingMedia(attempt: Int = 0) {
+        guard let message = ProjectMedia.missingMessage(names: missingMediaNames) else { return }
+        guard let window = hostWindow, window.isVisible, window.alphaValue >= 1 else {
+            guard attempt < 40 else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
+                self?.tellAboutMissingMedia(attempt: attempt + 1)
+            }
+            return
+        }
+        let alert = NSAlert()
+        alert.messageText = message
+        alert.informativeText = ProjectMedia.missingAdvice(count: missingMediaNames.count)
+        alert.alertStyle = .warning
+        alert.beginSheetModal(for: window)
     }
 
     // MARK: - Export

@@ -1,0 +1,469 @@
+{
+  "out": "/tmp/photonz-playtest/a-video-edit-saves-as-a-project-walk",
+  "seed": "An edited video saved as a project and opened again, at Next defaults with no flag touched: the talking sample recording is cut with Command K twice and Delete, the b-roll let go on the end of V1, a cross dissolve put on the jump cut, a title typed and keyed from A to B, the sample music dropped under it, and the captions write themselves. The edit is exported, saved as a project the way File > Save As does, the window closed, the project opened from disk, and the walk fails unless the document that comes back is the one that was saved, every file is found, it plays without a blank frame, and it exports the same length with its sound.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "scratch": [
+      "sample:recording as b-roll.mp4",
+      "sample:music"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleTalk"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "captionsWaitForThemselves"
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectOneTrack"
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Talk",
+      "track": "V1",
+      "startsAt": 0.0,
+      "count": 1
+    },
+    {
+      "do": "describe",
+      "stage": "1-opened",
+      "note": "A 17 second screen recording with somebody talking, opened at Next defaults. Nothing was pressed: the captions wrote themselves onto one Captions track, the recording is on V1 with its sound under it"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-opened"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekMiddle"
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "action",
+      "action": "videoSeekQuarter"
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "row": "Sample Talk",
+      "reads": "layer, 3 pieces"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "row": "Sample Talk",
+      "reads": "layer, 2 pieces"
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectEndWithRecording"
+    },
+    {
+      "do": "describe",
+      "stage": "2-cut",
+      "note": "THE CUT: Command K at 0:08 and at 0:04, Premiere's Add Edit, then Delete throws the middle piece away and closes the gap. V1 is two pieces of the recording, 12.9 seconds long, and the captions came along: the lines for the words that went are gone, every later line moved up with its words, and the last one ends with the recording"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-cut"
+    },
+    {
+      "do": "dropOnTimeline",
+      "file": "scratch/b-roll.mp4",
+      "track": "V1",
+      "seconds": 12.9
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "track": "V1",
+      "startsAt": 12.94,
+      "within": 0.1,
+      "count": 1
+    },
+    {
+      "do": "describe",
+      "stage": "3-second-clip",
+      "note": "THE SECOND CLIP: b-roll let go on V1 just short of the end snaps on at 0:12.9, with its sound on the Audio track under it"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-second-clip"
+    },
+    {
+      "do": "selectRow",
+      "row": "Sample Talk"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Sample Talk join 1"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-picker",
+      "note": "THE TRANSITION: the recording picked, a click on the jump cut left by the delete opens the picker AT THIS CUT with its six playing tiles"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-picker"
+    },
+    {
+      "do": "press",
+      "control": "Cross dissolve",
+      "in": "At this cut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Cross dissolve"
+    },
+    {
+      "do": "describe",
+      "stage": "5-dissolve",
+      "note": "A cross dissolve on the jump cut, paid for with the frames the delete threw away, drawn as a band over the join"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-dissolve"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        620,
+        330
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Ship it faster"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "control": "Track Title",
+      "present": true
+    },
+    {
+      "do": "reveal",
+      "control": "Animating section"
+    },
+    {
+      "do": "press",
+      "control": "Key",
+      "in": "Position"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Position",
+      "reads": "on a key"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "drag",
+      "from": [
+        720,
+        350
+      ],
+      "to": [
+        800,
+        420
+      ],
+      "space": "document",
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Position",
+      "reads": "on a key"
+    },
+    {
+      "do": "describe",
+      "stage": "6-title-at-b",
+      "note": "THE TITLE: T and a click at one second, Ship it faster typed, Position keyed from its diamond, and a second later the title dragged on the canvas: a second key, drawn on the title's Position lane. It moves from A at 0:01 to B at 0:02"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-title-at-b"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "dropImage",
+      "file": "scratch/Sample Music.m4a",
+      "at": [
+        640,
+        400
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "describe",
+      "stage": "7-music",
+      "note": "The sample music let go on the picture at the start: it lands on a sound track of its own under the edit"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-the-whole-edit"
+    },
+    {
+      "do": "writeVideo",
+      "name": "before-the-save",
+      "format": "mp4",
+      "seconds": 20.94,
+      "within": 0.6,
+      "sound": true,
+      "copied": false
+    },
+    {
+      "do": "expectEdited",
+      "edited": true
+    },
+    {
+      "do": "action",
+      "action": "saveProjectAs"
+    },
+    {
+      "do": "expectEdited",
+      "edited": false
+    },
+    {
+      "do": "describe",
+      "stage": "8-saved",
+      "note": "THE SAVE: File > Save As, pointed at project.photonz in the walk's folder. The window takes the project's name and has nothing left unsaved. The package holds the edit and a table of where the talk, the b-roll and the music are; none of them is copied into it"
+    },
+    {
+      "do": "snapshot",
+      "name": "8-saved-as-a-project"
+    },
+    {
+      "do": "action",
+      "action": "closeDocument"
+    },
+    {
+      "do": "open",
+      "file": "/tmp/photonz-playtest/a-video-edit-saves-as-a-project-walk/project.photonz"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "action",
+      "action": "expectReopenedAsSaved"
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Talk",
+      "track": "V1",
+      "startsAt": 0.0,
+      "count": 1
+    },
+    {
+      "do": "expectEdited",
+      "edited": false
+    },
+    {
+      "do": "describe",
+      "stage": "9-reopened",
+      "note": "THE REOPEN: the window was closed and the project opened from disk in a fresh one. Every track, both pieces of the talk, the dissolve, the b-roll, the title and its two Position keys, the captions and the music came back exactly as they were saved, and every file was found where it sits"
+    },
+    {
+      "do": "snapshot",
+      "name": "9-reopened"
+    },
+    {
+      "do": "expectPlaybackNeverBlank",
+      "name": "reopened-playing",
+      "seconds": 21,
+      "moments": 20
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "describe",
+      "stage": "10-exported-again",
+      "note": "THE SAME FILE: the reopened project written out as an MP4 runs the same 20.94 seconds with its sound, as the export before the save did"
+    },
+    {
+      "do": "writeVideo",
+      "name": "after-the-reopen",
+      "format": "mp4",
+      "seconds": 20.94,
+      "within": 0.6,
+      "sound": true,
+      "copied": false
+    },
+    {
+      "do": "expectEdited",
+      "edited": false
+    },
+    {
+      "do": "action",
+      "action": "videoSeekQuarter"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "clipSplit"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectEdited",
+      "edited": true
+    },
+    {
+      "do": "action",
+      "action": "save"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectEdited",
+      "edited": false
+    },
+    {
+      "do": "describe",
+      "stage": "11-saved-in-place",
+      "note": "Once the edit is a project, Command S saves it in place like any other document: one more cut, Command S, and nothing is left unsaved"
+    }
+  ]
+}

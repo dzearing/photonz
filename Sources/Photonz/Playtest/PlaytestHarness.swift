@@ -120,6 +120,8 @@ private final class Run {
     private var canvas: CanvasNSView?
     /// The control the last `hover` rested on, so the next one can leave it.
     private var hovered: HintAnchorView?
+    /// The document the last `saveProjectAs` wrote, for `expectReopenedAsSaved`.
+    private var savedProjectDocument: PhotonzDocument?
     /// A colour drag left down by `holdColorDrag`, waiting for the release that
     /// turns its live frames into one recorded step.
     private var heldColorDrag: (slot: ColorSlot, paint: Paint)?
@@ -2127,20 +2129,102 @@ private final class Run {
             note(number, step.name, "askToClose: the window stopped and asked. \(words)",
                  state: describe())
 
-        case .action(.answerCloseFirst):
+        case .action(.answerCloseFirst), .action(.answerCloseExport):
             let closing = try requireWindow()
             guard let sheet = closing.attachedSheet,
                   let first = Self.alertButtons(in: sheet).first else {
                 throw Failure(description: "there is no close question on the window to answer")
             }
-            let title = first.title
-            first.performClick(nil)
+            let wantsExport = step == .action(.answerCloseExport)
+            let buttons = Self.alertButtons(in: sheet)
+            guard let chosen = wantsExport ? buttons.first(where: { $0.title.hasPrefix("Export") }) : first
+            else {
+                throw Failure(description: "the close question offers no Export: "
+                              + buttons.map(\.title).joined(separator: ", "))
+            }
+            // A Save As answered here writes where a walk's save box would
+            // have pointed, since nothing can answer the box itself.
+            let projectURL = out.appendingPathComponent("project.photonz")
+            try? FileManager.default.removeItem(at: projectURL)
+            EditorState.playtestSaveAsURL = projectURL
+            defer { EditorState.playtestSaveAsURL = nil }
+            let savingDocument = editor?.document
+            let title = chosen.title
+            chosen.performClick(nil)
             await sleep(0.8)
             let exporting = editor?.isExportDialogPresented == true
+            let saved = FileManager.default.fileExists(atPath: projectURL.path)
+            if saved { savedProjectDocument = savingDocument }
             note(number, step.name,
                  "answered \"\(title)\": the window is \(closing.isVisible ? "still open" : "closed")"
-                     + (exporting ? ", with the Export sheet up" : ""),
+                     + (exporting ? ", with the Export sheet up" : "")
+                     + (saved ? ", and the project was saved as \(projectURL.path)" : ""),
                  state: describe())
+            if !closing.isVisible {
+                editor = nil
+                window = nil
+                canvas = nil
+                hovered = nil
+            }
+
+        case .action(.saveProjectAs):
+            let saving = try requireEditor()
+            let projectURL = out.appendingPathComponent("project.photonz")
+            try? FileManager.default.removeItem(at: projectURL)
+            EditorState.playtestSaveAsURL = projectURL
+            defer { EditorState.playtestSaveAsURL = nil }
+            saving.saveDocumentAs()
+            guard FileManager.default.fileExists(atPath: projectURL.path) else {
+                throw Failure(description: "Save As wrote nothing at \(projectURL.path)")
+            }
+            savedProjectDocument = saving.document
+            let table = (try? PackageIO.readMedia(from: projectURL)) ?? []
+            note(number, step.name,
+                 "saved as \(projectURL.path), pointing at "
+                     + (table.isEmpty ? "no files"
+                        : table.map { "\($0.name) (\($0.kind.rawValue))" }.joined(separator: ", "))
+                     + "; the window is \(saving.hasUnsavedChanges ? "STILL edited" : "no longer edited")"
+                     + " and titled \"\(saving.windowTitle)\"",
+                 state: describe())
+
+        case .action(.expectMissingMedia):
+            let opened = try requireEditor()
+            let closing = try requireWindow()
+            let missing = opened.missingMediaNames
+            guard !missing.isEmpty else {
+                throw Failure(description: "the project opened with every file found; nothing is missing")
+            }
+            try await poll("the window to say which files are missing", within: 10) {
+                closing.attachedSheet != nil
+            }
+            let words = Self.alertWords(on: closing)
+            let unsaid = missing.filter { !words.contains($0) }
+            guard unsaid.isEmpty else {
+                throw Failure(description: "the sheet never names " + unsaid.joined(separator: ", ")
+                              + ". \(words)")
+            }
+            note(number, step.name, "opened without \(missing.joined(separator: ", ")), and said so. \(words)",
+                 state: describe())
+
+        case .action(.expectReopenedAsSaved):
+            let reopened = try requireEditor()
+            guard let saved = savedProjectDocument else {
+                throw Failure(description: "no saveProjectAs ran before this step")
+            }
+            guard let now = reopened.document else { throw Failure(description: "the window has no document") }
+            guard now == saved else {
+                let before = saved.allLayers.map(\.name), after = now.allLayers.map(\.name)
+                throw Failure(description: "the reopened project is not the one that was saved: layers before "
+                              + "\(before), after \(after); length \(saved.durationMS ?? 0)ms before, "
+                              + "\(now.durationMS ?? 0)ms after")
+            }
+            let missing = reopened.missingMediaNames
+            guard missing.isEmpty else {
+                throw Failure(description: "the project opened without " + missing.joined(separator: ", "))
+            }
+            note(number, step.name,
+                 "the reopened project is the saved one exactly: \(now.allLayers.count) layers, "
+                     + "\(now.durationMS ?? 0)ms, every file found", state: describe())
 
         case .action(.exportVideoAsTheSheetDoes):
             let editor = try requireEditor()
@@ -4701,7 +4785,8 @@ private final class Run {
                 if let id = editor.selectedLayerID {
                     editor.setContentPlacement(id: id, horizontal: .stretch)
                 }
-            case .closeDocument, .askToClose, .answerCloseFirst, .exportVideoAsTheSheetDoes:
+            case .closeDocument, .askToClose, .answerCloseFirst, .exportVideoAsTheSheetDoes,
+                 .saveProjectAs, .answerCloseExport, .expectReopenedAsSaved, .expectMissingMedia:
                 break  // handled above, where there is still a window to close
             case .closeSheets:
                 editor.isExportDialogPresented = false
