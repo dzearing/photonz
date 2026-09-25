@@ -1,0 +1,35 @@
+{
+  "id": "anything-you-draw-on-a-video-gets-its-own-row-on",
+  "title": "Anything you draw on a video gets its own row on the timeline",
+  "goal": "User 2026-09-25: 'If I drag a rectangle on the video canvas, I expect that to show up on the timeline in its own layer, this lets me say when it's visible and when it's not. It lets me take a keyframe, move the cursor over, and take another keyframe to animate it tweening between points.' Today it does not: a layer is on the timeline only if it occupiesTime or hasMotion (DocumentTracks.swift:126, isOnTheTimeline), and only text is given a span when made in a timed document (EditorState+Text.swift:337); a rectangle, ellipse, arrow, line, image, sticker or component drawn on a video gets no time, so it has no row, no in/out, and nowhere its keys show until it is already animated. This is the Photoshop-meets-Premiere core of the product (After Effects and Premiere put every new graphic on the timeline). Found by reading the code in the intake window; reproduce first.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 0.0045,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-25T21:07:16.741Z",
+  "updated": "2026-09-25T21:07:16.823Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window. Related done tasks: tracks (63fc06b1), move A to B (4760f7d7), keyframe anything.",
+  "acceptance": [
+    "Reproduced first: a walk at Next defaults opens a recording, draws a rectangle, and shows it has no timeline row today",
+    "In a document with time, every layer made by any tool or paste or drop (rectangle, ellipse, line, arrow, pen path, text, image, sticker, component, callout, measurement) is given a LayerTime and appears at once as its own row on a video track, named after the layer (PhotonzCore rule tested first)",
+    "Its default in/out: from the playhead to the end of the clip under it (or 5 s when the playhead is at the end), and its bar can be dragged, trimmed at either end, and moved between tracks like a clip",
+    "Keyframe flow in two gestures: with the layer selected, press the diamond on its row header (or K) to key its current position/size/rotation/opacity at the playhead; move the playhead, drag or resize the rectangle on the canvas, and a second key is made automatically because the layer is now animated; playback tweens between them with the default ease",
+    "The row's keys show as diamonds on the bar at once, with the property lanes under its chevron (keyframe task), and right-click on a key gives the eases",
+    "A layer drawn on a picture (no time) is unchanged: no timeline appears for a screenshot",
+    "Walk at Next defaults: draw a rectangle on a recording, trim its bar to 1s-3s, key it at 1s, move the playhead to 3s, drag it across and scale it, play, and photograph 1s, 2s and 3s showing it tweening, and 0.5s and 3.5s showing it absent"
+  ],
+  "log": [
+    {
+      "t": "2026-09-25T21:07:16.743Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-25T21:07:16.822Z",
+      "note": "seq 350 -> 0.0045"
+    }
+  ]
+}
