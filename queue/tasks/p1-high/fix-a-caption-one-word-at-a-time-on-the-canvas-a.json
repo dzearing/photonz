@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-25T11:57:41.780Z",
-  "updated": "2026-09-25T11:57:41.861Z",
+  "updated": "2026-09-25T11:59:18.239Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -17,7 +17,7 @@
     "Double-clicking a word in a caption on the canvas, or its chip in the word lane, edits just that word in place; Return or clicking away commits, Escape cancels, and the word keeps its timing",
     "Correcting a word into two ('alot' to 'a lot') or merging two splits or joins the time span evenly, and the edit is one undo step",
     "The captions track expands (chevron) into a word lane with one chip per word, as the mock draws it; the active word lights up as the playhead moves",
-    "Drag a word chip to move it in time and drag its edges to resize it; neighbours clamp so words never overlap, snapping to the playhead and to neighbouring words; Opt-drag moves the word's cue with it",
+    "Dragging a word chip moves that word AND every later word in its caption along with it, keeping their spacing, so a caption whose timing is off from one word on is fixed in one drag (user: 'grab \"the\" and move it to the left or right and all of the words after it move along with it'). Shift-drag carries every later caption on the track too, Premiere-ripple style; Cmd-drag moves the single word alone, clamped between its neighbours. Dragging a chip's edge resizes only that word. Everything snaps to the playhead and neighbouring words, words never overlap, and the whole drag is one undo step",
     "Right-click a word: Edit Word, Split Here, Merge with Next, Delete Word, Move to Next Line, Play From Here",
     "Tab and Shift-Tab step to the next and previous word while editing, so a run of typos is fixed without the mouse",
     "Editing a word never re-styles or reflows the rest of the caption, and the fixed spelling survives re-captioning of a different stretch",
@@ -31,6 +31,10 @@
     {
       "t": "2026-09-25T11:57:41.860Z",
       "note": "seq 400 -> 0.01"
+    },
+    {
+      "t": "2026-09-25T11:59:18.238Z",
+      "note": "User 2026-09-25: dragging a word must carry the words after it (example: 'the video captions' off from 'the'; drag 'the' and the rest follow). Acceptance updated: plain drag ripples the rest of the caption, Shift-drag ripples later captions, Cmd-drag moves one word."
     }
   ]
 }
