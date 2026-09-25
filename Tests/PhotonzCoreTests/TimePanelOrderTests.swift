@@ -17,7 +17,7 @@ struct TimePanelOrderTests {
 
     static let saved = ["layers", "measureTool", "arrange", "component", "text", "geometry",
                         "color", "effects", "keys", "reframe", "motion", "editPoint",
-                        "transition", "speed", "sound", "captions", "library"]
+                        "transition", "speed", "sound", "fades", "captions", "library"]
 
     static func clip() -> Layer {
         var layer = Layer(name: "Recording",
@@ -75,7 +75,7 @@ struct TimePanelOrderTests {
 
     @Test func aClipLeadsWithItsPropertiesThenHowItPlaysThenHowLoud() {
         let order = TimePanelOrder.arrange(Self.saved, for: .playing)
-        #expect(Array(order.prefix(4)) == ["layers", "keys", "speed", "sound"])
+        #expect(Array(order.prefix(5)) == ["layers", "keys", "speed", "sound", "fades"])
     }
 
     @Test func aTitleLeadsWithItsPropertiesThenWhenItIsOnThenItsWords() {
@@ -85,7 +85,17 @@ struct TimePanelOrderTests {
 
     @Test func aSoundLeadsWithItsPropertiesThenItsLevelThenItsTime() {
         let order = TimePanelOrder.arrange(Self.saved, for: .heard)
-        #expect(Array(order.prefix(4)) == ["layers", "keys", "sound", "speed"])
+        #expect(Array(order.prefix(5)) == ["layers", "keys", "sound", "fades", "speed"])
+    }
+
+    /// Fades sit straight under Sound wherever Sound leads, as the audio mock
+    /// draws its channel strip: the level, then the fades.
+    @Test func fadesFollowTheLevelWhereverItLeads() {
+        for role in TimePanelOrder.Role.allCases {
+            let lead = TimePanelOrder.leads(role)
+            guard let sound = lead.firstIndex(of: "sound") else { continue }
+            #expect(lead.indices.contains(sound + 1) && lead[sound + 1] == "fades")
+        }
     }
 
     // MARK: - What the rule never does

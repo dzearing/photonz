@@ -88,7 +88,7 @@ struct FlagDescriptionBudgetTests {
         "next-setup-takes-no-for-an-answer": 106,
         "next-shape-parts": 170,
         "next-shared-library": 174,
-        "next-sound-on-the-timeline": 285,
+        "next-sound-on-the-timeline": 279,
         "next-starter-components": 127,
         "next-styles": 195,
         "next-the-mix-says-how-loud-it-is": 250,

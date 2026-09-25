@@ -728,7 +728,7 @@ struct MotionNumberField: View {
 ///
 /// It is the last item on the curve menu rather than a mode, because the named
 /// curves cover nearly everything and this is for the time they do not.
-private struct CurveEditor: View {
+struct CurveEditor: View {
     let curve: EasingCurve
     let done: (EasingCurve) -> Void
 

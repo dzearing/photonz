@@ -675,6 +675,7 @@ struct InspectorPanel: View {
         // row on a rectangle would be a control for nothing.
         if Experiments.shared.soundOnTheTimelineEnabled, editorState.soundLayerInHand != nil {
             set.insert(.sound)
+            set.insert(.fades)
         }
         // Having the app write the captions (Next, `next-captions-from-the-sound`).
         // Present for the whole document rather than for what is picked: unlike
@@ -990,6 +991,17 @@ struct InspectorPanel: View {
                 .foregroundStyle(VideoKit.Palette.faint)
                 .panelReadout(note)
                 .playtestField("\(id.title) header"))
+        case .fades:
+            // The mock's `.sec-h .mut`: where the other way to set them is.
+            // Shrunk rather than cut short in the narrowest dock, because the
+            // note is the whole of what it says.
+            return AnyView(Text(SoundFadesInspector.headerNote)
+                .font(.system(size: 10.5, weight: .medium))
+                .foregroundStyle(VideoKit.Palette.faint)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .panelReadout(SoundFadesInspector.headerNote)
+                .playtestField("Fades header"))
         case .keys:
             return AnyView(PropertyKeysSectionAccessory())
         case .library:
@@ -1187,6 +1199,8 @@ struct InspectorPanel: View {
             SpeedInspector()
         case .sound:
             SoundInspector()
+        case .fades:
+            SoundFadesInspector()
         case .captions:
             CaptionsInspector()
         case .shadow:

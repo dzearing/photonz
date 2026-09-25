@@ -6,10 +6,10 @@ import SwiftUI
 //
 // Two drawings and they answer two different questions. The WAVEFORM says
 // where the words and the beats are, so a cut can be aimed at one instead of
-// guessed at. The LEVEL LINE says how loud it is as it runs, and it is the only
-// control for that: a fade is a point at the start and a point a moment later,
-// a duck is a point either side of a dip, and there is deliberately no fade
-// control and no curve menu because both would be the same thing said again.
+// guessed at. The LEVEL LINE says how loud it is as it runs: a fade is a point
+// at the start and a point a moment later, a duck is a point either side of a
+// dip. The Fades section in the panel writes the same fade points, and its
+// curve bends the line along a fade (`AudioLevel.moments`).
 
 /// The shape of a sound, drawn inside one piece of a clip's bar.
 ///
@@ -186,12 +186,12 @@ struct SoundLevelLine: View {
         .allowsHitTesting(false)
     }
 
-    /// The line's corners: one at each end of the bar and one at every point,
-    /// which is exactly what `AudioLevel.gain(atLayerMS:)` describes.
+    /// The line's corners: one at each end of the bar, one at every point,
+    /// and the steps along a curved fade, which are exactly the corners the
+    /// mix plays ramps between (`AudioLevel.moments`).
     private var shape: [CGPoint] {
         guard lengthMS > 0, width > 0 else { return [] }
-        var moments = [fromMS] + shownLevel.points.map(\.atMS) + [toMS]
-        moments = Array(Set(moments)).sorted().filter { $0 >= fromMS && $0 <= toMS }
+        let moments = shownLevel.moments(fromMS: fromMS, toMS: toMS)
         return moments.map { CGPoint(x: x(atMS: $0), y: y(forGain: shownLevel.gain(atLayerMS: $0))) }
     }
 

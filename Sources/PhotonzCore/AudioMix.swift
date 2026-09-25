@@ -9,13 +9,14 @@ import Foundation
 // and the exporter are both handed it.** Neither works anything out for itself,
 // so neither can drift from the other.
 //
-// The other thing this file is deliberately short on is controls. The mock
-// draws a fade in, a fade out, a curve picker and a ducking gesture as four
-// separate things; they are one thing seen four ways, and the one thing is a
-// level that changes as the layer runs. A fade in is a point at nought and a
-// point at full a second and a half later. A duck is a point either side of a
-// dip. So there is a fader and there are points, and no fade control, no curve
-// menu and no duck button.
+// Underneath, a fade and a duck are the same thing: a level that changes as
+// the layer runs. A fade in is a point at nought and a point at full a second
+// and a half later; a duck is a point either side of a dip. So the model is a
+// fader and points, and the panel's Fades section (`pages/video-audio.html`)
+// reads its In and Out off those points and writes them back as points. The
+// one thing a point cannot say is the SHAPE of the rise, so that is the one
+// thing kept beside them: `fadeCurve`, which bends the two fade stretches and
+// nothing else.
 
 /// One moment where the level is a known value, measured from the layer's own
 /// start rather than the document's, so moving a layer takes its shape along.
@@ -50,10 +51,17 @@ public struct AudioLevel: Hashable, Codable, Sendable {
     public var gain: Double
     /// Where the level is pinned as the layer runs, in order, one per moment.
     public private(set) var points: [AudioLevelPoint]
+    /// How the fade in rises and the fade out falls, from the one list of
+    /// curves (`EasingCurve`). The fade out is the fade in played backwards,
+    /// as the mock draws it. Straight unless somebody picked one, which is
+    /// what every fade written before the curve existed does.
+    public var fadeCurve: EasingCurve
 
-    public init(gain: Double = AudioLevel.unityGain, points: [AudioLevelPoint] = []) {
+    public init(gain: Double = AudioLevel.unityGain, points: [AudioLevelPoint] = [],
+                fadeCurve: EasingCurve = .linear) {
         self.gain = Self.bounded(gain)
         self.points = Self.tidied(points)
+        self.fadeCurve = fadeCurve
     }
 
     /// A level held inside what a level control may ask for.
@@ -99,8 +107,64 @@ public struct AudioLevel: Hashable, Codable, Sendable {
         let span = after.atMS - before.atMS
         guard span > 0 else { return after.gain }
         let through = Double(ms - before.atMS) / Double(span)
+        if fadeCurve != .linear {
+            // A curve can overshoot on its way; it may never ask for less
+            // than silence.
+            if next == 1, fadeInStretch != nil {
+                return max(0, after.gain * fadeCurve.value(at: through))
+            }
+            if next == points.count - 1, fadeOutStretch != nil {
+                return max(0, before.gain * fadeCurve.value(at: 1 - through))
+            }
+        }
         return before.gain + (after.gain - before.gain) * through
     }
+
+    /// The fade in as it stands in the points: silence pinned at the very
+    /// start and the next point up.
+    private var fadeInStretch: ClosedRange<Int>? {
+        guard points.count >= 2, points[0].atMS == 0, points[0].gain == 0, points[1].gain > 0
+        else { return nil }
+        return 0...points[1].atMS
+    }
+
+    /// The fall into silence the points end on. Read off the points alone, so
+    /// it bends what is heard wherever the layer's end has since been moved.
+    private var fadeOutStretch: ClosedRange<Int>? {
+        guard points.count >= 2, let last = points.last, last.gain == 0 else { return nil }
+        let before = points[points.count - 2]
+        guard before.gain > 0, before.atMS < last.atMS else { return nil }
+        return before.atMS...last.atMS
+    }
+
+    /// The moments the level turns a corner between `fromMS` and `toMS`, both
+    /// ends included, in order: every point, and along a curved fade enough
+    /// moments that straight lines between them follow the curve. The lane
+    /// draws its line through these and the mix plays a ramp between each two,
+    /// so what is drawn and what is heard are the same shape.
+    public func moments(fromMS: Int, toMS: Int) -> [Int] {
+        guard toMS > fromMS else { return [fromMS] }
+        var found = Set([fromMS, toMS])
+        for point in points where point.atMS > fromMS && point.atMS < toMS { found.insert(point.atMS) }
+        if fadeCurve != .linear {
+            for stretch in [fadeInStretch, fadeOutStretch].compactMap({ $0 }) {
+                let span = stretch.upperBound - stretch.lowerBound
+                let steps = min(Self.curveSteps, max(1, span / Self.shortestCurveStepMS))
+                for step in 1..<max(steps, 1) {
+                    let ms = stretch.lowerBound + span * step / steps
+                    if ms > fromMS && ms < toMS { found.insert(ms) }
+                }
+            }
+        }
+        return found.sorted()
+    }
+
+    /// How finely a curved fade is followed: at most this many straight
+    /// pieces, none shorter than `shortestCurveStepMS`. Forty over a second
+    /// and a half is under forty milliseconds a piece, which the ear cannot
+    /// tell from the curve itself.
+    static let curveSteps = 40
+    static let shortestCurveStepMS = 10
 
     // MARK: - Editing it
 
@@ -119,7 +183,7 @@ public struct AudioLevel: Hashable, Codable, Sendable {
 
     /// Whether this is the level a layer has when nobody has touched it, which
     /// is what decides whether it is written down at all.
-    public var isUntouched: Bool { gain == Self.unityGain && points.isEmpty }
+    public var isUntouched: Bool { gain == Self.unityGain && points.isEmpty && fadeCurve == .linear }
 
     // MARK: - Fades
 
@@ -171,6 +235,20 @@ public struct AudioLevel: Hashable, Codable, Sendable {
 
     // MARK: - Saying it out loud
 
+    /// A fade's length as the Fades section says it: seconds, one place.
+    public static func fadeLabel(ms: Int) -> String {
+        String(format: "%.1fs", Double(max(0, ms)) / 1000)
+    }
+
+    /// A fade length somebody typed, in seconds, with or without the s.
+    /// Below nought is nought; anything that is not a number is nil.
+    public static func fadeMS(typed: String) -> Int? {
+        var text = typed.trimmingCharacters(in: .whitespaces).lowercased()
+        if text.hasSuffix("s") { text = String(text.dropLast()).trimmingCharacters(in: .whitespaces) }
+        guard let seconds = Double(text), seconds.isFinite else { return nil }
+        return max(0, Int((seconds * 1000).rounded()))
+    }
+
     /// A level in decibels, or nil for silence, which has no number.
     public static func decibels(forGain gain: Double) -> Double? {
         guard gain > 0 else { return nil }
@@ -188,7 +266,7 @@ public struct AudioLevel: Hashable, Codable, Sendable {
         return String(format: "%.1f dB", dB)
     }
 
-    private enum CodingKeys: String, CodingKey { case gain, points }
+    private enum CodingKeys: String, CodingKey { case gain, points, fadeCurve }
 
     /// A level nobody has touched writes nothing, so every document written
     /// before sound existed reads back identical.
@@ -196,12 +274,14 @@ public struct AudioLevel: Hashable, Codable, Sendable {
         var c = encoder.container(keyedBy: CodingKeys.self)
         if gain != Self.unityGain { try c.encode(gain, forKey: .gain) }
         if !points.isEmpty { try c.encode(points, forKey: .points) }
+        if fadeCurve != .linear { try c.encode(fadeCurve, forKey: .fadeCurve) }
     }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.init(gain: try c.decodeIfPresent(Double.self, forKey: .gain) ?? Self.unityGain,
-                  points: try c.decodeIfPresent([AudioLevelPoint].self, forKey: .points) ?? [])
+                  points: try c.decodeIfPresent([AudioLevelPoint].self, forKey: .points) ?? [],
+                  fadeCurve: try c.decodeIfPresent(EasingCurve.self, forKey: .fadeCurve) ?? .linear)
     }
 }
 
@@ -329,8 +409,9 @@ extension PhotonzDocument {
 
     /// The level over one piece, as ramps on the document's own clock.
     ///
-    /// Every point that falls inside the piece becomes a boundary, and the
-    /// stretches either side of them are ramps, so the list covers the piece end
+    /// Every corner that falls inside the piece becomes a boundary (every
+    /// point, and the steps along a curved fade), and the stretches either
+    /// side of them are ramps, so the list covers the piece end
     /// to end with no hole in it. A level nobody has shaped comes back as one
     /// flat ramp, which keeps the player and the exporter from ever needing a
     /// special case for the ordinary thing.
@@ -339,14 +420,9 @@ extension PhotonzDocument {
         let endMS = startMS + lengthMS
         // Points are measured from the layer's start; the ramps are measured
         // from the document's, so every moment moves along by the layer's in.
-        var boundaries = level.points
-            .map { layerInMS + $0.atMS }
-            .filter { $0 > startMS && $0 < endMS }
-        boundaries = Array(Set(boundaries)).sorted()
-        var moments = [startMS] + boundaries + [endMS]
-        moments = moments.enumerated().compactMap { index, ms in
-            index == 0 || ms > moments[index - 1] ? ms : nil
-        }
+        // The same corners the lane draws, so a curved fade plays as drawn.
+        let moments = level.moments(fromMS: startMS - layerInMS, toMS: endMS - layerInMS)
+            .map { layerInMS + $0 }
         guard moments.count > 1 else {
             let gain = level.gain(atLayerMS: startMS - layerInMS)
             return [AudioGainRamp(fromMS: startMS, toMS: endMS, fromGain: gain, toGain: gain)]

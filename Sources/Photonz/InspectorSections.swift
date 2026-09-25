@@ -146,6 +146,10 @@ enum InspectorSectionID: String, CaseIterable {
     // picked makes a sound at all, which is a clip or a piece of sound and
     // nothing else in any document anybody has.
     case sound
+    // How long the picked sound fades in and out, and the curve both follow
+    // (`pages/video-audio.html`, the Fades section). Directly under Sound,
+    // where the mock puts it, and present exactly when Sound is.
+    case fades
     // Having the app write the words off the sound (Next,
     // `next-captions-from-the-sound`). Directly under Sound, because it is the
     // one thing you do WITH a recording's sound that is not about how loud it
@@ -195,6 +199,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .transition: "Transition"
         case .speed: "Time"
         case .sound: "Sound"
+        case .fades: "Fades"
         case .captions: "Captions"
         case .shadow: "Shadow"
         case .library: "Library"

@@ -550,7 +550,7 @@ struct ClipPiecesBar: View {
 
     // MARK: The fades
 
-    /// A handle at each top corner of a sound's segment: drag the left one in
+    /// A diamond at each top corner of a sound's segment: drag the left one in
     /// to fade in, the right one in to fade out. The level line draws the
     /// fade itself, because a fade IS the level falling to silence.
     @ViewBuilder
@@ -583,9 +583,13 @@ struct ClipPiecesBar: View {
 
     private func fadeHandle(isIn: Bool, fromMS: Int, lengthMS: Int,
                             ruler: MotionStripRuler) -> some View {
-        RoundedRectangle(cornerRadius: 2)
+        // A diamond, as the mock's `.fade` is and as the Fades section's
+        // header calls it: white, ringed in the sound's own colour.
+        RoundedRectangle(cornerRadius: 1.5)
             .fill(Color.white)
-            .overlay { RoundedRectangle(cornerRadius: 2).strokeBorder(Color.black.opacity(0.35), lineWidth: 0.5) }
+            .overlay { RoundedRectangle(cornerRadius: 1.5).strokeBorder(Color(red: 0x12 / 255, green: 0xC2 / 255, blue: 0xE9 / 255), lineWidth: 1.2) }
+            .frame(width: 7, height: 7)
+            .rotationEffect(.degrees(45))
             .frame(width: 8, height: 8)
             .padding(.top, 1)
             .contentShape(Rectangle().inset(by: -4))

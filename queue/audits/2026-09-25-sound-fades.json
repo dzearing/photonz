@@ -1,0 +1,27 @@
+{
+  "feature": "Sound fades in the panel",
+  "epic": "video-editing",
+  "summary": "Pick a piece of sound and the panel has a Fades section, drawn like the audio mock: In and Out boxes you can type seconds into, and a Curve dropdown. The fade shows on the sound's bar and plays as you hear it, curve included.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    { "do": "Open a recording, then choose Add Sound and pick a piece of music. It lands on the timeline already picked.", "shot": "2026-09-25-sound-fades-1-music-picked-sc.png" },
+    { "do": "In the Fades section, click In, type 1.5 and press Return.", "shot": "2026-09-25-sound-fades-2-faded-in-sc.png" },
+    { "do": "Click Out, type 2 and press Return." },
+    { "do": "Open Curve and pick Ease in out. Both fades on the bar bend into an S.", "shot": "2026-09-25-sound-fades-3-eased-sc.png" },
+    { "do": "Drag the white diamond at the top left corner of the music's bar further right, and watch In change." },
+    { "do": "Press space and listen to the music rise out of silence." },
+    { "do": "Press Command Z three times: the curve goes, then the fade out, then the fade in.", "shot": "2026-09-25-sound-fades-4-redone-sc.png" }
+  ],
+  "evaluate": [
+    "Is typing a length into In quicker than dragging the diamond, or do you reach for the diamond anyway?",
+    "Does Ease in out sound smoother to you than Linear on a music fade?",
+    "Should a new fade start on Ease in out, like the mock's sample, rather than Linear?",
+    "Is it confusing that a fade also shows as 2 points under Sound, and as Volume under Animating?"
+  ],
+  "rough": [
+    "A fade nobody has shaped plays Linear. The mock's sample shows Ease in out, but that is its example state, and Linear keeps every fade saved before today sounding the same.",
+    "A fade is still points on the level line, so the Sound section counts them (Points 2 on the bar) and Flatten takes the fades away too. Properties also lists them under Animating as Volume keys.",
+    "One curve covers both fades, as the mock draws it. Premiere lets each end have its own.",
+    "The mock's channel strip above Fades (Channel header with the file name, Mute, Solo, Volume) is not built yet. It is filed as its own task."
+  ]
+}

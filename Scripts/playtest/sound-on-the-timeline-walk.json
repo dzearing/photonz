@@ -39,7 +39,7 @@
     { "do": "wait", "seconds": 0.6 },
     { "do": "action", "action": "soundDuck" },
     { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "5-the-music-ducks-under-the-voice", "note": "The music's fader is at half, and four points on its bar take it down to a sixth over the middle of the recording and back up again. The line across its bar IS the level: no fade control and no curve menu, because a fade and a duck are the same thing said twice. The Sound section says how many moments the level is pinned at, with a Flatten beside it" },
+    { "do": "describe", "stage": "5-the-music-ducks-under-the-voice", "note": "The music's fader is at half, and four points on its bar take it down to a sixth over the middle of the recording and back up again. The line across its bar IS the level, and a duck is just points on it. The Sound section says how many moments the level is pinned at, with a Flatten beside it" },
     { "do": "snapshot", "name": "5-the-music-ducks-under-the-voice" },
 
     { "do": "action", "action": "videoSeekThreeQuarters" },

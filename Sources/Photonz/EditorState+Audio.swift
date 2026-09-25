@@ -161,12 +161,42 @@ extension EditorState {
     /// fade away.
     func setSoundFade(onLayer id: UUID, fadeIn: Bool, ms: Int) {
         guard let layer = document?.layer(id: id), layer.sound != nil else { return }
-        let length = layer.clipPieces?.totalLengthMS ?? layer.time?.lengthMS ?? 0
+        let length = soundLengthMS(layer)
         var level = layer.soundLevel ?? AudioLevel()
         let before = level
         if fadeIn { level.setFadeIn(ms, lengthMS: length) } else { level.setFadeOut(ms, lengthMS: length) }
         guard level != before else { return }
         writeSoundLevel(level, onLayer: id)
+    }
+
+    /// How long the picked layer's sound fades in and out, in milliseconds.
+    var soundFadesInHand: (inMS: Int, outMS: Int) {
+        guard let layer = soundLayerInHand else { return (0, 0) }
+        let level = soundLevelInHand
+        return (level.fadeInMS, level.fadeOutMS(lengthMS: soundLengthMS(layer)))
+    }
+
+    /// The Fades section's In or Out, typed: the same edit the handle at that
+    /// corner of the bar makes, as one step to undo.
+    @discardableResult
+    func setSoundFadeInHand(fadeIn: Bool, ms: Int) -> Int {
+        guard let id = soundLayerInHand?.id else { return 0 }
+        setSoundFade(onLayer: id, fadeIn: fadeIn, ms: ms)
+        return fadeIn ? soundFadesInHand.inMS : soundFadesInHand.outMS
+    }
+
+    /// The Fades section's Curve: how both fades of the picked layer rise and
+    /// fall. Picked before there is a fade, it waits for the next one.
+    func setSoundFadeCurve(_ curve: EasingCurve) {
+        guard let id = soundLayerInHand?.id else { return }
+        var level = soundLevelInHand
+        guard level.fadeCurve != curve else { return }
+        level.fadeCurve = curve
+        writeSoundLevel(level, onLayer: id)
+    }
+
+    private func soundLengthMS(_ layer: Layer) -> Int {
+        layer.clipPieces?.totalLengthMS ?? layer.time?.lengthMS ?? 0
     }
 
     /// Put the level back to flat, keeping the fader where it is.

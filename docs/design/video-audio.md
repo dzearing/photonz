@@ -86,7 +86,7 @@ leaves no segment at all.
 
 ---
 
-## 3. Level, and why there is no fade control
+## 3. Level, and fades
 
 `AudioLevel` is a fader and a list of points, and they multiply.
 
@@ -96,14 +96,28 @@ leaves no segment at all.
 - **A duck** is a point either side of a dip.
 - **A level that just sits there** is no points at all.
 
-They are one idea, so they are one control: a line across the layer's bar in the
-timeline, with a dot at every moment somebody has pinned it. Click the line to
-pin it, drag a dot to move it in time and level at once, double click to take it
-out. The Sound section carries the fader, the reading in decibels, and a Flatten
-for taking every point off.
+The line across the layer's bar in the timeline draws all of it, with a dot at
+every moment somebody has pinned it. Click the line to pin it, drag a dot to
+move it in time and level at once, double click to take it out. The Sound
+section carries the fader, the reading in decibels, and a Flatten for taking
+every point off.
 
-The mock draws a fade in field, a fade out field, a curve picker AND diamonds on
-the lane. Four controls for one fact is four things to keep in step.
+**Fades have their own section as well, as the mock draws them** (2026-09-25,
+task `a-sound-shows-its-fade-in-and-fade-out-as-the-mo`). Under Sound, headed
+Fades with "drag the diamonds on the lane" beside it: an In box and an Out box
+you can read or type seconds into, and a Curve dropdown from the one list of
+curves. The boxes and the diamonds at the bar's top corners write the same two
+points, so they cannot drift apart. The one thing a point cannot say is the
+shape of the rise, so `AudioLevel.fadeCurve` sits beside the points: it bends
+the fade in, and the fade out played backwards, and nothing else. A curve is
+heard as well as drawn: `AudioLevel.moments` steps along a curved fade (up to 40
+pieces, none under 10 ms) and both the lane's line and the mix's ramps are
+drawn through those same moments. A fade nobody shaped stays Linear, which is
+what every fade written before the curve does.
+
+An earlier version of this section argued the mock's four fade controls were
+one fact said four times and shipped only the line. That was a departure from
+the mock, and it was put right.
 
 **The line is not drawn on a straight scale.** Level goes to twice as loud (+6
 dB), so spread evenly the ordinary level would sit exactly halfway up the bar,
