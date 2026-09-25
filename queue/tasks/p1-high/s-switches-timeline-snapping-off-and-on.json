@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 100,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:16:32.050Z",
-  "updated": "2026-09-24T12:40:38.366Z",
+  "updated": "2026-09-25T00:37:18.559Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24); gap report docs/design/video-vs-premiere.md. Reproduced: s with the timeline focused is taken by nobody (five-minute walk step 21). No toggle exists in Sources (grep 'snapping' in the timeline files only finds the key snap reach). Holding a modifier to suspend snapping while dragging is fine as well, if the walk shows it.",
@@ -28,6 +28,35 @@
     {
       "t": "2026-09-24T12:40:38.365Z",
       "note": "seq 425 -> 100"
+    },
+    {
+      "t": "2026-09-25T00:20:34.939Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-25T00:37:02.087Z",
+      "note": "owns these walks: snapping-switches-with-s-walk"
+    },
+    {
+      "t": "2026-09-25T00:37:02.139Z",
+      "note": "Review before building: Premiere and Final Cut both put snapping on S with a magnet that shows its state; the mock's timeline bar (video.html .tlbar) draws no snapping control, so the magnet is an addition past the floor, placed after Select and Blade behind a divider so it reads as a switch, not a third tool. S is free on a focused timeline (on the canvas it stays the tool key). Snapping is a mode, not a verb, so it goes in the menu bar (Video > Snap in Timeline, Premiere's name) rather than a right-click menu. The switch covers every snap the timeline makes: clip bars (move, trim, seam), files dropped on the timeline, and the playhead catching on keys. The old recording window's trim strip is left alone."
+    },
+    {
+      "t": "2026-09-25T00:37:02.192Z",
+      "note": "Built: TimelineKeys s -> toggleSnapping; ClipBarDrag.snapping(withinMS:) so S mid-drag re-lands from the hand; EditorState.isTimelineSnapping (per window, on by default) gating clipSnapMS, the drop reach and keySnapReachMS; magnet button (drawn MagnetGlyph, SF Symbols has none) in TimelineDock's bar; Video menu toggle; walk claim expectTimeline.snapping and action clipSlideShortOfPlayhead. Tests: Scripts/test.sh 9652 passed. Walk snapping-switches-with-s-walk: at Next defaults, no flags, 5-minute hold so the catch reach is 2 s; snapping on a slide 0.1 s short lands on the playhead (75.00), S off it lands 74.90, magnet click turns it back on, S mid-drag lets go of a catch (74.97). Neighbours a-clip-shows-where-it-will-land, second-clip-on-the-timeline, library-clip-onto-a-track, ripple-trim-to-playhead, timeline-keys-on-open all ok."
+    },
+    {
+      "t": "2026-09-25T00:37:02.245Z",
+      "note": "left rough (not filed, below the bar): snapping is per window and resets to on for each new window, where Premiere remembers the last setting; chosen so an off left over from yesterday does not read as snapping being broken, and put to the user as an evaluate question in the audit rather than filed. The walk slides the clip through the harness (the same drag model the pointer drives), not a real pointer; the S press and the magnet click are real."
+    },
+    {
+      "t": "2026-09-25T00:37:18.557Z",
+      "note": "S on a focused timeline, a magnet button in the timeline's bar and Video > Snap in Timeline switch timeline snapping (clip moves, trims, file drops, playhead on keys); S mid-drag takes effect at once. Commit 430f947e. Verified: Scripts/test.sh 9652 passed; snapping-switches-with-s-walk at Next defaults with no flags (on: a slide 0.1 s short lands on the playhead; off: lands 0.1 s short; magnet click back on; S mid-drag lets go of a catch) plus 5 neighbouring timeline walks ok. Audit queue/audits/2026-09-24-timeline-snapping.json with 4 real window captures."
     }
-  ]
+  ],
+  "started": "2026-09-25T00:20:34.938Z",
+  "walks": [
+    "snapping-switches-with-s-walk"
+  ],
+  "completed": "2026-09-25T00:37:18.558Z"
 }

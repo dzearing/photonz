@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 60,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:16:31.682Z",
-  "updated": "2026-09-24T21:35:01.409Z",
+  "updated": "2026-09-24T21:35:29.508Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24); gap report docs/design/video-vs-premiere.md. Reproduced: q and w with the timeline focused are taken by nobody (five-minute walk log steps 23, 24). TimelineKeys.swift has no such command. Q is also Photoshop's quick mask, which the canvas does not use; confirm the canvas has no Q/W tool first. | Built 2026-09-24: PhotonzCore/RippleTrim.swift (rippleTrimClip, rippleTrimStretch, rippleTrim; reuses extractStretch so every unlocked track loses the stretch, markers and In/Out squeeze with the picture; marker move factored into moveMarkers in MarkedStretch.swift). TimelineKeys: .rippleTrimToPlayhead(.start/.end) on q/w when the timeline is focused, not on repeat. App: EditorState+TimelineMenus (rippleTrimToPlayhead, clip menu rows under Split at Playhead, enabled only on the piece holding the playhead), Video menu rows with Q/W printed only when the timeline has the keyboard. Tests: RippleTrimTests, TimelineKeysTests.qAndWTrim. Walks: ripple-trim-to-playhead-walk (lock-safe), ripple-trim-from-the-clip-menu-walk (right-click, needs an unlocked screen).",
@@ -53,11 +53,16 @@
     {
       "t": "2026-09-24T21:35:01.408Z",
       "note": "filed a-right-click-on-a-timeline-clip-shows-the-whole (p2) for the clip menu scrolling after three rows at the foot of the screen"
+    },
+    {
+      "t": "2026-09-24T21:35:29.506Z",
+      "note": "Q and W ripple trim the piece under the playhead on a focused timeline (PhotonzCore/RippleTrim.swift on extractStretch, every unlocked track, markers follow), plus clip right-click and Video menu rows printing Q/W. Verified: RippleTrimTests + key tests, Scripts/test.sh green, ripple-trim-to-playhead-walk and ripple-trim-from-the-clip-menu-walk ok at Next defaults with real captures. Audit queue/audits/2026-09-24-ripple-trim-to-playhead.json. Commit d49e334f."
     }
   ],
   "started": "2026-09-24T21:18:21.508Z",
   "walks": [
     "ripple-trim-to-playhead-walk",
     "ripple-trim-from-the-clip-menu-walk"
-  ]
+  ],
+  "completed": "2026-09-24T21:35:29.507Z"
 }

@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:15:48.384Z",
-  "updated": "2026-09-24T12:40:37.893Z",
+  "updated": "2026-09-24T13:14:43.455Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24), gap report docs/design/video-vs-premiere.md. Reproduced: open a 5 minute recording, videoSeekQuarter (75 s), give the timeline the keyboard, press = twice. Readout says 0:56 to 2:11, playhead at 1:15 draws at x 587 of the lane, the 1:15 label at x 497 (24.9 pt a second, so about 3.6 s off). Another view (0:01 to 1:16) put 0:15 at the lane start, about 14 s off. Pictures: docs/design/video-vs-premiere/ruler-at-4x.jpg, ruler-at-max-zoom.jpg. Cause, read in code: VideoKit.TimeRuler (Sources/Photonz/VideoKit/VideoKitTimeline.swift ~line 86) lays labels in a ZStack with .alignmentGuide(.leading) { -x }; a ZStack of alignment-guided children is sized to its children, so the leftmost visible tick is pulled to x 0 and every label shifts left by that tick s x. At Fit the first tick is at 0 so nothing shows. Fix is to place labels with .offset/.position in a fixed frame, the way TimelineGridlines does.",
@@ -29,6 +29,43 @@
     {
       "t": "2026-09-24T12:40:37.892Z",
       "note": "seq 190.1 -> 10"
+    },
+    {
+      "t": "2026-09-24T12:45:31.045Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T12:48:52.722Z",
+      "note": "owns these walks: ruler-names-the-right-time-zoomed-walk"
+    },
+    {
+      "t": "2026-09-24T12:57:20.000Z",
+      "note": "Reproduced before touching the ruler: new walk ruler-names-the-right-time-zoomed-walk (Next defaults, no flags) with a new expectTimeline claim that reads where each ruler number was DRAWN (probe-only markers, PlaytestRulerMark.swift). At 4x, 0:56 to 2:11, every number sat 80.6 pt left of its moment (the x of the first visible tick, 1:00), 1:15 drawn at 322.5 pt with the playhead line at 403.0 pt. Fit passed."
+    },
+    {
+      "t": "2026-09-24T12:57:20.000Z",
+      "note": "Fix: VideoKit.TimeRuler's ZStack gets a clear full-width first child, so the stack's left edge is the lane's and alignment-guided numbers stay where their guides put them. After: 1:15 at 403 with the playhead at 403 (4x); 75s at 403 on playhead 403 (deepest); 225s at 161 on playhead 161 (deepest, further along); Fit unchanged."
+    },
+    {
+      "t": "2026-09-24T12:57:20.000Z",
+      "note": "Walks passing: ruler-names-the-right-time-zoomed-walk, premiere-keys-on-the-timeline-walk, open-out-the-timeline-walk, an-editing-session-walk, cut-on-the-timeline-walk. Audit queue/audits/2026-09-24-ruler-at-zoom.json with three real captures."
+    },
+    {
+      "t": "2026-09-24T12:57:20.000Z",
+      "note": "Adversarial pass: a Premiere editor lines cuts up against ruler numbers, so a number drawn off its moment is a wrong cut, not a cosmetic nit; the fix changes no look (mock video.html places each .tk absolutely at its moment, which is now what the app does). Nothing filed: the only rough edge (ruler counts in seconds, not frames) was already seen and deliberately not filed by the Premiere comparison."
+    },
+    {
+      "t": "2026-09-24T13:14:31.695Z",
+      "note": "Scripts/test.sh: 9549 of 9550 on each of four full runs; the one failure each time was an export-size test (different one each run), the known load flake tracked in the-export-size-test-fails-about-one-run-in-thre. Reproduced that flake on HEAD with this task's code set aside, and the export suites pass alone, so committed on that evidence."
+    },
+    {
+      "t": "2026-09-24T13:14:43.453Z",
+      "note": "Ruler numbers now sit over their moments at every zoom (VideoKit.TimeRuler pinned to the lane's width). Verified by a new expectTimeline check that reads where the numbers were drawn: at 4x, 1:15 is at 403 pt with the playhead at 403 (was 322.5); at the deepest zoom, 75s and 225s are on the playhead; Fit is unchanged. Walk ruler-names-the-right-time-zoomed-walk at Next defaults; audit queue/audits/2026-09-24-ruler-at-zoom.json with real captures. Commit 2271b8e8."
     }
-  ]
+  ],
+  "started": "2026-09-24T12:45:31.044Z",
+  "walks": [
+    "ruler-names-the-right-time-zoomed-walk"
+  ],
+  "completed": "2026-09-24T13:14:43.454Z"
 }

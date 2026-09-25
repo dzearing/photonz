@@ -4,12 +4,12 @@
   "goal": "A recording opens with the full picture-editing tool bar: marquee, crop, arrow, line, highlight, lens, pen, fill and more, sixteen buttons, with no Blade among them. The user's video design gives a video its own short set, Select, Blade, Title, Shape and Measure, with everything else one click away under More and every shortcut still working. Give a document with a timeline that tool bar.",
   "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 240,
+  "seq": 100,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:02:57.060Z",
-  "updated": "2026-09-24T12:40:39.082Z",
+  "updated": "2026-09-25T12:22:27.596Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video.html lines 384-416 (FLOATING TOOL BAR, D4 video inventory, #toolOvf More menu holding Title / Text, Shape, Measure when narrow) and docs/design/mocks/shared/UX-PATTERNS.md D4 'Video: Select . Blade/split . Title/Text . Shape . Measure . Hand . Zoom. (The timeline has its own Select/Blade in its local toolbar; they mirror the same tools.)'. The app has no Hand or Zoom tool anywhere (space-drag and the zoom slider do those jobs), so leave them out and say so in the audit rather than inventing two tools. Seen in /tmp/photonz-playtest/an-editing-session-walk/5-dissolve-sc.png (2026-09-24 04:44, Next defaults): sixteen buttons, no Blade; the timeline bar's Select/Blade is TimelineDock.swift toolButton('scissors') on editorState.isTimelineBlade. Machinery that exists: ToolBarLayout (PhotonzCore, families and groups, tested), the measured-fit overflow menu and overflowShortcuts in EditorView.swift ~1073, which today only appear when the bar runs out of room; docs/design/modes.md section 2 already says folding by GROUP into a permanently visible overflow, never one tool out of a group, and section 3 lists the way back (the key still arms it, with a quiet line). Why not a mode: the mode is one app-wide setting (swap-the-window-into-a-mode-from-a-chip-beside-t left rough), so switching every window into Video because one recording opened would fold other windows' panels; tie this to the document having time, as the timeline is. Build the fold in core so a-mode-is-written-down-so-pixel-art-can-be-added (which needs the same fold by mode) reuses it. trim-becomes-a-tool-and-the-recording-window-ret plans Trim in Crop's slot on a document with time; the mock's inventory has no Trim, so whichever lands second says in its log where Trim sits.",
@@ -40,6 +40,22 @@
     {
       "t": "2026-09-24T12:40:39.081Z",
       "note": "seq 415 -> 240"
+    },
+    {
+      "t": "2026-09-24T13:36:16.663Z",
+      "note": "From premiere-s-timeline-keys-work-the-moment-a-recor (landed 2026-09-24): on a document with time the timeline has the keyboard from open, so the folded tools whose letters the timeline uses (K Lens, L Line, I Measure, O Ellipse, M Marquee) answer their key only after a press on the canvas; every other folded tool answers its key either way. The rule is written in UX-PATTERNS D4 'Which letters a document with time gives the timeline'. The quiet 'it is under More' line should say so for those five."
+    },
+    {
+      "t": "2026-09-24T13:36:51.832Z",
+      "note": "Also: the tool bar's hover tips still print Line (L), Measure (I), Lens (K), Ellipse (O) and the marquee's M on a video, where those letters now play, mark and add markers until the picture is clicked. When the video bar is built, its tips for those five should not promise the bare letter."
+    },
+    {
+      "t": "2026-09-24T14:13:40.578Z",
+      "note": "also from the timeline-keys task: on a video the tool bar's hover tips still say Line (L), Measure (I), Lens (K), Ellipse (O), Marquee (M), and those letters only pick the tool after a click on the picture. The tip on a video should say so or drop the letter for those five."
+    },
+    {
+      "t": "2026-09-25T12:22:27.595Z",
+      "note": "seq 240 -> 100"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "When a button has a resting, hovered, pressed and disabled look, the four drawings should sit together on the page so you can see them as one set. Today the app drops each new one wherever it finds room, so on a page that is not wide enough you get one drawing on its own with its copies underneath and the other three stacked in a column beside it, and nothing says the four belong together.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 210,
+  "seq": 270,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T10:43:55.290Z",
-  "updated": "2026-09-24T12:40:40.278Z",
+  "updated": "2026-09-25T12:23:33.750Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-23 with Scripts/playtest.sh Scripts/playtest/tutorial-component-versions-walk.json --no-build. The guide builds all four states on its own sample page (720x480, button 240x52 starting at 88,88) and its last step promises \"Four drawings under one name, each labelled with its state\". The render it leaves, /tmp/photonz-playtest/tutorial-component-versions-walk/7-four-states-built-doc.png, is Default at top left with its two copies below it and Hover, Pressed and Disabled in a column to its right.\n\nWhy: PhotonzDocument.roomForDrawing (Sources/PhotonzCore/ComponentVersions.swift) is a generic packer. It walks along the row the SOURCE drawing is on, steps over anything in the way, and when the row runs out of canvas it drops to a fresh row under the blockers. Four 240-wide drawings with the 24pt gap need 1032pt and the sample page is 720, so the third and fourth wrap. On a 1440 wide page they do land in a row, which is why the journey walk (Scripts/playtest/button-states-journey-walk.json) looks right and the tutorial does not.\n\nThis was measured twice before: make-a-button-with-states-and-properties-and-set logged it on 2026-09-15 and tutorials-making-states-in-a-component folded it on 2026-09-16. Both left it because the fix is a real decision rather than a tweak: keeping a set together on a page too narrow for it means either wrapping them deliberately into a grid of the component's own, growing the page, or giving the component a strip that holds its looks. That decision is the first act of this task.",
@@ -35,6 +35,14 @@
     {
       "t": "2026-09-24T12:40:40.277Z",
       "note": "seq 150 -> 210"
+    },
+    {
+      "t": "2026-09-25T12:22:29.385Z",
+      "note": "seq 210 -> 260"
+    },
+    {
+      "t": "2026-09-25T12:23:33.749Z",
+      "note": "seq 260 -> 270"
     }
   ],
   "walks": [

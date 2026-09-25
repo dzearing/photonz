@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T09:42:58.763Z",
-  "updated": "2026-09-24T12:40:37.998Z",
+  "updated": "2026-09-24T14:54:20.415Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-24 with Scripts/playtest.sh Scripts/playtest/an-editing-session-walk.json --no-build (screen unlocked, real captures): openSampleTalk (17.25s, 10 captions), Command K at 8.63s and 4.31s, Delete. V1 becomes two pieces ending at 12.94s, but the Captions track still runs to 17.25s: see /tmp/photonz-playtest/an-editing-session-walk/2-cut-sc.png and 3-second-clip-sc.png, and playing-19.png / playing-20.png where the cue 'layer that happens to have a start and an' plays over the b-roll. Cause: EditorState.deleteClipPieceInHand calls PhotonzDocument.removeClipPiece, which edits only that clip's ClipPieces (ClipPieces.swift editClip); nothing else in the document moves. rippleTime(atMS:byMS:exceptLayer:) in HoldPush.swift already moves every other layer for a hold that pushes everything and can shorten a straddling layer; it does not yet drop a layer wholly inside a removed stretch. Captions are text layers with their own LayerTime inside the Captions group (Captions.swift CaptionLayers.layers), so moving them is ordinary layer time. Decide with the user only if a Premiere-style per-track sync lock is wanted; the default behaviour should be ripple everything.",
@@ -37,7 +37,35 @@
     {
       "t": "2026-09-24T12:40:37.997Z",
       "note": "seq 195 -> 30"
+    },
+    {
+      "t": "2026-09-24T14:26:01.997Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T14:53:59.359Z",
+      "note": "walks none -> an-editing-session-walk"
+    },
+    {
+      "t": "2026-09-24T14:53:59.415Z",
+      "note": "Adversarial pass before building: a Premiere editor with sync lock on expects a ripple of the piece to take every track along; the cut mock (video-cut-wt) says a detached voiceover under the cut 'has not moved a frame', so a sound across the whole stretch is left alone while words and shapes across it are shortened. Caption words carry document-clock timings (captionWords), so they are squeezed by the same rule or the lit word would drift."
+    },
+    {
+      "t": "2026-09-24T14:53:59.469Z",
+      "note": "Built: PhotonzDocument.removeTime(fromMS:toMS:exceptLayer:) (Sources/PhotonzCore/StretchRemoval.swift, 11 tests in StretchRemovalTests). rippleDeleteClipPiece uses it instead of closeGap, and Delete on a piece (deleteClipPieceInHand) now calls rippleDeleteClipPiece, so Delete and the Delete/Ripple Delete menu rows all take the stretch out of the whole document in one undo step. New walk action captionsExpectEndWithRecording; an-editing-session-walk runs it after the cut: 'the last one ends at 12.94s, the recording at 12.94s' (was 17.25s), status ok, playing-20.png over the b-roll has no caption. One-off /tmp walk cut, undo, redo: 10 cues/17.25s -> 8 cues/12.94s -> Command Z -> 10 cues/17.25s -> redo -> 8/12.94s."
+    },
+    {
+      "t": "2026-09-24T14:53:59.525Z",
+      "note": "Left rough, none filed (all intended or the user's call via the audit): a caption across the join keeps its full text, only shorter (Premiere trims the caption clip the same way); a speech sound across the whole cut stays put and so is out of step after the join, as the cut mock chooses for a detached voiceover; nothing shows which tracks a delete moves (the cut mock's own open question, no per-track sync lock yet); Delete and Ripple Delete on a piece now do the same thing. Full Scripts/test.sh green (9561) on the third run; the two failures before it were export-size flakes folded into the-export-size-test-fails-about-one-run-in-thre."
+    },
+    {
+      "t": "2026-09-24T14:54:20.413Z",
+      "note": "Delete on a piece of a clip now takes the same stretch out of the whole document (PhotonzDocument.removeTime in Sources/PhotonzCore/StretchRemoval.swift, used by rippleDeleteClipPiece and Delete): captions only inside the piece go, later captions/titles/sounds move up with their words, captions across the join are shortened, one undo restores. Verified: 11 new core tests, full Scripts/test.sh green, an-editing-session-walk ok with new captionsExpectEndWithRecording step (last caption 12.94s = recording, was 17.25s), cut/undo/redo one-off walk. Audit queue/audits/2026-09-24-captions-follow-cut.json with 3 real captures. Commit 31ae995e."
     }
   ],
-  "walks": []
+  "walks": [
+    "an-editing-session-walk"
+  ],
+  "started": "2026-09-24T14:26:01.996Z",
+  "completed": "2026-09-24T14:54:20.414Z"
 }

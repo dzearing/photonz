@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:16:31.500Z",
-  "updated": "2026-09-24T12:40:38.048Z",
+  "updated": "2026-09-24T15:31:09.477Z",
   "deps": [
     "cutting-a-stretch-out-of-a-recording-takes-its-c"
   ],
@@ -36,6 +36,40 @@
     {
       "t": "2026-09-24T12:40:38.047Z",
       "note": "seq 190.3 -> 40"
+    },
+    {
+      "t": "2026-09-24T14:53:44.479Z",
+      "note": "The document-level stretch removal this needs landed 2026-09-24: PhotonzDocument.removeTime(fromMS:toMS:exceptLayer:) in Sources/PhotonzCore/StretchRemoval.swift drops captions and titles wholly inside, shortens words and shapes across either end (caption words squeezed with them), moves everything after earlier, lands a sound starting inside on the join, and leaves a sound across the whole stretch alone. Extract can cut every clip at In and Out and call it once."
+    },
+    {
+      "t": "2026-09-24T15:08:07.347Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T15:30:49.037Z",
+      "note": "Adversarial review before building: a Premiere editor expects ' and ; with In/Out marks, acting on every unlocked track (music included), one undo step, marks cleared afterwards, playhead on the join. Gaps the app had: a clip cannot hold a hole (ClipPieces), so Lift cutting a clip across the stretch has to make it two layers on the same track (tracks written down first so the copy stays on the clip's track). removeTime leaves a sound across the stretch alone; Extract must cut it, so clips are cut through their own pieces first and removeTime handles everything else. Keys gated on the timeline having the keyboard, like I/O, so ' and ; never fire while typing on the canvas."
+    },
+    {
+      "t": "2026-09-24T15:30:49.088Z",
+      "note": "Built: Sources/PhotonzCore/MarkedStretch.swift (ClipPieces.removingStretch, extractStretch/liftStretch, extractMarkedStretch/liftMarkedStretch: markers after move up, one inside lands on the join, marks cleared). removeTime(exceptLayers:) plus removeLayersEmptyingCaptions factored in StretchRemoval.swift. TimelineKeyCommand .extractMarked/.liftMarked on ' and ;. App: EditorState+TimelineMenus (canTakeOutMarkedStretch, extract/liftMarkedStretch; ruler menu leads with Extract and Lift when the click is on the stretch, ends included, since the ruler sits at the foot of the screen and the long menu scrolled them out of sight), Mark menu rows. Walk harness: action clipHoldToFiveMinutes, expectTimeline lengthMS. Tests: Tests/PhotonzCoreTests/MarkedStretchTests.swift (20). Full suite 9581 green. Walks extract-a-marked-stretch-walk (lock-safe, no flags: 5:00, I at 1:15, O at 2:30, ' -> 3:45, cmd-Z -> 5:00 with marks, ; -> gap) and extract-from-the-ruler-menu-walk ok, plus timeline-right-click, premiere-keys-on-the-timeline, timeline-keys-on-open ok."
+    },
+    {
+      "t": "2026-09-24T15:30:49.140Z",
+      "note": "left rough (not filed, in the audit for the user to react to): Lift's tail is named '<name> copy' per the app's duplicate-naming rule where Premiere keeps the name; motion keys on a layer Lift cuts in two replay from the tail's start (same as other clip cuts, unverified in a walk); a walk's synthesized pointer never reaches the ruler's onContinuousHover (the move step logs 'nothing under the pointer watches for one'), so ruler right-clicks in walks act at the playhead. No mock page draws Extract/Lift; nearest is video.html's ruler."
+    },
+    {
+      "t": "2026-09-24T15:30:49.193Z",
+      "note": "owns these walks: extract-a-marked-stretch-walk, extract-from-the-ruler-menu-walk"
+    },
+    {
+      "t": "2026-09-24T15:31:09.475Z",
+      "note": "Extract (') and Lift (;) on an In/Out stretch, every unlocked track, one undo step, captions/titles/markers follow (Sources/PhotonzCore/MarkedStretch.swift; keys, Mark menu, ruler right-click leading with both). 20 core tests, full suite 9581 green; walks extract-a-marked-stretch-walk (5:00 marked 1:15-2:30, extract reads 3:45, no flags, real captures) and extract-from-the-ruler-menu-walk pass; audit queue/audits/2026-09-24-extract-and-lift.json. Commit c21c0fc1."
     }
-  ]
+  ],
+  "started": "2026-09-24T15:08:07.346Z",
+  "walks": [
+    "extract-a-marked-stretch-walk",
+    "extract-from-the-ruler-menu-walk"
+  ],
+  "completed": "2026-09-24T15:31:09.476Z"
 }

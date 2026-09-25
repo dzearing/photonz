@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 190,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T02:23:06.624Z",
-  "updated": "2026-09-24T12:40:38.828Z",
+  "updated": "2026-09-25T10:27:18.148Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the side by side for the-video-properties-look-like-the-rest-of-the-d (queue/audits/2026-09-24-video-panel-side-by-side.png). Mock: docs/design/mocks/pages/video.html renderProps, .cliphead and the Animating .prow.anim rows plus #addProp. App: PropertyKeysInspector lists every keyRow; the Time section (SpeedInspector) now holds Speed/Length/Sound rows and a title On screen row, which the clip line would partly replace. Order rule is TimePanelOrder (PhotonzCore).",
@@ -36,6 +36,41 @@
     {
       "t": "2026-09-24T12:40:38.827Z",
       "note": "seq 370 -> 190"
+    },
+    {
+      "t": "2026-09-25T06:36:59.188Z",
+      "note": "From on-a-video-the-timeline-is-the-layer-list (2026-09-25): Layers is gone from the panel while the timeline shows, so the clip line is now the FIRST thing in the panel, not the first thing under Layers. The mock's dock also heads that pane 'Properties' with the kind (Title/Clip) as a chip and a panel menu; today the panel shows separate Time, Sound, Animating, Appearance sections. That heading is part of matching video.html's #gProps and belongs here."
+    },
+    {
+      "t": "2026-09-25T09:34:48.040Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-25T09:37:26.524Z",
+      "note": "Adversarial review before building. Mock video.html #gProps: header 'Properties' + kind chip + panel menu; .cliphead (name, in -> out, length . speed); 'Animating  N of M properties / nothing yet' + Graph; rows only for keyed values (diamond toggles a key AT THE PLAYHEAD, x on hover stops animating); '+ Animate a property' opens a grouped, searchable picker of the rest. A first-time user: today a fresh title shows 15 dim rows, which is the Premiere Effect Controls wall; the mock's picker is shorter and still answers 'how do I animate this' with one visible button. Premiere user: diamond = add/remove keyframe at playhead is exactly Premiere's, and the app's current diamond (= stop animating) is not, so the diamond changes to the mock's meaning and Stop Animating moves to the row's x and right-click. App gaps: none blocking (popovers are drivable by walks). Plan: the Animating section becomes the dock's Properties section in a document with time and leads the panel; Time keeps Speed/Sound/Hold/Start Here/End Here/Fade but loses Length and On screen, which the clip line now says. ~14 walks and the a-title-that-moves guide press the dormant Position diamond; they move to the picker."
+    },
+    {
+      "t": "2026-09-25T09:37:26.577Z",
+      "note": "owns these walks: key-a-title-s-scale-walk, video-panel-order-walk"
+    },
+    {
+      "t": "2026-09-25T10:26:58.300Z",
+      "note": "walks key-a-title-s-scale-walk, video-panel-order-walk -> properties-pane-walk, key-a-title-s-scale-walk, video-panel-order-walk"
+    },
+    {
+      "t": "2026-09-25T10:26:58.354Z",
+      "note": "left rough (not filed, below the bar): Animating is a heading inside the pane rather than its own foldable sub-section as the mock's chevron draws; the picker's Find box takes Return to pick the first match but the walk never types in it; a fast stretch no longer says '8s into 2s' (clip line says 2.0s · 4.0x). Filed the one that clears the bar: the-dock-headers-match-the-mock-small-caps-title (p1). Not mine: keys-copy-between-layers-walk and punch-in-and-hold-walk fail at the same steps as in the 09-25 sweep, owned by walks-that-fail-in-the-full-sweep-5."
+    },
+    {
+      "t": "2026-09-25T10:27:18.146Z",
+      "note": "Shipped in b009ac43. On a video the panel opens on Properties (kind pill), a clip line (name, in -> out, length . speed) and Animating with only keyed values plus an Animate a property picker (grouped, searchable); the diamond adds or removes the key at the playhead, the row cross stops animating. Time lost Length/On screen. Core ClipLine + PropertyPicker TDD (PropertiesPaneTests). Verified: properties-pane-walk at Next defaults reads the clip line and Animating count for a clip and a title; 17 updated walks green; suite 9735 green. Audit queue/audits/2026-09-25-properties-pane.json with a side-by-side against video.html PROPERTIES. Follow-up filed: the-dock-headers-match-the-mock-small-caps-title."
     }
-  ]
+  ],
+  "started": "2026-09-25T09:34:48.039Z",
+  "walks": [
+    "properties-pane-walk",
+    "key-a-title-s-scale-walk",
+    "video-panel-order-walk"
+  ],
+  "completed": "2026-09-25T10:27:18.147Z"
 }

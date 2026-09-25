@@ -4,12 +4,12 @@
   "goal": "Put a dissolve between two clips and the picture blends, but the sound still jumps from one clip to the next at the edit point, so the exported video has a hard audio cut, often a click, right in the middle of a smooth picture change. A Final Cut editor expects the dissolve to cross-fade the sound as well, and a Premiere editor applies both with one key. Make a transition on a cut blend the two clips' own sound over the same stretch, in playback and in the exported file.",
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
-  "seq": 80,
+  "seq": 100,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T09:51:41.666Z",
-  "updated": "2026-09-24T12:40:39.607Z",
+  "updated": "2026-09-25T12:23:32.867Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the audit rough line in queue/audits/2026-09-23-transition-picker-at-a-cut.json: 'Transitions between clips only change the picture: the sound still cuts hard at the edit point.' Checked by reading, 2026-09-24: ClipTransitions.swift (PhotonzCore) is picture only, and AudioMix.swift / DocumentAudioPlayer.swift / DocumentMovieWriter.swift never mention a transition. Not reproduced by ear (the probe cannot listen), so this is a gap to build, not a p1 bug. Linked sound segments come from a-clip-s-sound-is-on-the-timeline-from-the-momen; volume ramps already exist in AudioMix. No new control: the existing transition drives it.",
@@ -34,6 +34,14 @@
     {
       "t": "2026-09-24T12:40:39.606Z",
       "note": "seq 34 -> 80"
+    },
+    {
+      "t": "2026-09-25T12:22:28.483Z",
+      "note": "seq 80 -> 90"
+    },
+    {
+      "t": "2026-09-25T12:23:32.866Z",
+      "note": "seq 90 -> 100"
     }
   ]
 }

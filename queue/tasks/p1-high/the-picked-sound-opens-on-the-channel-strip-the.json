@@ -1,0 +1,33 @@
+{
+  "id": "the-picked-sound-opens-on-the-channel-strip-the",
+  "title": "The picked sound opens on the channel strip the audio mock draws",
+  "goal": "When a piece of sound is picked, the panel shows a Channel section like the audio mock: the file name beside the header, Mute and Solo buttons, and a Volume slider in decibels. Today the section is called Sound, has a Level slider, and has no Mute or Solo.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 170,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-25T11:07:07.430Z",
+  "updated": "2026-09-25T12:22:27.965Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building the Fades section (a-sound-shows-its-fade-in-and-fade-out-as-the-mo, 2026-09-25). Mock: docs/design/mocks/pages/video-audio.html lines ~214-221 (.section Channel: .btnrow chMute/chSolo, .slrow chVol -24..+6 dB). App: Sources/Photonz/SoundInspector.swift (SoundInspector: Level slider + Points/Flatten), section title in InspectorSections.swift (.sound \"Sound\"). Track mute/solo already exist on track headers (DocumentTracks.swift, layersSilencedByTrack); the panel buttons should drive those, not a second mute. Keep the Points/Flatten row or fold it in; decide against the mock.",
+  "acceptance": [
+    "With a sound picked, the panel has a section headed Channel with the file name beside it, as pages/video-audio.html draws #propBody",
+    "Mute and Solo buttons sit under the header and do the same thing as the mute and solo on that sound track, as one undo step each",
+    "The level row reads Volume with its decibels at the end, as the mock draws it",
+    "A walk with no flags picks the sample music, mutes it, solos it and reads each back"
+  ],
+  "log": [
+    {
+      "t": "2026-09-25T11:07:07.432Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-25T12:22:27.964Z",
+      "note": "seq 390 -> 170"
+    }
+  ],
+  "walks": []
+}

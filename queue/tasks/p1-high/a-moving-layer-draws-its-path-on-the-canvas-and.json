@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 210,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T03:00:40.487Z",
-  "updated": "2026-09-24T12:40:38.929Z",
+  "updated": "2026-09-25T12:04:03.890Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From move-a-layer-from-a-to-b-grow-it-shrink-it-fade (2026-09-23): docs/design/mocks/pages/video-move-wt.html steps 5, 7 and 8 draw the dashed path and the arc; nothing in the app draws or bends a motion path yet. Position keys are LayerMotion .point values blended linearly (MotionValue.blended); a curved segment needs a control point per segment (on MotionStop, beside the new per-key ease in PropertyKeys/ClipKeys). Easing between keys already exists from the key right-click (KeyEase).",
@@ -29,6 +29,39 @@
     {
       "t": "2026-09-24T12:40:38.928Z",
       "note": "seq 390 -> 210"
+    },
+    {
+      "t": "2026-09-25T11:25:12.378Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-25T12:03:19.321Z",
+      "note": "owns these walks: motion-path-walk"
+    },
+    {
+      "t": "2026-09-25T12:03:19.373Z",
+      "note": "Adversarial review before building: a Premiere/After Effects user expects the motion path on the canvas with a handle to bend it, and that a key added part way along keeps the arc (done: the arc is split, de Casteljau). The mock's handle is ON the curve, not the control point, so dragging it puts the curve's middle where you let go. Linear keys run at a flat rate along the arc (arc-length), as the mock's note promises. Mock assumptions the app lacked: a 'Between the keys' panel section (the app follows video.html's Animating list instead) and an Animate command menu; both filed as one p1 follow-up rather than cut."
+    },
+    {
+      "t": "2026-09-25T12:03:19.425Z",
+      "note": "Built: PhotonzCore/MotionPath.swift (segment math, bend per key as the control point's offset from the chord middle, Straight/Curved, document helpers), MotionStop.bend + LayerMotion.fromBend (nil when straight, so old documents encode unchanged), evaluation through LayerMotion.travelled so render, export and the Properties readout follow the arc; copy/paste keeps bends between copied keys. App: CanvasMotionPath.swift (dashed route, key rings, middle squares, drag, double-click straightens, Escape cancels), EditorState+MotionPath.swift, Path row (Straight | Curved) under Position in PropertyKeysInspector, right-click on the square offers Straight/Curved (answered before the click re-aims the picks, which otherwise took the moving layer out of the selection). 18 new core tests in MotionPathTests."
+    },
+    {
+      "t": "2026-09-25T12:03:19.478Z",
+      "note": "Verified: motion-path-walk (Next defaults, no flags) green twice with 5 real captures; keyframe-anything, title-flies-in-grows-and-fades-out, motion-pivot, key-lanes walks green. keys-copy-between-layers-walk fails at step 81, already listed failing by the last sweep and owned by walks-that-fail-in-the-full-sweep-5. Full Scripts/test.sh: 9767 tests, only AnimatedExportWeighTests' size check failed (passes alone; known flake, task the-export-size-test-fails-about-one-run-in-thre) on a machine with load ~9 from the user's own Photonz Dev at 100% CPU. A first full run also failed MotionRenderTests.aSwitchedOffMotionDrawsTheLayerAsItWasDrawn; it fails 3/3 with --filter MotionRenderTests on the tree WITHOUT this change too, so it is pre-existing and filed separately."
+    },
+    {
+      "t": "2026-09-25T12:03:19.531Z",
+      "note": "left rough: the ring on the last key hides under the title's selection box while the playhead sits on that key; only one handle per stretch (no per-key spatial Bezier handles like After Effects) so a lopsided arc is not possible yet; the dashed line is thin over white parts of a recording. None filed: noted in the audit's rough list for the user to react to."
+    },
+    {
+      "t": "2026-09-25T12:04:03.888Z",
+      "note": "Shipped in a0fc5bbb: a picked layer keyed at two places shows its dashed route with key rings and a square mid-stretch; dragging the square bends the stretch into an arc the layer follows when scrubbed, played and exported (core MotionPath.swift, evaluation through LayerMotion.travelled); double-click or Straight in the new Path row under Position puts it back; right-click on the square offers Straight/Curved. Verified by 18 MotionPathTests and motion-path-walk at Next defaults (5 real captures); audit queue/audits/2026-09-25-motion-path.json. Follow-ups filed: a-moving-layer-shows-between-the-keys-in-propert (p1), a-switched-off-motion-test-passes-whichever-rend (p2)."
     }
-  ]
+  ],
+  "started": "2026-09-25T11:25:12.377Z",
+  "walks": [
+    "motion-path-walk"
+  ],
+  "completed": "2026-09-25T12:04:03.889Z"
 }

@@ -4,12 +4,12 @@
   "goal": "The video mocks put one quiet line in the title bar: the project name in bold, the picture size, the length, and saved or edited, so a person always knows which edit they are in and whether closing will lose anything. The app shows none of that today, which matters more now that an edit can be saved as a named project.",
   "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 350,
+  "seq": 130,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T03:42:46.056Z",
-  "updated": "2026-09-25T03:42:46.059Z",
+  "updated": "2026-09-25T12:22:27.758Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the side-by-side for a-video-edit-can-be-saved-as-a-project-and-opene (2026-09-24). Mock spec: docs/design/mocks/shared/AGENTS.md ~line 452 (data-shell: text before the first dot is bolded) and data-shell on video.html, video-captions.html (capDirty) and video-audio.html (aDirty). App today: the title bar shows the traffic lights and the Everything mode picker, no document name (see /tmp/photonz-playtest/a-video-edit-saves-as-a-project-walk/9-reopened-sc.png). Readable state: EditorState.windowTitle, hasUnsavedChanges, documentLengthMS, document.canvasSize.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-25T03:42:46.058Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-25T12:22:27.757Z",
+      "note": "seq 350 -> 130"
     }
   ]
 }

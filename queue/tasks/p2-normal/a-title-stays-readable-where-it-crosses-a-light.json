@@ -1,0 +1,38 @@
+{
+  "id": "a-title-stays-readable-where-it-crosses-a-light",
+  "title": "A title stays readable where it crosses a light part of the picture",
+  "goal": "A new title over a video is white with a soft shadow, which reads on dark footage but nearly disappears where the words cross something light, like a white window or card in a screen recording, and while typing the words have no shadow at all. The title should stay legible wherever it is put, without the person restyling it.",
+  "epic": "video-titles-graphics",
+  "priority": "p2-normal",
+  "seq": 160,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T22:19:18.336Z",
+  "updated": "2026-09-25T12:23:33.175Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen in a-title-reads-over-a-video-walk 2-a-title-over-the-recording-sc.png (click at 120,110 on Sample Talk puts Ship over the Ready card). TitleLook.shadow is the mock soft shadow (sigma fontSize*6/26, 45% black). Options: stronger or tighter second shadow, a colour picked from the frame under the words, or a plate like captions. The inline draft (CanvasTextEditing.styleTextEditor) sets no shadow on the NSTextView. Mock video.html .vframe .title uses text-shadow 0 2px 12px rgba(0,0,0,.4), so anything beyond that is going further than the mock, not away from it.",
+  "acceptance": [
+    "A title typed across a white card in the sample talk recording reads at a glance in a real window capture, at Next defaults",
+    "The words being typed look the same as the placed title, shadow included, so nothing changes on Return",
+    "A title on dark footage looks as it does today"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T22:19:18.338Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-25T12:22:28.801Z",
+      "note": "seq 3330 -> 150"
+    },
+    {
+      "t": "2026-09-25T12:23:33.174Z",
+      "note": "seq 150 -> 160"
+    }
+  ],
+  "walks": [
+    "a-title-reads-over-a-video-walk"
+  ]
+}

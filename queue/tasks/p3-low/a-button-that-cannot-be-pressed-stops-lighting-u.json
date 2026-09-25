@@ -4,12 +4,12 @@
   "goal": "Every round icon button in the app dims when it cannot be used, which is right. But move the pointer over a dimmed one and it still brightens and still grows the soft ring that says press me, just fainter. So the one moment a person is deciding whether a button will answer them, the button says yes and then does nothing. A control that cannot be pressed should sit still under the pointer.",
   "epic": "design-system",
   "priority": "p3-low",
-  "seq": 40,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T12:19:44.405Z",
-  "updated": "2026-09-23T12:10:32.704Z",
+  "updated": "2026-09-25T12:22:29.760Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the 2026-09-22 digest pass while reading queue/audits/2026-09-21-video-bar-says-what-it-does.json, whose rough list says: 'A dimmed button still brightens a little and grows its hover ring when the pointer crosses it, so it reads as slightly more pressable than it is. This is in the shared icon button style, not in the video bar.'\n\nConfirmed in the code rather than taken on trust. Sources/Photonz/IconActionButtonStyle.swift: both styles read @Environment(\\.isEnabled) and use it for exactly one thing, .opacity(isEnabled ? 1 : 0.4) (lines 70 and 148). The hover state is tracked regardless (hovering, lines 45 and 129) and fillOpacity (lines 85 and 156) never consults isEnabled, so the hover fill is drawn on a disabled button and then dimmed to 40 per cent along with everything else, and the 0.12s ease still runs.\n\nThis is the SHARED style, so it is every dimmed round icon button in the app, not a video problem. It was found on the video bar because that row is the one place with four permanently dimmed buttons side by side.\n\nParked at p3 because design-system is staged next: it is a real defect, small, and it does not unblock the video focus.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-09-23T12:10:32.703Z",
       "note": "seq 40 -> 40"
+    },
+    {
+      "t": "2026-09-25T12:22:29.759Z",
+      "note": "seq 40 -> 30"
     }
   ]
 }

@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 160,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T21:55:30.418Z",
-  "updated": "2026-09-24T12:40:38.673Z",
+  "updated": "2026-09-25T04:58:58.594Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video.html onboarding step 2 (Fill the Library, line ~326, view ~691) and the Library header + button (data-menu #libMenu, line ~530). The pool exists since recordings-and-sounds-in-a-document-sit-on-the-l: PhotonzDocument.media + rememberMedia (Sources/PhotonzCore/DocumentClipMedia.swift); adding to the shelf is perform { $0.rememberMedia(...) } after MovieLibrary/SoundLibrary read the file. The shelf already takes colour drops (LibraryColorDrop.swift), so a file drop must be added alongside without breaking that. Capture landing new recordings in the Library is the third way in the mock; decide in the task whether it belongs here.",
@@ -37,6 +37,36 @@
     {
       "t": "2026-09-24T12:40:38.672Z",
       "note": "seq 350 -> 160"
+    },
+    {
+      "t": "2026-09-25T04:05:57.006Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-25T04:08:35.174Z",
+      "note": "Pre-build review: (1) the mock's step 1 'New, empty' blank video timeline does not exist in the app (a document has time only once something occupies it), so the walk starts from the sample recording, whose Audio track is empty; the blank project is a separate gap, filed as a follow-up. (2) Shift Command I is Photoshop's Invert Selection and already taken in Edit; Import Media takes it whenever no marquee is active (Invert is disabled then anyway), and with a marquee up the key stays Invert, so Photoshop muscle memory never changes. (3) Premiere/FCP editors expect Import on Command I and a bin that takes a Finder drop; the shelf drop covers the bin, the File row covers the menu. (4) A picture dropped on the Library keeps today's behaviour (becomes a layer): the shelf holds pictures only through layers. (5) Capture landing new recordings in the Library (mock's third way) is left out: a capture opens its own document today, so there is no open Library for it to land in; the + menu's 'From capture history' row opens History instead."
+    },
+    {
+      "t": "2026-09-25T04:08:35.228Z",
+      "note": "owns these walks: library-import-walk"
+    },
+    {
+      "t": "2026-09-25T04:58:33.533Z",
+      "note": "walks library-import-walk -> library-import-walk, import-key-leaves-invert-selection-walk"
+    },
+    {
+      "t": "2026-09-25T04:58:33.587Z",
+      "note": "Built: File > Import Media (Shift Command I, Import only while no marquee is up so Invert Selection keeps the key), Library header plus with the mock's three rows, shelf drop that keeps recordings/sounds on the shelf only. Core LibraryImport + bringIntoLibrary, tested. Walks library-import-walk and import-key-leaves-invert-selection-walk ok at Next defaults with real captures; 28 related walks ok; full suite 9710 green. Side by side with video.html Library (#gLibrary, #libMenu): header Library · Media · plus matches; menu rows match with the key shown, but the mock's rows carry icons and ours are plain macOS rows (left rough: native menus); tiles are 68pt wide vs the mock's 96pt min, names cut, filed as library-tiles-are-as-wide-as-the-mock-draws-them (p1). Filed a-new-video-starts-from-an-empty-timeline (p1) for the mock's step 1. Left rough, not filed: a music clip dropped on Audio moves the recording's own sound to a new Audio 2 track, which is the existing landing behaviour (library-clip-onto-a-track-walk does the same), not new here; capture landing straight in the Library is not built because a capture opens its own window, the plus's From Capture History opens History instead. Also dropped lib-tiles-dup-check, a task this runner created by mistake."
+    },
+    {
+      "t": "2026-09-25T04:58:58.592Z",
+      "note": "File > Import Media (Shift Command I, yielding to Invert Selection while a marquee is up), a plus on the Library header with the mock's three rows, and a shelf drop that keeps recordings and sounds on the shelf only, all opening the Library on the new tile. Verified by library-import-walk and import-key-leaves-invert-selection-walk at Next defaults with real captures, 28 related walks, full suite 9710 green. Audit queue/audits/2026-09-25-library-import.json. Commit 4129c190. Filed: tile width vs mock, new empty video."
     }
-  ]
+  ],
+  "started": "2026-09-25T04:05:57.005Z",
+  "walks": [
+    "library-import-walk",
+    "import-key-leaves-invert-selection-walk"
+  ],
+  "completed": "2026-09-25T04:58:58.593Z"
 }

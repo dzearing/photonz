@@ -1,0 +1,27 @@
+{
+  "id": "x-6",
+  "title": "x",
+  "goal": "",
+  "epic": "",
+  "priority": "p2-normal",
+  "seq": 3390,
+  "status": "dropped",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-25T11:07:11.182Z",
+  "updated": "2026-09-25T11:07:18.858Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-09-25T11:07:11.184Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-25T11:07:18.857Z",
+      "note": "Created by mistake by the runner of a-sound-shows-its-fade-in-and-fade-out-as-the-mo (a stray addjson test call); nothing to do"
+    }
+  ]
+}

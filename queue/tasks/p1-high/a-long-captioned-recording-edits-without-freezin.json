@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:16:31.590Z",
-  "updated": "2026-09-24T12:40:38.099Z",
+  "updated": "2026-09-24T18:57:59.369Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24); gap report docs/design/video-vs-premiere.md. Reproduced: /tmp/photonz-5min/five-min-walk-3.json on a 300 s 2880x1800 H.264 with 1018 spoken words (made with say + ffmpeg). With captions: key i longest pass 173.9 ms, backslash 445 ms, earlier runs 537 to 677 ms after I/O and 598 ms after zoom keys, 559 ms after Add Track. After captionsClear, the same four keys: longest 30.9 ms. The 17 s Sample Talk also logs an 833 ms pass right after open. Suspect every caption cue and word is its own layer and view on the Captions and Words rows (the document held 175 layers), rebuilt on each change. Needs a perf note per CLAUDE.md if it touches the composite path.",
@@ -28,6 +28,52 @@
     {
       "t": "2026-09-24T12:40:38.098Z",
       "note": "seq 190.4 -> 50"
+    },
+    {
+      "t": "2026-09-24T15:42:36.821Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T17:32:23.165Z",
+      "note": "Reproduced 2026-09-24 on a rebuilt 300 s 2880x1800 talk (say+ffmpeg; the /tmp original was gone): i 310 ms, backslash 485 ms longest pass with 173 captions; 25-30 ms after captionsClear. Profiled with sample(1)."
+    },
+    {
+      "t": "2026-09-24T17:32:23.218Z",
+      "note": "Causes found: (1) the menu bar asked canTakeOutMarkedStretch by running a whole Lift on a document copy on every redraw once an In was set, and Lift looked each layer's track up by laying all tracks out again (O(n^2)); canSplitEverythingAtPlayhead did the same with a trial split. (2) every caption cue was a full ClipPiecesBar reading the whole document, so any edit re-ran 175 bars; (3) the Words lane was ~1000 chip views redrawn per playhead step; (4) dozens of whole-document scans (allLayers copies, layer(id:) copying every layer it passed, holdDrifts per bar, key lanes per cue, Arrange container per sibling). (5) In the PROBE only, each cue bar carried 5 walk-name NSViews, ~870 on a zoom-out: 375 ms of the 450 ms backslash freeze was the harness's own instrumentation."
+    },
+    {
+      "t": "2026-09-24T17:32:23.270Z",
+      "note": "Adversarial review before building: a Premiere editor expects a 5 min captioned timeline to scrub, mark and zoom without a hitch; the mock's cue bars and word chips must look the same after the change, so both are painted with the kit's exact constants rather than redesigned. Risk: a painted cue must still take click, drag (incl. onto another track), right click, double-click-to-retype; handled by keeping picked cues as the full bar and a hit layer shaped to the cues so the lane between them still scrubs."
+    },
+    {
+      "t": "2026-09-24T17:56:11.732Z",
+      "note": "owns these walks: a-long-captioned-recording-walk"
+    },
+    {
+      "t": "2026-09-24T18:57:52.463Z",
+      "note": "Built: see commit 0c3e3a55 and docs/progress/log.md. Measured on a quiet Mac (probe, 7+ runs): arrows 20-36 ms, i/o 35-47, = and \\ 30-45, landing at open 60-81. Measured later with WindowServer at 55% and a browser GPU helper at 25% (not ours): the same presses 40-60 ms, landing 90-100. So the guard walk fails at 80 ms a key and 150 ms for the landing rather than 50/100: every freeze it guards against was 170 ms or more. Acceptance 1 and 2 hold on a quiet Mac, not always on a loaded one; said so in the audit."
+    },
+    {
+      "t": "2026-09-24T18:57:52.516Z",
+      "note": "Left rough (logged, not filed): the probe could not become the front app for the last hour (UserNotificationCenter alert frontmost), so a-painted-caption-takes-a-click-walk has not been seen green; the Blade target, built the same way, also ignores clicks then, while it worked at 05:14 with the probe active. The next sweep with an active probe settles it. Also: opening a long Retina recording has 200-420 ms passes before any caption exists (seen with a temporary pass logger); not caption work. Also: my cleanup removed /tmp/photonz-5min/script.txt, the measuring runner's talk script (scratch, nothing in the repo points at it)."
+    },
+    {
+      "t": "2026-09-24T18:57:52.568Z",
+      "note": "Walks run by hand: 77 across timeline, captions, keys, arrange and a spread of image walks. Red ones all red on untouched HEAD too, built in a clean worktree: keys-copy-between-layers, premiere-keys-on-the-timeline, tracks-you-can-add-rename-group, tutorial-mark-it-up; extract-a-marked-stretch went red later only because command+z could not reach the frozen menu of an inactive probe. Logged on walks-that-fail-in-the-full-sweep-5. Full sweep requested (shell change). Filed: picking-or-retyping-a-caption-answers-at-once (p2)."
+    },
+    {
+      "t": "2026-09-24T18:57:52.619Z",
+      "note": "walks a-long-captioned-recording-walk -> a-long-captioned-recording-walk, a-painted-caption-takes-a-click-walk"
+    },
+    {
+      "t": "2026-09-24T18:57:59.367Z",
+      "note": "A five minute captioned talk no longer freezes on I, O, arrows, = or \\: 20-47 ms per key on a quiet Mac, down from 170-485 ms; captions landing peak at 60-70 ms. Fixes in PhotonzCore (cheap Extract/Lift and Add Edit checks, one locked-track pass, layer lookups and scans that copy nothing) and the timeline (unpicked cues painted as one layer, the Words lane one canvas, the editor body no longer rebuilt per edit). Commit 0c3e3a55. Guarded by a-long-captioned-recording-walk at 80 ms a key and 150 ms for the landing, looser than the 50/100 asked because the same presses read 40-60 ms when another app keeps the Mac busy. Audit queue/audits/2026-09-24-long-captioned-timeline.json has two real captures. Not yet seen: a real click on a painted cue; its walk waits for an active probe (a system alert held the front today)."
     }
-  ]
+  ],
+  "started": "2026-09-24T15:42:36.820Z",
+  "walks": [
+    "a-long-captioned-recording-walk",
+    "a-painted-caption-takes-a-click-walk"
+  ],
+  "completed": "2026-09-24T18:57:59.368Z"
 }

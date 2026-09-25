@@ -4,12 +4,12 @@
   "goal": "Scroll the right hand panel so a colour row sits right at its top edge, then click the swatch: nothing opens. The same swatch opens the picker normally once the panel has been scrolled a little way down. Anyone whose panel has scrolled itself there clicks a colour and gets silence.",
   "epic": "interaction-foundations",
   "priority": "p3-low",
-  "seq": 50,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T13:50:22.676Z",
-  "updated": "2026-09-23T12:10:32.754Z",
+  "updated": "2026-09-25T12:22:29.814Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-22. Take Scripts/playtest/copy-own-color-walk.json, strip its three reveal steps, run Scripts/playtest.sh on it:\n\n  [31 3-picker] the app's own colour picker opened on the colour this copy is wearing\n  [33 press] FAILED: no control called \"Related\" in \"Swatches\" is in the panel; the ones that are: none.\n\nThe panel dump at that moment (panel-3-picker.json) holds the dock and nothing of the picker: Component section (a dock section header, out of window), Color (Fill) at window (1159, 892) in a 920 tall window, Edit Original, Detach, Appearance section... The press landed on the well and the popover never came up. Put a reveal of the Component section in front of the same press, so the well sits further down, and the same run lists Close (the picker), Save style (the picker), Shades/Related/Document/Recent (Swatches). That is the whole difference.\n\nThe well is ComponentPanel.swift:1965 (.playtestControl(\"Color\", detail: property.name)) with a .popover(isPresented: editorState.colorWellBinding(wellKey), arrowEdge: .top) on it. Suspect the anchor view being clipped by the dock scroll view at the top edge, or the panel title overlaying the press point. Reached in the first place because a drop or an insert scrolls the dock down to the Library (the-panel-jumps-to-the-shelf-after-a-drop-instea), which is what leaves the Component section above the top and the Fill row jammed against it.\n\nThe three walks that hit it (copy-own-color-walk, copies-share-choice-walk) are green again with a reveal in front of each press; that is a walk working around this, not a fix.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-09-23T12:10:32.753Z",
       "note": "seq 3030 -> 50"
+    },
+    {
+      "t": "2026-09-25T12:22:29.813Z",
+      "note": "seq 50 -> 40"
     }
   ],
   "walks": []

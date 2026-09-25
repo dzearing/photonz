@@ -1,0 +1,39 @@
+{
+  "id": "a-clip-brought-onto-the-timeline-shows-its-sound",
+  "title": "A clip brought onto the timeline shows its sound waveform",
+  "goal": "A recording put onto the timeline from the Library or the Finder brings its sound onto an Audio track, but that track draws a flat line instead of the shape of the sound, so you cannot aim a cut at anything in it.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-25T01:51:08.398Z",
+  "updated": "2026-09-25T12:22:27.286Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-25: Scripts/playtest.sh Scripts/playtest/tutorial-add-a-second-clip-walk.json. After V1 is picked and b-roll.mp4 (written with sound by TutorialSampleRecording, same generator as the main clip whose waveform does draw) is placed with Add at Playhead, 3-command-inserts-sc.png and 4-where-they-meet-sc.png (a few seconds later) show the b-roll part of the Audio track as a flat line while the recording part shows its peaks. In tutorial-put-a-transition-on-a-cut-walk, where b-roll is in the document when it opens, its waveform does draw. EditorState+TimelineDrop.landTimelineFile calls SoundLibrary.loadWaveform only for a sound file (inAir.sound), never for a recording s own sound: likely the cause, unconfirmed.",
+  "acceptance": [
+    "A recording added at the playhead from the Library shows the waveform of its sound on its Audio track within a second",
+    "The same holds for a recording dragged onto a track from the Finder",
+    "A walk at Next defaults photographs the Audio track after adding b-roll and checks the waveform is drawn"
+  ],
+  "log": [
+    {
+      "t": "2026-09-25T01:51:08.400Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-25T12:21:56.328Z",
+      "note": "triage 2026-09-25 spot-check: confirmed from the picture in the notes, /tmp/photonz-playtest/tutorial-add-a-second-clip-walk/4-where-they-meet-sc.png: the Tutorial Sample stretch of the Audio track draws its waveform, and the b-roll stretch after the cut is a flat line. Moved p2 -> p1: the focus says a clip's sound is visible under its picture, and the second-clip guide shows this to every person who takes it."
+    },
+    {
+      "t": "2026-09-25T12:22:07.773Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-09-25T12:22:27.285Z",
+      "note": "seq 3370 -> 40"
+    }
+  ]
+}

@@ -4,12 +4,12 @@
   "goal": "The app learned a real rule this week and wrote it down nowhere anybody will look: a mark the app draws to help you place things must never be a closed rectangle, because a closed rectangle is what the app uses to say this is the thing you picked. An icon frame's keyline margin had to be redrawn as a soft band and four hairlines running off the edges for exactly that reason. Put the rule in the shared guide rule so the next feature that draws a helper mark does not have to work it out again.",
   "epic": "design-system",
   "priority": "p3-low",
-  "seq": 30,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T12:26:26.172Z",
-  "updated": "2026-09-23T12:10:32.653Z",
+  "updated": "2026-09-25T12:22:29.707Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the daily digest of 2026-09-20 as a rule scrub. Evidence: queue/audits/2026-09-20-icon-keylines-read-as-guides.json, whose summary is 'Nothing the app draws to help you place things closes a rectangle any more, so the only outlined rectangle on the canvas is the thing you have picked.' D16 today (docs/design/mocks/shared/UX-PATTERNS.md line 2459) covers over-your-work, wash-or-hairline and never-in-the-export, and says nothing about closed outlines, which is why the keyline shipped as a dashed rectangle first and had to be redone. Same audit records a cost worth carrying into the rule: the square keyline lost its corner rounding when it stopped being a rounded rectangle, and corner ticks were the alternative. Parked at p3 because design-system is staged next and this does not unblock the video focus.",
@@ -30,6 +30,10 @@
       "note": "seq 30 -> 30",
       "since": "2026-09-22T12:17:53.931Z",
       "count": 2
+    },
+    {
+      "t": "2026-09-25T12:22:29.706Z",
+      "note": "seq 30 -> 20"
     }
   ]
 }

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-24T11:13:36.648Z",
-  "updated": "2026-09-24T12:40:39.239Z",
+  "updated": "2026-09-25T12:23:32.403Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by every-panel-follows-the-design-system (2026-09-24). Reproduce: Scripts/playtest.sh Scripts/playtest/captions-write-themselves-walk.json --no-build; 2-the-captions-wrote-themselves-sc.png shows the Generate button as \"Write Ag...\" beside \"10 captions\"; 6-lower-third-at-the-top-sc.png shows Background as \"#000000B3\". CaptionsInspector.generate puts a borderedProminent button with label \"Write Again\" and the count in a 148pt column; colourRow names a value only when it is one of Self.plates, and the Lower third preset (CaptionLook.Preset) sets a plate that is not in that list. In the narrowest dock the button reads \"W...\".",
@@ -42,6 +42,20 @@
     {
       "t": "2026-09-24T12:40:39.238Z",
       "note": "seq 39 -> 10"
+    },
+    {
+      "t": "2026-09-25T12:21:56.253Z",
+      "note": "triage 2026-09-25: the Generate button now reads 'Auto capti...' rather than 'Write Ag...' (queue/audits pictures of 2026-09-25 library-import-walk 2-imported-sc.png and tutorial-cut-a-recording-down-walk 1-a-clip-on-v1-sc.png), so the label changed and the cut did not. The new Properties clip line also cuts the clip name to 'Tutorial Sam...' at the default dock width. The Library tile names are now owned by library-tiles-are-as-wide-as-the-mock-draws-them (p1), so leave those to it."
+    },
+    {
+      "t": "2026-09-25T12:22:07.613Z",
+      "note": "correction to the triage line above: those two pictures are under /tmp/photonz-playtest/<walk>/, not queue/audits."
+    },
+    {
+      "t": "2026-09-25T12:23:32.402Z",
+      "note": "seq 10 -> 10",
+      "since": "2026-09-25T12:22:28.068Z",
+      "count": 2
     }
   ],
   "walks": [

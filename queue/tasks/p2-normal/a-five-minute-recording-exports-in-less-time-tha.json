@@ -1,0 +1,38 @@
+{
+  "id": "a-five-minute-recording-exports-in-less-time-tha",
+  "title": "A five minute recording exports in less time than it plays",
+  "goal": "Writing a five minute screen recording out as a 1080p video takes nearly six minutes, longer than the recording itself runs. Premiere and share tools write a screen recording several times faster than it plays; people should not wait longer for the file than the video lasts.",
+  "epic": "video-share",
+  "priority": "p2-normal",
+  "seq": 170,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T23:56:58.863Z",
+  "updated": "2026-09-25T12:23:33.225Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Measured 2026-09-24 during the-export-sheet-lets-you-pick-the-size-of-the-v: Scripts/playtest.sh Scripts/playtest/export-a-video-at-1080p-walk.json --no-build -> [20 writeVideo] five-minutes-at-1080p.mp4 is 17 MB, written in 342447 ms; it runs 319.24s at 1728 x 1080 px ... made frame by frame from the document. Load average about 3-4 at the time. Path: EditorState.writeVideo -> DocumentFrames (composites every frame at canvas size 2880x1800, then DocumentMovieWriter fits to plan.size). Likely wins: composite at the output size rather than the canvas size, decode with hardware, pipeline frame fetch and encode. An untouched recording at Full is still a verbatim copy and is not affected.",
+  "acceptance": [
+    "The five minute Retina talk, with captions burned in, writes at 1080p in under half its running time on this Mac",
+    "The export card still moves smoothly and the editor stays responsive while it writes",
+    "export-a-video-at-1080p-walk logs the time the write took and still lands a 1728 x 1080 file"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T23:56:58.865Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-25T12:22:28.853Z",
+      "note": "seq 3350 -> 160"
+    },
+    {
+      "t": "2026-09-25T12:23:33.224Z",
+      "note": "seq 160 -> 170"
+    }
+  ],
+  "walks": [
+    "export-a-video-at-1080p-walk"
+  ]
+}

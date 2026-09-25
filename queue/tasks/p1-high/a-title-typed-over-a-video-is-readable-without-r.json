@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:16:31.771Z",
-  "updated": "2026-09-24T12:40:38.209Z",
+  "updated": "2026-09-24T22:19:44.129Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24); gap report docs/design/video-vs-premiere.md. Seen in an-editing-session-walk 6-title-at-b-sc.png (docs/design/video-vs-premiere/title-default-look.jpg): 'Ship it faster' 24 px SF Pro Regular, black, on the dark Sample Talk frame. foregroundFill #000000 in walk state. Mock video.html draws the title large, white, serif bold ('Ship it faster.').",
@@ -28,6 +28,39 @@
     {
       "t": "2026-09-24T12:40:38.208Z",
       "note": "seq 194 -> 70"
+    },
+    {
+      "t": "2026-09-24T21:35:52.973Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T22:00:38.632Z",
+      "note": "Before building: the mock (video.html .vframe .title) draws the title white, bold, system serif, 26px on a 248px frame (about a tenth of the height) with text-shadow 0 2px 12px at 40%. Premiere's type tool starts at 100px on 1080, also about a tenth. The acceptance guessed a twentieth, which is what captions already use (4.5%), so a title at that size would look like a caption. Built to the mock: a tenth. The system serif cannot be drawn by the renderer, so Georgia (the curated serif) stands in. Risk found: the text tool's remembered type is shared with stills and saved, so seeding it with the title look would leak 80px bold white into the next screenshot. So a document with time gets its own in-memory title type, reset for each document, and only the still type is saved."
+    },
+    {
+      "t": "2026-09-24T22:00:38.687Z",
+      "note": "Found and fixed while building: a draft typed in ANY font picked by family name (Georgia, Helvetica Neue) was invisible until Return, on stills too. AppKit's NSFont(descriptor:textTransform:) takes the transform as the whole matrix for those faces and drops the size (Georgia came out at 0.74pt), while the system face multiplies it by the size. Reproduced with a standalone script (/tmp/photonz-exp/font.swift: 0 inked pixels for Georgia vs 3160 once the size rides in the transform) and in the probe (Georgia drafts at 24 and 96 px empty, SF Pro fine). Fix in CanvasTextEditing.draftFont: try the zoom, check the point size, fall back to a size-carrying transform. This file is shared, so Current gets the fix too; it is a plain bug fix with no change of look."
+    },
+    {
+      "t": "2026-09-24T22:00:38.747Z",
+      "note": "owns these walks: a-title-reads-over-a-video-walk"
+    },
+    {
+      "t": "2026-09-24T22:19:18.412Z",
+      "note": "left rough: over a video the Text section does not show while the text tool is merely held (the panel shows the clip), so the title's font and size are only visible once a title is placed. Photoshop shows type options before you type. Not filed: a person can still set the look by picking the first title; if it comes up again it earns a task."
+    },
+    {
+      "t": "2026-09-24T22:19:18.469Z",
+      "note": "Acceptance: (1) white, bold, a tenth of the height rather than the twentieth the item guessed, to match the mock and Premiere (captions already use a twentieth); (2) still text unchanged, proven by a-title-reads-over-a-video-walk before and after a video; (3) an-editing-session-walk's title picture is readable, checked with a copy of that walk skipping the cross dissolve step, since the real walk stops at step 34 (transition picker, owned by walks-that-fail-in-the-full-sweep-5); its title drag was shortened so the title stays in frame (B now 700, 400); (4) default config walk and audit queue/audits/2026-09-24-a-title-typed-over-a-video-is-readable-without-r.json with real captures; (5) the white-over-light case filed as p2 follow-up, the draft shadow folded into it."
+    },
+    {
+      "t": "2026-09-24T22:19:44.127Z",
+      "note": "Shipped in 8b66d0a0. On Next, text typed over a video starts white, bold Georgia, a tenth of the picture tall, with the mock's soft shadow (PhotonzCore/TitleLook, unit tested). Still-picture text is unchanged, and the title type is kept per document and never saved. Also fixed Georgia and other family-matched drafts being invisible while typing. Verified: new a-title-reads-over-a-video-walk at default config (80 px Bold Georgia on the 1280x800 sample; 24 px Regular SF Pro on stills before and after; a picked size carries to the next title), the editing-session title steps via a copy that skips its already-broken transition step, 45 of 46 related walks green (the failure is pre-existing), and all 9616 tests pass. Audit: queue/audits/2026-09-24-a-title-typed-over-a-video-is-readable-without-r.json. Follow-up p2: a-title-stays-readable-where-it-crosses-a-light."
     }
-  ]
+  ],
+  "started": "2026-09-24T21:35:52.972Z",
+  "walks": [
+    "a-title-reads-over-a-video-walk"
+  ],
+  "completed": "2026-09-24T22:19:44.128Z"
 }

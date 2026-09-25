@@ -1,18 +1,18 @@
 {
   "id": "fix-a-caption-one-word-at-a-time-on-the-canvas-a",
   "title": "Fix a caption one word at a time, on the canvas and in a word lane",
-  "goal": "User 2026-09-25, after auto-captioning a real recording: 'It misspelled some words, and I'd like to adjust them. I tried double clicking on an individual word that was wrong and couldn't edit. I could only edit captions as a whole. I also wanted to resize the individual words and drag them within the captions timeline but couldn't.' The model already has word timing (TranscribedWord startMS/endMS in Captions.swift, CaptionCue.words, the active-word highlight in CaptionLook.swift), but no UI edits a single word. The mock docs/design/mocks/pages/video-captions.html draws a word lane (.lane.wordlane, .wchip) with a chip per word on its own time span; its open question 'inline nudge on each word chip, or re-transcription plus a global offset?' is answered by the user: per word, inline. Build it at the mock's fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask: would someone fixing captions in Premiere or Descript get this, and is it quicker here?",
+  "goal": "Captions that write themselves get some words wrong, and today the only fix is retyping a whole caption. Let a person double-click one wrong word to fix just that word, and see every word as its own small block on the captions track that they can drag earlier or later and stretch, the way the captions mock draws it. The user asked for this after captioning a real recording.",
   "epic": "video-audio",
   "priority": "p1-high",
-  "seq": 0.01,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T11:57:41.780Z",
-  "updated": "2026-09-25T11:59:18.239Z",
+  "updated": "2026-09-25T12:22:27.131Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Filed from the intake window.",
+  "notes": "Filed from the intake window.\n\nThe user's words, 2026-09-25: 'It misspelled some words, and I'd like to adjust them. I tried double clicking on an individual word that was wrong and couldn't edit. I could only edit captions as a whole. I also wanted to resize the individual words and drag them within the captions timeline but couldn't.'\n\nWhere things are (moved out of the goal by the 2026-09-25 triage): the model already has word timing (TranscribedWord startMS/endMS in Sources/PhotonzCore/Captions.swift, CaptionCue.words, the active-word highlight in CaptionLook.swift), but no UI edits a single word. The mock docs/design/mocks/pages/video-captions.html draws a word lane (.lane.wordlane, .wchip) with a chip per word on its own time span; its open question 'inline nudge on each word chip, or re-transcription plus a global offset?' is answered by the user: per word, inline. Build it at the mock's fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask: would someone fixing captions in Premiere or Descript get this, and is it quicker here?",
   "acceptance": [
     "Double-clicking a word in a caption on the canvas, or its chip in the word lane, edits just that word in place; Return or clicking away commits, Escape cancels, and the word keeps its timing",
     "Correcting a word into two ('alot' to 'a lot') or merging two splits or joins the time span evenly, and the edit is one undo step",
@@ -35,6 +35,14 @@
     {
       "t": "2026-09-25T11:59:18.238Z",
       "note": "User 2026-09-25: dragging a word must carry the words after it (example: 'the video captions' off from 'the'; drag 'the' and the rest follow). Acceptance updated: plain drag ripples the rest of the caption, Shift-drag ripples later captions, Cmd-drag moves one word."
+    },
+    {
+      "t": "2026-09-25T12:21:56.172Z",
+      "note": "triage 2026-09-25: goal rewritten in plain words; the user's quote and the code pointers moved to notes, nothing dropped. Related: picking-or-retyping-a-caption-answers-at-once measured 120 to 200 ms to pick or open a caption; fixing words one after another will feel that lag, so keep each word pick and open under 50 ms and say in the audit what it measured."
+    },
+    {
+      "t": "2026-09-25T12:22:27.130Z",
+      "note": "seq 0.01 -> 10"
     }
   ]
 }

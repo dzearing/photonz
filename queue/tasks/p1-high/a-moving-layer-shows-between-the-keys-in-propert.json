@@ -1,0 +1,37 @@
+{
+  "id": "a-moving-layer-shows-between-the-keys-in-propert",
+  "title": "A moving layer shows Between the keys in Properties, as the move walkthrough draws it",
+  "goal": "When a picked layer has two or more keys, Properties shows the move walkthrough mock's Between the keys section: the Curve dropdown for how fast it travels, the Path control for where it travels, and the mock's one-line note, plus the Animate command menu with Key at playhead, Curve the path and Easing.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 180,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-25T12:03:27.116Z",
+  "updated": "2026-09-25T12:23:34.009Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From a-moving-layer-draws-its-path-on-the-canvas-and (2026-09-25). That task shipped the Path control as a row under Position in the Animating list (PropertyKeysInspector.MotionPathRow), because the app follows video.html's Animating panel; video-move-wt.html instead draws Transform / Animate / Between the keys (Curve select + Path seg + pPathNote). The two mocks disagree on panel structure: if building both is not possible, open a decision card rather than picking. Core already has MotionPathShape and PhotonzDocument.shapeMotionPath; easing per key is KeyEase via LayerMotion.easing(key:).",
+  "acceptance": [
+    "With a layer keyed at two moments picked, Properties shows a Between the keys section with Curve and Path, as docs/design/mocks/pages/video-move-wt.html step 6 draws it",
+    "Choosing a curve there eases the stretch the playhead is in, and the timeline bar's Easing and the key right-click stay in step with it",
+    "The mock's note line under Path ships as drawn",
+    "The window's command menu offers Key at playhead, Curve the path and Easing, and each works at Next defaults",
+    "A walk at Next defaults photographs the section beside the mock frame"
+  ],
+  "log": [
+    {
+      "t": "2026-09-25T12:03:27.118Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-25T12:22:28.015Z",
+      "note": "seq 400 -> 180"
+    },
+    {
+      "t": "2026-09-25T12:23:34.008Z",
+      "note": "digest 2026-09-25: the shared rule D10 still calls video.html the printed catalogue, which the user's restored mock no longer is; the-design-rules-say-what-the-video-mock-says-ab (p2) fixes the rule. Read the mocks, not D10, for this one."
+    }
+  ]
+}

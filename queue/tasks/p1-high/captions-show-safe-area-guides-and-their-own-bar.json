@@ -4,13 +4,15 @@
   "goal": "The captions mock shows three things the app does not have yet: title-safe and action-safe guides you can switch on over the picture, a small badge on the picture saying captions are automatic and in which language, and a bar above the Captions track with the word being said, the time, Clear and Reset. The captions options also sit at the top of the panel in the mock, not under Effects.",
   "epic": "video-audio",
   "priority": "p1-high",
-  "seq": 220,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T06:02:42.624Z",
-  "updated": "2026-09-24T12:40:38.980Z",
-  "deps": [],
+  "updated": "2026-09-25T12:22:27.496Z",
+  "deps": [
+    "fix-a-caption-one-word-at-a-time-on-the-canvas-a"
+  ],
   "blockedBy": [],
   "notes": "Left from captions-write-themselves-from-the-speech (2026-09-23). Mock: docs/design/mocks/pages/video-captions.html (#safeBtn, AUTO · EN chip on the stage, the .captrack header row: CAPTION TRACK auto · word level, Clear, Reset, Active word <w>, 1.30s / 6.00s). Captions panel is Sources/Photonz/CaptionsInspector.swift; the look and track model live in Sources/PhotonzCore/CaptionLook.swift; the Captions track row and Words lane are TimelineTrackRows.swift + CaptionWordsLane.swift. Section order is InspectorPanel.swift availableSections.",
   "acceptance": [
@@ -38,6 +40,14 @@
     {
       "t": "2026-09-24T12:40:38.979Z",
       "note": "seq 400 -> 220"
+    },
+    {
+      "t": "2026-09-25T12:21:56.233Z",
+      "note": "triage 2026-09-25: now waits on the user's word-editing task. Both build from the captions mock's track: that task adds the word lane and the lit active word, and this one's bar over the Captions track reads that same active word. Build the bar on top of the word lane rather than beside it."
+    },
+    {
+      "t": "2026-09-25T12:22:27.495Z",
+      "note": "seq 220 -> 80"
     }
   ]
 }

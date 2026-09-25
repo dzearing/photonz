@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 80,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:16:31.860Z",
-  "updated": "2026-09-24T12:40:38.262Z",
+  "updated": "2026-09-24T22:59:06.420Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24); gap report docs/design/video-vs-premiere.md. Reproduced: command+d on the timeline 'taken by responder chain (Edit > Deselect carries this chord)'. Command T is already taken? Check before picking; the Premiere key is Command D, which collides with Deselect: say in the log which key won and why (Photoshop parity rule: default to Photoshop's for picture keys, Premiere's on the timeline). See also find-out-whether-the-layer-menu-promises-a-dupli (Command D confusion).",
@@ -33,6 +33,35 @@
     {
       "t": "2026-09-24T12:40:38.261Z",
       "note": "seq 197 -> 80"
+    },
+    {
+      "t": "2026-09-24T22:33:26.421Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T22:58:27.033Z",
+      "note": "owns these walks: default-transition-key-walk"
+    },
+    {
+      "t": "2026-09-24T22:59:06.196Z",
+      "note": "Before building: a first-time user lands on a cut with the down arrow or right after Command K, so the key must find the cut near the playhead with nothing picked, and must say something when it cannot (a silent key reads as broken). A blade cut with nothing trimmed takes a dissolve that shows nothing (same in Premiere; the panel already says so). Two clips butted with no handles cannot afford a dissolve: refused with a canvas line rather than quietly swapped for a dip. Mock (video-transitions.html) draws 'Apply default transition' and 'Set as the default transition' menu rows; both built, Title Case to match the app's menus."
+    },
+    {
+      "t": "2026-09-24T22:59:06.249Z",
+      "note": "Key: Command T (Final Cut). Command D stays Deselect per the Photoshop parity rule and the digest; Command T was unused (Option Command T is Show Timing, T alone is Text). Works wherever the keyboard is, like Command K."
+    },
+    {
+      "t": "2026-09-24T22:59:06.301Z",
+      "note": "left rough: the Video menu row cannot be proven by a walk (frozen menu bar), the timeline router takes the key first so the walk proves the key itself. transition-picker-at-a-cut-walk and premiere-keys-on-the-timeline-walk fail at the same steps as the 21:18 sweep (before this change), owned by walks-that-fail-in-the-full-sweep-5. Filed one-step-puts-a-transition-on-every-cut (mock's Apply to every cut)."
+    },
+    {
+      "t": "2026-09-24T22:59:06.418Z",
+      "note": "Command T (Final Cut's key; Command D stays Deselect) puts the default transition on the picked cut, else the cut at the playhead, one undo step; refusals are said on the canvas. Right click a picker tile to Set as Default Transition; the default tile wears a Command T keycap; Apply Default Transition with Command T in the join, edit point and Video menus. Core in PhotonzCore/DefaultTransition.swift with DefaultTransitionTests; default-transition-key-walk passes at Next defaults with 7 real pictures; full test.sh green; audit queue/audits/2026-09-24-default-transition-key.json. Commit 06c43966."
     }
-  ]
+  ],
+  "started": "2026-09-24T22:33:26.420Z",
+  "walks": [
+    "default-transition-key-walk"
+  ],
+  "completed": "2026-09-24T22:59:06.419Z"
 }

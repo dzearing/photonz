@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 120,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T14:46:20.771Z",
-  "updated": "2026-09-24T12:40:38.468Z",
+  "updated": "2026-09-25T03:03:39.928Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence, from queue/history.jsonl runner_failed events with exit 0, not reproduced by running (it is a record of four real runs):\n- 2026-09-08T15:40 find-out-whether-a-tool-letter-fires-while-an-in: \"Waiting on the walk suite to finish before the final rebuild, screenshot, audit, and commit.\"\n- 2026-09-08T17:04 thirteen-scripted-walks-still-look-for-an-outlin: \"The suite is at walk 58 of 307. I'll continue when the background poller reports.\"\n- 2026-09-16T12:18 separate-finds-the-boxes-in-a-dark-window-too-no: \"Waiting on the full suite. While it runs, here's where the task stands.\"\n- 2026-09-23T14:43 the-video-mocks-are-the-user-s-again-and-d18-is: \"The only busy process is my own test run. I'll pick up again when it finishes.\" 25 files went to stash 73e6f696, audit already written.\nThe two September 8 ones were the whole walk sweep, since fixed by the sweep rule in runner-prompt.md (around line 83). The live form is Scripts/test.sh started in the background. The runner rule about background work is about the sweep only; nothing says ending the turn ends the task.\nWhere: queue/bin/runner-prompt.md (test rule), queue/bin/go-loop.sh run_runner and the runner-exit handling in queue/bin/queue.mjs (runner-exit prints OUTCOME). A resume could use the CLI's resume of the runner's own session id if go-loop.sh keeps it; check before building.\nFiled by the manager pass 2026-09-23 07:44.",
@@ -40,6 +40,45 @@
     {
       "t": "2026-09-24T12:40:38.467Z",
       "note": "seq 25 -> 120"
+    },
+    {
+      "t": "2026-09-25T02:45:05.730Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-25T03:03:15.061Z",
+      "note": "measured: a full Scripts/test.sh at fa1f1ea4 took 220s wall (209s of tests, 9686 in 776 suites) at 19:45 on 2026-09-24, and 214s on a second run at 20:00. The rule is set against that: foreground with the Bash tool's timeout 600000 (the ten minute ceiling), about 2.7x headroom."
+    },
+    {
+      "t": "2026-09-25T03:03:15.113Z",
+      "note": "reproduced from the record rather than by running: queue/history.jsonl holds eleven runner_failed events with exit 0 whose last line says the runner was waiting (2026-09-02 to 09-24), not four. All eleven are in failure-drill.sh scenario 8 word for word. Checked for real that the CLI resumes a print-mode session: claude -p --session-id <uuid> then claude -p --resume <uuid>, and the second turn referred back to the first."
+    },
+    {
+      "t": "2026-09-25T03:03:15.165Z",
+      "note": "built: queue-lib runnerIsWaiting + decideRunnerResume (exit 0, task in_progress, no CLI refusal, last words waiting, once per claim keyed on task.started; logs the task, writes task.waitResume, emits runner_resumed). queue.mjs runner-resume prints RESUME=0|1. go-loop.sh starts every task runner under --session-id <uuidgen>, and resume_if_waiting runs queue/bin/resume-prompt.md in the same session with --resume before record_exit; the leftovers snapshot is not retaken on the resumed turn. runner-prompt.md has a new rule, 'Ending your turn ends your task', with the measured number."
+    },
+    {
+      "t": "2026-09-25T03:03:15.219Z",
+      "note": "verified: failure-drill.sh scenario 8 (new, 10 checks: resumed-and-finished, same session id, prompt wording, log + history, only once, quiet stop not resumed, all eleven recorded lines match, finished summaries do not) and scenarios 1-7 all pass; leftovers-drill, manager-due-drill, awake-drill pass; Scripts/test.sh green. The live loop adopts the go-loop.sh change between tasks by its own reload."
+    },
+    {
+      "t": "2026-09-25T03:03:15.273Z",
+      "note": "left rough, not filed: the digest and manager passes are not resumed (they have no task to be in progress; none of the eleven recorded cases was one). When a runner ends its turn with a job in the background, the CLI waits up to 600s for it and then kills it, so a resumed runner may have to run its tests again; the resume prompt tells it to. Neither is something a person would notice beyond what this task fixes."
+    },
+    {
+      "t": "2026-09-25T03:03:15.328Z",
+      "note": "first full test run hit the known flaky 'written twice, an animated export lands at the same size' (160386 vs 233688 bytes); folded into the-export-size-test-fails-about-one-run-in-thre. Second run green."
+    },
+    {
+      "t": "2026-09-25T03:03:15.437Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-09-25T03:03:39.926Z",
+      "note": "Runner rule 'Ending your turn ends your task' in queue/bin/runner-prompt.md with the measured full test run (220s/214s, foreground, timeout 600000). go-loop.sh starts task runners under --session-id and, when one exits 0 with its task in progress and last words saying it is waiting, resumes the same session once per claim (queue/bin/resume-prompt.md) before recording the exit; task log + runner_resumed event say so. Verified by failure-drill.sh scenario 8 (real loop, fake runner: waits once -> resumed and done; waits twice -> one resume then failure; quiet stop -> no resume; all eleven recorded waiting lines match), scenarios 1-7, leftovers/manager-due/awake drills, and a green Scripts/test.sh. Commit d88dfade."
     }
-  ]
+  ],
+  "started": "2026-09-25T02:45:05.729Z",
+  "walks": [],
+  "completed": "2026-09-25T03:03:39.927Z"
 }

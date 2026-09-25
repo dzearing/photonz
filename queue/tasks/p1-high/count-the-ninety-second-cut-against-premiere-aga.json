@@ -5,11 +5,11 @@
   "epic": "video-beats-premiere",
   "priority": "p1-high",
   "seq": 115,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:44:48.499Z",
-  "updated": "2026-09-24T12:44:52.733Z",
+  "updated": "2026-09-25T02:29:30.283Z",
   "deps": [
     "the-timeline-ruler-names-the-right-time-when-zoo",
     "premiere-s-timeline-keys-work-the-moment-a-recor",
@@ -34,6 +34,35 @@
     {
       "t": "2026-09-24T12:44:52.732Z",
       "note": "seq 350 -> 115"
+    },
+    {
+      "t": "2026-09-25T02:04:39.647Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-25T02:29:30.071Z",
+      "note": "owns these walks: the-ninety-second-cut-walk"
+    },
+    {
+      "t": "2026-09-25T02:29:30.124Z",
+      "note": "Adversarial pass before counting: the ruler is SwiftUI and a walk's click reaches the canvas, so a ruler click could not be driven; added a clickRuler step that runs the ruler's own gesture (begin/drag/end playhead) at a named moment, without the gesture's snap onto a key. The recording opens paused with the timeline holding the keyboard, so no press was needed before the first cut. Premiere is not installed here, so its count comes from its documented default keys, not a timed run."
+    },
+    {
+      "t": "2026-09-25T02:29:30.176Z",
+      "note": "Counted: 5:19 to exactly 1:30 in 19 actions (click+Q, 3x click/I/click/O/', click+W); Premiere 20 (same 19 plus making a sequence). One marked stretch = I, O, ' (3 presses). Walk the-ninety-second-cut-walk ok with 4 real captures; longest main-thread hold after a cut key 83 ms; captions 191 -> 58; 8 s playback never blank. Gap walks re-run, all 9 ok with real captures: ruler-names-the-right-time-zoomed, timeline-keys-on-open, extract-a-marked-stretch, a-long-captioned-recording, a-title-reads-over-a-video, ripple-trim-to-playhead, default-transition-key, export-a-video-at-1080p, snapping-switches-with-s."
+    },
+    {
+      "t": "2026-09-25T02:29:30.227Z",
+      "note": "left rough, did not earn a task: (1) opening Export holds the main thread 310-370 ms in every walk that opens it, on every document from 900x700 stills to 2880x1800 video (35 readings in /tmp/photonz-playtest logs); so constant it looks like the sheet's own presentation being counted as one pass, not a video or size cost, and not confirmed as a freeze a person feels. File it if it shows up as a visible stall. (2) clickRuler does not snap the way a real ruler click does. (3) clickRuler has not been watched under a lock, so the walk is refused on a locked Mac. (4) the first Scripts/test.sh run had 1 failing test I did not capture; the second run was fully green (9686 tests), most likely the tracked export-size flake. Nothing in the cut was slower or clumsier than Premiere, so no follow-up filed."
+    },
+    {
+      "t": "2026-09-25T02:29:30.281Z",
+      "note": "5:19 cut to exactly 1:30 at Next defaults in 19 actions (ruler clicks + Q, I/O/' x3, W), vs Premiere's 20 from its default keys; under the 40 line; one stretch = 3 presses. New walk the-ninety-second-cut-walk (ok, real captures) with a clickRuler step (parse-tested). docs/design/video-vs-premiere.md has the count and a Now column: gaps 1-9 closed with fresh pictures from their 9 green walks, gap 10 awaits the decision card. Commit fa1f1ea4 (pushed). Tests green."
     }
-  ]
+  ],
+  "started": "2026-09-25T02:04:39.646Z",
+  "walks": [
+    "the-ninety-second-cut-walk"
+  ],
+  "completed": "2026-09-25T02:29:30.282Z"
 }

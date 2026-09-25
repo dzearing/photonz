@@ -5,11 +5,11 @@
   "epic": "video-share",
   "priority": "p1-high",
   "seq": 90,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:16:31.956Z",
-  "updated": "2026-09-24T12:40:38.315Z",
+  "updated": "2026-09-25T00:01:53.708Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24); gap report docs/design/video-vs-premiere.md. Reproduced: five-minute walk exportDialogAsVideo on a 2880x1800 recording: rows are Format, Quality, Captions only; footer '2880 x 1800 px, 30 fps, 5:00, about 678 MB' (export-sheet-5-min.jpg). Rows live in Sources/Photonz/VideoExportDialog.swift. The size estimate itself being off is the-export-sheet-s-size-for-an-edited-video-is-c; do not fix that here.",
@@ -35,6 +35,78 @@
     {
       "t": "2026-09-24T12:40:38.314Z",
       "note": "seq 199 -> 90"
+    },
+    {
+      "t": "2026-09-24T23:11:24.111Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T23:37:35.242Z",
+      "note": "Adversarial review before building: a Premiere user expects Resolution (Match Source, 1080p, 720p) apart from bitrate, so Size is its own row and owns the pixels while Quality keeps frame rate and budget. The old Quality presets secretly shrank an MP4 (Standard 1440, Small 960 long side) with nothing saying so; with a Size row that coupling goes (only on the Next sheet; the Current recording sheet passes no size and is byte-identical). 1080p means short side 1080, so 2880x1800 -> 1728x1080 and portrait works. Sizes that would not shrink the recording are hidden; with only Full left the row goes. GIF/HEIC get Full, 720p, 480p (default 480p) instead of Full, 1080p, 720p: a 1080p GIF is a file nobody can send and 480p is where the old Standard GIF was (800x500). MP4 defaults to Full so an untouched recording still leaves as a verbatim copy. Mock check: export-share.html part A draws Format / Scale / Quality as segmented rows with a pixel summary; the Size row follows that shape."
+    },
+    {
+      "t": "2026-09-24T23:37:35.296Z",
+      "note": "Reproduced the estimate fault before fixing it: an-edited-recording-comes-out-as-a-video-walk, 4 s cut of the sample: sheet 'about 1.8 MB', 73 KB landed (25x); 14 s mix: 'about 6.4 MB', 171 KB landed. Cause: an edited document has no one file to measure, so the sheet fell back to the encoder budget, a ceiling a screen recording never nears. Fix: measure the footage the clips play (bytes per pixel-second across the recording files) and add an allowance for burned-in captions (measured: 1080p re-encode of the Retina talk is 227 kbps without captions, 404 kbps with the lit word moving). After: 74 KB vs 73 KB, 74 KB vs 74 KB, 258 KB vs 171 KB (1.5x)."
+    },
+    {
+      "t": "2026-09-24T23:37:35.349Z",
+      "note": "owns these walks: export-a-video-at-1080p-walk, an-edited-recording-comes-out-as-a-video-walk"
+    },
+    {
+      "t": "2026-09-24T23:38:07.763Z",
+      "note": "runner failed (exit 0, attempt 1): The probe is still building; I'll pick this up when the walk reports back. <br>"
+    },
+    {
+      "t": "2026-09-24T23:38:08.276Z",
+      "note": "ran out of turn with 18 file(s) still changed: Scripts/playtest.sh, Scripts/playtest/an-edited-recording-comes-out-as-a-video-walk.json, Scripts/playtest/an-editing-session-walk.json, Sources/Photonz/EditorState+VideoExport.swift, Sources/Photonz/EditorState.swift, Sources/Photonz/ExportWeigh.swift, Sources/Photonz/Playtest/PlaytestHarness.swift, Sources/Photonz/Playtest/PlaytestLongTalk.swift, Sources/Photonz/RecordingExportDialog.swift, Sources/Photonz/VideoExportDialog.swift, Sources/PhotonzCore/Captions.swift, Sources/PhotonzCore/DocumentVideoExport.swift, Sources/PhotonzCore/PlaytestScript.swift, Sources/PhotonzCore/RecordingExport.swift, Sources/PhotonzCore/VideoExportRecipe.swift, Scripts/playtest/export-a-video-at-1080p-walk.json, Sources/PhotonzCore/VideoExportSize.swift, Tests/PhotonzCoreTests/VideoExportSizeTests.swift. Put aside so the next task started clean; restore with `git stash apply 05239bbe287733e5df03d0e6ca95dcf956f022a6` before carrying on."
+    },
+    {
+      "t": "2026-09-24T23:38:39.708Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T23:38:39.713Z",
+      "note": "a previous attempt at this task left 18 file(s) changed; they are set aside. Restore them with `git stash apply 05239bbe287733e5df03d0e6ca95dcf956f022a6` and carry on, or start over and leave the stash alone."
+    },
+    {
+      "t": "2026-09-24T23:57:10.008Z",
+      "note": "Restored the stash from attempt 1 and finished. export-a-video-at-1080p-walk ok at Next defaults (no flags): Size row reads Full · 2880 × 1800 / 1080p / 720p; 1080p file lands 1728x1080, 17 MB, sheet said about 13 MB (1.31x). an-edited-recording-comes-out-as-a-video-walk ok: 147 KB exact, 74/73 KB (1.01x), 74/74 KB, 258/171 KB (1.51x), GIF 768x480 at 480p exact."
+    },
+    {
+      "t": "2026-09-24T23:57:10.065Z",
+      "note": "an-editing-session-walk fails at step 34 (Cross dissolve not in At this cut), same as the 21:18 sweep and the 23:11 rotating check before this work; owned by walks-that-fail-in-the-full-sweep-5. To reach its export step I ran a copy with the transition steps 30-38 removed: [66 writeVideo] the-edit.mp4 737 KB, sheet said about 558 KB (1.32x under), was 9.6 MB vs 0.7 MB before. The real walk now carries estimateFactor 2 on that step."
+    },
+    {
+      "t": "2026-09-24T23:57:10.120Z",
+      "note": "Remembered size: the harness cannot click a segment inside a sheet, so checked the read side with the probe's defaults seeded to p720 on the sample recording: sheet opened with Export size reading 720p. Write side is VideoExportDialog.export() -> RecordingExportMemory.remember(size:), stored per format."
+    },
+    {
+      "t": "2026-09-24T23:57:10.176Z",
+      "note": "Side by side with export-share.html part A: the mock's rows are segmented Format / Scale / Quality with a pixel summary, and the Size row takes that same shape. Differences: mock names it Scale with 1x/2x/3x (for pictures); video uses Size with Full/1080p/720p, the names Premiere uses. The mock's preview pane and key/value summary table are not on the video sheet at all; that predates this task and is the sheet's design, not the Size row's. Left in log rather than filed."
+    },
+    {
+      "t": "2026-09-24T23:57:10.233Z",
+      "note": "Left rough: with captions burned in, 1080p on the five minute talk reads about 13 MB, the same as the Full copy, and lands at 17 MB, because moving captions cost more than the smaller picture saves. The line is honest; nothing explains it. In the audit's evaluate list for the user to judge rather than filed. Filed: a-five-minute-recording-exports-in-less-time-tha (342 s to write 319 s at 1080p). Test note: the first full test run failed 'The same frames write a GIF at the preset's size' from a stale test build; it passed on rebuild. The drift test that failed is the known flake on the-export-size-test-fails-about-one-run-in-thre."
+    },
+    {
+      "t": "2026-09-25T00:01:28.929Z",
+      "note": "Asked for a normal sweep: playtest.sh now reads a walk's own clock, and every video export walk goes through the changed path. Probe quit; no processes left running."
+    },
+    {
+      "t": "2026-09-25T00:01:28.980Z",
+      "note": "Size row on the Next video Export sheet (Full with pixels / 1080p / 720p; GIF and HEIC Full / 720p / 480p), remembered per format, and an edited video's size estimate is now measured from its footage plus burned-in captions. Commit 5fcfbed6. Verified: export-a-video-at-1080p-walk ok at Next defaults (1728x1080 file, sheet within 1.31x); an-edited-recording walk ok (1.01x to 1.51x); editing-session export step 1.32x in a copy that skips the transition step, which fails on its own before this work (sweep task owns it); remembered size checked on the probe; VideoExportSizeTests plus full suite green apart from the known budget flake. Audit queue/audits/2026-09-24-export-size.json with two real pictures. Follow-up filed: a-five-minute-recording-exports-in-less-time-tha."
     }
-  ]
+  ],
+  "started": "2026-09-24T23:38:39.707Z",
+  "walks": [
+    "export-a-video-at-1080p-walk",
+    "an-edited-recording-comes-out-as-a-video-walk"
+  ],
+  "failures": 0,
+  "lastError": {
+    "at": "2026-09-24T23:38:07.762Z",
+    "exit": 0,
+    "message": "The probe is still building; I'll pick this up when the walk reports back. <br>"
+  },
+  "completed": "2026-09-25T00:01:28.981Z"
 }

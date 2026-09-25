@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:16:31.412Z",
-  "updated": "2026-09-24T12:40:37.945Z",
+  "updated": "2026-09-24T14:14:21.526Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24); gap report docs/design/video-vs-premiere.md. Reproduced: /tmp five-minute walk, open a .mov, captionsWaitForThemselves, videoPause, key l: the Line tool lit in the tool bar (picture docs/design/video-vs-premiere/l-on-open-picks-line.jpg), transport stayed at 0:00. Keys s, c, q, w, ', ;, n, r pressed with the timeline focused were taken by nobody. The rule is written in Sources/PhotonzCore/TimelineKeys.swift: letters only mean the timeline's thing when timelineFocused; firstResponder after open is CanvasNSView (walk state). Related, not a duplicate: on-a-video-the-tool-bar-holds-the-video-tools-an (the tool bar set) and premiere-s-keys-work-on-the-timeline (done, built the focus rule). Needs a decision on where the keyboard lives on a video document only if the runner finds the answer is not obvious; the Premiere answer is: the timeline has the keys unless you are typing or drawing.",
@@ -34,6 +34,70 @@
     {
       "t": "2026-09-24T12:40:37.944Z",
       "note": "seq 190.2 -> 20"
+    },
+    {
+      "t": "2026-09-24T13:29:48.515Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T13:36:16.492Z",
+      "note": "Reproduced before fixing: new walk timeline-keys-on-open-walk (open the Retina .mp4 fixture, press L first) failed at step 5 on today's main: 'the keyboard is on the canvas, not the timeline; it is playing at 0.0, not 1.0'."
+    },
+    {
+      "t": "2026-09-24T13:36:16.550Z",
+      "note": "Adversarial review: (1) Premiere's answer is that the timeline has the keys unless you are drawing or typing, so the timeline takes the keyboard the moment the dock appears (open, or a clip dropped into a picture). (2) A Photoshop user who wants L for Line clicks the canvas first (any press outside the dock gives the canvas the keys, unchanged from the done premiere-keys task) or uses the tool bar; letters the timeline does not use (P, T, U...) still pick their tools from either place. (3) Considered making only a canvas press take the keys (so a click in Layers or the inspector would leave J/K/L on the timeline), rejected for now: the router would then eat up/down and delete from lists that have focus. (4) Collides with on-a-video-the-tool-bar-holds-the-video-tools-an's 'every folded tool still answers its key': K, L, I, O, M answer their tool only once the canvas has the keyboard; logging that on that task."
+    },
+    {
+      "t": "2026-09-24T13:36:16.606Z",
+      "note": "owns these walks: timeline-keys-on-open-walk, premiere-keys-on-the-timeline-walk"
+    },
+    {
+      "t": "2026-09-24T13:37:02.039Z",
+      "note": "runner failed (exit 0, attempt 1): Waiting for the walk batch and test suite to finish."
+    },
+    {
+      "t": "2026-09-24T13:37:02.526Z",
+      "note": "ran out of turn with 8 file(s) still changed: Scripts/playtest/premiere-keys-on-the-timeline-walk.json, Sources/Photonz/EditorState+TimelineKeys.swift, Sources/Photonz/EditorState.swift, Sources/Photonz/TimelineDock.swift, docs/design/mocks/shared/UX-PATTERNS.md, docs/design/video-vs-premiere.md, docs/design/video.md, Scripts/playtest/timeline-keys-on-open-walk.json. Put aside so the next task started clean; restore with `git stash apply cbce38fcac982118a3044fbd44e1fdf906fc6c51` before carrying on."
+    },
+    {
+      "t": "2026-09-24T13:37:33.651Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-24T13:37:33.656Z",
+      "note": "a previous attempt at this task left 8 file(s) changed; they are set aside. Restore them with `git stash apply cbce38fcac982118a3044fbd44e1fdf906fc6c51` and carry on, or start over and leave the stash alone."
+    },
+    {
+      "t": "2026-09-24T13:44:36.462Z",
+      "note": "Restored stash cbce38fc and carried on. timeline-keys-on-open-walk passes (L plays first thing, K/J, I/O/M, B, P still Pen, canvas click then L is Line). premiere-keys-on-the-timeline-walk passes 7 of 7 runs since; 3 CRASHED runs at 06:40-06:42 local overlapped the previous attempt's orphaned background walk batch (a-recording-is-a-document, video-bar-says-what-it-does, trim-keeps-the-piece... dirs written 06:39-06:41 after that runner was stopped at 06:37), which quits the shared probe; not a defect in this change."
+    },
+    {
+      "t": "2026-09-24T14:13:40.630Z",
+      "note": "Found HEAD 2271b8e8 had broken Scripts/test.sh's 'video kit compiles on its own' check (VideoKitTimeline used playtestRulerMark from Playtest/). Moved PlaytestRulerMark.swift into Sources/Photonz/VideoKit/VideoKitRulerMark.swift (pure SwiftUI, no-op without PHOTONZ_PLAYTEST); kit typechecks alone with and without the flag; ruler-names-the-right-time-zoomed-walk passes."
+    },
+    {
+      "t": "2026-09-24T14:13:40.685Z",
+      "note": "Verified: timeline-keys-on-open-walk, premiere-keys-on-the-timeline-walk, ruler-names-the-right-time-zoomed-walk and the six other video walks that press contested letters before a click (a-recording-is-a-document, an-editing-session, delete-key-drops-a-piece, library-clip-onto-a-track, trim-keeps-the-piece-you-picked, video-bar-says-what-it-does) all ok at Next defaults with real captures. Scripts/test.sh: 9549/9550 or 9550/9550 on six runs; the only failures were the export-size load flake (the-export-size-test-fails-about-one-run-in-thre, logged there with counts), green alone with --filter. Committed over it, as 2271b8e8 did."
+    },
+    {
+      "t": "2026-09-24T14:13:40.739Z",
+      "note": "Rough items: (1) any press outside the dock, including Layers and the inspector, gives the canvas the keys: stricter than Premiere, kept so arrows and Delete reach a clicked list; stays here, no task. (2) hover tips still name the contested letters: folded into on-a-video-the-tool-bar-holds-the-video-tools-an. (3) blue ring is not drawn in video.html: added by the done premiere-keys task and is what says where the keys are; stays here. (4) Trim bar up on open: trim-becomes-a-tool-and-the-recording-window-ret covers it."
+    },
+    {
+      "t": "2026-09-24T14:14:11.844Z",
+      "note": "Timeline holds the keyboard from the moment a recording opens: L/K/J shuttle, I/O/M mark, B blade with no click; a click on the picture gives K/L/I/O/M/A back to the picture tools, other letters always reach their tools. Rule in UX-PATTERNS D4. Commit 0451c6b3 (also repairs 2271b8e8's broken video-kit standalone check). Verified by timeline-keys-on-open-walk (L first act, Next defaults, real captures), premiere-keys-on-the-timeline-walk, the ruler walk and six other video walks; audit queue/audits/2026-09-24-timeline-keys-on-open.json. Tests green except the tracked export-size load flake."
     }
-  ]
+  ],
+  "started": "2026-09-24T13:37:33.650Z",
+  "walks": [
+    "timeline-keys-on-open-walk",
+    "premiere-keys-on-the-timeline-walk"
+  ],
+  "failures": 0,
+  "lastError": {
+    "at": "2026-09-24T13:37:02.038Z",
+    "exit": 0,
+    "message": "Waiting for the walk batch and test suite to finish."
+  },
+  "completed": "2026-09-24T14:14:11.845Z"
 }

@@ -4,12 +4,12 @@
   "goal": "Screen recording tools people switch from (Screen Studio, ScreenFlow, CleanShot) keep the pointer and every click as something you can edit afterwards: ring a click so a viewer sees it, hide or smooth a jittery pointer, or let the picture zoom in where the click happened. Photonz burns the pointer into the pixels and keeps nothing else, so every recording made today can never have any of that. Record the pointer path and the clicks alongside the video, and build the first thing the user picks on the card that uses them.",
   "epic": "video-editing",
   "priority": "p2-normal",
-  "seq": 220,
+  "seq": 280,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T12:19:16.059Z",
-  "updated": "2026-09-24T12:40:40.330Z",
+  "updated": "2026-09-25T12:23:33.800Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: Sources/Photonz/Capture/ScreenRecorder.swift:59 sets streamConfig.showsCursor = true and nothing in Capture/ records pointer or click events, so the pointer exists only as pixels. Competitor gap named by the manager passes of 2026-09-19 and 2026-09-20 as an open thread (cursor and click highlighting) and deferred while nine cards were pending; one card is pending today. It is time sensitive in a way the rest of the video queue is not: data not recorded now cannot be recovered later. Sits behind the p1 rebuild chain on purpose; nothing here should jump the user tasks. Hiding the pointer after the fact needs it NOT burned in, which is a capture change with its own cost; the card asks what the user wants first rather than deciding that here.",
@@ -38,6 +38,14 @@
     {
       "t": "2026-09-24T12:40:40.329Z",
       "note": "seq 5 -> 220"
+    },
+    {
+      "t": "2026-09-25T12:22:29.436Z",
+      "note": "seq 220 -> 270"
+    },
+    {
+      "t": "2026-09-25T12:23:33.799Z",
+      "note": "seq 270 -> 280"
     }
   ],
   "source": "manager"

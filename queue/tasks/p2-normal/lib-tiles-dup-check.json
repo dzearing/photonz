@@ -1,0 +1,29 @@
+{
+  "id": "lib-tiles-dup-check",
+  "title": "lib-tiles-dup-check",
+  "goal": "x",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 3380,
+  "status": "dropped",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-25T04:57:10.766Z",
+  "updated": "2026-09-25T04:57:21.786Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "",
+  "acceptance": [
+    "x"
+  ],
+  "log": [
+    {
+      "t": "2026-09-25T04:57:10.768Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-25T04:57:21.785Z",
+      "note": "created by mistake by the Library import runner while re-reading a duplicate warning; not a task"
+    }
+  ]
+}

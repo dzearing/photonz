@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 180,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:02:25.045Z",
-  "updated": "2026-09-24T12:40:38.776Z",
+  "updated": "2026-09-25T07:06:02.303Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video.html line 468, the comment NO LAYERS GROUP IN THE VIDEO LENS ('where there is a timeline, the timeline is the layer list'), and the Resolved paragraph at line 647. The mocks are the user's again as of 823fc26d (the-video-mocks-are-the-user-s-again-and-d18-is); UX-PATTERNS D18 v2.2 withdraws the old claim that docks without a Layers group were wrong. Line 645's 'the row in Layers' is stale text on the same page; the comment and line 647 are the decision. Seen in /tmp/photonz-playtest/an-editing-session-walk/5-dissolve-sc.png (2026-09-24 04:44, Next defaults): Layers (Captions, b-roll, Sample Talk, Canvas) takes the top third of the dock on a video. Rule today: layers is not in PanelSectionVisibility.optionalSections and docs/design/modes.md section 2 says a MODE may never fold it; this is not a mode, it follows from the document having time exactly as the timeline does (modes.md: 'The timeline appears because the document has time, never because of a mode'), so write it as its own rule beside that one with a test in PhotonzCore, not as a mode preset. Check what the Layers rows carry that timeline track headers do not (the Canvas row with its size, the find-a-layer field, lock and eye) before removing. Order after it: the-properties-pane-opens-on-the-clip-line-and-l (seq 370) puts the clip line at the top of what is then the first section.",
@@ -32,6 +32,52 @@
     {
       "t": "2026-09-24T12:40:38.775Z",
       "note": "seq 365 -> 180"
+    },
+    {
+      "t": "2026-09-25T05:10:19.739Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-25T06:40:31.733Z",
+      "note": "owns these walks: the-timeline-is-the-layer-list-walk, the-layers-row-says-how-many-pieces-walk, delete-key-drops-a-timeline-piece-walk, tutorial-cut-a-recording-down-walk, an-editing-session-walk, a-video-edit-saves-as-a-project-walk"
+    },
+    {
+      "t": "2026-09-25T06:40:42.459Z",
+      "note": "Before building: Layers rows on a video carried pick, Shift/Cmd multi-pick, rename, eye, lock, drag reorder, the Captions group, the find-a-layer field and (on pictures) a Canvas row. Timeline already had pick, rename (double-click track or clip), hide/lock/solo per track, track reorder by drag, a Captions track. Missing: Shift-click multi-pick on clips, so it was added. Premiere editors expect exactly this: no layer panel, clips picked on the timeline."
+    },
+    {
+      "t": "2026-09-25T06:40:42.509Z",
+      "note": "Found while building: PanelSectionArrival held back every section when a pick shared none with the last (clip then cut), leaving the dock empty for good. Only reachable once Layers left the dock. Fixed in core with a test; transition-picker-at-a-cut-walk proved it (failed with the bug, passes now)."
+    },
+    {
+      "t": "2026-09-25T06:40:42.560Z",
+      "note": "Side by side with video.html #dock: no Layers group, panel opens on the pick (matches). Differences: the mock heads it 'Properties' with a kind chip and a clip line; we show Time/Sound/Animating sections. Folded into the-properties-pane-opens-on-the-clip-line-and-l (seq 370), which already owns it."
+    },
+    {
+      "t": "2026-09-25T06:40:42.611Z",
+      "note": "left rough: a clip piece's walk frame is read outside its .offset, so a walk can only press a clip that starts at 0 by name (my walk picks b-roll through its track header instead). Moving the name inside the offset broke title-on-the-timeline-walk's 'Timing' field lookup. Walk-harness only, a person never sees it, so not filed."
+    },
+    {
+      "t": "2026-09-25T06:40:42.662Z",
+      "note": "left rough: on a video the canvas has no row to pick; Canvas Size is in the Image menu and bare-canvas right click. Per-clip hide is not there (per track only, as Premiere). Both written in the audit's rough list for the user to react to; neither clears the bar on its own."
+    },
+    {
+      "t": "2026-09-25T06:40:42.714Z",
+      "note": "find-a-layer field: it filters the Layers list and has no timeline counterpart; with a handful of tracks the timeline is its own index. Not filed."
+    },
+    {
+      "t": "2026-09-25T07:06:02.301Z",
+      "note": "Shipped in 256e8b0b behind next-the-timeline-is-the-layer-list (on in Next). With the timeline showing, a video's panel has no Layers list and opens on the picked clip (Time, Sound, Animating); a cut picked opens on Edit point; folding the timeline brings Layers back; pictures untouched. Shift/Cmd-click multi-picks clips; rename, hide, lock, reorder and Captions were already on the timeline. Fixed an empty-dock bug in PanelSectionArrival on the way. Verified: TimelineIsTheLayerListTests + arrival test, suite 9723 green, the-timeline-is-the-layer-list-walk at Next defaults with 4 real captures, 91 neighbouring video walks green. Audit queue/audits/2026-09-24-timeline-is-the-layer-list.json. Mock gap (Properties heading, clip line) folded into the seq 370 task. Full sweep requested."
     }
-  ]
+  ],
+  "started": "2026-09-25T05:10:19.738Z",
+  "walks": [
+    "the-timeline-is-the-layer-list-walk",
+    "the-layers-row-says-how-many-pieces-walk",
+    "delete-key-drops-a-timeline-piece-walk",
+    "tutorial-cut-a-recording-down-walk",
+    "an-editing-session-walk",
+    "a-video-edit-saves-as-a-project-walk"
+  ],
+  "completed": "2026-09-25T07:06:02.302Z"
 }

@@ -4,12 +4,12 @@
   "goal": "For five days the loop built about twenty video features, audited them and called them ready to try, while every one sat behind a switch that is off by default, so the user opening a recording saw none of it. The rule now says a feature must be reachable at Next defaults; make the queue check it when a task is marked done, instead of trusting each runner to remember.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 40,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T12:12:00.509Z",
-  "updated": "2026-09-24T12:40:39.398Z",
+  "updated": "2026-09-25T12:23:32.662Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence, checked 2026-09-23 by the digest pass: Sources/PhotonzCore/FeatureCatalog.swift, the recordingIsADocumentFlag entry (next-a-recording-is-a-document) has enabledByDefaultIn: [] while the video features under it (next-sound-on-the-timeline, next-open-out-the-timeline, next-hear-the-scrub, next-export-the-video and more) are enabledByDefaultIn: [.next]. The 2026-09-22 digest told the user video cutting was genuinely tryable end to end. runner-prompt.md now says it in prose (Default config, section around line 308); prose was not enough last time. The fix for the flag itself is a-recording-opens-in-the-video-editor-for-real-i; this task is the gate so the next parent switch cannot hide a feature the same way. Walk setups carry flags in their JSON (see a-walk-can-switch-a-feature-off-before-it-runs, done).",
@@ -35,6 +35,14 @@
     {
       "t": "2026-09-24T12:40:39.397Z",
       "note": "seq 30 -> 40"
+    },
+    {
+      "t": "2026-09-25T12:22:28.272Z",
+      "note": "seq 40 -> 50"
+    },
+    {
+      "t": "2026-09-25T12:23:32.661Z",
+      "note": "seq 50 -> 60"
     }
   ]
 }

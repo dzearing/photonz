@@ -4,12 +4,12 @@
   "goal": "Drag a turning layer's pivot somewhere of your own and the Around menu says Custom. Open that menu to see what Top centre would look like, pick it, and there is no way back: Custom is a word the menu prints but will not let you choose, so your own point is gone unless you drag the crosshair again or type the numbers back in by hand. A menu that shows a value should let you pick it, or should say why it cannot.",
   "epic": "icon-animate",
   "priority": "p2-normal",
-  "seq": 190,
+  "seq": 250,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T12:26:21.377Z",
-  "updated": "2026-09-24T12:40:40.175Z",
+  "updated": "2026-09-25T12:23:33.648Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the daily digest of 2026-09-20 in the rough list of queue/audits/2026-09-20-motion-pivot-reads-once.json, which shipped the Around row saying Custom: 'Custom is a word the menu shows but does not offer: once you pick a named spot there is no way back to your own point except by dragging the crosshair again or typing into At. That is true of every menu with a custom value in it.' The same audit names New Frame and New Canvas as already printing Custom for a size that is not a preset. Nothing in the queue covered it: searched 'menu shows Custom but does not offer it' and 'custom value in a menu cannot be chosen', both empty. The likely shape of the answer is that picking Custom means 'put back the last value I set by hand', which means the row has to remember it, so check whether the pivot already keeps that when a named spot is picked.",
@@ -49,6 +49,14 @@
     {
       "t": "2026-09-24T12:40:40.174Z",
       "note": "seq 130 -> 190"
+    },
+    {
+      "t": "2026-09-25T12:22:29.281Z",
+      "note": "seq 190 -> 240"
+    },
+    {
+      "t": "2026-09-25T12:23:33.647Z",
+      "note": "seq 240 -> 250"
     }
   ]
 }

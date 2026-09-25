@@ -1,0 +1,25 @@
+{
+  "id": "premiere-s-timeline-keys-work-the-moment-a-recor-2026-09-24T13-37-02-499Z",
+  "task": "premiere-s-timeline-keys-work-the-moment-a-recor",
+  "kind": "task",
+  "label": "Premiere's timeline keys work the moment a recording opens",
+  "title": "Premiere's timeline keys work the moment a recording opens",
+  "outcome": "failed",
+  "at": "2026-09-24T13:37:02.499Z",
+  "files": [
+    "Scripts/playtest/premiere-keys-on-the-timeline-walk.json",
+    "Sources/Photonz/EditorState+TimelineKeys.swift",
+    "Sources/Photonz/EditorState.swift",
+    "Sources/Photonz/TimelineDock.swift",
+    "docs/design/mocks/shared/UX-PATTERNS.md",
+    "docs/design/video-vs-premiere.md",
+    "docs/design/video.md",
+    "Scripts/playtest/timeline-keys-on-open-walk.json"
+  ],
+  "count": 8,
+  "state": "stashed",
+  "stash": "cbce38fcac982118a3044fbd44e1fdf906fc6c51",
+  "restore": "git stash apply cbce38fcac982118a3044fbd44e1fdf906fc6c51",
+  "why": "",
+  "handed": "2026-09-24T13:37:33.655Z"
+}

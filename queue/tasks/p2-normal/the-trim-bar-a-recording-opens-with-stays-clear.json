@@ -4,12 +4,12 @@
   "goal": "A screen recording opens with the trim bar floating over the bottom of the picture, and once its captions have written themselves that bar sits right on top of the bottom caption, so the first thing you see of your captions is half of one hidden.",
   "epic": "video-audio",
   "priority": "p2-normal",
-  "seq": 70,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T06:02:48.695Z",
-  "updated": "2026-09-24T12:40:39.557Z",
+  "updated": "2026-09-25T12:23:34.062Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-23: Scripts/playtest.sh Scripts/playtest/captions-write-themselves-walk.json, picture 2-the-captions-wrote-themselves-sc.png (queue/audits/2026-09-23-captions-write-themselves-2-the-captions-wrote-themselves.png): the In 0:00 · Out 0:17 · Cancel · Trim capsule covers the middle of the caption line The transport bar and the timeline appear. The capsule comes from document.opensWithTrimInHand (EditorState.openRecordingAsDocument sets .trim). Options: lift the capsule above the caption band, or drop the fast-lane trim once the document has captions.",
@@ -41,6 +41,18 @@
     {
       "t": "2026-09-24T12:40:39.556Z",
       "note": "seq 33 -> 70"
+    },
+    {
+      "t": "2026-09-25T12:22:28.431Z",
+      "note": "seq 70 -> 80"
+    },
+    {
+      "t": "2026-09-25T12:23:32.815Z",
+      "note": "seq 80 -> 90"
+    },
+    {
+      "t": "2026-09-25T12:23:34.061Z",
+      "note": "digest 2026-09-25: the floating trim bar was in the rough list of three audits in the last day (timeline keys on open, video guides, and the first-frame picture of the cut guide). The real fix, trim-becomes-a-tool-and-the-recording-window-ret, waits on the Command S card, so this task is still the one that helps first."
     }
   ]
 }

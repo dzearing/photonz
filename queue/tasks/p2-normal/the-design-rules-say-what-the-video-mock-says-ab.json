@@ -1,0 +1,32 @@
+{
+  "id": "the-design-rules-say-what-the-video-mock-says-ab",
+  "title": "The design rules say what the video mock says about the Animating list",
+  "goal": "The shared design rules still say the panel beside a video's timeline lists every value that could be animated, and name the video mock as the model for that. The user's video mock was put back on 2026-09-23 and now lists only what is animating, with an Animate a property button for the rest, and the app shipped exactly that on 2026-09-25. A runner who reads the rule will build the old list back and fight the mock, so the rule has to say what the mock says.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 50,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-25T12:23:19.492Z",
+  "updated": "2026-09-25T12:23:32.609Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by the 2026-09-25 digest design review. docs/design/mocks/shared/UX-PATTERNS.md line ~2134 (D10 heading 'A property list shows what CAN be animated, not what is') and its last paragraph: '`pages/video.html` remains canonical for the printed catalogue. It is the CLIP spelling'. Against it: docs/design/mocks/pages/video.html line ~844 ('The pane lists what this clip IS animating; everything else is one click') and ~875 (Animate a property button), restored by 823fc26d; shipped by b009ac43 (the-properties-pane-opens-on-the-clip-line-and-l, audit queue/audits/2026-09-25-properties-pane.json). The mock is the floor: change the rule, never the mock.",
+  "acceptance": [
+    "Rule D10 in the shared UX patterns doc says a video clip's panel lists only what the clip is animating, with a searchable Animate a property picker for everything else, and names the user's video mock as the reason",
+    "D10 keeps what it exists to protect, written against the new spelling: the way to animate something is on screen before anything moves (the picker button and the 'nothing yet' line), and removing the last key never makes a value unreachable",
+    "No other place in the shared docs (UX-PATTERNS D10 and D17, AGENTS.md, docs/design/video.md) still calls video.html the printed catalogue",
+    "The runner of a-moving-layer-shows-between-the-keys-in-propert can read one answer for where Curve and Path live, or the rule says plainly that the two mocks disagree and points at that task's card"
+  ],
+  "log": [
+    {
+      "t": "2026-09-25T12:23:19.494Z",
+      "note": "created (digest)"
+    },
+    {
+      "t": "2026-09-25T12:23:32.608Z",
+      "note": "seq 3400 -> 50"
+    }
+  ]
+}

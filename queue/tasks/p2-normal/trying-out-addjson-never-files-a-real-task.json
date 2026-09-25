@@ -4,12 +4,12 @@
   "goal": "Five tasks titled x were filed on 2026-09-23 by runners trying the filing command out, and each one shows on the dashboard as real work until somebody drops it. Filing should refuse a title that says nothing, and a dry run should file nothing.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 60,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "infra",
   "created": "2026-09-24T06:03:10.650Z",
-  "updated": "2026-09-24T12:40:39.505Z",
+  "updated": "2026-09-25T12:23:32.766Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-23 23:02: node queue/bin/queue.mjs addjson {\"title\":\"x\"} --dry-run wrote queue/tasks/p2-normal/x-5.json (status pending), dropped by hand. Earlier ones: x.json 2026-09-23T21:34, x-2 00:14, x-3 01:31, x-4 03:00 (all created stamps, all dropped).",
@@ -38,6 +38,18 @@
     {
       "t": "2026-09-24T12:40:39.504Z",
       "note": "seq 55 -> 60"
+    },
+    {
+      "t": "2026-09-25T12:21:56.407Z",
+      "note": "triage 2026-09-25: two more stray tasks in the last 24 hours, lib-tiles-dup-check (04:57Z, a runner re-reading a duplicate warning) and x-6 (11:07Z, a stray addjson test call), both dropped by their runners. That makes eight in two days."
+    },
+    {
+      "t": "2026-09-25T12:22:28.377Z",
+      "note": "seq 60 -> 70"
+    },
+    {
+      "t": "2026-09-25T12:23:32.765Z",
+      "note": "seq 70 -> 80"
     }
   ]
 }

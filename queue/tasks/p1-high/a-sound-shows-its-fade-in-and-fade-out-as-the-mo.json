@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 200,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T02:23:06.697Z",
-  "updated": "2026-09-24T12:40:38.879Z",
+  "updated": "2026-09-25T11:11:23.391Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-audio.html, #propBody Fades section (grid2 In/Out fields, Curve select). App: SoundInspector has only Level and Points/Flatten; its header comment argued fades are the level line, which departs from the mock (found in the-video-properties-look-like-the-rest-of-the-d). A fade can be written as level points at the ends so the model stays one line.",
@@ -28,6 +28,31 @@
     {
       "t": "2026-09-24T12:40:38.878Z",
       "note": "seq 380 -> 200"
+    },
+    {
+      "t": "2026-09-25T10:42:54.255Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-25T10:46:19.274Z",
+      "note": "Pre-build review: the model already writes a fade as two level points (setFadeIn/setFadeOut) and the bar already has a grab handle at each top corner, so what is missing is the panel section and the curve. Mock (video-audio.html #propBody) draws a section headed Fades with the muted note 'drag the diamonds on the lane', two .field boxes In/Out, and a Curve dropdown fed by the one shared easing list. Plan: (1) AudioLevel gains fadeCurve (EasingCurve, linear when absent so every saved fade sounds the same), shape() bends the fade stretches by it, and the mix samples a curved fade into short ramps so the player and the export hear the curve; (2) a Fades section under Sound with In/Out boxes you can also type into (going past the mock's read-only boxes, which is allowed) and the Curve dropdown with each shape drawn; (3) the bar's corner handles become diamonds, since the note tells you to drag diamonds. Premiere check: Premiere users fade audio with the Constant Power crossfade or by dragging keyframes; a typed length and a curve menu in the panel meets that and is quicker. First-time user: the note points at the handles, so both routes are findable. Risk: a fade nobody shaped stays Linear, while the mock's sample shows Ease in out; that is the mock's example state, not a stated default, so saved documents keep sounding the same."
+    },
+    {
+      "t": "2026-09-25T11:07:30.329Z",
+      "note": "owns these walks: sound-fades-in-the-panel-walk"
+    },
+    {
+      "t": "2026-09-25T11:11:11.790Z",
+      "note": "Built: AudioLevel.fadeCurve + moments() (core, tested in SoundFadeCurveTests), Fades section under Sound (SoundFadesInspector in SoundInspector.swift, InspectorSectionID.fades, TimePanelOrder leads sound then fades), fade handles on the bar drawn as diamonds. Walk sound-fades-in-the-panel-walk passes at Next defaults with 4 real window captures; video-panel-order, sound-on-the-timeline, mix-says-how-loud, hold-pushes-the-sound, hear-the-scrub walks still ok. Full suite 9749 tests green. Rough items: default curve Linear vs the mock's example Ease in out (asked in the audit's evaluate); fade points counted under Sound Points and Animating Volume (left rough here, asked in the audit; not filed, it is truthful and a person decides whether it bothers them); one curve for both ends (as the mock draws it, left rough here); mock Channel strip (Mute/Solo/Volume) missing, filed as the-picked-sound-opens-on-the-channel-strip-the. Also dropped x-6, a stray task my own mistyped addjson call created."
+    },
+    {
+      "t": "2026-09-25T11:11:23.389Z",
+      "note": "Fades section under Sound in the Next panel (In/Out boxes you can type into, Curve dropdown from the one easing list, the mock's header note), fade handles drawn as diamonds, and AudioLevel.fadeCurve so the curve is drawn on the bar and heard in playback and export. Verified by SoundFadeCurveTests + full suite (9749 green) and sound-fades-in-the-panel-walk at Next defaults with real captures; audit queue/audits/2026-09-25-sound-fades.json. Commit 3f6a7c04."
     }
-  ]
+  ],
+  "started": "2026-09-25T10:42:54.254Z",
+  "walks": [
+    "sound-fades-in-the-panel-walk"
+  ],
+  "completed": "2026-09-25T11:11:23.390Z"
 }

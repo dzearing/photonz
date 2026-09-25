@@ -1,0 +1,39 @@
+{
+  "id": "a-recording-opens-on-a-sharp-first-frame",
+  "title": "A recording opens on a sharp first frame",
+  "goal": "When a recording opens in the editor, the picture at the start is drawn blurred, like a small thumbnail stretched up, and stays that way until the playhead moves. It is the first thing anybody sees of their recording.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-25T01:51:08.324Z",
+  "updated": "2026-09-25T12:22:27.235Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-25 while building the video guides: Scripts/playtest.sh Scripts/playtest/tutorial-cut-a-recording-down-walk.json (probe, Next defaults, Screen Recording granted, screen unlocked). 1-a-clip-on-v1-sc.png at 0:00, after a 1s wait: the Ready card and the 0 counter are visibly blurred. 6-throw-a-piece-away-sc.png at 0:02 in the same run is sharp. The same blur shows at 0:00 in tutorial-put-a-transition-on-a-cut-walk (two clips, no trim fast lane) and tutorial-add-a-second-clip-walk, so it is not the Trim tool. Suspect the frame fetched at open (EditorState.openRecordingAsDocument -> documentMomentChanged) is a low-resolution one that is never replaced until the moment changes. Captures are copied in queue/audits/2026-09-25-video-guides-cut-sc.png.",
+  "acceptance": [
+    "A recording opened at Next defaults shows its first frame as sharp as any later frame, without the playhead being moved",
+    "A walk photographs the picture at 0:00 right after opening and fails if it is blurred",
+    "Holds for a recording opened from the Finder and for one a guide opens"
+  ],
+  "log": [
+    {
+      "t": "2026-09-25T01:51:08.326Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-25T12:21:56.309Z",
+      "note": "triage 2026-09-25 spot-check: confirmed from the picture in the notes, /tmp/photonz-playtest/tutorial-cut-a-recording-down-walk/1-a-clip-on-v1-sc.png (03:42 today): the Ready card, the 0 and the line under it are visibly blurred at 0:00. Moved p2 -> p1: it is the first thing anybody sees of their recording, at Next defaults, and it is broken rather than unpolished, so it goes ahead of the mock matching work."
+    },
+    {
+      "t": "2026-09-25T12:22:07.720Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-09-25T12:22:27.234Z",
+      "note": "seq 3360 -> 30"
+    }
+  ]
+}

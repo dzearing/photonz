@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p3-low",
   "seq": 20,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T08:30:42.390Z",
-  "updated": "2026-09-23T12:10:32.603Z",
+  "updated": "2026-09-25T12:22:07.879Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-09-17-what-a-reading-found-is-saved.json: 'A file separated before today opens, reads in the background, and then holds the reading without being marked edited, so the words are only written down if you save for some other reason. A person who never saves it pays the reading again next time.'\n\nSize of the thing being repeated, measured by that same audit on the dense page: 3.1 seconds of CPU over 142 runs, landing as a few hundred milliseconds of background work after every open. Not a stall, which is why this is p3 and not higher, but it is paid forever on a file nobody edits.\n\nThe tension to resolve, and it is the whole task: EditorState.applyWithoutMarkingEdited deliberately advances the clean baseline so a reading never makes a file look edited, and that is right. What is missing is a way for a reading of a file that had none to reach the disk without a person being asked. Writing on close, or writing once in the background after the read settles, are both possible and both are a change to when the app touches a file, so say plainly in the audit which one was chosen and why.\n\nCode: Sources/Photonz/EditorState+RunWords.swift, Sources/Photonz/EditorState.swift applyWithoutMarkingEdited, Sources/PhotonzCore/ReadWords.swift, and the reader in PackageIO. Spec: docs/design/separate-reads-the-words.md. Born in commit 4f83fd70.\n\nWhile in here: the same audit records that a document keeps what was read off a picture even after undo takes that picture out, and nothing ever prunes those entries, so a file separated and undone twenty times carries twenty dead sets of words. Deliberate, a few kilobytes each, and below the follow-up bar on its own; worth a line in this task's audit if it turns out to be free to tidy.",
@@ -43,6 +43,14 @@
       "note": "seq 20 -> 20",
       "since": "2026-09-22T12:17:53.883Z",
       "count": 2
+    },
+    {
+      "t": "2026-09-25T12:22:07.826Z",
+      "note": "triage 2026-09-25: dropped under the follow-up bar. Only files separated before 2026-09-17 are affected, the cost is a quiet background read on open, and nothing a person sees is wrong; it has sat at p3 for a week in an epic whose screen-building work is staged later. If an old file ever visibly stalls on open, search --all finds this and it comes back."
+    },
+    {
+      "t": "2026-09-25T12:22:07.878Z",
+      "note": "follow-up bar: nobody would notice; kept searchable with --all"
     }
   ]
 }

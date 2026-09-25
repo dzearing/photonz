@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 110,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:54:04.593Z",
-  "updated": "2026-09-24T12:40:38.416Z",
+  "updated": "2026-09-25T01:51:25.910Z",
   "deps": [
     "the-timeline-is-the-one-in-the-mock",
     "bring-in-a-second-clip-and-cut-between-clips",
@@ -71,6 +71,44 @@
     {
       "t": "2026-09-24T12:40:38.415Z",
       "note": "seq 192 -> 110"
+    },
+    {
+      "t": "2026-09-25T00:53:59.141Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-25T01:51:25.599Z",
+      "note": "owns these walks: tutorial-cut-a-recording-down-walk, tutorial-add-a-second-clip-walk, tutorial-a-title-that-moves-walk, tutorial-put-a-transition-on-a-cut-walk, tutorial-captions-from-the-speech-walk, tutorial-export-the-video-walk"
+    },
+    {
+      "t": "2026-09-25T01:51:25.652Z",
+      "note": "adversarial review before building: a guide with the old recording sample never started in the editor (only the retired window called startPendingGuide); the video Export sheet had no anchor; the video panel sections were not on the promise; nothing inside the timeline had an anchor; B picks the Blade rather than cutting, so the cut guide teaches Command K (Premiere's Add Edit) plus Q/W; the video tool bar is being rebuilt, so no step rings a tool other than Text. All fixed in this task rather than filed: new samples open in the editor, dialog(.export) on VideoExportDialog, sections added, timelineTracks anchor."
+    },
+    {
+      "t": "2026-09-25T01:51:25.704Z",
+      "note": "review on the real app: the transition tiles opened straight over the card (cut in the middle, card centred) and hid 'Pick Cross dissolve'; fixed by making b-roll 2s so the cut sits right of centre. The export card named 1080p for an 800-tall recording that is only offered Full and 720p; reworded. Add at Playhead lands on a new V2 unless V1 is picked (by design: Premiere's target track), so the card says to click V1 first."
+    },
+    {
+      "t": "2026-09-25T01:51:25.755Z",
+      "note": "left rough, not filed: opening a recording puts the Trim tool in hand, so its In/Out/Trim bar floats over the picture through guides that never use it (covered in spirit by trim-becomes-a-tool-and-the-recording-window-ret and the video tool bar task); the card sits over the middle of the floating tool bar while pointing at the timeline (placement nit); the captions guide assumes speech recognition is available. Filed: a-recording-opens-on-a-sharp-first-frame (reproduced blur at 0:00), a-clip-brought-onto-the-timeline-shows-its-sound (reproduced flat waveform)."
+    },
+    {
+      "t": "2026-09-25T01:51:25.806Z",
+      "note": "tests: full Scripts/test.sh 9684 green (third run). Runs one and two each failed only VideoExportBudgetTests.swift:155 under load (121102 < 119420, then < 113222), the known flake owned by the-export-size-test-fails-about-one-run-in-thre; it passes alone twice. No sweep requested: the change touches tutorial walks only and the six new walks were run."
+    },
+    {
+      "t": "2026-09-25T01:51:25.908Z",
+      "note": "Six Video guides for the editor (cut, second clip, moving title, transition, captions, export) in TutorialGuides.swift, offered at Next defaults with no flag; steps wait on the document via TutorialDocumentChange (core, tested); samples open in the editor (TutorialVideoSample + TutorialSampleVideos); anchors timelineTracks and dialog(.export) on the video sheet. Verified: six tutorial-*-walk.json walks ok at Next defaults with real captures; Scripts/test.sh 9684 green. Audit queue/audits/2026-09-25-video-guides.json. Commit b39f34d0."
     }
-  ]
+  ],
+  "started": "2026-09-25T00:53:59.140Z",
+  "walks": [
+    "tutorial-cut-a-recording-down-walk",
+    "tutorial-add-a-second-clip-walk",
+    "tutorial-a-title-that-moves-walk",
+    "tutorial-put-a-transition-on-a-cut-walk",
+    "tutorial-captions-from-the-speech-walk",
+    "tutorial-export-the-video-walk"
+  ],
+  "completed": "2026-09-25T01:51:25.909Z"
 }

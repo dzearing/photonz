@@ -4,12 +4,12 @@
   "goal": "On a five minute recording the clip is one long coloured bar, so the only way to find the moment you want is to play or scrub. Premiere and Final Cut draw small pictures along each clip. The user decides whether clips here show pictures, as the mock draws plain coloured bars.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 260,
+  "seq": 120,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:16:45.418Z",
-  "updated": "2026-09-24T12:40:39.186Z",
+  "updated": "2026-09-25T12:22:27.702Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24); gap report docs/design/video-vs-premiere.md. Picture: docs/design/video-vs-premiere/five-minutes-at-fit.jpg. Mock video.html (timeline section) draws clips as gradient bars with no pictures, so this departs from the mock and needs the user s yes before building.",
@@ -32,6 +32,10 @@
     {
       "t": "2026-09-24T12:40:39.185Z",
       "note": "seq 420.5 -> 260"
+    },
+    {
+      "t": "2026-09-25T12:22:27.701Z",
+      "note": "seq 260 -> 120"
     }
   ]
 }

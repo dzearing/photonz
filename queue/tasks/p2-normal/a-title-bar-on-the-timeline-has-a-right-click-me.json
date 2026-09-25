@@ -4,12 +4,12 @@
   "goal": "Right-clicking a title or any placed layer on the timeline offers what you would do to it there (start here, end here, fade, delete), the way a clip bar already does, so the Time section can drop its two buttons.",
   "epic": "video-editing",
   "priority": "p2-normal",
-  "seq": 100,
+  "seq": 130,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T02:23:06.770Z",
-  "updated": "2026-09-24T12:40:39.710Z",
+  "updated": "2026-09-25T12:23:33.024Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the-video-properties-look-like-the-rest-of-the-d: SpeedInspector.placedInTime still has a Playhead row with Start Here and End Here because a placed layer bar has no .contextMenu (clip bars get TimelineClipMenu in ClipPiecesBar). EditorState startPlacedLayerHere/endPlacedLayerHere/setPlacedLayerFade already exist.",
@@ -36,6 +36,14 @@
     {
       "t": "2026-09-24T12:40:39.709Z",
       "note": "seq 35 -> 100"
+    },
+    {
+      "t": "2026-09-25T12:22:28.640Z",
+      "note": "seq 100 -> 120"
+    },
+    {
+      "t": "2026-09-25T12:23:33.023Z",
+      "note": "seq 120 -> 130"
     }
   ]
 }

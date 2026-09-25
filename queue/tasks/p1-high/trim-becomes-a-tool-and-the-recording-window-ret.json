@@ -4,12 +4,12 @@
   "goal": "A recording now opens in the ordinary editor, but only if you switch it on, because the small video window is still the only place you can trim, crop, save or export one. Finish the move: make trimming a tool you pick in the editor, give the editor the save, the export and the revert the old window had, and then take the old window away so there is one way to open a recording and not two.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 150,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T19:20:02.577Z",
-  "updated": "2026-09-24T12:40:38.622Z",
+  "updated": "2026-09-25T12:22:27.393Z",
   "deps": [
     "a-video-edit-can-be-saved-as-a-project-and-opene",
     "command-s-on-a-video-edit-does-what-the-user-pic"
@@ -126,6 +126,18 @@
     {
       "t": "2026-09-24T12:40:38.621Z",
       "note": "seq 198 -> 150"
+    },
+    {
+      "t": "2026-09-25T03:49:47.797Z",
+      "note": "a video edit can now be saved as a project with File > Save As (task a-video-edit-can-be-saved-as-a-project-and-opene, 2026-09-25); what Command S does on an unsaved recording is still the command-s task's card, so this task's 'Save stops being dimmed' item should be read against that answer"
+    },
+    {
+      "t": "2026-09-25T12:21:56.370Z",
+      "note": "triage 2026-09-25: the 09:34Z sweep had the app quit part way through tutorial-trim-a-recording-walk (this task owns it) with no crash report; run alone this morning it passed. Worth watching when this task retires the old trim flow."
+    },
+    {
+      "t": "2026-09-25T12:22:27.392Z",
+      "note": "seq 150 -> 60"
     }
   ],
   "walks": [

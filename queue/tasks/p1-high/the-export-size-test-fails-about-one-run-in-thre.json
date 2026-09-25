@@ -3,13 +3,13 @@
   "title": "An export weighs the same on a busy machine as on an idle one",
   "goal": "The video and animated picture export size tests go red about one run in three when the machine is busy, because the encoders hand back different sizes for the same frames. A red run that means nothing blocks honest commits, and if the size really moves, the Export sheet may be promising a size it cannot keep.",
   "epic": "video-share",
-  "priority": "p2-normal",
+  "priority": "p1-high",
   "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T22:53:19.192Z",
-  "updated": "2026-09-24T12:40:39.292Z",
+  "updated": "2026-09-25T12:22:27.181Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): Running the test suite before a commit comes back red about a third of the time, on a video export test that nobody has touched. The rule is that the suite must be green before every commit, so a test that fails at random either stops honest work or teaches people to ignore a red suite. Make that test tell the truth every time it runs.\n\nReproduced 2026-09-22 while finishing resizing-one-piece-inside-a-turned-card-moves-th. Three back-to-back full runs of Scripts/test.sh on the same commit: run 1 failed with 1 issue, run 2 failed with 3 issues, run 3 passed with 9094 tests. The issue named each time:\n\n  x Test \"What lands is inside the budget it was given, and not far under it\" recorded an issue at VideoExportBudgetTests.swift:155:9: Expectation failed: (Self.bytes(of: tighter) -> 125039) < (landed -> 116723)\n\nTests/PhotonzMediaTests/VideoExportBudgetTests.swift:155 is the last line of theBudgetPredictsTheFile: it exports the same 3-second 1280x800 synthetic source at VideoExportQuality.standard and again at .small, and claims the .small file is the smaller of the two. Both land around 120KB, so on that source the hardware encoder is near its own floor and the bitrate ceiling is not what is deciding the size; which file comes out smaller is then down to the encoder, not to the recipe. Self.busySource(seconds:3,size:) is the source. Either give it a source with enough detail that both budgets actually bind, or make the claim about the recipe rather than about the bytes.",
@@ -111,6 +111,78 @@
     {
       "t": "2026-09-24T12:40:39.291Z",
       "note": "seq 10 -> 20"
+    },
+    {
+      "t": "2026-09-24T12:58:37.500Z",
+      "note": "seen again 2026-09-24 in Scripts/test.sh during the ruler task: VideoExportBudgetTests.swift:155 (tighter 121102 < landed 118942), with probe walks running alongside"
+    },
+    {
+      "t": "2026-09-24T13:02:28.696Z",
+      "note": "2026-09-24 again, second full run in a row during the ruler task (no export code touched): 'Exporting the same recording twice' drift 0.064 > 0.05 and 'written twice, an animated export lands at the same size' (standard < high false). Load average about 5-6."
+    },
+    {
+      "t": "2026-09-24T13:14:31.643Z",
+      "note": "2026-09-24: reproduced on HEAD b7f3368b with no local code changes: a full Scripts/test.sh failed 'What lands is inside the budget it was given' (tighter 121102 < landed 120905). Four full runs in a row today each failed one test of this family (budget, drift 0.064, animated twice x2); each passes alone (--filter VideoExportBudget|AnimatedExportWeigh, 8/8 in 19s). Load average 5-6."
+    },
+    {
+      "t": "2026-09-24T13:48:05.344Z",
+      "note": "seen again 2026-09-24 06:5x on main + an unrelated keyboard change: AnimatedExportWeighTests.swift:128 (small < standard true, standard < high false)"
+    },
+    {
+      "t": "2026-09-24T13:54:16.929Z",
+      "note": "2026-09-24 also VideoExportBudgetTests.swift:155 went red (tighter 121102 not < landed 114736) on the next run"
+    },
+    {
+      "t": "2026-09-24T14:13:11.583Z",
+      "note": "2026-09-24 07:00-07:25: 4 of 6 full Scripts/test.sh runs went red on this family alone (AnimatedExportWeighTests.swift:109 and :128, VideoExportBudgetTests.swift:155), each green run on its own with --filter. It now fails more often than one in three and blocks every runner's commit; the keyboard task (premiere-s-timeline-keys-work-the-moment-a-recor) committed over it like 2271b8e8 did."
+    },
+    {
+      "t": "2026-09-24T14:49:42.405Z",
+      "note": "2026-09-24 (captions-follow-cut runner): under full-suite load also saw AnimatedExportWeighTests 'written twice, an animated export lands at the same size' fail once (294125 vs 285616 bytes) and VideoExportBudgetTests:155 once; both suites pass alone twice in a row (Scripts/test.sh --filter 'AnimatedExportWeigh|VideoExportBudget')."
+    },
+    {
+      "t": "2026-09-24T17:31:06.380Z",
+      "note": "2026-09-24 (long-captioned-recording runner): VideoExportBudgetTests.swift:155 red once more under the full suite (tighter 121102 not < landed 118942), green twice alone with --filter VideoExportBudgetTests."
+    },
+    {
+      "t": "2026-09-24T21:34:21.835Z",
+      "note": "seen again 2026-09-24 in a full Scripts/test.sh run (314955 vs 306789 bytes); the rerun passed"
+    },
+    {
+      "t": "2026-09-24T22:57:59.193Z",
+      "note": "failed again 2026-09-24 (VideoExportBudgetTests.swift:155, tighter 121102 vs landed 118702) during a full test.sh for the default-transition task; passed on the immediate rerun"
+    },
+    {
+      "t": "2026-09-25T00:00:55.483Z",
+      "note": "2026-09-24 again during the export Size row task: full Scripts/test.sh failed 'What lands is inside the budget it was given' (tighter 121102 < landed 114017), then failed once more inside a 7-suite export filter run (123269 < 118484), then passed 4 of 4 on its own. The recipe calls it makes (no size) are unchanged by that task."
+    },
+    {
+      "t": "2026-09-25T01:51:25.857Z",
+      "note": "seen twice more on 2026-09-25 in full runs while the probe had just been built: 121102 < 119420 and 121102 < 113222; passed alone twice right after."
+    },
+    {
+      "t": "2026-09-25T03:03:15.382Z",
+      "note": "seen again 2026-09-24 19:49 at fa1f1ea4 on an otherwise idle full Scripts/test.sh: AnimatedExportWeighTests.swift:109 written[0].count 160386 vs written[1].count 233688; the next full run passed."
+    },
+    {
+      "t": "2026-09-25T04:53:08.598Z",
+      "note": "seen 3 runs in a row on 2026-09-25 during the Library import task, straight after 28 walks: AnimatedExportWeighTests.swift:109 208988 vs 285616, then 279957 vs 279472, plus :128 standard < high false once"
+    },
+    {
+      "t": "2026-09-25T06:45:09.543Z",
+      "note": "2026-09-24, on-a-video-the-timeline-is-the-layer-list: 'written twice... same size' failed one full run (300607 vs 223833 bytes) after two green ones; passed alone straight after. Change touched no export code."
+    },
+    {
+      "t": "2026-09-25T12:21:56.289Z",
+      "note": "triage 2026-09-25: moved p2 -> p1. In the 36 hours to this morning this log gained about a dozen sightings from nearly every runner, including 4 of 6 full runs red in one stretch and 3 red in a row during the Library import task, each costing a 220 s re-run of the whole suite before the runner could commit. It is the most expensive thing in the loop that is not a feature."
+    },
+    {
+      "t": "2026-09-25T12:22:07.668Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-09-25T12:22:27.180Z",
+      "note": "seq 20 -> 20"
     }
   ],
   "walks": []
