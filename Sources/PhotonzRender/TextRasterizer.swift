@@ -226,6 +226,53 @@ public enum TextRasterizer {
         return outline.isEmpty ? nil : outline
     }
 
+    /// Where each word of `text` is drawn in a box of `size`: one rect per run
+    /// of non-space characters, in document points with the origin top left,
+    /// or nil for a word that was cut off. A word broken across two lines is
+    /// the union of both pieces.
+    ///
+    /// Laid out exactly as `rasterize` lays it out — the same truncation, box
+    /// and alignment — so a double click on a word of a caption lands on the
+    /// word the picture shows there.
+    public static func wordRects(_ text: TextContent, size: CGSize) -> [CGRect?] {
+        let spans = CaptionActiveWord.tokenSpans(in: text.string)
+        guard size.width > 0, size.height > 0, text.fontSize > 0, !spans.isEmpty else {
+            return spans.map { _ in nil }
+        }
+        let shown = truncating(text, toFit: size.width)
+        let path = CGPath(rect: laidOutBox(shown, in: CGRect(origin: .zero, size: size)), transform: nil)
+        let frame = CTFramesetterCreateFrame(
+            CTFramesetterCreateWithAttributedString(attributedString(shown)),
+            CFRange(location: 0, length: 0), path, nil)
+        guard let lines = CTFrameGetLines(frame) as? [CTLine], !lines.isEmpty else {
+            return spans.map { _ in nil }
+        }
+        var origins = [CGPoint](repeating: .zero, count: lines.count)
+        CTFrameGetLineOrigins(frame, CFRange(location: 0, length: 0), &origins)
+        let base = path.boundingBox.origin
+        let visible = shown.string == text.string ? (text.string as NSString).length
+            : max(0, (shown.string as NSString).length - 1)
+        return spans.map { span in
+            let start = span.location
+            let end = min(span.location + span.length, visible)
+            guard end > start else { return nil }
+            var union = CGRect.null
+            for (line, origin) in zip(lines, origins) {
+                let range = CTLineGetStringRange(line)
+                let from = max(start, range.location), to = min(end, range.location + range.length)
+                guard to > from else { continue }
+                var ascent: CGFloat = 0, descent: CGFloat = 0, leading: CGFloat = 0
+                _ = CTLineGetTypographicBounds(line, &ascent, &descent, &leading)
+                let x0 = CTLineGetOffsetForStringIndex(line, from, nil)
+                let x1 = CTLineGetOffsetForStringIndex(line, to, nil)
+                let top = size.height - (base.y + origin.y + ascent)
+                union = union.union(CGRect(x: base.x + origin.x + min(x0, x1), y: top,
+                                           width: abs(x1 - x0), height: ascent + descent))
+            }
+            return union.isNull ? nil : union
+        }
+    }
+
     /// The part of `box` the lines are laid out in, so text that does not fill
     /// its box sits where `verticalAlignment` says.
     ///

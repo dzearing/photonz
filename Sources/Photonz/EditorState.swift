@@ -1138,6 +1138,14 @@ final class EditorState {
     /// without this the view holding the gesture would be swapped out under
     /// the hand and the drag never let go.
     var carriedCaptionCueID: UUID?
+    /// The one word of a caption open for typing, on the canvas or on the
+    /// Words lane (`EditorState+CaptionWords`).
+    var captionWordEdit: CaptionWordEditSession?
+    /// A word chip on the Words lane under a hand. Kept out of the document so
+    /// the whole drag is one step to undo, exactly like the bar drag above.
+    var captionWordDrag: CaptionWordDragSession?
+    /// Escape, for as long as a word chip is in the hand.
+    @ObservationIgnored var captionWordEscapeWatch: Any?
     /// The tracks picked in the timeline's gutter (`EditorState+Tracks`).
     var selectedTrackIDs: Set<UUID> = []
     /// Track groups folded shut in this window. How you are looking at the
@@ -3795,6 +3803,9 @@ final class EditorState {
         // absolute values, so the shown document having already had it applied
         // costs nothing.
         document = withDraggedClipBar(document)
+        // ...and a caption's WORD under a hand on the Words lane, so the line
+        // lights its words at the times the hand is giving them.
+        document = withDraggedCaptionWord(document)
         // ...and the BAND over a cut under a hand, for the third time for the
         // same reason: dragging a dissolve longer has to show you the dissolve
         // it is about to be (`EditorState+ClipTransitions`).

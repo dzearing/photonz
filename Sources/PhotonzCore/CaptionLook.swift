@@ -137,7 +137,7 @@ extension CaptionCue {
         return words.map { word in
             let start = cue.inMS + (word.startMS - first.startMS) * span / heardLength
             let end = cue.inMS + (word.endMS - first.startMS) * span / heardLength
-            return TranscribedWord(word.text, startMS: start, endMS: end, confidence: word.confidence)
+            return word.retimed(startMS: start, endMS: end)
         }
     }
 }
@@ -189,7 +189,7 @@ public enum CaptionActiveWord {
     }
 
     /// Each run of non-space characters, in UTF-16 units.
-    static func tokenSpans(in string: String) -> [Span] {
+    public static func tokenSpans(in string: String) -> [Span] {
         var spans: [Span] = []
         var offset = 0
         var start: Int?
@@ -259,12 +259,15 @@ extension PhotonzDocument {
     /// Captions track.
     @discardableResult
     public mutating func landCaptions(_ cues: [CaptionCue], look: CaptionLook? = nil) -> UUID? {
+        // Words somebody fixed by hand come back fixed where the same words
+        // are heard the same way again (`CaptionWordFixes`).
+        let fixed = CaptionWordFixes(self).applied(to: cues)
         clearCaptions()
         // Nothing is said after the film ends, so no line is on screen after
         // it either: a line lingering past the last frame would make the film
         // longer by the linger.
         let end = hasTime ? documentDurationMS : Int.max
-        let cues = cues.compactMap { cue -> CaptionCue? in
+        let cues = fixed.compactMap { cue -> CaptionCue? in
             guard cue.inMS < end - LayerTime.shortestMS else { return cue.outMS <= end ? cue : nil }
             return CaptionCue(words: cue.words, inMS: cue.inMS, outMS: min(cue.outMS, end))
         }

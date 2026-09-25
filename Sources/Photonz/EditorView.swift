@@ -357,6 +357,8 @@ struct EditorView: View {
     private var canvas: some View {
         if editorState.hasDocument {
             EditorCanvasSurface()
+                // One word of a caption, open for typing over itself.
+                .overlay(alignment: .topLeading) { CaptionWordCanvasOverlay() }
                 .overlay(alignment: .bottom) {
                     // One slot: the "Copied" notice and the Measure mode hint
                     // never stack. The notice wins while it is up.

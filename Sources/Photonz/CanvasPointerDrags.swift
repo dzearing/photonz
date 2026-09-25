@@ -254,6 +254,14 @@ extension CanvasNSView {
             refreshOverlays()
             return
         }
+        // A double click on one word of a caption opens THAT word, not the
+        // line: every automatic caption is wrong a word at a time, and the
+        // group walk below would otherwise pick the line and then open all of
+        // it (`EditorState+CaptionWords`).
+        if event.clickCount == 2, onEditCaptionWord(p) {
+            refreshOverlays()
+            return
+        }
         // A double click always DESCENDS: on a group it picks the piece under
         // the pointer, and only once there is nothing left to go into does it
         // mean what it always meant — opening a text layer to type, or an

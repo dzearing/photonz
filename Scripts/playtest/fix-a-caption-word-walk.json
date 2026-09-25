@@ -1,0 +1,51 @@
+{
+  "out": "/tmp/photonz-playtest/fix-a-caption-word-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "describe", "stage": "why", "note": "Captions that write themselves get words wrong one at a time: the talking sample's recogniser hears the app's name as 'Fodons'. A double click on one word, on the picture or on its chip in the Words lane, opens THAT word for typing and nothing else. Tab keeps it and opens the next. A chip dragged on the lane carries the words after it; its edge stretches it alone. Next at its defaults: no flag is set here." },
+    { "do": "action", "action": "openSampleTalk" },
+    { "do": "action", "action": "captionsWaitForThemselves" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+
+    { "do": "action", "action": "captionsWordOpenOnCanvas" },
+    { "do": "action", "action": "captionsExpectWordOpen" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "snapshot", "name": "1-one-word-open-on-the-picture" },
+    { "do": "type", "text": "Photonz" },
+    { "do": "key", "key": "return" },
+    { "do": "action", "action": "captionsExpectWordFixed" },
+    { "do": "action", "action": "captionsExpectTimingsKept" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "snapshot", "name": "2-fixed-on-the-picture" },
+
+    { "do": "action", "action": "captionsWordOpenInLane" },
+    { "do": "action", "action": "captionsExpectWordOpen" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "snapshot", "name": "3-one-word-open-in-the-lane" },
+    { "do": "type", "text": "plain" },
+    { "do": "key", "key": "tab" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "action", "action": "captionsExpectTabbedOn" },
+    { "do": "snapshot", "name": "4-tab-opened-the-next-word" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.3 },
+
+    { "do": "action", "action": "captionsWordDragEarlier" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "snapshot", "name": "5-a-word-and-the-rest-dragged-earlier" },
+    { "do": "action", "action": "captionsWordStretchLastLater" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "snapshot", "name": "6-the-last-word-stretched-later" },
+    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "action", "action": "captionsExpectWordDragsUndone" },
+
+    { "do": "action", "action": "captionsWordSplitAndMerge" },
+    { "do": "action", "action": "captionsExpectTimingsKept" },
+    { "do": "snapshot", "name": "7-after-split-and-merge" }
+  ]
+}

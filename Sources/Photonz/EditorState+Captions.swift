@@ -381,22 +381,6 @@ extension EditorState {
         documentMomentChanged()
     }
 
-    /// Every word under these cues, where it now sits in time, for the Words
-    /// lane.
-    func captionWordChips(cueIDs: [UUID]) -> [TranscribedWord] {
-        guard let document = shownDocument else { return [] }
-        // One pass over the document, not a search per cue: a long talk has
-        // 170 cues, and this is asked on every step of the playhead.
-        let wanted = Set(cueIDs)
-        var words: [UUID: [TranscribedWord]] = [:]
-        document.forEachLayer { layer in
-            guard wanted.contains(layer.id), let time = layer.time,
-                  let cue = document.captionCue(of: layer) else { return }
-            words[layer.id] = CaptionCue.words(cue.words, fittedTo: time)
-        }
-        return cueIDs.flatMap { words[$0] ?? [] }
-    }
-
     /// Put the playhead on a moment, the way a click on the ruler does.
     func moveDocumentPlayhead(toMS ms: Int) {
         pauseDocument()

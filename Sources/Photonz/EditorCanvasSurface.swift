@@ -75,6 +75,7 @@ struct EditorCanvasSurface: View {
                    onSelectLayer: { editorState.selectLayer($0) },
                    onSelectLayerInGroup: { editorState.selectLayer($0, inGroup: $1) },
                    onReadTheWordsThenType: { editorState.readTheWordsThenType(id: $0) },
+                   onEditCaptionWord: { editorState.editCaptionWord(atCanvasPoint: $0) },
                    onExtendSelection: { editorState.extendSelection(toLayer: $0) },
                    onAddSweptLayers: { editorState.addSweptLayersToSelection(in: $0, inside: $1) },
                    onRenameLayer: { editorState.renameLayer(id: $0, to: $1) },
@@ -89,6 +90,9 @@ struct EditorCanvasSurface: View {
                        // under the pointer, which would take the moving layer
                        // (and its path) out of the picks (`EditorState+MotionPath`).
                        if let rows = editorState.motionPathMenuRows(at: point) { return rows }
+                       // ...and so does a word of a caption: its menu is about
+                       // that word (`EditorState+CaptionWords`).
+                       if let rows = editorState.captionWordMenuRows(atCanvasPoint: point) { return rows }
                        editorState.aimCanvasMenu(at: hit, inside: context)
                        editorState.canvasMenuPoint = point
                        return editorState.canvasMenuRows

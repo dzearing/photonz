@@ -227,8 +227,7 @@ extension PhotonzDocument {
         }
         let words = layer.captionWords?.compactMap { word -> TranscribedWord? in
             guard word.endMS > keepFrom, word.startMS < keepTo else { return nil }
-            return TranscribedWord(word.text, startMS: max(word.startMS, keepFrom),
-                                   endMS: min(word.endMS, keepTo), confidence: word.confidence)
+            return word.retimed(startMS: max(word.startMS, keepFrom), endMS: min(word.endMS, keepTo))
         }
         if let words, words.isEmpty { return false }
         updateLayer(id: id) { cut in

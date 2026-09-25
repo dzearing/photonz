@@ -915,6 +915,30 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Fail unless the words being typed on the canvas are a caption's: what a
     /// double click on a caption on the picture has to open.
     case captionsExpectEditingOnCanvas
+    /// Fixing one word (`EditorState+CaptionWords`). Put the playhead in the
+    /// first caption and double click its first word ON THE PICTURE, with a
+    /// real click; or double click the second caption's second word on the
+    /// Words lane, with a real click. Both say how long the field took to open.
+    case captionsWordOpenOnCanvas, captionsWordOpenInLane
+    /// Fail unless one word is open for typing, and not the whole line.
+    case captionsExpectWordOpen
+    /// Fail unless the word opened last now reads differently, over exactly
+    /// the stretch of time it had.
+    case captionsExpectWordFixed
+    /// Fail unless the word open now is the one after the word opened last:
+    /// what Tab does.
+    case captionsExpectTabbedOn
+    /// The second caption's second word, and the words after it, carried a
+    /// fifth of a second earlier on the Words lane, squeezing the word before;
+    /// then the line's last word stretched a tenth and a half later into the
+    /// room that made. Each fails unless the words landed where the drag says.
+    case captionsWordDragEarlier, captionsWordStretchLastLater
+    /// Fail unless the second caption's words are back where they were before
+    /// the drags, which is what two undos have to do.
+    case captionsExpectWordDragsUndone
+    /// Split the second caption's second word from its right click menu, then
+    /// merge it back, and fail unless the line reads as it did.
+    case captionsWordSplitAndMerge
     /// Write the film with its picture clean and its captions as an SRT file
     /// beside it, into the walk's own folder, and fail unless both land.
     case captionsWriteFilmWithFileBeside
@@ -1101,6 +1125,9 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .captionsPositionTop, .captionsPositionBottom, .captionsExpectLitWord,
              .captionsExportFiles, .captionsAutoOff, .captionsAutoOn, .captionsExpectEditingOnCanvas,
              .captionsWriteFilmWithFileBeside,
+             .captionsWordOpenOnCanvas, .captionsWordOpenInLane, .captionsExpectWordOpen,
+             .captionsExpectWordFixed, .captionsExpectTabbedOn, .captionsWordDragEarlier,
+             .captionsWordStretchLastLater, .captionsExpectWordDragsUndone, .captionsWordSplitAndMerge,
              .soundExpectPlaying, .soundExportMix, .soundScrubAcrossIt,
              .soundExpectMixOver, .soundExpectMeterReads,
              .clipDragStartIn, .clipDragStartBackOut, .clipDragEndIn,

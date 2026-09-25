@@ -67,8 +67,7 @@ extension PhotonzDocument {
                     cut.time = LayerTime(inMS: squeeze(time.inMS), outMS: squeeze(time.outMS),
                                          sourceInMS: time.sourceInMS, sourceLengthMS: time.sourceLengthMS)
                     cut.captionWords = cut.captionWords?.map {
-                        TranscribedWord($0.text, startMS: squeeze($0.startMS),
-                                        endMS: squeeze($0.endMS), confidence: $0.confidence)
+                        $0.retimed(startMS: squeeze($0.startMS), endMS: squeeze($0.endMS))
                     }
                 }
                 refitFade(layer.id)

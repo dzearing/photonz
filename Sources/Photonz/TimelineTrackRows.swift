@@ -44,7 +44,7 @@ struct TimelineTrackRow: View {
             }
             .frame(height: laneHeight)
             .playtestField("Track \(track.name)")
-            if row.isCaptions, !row.clips.isEmpty {
+            if row.isCaptions, !row.clips.isEmpty, editorState.isKeyTrackOpen(track.id) {
                 HStack(spacing: TimelineDock.gap) {
                     CaptionWordsLane.header(indent: indent)
                     CaptionWordsLane(cueIDs: row.clips.map(\.layerID), laneWidth: laneWidth)
@@ -162,14 +162,19 @@ struct TimelineTrackRow: View {
         editorState.trackHasKeyLanes(row.clips.map(\.layerID))
     }
 
-    private var twistWidth: CGFloat { hasKeyLanes ? 12 : 0 }
+    /// A Captions track opens into its Words lane the same way, and starts
+    /// open, the way the captions mock draws it.
+    private var hasWordsLane: Bool { row.isCaptions && !row.clips.isEmpty }
+
+    private var twistWidth: CGFloat { hasKeyLanes || hasWordsLane ? 12 : 0 }
 
     /// The arrow before the name, the way Premiere and After Effects open a
     /// track into its keyed values: pointing right while closed, down while
     /// open.
     @ViewBuilder private var twist: some View {
-        if hasKeyLanes {
+        if hasKeyLanes || hasWordsLane {
             let open = editorState.isKeyTrackOpen(track.id)
+            let what = hasWordsLane ? "words" : "keyed values"
             Button {
                 withAnimation(.snappy(duration: 0.18)) { editorState.toggleKeyTrack(track.id) }
             } label: {
@@ -181,11 +186,12 @@ struct TimelineTrackRow: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .help(open ? "Hide the keyed values" : "Show the keyed values")
-            .accessibilityLabel(open ? "Hide the keyed values of \(track.name)"
-                                     : "Show the keyed values of \(track.name)")
-            .playtestControl("Key Lanes \(track.name)", detail: "Timeline")
-            .panelReadout("\(track.name) keyed values \(open ? "open" : "closed")")
+            .help(open ? "Hide the \(what)" : "Show the \(what)")
+            .accessibilityLabel(open ? "Hide the \(what) of \(track.name)"
+                                     : "Show the \(what) of \(track.name)")
+            .playtestControl(hasWordsLane ? "Words \(track.name)" : "Key Lanes \(track.name)",
+                             detail: "Timeline")
+            .panelReadout("\(track.name) \(what) \(open ? "open" : "closed")")
         }
     }
 

@@ -45,12 +45,24 @@ public struct TranscribedWord: Hashable, Codable, Sendable {
     public var endMS: Int
     /// How sure the machine was, nought to one, or nil where it did not say.
     public var confidence: Double?
+    /// What the machine heard here before somebody fixed it by hand, or nil
+    /// for a word nobody has touched. It is how a fix survives the captions
+    /// being written again: the same mishearing in the same place gets the
+    /// same fix (`CaptionWordFixes`).
+    public var heardAs: String?
 
-    public init(_ text: String, startMS: Int, endMS: Int, confidence: Double? = nil) {
+    public init(_ text: String, startMS: Int, endMS: Int, confidence: Double? = nil,
+                heardAs: String? = nil) {
         self.text = text
         self.startMS = max(0, startMS)
         self.endMS = max(self.startMS, endMS)
         self.confidence = confidence
+        self.heardAs = heardAs
+    }
+
+    /// The same word, fixed or not, over a different stretch.
+    public func retimed(startMS: Int, endMS: Int) -> TranscribedWord {
+        TranscribedWord(text, startMS: startMS, endMS: endMS, confidence: confidence, heardAs: heardAs)
     }
 
     public var lengthMS: Int { endMS - startMS }
@@ -68,7 +80,7 @@ public struct TranscribedWord: Hashable, Codable, Sendable {
 
     /// The same word said somewhere else in the recording.
     public func shifted(byMS ms: Int) -> TranscribedWord {
-        TranscribedWord(text, startMS: startMS + ms, endMS: endMS + ms, confidence: confidence)
+        retimed(startMS: startMS + ms, endMS: endMS + ms)
     }
 }
 
@@ -614,13 +626,12 @@ extension PhotonzDocument {
             // matching to do. The common case, asked for every cue each time
             // the document changes.
             if zip(pieces, heard).allSatisfy({ $0 == $1.text }) {
-                return heard.map {
-                    TranscribedWord($0.text, startMS: $0.startMS, endMS: $0.endMS, confidence: $0.confidence)
-                }
+                return heard
             }
             return zip(pieces, heard).map {
                 TranscribedWord($0, startMS: $1.startMS, endMS: $1.endMS,
-                                confidence: Captions.spine(of: $0) == $1.spine ? $1.confidence : nil)
+                                confidence: Captions.spine(of: $0) == $1.spine ? $1.confidence : nil,
+                                heardAs: $0 == $1.text ? $1.heardAs : ($1.heardAs ?? $1.text))
             }
         }
         let start = heard.first?.startMS ?? 0

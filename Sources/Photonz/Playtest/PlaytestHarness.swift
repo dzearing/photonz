@@ -122,6 +122,11 @@ private final class Run {
     private var hovered: HintAnchorView?
     /// The document the last `saveProjectAs` wrote, for `expectReopenedAsSaved`.
     private var savedProjectDocument: PhotonzDocument?
+    /// The caption word a walk opened last, and when it was said then
+    /// (`captionsExpectWordFixed`).
+    private var openedCaptionWord: (ref: CaptionWordRef, word: TranscribedWord)?
+    /// The second caption's words before a walk dragged any of them.
+    private var captionWordsBeforeDrags: [TranscribedWord]?
     /// A colour drag left down by `holdColorDrag`, waiting for the release that
     /// turns its live frames into one recorded step.
     private var heldColorDrag: (slot: ColorSlot, paint: Paint)?
@@ -3325,6 +3330,172 @@ private final class Run {
                 }
                 note(number, step.name, "captions: wrote \(film.lastPathComponent) and "
                      + "\(beside.lastPathComponent) beside it", state: describe())
+            case .captionsWordOpenOnCanvas:
+                guard let first = editor.document?.captionLayers.first, let time = first.time else {
+                    throw Failure(description: "there is no caption to fix")
+                }
+                editor.moveDocumentPlayhead(toMS: (time.inMS + time.outMS) / 2)
+                await sleep(0.4)
+                let ref = CaptionWordRef(cueID: first.id, index: 0)
+                guard let shown = editor.canvasGeometryDocument?.canvasLayer(id: first.id),
+                      case .text(let text) = shown.content,
+                      let rect = TextRasterizer.wordRects(text, size: shown.frame.size).first ?? nil,
+                      let word = editor.captionWord(ref) else {
+                    throw Failure(description: "the first caption's first word is not on the picture")
+                }
+                let point = CGPoint(x: shown.frame.minX + rect.midX, y: shown.frame.minY + rect.midY)
+                let canvas = try requireCanvas()
+                let p = try viewPoint(PlaytestPoint(point))
+                let t0 = CACurrentMediaTime()
+                if let down = mouseEvent(.leftMouseDown, at: p, on: canvas, clicks: 2) { canvas.mouseDown(with: down) }
+                if let up = mouseEvent(.leftMouseUp, at: p, on: canvas, clicks: 2) { canvas.mouseUp(with: up) }
+                let ms = (CACurrentMediaTime() - t0) * 1000
+                openedCaptionWord = (ref, word)
+                note(number, step.name, "captions: double clicked \"\(word.text)\" on the picture at "
+                     + "(\(Int(point.x)), \(Int(point.y))); the field opened in \(String(format: "%.1f", ms)) ms",
+                     state: describe())
+            case .captionsWordOpenInLane:
+                let cues = editor.document?.captionLayers ?? []
+                guard cues.count >= 2, let words = editor.document?.captionWordsAsShown(of: cues[1].id),
+                      words.count >= 2 else {
+                    throw Failure(description: "there is no second caption with two words to fix")
+                }
+                let ref = CaptionWordRef(cueID: cues[1].id, index: 1)
+                let middle = Double(words[1].startMS + words[1].endMS) / 2
+                let across = CGFloat(editor.motionStripRuler.fraction(ofMS: middle))
+                let t0 = CACurrentMediaTime()
+                try await pressControl("Words", in: nil, count: 2, modifiers: [],
+                                       across: across, number: number)
+                let ms = (CACurrentMediaTime() - t0) * 1000
+                openedCaptionWord = (ref, words[1])
+                note(number, step.name, "captions: double clicked \"\(words[1].text)\" on the Words lane; "
+                     + "the press and the field took \(String(format: "%.1f", ms)) ms", state: describe())
+            case .captionsExpectWordOpen:
+                try await poll("a caption word to open for typing", within: 3) {
+                    editor.captionWordEdit != nil
+                }
+                guard let session = editor.captionWordEdit else { throw Failure(description: "no word is open") }
+                guard editor.editingTextLayerID == nil else {
+                    throw Failure(description: "the whole caption is open for typing, not one word")
+                }
+                note(number, step.name, "captions: \"\(session.original)\" is open for typing on the "
+                     + "\(session.place == .canvas ? "picture" : "Words lane"), and nothing else is",
+                     state: describe())
+            case .captionsExpectWordFixed:
+                guard let opened = openedCaptionWord else {
+                    throw Failure(description: "no caption word was opened earlier in this walk")
+                }
+                try await poll("the word to be kept", within: 3) { editor.captionWordEdit == nil }
+                guard let now = editor.captionWord(opened.ref) else {
+                    throw Failure(description: "the word that was opened is gone")
+                }
+                guard now.text != opened.word.text else {
+                    throw Failure(description: "\"\(opened.word.text)\" still reads the same")
+                }
+                guard now.startMS == opened.word.startMS else {
+                    throw Failure(description: "\"\(now.text)\" moved: it started at \(opened.word.startMS) ms "
+                        + "and now starts at \(now.startMS) ms")
+                }
+                let line = editor.captionWords(of: opened.ref.cueID) ?? ""
+                note(number, step.name, "captions: \"\(opened.word.text)\" now reads \"\(now.text)\" from "
+                     + "\(now.startMS) ms, and the line reads \"\(line)\"", state: describe())
+            case .captionsExpectTabbedOn:
+                guard let opened = openedCaptionWord, let session = editor.captionWordEdit else {
+                    throw Failure(description: "no word is open for typing after Tab")
+                }
+                let expected = editor.document?.captionWord(from: opened.ref, step: 1)
+                guard session.ref == expected else {
+                    throw Failure(description: "Tab opened word \(session.ref.index), not the word after "
+                        + "the one that was open")
+                }
+                if let word = editor.captionWord(session.ref) { openedCaptionWord = (session.ref, word) }
+                note(number, step.name, "captions: Tab kept the word and opened \"\(session.original)\"",
+                     state: describe())
+            case .captionsWordDragEarlier, .captionsWordStretchLastLater:
+                let cues = editor.document?.captionLayers ?? []
+                guard cues.count >= 2, let before = editor.document?.captionWordsAsShown(of: cues[1].id),
+                      before.count >= 3 else {
+                    throw Failure(description: "there is no second caption with three words to drag")
+                }
+                if captionWordsBeforeDrags == nil { captionWordsBeforeDrags = before }
+                let carry = action == .captionsWordDragEarlier
+                let ref = CaptionWordRef(cueID: cues[1].id, index: carry ? 1 : before.count - 1)
+                let delta = carry ? -200 : 150
+                editor.beginCaptionWordDrag(ref, grab: carry ? .carryRest : .end)
+                guard editor.captionWordDrag != nil else {
+                    throw Failure(description: "the word chip could not be taken hold of")
+                }
+                for fraction in [0.35, 0.7, 1.0] {
+                    editor.updateCaptionWordDrag(byMS: Int(Double(delta) * fraction))
+                    await sleep(0.05)
+                }
+                let landed = editor.captionWordDrag?.landedMS ?? 0
+                let held = carry ? "held-word-drag" : "held-word-stretch"
+                if let window = try? requireWindow(), let content = window.contentView {
+                    try snapshot(content, name: held)
+                    await screenCapture(window, name: held)
+                }
+                // The pictures cost what pictures cost; the wait after this
+                // step reports what letting go of the word cost.
+                MainThreadMeter.shared.reset()
+                editor.commitCaptionWordDrag()
+                guard let after = editor.document?.captionWordsAsShown(of: cues[1].id) else {
+                    throw Failure(description: "the second caption is gone")
+                }
+                guard landed != 0 else { throw Failure(description: "the drag went nowhere") }
+                let word = before[ref.index].text
+                if carry {
+                    guard after[0].startMS == before[0].startMS, after[0].endMS == after[1].startMS,
+                          zip(after.dropFirst(), before.dropFirst()).allSatisfy({ $0.startMS == $1.startMS + landed }) else {
+                        throw Failure(description: "dragging \"\(word)\" did not carry the words after it by "
+                            + "\(landed) ms and squeeze the word before up to it")
+                    }
+                } else {
+                    guard after.last?.endMS == (before.last?.endMS ?? 0) + landed,
+                          after.last?.startMS == before.last?.startMS,
+                          Array(after.dropLast()) == Array(before.dropLast()) else {
+                        throw Failure(description: "stretching \"\(word)\" moved more than its end")
+                    }
+                }
+                note(number, step.name, "captions: \"\(word)\" \(carry ? "and the words after it moved" : "stretched its end") "
+                     + "\(landed) ms; the line's words now run "
+                     + after.map { "\($0.startMS)-\($0.endMS)" }.joined(separator: ", ") + " ms", state: describe())
+            case .captionsExpectWordDragsUndone:
+                let cues = editor.document?.captionLayers ?? []
+                guard cues.count >= 2, let was = captionWordsBeforeDrags,
+                      let now = editor.document?.captionWordsAsShown(of: cues[1].id) else {
+                    throw Failure(description: "there were no word drags to undo")
+                }
+                guard now.map(\.startMS) == was.map(\.startMS), now.map(\.endMS) == was.map(\.endMS) else {
+                    throw Failure(description: "the words are not back where they were: "
+                        + now.map { "\($0.startMS)" }.joined(separator: ", ") + " against "
+                        + was.map { "\($0.startMS)" }.joined(separator: ", "))
+                }
+                note(number, step.name, "captions: undo put every word back", state: describe())
+            case .captionsWordSplitAndMerge:
+                let cues = editor.document?.captionLayers ?? []
+                guard cues.count >= 2, let line = editor.captionWords(of: cues[1].id) else {
+                    throw Failure(description: "there is no second caption")
+                }
+                let ref = CaptionWordRef(cueID: cues[1].id, index: 1)
+                func run(_ title: String) throws {
+                    guard let row = editor.captionWordMenuRows(ref, place: .lane).first(where: { $0.title == title }) else {
+                        throw Failure(description: "the word's right click menu has no \(title)")
+                    }
+                    row.run()
+                }
+                try run("Split Here")
+                let split = editor.captionWords(of: cues[1].id) ?? ""
+                guard split.split(separator: " ").count == line.split(separator: " ").count + 1 else {
+                    throw Failure(description: "Split Here did not make two words of one: \"\(split)\"")
+                }
+                try run("Merge with Next")
+                guard editor.captionWords(of: cues[1].id) == line else {
+                    throw Failure(description: "Merge with Next did not put it back: "
+                        + "\"\(editor.captionWords(of: cues[1].id) ?? "")\"")
+                }
+                note(number, step.name, "captions: Split Here made \"\(split)\", Merge with Next put "
+                     + "back \"\(line)\"", state: describe())
             case .captionsExpectEditingOnCanvas:
                 guard let id = editor.editingTextLayerID,
                       editor.document?.layer(id: id)?.isCaption == true else {
@@ -4176,7 +4347,11 @@ private final class Run {
                  .captionsStyleKaraoke, .captionsPositionTop, .captionsPositionBottom,
                  .captionsExpectLitWord, .captionsExportFiles, .captionsAutoOff,
                  .captionsAutoOn, .captionsExpectEditingOnCanvas,
-                 .captionsWriteFilmWithFileBeside: break
+                 .captionsWriteFilmWithFileBeside,
+                 .captionsWordOpenOnCanvas, .captionsWordOpenInLane, .captionsExpectWordOpen,
+                 .captionsExpectWordFixed, .captionsExpectTabbedOn, .captionsWordDragEarlier,
+                 .captionsWordStretchLastLater, .captionsExpectWordDragsUndone,
+                 .captionsWordSplitAndMerge: break
             case .copySpecList: editor.copyMeasureSpecList()
             case .copyImage: editor.copyCompositeToClipboard()
             // Keys picked on a lane go first, as Edit ▸ Copy and Cut do.

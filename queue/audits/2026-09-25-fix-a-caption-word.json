@@ -1,0 +1,32 @@
+{
+  "feature": "Fix a caption one word at a time",
+  "epic": "video-audio",
+  "summary": "Double-click one wrong word in a caption, on the picture or on its chip in the Words lane, and you type over just that word. On the Words lane a chip drags earlier or later and carries the words after it, and its edges stretch it. A right-click on a word splits, merges, deletes or moves it.",
+  "setup": "Photonz Probe, release Next, no flag changed from its default. Open a recording with somebody talking in it and let the captions write themselves.",
+  "try": [
+    { "do": "Put the playhead in a caption and double-click one wrong word on the picture.", "shot": "2026-09-25-fix-a-caption-word-1-one-word-open-on-the-picture.png" },
+    { "do": "Type the right word and press Return.", "shot": "2026-09-25-fix-a-caption-word-2-fixed-on-the-picture.png" },
+    { "do": "Double-click a word's chip in the Words lane under the Captions track.", "shot": "2026-09-25-fix-a-caption-word-3-one-word-open-in-the-lane.png" },
+    { "do": "Type a fix and press Tab: the word is kept and the next word opens. Escape closes it.", "shot": "2026-09-25-fix-a-caption-word-4-tab-opened-the-next-word.png" },
+    { "do": "Drag a word chip earlier: the words after it come too, and the word before gives way.", "shot": "2026-09-25-fix-a-caption-word-held-word-drag.png" },
+    { "do": "Drag the right edge of a line's last chip to stretch that word alone.", "shot": "2026-09-25-fix-a-caption-word-6-the-last-word-stretched-later.png" },
+    { "do": "Shift-drag a chip to carry every later line too; Command-drag to move one word alone." },
+    { "do": "Right-click a chip, or a word on the picture, and try Split Here, then Merge with Next." }
+  ],
+  "evaluate": [
+    "Is a double-click on the picture the first place you would go to fix a misspelled word, and does the field sit where your eye already is?",
+    "When you drag a word earlier, is squeezing the word before it what you expected, or should the drag stop at it?",
+    "Is Tab to the next word enough to fix a run of typos without the mouse?",
+    "At Fit zoom most chips are too narrow for a whole word. Is zooming in (2x, 4x) to read them acceptable, or should the lane show the words some other way?",
+    "Does the fold arrow before Captions, which hides the Words lane, earn its place?"
+  ],
+  "rough": [
+    "Side by side with pages/video-captions.html (Caption track, Words lane): the chips, 26 pt lane, 20 pt chip, 9.5 pt type, lit word in the accent and the Words label match. The mock letters every chip because its words are a second wide. On a 17 second talk at Fit most chips are about 20 pt, so the short ones show two letters and an ellipsis and the shortest show none. Zoom in to read them.",
+    "The mock's lit chip is a soft accent gradient. Ours is flat accent, as it was before this change.",
+    "The mock has faint second gridlines through the Words lane. Ours has none.",
+    "There is no readout while a chip is dragged. You judge the drag by the chips and by the picture, which both follow the hand.",
+    "A double-click on the caption's box but off every word still opens the whole line, as before. The line's bar on the track does too.",
+    "A fix survives Write Again when the same word is heard the same way at the same moment. A fix made by merging two words does not survive, because the recogniser hears them as two again.",
+    "Measured on the probe: the field on the picture opens in 2.4 ms. On the lane the main thread's longest pass for the double-click was 15 ms. Letting go of a drag cost 18 ms, and undoing one 46 ms at worst."
+  ]
+}

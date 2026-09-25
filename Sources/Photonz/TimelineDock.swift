@@ -514,7 +514,8 @@ struct TimelineDock: View {
                 rows += (isCollapsed ? TimelineGroupRow.foldedHeight : TimelineGroupRow.openHeight)
                     + Self.rowSpacing
             case .track(let track, _):
-                rows += Self.height(of: track) + Self.rowSpacing
+                rows += Self.height(of: track, wordsOpen: editorState.isKeyTrackOpen(track.id))
+                    + Self.rowSpacing
             }
         }
         rows += TimelineAddTrackRow.height + Self.rowSpacing
@@ -525,14 +526,14 @@ struct TimelineDock: View {
 
     /// One track's full height: its lane, the lanes of anything moving on
     /// its clips, and the rows of the parts inside them.
-    static func height(of track: TimelineTrackRowModel) -> CGFloat {
+    static func height(of track: TimelineTrackRowModel, wordsOpen: Bool = true) -> CGFloat {
         let lane = track.carriesSound ? soundLaneHeight : laneHeight
         let motionLanes = track.clips.reduce(0) { $0 + $1.lanes.count }
         let inner = track.inner.reduce(CGFloat(0)) { total, group in
             total + 3 + (group.isSound ? soundLaneHeight : laneHeight)
                 + CGFloat(group.lanes.count) * (MotionStripView.laneHeight + 3)
         }
-        let words = track.isCaptions && !track.clips.isEmpty ? CaptionWordsLane.height + 3 : 0
+        let words = track.isCaptions && !track.clips.isEmpty && wordsOpen ? CaptionWordsLane.height + 3 : 0
         return lane + CGFloat(motionLanes) * (MotionStripView.laneHeight + 3) + inner + words
     }
 

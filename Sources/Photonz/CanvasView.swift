@@ -121,6 +121,9 @@ struct CanvasView: NSViewRepresentable {
     /// A double click on a separated label: read its words, then open them for
     /// typing. See `EditorState.readTheWordsThenType`.
     let onReadTheWordsThenType: (UUID) -> Void
+    /// A double click on the picture that may be on one word of a caption:
+    /// true where it opened that word for typing (`EditorState+CaptionWords`).
+    var onEditCaptionWord: (CGPoint) -> Bool = { _ in false }
     let onExtendSelection: (UUID) -> Void
     let onAddSweptLayers: (SelectionRegion, UUID?) -> Void
     /// A name typed on the canvas: the layer and what it is now called.
@@ -390,6 +393,7 @@ struct CanvasView: NSViewRepresentable {
         view.onSelectLayer = onSelectLayer
         view.onSelectLayerInGroup = onSelectLayerInGroup
         view.onReadTheWordsThenType = onReadTheWordsThenType
+        view.onEditCaptionWord = onEditCaptionWord
         view.onExtendSelection = onExtendSelection
         view.onAddSweptLayers = onAddSweptLayers
         view.onRenameLayer = onRenameLayer
@@ -521,6 +525,7 @@ final class CanvasNSView: NSView {
     var onSelectLayer: ((UUID?) -> Void) = { _ in }
     var onSelectLayerInGroup: ((UUID?, UUID?) -> Void) = { _, _ in }
     var onReadTheWordsThenType: ((UUID) -> Void) = { _ in }
+    var onEditCaptionWord: ((CGPoint) -> Bool) = { _ in false }
     var onExtendSelection: ((UUID) -> Void) = { _ in }
     var onAddSweptLayers: ((SelectionRegion, UUID?) -> Void) = { _, _ in }
     var onRenameLayer: ((UUID, String) -> Void) = { _, _ in }
