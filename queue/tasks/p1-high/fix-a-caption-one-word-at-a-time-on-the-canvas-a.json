@@ -5,12 +5,14 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T11:57:41.780Z",
-  "updated": "2026-09-25T12:22:27.131Z",
-  "deps": [],
+  "updated": "2026-09-25T13:37:19.859Z",
+  "deps": [
+    "captions-are-one-layer-positioned-and-styled-lik"
+  ],
   "blockedBy": [],
   "notes": "Filed from the intake window.\n\nThe user's words, 2026-09-25: 'It misspelled some words, and I'd like to adjust them. I tried double clicking on an individual word that was wrong and couldn't edit. I could only edit captions as a whole. I also wanted to resize the individual words and drag them within the captions timeline but couldn't.'\n\nWhere things are (moved out of the goal by the 2026-09-25 triage): the model already has word timing (TranscribedWord startMS/endMS in Sources/PhotonzCore/Captions.swift, CaptionCue.words, the active-word highlight in CaptionLook.swift), but no UI edits a single word. The mock docs/design/mocks/pages/video-captions.html draws a word lane (.lane.wordlane, .wchip) with a chip per word on its own time span; its open question 'inline nudge on each word chip, or re-transcription plus a global offset?' is answered by the user: per word, inline. Build it at the mock's fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask: would someone fixing captions in Premiere or Descript get this, and is it quicker here?",
   "acceptance": [
@@ -43,6 +45,32 @@
     {
       "t": "2026-09-25T12:22:27.130Z",
       "note": "seq 0.01 -> 10"
+    },
+    {
+      "t": "2026-09-25T12:25:30.572Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-25T12:29:24.252Z",
+      "note": "Reproduced 2026-09-25 on the probe at Next defaults (openSampleTalk + captionsWaitForThemselves, /tmp/wordrepro/repro.json): double-clicking 'The' on the canvas twice opens the WHOLE caption for typing with every word selected (captionsExpectEditingOnCanvas: 'typing into The transport bar and the timeline appear'). The Words lane already draws one chip per word and lights the active one, but only takes a click (playhead); no edit, drag, resize or right-click. Recogniser wrote 'Fodons' for 'Photonz', a real misspelling to fix in the walk. Pre-build review: Premiere's caption editing and Descript both edit a word in place and let you drag word timing; nothing in the mock collides with existing gestures except the lane click (kept: single click still moves the playhead, drag now moves the word). Most chips at Fit zoom are ~20pt wide so their letters are hidden; editing works on any chip, and the field opens wider than the chip."
+    },
+    {
+      "t": "2026-09-25T13:36:36.913Z",
+      "note": "owns these walks: fix-a-caption-word-walk, captions-write-themselves-walk"
+    },
+    {
+      "t": "2026-09-25T13:36:53.477Z",
+      "note": "Built and walked. Design change found by the walk: spoken words sit end to end, so a word carried earlier squeezes the word before it (down to 40 ms) instead of stopping at it; otherwise the user's own example (grab 'the', move it left) could not move at all. Command-drag and edge drags stay clamped. Left rough, not filed (each is a mock-fidelity nit the audit puts to the user, and no open task covers it): flat accent on the lit chip vs the mock's gradient; no second gridlines in the Words lane; no numeric readout while a chip is dragged; chips narrower than ~20 pt at Fit show no letters. Canvas right-click word menu shares its rows with the lane menu (verified through captionsWordSplitAndMerge) but was not opened by a walk: rightClick steps do not survive a lock and the rows are the same code."
+    },
+    {
+      "t": "2026-09-25T13:37:19.857Z",
+      "note": "Shipped in 907bc80a. Double-click a caption word on the picture or its chip on the Words lane to type over just that word (Return/click away keep, Escape cancels, Tab/Shift-Tab step across lines, two words split the time evenly). Words lane: drag carries the rest of the line (squeezing the word before when earlier), Shift ripples later lines, Command moves one word, edges stretch; snaps; one undo step. Right-click word menu on lane and picture. Fold arrow on the Captions track; chips lettered with ellipsis at the mock's 26 pt. Fixes survive Write Again via heardAs. Verified: CaptionWordEditTests (35) and TextWordRectsTests; fix-a-caption-word-walk at Next defaults green with 9 real captures; all caption walks green except captions-panel-keeps-its-margins-walk, which fails on clean main (logged on its owner). Full suite green except VideoExportBudgetTests, failing identically on clean main (logged on the flake task). Audit queue/audits/2026-09-25-fix-a-caption-word.json."
     }
-  ]
+  ],
+  "started": "2026-09-25T12:25:30.571Z",
+  "walks": [
+    "fix-a-caption-word-walk",
+    "captions-write-themselves-walk"
+  ],
+  "completed": "2026-09-25T13:37:19.858Z"
 }

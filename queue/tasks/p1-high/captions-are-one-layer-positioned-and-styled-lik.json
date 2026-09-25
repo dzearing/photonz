@@ -1,0 +1,37 @@
+{
+  "id": "captions-are-one-layer-positioned-and-styled-lik",
+  "title": "Captions are one layer, positioned and styled like any other",
+  "goal": "User 2026-09-25: 'I expected a layer of type Captions which has its own properties, like a rectangle or other object types would. I should be able to change the font size, text... easy to position like any other layer. Its position shouldn't be some proprietary setting you set in the pane, it should be just like any other layer.' Today captions are a group of text layers, one per cue (EditorState+Captions.swift writeCaptions, isCaptionGroup in CaptionLook.swift:229), styled by one document-wide CaptionLook whose position is a Bottom/Middle/Top enum (CaptionLook.swift:43-75). Replace that with a first-class Captions layer. Ask: would a Photoshop or Premiere user find this where they expect it?",
+  "epic": "video-audio",
+  "priority": "p1-high",
+  "seq": 0.005,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-25T15:10:08.404Z",
+  "updated": "2026-09-25T15:10:16.001Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window. The word-editing task (fix-a-caption-one-word-at-a-time-on-the-canvas-a) now builds on this layer.",
+  "acceptance": [
+    "The model (PhotonzCore, tests first) has a Captions layer kind holding the transcript (cues of timed words) and its own look; it sits in the layers list as one row named Captions with its own icon, and on the timeline as one captions track",
+    "It has an ordinary frame: select it, drag it anywhere on the canvas, resize it with the usual handles (the box sets the wrap width), rotate it, snap and align it like a rectangle; the Bottom/Middle/Top position setting is gone",
+    "Its default frame is centred in the lower third inside title-safe; a fresh transcript lands there, and moving it once moves every caption",
+    "The panel for a selected Captions layer shows ordinary sections (Text: font, size, weight, colour, alignment; Appearance: opacity, background, corner radius; Effects: shadow, glow, stroke) with the same controls a text layer uses, plus a Captions section (next task) and no paragraphs",
+    "Its text is editable: double-click on the canvas edits the words showing now (hands off to the one-word editing task)",
+    "Opacity, position and scale can be keyframed like any layer (see the keyframe task)",
+    "Existing documents with a caption group open converted to one Captions layer with the same words, times and look",
+    "Several Captions layers can exist (e.g. two languages or two speakers), each positioned independently",
+    "A walk at Next defaults opens a recording with speech, selects Captions in the layers list, drags it to the top of the picture, makes the font bigger, and photographs each step"
+  ],
+  "log": [
+    {
+      "t": "2026-09-25T15:10:08.406Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-25T15:10:16.000Z",
+      "note": "seq 350 -> 0.005"
+    }
+  ]
+}

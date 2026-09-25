@@ -1,0 +1,36 @@
+{
+  "id": "how-the-words-show-a-line-a-few-words-or-one-wit",
+  "title": "How the words show: a line, a few words, or one, with the current word popping",
+  "goal": "User 2026-09-25: 'I should be able to change... even the highlight behavior (for example, maybe I want to have a sentence at a time, or 3 words at a time, or 1... maybe the current word should have a soft grow animation with a bounce to make it more obvious. There could be styles to the caption. Maybe glow on the overall text vs the active word. I want it to be easy to tweak.' Builds on the Captions layer. Compare with CapCut, Descript, Premiere's captions and Submagic styles: is it as quick to get a good look here?",
+  "epic": "video-audio",
+  "priority": "p1-high",
+  "seq": 0.018,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-25T15:10:08.488Z",
+  "updated": "2026-09-25T15:10:16.054Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "A Captions section on the Captions layer: Show (a dropdown: Sentence, Line, 3 words, 2 words, 1 word) regrouping the words live, and Lines (1 or 2)",
+    "Current word: its own row of styling separate from the rest of the text: colour, background pill, glow, scale; and an animation dropdown: None, Grow, Grow with bounce (a soft spring), Pop, Underline sweep; with the timing of the pop in a single Speed slider",
+    "Glow, shadow and stroke can be set on the whole text and separately on the current word",
+    "Words already said, the current word, and words to come can each dim or keep full colour (karaoke vs one-at-a-time)",
+    "Styles: a row of visual preset tiles (live previews of the real caption, like the transition tiles) that set all of the above in one click: e.g. Clean, Bold pop, Karaoke, Lower third, Neon; the user's own tweak can be saved as a style",
+    "Every control is a label with a control, no explanations; long option lists are dropdowns; side by side with docs/design/mocks/pages/video-captions.html",
+    "The animation renders identically in the canvas during playback and in the exported video, at 60fps without dropped frames on a 1080p recording",
+    "A walk at Next defaults switches Show to 1 word, picks Grow with bounce, adds a glow to the current word only, and photographs three moments mid-word"
+  ],
+  "log": [
+    {
+      "t": "2026-09-25T15:10:08.490Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-25T15:10:16.053Z",
+      "note": "seq 360 -> 0.018"
+    }
+  ]
+}
