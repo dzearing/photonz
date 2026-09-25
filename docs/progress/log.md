@@ -19650,3 +19650,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Audit: `queue/audits/2026-09-25-video-guides.json`.
 - Full suite: 9684 green on the third run; the first two failed only `VideoExportBudgetTests.swift:155`, the known flake under load (task the-export-size-test-fails-about-one-run-in-thre), which passes alone.
 - Next: the blurry first frame and the missing waveform under an added clip's sound are filed.
+
+## 2026-09-25 — The ninety second cut, counted against Premiere again
+
+- With the ruler, keys on open, Extract/Lift, Q/W and the long-recording freeze all closed, the five minute 2880 x 1800 talk (5:19 as written) was cut to exactly 1:30 at Next defaults in **19 actions** (ruler clicks and keys only): Q for the head, three I/O/apostrophe stretches, W for the tail. Premiere, from its default keys: 20 (the same 19 plus making a sequence). The success line was under 40.
+- New walk `Scripts/playtest/the-ninety-second-cut-walk.json`, ok with real captures; longest main-thread hold after any cut key 83 ms; captions followed (191 to 58); 8 s of playback never blank.
+- New walk step `clickRuler` (seconds): the ruler's own gesture at a named moment, because a walk's click reaches the canvas and never the ruler. Parse tests in `PlaytestScriptTests`. Not yet watched under a lock, so it is refused on a locked Mac.
+- `docs/design/video-vs-premiere.md`: the count, and a Now column in the Gaps table: gaps 1 to 9 closed, each with a fresh picture from its guarding walk (all nine green today); gap 10 waits on the user's decision card.
+- Nothing in the cut was slower than Premiere, so nothing new filed. Opening Export holds the main thread 310 to 370 ms on every document in every walk that opens it (stills too), left in the task log as unconfirmed.

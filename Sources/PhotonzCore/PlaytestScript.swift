@@ -2181,6 +2181,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `file` and `tile` is given.
     case dropOnTimeline(file: String?, tile: String?, track: String, seconds: Double, insert: Bool,
                         hold: String?, release: Bool, says: String?)
+    /// One click on the timeline's ruler at `seconds`, which puts the playhead
+    /// there the way the ruler's own gesture does. The ruler is SwiftUI and a
+    /// walk's `click` reaches the canvas, so this is how a walk that COUNTS an
+    /// edit's presses spends one click on putting the playhead somewhere
+    /// (`docs/design/video-vs-premiere.md`).
+    case clickRuler(seconds: Double)
     /// Where a clip on the timeline is, by its name, and FAIL when it is not
     /// so: which track it is on, when it starts and when it ends, in seconds,
     /// give or take `within`. `count` is how many clips are called that,
@@ -3082,7 +3088,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "dropImage", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "clickRuler", "dropImage", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag",
     ].sorted()
@@ -3117,6 +3123,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .dragFile: "dragFile"
         case .windowDrag: "windowDrag"
         case .dropOnTimeline: "dropOnTimeline"
+        case .clickRuler: "clickRuler"
         case .expectClip: "expectClip"
         case .dragOver: "dragOver"
         case .snapshot: "snapshot"
@@ -3373,6 +3380,12 @@ public enum PlaytestStep: Sendable, Equatable {
                                    hold: try f.optionalString("hold"),
                                    release: try f.optionalFlag("release") ?? true,
                                    says: try f.optionalString("says"))
+        case "clickRuler":
+            let seconds = try f.number("seconds")
+            guard seconds >= 0 else {
+                throw f.invalid("seconds", "a click on the ruler lands at the start or after it")
+            }
+            self = .clickRuler(seconds: seconds)
         case "expectClip":
             let count = try f.optionalNumber("count").map { Int($0) }
             let track = try f.optionalString("track")

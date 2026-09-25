@@ -1467,6 +1467,26 @@ private final class Run {
                                                              says: says),
                  state: describe())
 
+        // The ruler's own gesture, pressed and let go at one moment: what a
+        // click on the ruler does (`TimelineDock.rulerScrub`), less its snap
+        // onto a key, since a walk counting presses names the moment it wants.
+        case .clickRuler(let seconds):
+            let editor = try requireEditor()
+            guard editor.documentHasTime else {
+                throw Failure(description: "clickRuler needs a document that runs for a length of time")
+            }
+            let ms = Int((seconds * 1000).rounded())
+            guard ms <= editor.documentLengthMS else {
+                throw Failure(description: "the ruler ends at \(editor.documentLengthTimecode), "
+                    + "so there is nothing at \(EditorState.timecode(ms: ms)) to click")
+            }
+            editor.beginPlayheadDrag()
+            editor.dragPlayhead(toMS: ms)
+            editor.endPlayheadDrag()
+            await sleep(0.1)
+            note(number, step.name, "clicked the ruler at \(EditorState.timecode(ms: ms)): playhead "
+                 + "\(editor.documentTimeMS) ms of \(editor.documentLengthTimecode)", state: describe())
+
         case .expectClip(let named, let track, let startsAt, let endsAt, let count, let within):
             note(number, step.name, try checkClip(named: named, track: track, startsAt: startsAt,
                                                   endsAt: endsAt, count: count, within: within),

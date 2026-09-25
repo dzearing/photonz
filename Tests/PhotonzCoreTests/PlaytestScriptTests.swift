@@ -2310,6 +2310,36 @@ struct PlaytestScriptTests {
         }
     }
 
+    // The ruler is SwiftUI, and a walk's click reaches the canvas, never the
+    // ruler. A person counting the presses of an edit puts the playhead with
+    // one click on the ruler, so a walk says where that click lands, in time.
+    @Test("A clickRuler step names the moment the playhead is put at")
+    func clickRulerParses() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "clickRuler", "seconds": 72.5 } ] }
+        """)
+        guard case .clickRuler(let seconds) = script.steps[0] else {
+            Issue.record("clickRuler"); return
+        }
+        #expect(seconds == 72.5)
+        #expect(script.steps[0].name == "clickRuler")
+        #expect(PlaytestStep.names.contains("clickRuler"))
+    }
+
+    @Test("A clickRuler step needs a moment, and never one before the start")
+    func clickRulerNeedsAMoment() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "clickRuler" } ] }
+            """)
+        }
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "clickRuler", "seconds": -1 } ] }
+            """)
+        }
+    }
+
     @Test("A sample can be copied in under a name of the walk's own")
     func sampleCopiesTakeAName() {
         #expect(PlaytestSampleFile.copy("sample:recording")?.fileName == "Tutorial Sample.mp4")
