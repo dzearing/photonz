@@ -61,12 +61,24 @@ public enum RecordingExport {
         /// Where the playhead is, in seconds. Only one answer uses it — the
         /// picture, which is a frame of a particular moment and says which.
         public var playheadTime: TimeInterval
+        /// What one second of the footage an EDITED document is made of costs
+        /// at `sourceSize`, measured off the recording files behind its clips
+        /// (`footageBytesPerSecond(_:at:)`). Nil where there is no footage, or
+        /// where `fileBytes` already answers because the document is one
+        /// untouched recording.
+        public var footageBytesPerSecond: Double?
+        /// How many seconds of it have captions burned into the picture, which
+        /// cost far more than the footage under them suggests. Zero when the
+        /// captions leave as a file beside the film instead.
+        public var captionedSeconds: TimeInterval
 
         public init(sourceDuration: TimeInterval, keptDuration: TimeInterval,
                     sourceSize: CGSize, cropSize: CGSize? = nil,
                     fileBytes: Int, isEdited: Bool,
                     sourceFPS: Double = 30, hasAudio: Bool = false,
-                    playheadTime: TimeInterval = 0) {
+                    playheadTime: TimeInterval = 0,
+                    footageBytesPerSecond: Double? = nil,
+                    captionedSeconds: TimeInterval = 0) {
             self.sourceDuration = sourceDuration
             self.keptDuration = keptDuration
             self.sourceSize = sourceSize
@@ -76,7 +88,48 @@ public enum RecordingExport {
             self.sourceFPS = sourceFPS
             self.hasAudio = hasAudio
             self.playheadTime = playheadTime
+            self.footageBytesPerSecond = footageBytesPerSecond
+            self.captionedSeconds = captionedSeconds
         }
+    }
+
+    /// One recording file an edited document plays pieces of: what it weighs,
+    /// how long it runs and how big its picture is.
+    public struct Footage: Sendable, Hashable {
+        public var bytes: Int
+        public var seconds: TimeInterval
+        public var pixelSize: CGSize
+
+        public init(bytes: Int, seconds: TimeInterval, pixelSize: CGSize) {
+            self.bytes = bytes
+            self.seconds = seconds
+            self.pixelSize = pixelSize
+        }
+    }
+
+    /// What a second of this footage costs at a picture this big, or nil when
+    /// none of it could be measured.
+    ///
+    /// **Why the footage and not the budget.** The budget is a ceiling, and a
+    /// screen recording comes nowhere near it: on 2026-09-24 a four second cut
+    /// of the sample was estimated at 1.8 MB and 73 KB landed. The encoder
+    /// writing the export spends about what the encoder that wrote the
+    /// recording spent, per pixel and per second, because it is the same
+    /// picture. So the cost is measured per pixel-second across every file,
+    /// which lets a document mix recordings of different sizes, and scaled to
+    /// the document's own picture.
+    public static func footageBytesPerSecond(_ footage: [Footage], at size: CGSize) -> Double? {
+        var bytes = 0.0
+        var pixelSeconds = 0.0
+        for file in footage where file.bytes > 0 && file.seconds > 0 {
+            let pixels = Double(file.pixelSize.width * file.pixelSize.height)
+            guard pixels > 0 else { continue }
+            bytes += Double(file.bytes)
+            pixelSeconds += pixels * file.seconds
+        }
+        let canvas = Double(size.width * size.height)
+        guard bytes > 0, pixelSeconds > 0, canvas > 0 else { return nil }
+        return bytes / pixelSeconds * canvas
     }
 
     /// What Export is being asked for on a document that has time.
@@ -142,22 +195,26 @@ public enum RecordingExport {
         public var format: RecordingFormat
         /// The preset it was written at.
         public var quality: VideoExportQuality
+        /// The size it was written at, where the sheet has a Size row.
+        public var size: VideoExportSize?
         /// How far through writing it is, nought to one.
         public var fraction: Double
         /// What it weighed, once it finished. Nil while it is still running.
         public var bytes: Int?
 
         public init(format: RecordingFormat, quality: VideoExportQuality,
-                    fraction: Double, bytes: Int? = nil) {
+                    size: VideoExportSize? = nil, fraction: Double, bytes: Int? = nil) {
             self.format = format
             self.quality = quality
+            self.size = size
             self.fraction = fraction
             self.bytes = bytes
         }
 
         /// Whether this is the answer to the choice showing on the sheet.
-        public func answers(format: RecordingFormat, quality: VideoExportQuality) -> Bool {
-            self.format == format && self.quality == quality
+        public func answers(format: RecordingFormat, quality: VideoExportQuality,
+                            size: VideoExportSize? = nil) -> Bool {
+            self.format == format && self.quality == quality && self.size == size
         }
     }
 
@@ -183,10 +240,10 @@ public enum RecordingExport {
 
     /// What this format at this choice asks the encoder for.
     public static func recipe(format: RecordingFormat, quality: VideoExportQuality,
-                              source: Source) -> VideoExportRecipe {
+                              source: Source, size: VideoExportSize? = nil) -> VideoExportRecipe {
         quality.recipe(format: format,
                        sourceSize: source.cropSize ?? source.sourceSize,
-                       sourceFPS: source.sourceFPS)
+                       sourceFPS: source.sourceFPS, size: size)
     }
 
     /// Whether the export is a file copy rather than a re-encode.
@@ -198,20 +255,26 @@ public enum RecordingExport {
     /// nothing has been edited. That is the point of them: the commonest reason
     /// to export a recording nobody has touched is that the one on disk is too
     /// big to send.
+    ///
+    /// A Size row that shrinks the picture is the same kind of ask: a copy is
+    /// only ever the whole picture.
     public static func copiesVerbatim(format: RecordingFormat, quality: VideoExportQuality,
-                                      source: Source) -> Bool {
+                                      source: Source, size: VideoExportSize? = nil) -> Bool {
         format == .mp4 && quality == .high && !source.isEdited
+            && !(size?.shrinks(source.cropSize ?? source.sourceSize) ?? false)
     }
 
     /// The pixel size the written file will really have.
     public static func outputSize(format: RecordingFormat, quality: VideoExportQuality,
-                                  source: Source) -> CGSize {
+                                  source: Source, size: VideoExportSize? = nil) -> CGSize {
         let base = source.cropSize ?? source.sourceSize
         guard base.width > 0, base.height > 0 else { return base }
         // An untouched recording going out as MP4 is copied, so its picture is
         // whatever it already was, whichever choice the row is showing.
-        if copiesVerbatim(format: format, quality: quality, source: source) { return base }
-        return recipe(format: format, quality: quality, source: source).size
+        if copiesVerbatim(format: format, quality: quality, source: source, size: size) {
+            return base
+        }
+        return recipe(format: format, quality: quality, source: source, size: size).size
     }
 
     /// How well the size is known, and the best honest number where one exists.
@@ -230,12 +293,13 @@ public enum RecordingExport {
     /// - weighing: a scratch copy of an animated picture being written, or
     ///   finished, which is the only thing that can answer for a GIF or a HEIC.
     public static func weight(format: RecordingFormat, quality: VideoExportQuality,
-                              source: Source, weighing: Weighing? = nil) -> Weight {
+                              source: Source, weighing: Weighing? = nil,
+                              size: VideoExportSize? = nil) -> Weight {
         // A different container, written frame by frame. The MP4's weight says
         // nothing about it, so the answer is whatever the scratch copy has got
         // to, and nothing at all when none is being written.
         guard format == .mp4 else {
-            guard let weighing, weighing.answers(format: format, quality: quality) else {
+            guard let weighing, weighing.answers(format: format, quality: quality, size: size) else {
                 return .unknown
             }
             guard let bytes = weighing.bytes else {
@@ -245,13 +309,14 @@ public enum RecordingExport {
             // nothing. Say what is said when there is no answer.
             return bytes > 0 ? .exact(bytes) : .unknown
         }
-        if copiesVerbatim(format: format, quality: quality, source: source) {
+        if copiesVerbatim(format: format, quality: quality, source: source, size: size) {
             return source.fileBytes > 0 ? .exact(source.fileBytes) : .unknown
         }
-        let budget = recipe(format: format, quality: quality, source: source)
+        let budget = recipe(format: format, quality: quality, source: source, size: size)
             .expectedBytes(seconds: source.keptDuration, hasAudio: source.hasAudio)
         let estimate: Int
-        if let measured = measuredCost(format: format, quality: quality, source: source) {
+        if let measured = measuredCost(format: format, quality: quality, source: source,
+                                       size: size) {
             estimate = budget > 0 ? min(budget, measured) : measured
         } else {
             estimate = budget
@@ -262,12 +327,42 @@ public enum RecordingExport {
 
     /// What this recording already costs for the seconds and the pixels that
     /// survive, or nil when the file on disk could not be measured.
+    ///
+    /// An edited document has no one file to measure, so it is measured off
+    /// the footage it is made of, a second at a time, for as long as it runs.
     private static func measuredCost(format: RecordingFormat, quality: VideoExportQuality,
-                                     source: Source) -> Int? {
-        guard source.fileBytes > 0, source.sourceDuration > 0 else { return nil }
-        let seconds = min(max(0, source.keptDuration) / source.sourceDuration, 1)
-        let pixels = pixelShare(format: format, quality: quality, source: source)
-        return Int((Double(source.fileBytes) * seconds * pixels).rounded())
+                                     source: Source, size: VideoExportSize?) -> Int? {
+        let pixels = pixelShare(format: format, quality: quality, source: source, size: size)
+        let footage: Double
+        if source.fileBytes > 0, source.sourceDuration > 0 {
+            let seconds = min(max(0, source.keptDuration) / source.sourceDuration, 1)
+            footage = Double(source.fileBytes) * seconds * pixels
+        } else if let rate = source.footageBytesPerSecond, rate > 0 {
+            footage = rate * max(0, source.keptDuration) * pixels
+        } else {
+            return nil
+        }
+        return Int((footage + captionCost(format: format, quality: quality, source: source,
+                                          size: size)).rounded())
+    }
+
+    /// Bits a burned-in caption costs per pixel of the written picture per
+    /// second it is on screen.
+    ///
+    /// Measured, not derived: five minutes of the sample at Retina size,
+    /// written at 1080p, came out at 227 kbps with no captions and 404 kbps
+    /// with them (2026-09-24, export-a-video-at-1080p-walk), because the lit
+    /// word moves three times a second and every move is new picture. That is
+    /// 177 kbps over 1728 × 1080 pixels.
+    static let captionBitsPerPixelSecond = 0.095
+
+    /// What the captions burned into the picture add, in bytes.
+    private static func captionCost(format: RecordingFormat, quality: VideoExportQuality,
+                                    source: Source, size: VideoExportSize?) -> Double {
+        let seconds = min(max(0, source.captionedSeconds), max(0, source.keptDuration))
+        guard seconds > 0 else { return 0 }
+        let out = outputSize(format: format, quality: quality, source: source, size: size)
+        return Double(out.width * out.height) * captionBitsPerPixelSecond * seconds / 8
     }
 
     /// What share of the recording's COST the written file's pixels carry,
@@ -282,10 +377,10 @@ public enum RecordingExport {
     /// promised 83 KB against 108 KB landing, a third light; with the power it
     /// promises 95 KB, and the line says "about" for the rest.
     private static func pixelShare(format: RecordingFormat, quality: VideoExportQuality,
-                                   source: Source) -> Double {
+                                   source: Source, size: VideoExportSize?) -> Double {
         let whole = source.sourceSize.width * source.sourceSize.height
         guard whole > 0 else { return 1 }
-        let out = outputSize(format: format, quality: quality, source: source)
+        let out = outputSize(format: format, quality: quality, source: source, size: size)
         let kept = out.width * out.height
         guard kept > 0 else { return 1 }
         return min(pow(Double(kept / whole), 0.75), 1)
@@ -296,9 +391,11 @@ public enum RecordingExport {
     /// The same shape as the picture sheet's line, so the eye looking for the
     /// size finds it in the same place and reads it in the same words.
     public static func sizeLine(format: RecordingFormat, quality: VideoExportQuality,
-                                source: Source, weighing: Weighing? = nil) -> String {
+                                source: Source, weighing: Weighing? = nil,
+                                size: VideoExportSize? = nil) -> String {
         let name = format.displayName
-        switch weight(format: format, quality: quality, source: source, weighing: weighing) {
+        switch weight(format: format, quality: quality, source: source, weighing: weighing,
+                      size: size) {
         case .exact(let bytes):
             return "\(name) · \(ExportQuality.fileSize(bytes: bytes))"
         case .about(let bytes):
@@ -318,9 +415,9 @@ public enum RecordingExport {
     /// file's picture is, how fast it runs where that is chosen, and how much
     /// of the recording is in it.
     public static func shapeLine(format: RecordingFormat, quality: VideoExportQuality,
-                                 source: Source) -> String {
+                                 source: Source, size chosen: VideoExportSize? = nil) -> String {
         var parts: [String] = []
-        let size = outputSize(format: format, quality: quality, source: source)
+        let size = outputSize(format: format, quality: quality, source: source, size: chosen)
         if size.width >= 1, size.height >= 1 {
             parts.append("\(Int(size.width.rounded())) × \(Int(size.height.rounded())) px")
         }
@@ -329,9 +426,9 @@ public enum RecordingExport {
         // frame rate is whatever it was recorded at and no choice touched it.
         if format.isAnimatedImage {
             parts.append("\(Int(quality.targetFPS.rounded())) fps")
-        } else if !copiesVerbatim(format: format, quality: quality, source: source),
+        } else if !copiesVerbatim(format: format, quality: quality, source: source, size: chosen),
                   size.width >= 1, size.height >= 1 {
-            let fps = recipe(format: format, quality: quality, source: source).fps
+            let fps = recipe(format: format, quality: quality, source: source, size: chosen).fps
             parts.append("\(Int(fps.rounded())) fps")
         }
         parts.append(lengthPhrase(source))
@@ -402,10 +499,10 @@ public enum RecordingExport {
 
     /// The pixel size the written file will really have.
     public static func outputSize(choice: Choice, quality: VideoExportQuality,
-                                  source: Source) -> CGSize {
+                                  source: Source, size: VideoExportSize? = nil) -> CGSize {
         switch choice {
         case .video(let format):
-            return outputSize(format: format, quality: quality, source: source)
+            return outputSize(format: format, quality: quality, source: source, size: size)
         case .still:
             // Nothing is scaled: the frame is the document, at the size the
             // document is, which is what a still is wanted for.
@@ -416,9 +513,10 @@ public enum RecordingExport {
     /// How big the file's picture is, and how much of the recording is in it.
     /// For one frame, that last part is the moment it was taken at.
     public static func shapeLine(choice: Choice, quality: VideoExportQuality,
-                                 source: Source) -> String {
+                                 source: Source, size chosen: VideoExportSize? = nil) -> String {
         guard case .still = choice else {
-            return shapeLine(format: choice.format ?? .mp4, quality: quality, source: source)
+            return shapeLine(format: choice.format ?? .mp4, quality: quality, source: source,
+                             size: chosen)
         }
         var parts: [String] = []
         let size = outputSize(choice: choice, quality: quality, source: source)
@@ -438,10 +536,11 @@ public enum RecordingExport {
     /// cannot be weighed says.
     public static func sizeLine(choice: Choice, quality: VideoExportQuality,
                                 source: Source, stillBytes: Int? = nil,
-                                weighing: Weighing? = nil) -> String {
+                                weighing: Weighing? = nil,
+                                size: VideoExportSize? = nil) -> String {
         guard case .still = choice else {
             return sizeLine(format: choice.format ?? .mp4, quality: quality, source: source,
-                            weighing: weighing)
+                            weighing: weighing, size: size)
         }
         let name = displayName(choice)
         guard let stillBytes, stillBytes > 0 else {

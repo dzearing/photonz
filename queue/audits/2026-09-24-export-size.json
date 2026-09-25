@@ -1,0 +1,27 @@
+{
+  "feature": "Export a video at 1080p or 720p",
+  "epic": "video-share",
+  "summary": "The Export sheet for a video has a Size row: Full (with its pixels), 1080p and 720p, or Full, 720p and 480p for a GIF. The size line now comes from what your recordings actually cost, so an edited video no longer promises ten times the file it writes.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    { "do": "Open a Retina screen recording (2880 by 1800 or bigger) and choose File > Export… (Shift Command E).", "shot": "2026-09-24-export-size-1-sheet-sc.png" },
+    { "do": "Read the Size row: Full names the recording's pixels, then 1080p and 720p." },
+    { "do": "Click 1080p and read the line under the rows: 1728 × 1080 px and a new size.", "shot": "2026-09-24-export-size-2-at-1080p-sc.png" },
+    { "do": "Press Export… and save it; open the file in Finder's Get Info and check it is 1728 by 1080." },
+    { "do": "Press Shift Command E again: the sheet opens on 1080p, the size you last used." },
+    { "do": "Click GIF: the row becomes Full, 720p and 480p, and opens on 480p." },
+    { "do": "Cut a piece out of a recording, press Shift Command E, and compare the size the sheet promises with the file you save." }
+  ],
+  "evaluate": [
+    "Is Size where you expect it, between Format and Quality, the way Premiere puts Resolution next to bitrate?",
+    "Does \"Full · 2880 × 1800\" tell you enough, or do you want 1440p as well?",
+    "On the five minute talk with captions burned in, 1080p reads about 13 MB, the same as Full, because moving captions cost more than the smaller picture saves. Is that believable, or confusing?",
+    "Should a GIF open on 480p, or on the size you last picked for a video?"
+  ],
+  "rough": [
+    "Writing the five minute Retina talk at 1080p took about 342 seconds, longer than the recording plays. Filed as its own task.",
+    "With captions burned in, picking 1080p barely moves the size line and the file lands bigger than the Full copy (17 MB against 13 MB). The line is honest about it, but nothing says why.",
+    "Quality no longer shrinks an MP4 on this sheet: the old Standard and Small presets secretly cut it to 1440 and 960 pixels. On this sheet Size owns the pixels and Quality only the frame rate and budget.",
+    "The mock's row is called Scale with 1×, 2×, 3× for pictures; for video it is Size with the names people post at, which is a deliberate difference from the mock."
+  ]
+}

@@ -365,7 +365,8 @@
       "seconds": 20.94,
       "within": 0.6,
       "sound": true,
-      "copied": false
+      "copied": false,
+      "estimateFactor": 2
     }
   ]
 }

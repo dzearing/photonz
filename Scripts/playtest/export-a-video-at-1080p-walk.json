@@ -1,0 +1,33 @@
+{
+  "out": "/tmp/photonz-playtest/export-a-video-at-1080p-walk",
+  "clock": 480,
+  "seed": "The Export sheet's Size row, at Next defaults with no flag touched: a five minute talk recorded at Retina size, 2880 by 1800, opens; Export shows Full, 1080p and 720p with the full size named in pixels; 1080p changes the pixel line and the size line; and the five minutes written at 1080p land as a 1728 by 1080 file whose weight is within a factor of two of what the sheet said.",
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "describe", "stage": "why", "note": "A Retina screen recording is 2880 by 1800, and the sheet could only write it at that size: five minutes came to hundreds of megabytes. People post 1080p and 720p, which is what Premiere offers. This walk opens a five minute recording at Retina size and exports it at 1080p" },
+    { "do": "action", "action": "openLongRetinaTalk" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "action", "action": "exportDialogAsVideo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Export size", "present": true },
+    { "do": "describe", "stage": "1-the-sheet", "note": "Export on MP4: a Size row under Format, reading Full with the recording's own pixels, then 1080p and 720p" },
+    { "do": "snapshot", "name": "1-the-sheet" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "action", "action": "exportDialogAsVideo1080p" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Export size", "reads": "1080p" },
+    { "do": "describe", "stage": "2-at-1080p", "note": "1080p picked: the pixel line says 1728 × 1080 and the size line drops with it" },
+    { "do": "snapshot", "name": "2-at-1080p" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "writeVideo", "name": "five-minutes-at-1080p", "format": "mp4", "size": "p1080", "width": 1728, "height": 1080, "sound": true, "copied": false, "estimateFactor": 2 }
+  ]
+}

@@ -6,7 +6,7 @@ import SwiftUI
 /// the window.
 ///
 /// **It is the recording's sheet, not a second one.** The same three formats in
-/// the same order, the same size presets, the same two lines saying what the
+/// the same order, the same quality presets, the same two lines saying what the
 /// file will be and what it will weigh, worked out by the same
 /// `RecordingExport`. The only difference is what is behind it: a recording
 /// exports one file re-timed, and this exports the document, which is the
@@ -22,6 +22,12 @@ import SwiftUI
 /// stopped there, so the line saying "the frame at 0:04" and the file that
 /// lands are the same frame.
 ///
+/// **A Size row the recording's sheet does not have.** Full, 1080p and 720p
+/// for a video, Full, 720p and 480p for an animated picture
+/// (`VideoExportSize`): a Retina recording is 2880 by 1800 and what people post
+/// is 1080p. The size owns the pixels, so beside it Quality says only how
+/// smooth the file runs and what is spent on it.
+///
 /// The sheet only CHOOSES. Pressing Export… hands to the save box and then to
 /// `EditorState.writeVideo`, so the fast path for an untouched recording is
 /// still a verbatim file copy.
@@ -31,6 +37,10 @@ struct VideoExportDialog: View {
 
     @State private var choice: RecordingExport.Choice = .video(.mp4)
     @State private var quality: VideoExportQuality = .standard
+    /// How big the picture is: Full, 1080p or 720p, which is what people post
+    /// and what Premiere offers. It owns the pixels; Quality keeps the frame
+    /// rate and the budget.
+    @State private var size: VideoExportSize = .full
     /// Words on the picture, or in a file beside it. Offered only on a film
     /// with captions in it.
     @State private var captions: CaptionExport = .burnedIn
@@ -57,17 +67,42 @@ struct VideoExportDialog: View {
     /// Whether the answer showing is the picture rather than a video.
     private var isStill: Bool { choice == .still }
 
+    /// The sizes that would shrink this document, with Full first. One entry
+    /// means nothing to choose, and the row stays away.
+    private var sizes: [VideoExportSize] {
+        VideoExportSize.offered(for: source.sourceSize, format: choice.format ?? .mp4)
+    }
+
+    /// The size this export is written at: nil for one frame, which leaves at
+    /// the size the document is.
+    private var chosenSize: VideoExportSize? {
+        choice.format.map { size.offeredOrFull(for: source.sourceSize, format: $0) }
+    }
+
+    /// What the lines are worked out from: the document, with its captions
+    /// counted only where they go into the picture rather than beside it.
+    private var described: RecordingExport.Source {
+        var described = source
+        if choice == .video(.mp4), captions != .burnedIn { described.captionedSeconds = 0 }
+        return described
+    }
+
     private var shapeLine: String {
-        RecordingExport.shapeLine(choice: choice, quality: quality, source: source)
+        RecordingExport.shapeLine(choice: choice, quality: quality, source: described,
+                                  size: chosenSize)
     }
 
     private var sizeLine: String {
-        RecordingExport.sizeLine(choice: choice, quality: quality, source: source,
-                                 stillBytes: stillFile?.count, weighing: weigh.result)
+        RecordingExport.sizeLine(choice: choice, quality: quality, source: described,
+                                 stillBytes: stillFile?.count, weighing: weigh.result,
+                                 size: chosenSize)
     }
 
     private var purposeLine: String {
-        RecordingExport.purposeLine(choice: choice, quality: quality)
+        guard let format = choice.format else {
+            return RecordingExport.purposeLine(choice: choice, quality: quality)
+        }
+        return quality.purposeBesideASize(for: format)
     }
 
     var body: some View {
@@ -82,6 +117,18 @@ struct VideoExportDialog: View {
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
+            }
+            if choice.format != nil, sizes.count > 1 {
+                ExportSheetRow("Size") {
+                    Picker("Size", selection: $size) {
+                        ForEach(sizes, id: \.self) { size in
+                            Text(size.label(for: source.sourceSize)).tag(size)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .playtestControl("Export size", detail: size.label(for: source.sourceSize))
+                }
             }
             if offersQuality {
                 ExportSheetRow("Quality") {
@@ -137,6 +184,9 @@ struct VideoExportDialog: View {
         .onAppear {
             choice = RecordingExportMemory.choice
             quality = RecordingExportMemory.quality(for: choice.format ?? .mp4)
+            source = editor.videoExportSource
+            size = RecordingExportMemory.size(for: choice.format ?? .mp4)
+                .offeredOrFull(for: source.sourceSize, format: choice.format ?? .mp4)
             #if PHOTONZ_PLAYTEST
             if editor.playtestOpensExportOnFrame {
                 choice = .still
@@ -150,22 +200,30 @@ struct VideoExportDialog: View {
                 quality = asked
                 editor.playtestOpensExportAtQuality = nil
             }
+            if let asked = editor.playtestOpensExportAtSize {
+                size = asked.offeredOrFull(for: source.sourceSize, format: choice.format ?? .mp4)
+                editor.playtestOpensExportAtSize = nil
+            }
             #endif
             // A picture is of a MOMENT, so the playhead stops where it is and
             // stays there: a document still playing behind the sheet would
             // make the line and the file disagree about which frame this is.
             editor.pauseDocument()
             momentMS = editor.documentTimeMS
-            source = editor.videoExportSource
             weighTheFrame()
             weighTheAnimation()
         }
         .onChange(of: choice) { _, now in
-            if let format = now.format { quality = RecordingExportMemory.quality(for: format) }
+            if let format = now.format {
+                quality = RecordingExportMemory.quality(for: format)
+                size = RecordingExportMemory.size(for: format)
+                    .offeredOrFull(for: source.sourceSize, format: format)
+            }
             weighTheFrame()
             weighTheAnimation()
         }
         .onChange(of: quality) { _, _ in weighTheAnimation() }
+        .onChange(of: size) { _, _ in weighTheAnimation() }
         .onDisappear {
             weighing?.cancel()
             weighing = nil
@@ -204,21 +262,26 @@ struct VideoExportDialog: View {
     private func weighTheAnimation() {
         guard let format = choice.format, format.isAnimatedImage else { weigh.stop(); return }
         let quality = quality
-        weigh.weigh(format: format, quality: quality) { [editor] url, onProgress in
-            try await editor.writeVideo(format: format, quality: quality, to: url,
+        let size = chosenSize
+        weigh.weigh(format: format, quality: quality, size: size) { [editor] url, onProgress in
+            try await editor.writeVideo(format: format, quality: quality, size: size, to: url,
                                         onProgress: onProgress)
         }
     }
 
     /// Hand what was chosen to the save box.
     private func export() {
-        RecordingExportMemory.remember(choice: choice, quality: quality)
+        // Remembered only where there was a size to choose: a recording too
+        // small for any keeps whatever was picked on the last one.
+        RecordingExportMemory.remember(choice: choice, quality: quality,
+                                       size: sizes.count > 1 ? size : nil)
+        let size = chosenSize
         // Taken before dismissing: dismissing stops the weigh and throws its
         // scratch file away, and that file is the export.
-        let weighed = choice.format.flatMap { weigh.take(format: $0, quality: quality) }
+        let weighed = choice.format.flatMap { weigh.take(format: $0, quality: quality, size: size) }
         dismiss()
         if let format = choice.format {
-            editor.exportVideo(format: format, quality: quality, weighed: weighed,
+            editor.exportVideo(format: format, quality: quality, size: size, weighed: weighed,
                                captions: format == .mp4 ? captions : .burnedIn)
         } else {
             editor.exportStillFrame(atMS: momentMS, weighed: stillFile)

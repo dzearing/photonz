@@ -103,5 +103,85 @@ enum PlaytestLongTalk {
         }
         return master
     }
+
+    // MARK: - At Retina size
+
+    static let retinaFileName = "Long Talk Retina.mov"
+    private static let retinaMasterName = "Long Talk Retina master.mov"
+    private static let retinaPictureName = "Long Talk Retina picture.mov"
+    /// What a Retina Mac records a full screen at.
+    static let retinaSize = CGSize(width: 2880, height: 1800)
+
+    static var retinaURL: URL { folder.appendingPathComponent(retinaFileName) }
+
+    /// The same five minute talk, its picture 2880 by 1800, which is what the
+    /// Export sheet's Size row exists for: the sample itself is 1280 by 800,
+    /// already smaller than 1080p. Written once per Mac, like the talk.
+    static func freshRetina() async -> URL? {
+        guard let master = await retinaMaster() else { return nil }
+        let url = retinaURL
+        for leftover in [url, VideoOriginals.url(for: url), VideoEditsSidecar.url(for: url)] {
+            try? FileManager.default.removeItem(at: leftover)
+        }
+        return (try? FileManager.default.copyItem(at: master, to: url)) == nil ? nil : url
+    }
+
+    private static func retinaMaster() async -> URL? {
+        let master = folder.appendingPathComponent(retinaMasterName)
+        if FileManager.default.fileExists(atPath: master.path) { return master }
+        // The eight second picture drawn once at Retina size, then passed
+        // round and round under the voice without being encoded again.
+        let picture = folder.appendingPathComponent(retinaPictureName)
+        guard await Self.master() != nil,
+              let sample = TutorialSampleRecording.fresh(),
+              await enlarge(sample, to: retinaSize, into: picture),
+              await TutorialSampleTalk.merge(picture: picture,
+                                             voice: folder.appendingPathComponent(voiceName),
+                                             into: master,
+                                             preset: AVAssetExportPresetPassthrough, as: .mov)
+        else {
+            try? FileManager.default.removeItem(at: master)
+            return nil
+        }
+        try? FileManager.default.removeItem(at: picture)
+        return master
+    }
+
+    /// A recording's picture scaled to a bigger size, silent.
+    private static func enlarge(_ source: URL, to size: CGSize, into url: URL) async -> Bool {
+        try? FileManager.default.removeItem(at: url)
+        let asset = AVURLAsset(url: source)
+        guard let track = try? await asset.loadTracks(withMediaType: .video).first,
+              let natural = try? await track.load(.naturalSize),
+              let length = try? await asset.load(.duration),
+              natural.width > 0, natural.height > 0
+        else { return false }
+        let composition = AVMutableComposition()
+        guard let video = composition.addMutableTrack(withMediaType: .video,
+                                                      preferredTrackID: kCMPersistentTrackID_Invalid),
+              (try? video.insertTimeRange(CMTimeRange(start: .zero, duration: length),
+                                          of: track, at: .zero)) != nil
+        else { return false }
+        let layer = AVMutableVideoCompositionLayerInstruction(assetTrack: video)
+        layer.setTransform(CGAffineTransform(scaleX: size.width / natural.width,
+                                             y: size.height / natural.height), at: .zero)
+        let instruction = AVMutableVideoCompositionInstruction()
+        instruction.timeRange = CMTimeRange(start: .zero, duration: length)
+        instruction.layerInstructions = [layer]
+        let drawing = AVMutableVideoComposition()
+        drawing.renderSize = size
+        drawing.frameDuration = CMTime(value: 1, timescale: 30)
+        drawing.instructions = [instruction]
+        guard let session = AVAssetExportSession(asset: composition,
+                                                 presetName: AVAssetExportPresetHighestQuality)
+        else { return false }
+        session.videoComposition = drawing
+        do {
+            try await session.export(to: url, as: .mov)
+            return true
+        } catch {
+            return false
+        }
+    }
 }
 #endif

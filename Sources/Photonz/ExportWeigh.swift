@@ -61,19 +61,21 @@ final class ExportWeigh {
     /// Restarting rather than keeping the old answer is the point: the number
     /// on the sheet belongs to the choice showing on the sheet, and a High
     /// number left sitting under Small would be a lie told by omission.
-    func weigh(format: RecordingFormat, quality: VideoExportQuality, write: @escaping Write) {
+    func weigh(format: RecordingFormat, quality: VideoExportQuality,
+               size: VideoExportSize? = nil, write: @escaping Write) {
         stop()
         Self.onScreen = self
         let file = FileManager.default.temporaryDirectory
             .appendingPathComponent("photonz-weigh-\(UUID().uuidString).\(format.fileExtension)")
         scratch = file
-        result = RecordingExport.Weighing(format: format, quality: quality, fraction: 0)
+        result = RecordingExport.Weighing(format: format, quality: quality, size: size,
+                                          fraction: 0)
         job = Task { @MainActor [weak self] in
             guard let self else { return }
             do {
                 try await write(file) { done in
                     Task { @MainActor [weak self] in
-                        self?.reached(done, format: format, quality: quality)
+                        self?.reached(done, format: format, quality: quality, size: size)
                     }
                 }
             } catch {
@@ -86,7 +88,7 @@ final class ExportWeigh {
             }
             guard !Task.isCancelled else { return }
             let landed = (try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
-            result = RecordingExport.Weighing(format: format, quality: quality,
+            result = RecordingExport.Weighing(format: format, quality: quality, size: size,
                                               fraction: 1, bytes: landed)
             job = nil
         }
@@ -121,8 +123,9 @@ final class ExportWeigh {
     ///
     /// Nil for a weigh still running: what has been written so far is a piece
     /// of a GIF, not a small one.
-    func take(format: RecordingFormat, quality: VideoExportQuality) -> URL? {
-        guard let result, result.answers(format: format, quality: quality),
+    func take(format: RecordingFormat, quality: VideoExportQuality,
+              size: VideoExportSize? = nil) -> URL? {
+        guard let result, result.answers(format: format, quality: quality, size: size),
               let bytes = result.bytes, bytes > 0, let file = scratch,
               FileManager.default.fileExists(atPath: file.path) else { return nil }
         scratch = nil
@@ -144,8 +147,8 @@ final class ExportWeigh {
     /// and they cost real milliseconds on the main thread of a window somebody
     /// is looking at.
     private func reached(_ done: Double, format: RecordingFormat,
-                         quality: VideoExportQuality) {
-        guard var live = result, live.answers(format: format, quality: quality),
+                         quality: VideoExportQuality, size: VideoExportSize?) {
+        guard var live = result, live.answers(format: format, quality: quality, size: size),
               live.bytes == nil else { return }
         let shown = Int((min(max(live.fraction, 0), 1) * 100).rounded())
         let now = Int((min(max(done, 0), 1) * 100).rounded())

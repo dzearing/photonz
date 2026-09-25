@@ -567,6 +567,16 @@ extension PhotonzDocument {
 
     public var hasCaptions: Bool { layers.contains { $0.containsSelfOrDescendant(where: \.isCaption) } }
 
+    /// How long captions are on screen, in seconds, added up across every
+    /// cue: what the Export sheet counts when it says what a film with its
+    /// captions burned in will weigh (`RecordingExport.Source.captionedSeconds`).
+    public var captionedSeconds: TimeInterval {
+        captionLayers.reduce(0) { total, layer in
+            guard let time = layer.time else { return total }
+            return total + Double(max(0, time.outMS - time.inMS)) / 1000
+        }
+    }
+
     /// The cues this document's captions are, read back off the layers.
     ///
     /// The layer's own in and out win over the words', because a person

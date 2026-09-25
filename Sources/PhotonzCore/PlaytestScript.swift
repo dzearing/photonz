@@ -26,8 +26,10 @@ public struct PlaytestScript: Sendable, Equatable {
 
     /// Everything a walk file may say at the top level. `seed` is prose about
     /// what the walk IS, for whoever reads it; anything it needs DONE goes in
-    /// `setup`, where the runner can act on it.
-    static let knownKeys = ["out", "seed", "setup", "steps"]
+    /// `setup`, where the runner can act on it. `clock` is read by
+    /// `Scripts/playtest.sh`, not by the app: how many seconds this walk may
+    /// take, for the rare walk that writes minutes of video.
+    static let knownKeys = ["clock", "out", "seed", "setup", "steps"]
 
     /// Every answer the canvas gives for what a press at the pointer would
     /// take hold of, which is what `expectCue` may claim. A walk naming
@@ -691,6 +693,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// (`PlaytestLongTalk`). What a walk timing the timeline on a long
     /// captioned recording needs (`a-long-captioned-recording-walk`).
     case openLongTalk
+    /// The same five minutes at the size a Retina screen records at, 2880 by
+    /// 1800 (`PlaytestLongTalk.retina`): what the Export sheet's Size row is
+    /// for, since the sample itself is already smaller than 1080p.
+    case openLongRetinaTalk
     /// The other doors a recording is asked for through, so a walk can check
     /// that one which cannot be opened SAYS so rather than leaving a window
     /// with nothing in it (`RecordingDoor`).
@@ -1261,6 +1267,8 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// already on GIF at the Small preset, since a walk cannot click a
     /// segmented row inside a sheet.
     case exportDialogAsVideo, exportDialogAsSmallGIF
+    /// ...and on MP4 at 1080p, the Size row's middle answer.
+    case exportDialogAsVideo1080p
     /// ...and already on the picture, which is the fourth answer on that same
     /// row: one frame of the document, at the moment the playhead is on.
     case exportDialogAsFrame
@@ -2263,10 +2271,14 @@ public enum PlaytestStep: Sendable, Equatable {
     /// proves a cut reached it: a walk that threw a piece away expects a file
     /// shorter than the recording. `sound` says whether the file must carry a
     /// sound track, `copied` claims the fast path, and `width`/`height` are the
-    /// picture's size in the file rather than the app's idea of it.
+    /// picture's size in the file rather than the app's idea of it. `size` is
+    /// the sheet's Size row (`full`, `p1080`, `p720`), and `estimateFactor`
+    /// fails the step when the sheet's number and the file that landed are
+    /// further apart than that many times either way.
     case writeVideo(name: String, format: String, quality: String?,
                     seconds: Double?, within: Double,
-                    width: Double?, height: Double?, sound: Bool?, copied: Bool?)
+                    width: Double?, height: Double?, sound: Bool?, copied: Bool?,
+                    size: String? = nil, estimateFactor: Double? = nil)
     /// Write ONE FRAME of the document out as a picture, exactly as choosing
     /// PNG on that same sheet and picking a place would, then read the file
     /// back and check it (`EditorState.exportStillFrame`).
@@ -3413,7 +3425,9 @@ public enum PlaytestStep: Sendable, Equatable {
                                width: try f.optionalNumber("width"),
                                height: try f.optionalNumber("height"),
                                sound: try f.optionalFlag("sound"),
-                               copied: try f.optionalFlag("copied"))
+                               copied: try f.optionalFlag("copied"),
+                               size: try f.optionalString("size"),
+                               estimateFactor: try f.optionalNumber("estimateFactor"))
         case "writeFrame":
             self = .writeFrame(name: try f.string("name"),
                                atMS: try f.optionalNumber("atMS").map { Int($0) },

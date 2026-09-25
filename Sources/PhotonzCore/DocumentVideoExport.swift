@@ -81,18 +81,22 @@ public enum DocumentVideoExport {
     /// animated picture takes the size preset the recording Export sheet
     /// already offers, so GIF and HEIC mean the same thing whichever door they
     /// are asked for through (`RecordingExport`).
+    ///
+    /// A Size row, where the sheet has one, decides how big the picture is for
+    /// every format (`VideoExportSize`); the preset then decides only how fast
+    /// it runs and what it may spend.
     public static func plan(durationMS: Int, canvasSize: CGSize,
                             format: RecordingFormat,
-                            quality: VideoExportQuality) -> VideoFramePlan {
+                            quality: VideoExportQuality,
+                            size chosen: VideoExportSize? = nil) -> VideoFramePlan {
         let length = max(0, durationMS)
         // A movie is photographed on the document's own frame grid and then
         // encoded within the budget the choice allows, so the choice means the
         // same thing here as it does on a recording (`VideoExportRecipe`).
-        let recipe = quality.recipe(format: format, sourceSize: canvasSize, sourceFPS: movieFPS)
+        let recipe = quality.recipe(format: format, sourceSize: canvasSize, sourceFPS: movieFPS,
+                                    size: chosen)
         let fps = format.isAnimatedImage ? quality.targetFPS : movieFPS
-        let size = format.isAnimatedImage
-            ? Geometry.downscaledToFit(canvasSize, maxDimension: quality.maxDimension)
-            : recipe.size
+        let size = recipe.size
         guard length > 0 else {
             return VideoFramePlan(frameCount: 0, fps: fps, size: size, durationMS: 0,
                                   videoBitsPerSecond: recipe.videoBitsPerSecond,

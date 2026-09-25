@@ -1583,12 +1583,14 @@ private final class Run {
                  state: describe())
 
         case .writeVideo(let name, let format, let quality, let seconds, let within,
-                         let width, let height, let sound, let copied):
+                         let width, let height, let sound, let copied, let size,
+                         let estimateFactor):
             note(number, step.name,
                  try await writeVideoFile(name: name, format: format, quality: quality,
                                           seconds: seconds, within: within,
                                           width: width, height: height,
-                                          sound: sound, copied: copied),
+                                          sound: sound, copied: copied, size: size,
+                                          estimateFactor: estimateFactor),
                  state: describe())
 
         case .writeFrame(let name, let atMS, let width, let height):
@@ -2572,6 +2574,24 @@ private final class Run {
             guard let landed else { throw Failure(description: "no editor opened the five minute talk") }
             try await adopt(landed, window: nil, step: step.name,
                             subject: "a five minute recording with somebody talking in it", number: number)
+
+        // The same five minutes at Retina size, for the Export sheet's Size row.
+        case .action(.openLongRetinaTalk):
+            guard let url = await PlaytestLongTalk.freshRetina() else {
+                throw Failure(description: "couldn't write the five minute talk at Retina size")
+            }
+            coordinator.openWindow(.video(standardizing: url))
+            var landed: EditorState?
+            try await poll("the Retina talk to open as a document", within: 30) {
+                landed = PlaytestHarness.readyEditors.last {
+                    $0.recordingURL?.lastPathComponent == PlaytestLongTalk.retinaFileName
+                }
+                return landed != nil
+            }
+            guard let landed else { throw Failure(description: "no editor opened the Retina talk") }
+            try await adopt(landed, window: nil, step: step.name,
+                            subject: "a five minute 2880 × 1800 recording with somebody talking in it",
+                            number: number)
 
         case .action(let action) where action == .openSampleRecording:
             guard let url = TutorialSampleRecording.fresh() else {
@@ -4494,6 +4514,10 @@ private final class Run {
                 editor.playtestOpensExportOnRecordingFormat = .gif
                 editor.playtestOpensExportAtQuality = .small
                 editor.isExportDialogPresented = true
+            case .exportDialogAsVideo1080p:
+                editor.playtestOpensExportOnRecordingFormat = .mp4
+                editor.playtestOpensExportAtSize = .p1080
+                editor.isExportDialogPresented = true
             case .exportDialogAsSVG:
                 // Asked for on the sheet itself rather than written into the
                 // app's memory, so a walk that photographs Export on SVG
@@ -4650,7 +4674,8 @@ private final class Run {
                  .videoExportSheetCancel, .videoExportBegin, .videoExportWeighed,
                  .videoExportStop,
                  .videoCropMiddle,
-                 .openSampleRecording, .openSampleTalk, .openLongTalk, .openRecordingFromDisk,
+                 .openSampleRecording, .openSampleTalk, .openLongTalk, .openLongRetinaTalk,
+                 .openRecordingFromDisk,
                  .openMissingRecording,
                  .openLandingRecording, .reopenSampleRecording, .editLastCapture:
                 break  // handled above, in the branch that asks for a recording
@@ -9679,11 +9704,12 @@ private final class Run {
     /// lands, at `estimateWithin: 0`, since an animated export written twice
     /// lands at the same size (`AnimatedExportWeighTests`).
     private func weighAnimated(_ format: RecordingFormat, quality: VideoExportQuality,
+                               size: VideoExportSize? = nil,
                                write: @escaping ExportWeigh.Write) async throws
         -> RecordingExport.Weighing? {
         guard format.isAnimatedImage else { return nil }
         let weigher = ExportWeigh()
-        weigher.weigh(format: format, quality: quality, write: write)
+        weigher.weigh(format: format, quality: quality, size: size, write: write)
         defer { weigher.stop() }
         let deadline = Date().addingTimeInterval(180)
         while weigher.result?.bytes == nil {
@@ -9908,7 +9934,8 @@ private final class Run {
     private func writeVideoFile(name: String, format: String, quality: String?,
                                 seconds: Double?, within: Double,
                                 width: Double?, height: Double?,
-                                sound: Bool?, copied: Bool?) async throws -> String {
+                                sound: Bool?, copied: Bool?, size: String? = nil,
+                                estimateFactor: Double? = nil) async throws -> String {
         let editor = try requireEditor()
         guard let document = editor.document, document.hasTime else {
             throw Failure(description: "this window holds no document with time in it, "
@@ -9928,17 +9955,36 @@ private final class Run {
         } else {
             preset = RecordingExportMemory.quality(for: recordingFormat)
         }
+        // The Size row as the sheet would hand it: what was asked, or what
+        // this format was last exported at, shown as Full where the document
+        // is too small for it.
+        let source = editor.videoExportSource
+        let pickedSize: VideoExportSize
+        if let size {
+            guard let named = VideoExportSize(rawValue: size) else {
+                throw Failure(description: "\(size) is not a size on the sheet: "
+                    + VideoExportSize.allCases.map(\.rawValue).joined(separator: ", "))
+            }
+            pickedSize = named
+        } else {
+            pickedSize = RecordingExportMemory.size(for: recordingFormat)
+        }
+        let chosenSize = pickedSize.offeredOrFull(for: source.sourceSize, format: recordingFormat)
         let destination = out.appendingPathComponent("\(name).\(recordingFormat.fileExtension)")
-        let weighed = try await weighAnimated(recordingFormat, quality: preset) {
+        let weighed = try await weighAnimated(recordingFormat, quality: preset, size: chosenSize) {
             [editor] url, onProgress in
-            try await editor.writeVideo(format: recordingFormat, quality: preset, to: url,
-                                        onProgress: onProgress)
+            try await editor.writeVideo(format: recordingFormat, quality: preset, size: chosenSize,
+                                        to: url, onProgress: onProgress)
         }
         let said = RecordingExport.sizeLine(format: recordingFormat, quality: preset,
-                                            source: editor.videoExportSource, weighing: weighed)
+                                            source: source, weighing: weighed, size: chosenSize)
+        let claimed = promisedBytes(RecordingExport.weight(format: recordingFormat, quality: preset,
+                                                           source: source, weighing: weighed,
+                                                           size: chosenSize))
         let started = Date()
         do {
-            try await editor.writeVideo(format: recordingFormat, quality: preset, to: destination)
+            try await editor.writeVideo(format: recordingFormat, quality: preset, size: chosenSize,
+                                        to: destination)
         } catch {
             throw Failure(description: "writing the document as \(format) failed: \(error)")
         }
@@ -10007,6 +10053,25 @@ private final class Run {
             }
         }
         facts.append("the sheet said \"\(said)\"")
+        // The sheet's number against the file, said every time so a drift is
+        // visible in any walk's log before a walk has to fail on it.
+        if let claimed, claimed > 0 {
+            let ratio = Double(claimed) / Double(landed)
+            let apart = max(ratio, 1 / ratio)
+            facts.append("the sheet's \(ExportQuality.fileSize(bytes: claimed)) is "
+                + "\(String(format: "%.2f", apart))× "
+                + (ratio >= 1 ? "over" : "under") + " the file that landed")
+            if let estimateFactor, apart > estimateFactor {
+                wrong.append("the sheet said \(ExportQuality.fileSize(bytes: claimed)) and "
+                    + "\(ExportQuality.fileSize(bytes: landed)) landed, "
+                    + "\(String(format: "%.1f", apart)) times apart where this walk allows "
+                    + "\(String(format: "%.1f", estimateFactor)): a size promised before "
+                    + "anybody commits to it has to be close to the file that arrives")
+            }
+        } else if estimateFactor != nil {
+            wrong.append("this walk checks the sheet's estimate against the file, and the "
+                + "sheet gave no number to check")
+        }
 
         guard wrong.isEmpty else {
             throw Failure(description: wrong.joined(separator: "; ") + ". "

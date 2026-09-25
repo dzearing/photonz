@@ -9,7 +9,8 @@
 #   Scripts/playtest.sh <script.json>             build, run, wait, quit
 #   Scripts/playtest.sh <script.json> --no-build  reuse the built probe
 #   Scripts/playtest.sh <script.json> --keep      leave the probe running after
-#   PHOTONZ_PLAYTEST_TIMEOUT=300 Scripts/playtest.sh ...   (default 180s)
+#   PHOTONZ_PLAYTEST_TIMEOUT=300 Scripts/playtest.sh ...   (default 180s, or the
+#                                  walk's own top-level "clock" when it has one)
 #
 # Exits 0 when done.json says "ok", 1 when the walk failed or ran out of time,
 # 3 when the screen was locked and the walk could not run at all, 4 when THE
@@ -93,7 +94,10 @@ probe_alive() {
   fi
 }
 
-TIMEOUT="${PHOTONZ_PLAYTEST_TIMEOUT:-180}"
+# A walk that writes minutes of video says how long it needs in its own file
+# ("clock": 420), so a sweep gives it that without anybody remembering to.
+WALK_CLOCK="$(node -e 'try { const c = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).clock; if (Number.isFinite(c) && c > 0) console.log(Math.round(c)) } catch {}' "$SCRIPT_ABS")"
+TIMEOUT="${PHOTONZ_PLAYTEST_TIMEOUT:-${WALK_CLOCK:-180}}"
 echo "==> Waiting up to ${TIMEOUT}s for $OUT/done.json"
 # Whether the app went away on us. Until 2026-09-18 nobody watched for this, so
 # an app that aborted at step 12 was waited on for the full timeout and then

@@ -37,18 +37,45 @@ extension EditorState {
     /// (`RecordingExport`): an untouched recording going out as MP4 is a
     /// verbatim copy and its size is known to the byte, and anything that has
     /// to be made frame by frame says so rather than inventing a number.
+    ///
+    /// An edited document is weighed off the recordings its clips play, a
+    /// second at a time (`RecordingExport.footageBytesPerSecond`), because
+    /// the encoder's budget is a ceiling a screen recording never gets near.
     var videoExportSource: RecordingExport.Source {
         let seconds = Double(documentLengthMS) / 1000
         let untouched = document?.untouchedRecording
         let bytes = untouched
             .flatMap { MovieLibrary.shared.url(for: $0) }
             .flatMap { try? $0.resourceValues(forKeys: [.fileSizeKey]).fileSize } ?? 0
+        let canvas = document?.canvasSize ?? .zero
         return RecordingExport.Source(sourceDuration: seconds, keptDuration: seconds,
-                                      sourceSize: document?.canvasSize ?? .zero,
+                                      sourceSize: canvas,
                                       fileBytes: bytes, isEdited: untouched == nil,
                                       sourceFPS: DocumentVideoExport.movieFPS,
                                       hasAudio: document?.audioMix().isEmpty == false,
-                                      playheadTime: Double(documentTimeMS) / 1000)
+                                      playheadTime: Double(documentTimeMS) / 1000,
+                                      footageBytesPerSecond: untouched == nil
+                                        ? RecordingExport.footageBytesPerSecond(footage, at: canvas)
+                                        : nil,
+                                      captionedSeconds: document?.captionedSeconds ?? 0)
+    }
+
+    /// Every recording file the document's clips play, weighed once each.
+    private var footage: [RecordingExport.Footage] {
+        guard let document else { return [] }
+        let files = MovieLibrary.shared.urls(in: document)
+        var seen = Set<UUID>()
+        var found: [RecordingExport.Footage] = []
+        for layer in document.allLayers {
+            guard let movie = layer.movie, seen.insert(movie.id).inserted,
+                  let url = files[movie.id],
+                  let bytes = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize
+            else { continue }
+            found.append(RecordingExport.Footage(bytes: bytes,
+                                                 seconds: Double(movie.durationMS) / 1000,
+                                                 pixelSize: movie.pixelSize))
+        }
+        return found
     }
 
     /// **Export…** on a document that has time: pick a place, then write it.
@@ -58,8 +85,11 @@ extension EditorState {
     ///   every time, so that file IS the export and is moved into place rather
     ///   than written again.
     func exportVideo(format: RecordingFormat, quality: VideoExportQuality,
+                     size: VideoExportSize? = nil,
                      weighed: URL? = nil, captions: CaptionExport = .burnedIn) {
         guard let document, document.hasTime else { return }
+        // The sheet remembers the size that was PICKED; the one handed here
+        // may be Full only because this document is too small for the pick.
         RecordingExportMemory.remember(format: format, quality: quality)
         let panel = NSSavePanel()
         panel.allowedContentTypes = [format.savePanelType]
@@ -71,8 +101,8 @@ extension EditorState {
             if let weighed { try? FileManager.default.removeItem(at: weighed) }
             return
         }
-        startVideoExport(format: format, quality: quality, to: url, weighed: weighed,
-                         captions: captions)
+        startVideoExport(format: format, quality: quality, size: size, to: url,
+                         weighed: weighed, captions: captions)
     }
 
     /// What the file is called before anybody renames it: the document's own
@@ -86,7 +116,8 @@ extension EditorState {
     /// Playing is paused first: an export is a minute of decoding and
     /// compositing, and a playhead running through it would be fighting for the
     /// same frames.
-    func startVideoExport(format: RecordingFormat, quality: VideoExportQuality, to url: URL,
+    func startVideoExport(format: RecordingFormat, quality: VideoExportQuality,
+                          size: VideoExportSize? = nil, to url: URL,
                           weighed: URL? = nil, captions: CaptionExport = .burnedIn) {
         guard videoExport == nil else { return }
         // Already written, to answer what it would weigh: move it into place
@@ -102,7 +133,7 @@ extension EditorState {
         videoExportTask = Task { [weak self] in
             guard let self else { return }
             do {
-                try await writeVideo(format: format, quality: quality, to: url,
+                try await writeVideo(format: format, quality: quality, size: size, to: url,
                                      captions: captions) { done in
                     Task { @MainActor in run.fraction = done }
                 }
@@ -201,7 +232,8 @@ extension EditorState {
     /// The part both the sheet and a scripted walk need, so a walk can check
     /// the file that actually lands rather than trusting what the app says it
     /// wrote.
-    func writeVideo(format: RecordingFormat, quality: VideoExportQuality, to url: URL,
+    func writeVideo(format: RecordingFormat, quality: VideoExportQuality,
+                    size: VideoExportSize? = nil, to url: URL,
                     captions: CaptionExport = .burnedIn,
                     onProgress: (@Sendable (Double) -> Void)? = nil) async throws {
         guard let document = document?.forExport(captions: captions), document.hasTime
@@ -211,8 +243,11 @@ extension EditorState {
         // rather than photographing it back into existence. Only at the top
         // choice: the two below it are asking for a SMALLER file than the one
         // on disk, and that cannot be done by copying it
-        // (`RecordingExport.copiesVerbatim`).
-        if format == .mp4, quality == .high, let movie = document.untouchedRecording,
+        // (`RecordingExport.copiesVerbatim`), and neither is a size that
+        // shrinks the picture.
+        if format == .mp4, quality == .high,
+           !(size?.shrinks(document.canvasSize) ?? false),
+           let movie = document.untouchedRecording,
            let source = MovieLibrary.shared.url(for: movie) {
             try? FileManager.default.removeItem(at: url)
             try FileManager.default.copyItem(at: source, to: url)
@@ -222,7 +257,7 @@ extension EditorState {
 
         let plan = DocumentVideoExport.plan(durationMS: document.documentDurationMS,
                                             canvasSize: document.canvasSize,
-                                            format: format, quality: quality)
+                                            format: format, quality: quality, size: size)
         let mix = document.audioMix()
         let soundURLs = SoundLibrary.shared.urls(for: mix)
         let pictures = DocumentFrames(document: document, store: store,

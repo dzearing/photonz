@@ -33,11 +33,27 @@ enum RecordingExportMemory {
         UserDefaults.standard.string(forKey: choiceKey) == "still" ? .still : .video(format)
     }
 
-    static func remember(choice: RecordingExport.Choice, quality: VideoExportQuality) {
+    static func remember(choice: RecordingExport.Choice, quality: VideoExportQuality,
+                         size: VideoExportSize? = nil) {
         UserDefaults.standard.set(choice == .still ? "still" : choice.fileExtension,
                                   forKey: choiceKey)
         guard let format = choice.format else { return }
-        remember(format: format, quality: quality)
+        remember(format: format, quality: quality, size: size)
+    }
+
+    /// Where the size each format was last exported at is kept: apart per
+    /// format, because a video and a GIF of the same recording want different
+    /// sizes.
+    static func sizeKey(_ format: RecordingFormat) -> String {
+        "export.recording.size.\(format.rawValue)"
+    }
+
+    /// The size this format was last exported at, or the one it opens on the
+    /// first time. What is remembered is what was PICKED: a recording too
+    /// small for it shows Full without forgetting it for the next big one.
+    static func size(for format: RecordingFormat) -> VideoExportSize {
+        VideoExportSize(rawValue: UserDefaults.standard.string(forKey: sizeKey(format)) ?? "")
+            ?? VideoExportSize.firstChoice(for: format)
     }
 
     /// The preset this format was last exported at, or the one it opens on the
@@ -48,10 +64,12 @@ enum RecordingExportMemory {
             ?? (format == .mp4 ? .high : .standard)
     }
 
-    static func remember(format: RecordingFormat, quality: VideoExportQuality) {
+    static func remember(format: RecordingFormat, quality: VideoExportQuality,
+                         size: VideoExportSize? = nil) {
         UserDefaults.standard.set(format.rawValue, forKey: formatKey)
         UserDefaults.standard.set(quality.rawValue,
                                   forKey: format == .mp4 ? movieQualityKey : qualityKey)
+        if let size { UserDefaults.standard.set(size.rawValue, forKey: sizeKey(format)) }
     }
 }
 

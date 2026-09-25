@@ -102,17 +102,27 @@ extension VideoExportQuality {
     /// - sourceSize: the recording's own pixel size, after any crop.
     /// - sourceFPS: how fast the recording itself runs. Nothing is ever sped
     ///   up: a cap only ever takes frames away.
+    /// - size: the Size row, where the sheet has one. It owns the pixels, and
+    ///   this choice keeps only the frame rate and the budget per pixel. Nil is
+    ///   the sheet without a Size row, where this choice shrinks the picture
+    ///   as it always did.
     public func recipe(format: RecordingFormat, sourceSize: CGSize,
-                       sourceFPS: Double) -> VideoExportRecipe {
+                       sourceFPS: Double, size: VideoExportSize? = nil) -> VideoExportRecipe {
         guard format == .mp4 else {
             return VideoExportRecipe(
-                size: Geometry.downscaledToFit(sourceSize, maxDimension: maxDimension),
+                size: size.map { $0.outputSize(for: sourceSize) }
+                    ?? Geometry.downscaledToFit(sourceSize, maxDimension: maxDimension),
                 fps: targetFPS, videoBitsPerSecond: 0,
                 audioBitsPerSecond: audioBitsPerSecond)
         }
-        let capped = movieMaxDimension.map {
-            Geometry.downscaledToFit(sourceSize, maxDimension: $0)
-        } ?? sourceSize
+        let capped: CGSize
+        if let size {
+            capped = size.outputSize(for: sourceSize)
+        } else {
+            capped = movieMaxDimension.map {
+                Geometry.downscaledToFit(sourceSize, maxDimension: $0)
+            } ?? sourceSize
+        }
         let size = DocumentVideoExport.evenSize(capped)
         let recorded = sourceFPS > 0 ? sourceFPS : 30
         let fps = min(recorded, movieMaxFPS)
@@ -143,6 +153,28 @@ extension VideoExportQuality {
         switch self {
         case .high: return "Every pixel and every frame, for keeping or editing later."
         case .standard: return "For sending: fits chat and email, still sharp on a screen."
+        case .small: return "For a tight limit: the smallest file that still reads."
+        }
+    }
+}
+
+extension VideoExportQuality {
+
+    /// Who this choice is for on a sheet that also has a Size row, where the
+    /// size says how big the picture is and this says only how smooth it runs
+    /// and how much is spent on it. "Every pixel" would be a claim about the
+    /// other row.
+    public func purposeBesideASize(for format: RecordingFormat) -> String {
+        guard format == .mp4 else {
+            switch self {
+            case .high: return "Smoothest, and much the biggest file."
+            case .standard: return "A fair trade for a chat, an issue or a pull request."
+            case .small: return "The fewest frames, for somewhere with a strict limit."
+            }
+        }
+        switch self {
+        case .high: return "Every frame, sharp enough to keep or edit later."
+        case .standard: return "For sending: still sharp, at a fraction of the weight."
         case .small: return "For a tight limit: the smallest file that still reads."
         }
     }
