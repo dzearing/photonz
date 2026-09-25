@@ -19658,3 +19658,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - New walk step `clickRuler` (seconds): the ruler's own gesture at a named moment, because a walk's click reaches the canvas and never the ruler. Parse tests in `PlaytestScriptTests`. Not yet watched under a lock, so it is refused on a locked Mac.
 - `docs/design/video-vs-premiere.md`: the count, and a Now column in the Gaps table: gaps 1 to 9 closed, each with a fresh picture from its guarding walk (all nine green today); gap 10 waits on the user's decision card.
 - Nothing in the cut was slower than Premiere, so nothing new filed. Opening Export holds the main thread 310 to 370 ms on every document in every walk that opens it (stills too), left in the task log as unconfirmed.
+
+## 2026-09-25 — A runner that stops to wait gets one more turn
+
+- Eleven runners between 2026-09-02 and 09-24 ended their turn saying they would carry on when their tests or walks finished; in `claude -p` that ends the run, so each was recorded as a failure and its work stashed.
+- `queue/bin/runner-prompt.md`: new rule "Ending your turn ends your task", with the measured cost of a full `Scripts/test.sh` (220s and 214s, 9686 tests): run it in the foreground with `timeout: 600000`.
+- `queue/bin/go-loop.sh` starts every task runner under a session id it picks (`--session-id`); `resume_if_waiting` asks `queue.mjs runner-resume` and, for exit 0 with the task still in progress and last words that say it is waiting, gives the same session one more turn (`--resume`, `queue/bin/resume-prompt.md`), once per claim, before the exit is recorded. Detection and the once-per-claim rule are `runnerIsWaiting` / `decideRunnerResume` in `queue-lib.mjs`; the task log and a `runner_resumed` event say it happened.
+- `queue/bin/failure-drill.sh` scenario 8 drives the real loop with a fake runner three ways (waits once, waits every time, stops without waiting) and holds all eleven recorded last lines. All eight scenarios, the leftovers, manager-due and awake drills, and `Scripts/test.sh` are green.

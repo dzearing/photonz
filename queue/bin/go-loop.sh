@@ -64,16 +64,26 @@ CLAUDE_FLAGS=(--dangerously-skip-permissions --output-format stream-json --verbo
 # run nothing refused.
 RUNNER_ERR=""
 RUNNER_REASON=""
-run_runner() { # $1 = prompt text; streams formatted output to the pane AND loop.log
+run_runner() { # $1 = prompt text, $2 = session id (optional), $3 = "resume" to continue that session
   local errf outf rc
+  local -a session=()
   errf=$(mktemp -t goloop-err) || return 1
   outf=$(mktemp -t goloop-out) || return 1
-  # What the working tree already looked like. Whatever is dirty AFTER this
-  # runner that was not dirty now is the runner's doing, and settle_leftovers
-  # puts it away under the runner's name instead of leaving it for the next
-  # task to commit. Taken here so every kind of runner is covered.
-  node queue/bin/leftovers.mjs snapshot "$LEFTOVERS_BEFORE" >/dev/null 2>&1 || : > "$LEFTOVERS_BEFORE"
-  claude -p "${CLAUDE_FLAGS[@]}" "$1" 2>"$errf" | node queue/bin/stream-format.mjs | tee -a "$LOG" "$outf"
+  # A task runner is started under a session id the loop picks, so that the
+  # loop can hand the same session one more turn (see resume_if_waiting).
+  if [[ "${3:-}" == resume ]]; then
+    session=(--resume "$2")
+  else
+    [[ -n "${2:-}" ]] && session=(--session-id "$2")
+    # What the working tree already looked like. Whatever is dirty AFTER this
+    # runner that was not dirty now is the runner's doing, and settle_leftovers
+    # puts it away under the runner's name instead of leaving it for the next
+    # task to commit. Taken here so every kind of runner is covered, and NOT
+    # retaken on a resumed turn, or the first turn's changes would read as
+    # somebody else's.
+    node queue/bin/leftovers.mjs snapshot "$LEFTOVERS_BEFORE" >/dev/null 2>&1 || : > "$LEFTOVERS_BEFORE"
+  fi
+  claude -p "${CLAUDE_FLAGS[@]}" "${session[@]}" "$1" 2>"$errf" | node queue/bin/stream-format.mjs | tee -a "$LOG" "$outf"
   rc=${pipestatus[1]}
   cat "$errf" >> "$LOG"
   # The queue reads the whole run once: the telling line (a refusal wherever it
@@ -86,6 +96,30 @@ run_runner() { # $1 = prompt text; streams formatted output to the pane AND loop
   eval "$(Q runner-classify "$errf" "$outf")"
   rm -f "$errf" "$outf"
   return $rc
+}
+
+# Ending a turn ends the task: `claude -p` returns when the runner stops
+# talking, and nothing wakes it when a background job it started finishes.
+# Eleven runners between 2026-09-02 and 09-24 still stopped to "pick up again
+# when the tests finish", and each was recorded as a failure with its work
+# stashed. So before the exit is recorded, the queue is asked whether this one
+# stopped like that (exit 0, task in progress, its last words saying it is
+# waiting); if so the SAME session gets one more turn, once per claim, and the
+# exit that counts is the one after it. The runner prompt forbids stopping to
+# wait; this is what makes it cost a turn instead of a task when one does.
+# Sets EXIT to the exit code that should be recorded.
+resume_if_waiting() { # $1 = task id, $2 = session id, $3 = exit code, $4 = task file
+  local RESUME=0
+  EXIT=$3
+  eval "$(Q runner-resume "$1" "$3" --reason "$RUNNER_REASON" "$RUNNER_ERR")"
+  (( RESUME )) || return 0
+  echo "[go-loop] $(date +%T) task $1 ended its turn waiting (\"$RUNNER_ERR\"); ending a turn ends the task, so the loop gave the same session one more turn to finish" | tee -a "$LOG"
+  Q note "runner stopped to wait; giving the same session one more turn to finish $1"
+  run_runner "$(cat queue/bin/resume-prompt.md)
+
+TASK FILE: $4" "$2" resume
+  EXIT=$?
+  echo "[go-loop] $(date +%T) task $1 resumed runner exited $EXIT" | tee -a "$LOG"
 }
 
 # Ask the queue what that runner exit meant and adopt its answer. Defaults are
@@ -667,11 +701,13 @@ while :; do
   banner "**Go loop** working: $TASK_TITLE ($TASK_ID)"
   state busy
 
+  SESSION=$(uuidgen | tr 'A-Z' 'a-z')
   run_runner "$(cat queue/bin/runner-prompt.md; echo; cat queue/bin/follow-up-bar.md)
 
-TASK FILE: $TASK_FILE"
+TASK FILE: $TASK_FILE" "$SESSION"
   EXIT=$?
   echo "[go-loop] $(date +%T) task $TASK_ID runner exited $EXIT" | tee -a "$LOG"
+  resume_if_waiting "$TASK_ID" "$SESSION" "$EXIT" "$TASK_FILE"
 
   # A runner MUST finalize its task. One that did not is a failure, not a free
   # retry: recorded with its exit code and last error, retried more slowly each

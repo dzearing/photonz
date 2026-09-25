@@ -80,6 +80,29 @@ The machine you run on is the user's. Anything you start, you finish.
   ```
   Read it before you write the audit. A capture that could have been taken and was not now FAILS the walk, so a green walk with pictures in that line really did photograph the app.
 
+- **Ending your turn ends your task.** You run as `claude -p`: the moment you
+  stop talking, the run is over and the loop judges your task as it stands.
+  Nothing wakes you when a background job finishes, so "I'll pick up again when
+  the tests finish" is the last thing you ever say: the task is recorded as a
+  failed run, your uncommitted work goes into a stash, and another runner starts
+  it over. Eleven runners did exactly that between 2026-09-02 and 09-24, one of
+  them with its audit already written.
+
+  So anything whose answer you need, you run in the FOREGROUND and wait for
+  inside the turn, with a timeout that fits it. Never `run_in_background` for
+  it, and never end a turn to wait.
+  - `Scripts/test.sh`, the whole suite: **about 3m40s** (220s measured on
+    2026-09-24, 9,686 tests). Run it in the foreground with the Bash tool's
+    `timeout: 600000`, the ten minute ceiling, which leaves room for a slow
+    machine or the wrapper's one rebuild after a signal 10 or 11.
+  - `swift build` and a handful of walks: foreground, same timeout.
+  - Something longer than ten minutes does not belong in your task at all (the
+    whole walk set is the only one, and it has its own rule below).
+
+  If you do end a turn saying you are waiting, the loop gives the same session
+  ONE more turn to finish, once per claim, and says so in your log. A second
+  stop is a failure like any other.
+
 - **Run the walks you touched, never the whole sweep.** There are two checks and
   they are not interchangeable. While you build, run the one or few walks your
   change affects: each costs about ten seconds.

@@ -77,6 +77,18 @@
 #  19. a real refusal is still caught, on stderr and in a stream where the
 #      runner never got to work, for a digest run and a task run alike
 #
+# Scenario 8, a runner that stops to wait for its own test run (2026-09-23):
+#
+#  28. a runner that exits 0 with its task still in progress, saying it will
+#      carry on when its tests finish, is given one more turn in the SAME
+#      session instead of being recorded as a failure, and finishes there
+#  29. the task log and the history say it was resumed, and why
+#  30. a runner that says it is waiting a second time is resumed only once:
+#      the second stop is an ordinary failure
+#  31. a runner that stops mid-task WITHOUT saying it is waiting is not resumed
+#  32. every waiting last line the loop has recorded reads as waiting, and
+#      finished summaries do not
+#
 # Nothing here touches the real queue or the real repo history.
 set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -84,7 +96,7 @@ cd "$REPO"
 Q() { node queue/bin/queue.mjs "$@"; }
 WANTED=("$@")
 want() { (( ${#WANTED} == 0 )) && return 0; [[ " ${WANTED[*]} " == *" $1 "* ]]; }
-S1=0; S2=0; S3=0; S4=0; S5=0; S6=0; S7=0
+S1=0; S2=0; S3=0; S4=0; S5=0; S6=0; S7=0; S8=0
 
 # ---- scenario 1: a runner that always dies ----------------------------------
 SANDBOX=$(mktemp -d -t photonz-drill)
@@ -94,8 +106,9 @@ SANDBOX4=$(mktemp -d -t photonz-drill-reload)
 SANDBOX5=$(mktemp -d -t photonz-drill-talk)
 SANDBOX6=$(mktemp -d -t photonz-drill-reach)
 SANDBOX7=$(mktemp -d -t photonz-drill-carry)
+SANDBOX8=$(mktemp -d -t photonz-drill-wait)
 SHARED_BIN=$(mktemp -d -t photonz-drill-bin)
-trap 'rm -rf "$SANDBOX" "$SANDBOX2" "$SANDBOX3" "$SANDBOX4" "$SANDBOX5" "$SANDBOX6" "$SANDBOX7" "$SHARED_BIN"' EXIT
+trap 'rm -rf "$SANDBOX" "$SANDBOX2" "$SANDBOX3" "$SANDBOX4" "$SANDBOX5" "$SANDBOX6" "$SANDBOX7" "$SANDBOX8" "$SHARED_BIN"' EXIT
 
 # Nothing a drill does may reach the user's real Notification Center. The loop
 # now raises a notification the moment it stalls on a refusal only a person can
@@ -1131,10 +1144,166 @@ process.exit(failed ? 1 : 0);
 S7=$?
 fi
 
-if (( S1 == 0 && S2 == 0 && S3 == 0 && S4 == 0 && S5 == 0 && S6 == 0 && S7 == 0 )); then
+if want 8; then
+# ---- scenario 8: a runner that stops to wait for its own test run -----------
+# Eleven runners between 2026-09-02 and 09-24 finished the work, started their
+# test run in the background, said they would carry on when it finished, and
+# ended their turn: in `claude -p` that ends the run, so every one was recorded
+# as a failure and its work stashed. The loop now gives such a runner the same
+# session back, once. Three single-task loops, so claim order cannot blur them:
+#
+#   once     stops waiting, and finishes when it is resumed
+#   always   stops waiting, and says it is waiting again when resumed
+#   quiet    stops mid-task without saying it is waiting
+BIN8="$SANDBOX8/bin"
+mkdir -p "$BIN8"
+cat > "$BIN8/claude" <<'FAKE'
+#!/bin/zsh
+# The session the loop named (--session-id on a first turn, --resume on the
+# second), recorded with the prompt, so the checks can see the SAME session came
+# back and what it was told.
+prompt="${@[-1]}"; sid=""; resume=0
+for (( i = 1; i < $#; i++ )); do
+  case "${@[i]}" in
+    --session-id) sid="${@[i+1]}" ;;
+    --resume)     sid="${@[i+1]}"; resume=1 ;;
+  esac
+done
+print -r -- "$sid $resume" >> "$DRILL_STATE/calls"
+(( resume )) && print -r -- "$prompt" > "$DRILL_STATE/resume-prompt.txt"
+file="${prompt##*TASK FILE: }"
+id=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).id)' "$file")
+printf '{"type":"system","subtype":"init","session_id":"%s"}\n' "$sid"
+echo '{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Bash","input":{"command":"Scripts/test.sh"}}]}}'
+say() { printf '{"type":"result","subtype":"success","result":"%s"}\n' "$1"; }
+case "$DRILL_MODE" in
+  once)
+    if (( resume )); then
+      node queue/bin/queue.mjs status "$id" done "drill: finished on the second turn" >/dev/null
+      say "Tests passed; committed and closed."
+    else
+      say "The only busy process is my own test run. I'll pick up again when it finishes."
+    fi ;;
+  always) say "Full tests are still running. I'll commit and close the task once they come back green." ;;
+  quiet)  say "Here is where the task stands: the fix is in and the audit is written." ;;
+esac
+exit 0
+FAKE
+chmod +x "$BIN8/claude"
+
+export PATH="$BIN8:$PATH"
+export PHOTONZ_BACKOFF_STEPS="1,1,1"
+export PHOTONZ_MANAGER_LOW_WATER=0
+export PHOTONZ_MAX_ITERS=1
+for mode in once always quiet; do
+  export PHOTONZ_QUEUE_DIR="$SANDBOX8/$mode/queue"
+  export DRILL_STATE="$SANDBOX8/$mode/state"
+  export DRILL_MODE=$mode
+  mkdir -p "$PHOTONZ_QUEUE_DIR/digests" "$DRILL_STATE"
+  : > "$PHOTONZ_QUEUE_DIR/digests/$(date +%F).md"
+  Q add "Drill task that waits ($mode)" p1-high "drill" >/dev/null
+  echo "[drill] scenario 8: running the real go loop against a runner that stops to wait ($mode)..."
+  queue/bin/go-loop.sh > "$SANDBOX8/$mode/drill.log" 2>&1
+done
+export DRILL_ROOT="$SANDBOX8"
+
+PHOTONZ_BACKOFF_STEPS= node --input-type=module -e '
+const fs = await import("node:fs");
+const root = process.env.DRILL_ROOT;
+const read = (f, fb) => { try { return fs.readFileSync(f, "utf8"); } catch { return fb; } };
+const run = (mode) => {
+  const q = root + "/" + mode + "/queue";
+  const history = read(q + "/history.jsonl", "").trim().split("\n").filter(Boolean).map(JSON.parse);
+  const tasks = ["p0-critical","p1-high","p2-normal","p3-low"].flatMap((p) => {
+    const d = q + "/tasks/" + p;
+    return fs.existsSync(d) ? fs.readdirSync(d).map((f) => JSON.parse(fs.readFileSync(d + "/" + f, "utf8"))) : [];
+  });
+  const calls = read(root + "/" + mode + "/state/calls", "").trim().split("\n").filter(Boolean).map((l) => l.split(" "));
+  return {
+    history, task: tasks[0] || {}, calls,
+    log: read(root + "/" + mode + "/drill.log", ""),
+    resumed: history.filter((e) => e.ev === "runner_resumed"),
+    fails: history.filter((e) => e.ev === "runner_failed"),
+    resumePrompt: read(root + "/" + mode + "/state/resume-prompt.txt", ""),
+  };
+};
+let failed = 0;
+const check = (name, ok, detail) => {
+  console.log((ok ? "  PASS  " : "  FAIL  ") + name + (detail ? "\n          " + detail : ""));
+  if (!ok) failed++;
+};
+
+const once = run("once");
+check("a runner that stopped to wait was resumed, not failed",
+  once.resumed.length === 1 && once.fails.length === 0 && once.task.status === "done",
+  once.resumed.length + " resumed, " + once.fails.length + " failed, status " + once.task.status);
+check("...in the same session the loop started it in",
+  once.calls.length === 2 && once.calls[0][1] === "0" && once.calls[1][1] === "1"
+    && /^[0-9a-f-]{36}$/.test(once.calls[0][0]) && once.calls[0][0] === once.calls[1][0],
+  JSON.stringify(once.calls));
+check("the second turn was told that ending a turn ends the task, and named the task file",
+  /ends your task/.test(once.resumePrompt) && /TASK FILE: \S+\.json/.test(once.resumePrompt),
+  once.resumePrompt.slice(0, 160).replace(/\n/g, " "));
+check("the task log and the history say it was resumed, quoting the runner",
+  (once.task.log || []).some((l) => /one more turn/.test(l.note) && /pick up again when it finishes/.test(l.note))
+    && /pick up again when it finishes/.test(once.resumed[0] && once.resumed[0].line || ""),
+  (once.task.log || []).map((l) => l.note).join(" | "));
+check("the loop window said so", /gave the same session one more turn/.test(once.log),
+  (once.log.match(/\[go-loop\][^\n]*turn[^\n]*/) || ["no such line"])[0]);
+
+const always = run("always");
+check("a runner that waits again is resumed only once",
+  always.resumed.length === 1 && always.calls.filter((c) => c[1] === "1").length === 1,
+  always.resumed.length + " resumed; calls " + JSON.stringify(always.calls));
+check("...and its second stop is an ordinary failure",
+  always.fails.length === 1 && always.task.status === "pending" && always.task.failures === 1,
+  always.fails.length + " failed, status " + always.task.status + ", failures " + always.task.failures);
+
+const quiet = run("quiet");
+check("a runner that stops without saying it is waiting is not resumed",
+  quiet.resumed.length === 0 && quiet.calls.length === 1 && quiet.fails.length === 1,
+  quiet.resumed.length + " resumed, " + quiet.calls.length + " call(s), " + quiet.fails.length + " failed");
+
+// Every waiting last line in queue/history.jsonl up to 2026-09-24, word for word.
+const { runnerIsWaiting } = await import(process.cwd() + "/queue/bin/queue-lib.mjs");
+const waiting = [
+  "Waiting on the probe run to finish before reading its snapshots and timings.",
+  "Both results are pending; nothing further is independent of them, so I am waiting for the notifications.",
+  "Waiting on the full walk suite. Meanwhile, here is where things stand.",
+  "Waiting on the walk set. Meanwhile, here is where things stand.",
+  "Background tasks still running after 600s; terminating. Set CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 to wait indefinitely.",
+  "The full walk sweep is still running (it re-runs all 253 walks). While it finishes, here is where things stand:",
+  "Waiting on the walk suite to finish before the final rebuild, screenshot, audit, and commit.",
+  "The suite is at walk 58 of 307. I’ll continue when the background poller reports.",
+  "Waiting on the full suite. While it runs, here is where the task stands.",
+  "The only busy process is my own test run. I’ll pick up again when it finishes.",
+  "Twelve right-click walks are running in the background to check the harness fix; I’ll pick up when they finish.",
+  "Full tests are still running. I’ll commit and close the task once they come back green.",
+  "Waiting for the walk batch and test suite to finish.",
+  "The probe is still building; I’ll pick this up when the walk reports back. <br>",
+];
+const finished = [
+  "Here is where the task stands: the fix is in and the audit is written.",
+  "Done. The task is marked done, committed as 1a2b3c4 and pushed.",
+  "Blocked on a decision: which of the two layouts the timeline should use.",
+  "Digest written and pushed (fdfbb14). Here is what it found.",
+  "",
+];
+const missed = waiting.filter((l) => !runnerIsWaiting(l));
+check("every recorded waiting line reads as waiting", missed.length === 0, "missed: " + JSON.stringify(missed));
+const wrong = finished.filter((l) => runnerIsWaiting(l));
+check("finished summaries do not", wrong.length === 0, "wrongly waiting: " + JSON.stringify(wrong));
+
+console.log(failed ? "\n[drill] scenario 8: " + failed + " check(s) failed" : "\n[drill] scenario 8: all checks passed");
+process.exit(failed ? 1 : 0);
+'
+S8=$?
+fi
+
+if (( S1 == 0 && S2 == 0 && S3 == 0 && S4 == 0 && S5 == 0 && S6 == 0 && S7 == 0 && S8 == 0 )); then
   echo "[drill] all checks passed"
   exit 0
 fi
-echo "[drill] FAILED (scenario 1 exit $S1, scenario 2 exit $S2, scenario 3 exit $S3, scenario 4 exit $S4, scenario 5 exit $S5, scenario 6 exit $S6, scenario 7 exit $S7)"
+echo "[drill] FAILED (scenario 1 exit $S1, scenario 2 exit $S2, scenario 3 exit $S3, scenario 4 exit $S4, scenario 5 exit $S5, scenario 6 exit $S6, scenario 7 exit $S7, scenario 8 exit $S8)"
 exit 1
 

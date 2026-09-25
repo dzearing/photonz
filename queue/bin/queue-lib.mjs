@@ -780,6 +780,55 @@ export function classifyRunnerOutput(stderrText = '', stdoutText = '') {
 }
 export const pickRunnerError = (stderrText = '', stdoutText = '') => classifyRunnerOutput(stderrText, stdoutText).line;
 
+// ---- a runner that stopped to wait ------------------------------------------
+// A runner's turn IS its task: `claude -p` returns when the model stops
+// talking, and nothing wakes it when a background job it started finishes. Yet
+// eleven runners between 2026-09-02 and 09-24 finished the work, started their
+// test run or walks in the background, said they would carry on when it came
+// back, and ended the turn (queue/history.jsonl, runner_failed with exit 0).
+// Each was recorded as a failure and its work stashed, one of them with its
+// audit already written. The runner prompt now forbids it; this is the part
+// that does not rely on a runner reading anything: such a runner gets the same
+// session back for one more turn, once per claim.
+//
+// Read against the runner's last words (the line runner-classify keeps). The
+// drill in failure-drill.sh scenario 8 holds every recorded case word for word.
+const WAITING_PATTERNS = [
+  /\bwaiting (?:on|for)\b/,
+  /\b(?:i['’]ll|i will|we['’]ll)\b[^.;]*\b(?:continue|pick\b[^.;]*\bup|carry on|resume|commit|close|finish|finalize|wrap)\b[^.;]*\b(?:when|once|after|as soon as)\b/,
+  /\bstill (?:running|building|going|in progress)\b/,
+  /\b(?:running|runs) in the background\b/,
+  /\bwhile (?:it|they|that|those|the [\w-]+(?: [\w-]+)?) (?:runs?|finish(?:es)?|builds?|completes?)\b/,
+];
+export function runnerIsWaiting(text = '') {
+  const s = stripAnsi(String(text || '')).toLowerCase();
+  return WAITING_PATTERNS.some((re) => re.test(s));
+}
+
+// Whether the loop should hand this runner's session one more turn instead of
+// recording its exit. Only a task run, only exit 0 with the task still
+// in_progress, only when the CLI refused nothing, only when its last words say
+// it is waiting, and only once per claim (`started` is stamped by each claim,
+// so a task handed back and claimed again gets its own one chance). Records the
+// resume on the task and in the history when it says yes.
+export function decideRunnerResume({ taskId = null, exit = 0, error = '', reason = '' } = {}) {
+  const task = taskId ? findTask(taskId) : null;
+  const no = (why) => ({ resume: false, why });
+  if (!task) return no('no task');
+  if (task.status !== 'in_progress') return no('task finalized');
+  if (exit !== 0) return no(`exit ${exit}`);
+  if (reason) return no(`the CLI refused (${reason})`);
+  if (!runnerIsWaiting(error)) return no('last words do not say it is waiting');
+  const claim = task.started || '';
+  if (task.waitResume && task.waitResume.claim === claim) return no('already resumed once on this claim');
+  const line = cleanError(error);
+  task.waitResume = { at: now(), claim, line };
+  appendLog(task, `runner ended its turn waiting for something to finish ("${line}"); ending a turn ends the task, so the loop gave the same session one more turn to finish it`);
+  saveTask(task);
+  appendEvent('runner_resumed', { id: task.id, line });
+  return { resume: true, why: 'waiting' };
+}
+
 // Park a task: it has failed on its own often enough that retrying it is just
 // burning runners. Blocked keeps it out of claimNext; parked/parkReason say why
 // so the dashboard and the next human can tell it from a decision block.

@@ -54,6 +54,10 @@
 //   node queue/bin/queue.mjs runner-exit <taskId|-> <exitCode> [--reason signin|spend|''] [error]
 //                                            record how a runner ended; prints shell vars
 //                                            (OUTCOME/BACKOFF/FAILURES/HEALTH/ENVFAIL/SIGNIN/REASON) for the go loop to eval
+//   node queue/bin/queue.mjs runner-resume <taskId> <exitCode> [--reason signin|spend|''] [error]
+//                                            whether a runner that stopped with its task in progress,
+//                                            saying it was waiting for something, gets its session back
+//                                            for one more turn; prints RESUME=0|1 for the go loop to eval
 //   node queue/bin/queue.mjs event <ev> [dataJSON]
 //   node queue/bin/queue.mjs devapp [--json]
 //                                            how far "dist/Photonz Dev.app" is behind the code and
@@ -267,6 +271,22 @@ try {
       // person was told), rather than one more retry inside a stall they have
       // already been told about.
       out(`OUTCOME=${r.outcome} BACKOFF=${r.backoff} FAILURES=${r.consecutiveFailures} HEALTH=${health} ENVFAIL=${r.environment ? 1 : 0} SIGNIN=${r.signIn ? 1 : 0} REASON=${r.reason || ''} NOTIFY=${r.notify ? 1 : 0} STALLHOURS=${r.stallHours || 0}`);
+      break;
+    }
+    // Asked BEFORE runner-exit: a yes means the loop resumes the same session
+    // and only records the exit after that second turn.
+    case 'runner-resume': {
+      const rest = args.slice(2);
+      const flag = rest.indexOf('--reason');
+      const reason = flag === -1 ? '' : (rest[flag + 1] || '');
+      if (flag !== -1) rest.splice(flag, 2);
+      const r = q.decideRunnerResume({
+        taskId: args[0] && args[0] !== '-' ? args[0] : null,
+        exit: Number(args[1] || 0),
+        error: rest.join(' '),
+        reason,
+      });
+      out(`RESUME=${r.resume ? 1 : 0}`);
       break;
     }
     // One plain line about how far "dist/Photonz Dev.app" is behind the code,
