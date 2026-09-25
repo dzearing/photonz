@@ -18,9 +18,11 @@ import SwiftUI
 /// So this writes the file, into a scratch copy, while the sheet is open. Two
 /// things make that pay rather than cost:
 ///
-/// - **The answer is exact.** An animated export written twice lands at the
-///   same size (`AnimatedExportWeighTests`), so the number is what arrives
-///   rather than an estimate, and the line drops the word "about".
+/// - **The answer is exact.** The file weighed is the file saved, so the
+///   number is what arrives rather than an estimate, and the line drops the
+///   word "about". That holds because of the handover, not because a second
+///   write would match: a GIF would, a HEIC on a busy machine would not
+///   (`AnimatedExportWeighTests`).
 /// - **The work is not thrown away.** Pressing Export hands the scratch file
 ///   straight to the save box, so a GIF somebody waited to see the size of is
 ///   saved instantly. It is the same bargain the one-frame picture already

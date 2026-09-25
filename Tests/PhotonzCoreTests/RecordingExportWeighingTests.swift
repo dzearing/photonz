@@ -12,8 +12,9 @@ import Testing
 /// cent out, because ImageIO spends far less on a frame that follows a frame
 /// like it — so the only honest number comes from writing the file. The app
 /// writes it into a scratch file while the sheet is open and hands the answer
-/// back here, and the same bytes come out again when Export is pressed
-/// (`AnimatedExportWeighTests` measures that they are identical).
+/// back here, and Export saves that very file rather than writing another
+/// (`AnimatedExportWeighTests` measures why: a GIF would come out the same
+/// again, a HEIC on a busy machine would not).
 ///
 /// These are the rules for what the line says on the way there and at the end.
 @Suite("What the sheet says while a GIF is being weighed")

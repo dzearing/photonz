@@ -81,9 +81,9 @@ extension EditorState {
     /// **Export…** on a document that has time: pick a place, then write it.
     ///
     /// - weighed: the scratch file the sheet already wrote to say what this
-    ///   would weigh (`ExportWeigh`). An animated export lands at the same size
-    ///   every time, so that file IS the export and is moved into place rather
-    ///   than written again.
+    ///   would weigh (`ExportWeigh`). That file IS the export and is moved into
+    ///   place rather than written again: the number the sheet showed is the
+    ///   file that lands, which a second write could not promise for a HEIC.
     func exportVideo(format: RecordingFormat, quality: VideoExportQuality,
                      size: VideoExportSize? = nil,
                      weighed: URL? = nil, captions: CaptionExport = .burnedIn) {

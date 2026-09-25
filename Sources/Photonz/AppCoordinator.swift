@@ -500,9 +500,9 @@ final class AppCoordinator {
     /// trim/crop it's a real re-encode. GIF/HEIC always re-encode (trim+crop
     /// threaded through). Runs off the main actor with basic error reporting.
     /// - weighed: the scratch file the Export sheet already wrote to say what
-    ///   this would weigh (`ExportWeigh`). An animated export lands at the same
-    ///   size every time, so that file IS the export: it is moved into place
-    ///   rather than written a second time. Whoever passes one hands over
+    ///   this would weigh (`ExportWeigh`). That file IS the export: it is moved
+    ///   into place rather than written a second time, so the number the sheet
+    ///   showed is the file that lands. Whoever passes one hands over
     ///   ownership, and it is removed here if the save box is cancelled.
     func saveRecording(_ state: VideoEditorState, as format: RecordingFormat,
                        quality: VideoExportQuality = .high, weighed: URL? = nil) {
@@ -610,12 +610,12 @@ final class AppCoordinator {
     /// Move the file the Export sheet already wrote to where the save box said,
     /// and say whether that worked.
     ///
-    /// An animated export written twice lands at the same size
-    /// (`AnimatedExportWeighTests`), so the scratch copy the sheet weighed is
-    /// the export: writing it again would spend the same seconds to arrive at
-    /// the same file. If the move fails for any reason the scratch copy is
-    /// dropped and the caller writes it properly, which is slower and always
-    /// correct.
+    /// The scratch copy the sheet weighed is the export: writing it again
+    /// would spend the same seconds, and for a HEIC on a busy machine would
+    /// arrive at a different size from the one the sheet showed
+    /// (`AnimatedExportWeighTests`). If the move fails for any reason the
+    /// scratch copy is dropped and the caller writes it properly, which is
+    /// slower and always a correct picture.
     static func putWeighedFileInPlace(_ weighed: URL, at url: URL) -> Bool {
         defer { try? FileManager.default.removeItem(at: weighed) }
         guard (try? weighed.resourceValues(forKeys: [.fileSizeKey]).fileSize).map({ $0 > 0 })

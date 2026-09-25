@@ -1,6 +1,7 @@
 import AVFoundation
 import CoreGraphics
 import Foundation
+import ImageIO
 import PhotonzCore
 @testable import PhotonzMedia
 import Testing
@@ -17,12 +18,19 @@ import Testing
 /// over, depending on the material and the format. There is no formula here.
 ///
 /// So the sheet writes a scratch copy while it is open, says what that weighed,
-/// and hands the very same file to Export. That is only honest if writing the
-/// same recording twice gives a file of the same size, which is what this
-/// measures. It does, for both formats and every preset: a GIF is identical to
-/// the byte, and a HEIC is identical in size with one byte of the video
-/// encoder's own state moving inside it. An MP4 is neither, which is why a
-/// video is weighed from its budget instead (`VideoExportBudgetTests`).
+/// and hands the very same file to Export: the bytes that were weighed are the
+/// bytes that get saved. What this measures is how much that handover matters.
+///
+/// - **A GIF** written twice is identical to the byte, busy machine or quiet.
+/// - **A HEIC** written twice holds the same pictures, frame for frame, but not
+///   the same number of bytes once other encodes share the machine: its frames
+///   go through the system's HEVC encoder, which decides differently under
+///   load. Measured on the short clip at High: 293,876 bytes every time alone,
+///   and 280,327 then 259,311, or 208,988 then 285,616, with the rest of the
+///   test suite running beside it. So a HEIC's number is only true because the
+///   weighed file IS the export, and the sheet must never write it again.
+///
+/// An MP4 is weighed from its budget instead (`VideoExportBudgetTests`).
 @Suite("An animated export weighs the same twice", .serialized)
 struct AnimatedExportWeighTests {
 
@@ -75,13 +83,25 @@ struct AnimatedExportWeighTests {
         return url
     }
 
+    /// How many pictures a written file holds, and how big the first one is.
+    static func pictures(in url: URL) -> (count: Int, width: Int, height: Int) {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return (0, 0, 0) }
+        let first = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]
+        return (CGImageSourceGetCount(source),
+                first?[kCGImagePropertyPixelWidth] as? Int ?? 0,
+                first?[kCGImagePropertyPixelHeight] as? Int ?? 0)
+    }
+
     /// Every preset, on a short recording and on a longer one that is still for
-    /// half its length, written twice: the same size both times.
+    /// half its length, written twice.
     ///
-    /// This is the promise the sheet makes when it drops the word "about" for a
-    /// GIF. It also checks the presets really are three different sizes, since
-    /// a number that never moved with the choice would be no use on the row.
-    @Test("written twice, an animated export lands at the same size")
+    /// A GIF comes out the same file both times, which is the promise the sheet
+    /// makes when it drops the word "about". A HEIC comes out the same pictures
+    /// and not always the same bytes (see above), so for a HEIC this checks the
+    /// pictures and leaves the bytes to the handover. It also checks the presets
+    /// really are different files, since a number that never moved with the
+    /// choice would be no use on the row.
+    @Test("written twice, a GIF is the same file and a HEIC the same pictures")
     func theSameFileTwice() async throws {
         for (label, seconds, size, stillAfter) in [
             ("short", 2, CGSize(width: 640, height: 400), 99.0),
@@ -92,8 +112,10 @@ struct AnimatedExportWeighTests {
             let trim = VideoTrim(duration: await VideoExporter.duration(of: source))
             for format in [RecordingFormat.gif, .heic] {
                 var landed: [VideoExportQuality: Int] = [:]
+                var held: [VideoExportQuality: (count: Int, width: Int, height: Int)] = [:]
                 for quality in VideoExportQuality.allCases {
                     var written: [Data] = []
+                    var pictures: [(count: Int, width: Int, height: Int)] = []
                     for pass in 0..<2 {
                         let out = Self.folder.appendingPathComponent(
                             "\(label)-\(format.rawValue)-\(quality.rawValue)-\(pass)."
@@ -102,30 +124,42 @@ struct AnimatedExportWeighTests {
                             from: source, to: out, format: format, trim: trim, crop: nil,
                             targetFPS: quality.targetFPS, maxDimension: quality.maxDimension)
                         written.append(try Data(contentsOf: out))
+                        pictures.append(Self.pictures(in: out))
                     }
-                    let drift = "\(label) \(format.rawValue) at \(quality.rawValue) came out "
-                        + "\(written[0].count) bytes and then \(written[1].count): "
-                        + "the sheet cannot promise a size it cannot reproduce"
-                    #expect(written[0].count == written[1].count, "\(drift)")
-                    // A GIF is the same file down to the byte. A HEIC is the
-                    // same SIZE and moves a single byte inside the first frame
-                    // — measured at offset 1123 of a 295,520 byte file, 0x76
-                    // one time and 0x80 the next — which is the video encoder's
-                    // own state and not anything about the picture. The size is
-                    // what the sheet promises, so the size is what is claimed
-                    // here for both, and the stronger claim is made where it
-                    // holds.
+                    let what = "\(label) \(format.rawValue) at \(quality.rawValue)"
+                    #expect(pictures[0] == pictures[1],
+                            "\(what) held \(pictures[0]) and then \(pictures[1]) pictures")
                     if format == .gif {
+                        let drift = "\(what) came out \(written[0].count) bytes and then "
+                            + "\(written[1].count): the sheet cannot promise a GIF it cannot reproduce"
                         #expect(written[0] == written[1], "\(drift)")
                     }
                     landed[quality] = written[0].count
+                    held[quality] = pictures[0]
                 }
                 let high = try #require(landed[.high])
                 let standard = try #require(landed[.standard])
                 let small = try #require(landed[.small])
                 let row = "\(label) \(format.rawValue) came out \(high)/\(standard)/\(small) "
                     + "bytes at High/Standard/Small, so the preset row does not move the size"
-                #expect(small < standard && standard < high, "\(row)")
+                // Small is always the lightest by a wide margin, a third or more
+                // under the next. High is deliberately NOT claimed heavier than
+                // Standard: on the longer clip, still for half its length, a GIF
+                // lands 515,331 against 489,554 bytes, five per cent apart, and
+                // came out the other way round (639,231 against 666,520) off a
+                // source recording written on a busy machine; a HEIC's High came
+                // out under its Standard with the suite running (208,988 against
+                // 234,401). The sheet weighs every choice, so it shows whichever
+                // way round they really are.
+                #expect(small < high, "\(row)")
+                if format == .gif { #expect(small < standard, "\(row)") }
+                // What the choice writes, as opposed to what the encoder makes
+                // of it, is exact every time: fewer frames each step down.
+                let frames = try #require(held[.high]?.count)
+                let fewer = try #require(held[.standard]?.count)
+                let fewest = try #require(held[.small]?.count)
+                #expect(fewest < fewer && fewer < frames,
+                        "\(label) \(format.rawValue) held \(frames)/\(fewer)/\(fewest) frames")
             }
         }
     }
