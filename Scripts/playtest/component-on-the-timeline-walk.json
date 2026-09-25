@@ -82,8 +82,8 @@
     },
     {
       "do": "expect",
-      "field": "Time reading",
-      "reads": "0:04 to 0:07 · 3.0s"
+      "field": "Clip line",
+      "reads": "Button 4.0s → 7.0s · 3.0s · 1.0x"
     },
     {
       "do": "panel",
@@ -144,12 +144,20 @@
     },
     {
       "do": "reveal",
-      "control": "Animating section"
+      "control": "Properties section"
     },
     {
       "do": "press",
-      "control": "Key",
-      "in": "Rotation"
+      "control": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Rotation",
+      "in": "Animate a property"
     },
     {
       "do": "wait",

@@ -70,19 +70,22 @@ struct TimePanelOrderTests {
 
     // MARK: - What each role leads with
 
-    @Test func aClipLeadsWithHowItPlaysThenHowLoudThenWhatIsKeyed() {
+    // Every role opens on Properties (raw id `keys`): the clip line and what
+    // is animating, as `video.html` draws its dock (2026-09-25).
+
+    @Test func aClipLeadsWithItsPropertiesThenHowItPlaysThenHowLoud() {
         let order = TimePanelOrder.arrange(Self.saved, for: .playing)
-        #expect(Array(order.prefix(4)) == ["layers", "speed", "sound", "keys"])
+        #expect(Array(order.prefix(4)) == ["layers", "keys", "speed", "sound"])
     }
 
-    @Test func aTitleLeadsWithWhenItIsOnThenItsWordsThenWhatIsKeyed() {
+    @Test func aTitleLeadsWithItsPropertiesThenWhenItIsOnThenItsWords() {
         let order = TimePanelOrder.arrange(Self.saved, for: .onScreen)
-        #expect(Array(order.prefix(4)) == ["layers", "speed", "text", "keys"])
+        #expect(Array(order.prefix(4)) == ["layers", "keys", "speed", "text"])
     }
 
-    @Test func aSoundLeadsWithItsLevelThenItsTime() {
+    @Test func aSoundLeadsWithItsPropertiesThenItsLevelThenItsTime() {
         let order = TimePanelOrder.arrange(Self.saved, for: .heard)
-        #expect(Array(order.prefix(3)) == ["layers", "sound", "speed"])
+        #expect(Array(order.prefix(4)) == ["layers", "keys", "sound", "speed"])
     }
 
     // MARK: - What the rule never does

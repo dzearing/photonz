@@ -244,12 +244,20 @@
     },
     {
       "do": "reveal",
-      "control": "Animating section"
+      "control": "Properties section"
     },
     {
       "do": "press",
-      "control": "Key",
-      "in": "Position"
+      "control": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Position",
+      "in": "Animate a property"
     },
     {
       "do": "wait",

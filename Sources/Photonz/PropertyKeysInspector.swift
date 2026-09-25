@@ -2,26 +2,42 @@ import AppKit
 import PhotonzCore
 import SwiftUI
 
-/// **Animating**: every value the picked layer has that can change over time,
-/// each with a key diamond (`every-value-in-the-panel-has-a-key-diamond`,
-/// `docs/design/mocks/pages/video.html`, the clip detail pane).
+/// **Properties**: the pane beside a clip, a title or a sound in a document
+/// with time (`docs/design/mocks/pages/video.html`, `renderProps`).
 ///
-/// Premiere's Effect Controls, said in one row per value: the arrows and the
-/// diamond, the value's name, and the value at the playhead. The diamond is the
-/// stopwatch: dim until the value is keyed, coloured once it is, filled while a
-/// key sits under the playhead. Changing a keyed value at another moment, here
-/// or on the canvas, puts a key there, so there is no Add Key button to find.
+/// One clip line first (its name, where it starts and ends, how long it is and
+/// how fast it plays), then **Animating**: only the values that are actually
+/// keyed, each with Premiere's row of ‹ ◆ › and its value at the playhead. The
+/// rest wait behind Animate a property, a picker rather than a longer list,
+/// because the list only grows (`PropertiesPane.swift`).
 ///
-/// Every value is listed, keyed or not, so "how do I animate this?" has a
-/// visible answer on a layer nobody has touched: the dim diamond on its row.
+/// The diamond is Premiere's keyframe button: a key here goes, and where there
+/// is none one is written. The row's cross, and its right-click, stop the
+/// value animating altogether.
 struct PropertyKeysInspector: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            ForEach(editorState.keyRows, id: \.self) { property in
+            if let line = editorState.keyClipLine {
+                ClipLineRow(line: line)
+            }
+            AnimatingHeader()
+            let rows = editorState.animatingRows
+            if rows.isEmpty {
+                Text(Self.nothingYet)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.vertical, 2)
+                    .panelReadout(Self.nothingYet)
+                    .playtestField("Animating Empty")
+            }
+            ForEach(rows, id: \.self) { property in
                 PropertyKeyRow(property: property)
             }
+            AnimatePropertyButton()
+                .padding(.top, 4)
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 6)
@@ -32,6 +48,10 @@ struct PropertyKeysInspector: View {
             Text(stopMessage)
         }
     }
+
+    /// The mock's empty line, in the app's own names for the two values it
+    /// points at (Color, Stroke width).
+    static let nothingYet = "Any property can be keyed, even color and stroke width."
 
     private var asking: Binding<Bool> {
         Binding(get: { editorState.keyStopQuestion != nil },
@@ -48,19 +68,103 @@ struct PropertyKeysInspector: View {
     }
 }
 
-/// How many values on the picked layer are keyed, on the section's header:
-/// the mock's "2 of 9 properties", said shorter.
+/// The kind chip on the Properties header: Clip, Title, Audio.
 struct PropertyKeysSectionAccessory: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
-        let keyed = editorState.keyedRowCount
-        HStack(spacing: 8) {
-            Text(keyed == 0 ? "None keyed" : "\(keyed) keyed")
+        if let kind = editorState.keyLayerKind {
+            // The mock's `.cnt`: a small pill beside the title.
+            Text(kind)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 1.5)
+                .background(Capsule().fill(Color.primary.opacity(0.07)))
+                .overlay(Capsule().strokeBorder(Color.primary.opacity(0.10)))
+                .panelReadout(kind)
+                .playtestField("Properties Kind")
+        }
+    }
+}
+
+/// `Sample Talk        2.0s → 14.9s  12.9s · 1.0x`: the mock's `.cliphead`.
+/// A readout, not a form: trimming is the clip's edges on the timeline, and
+/// speed is the Time section and the clip's right-click.
+private struct ClipLineRow: View {
+    let line: ClipLine
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // One line, the mock's way, with a long name cut short beside the
+            // times; only when that would leave it under a few words does the
+            // name go above them, never down to a lone ellipsis (2026-09-25,
+            // at 220pt it read "...").
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    name.frame(idealWidth: 72, maxWidth: .infinity, alignment: .leading)
+                    times
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    name
+                    times
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.top, 6)
+            .padding(.bottom, 4)
+            Rectangle()
+                .fill(VideoKit.Palette.line)
+                .frame(height: 1)
+                .padding(.bottom, 6)
+        }
+        .panelReadout("\(line.name) \(line.reading)")
+        .playtestField("Clip line")
+        .help("\(line.name): \(line.inText) to \(line.outText), \(line.lengthText) at \(line.speedText)")
+    }
+}
+
+extension ClipLineRow {
+    private var name: some View {
+        Text(line.name)
+            .font(.system(size: 11.5, weight: .semibold))
+            .foregroundStyle(.primary)
+            .lineLimit(1)
+            .truncationMode(.tail)
+    }
+
+    private var times: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text(line.inText).foregroundStyle(VideoKit.Palette.dim).fontWeight(.semibold)
+                + Text(" \u{2192} ").foregroundStyle(VideoKit.Palette.faint)
+                + Text(line.outText).foregroundStyle(VideoKit.Palette.dim).fontWeight(.semibold)
+            Text("\(line.lengthText) \u{00B7} \(line.speedText)")
+                .foregroundStyle(VideoKit.Palette.faint)
+        }
+        .font(.system(size: 10, design: .monospaced))
+        .monospacedDigit()
+        .lineLimit(1)
+        .fixedSize()
+    }
+}
+
+/// `Animating  2 of 15 properties  Graph`: the mock's `.sec-h` over the rows.
+private struct AnimatingHeader: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        let count = PropertyPicker.countText(keyed: editorState.animatingRows.count,
+                                             of: editorState.keyRows.count)
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text("Animating")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.primary)
+            Text(count)
                 .font(.caption)
                 .foregroundStyle(.tertiary)
-                .panelReadout(keyed == 0 ? "None keyed" : "\(keyed) keyed")
+                .panelReadout(count)
                 .playtestField("Animating Count")
+            Spacer(minLength: 0)
             // The mock's Graph link (`video.html`, `#graphOpen`): the picked
             // layer's first curve, opened on its lane in the timeline.
             if canGraph {
@@ -72,6 +176,7 @@ struct PropertyKeysSectionAccessory: View {
                     .playtestControl("Graph", detail: "Animating")
             }
         }
+        .padding(.bottom, 2)
     }
 
     private var canGraph: Bool {
@@ -83,13 +188,139 @@ struct PropertyKeysSectionAccessory: View {
     }
 }
 
+/// `+ Animate a property`, and the picker it opens: every value that is not
+/// animating yet, in groups, with a box to find one by name. Picking one
+/// starts it with a key at the playhead holding the value it has now.
+private struct AnimatePropertyButton: View {
+    @Environment(EditorState.self) private var editorState
+    @State private var isOpen = false
+    @State private var query = ""
+
+    var body: some View {
+        Button {
+            query = ""
+            isOpen = true
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "plus")
+                    .font(.system(size: 9, weight: .semibold))
+                Text("Animate a property")
+                    .font(.system(size: 11))
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 22)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.secondary)
+        .background(RoundedRectangle(cornerRadius: 5).fill(Color.primary.opacity(0.05)))
+        .panelHelp("Pick a value to key at the playhead")
+        .playtestControl("Animate a property", detail: "Animating")
+        .popover(isPresented: $isOpen, arrowEdge: .leading) { picker }
+    }
+
+    private var picker: some View {
+        let groups = PropertyPicker.groups(all: editorState.keyRows,
+                                           keyed: Set(editorState.animatingRows),
+                                           query: query)
+        return VStack(alignment: .leading, spacing: 0) {
+            TextField("Find a property", text: $query)
+                .textFieldStyle(.roundedBorder)
+                .controlSize(.small)
+                .padding(8)
+                .onSubmit {
+                    if let first = groups.first?.properties.first { pick(first) }
+                }
+            Divider()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    if groups.isEmpty {
+                        let empty = PropertyPicker.emptyText(query: query)
+                        Text(empty)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .panelReadout(empty)
+                    }
+                    ForEach(groups, id: \.self) { group in
+                        Text(group.title.uppercased())
+                            .font(.system(size: 9, weight: .bold))
+                            .tracking(0.7)
+                            .foregroundStyle(.tertiary)
+                            .padding(.horizontal, 12)
+                            .padding(.top, 8)
+                            .padding(.bottom, 2)
+                        ForEach(group.properties, id: \.self) { property in
+                            PickerRow(property: property) { pick(property) }
+                        }
+                    }
+                }
+                .padding(.bottom, 6)
+            }
+            .frame(maxHeight: 260)
+        }
+        .frame(width: 220)
+    }
+
+    private func pick(_ property: KeyedProperty) {
+        editorState.startAnimating(property)
+        isOpen = false
+    }
+}
+
+/// One value in the picker: its mark, its name, and what kind of number it is.
+private struct PickerRow: View {
+    let property: KeyedProperty
+    let action: () -> Void
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: "diamond")
+                    .font(.system(size: 8, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+                    .frame(width: 12)
+                Text(property.title)
+                    .font(.system(size: 11))
+                    .lineLimit(1)
+                Spacer(minLength: 4)
+                Text(unit)
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 5)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(isHovering ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+        .background(isHovering ? AnyShapeStyle(VideoKit.Palette.accent.opacity(0.14)) : AnyShapeStyle(.clear))
+        .playtestHover { isHovering = $0 }
+        .playtestControl(property.title, detail: "Animate a property")
+    }
+
+    /// The mock's `.mt`: px, %, °, dB, or colour.
+    private var unit: String {
+        switch property {
+        case .volume: "dB"
+        case let .motion(motion):
+            motion == .color ? "color" : (MotionEntry.suffix(motion) ?? DocumentUnit.word)
+        }
+    }
+}
+
 /// One value: ‹ ◆ › then its name, then what it is at the playhead.
 private struct PropertyKeyRow: View {
     @Environment(EditorState.self) private var editorState
     let property: KeyedProperty
 
+    @State private var isHovering = false
+
     private var diamond: KeyDiamond { editorState.keyDiamond(property) }
     private var isKeyed: Bool { diamond != .dormant }
+    private var isActive: Bool { editorState.activeKeyProperty == property }
 
     var body: some View {
         // One line, or the value under the name when the dock is too narrow
@@ -100,17 +331,20 @@ private struct PropertyKeyRow: View {
                 head
                 Spacer(minLength: 6)
                 PropertyKeyValue(property: property)
+                stopButton
             }
             VStack(alignment: .trailing, spacing: 2) {
                 HStack(spacing: 2) {
                     head
                     Spacer(minLength: 0)
+                    stopButton
                 }
                 PropertyKeyValue(property: property)
             }
         }
         .frame(minHeight: 24)
         .contentShape(Rectangle())
+        .playtestHover("Row \(property.title)") { isHovering = $0 }
         .playtestField(property.title)
         .panelStartProbe(.row, owner: property.title)
         // The verbs for one key live where you click, the way Premiere puts
@@ -122,8 +356,30 @@ private struct PropertyKeyRow: View {
             Button("Remove Key Here") { editorState.removeKeyHere(property) }
                 .disabled(diamond != .onKey)
             Divider()
-            Button(isKeyed ? "Stop Animating" : "Animate") { editorState.toggleKeying(property) }
+            Button("Stop Animating") { editorState.toggleKeying(property) }
         }
+    }
+
+    /// The mock's `.prow-x`: stop animating this value, keeping the value it
+    /// has now. Shown while the pointer is on the row, and its room is kept
+    /// either way so the values stay in a column.
+    private var stopButton: some View {
+        Button {
+            editorState.toggleKeying(property)
+        } label: {
+            Image(systemName: "xmark")
+                .font(.system(size: 8, weight: .semibold))
+                .frame(width: 16, height: 18)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.secondary)
+        // Not 0: SwiftUI stops hit testing a view at no opacity at all, and a
+        // click that lands a beat before the hover does must still count.
+        .opacity(isHovering ? 1 : 0.001)
+        .panelHelp("Stop animating \(property.title.lowercased())")
+        .accessibilityLabel("Stop animating \(property.title.lowercased())")
+        .playtestControl("Stop Animating", detail: "Animating, \(property.title)")
     }
 
     /// ‹ ◆ › and the name.
@@ -132,9 +388,12 @@ private struct PropertyKeyRow: View {
             stepButton(forward: false)
             KeyDiamondButton(property: property, state: diamond)
             stepButton(forward: true)
+            // The value last touched reads in the key colour, the mock's
+            // `.prow.sel`: it is the one the Graph link and the lanes follow.
             Text(property.title)
-                .font(.system(size: 11))
-                .foregroundStyle(isKeyed ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+                .font(.system(size: 11, weight: isActive ? .semibold : .regular))
+                .foregroundStyle(isActive ? AnyShapeStyle(VideoKit.Palette.comp)
+                                          : isKeyed ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                 .lineLimit(1)
                 .padding(.leading, 4)
         }
@@ -163,7 +422,7 @@ private struct PropertyKeyRow: View {
     }
 }
 
-/// The diamond: the stopwatch and the key readout in one mark, drawn by the
+/// The diamond: Premiere's keyframe button and the key readout in one mark, drawn by the
 /// video kit (`VideoKit.KeyDiamond`, the mock's `.kfkey`). Three states, told
 /// apart by weight: a dim outline, a coloured outline, a filled diamond.
 private struct KeyDiamondButton: View {
@@ -175,7 +434,7 @@ private struct KeyDiamondButton: View {
 
     var body: some View {
         Button {
-            editorState.toggleKeying(property)
+            editorState.toggleKeyHere(property)
         } label: {
             VideoKit.KeyDiamond(state: kitState, isHovering: isHovering)
                 .frame(width: 18, height: 18)
@@ -198,8 +457,11 @@ private struct KeyDiamondButton: View {
     }
 
     private var help: String {
-        state == .dormant ? "Animate \(property.title.lowercased()) from here"
-                          : "Stop animating \(property.title.lowercased())"
+        switch state {
+        case .dormant: "Animate \(property.title.lowercased()) from here"
+        case .betweenKeys: "Add a \(property.title.lowercased()) key here"
+        case .onKey: "Remove this \(property.title.lowercased()) key"
+        }
     }
 
     /// What a walk reads back, and what the state is called in the log.
@@ -268,7 +530,7 @@ private struct PropertyKeyValue: View {
                          identity: "key-\(editorState.keyLayer?.id.uuidString ?? "")-\(label)",
                          leading: leading,
                          suffix: suffix,
-                         width: .fixed(leading == nil ? 52 : 44),
+                         width: .fixed(leading == nil ? 84 : 52),
                          playtest: ("\(label) Value", "Animating"),
                          spell: { Self.text(Double($0)) },
                          land: { typed in

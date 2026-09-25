@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/key-a-title-s-scale-walk",
-  "seed": "Every value in the panel has a key diamond. This walk opens a recording at Next defaults with no flag changed, types a title on it, and keys the title's scale at two moments the way Premiere's stopwatch does: the diamond starts keying with a key at the playhead, a new value typed at a later moment is a second key, the diamond is hollow between them and filled on them, the arrows step between them, undo takes a key back in one step, and turning keying off asks first.",
+  "seed": "The Properties pane beside a title lists only what is animating. This walk opens a recording at Next defaults with no flag changed, types a title on it, picks Scale from Animate a property and keys it at two moments the way Premiere does: picking starts keying with a key at the playhead, a new value typed at a later moment is a second key, the diamond is hollow between them and filled on them and adds or takes off the key under the playhead, the arrows step between them, undo takes a key back in one step, and the row's cross turns keying off, asking first.",
   "setup": {
     "forget": [
       "all"
@@ -67,7 +67,7 @@
     },
     {
       "do": "reveal",
-      "control": "Animating section"
+      "control": "Properties section"
     },
     {
       "do": "wait",
@@ -76,30 +76,52 @@
     {
       "do": "describe",
       "stage": "1-nothing-keyed",
-      "note": "THE FIRST TEST, at Next defaults: a title typed on a recording, and the panel's Animating section lists every value it has that can change over time, each with a dim diamond. Nothing is keyed yet, and 'how do I animate this?' has a visible answer on a layer nobody has touched"
+      "note": "THE FIRST TEST, at Next defaults: a title typed on a recording, and the panel opens on Properties: the title's clip line (its name, in, out, length and speed), then Animating, which says nothing yet and lists no rows. 'How do I animate this?' has one visible answer: Animate a property"
+    },
+    {
+      "do": "expect",
+      "field": "Properties Kind",
+      "reads": "Title"
+    },
+    {
+      "do": "expect",
+      "field": "Clip line",
+      "present": true
     },
     {
       "do": "expect",
       "field": "Animating Count",
-      "reads": "None keyed"
+      "reads": "nothing yet"
     },
     {
       "do": "expect",
       "control": "Key",
       "in": "Scale",
-      "reads": "not keyed"
+      "present": false
+    },
+    {
+      "do": "press",
+      "control": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
     },
     {
       "do": "expect",
-      "control": "Key",
-      "in": "Text size",
+      "control": "Text size",
+      "in": "Animate a property",
       "present": true
     },
     {
       "do": "expect",
-      "control": "Key",
-      "in": "Shadow size",
+      "control": "Shadow size",
+      "in": "Animate a property",
       "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "1b-the-picker"
     },
     {
       "do": "panel",
@@ -110,9 +132,14 @@
       "name": "1-a-title-nothing-keyed"
     },
     {
+      "do": "describe",
+      "stage": "1b-the-picker",
+      "note": "Animate a property opens a picker of every value the title is not animating, grouped Transform, Appearance, Effects, Text and Crop, with a box to find one by name. Scale is picked from it"
+    },
+    {
       "do": "press",
-      "control": "Key",
-      "in": "Scale"
+      "control": "Scale",
+      "in": "Animate a property"
     },
     {
       "do": "wait",
@@ -121,7 +148,7 @@
     {
       "do": "describe",
       "stage": "2-keying",
-      "note": "THE SECOND TEST: one click on the diamond starts keying Scale with a key at the playhead. The diamond fills, because a key sits right here"
+      "note": "THE SECOND TEST: picking Scale starts keying it with a key at the playhead, and its row joins Animating with the diamond filled, because a key sits right here"
     },
     {
       "do": "expect",
@@ -132,7 +159,7 @@
     {
       "do": "expect",
       "field": "Animating Count",
-      "reads": "1 keyed"
+      "reads": "1 of 8 properties"
     },
     {
       "do": "action",
@@ -276,7 +303,7 @@
     {
       "do": "expect",
       "field": "Animating Count",
-      "reads": "1 keyed"
+      "reads": "1 of 8 properties"
     },
     {
       "do": "expect",
@@ -309,8 +336,48 @@
     },
     {
       "do": "describe",
+      "stage": "6b-diamond-off",
+      "note": "THE DIAMOND IS PREMIERE'S KEYFRAME BUTTON: clicking it on a key takes that key off; the value stays animating on its other key"
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Scale",
+      "reads": "between keys"
+    },
+    {
+      "do": "expect",
+      "field": "Animating Count",
+      "reads": "1 of 8 properties"
+    },
+    {
+      "do": "press",
+      "control": "Key",
+      "in": "Scale"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Scale",
+      "reads": "on a key"
+    },
+    {
+      "do": "press",
+      "control": "Stop Animating",
+      "in": "Scale"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
       "stage": "7-asks",
-      "note": "THE SEVENTH TEST: clicking the lit diamond on a value with two keys asks before losing them"
+      "note": "THE SEVENTH TEST: the row's cross, stopping a value with two keys, asks before losing them"
     },
     {
       "do": "snapshot",
@@ -328,18 +395,18 @@
     {
       "do": "expect",
       "field": "Animating Count",
-      "reads": "None keyed"
+      "reads": "nothing yet"
     },
     {
       "do": "expect",
       "control": "Key",
       "in": "Scale",
-      "reads": "not keyed"
+      "present": false
     },
     {
       "do": "describe",
       "stage": "8-stopped",
-      "note": "keying is off, and the title keeps the size it had at the playhead rather than jumping back"
+      "note": "keying is off, the Scale row has left Animating, and the title keeps the size it had at the playhead rather than jumping back"
     },
     {
       "do": "snapshot",
@@ -347,8 +414,16 @@
     },
     {
       "do": "press",
-      "control": "Key",
-      "in": "Position"
+      "control": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Position",
+      "in": "Animate a property"
     },
     {
       "do": "wait",
@@ -409,7 +484,7 @@
     {
       "do": "expect",
       "field": "Animating Count",
-      "reads": "1 keyed"
+      "reads": "1 of 8 properties"
     },
     {
       "do": "panel",

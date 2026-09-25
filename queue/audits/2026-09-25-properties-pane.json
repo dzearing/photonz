@@ -1,0 +1,48 @@
+{
+  "feature": "The Properties pane: clip line and only what is animating",
+  "epic": "video-editing",
+  "summary": "Pick a clip, a title or a sound and the panel now opens on Properties: one line with its name, in, out, length and speed, then Animating, which lists only the values that are keyed. Everything else is behind Animate a property, a grouped picker with a search box.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording.",
+  "try": [
+    {
+      "do": "Click the recording's clip on the timeline and read the first line of the panel.",
+      "shot": "2026-09-25-properties-pane-1-clip-sc.png"
+    },
+    {
+      "do": "Click Animate a property and pick Opacity.",
+      "shot": "2026-09-25-properties-pane-2-picker-sc.png"
+    },
+    {
+      "do": "Click the Opacity diamond while the playhead sits on its key."
+    },
+    {
+      "do": "Press T, click the picture, type a title and press Command Return."
+    },
+    {
+      "do": "Animate its Scale and Opacity from the picker, then move the playhead and type a new Scale.",
+      "shot": "2026-09-25-properties-pane-3-title-sc.png"
+    },
+    {
+      "do": "Hover the Scale row and click its cross.",
+      "shot": "2026-09-25-properties-pane-4-stopped-sc.png"
+    },
+    {
+      "do": "Compare the pane with video.html PROPERTIES (left: mock, right: app).",
+      "shot": "2026-09-25-properties-pane-side-by-side.png"
+    }
+  ],
+  "evaluate": [
+    "Does the clip line tell you where the thing starts, ends and how fast it plays without looking at the timeline?",
+    "Is Animate a property the first place you would look to animate something that is not moving yet?",
+    "Does the diamond now behave like Premiere's keyframe button: a key here goes, and where there is none one is written?",
+    "Is a cross that only shows on hover enough of a way to stop a value animating, or should it always show?",
+    "With Time now holding only Speed and Sound for a clip, is it still worth being its own section?"
+  ],
+  "rough": [
+    "The dock's section header is the app's own style (title case with the grip), not the mock's small caps title and three dot menu; that is the whole dock, filed as the-dock-headers-match-the-mock-small-caps-title.",
+    "The app keeps Premiere's arrows either side of the diamond, which the mock does not draw; the value boxes were widened toward the mock's but stop short of filling the row.",
+    "The mock's empty line says 'colours and border width'; the app says 'color and stroke width', the names its own values use, and fits the panel's 60 character line limit.",
+    "Animating is a heading inside the pane, not a section of its own that folds, as the mock draws it with a chevron.",
+    "A clip's Length row and a title's On screen row are gone from Time, since the clip line says both; a fast stretch says its length and speed (2.0s · 4.0x) but no longer '8s into 2s'."
+  ]
+}

@@ -2349,7 +2349,7 @@ public enum TutorialGuides {
                 id: "key-where-it-starts",
                 anchor: .panelSection("keys"),
                 title: "Key where it starts",
-                body: "With the title picked, click the diamond on the Position row. That writes down where it is at this moment.",
+                body: "With the title picked, click Animate a property and choose Position. That writes down where it is at this moment.",
                 advance: .waitsFor(.keyAdded),
                 prepare: [.showPanel, .revealTarget]),
             TutorialStep(

@@ -130,9 +130,9 @@
       "do": "expectSections",
       "layers": false,
       "leading": [
+        "Properties",
         "Time",
-        "Sound",
-        "Animating"
+        "Sound"
       ]
     },
     {

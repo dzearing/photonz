@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/tutorial-a-title-that-moves-walk",
-  "seed": "The Video track's title guide at Next defaults with no flag set: the Text tool, a title typed on the picture that lands at the playhead with its own bar, Position keyed from its diamond, and a second key written by dragging the title a second later. The two key steps move on only when the document really gains a key.",
+  "seed": "The Video track's title guide at Next defaults with no flag set: the Text tool, a title typed on the picture that lands at the playhead with its own bar, Position keyed from Animate a property, and a second key written by dragging the title a second later. The two key steps move on only when the document really gains a key.",
   "setup": { "forget": ["tutorials"] },
   "steps": [
     { "do": "startGuide", "guide": "a-title-that-moves" },
@@ -29,10 +29,12 @@
     { "do": "action", "action": "tutorialNext" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "key-where-it-starts", "timeout": 6 },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "4-key-where-it-starts", "note": "the panel brought to the Animating section, which the card rings" },
+    { "do": "describe", "stage": "4-key-where-it-starts", "note": "the panel brought to the Properties section, which the card rings: Animate a property is how Position starts" },
     { "do": "snapshot", "name": "4-key-where-it-starts" },
 
-    { "do": "press", "control": "Key", "in": "Position" },
+    { "do": "press", "control": "Animate a property" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Position", "in": "Animate a property" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "then-where-it-ends", "timeout": 6 },
     { "do": "expect", "control": "Key", "in": "Position", "reads": "on a key" },
     { "do": "wait", "seconds": 0.6 },

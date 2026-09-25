@@ -46,7 +46,7 @@ struct TimelineIsTheLayerListTests {
         let order = TimePanelOrder.arrange(Self.saved, for: .playing)
         let shown = TimelineIsTheLayerList.sections(order, isOn: true, documentHasTime: true,
                                                     isTimelineOpen: true)
-        #expect(shown.first == "speed")
+        #expect(shown.first == "keys", "Properties: the clip line and what is animating")
         #expect(!shown.contains("layers"))
     }
 

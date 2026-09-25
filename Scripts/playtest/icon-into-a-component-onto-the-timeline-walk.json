@@ -52,7 +52,7 @@
     { "do": "action", "action": "insertPickedComponent" },
     { "do": "wait", "seconds": 1.2 },
     { "do": "describe", "stage": "4-the-icon-on-the-film", "note": "THE TEST: the icon is on the film, at the playhead, for three seconds, with a bar of its own on the timeline beside the clip. It is still the component you drew, and editing the original still reaches it" },
-    { "do": "expect", "field": "Time reading", "reads": "0:04 to 0:07 · 3.0s" },
+    { "do": "expect", "field": "Clip line", "reads": "Live Badge 4.0s → 7.0s · 3.0s · 1.0x" },
     { "do": "panel", "stage": "4-the-icon-on-the-film" },
     { "do": "snapshot", "name": "chain-4-the-icon-on-the-film" },
 

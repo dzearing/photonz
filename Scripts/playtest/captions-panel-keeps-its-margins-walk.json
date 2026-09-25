@@ -96,7 +96,24 @@
     {
       "do": "describe",
       "stage": "3a-the-clip-in-the-narrowest-dock",
-      "note": "The clip's Time, Sound and Animating rows at 220pt: a value that cannot sit beside its name drops under it, so Position keeps its name and px never wraps."
+      "note": "The clip's Properties (its clip line and Position, picked from Animate a property), Time and Sound rows at 220pt: a value that cannot sit beside its name drops under it, so Position keeps its name and px never wraps, and a long clip name is cut short before its times are."
+    },
+    {
+      "do": "press",
+      "control": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Position",
+      "in": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
     },
     {
       "do": "reveal",

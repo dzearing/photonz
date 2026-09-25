@@ -24,7 +24,7 @@
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "2-four-times", "note": "THE FIRST TEST: one click in the panel and the clip plays at four times. The bar on the timeline is a quarter of the room it took, the ruler and the transport count to two seconds rather than eight, and the piece is badged 4x. The panel says the two numbers a person would check it by, what it did about frames, and that the sound has stopped" },
     { "do": "expect", "menu": "Speed", "reads": "4x Speed" },
-    { "do": "expect", "field": "Length reading", "reads": "8s → 2s" },
+    { "do": "expect", "field": "Clip line", "reads": "Tutorial Sample 0.0s → 2.0s · 2.0s · 4.0x" },
     { "do": "panel", "stage": "2-four-times" },
     { "do": "snapshot", "name": "speed-2-the-same-take-at-four-times" },
 
@@ -44,7 +44,7 @@
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "5-slowed", "note": "THE THIRD TEST: the other direction. A quarter speed makes the clip four times longer on the timeline, and the Length row reads 8s into 32s. What it does with frames (each is held, nothing invented) is the Speed row's tooltip" },
     { "do": "expect", "menu": "Speed", "reads": "Quarter Speed" },
-    { "do": "expect", "field": "Length reading", "reads": "8s → 32s" },
+    { "do": "expect", "field": "Clip line", "reads": "Tutorial Sample 0.0s → 32.0s · 32.0s · 0.25x" },
     { "do": "snapshot", "name": "speed-5-a-quarter-speed" },
 
     { "do": "panelMenu", "menu": "Speed", "choose": "Normal" },

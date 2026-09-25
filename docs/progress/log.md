@@ -19692,3 +19692,13 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Walk steps: `expectClip` takes `pieces`, `expectSections` takes `layers`. Timeline clip pieces are walk controls now, so `press` can Shift-click one. Five video walks that read the Layers row moved to `expectClip pieces` (or fold the timeline first, in `the-layers-row-says-how-many-pieces-walk`). New walk `the-timeline-is-the-layer-list-walk` at Next defaults. 91 neighbouring walks green; suite 9723 green.
 - Audit `queue/audits/2026-09-24-timeline-is-the-layer-list.json`. Next: the Properties pane's clip line (seq 370), which now leads the panel.
 - Left rough (in the task log): a clip piece's walk frame ignores its offset, so only a clip starting at 0 can be pressed by name; moving the name inside the offset broke `title-on-the-timeline-walk`.
+
+## 2026-09-25 — The Properties pane opens on the clip line
+
+- In a document with time the panel now opens on **Properties** (the Animating section renamed, raw id `keys` kept for saved orders), headed with a kind pill (Clip, Title, Audio, Caption, Instance), as `video.html` `#gProps` draws it. First line: the clip line, name (the timeline's name, a title's words) and `in → out  length · speed`, for a cut clip the piece in hand. In a narrow dock the name goes above the times instead of down to an ellipsis.
+- **Animating lists only keyed values** ("2 of 8 properties" / "nothing yet" plus the mock's empty line in the app's own names). **Animate a property** opens a popover picker: grouped Transform, Appearance, Effects, Text, Crop, Levels, with a Find box. The diamond is Premiere's keyframe button now (key here off, or on); taking the last key off retires the row. Stop Animating is the row's hover cross and its right-click. The value last touched reads in the key colour.
+- Time loses Length (clip) and On screen (title), which the clip line says. `TimePanelOrder` leads every role with `keys`. The a-title-that-moves guide says "click Animate a property and choose Position".
+- Core: `PropertiesPane.swift` (`ClipLine`, `PropertyPicker`), tests `PropertiesPaneTests`; `TimePanelOrderTests`/`TimelineIsTheLayerListTests` updated. App: `PropertyKeysInspector.swift`, `EditorState+PropertyKeys` (`animatingRows`, `keyClipLine`, `startAnimating`, `toggleKeyHere`).
+- Walks: 17 moved from the dormant diamond to the picker, from Time/Length readings to `Clip line`, and to the new leading sections; new `properties-pane-walk` at Next defaults. All green except the two already failing before this (keys-copy-between-layers, punch-in-and-hold, same steps). Suite 9735 green.
+- Audit `queue/audits/2026-09-25-properties-pane.json`. Filed: the dock headers match the mock (small caps, chip, panel menu).
+

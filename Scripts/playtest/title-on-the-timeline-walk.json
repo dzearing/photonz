@@ -27,7 +27,7 @@
     { "do": "describe", "stage": "2-a-title", "note": "THE FIRST TEST: the ordinary text tool, on a document that has time. No Insert menu, no Titles panel, no preset. The words land as a text layer with an in and an out, and the timeline draws a bar for them beside the clip, named after what they say" },
     { "do": "reveal", "control": "Time section" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "expect", "field": "Time reading", "reads": "0:04 to 0:07 · 3.0s" },
+    { "do": "expect", "field": "Clip line", "reads": "Shipping today 4.0s → 7.0s · 3.0s · 1.0x" },
     { "do": "panel", "stage": "2-a-title" },
     { "do": "snapshot", "name": "title-1-typed-on-the-shot" },
 
@@ -41,13 +41,13 @@
     { "do": "action", "action": "titleDragEndLater" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "4-longer", "note": "THE THIRD TEST: when it leaves is set on the timeline, by dragging the end of its bar, exactly as anything else on the timeline is trimmed. A second later and the reading follows" },
-    { "do": "expect", "field": "Time reading", "reads": "0:04 to 0:08 · 4.0s" },
+    { "do": "expect", "field": "Clip line", "reads": "Shipping today 4.0s → 8.0s · 4.0s · 1.0x" },
     { "do": "panel", "stage": "4-longer" },
 
     { "do": "action", "action": "titleDragStartEarlier" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "5-earlier", "note": "THE FOURTH TEST, and the thing a title does that a clip cannot: its LEFT end moves the moment it arrives and leaves its far end where it is. A clip's left end trims into the frames behind it, because there are frames behind it. There is nothing behind a title" },
-    { "do": "expect", "field": "Time reading", "reads": "0:03 to 0:08 · 5.0s" },
+    { "do": "expect", "field": "Clip line", "reads": "Shipping today 3.0s → 8.0s · 5.0s · 1.0x" },
     { "do": "snapshot", "name": "title-3-both-ends-dragged" },
 
     { "do": "panelMenu", "menu": "Fade", "choose": "0.50s" },

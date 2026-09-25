@@ -85,8 +85,8 @@
     },
     {
       "do": "expect",
-      "field": "Time reading",
-      "reads": "0:01 to 0:04 · 3.0s"
+      "field": "Clip line",
+      "reads": "Ship it faster 1.0s → 4.0s · 3.0s · 1.0x"
     },
     {
       "do": "snapshot",
@@ -157,12 +157,20 @@
     },
     {
       "do": "reveal",
-      "control": "Animating section"
+      "control": "Properties section"
     },
     {
       "do": "press",
-      "control": "Key",
-      "in": "Scale"
+      "control": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Scale",
+      "in": "Animate a property"
     },
     {
       "do": "wait",

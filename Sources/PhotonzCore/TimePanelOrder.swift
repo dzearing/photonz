@@ -3,11 +3,13 @@ import Foundation
 /// **In a document with time, the panel leads with what the picked layer is
 /// for.** A rule, not a list somebody keeps by hand.
 ///
-/// - A recording is for PLAYING: how fast it plays (Time), how loud (Sound),
-///   then what about it is keyed (Animating).
+/// Every one of them opens on Properties (raw id `keys`): the clip line that
+/// names it and says when it runs, then what about it is animating, as
+/// `video.html` draws its dock (2026-09-25). After that:
+///
+/// - A recording is for PLAYING: how fast it plays (Time), how loud (Sound).
 /// - A title, or anything else placed on the timeline, is for being ON SCREEN
-///   and read: when it is on and how it fades (Time), its words (Text), then
-///   what is keyed.
+///   and read: when it is on and how it fades (Time), its words (Text).
 /// - A sound is for being HEARD: its level (Sound), then its time.
 ///
 /// Those sections go straight under Layers, in that order. Everything else
@@ -35,9 +37,9 @@ public enum TimePanelOrder {
         /// The rule in words, for the design doc and a walk's log.
         public var purpose: String {
             switch self {
-            case .playing: "A clip is for playing: how fast, how loud, what is keyed."
-            case .onScreen: "A title is for being read: when it is on, its words, what is keyed."
-            case .heard: "A sound is for being heard: its level, then its time."
+            case .playing: "A clip is for playing: what is animating, how fast, how loud."
+            case .onScreen: "A title is for being read: what is animating, when it is on, its words."
+            case .heard: "A sound is for being heard: what is animating, its level, then its time."
             }
         }
     }
@@ -48,9 +50,9 @@ public enum TimePanelOrder {
     /// The sections a role leads with, in order.
     public static func leads(_ role: Role) -> [String] {
         switch role {
-        case .playing: ["speed", "sound", "keys"]
-        case .onScreen: ["speed", "text", "keys"]
-        case .heard: ["sound", "speed", "keys"]
+        case .playing: ["keys", "speed", "sound"]
+        case .onScreen: ["keys", "speed", "text"]
+        case .heard: ["keys", "sound", "speed"]
         }
     }
 

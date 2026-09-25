@@ -111,6 +111,9 @@ enum InspectorSectionID: String, CaseIterable {
     // Reframe and Motion: those are two ways of making a move, and this is
     // the list of what is moving and where its keys are, which is what the
     // mock's clip detail pane leads with ("Animating").
+    // ...and it is that whole pane now, headed Properties with the picked
+    // thing's kind beside it: the clip line, then only what is animating
+    // (`PropertiesPane.swift`, 2026-09-25). The raw id stays for saved orders.
     case keys
     case reframe
     case motion
@@ -185,7 +188,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .collage: "Collage"
         case .canvas: "Canvas"
         case .effects: "Effects"
-        case .keys: "Animating"
+        case .keys: "Properties"
         case .motion: "Motion"
         case .reframe: "Reframe"
         case .editPoint: "Edit point"

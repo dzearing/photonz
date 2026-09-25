@@ -34,9 +34,46 @@ extension EditorState {
     var keyRows: [KeyedProperty] { keyLayer?.keyableProperties ?? [] }
 
     /// How many of them are keyed, for the header's count.
-    var keyedRowCount: Int {
-        guard let layer = keyLayer, let document else { return 0 }
-        return keyRows.filter { document.keyCount(layerID: layer.id, $0) > 0 }.count
+    var keyedRowCount: Int { animatingRows.count }
+
+    /// The rows the pane lists: only what is animating, in the mock's order.
+    /// Everything else waits in the Animate a property picker
+    /// (`PropertiesPane.swift`).
+    var animatingRows: [KeyedProperty] {
+        guard let layer = keyLayer, let document else { return [] }
+        return keyRows.filter { document.keyCount(layerID: layer.id, $0) > 0 }
+    }
+
+    /// The pane's first line: the picked thing's name, in, out, length and
+    /// speed. For a clip, the piece in hand, which is the clip the timeline
+    /// draws.
+    var keyClipLine: ClipLine? {
+        guard let layer = keyLayer else { return nil }
+        let piece = clipInHandID == layer.id ? clipPieceInHand : nil
+        return ClipLine(layer: layer, piece: piece)
+    }
+
+    /// The chip on the pane's header: Clip, Title, Audio, Caption, Instance.
+    var keyLayerKind: String? { keyLayer.map(ClipLine.kind(of:)) }
+
+    /// Picked in the Animate a property picker: it starts animating with one
+    /// key at the playhead holding the value it has now.
+    func startAnimating(_ property: KeyedProperty) {
+        guard keyCount(property) == 0 else { return }
+        toggleKeying(property)
+    }
+
+    /// The row's diamond, as Premiere's: a key at the playhead goes, and where
+    /// there is none one is written holding the value it has now. Taking the
+    /// last key off stops the value animating, and its row leaves the list.
+    func toggleKeyHere(_ property: KeyedProperty) {
+        switch keyDiamond(property) {
+        case .dormant: startAnimating(property)
+        case .betweenKeys: addKeyHere(property)
+        case .onKey:
+            activeKeyProperty = property
+            removeKeyHere(property)
+        }
     }
 
     func keyDiamond(_ property: KeyedProperty) -> KeyDiamond {

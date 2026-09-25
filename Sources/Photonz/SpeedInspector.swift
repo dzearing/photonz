@@ -4,9 +4,10 @@ import SwiftUI
 /// **Time**: what the piece you have picked does with time, as label and value
 /// rows (`docs/design/mocks/pages/video.html`, PROPERTIES).
 ///
-/// A clip piece is its Speed, one dropdown, and what that speed did: how much
-/// recording in how much timeline, and what you hear. A held frame is how long
-/// it holds. A title is when it is on screen and how it fades.
+/// A clip piece is its Speed, one dropdown, and what you hear at it. A held
+/// frame is how long it holds. A title is where the playhead puts its ends and
+/// how it fades. Where each one starts, ends and how long it runs is the
+/// Properties pane's clip line, which leads the panel.
 ///
 /// Freezing a frame and what a freeze pushes are verbs, so they are on the
 /// clip's right-click menu (Freeze Frame ▸), not here. Every longer answer
@@ -19,8 +20,8 @@ struct SpeedInspector: View {
         VStack(alignment: .leading, spacing: 6) {
             // Words placed on a document with time: an in, an out and a fade,
             // and nothing about frames (`TitleTime.swift`).
-            if let placed = editorState.placedLayerInHand, let time = placed.time {
-                placedInTime(time)
+            if editorState.placedLayerInHand?.time != nil {
+                placedInTime
             } else if let piece = editorState.clipPieceInHandPiece {
                 which
                 if piece.isHeld {
@@ -37,14 +38,10 @@ struct SpeedInspector: View {
 
     // MARK: A title
 
+    // When it is on screen is the Properties pane's clip line, one section up
+    // (`PropertiesPane.swift`), so this says only what you can do about it.
     @ViewBuilder
-    private func placedInTime(_ time: LayerTime) -> some View {
-        let reading = TitleTime.reading(time)
-        VideoKit.FieldRow(label: "On screen") {
-            VideoKit.ValueFace(value: reading)
-                .panelReadout(reading)
-        }
-        .playtestField("Time reading")
+    private var placedInTime: some View {
         VideoKit.FieldRow(label: "Playhead") {
             HStack(spacing: 6) {
                 Button("Start Here") { editorState.startPlacedLayerHere() }
@@ -107,12 +104,7 @@ struct SpeedInspector: View {
         }
         .playtestField("Speed")
         .panelHelp(reading.framesSentence)
-        VideoKit.FieldRow(label: "Length") {
-            VideoKit.ValueFace(value: reading.lengthValue)
-                .panelReadout(reading.lengthValue)
-        }
-        .playtestField("Length reading")
-        .panelHelp(reading.lengthSentence)
+        // How long it runs is the Properties pane's clip line, one section up.
         sound(reading.sound)
     }
 
