@@ -1,0 +1,36 @@
+{
+  "id": "fix-a-caption-one-word-at-a-time-on-the-canvas-a",
+  "title": "Fix a caption one word at a time, on the canvas and in a word lane",
+  "goal": "User 2026-09-25, after auto-captioning a real recording: 'It misspelled some words, and I'd like to adjust them. I tried double clicking on an individual word that was wrong and couldn't edit. I could only edit captions as a whole. I also wanted to resize the individual words and drag them within the captions timeline but couldn't.' The model already has word timing (TranscribedWord startMS/endMS in Captions.swift, CaptionCue.words, the active-word highlight in CaptionLook.swift), but no UI edits a single word. The mock docs/design/mocks/pages/video-captions.html draws a word lane (.lane.wordlane, .wchip) with a chip per word on its own time span; its open question 'inline nudge on each word chip, or re-transcription plus a global offset?' is answered by the user: per word, inline. Build it at the mock's fidelity; runner-prompt rules on default config, side-by-side with the mock, labels-not-explanations and right-click apply. Ask: would someone fixing captions in Premiere or Descript get this, and is it quicker here?",
+  "epic": "video-audio",
+  "priority": "p1-high",
+  "seq": 0.01,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-25T11:57:41.780Z",
+  "updated": "2026-09-25T11:57:41.861Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Double-clicking a word in a caption on the canvas, or its chip in the word lane, edits just that word in place; Return or clicking away commits, Escape cancels, and the word keeps its timing",
+    "Correcting a word into two ('alot' to 'a lot') or merging two splits or joins the time span evenly, and the edit is one undo step",
+    "The captions track expands (chevron) into a word lane with one chip per word, as the mock draws it; the active word lights up as the playhead moves",
+    "Drag a word chip to move it in time and drag its edges to resize it; neighbours clamp so words never overlap, snapping to the playhead and to neighbouring words; Opt-drag moves the word's cue with it",
+    "Right-click a word: Edit Word, Split Here, Merge with Next, Delete Word, Move to Next Line, Play From Here",
+    "Tab and Shift-Tab step to the next and previous word while editing, so a run of typos is fixed without the mouse",
+    "Editing a word never re-styles or reflows the rest of the caption, and the fixed spelling survives re-captioning of a different stretch",
+    "A walk at Next defaults opens a captioned recording, fixes a misspelled word by double-clicking it on the canvas, fixes another in the word lane, drags and resizes a word, and photographs each step"
+  ],
+  "log": [
+    {
+      "t": "2026-09-25T11:57:41.782Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-25T11:57:41.860Z",
+      "note": "seq 400 -> 0.01"
+    }
+  ]
+}
