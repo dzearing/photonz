@@ -1,0 +1,32 @@
+{
+  "id": "a-picture-or-video-fits-above-the-tool-bar-not-u",
+  "title": "A picture or video fits above the tool bar, not under it",
+  "goal": "User 2026-09-25: 'when the video or image is centered, we should try to center above the toolbar so its not covered up. And maybe position the toolbar lower.' Cause: EditorState.zoomToFit (EditorState.swift:3429) and the initial fit call Viewport.fit(documentSize:in: viewport.viewSize), which centres the document in the whole canvas and ignores the floating tool capsule, so the bottom of the picture or video sits under it. Fix the fit, and move the capsule lower as the mocks place it (the capsule floats near the bottom edge of the canvas in video.html and the shell mocks). Runner-prompt rules on default config, side-by-side with the mock apply.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 0.02,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-25T15:02:18.968Z",
+  "updated": "2026-09-25T15:02:19.053Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Viewport fit (PhotonzCore, tested first) takes the obscured insets of floating chrome: the document is fitted and centred in the canvas area above the tool capsule (plus the standard margin), for images and videos, on open, on Fit (Cmd-0), and when the window resizes while fitted",
+    "The tool capsule sits lower, a consistent small margin above the canvas's bottom edge (or above the timeline dock on a video), matching the mock's placement; the gap is measured in the audit",
+    "Nothing that was fitted is covered by the capsule at any window size, in both Current-shared code paths and Next; a walk opens a tall portrait image, a wide image and a recording at Next defaults and fails if the capsule overlaps the document's bounds",
+    "Zoomed or panned by hand, the view is left alone: only fitting accounts for the capsule; scroll can still bring the picture under the capsule deliberately"
+  ],
+  "log": [
+    {
+      "t": "2026-09-25T15:02:18.970Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-25T15:02:19.052Z",
+      "note": "seq 350 -> 0.02"
+    }
+  ]
+}
