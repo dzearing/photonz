@@ -37,10 +37,18 @@ public enum PanelSectionArrival {
     /// With nothing mounted at all this is the whole of `target`: a window
     /// opening has no previous frame to protect, and holding everything back
     /// would be a visible flash of an empty dock.
+    ///
+    /// ...and the same when nothing in `target` is mounted: holding all of it
+    /// back is that same empty dock, and one that shares nothing with the last
+    /// pass would leave nothing mounted and so nothing counted as waiting. It
+    /// never happened while the layers list was in every dock; on a video the
+    /// timeline stands in for the list (`TimelineIsTheLayerList`), and picking
+    /// a cut after a clip swaps every section at once.
     public static func showing(target: [String], mounted: [String]) -> [String] {
         guard !mounted.isEmpty else { return target }
         let have = Set(mounted)
-        return target.filter { have.contains($0) }
+        let built = target.filter { have.contains($0) }
+        return built.isEmpty ? target : built
     }
 
     /// True when the selection has asked for a section the dock has not built,

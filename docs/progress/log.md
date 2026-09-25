@@ -19683,3 +19683,12 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Walk steps `dropOnLibrary` and `importPicks` (docs/design/playtest-harness.md). Walk `library-import-walk` at Next defaults: import, shelf drop, tile onto the Audio track, plus-menu import of a file already there. 28 neighbouring walks green; full suite 9710 green (the export-size flake failed twice first, logged on its task).
 - Audit `queue/audits/2026-09-25-library-import.json`. Filed: Library tiles as wide as the mock (68 vs 96 points, names cut), and a new empty video (the mock's step 1).
 
+
+## 2026-09-24 — On a video, the timeline is the layer list
+
+- While a document with time shows its timeline, the panel leaves its Layers list out and opens on the picked clip, as `video.html` draws its dock; folding the timeline brings Layers back, and a picture is untouched. Rule `TimelineIsTheLayerList` (core, tested, not a mode and not an optional section), flag `next-the-timeline-is-the-layer-list`, on in Next. Written into `docs/design/modes.md` beside the timeline's own rule.
+- What the list did lives on the timeline: pick, Shift or Command click to pick more (new, `ClipPiecesBar` and the whole-length bar), rename, hide, lock and reorder from track headers, the Captions track.
+- Fixed on the way: `PanelSectionArrival` held back every section when a pick shared none with the last one (clip to cut, only possible once Layers stopped being in every dock) and the dock then stayed empty for good. It shows the whole target now. Test in `PanelSectionArrivalTests`.
+- Walk steps: `expectClip` takes `pieces`, `expectSections` takes `layers`. Timeline clip pieces are walk controls now, so `press` can Shift-click one. Five video walks that read the Layers row moved to `expectClip pieces` (or fold the timeline first, in `the-layers-row-says-how-many-pieces-walk`). New walk `the-timeline-is-the-layer-list-walk` at Next defaults. 91 neighbouring walks green; suite 9723 green.
+- Audit `queue/audits/2026-09-24-timeline-is-the-layer-list.json`. Next: the Properties pane's clip line (seq 370), which now leads the panel.
+- Left rough (in the task log): a clip piece's walk frame ignores its offset, so only a clip starting at 0 can be pressed by name; moving the name inside the offset broke `title-on-the-timeline-walk`.

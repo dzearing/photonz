@@ -408,6 +408,17 @@ struct InspectorPanel: View {
                             .onDrop(of: FileDrop.types,
                                     delegate: SectionFileDrop(item: id, editorState: editorState))
                         }
+                        // A video with nothing picked: the timeline has taken
+                        // the list's place, so the dock says where to click
+                        // rather than standing empty.
+                        if sections.isEmpty, !showsLayersList {
+                            Text("Pick a clip on the timeline")
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.top, 24)
+                                .panelReadout("panel empty: pick a clip on the timeline")
+                        }
                     }
                     .padding(.vertical, DockMetrics.listTopPadding)
                     // NO implicit animation on the section SET (10.7). Animating
@@ -867,7 +878,7 @@ struct InspectorPanel: View {
 
     private var orderedAvailableSections: [InspectorSectionID] {
         let available = availableSections
-        let inOrder = timeOrdered(order).filter { available.contains($0) }
+        let inOrder = withoutLayersUnderATimeline(timeOrdered(order).filter { available.contains($0) })
         // ...and then the panel's own rule about which of the OPTIONAL sections
         // are worth showing at all (Next, `next-panel-sections`). The test
         // above says a section applies to what is picked; this one says the
@@ -882,6 +893,24 @@ struct InspectorPanel: View {
                                            choices: sectionVisibility.choices,
                                            in: situation)
         }
+    }
+
+    /// Where the timeline is on screen, it is the layer list, so the panel
+    /// leaves its own out and opens on the picked clip
+    /// (`TimelineIsTheLayerList`, `video.html`'s "NO LAYERS GROUP"). Folding
+    /// the timeline away brings the list straight back.
+    private func withoutLayersUnderATimeline(_ sections: [InspectorSectionID]) -> [InspectorSectionID] {
+        TimelineIsTheLayerList.sections(sections.map(\.rawValue),
+                                        isOn: Experiments.shared.timelineIsTheLayerListEnabled,
+                                        documentHasTime: editorState.documentHasTime,
+                                        isTimelineOpen: editorState.motionStripPhase == .open)
+            .compactMap(InspectorSectionID.init(rawValue:))
+    }
+
+    private var showsLayersList: Bool {
+        TimelineIsTheLayerList.showsLayersList(isOn: Experiments.shared.timelineIsTheLayerListEnabled,
+                                               documentHasTime: editorState.documentHasTime,
+                                               isTimelineOpen: editorState.motionStripPhase == .open)
     }
 
     /// In a document with time, the saved order with what the picked layer is

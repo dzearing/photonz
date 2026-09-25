@@ -82,9 +82,9 @@
       "seconds": 0.4
     },
     {
-      "do": "expect",
-      "row": "Sample Talk",
-      "reads": "layer, 3 pieces"
+      "do": "expectClip",
+      "clip": "Sample Talk",
+      "pieces": 3
     },
     {
       "do": "key",
@@ -95,9 +95,9 @@
       "seconds": 0.8
     },
     {
-      "do": "expect",
-      "row": "Sample Talk",
-      "reads": "layer, 2 pieces"
+      "do": "expectClip",
+      "clip": "Sample Talk",
+      "pieces": 2
     },
     {
       "do": "action",

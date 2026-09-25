@@ -1503,9 +1503,10 @@ private final class Run {
             note(number, step.name, "clicked the ruler at \(EditorState.timecode(ms: ms)): playhead "
                  + "\(editor.documentTimeMS) ms of \(editor.documentLengthTimecode)", state: describe())
 
-        case .expectClip(let named, let track, let startsAt, let endsAt, let count, let within):
+        case .expectClip(let named, let track, let startsAt, let endsAt, let count, let pieces, let within):
             note(number, step.name, try checkClip(named: named, track: track, startsAt: startsAt,
-                                                  endsAt: endsAt, count: count, within: within),
+                                                  endsAt: endsAt, count: count, pieces: pieces,
+                                                  within: within),
                  state: describe())
 
         case .snapshot(let name, let wanted):
@@ -1914,9 +1915,9 @@ private final class Run {
         case .expectSectionFits(let section):
             note(number, step.name, try checkSectionFits(section), state: describe())
 
-        case .expectSections(let leading):
+        case .expectSections(let leading, let layers):
             note(number, step.name,
-                 try await patiently { try self.checkSections(leading: leading) },
+                 try await patiently { try self.checkSections(leading: leading, layers: layers) },
                  state: describe())
 
         case .expectInView(let field, let whole):
@@ -7324,14 +7325,25 @@ private final class Run {
     /// capture with a ruler.
     /// Whether the dock's sections, top to bottom and with Layers aside,
     /// start with `leading`.
-    private func checkSections(leading: [String]) throws -> String {
+    private func checkSections(leading: [String], layers: Bool? = nil) throws -> String {
         let probe = InspectorLayoutProbe.shared
-        let shown = probe.visible.map(\.title).filter { $0 != InspectorSectionID.layers.title }
+        let all = probe.visible.map(\.title)
+        let hasLayers = all.contains(InspectorSectionID.layers.title)
+        if let layers, layers != hasLayers {
+            throw Failure(description: layers
+                ? "there is no Layers list in the panel, and the walk said there would be; "
+                    + "it shows: \(all.isEmpty ? "nothing" : all.joined(separator: ", "))"
+                : "the panel still has its Layers list, and the walk said the timeline stands in for it; "
+                    + "it shows: \(all.joined(separator: ", "))")
+        }
+        let listSays = layers.map { $0 ? "the Layers list is there" : "there is no Layers list" }
+        guard !leading.isEmpty else { return listSays ?? "" }
+        let shown = all.filter { $0 != InspectorSectionID.layers.title }
         guard Array(shown.prefix(leading.count)) == leading else {
             throw Failure(description: "the panel starts \(shown.prefix(leading.count + 2).joined(separator: ", ")), "
                 + "not \(leading.joined(separator: ", ")); all of it: \(shown.joined(separator: ", "))")
         }
-        return "the panel starts \(leading.joined(separator: ", "))"
+        return (listSays.map { $0 + "; " } ?? "") + "the panel starts \(leading.joined(separator: ", "))"
             + (shown.count > leading.count ? ", then \(shown.dropFirst(leading.count).joined(separator: ", "))" : "")
     }
 
@@ -12805,7 +12817,7 @@ extension Run {
 
     /// Where a clip on the timeline is, by name.
     func checkClip(named: String, track: String?, startsAt: Double?, endsAt: Double?,
-                   count: Int?, within: Double) throws -> String {
+                   count: Int?, pieces: Int?, within: Double) throws -> String {
         guard let document = try requireEditor().document else {
             throw Failure(description: "there is no document open")
         }
@@ -12842,7 +12854,16 @@ extension Run {
             throw Failure(description: "no clip called \"\(named)\" is \(wanted.joined(separator: ", ")); "
                 + "the timeline: \(said)")
         }
-        return "\(named) is where the walk said; the timeline: \(said)"
+        if let pieces {
+            let counted = matching.map { $0.clipPieces?.count ?? 1 }
+            guard counted.contains(pieces) else {
+                throw Failure(description: "\(named) is in "
+                    + counted.map(String.init).joined(separator: ", ") + " pieces"
+                    + ", not \(pieces); the timeline: \(said)")
+            }
+        }
+        return "\(named) is where the walk said"
+            + (pieces.map { ", in \($0) piece\($0 == 1 ? "" : "s")" } ?? "") + "; the timeline: \(said)"
     }
 }
 #endif

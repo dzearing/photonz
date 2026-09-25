@@ -12,8 +12,12 @@
     { "do": "action", "action": "videoPause" },
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.6 },
+    { "do": "expectSections", "layers": false },
+    { "do": "action", "action": "toggleTimingStrip" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectSections", "layers": true },
     { "do": "expect", "row": "Tutorial Sample", "reads": "layer" },
-    { "do": "describe", "stage": "1-uncut", "note": "an eight second recording nobody has cut. Its row in the layers list says its own name and nothing else, exactly as a screenshot's row has always read" },
+    { "do": "describe", "stage": "1-uncut", "note": "an eight second recording nobody has cut, with its timeline folded away so the Layers list is back (while the timeline shows, the timeline IS the layer list). Its row says its own name and nothing else, exactly as a screenshot's row has always read" },
     { "do": "snapshot", "name": "1-uncut" },
 
     { "do": "action", "action": "videoSeekQuarter" },

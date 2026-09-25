@@ -94,8 +94,8 @@ struct TimelineTrackRow: View {
 
     private var isPicked: Bool {
         editorState.selectedTrackIDs.contains(track.id)
-            || row.clips.contains { $0.layerID == editorState.selectedLayerID }
-            || row.linked.contains { $0.layerID == editorState.selectedLayerID }
+            || row.clips.contains { editorState.isLayerSelected($0.layerID) }
+            || row.linked.contains { editorState.isLayerSelected($0.layerID) }
     }
 
     // MARK: The header
@@ -577,10 +577,17 @@ struct TimelineClipView: View {
             let x0 = laneWidth * ruler.fraction(ofMS: 0)
             let x1 = laneWidth * ruler.fraction(ofMS: Double(editorState.documentLengthMS))
             VideoKit.ClipBar(title: group.layerName, kind: kind,
-                             isSelected: editorState.selectedLayerID == group.layerID, height: height)
+                             isSelected: editorState.isLayerSelected(group.layerID), height: height)
                 .frame(width: max(2, x1 - x0))
                 .offset(x: x0)
-                .onTapGesture { editorState.selectLayer(group.layerID) }
+                .onTapGesture {
+                    let flags = NSApp.currentEvent?.modifierFlags ?? NSEvent.modifierFlags
+                    if flags.contains(.shift) || flags.contains(.command) {
+                        editorState.extendSelection(toLayer: group.layerID)
+                    } else {
+                        editorState.selectLayer(group.layerID)
+                    }
+                }
         }
     }
 }

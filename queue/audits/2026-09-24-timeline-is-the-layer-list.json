@@ -1,0 +1,45 @@
+{
+  "feature": "On a video, the timeline is the layer list",
+  "epic": "video-editing",
+  "summary": "On a recording, the panel no longer repeats the timeline as a Layers list. It opens on the clip you picked, and Layers comes back the moment you fold the timeline away.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    {
+      "do": "Open a screen recording, then click the talk clip on the V1 track.",
+      "shot": "2026-09-24-timeline-is-the-layer-list-1.png"
+    },
+    {
+      "do": "Shift-click a second clip on the timeline to pick both.",
+      "shot": "2026-09-24-timeline-is-the-layer-list-2.png"
+    },
+    {
+      "do": "Click the join between two clips.",
+      "shot": "2026-09-24-timeline-is-the-layer-list-4.png"
+    },
+    {
+      "do": "Press Escape so nothing is picked.",
+      "shot": "2026-09-24-timeline-is-the-layer-list-5.png"
+    },
+    {
+      "do": "Press the × at the right end of the timeline's bar to fold it away.",
+      "shot": "2026-09-24-timeline-is-the-layer-list-3.png"
+    },
+    {
+      "do": "Click the TIMING row at the bottom to open the timeline again."
+    },
+    {
+      "do": "Open an ordinary screenshot and check its Layers list is where it always was."
+    }
+  ],
+  "evaluate": [
+    "With the timeline showing, do you ever miss the Layers list?",
+    "Does the panel now start where your eye goes after picking a clip?",
+    "With nothing picked, the panel shows the Captions settings and the clip under the playhead. Is that what you want there, or should it be quieter?",
+    "When you fold the timeline, is Layers coming back the right thing, or would you rather it stayed away?"
+  ],
+  "rough": [
+    "The mock heads this pane 'Properties' with the kind as a chip, and opens with one line naming the clip, its in and out, length and speed. The app shows separate Time, Sound and Animating sections instead. That is the next task in the queue (the Properties pane opens on the clip line).",
+    "Canvas settings no longer have a row on a video. Canvas Size is in the Image menu and on a right click over bare canvas, but a recording usually covers the whole canvas, so the right click lands on the clip.",
+    "Hide and lock work per track, from the track header, not per clip. That is how Premiere does it, but a title that shares a track with another cannot be hidden on its own."
+  ]
+}

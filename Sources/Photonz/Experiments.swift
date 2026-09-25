@@ -446,6 +446,11 @@ extension Experiments {
     /// (`docs/design/video-audio.md`).
     var soundOnTheTimelineEnabled: Bool { isEnabled(FeatureCatalog.soundOnTheTimelineFlag) }
 
+    /// `next-the-timeline-is-the-layer-list`: whether the panel leaves its
+    /// Layers list out while a timeline is on screen, because the timeline is
+    /// that list (`TimelineIsTheLayerList`).
+    var timelineIsTheLayerListEnabled: Bool { isEnabled(FeatureCatalog.timelineIsTheLayerListFlag) }
+
     /// `next-hear-the-scrub`: whether dragging the playhead plays the sound
     /// under it (`ScrubAudition.swift`). Leans on the one above: with no sound
     /// on the timeline there is nothing under the playhead to hear.

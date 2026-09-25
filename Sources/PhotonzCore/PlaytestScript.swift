@@ -2214,8 +2214,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// so: which track it is on, when it starts and when it ends, in seconds,
     /// give or take `within`. `count` is how many clips are called that,
     /// which is what an overwrite that split a clip in two has to claim.
+    /// `pieces` is how many pieces the cuts have left it in, read off the
+    /// timeline: where the timeline is the layer list there is no Layers row
+    /// to say "3 pieces" (`TimelineIsTheLayerList`).
     case expectClip(named: String, track: String?, startsAt: Double?, endsAt: Double?,
-                    count: Int?, within: Double)
+                    count: Int?, pieces: Int?, within: Double)
     /// One of the app's OWN things — a layer row, a shelf tile, a colour swatch
     /// — picked up by name and held over a point, so a walk can see what the
     /// panel says about a drag that has nothing to do with files. Nothing is
@@ -2937,7 +2940,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// time leads with (`TimePanelOrder`): a clip's Time, Sound, Animating; a
     /// title's Time, Text, Animating; a sound's Sound, Time. Named the way the
     /// dock titles them. The failure lists the order the dock really has.
-    case expectSections(leading: [String])
+    /// ...and, with `layers`, whether the Layers list is in the dock at all:
+    /// false where a timeline is on screen and stands in for it, true once
+    /// the timeline is folded away (`TimelineIsTheLayerList`).
+    case expectSections(leading: [String], layers: Bool?)
     /// The named thing in the right hand panel must be ALL on screen: inside
     /// the window, and inside whatever is scrolling it.
     ///
@@ -3426,12 +3432,13 @@ public enum PlaytestStep: Sendable, Equatable {
             let track = try f.optionalString("track")
             let startsAt = try f.optionalNumber("startsAt")
             let endsAt = try f.optionalNumber("endsAt")
-            guard track != nil || startsAt != nil || endsAt != nil || count != nil else {
+            let pieces = try f.optionalNumber("pieces").map { Int($0) }
+            guard track != nil || startsAt != nil || endsAt != nil || count != nil || pieces != nil else {
                 throw f.invalid("startsAt", "expectClip has to claim something: "
-                    + "a track, a startsAt, an endsAt or a count")
+                    + "a track, a startsAt, an endsAt, a count or a number of pieces")
             }
             self = .expectClip(named: try f.string("clip"), track: track, startsAt: startsAt,
-                               endsAt: endsAt, count: count,
+                               endsAt: endsAt, count: count, pieces: pieces,
                                within: try f.optionalNumber("within") ?? 0.05)
         case "dragOver":
             self = .dragOver(carry: try f.string("carry"), at: try f.point("at"),
@@ -4060,10 +4067,12 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .expectSectionFits(section: try f.string("section"))
         case "expectSections":
             let leading = try f.optionalStrings("leading")
-            guard !leading.isEmpty else {
-                throw f.invalid("leading", "expectSections has to name the sections the panel must start with, in order")
+            let layers = try f.optionalFlag("layers")
+            guard !leading.isEmpty || layers != nil else {
+                throw f.invalid("leading", "expectSections has to name the sections the panel must start with, "
+                    + "in order, or say whether the Layers list is there")
             }
-            self = .expectSections(leading: leading)
+            self = .expectSections(leading: leading, layers: layers)
         case "expectInView":
             self = .expectInView(field: try f.string("field"),
                                  whole: try f.optionalFlag("whole") ?? false)

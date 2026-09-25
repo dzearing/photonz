@@ -220,6 +220,8 @@ public enum FeatureCatalog {
 
     public static let whatIsLeftInThePictureFlag = "next-what-a-separation-left-behind"
 
+    public static let timelineIsTheLayerListFlag = "next-the-timeline-is-the-layer-list"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -781,6 +783,17 @@ public enum FeatureCatalog {
                     title: "Put something you built on the timeline and animate it",
                     description: "A component you drew, an icon you made, a badge you styled: drop one on a recording today and it stands over the whole film, from the first frame to the last, because a component knows nothing about time. With this on, anything you place on a document that has time arrives where the playhead is and runs for three seconds, with a bar on the timeline beside the clip. Drag either end to say when it comes on and when it goes, drag the middle to move it, and the Time section says the two moments with a button for each that puts it on the playhead. It stays the thing you built: it keeps its link to the original, so editing the original changes it on the timeline too, and a copy dropped twice is the same component in two places. And it animates with the machinery everything else animates with, which is the point of it: a move recorded on a part of the original is a real motion with a lane on the strip, a curve of its own and an ending you choose, so two parts of one badge can move out of phase, and each copy runs that animation from the moment IT arrives rather than from the start of the film. What plays is what leaves: the file written out has the component on it, over the shot, moving. Off means a component on a recording is on screen for the whole of it and stands still.",
                     area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next],
+                needs: [recordingIsADocumentFlag]),
+            Definition(
+                flag: FeatureFlag(
+                    name: timelineIsTheLayerListFlag,
+                    title: "On a video, the timeline is the layer list",
+                    description: "On a video, the panel drops its Layers list while the timeline shows, because the timeline already lists every clip, and opens on the clip you picked. Fold the timeline away and Layers comes back. Pictures are untouched.",
+                    area: .panel,
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

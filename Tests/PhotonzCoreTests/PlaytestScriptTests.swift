@@ -2355,7 +2355,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 8, "endsAt": 12, "count": 1 } ] }
         """)
-        guard case .expectClip(let named, let track, let startsAt, let endsAt, let count, let within)
+        guard case .expectClip(let named, let track, let startsAt, let endsAt, let count, let pieces, let within)
                 = script.steps[0] else {
             Issue.record("expectClip"); return
         }
@@ -2364,10 +2364,50 @@ struct PlaytestScriptTests {
         #expect(startsAt == 8)
         #expect(endsAt == 12)
         #expect(count == 1)
+        #expect(pieces == nil)
         #expect(within == 0.05)
         #expect(throws: PlaytestScriptError.self) {
             try decode("""
             { "steps": [ { "do": "expectClip", "clip": "b-roll" } ] }
+            """)
+        }
+    }
+
+    /// Where the timeline is the layer list, how many pieces a cut left is
+    /// read off the timeline rather than off a Layers row that is not there.
+    @Test("An expectClip step can claim how many pieces a clip is in, and that alone is a claim")
+    func expectClipCountsPieces() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectClip", "clip": "Tutorial Sample", "pieces": 3 } ] }
+        """)
+        guard case .expectClip(_, _, _, _, let count, let pieces, _) = script.steps[0] else {
+            Issue.record("expectClip"); return
+        }
+        #expect(count == nil)
+        #expect(pieces == 3)
+    }
+
+    @Test("An expectSections step can claim the Layers list is there or gone, with or without a lead")
+    func expectSectionsClaimsTheLayersList() throws {
+        let gone = try decode("""
+        { "steps": [ { "do": "expectSections", "layers": false, "leading": ["Time"] } ] }
+        """)
+        guard case .expectSections(let leading, let layers) = gone.steps[0] else {
+            Issue.record("expectSections"); return
+        }
+        #expect(leading == ["Time"])
+        #expect(layers == false)
+        let back = try decode("""
+        { "steps": [ { "do": "expectSections", "layers": true } ] }
+        """)
+        guard case .expectSections(let none, let present) = back.steps[0] else {
+            Issue.record("expectSections"); return
+        }
+        #expect(none.isEmpty)
+        #expect(present == true)
+        #expect(throws: PlaytestScriptError.self) {
+            try decode("""
+            { "steps": [ { "do": "expectSections" } ] }
             """)
         }
     }

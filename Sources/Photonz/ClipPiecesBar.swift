@@ -255,6 +255,8 @@ struct ClipPiecesBar: View {
     }
 
     private func isPiecePicked(_ index: Int, of count: Int) -> Bool {
+        // One of several clips picked with Shift: the whole clip is in hand.
+        if !isPicked, editorState.multiSelectedLayerIDs.contains(layerID) { return true }
         guard isPicked else { return false }
         guard count > 1 else { return true }
         // Mid-carry the bar is already drawn in the order it would land in, so
@@ -349,6 +351,16 @@ struct ClipPiecesBar: View {
                 // A click on the clip takes it rather than any keys picked on
                 // its lanes, so ⌫ afterwards means the clip.
                 editorState.clearKeySelection()
+                // Shift or ⌘ adds the clip to what is picked, or takes it out,
+                // the way Premiere's timeline and the Layers list both do.
+                // Where the timeline is the layer list this is the only way
+                // left to pick two things at once without a sweep.
+                let flags = NSApp.currentEvent?.modifierFlags ?? NSEvent.modifierFlags
+                if kind != nil, flags.contains(.shift) || flags.contains(.command) {
+                    editorState.selectedClipPieceIndex = nil
+                    editorState.extendSelection(toLayer: layerID)
+                    return
+                }
                 editorState.selectClipPiece(layerID: layerID,
                                             index: pieces.count > 1 ? index : nil)
                 // A double click on a caption opens its words for typing, in
@@ -1062,7 +1074,13 @@ private struct WalkNames: ViewModifier {
 
     func body(content: Content) -> some View {
         if on {
-            content.playtestField(field).panelHelp(help)
+            // A control as well as a field, so a walk can PRESS a clip, with
+            // Shift held if it likes, the way a person picks one on the
+            // timeline: where the timeline is the layer list there is no row
+            // to pick it from instead.
+            content.playtestField(field)
+                .playtestControl(field, detail: "Timeline")
+                .panelHelp(help)
         } else {
             content.help(help)
         }

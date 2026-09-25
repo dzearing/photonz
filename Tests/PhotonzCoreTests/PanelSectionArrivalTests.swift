@@ -81,6 +81,18 @@ struct PanelSectionArrivalTests {
         #expect(PanelSectionArrival.isWaiting(target: target, mounted: []) == false)
     }
 
+    @Test func aPickThatSharesNoSectionWithTheLastShowsAllOfItAtOnce() {
+        // On a video the Layers list is not in the dock (the timeline is the
+        // layer list), so picking a cut after a clip swaps EVERY section.
+        // Holding them all back left the dock empty, and with nothing mounted
+        // nothing counted as waiting, so it stayed empty for good (found
+        // 2026-09-24, `transition-picker-at-a-cut-walk`).
+        let target = ["editPoint", "transition"]
+        let mounted = ["speed", "sound", "keys"]
+        #expect(PanelSectionArrival.showing(target: target, mounted: mounted) == target)
+        #expect(PanelSectionArrival.isWaiting(target: target, mounted: mounted) == false)
+    }
+
     @Test func anEmptyTargetShowsNothing() {
         #expect(PanelSectionArrival.showing(target: [], mounted: ["layers"]).isEmpty)
         #expect(PanelSectionArrival.isWaiting(target: [], mounted: ["layers"]) == false)

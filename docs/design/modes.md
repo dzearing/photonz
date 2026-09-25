@@ -107,6 +107,14 @@ that shape out (`PRODUCT-MODEL.md` §4f). A popup reads as state.
 | Shortcuts | Never | every tool keeps its key in every mode |
 | The native menu bar | Never | **this is the safety net the whole idea rests on** |
 | The timeline | Folded, not removed | it appears because the document has time, never because of a mode |
+
+The layers list has one rule of its own beside the timeline's, and it is not a
+mode: **where the timeline is on screen, the timeline is the layer list**, so
+the panel leaves its Layers list out and opens on the picked clip, exactly as
+`video.html` draws its dock. Fold the timeline away and the list comes straight
+back; a picture with no time never loses it. It follows from the document having
+time, the same way the timeline does, and no mode can reach it
+(`TimelineIsTheLayerList`, flag `next-the-timeline-is-the-layer-list`).
 | The document | Never, in any sense | nothing hidden, nothing changed, nothing written |
 
 One honest consequence: the tool bar's overflow button is `display:none` today

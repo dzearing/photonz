@@ -1,0 +1,216 @@
+{
+  "out": "/tmp/photonz-playtest/the-timeline-is-the-layer-list-walk",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "scratch": [
+      "sample:recording as b-roll.mp4"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvas": "1200x800",
+      "window": "1440x900"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectSections",
+      "layers": true
+    },
+    {
+      "do": "describe",
+      "stage": "0-a-picture",
+      "note": "a picture with no time: the Layers list is where it has always been, because there is no timeline to stand in for it"
+    },
+    {
+      "do": "action",
+      "action": "openSampleTalk"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "captionsWaitForThemselves"
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "dropOnTimeline",
+      "file": "scratch/b-roll.mp4",
+      "track": "V1",
+      "seconds": 12.9
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "track": "V1",
+      "count": 1
+    },
+    {
+      "do": "press",
+      "control": "Track V1"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "b-roll"
+      ]
+    },
+    {
+      "do": "press",
+      "control": "Sample Talk clip",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Sample Talk",
+        "b-roll"
+      ]
+    },
+    {
+      "do": "expectSections",
+      "layers": false
+    },
+    {
+      "do": "describe",
+      "stage": "1-shift-picks-two",
+      "note": "b-roll picked from its track header, then Shift-click on the talk adds it to what is picked, as the Layers list and Premiere's timeline both do: picking two things survives the list going away"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-shift-picks-two"
+    },
+    {
+      "do": "press",
+      "control": "Sample Talk clip"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Sample Talk"
+      ]
+    },
+    {
+      "do": "expectSections",
+      "layers": false,
+      "leading": [
+        "Time",
+        "Sound",
+        "Animating"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "2-opens-on-the-clip",
+      "note": "THE TEST, at Next defaults with no flag touched: a recording with a second clip on it and the talk picked on the timeline. The panel has no Layers list, because the timeline under it already lists every clip, title, sound and caption; the first thing in the panel is the picked clip's Time, the way video.html draws its dock"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-opens-on-the-clip"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectPicked",
+      "layers": []
+    },
+    {
+      "do": "expectSections",
+      "layers": false
+    },
+    {
+      "do": "describe",
+      "stage": "3-nothing-picked",
+      "note": "Escape and nothing is picked: the panel says where to click rather than standing empty, and still no Layers list, because the timeline under it is that list"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-nothing-picked"
+    },
+    {
+      "do": "press",
+      "control": "Hide Timing"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectSections",
+      "layers": true
+    },
+    {
+      "do": "expect",
+      "row": "b-roll",
+      "reads": "layer"
+    },
+    {
+      "do": "describe",
+      "stage": "3-folded",
+      "note": "the timeline folded away to its one row, and the Layers list is straight back at the top of the panel: a document is never left with no list of what is in it"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-timeline-folded"
+    },
+    {
+      "do": "action",
+      "action": "toggleTimingStrip"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectSections",
+      "layers": false
+    },
+    {
+      "do": "describe",
+      "stage": "4-open-again",
+      "note": "and open again, the list gives way to the timeline once more"
+    }
+  ]
+}
