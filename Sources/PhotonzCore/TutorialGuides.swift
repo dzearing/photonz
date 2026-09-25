@@ -2198,6 +2198,302 @@ public enum TutorialGuides {
                 title: "What you see is what comes out",
                 body: "A trim or a crop goes into everything you copy or export from here. The recording on disk stays as it was until you save."),
         ])
+
+    // MARK: The Video track, in the editor
+
+    // A recording is a document now: it opens in the editor with the transport
+    // and the timeline under the picture, and the small recording window the
+    // two guides above teach is retired at Next. These six teach the editor a
+    // Premiere or Final Cut person already half knows, with the keys they
+    // already have in their fingers: Q and W, Command K, the Delete key, a
+    // click on the cut for its transitions, Command T.
+    //
+    // Every step that asks for something waits for the DOCUMENT to show it
+    // happened (`TutorialDocumentChange`), because each of these has a key, a
+    // menu row and a right click, and the step must not care which one a
+    // person reached for. Four of the six share one window and one recording,
+    // so the track reads as one video being made: cut it, bring a clip in,
+    // put a title over it, send it.
+    //
+    // The steps point at the timeline's tracks, the transport, the canvas and
+    // the panel's own sections, never at a tool bar button that the video tool
+    // bar (still to come) would move.
+
+    /// Premiere's way to tighten a take: park the playhead, Q, park it, W.
+    /// Then a cut in the middle and a piece thrown away, which is the fumble
+    /// in the middle of a take. The last card says nothing was lost, because
+    /// that is the fear that stops people cutting at all.
+    public static let cutARecordingDown = TutorialGuide(
+        id: "cut-a-recording-down",
+        track: .video,
+        title: "Cut a recording down",
+        summary: "Take the dead air off both ends, then cut a stretch out of the middle.",
+        minutes: 2,
+        sample: .videoRecording,
+        requires: [FeatureCatalog.recordingIsADocumentFlag, FeatureCatalog.cutRecordingFlag],
+        steps: [
+            TutorialStep(
+                id: "a-clip-on-v1",
+                anchor: .timelineTracks,
+                title: "Your recording is a clip",
+                body: "It sits on V1 under the picture. The first and last two seconds are nothing happening, which is what you are about to take off."),
+            TutorialStep(
+                id: "getting-around",
+                anchor: .video(.transport),
+                title: "Getting around",
+                body: "Space plays and pauses. J, K and L play back, stop and play on, and the left and right arrows step one frame."),
+            TutorialStep(
+                id: "take-the-start-off",
+                anchor: .timelineTracks,
+                title: "Take the start off",
+                body: "Click the ruler where something starts happening, about two seconds in, and press Q. Everything before the playhead goes.",
+                advance: .waitsFor(.timeTakenOut)),
+            TutorialStep(
+                id: "and-the-end",
+                anchor: .timelineTracks,
+                title: "And the end",
+                body: "Click the ruler where it stops being worth watching and press W. Everything after the playhead goes.",
+                advance: .waitsFor(.timeTakenOut)),
+            TutorialStep(
+                id: "cut-it-in-two",
+                anchor: .timelineTracks,
+                title: "Cut it in two",
+                body: "Park the playhead anywhere in the clip and press Command K. It splits there, and nothing is thrown away.",
+                advance: .waitsFor(.clipCut)),
+            TutorialStep(
+                id: "throw-a-piece-away",
+                anchor: .timelineTracks,
+                title: "Throw a piece away",
+                body: "Click a piece and press Delete. The gap closes behind it, and anything laid over it moves up too.",
+                advance: .waitsFor(.timeTakenOut)),
+            TutorialStep(
+                id: "nothing-is-lost",
+                anchor: .timelineTracks,
+                title: "Nothing is lost",
+                body: "The frames you cut off are still in the recording. Drag a clip's end back out to get them, or press Command Z."),
+        ])
+
+    /// A clip from the Library's Media shelf, let go on V1 past the end of the
+    /// recording. The shelf is where the sample puts it, so nobody needs a
+    /// second file of their own; the Finder works the same way and the card
+    /// says so.
+    public static let addASecondClip = TutorialGuide(
+        id: "add-a-second-clip",
+        track: .video,
+        title: "Add a second clip",
+        summary: "Bring another recording onto the timeline and let the two meet at a cut.",
+        minutes: 1,
+        sample: .videoRecording,
+        requires: [FeatureCatalog.recordingIsADocumentFlag, FeatureCatalog.libraryFlag,
+                   FeatureCatalog.droppingMediaFlag],
+        steps: [
+            TutorialStep(
+                id: "the-media-shelf",
+                anchor: .panelSection("library"),
+                title: "What this video can use",
+                body: "The Library's Media shelf holds the recordings and sounds this video has been given. There is a second one here, b-roll.",
+                prepare: [.showMediaShelf, .revealTarget]),
+            TutorialStep(
+                id: "drag-it-on",
+                anchor: .timelineTracks,
+                title: "Drag it onto V1",
+                body: "Let go just past the end of the recording and it snaps on, so the two clips meet. Or click V1, pick b-roll and press Add at Playhead.",
+                advance: .waitsFor(.clipAdded)),
+            TutorialStep(
+                id: "command-inserts",
+                anchor: .timelineTracks,
+                title: "Hold Command to push",
+                body: "Let go with Command held and a clip goes in between, pushing everything after it along instead of covering it."),
+            TutorialStep(
+                id: "from-the-finder",
+                anchor: .timelineTracks,
+                title: "Or from the Finder",
+                body: "Any recording or sound dragged onto a track lands where you let go, and goes on the shelf for next time."),
+            TutorialStep(
+                id: "where-they-meet",
+                anchor: .timelineTracks,
+                title: "Where they meet is a cut",
+                body: "The thin line between the two clips is the cut. Click it and the transitions open right there."),
+        ])
+
+    /// Photoshop's text tool, in time: a title arrives at the playhead with an
+    /// in and an out, and moving it at a second moment is all a move is. No
+    /// animate mode and no keyframe window, which is the whole point.
+    public static let aTitleThatMoves = TutorialGuide(
+        id: "a-title-that-moves",
+        track: .video,
+        title: "A title that moves",
+        summary: "Put words over the video, then move them from one place to another.",
+        minutes: 2,
+        sample: .videoRecording,
+        requires: [FeatureCatalog.recordingIsADocumentFlag, FeatureCatalog.titleOnTheTimelineFlag],
+        steps: [
+            TutorialStep(
+                id: "pick-text",
+                anchor: .tool(.text),
+                title: "Pick the Text tool",
+                body: "Click it, or press T. On a video, words start out as a big white title.",
+                advance: .waitsFor(.toolPicked(.text))),
+            TutorialStep(
+                id: "type-a-title",
+                anchor: .canvas,
+                title: "Click the picture and type",
+                body: "Type a few words, then press Command Return. The title starts at the playhead and stays for three seconds.",
+                advance: .waitsFor(.titleAdded)),
+            TutorialStep(
+                id: "its-own-bar",
+                anchor: .timelineTracks,
+                title: "It has its own bar",
+                body: "The title sits on a track of its own. Drag the bar to change when it comes on, or an end to change how long it stays."),
+            TutorialStep(
+                id: "key-where-it-starts",
+                anchor: .panelSection("keys"),
+                title: "Key where it starts",
+                body: "With the title picked, click the diamond on the Position row. That writes down where it is at this moment.",
+                advance: .waitsFor(.keyAdded),
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "then-where-it-ends",
+                anchor: .canvas,
+                title: "Then where it ends",
+                body: "Click the ruler a second or two later, then drag the title somewhere else. A second key is written for you.",
+                advance: .waitsFor(.keyAdded)),
+            TutorialStep(
+                id: "fade-it",
+                anchor: .panelSection("speed"),
+                title: "Fade it in and out",
+                body: "Pick a Fade length in the Time section. It is written as keys on Opacity, so you can tune it the same way.",
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "watch-it-travel",
+                anchor: .video(.transport),
+                title: "Watch it travel",
+                body: "Press Home, then Space. The title slides from the first place to the second, and fades as it goes."),
+        ])
+
+    /// Click the cut, pick a tile. The sample arrives with two clips already
+    /// meeting and a second of spare either side, so the dissolve the mock
+    /// picks first can be paid for.
+    public static let putATransitionOnACut = TutorialGuide(
+        id: "put-a-transition-on-a-cut",
+        track: .video,
+        title: "Put a transition on a cut",
+        summary: "Click the cut between two clips and pick how one turns into the other.",
+        minutes: 1,
+        sample: .videoTwoClips,
+        requires: [FeatureCatalog.recordingIsADocumentFlag, FeatureCatalog.cutRecordingFlag,
+                   FeatureCatalog.transitionsAtACutFlag],
+        steps: [
+            TutorialStep(
+                id: "two-clips-one-cut",
+                anchor: .timelineTracks,
+                title: "Two clips, one cut",
+                body: "The recording ends and b-roll starts at the same moment. The thin line where they meet is the cut."),
+            TutorialStep(
+                id: "click-the-cut",
+                anchor: .timelineTracks,
+                title: "Click the cut, pick a tile",
+                body: "The transitions open right at the cut, each one playing what it does. Pick Cross dissolve.",
+                advance: .waitsFor(.transitionAdded)),
+            TutorialStep(
+                id: "a-band-over-the-cut",
+                anchor: .timelineTracks,
+                title: "It sits across the cut",
+                body: "The dissolve is drawn as a band over both clips. Drag either end of it to make it longer or shorter."),
+            TutorialStep(
+                id: "its-type-and-length",
+                anchor: .panelSection("transition"),
+                title: "Its type and length",
+                body: "The panel shows the transition on the picked cut. Change it or its length here, or take it off with Hard cut.",
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "command-t",
+                anchor: .timelineTracks,
+                title: "One key for the usual one",
+                body: "Park the playhead on any cut and press Command T. Right click a tile to make it the one Command T puts on."),
+        ])
+
+    /// Captions are text that the machine wrote. The guide lets them arrive,
+    /// has you correct a word the way you would correct any text, and ends
+    /// on where they go when the video leaves.
+    public static let captionsFromTheSpeech = TutorialGuide(
+        id: "captions-from-the-speech",
+        track: .video,
+        title: "Captions from the speech",
+        summary: "Let the captions write themselves, fix a word, and choose how they leave.",
+        minutes: 1,
+        sample: .videoTalk,
+        requires: [FeatureCatalog.recordingIsADocumentFlag, FeatureCatalog.captionsFromTheSoundFlag],
+        steps: [
+            TutorialStep(
+                id: "they-write-themselves",
+                anchor: .panelSection("captions"),
+                title: "Captions write themselves",
+                body: "A recording with somebody talking is listened to as it opens. The words land as captions while you watch.",
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "a-track-of-their-own",
+                anchor: .timelineTracks,
+                title: "On a track of their own",
+                body: "Each line is a bar on the Captions track, timed to the words. Drag a bar or its ends to retime it."),
+            TutorialStep(
+                id: "fix-a-word",
+                anchor: .canvas,
+                title: "Fix a word it misheard",
+                body: "Double click a caption on the picture, retype it, then press Command Return.",
+                advance: .waitsFor(.captionRetyped)),
+            TutorialStep(
+                id: "one-look",
+                anchor: .panelSection("captions"),
+                title: "One look for every line",
+                body: "Change the style here and every caption follows. Write Again listens afresh if the sound has changed.",
+                prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "on-the-way-out",
+                anchor: .timelineTracks,
+                title: "When the video leaves",
+                body: "Export puts them on the picture, or in a file beside the video for a player to show."),
+        ])
+
+    /// The sheet, what it asks and in what order. It never walks anybody into
+    /// the save panel: that is a modal window over the card with nothing on it
+    /// to press, so the last card says what Export does and leaves it there.
+    public static let exportTheVideo = TutorialGuide(
+        id: "export-the-video",
+        track: .video,
+        title: "Export the video",
+        summary: "Write the whole edit out as an MP4, a GIF or a HEIC, at the size you need.",
+        minutes: 1,
+        sample: .videoRecording,
+        requires: [FeatureCatalog.recordingIsADocumentFlag, FeatureCatalog.videoExportFlag],
+        steps: [
+            TutorialStep(
+                id: "open-the-sheet",
+                anchor: .canvas,
+                title: "Press Shift Command E",
+                body: "The Export sheet comes down over the window. Everything in the edit goes out: cuts, titles, transitions and captions.",
+                advance: .waitsFor(.dialogOpened(.export))),
+            TutorialStep(
+                id: "pick-a-format",
+                anchor: .dialog(.export),
+                title: "Pick a format",
+                body: "MP4 plays anywhere, with its sound. GIF loops silently and needs no player. HEIC is a small animation for Apple devices."),
+            TutorialStep(
+                id: "pick-a-size",
+                anchor: .dialog(.export),
+                title: "Pick a size",
+                body: "Full keeps every pixel. 1080p and 720p are what people post and make a smaller file, offered where the video is bigger than them."),
+            TutorialStep(
+                id: "what-you-will-get",
+                anchor: .dialog(.export),
+                title: "It says what you will get",
+                body: "The lines under the rows give the shape of the file and roughly how big it will be, before anything is written."),
+            TutorialStep(
+                id: "export-it",
+                anchor: .dialog(.export),
+                title: "Export, then choose where",
+                body: "Press Export and pick a folder. A bar shows how far along it is, and Stop cancels it."),
+        ])
 }
 
 // MARK: - The sample a guide opens for itself
@@ -2246,7 +2542,7 @@ public enum TutorialSampleScreen {
         case .iconBell, .iconBellSwinging, .iconBellInStep, .iconBellRinging: "#EDF0F5"
         // A recording is not drawn on a page. Its window holds media, and this
         // is never asked of it.
-        case .sampleRecording: "#FFFFFF"
+        case .sampleRecording, .videoRecording, .videoTwoClips, .videoTalk: "#FFFFFF"
         }
     }
 
@@ -2268,7 +2564,7 @@ public enum TutorialSampleScreen {
         case .blankPage, .handPlacedScreen, .tightScreen, .crookedBoxes: []
         case .iconFrame, .iconPath, .iconBox: []
         case .iconBell, .iconBellSwinging, .iconBellInStep, .iconBellRinging: []
-        case .sampleRecording: []
+        case .sampleRecording, .videoRecording, .videoTwoClips, .videoTalk: []
         }
     }
 
@@ -2325,7 +2621,7 @@ public enum TutorialSampleScreen {
         case .iconBellRinging: [iconFrame(holding: bell(swing: .clapperLate))]
         // A recording, which has no layers at all. What it IS lives in the
         // app, beside the code that can write an MP4.
-        case .sampleRecording: []
+        case .sampleRecording, .videoRecording, .videoTwoClips, .videoTalk: []
         }
     }
 

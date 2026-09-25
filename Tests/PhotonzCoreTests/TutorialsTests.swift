@@ -248,9 +248,10 @@ struct TutorialsTests {
         // select a layer, or otherwise do the thing a step is asking for.
         // Turning the shelf to Components is a reveal too: a shelf showing the
         // wrong scope is a step pointing at something that is not there, and
-        // turning to a shelf is not fetching anything off it.
+        // turning to a shelf is not fetching anything off it. Turning it to
+        // Media, where a video's recordings sit, is the same reveal.
         #expect(TutorialPrep.allCases == [.showPanel, .showLibrary,
-                                          .showComponentShelf, .revealTarget])
+                                          .showComponentShelf, .showMediaShelf, .revealTarget])
         for step in TutorialGuides.takeTheTour.steps {
             for prep in step.prepare {
                 #expect(TutorialPrep.allCases.contains(prep))

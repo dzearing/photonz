@@ -81,6 +81,12 @@ extension EditorState: TutorialHost {
             if !isLibraryVisible { setLibraryVisible(true) }
             UserDefaults.standard.set(LibraryScope.components.rawValue,
                                       forKey: LibraryPanel.scopeKey)
+        case .showMediaShelf:
+            // The recordings and sounds this document holds, which is what a
+            // video guide about bringing a clip in is pointing at.
+            if !isLibraryVisible { setLibraryVisible(true) }
+            UserDefaults.standard.set(LibraryScope.media.rawValue,
+                                      forKey: LibraryPanel.scopeKey)
         case .revealTarget:
             break // the controller drives this one through the registry
         }
@@ -140,6 +146,10 @@ extension EditorState: TutorialHost {
         // picture window, because none of it exists here.
         case .trimModeOpened, .trimStartMoved, .trimEndMoved, .trimApplied,
              .recordingCopied: false
+        // Kinds of edit, read off the document as each one lands. None of them
+        // is ever already so: the step is asking for the next one.
+        case .timeTakenOut, .clipCut, .clipAdded, .titleAdded, .keyAdded,
+             .transitionAdded, .captionRetyped: false
         }
     }
 }
@@ -176,6 +186,9 @@ extension VideoEditorState: TutorialHost {
         // A recording's window has no canvas, no grid, neither of these sheets
         // and no lens, so none of them is ever already so in here either.
         case .gridShown, .keylinesShown, .dialogOpened, .settingReached: false
+        // And it has no timeline to cut, bring clips onto or caption.
+        case .timeTakenOut, .clipCut, .clipAdded, .titleAdded, .keyAdded,
+             .transitionAdded, .captionRetyped: false
         }
     }
 

@@ -1,0 +1,42 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-add-a-second-clip-walk",
+  "seed": "The Video track's second clip guide at Next defaults with no flag set: the recording opens in the editor with b-roll waiting on the Library's Media shelf, the guide turns the shelf to Media and rings it, and the step asking for b-roll on V1 moves on only when a clip really lands on the timeline. The walk clicks V1, picks the tile and presses Add at Playhead, the card's second way, because that is what a walk can do with the screen locked.",
+  "setup": { "forget": ["tutorials"] },
+  "steps": [
+    { "do": "startGuide", "guide": "add-a-second-clip" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "the-media-shelf", "timeout": 40 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "1-the-media-shelf", "note": "the Library came on screen on Media, holding the recording and b-roll.mp4, and the card rings it" },
+    { "do": "snapshot", "name": "1-the-media-shelf" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "drag-it-on", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "2-drag-it-on" },
+
+    { "do": "key", "key": "end" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "press", "control": "Track V1" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "b-roll.mp4" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "2b-b-roll-picked" },
+    { "do": "press", "control": "Add at Playhead" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "command-inserts", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-command-inserts", "note": "b-roll picked on the shelf and put at the playhead, at the end of the recording, so the two clips meet on V1, and the card moved on by itself" },
+    { "do": "snapshot", "name": "3-command-inserts" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "from-the-finder", "timeout": 6 },
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "where-they-meet", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "4-where-they-meet" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-finished", "note": "Done swapped the step card for the finish card" }
+  ]
+}

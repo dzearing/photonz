@@ -1,0 +1,61 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-cut-a-recording-down-walk",
+  "seed": "The Video track's first guide, at Next defaults with no flag set: the guide writes its own eight second recording and opens it in the editor, then teaches Premiere's way to tighten a take. Q with the playhead two seconds in takes the start off, W takes the end off, Command K cuts the clip in two and Delete throws the piece before the cut away. Every waiting step moves on only because the document really lost time or gained a cut.",
+  "setup": { "forget": ["tutorials"] },
+  "steps": [
+    { "do": "startGuide", "guide": "cut-a-recording-down" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "a-clip-on-v1", "timeout": 40 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "1-a-clip-on-v1", "note": "the guide opened its recording in the editor, one clip on V1, and the first card rings the ruler and the tracks" },
+    { "do": "snapshot", "name": "1-a-clip-on-v1" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "getting-around", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-getting-around", "note": "the transport, ringed: Space, J K L and the arrows" },
+    { "do": "snapshot", "name": "2-getting-around" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "take-the-start-off", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-take-the-start-off", "note": "this step waits: the button offers to skip, never to claim you pressed Q" },
+    { "do": "snapshot", "name": "3-take-the-start-off" },
+
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "key", "key": "q" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "and-the-end", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-and-the-end", "note": "Q at two seconds took the dead air off the start, the clip slid up and is six seconds long, and the card moved on by itself" },
+    { "do": "snapshot", "name": "4-and-the-end" },
+
+    { "do": "action", "action": "videoSeekThreeQuarters" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "key", "key": "w" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "cut-it-in-two", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "5-cut-it-in-two" },
+
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "key", "key": "k", "modifiers": ["command"] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "throw-a-piece-away", "timeout": 6 },
+    { "do": "expect", "row": "Tutorial Sample", "reads": "layer, 2 pieces" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-throw-a-piece-away", "note": "Command K cut the clip in two at the playhead, and the piece before the cut is the one left picked" },
+    { "do": "snapshot", "name": "6-throw-a-piece-away" },
+
+    { "do": "key", "key": "delete" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "nothing-is-lost", "timeout": 6 },
+    { "do": "expect", "row": "Tutorial Sample", "reads": "layer" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "7-nothing-is-lost", "note": "Delete threw the picked piece away and the gap closed; the last card says the frames are still in the recording" },
+    { "do": "snapshot", "name": "7-nothing-is-lost" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "8-finished", "note": "Done swapped the step card for the finish card, over the practice window" },
+    { "do": "snapshot", "name": "8-finished" }
+  ]
+}

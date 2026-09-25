@@ -1,0 +1,59 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-a-title-that-moves-walk",
+  "seed": "The Video track's title guide at Next defaults with no flag set: the Text tool, a title typed on the picture that lands at the playhead with its own bar, Position keyed from its diamond, and a second key written by dragging the title a second later. The two key steps move on only when the document really gains a key.",
+  "setup": { "forget": ["tutorials"] },
+  "steps": [
+    { "do": "startGuide", "guide": "a-title-that-moves" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-text", "timeout": 40 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "1-pick-text", "note": "the Text tool's button is ringed on the tool bar" },
+    { "do": "snapshot", "name": "1-pick-text" },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "type-a-title", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "2-type-a-title" },
+
+    { "do": "click", "at": [620, 330] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "type", "text": "Ship it faster" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "its-own-bar", "timeout": 6 },
+    { "do": "expect", "control": "Track Title", "present": true },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-its-own-bar", "note": "the title landed at one second on a track of its own, and the card moved on only once it had words in it" },
+    { "do": "snapshot", "name": "3-its-own-bar" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "key-where-it-starts", "timeout": 6 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-key-where-it-starts", "note": "the panel brought to the Animating section, which the card rings" },
+    { "do": "snapshot", "name": "4-key-where-it-starts" },
+
+    { "do": "press", "control": "Key", "in": "Position" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "then-where-it-ends", "timeout": 6 },
+    { "do": "expect", "control": "Key", "in": "Position", "reads": "on a key" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "5-then-where-it-ends" },
+
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "drag", "from": [720, 350], "to": [800, 420], "space": "document", "steps": 10 },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "fade-it", "timeout": 6 },
+    { "do": "expect", "field": "Playhead Readout", "reads": "Playhead Position 700, 400 @ 2.00s" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-fade-it", "note": "dragging the title a second later wrote a second key, so it moves from A to B; the card rings the Time section, where Fade is" },
+    { "do": "snapshot", "name": "6-fade-it" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "watch-it-travel", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "7-watch-it-travel" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "8-finished", "note": "Done swapped the step card for the finish card" }
+  ]
+}

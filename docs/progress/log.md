@@ -19640,3 +19640,13 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - S on a focused timeline, a magnet button in the timeline's bar (after Select and Blade) and Video > Snap in Timeline all switch timeline snapping. Off, clip drags, trims, file drops and the playhead-on-keys catch go exactly where the hand leaves them. S mid-drag takes effect at once.
 - Walk: `Scripts/playtest/snapping-switches-with-s-walk.json` (Next defaults). Audit: `queue/audits/2026-09-24-timeline-snapping.json`.
 - Open question for the user (in the audit): should the off setting be remembered across windows, as Premiere does?
+
+## 2026-09-25 — The Video track teaches the editor that exists
+
+- Six new guides on the Video track (`TutorialGuides.swift`, "The Video track, in the editor"): Cut a recording down (Q, W, ⌘K, Delete), Add a second clip (Media shelf onto V1), A title that moves (T, ⌘⏎, Position diamond, a drag later), Put a transition on a cut, Captions from the speech, Export the video. They need `next-a-recording-is-a-document`, so Next at defaults offers a Video track again; the two retired recording-window guides stay for Current.
+- Waits read off the document: `TutorialDocumentChange` answers seven new triggers by comparing the document before and after each `perform` (EditorState), only for the trigger the waiting step asks. Tested in `TutorialDocumentChangeTests`.
+- Video samples open in the editor: `.videoRecording` / `.videoTwoClips` / `.videoTalk`, written per sample into their own folder (`TutorialSampleVideos`), shaped by `TutorialVideoSample` (core, tested). b-roll is painted green. New anchor `timelineTracks`, the video Export sheet wears `dialog(.export)`, video panel sections on the promise, `showMediaShelf` prep.
+- Walks: `tutorial-<guide>-walk.json` for all six, at Next defaults with no flag, all ok with real captures; built from lock-safe steps only.
+- Audit: `queue/audits/2026-09-25-video-guides.json`.
+- Full suite: 9684 green on the third run; the first two failed only `VideoExportBudgetTests.swift:155`, the known flake under load (task the-export-size-test-fails-about-one-run-in-thre), which passes alone.
+- Next: the blurry first frame and the missing waveform under an added clip's sound are filed.

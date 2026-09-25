@@ -1,0 +1,44 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-put-a-transition-on-a-cut-walk",
+  "seed": "The Video track's transition guide at Next defaults with no flag set: the recording opens with b-roll already butted onto it on V1, each holding back a second so the cut can pay for a dissolve. A click on the cut opens the tiles right there, Cross dissolve goes on, and the step moves on only because the document really gained a transition.",
+  "setup": { "forget": ["tutorials"] },
+  "steps": [
+    { "do": "startGuide", "guide": "put-a-transition-on-a-cut" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "two-clips-one-cut", "timeout": 40 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "1-two-clips-one-cut", "note": "the recording and b-roll meet on V1 at seven seconds, well right of the middle so the tiles open clear of the card" },
+    { "do": "snapshot", "name": "1-two-clips-one-cut" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "click-the-cut", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "2-click-the-cut" },
+
+    { "do": "press", "control": "Edit point Tutorial Sample to b-roll" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-the-tiles", "note": "a click on the cut opened the picker AT THIS CUT with its six playing tiles; the guide is still waiting" },
+    { "do": "snapshot", "name": "3-the-tiles" },
+    { "do": "press", "control": "Cross dissolve", "in": "At this cut" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "a-band-over-the-cut", "timeout": 6 },
+    { "do": "expect", "menu": "Type", "reads": "Cross dissolve" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-a-band-over-the-cut", "note": "Cross dissolve on the cut, drawn as a band over both clips, and the card moved on by itself" },
+    { "do": "snapshot", "name": "4-a-band-over-the-cut" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "its-type-and-length", "timeout": 6 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-its-type-and-length", "note": "the Transition section of the panel, ringed" },
+    { "do": "snapshot", "name": "5-its-type-and-length" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "command-t", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "6-command-t" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "7-finished", "note": "Done swapped the step card for the finish card" }
+  ]
+}

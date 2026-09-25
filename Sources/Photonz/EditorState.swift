@@ -1347,7 +1347,8 @@ final class EditorState {
     /// having been told video exists. The one thing different about it is that
     /// something in it occupies time, and that is what puts the timeline across
     /// the bottom and the transport under the picture.
-    func openRecordingAsDocument(at url: URL) {
+    func openRecordingAsDocument(at url: URL,
+                                 shaping shape: ((PhotonzDocument) -> PhotonzDocument)? = nil) {
         openedFileURL = url
         untitledName = url.deletingPathExtension().lastPathComponent
         // Deliberately NOT `sourceCaptureURL`. That is "Save writes the
@@ -1372,6 +1373,10 @@ final class EditorState {
             // The recording is the first thing on its Library shelf, under the
             // name it has on disk.
             opened.rememberMedia(.recording(movie), named: url.lastPathComponent)
+            // A guide's sample adds what its lesson needs before anybody sees
+            // it (`TutorialVideoSample`): the same edits a person would make,
+            // so it opens as an ordinary document with no undo steps in it.
+            if let shape { opened = shape(opened) }
             installDocument(opened, url: nil)
             // After the install, which clears it: this window holds a
             // recording, and that is what dims Save (see `saveAffordance`).
@@ -1516,6 +1521,22 @@ final class EditorState {
         }
     }
 
+    /// The recording a video guide brings, written fresh and opened the way
+    /// any recording opens, then made into what the guide's lesson needs.
+    private func openTutorialRecording(_ sample: TutorialSample) {
+        Task { @MainActor [weak self] in
+            guard let written = await TutorialSampleVideos.write(sample), let self else { return }
+            var broll: MovieRef?
+            if let url = written.broll { broll = await MovieLibrary.shared.movie(at: url) }
+            // A fresh file every time, so nowhere to pick up from: a place kept
+            // from last time would open the guide half way down the clip.
+            RecordingPlaceStore.shared.forget(url: written.recording)
+            self.openRecordingAsDocument(at: written.recording) { opened in
+                TutorialVideoSample.shaped(opened, for: sample, broll: broll)
+            }
+        }
+    }
+
     /// The sample this window was opened to hold, when a guide opened it.
     /// Nil for every window somebody opened for themselves, which is what
     /// makes it safe for a finished guide to offer to close this one and how a
@@ -1533,6 +1554,12 @@ final class EditorState {
         // A guide about getting a picture IN has to start from nothing: the
         // card offering the ways in only exists while the window is empty.
         guard sample != .emptyWindow else { return }
+        // A video guide brings a recording, and a recording is a document:
+        // it opens here exactly as one from the Finder would.
+        if sample.isVideo {
+            openTutorialRecording(sample)
+            return
+        }
         let size = TutorialSampleScreen.canvasSize
         let page = TutorialSampleScreen.backgroundHex(for: sample)
         guard let blank = SolidImage.make(size: size, hex: page) else { return }
@@ -3416,7 +3443,12 @@ final class EditorState {
         // this is where every command in the app lands. Only when the document
         // really changed: `History.perform` records nothing for an edit that
         // changed nothing, and a guide must not move on for one either.
-        if document != before { TutorialController.shared.note(.editMade, from: self) }
+        if document != before {
+            TutorialController.shared.note(.editMade, from: self)
+            if let before, let after = document {
+                TutorialController.shared.noteDocumentChange(from: before, to: after, in: self)
+            }
+        }
     }
 
     /// Says how many copies followed the edit that just landed

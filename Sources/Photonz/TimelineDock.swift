@@ -418,6 +418,10 @@ struct TimelineDock: View {
                     playhead(laneWidth: laneWidth)
                         .padding(.leading, Self.lanesLeading)
                 }
+                // The ruler and the tracks under it: where a video guide
+                // points when it means "on the timeline" rather than the
+                // transport above.
+                .tutorialAnchor(.timelineTracks)
                 .simultaneousGesture(pinch(laneWidth: laneWidth))
                 .background {
                     TimelineWheel { event in wheel(event, laneWidth: laneWidth) }

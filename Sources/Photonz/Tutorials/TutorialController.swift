@@ -380,6 +380,19 @@ final class TutorialController {
         }
     }
 
+    /// An edit landed in `host`'s document. A step waiting on a KIND of edit
+    /// (a cut, a clip brought in, a transition put on) asks the document
+    /// before and after whether that is what just happened
+    /// (`TutorialDocumentChange`). Only the question the waiting step asks is
+    /// worked out, so an edit made while no such step is up costs nothing.
+    func noteDocumentChange(from before: PhotonzDocument, to after: PhotonzDocument,
+                            in host: any TutorialHost) {
+        guard let run, self.host === host, let trigger = run.step.advance.trigger,
+              trigger.isDocumentChange,
+              TutorialDocumentChange.happened(trigger, from: before, to: after) else { return }
+        note(trigger, from: host)
+    }
+
     /// A step waiting on a VALUE is answered by READING the document, not by
     /// being told something happened.
     ///

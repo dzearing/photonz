@@ -52,16 +52,28 @@ enum TutorialSampleRecording {
     /// time would otherwise open the guide on a clip somebody had already cut,
     /// and the step asking them to bring the start in would be asking them to
     /// do it twice. Anything a save left beside it goes with it.
-    static func fresh() -> URL? {
-        let url = Self.url
+    static func fresh() -> URL? { fresh(at: Self.url) }
+
+    /// The same clean recording, written wherever `url` says. The editor's
+    /// video samples each keep theirs in a folder of their own
+    /// (`TutorialVideoSample.folderName`), so starting one guide never rewrites
+    /// a file another window is playing.
+    static func fresh(at url: URL, background: String = screenBackground) -> URL? {
         let manager = FileManager.default
         try? manager.createDirectory(at: url.deletingLastPathComponent(),
                                      withIntermediateDirectories: true)
         try? manager.removeItem(at: url)
         try? manager.removeItem(at: VideoOriginals.url(for: url))
         try? manager.removeItem(at: VideoEditsSidecar.url(for: url))
-        return write(to: url) ? url : nil
+        return write(to: url, background: background) ? url : nil
     }
+
+    /// What the recording is painted on: a dark desk, like most screens.
+    static let screenBackground = "#20242E"
+    /// What b-roll is painted on. A second clip that looked exactly like the
+    /// first would make a transition between them invisible, so it sits on a
+    /// deep green instead.
+    static let brollBackground = "#163A30"
 
     // MARK: - Writing it
 
@@ -76,14 +88,14 @@ enum TutorialSampleRecording {
     /// which is a lot of machinery for a sample clip. So the picture is written
     /// exactly as it always was, the sound is written beside it with
     /// `AVAudioFile`, and the two are laid into one composition and exported.
-    private static func write(to url: URL) -> Bool {
+    private static func write(to url: URL, background: String = screenBackground) -> Bool {
         let silent = url.deletingPathExtension().appendingPathExtension("picture.mp4")
         let sound = url.deletingPathExtension().appendingPathExtension("sound.m4a")
         defer {
             try? FileManager.default.removeItem(at: silent)
             try? FileManager.default.removeItem(at: sound)
         }
-        guard writePicture(to: silent) else { return false }
+        guard writePicture(to: silent, background: background) else { return false }
         // A sample with no sound still opens and still teaches trimming, so a
         // sound that would not write is not a reason to have no recording.
         guard writeSound(to: sound), merge(picture: silent, sound: sound, into: url) else {
@@ -93,7 +105,7 @@ enum TutorialSampleRecording {
         return true
     }
 
-    private static func writePicture(to url: URL) -> Bool {
+    private static func writePicture(to url: URL, background: String) -> Bool {
         try? FileManager.default.removeItem(at: url)
         guard let writer = try? AVAssetWriter(outputURL: url, fileType: .mp4) else { return false }
         let settings: [String: Any] = [
@@ -123,7 +135,8 @@ enum TutorialSampleRecording {
             while !input.isReadyForMoreMediaData { Thread.sleep(forTimeInterval: 0.005) }
             guard let pool = adaptor.pixelBufferPool,
                   let buffer = makeBuffer(pool: pool,
-                                          at: Double(frame) / Double(framesPerSecond))
+                                          at: Double(frame) / Double(framesPerSecond),
+                                          background: background)
             else { continue }
             adaptor.append(buffer, withPresentationTime: CMTime(value: CMTimeValue(frame),
                                                                 timescale: CMTimeScale(framesPerSecond)))
@@ -238,7 +251,8 @@ enum TutorialSampleRecording {
         return true
     }
 
-    private static func makeBuffer(pool: CVPixelBufferPool, at time: Double) -> CVPixelBuffer? {
+    private static func makeBuffer(pool: CVPixelBufferPool, at time: Double,
+                                   background: String) -> CVPixelBuffer? {
         var buffer: CVPixelBuffer?
         guard CVPixelBufferPoolCreatePixelBuffer(nil, pool, &buffer) == kCVReturnSuccess,
               let buffer else { return nil }
@@ -253,7 +267,7 @@ enum TutorialSampleRecording {
             space: CGColorSpaceCreateDeviceRGB(),
             bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue)
         else { return nil }
-        draw(in: context, at: time)
+        draw(in: context, at: time, background: background)
         return buffer
     }
 
@@ -270,9 +284,9 @@ enum TutorialSampleRecording {
     /// you to watch it. So the bar runs along the top edge, above the highest
     /// a card ever reaches, and the tile sits in the left column, clear of the
     /// widest one.
-    private static func draw(in context: CGContext, at time: Double) {
+    private static func draw(in context: CGContext, at time: Double, background: String) {
         let full = CGRect(origin: .zero, size: size)
-        fill(context, full, "#20242E")
+        fill(context, full, background)
 
         // The progress of the thing happening, 0 before it starts and 1 after
         // it finishes, so both ends of the clip are a still picture.

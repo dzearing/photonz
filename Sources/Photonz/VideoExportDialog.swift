@@ -181,6 +181,9 @@ struct VideoExportDialog: View {
         }
         .padding(ExportSheetMetrics.padding)
         .frame(width: ExportSheetMetrics.width)
+        // The video guide's export cards point at this sheet, so they sit
+        // beside it rather than over the rows they are talking about.
+        .tutorialAnchor(.dialog(.export))
         .onAppear {
             choice = RecordingExportMemory.choice
             quality = RecordingExportMemory.quality(for: choice.format ?? .mp4)

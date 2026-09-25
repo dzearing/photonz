@@ -1,0 +1,30 @@
+{
+  "feature": "Video guides for the editor",
+  "epic": "video-editing",
+  "summary": "Help and the Tutorials window offer a Video track again at Next. Its six guides open a practice recording in the editor and walk you through cutting it down, adding a second clip, a moving title, a transition, captions and export, using Premiere's keys.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    { "do": "Help, Tutorials, Video, Cut a recording down. Follow it: Q, W, Command K, then Delete.", "shot": "2026-09-25-video-guides-cut-sc.png" },
+    { "do": "Run Add a second clip and drag b-roll from the Media shelf onto the end of V1.", "shot": "2026-09-25-video-guides-shelf-sc.png" },
+    { "do": "Run A title that moves: press T, type a title, press Command Return, click the Position diamond, then drag the title a second later.", "shot": "2026-09-25-video-guides-key-sc.png" },
+    { "do": "Run Put a transition on a cut, click the cut and pick Cross dissolve.", "shot": "2026-09-25-video-guides-tiles-sc.png" },
+    { "do": "Run Captions from the speech, wait for the captions, then double click one on the picture and fix a word.", "shot": "2026-09-25-video-guides-captions-sc.png" },
+    { "do": "Run Export the video and press Shift Command E.", "shot": "2026-09-25-video-guides-export-sc.png" }
+  ],
+  "evaluate": [
+    "Would someone who knows Premiere recognise Q, W, Command K and Delete as the way to cut here, or would they reach for the Blade first?",
+    "Is the card over the middle of the timeline in the right place, or does it hide the clip you are being asked to work on?",
+    "Does the cut guide move on at the right moments, only after you really trim or cut?",
+    "Are six short guides the right size, or would you rather have one longer video guide that makes a whole edit?",
+    "Is anything a first-time video editor needs missing from the track, such as detaching the sound or changing a clip's speed?"
+  ],
+  "rough": [
+    "The first frame of every recording is drawn blurry until the playhead moves. It shows on every guide's first card. Filed as its own task.",
+    "Opening a recording puts the Trim tool in hand, so its In, Out and Trim bar floats over the picture through guides that never use it.",
+    "The card sits over the middle of the floating tool bar while it points at the timeline.",
+    "A clip brought in from the shelf shows no waveform under its sound on the Audio track. Filed as its own task.",
+    "The mock's cut walkthrough uses the Blade and Detach Audio. The guide teaches Q, W and Command K instead, because those need no tool change and the Blade is not on the video tool bar yet.",
+    "The walks land b-roll with V1 picked and Add at Playhead, the card's second way, not by dragging, because a timeline drop has not been watched with the screen locked yet. The drag itself is covered by the second clip walks.",
+    "The captions guide needs the Mac's speech recognition. Where that is missing, the first card promises captions that never arrive."
+  ]
+}

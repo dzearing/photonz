@@ -108,6 +108,13 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
     /// something in its own sample is moving, which is why the phase guide
     /// brings a bell that already swings.
     public static let timingStrip = TutorialAnchor("timingStrip")
+    /// The tracks of a video's timeline: the rows the clips, titles and
+    /// captions sit on, under the ruler. Where a video guide points when it
+    /// means "on the timeline" rather than the transport above it.
+    ///
+    /// A surface, like the strip it sits in, and only there while the
+    /// document has time. So only a guide that brings a recording points here.
+    public static let timelineTracks = TutorialAnchor("timelineTracks")
 
     /// One tool's button in the floating tool bar. Named off the tool, so the
     /// button's words and its tooltip can change freely.
@@ -309,7 +316,15 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
                                             // layer you pick, so a guide can point at it
                                             // before anything is moving, which is how the
                                             // first motion ever gets made.
-                                            "motion"]
+                                            "motion",
+                                            // A video's own sections: when a thing is on
+                                            // screen (headed Time), its keys (headed
+                                            // Animating), its sound, the captions, and the
+                                            // cut in hand with its transition. Each is in
+                                            // the panel only while what it is about is, so
+                                            // a video guide has you pick that first.
+                                            "speed", "keys", "sound", "captions",
+                                            "editPoint", "transition"]
 
     /// The rows of the empty window's card a guide is allowed to name. The
     /// blank canvas row is deliberately absent: it comes and goes with a
@@ -324,7 +339,7 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
     /// This is the PROMISE. That the app keeps it in a live window is checked
     /// separately, by a walk that drives the real editor.
     public static var all: [TutorialAnchor] {
-        [canvas, toolBar, moreTools, panel, titleBar, timingStrip]
+        [canvas, toolBar, moreTools, panel, titleBar, timingStrip, timelineTracks]
             + Tool.allCases.map(tool)
             + ToolGroup.allCases.map(toolGroup)
             + knownPanelSections.map(panelSection)
@@ -414,6 +429,29 @@ public enum TutorialTrigger: Hashable, Codable, Sendable {
     /// value, and waits as long as it takes otherwise. As with every waiting
     /// step, the button says Skip This Step meanwhile.
     case settingReached(TutorialSetting, atLeast: CGFloat)
+
+    // What the video editor's guides wait for. Each is a KIND of edit, and each
+    // has three or four ways in (a key, a menu row, a right click, a drag), so
+    // none is wired to a command: every one lands through the same door, and
+    // the step asks the document before and after whether this kind of thing
+    // just happened (`TutorialDocumentChange`).
+
+    /// Time came out of the film: Q or W, an extract, a piece thrown away.
+    case timeTakenOut
+    /// A clip was cut in two where it stood, with B or Split at Playhead.
+    case clipCut
+    /// Another clip landed on the timeline, from the Library or the Finder.
+    case clipAdded
+    /// A title with words in it arrived. Captions never count: they arrive by
+    /// themselves.
+    case titleAdded
+    /// A value got another key, by its diamond or by changing it at a new
+    /// moment once it is keyed.
+    case keyAdded
+    /// A transition went onto a cut.
+    case transitionAdded
+    /// Somebody corrected the words of a caption the machine wrote.
+    case captionRetyped
 }
 
 /// A number in the app a guide can wait for.
@@ -440,6 +478,16 @@ extension TutorialTrigger {
             return (setting, atLeast)
         }
         return nil
+    }
+
+    /// Whether this trigger is answered by comparing the document before and
+    /// after an edit rather than by the app announcing a moment.
+    public var isDocumentChange: Bool {
+        switch self {
+        case .timeTakenOut, .clipCut, .clipAdded, .titleAdded, .keyAdded,
+             .transitionAdded, .captionRetyped: true
+        default: false
+        }
     }
 }
 
@@ -480,6 +528,10 @@ public enum TutorialPrep: String, Hashable, Codable, Sendable, CaseIterable {
     /// and the Make Component command already does exactly this for the same
     /// reason.
     case showComponentShelf
+    /// Bring the Library shelf on screen AND put it on Media: the recordings
+    /// and sounds this document holds. Same reason as the Components one: the
+    /// shelf remembers the scope it was left on.
+    case showMediaShelf
     /// Scroll this step's own target into view. The docked panel is routinely
     /// taller than the window, so a step pointing at a section near the top can
     /// find it scrolled away by whatever the person did last. Still reveal
@@ -561,7 +613,7 @@ public enum TutorialTrack: String, CaseIterable, Codable, Hashable, Sendable {
         case .buildingUI: "Frames, grids and layout that behave like real screens."
         case .components: "Build a piece once, reuse it, and override just the bits that differ."
         case .icons: "Draw an icon at the size it will really be used, and hand it over as an SVG."
-        case .video: "Cut a recording down to the part worth watching, and send it on."
+        case .video: "Cut a recording down, lay a title and a transition over it, and send it on."
         }
     }
 
@@ -691,10 +743,34 @@ public enum TutorialSample: String, Codable, Hashable, Sendable {
     /// visible point rather than being a gesture practised on nothing.
     case sampleRecording
 
-    /// Whether this sample is a recording rather than a picture. A recording
-    /// opens in the video window, so the two go different ways from the moment
-    /// a guide is started.
-    public var isVideo: Bool { self == .sampleRecording }
+    /// The same recording, opened in the EDITOR as a document with time: one
+    /// clip on V1, the transport and the timeline under the picture. A second
+    /// recording, b-roll, waits on the Library's Media shelf, so the guide
+    /// about bringing a clip in has one to bring.
+    ///
+    /// Every guide on the Video track that teaches the editor opens on this,
+    /// and they share its window, so the track reads as one video being made.
+    case videoRecording
+    /// The recording with b-roll already butted onto its end on V1, and each
+    /// clip holding back a second of what it recorded, so the cut between them
+    /// has spare frames either side and a dissolve has something to pay with.
+    case videoTwoClips
+    /// A recording with somebody talking over it, so its captions have words
+    /// to write themselves from.
+    case videoTalk
+
+    /// Whether this sample is a recording rather than a picture.
+    public var isVideo: Bool {
+        switch self {
+        case .sampleRecording, .videoRecording, .videoTwoClips, .videoTalk: true
+        default: false
+        }
+    }
+
+    /// Whether this sample opens in the small recording window rather than the
+    /// editor. Only the recording the retired trim and export guides bring:
+    /// every other video sample is a document with time, in the editor.
+    public var opensInRecordingWindow: Bool { self == .sampleRecording }
 
     /// Whether this sample fills its window with something made up.
     ///
@@ -720,7 +796,7 @@ public enum TutorialSample: String, Codable, Hashable, Sendable {
         // A recording has no layers to flatten and no canvas to flatten them
         // into. The question does not apply, and false is the answer that keeps
         // the picture path away from it.
-        case .sampleRecording: false
+        case .sampleRecording, .videoRecording, .videoTwoClips, .videoTalk: false
         case .componentPieces, .componentOriginal, .componentCopies: false
         // Every Building UI sample is live for the same reason the component
         // ones are: a screen is made of layers, and you cannot group, stack,
@@ -871,6 +947,14 @@ public enum TutorialCatalog {
         TutorialGuides.getTheTimingRight,
         TutorialGuides.twoPartsOutOfPhase,
         TutorialGuides.exportAnAnimatedSVG,
+        TutorialGuides.cutARecordingDown,
+        TutorialGuides.addASecondClip,
+        TutorialGuides.aTitleThatMoves,
+        TutorialGuides.putATransitionOnACut,
+        TutorialGuides.captionsFromTheSpeech,
+        TutorialGuides.exportTheVideo,
+        // The small recording window's two guides, offered only where that
+        // window is still what a recording opens in.
         TutorialGuides.trimARecording,
         TutorialGuides.exportARecording,
     ]

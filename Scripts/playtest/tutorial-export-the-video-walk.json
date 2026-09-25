@@ -1,0 +1,39 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-export-the-video-walk",
+  "seed": "The Video track's export guide at Next defaults with no flag set: the first step waits for the Export sheet, and every card after it points at the video Export sheet itself, so it sits beside the sheet rather than over the rows it is talking about. No step walks anybody into the save panel.",
+  "setup": { "forget": ["tutorials"] },
+  "steps": [
+    { "do": "startGuide", "guide": "export-the-video" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "open-the-sheet", "timeout": 40 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "snapshot", "name": "1-open-the-sheet" },
+
+    { "do": "action", "action": "exportDialogAsVideo" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-a-format", "timeout": 6 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-pick-a-format", "note": "the sheet opening moved the card on, and the card now sits beside the video Export sheet" },
+    { "do": "snapshot", "name": "2-pick-a-format" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "pick-a-size", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "3-pick-a-size" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "what-you-will-get", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "4-what-you-will-get" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "export-it", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "5-export-it" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-finished", "note": "Done closed the guide without writing a file; Escape put the sheet away" }
+  ]
+}

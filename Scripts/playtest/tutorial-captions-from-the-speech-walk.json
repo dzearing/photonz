@@ -1,0 +1,41 @@
+{
+  "out": "/tmp/photonz-playtest/tutorial-captions-from-the-speech-walk",
+  "seed": "The Video track's captions guide at Next defaults with no flag set: the guide writes a recording with somebody talking over it and opens it in the editor, the captions write themselves with nothing pressed, and the step asking for a misheard word to be fixed moves on only when a caption's words really change, not when more captions arrive.",
+  "setup": { "forget": ["tutorials"] },
+  "steps": [
+    { "do": "startGuide", "guide": "captions-from-the-speech" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "they-write-themselves", "timeout": 60 },
+    { "do": "action", "action": "captionsWaitForThemselves" },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "1-they-write-themselves", "note": "the captions wrote themselves as the talk opened; the card rings the Captions section" },
+    { "do": "snapshot", "name": "1-they-write-themselves" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "a-track-of-their-own", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "2-a-track-of-their-own" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "fix-a-word", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "3-fix-a-word" },
+
+    { "do": "action", "action": "captionsEditFirstInPlace" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "captionsCommitFirstWords" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "one-look", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-one-look", "note": "the first caption's first word was retyped, and that, not the words arriving, moved the card on" },
+    { "do": "snapshot", "name": "4-one-look" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "on-the-way-out", "timeout": 6 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "5-on-the-way-out" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-finished", "note": "Done swapped the step card for the finish card" }
+  ]
+}

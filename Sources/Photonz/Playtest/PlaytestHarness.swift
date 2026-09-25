@@ -2336,7 +2336,23 @@ private final class Run {
             }
             TutorialController.shared.forgetProgress(guide.id)
             TutorialLauncher.start(guide, coordinator: coordinator, editor: editor)
-            if guide.sample?.isVideo == true {
+            if let sample = guide.sample, sample.isVideo, !sample.opensInRecordingWindow {
+                // A recording that opens in the EDITOR, as a document with
+                // time. The guide writes it fresh first (the talk is spoken, which
+                // takes a few seconds), so the wait is longer than a drawing's.
+                var opened: EditorState?
+                try await poll("the recording \(id) opened in the editor", within: 40) {
+                    opened = PlaytestHarness.allEditors.last {
+                        $0.tutorialSample == sample && $0.document?.hasTime == true
+                            && $0.hostWindow != nil
+                    }
+                    return opened != nil
+                }
+                guard let opened else { throw Failure(description: "\(id) opened no recording") }
+                try await adopt(opened, window: size, step: step.name,
+                                subject: "\(guide.title), in the recording it brought",
+                                number: number)
+            } else if guide.sample?.isVideo == true {
                 // A recording's window, not a picture editor's. It writes a
                 // fresh sample MP4 first and opens once the clip has loaded,
                 // so the wait is longer than a drawing's.

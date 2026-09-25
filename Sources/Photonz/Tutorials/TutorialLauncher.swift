@@ -27,7 +27,10 @@ enum TutorialLauncher {
         // A guide already running is closed first: two callouts pointing at two
         // controls is nobody's idea of a walkthrough.
         TutorialController.shared.close()
-        if guide.sample?.isVideo == true {
+        // The retired recording window's guides still teach in that window.
+        // Every other video guide brings a recording that opens in the editor,
+        // through the same window-per-sample path a drawing takes.
+        if guide.sample?.opensInRecordingWindow == true {
             startInRecording(guide, coordinator: coordinator)
             return
         }

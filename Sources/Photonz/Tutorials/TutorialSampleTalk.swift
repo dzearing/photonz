@@ -30,6 +30,23 @@ enum TutorialSampleTalk {
         return await merge(picture: picture, voice: voice, into: url) ? url : nil
     }
 
+    /// The same talk, written wherever `url` says, with its picture written
+    /// beside it rather than over the shared sample: the captions guide keeps
+    /// its files in a folder of its own (`TutorialVideoSample.folderName`).
+    static func fresh(at url: URL) async -> URL? {
+        let manager = FileManager.default
+        try? manager.createDirectory(at: url.deletingLastPathComponent(),
+                                     withIntermediateDirectories: true)
+        try? manager.removeItem(at: url)
+        try? manager.removeItem(at: VideoOriginals.url(for: url))
+        try? manager.removeItem(at: VideoEditsSidecar.url(for: url))
+        let pictureURL = url.deletingPathExtension().appendingPathExtension("picture.mp4")
+        defer { try? manager.removeItem(at: pictureURL) }
+        guard let picture = TutorialSampleRecording.fresh(at: pictureURL),
+              let voice = await TutorialSampleVoiceover.fresh() else { return nil }
+        return await merge(picture: picture, voice: voice, into: url) ? url : nil
+    }
+
     /// The picture played round until the voice has had its say, written as
     /// one file. `preset` and `type` let a long talk be written without
     /// encoding five minutes of picture again (`PlaytestLongTalk`).

@@ -1154,6 +1154,48 @@ Two things the walk harness had to learn, because it had never seen a recording:
   of those ways shows neither the clip nor the controls. Visible, the capture
   shows both.
 
+### The Video track in the editor (2026-09-25)
+
+At Next a recording opens in the EDITOR as a document with time, so the two
+guides above are retired there (`retiredBy`) and six new ones teach the editor
+a Premiere or Final Cut person half knows already:
+
+| Guide | Brings | What it makes you do |
+| --- | --- | --- |
+| Cut a recording down | the recording, b-roll on the shelf | Q, W, Command K, Delete |
+| Add a second clip | the same window | b-roll from the Media shelf onto the end of V1 |
+| A title that moves | the same window | T, type, Command Return, Position's diamond, a drag a second later |
+| Put a transition on a cut | recording and b-roll already meeting on V1 | click the cut, pick Cross dissolve |
+| Captions from the speech | a talk (spoken by the Mac's own voice) | let them write themselves, retype one |
+| Export the video | the same window | Shift Command E, then read the sheet |
+
+What the track added to the framework:
+
+- **Waits read off the DOCUMENT** (`TutorialDocumentChange`). Seven triggers
+  (`timeTakenOut`, `clipCut`, `clipAdded`, `titleAdded`, `keyAdded`,
+  `transitionAdded`, `captionRetyped`) are answered by comparing the document
+  before and after each `perform`, because every one of them has a key, a menu
+  row, a right click and a drag, and a wire per command is the one nobody wired.
+  Only the question the waiting step asks is worked out, so edits made while no
+  such step is up cost nothing. Captions arriving never pass for a title, and
+  more captions arriving never pass for one being retyped.
+- **Samples that open in the editor** (`.videoRecording`, `.videoTwoClips`,
+  `.videoTalk`). The app writes the files, each sample into a folder of its own
+  so one guide never rewrites a file another window is playing; what goes in the
+  document beyond the recording is `TutorialVideoSample`, in the core and
+  tested. b-roll is painted on green so a dissolve into it can be seen. The
+  two-clip sample holds a second back either side of the cut, and b-roll is
+  short so the cut sits well right of centre: in the middle, the tiles that
+  open at it covered the card telling you which one to pick.
+- **Anchors**: `timelineTracks` (the ruler and the tracks, not the transport),
+  the video Export sheet now wears `dialog(.export)`, and the panel sections a
+  video shows (`speed`, `keys`, `sound`, `captions`, `editPoint`, `transition`)
+  are on the promise. `showMediaShelf` turns the Library to Media.
+- **Walked at Next defaults with no flag set**, one walk per guide, each made of
+  steps that survive a locked screen (b-roll goes on with V1 picked and Add at
+  Playhead, the card's second way, rather than a timeline drop nobody has yet
+  watched under a lock).
+
 ## Where the rest of it is
 
 Landed here: the framework, the anchors, the callout, Take the Tour, the Help
