@@ -87,7 +87,20 @@ extension EditorState {
     /// timeline. A share of the document rather than a fixed number of
     /// milliseconds, so it is about the same few points of travel whether the
     /// recording is eight seconds or eight minutes.
-    var clipSnapMS: Int { max(16, documentLengthMS / 150) }
+    ///
+    /// Nought with snapping switched off: the hand puts it anywhere.
+    var clipSnapMS: Int { isTimelineSnapping ? max(16, documentLengthMS / 150) : 0 }
+
+    /// S, or the magnet: snapping off, or back on. A drag in the hand picks
+    /// the change up at once, from where the hand already is.
+    func toggleTimelineSnapping() {
+        isTimelineSnapping.toggle()
+        guard var session = clipBarDrag else { return }
+        session.drag = session.drag.snapping(withinMS: clipSnapMS)
+        session.landing = session.drag.landing(byMS: session.handMS)
+        clipBarDrag = session
+        rerender()
+    }
 
     // MARK: Cutting
 
@@ -352,6 +365,7 @@ extension EditorState {
     /// still one step to undo.
     func updateClipBarDrag(byMS delta: Int) {
         guard var session = clipBarDrag else { return }
+        session.handMS = delta
         session.landing = session.drag.landing(byMS: delta)
         clipBarDrag = session
         rerender()
@@ -493,8 +507,11 @@ struct ClipBarDragSession {
     let layerID: UUID
     let grab: ClipBarGrab
     /// The arithmetic, holding the pieces the clip had when it was grabbed.
-    let drag: ClipBarDrag
+    var drag: ClipBarDrag
     var landing: ClipBarDrag.Landing
+    /// How far the hand has gone, before any snap: what a landing is worked
+    /// out again from when S switches snapping part way through.
+    var handMS = 0
     /// How long the document was when the bar was grabbed, held for the length
     /// of the drag so the ruler cannot rescale under the hand.
     let heldTimelineMS: Int

@@ -43,6 +43,10 @@ public enum MenuToggleNames {
     /// a row that lies.
     public static let timingStrip = "Show Timing"
 
+    /// Premiere's Sequence > Snap in Timeline, on its key S while the
+    /// timeline has the keyboard, and the magnet in the timeline's own bar.
+    public static let snapInTimeline = "Snap in Timeline"
+
     // MARK: Layer menu
 
     /// The selected screen's own column layout. Deliberately not called a grid:
@@ -65,6 +69,6 @@ public enum MenuToggleNames {
     /// standard and a new one added without a name here shows up as a gap.
     public static let all: [String] = [
         grid, snapToGrid, panel, library, iconKeylines, showColumns, history,
-        layerVisible, layerLocked,
+        layerVisible, layerLocked, snapInTimeline,
     ]
 }

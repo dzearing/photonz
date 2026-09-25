@@ -218,6 +218,33 @@ struct ClipBarDragTests {
         #expect(landing.movedMS == 1_000)
     }
 
+    // MARK: - Snapping switched off (S, or the magnet in the timeline's bar)
+
+    @Test func withSnappingOffABarNearThePlayheadLandsWhereTheHandLetGo() {
+        let others = [MotionStripEdge(ms: 4_000, name: ClipBarCopy.thePlayhead, isStart: true)]
+        let drag = ClipBarDrag(grab: .body, pieces: Self.cutTwice(), clipStartMS: 0,
+                               others: others, snapWithinMS: 200)
+            .snapping(withinMS: 0)
+        let landing = drag.landing(byMS: 3_900)
+        #expect(landing.clipStartMS == 3_900)
+        #expect(landing.snappedTo == nil)
+    }
+
+    @Test func switchingSnappingMidDragKeepsEverythingElseTheDragHeld() {
+        let others = [MotionStripEdge(ms: 7_000, name: ClipBarCopy.thePlayhead, isStart: true)]
+        let drag = ClipBarDrag(grab: .seam(after: 1), pieces: Self.cutTwice(), clipStartMS: 0,
+                               others: others, snapWithinMS: 0, startIsFree: true)
+        let on = drag.snapping(withinMS: 250)
+        #expect(on.grab == drag.grab)
+        #expect(on.pieces == drag.pieces)
+        #expect(on.clipStartMS == drag.clipStartMS)
+        #expect(on.others == drag.others)
+        #expect(on.startIsFree)
+        #expect(on.snapWithinMS == 250)
+        #expect(on.landing(byMS: 900).snappedTo?.name == ClipBarCopy.thePlayhead)
+        #expect(drag.landing(byMS: 900).snappedTo == nil)
+    }
+
     @Test func aCatchTheClipCouldNeverReachIsNotTakenSilently() {
         // The edge could only reach five seconds out; the catch is at nine.
         let others = [MotionStripEdge(ms: 19_000, name: "Title", isStart: true)]

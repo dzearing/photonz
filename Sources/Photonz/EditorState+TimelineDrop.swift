@@ -121,7 +121,7 @@ extension EditorState {
             .rounded())
         let start = ClipLanding.snapped(startMS: raw, lengthMS: length,
                                         to: document.timelineEdgesMS + [documentTimeMS],
-                                        withinMS: max(0, reach))
+                                        withinMS: isTimelineSnapping ? max(0, reach) : 0)
         return document.clipLanding(kind: inAir.trackKind, lengthMS: length, atMS: start,
                                     over: trackDrop(atY: point.y),
                                     edit: insert ? .insert : .overwrite)

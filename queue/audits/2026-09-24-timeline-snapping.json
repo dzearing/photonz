@@ -1,0 +1,26 @@
+{
+  "feature": "S switches timeline snapping off and on",
+  "epic": "video-cutting",
+  "summary": "Snapping on the timeline can now be switched off for a fine placement: S with the timeline focused, the magnet in the timeline's bar, or Snap in Timeline in the Video menu. With it off, a clip lands exactly where you let go.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any screen recording so the timeline shows.",
+  "try": [
+    { "do": "Look at the timeline's bar: the magnet right of Select and Blade is lit, so snapping is on.", "shot": "2026-09-24-timeline-snapping-0-magnet-lit-sc.png" },
+    { "do": "Drag the clip so its start comes close to the red playhead and let go: it catches on the playhead." },
+    { "do": "Press Command Z, click in the timeline, then press S: the magnet goes dark.", "shot": "2026-09-24-timeline-snapping-2-s-turned-snapping-off-sc.png" },
+    { "do": "Drag the clip to just short of the playhead again and let go: it stays where you left it.", "shot": "2026-09-24-timeline-snapping-3-landed-a-tenth-short-sc.png" },
+    { "do": "Press S in the middle of a drag: the catch goes off, or comes back on, while the clip is still in your hand." },
+    { "do": "Click the magnet: snapping is back on, and the Video menu's Snap in Timeline row has its checkmark again.", "shot": "2026-09-24-timeline-snapping-4-magnet-turned-it-back-on-sc.png" }
+  ],
+  "evaluate": [
+    "Does the magnet read as a magnet at that size, and is the on and off state clear at a glance?",
+    "Is the magnet in the right place, on its own past a divider after Select and Blade, or would you look for it somewhere else?",
+    "Should snapping stay off in a new window once you have turned it off, the way Premiere remembers it, rather than coming back on each time?",
+    "With snapping off, is it right that the playhead also stops catching on keys when you drag it across a lane?"
+  ],
+  "rough": [
+    "The mock's timeline bar draws no snapping control at all; the magnet is an addition past the mock, placed after Select and Blade behind a divider so it reads as a switch rather than a third tool.",
+    "Snapping is per window and every window starts with it on. Premiere remembers the last setting; not remembering it was chosen so an off left over from yesterday does not look like snapping being broken.",
+    "The walk drives the drag through the same code a pointer does, but not with a real pointer: the key press and the magnet click are real, the clip slide is the harness's.",
+    "The magnet is drawn by the app, because the system's symbol set has no magnet."
+  ]
+}

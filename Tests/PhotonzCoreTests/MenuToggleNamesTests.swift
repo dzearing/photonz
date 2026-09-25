@@ -13,6 +13,8 @@ import Testing
         #expect(MenuToggleNames.library == "Show Library")
         #expect(MenuToggleNames.iconKeylines == "Show Icon Keylines")
         #expect(MenuToggleNames.history == "Show History")
+        // Premiere's own name for the row S switches.
+        #expect(MenuToggleNames.snapInTimeline == "Snap in Timeline")
     }
 
     /// A row in a list is already the thing, so its menu says what the row IS
@@ -40,8 +42,8 @@ import Testing
     /// a name in this file shows up as a missing entry rather than silently
     /// growing its own flip.
     @Test func everyOnOffItemInTheAppIsAccountedFor() {
-        #expect(MenuToggleNames.all.count == 9)
-        #expect(Set(MenuToggleNames.all).count == 9)
+        #expect(MenuToggleNames.all.count == 10)
+        #expect(Set(MenuToggleNames.all).count == 10)
     }
 
     // MARK: The capture menus agree with it

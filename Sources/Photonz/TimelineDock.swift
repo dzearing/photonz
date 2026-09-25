@@ -141,6 +141,16 @@ struct TimelineDock: View {
                        isOn: isBlade) {
                 editorState.isTimelineBlade.toggle()
             }
+            Rectangle().fill(VideoKit.Palette.line).frame(width: 1, height: 18)
+                .padding(.horizontal, 5)
+            // Premiere's and Final Cut's magnet: lit while clips catch on the
+            // playhead, the cuts and each other. A switch, not a third tool,
+            // so it stands apart from Select and Blade.
+            toolButton(name: "Snapping", help: "Snapping (S)", isOn: editorState.isTimelineSnapping) {
+                editorState.toggleTimelineSnapping()
+            } icon: {
+                MagnetGlyph().frame(width: 13, height: 13)
+            }
             if !editorState.timelineZoomSteps.isEmpty {
                 Rectangle().fill(VideoKit.Palette.line).frame(width: 1, height: 18)
                     .padding(.horizontal, 5)
@@ -180,7 +190,8 @@ struct TimelineDock: View {
             Rectangle().fill(VideoKit.Palette.edgeLo).frame(height: 1)
         }
         .panelReadout("timeline \(editorState.timelineWindowReading)"
-                      + (isBlade ? ", blade" : ", select"))
+                      + (isBlade ? ", blade" : ", select")
+                      + (editorState.isTimelineSnapping ? ", snapping" : ", snapping off"))
     }
 
     /// The right end of the bar, as `video.html` draws it: the keyed value
@@ -262,14 +273,21 @@ struct TimelineDock: View {
     /// face when it is the one in hand.
     private func toolButton(_ symbol: String, name: String, help: String, isOn: Bool,
                             action: @escaping () -> Void) -> some View {
+        toolButton(name: name, help: help, isOn: isOn, action: action) {
+            Image(systemName: symbol).font(.system(size: 12, weight: .medium))
+        }
+    }
+
+    private func toolButton<Icon: View>(name: String, help: String, isOn: Bool,
+                                        action: @escaping () -> Void,
+                                        @ViewBuilder icon: () -> Icon) -> some View {
         Button {
             // A tool picked here is a press in the dock, so the keys that
             // follow are the timeline's.
             editorState.takeTimelineKeyboard()
             action()
         } label: {
-            Image(systemName: symbol)
-                .font(.system(size: 12, weight: .medium))
+            icon()
                 .foregroundStyle(isOn ? AnyShapeStyle(Color.white) : AnyShapeStyle(VideoKit.Palette.dim))
                 .frame(width: 30, height: 26)
                 .background {
@@ -783,5 +801,52 @@ private struct TimelineKeyboard: NSViewRepresentable {
         }
 
         override func hitTest(_ point: NSPoint) -> NSView? { nil }
+    }
+}
+
+/// A horseshoe magnet, poles up: the timeline's Snapping switch, drawn because
+/// the system's symbols have none. The pole tips are split off by a hairline,
+/// which is what makes it read as a magnet rather than a U at 13 points.
+struct MagnetGlyph: View {
+    var body: some View {
+        GeometryReader { box in
+            let w = box.size.width, h = box.size.height
+            let bar = (w * 0.30).rounded()
+            let pole = (h * 0.26).rounded()
+            let gap: CGFloat = 1.5
+            ZStack(alignment: .topLeading) {
+                MagnetArc(armWidth: bar, top: pole + gap)
+                Rectangle().frame(width: bar, height: pole)
+                Rectangle().frame(width: bar, height: pole).offset(x: w - bar)
+            }
+            .frame(width: w, height: h, alignment: .topLeading)
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+/// The body of the magnet: two arms joined by a half ring, filled.
+private struct MagnetArc: Shape {
+    var armWidth: CGFloat
+    /// Where the arms start, below the pole tips.
+    var top: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        let outer = rect.width / 2
+        let inner = max(0, outer - armWidth)
+        let centre = CGPoint(x: rect.midX, y: rect.maxY - outer)
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.minY + top))
+        path.addLine(to: CGPoint(x: rect.minX, y: centre.y))
+        path.addArc(center: centre, radius: outer, startAngle: .degrees(180), endAngle: .degrees(0),
+                    clockwise: true)
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + top))
+        path.addLine(to: CGPoint(x: rect.maxX - armWidth, y: rect.minY + top))
+        path.addLine(to: CGPoint(x: rect.maxX - armWidth, y: centre.y))
+        path.addArc(center: centre, radius: inner, startAngle: .degrees(0), endAngle: .degrees(180),
+                    clockwise: false)
+        path.addLine(to: CGPoint(x: rect.minX + armWidth, y: rect.minY + top))
+        path.closeSubpath()
+        return path
     }
 }

@@ -96,6 +96,18 @@ struct TimelineKeysTests {
         #expect(command(.letter("q"), repeating: true) == nil)
     }
 
+    @Test("S switches snapping on a focused timeline, as in Premiere and Final Cut")
+    func sSwitchesSnapping() {
+        #expect(command(.letter("s")) == .toggleSnapping)
+        // On the canvas S is still whatever tool it picks there.
+        #expect(command(.letter("s"), focused: false) == nil)
+        // ⌘S is Save, ⇧S and ⌥S are not this.
+        #expect(command(.letter("s"), .command) == nil)
+        #expect(command(.letter("s"), .shift) == nil)
+        // A held S is one switch, not thirty.
+        #expect(command(.letter("s"), repeating: true) == nil)
+    }
+
     @Test("Command-K splits at the playhead wherever the keyboard is")
     func commandKSplits() {
         #expect(command(.letter("k"), .command) == .splitAtPlayhead)
@@ -365,6 +377,20 @@ struct ExpectTimelineStepTests {
         }
         #expect(claim.rulerMatches == nil)
         #expect(claim.claimsSomething)
+    }
+
+    @Test("It can claim whether the timeline snaps, on its own")
+    func readsSnappingClaim() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "steps": [ { "do": "expectTimeline", "snapping": false },
+                     { "do": "action", "action": "clipSlideShortOfPlayhead" } ] }
+        """.utf8))
+        guard case .expectTimeline(let claim) = script.steps[0] else {
+            Issue.record("expectTimeline"); return
+        }
+        #expect(claim.snapping == false)
+        #expect(claim.claimsSomething)
+        #expect(PlaytestAction.clipSlideShortOfPlayhead.drivesTheTimeline)
     }
 
     @Test("A step that claims nothing is refused")

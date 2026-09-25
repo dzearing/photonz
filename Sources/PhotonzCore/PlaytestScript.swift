@@ -956,6 +956,12 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// playhead, which is inside the catching distance, so the picture is of a
     /// catch rather than of a near miss.
     case clipSlideOntoPlayheadHeld, clipCarryLastToFrontHeld
+    /// The picked clip slid until its start is a tenth of a second short of
+    /// the playhead, and let go: where it lands says whether the timeline was
+    /// snapping (onto the playhead) or not (a tenth short, where the hand
+    /// left it). Needs a catching distance wider than a tenth, which a
+    /// document of fifteen seconds or more has (`clipHoldToFiveMinutes`).
+    case clipSlideShortOfPlayhead
     /// The picked clip taken hold of and carried up onto the track above
     /// its own, or up past the top track, where a drop makes a new track, and
     /// LEFT IN THE HAND so a walk can photograph the lane or the line lit
@@ -1085,6 +1091,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .clipDragStartIn, .clipDragStartBackOut, .clipDragEndIn,
              .clipCarryLastToFront, .clipSlideLater,
              .clipSlideOntoPlayheadHeld, .clipCarryLastToFrontHeld, .clipDragRelease,
+             .clipSlideShortOfPlayhead,
              .clipCarryUpATrackHeld, .clipCarryToNewTrackOnTopHeld, .tracksGroupPicked,
              .clipPickCut, .clipPickFirstCut, .clipTransitionDissolve, .clipTransitionDipToBlack,
              .clipTransitionHardCut, .clipTransitionDragLonger, .clipBlurComesOn,
@@ -3962,7 +3969,8 @@ public enum PlaytestStep: Sendable, Equatable {
                 markers: try f.optionalNumber("markers").map { Int($0) },
                 rulerMatches: fields["rulerMatches"] as? Bool,
                 rulerAtPlayhead: try f.optionalString("rulerAtPlayhead"),
-                lengthMS: try f.optionalNumber("lengthMS").map { Int($0) })
+                lengthMS: try f.optionalNumber("lengthMS").map { Int($0) },
+                snapping: fields["snapping"] as? Bool)
             guard claim.claimsSomething else {
                 throw f.invalid("playheadMS", "expectTimeline has to claim something: \"playheadMS\", "
                     + "\"keyboard\", \"rate\", \"blade\", \"markInMS\", \"markOutMS\", \"hasIn\", "
@@ -4220,11 +4228,15 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
     public var rulerAtPlayhead: String?
     /// How long the document runs for, which is what the transport counts to.
     public var lengthMS: Int?
+    /// Clips catch on the playhead, cuts and each other while dragged (true),
+    /// or go where the hand leaves them (false): S and the magnet.
+    public var snapping: Bool?
 
     public init(playheadMS: Int? = nil, withinMS: Int = 0, keyboard: Keyboard? = nil, rate: Double? = nil,
                 blade: Bool? = nil, markInMS: Int? = nil, markOutMS: Int? = nil,
                 hasIn: Bool? = nil, hasOut: Bool? = nil, markers: Int? = nil,
-                rulerMatches: Bool? = nil, rulerAtPlayhead: String? = nil, lengthMS: Int? = nil) {
+                rulerMatches: Bool? = nil, rulerAtPlayhead: String? = nil, lengthMS: Int? = nil,
+                snapping: Bool? = nil) {
         self.playheadMS = playheadMS
         self.withinMS = max(0, withinMS)
         self.keyboard = keyboard
@@ -4238,10 +4250,11 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
         self.rulerMatches = rulerMatches
         self.rulerAtPlayhead = rulerAtPlayhead
         self.lengthMS = lengthMS
+        self.snapping = snapping
     }
 
     public var claimsSomething: Bool {
-        playheadMS != nil || keyboard != nil || rate != nil || blade != nil || markInMS != nil
+        snapping != nil || playheadMS != nil || keyboard != nil || rate != nil || blade != nil || markInMS != nil
             || markOutMS != nil || hasIn != nil || hasOut != nil || markers != nil
             || rulerMatches != nil || rulerAtPlayhead != nil || lengthMS != nil
     }

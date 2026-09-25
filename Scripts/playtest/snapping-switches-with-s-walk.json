@@ -1,0 +1,62 @@
+{
+  "out": "/tmp/photonz-playtest/snapping-switches-with-s-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "clipHoldToFiveMinutes" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "lengthMS": 300000, "playheadMS": 75000, "keyboard": "timeline", "snapping": true },
+    { "do": "describe", "stage": "0-snapping-on", "note": "a five minute recording at Next defaults, the playhead parked at 1:15. The magnet in the timeline's bar, right of Select and Blade, is lit: clips catch on the playhead, the cuts and each other" },
+    { "do": "snapshot", "name": "0-magnet-lit" },
+
+    { "do": "action", "action": "clipSlideShortOfPlayhead" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "startsAt": 75.0, "within": 0.01, "count": 1 },
+    { "do": "describe", "stage": "1-caught", "note": "the clip slid until its start is a tenth of a second short of the playhead and let go: with snapping on it caught, and starts exactly on the playhead at 1:15" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "startsAt": 0.0, "count": 1 },
+
+    { "do": "key", "key": "s" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "snapping": false, "playheadMS": 75000 },
+    { "do": "describe", "stage": "2-s-off", "note": "one press of S with the timeline holding the keyboard, Premiere's and Final Cut's key: snapping is off and the magnet goes dark" },
+    { "do": "snapshot", "name": "2-s-turned-snapping-off" },
+
+    { "do": "action", "action": "clipSlideShortOfPlayhead" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "startsAt": 74.9, "within": 0.01, "count": 1 },
+    { "do": "describe", "stage": "3-landed-where-let-go", "note": "the same slide with snapping off: the clip lands where the hand let go, a tenth of a second short of the playhead, at 1:14.9" },
+    { "do": "snapshot", "name": "3-landed-a-tenth-short" },
+
+    { "do": "press", "control": "Timeline Snapping" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "snapping": true, "keyboard": "timeline" },
+    { "do": "describe", "stage": "4-magnet-on", "note": "a click on the magnet turns snapping back on, the same switch S works" },
+    { "do": "snapshot", "name": "4-magnet-turned-it-back-on" },
+
+    { "do": "key", "key": "s" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "snapping": false },
+    { "do": "key", "key": "s" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "snapping": true },
+    { "do": "describe", "stage": "5-s-twice", "note": "S twice more: off, then on again. It is a switch, not a hold" },
+
+    { "do": "action", "action": "clipSlideOntoPlayheadHeld" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "6-held-and-caught", "note": "the clip taken hold of again and aimed 30 ms short of the playhead, still in the hand: with snapping on it has caught on the playhead" },
+    { "do": "key", "key": "s" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "snapping": false },
+    { "do": "action", "action": "clipDragRelease" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "startsAt": 74.97, "within": 0.005, "count": 1 },
+    { "do": "describe", "stage": "7-s-mid-drag", "note": "S pressed while the clip was still in the hand let go of the catch at once, so it landed 30 ms short of the playhead, where the hand was" }
+  ]
+}

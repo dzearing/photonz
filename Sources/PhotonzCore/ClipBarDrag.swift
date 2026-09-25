@@ -87,6 +87,15 @@ public struct ClipBarDrag: Hashable, Sendable {
         self.startIsFree = startIsFree
     }
 
+    /// The same drag catching within `reach` instead: nought lets the hand
+    /// put it anywhere. Snapping can be switched with S half way through a
+    /// drag, the moment you find it will not let you park where you want, so
+    /// the drag carries on from what it already holds.
+    public func snapping(withinMS reach: Int) -> ClipBarDrag {
+        ClipBarDrag(grab: grab, pieces: pieces, clipStartMS: clipStartMS, others: others,
+                    snapWithinMS: max(0, reach), startIsFree: startIsFree)
+    }
+
     // MARK: Where the thing in the hand is right now
 
     /// The moment on the document's clock the grabbed edge sat at. What a snap

@@ -336,8 +336,9 @@ extension EditorState {
 
     /// How much of the timeline's clock `keySnapPoints` spans on a lane
     /// `laneWidth` wide, at the zoom it is at.
+    /// Nought with the timeline's snapping switched off.
     func keySnapReachMS(laneWidth: CGFloat) -> Int {
-        guard laneWidth > 0 else { return 0 }
+        guard laneWidth > 0, isTimelineSnapping else { return 0 }
         let ruler = motionStripRuler
         let span = ruler.ms(atFraction: Double(Self.keySnapPoints / laneWidth)) - ruler.ms(atFraction: 0)
         return max(0, Int(span.rounded()))

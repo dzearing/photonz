@@ -488,6 +488,13 @@ struct EditorCommands: Commands {
                             .keyboardShortcut("t", modifiers: .command)
                             .disabled(!(editor?.canApplyDefaultTransition() ?? false))
                     }
+                    // Premiere's Sequence > Snap in Timeline, on its S. A
+                    // setting, so it keeps its name and wears a checkmark; the
+                    // magnet in the timeline's bar is the same switch.
+                    Toggle(MenuToggleNames.snapInTimeline, isOn: Binding(
+                        get: { editor?.isTimelineSnapping ?? true },
+                        set: { _ in editor?.toggleTimelineSnapping() }))
+                    .keyboardShortcut(timelineKeys ? KeyboardShortcut("s", modifiers: []) : nil)
                 }
                 // A freeze is not a special object: it is a piece whose in and
                 // out are the same frame, so it drops onto the timeline like

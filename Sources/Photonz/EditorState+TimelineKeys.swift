@@ -9,8 +9,8 @@ import PhotonzCore
 // opening, a clip dropped into a picture) and after any press in the dock, and
 // loses it to a press anywhere else, Premiere's own panel focus. While it does, J/K/L
 // shuttle, I and O mark, ' and ; extract and lift what they mark, Q and W
-// ripple trim the clip under the playhead up to it, the arrows step frames and
-// edit points, and V, B and
+// ripple trim the clip under the playhead up to it, S switches snapping, the
+// arrows step frames and edit points, and V, B and
 // the zoom keys pick the timeline's tools, where the same letters on the canvas
 // are Photoshop's tools. `TimelineKeyRouter` gets a press here before the
 // toolbar or the menu bar can take it.
@@ -92,6 +92,8 @@ extension EditorState {
             return rippleTrimToPlayhead(end)
         case .applyDefaultTransition:
             return applyDefaultTransition()
+        case .toggleSnapping:
+            toggleTimelineSnapping()
         case .selectTool:
             // Premiere's V and Photoshop's V are the same arrow, so the
             // timeline puts the Blade down and the press carries on to the

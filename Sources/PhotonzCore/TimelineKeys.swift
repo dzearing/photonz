@@ -99,6 +99,9 @@ public enum TimelineKeyCommand: Hashable, Sendable {
     /// Final Cut's ⌘T, Premiere's ⌘D: the default transition on the cut at
     /// the playhead (`DefaultTransition.swift`).
     case applyDefaultTransition
+    /// Premiere's and Final Cut's S: clips stop, or start again, catching on
+    /// the playhead, the cuts and each other while they are dragged.
+    case toggleSnapping
     case selectTool, bladeTool, trackSelectForwardTool
     case zoomIn, zoomOut, zoomToFit
 }
@@ -163,6 +166,7 @@ public enum TimelineKeys {
         case ";": return .liftMarked
         case "q": return .rippleTrimToPlayhead(.start)
         case "w": return .rippleTrimToPlayhead(.end)
+        case "s": return .toggleSnapping
         case "v": return .selectTool
         case "b": return .bladeTool
         case "a": return .trackSelectForwardTool

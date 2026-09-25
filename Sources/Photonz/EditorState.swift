@@ -1019,6 +1019,12 @@ final class EditorState {
     var timelineHasKeyboard = false
     /// The timeline's own tool: the Blade, or the Select arrow when false.
     var isTimelineBlade = false
+    /// Clips catch on the playhead, the cuts and each other while they are
+    /// dragged. S and the magnet in the timeline's bar switch it, Premiere's
+    /// and Final Cut's key. Per window and on for every new one, as a fresh
+    /// Premiere sequence is: an off switch left over from yesterday's fine
+    /// placement would read as snapping being broken.
+    var isTimelineSnapping = true
     /// Where a clip's pixels come from (`MovieFrames.swift`). Made on demand,
     /// so a window holding a screenshot never makes one.
     @ObservationIgnored var movieFramesStorage: MovieFrameFetcher?

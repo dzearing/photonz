@@ -19634,3 +19634,9 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Size estimate for an edited video: `RecordingExport.footageBytesPerSecond` measures the recordings the clips play, plus `captionBitsPerPixelSecond` for burned-in captions. Editing-session edit: 558 KB promised, 737 KB landed (was 9.6 MB vs 0.7 MB).
 - Walks: new `export-a-video-at-1080p-walk` (five minute Retina talk, `openLongRetinaTalk`, ~350 s, top-level `"clock": 480`, which `playtest.sh` now honours); `writeVideo` takes `size` and `estimateFactor`. Audit `queue/audits/2026-09-24-export-size.json`.
 - Filed: `a-five-minute-recording-exports-in-less-time-tha` (342 s to write 319 s at 1080p). `an-editing-session-walk` still stops at step 34 on the transition picker, owned by the sweep task.
+
+## 2026-09-24 — S switches timeline snapping
+
+- S on a focused timeline, a magnet button in the timeline's bar (after Select and Blade) and Video > Snap in Timeline all switch timeline snapping. Off, clip drags, trims, file drops and the playhead-on-keys catch go exactly where the hand leaves them. S mid-drag takes effect at once.
+- Walk: `Scripts/playtest/snapping-switches-with-s-walk.json` (Next defaults). Audit: `queue/audits/2026-09-24-timeline-snapping.json`.
+- Open question for the user (in the audit): should the off setting be remembered across windows, as Premiere does?

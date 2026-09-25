@@ -3478,6 +3478,19 @@ private final class Run {
                         + "and did not catch on it; the catching distance is "
                         + "\(editor.clipSnapMS) ms")
                 }
+            case .clipSlideShortOfPlayhead:
+                guard let id = editor.clipInHandID,
+                      let start = editor.document?.layer(id: id)?.time?.inMS else {
+                    throw Failure(description: "there is no clip to slide")
+                }
+                let aim = editor.documentTimeMS - 100
+                guard aim >= 0 else {
+                    throw Failure(description: "the playhead is at \(editor.documentTimeMS) ms, too near "
+                        + "the start to slide a clip a tenth of a second short of it")
+                }
+                editor.beginClipBarDrag(layerID: id, grab: .body)
+                editor.updateClipBarDrag(byMS: aim - start)
+                editor.commitClipBarDrag()
             case .clipCarryLastToFrontHeld:
                 let last = (editor.clipInHandPieces?.count ?? 1) - 1
                 guard last > 0, let id = editor.clipInHandID else {
@@ -4684,6 +4697,7 @@ private final class Run {
                  .clipDragStartIn, .clipDragStartBackOut, .clipDragEndIn,
                  .clipCarryLastToFront, .clipSlideLater,
                  .clipSlideOntoPlayheadHeld, .clipCarryLastToFrontHeld, .clipDragRelease,
+                 .clipSlideShortOfPlayhead,
                  .clipCarryUpATrackHeld, .clipCarryToNewTrackOnTopHeld, .tracksGroupPicked,
                  .clipPickCut, .clipPickFirstCut, .clipTransitionDissolve, .clipTransitionDipToBlack,
                  .clipTransitionHardCut, .clipTransitionDragLonger, .clipBlurComesOn,
@@ -9365,8 +9379,12 @@ private final class Run {
         let reading = "playhead \(editor.documentTimeMS)ms, keyboard on the \(keyboard.rawValue), "
             + "rate \(rate), \(editor.isTimelineBlade ? "blade" : "select"), "
             + "in \(mark(document?.markInMS)), out \(mark(document?.markOutMS)), "
-            + "\(document?.markers.count ?? 0) marker(s), runs \(editor.documentLengthMS)ms"
+            + "\(document?.markers.count ?? 0) marker(s), runs \(editor.documentLengthMS)ms, "
+            + (editor.isTimelineSnapping ? "snapping" : "snapping off")
         var wrong: [String] = []
+        if let want = claim.snapping, want != editor.isTimelineSnapping {
+            wrong.append(editor.isTimelineSnapping ? "the timeline is snapping" : "snapping is off")
+        }
         if let want = claim.lengthMS, editor.documentLengthMS != want {
             wrong.append("the timeline runs \(editor.documentLengthMS)ms, not \(want)ms")
         }
