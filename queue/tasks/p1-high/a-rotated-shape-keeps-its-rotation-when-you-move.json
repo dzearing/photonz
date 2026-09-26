@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 0.002,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-26T13:57:27.112Z",
-  "updated": "2026-09-26T13:57:27.199Z",
+  "updated": "2026-09-26T15:40:29.840Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -29,6 +29,27 @@
     {
       "t": "2026-09-26T13:57:27.198Z",
       "note": "seq 370 -> 0.002"
+    },
+    {
+      "t": "2026-09-26T15:08:20.629Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T15:40:29.726Z",
+      "note": "owns these walks: a-turned-shape-keeps-its-turn-walk, a-turned-shape-keeps-its-turn-on-a-video-walk"
+    },
+    {
+      "t": "2026-09-26T15:40:29.787Z",
+      "note": "Reproduced 2026-09-26 with throwaway walks at Next defaults (rectangle turned 20/45 deg, then body drag, arrows, corner, edge, Shift corner, panel X, panel W; on a blank picture and on the sample recording; with Position, Scale and Rotation keyed). The stored model kept the angle in every unkeyed case (harness tree now prints 'turned N°'). Two real bugs: (1) the drag sprite was the finished turned drawing cut to the upright box plus effect padding, so mid-drag the turned rectangle showed its corners sliced off flat (photographed with drag hold); turning an already-turned layer clipped the same way; resizing a turned photo would have stretched the baked-in turn along screen axes (shear). (2) With Rotation keyed, the canvas edit was applied to the STORED layer while foldEditIntoKeys compared against the POSE, so a move/resize at a moment where keys had turned the layer wrote the stored angle back as a new Rotation key (core test: keys 0@1s 30@3s, move at 5s -> angle 0 and a third key)."
+    },
+    {
+      "t": "2026-09-26T15:40:29.839Z",
+      "note": "Fix: Layer.dragSpritePadding (core, tested) pads the sprite by renderBounds ∪ turnedReach; beginLayerDrag uses it. Layer.resizeScalesUniformly is false for a rotation or skew, so a turned layer's resize re-renders live instead of stretching the sprite. PhotonzDocument.editPosedForCanvas (core, tested) puts the pose on the layer before the hand's edit, then folds into keys; EditorState.foldingIntoKeys calls it. Tests: DragSpritePaddingTests, TurnedDragSpriteTests (render: sprite ink 20000 at 20/45/90/135 deg; failed with old padding, lost up to half), ResizePreviewScalingTests (+2), RotationSurvivesMoveAndResizeTests (every kind: rectangle, ellipse, line, arrow, path, text, image, group; keyed place/size/turn; turn back to stored angle still keys; Escape leaves nothing). Adversarial: Photoshop keeps the turn through move and Free Transform scale and resizes along the turned sides; ours already resized in the turned frame. Stickers and components are a picture and a group in the model, covered by image and group. Left rough: undo with Position and Size open takes two steps (filed undo-after-a-drag-puts-a-shape-back-where-it-was, p2, reproduced); drawn angle at 2s between keys 20@1s and 0@3s read 4 deg, not investigated (ease/playhead position, not a lost turn)."
     }
+  ],
+  "started": "2026-09-26T15:08:20.628Z",
+  "walks": [
+    "a-turned-shape-keeps-its-turn-walk",
+    "a-turned-shape-keeps-its-turn-on-a-video-walk"
   ]
 }

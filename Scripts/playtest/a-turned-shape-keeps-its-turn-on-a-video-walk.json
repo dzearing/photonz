@@ -1,0 +1,366 @@
+{
+ "out": "/tmp/photonz-playtest/a-turned-shape-keeps-its-turn-on-a-video-walk",
+ "seed": "The same on a recording at Next defaults: a turned rectangle keeps its turn through a move, a nudge, and corner, edge and Shift corner resizes, and then with Rotation keyed (20 at 1s, upright at 3s) a move at 5s leaves it upright rather than writing the stored angle back as a new key.",
+ "setup": {
+  "forget": [
+   "all"
+  ],
+  "timelineOpen": true
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "action",
+   "action": "videoSeekStart"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    400,
+    300
+   ],
+   "to": [
+    700,
+    450
+   ],
+   "steps": 8
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "action",
+   "action": "turnKnob"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "describe",
+   "stage": "1-turned",
+   "note": "a rectangle turned 20 degrees clockwise with the knob"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-turned"
+  },
+  {
+   "do": "drag",
+   "from": [
+    550.0,
+    375.0
+   ],
+   "to": [
+    650.0,
+    455.0
+   ],
+   "steps": 12,
+   "hold": "2-mid-move"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "describe",
+   "stage": "2-moved",
+   "note": "dragged by its body: the held picture mid-move must show the whole turned rectangle, corners and all, never one cut square to the screen"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-moved"
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "describe",
+   "stage": "2-undo",
+   "note": "one undo puts it back where it was, still turned 20"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-undo"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "key",
+   "key": "down",
+   "modifiers": [
+    "shift"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "describe",
+   "stage": "3-nudged",
+   "note": "nudged one point right and ten down with the arrow keys, still turned 20"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-nudged"
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "drag",
+   "from": [
+    665.3,
+    496.8
+   ],
+   "to": [
+    721.7,
+    517.3
+   ],
+   "steps": 12,
+   "hold": "4-mid-corner"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "describe",
+   "stage": "4-corner",
+   "note": "the bottom right corner handle pulled 60 points along the turned long side: it grows along its own side, still turned 20"
+  },
+  {
+   "do": "snapshot",
+   "name": "4-corner"
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "drag",
+   "from": [
+    691.0,
+    426.3
+   ],
+   "to": [
+    747.4,
+    446.8
+   ],
+   "steps": 12,
+   "hold": "5-mid-edge"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "describe",
+   "stage": "5-edge",
+   "note": "the right edge handle pulled 60 points outward along the turn, still turned 20"
+  },
+  {
+   "do": "snapshot",
+   "name": "5-edge"
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "drag",
+   "from": [
+    665.3,
+    496.8
+   ],
+   "to": [
+    721.7,
+    517.3
+   ],
+   "steps": 12,
+   "modifiers": [
+    "shift"
+   ],
+   "hold": "6-mid-shift"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "describe",
+   "stage": "6-shift-corner",
+   "note": "Shift held on the corner keeps the proportions, still turned 20"
+  },
+  {
+   "do": "snapshot",
+   "name": "6-shift-corner"
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "reveal",
+   "control": "Properties section"
+  },
+  {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Rotation",
+   "in": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "turnKnobStraight"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "describe",
+   "stage": "7-keyed-upright",
+   "note": "Rotation keyed at 20 at 1s and 0 at 3s: at 5s the keys draw it upright"
+  },
+  {
+   "do": "snapshot",
+   "name": "7-keyed-upright"
+  },
+  {
+   "do": "drag",
+   "from": [
+    550.0,
+    375.0
+   ],
+   "to": [
+    650.0,
+    455.0
+   ],
+   "steps": 12,
+   "hold": "8-mid-keyed-move"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "describe",
+   "stage": "8-keyed-moved",
+   "note": "moved at 5s: still drawn upright, and no new Rotation key at 5s"
+  },
+  {
+   "do": "snapshot",
+   "name": "8-keyed-moved"
+  },
+  {
+   "do": "action",
+   "action": "videoSeekStart"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "describe",
+   "stage": "9-at-2s",
+   "note": "at 2s the keys still have it partway between 20 and 0"
+  },
+  {
+   "do": "snapshot",
+   "name": "9-at-2s"
+  }
+ ]
+}

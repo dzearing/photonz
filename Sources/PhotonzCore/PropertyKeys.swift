@@ -586,6 +586,32 @@ extension PhotonzDocument {
         return true
     }
 
+    /// A hand's edit on the canvas, start to finish, for a layer whose keys
+    /// pose it at `ms`: the layer is put where and at the angle it is DRAWN at
+    /// that moment (`posedForCanvas`), `mutate` does what the hand did, and
+    /// whatever is keyed becomes keys at the playhead (`foldEditIntoKeys`).
+    ///
+    /// The pose goes on first because the hand worked on the pose. Left on
+    /// the stored layer, a move at a moment where the keys had turned a
+    /// rectangle to 30 degrees read as the hand turning it back to the stored
+    /// 0, and wrote a key of 0: the shape lost its rotation the moment it was
+    /// moved or resized (reported 2026-09-26).
+    public mutating func editPosedForCanvas(layerID: UUID, atDocumentTimeMS ms: Int,
+                                            ease: KeyEase? = nil,
+                                            _ mutate: (inout PhotonzDocument) -> Void) {
+        guard let stored = layer(id: layerID) else { return mutate(&self) }
+        let posed = posedForCanvas(atTimeMS: ms).layer(id: layerID) ?? stored
+        if posed.frame != stored.frame || posed.transform.rotation != stored.transform.rotation {
+            updateLayer(id: layerID) {
+                $0.frame = posed.frame
+                $0.transform.rotation = posed.transform.rotation
+            }
+        }
+        mutate(&self)
+        foldEditIntoKeys(layerID: layerID, before: posed, restoring: stored,
+                         atDocumentTimeMS: ms, ease: ease)
+    }
+
     // MARK: Where the handles go
 
     /// The document as the canvas should hit-test it and draw handles round

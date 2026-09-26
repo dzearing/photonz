@@ -74,4 +74,22 @@ struct ResizePreviewScalingTests {
         let layer = Layer(name: "Text", content: .text(TextContent(string: "hi")), frame: frame)
         #expect(!layer.resizeScalesUniformly)
     }
+
+    // MARK: A turn — the sprite has the turn baked in
+
+    @Test func turnedPhotoBlocksSpriteScaling() {
+        // The sprite is the picture already turned, so stretching it along the
+        // screen's axes shears it rather than resizing it along its own sides:
+        // a turned photo dragged by an edge would lean the wrong way until the
+        // mouse came up (2026-09-26, "it loses its rotation").
+        let layer = Layer(name: "Photo", content: .image(ref), frame: frame,
+                          transform: LayerTransform(rotation: .pi / 9))
+        #expect(!layer.resizeScalesUniformly)
+    }
+
+    @Test func skewedPhotoBlocksSpriteScaling() {
+        let layer = Layer(name: "Photo", content: .image(ref), frame: frame,
+                          transform: LayerTransform(skewX: 0.2))
+        #expect(!layer.resizeScalesUniformly)
+    }
 }

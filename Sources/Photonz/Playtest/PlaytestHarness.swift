@@ -12605,6 +12605,9 @@ private final class Run {
         // — or scaled — everything inside it, in the same units its clicks are
         // written in.
         var tree: [String] = []
+        // The document as the canvas draws it at the playhead, where keys can
+        // have turned a layer away from its stored angle.
+        let posedAtPlayhead = editor.documentHasTime ? editor.canvasGeometryDocument : nil
         func walk(_ list: [Layer], origin: CGPoint, depth: Int) {
             for layer in list {
                 let box = layer.localBounds.offsetBy(dx: origin.x, dy: origin.y)
@@ -12641,6 +12644,17 @@ private final class Run {
                 }
                 if let path = layer.path {
                     line += " stroke \(Int(path.strokeWidth.rounded()))"
+                }
+                // How far it is turned, so a walk can prove a move or a resize
+                // kept the angle without reading a picture.
+                func degrees(_ radians: CGFloat) -> Int {
+                    Int(LayerAngle.display(LayerAngle.degrees(fromRadians: radians)))
+                }
+                if layer.transform.rotation != 0 {
+                    line += " turned \(degrees(layer.transform.rotation))°"
+                }
+                if layer.hasMotion, let posed = posedAtPlayhead?.layer(id: layer.id) {
+                    line += " drawn turned \(degrees(posed.transform.rotation))°"
                 }
                 // How much a callout magnifies and what it is drawn in, so a
                 // walk can prove what came out of a drag without reading a

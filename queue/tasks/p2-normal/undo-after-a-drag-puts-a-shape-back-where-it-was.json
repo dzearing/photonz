@@ -1,0 +1,28 @@
+{
+  "id": "undo-after-a-drag-puts-a-shape-back-where-it-was",
+  "title": "Undo after a drag puts a shape back where it was, even with Position and Size open",
+  "goal": "With the Position and Size popover open, dragging a shape and pressing Undo does not put it back where it started: the first Undo stops at a spot the shape passed through during the drag, and a second Undo is needed. A person expects one drag to be one undo.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 3430,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-26T15:39:57.811Z",
+  "updated": "2026-09-26T15:39:57.814Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found 2026-09-26 while reproducing a-rotated-shape-keeps-its-rotation-when-you-move (unrelated to rotation). Repro walk (/tmp/rotrepro/pop.json): blank 900x600, rectangle tool drag (120,120)->(320,220), select tool, action positionAndSize (firstResponder becomes _SystemTextFieldFieldEditor), drag body (220,170)->(320,250), undo, undo. Tree readings: after drag (220,200); after first undo (120,128); after second undo (120,120). So the drag made two history steps: a move to (120,128) and then the drag. Theory (not confirmed): the focused X/Y field commits the live preview value (previewMoves) when it loses first responder part way into the drag. Without the popover open the same drag undoes in one step to (120,120).",
+  "acceptance": [
+    "With Position and Size open, one drag of a shape followed by one Undo returns it exactly to where it started",
+    "The drag leaves exactly one step in the undo history",
+    "A walk opens Position and Size, drags a shape, undoes once and shows it back at its starting place"
+  ],
+  "log": [
+    {
+      "t": "2026-09-26T15:39:57.813Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": []
+}

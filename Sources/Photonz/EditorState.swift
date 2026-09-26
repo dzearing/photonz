@@ -3460,17 +3460,11 @@ final class EditorState {
         // the smear a person sees. It falls back to a full re-render per move,
         // the same as text does, and that keeps it right.
         if !doc.inheritedTurn(of: id).isIdentity { return }
-        // A group's own style is usually plain, but the shadows and blur of the
-        // pieces INSIDE it still reach past the box they make, so the sprite is
-        // padded by the furthest any of them reaches or they would be clipped
-        // the moment the drag started.
-        var padding = layer.reachPadding
-        if layer.isGroup {
-            let box = layer.localBounds
-            let reach = layer.renderBounds
-            padding = max(padding, box.minX - reach.minX, box.minY - reach.minY,
-                          reach.maxX - box.maxX, reach.maxY - box.maxY).rounded(.up)
-        }
+        // Padded by the furthest the layer draws past its box: its shadow and
+        // blur, the pieces inside a group, and the corners its own turn swings
+        // out. Without the turn, a rotated shape had its corners cut off flat
+        // for the whole of a move (`dragSpritePadding`).
+        let padding = layer.dragSpritePadding
         let blend = layer.effectiveBlendMode
         let renderer = previewRenderer
         let store = store

@@ -1,0 +1,26 @@
+{
+  "feature": "A turned shape keeps its turn when you move or resize it",
+  "epic": "video-transitions-motion",
+  "summary": "A turned shape now stays turned while you drag it, instead of showing its corners cut off flat until you let go. On a video with Rotation keyed, moving or resizing it no longer adds a Rotation key that untwists it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: a-turned-shape-keeps-its-turn-walk (picture) and a-turned-shape-keeps-its-turn-on-a-video-walk (recording).",
+  "try": [
+    { "do": "Draw a rectangle, then drag its round knob to turn it about 20 degrees.", "shot": "2026-09-26-turned-shape-mid-move.png" },
+    { "do": "Drag the rectangle by its middle and look at it before letting go: it should be the whole turned rectangle, corners included." },
+    { "do": "Pull its bottom right corner handle outward along the long side.", "shot": "2026-09-26-turned-shape-mid-corner.png" },
+    { "do": "Draw a second rectangle, turn it, pick both in the layers list and drag them together.", "shot": "2026-09-26-turned-shape-two-together.png" },
+    { "do": "Open a recording, draw a rectangle on it, turn it and drag it.", "shot": "2026-09-26-turned-shape-video-mid-move.png" },
+    { "do": "Under Properties choose Animate a property, then Rotation. Two seconds later turn it upright, move the playhead two seconds further and drag the rectangle.", "shot": "2026-09-26-turned-shape-video-keyed-move.png" },
+    { "do": "Check the Rotation row on the timeline: it still has only its two keys." }
+  ],
+  "evaluate": [
+    "While you drag a turned shape, does it look the same as when it is standing still?",
+    "Is this the case you hit? If you still see a turn lost on some shape or gesture, which one?",
+    "On a video with Rotation keyed, does a move now leave the angle where the keys put it?",
+    "Does resizing a turned shape grow it along its own sides the way Photoshop's Free Transform does?"
+  ],
+  "rough": [
+    "On a picture and on a video without keys, the model never lost the turn: every move, nudge, corner, edge, Shift and panel edit I walked kept it exactly. What looked lost was the picture that follows the pointer, which was cut to the shape's upright box. If you saw the turn gone AFTER letting go, that is a case I could not reproduce.",
+    "Separate bug found on the way: with the Position and Size popover open, one drag takes two Undos to put back. Filed as its own task.",
+    "Nothing in the mocks draws this; it is a fix to existing behaviour, so there is no mock frame to set beside it."
+  ]
+}

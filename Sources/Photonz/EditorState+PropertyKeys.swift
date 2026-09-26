@@ -205,19 +205,17 @@ extension EditorState {
     /// The canvas edit `mutate` makes to layer `id`, with every change to a
     /// keyed value turned into a key at the playhead
     /// (`PhotonzDocument.foldEditIntoKeys`). The hand worked on the layer as
-    /// POSED, so that is what its move is read against. Used for the live
-    /// preview and the commit alike, so what the hand sees is what lands.
+    /// POSED, so the edit is made to the pose and read against it
+    /// (`PhotonzDocument.editPosedForCanvas`). Used for the live preview and
+    /// the commit alike, so what the hand sees is what lands.
     func foldingIntoKeys(_ id: UUID, in document: inout PhotonzDocument,
                          _ mutate: (inout PhotonzDocument) -> Void) {
-        guard dragMakesKeys(id), let stored = document.layer(id: id) else {
+        guard dragMakesKeys(id), document.layer(id: id) != nil else {
             mutate(&document)
             return
         }
-        let time = documentTimeMS
-        let posed = document.posedForCanvas(atTimeMS: time).layer(id: id) ?? stored
-        mutate(&document)
-        document.foldEditIntoKeys(layerID: id, before: posed, restoring: stored,
-                                  atDocumentTimeMS: time, ease: newKeyEaseToWrite)
+        document.editPosedForCanvas(layerID: id, atDocumentTimeMS: documentTimeMS,
+                                    ease: newKeyEaseToWrite, mutate)
     }
 
     // MARK: The timeline bar

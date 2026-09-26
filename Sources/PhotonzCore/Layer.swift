@@ -1987,6 +1987,22 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         return reach.applying(transform.affineTransform(around: turnPivot))
     }
 
+    /// The clear margin a picture of this layer needs on every side of its box
+    /// so that nothing it draws is cut off: its shadow and blur, what the
+    /// pieces of a group reach, and the corners its own turn swings out past
+    /// the upright box. What the canvas pads the picture it floats under the
+    /// pointer by, which is drawn centred on the box.
+    ///
+    /// Only the shadow used to count, so a rectangle turned 45 degrees had its
+    /// corners sliced off flat for the whole of a move and looked as if it had
+    /// lost its rotation until the mouse came up.
+    public var dragSpritePadding: CGFloat {
+        let box = localBounds
+        let reach = renderBounds.union(turnedReach)
+        return max(reachPadding, box.minX - reach.minX, box.minY - reach.minY,
+                   reach.maxX - box.maxX, reach.maxY - box.maxY, 0).rounded(.up)
+    }
+
     /// Whether "Turn Into Picture" applies: the layer is a shape or a piece of
     /// text, so it can be baked into pixels. Both draw entirely inside their own
     /// frame (plus the reach `reachPadding` already accounts for), which is what
@@ -2032,8 +2048,14 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// border/corner-radius/blur/shadow decoration — a scaled sprite would
     /// stretch the fixed-size detail (and drift the anchored edge once padding is
     /// scaled too), so the live drag must re-render the frame each move instead.
+    ///
+    /// A turn or a skew rules it out as well: the bitmap has the turn baked
+    /// in, so stretching it along the screen's axes shears the picture rather
+    /// than resizing it along its own sides. A flip is square to the axes and
+    /// stretches faithfully.
     public var resizeScalesUniformly: Bool {
         content.scalesUniformlyOnResize && style.hasNoFixedSizeDecoration
+            && transform.rotation == 0 && transform.skewX == 0 && transform.skewY == 0
     }
 
     /// Whether a canvas-space point lands on this layer's transformed shape.
