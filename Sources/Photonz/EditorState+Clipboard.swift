@@ -332,8 +332,7 @@ extension EditorState {
         // Pasted over a screen means pasted ONTO it: the layer keeps the spot
         // it looks like it landed on and becomes part of that screen, the same
         // way a shape drawn there does.
-        let moment = documentTimeMS
-        perform { [layer] in $0.addLayerDrawn(layer, atTimeMS: moment) }
+        addDrawnLayer(layer)
         selectedLayerID = layer.id
         recordPaste(layer.id, at: layer.frame)
         return layer.id
@@ -393,13 +392,19 @@ extension EditorState {
         // gives two rows you can tell apart instead of the same word twice.
         let name = PlacedImageNaming.layerName(named: baseName,
                                                taken: Set(document.allLayers.map(\.name)))
-        let layer = Layer(name: name, content: .image(ref), frame: frame)
+        let layer = placedInTimeIfDrawnOnVideo(Layer(name: name, content: .image(ref), frame: frame))
         discardDragPreview()
+        let moment = documentTimeMS
+        let placing = placesDrawingsInTime
         perform {
             // The panel drew a line saying exactly where this goes, so that is
             // where it goes. The fallback is the way every other drop lands.
             if let landing, $0.insertLayer(layer, landing) { return }
-            $0.addLayerDrawnOnFrame(layer)
+            if placing {
+                $0.addLayerDrawn(layer, atTimeMS: moment)
+            } else {
+                $0.addLayerDrawnOnFrame(layer)
+            }
         }
         // Landing inside a group opens it, so you can see where it went.
         if case .inside(let groupID) = landing { expandedGroupIDs.insert(groupID) }

@@ -38,8 +38,7 @@ extension EditorState {
             armed: content.strokeWidth,
             drawnAt: CGPoint(x: content.bounds.midX, y: content.bounds.midY))
         let layer = PenSession.layer(from: content)
-        let moment = documentTimeMS
-        perform { $0.addLayerDrawn(layer, atTimeMS: moment) }
+        addDrawnLayer(layer)
         finishCreating(layer.id,
                        tool: ArrowCaptionEntry.toolAfterLanding(activeTool,
                                                              offersCaption: false))

@@ -118,6 +118,15 @@ extension EditorState {
         }
         // A title, a piece of clip art: how it comes on and goes off.
         rows.append(contentsOf: titleAnimationMenuRows(layerID: layerID))
+        // Where it is, its size, its angle and its opacity, keyed at the
+        // playhead: the header diamond's verb, where the hand already is.
+        if Experiments.shared.drawnOnTheTimelineEnabled, !layer.isSoundOnly {
+            let onKey = document.transformKeyDiamond(layerID: layerID, atDocumentTimeMS: documentTimeMS) == .onKey
+            rows.append(.command(onKey ? "Remove Key" : "Add Key", enabled: underPlayhead) {
+                self.selectLayer(layerID)
+                self.toggleHeaderKey(layerID)
+            })
+        }
         // Keys copied off another layer land here at the playhead.
         if keysOnClipboard != nil { rows.append(pasteKeysRow(layerID: layerID)) }
         rows.append(.separator)

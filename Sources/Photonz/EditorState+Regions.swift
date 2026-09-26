@@ -507,7 +507,7 @@ extension EditorState {
                                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue),
               let transparent = context.makeImage() else { return }
         let ref = store.register(transparent)
-        let layer = Layer(name: "Layer", content: .image(ref), frame: frame)
+        let layer = placedInTimeIfDrawnOnVideo(Layer(name: "Layer", content: .image(ref), frame: frame))
         perform { $0.addLayer(layer) }
         selectedLayerID = layer.id
     }

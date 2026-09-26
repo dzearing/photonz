@@ -20,7 +20,8 @@ extension EditorState {
     /// where it is placed in time rather than played.
     var placedLayerInHand: Layer? {
         guard Experiments.shared.titleOnTheTimelineEnabled
-                || Experiments.shared.componentOnTheTimelineEnabled,
+                || Experiments.shared.componentOnTheTimelineEnabled
+                || Experiments.shared.drawnOnTheTimelineEnabled,
               documentHasTime,
               let id = selectedLayerID, let layer = document?.layer(id: id),
               layer.isPlacedInTime else { return nil }

@@ -496,6 +496,14 @@ extension Experiments {
         isEnabled(FeatureCatalog.componentOnTheTimelineFlag)
     }
 
+    /// `next-anything-drawn-on-a-video-is-on-the-timeline`: whether a shape,
+    /// line, lens, picture or paste made on a document with time gets a stretch
+    /// and a row of its own, and a key diamond on that row's header
+    /// (`DrawnOnTheTimeline.swift`).
+    var drawnOnTheTimelineEnabled: Bool {
+        isEnabled(FeatureCatalog.drawnOnTheTimelineFlag)
+    }
+
     /// `next-a-recording-is-a-document`: whether opening a recording opens the
     /// ordinary editor window, with the recording as a layer in it and a
     /// timeline across the bottom, rather than the small video window.

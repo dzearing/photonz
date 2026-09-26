@@ -46,6 +46,7 @@ struct FeatureDependencyTests {
             FeatureCatalog.titleOnTheTimelineFlag,
             FeatureCatalog.captionsFromTheSoundFlag,
             FeatureCatalog.componentOnTheTimelineFlag,
+            FeatureCatalog.drawnOnTheTimelineFlag,
             FeatureCatalog.soundOnTheTimelineFlag,
             FeatureCatalog.scrubAuditionFlag,
             FeatureCatalog.mixLoudnessFlag,

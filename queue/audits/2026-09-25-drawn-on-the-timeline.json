@@ -1,0 +1,46 @@
+{
+  "feature": "Anything you draw on a video gets its own row on the timeline",
+  "epic": "video-transitions-motion",
+  "summary": "A rectangle, line, arrow, lens, measurement or picture drawn on a recording now lands on its own timeline row, named after it, from the playhead to the end of the shot. A diamond on that row keys it, and dragging it later on the canvas makes the next key, so it tweens.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    {
+      "do": "Open a recording, pause, and put the playhead at 1s.",
+      "shot": "2026-09-25-drawn-on-the-timeline-1-drawn-its-own-row.png"
+    },
+    {
+      "do": "Press R for the rectangle tool and drag a box on the picture. A Rectangle row appears above V1."
+    },
+    {
+      "do": "Move the playhead to 3.5s and press End Here in the Time section, or drag the right end of its bar."
+    },
+    {
+      "do": "Back at 1s, click the diamond beside Rectangle on its row header.",
+      "shot": "2026-09-25-drawn-on-the-timeline-2-keyed-at-one-second.png"
+    },
+    {
+      "do": "Move the playhead to 3s and drag the rectangle across, then drag a corner to grow it.",
+      "shot": "2026-09-25-drawn-on-the-timeline-3-dragged-at-three-seconds.png"
+    },
+    {
+      "do": "Scrub from 0s to 4s, or press Space.",
+      "shot": "2026-09-25-drawn-on-the-timeline-7-two-seconds-tweening.png"
+    },
+    {
+      "do": "Right-click the Rectangle bar with the playhead on it: Add Key or Remove Key is in the menu."
+    }
+  ],
+  "evaluate": [
+    "Is running from the playhead to the end of the shot the right default, or would you rather it ran a fixed few seconds like a title does?",
+    "Is the diamond on the row header where your hand goes to key a layer, next to the name?",
+    "Should a shape's row be named after the shape (Rectangle, Arrow) or numbered like Premiere (V2, V3)?",
+    "Does one diamond keying position, size, angle and opacity together feel right, or do you want only what you then change to stay keyed?"
+  ],
+  "rough": [
+    "K is not bound to add a key: on the timeline K is Premiere's Stop and on the canvas it is the Lens tool. The row diamond and the bar's right-click do it instead.",
+    "The row header is 84 points wide, so with the diamond and the lanes arrow the name reads Recta... in the header; the bar itself says Rectangle in full.",
+    "Before the layer arrives (0.5s) its diamonds read as on a key, because the first key is where it starts; the motion path of the picked layer also stays drawn while the layer is off screen.",
+    "A resize while Scale is keyed becomes a uniform scale key, so stretching one side only is not keyed.",
+    "The header diamond is not in the video mock; the mock has no keyed graphic row. The rest of the row is the mock's track, bar and lanes."
+  ]
+}

@@ -76,7 +76,7 @@ extension EditorState {
         // Inherit the last caliper's non-destructive effects (a drop shadow added
         // in Effects carries to the next measure), like annotations do per shape.
         layer.style = measureStyles.layerStyle
-        perform { $0.addLayer(layer) }
+        perform { [layer = placedInTimeIfDrawnOnVideo(layer)] in $0.addLayer(layer) }
         recordRecentColor(hex: content.strokeColorHex)
         noteMeasurementLanded()
         finishCreating(layer.id)
@@ -127,9 +127,11 @@ extension EditorState {
         var heightLayer = MeasureBuilder.layer(content: height, from: heightFeet.0, to: heightFeet.1)
         widthLayer.style = measureStyles.layerStyle
         heightLayer.style = measureStyles.layerStyle
+        let placedWidth = placedInTimeIfDrawnOnVideo(widthLayer)
+        let placedHeight = placedInTimeIfDrawnOnVideo(heightLayer)
         perform {
-            $0.addLayer(widthLayer)
-            $0.addLayer(heightLayer)
+            $0.addLayer(placedWidth)
+            $0.addLayer(placedHeight)
         }
         recordRecentColor(hex: width.strokeColorHex)
         noteMeasurementLanded()
@@ -164,7 +166,7 @@ extension EditorState {
                     describing: caliperSubjects(from: gap.start, to: gap.end, mode: gap.axis))
         var layer = MeasureBuilder.layer(content: content, from: gap.start, to: gap.end)
         layer.style = measureStyles.layerStyle
-        perform { $0.addLayer(layer) }
+        perform { [layer = placedInTimeIfDrawnOnVideo(layer)] in $0.addLayer(layer) }
         recordRecentColor(hex: content.strokeColorHex)
         noteMeasurementLanded()
         finishCreating(layer.id)
@@ -258,7 +260,7 @@ extension EditorState {
         planReadout(&content, from: start, to: end)
         var layer = MeasureBuilder.layer(content: content, from: start, to: end)
         layer.style = measureStyles.layerStyle
-        perform { $0.addLayer(layer) }
+        perform { [layer = placedInTimeIfDrawnOnVideo(layer)] in $0.addLayer(layer) }
         recordRecentColor(hex: content.strokeColorHex)
         noteMeasurementLanded()
         finishCreating(layer.id)

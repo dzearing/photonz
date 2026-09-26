@@ -94,6 +94,15 @@ struct PropertiesPaneTests {
         #expect(ClipLine.kind(of: Self.sound()) == "Audio")
     }
 
+    @Test func aShapeDrawnOnAVideoIsAGraphicNotAClip() {
+        // Premiere's word for a shape or a picture on the timeline.
+        var shape = Layer(name: "Rectangle",
+                          content: .annotation(AnnotationContent(shape: .rectangle, colorHex: "#FF3B30")),
+                          frame: CGRect(x: 0, y: 0, width: 100, height: 60))
+        shape.time = LayerTime(inMS: 1000, outMS: 3000)
+        #expect(ClipLine.kind(of: shape) == "Graphic")
+    }
+
     // MARK: - Animating, and the picker for the rest
 
     @Test func theCountSaysHowManyOfHowMany() {

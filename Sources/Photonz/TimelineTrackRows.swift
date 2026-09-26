@@ -123,7 +123,8 @@ struct TimelineTrackRow: View {
                     // While the switches are up the icon gives the name its
                     // room: the switches already say what kind of track it is.
                     VideoKit.TrackHeader(title: track.name, symbol: showsAllSwitches ? nil : symbol,
-                                         width: TimelineDock.gutter - indent - switchesWidth - twistWidth,
+                                         width: TimelineDock.gutter - indent - switchesWidth - twistWidth
+                                             - keyWidth,
                                          uppercase: false,
                                          // Written by the app off the sound: the
                                          // mock's sparkle and lavender.
@@ -136,6 +137,9 @@ struct TimelineTrackRow: View {
                 .buttonStyle(.plain)
                 .playtestControl("Track \(track.name)", detail: "Timeline")
                 switches
+                if let keyLayerID {
+                    TrackKeyDiamond(layerID: keyLayerID, trackName: track.name)
+                }
             }
         }
         .frame(width: TimelineDock.gutter, height: laneHeight, alignment: .leading)
@@ -153,6 +157,15 @@ struct TimelineTrackRow: View {
     }
 
     private var indent: CGFloat { inGroup ? 10 : 0 }
+
+    /// The picked layer, where it is on this track: the one the header's key
+    /// diamond keys.
+    private var keyLayerID: UUID? {
+        guard !track.isLocked, editorState.renamingTrackID != track.id else { return nil }
+        return editorState.headerKeyLayerID(onTrackWith: row.clips.map(\.layerID))
+    }
+
+    private var keyWidth: CGFloat { keyLayerID == nil ? 0 : TrackKeyDiamond.width }
 
     // MARK: The arrow that opens the lanes
 
@@ -459,6 +472,57 @@ struct TimelineTrackRow: View {
 
 /// One of a header's switches: 14 points square, faint while off, its tint
 /// while on.
+/// The key diamond on a track's header, beside the picked layer's name: one
+/// press keys where it is, its size, its angle and its opacity at the playhead,
+/// the way After Effects keys a layer's Transform. Pressed on a key, those keys
+/// go. Once it is keyed, a drag on the canvas somewhere else is the next key.
+struct TrackKeyDiamond: View {
+    static let width: CGFloat = 16
+    @Environment(EditorState.self) private var editorState
+    let layerID: UUID
+    let trackName: String
+    @State private var isHovering = false
+
+    var body: some View {
+        let state = editorState.headerKeyDiamond(layerID)
+        Button {
+            editorState.toggleHeaderKey(layerID)
+        } label: {
+            VideoKit.KeyDiamond(state: kitState(state), isHovering: isHovering)
+                .frame(width: Self.width, height: Self.width)
+        }
+        .buttonStyle(.plain)
+        .playtestHover("Key \(trackName)") { isHovering = $0 }
+        .help(help(state))
+        .accessibilityLabel("Key \(trackName)")
+        .playtestControl("Key \(trackName)", detail: word(state))
+        .panelReadout(word(state))
+    }
+
+    private func kitState(_ state: KeyDiamond) -> VideoKit.KeyState {
+        switch state {
+        case .dormant: .dormant
+        case .betweenKeys: .armed
+        case .onKey: .onKey
+        }
+    }
+
+    private func help(_ state: KeyDiamond) -> String {
+        switch state {
+        case .dormant, .betweenKeys: "Add Key"
+        case .onKey: "Remove Key"
+        }
+    }
+
+    private func word(_ state: KeyDiamond) -> String {
+        switch state {
+        case .dormant: "not keyed"
+        case .betweenKeys: "between keys"
+        case .onKey: "on a key"
+        }
+    }
+}
+
 private struct TrackSwitch: View {
     var symbol: String?
     var letter: String?

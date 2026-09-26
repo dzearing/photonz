@@ -336,7 +336,8 @@ extension EditorState {
                let span = document?.placedSpan(atTimeMS: moment) {
                 layer.time = span
             }
-            perform { $0.addLayerDrawn(layer, atTimeMS: moment) }
+            let placing = placesDrawingsInTime
+            perform { $0.addLayerDrawn(layer, atTimeMS: moment, placingInTime: placing) }
             // Re-editing existing text already runs with Select active, so only
             // the new-block path hands the editor back.
             finishCreating(layer.id)

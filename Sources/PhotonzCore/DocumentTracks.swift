@@ -224,8 +224,12 @@ extension PhotonzDocument {
         for layer in loosePicture.reversed() {
             let kind = layer.clipTrackKind
             // Words get a track called Title, the way the mock names the
-            // track a title lands on; everything else is numbered V1, V2.
+            // track a title lands on; anything else simply placed in time (a
+            // shape, a picture, a lens drawn on the recording) gets a track
+            // named after it, the way its row in the layers list reads; clips
+            // are numbered V1, V2.
             let name = layer.isTitleText ? Self.freeTitleTrackName(used: used)
+                : layer.isDrawnGraphic ? Self.freeNamedTrackName(layer.name, used: used)
                 : Self.freeTrackName(kind, used: used)
             used.insert(name)
             picture.insert(DocumentTrack(id: layer.id, name: name, kind: kind), at: 0)
@@ -350,6 +354,16 @@ extension PhotonzDocument {
         var n = 2
         while used.contains("Title \(n)") { n += 1 }
         return "Title \(n)"
+    }
+
+    /// A track named after what is on it, numbered where that name is taken.
+    static func freeNamedTrackName(_ name: String, used: Set<String>) -> String {
+        let base = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !base.isEmpty else { return freeTrackName(.video, used: used) }
+        if !used.contains(base) { return base }
+        var n = 2
+        while used.contains("\(base) \(n)") { n += 1 }
+        return "\(base) \(n)"
     }
 
     static func freeTrackName(_ kind: DocumentTrack.Kind, used: Set<String>) -> String {
@@ -640,6 +654,12 @@ public enum TrackDrop: Hashable, Sendable {
 
 extension Layer {
     /// Words placed in time: a title.
+    /// Something drawn or placed on the picture that is simply placed in time
+    /// and is not words: a shape, a line, a picture, a lens, a component.
+    var isDrawnGraphic: Bool {
+        isPlacedInTime && clipTrackKind == .video && !isTitleText
+    }
+
     var isTitleText: Bool {
         guard isPlacedInTime, clipTrackKind == .video else { return false }
         if case .text = content { return true }
