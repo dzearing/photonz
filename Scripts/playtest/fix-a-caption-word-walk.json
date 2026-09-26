@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/fix-a-caption-word-walk",
-  "setup": { "forget": ["all"] },
+  "setup": { "timelineOpen": true, "forget": ["all"] },
   "steps": [
     { "do": "describe", "stage": "why", "note": "Captions that write themselves get words wrong one at a time: the talking sample's recogniser hears the app's name as 'Fodons'. A double click on one word, on the picture or on its chip in the Words lane, opens THAT word for typing and nothing else. Tab keeps it and opens the next. A chip dragged on the lane carries the words after it; its edge stretches it alone. Next at its defaults: no flag is set here." },
     { "do": "action", "action": "openSampleTalk" },

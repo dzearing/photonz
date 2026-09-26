@@ -1,0 +1,55 @@
+{
+  "out": "/tmp/photonz-playtest/a-recording-opens-to-watch-walk",
+  "seed": "A recording opened the way the Finder opens one, at Next defaults with no flag set and nothing remembered, opens to watch: nothing picked, the arrow in hand, the timeline tucked down to the transport and one row. Space plays it. The row brings the tracks up; putting them away is remembered for the next recording; and an edit key (I) brings them up by itself. It used to open with the clip picked and Trim in hand, which the user turned down on 2026-09-25.",
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "open", "file": "fixtures/Full screen Retina recording 3456x2234.mp4", "width": 1440, "height": 900 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectTimeline", "open": false, "tool": "select", "keyboard": "timeline", "playheadMS": 0 },
+    { "do": "expectPicked", "layers": [] },
+    { "do": "describe", "stage": "1-opened-to-watch", "note": "THE TEST: just opened, nothing pressed. The picture over the transport, one TIMELINE row under it, no clip picked, no Trim" },
+    { "do": "snapshot", "name": "1-opened-to-watch" },
+
+    { "do": "key", "key": "space" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "expectTimeline", "rate": 1, "open": false },
+    { "do": "key", "key": "space" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "rate": 0, "open": false },
+    { "do": "describe", "stage": "2-watched", "note": "space played it and space stopped it, and the timeline stayed tucked away while it did" },
+    { "do": "snapshot", "name": "2-watched" },
+
+    { "do": "press", "control": "Show Timing" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTimeline", "open": true, "tool": "select" },
+    { "do": "describe", "stage": "3-expanded", "note": "the row under the transport opened the tracks: ruler, V1, the timeline's own bar" },
+    { "do": "snapshot", "name": "3-expanded" },
+
+    { "do": "press", "control": "Hide Timing" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTimeline", "open": false },
+    { "do": "key", "key": "i" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTimeline", "open": true, "hasIn": true },
+    { "do": "describe", "stage": "4-an-edit-opens-it", "note": "tucked away again, then I marked an In, and the tracks came up by themselves to show it" },
+    { "do": "snapshot", "name": "4-an-edit-opens-it" },
+
+    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "action", "action": "reopenSampleRecording" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectTimeline", "open": false, "tool": "select" },
+    { "do": "describe", "stage": "5-reopened-as-left", "note": "the last choice made by hand was to put the tracks away, and an edit bringing them up is not a choice, so the same recording opened again comes up tucked away" },
+
+    { "do": "press", "control": "Show Timing" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "reopenSampleRecording" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectTimeline", "open": true, "tool": "select" },
+    { "do": "expectPicked", "layers": [] },
+    { "do": "describe", "stage": "6-remembered-open", "note": "opened the tracks by hand, then opened the recording again: it comes up with them showing, still with nothing picked and the arrow in hand" },
+    { "do": "snapshot", "name": "6-remembered-open" }
+  ]
+}

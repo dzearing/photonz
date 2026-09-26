@@ -2,6 +2,7 @@
   "out": "/tmp/photonz-playtest/second-clip-on-the-timeline-walk",
   "seed": "A second recording or a sound let go on the TIMELINE lands at the moment and on the track under the pointer: overwrite by default, insert with the command key held, as in Premiere. While it is in the air the lane shows a dashed ghost the length of the file. Clips that meet on a track have an edit point between them, faint at rest, lit on hover and picked with a click. Letting go over the picture still lands at the playhead. At Next defaults, no flag set.",
   "setup": {
+    "timelineOpen": true,
     "forget": ["all"],
     "scratch": [
       "sample:recording as b-roll.mp4",

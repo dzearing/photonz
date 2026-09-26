@@ -1,6 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/a-painted-caption-takes-a-click-walk",
   "setup": {
+    "timelineOpen": true,
     "forget": [
       "all"
     ]

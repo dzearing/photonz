@@ -42,6 +42,9 @@ public enum MenuToggleNames {
     /// there is no strip to show, and a row that would put up an empty one is
     /// a row that lies.
     public static let timingStrip = "Show Timing"
+    /// The same switch on a recording, where what it shows is the timeline:
+    /// a recording opens with it tucked down to the transport and one row.
+    public static let timeline = "Show Timeline"
 
     /// Premiere's Sequence > Snap in Timeline, on its key S while the
     /// timeline has the keyboard, and the magnet in the timeline's own bar.

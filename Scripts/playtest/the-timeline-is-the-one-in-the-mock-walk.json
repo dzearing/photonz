@@ -2,6 +2,7 @@
   "out": "/tmp/photonz-playtest/the-timeline-is-the-one-in-the-mock-walk",
   "seed": "The dock under a recording is the timeline video.html draws: a transport with volume, start, a big round play, end, the time, a full width scrubber and the length; the timeline's own bar with Select, Blade and the zoom; a ruler in seconds; a named track per clip with the clip drawn in its kind's colour and its name inside; a red playhead with a head across every track. At Next defaults, no flag set.",
   "setup": {
+    "timelineOpen": true,
     "forget": [
       "all"
     ]

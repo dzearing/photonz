@@ -2,6 +2,7 @@
   "out": "/tmp/photonz-playtest/key-lanes-walk",
   "seed": "A layer's track opens into one lane per keyed value. At Next defaults with no flag changed, this walk types a title on a recording, keys its Scale and Opacity with the panel's diamonds, and then works the keys on the lanes under its Title track: the header arrow closes and opens them, keys at one moment are picked together and dragged later, undone, copied with Option, deleted with ⌫, given Hold, then Bezier, and the Graph link opens a lane into its curve where a handle is dragged. It photographs the lanes open, closed, dragged, copied, held and curved.",
   "setup": {
+    "timelineOpen": true,
     "forget": [
       "all"
     ]

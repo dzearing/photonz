@@ -2,6 +2,7 @@
   "out": "/tmp/photonz-playtest/properties-pane-walk",
   "seed": "The Properties pane beside a clip and a title, at Next defaults with nothing switched on by hand, as video.html draws it: a header saying Properties and what is picked, one clip line with its name, in, out, length and speed, then Animating, which lists only what is keyed, and Animate a property, which opens a grouped picker of the rest. A key taken off the last time leaves the list; the row's cross stops a value animating.",
   "setup": {
+    "timelineOpen": true,
     "forget": ["all"]
   },
   "steps": [

@@ -1,6 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/punch-in-and-hold-walk",
   "setup": {
+    "timelineOpen": true,
     "forget": [
       "all"
     ],

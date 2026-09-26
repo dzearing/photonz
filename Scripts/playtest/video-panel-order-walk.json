@@ -2,6 +2,7 @@
   "out": "/tmp/photonz-playtest/video-panel-order-walk",
   "seed": "The panel beside a recording, at the smallest window the app supports, with nothing switched from its default. It leads with what the picked layer is FOR: a clip's Time, Sound and Animating, a title's Time, Text and Animating, a sound's Sound. Every row is a short label and a value, inset like the rest of the panel, and the speed, the level and the fade are on screen without scrolling.",
   "setup": {
+    "timelineOpen": true,
     "forget": ["all"]
   },
   "steps": [
@@ -10,6 +11,7 @@
     { "do": "action", "action": "windowLaptop" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "action", "action": "videoPause" },
+    { "do": "selectRow", "row": "Tutorial Sample" },
     { "do": "tool", "tool": "select" },
     { "do": "action", "action": "videoSeekQuarter" },
     { "do": "wait", "seconds": 0.8 },

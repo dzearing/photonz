@@ -24,6 +24,8 @@ struct TimelineDock: View {
     private var isBlade: Bool { editorState.isTimelineBlade }
     /// How far a pinch in flight has got, so each move zooms by the CHANGE.
     @State private var pinchedTo: CGFloat?
+    /// The pointer is over the tucked-away row (`.tlrail:hover`).
+    @State private var isRailPointedAt = false
 
     /// The track name column (`#tlDock{--gutter:84px}`) and the gap after it.
     static let gutter: CGFloat = 84
@@ -44,9 +46,21 @@ struct TimelineDock: View {
     var body: some View {
         VStack(spacing: 0) {
             transport
-            localBar
-            grid
+            // Tucked away, the transport stays and the tracks fold down to the
+            // mock's one row (`dock.css` `.timeline[data-tl="closed"]`): a
+            // recording opens this way, to watch (`TimelineOpening`).
+            if editorState.isMotionStripOpen {
+                VStack(spacing: 0) {
+                    localBar
+                    grid
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else {
+                rail
+                    .transition(.opacity)
+            }
         }
+        .clipped()
         .background(VideoKit.Palette.panel)
         // A press anywhere in here hands the timeline the keyboard, and the
         // keys reach it through here (`EditorState+TimelineKeys`).
@@ -341,6 +355,53 @@ struct TimelineDock: View {
         .accessibilityLabel("Put the timeline away")
         .panelHelp("Put the timeline away (⌥⌘T)")
         .playtestControl("Hide Timing", detail: "Timeline")
+    }
+
+    // MARK: - The row it tucks down to
+
+    /// `.tlrail`: the chevron, TIMELINE, what is picked and where the playhead
+    /// is, and the words saying it opens. The whole row is the button, and
+    /// ⌥⌘T or any edit key does the same.
+    private var rail: some View {
+        Button { editorState.toggleMotionStrip() } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "chevron.up")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(isRailPointedAt ? VideoKit.Palette.ink : VideoKit.Palette.faint)
+                Text(TimelineOpening.railName.uppercased())
+                    .font(.system(size: 10, weight: .semibold))
+                    .tracking(0.9)
+                    .foregroundStyle(VideoKit.Palette.faint)
+                    .fixedSize()
+                Text(editorState.timelineRailSummary)
+                    .font(.system(size: 10.5, design: .monospaced))
+                    .monospacedDigit()
+                    .foregroundStyle(VideoKit.Palette.ink)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Spacer(minLength: 8)
+                Text(TimelineOpening.railHint)
+                    .font(.system(size: 10))
+                    .foregroundStyle(VideoKit.Palette.faint)
+                    .lineLimit(1)
+                    .fixedSize()
+            }
+            .padding(.horizontal, 12)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .frame(height: MotionStripRailView.height)
+        .background(isRailPointedAt ? AnyShapeStyle(VideoKit.Palette.glassThin) : AnyShapeStyle(Color.clear))
+        .overlay(alignment: .top) {
+            Rectangle().fill(VideoKit.Palette.edgeLo).frame(height: 1)
+        }
+        .playtestHover { isRailPointedAt = $0 }
+        .accessibilityLabel("Show the timeline")
+        .accessibilityValue(editorState.timelineRailSummary)
+        .panelHelp("Show the timeline (⌥⌘T)")
+        .playtestControl("Show Timing", detail: editorState.timelineRailSummary)
+        .panelReadout("timeline tucked away: \(editorState.timelineRailSummary)")
     }
 
     // MARK: - The grid

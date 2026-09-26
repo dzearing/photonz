@@ -195,3 +195,40 @@ struct PlaytestWalkSetupTests {
             """)
     }
 }
+
+/// A walk about the tracks starts with them showing, the way a person who
+/// last left a recording's timeline open finds it; a walk about opening a
+/// recording to watch says nothing and gets the tucked-away default.
+@Suite("A walk says how the timeline was last left")
+struct PlaytestTimelineSetupTests {
+
+    @Test("it reads open or put away")
+    func reads() throws {
+        let open = try PlaytestScript.decode(Data("""
+        { "setup": { "forget": ["all"], "timelineOpen": true }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(open.setup.timelineOpen == true)
+        #expect(open.setup.isEmpty == false)
+        let away = try PlaytestScript.decode(Data("""
+        { "setup": { "timelineOpen": false }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(away.setup.timelineOpen == false)
+    }
+
+    @Test("saying nothing leaves it to the app")
+    func unsaid() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "setup": { "forget": ["all"] }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(script.setup.timelineOpen == nil)
+    }
+
+    @Test("it is a yes or a no")
+    func onlyABool() {
+        #expect(throws: PlaytestScriptError.self) {
+            try PlaytestScript.decode(Data("""
+            { "setup": { "timelineOpen": "yes" }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+            """.utf8))
+        }
+    }
+}

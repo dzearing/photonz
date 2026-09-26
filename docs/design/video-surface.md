@@ -451,27 +451,32 @@ five things wrong with that window. Copying Crop means dropping it.
 - **Its keys:** `⏎` trims, `⎋` cancels. The same two keys as Crop, and the same
   meanings.
 
-### 10.3 The fast lane is kept by what the window opens as, not by a second view
+### 10.3 A recording opens to watch (the fast lane is gone)
 
-The chosen option says trim-and-send costs one more click than today, and its
-mitigation is that Trim is the tool your hand is already on. That has to be
-built, so it is stated here as a rule:
+This section used to say a recording that is one clip and has never been edited
+opens with the clip picked and Trim in hand. The user turned that down on
+2026-09-25: "When I open a video, it seems defaulted into a trim workflow. I'd
+prefer to be in playback mode where the edit tools are collapsed but can be
+expanded." (queue task `a-recording-opens-to-watch-with-the-editing-tuck`.)
 
-**A recording that is one clip and has never been edited opens with the clip
-picked and Trim in hand.** More than one layer, or any edit in its history, and
-it opens with Select, like every other document. So the flow that shipped on
-2026-09-19 survives move for move:
+The rule now, in `PhotonzCore/TimelineOpening.swift`:
 
-| Today, in its own window | After, in the ordinary window |
-| --- | --- |
-| Open the recording | Open the recording |
-| Drag a handle | Drag a handle |
-| Press Done | Press ⏎ |
-| Save / send | ⌘⇧E, the export the rest of the app uses |
+- **An untouched recording opens to watch.** Nothing picked, the arrow in hand,
+  the picture over the transport, and the timeline tucked down to the mock's one
+  row under it (`dock.css` `.timeline[data-tl="closed"]`: chevron, TIMELINE, the
+  pick and the time, *click to expand*). Space, J/K/L and the arrows work there.
+- **The row, ⌥⌘T (View ▸ Show Timeline) or the × on the timeline's bar** open
+  and close it, and that choice is remembered: the next untouched recording
+  opens the way you last left it.
+- **Starting an edit opens it by itself**, and is not remembered: an edit key (I,
+  O, M, B, Q, W, ;, ', ⌘K, ⌘T, S, the zoom keys), a Split from a right click,
+  picking up Trim, or any change to the document. Captions the app writes by
+  itself are not an edit.
+- **A document already worked on** (a second layer, a cut, a trim) and a guide's
+  sample open with the tracks showing.
 
-No extra click. The tool bar shows Trim lit, so the mode is visible rather than
-implied, and `V` leaves it — which is more than today's window offers, where the
-only way out of trim is one of three buttons.
+Trim-and-send is now open, C for Trim (it sits in Crop's slot), drag a handle, ⏎, export:
+Trim with nothing picked still finds the clip under the playhead (§10.5).
 
 ### 10.4 The two ways to change a clip's length, reconciled
 
@@ -490,8 +495,8 @@ corner and entering Crop.
 ### 10.5 The awkward corners, decided rather than left
 
 - **Trim with nothing picked** picks the topmost layer with time under the
-  playhead. In a just-opened recording that is the one clip, which is why the
-  fast lane needs no click at all.
+  playhead. In a just-opened recording that is the one clip, which is why
+  picking Trim up needs no click first.
 - **Trim on a layer with no time** (a background, an adjustment) does nothing
   and says so where the capsule would be: *Pick a clip to trim*. The tool is not
   hidden, because a tool that vanishes per selection is a slot that moves.

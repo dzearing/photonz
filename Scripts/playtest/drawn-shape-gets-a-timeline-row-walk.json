@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/drawn-shape-gets-a-timeline-row-walk",
   "seed": "Anything drawn on a video is on the timeline. At Next defaults with no flag changed, this walk draws a rectangle on a recording at one second and finds its own row, named Rectangle, running to the end of the shot; ends it at three and a half seconds with End Here; keys it at one second with the diamond on its row; moves the playhead to three seconds and drags it across and bigger on the canvas, which makes the second key by itself; then photographs half a second (not there yet), one, two and three seconds (tweening across and growing) and three and a half (gone).",
-  "setup": { "forget": ["all"] },
+  "setup": { "timelineOpen": true, "forget": ["all"] },
   "steps": [
     { "do": "action", "action": "openSampleRecording" },
     { "do": "wait", "seconds": 2.0 },

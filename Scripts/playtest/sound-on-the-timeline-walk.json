@@ -1,6 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/sound-on-the-timeline-walk",
   "setup": {
+    "timelineOpen": true,
     "forget": ["all"],
     "flags": {
       "next-cut-a-recording": true,
@@ -11,6 +12,7 @@
     { "do": "action", "action": "openSampleRecording" },
     { "do": "wait", "seconds": 2.0 },
     { "do": "action", "action": "videoPause" },
+    { "do": "selectRow", "row": "Tutorial Sample" },
     { "do": "wait", "seconds": 1.0 },
     { "do": "describe", "stage": "1-the-recording-arrives-with-its-sound", "note": "An eight second screen recording opens as an ordinary document. It has a sound track, so its clip's bar carries the shape of the sound: silence over the dead air at both ends, a hum while the copy runs, and a blip at each of the four moments a file arrives. The Sound section in the panel says what level it plays at" },
     { "do": "snapshot", "name": "1-the-recording-arrives-with-its-sound" },

@@ -2,6 +2,7 @@
   "out": "/tmp/photonz-playtest/tracks-you-can-add-rename-group-walk",
   "seed": "A recording's timeline has real tracks: a + at the foot of the gutter adds a video, audio or captions track; double clicking a track's name renames it; each header has hide (or mute for sound), solo and lock; a clip carried up lands on the track above, and carried past the top makes a new track; tracks picked together group under a chevron that folds them away. At Next defaults, no flag set.",
   "setup": {
+    "timelineOpen": true,
     "forget": ["all"]
   },
   "steps": [

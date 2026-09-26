@@ -9735,7 +9735,15 @@ private final class Run {
             + "in \(mark(document?.markInMS)), out \(mark(document?.markOutMS)), "
             + "\(document?.markers.count ?? 0) marker(s), runs \(editor.documentLengthMS)ms, "
             + (editor.isTimelineSnapping ? "snapping" : "snapping off")
+            + ", " + (editor.isMotionStripOpen ? "tracks open" : "tucked away")
+            + ", \(editor.activeTool.rawValue) in hand"
         var wrong: [String] = []
+        if let want = claim.open, want != editor.isMotionStripOpen {
+            wrong.append(editor.isMotionStripOpen ? "the timeline's tracks are open" : "the timeline is tucked away")
+        }
+        if let want = claim.tool, want != editor.activeTool.rawValue {
+            wrong.append("\(editor.activeTool.rawValue) is in hand, not \(want)")
+        }
         if let want = claim.snapping, want != editor.isTimelineSnapping {
             wrong.append(editor.isTimelineSnapping ? "the timeline is snapping" : "snapping is off")
         }

@@ -190,17 +190,20 @@ struct EditorView: View {
             // it is put away, or nothing at all where nothing moves. Putting it
             // away has to leave a way back ON SCREEN — `UX-PATTERNS.md` D9, and
             // the same rule the panel toggle three lines below follows.
-            switch editorState.motionStripPhase {
-            case .open:
-                // A document with a length gets the video timeline the mock
-                // draws; an icon keeps the one-lap timing strip.
-                if editorState.motionStripMeasuresADocument {
-                    TimelineDock()
-                } else {
-                    MotionStripView()
+            //
+            // A document with a length gets the video timeline the mock draws,
+            // open or tucked down to its transport and one row, and it is ONE
+            // view either way, so opening it grows the tracks out of the row
+            // rather than swapping one dock for another. An icon keeps the
+            // one-lap timing strip and the row it leaves behind.
+            if editorState.motionStripMeasuresADocument, editorState.motionStripPhase != .none {
+                TimelineDock()
+            } else {
+                switch editorState.motionStripPhase {
+                case .open: MotionStripView()
+                case .row: MotionStripRailView()
+                case .none: EmptyView()
                 }
-            case .row: MotionStripRailView()
-            case .none: EmptyView()
             }
             }
             .animation(.spring(duration: 0.28), value: editorState.motionStripPhase)

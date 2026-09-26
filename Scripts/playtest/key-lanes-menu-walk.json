@@ -2,6 +2,7 @@
   "out": "/tmp/photonz-playtest/key-lanes-menu-walk",
   "seed": "A key on a lane answers a right-click the way a Premiere key does. At Next defaults with no flag changed, this walk keys a title's Scale and Opacity with the panel's diamonds, right-clicks the first Scale key on its lane and photographs the menu, chooses Hold, then Bezier, checking each time the menu ticks what the key is, and opens the curve from the same menu.",
   "setup": {
+    "timelineOpen": true,
     "forget": [
       "all"
     ]

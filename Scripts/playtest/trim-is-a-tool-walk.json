@@ -11,7 +11,9 @@
     { "do": "wait", "seconds": 2.0 },
     { "do": "action", "action": "videoPause" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "describe", "stage": "1-opens-with-trim-in-hand", "note": "THE FAST LANE: an eight second recording that is one clip and has never been edited opens in the ORDINARY editor with the clip picked and Trim already in hand. Crop's slot wears Trim, the timeline is open, and the clip's bar carries a handle at each end" },
+    { "do": "action", "action": "videoBeginTrim" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-opens-with-trim-in-hand", "note": "A recording opens to watch with nothing in hand (a-recording-opens-to-watch-walk); picking Trim up with nothing picked takes the clip under the playhead and brings the timeline up. Crop's slot wears Trim, and the clip's bar carries a handle at each end" },
     { "do": "snapshot", "name": "1-opens-with-trim-in-hand" },
 
     { "do": "action", "action": "videoTrimStart" },

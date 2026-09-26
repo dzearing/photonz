@@ -1,6 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/timeline-right-click-walk",
   "setup": {
+    "timelineOpen": true,
     "forget": [
       "all"
     ]

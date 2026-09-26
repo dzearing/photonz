@@ -963,10 +963,35 @@ final class EditorState {
     /// Kept apart from whether there IS one: a document with nothing moving
     /// shows no strip whatever this says, and putting one away stays put for
     /// the next document that has something moving in it.
-    var isMotionStripOpen = EditorState.motionStripOpenDefault {
-        didSet { UserDefaults.standard.set(isMotionStripOpen, forKey: Self.motionStripOpenKey) }
+    ///
+    /// Two strips, two states. An icon's timing strip is one remembered switch.
+    /// A recording's timeline is decided per window when the document lands
+    /// (`TimelineOpening`), opens by itself when an edit starts, and remembers
+    /// only what you chose by hand. Every reader and writer goes through this
+    /// one name, so a trim or a reframe that brings "the strip" up brings up
+    /// whichever one this window has.
+    var isMotionStripOpen: Bool {
+        get { documentHasTime ? isVideoTimelineOpen : isTimingStripOpen }
+        set {
+            if documentHasTime { isVideoTimelineOpen = newValue } else { isTimingStripOpen = newValue }
+        }
     }
+    /// An icon's timing strip, open or put away.
+    var isTimingStripOpen = EditorState.motionStripOpenDefault {
+        didSet { UserDefaults.standard.set(isTimingStripOpen, forKey: Self.motionStripOpenKey) }
+    }
+    /// A recording's timeline, open or tucked down to the transport and one
+    /// row (`EditorState+MotionStrip`, `TimelineOpening`). Not stored as it
+    /// changes: an edit that brings it up is not a choice about the next
+    /// recording. `toggleMotionStrip` is, and writes it down.
+    var isVideoTimelineOpen = false
     static let motionStripOpenKey = "motion.stripOpen"
+    /// The last open or closed chosen by hand for a recording's timeline, which
+    /// is what the next untouched recording opens with.
+    static let videoTimelineOpenKey = "video.timelineOpen"
+    static var rememberedVideoTimelineOpen: Bool? {
+        UserDefaults.standard.object(forKey: videoTimelineOpenKey) as? Bool
+    }
     /// Open the first time, because a strip that had to be found before it
     /// could be seen would be a surface nobody knows is there. Putting it away
     /// is remembered.
@@ -1424,12 +1449,13 @@ final class EditorState {
             // somebody talking in it opens with its captions coming
             // (`EditorState+Captions.swift`).
             writeCaptionsByThemselves()
-            // The fast lane (`docs/design/video-surface.md` §10.3): one clip,
-            // nothing done to it yet, so trim-and-send is drag a handle, ⏎,
-            // export — no click to pick the clip and none to pick the tool.
-            if document?.opensWithTrimInHand == true {
-                selectedLayerID = document?.layers.first?.id
-                setTool(.trim)
+            // Open to watch: nothing picked, no editing tool in hand, and the
+            // timeline tucked down to the transport and one row unless you
+            // left it open last time (`TimelineOpening`). A guide's sample
+            // opens with the tracks showing, because its cards point at them.
+            if let document {
+                isVideoTimelineOpen = TimelineOpening.opensOpen(
+                    document, remembered: Self.rememberedVideoTimelineOpen, forAGuide: shape != nil)
             }
             #if PHOTONZ_PLAYTEST
             PlaytestHarness.register(self)
@@ -2328,6 +2354,11 @@ final class EditorState {
         // opened out the last recording says nothing about this one
         // (`EditorState+TimelineZoom`).
         timelineZoom = .fit
+        // ...and whether its timeline is up is this document's question too:
+        // an untouched recording opens to watch, anything already worked on
+        // opens on its tracks (`TimelineOpening`). A picture answers open, so
+        // a clip dropped into one lands on a timeline already showing it.
+        isVideoTimelineOpen = TimelineOpening.opensOpen(document, remembered: Self.rememberedVideoTimelineOpen)
         recordingURL = nil
         // Size the window to the image (100% when it fits, reduced only when a
         // maxed window can't). The `.fit` above is the fallback for when there
@@ -3501,6 +3532,7 @@ final class EditorState {
     }
 
     func perform(announcing: Bool = true, reportingLinkBreaks: Bool = true,
+                 openingTheTimeline: Bool = true,
                  _ mutate: (inout PhotonzDocument) -> Void) {
         // Anything recorded supersedes a colour drag's live frames, including
         // the release that ends one.
@@ -3538,6 +3570,12 @@ final class EditorState {
         // really changed: `History.perform` records nothing for an edit that
         // changed nothing, and a guide must not move on for one either.
         if document != before {
+            // Any edit to a recording brings its tucked-away timeline up: a
+            // shape drawn on it gets a row there, a cut shows there, and a
+            // person who started editing is no longer only watching
+            // (`TimelineOpening`). Captions the app wrote by itself are not
+            // somebody editing, so they pass `openingTheTimeline: false`.
+            if openingTheTimeline { openTimelineForAnEdit() }
             TutorialController.shared.note(.editMade, from: self)
             if let before, let after = document {
                 TutorialController.shared.noteDocumentChange(from: before, to: after, in: self)

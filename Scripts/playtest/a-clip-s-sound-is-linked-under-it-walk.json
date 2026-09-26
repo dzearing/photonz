@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/a-clip-s-sound-is-linked-under-it-walk",
-  "setup": { "forget": ["all"] },
+  "setup": { "timelineOpen": true, "forget": ["all"] },
   "steps": [
     { "do": "action", "action": "openSampleRecording" },
     { "do": "wait", "seconds": 2.0 },

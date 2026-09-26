@@ -1,6 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/hold-pushes-the-sound-walk",
   "setup": {
+    "timelineOpen": true,
     "forget": ["all"],
     "flags": {
       "next-cut-a-recording": true,
@@ -11,6 +12,7 @@
     { "do": "action", "action": "openSampleRecording" },
     { "do": "wait", "seconds": 2.0 },
     { "do": "action", "action": "videoPause" },
+    { "do": "selectRow", "row": "Tutorial Sample" },
     { "do": "tool", "tool": "select" },
     { "do": "action", "action": "soundDetach" },
     { "do": "wait", "seconds": 1.2 },

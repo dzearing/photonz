@@ -150,28 +150,12 @@ extension PhotonzDocument {
         return opened
     }
 
-    /// Whether opening this document should put Trim straight in your hand.
-    ///
-    /// The fast lane, kept by what the window opens as rather than by a second
-    /// view (`docs/design/video-surface.md` §10.3): a recording that is one
-    /// clip and has never been edited opens with the clip picked and Trim in
-    /// hand, so trim-and-send is still drag a handle, ⏎, export. More than one
-    /// layer, or anything already done to it, and it opens with Select like
-    /// every other document.
-    public var opensWithTrimInHand: Bool {
-        guard hasTime, layers.count == 1, let only = layers.first, only.isClip,
-              only.clipPieces?.isOnePlainPiece == true else { return false }
-        // A clip already trimmed has been edited, whatever else has happened
-        // to it, so it opens the ordinary way.
-        return only.time?.spareBeforeMS == 0 && only.time?.spareAfterMS == 0
-    }
-
     /// The clip a trim should open on: the one already picked when it occupies
     /// time, else the topmost thing with time under the playhead.
     ///
-    /// The second half is what makes the fast lane free. A recording that has
-    /// just been opened is one clip and the playhead is on it, so picking Trim
-    /// up needs no click first (`docs/design/video-surface.md` §10.5).
+    /// The second half is what lets a recording opened to watch be trimmed
+    /// with no click first: it is one clip and the playhead is on it, so
+    /// picking Trim up finds it (`docs/design/video-surface.md` §10.5).
     /// **A layer that plays nothing is never a clip in hand**, however much time
     /// it occupies (`TitleTime.swift`). A title and a mark on a held frame have
     /// an in and an out and no frames behind them, so a trim, a split, a speed,

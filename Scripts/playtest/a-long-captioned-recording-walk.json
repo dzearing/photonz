@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/a-long-captioned-recording-walk",
-  "setup": { "forget": ["all"] },
+  "setup": { "timelineOpen": true, "forget": ["all"] },
   "steps": [
     { "do": "describe", "stage": "why", "note": "A five minute talk writes itself about 170 captions and a thousand words. Every press on the timeline used to freeze the app for a sixth to two thirds of a second once they were there (2026-09-24): the menu bar ran a whole Lift on a copy of the document to ask whether Extract could do anything, every caption bar read the whole document as it drew, and a thousand word chips were a thousand views. Each key below is judged on the longest single pass of the main thread after it. On a quiet Mac every one of them takes 20 to 47ms; the walk fails at 80ms, not 50, because the same presses read 30 to 40 percent slower while another window keeps the Mac busy (the dashboard in a browser did, 2026-09-24), and a guard that goes red on a busy machine sends runners after nothing. Every freeze this guards against was 170ms or more." },
     { "do": "action", "action": "openLongTalk" },

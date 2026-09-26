@@ -19740,3 +19740,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Picked Captions layer: new Text section (`CaptionsTextInspector`), Layout section hidden.
 - Walk `captions-are-one-layer-walk`; audit `queue/audits/2026-09-25-captions-are-one-layer.json`.
 - Open: two untracked "opens sharp" walks from another task break the walk-setup tests while in the tree (logged on that task).
+
+## 2026-09-25 — A recording opens to watch
+
+- The fast lane is gone (`opensWithTrimInHand` removed, video-surface.md §10.3 rewritten, the trim task's acceptance item struck). An untouched recording opens with nothing picked, the arrow in hand, and the timeline tucked down to the transport plus the mock's one TIMELINE row (`dock.css` `.tlrail`). The row, the × and ⌥⌘T (View ▸ Show Timeline, now reachable at Next defaults on a recording) open and close it, and that hand-made choice is remembered (`video.timelineOpen`) for the next untouched recording. Edit keys, right-click Split, Trim and any document edit open it without remembering; background captions do not (`perform(openingTheTimeline:)`). An edited document or a guide's sample opens with the tracks showing.
+- Core: `TimelineOpening.swift` (`opensOpen`, `railSummary`, `PhotonzDocument.isUntouchedRecording`, `TimelineKeyCommand.opensTheTimeline`), tests `TimelineOpeningTests`. App: `isMotionStripOpen` now routes between the icon strip's `isTimingStripOpen` and a per-window `isVideoTimelineOpen`; `TimelineDock` is one view in both states. Walk harness: `setup.timelineOpen`, `expectTimeline` claims `open` and `tool`.
+- Walk `a-recording-opens-to-watch-walk` at Next defaults; audit `queue/audits/2026-09-25-recording-opens-to-watch.json`. 27 video walks now say `timelineOpen: true` (six also pick their clip).
+- Open: the two untracked "opens sharp" walks still fail the walk-setup tests while in the tree.

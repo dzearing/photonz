@@ -1,0 +1,27 @@
+{
+  "feature": "A recording opens to watch",
+  "epic": "video-editing",
+  "summary": "Opening a recording no longer picks the clip or puts Trim in your hand. You get the picture, the transport, and the timeline tucked down to one row under it, and the tracks come up when you ask for them or start editing.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    { "do": "Open any screen recording (double-click it in the Finder, or drag it onto Photonz).", "shot": "2026-09-25-recording-opens-to-watch-1-opened-to-watch-sc.png" },
+    { "do": "Press Space to play it, and Space again to stop." },
+    { "do": "Click the TIMELINE row under the transport.", "shot": "2026-09-25-recording-opens-to-watch-3-expanded-sc.png" },
+    { "do": "Click the × at the right end of the timeline's bar (or press ⌥⌘T) to tuck it away again." },
+    { "do": "Press I to mark an In.", "shot": "2026-09-25-recording-opens-to-watch-4-an-edit-opens-it-sc.png" },
+    { "do": "Open the tracks with the row, close the window, and open the same recording again.", "shot": "2026-09-25-recording-opens-to-watch-6-remembered-open-sc.png" }
+  ],
+  "evaluate": [
+    "Does opening a recording now feel like QuickTime or Premiere's source monitor: watch first, edit when you choose?",
+    "Is the TIMELINE row under the transport an obvious enough way in, or would you rather have a button on the transport itself?",
+    "When an edit key or drawing on the video brings the tracks up by itself, is that what you want, or does it get in the way when you tucked them away on purpose?",
+    "Should the next recording open the way you last left the timeline (what it does now), or always tucked away?"
+  ],
+  "rough": [
+    "The first frame still opens soft until the playhead moves; that is its own open task (A recording opens on a sharp first frame).",
+    "The floating tool bar still sits over the bottom of the picture instead of the picture fitting above it; that is its own open task (A picture or video fits above the tool bar).",
+    "The task asked for a modifier drag on the scrubber to open the tracks, but no modifier drag exists on the scrubber today, so there was nothing to hook.",
+    "Any change to the document opens the tracks, including panel edits like Speed. Captions the app writes by itself do not.",
+    "The open and close animation has not been seen in motion: a walk photographs the before and after only."
+  ]
+}

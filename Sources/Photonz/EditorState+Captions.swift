@@ -219,7 +219,9 @@ extension EditorState {
             return
         }
 
-        perform { doc in
+        // Captions that wrote themselves are not somebody editing, so they
+        // leave a tucked-away timeline where it is.
+        perform(openingTheTimeline: !quietly) { doc in
             // Writing captions again replaces the last lot rather than laying a
             // second track over the first, which is what a second press
             // obviously means and what stops two copies of every line. They

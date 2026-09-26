@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-20T19:20:02.577Z",
-  "updated": "2026-09-25T12:22:27.393Z",
+  "updated": "2026-09-26T02:26:44.246Z",
   "deps": [
     "a-video-edit-can-be-saved-as-a-project-and-opene",
     "command-s-on-a-video-edit-does-what-the-user-pic"
@@ -21,7 +21,7 @@
     "Trim is a tool in Crop's slot: C picks it, C again swaps, and it is offered only when the document has a duration. No slot in the tool bar moves",
     "Trimming puts handles on the clip's bar in the timeline, both up without hover, with the frames outside the in and out drawn as spare at each end with their durations",
     "The session ends on one glass capsule shaped like Crop's: readouts and Reset in its settings half, then Cancel, then a primary button reading Trim. Return trims, Escape cancels, and no Reset/Cancel/Done row survives",
-    "A recording that is one clip and has never been edited opens with the clip picked and Trim in hand, so trim-and-send is still drag a handle, Return, export",
+    "STRUCK 2026-09-25 (the user turned the fast lane down; see a-recording-opens-to-watch-with-the-editing-tuck): A recording that is one clip and has never been edited opens with the clip picked and Trim in hand, so trim-and-send is still drag a handle, Return, export",
     "Save, Save a copy, export and Revert to Original all work on a recording opened as a document, and each is checked in the audit",
     "The eleven walks that drive the shipped trim flow (trim-*, undo-while-trimming, save-is-live-after-a-trim, close-a-trimmed-recording, the two tutorial-trim-a-recording ones) are rewritten against the new surface and pass",
     "next-a-recording-is-a-document is on by default in Next, or is deleted and the document path becomes the only path",
@@ -138,6 +138,10 @@
     {
       "t": "2026-09-25T12:22:27.392Z",
       "note": "seq 150 -> 60"
+    },
+    {
+      "t": "2026-09-26T02:26:44.245Z",
+      "note": "Acceptance item 5 (a fresh recording opens with the clip picked and Trim in hand) is struck: the user turned the fast lane down on 2026-09-25, and a-recording-opens-to-watch-with-the-editing-tuck removed opensWithTrimInHand. A recording now opens to watch with the timeline tucked away; Trim with nothing picked still finds the clip under the playhead."
     }
   ],
   "walks": [

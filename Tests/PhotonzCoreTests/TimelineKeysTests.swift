@@ -341,6 +341,19 @@ struct ExpectTimelineStepTests {
         #expect(PlaytestStep.names.contains("expectTimeline"))
     }
 
+    @Test("It claims whether the timeline is open and which tool is in hand")
+    func openAndTool() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "steps": [ { "do": "expectTimeline", "open": false, "tool": "select" } ] }
+        """.utf8))
+        guard case .expectTimeline(let claim) = script.steps[0] else {
+            Issue.record("expectTimeline"); return
+        }
+        #expect(claim.open == false)
+        #expect(claim.tool == "select")
+        #expect(claim.claimsSomething)
+    }
+
     @Test("The playhead is claimed to the millisecond unless it says otherwise")
     func exactByDefault() throws {
         let script = try PlaytestScript.decode(Data("""

@@ -2,6 +2,7 @@
   "out": "/tmp/photonz-playtest/a-title-reads-over-a-video-walk",
   "seed": "Words typed over a recording come out as a title, not as a screenshot callout: large, white, bold serif with a soft shadow, a tenth of the picture tall, the way the video mock draws 'Ship it faster.' and the way Premiere and Final Cut start one. It runs exactly as a person running Next gets it, no flag touched. Text typed on a still picture keeps its own look, before AND after a video has been titled, so a size picked for a title never leaks into the next screenshot.",
   "setup": {
+    "timelineOpen": true,
     "forget": [
       "all"
     ]

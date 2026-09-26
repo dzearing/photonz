@@ -2,6 +2,7 @@
   "out": "/tmp/photonz-playtest/library-clip-onto-a-track-walk",
   "seed": "The recordings and sounds a video document has been given sit on the Library shelf, scope Media, as tiles with their name and length (video.html: b-roll.mov 0:04, music.wav 0:14). A tile stays on the shelf after its last clip is cut away, like a Premiere bin, and dragging it onto a track lands it at the moment and on the track under the pointer, with the same ghost, snapping and command-key insert as the file from the Finder. At Next defaults, no flag set.",
   "setup": {
+    "timelineOpen": true,
     "forget": ["all"],
     "scratch": [
       "sample:music"

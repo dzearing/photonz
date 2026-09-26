@@ -1,6 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/open-out-the-timeline-walk",
   "setup": {
+    "timelineOpen": true,
     "forget": ["all"],
     "flags": {
       "next-cut-a-recording": true,
@@ -12,6 +13,7 @@
     { "do": "action", "action": "openSampleRecording" },
     { "do": "wait", "seconds": 2.0 },
     { "do": "action", "action": "videoPause" },
+    { "do": "selectRow", "row": "Tutorial Sample" },
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.6 },
 

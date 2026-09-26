@@ -1,6 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/the-layers-row-says-how-many-pieces-walk",
   "setup": {
+    "timelineOpen": true,
     "forget": ["all"],
     "flags": {
       "next-cut-a-recording": true
@@ -23,18 +24,27 @@
     { "do": "action", "action": "videoSeekQuarter" },
     { "do": "action", "action": "clipSplit" },
     { "do": "wait", "seconds": 0.5 },
+    { "do": "expectTimeline", "open": true },
+    { "do": "action", "action": "toggleTimingStrip" },
+    { "do": "wait", "seconds": 0.5 },
     { "do": "expect", "row": "Tutorial Sample", "reads": "layer, 2 pieces" },
-    { "do": "describe", "stage": "2-two-pieces", "note": "one cut, and the layers list says so: still ONE row with the recording's own name, now saying 2 pieces under it. A cut adds a piece rather than a row, and this line is the only place outside the timeline that says it happened" },
+    { "do": "describe", "stage": "2-two-pieces", "note": "one cut, which brings the tracks up because a cut is an edit, folded away again, and the layers list says so: still ONE row with the recording's own name, now saying 2 pieces under it. A cut adds a piece rather than a row, and this line is the only place outside the timeline that says it happened" },
     { "do": "snapshot", "name": "2-two-pieces" },
 
     { "do": "action", "action": "videoSeekMiddle" },
     { "do": "action", "action": "clipSplit" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectTimeline", "open": true },
+    { "do": "action", "action": "toggleTimingStrip" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "expect", "row": "Tutorial Sample", "reads": "layer, 3 pieces" },
     { "do": "describe", "stage": "3-three-pieces", "note": "a second cut, and the count follows: 3 pieces, one row, one name" },
     { "do": "snapshot", "name": "3-three-pieces" },
 
     { "do": "action", "action": "clipDeletePiece" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectTimeline", "open": true },
+    { "do": "action", "action": "toggleTimingStrip" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "expect", "row": "Tutorial Sample", "reads": "layer, 2 pieces" },
     { "do": "describe", "stage": "4-a-piece-thrown-away", "note": "Delete threw the middle piece away and the count came down with it, in the list as well as on the bar" },

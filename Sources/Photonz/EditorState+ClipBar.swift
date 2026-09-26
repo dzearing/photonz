@@ -71,9 +71,7 @@ extension EditorState {
     ///
     /// A trim session lays the clip out at its FULL length so the spare at
     /// each end can be seen, and cutting a bar that is being shown at a length
-    /// it does not have would put the cut in the wrong place. A recording
-    /// opens with Trim already in hand (§10.3), so this runs on the first B
-    /// almost every time.
+    /// it does not have would put the cut in the wrong place.
     ///
     /// A session nobody has touched is simply dropped. One whose handles HAVE
     /// been moved is committed instead: that trim is a thing the person did,
@@ -123,6 +121,9 @@ extension EditorState {
         endTrimBeforeCutting()
         guard canSplitClipAtPlayhead, let id = clipInHandID else { return }
         pauseDocument()
+        // From a right click on the picture or the scrubber too, with the
+        // timeline tucked away: the cut is on the tracks, so they come up.
+        openTimelineForAnEdit()
         perform { $0.splitClip(id, atMS: documentTimeMS) }
         // **The piece you are left holding is the one BEFORE the cut**, and
         // the model does not decide that — the surface does.

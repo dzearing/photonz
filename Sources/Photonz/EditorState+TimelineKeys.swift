@@ -52,8 +52,17 @@ extension EditorState {
 
     /// Do what a key asks. False where there was nothing for it to do, so the
     /// press carries on to whatever would have had it.
+    ///
+    /// A command that starts an edit brings a tucked-away timeline up to show
+    /// it; one that found nothing to do leaves it where it was.
     @discardableResult
     func perform(timelineCommand command: TimelineKeyCommand) -> Bool {
+        let took = carryOut(timelineCommand: command)
+        if took, command.opensTheTimeline { openTimelineForAnEdit() }
+        return took
+    }
+
+    private func carryOut(timelineCommand command: TimelineKeyCommand) -> Bool {
         switch command {
         case .playPause:
             toggleDocumentPlayback()

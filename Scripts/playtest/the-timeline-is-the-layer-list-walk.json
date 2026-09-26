@@ -1,6 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/the-timeline-is-the-layer-list-walk",
   "setup": {
+    "timelineOpen": true,
     "forget": [
       "all"
     ],

@@ -2,6 +2,7 @@
   "out": "/tmp/photonz-playtest/captions-panel-keeps-its-margins-walk",
   "seed": "The Captions section keeps the panel's margins and never makes the panel wider than its dock, at the default width and at the narrowest, with no flag changed.",
   "setup": {
+    "timelineOpen": true,
     "forget": [
       "all"
     ]
@@ -23,6 +24,7 @@
       "do": "action",
       "action": "videoPause"
     },
+    { "do": "selectRow", "row": "Sample Talk" },
     {
       "do": "action",
       "action": "videoSeekQuarter"

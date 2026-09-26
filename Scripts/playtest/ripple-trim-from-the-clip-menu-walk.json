@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/ripple-trim-from-the-clip-menu-walk",
-  "setup": { "forget": ["all"] },
+  "setup": { "timelineOpen": true, "forget": ["all"] },
   "steps": [
     { "do": "action", "action": "openSampleRecording" },
     { "do": "wait", "seconds": 2.0 },

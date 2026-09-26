@@ -2,6 +2,7 @@
   "out": "/tmp/photonz-playtest/library-import-walk",
   "seed": "Recordings and sounds go into the Library without going onto the timeline (video.html, onboarding step 2, Fill the Library: Import, drag and drop onto the panel). File > Import Media (Shift Command I) puts files on the shelf and opens the Library to show them; a file let go on the shelf becomes a tile there and lands nowhere else; the Library header's plus has Import Media too; then a tile dragged onto the empty Audio track lands there (step 3, Drop a first clip). At Next defaults, no flag set, the Library hidden as a new install has it.",
   "setup": {
+    "timelineOpen": true,
     "forget": ["all"],
     "scratch": [
       "sample:music",

@@ -1255,8 +1255,13 @@ struct EditorCommands: Commands {
             // the window can show or put away. Dimmed with nothing moving,
             // because there is no strip for a still picture and a row that
             // would open an empty one is a row that lies.
-            if Experiments.shared.motionStripEnabled {
-                Toggle(MenuToggleNames.timingStrip, isOn: Binding(
+            //
+            // A recording's timeline is the same switch under its own name, and
+            // it is there whether or not the Motion list is: a recording opens
+            // with its timeline tucked away, so ⌥⌘T has to reach it.
+            if Experiments.shared.motionStripEnabled || Experiments.shared.cutRecordingEnabled {
+                Toggle((editor?.documentHasTime ?? false) ? MenuToggleNames.timeline : MenuToggleNames.timingStrip,
+                       isOn: Binding(
                     get: { editor?.isMotionStripShown ?? false },
                     set: { _ in editor?.toggleMotionStrip() }))
                 .keyboardShortcut("t", modifiers: [.command, .option])

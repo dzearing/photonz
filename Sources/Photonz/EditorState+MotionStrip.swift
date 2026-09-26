@@ -141,7 +141,33 @@ extension EditorState {
     /// switch, and so is ⌥⌘T. Putting it away is remembered, which it can
     /// safely be now that away means a row rather than nothing: the strip can
     /// no longer come back to a document that gives no sign it exists.
-    func toggleMotionStrip() { isMotionStripOpen.toggle() }
+    ///
+    /// On a recording the switch is also the answer for the NEXT recording:
+    /// the last open or closed chosen by hand is what an untouched one opens
+    /// with (`TimelineOpening`).
+    func toggleMotionStrip() {
+        isMotionStripOpen.toggle()
+        if documentHasTime {
+            UserDefaults.standard.set(isVideoTimelineOpen, forKey: Self.videoTimelineOpenKey)
+        }
+    }
+
+    /// An edit started with the timeline tucked away (I, O, B, Q, W, ⌘K, a
+    /// Split from a right click, Trim): up it comes, to show what the edit is
+    /// doing. Not remembered, because starting an edit is not a choice about
+    /// how the next recording opens.
+    func openTimelineForAnEdit() {
+        guard documentHasTime, !isVideoTimelineOpen else { return }
+        isVideoTimelineOpen = true
+    }
+
+    /// What the tucked-away timeline's row says (`.tlrail .sum`): the thing
+    /// picked, then where the playhead is in how long.
+    var timelineRailSummary: String {
+        let picked = selectedLayerID.flatMap { document?.layer(id: $0)?.name }
+        return TimelineOpening.railSummary(pickedName: picked, time: documentTimecode,
+                                           length: documentLengthTimecode)
+    }
 
     // MARK: How long one lap is
 

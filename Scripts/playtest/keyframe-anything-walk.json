@@ -2,6 +2,7 @@
  "out": "/tmp/photonz-playtest/keyframe-anything-walk",
  "seed": "Keyframe anything. At Next defaults with no flag changed, this walk types a title on a recording and keys its Position, Scale and Blur at one and two seconds from the panel's diamonds, picks each value's first key and sets the timeline bar's Easing on it to Ease Out, photographs the lanes and the title half way, then picks the recording, dips its volume to -18 dB at two seconds and back, and keys a crop wiping in from the left, photographing the level line and the crop lane.",
  "setup": {
+  "timelineOpen": true,
   "forget": [
    "all"
   ]
