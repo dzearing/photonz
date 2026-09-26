@@ -75,16 +75,22 @@ public struct ClipBarDrag: Hashable, Sendable {
     /// arrives, so dragging it earlier makes it arrive earlier and its far end
     /// does not move at all.
     public let startIsFree: Bool
+    /// Where every OTHER clip carried along with this one started, for a
+    /// `.body` drag of several picked clips at once (`TrackSelectForward`).
+    /// They move by whatever this one moves by, so the earliest of them is
+    /// what stops the lot at the start of the document.
+    public let alongStartsMS: [Int]
 
     public init(grab: ClipBarGrab, pieces: ClipPieces, clipStartMS: Int,
                 others: [MotionStripEdge] = [], snapWithinMS: Int = 0,
-                startIsFree: Bool = false) {
+                startIsFree: Bool = false, alongStartsMS: [Int] = []) {
         self.grab = grab
         self.pieces = pieces
         self.clipStartMS = clipStartMS
         self.others = others
         self.snapWithinMS = snapWithinMS
         self.startIsFree = startIsFree
+        self.alongStartsMS = alongStartsMS
     }
 
     /// The same drag catching within `reach` instead: nought lets the hand
@@ -93,7 +99,8 @@ public struct ClipBarDrag: Hashable, Sendable {
     /// the drag carries on from what it already holds.
     public func snapping(withinMS reach: Int) -> ClipBarDrag {
         ClipBarDrag(grab: grab, pieces: pieces, clipStartMS: clipStartMS, others: others,
-                    snapWithinMS: max(0, reach), startIsFree: startIsFree)
+                    snapWithinMS: max(0, reach), startIsFree: startIsFree,
+                    alongStartsMS: alongStartsMS)
     }
 
     // MARK: Where the thing in the hand is right now
@@ -135,9 +142,10 @@ public struct ClipBarDrag: Hashable, Sendable {
             guard let range = pieces.trimEndRange(ofPiece: after) else { return (0, 0) }
             return (range.in, range.out)
         case .body:
-            // A clip cannot start before the first frame of the document.
-            // Nothing stops it going the other way: the document grows.
-            return (-clipStartMS, nil)
+            // A clip cannot start before the first frame of the document,
+            // and nor can any clip carried along with it. Nothing stops it
+            // going the other way: the document grows.
+            return (-min(clipStartMS, alongStartsMS.min() ?? clipStartMS), nil)
         case .carry:
             return (nil, nil)
         }
@@ -289,13 +297,19 @@ extension PhotonzDocument {
     /// would make the piece between them collapse to nothing the moment you
     /// looked at it.
     public func clipBarEdges(excluding layerID: UUID, playheadMS: Int?) -> [MotionStripEdge] {
+        clipBarEdges(excluding: [layerID], playheadMS: playheadMS)
+    }
+
+    /// The same, for several clips carried at once: none of them catches on
+    /// another, since they all move together.
+    public func clipBarEdges(excluding layerIDs: Set<UUID>, playheadMS: Int?) -> [MotionStripEdge] {
         var edges = [MotionStripEdge(ms: 0, name: ClipBarCopy.theStart, isStart: true)]
         let end = documentDurationMS
         if end > 0 { edges.append(MotionStripEdge(ms: end, name: ClipBarCopy.theEnd, isStart: false)) }
         if let playheadMS {
             edges.append(MotionStripEdge(ms: playheadMS, name: ClipBarCopy.thePlayhead, isStart: true))
         }
-        for layer in allLayers where layer.id != layerID {
+        for layer in allLayers where !layerIDs.contains(layer.id) {
             guard let time = layer.time else { continue }
             edges.append(MotionStripEdge(ms: time.inMS, name: layer.name, isStart: true))
             edges.append(MotionStripEdge(ms: time.outMS, name: layer.name, isStart: false))

@@ -870,7 +870,8 @@ struct ClipPiecesBar: View {
     /// A piece taken hold of. With more than one piece that is a carry — the
     /// order is the thing there is to change — and with one it is the clip
     /// sliding along the document, because a clip of one piece has no order to
-    /// rearrange. ⌘ always means the whole clip.
+    /// rearrange. ⌘ always means the whole clip, and so does a clip that is
+    /// one of several picked, which carries the others along.
     private func carry(_ pieces: ClipPieces, index: Int) -> some Gesture {
         // On the dock the pointer is read in the tracks' own space too, so a
         // clip carried up or down lands on the track under it, or on a new
@@ -879,8 +880,10 @@ struct ClipPiecesBar: View {
                     coordinateSpace: kind == nil ? .local : .named(TimelineDock.tracksSpace))
             .onChanged { value in
                 if editorState.clipBarDrag == nil {
+                    // One of several picked clips: the lot slides together.
                     let whole = pieces.count == 1
                         || NSEvent.modifierFlags.contains(.command)
+                        || editorState.multiSelectedLayerIDs.contains(layerID)
                     editorState.beginClipBarDrag(layerID: layerID,
                                                  grab: whole ? .body : .carry(piece: index))
                 }

@@ -70,11 +70,12 @@ extension TimelineKeyCommand {
     public var opensTheTimeline: Bool {
         switch self {
         case .playPause, .shuttle, .stepFrames, .editPoint, .goToStart, .goToEnd,
-             .selectTool, .trackSelectForwardTool:
+             .selectTool:
             return false
         case .markIn, .markOut, .clearIn, .clearOut, .addMarker, .splitAtPlayhead, .lift,
              .rippleDelete, .extractMarked, .liftMarked, .rippleTrimToPlayhead,
-             .applyDefaultTransition, .toggleSnapping, .bladeTool, .zoomIn, .zoomOut, .zoomToFit:
+             .applyDefaultTransition, .toggleSnapping, .bladeTool, .trackSelectForwardTool,
+             .zoomIn, .zoomOut, .zoomToFit:
             return true
         }
     }

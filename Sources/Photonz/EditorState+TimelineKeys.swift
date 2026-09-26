@@ -105,17 +105,16 @@ extension EditorState {
             toggleTimelineSnapping()
         case .selectTool:
             // Premiere's V and Photoshop's V are the same arrow, so the
-            // timeline puts the Blade down and the press carries on to the
+            // timeline puts its tool down and the press carries on to the
             // toolbar, which picks Select on the canvas as it always has.
-            isTimelineBlade = false
+            timelineTool = .select
             return false
         case .bladeTool:
             isTimelineBlade = true
         case .trackSelectForwardTool:
-            // Not yet: a pick that takes everything after a clip is only worth
-            // having once the lot can be carried as one. Until then A stays
-            // the Arrow tool.
-            return false
+            // Premiere's A: a press on a clip picks it and everything after
+            // it, and the drag carries the lot (`TrackSelectForward.swift`).
+            timelineTool = .trackSelectForward
         case .zoomIn:
             guard canOpenOutTheTimeline else { return false }
             zoomTimelineIn()

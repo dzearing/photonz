@@ -249,7 +249,10 @@ extension EditorState {
     /// down, so a sideways slide started near the top of a lane never makes a
     /// track by accident.
     func updateClipTrackDrop(pointerY: CGFloat, travelledY: CGFloat) {
-        guard let session = clipBarDrag, case .body = session.grab, abs(travelledY) >= 8 else {
+        // Several clips carried at once stay on their own tracks: they slide
+        // in time only.
+        guard let session = clipBarDrag, case .body = session.grab, session.along.isEmpty,
+              abs(travelledY) >= 8 else {
             if clipTrackDrop != nil { clipTrackDrop = nil }
             return
         }

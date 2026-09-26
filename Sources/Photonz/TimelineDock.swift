@@ -148,8 +148,18 @@ struct TimelineDock: View {
 
     private var localBar: some View {
         HStack(spacing: 4) {
-            toolButton("cursorarrow", name: "Select", help: "Select (V)", isOn: !isBlade) {
-                editorState.isTimelineBlade = false
+            toolButton("cursorarrow", name: "Select", help: "Select (V)",
+                       isOn: editorState.timelineTool == .select) {
+                editorState.timelineTool = .select
+            }
+            // Premiere's A, between Select and the Blade as Premiere's own
+            // tool bar has it. Beyond the mock, which draws only the two: the
+            // same size and face, so it reads as one of them.
+            toolButton("rectangle.righthalf.inset.filled.arrow.right", name: "Track Select Forward",
+                       help: "Track Select Forward (A)",
+                       isOn: editorState.timelineTool == .trackSelectForward) {
+                editorState.timelineTool = editorState.timelineTool == .trackSelectForward
+                    ? .select : .trackSelectForward
             }
             toolButton("scissors", name: "Blade", help: "Blade (B), split at playhead (⌘K)",
                        isOn: isBlade) {
@@ -204,8 +214,16 @@ struct TimelineDock: View {
             Rectangle().fill(VideoKit.Palette.edgeLo).frame(height: 1)
         }
         .panelReadout("timeline \(editorState.timelineWindowReading)"
-                      + (isBlade ? ", blade" : ", select")
+                      + ", " + Self.toolReading(editorState.timelineTool)
                       + (editorState.isTimelineSnapping ? ", snapping" : ", snapping off"))
+    }
+
+    static func toolReading(_ tool: TimelineTool) -> String {
+        switch tool {
+        case .select: return "select"
+        case .trackSelectForward: return "track select forward"
+        case .blade: return "blade"
+        }
     }
 
     /// The right end of the bar: Easing (`#easeSel`), only while keys are

@@ -65,7 +65,7 @@ struct TimelineKeysOpenTheTimelineTests {
     func watchingKeys() {
         let watching: [TimelineKeyCommand] = [
             .playPause, .shuttle(.forward), .shuttle(.stop), .stepFrames(1), .stepFrames(-5),
-            .editPoint(forward: true), .goToStart, .goToEnd, .selectTool, .trackSelectForwardTool,
+            .editPoint(forward: true), .goToStart, .goToEnd, .selectTool,
         ]
         for command in watching { #expect(command.opensTheTimeline == false, "\(command)") }
     }
@@ -75,7 +75,8 @@ struct TimelineKeysOpenTheTimelineTests {
         let editing: [TimelineKeyCommand] = [
             .markIn, .markOut, .clearIn, .clearOut, .addMarker, .splitAtPlayhead, .lift, .rippleDelete,
             .extractMarked, .liftMarked, .rippleTrimToPlayhead(.start), .rippleTrimToPlayhead(.end),
-            .applyDefaultTransition, .toggleSnapping, .bladeTool, .zoomIn, .zoomOut, .zoomToFit,
+            .applyDefaultTransition, .toggleSnapping, .bladeTool, .trackSelectForwardTool,
+            .zoomIn, .zoomOut, .zoomToFit,
         ]
         for command in editing { #expect(command.opensTheTimeline, "\(command)") }
     }

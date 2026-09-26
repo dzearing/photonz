@@ -343,22 +343,59 @@ extension EditorState {
               !document.isClipOnLockedTrack(layerID) else { return }
         pauseDocument()
         clipTrackDrop = nil
+        // A bar taken hold of while it is one of several picked clips carries
+        // the others along, Premiere's way, so the pick survives the press.
+        let along = grab == .body ? clipsCarriedAlong(with: layerID, in: document) : [:]
         // Taking hold of a bar picks its clip, and taking hold of a piece
         // picks that piece, so the panel is talking about what is in the hand.
         if case .carry(let piece) = grab {
             selectClipPiece(layerID: layerID, index: piece)
-        } else if selectedLayerID != layerID {
+        } else if selectedLayerID != layerID, along.isEmpty {
             selectLayer(layerID)
         }
         let drag = ClipBarDrag(grab: grab, pieces: pieces, clipStartMS: time.inMS,
-                               others: document.clipBarEdges(excluding: layerID,
+                               others: document.clipBarEdges(excluding: Set(along.keys).union([layerID]),
                                                              playheadMS: documentTimeMS),
                                snapWithinMS: clipSnapMS,
-                               startIsFree: layer.startIsFree)
+                               startIsFree: layer.startIsFree,
+                               alongStartsMS: Array(along.values))
         clipBarDrag = ClipBarDragSession(layerID: layerID, grab: grab, drag: drag,
                                          landing: drag.landing(byMS: 0),
-                                         heldTimelineMS: max(1, document.documentDurationMS))
+                                         heldTimelineMS: max(1, document.documentDurationMS),
+                                         along: along)
         watchForClipBarEscape()
+    }
+
+    /// The other picked clips a bar carries along, each with where it
+    /// started: every picked clip on the timeline with times of its own and
+    /// not on a locked track, when the bar in the hand is one of them.
+    private func clipsCarriedAlong(with layerID: UUID, in document: PhotonzDocument) -> [UUID: Int] {
+        guard multiSelectedLayerIDs.contains(layerID) else { return [:] }
+        let onTimeline = Set(document.timelineClipLayers.map(\.id))
+        var along: [UUID: Int] = [:]
+        for id in multiSelectedLayerIDs where id != layerID && onTimeline.contains(id) {
+            guard let start = document.layer(id: id)?.time?.inMS,
+                  !document.isClipOnLockedTrack(id) else { continue }
+            along[id] = start
+        }
+        return along
+    }
+
+    /// A press on a clip with Track Select Forward in hand: the clip and
+    /// everything after it picked, and the lot taken hold of, so the same
+    /// press can carry on into a drag (`TimelineTrackSelect`).
+    func beginTrackSelectForwardDrag(layerID: UUID, onItsTrackOnly: Bool) {
+        clearKeySelection()
+        selectClipsForward(from: layerID, onItsTrackOnly: onItsTrackOnly)
+        beginClipBarDrag(layerID: layerID, grab: .body)
+    }
+
+    /// Premiere's Track Select Forward: pick the clip and every clip that
+    /// starts at or after it, on every track, or on its own track with ⇧.
+    func selectClipsForward(from layerID: UUID, onItsTrackOnly: Bool) {
+        guard let picked = document?.clipsForward(from: layerID, onItsTrackOnly: onItsTrackOnly),
+              !picked.isEmpty else { return }
+        selectLayers(Set(picked))
     }
 
     /// The hand moved. Nothing is written down: the strip and the canvas both
@@ -393,6 +430,11 @@ extension EditorState {
         case .seam(let after):
             guard landing.movedMS != 0 else { break }
             perform { $0.trimClipEnd(id, ofPiece: after, byMS: landing.movedMS) }
+        case .body where !session.along.isEmpty:
+            // Several picked clips: all of them by the same amount, one step.
+            clipTrackDrop = nil
+            guard landing.movedMS != 0 else { break }
+            perform { $0.moveClips([id] + Array(session.along.keys), byMS: landing.movedMS) }
         case .body:
             // Carried onto another track, or onto a new one between two: the
             // slide and the change of track land as one step.
@@ -458,6 +500,12 @@ extension EditorState {
             layer.setClipPieces(landing.pieces)
             layer.time = layer.time?.moved(toInMS: landing.clipStartMS)
         }
+        // Everything carried along goes by what the bar in the hand went by.
+        for (id, start) in session.along {
+            document.updateLayer(id: id) { layer in
+                layer.time = layer.time?.moved(toInMS: start + landing.movedMS)
+            }
+        }
         // **The ruler is HELD for the length of the drag.** A document that
         // grew to fit the clip being dragged would rescale the ruler under the
         // hand doing the dragging, and the bar would chase the pointer instead
@@ -516,4 +564,7 @@ struct ClipBarDragSession {
     /// How long the document was when the bar was grabbed, held for the length
     /// of the drag so the ruler cannot rescale under the hand.
     let heldTimelineMS: Int
+    /// The other picked clips carried along with a `.body` drag, each with
+    /// where it started. Empty for a bar dragged on its own.
+    var along: [UUID: Int] = [:]
 }

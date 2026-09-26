@@ -2537,6 +2537,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// calls the strip's own call-off straight, and `escape` posts a real
     /// Escape key into the app the way a keyboard does, which is the only way
     /// to prove the key is wired to anything at all.
+    /// A press on a clip on the timeline with whatever timeline tool is in
+    /// hand, carried `byMS` along (nought is a click) and let go. It goes in
+    /// through the same editor calls the clip's own press makes, the way
+    /// `dragTiming` does for the strip. `modifiers` are the keys held at the
+    /// press: ⇧ keeps Track Select Forward to the clip's own track.
+    case dragClip(clip: String, byMS: Int, modifiers: [PlaytestModifier])
     case dragTiming(bar: String, grab: PlaytestTimingGrab, byMS: Int,
                     hold: String?, cancel: Bool, cancelBy: PlaytestTimingCancel)
     /// Drag ONE KEY along a bar on the timing strip: the mark at a moment the
@@ -3204,7 +3210,7 @@ public enum PlaytestStep: Sendable, Equatable {
     public static let names: [String] = [
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragComponent",
-        "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
+        "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
         "clickRuler", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
@@ -3262,6 +3268,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .dragRow: "dragRow"
         case .dragColor: "dragColor"
         case .dragSection: "dragSection"
+        case .dragClip: "dragClip"
         case .dragTiming: "dragTiming"
         case .dragMotionKey: "dragMotionKey"
         case .dragHandle: "dragHandle"
@@ -3674,6 +3681,10 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .dragSection(section: try f.string("section"), past: try f.string("past"),
                                 stop: stop, hold: try f.optionalString("hold"),
                                 cancel: try f.optionalFlag("cancel") ?? false)
+        case "dragClip":
+            self = .dragClip(clip: try f.string("clip"),
+                             byMS: Int((try f.optionalNumber("byMS") ?? 0).rounded()),
+                             modifiers: try f.modifiers())
         case "dragTiming":
             let grab: PlaytestTimingGrab = if fields["grab"] == nil {
                 .body
@@ -4130,12 +4141,13 @@ public enum PlaytestStep: Sendable, Equatable {
                 lengthMS: try f.optionalNumber("lengthMS").map { Int($0) },
                 snapping: fields["snapping"] as? Bool,
                 open: fields["open"] as? Bool,
-                tool: try f.optionalString("tool"))
+                tool: try f.optionalString("tool"),
+                timelineTool: f.has("timelineTool") ? try f.enumValue("timelineTool", TimelineTool.self) : nil)
             guard claim.claimsSomething else {
                 throw f.invalid("playheadMS", "expectTimeline has to claim something: \"playheadMS\", "
                     + "\"keyboard\", \"rate\", \"blade\", \"markInMS\", \"markOutMS\", \"hasIn\", "
                     + "\"hasOut\", \"markers\", \"rulerMatches\", \"rulerAtPlayhead\", \"lengthMS\", "
-                    + "\"open\" or \"tool\"")
+                    + "\"open\", \"tool\" or \"timelineTool\"")
             }
             self = .expectTimeline(claim)
         case "expectPlaybackNeverBlank":
@@ -4400,14 +4412,18 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
     public var open: Bool?
     /// The tool in hand on the canvas, by its raw name ("select", "trim").
     public var tool: String?
+    /// The timeline's own tool: Select, Track Select Forward or the Blade.
+    public var timelineTool: TimelineTool?
 
     public init(playheadMS: Int? = nil, withinMS: Int = 0, keyboard: Keyboard? = nil, rate: Double? = nil,
                 blade: Bool? = nil, markInMS: Int? = nil, markOutMS: Int? = nil,
                 hasIn: Bool? = nil, hasOut: Bool? = nil, markers: Int? = nil,
                 rulerMatches: Bool? = nil, rulerAtPlayhead: String? = nil, lengthMS: Int? = nil,
-                snapping: Bool? = nil, open: Bool? = nil, tool: String? = nil) {
+                snapping: Bool? = nil, open: Bool? = nil, tool: String? = nil,
+                timelineTool: TimelineTool? = nil) {
         self.open = open
         self.tool = tool
+        self.timelineTool = timelineTool
         self.playheadMS = playheadMS
         self.withinMS = max(0, withinMS)
         self.keyboard = keyboard
@@ -4425,7 +4441,7 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
     }
 
     public var claimsSomething: Bool {
-        open != nil || tool != nil || snapping != nil || playheadMS != nil || keyboard != nil || rate != nil || blade != nil || markInMS != nil
+        open != nil || tool != nil || timelineTool != nil || snapping != nil || playheadMS != nil || keyboard != nil || rate != nil || blade != nil || markInMS != nil
             || markOutMS != nil || hasIn != nil || hasOut != nil || markers != nil
             || rulerMatches != nil || rulerAtPlayhead != nil || lengthMS != nil
     }

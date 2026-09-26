@@ -1,0 +1,28 @@
+{
+  "feature": "Track Select Forward (A) on the timeline",
+  "epic": "video-cutting",
+  "summary": "Premiere's A: pick a clip and everything after it on every track, then drag the lot to open or close a gap, as one undo step. Dragging any clip that is one of several picked now carries all of them, with Select too.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording, drop a second clip after it on V1 and a sound a little later.",
+  "try": [
+    { "do": "Click the timeline once so it holds the keyboard, then press A.", "shot": "2026-09-26-track-select-forward-2-a-in-hand.png" },
+    { "do": "Click the second clip: it and the sound after it light up, the first clip does not.", "shot": "2026-09-26-track-select-forward-3-picked-forward.png" },
+    { "do": "Drag that clip right about two seconds and let go.", "shot": "2026-09-26-track-select-forward-4-gap-opened.png" },
+    { "do": "Press Command Z once: both clips go back." },
+    { "do": "Shift-click the second clip: only the clips on its own track are picked." },
+    { "do": "Click the first clip with A to pick everything, press V, then drag any picked clip.", "shot": "2026-09-26-track-select-forward-7-select-carries-the-pick.png" },
+    { "do": "Right-click any clip and choose Select Forward." }
+  ],
+  "evaluate": [
+    "Does the third button between Select and the Blade read as a tool you would reach for, or is A enough?",
+    "Is the icon (a box with an arrow pointing right) recognisable as select forward?",
+    "When several clips are picked, is it right that dragging one moves them all even with the Select arrow?",
+    "Is Select Forward worth a row in the clip's right-click menu?"
+  ],
+  "rough": [
+    "The mock's timeline bar draws only Select and the Blade. The third button goes beyond it, the same size and face as the other two.",
+    "Shift-click keeps the pick to one track, the way Premiere does it. Premiere's Shift-A (Track Select Backward) is not here.",
+    "Several picked clips slide in time only: carrying them up or down onto another track does nothing, where one clip can change track.",
+    "Only the clip in your hand catches on the playhead and other edges while you drag. The other picked clips do not.",
+    "The walk presses and drags through the same code the clip's press runs, not with a posted mouse drag, because posted drags on the timeline are not reaching clips (filed separately)."
+  ]
+}

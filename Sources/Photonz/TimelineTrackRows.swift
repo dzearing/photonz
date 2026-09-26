@@ -88,6 +88,10 @@ struct TimelineTrackRow: View {
         }
     }
 
+    /// Track Select Forward in hand (A): a press on a clip picks it and
+    /// everything after it, and the edit points are no longer in the way.
+    private var isTrackSelect: Bool { editorState.timelineTool == .trackSelectForward }
+
     private var laneHeight: CGFloat {
         row.carriesSound ? TimelineDock.soundLaneHeight : TimelineDock.laneHeight
     }
@@ -343,6 +347,11 @@ struct TimelineTrackRow: View {
                     TimelineBlade(group: clip, laneWidth: laneWidth)
                 }
             }
+            if isTrackSelect, !track.isLocked {
+                ForEach(row.clips) { clip in
+                    TimelineTrackSelect(group: clip, laneWidth: laneWidth)
+                }
+            }
             // A clip's own sound: the clip's bar a second time, as sound, so
             // every drag on it is a drag on the clip and the two never part
             // until Detach Audio.
@@ -354,8 +363,11 @@ struct TimelineTrackRow: View {
                 if isBlade, !track.isLocked {
                     TimelineBlade(group: clip, laneWidth: laneWidth, isLinkedSound: true)
                 }
+                if isTrackSelect, !track.isLocked {
+                    TimelineTrackSelect(group: clip, laneWidth: laneWidth, isLinkedSound: true)
+                }
             }
-            if !isBlade {
+            if !isBlade, !isTrackSelect {
                 ForEach(editorState.document?.editPoints(onTrack: track.id) ?? []) { point in
                     TimelineEditPointView(point: point, laneWidth: laneWidth, height: laneHeight)
                         .allowsHitTesting(!track.isLocked)
@@ -692,6 +704,52 @@ struct TimelineBlade: View {
                 if inside { NSCursor.crosshair.push() } else { NSCursor.pop() }
             }
             .playtestControl("Blade \(name)", detail: "Timeline")
+            .offset(x: x0)
+    }
+}
+
+/// With Track Select Forward in hand (A) a clip is where a pick of it and
+/// everything after it starts: the press picks the lot, on every track (⇧: this
+/// track only), and a drag from the same press slides the lot, Premiere's way.
+struct TimelineTrackSelect: View {
+    @Environment(EditorState.self) private var editorState
+    let group: MotionStripGroup
+    let laneWidth: CGFloat
+    var isLinkedSound = false
+    @State private var isPressed = false
+
+    private var name: String { isLinkedSound ? "\(group.layerName) sound" : group.layerName }
+
+    var body: some View {
+        let ruler = editorState.motionStripRuler
+        let startMS = Double(group.bar?.inMS ?? 0)
+        let endMS = Double(group.bar?.outMS ?? editorState.documentLengthMS)
+        let x0 = max(0, laneWidth * ruler.fraction(ofMS: startMS))
+        let x1 = min(laneWidth, laneWidth * ruler.fraction(ofMS: endMS))
+        Color.clear
+            .frame(width: max(1, x1 - x0))
+            .contentShape(Rectangle())
+            // Read in the tracks' own space: the bar moves under the hand
+            // while it is dragged, and a travel read against the bar itself
+            // would chase it.
+            .gesture(DragGesture(minimumDistance: 0, coordinateSpace: .named(TimelineDock.tracksSpace))
+                .onChanged { value in
+                    if !isPressed {
+                        isPressed = true
+                        let flags = NSApp.currentEvent?.modifierFlags ?? NSEvent.modifierFlags
+                        editorState.beginTrackSelectForwardDrag(layerID: group.layerID,
+                                                                onItsTrackOnly: flags.contains(.shift))
+                    }
+                    editorState.updateClipBarDrag(
+                        byMS: ClipPiecesBar.ms(value.translation.width, laneWidth: laneWidth,
+                                               ruler: editorState.motionStripRuler))
+                }
+                .onEnded { _ in
+                    isPressed = false
+                    editorState.commitClipBarDrag()
+                })
+            .contextMenu { TimelineClipMenu(layerID: group.layerID) }
+            .playtestControl("Track Select \(name)", detail: "Timeline")
             .offset(x: x0)
     }
 }

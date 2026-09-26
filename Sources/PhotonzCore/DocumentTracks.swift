@@ -196,7 +196,7 @@ extension PhotonzDocument {
         var linked: [UUID: [UUID]] = [:]
     }
 
-    private func trackLayout() -> TrackLayout {
+    func trackLayout() -> TrackLayout {
         let clipLayers = timelineClipLayers
         guard !clipLayers.isEmpty || !tracks.isEmpty else { return TrackLayout() }
         let written = Dictionary(tracks.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })

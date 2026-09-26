@@ -1054,8 +1054,14 @@ final class EditorState {
     /// press in the dock hands it back. While it does, the Premiere keys
     /// that are also Photoshop tool letters mean the timeline's thing.
     var timelineHasKeyboard = false
-    /// The timeline's own tool: the Blade, or the Select arrow when false.
-    var isTimelineBlade = false
+    /// The timeline's own tool: Select, Track Select Forward (A) or the Blade
+    /// (B). Per window, and Select in every new one.
+    var timelineTool: TimelineTool = .select
+    /// The Blade in hand, or put down for Select.
+    var isTimelineBlade: Bool {
+        get { timelineTool == .blade }
+        set { timelineTool = newValue ? .blade : .select }
+    }
     /// Clips catch on the playhead, the cuts and each other while they are
     /// dragged. S and the magnet in the timeline's bar switch it, Premiere's
     /// and Final Cut's key. Per window and on for every new one, as a fresh

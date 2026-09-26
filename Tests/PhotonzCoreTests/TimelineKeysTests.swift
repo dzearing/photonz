@@ -341,6 +341,23 @@ struct ExpectTimelineStepTests {
         #expect(PlaytestStep.names.contains("expectTimeline"))
     }
 
+    @Test("It claims which of the timeline's own tools is in hand")
+    func timelineTool() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "steps": [ { "do": "expectTimeline", "timelineTool": "trackSelectForward" } ] }
+        """.utf8))
+        guard case .expectTimeline(let claim) = script.steps[0] else {
+            Issue.record("expectTimeline"); return
+        }
+        #expect(claim.timelineTool == .trackSelectForward)
+        #expect(claim.claimsSomething)
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try PlaytestScript.decode(Data("""
+            { "steps": [ { "do": "expectTimeline", "timelineTool": "razor" } ] }
+            """.utf8))
+        }
+    }
+
     @Test("It claims whether the timeline is open and which tool is in hand")
     func openAndTool() throws {
         let script = try PlaytestScript.decode(Data("""

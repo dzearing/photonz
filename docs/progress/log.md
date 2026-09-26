@@ -19781,3 +19781,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - `CaptionGuides.swift` (core, tested first): `SafeAreaGuide` (action 93%, title 90%, the mock's labels), `CaptionBadge` ("Auto · en"), `CaptionTrackBar` readings, `PhotonzDocument.resetCaptions` (standard look, fresh box, words kept). `TimePanelOrder` gains `.captioned`: a picked Captions layer or cue leads with Captions, Text, Properties.
 - App: `CaptionGuidesOverlay` over the canvas (guides + AUTO · EN, only with captions and the timeline open), Guides row with a Safe areas button in the Captions section (one app-wide switch, on by default as the mock opens), `CaptionTrackBarView` over the ruler (Caption track, auto · word level, Clear, Reset, Active word, time), and Safe Areas / Reset Captions on the Captions track's right-click menu.
 - Walk `captions-guides-and-track-bar-walk` at Next defaults, 6 real captures. properties-pane-walk and fix-a-caption-word-walk fail on clean main too (logged on the standing walk task).
+
+## 2026-09-26 — Track Select Forward (A) on the timeline
+
+- `TrackSelectForward.swift` (core, tested first): `TimelineTool` (select, trackSelectForward, blade), `clipsForward(from:onItsTrackOnly:)` (skips locked tracks), `moveClips(_:byMS:)` (one edit, stops the earliest clip at 0). `ClipBarDrag.alongStartsMS` so a group's drag stops at the start; `clipBarEdges(excluding: Set)`.
+- App: `EditorState.timelineTool` (`isTimelineBlade` kept as a computed view), A picks the tool and opens a tucked timeline, V puts it down; a third button in the timeline bar; `TimelineTrackSelect` press target per clip (⇧ = its track only); a body drag on any clip in a multi-pick carries every picked clip as one undo step (`ClipBarDragSession.along`), Select included; Select Forward on the clip menu.
+- Walk `track-select-forward-walk` at Next defaults via a new `dragClip` step (drives the editor like `dragTiming`), 5 real captures, audit written.
+- Found: posted `windowDrag`s never reach timeline clips, so walks using them pass without moving anything. Filed `walks-that-drag-a-clip-on-the-timeline-by-window`.

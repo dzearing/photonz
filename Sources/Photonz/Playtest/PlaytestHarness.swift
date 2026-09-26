@@ -1728,6 +1728,9 @@ private final class Run {
         case .dragHandle(let area, let by, let expect, let hold):
             try await dragHandle(area, by: by, expect: expect, hold: hold, number: number)
 
+        case .dragClip(let clip, let byMS, let modifiers):
+            try await dragClip(clip, byMS: byMS, modifiers: modifiers, number: number)
+
         case .dragTiming(let bar, let grab, let byMS, let hold, let cancel, let cancelBy):
             try await dragTiming(bar, grab: grab, byMS: byMS, hold: hold, cancelBy: cancelBy,
                                  cancel: cancel, number: number)
@@ -5616,6 +5619,52 @@ private final class Run {
         NSApp.postEvent(down, atStart: false)
         NSApp.postEvent(up, atStart: false)
         await sleep(0.2)
+    }
+
+    /// A press on a clip on the timeline with the timeline's tool in hand,
+    /// carried along and let go, through the calls the clip's own press makes
+    /// (`TimelineTrackSelect`, `ClipPiecesBar.carry`).
+    private func dragClip(_ clip: String, byMS: Int, modifiers: [PlaytestModifier],
+                          number: Int) async throws {
+        let editor = try requireEditor()
+        guard editor.isMotionStripOpen else {
+            throw Failure(description: "the timeline's tracks are tucked away, so no clip is on "
+                + "screen to be pressed")
+        }
+        let clips = editor.document?.timelineClipLayers ?? []
+        guard let layer = clips.first(where: {
+            $0.name.compare(clip, options: .caseInsensitive) == .orderedSame
+        }) else {
+            throw Failure(description: "there is no clip called \"\(clip)\" on the timeline; there is "
+                + (clips.isEmpty ? "none at all" : clips.map(\.name).joined(separator: ", ")))
+        }
+        let shift = modifiers.contains(.shift)
+        switch editor.timelineTool {
+        case .blade:
+            throw Failure(description: "the Blade is in hand, and a press with it cuts; dragClip "
+                + "presses with Select or Track Select Forward")
+        case .trackSelectForward:
+            editor.beginTrackSelectForwardDrag(layerID: layer.id, onItsTrackOnly: shift)
+        case .select:
+            guard byMS != 0 else {
+                // A click with the arrow: the clip, or added to what is picked.
+                if shift { editor.extendSelection(toLayer: layer.id) } else { editor.selectLayer(layer.id) }
+                note(number, "dragClip", "clicked \(layer.name) with Select", state: describe())
+                return
+            }
+            editor.beginClipBarDrag(layerID: layer.id, grab: .body)
+        }
+        for fraction in [0.35, 0.7, 1.0] {
+            editor.updateClipBarDrag(byMS: Int((Double(byMS) * fraction).rounded()))
+            await sleep(0.05)
+        }
+        editor.commitClipBarDrag()
+        await sleep(0.1)
+        let picked = editor.document?.allLayers
+            .filter { editor.isLayerSelected($0.id) }.map(\.name) ?? []
+        note(number, "dragClip", "pressed \(layer.name) with \(TimelineDock.toolReading(editor.timelineTool))"
+             + (byMS == 0 ? "" : ", carried \(byMS) ms") + "; picked: \(picked.joined(separator: ", "))",
+             state: describe())
     }
 
     private func dragTiming(_ bar: String, grab: PlaytestTimingGrab, byMS: Int,
@@ -9939,7 +9988,7 @@ private final class Run {
         let keyboard: PlaytestTimelineClaim.Keyboard = editor.timelineHasKeyboard ? .timeline : .canvas
         func mark(_ ms: Int?) -> String { ms.map { "\($0)ms" } ?? "none" }
         let reading = "playhead \(editor.documentTimeMS)ms, keyboard on the \(keyboard.rawValue), "
-            + "rate \(rate), \(editor.isTimelineBlade ? "blade" : "select"), "
+            + "rate \(rate), \(TimelineDock.toolReading(editor.timelineTool)), "
             + "in \(mark(document?.markInMS)), out \(mark(document?.markOutMS)), "
             + "\(document?.markers.count ?? 0) marker(s), runs \(editor.documentLengthMS)ms, "
             + (editor.isTimelineSnapping ? "snapping" : "snapping off")
@@ -9969,6 +10018,10 @@ private final class Run {
         }
         if let want = claim.blade, want != editor.isTimelineBlade {
             wrong.append("the timeline's tool is \(editor.isTimelineBlade ? "the Blade" : "Select")")
+        }
+        if let want = claim.timelineTool, want != editor.timelineTool {
+            wrong.append("the timeline's tool is \(TimelineDock.toolReading(editor.timelineTool)), "
+                         + "not \(TimelineDock.toolReading(want))")
         }
         if let want = claim.markInMS, document?.markInMS != want {
             wrong.append("the In is \(mark(document?.markInMS)), not \(want)ms")

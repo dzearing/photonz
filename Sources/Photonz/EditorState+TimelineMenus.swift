@@ -130,6 +130,10 @@ extension EditorState {
         // Keys copied off another layer land here at the playhead.
         if keysOnClipboard != nil { rows.append(pasteKeysRow(layerID: layerID)) }
         rows.append(.separator)
+        // The Track Select Forward tool's pick (A), where the hand already is.
+        rows.append(.command("Select Forward") {
+            self.selectClipsForward(from: layerID, onItsTrackOnly: false)
+        })
         rows.append(.command("Rename…") { self.beginRenamingClip(layerID) })
         rows.append(.command("Duplicate", TimelineMenuKeys.duplicate) { self.duplicateLayer(id: layerID) })
         if let url = mediaURL(ofLayer: layerID) {
