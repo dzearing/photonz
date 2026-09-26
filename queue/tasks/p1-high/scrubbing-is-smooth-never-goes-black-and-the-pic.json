@@ -1,0 +1,34 @@
+{
+  "id": "scrubbing-is-smooth-never-goes-black-and-the-pic",
+  "title": "Scrubbing is smooth, never goes black, and the picture moves with the playhead",
+  "goal": "User 2026-09-26: 'as I'm dragging the video player thumb, especially backwards, the video blacks out for a frame or 2 sporadically. It should not flicker. Also there seems to be lag... the selection blue dotted line around the rectangle moves gracefully with the scrubber, but the rectangle itself lags behind... I want it to be graceful when scrubbing.' The playback-blink fix (playing-a-recording-never-blinks) already holds the nearest decoded frame, including a later one when scrubbing backwards (MovieFramesInHand.frameIndexToShow), so the backward blackouts have another cause. Theories to TEST, none proven: the bookkeeping says a frame is in hand after ImageStore evicted it (frame budget), so the held ref draws empty; a backward seek cancels in-flight decodes and the hold falls to nil; the renderer's diff drops the clip layer for a frame while a ref swaps. The lag: the selection outline is SwiftUI drawn straight from the playhead, while the rectangle lives inside the composited picture, which is rendered off the main thread per submit(document) (EditorState+Time.swift documentMomentChanged) and swapped in only when done, so graphics trail by one or more renders. Standard: Premiere and Final Cut scrub with the picture and graphics locked to the playhead every display frame.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 0.0025,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-26T14:00:22.060Z",
+  "updated": "2026-09-26T14:00:22.141Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Reproduced first: a walk at Next defaults scrubs a full-screen Retina recording with a rectangle on it forward and backward in 60+ small steps (and a fast fling), photographing every step and logging for each: playhead time, the frame shown, the rectangle's drawn position vs its position in the model, and whether the clip area was empty; the report states which theory is true",
+    "The clip area is never empty during any scrub (0 empty frames across the walk), backward included",
+    "Graphics layers (shapes, text, captions, keys) are drawn at the playhead's time in the same display frame as the selection outline: during a scrub the rectangle's drawn position matches the model's at every step (measured in the walk), even while the video frame is still decoding, e.g. by compositing the video plate and the graphics separately so graphics never wait on a decode or a full render",
+    "Scrub updates are paced by the display (CADisplayLink), coalescing pointer moves so no render queue builds up behind a fast drag; measured: no scrub step waits more than one display frame for graphics",
+    "Backward scrubbing reads ahead in the direction of travel (decoders prefetch behind the playhead when moving backward) and keeps enough recent frames that reversing direction shows the frames just seen",
+    "A perf note in the commit: frame time during scrub on a 3456x2234 recording with 5 graphics layers, before and after, within the 16 ms budget"
+  ],
+  "log": [
+    {
+      "t": "2026-09-26T14:00:22.062Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-26T14:00:22.140Z",
+      "note": "seq 370 -> 0.0025"
+    }
+  ]
+}
