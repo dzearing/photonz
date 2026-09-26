@@ -70,7 +70,7 @@ final class RecordingCoordinator {
     }
 
     private func presentStartFailure(_ error: Error) {
-        NSApp.activate(ignoringOtherApps: true)
+        AppFront.activate()
         let alert = NSAlert()
         alert.messageText = "Could not start the recording"
         alert.informativeText = "\(error.localizedDescription)\n\nCheck Screen Recording and Microphone in System Settings under Privacy & Security, then try again."

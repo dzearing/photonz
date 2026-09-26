@@ -258,6 +258,21 @@ slice)
   queue/bin/sweep-slice-record.mjs "$RUNLOG" "$SDIR/last-slice.json" "$began" "$(now)" "$took" "$N" "$OF" "$SLICE_JSON" "$SLICE_TIMED_OUT"
   # Keep the last five rotating-check logs; they are small but there are many.
   ls -t "$SDIR"/slice-*.log 2>/dev/null | tail -n +6 | while IFS= read -r old; do rm -f "$old"; done
+  # Then whether a walk still takes a person's keyboard, focus or screen: a
+  # stand-in for the person holds the front through four walks, one per way a
+  # walk was ever seen doing it (queue/bin/focus-drill.sh, about a minute and
+  # a half). Only on an unlocked Mac nobody is using, since the stand-in takes
+  # the front, and a lock gives the front to the login window whatever a walk does.
+  if (( SLICE_TIMED_OUT == 0 )) \
+     && ! node -e 'process.exit(JSON.parse(require("fs").readFileSync("dist/probe-grants.json","utf8")).screenLocked ? 0 : 1)' 2>/dev/null; then
+    echo "==> Focus check: do walks leave a person's keyboard, focus and screen alone?"
+    queue/bin/focus-drill.sh --check 2>&1 | grep -v '^==> traces'
+    case "${PIPESTATUS[0]}" in
+      0) echo "==> Focus check: clean." ;;
+      6) echo "==> Focus check: deferred, somebody is using the Mac." ;;
+      *) echo "!! Focus check: A WALK TOOK THE PERSON'S FOCUS. The steps are named above; this is a bug in the walk harness or the app, not in the walk." ;;
+    esac
+  fi
   exit 0
   ;;
 

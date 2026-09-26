@@ -79,7 +79,7 @@ final class WelcomeController: NSObject, NSWindowDelegate {
     /// Menu re-entry ("Welcome & Permissions…"): always presents.
     func present(capture: CaptureCenter) {
         if let panel {
-            NSApp.activate(ignoringOtherApps: true)
+            AppFront.activate()
             panel.makeKeyAndOrderFront(nil)
             return
         }
@@ -123,7 +123,7 @@ final class WelcomeController: NSObject, NSWindowDelegate {
         panel.contentView = hosting
         panel.setContentSize(hosting.fittingSize)
         panel.center()
-        NSApp.activate(ignoringOtherApps: true)
+        AppFront.activate()
         panel.makeKeyAndOrderFront(nil)
         self.panel = panel
 
@@ -236,7 +236,7 @@ final class WelcomeController: NSObject, NSWindowDelegate {
             // system prompt appears behind whatever is frontmost — easy to
             // never see, and until it's answered macOS doesn't list Photonz in
             // the Microphone settings pane at all.
-            NSApp.activate(ignoringOtherApps: true)
+            AppFront.activate()
             AVCaptureDevice.requestAccess(for: .audio) { _ in
                 Task { @MainActor [weak self] in self?.state?.refresh() }
             }

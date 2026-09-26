@@ -15,7 +15,7 @@ final class TutorialHubWindowController: NSObject, NSWindowDelegate {
     private var window: NSWindow?
 
     func present(coordinator: AppCoordinator) {
-        NSApp.activate(ignoringOtherApps: true)
+        AppFront.activate()
         if let window {
             window.makeKeyAndOrderFront(nil)
             return

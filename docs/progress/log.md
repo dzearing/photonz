@@ -19848,3 +19848,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
   right-click menu and the Sound panel, dB-scaled waveform that follows gain,
   `+N dB` segment tag. Walk: `normalize-quiet-system-audio-walk`.
 - Open: auto-normalize new recordings on open is a question in the audit.
+
+## 2026-09-26 — Walks leave the person's keyboard, focus and screen alone
+
+- Measured before fixing: `queue/bin/focus-drill.sh` runs walks under a full-screen stand-in window (`queue/bin/focus-canary.swift`) and names every walk and step that activated another app, took key focus, held a menu open or covered the window.
+- Fixed: the probe no longer activates itself during a walk (`AppFront`); guides no longer order their window in front; menus a walk only reads or picks from are never opened on screen (SwiftUI `Menu` rows via `popUpButtonCell:willShowMenu:`); walk windows sit one level under ordinary windows and go back behind the person after every step, 30 ms after a press, and via a 20 ms off-main watcher.
+- Walks that photograph an open menu (66, `queue/bin/walk-needs-the-mac.mjs`) still take the keys for about a second per picture.
+- The drill's standing set runs after every rotating check. Next: run `--all --slice i/n` overnight, then relax the idle gate (task `walks-run-while-the-person-works-once-the-whole`).

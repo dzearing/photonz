@@ -510,7 +510,7 @@ final class AppCoordinator {
         // the window's edits apply to full-length media rather than stacking on
         // an already-committed trim; name the file after the recording.
         guard let recordingURL = state.url, state.editSourceURL != nil else { return }
-        NSApp.activate(ignoringOtherApps: true)
+        AppFront.activate()
         let panel = NSSavePanel()
         panel.allowedContentTypes = [format.savePanelType]
         // The recording's own name wearing the chosen format's extension, so
@@ -677,7 +677,7 @@ final class AppCoordinator {
     func clearHistory() {
         let count = capture.store.entries.count
         guard count > 0 else { return }
-        NSApp.activate(ignoringOtherApps: true)
+        AppFront.activate()
         let alert = NSAlert()
         alert.messageText = "Clear capture history?"
         alert.informativeText =
@@ -708,7 +708,7 @@ final class AppCoordinator {
     /// `.accessory` when the last one closes.
     func openWindow(_ id: EditorWindowID) {
         NSApp.setActivationPolicy(.regular)
-        NSApp.activate(ignoringOtherApps: true)
+        AppFront.activate()
         openWindowAction?(id)
     }
 
@@ -756,7 +756,7 @@ final class AppCoordinator {
         focusMRU.removeAll { if case .editorWindow(let n) = $0 { return n == closing } else { return false } }
         focusMRU.removeAll { if case .app(let a) = $0 { return a.isTerminated } else { return false } }
         if case .app(let app)? = focusMRU.first {
-            app.activate()
+            AppFront.activate(app)
         }
     }
 
@@ -814,7 +814,7 @@ final class AppCoordinator {
     /// editor can adopt it as its source and refresh its layered sidecar.
     @discardableResult
     func saveEditedCapture(sourceURL: URL?, image: CGImage, scale: CGFloat = 1) -> URL? {
-        NSApp.activate(ignoringOtherApps: true)
+        AppFront.activate()
         if let sourceURL, capture.store.entries.contains(where: { $0.url == sourceURL }) {
             let alert = NSAlert()
             alert.messageText = "Save to Capture History"
@@ -858,7 +858,7 @@ final class AppCoordinator {
     /// are offered alongside pictures once `next-opening-a-recording` is on, so
     /// a recording that is not in the capture folder still has a way in.
     func presentOpenPanel() {
-        NSApp.activate(ignoringOtherApps: true)
+        AppFront.activate()
         let panel = NSOpenPanel()
         panel.allowedContentTypes = Experiments.shared.openingARecording
             ? [.image, EditorState.photonzType] + RecordingContentTypes.all
@@ -938,7 +938,7 @@ final class AppCoordinator {
     }
 
     private func presentUpdateInstallFailure(_ error: Error) {
-        NSApp.activate(ignoringOtherApps: true)
+        AppFront.activate()
         let alert = NSAlert()
         alert.alertStyle = .warning
         alert.messageText = "Couldn't install the update"
@@ -957,7 +957,7 @@ final class AppCoordinator {
     func checkForUpdates() {
         guard !isCheckingForUpdates else { return }
         isCheckingForUpdates = true
-        NSApp.activate(ignoringOtherApps: true)
+        AppFront.activate()
         Task {
             let result = await UpdateChecker.check()
             isCheckingForUpdates = false
@@ -1006,7 +1006,7 @@ final class AppCoordinator {
     /// libwebp has to carry its notice somewhere a person can read it. A panel
     /// rather than a file beside the app, so it travels wherever the app does.
     func showOpenSourceNotices() {
-        NSApp.activate(ignoringOtherApps: true)
+        AppFront.activate()
         let alert = NSAlert()
         alert.messageText = OpenSourceNotices.title
         alert.informativeText = OpenSourceNotices.intro
@@ -1026,7 +1026,7 @@ final class AppCoordinator {
 
     /// Shared About panel (menu-bar menu + the editor windows' app menu).
     func showAbout() {
-        NSApp.activate(ignoringOtherApps: true)
+        AppFront.activate()
         let credits = NSMutableAttributedString(
             string: "Fast photo & screenshot editing for the Mac.\n",
             attributes: [

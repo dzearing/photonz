@@ -15,7 +15,7 @@ final class ExperimentsWindowController: NSObject, NSWindowDelegate {
     private var window: NSWindow?
 
     func present(experiments: Experiments = .shared) {
-        NSApp.activate(ignoringOtherApps: true)
+        AppFront.activate()
         if let window {
             window.makeKeyAndOrderFront(nil)
             return

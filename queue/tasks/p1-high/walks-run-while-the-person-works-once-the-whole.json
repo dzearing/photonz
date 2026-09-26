@@ -1,0 +1,28 @@
+{
+  "id": "walks-run-while-the-person-works-once-the-whole",
+  "title": "Walks run while the person works, once the whole set measures clean",
+  "goal": "Walks no longer take the keyboard, focus or screen in the walks measured so far, but the loop still waits for the person to step away before testing. Measure every walk the same way overnight, fix any that still take focus, then let walks run while the person is at the Mac.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 0.036,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-26T22:11:25.150Z",
+  "updated": "2026-09-26T22:11:25.153Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follows a-walk-never-takes-the-keyboard-the-pointer-or-f (2026-09-26), which fixed: probe activation (AppFront gate), guide orderFrontRegardless, menus opened just to read/pick (rightClick, panelMenu incl. SwiftUI Menu via popUpButtonCell:willShowMenu:), windows raised by a press release (walk windows at level normal-1 + orderBack + 20ms off-main watcher). Measured clean on about 35 walks. Cannot run the whole set inside one task (about 105 min). Unverified: whether a person clicking an area where an alpha-0 walk window sits hits the probe (windows are now under other apps, so only bare desktop is exposed). The drill needs the person away (the canary takes the front) and an unlocked screen.",
+  "acceptance": [
+    "queue/bin/focus-drill.sh --all has run over every walk (in slices overnight, e.g. --slice 1/12 through 12/12) and every walk reads clean or menu shown",
+    "Any walk that reads TOOK FOCUS is fixed in the harness or the app, not skipped",
+    "The idle gate is relaxed in person-at-mac.sh, probe-app.sh, playtest.sh and CLAUDE.md: walks run while the person is present, except the full sweep and walks queue/bin/walk-needs-the-mac.mjs names (they photograph an open menu)",
+    "The runner prompt says the same"
+  ],
+  "log": [
+    {
+      "t": "2026-09-26T22:11:25.152Z",
+      "note": "created (manual)"
+    }
+  ]
+}

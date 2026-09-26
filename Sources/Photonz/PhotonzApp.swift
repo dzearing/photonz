@@ -119,7 +119,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard !dirty.isEmpty else { return .terminateNow }
             // The agent may be quitting from the (non-activating) menu-bar menu;
             // the alert needs the app frontmost to be seen.
-            NSApp.activate(ignoringOtherApps: true)
+            AppFront.activate()
             let alert = NSAlert()
             alert.messageText = dirty.count == 1
                 ? "You have a window with unsaved changes."

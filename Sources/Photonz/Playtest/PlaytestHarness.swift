@@ -31,6 +31,70 @@ enum PlaytestHarness {
     /// is not a person (`TutorialCardPresence`).
     static var isDrivingAWalk: Bool { run != nil }
 
+    /// The level a window a walk drives sits at: just under an ordinary
+    /// window, so however it is raised it stays under every other app's.
+    static let walkWindowLevel = NSWindow.Level(rawValue: NSWindow.Level.normal.rawValue - 1)
+
+    /// Puts every window of the probe that has come up over another app's
+    /// window back behind it, keeping the probe's own windows in the order
+    /// they were in.
+    ///
+    /// A walk runs on a Mac a person may be using, and the probe's windows
+    /// kept surfacing over their work: a press on a panel button lifted the
+    /// walk's window to the front of every app during the release, and so did
+    /// other steps, by routes that are AppKit's and not the app's (measured
+    /// 2026-09-26 with queue/bin/focus-drill.sh: the window was still at the
+    /// back after the mouse-down and in front after the release, with
+    /// `preventWindowOrdering` in force on both). So whatever lifted it, it
+    /// goes back after each step. Nothing a walk does needs it in front: its
+    /// events are handed to the window directly and its pictures are taken of
+    /// the window by id.
+    static func sendWindowsBehindThePerson() {
+        guard aProbeWindowIsOverAnotherApp() else { return }
+        // Front to back, each to the very back: the first ends up in front of
+        // the rest again, so the probe's own order survives.
+        for window in NSApp.orderedWindows where window.isVisible && window.parent == nil
+            && (window.level == .normal || window.level == walkWindowLevel) {
+            window.level = walkWindowLevel
+            window.orderBack(nil)
+        }
+    }
+
+    /// Whether a visible window of this app sits in front of the frontmost
+    /// window of any other app. Safe off the main thread, which is where the
+    /// watcher asks it, so a walk's own timing of the main thread never
+    /// includes it.
+    nonisolated static func aProbeWindowIsOverAnotherApp() -> Bool {
+        let me = Int(getpid())
+        guard let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly], kCGNullWindowID)
+                as? [[String: Any]] else { return false }
+        let normal = list.filter { ($0[kCGWindowLayer as String] as? Int) == 0 }
+        guard let firstOther = normal.firstIndex(where: { ($0[kCGWindowOwnerPID as String] as? Int) != me })
+        else { return false }
+        return normal.prefix(firstOther).contains {
+            ($0[kCGWindowOwnerPID as String] as? Int) == me && ($0[kCGWindowAlpha as String] as? Double ?? 1) > 0
+        }
+    }
+
+    /// Checks fifty times a second, for the whole walk, whether a probe
+    /// window has come up over somebody's work, and puts it back when one has.
+    /// The step loop does the same after every step; this catches what rises
+    /// in the middle of one (a slider still tracking, a popover opening a beat
+    /// after its press) within a frame or two rather than at the end of the
+    /// step. One look costs about a millisecond (measured 2026-09-26), on this
+    /// thread and never the main one.
+    private static func watchForWindowsOverThePerson() {
+        Thread.detachNewThread {
+            while true {
+                Thread.sleep(forTimeInterval: 0.02)
+                guard aProbeWindowIsOverAnotherApp() else { continue }
+                DispatchQueue.main.async {
+                    MainActor.assumeIsolated { sendWindowsBehindThePerson() }
+                }
+            }
+        }
+    }
+
     /// Every editor announces itself when its canvas lands in a window, so
     /// the run can find the one it just opened.
     static func register(_ editor: EditorState) {
@@ -47,6 +111,7 @@ enum PlaytestHarness {
         let scriptURL = URL(fileURLWithPath: arguments[flag + 1]).standardizedFileURL
         let run = Run(scriptURL: scriptURL, coordinator: coordinator)
         self.run = run
+        watchForWindowsOverThePerson()
         Task { await run.start() }
     }
 
@@ -250,6 +315,7 @@ private final class Run {
             let number = index + 1
             do {
                 try await perform(step, number: number)
+                PlaytestHarness.sendWindowsBehindThePerson()
                 completed = number
             } catch let lockedOut as LockedOut {
                 note(number, step.name, "COULD NOT RUN: \(lockedOut)")
@@ -358,13 +424,13 @@ private final class Run {
     private func requireStepFoundItsControl() async throws {
         let controller = TutorialController.shared
         guard let run = controller.run else { return }
-        // The probe's windows are invisible and never active, so the window a
-        // guide is teaching in can be sitting behind whatever else is on the
-        // machine. A guide over a covered window draws nothing on purpose, the
-        // same as it would for a person who buried the window, so it is put in
-        // front first: the check is about the control, not about what else is
-        // open.
-        controller.guideWindow?.orderFrontRegardless()
+        // The window a guide is teaching in can be sitting behind whatever a
+        // person has in front, and it stays there: a guide a walk drives keeps
+        // its card up over a buried window (`TutorialCardPresence`), and the
+        // anchor check never asked what was in front. This used to order the
+        // window to the front of every other app at every step, which put the
+        // probe over the person's work for the whole of a guide walk
+        // (queue/bin/focus-drill.sh, 2026-09-26).
         // A step the walk SAID has nothing to ring: the check turns around.
         if expectNoControl.contains("\(run.guide.id)/\(run.step.id)") {
             await sleep(Self.anchorGrace)
@@ -5452,9 +5518,15 @@ private final class Run {
         NSApp.postEvent(down, atStart: true)
         NSApp.sendEvent(NSApp.nextEvent(matching: .leftMouseDown, until: .distantPast,
                                         inMode: .default, dequeue: true) ?? down)
+        // The release lifts the window over every other app's, inside AppKit
+        // where nothing the app calls is involved (a hook on every ordering
+        // call caught none), so it goes straight back the moment the release
+        // has been handled rather than at the watcher's next look.
+        await sleep(0.03)
+        PlaytestHarness.sendWindowsBehindThePerson()
         // Long enough for the queue to drain and for whatever the press
         // changed to be laid out before the next step reads it.
-        await sleep(0.30)
+        await sleep(0.27)
         let place = target.detail.isEmpty ? "" : " in \(target.detail)"
         let along = across.map { " at \(Int(($0 * 100).rounded()))% across it" } ?? ""
         note(number, "press",
@@ -9019,8 +9091,10 @@ private final class Run {
         try? FileManager.default.removeItem(at: noteURL)
         var reading = PlaytestMenuReading()
 
-        // Everything below runs INSIDE the menu's own event loop.
-        let hop = PlaytestTrackingHop {
+        // Reading the rows and picking one. With a picture asked for this runs
+        // INSIDE the open menu's own event loop; without one it runs on the
+        // menu as built, never opened.
+        let readAndChoose: @MainActor () -> Void = {
             reading.rows = menu.items.map { $0.isSeparatorItem ? "" : $0.title }
             reading.dimmed = menu.items.filter { !$0.isSeparatorItem && !$0.isEnabled }.map(\.title)
             reading.ticked = menu.items.filter { $0.state == .on }.map(\.title)
@@ -9052,16 +9126,40 @@ private final class Run {
                         + reading.rows.map { $0.isEmpty ? "—" : $0 }.joined(separator: ", ")
                 }
             }
-            menu.cancelTracking()
         }
-        // Long enough for the menu to be up and drawn, short enough that it is
-        // not sitting over whatever the person at this machine is looking at.
-        hop.schedule(after: 0.55)
-        // At the point the click landed on, which is where a real right click
-        // puts it: the picture then shows the menu joined to the row it came
-        // from, rather than floating at a corner.
-        menu.popUp(positioning: nil, at: view.convert(target.point, from: nil), in: view)
-        await sleep(0.25)
+        // An open menu takes every key press on the Mac until it closes, from
+        // whatever app a person is typing in (queue/bin/focus-drill.sh,
+        // 2026-09-26). So it is only opened when the walk wants a PICTURE of
+        // it. Reading its rows and choosing one is the same menu object either
+        // way: asked to update, it validates each row exactly as opening it
+        // does, and a row is run through the menu's own `performActionForItem`.
+        var opened = shot != nil
+        if !opened {
+            menu.delegate?.menuNeedsUpdate?(menu)
+            menu.update()
+            if menu.items.isEmpty {
+                // Some menus only build their rows as they open. Then there is
+                // nothing to read without opening it.
+                opened = true
+            } else {
+                readAndChoose()
+            }
+        }
+        if opened {
+            let hop = PlaytestTrackingHop {
+                readAndChoose()
+                menu.cancelTracking()
+            }
+            // Long enough for the menu to be up and drawn, short enough that it
+            // is not sitting over whatever the person at this machine is
+            // looking at.
+            hop.schedule(after: 0.55)
+            // At the point the click landed on, which is where a real right
+            // click puts it: the picture then shows the menu joined to the row
+            // it came from, rather than floating at a corner.
+            menu.popUp(positioning: nil, at: view.convert(target.point, from: nil), in: view)
+            await sleep(0.25)
+        }
 
         var outcome = "no picture asked for"
         if shot != nil {
@@ -9107,6 +9205,7 @@ private final class Run {
         detail += "; ticked: \(reading.ticked.isEmpty ? "none" : reading.ticked.joined(separator: ", "))"
         if !reading.dimmed.isEmpty { detail += "; dimmed: \(reading.dimmed.joined(separator: ", "))" }
         if let chose = reading.chose { detail += "; picked \"\(chose)\"" }
+        if shot == nil { detail += opened ? "; opened on screen to read it" : "; read without opening it" }
         detail += "; picture: \(outcome)"
         note(number, "rightClick", detail,
              state: ["on": target.name, "rows": reading.rows, "ticked": reading.ticked,
@@ -9267,8 +9366,10 @@ private final class Run {
         try? FileManager.default.removeItem(at: noteURL)
         var reading = PlaytestMenuReading()
 
-        // Everything below runs INSIDE the menu's own event loop.
-        let hop = PlaytestTrackingHop {
+        // Reading the rows and picking one. With a picture asked for, or a real
+        // click opening the menu, this runs INSIDE the open menu's own event
+        // loop; otherwise on the menu as built, never opened.
+        let readAndChoose: @MainActor () -> Void = {
             let menu = button.menu
             // Read as a person reads them: a size row is padded out with blank
             // so every size takes the same room in the box, and that blank is
@@ -9333,24 +9434,75 @@ private final class Run {
                         + reading.rows.map { $0.isEmpty ? "—" : $0 }.joined(separator: ", ")
                 }
             }
-            menu?.cancelTracking()
         }
-        // Long enough for the menu to be up and drawn, short enough that it is
-        // not sitting over whatever the person at this machine is looking at.
-        // A control that has to tell a single click from a double one cannot
-        // open its menu on the press: it waits first. So a walk that opens the
-        // menu with a real click has to leave that wait, and the walk's way
-        // out, room to happen.
+        // An open menu takes every key press on the Mac until it closes, from
+        // whatever app a person is typing in (queue/bin/focus-drill.sh,
+        // 2026-09-26). So the menu only opens on screen when the walk wants a
+        // PICTURE of it, or opens it with a real click to prove the click
+        // opens it. Otherwise its rows are read and chosen on the same menu
+        // object, asked to update first, which validates every row exactly as
+        // opening it does.
         let opener = try clicking.map { try pressTarget($0, in: nil) }
-        hop.schedule(after: opener == nil ? 0.55 : 1.1)
-        var opened = "pressed the button in code"
-        if let opener {
-            try clickToOpen(opener)
-            opened = "opened by clicking \"\(opener.name)\" at \(short(opener.point))"
-        } else {
-            button.performClick(nil)
+        var opened = "read without opening it"
+        var mustOpen = shot != nil || opener != nil
+        var whyOpened = ""
+        if !mustOpen {
+            // A menu can fill in its rows as it opens. It is told it is
+            // opening, without being put on screen, and told it closed once it
+            // has been read.
+            NotificationCenter.default.post(name: NSPopUpButton.willPopUpNotification, object: button)
+            if let menu = button.menu {
+                menu.delegate?.menuNeedsUpdate?(menu)
+                // A SwiftUI `Menu` builds its rows in the one callback its pop
+                // up cell makes as the menu is about to show (measured
+                // 2026-09-26: `menuWillOpen`, `menuNeedsUpdate` and the
+                // pop-up notification all left it empty), so that callback is
+                // made, and nothing is shown.
+                let showing = NSSelectorFromString("popUpButtonCell:willShowMenu:")
+                var told = false
+                if menu.items.isEmpty, let cell = button.cell,
+                   let coordinator = menu.delegate as? NSObject, coordinator.responds(to: showing) {
+                    coordinator.perform(showing, with: cell, with: menu)
+                    told = true
+                }
+                if menu.items.isEmpty, menu.delegate?.menuWillOpen != nil {
+                    menu.delegate?.menuWillOpen?(menu)
+                    told = true
+                }
+                menu.update()
+                if menu.items.isEmpty {
+                    mustOpen = true
+                    whyOpened = " (it had no rows until it was really open)"
+                } else {
+                    readAndChoose()
+                }
+                if told { menu.delegate?.menuDidClose?(menu) }
+            } else {
+                mustOpen = true
+                whyOpened = " (the button had no menu until it was really open)"
+            }
         }
-        await sleep(0.25)
+        if mustOpen {
+            let hop = PlaytestTrackingHop {
+                readAndChoose()
+                button.menu?.cancelTracking()
+            }
+            // Long enough for the menu to be up and drawn, short enough that it
+            // is not sitting over whatever the person at this machine is
+            // looking at. A control that has to tell a single click from a
+            // double one cannot open its menu on the press: it waits first. So
+            // a walk that opens the menu with a real click has to leave that
+            // wait, and the walk's way out, room to happen.
+            hop.schedule(after: opener == nil ? 0.55 : 1.1)
+            opened = "pressed the button in code" + whyOpened
+            if let opener {
+                try clickToOpen(opener)
+                opened = "opened by clicking \"\(opener.name)\" at \(short(opener.point))"
+            } else {
+                button.performClick(nil)
+            }
+            await sleep(0.25)
+        }
 
         // The picture is written on a background queue, so wait for its note.
         var outcome = "no picture asked for"
@@ -10222,6 +10374,7 @@ private final class Run {
                                    width: size.width, height: size.height), display: true)
         }
         window.makeKey()
+        Self.keepBehindThePerson(window)
         try await poll("the canvas", within: 5) {
             guard let content = window.contentView else { return false }
             canvas = Self.findCanvas(content)
@@ -10259,6 +10412,7 @@ private final class Run {
         // picture of the empty window is a real photograph like any other.
         window.alphaValue = 0
         window.makeKey()
+        Self.keepBehindThePerson(window)
         await sleep(0.5)
         editor = opened
         self.window = window
@@ -10310,11 +10464,11 @@ private final class Run {
         // neither the clip nor most of the controls a guide is pointing at. The
         // screen capture shows both, and a capture of a window at zero alpha
         // comes back blank. So the probe's own window stays up for the length
-        // of the walk, which nobody is watching anyway.
+        // of the walk, behind whatever a person has in front.
         _ = try? await poll("reveal", within: 4) { window.alphaValue >= 1 }
         window.alphaValue = 1
         window.makeKey()
-        window.orderFront(nil)
+        Self.keepBehindThePerson(window)
         await sleep(0.6)
         editor = nil
         canvas = nil
@@ -12677,6 +12831,7 @@ private final class Run {
             // put straight back.
             let hidden = window.alphaValue == 0
             if hidden {
+                Self.keepBehindThePerson(window)
                 window.alphaValue = 1
                 window.display()
                 await sleep(0.25)
@@ -12697,6 +12852,28 @@ private final class Run {
         } catch {
             captureFailed(name, "\(error)")
         }
+    }
+
+    /// Puts a window the walk drives behind every other app's windows.
+    ///
+    /// A walk's window opens in front of whatever a person is working in, and
+    /// it is shown for real for every picture: at zero alpha the rest of the
+    /// time, it came up over their work for half a second at each snapshot,
+    /// and a recording's window stayed up over it for the whole walk
+    /// (queue/bin/focus-drill.sh, 2026-09-26). Nothing a walk does needs it in
+    /// front: events are handed to the window directly, and the screen capture
+    /// photographs this one window by its id, whatever covers it.
+    ///
+    /// It also goes one level below an ordinary window. AppKit lifts a window
+    /// to the front of its level when a press is released in it, below
+    /// anything the app calls, and the main thread is busy redrawing for a
+    /// beat after most presses, so putting it back afterwards still left a
+    /// tenth of a second of the walk's window over the person's work (focus
+    /// drill, 2026-09-26). One level down, the front of its level is still
+    /// behind every other app's window.
+    static func keepBehindThePerson(_ window: NSWindow) {
+        window.level = PlaytestHarness.walkWindowLevel
+        window.orderBack(nil)
     }
 
     /// One photograph of this window, at the size of everything hanging off it.

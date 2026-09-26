@@ -205,7 +205,7 @@ final class HintTooltipController {
         if !panel.isVisible || panel.parent !== window {
             window.addChildWindow(panel, ordered: .above)
         }
-        panel.orderFront(nil)
+        AppFront.show(panel, above: window)
         panel.invalidateShadow()
         installMonitor()
     }

@@ -61,7 +61,7 @@ final class RecordingSetupController {
         // app doesn't flash to the foreground. Regifting focus only when a *different*
         // app was frontmost keeps the "invoked from within Photonz" case put.
         if let previousApp, !previousApp.isTerminated {
-            previousApp.activate()
+            AppFront.activate(previousApp)
         }
         previousApp = nil
         panel?.orderOut(nil)

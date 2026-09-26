@@ -686,7 +686,10 @@ final class TutorialController {
     /// beak and no ring: it is not about a control, it is about the guide being
     /// over.
     private func placeFinish(_ finish: TutorialFinish, in window: NSWindow) {
-        guard !window.isMiniaturized, window.occlusionState.contains(.visible) else {
+        guard TutorialCardPresence.shouldBeOnScreen(
+            miniaturized: window.isMiniaturized,
+            windowVisible: window.occlusionState.contains(.visible),
+            aWalkIsDriving: Self.aWalkIsDriving) else {
             cardPanel?.orderOut(nil)
             lastWindowFrame = nil
             return
@@ -792,7 +795,7 @@ final class TutorialController {
             panel.parent?.removeChildWindow(panel)
             window.addChildWindow(panel, ordered: .above)
         }
-        if !panel.isVisible { panel.orderFront(nil) }
+        if !panel.isVisible { AppFront.show(panel, above: window) }
     }
 
     private func makePanel(ignoresMouse: Bool) -> NSPanel {

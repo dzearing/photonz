@@ -15,7 +15,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     private var window: NSWindow?
 
     func present(store: SilencedQuestions) {
-        NSApp.activate(ignoringOtherApps: true)
+        AppFront.activate()
         if let window {
             window.makeKeyAndOrderFront(nil)
             return

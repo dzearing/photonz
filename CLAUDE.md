@@ -81,6 +81,16 @@ puts itself down and its request goes back on the pile. The whole set runs at
 most once a day. `PHOTONZ_IGNORE_PERSON=1` is for a person running a walk by
 hand while they watch.
 
+The gate is a stopgap. The real fix landed the same day: a walk no longer
+activates the probe, keeps its windows one level under every other app's, and
+reads or picks from a menu without opening it on screen. The one exception is a
+walk that PHOTOGRAPHS an open menu (66 of them, `queue/bin/walk-needs-the-mac.mjs`),
+which takes the keys for about a second per picture. `queue/bin/focus-drill.sh`
+proves it: a stand-in for the person holds the front while walks run and every
+walk and step that took a key or covered their window is named. Its standing
+set runs after every rotating check; `--all --slice i/n` runs the whole set in
+pieces. The gate stays until the whole set has measured clean.
+
 ### A locked screen stops names, not the app
 
 A scripted walk finds every control BY NAME, and a locked screen takes that name

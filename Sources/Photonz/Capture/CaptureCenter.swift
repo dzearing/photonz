@@ -128,7 +128,7 @@ final class CaptureCenter {
             // behind the frontmost app and never be seen (same reason the
             // welcome flow activates). This OS prompt only exists while the
             // status is notDetermined, so it inherently fires at most once.
-            NSApp.activate(ignoringOtherApps: true)
+            AppFront.activate()
             if await AVCaptureDevice.requestAccess(for: .audio) {
                 launchRecording(with: config)
             } else {
@@ -157,7 +157,7 @@ final class CaptureCenter {
     /// microphone, jump to Settings, or bail. User-initiated each time, so this
     /// is feedback, not a prompt loop.
     private func presentMicrophoneBlocked(for config: RecordingConfig) {
-        NSApp.activate(ignoringOtherApps: true)
+        AppFront.activate()
         let alert = NSAlert()
         alert.messageText = "Microphone access is turned off"
         alert.informativeText = "macOS is blocking Photonz from using the microphone, so the recording can't include it. You can record without the microphone, or turn it on in System Settings and try again."
@@ -254,7 +254,7 @@ final class CaptureCenter {
     /// can be flipped. Must run frontmost.
     func requestScreenRecordingAccess() {
         promptedScreenRecordingThisLaunch = true
-        NSApp.activate(ignoringOtherApps: true)
+        AppFront.activate()
         Task {
             await ScreenCapturer.primePermissionRegistration()
             ScreenCapturer.openScreenRecordingSettings()
