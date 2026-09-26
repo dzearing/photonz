@@ -3626,6 +3626,42 @@ struct PlaytestScriptTests {
         }
     }
 
+    // MARK: - Is a clip's sound drawn on its bar?
+
+    @Test("An expectWaveform step claims a clip's bar is drawing the shape of its sound")
+    func expectWaveformClaimsTheBarDrawsIt() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectWaveform", "clip": "b-roll" } ] }
+        """)
+        guard case .expectWaveform(let clip, let within) = script.steps[0] else {
+            Issue.record("expectWaveform"); return
+        }
+        #expect(clip == "b-roll")
+        #expect(within == 1)
+        #expect(script.steps[0].name == "expectWaveform")
+    }
+
+    @Test("An expectWaveform step can say how long to wait for the shape to land")
+    func expectWaveformWaits() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectWaveform", "clip": "b-roll", "within": 2.5 } ] }
+        """)
+        guard case .expectWaveform(_, let within) = script.steps[0] else {
+            Issue.record("expectWaveform"); return
+        }
+        #expect(within == 2.5)
+    }
+
+    @Test("An expectWaveform step has to name its clip and wait zero seconds or more")
+    func expectWaveformRefusesNonsense() throws {
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "expectWaveform" } ] }"#)
+        }
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "expectWaveform", "clip": "b-roll", "within": -1 } ] }"#)
+        }
+    }
+
     // MARK: - What the recording on disk says
 
     // A walk that trims and saves has to be able to ask the FILE, not the app.

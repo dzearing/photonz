@@ -1866,6 +1866,10 @@ private final class Run {
         case .expectFrameSharp(let within):
             note(number, step.name, try await checkFrameSharp(within: within), state: describe())
 
+        case .expectWaveform(let clip, let within):
+            note(number, step.name, try await checkWaveform(clip: clip, within: within),
+                 state: describe())
+
         case .expectLanding(let near, let within, let absent):
             note(number, step.name, try checkLanding(near: near, within: within, absent: absent),
                  state: describe())
@@ -6555,6 +6559,29 @@ private final class Run {
         }
         throw Failure(description: "the picture at \(editor.documentTimecode) is a small read stretched "
             + "up, so it draws blurred: \(said(frames)). Waited \(Self.round1(CGFloat(within)))s.")
+    }
+
+    private func checkWaveform(clip: String, within: Double) async throws -> String {
+        let editor = try requireEditor()
+        guard let layer = editor.document?.flattenedLayers.first(where: { $0.name == clip }) else {
+            throw Failure(description: "there is no clip called \(clip) in the document")
+        }
+        guard layer.sound != nil else {
+            throw Failure(description: "\(clip) has no sound, so its bar has no waveform to draw")
+        }
+        let began = CACurrentMediaTime()
+        while true {
+            if DrawnWaveforms.shared.drew(layer.id) == true {
+                let waited = Self.round1(CGFloat(CACurrentMediaTime() - began))
+                return "\(clip)'s bar is drawing the shape of its sound, after \(waited)s"
+            }
+            guard CACurrentMediaTime() - began < within else { break }
+            await sleep(0.05)
+        }
+        let read = layer.sound.flatMap { SoundLibrary.shared.waveform(for: $0) } != nil
+        let bar = DrawnWaveforms.shared.drew(layer.id) == nil ? "has never drawn" : "last drew a flat line"
+        throw Failure(description: "\(clip)'s bar \(bar) after \(Self.round1(CGFloat(within)))s, and the "
+            + "shape of its sound \(read ? "HAS been read, so the bar was never told" : "has not been read")")
     }
 
     private func checkSharp(absent: Bool, within: Double) async throws -> String {

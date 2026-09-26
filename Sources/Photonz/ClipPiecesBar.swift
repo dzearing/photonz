@@ -386,7 +386,11 @@ struct ClipPiecesBar: View {
     /// wait (`SoundFiles.swift`).
     private var waveform: Waveform? {
         guard let sound = editorState.document?.layer(id: layerID)?.sound else { return nil }
-        if let already = SoundLibrary.shared.waveform(for: sound) { return already }
+        let already = SoundLibrary.shared.waveform(for: sound)
+        #if PHOTONZ_PLAYTEST
+        DrawnWaveforms.shared.bar(of: layerID, drew: already != nil)
+        #endif
+        if let already { return already }
         SoundLibrary.shared.loadWaveform(for: sound)
         return nil
     }

@@ -1,0 +1,21 @@
+{
+  "feature": "A clip brought onto the timeline shows its sound",
+  "epic": "video-editing",
+  "summary": "A recording you add from the Library or drag in from the Finder now draws the shape of its sound on the Audio track the moment it lands, instead of a flat line.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    { "do": "Open a screen recording that has sound, and press End to park the playhead at its end." },
+    { "do": "Open the Library, pick a second recording with sound on the Media shelf, and choose Add at Playhead.", "shot": "2026-09-26-broll-waveform-library.png" },
+    { "do": "Look at the Audio track under the new clip: its peaks are drawn, like the first clip's." },
+    { "do": "Drag another recording from the Finder onto the end of V1.", "shot": "2026-09-26-broll-waveform-finder.png" },
+    { "do": "Drag a music file onto the timeline and check its bar shows its waveform too." }
+  ],
+  "evaluate": [
+    "Does the new clip's waveform appear fast enough that you never see a flat line?",
+    "Can you now aim a cut at a loud moment in the clip you just added?",
+    "Does the added clip's waveform look the same as the first clip's, at the same zoom?"
+  ],
+  "rough": [
+    "Only the missing redraw was fixed. How the waveform itself looks next to the video-audio mock (bar colour, height, peaks drawn as a filled shape) is unchanged by this task."
+  ]
+}

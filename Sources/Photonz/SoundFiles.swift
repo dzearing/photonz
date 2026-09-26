@@ -1,6 +1,7 @@
 import AVFoundation
 import AppKit
 import Foundation
+import Observation
 import PhotonzCore
 import PhotonzMedia
 import UniformTypeIdentifiers
@@ -15,18 +16,24 @@ import UniformTypeIdentifiers
 // the same file rather than two.
 
 /// Which file each sound in a document is, for the length of this run.
+///
+/// Observed for one thing only, the shapes: a bar drawn before its file had
+/// been read draws the waveform the moment it lands, because the bar read
+/// `waveform(for:)` and SwiftUI is watching that. Nothing told it before
+/// 2026-09-26, and a recording added at the playhead kept a flat line under
+/// it for as long as anyone looked.
 @MainActor
+@Observable
 final class SoundLibrary {
     static let shared = SoundLibrary()
 
-    private var urls: [UUID: URL] = [:]
-    private var refsByURL: [URL: SoundRef] = [:]
+    @ObservationIgnored private var urls: [UUID: URL] = [:]
+    @ObservationIgnored private var refsByURL: [URL: SoundRef] = [:]
     private var waveforms: [UUID: Waveform] = [:]
-    private var reading: Set<UUID> = []
-
-    /// Called on the main actor whenever a waveform lands, so a timeline drawn
-    /// before the file had been read can draw it now.
-    var onWaveformLanded: (() -> Void)?
+    /// Ignored on purpose: a bar asks for its file to be read from inside its
+    /// own body, and a body that changed something it was watching would ask
+    /// to be drawn again straight away.
+    @ObservationIgnored private var reading: Set<UUID> = []
 
     /// The file types Add Sound will open. Recordings are in the list on
     /// purpose: taking the sound off a video you are not otherwise using is a
@@ -126,7 +133,6 @@ final class SoundLibrary {
             self.reading.remove(ref.id)
             guard let reading, !reading.waveform.isEmpty else { return }
             waveforms[ref.id] = reading.waveform
-            onWaveformLanded?()
         }
     }
 }

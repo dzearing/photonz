@@ -26,6 +26,7 @@
     { "do": "waitFor", "condition": "tutorialStep", "value": "command-inserts", "timeout": 6 },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "3-command-inserts", "note": "b-roll picked on the shelf and put at the playhead, at the end of the recording, so the two clips meet on V1, and the card moved on by itself" },
+    { "do": "expectWaveform", "clip": "b-roll", "within": 1 },
     { "do": "snapshot", "name": "3-command-inserts" },
 
     { "do": "action", "action": "tutorialNext" },
