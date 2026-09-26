@@ -31,6 +31,14 @@ extension EditorState {
         return document.keyLanes(layerID: layerID)
     }
 
+    /// The same, asked of the document itself and never of a drag in the
+    /// hand: for a view that only needs WHICH values are keyed, which no drag
+    /// changes, and must not be rebuilt at every move of one.
+    func keyLanesAtRest(layerID: UUID) -> [KeyLane] {
+        guard documentHasTime, let document else { return [] }
+        return document.keyLanes(layerID: layerID)
+    }
+
     /// Whether any clip on a track has a value keyed: the arrow on its header.
     func trackHasKeyLanes(_ layerIDs: [UUID]) -> Bool {
         guard documentHasTime, let document else { return false }

@@ -16,6 +16,13 @@ extension EditorState {
         return document.clipKeyMarks(layerID: layerID)
     }
 
+    /// The same, for a clip's own bar, which only follows a drag it is in
+    /// (`shownDocument(forClip:)`).
+    func clipKeyMarks(onBarOf layerID: UUID) -> [ClipKeyMark] {
+        guard documentHasTime, let document = shownDocument(forClip: layerID) else { return [] }
+        return document.clipKeyMarks(layerID: layerID)
+    }
+
     /// A diamond let go somewhere else in time.
     func moveClipKeys(layerID: UUID, fromMS: Int, toMS: Int) {
         guard fromMS != toMS, !isClipLocked(layerID) else { return }

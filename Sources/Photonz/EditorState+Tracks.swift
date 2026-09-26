@@ -12,7 +12,7 @@ struct ClipTrackDrop: Equatable {
 
 /// One track as the timeline dock draws it: the track, the clips on it, and
 /// the rows of anything inside those clips that moves on its own.
-struct TimelineTrackRowModel: Identifiable {
+struct TimelineTrackRowModel: Identifiable, Equatable {
     let track: DocumentTrack
     /// The top level clips on the track, one bar each.
     let clips: [MotionStripGroup]

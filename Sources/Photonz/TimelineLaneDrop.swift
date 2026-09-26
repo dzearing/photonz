@@ -255,7 +255,7 @@ struct TimelineEditPointView: View {
             .frame(width: 8, height: height)
             .contentShape(Rectangle())
             .offset(x: leading ? -3 : 3)
-            .gesture(DragGesture(minimumDistance: 1)
+            .gesture(DragGesture(minimumDistance: 1, coordinateSpace: ClipPiecesBar.handSpace)
                 .onChanged { value in
                     if editorState.clipTransitionDrag == nil {
                         editorState.beginClipTransitionDrag(place: place, leadingEdge: leading)

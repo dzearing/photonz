@@ -1,0 +1,45 @@
+{
+  "out": "/tmp/photonz-playtest/bar-end-follows-the-pointer-walk",
+  "seed": "A bar's end sits under the pointer (user report 2026-09-26: dragging a rectangle's bar end left flickered). At Next defaults with no flag changed, this walk draws a rectangle on a recording at one second, then pulls its bar's right end left in forty small real mouse moves, reading where the end was drawn after every one against where the pointer was. It must stay within two points of the hand and never jump back. Then the same for its left end, and for the whole bar slid along, and it photographs the bar mid-drag.",
+  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [500, 300], "to": [700, 420], "steps": 10 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "field": "Rectangle clip", "present": true },
+    { "do": "describe", "stage": "1-drawn", "note": "A rectangle drawn at one second has its own row, its bar picked, the playhead parked at the start out of the way" },
+    { "do": "snapshot", "name": "1-drawn" },
+
+    { "do": "dragGrip", "control": "Rectangle clip end", "by": -160, "steps": 40, "within": 2, "hold": "2-end-mid-drag" },
+    { "do": "expectBuilds", "view": "trackRow", "atMost": 60 },
+    { "do": "describe", "stage": "2-builds", "note": "Forty moves with three tracks on screen: every row rebuilt at every move was 132 row builds and 130 bar builds before 2026-09-26. Only the rectangle's row and bar may follow the hand; the others build once at the grab and once at the let go." },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-end-pulled", "note": "THE FIRST TEST: the bar's right end, pulled left in forty small moves, stayed under the pointer at every one and never jumped back" },
+    { "do": "snapshot", "name": "3-end-let-go" },
+
+    { "do": "dragGrip", "control": "Rectangle clip start", "by": 60, "steps": 30, "within": 2 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-start-pulled", "note": "THE SECOND TEST: its left end, pulled right, did the same" },
+
+    { "do": "dragGrip", "control": "Rectangle clip end", "by": 158, "steps": 40, "within": 2, "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-end-free", "note": "THE THIRD TEST: with Command held nothing catches, so it followed the hand at every step" },
+    { "do": "snapshot", "name": "4-after" },
+
+    { "do": "dragGrip", "control": "Rectangle clip", "by": -90, "steps": 30, "within": 2, "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "5-slid", "note": "THE FOURTH TEST: the whole bar, held by its middle and slid left with Command held so nothing catches, stayed under the hand at every move" },
+    { "do": "snapshot", "name": "5-slid" }
+  ]
+}

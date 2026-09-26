@@ -1204,7 +1204,26 @@ final class EditorState {
     /// The clip's bar under a hand: which edge, what it was when it was
     /// grabbed, and where it has got to. Kept out of the document so a whole
     /// drag is one step to undo, exactly like the timing drag next door.
-    var clipBarDrag: ClipBarDragSession?
+    var clipBarDrag: ClipBarDragSession? {
+        didSet {
+            // Only when they CHANGE, which is at the grab and the let go:
+            // every move of the hand sets the session again, and a view that
+            // reads one of these must not be woken by that.
+            let ids = clipBarDrag.map { Set($0.along.keys).union([$0.layerID]) } ?? []
+            if ids != clipBarInHandIDs { clipBarInHandIDs = ids }
+            let held = clipBarDrag?.heldTimelineMS
+            if held != clipBarHeldTimelineMS { clipBarHeldTimelineMS = held }
+        }
+    }
+    /// The clips a bar drag has in hand, the grabbed one and any carried
+    /// along. Set at the grab and cleared at the let go and nothing between,
+    /// so a bar or a row that only needs to know whether it is IN the drag
+    /// reads this and is left alone while somebody else's bar moves
+    /// (`bar-end-follows-the-pointer-walk`).
+    private(set) var clipBarInHandIDs: Set<UUID> = []
+    /// How long the timeline is held at while a bar is under a hand, for the
+    /// ruler: steady for the whole drag, where the session changes every move.
+    private(set) var clipBarHeldTimelineMS: Int?
     /// The caption cue whose drag began on its light bar (`CaptionCueBar`).
     /// The drag picks the cue, and a picked cue is drawn as the full bar, so
     /// without this the view holding the gesture would be swapped out under

@@ -80,7 +80,7 @@ extension EditorState {
         if let drag = motionTimingDrag { return drag.heldCycleMS }
         // ...and the same for a CLIP's bar, for the same reason
         // (`EditorState+ClipBar`).
-        if let drag = clipBarDrag { return drag.heldTimelineMS }
+        if let held = clipBarHeldTimelineMS { return held }
         // ...and room past the end for a file in the air over the timeline
         // (`EditorState+TimelineDrop`).
         if let room = timelineDropRoomMS { return max(1, (shownDocument?.timelineLengthMS ?? 0) + room) }

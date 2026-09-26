@@ -418,7 +418,9 @@ private struct KeyLaneView: View {
     }
 
     private func keyDrag(_ key: LaneKey, ruler: MotionStripRuler) -> some Gesture {
-        DragGesture(minimumDistance: 2)
+        // A key is drawn where the drag has it, so the hand is read in a space
+        // that does not move with it (`ClipPiecesBar.handSpace`).
+        DragGesture(minimumDistance: 2, coordinateSpace: ClipPiecesBar.handSpace)
             .onChanged { value in
                 if editorState.keyLaneDrag == nil { editorState.beginKeyDrag(layerID: layerID, grabbing: key.ref) }
                 var moved = Int(ruler.msSpanning(fraction: Double(value.translation.width / laneWidth)).rounded())

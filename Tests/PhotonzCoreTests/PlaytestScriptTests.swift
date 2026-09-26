@@ -387,6 +387,32 @@ struct PlaytestScriptTests {
         #expect(PlaytestStep.names.contains("windowDrag"))
     }
 
+    @Test("A dragGrip step pulls a named timeline grip by real mouse moves and can claim it followed")
+    func dragGripStep() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragGrip", "control": "Rectangle clip end", "by": -120, "steps": 40,
+                       "within": 2, "hold": "mid-drag", "modifiers": ["command"] },
+                     { "do": "dragGrip", "control": "Rectangle clip start", "by": 30 } ] }
+        """)
+        guard case .dragGrip(let control, let by, let steps, let within, let hold, let modifiers) = script.steps[0],
+              case .dragGrip(_, let by2, let steps2, let within2, let hold2, let modifiers2) = script.steps[1] else {
+            Issue.record("dragGrip"); return
+        }
+        #expect(control == "Rectangle clip end")
+        #expect(by == -120)
+        #expect(steps == 40)
+        #expect(within == 2)
+        #expect(hold == "mid-drag")
+        #expect(modifiers == [.command])
+        #expect(by2 == 30)
+        #expect(steps2 == PlaytestStep.defaultDragSteps)
+        #expect(within2 == nil)
+        #expect(hold2 == nil)
+        #expect(modifiers2.isEmpty)
+        #expect(script.steps[0].name == "dragGrip")
+        #expect(PlaytestStep.names.contains("dragGrip"))
+    }
+
     @Test("A dragFile step holds a file over a point and records what the canvas answered")
     func dragFileStepHoldsAFileInTheAir() throws {
         let script = try decode("""

@@ -129,7 +129,7 @@ struct ClipPiecesBar: View {
             // Drawn UNDER the grips, and drawn nowhere else: a document nobody
             // has frozen, and one frozen with everything waiting, are both
             // left clean.
-            ForEach(editorState.holdDrifts(forLayer: layerID), id: \.atMS) { drift in
+            ForEach(editorState.holdDrifts(onBarOf: layerID), id: \.atMS) { drift in
                 driftMark(drift, ruler: ruler)
             }
             ForEach(0...pieces.count, id: \.self) { edge in
@@ -149,7 +149,7 @@ struct ClipPiecesBar: View {
             // A diamond for every moment something on the layer is keyed
             // (`ClipKeys.swift`): drag it in time, right-click it to ease it.
             if kind != nil, !isLinkedSound {
-                let marks = editorState.clipKeyMarks(layerID: layerID)
+                let marks = editorState.clipKeyMarks(onBarOf: layerID)
                 ForEach(Array(marks.enumerated()), id: \.element.documentMS) { index, mark in
                     // Only the diamonds in the window: the rest are scrolled
                     // off, and padding cannot place one off the left edge.
@@ -170,10 +170,10 @@ struct ClipPiecesBar: View {
                     fadeHandles(pieces, x0: x0, ruler: ruler)
                 }
             }
-            if let snap = editorState.clipBarSnap, isBeingDragged {
+            if isBeingDragged, let snap = editorState.clipBarSnap {
                 snapLine(atMS: snap.ms, ruler: ruler)
             }
-            if let readout = editorState.clipBarReadout, isBeingDragged {
+            if isBeingDragged, let readout = editorState.clipBarReadout {
                 capsule(readout, x: x0)
                     .frame(height: barHeight)
             }
@@ -203,18 +203,22 @@ struct ClipPiecesBar: View {
     /// The pieces as the strip is showing them. `shownDocument` already
     /// carries the drag in flight, so there is nothing to merge here.
     private var shownPieces: ClipPieces {
-        editorState.shownDocument?.layer(id: layerID)?.clipPieces
+        editorState.shownDocument(forClip: layerID)?.layer(id: layerID)?.clipPieces
             ?? ClipPieces(single: bar)
     }
 
     private var isPicked: Bool { editorState.selectedLayerID == layerID }
-    private var isBeingDragged: Bool { editorState.clipBarDrag?.layerID == layerID }
+    /// Whether this bar is in a drag at all, grabbed or carried along. Asked
+    /// FIRST everywhere below, so a bar nobody is dragging never reads the
+    /// drag and is not rebuilt at every move of somebody else's.
+    private var isInHand: Bool { editorState.clipBarInHandIDs.contains(layerID) }
+    private var isBeingDragged: Bool { isInHand && editorState.clipBarDrag?.layerID == layerID }
 
     /// How far the whole bar is drawn along while its left end is in a hand.
     /// Nought at every other moment, so nothing about the ordinary drawing
     /// knows this exists.
     private var headShiftMS: Int {
-        guard let session = editorState.clipBarDrag, session.layerID == layerID,
+        guard isInHand, let session = editorState.clipBarDrag, session.layerID == layerID,
               case .clipStart = session.grab else { return 0 }
         // A free start is not a trim: the bar itself is already drawn where the
         // hand has it, because its in point moved, and there is no spare behind
@@ -228,7 +232,7 @@ struct ClipPiecesBar: View {
     /// its right end is in a hand: what there is left to pull back out into,
     /// drawn faint so nobody has to drag to find out whether there is any.
     private var spareBehindMS: Int? {
-        guard let session = editorState.clipBarDrag, session.layerID == layerID,
+        guard isInHand, let session = editorState.clipBarDrag, session.layerID == layerID,
               case .seam(let after) = session.grab,
               after == session.landing.pieces.count - 1 else { return nil }
         guard let range = session.landing.pieces.trimEndRange(ofPiece: after) else { return nil }
@@ -263,7 +267,7 @@ struct ClipPiecesBar: View {
         // the piece in the hand is at its NEW place. Reading the picked index
         // straight off the selection would light up whatever piece happens to
         // sit at the old one, which is another piece entirely.
-        if let session = editorState.clipBarDrag, session.layerID == layerID,
+        if isInHand, let session = editorState.clipBarDrag, session.layerID == layerID,
            case .carry(let grabbed) = session.grab {
             return index == (session.landing.dropIndex ?? grabbed)
         }
@@ -376,10 +380,14 @@ struct ClipPiecesBar: View {
             .contextMenu {
                 if kind != nil { TimelineClipMenu(layerID: layerID, piece: index) }
             }
-            .offset(x: shown.x)
+            // Named BEFORE the offset, as the grips are, so the mark is where
+            // the piece is drawn: after it, the mark sat on the piece's
+            // unshifted frame, so a walk pressed a clip that starts at five
+            // seconds somewhere near nought, and a slid bar's mark never moved.
             .modifier(WalkNames(on: carriesWalkNames,
                                 field: Self.pieceName(layerName: fieldName, index: index, of: pieces.count),
                                 help: Self.help(pieces, index: index)))
+            .offset(x: shown.x)
         }
     }
 
@@ -600,7 +608,7 @@ struct ClipPiecesBar: View {
             .frame(width: 8, height: 8)
             .padding(.top, 1)
             .contentShape(Rectangle().inset(by: -4))
-            .gesture(DragGesture(minimumDistance: 1)
+            .gesture(DragGesture(minimumDistance: 1, coordinateSpace: Self.handSpace)
                 .onChanged { value in
                     let moved = Self.ms(value.translation.width, laneWidth: laneWidth, ruler: ruler)
                     let ms = min(max(0, fromMS + (isIn ? moved : -moved)), lengthMS)
@@ -639,7 +647,7 @@ struct ClipPiecesBar: View {
             // stays in reach above and below it.
             .frame(width: 12, height: 12)
             .contentShape(Rectangle())
-            .gesture(DragGesture(minimumDistance: 2)
+            .gesture(DragGesture(minimumDistance: 2, coordinateSpace: Self.handSpace)
                 .onChanged { value in
                     let moved = Self.ms(value.translation.width, laneWidth: laneWidth, ruler: ruler)
                     var landing = mark.documentMS + moved
@@ -743,7 +751,7 @@ struct ClipPiecesBar: View {
     }
 
     private func bandDrag(_ cut: ClipCut, leading: Bool) -> some Gesture {
-        DragGesture(minimumDistance: 1)
+        DragGesture(minimumDistance: 1, coordinateSpace: Self.handSpace)
             .onChanged { value in
                 if editorState.clipTransitionDrag == nil {
                     editorState.beginClipTransitionDrag(layerID: layerID, cutIndex: cut.index,
@@ -857,15 +865,23 @@ struct ClipPiecesBar: View {
 
     private func edgeDrag(_ pieces: ClipPieces, edge: Int,
                           ruler: MotionStripRuler) -> some Gesture {
-        DragGesture(minimumDistance: 1)
+        // Read in a space that stays put. The grip is drawn where the drag
+        // has it, so in its OWN space every move it makes is taken off the
+        // next reading of the hand: it landed under the pointer, jumped back
+        // to where it was grabbed, landed again, and flickered all the way
+        // (`bar-end-follows-the-pointer-walk`).
+        DragGesture(minimumDistance: 1, coordinateSpace: Self.handSpace)
             .onChanged { value in
                 if editorState.clipBarDrag == nil {
                     editorState.beginClipBarDrag(
                         layerID: layerID,
                         grab: edge == 0 ? .clipStart : .seam(after: edge - 1))
                 }
+                // ⌘ held frees the edge of every magnet for as long as it is
+                // held, the way it frees a handle on the canvas and in Trim.
                 editorState.updateClipBarDrag(byMS: Self.ms(value.translation.width,
-                                                            laneWidth: laneWidth, ruler: ruler))
+                                                            laneWidth: laneWidth, ruler: ruler),
+                                              free: Self.commandHeld)
             }
             .onEnded { _ in editorState.commitClipBarDrag() }
     }
@@ -880,7 +896,7 @@ struct ClipPiecesBar: View {
         // clip carried up or down lands on the track under it, or on a new
         // one between two (`EditorState+Tracks`).
         DragGesture(minimumDistance: 3,
-                    coordinateSpace: kind == nil ? .local : .named(TimelineDock.tracksSpace))
+                    coordinateSpace: kind == nil ? Self.handSpace : .named(TimelineDock.tracksSpace))
             .onChanged { value in
                 if editorState.clipBarDrag == nil {
                     // One of several picked clips: the lot slides together.
@@ -901,6 +917,18 @@ struct ClipPiecesBar: View {
                 }
             }
             .onEnded { _ in editorState.commitClipBarDrag() }
+    }
+
+    /// Where every drag on a bar reads the hand: a space that does not move
+    /// when the thing being dragged does. A grip's own space travels with the
+    /// grip, so a drag read there chases its own tail.
+    static let handSpace: CoordinateSpace = .global
+
+    /// ⌘ down right now, on the keyboard or on the event being handled (a
+    /// walk's posted drag carries its keys on the event, not the keyboard).
+    static var commandHeld: Bool {
+        NSEvent.modifierFlags.contains(.command)
+            || NSApp.currentEvent?.modifierFlags.contains(.command) == true
     }
 
     /// How many milliseconds a sideways travel is worth on this ruler.
@@ -981,7 +1009,7 @@ struct ClipPiecesBar: View {
             if fadeIn > 0 { words += ", fade in \(ClipBarCopy.length(fadeIn))" }
             if fadeOut > 0 { words += ", fade out \(ClipBarCopy.length(fadeOut))" }
         }
-        if let readout = editorState.clipBarReadout, isBeingDragged {
+        if isBeingDragged, let readout = editorState.clipBarReadout {
             words += ", dragging \(readout)"
             if let snap = editorState.clipBarSnap { words += ", \(ClipBarCopy.caught(on: snap))" }
         }

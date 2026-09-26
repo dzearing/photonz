@@ -460,6 +460,7 @@ struct TimelineDock: View {
                                                      index: order.firstIndex(of: track.id) ?? 0,
                                                      trackCount: order.count,
                                                      laneWidth: laneWidth, isBlade: isBlade)
+                                    .equatable()
                                 }
                             }
                             TimelineAddTrackRow(laneWidth: laneWidth)

@@ -55,7 +55,10 @@ struct TimelineTrackRow: View {
                 // A keyed value is a lane of keys, opened and closed by the
                 // arrow on the header (`KeyLanesView`); anything else that
                 // moves keeps its timing bar.
-                let keyed = Set(editorState.keyLanes(layerID: clip.layerID).map(\.motionID))
+                // Which values are keyed does not change while a bar is
+                // dragged, so the row asks the document and is not woken by
+                // every move of the hand.
+                let keyed = Set(editorState.keyLanesAtRest(layerID: clip.layerID).map(\.motionID))
                 if !keyed.isEmpty, editorState.isKeyTrackOpen(track.id) {
                     KeyLanesView(layerID: clip.layerID, layerName: clip.layerName, laneWidth: laneWidth,
                                  indent: indent, isLocked: track.isLocked)
@@ -1017,5 +1020,20 @@ private struct TimingName: ViewModifier {
 
     func body(content: Content) -> some View {
         if on { content.playtestField(name) } else { content }
+    }
+}
+
+// MARK: - Only the row that changed
+
+/// A row is rebuilt only when what it was HANDED changed. The grid re-reads
+/// every track while a bar is under a hand, because the bar being dragged is
+/// drawn from the document as the drag would leave it, and without this every
+/// other row, header and lane and all, was rebuilt at every move of the
+/// pointer (`bar-end-follows-the-pointer-walk`). What a row reads off the
+/// editor for itself still rebuilds it the moment that changes.
+extension TimelineTrackRow: Equatable {
+    nonisolated static func == (a: TimelineTrackRow, b: TimelineTrackRow) -> Bool {
+        a.row == b.row && a.inGroup == b.inGroup && a.index == b.index
+            && a.trackCount == b.trackCount && a.laneWidth == b.laneWidth && a.isBlade == b.isBlade
     }
 }

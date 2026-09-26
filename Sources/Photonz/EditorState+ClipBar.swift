@@ -240,6 +240,25 @@ extension EditorState {
         return shownDocument?.holdDrifts(forLayer: id) ?? []
     }
 
+    /// The same, for a clip's own bar (`shownDocument(forClip:)`).
+    func holdDrifts(onBarOf id: UUID) -> [HoldDrift] {
+        guard Experiments.shared.cutRecordingEnabled else { return [] }
+        return shownDocument(forClip: id)?.holdDrifts(forLayer: id) ?? []
+    }
+
+    /// The document one clip's bar is drawn from.
+    ///
+    /// The document as the hand has it while that clip is in a bar drag, or a
+    /// trim or a caption word drag is running; the document itself for every
+    /// other bar while somebody else's is dragged. Nothing a bar drag does
+    /// reaches a clip it does not have in hand (the ruler is held, see
+    /// `withDraggedClipBar`), and reading the shown document would tie every
+    /// bar on the timeline to every move of the one that is being dragged.
+    func shownDocument(forClip id: UUID) -> PhotonzDocument? {
+        if trimSession == nil, captionWordDrag == nil, !clipBarInHandIDs.contains(id) { return document }
+        return shownDocument
+    }
+
     /// What is being held at the moment the canvas is drawing, or nil while the
     /// picture is playing. The canvas says so on the picture
     /// (`EditorView.heldFrameBadge`), because a picture that has stopped moving
@@ -401,10 +420,12 @@ extension EditorState {
     /// The hand moved. Nothing is written down: the strip and the canvas both
     /// read the landing, so the picture follows at once and the whole drag is
     /// still one step to undo.
-    func updateClipBarDrag(byMS delta: Int) {
+    /// `free` is ⌘ held: nothing catches while it is down, and letting it go
+    /// part way brings the magnets back from where the hand already is.
+    func updateClipBarDrag(byMS delta: Int, free: Bool = false) {
         guard var session = clipBarDrag else { return }
         session.handMS = delta
-        session.landing = session.drag.landing(byMS: delta)
+        session.landing = (free ? session.drag.snapping(withinMS: 0) : session.drag).landing(byMS: delta)
         clipBarDrag = session
         rerender()
     }

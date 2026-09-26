@@ -1,0 +1,39 @@
+{
+  "feature": "A bar's end tracks the pointer without flickering",
+  "epic": "video-cutting",
+  "summary": "Dragging either end of a bar on the timeline, or the whole bar, now keeps it under the pointer at every move. Before, a rectangle's bar end jumped back to where you grabbed it on every other move. Hold Command while dragging an end to stop it catching on anything.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    {
+      "do": "Open a recording, park the playhead at 1s and draw a rectangle on the picture."
+    },
+    {
+      "do": "Grab the right end of the Rectangle bar on its timeline row and drag slowly left, then fast.",
+      "shot": "2026-09-26-bar-end-follows-mid-drag.png"
+    },
+    {
+      "do": "Drag the same end back right past where the recording ends and watch it catch there."
+    },
+    {
+      "do": "Do it again holding Command: it should glide past without catching."
+    },
+    {
+      "do": "Drag the bar's left end right, then slide the whole bar by its middle.",
+      "shot": "2026-09-26-bar-end-follows-slid.png"
+    },
+    {
+      "do": "Try a key diamond, a sound's fade handle and a transition band's end the same way."
+    }
+  ],
+  "evaluate": [
+    "Does the end stay under your pointer the whole way, slow and fast, with no flicker?",
+    "Does the catch at the recording's end feel like Premiere's: a small pull, held, then let go cleanly?",
+    "Is Command the right key to drag free, given S already switches snapping for the whole timeline?",
+    "Does a key diamond or fade handle now feel as steady as the bar's end?"
+  ],
+  "rough": [
+    "The mock draws plain clips with no end grips and no drag readout; the white grips and the '6.2s · -0.8s' pill were already there and are unchanged by this fix.",
+    "The right hand panel still rebuilds at every move of a drag (about 35 times in 40 moves); the timeline rows and bars no longer do.",
+    "The timing bars on the older motion strip under a picture were not measured by this walk; they share the same kind of drag and may want the same check."
+  ]
+}

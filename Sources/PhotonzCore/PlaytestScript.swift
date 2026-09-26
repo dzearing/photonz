@@ -2251,6 +2251,15 @@ public enum PlaytestStep: Sendable, Equatable {
     /// hand does: a clip on the timeline, the level line on a sound, a fade
     /// handle. Points are window points, top left, unless `space` says other.
     case windowDrag(from: PlaytestPoint, to: PlaytestPoint, steps: Int)
+    /// A grip on the timeline, found by its name in the app's own register,
+    /// pulled `by` points sideways in `steps` real mouse moves posted to the
+    /// window, with the grip's drawn position read back after every move
+    /// (`GripTrace`). `within` claims it stayed that many points from under
+    /// the pointer at every step it was not caught on something, and never
+    /// once went the other way. `hold` names a picture taken with the button
+    /// still down, and `modifiers` are held for the whole drag.
+    case dragGrip(control: String, by: CGFloat, steps: Int, within: CGFloat?, hold: String?,
+                  modifiers: [PlaytestModifier])
     case dragFile(file: String, at: PlaytestPoint, hold: String?, release: Bool, leave: Bool,
                   says: String?)
     /// A file carried from the Finder onto the TIMELINE, over the lane of the
@@ -3228,7 +3237,7 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
-        "dragColor", "dragComponent",
+        "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
         "clickRuler", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
@@ -3265,6 +3274,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .dropImage: "dropImage"
         case .dragFile: "dragFile"
         case .windowDrag: "windowDrag"
+        case .dragGrip: "dragGrip"
         case .dropOnTimeline: "dropOnTimeline"
         case .dropOnLibrary: "dropOnLibrary"
         case .importPicks: "importPicks"
@@ -3508,6 +3518,13 @@ public enum PlaytestStep: Sendable, Equatable {
                 to.space = .window
             }
             self = .windowDrag(from: from, to: to, steps: max(1, steps))
+        case "dragGrip":
+            self = .dragGrip(control: try f.string("control"),
+                             by: CGFloat(try f.number("by")),
+                             steps: max(1, try f.optionalNumber("steps").map { Int($0) } ?? Self.defaultDragSteps),
+                             within: try f.optionalNumber("within").map { CGFloat($0) },
+                             hold: try f.optionalString("hold"),
+                             modifiers: try f.modifiers())
         case "dragFile":
             self = .dragFile(file: try f.string("file"), at: try f.point("at"),
                              hold: try f.optionalString("hold"),

@@ -190,14 +190,14 @@ public struct ClipBarDrag: Hashable, Sendable {
             // spare, because there was never anything behind it to give back.
             var next = pieces
             guard moved != 0, next.trimEnd(ofPiece: next.count - 1, byMS: -moved) else {
-                return Landing(pieces: pieces, clipStartMS: clipStartMS, movedMS: 0)
+                return unmoved(caught: caught)
             }
             return Landing(pieces: next, clipStartMS: clipStartMS + moved,
                            movedMS: moved, snappedTo: caught)
         case .clipStart:
             var next = pieces
             guard moved != 0, next.trimStart(ofPiece: 0, byMS: moved) else {
-                return Landing(pieces: pieces, clipStartMS: clipStartMS, movedMS: 0)
+                return unmoved(caught: caught)
             }
             // The clip stays where it was put and the bar closes up from its
             // far end, so a recording trimmed at the front still starts at the
@@ -207,19 +207,24 @@ public struct ClipBarDrag: Hashable, Sendable {
         case .seam(let after):
             var next = pieces
             guard moved != 0, next.trimEnd(ofPiece: after, byMS: moved) else {
-                return Landing(pieces: pieces, clipStartMS: clipStartMS, movedMS: 0)
+                return unmoved(caught: caught)
             }
             return Landing(pieces: next, clipStartMS: clipStartMS,
                            movedMS: moved, snappedTo: caught)
         case .body:
-            guard moved != 0 else {
-                return Landing(pieces: pieces, clipStartMS: clipStartMS, movedMS: 0)
-            }
+            guard moved != 0 else { return unmoved(caught: caught) }
             return Landing(pieces: pieces, clipStartMS: clipStartMS + moved,
                            movedMS: moved, snappedTo: caught)
         case .carry:
             return Landing(pieces: pieces, clipStartMS: clipStartMS, movedMS: 0)
         }
+    }
+
+    /// The bar as it was grabbed. Held there by an edge it already lines up
+    /// with, it still says so, or the line that explains why the hand is not
+    /// moving it never comes up.
+    private func unmoved(caught: MotionStripEdge?) -> Landing {
+        Landing(pieces: pieces, clipStartMS: clipStartMS, movedMS: 0, snappedTo: caught)
     }
 
     /// A piece being carried: which join it would drop into.

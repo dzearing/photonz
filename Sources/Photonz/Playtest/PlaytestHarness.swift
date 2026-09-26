@@ -1378,6 +1378,65 @@ private final class Run {
             await sleep(0.3)
             note(number, "windowDrag", "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue), "
                  + "posted to the window in \(steps) moves")
+        case .dragGrip(let control, let by, let steps, let within, let hold, let modifiers):
+            // A grip on the timeline pulled by real mouse moves, and where it
+            // was DRAWN read back after every one (`GripTrace`). The fault it
+            // exists for lives between pictures: a bar end that lands half way
+            // and jumps back looks like a bar in any still of it.
+            let window = try requireWindow()
+            func gripMiddle() throws -> CGPoint {
+                // A grip is a control; a whole bar, held by its body, is the
+                // field it is named by.
+                let target = try (try? panelTarget(control, kind: .control))
+                    ?? panelTarget(control, kind: .field)
+                let frame = target.convert(target.bounds, to: nil)
+                return CGPoint(x: frame.midX, y: frame.midY)
+            }
+            let start = try gripMiddle()
+            let flags = eventFlags(modifiers)
+            var stamp = ProcessInfo.processInfo.systemUptime
+            func post(_ type: NSEvent.EventType, at point: CGPoint, pressure: Float) {
+                stamp += 0.016
+                guard let event = NSEvent.mouseEvent(
+                        with: type, location: point, modifierFlags: flags, timestamp: stamp,
+                        windowNumber: window.windowNumber, context: nil, eventNumber: 0,
+                        clickCount: 1, pressure: pressure) else { return }
+                NSApp.postEvent(event, atStart: false)
+            }
+            post(.mouseMoved, at: start, pressure: 0)
+            await sleep(0.15)
+            post(.leftMouseDown, at: start, pressure: 1)
+            await sleep(0.1)
+            var samples = [GripTrace.Sample(pointerX: start.x, gripX: start.x)]
+            var readings: [[String: Any]] = []
+            for i in 1...steps {
+                let x = start.x + by * CGFloat(i) / CGFloat(steps)
+                post(.leftMouseDragged, at: CGPoint(x: x, y: start.y), pressure: 1)
+                // One frame and a bit: what a person sees before the next move.
+                await sleep(0.03)
+                let grip = (try? gripMiddle())?.x ?? .nan
+                let snapped = editor?.clipBarSnap != nil
+                samples.append(GripTrace.Sample(pointerX: x, gripX: grip, snapped: snapped))
+                readings.append(["step": i, "pointerX": Double(x), "gripX": Double(grip),
+                                 "snapped": snapped])
+            }
+            var held = ""
+            if let hold, let content = window.contentView {
+                try snapshot(content, name: hold)
+                await screenCapture(window, name: hold)
+                held = ", held \(hold).png"
+            }
+            post(.leftMouseUp, at: CGPoint(x: start.x + by, y: start.y), pressure: 0)
+            await sleep(0.3)
+            let trace = GripTrace(samples)
+            let data = try JSONSerialization.data(withJSONObject: readings, options: [.prettyPrinted])
+            try data.write(to: out.appendingPathComponent("grip-trace-\(number).json"))
+            note(number, "dragGrip", "\(control) pulled \(short(CGPoint(x: by, y: 0))) in \(steps) moves: "
+                 + trace.summary + held)
+            if let within, !trace.follows(within: within) {
+                throw Failure(description: "\(control) did not follow the pointer within \(within)pt: "
+                    + trace.summary + " (every step is in grip-trace-\(number).json)")
+            }
         case .dragFile(let file, let at, let hold, let release, let leave, let says):
             // A file held over the canvas with the button still down, so the
             // step can write down the answer the pointer is showing. It is the
