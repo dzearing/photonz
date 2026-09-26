@@ -1,0 +1,35 @@
+{
+  "id": "a-shape-s-bar-never-vanishes-from-its-track-and",
+  "title": "A shape's bar never vanishes from its track, and an empty track can take one back",
+  "goal": "User 2026-09-26: 'I made a rectangle. It was in the timeline. I did something which caused it to be removed (the box in the timeline disappeared) but the track was still there. 1. why did it ever disappear, and 2. if a rectangle layer has no content in its track, I don't know what to do with the track other than delete it. There is no way to bring it back and size it in the timeline.' The user does not know which action did it. A layer is on the timeline only while it occupiesTime or hasMotion (DocumentTracks.swift isOnTheTimeline), and tracks are written down separately, so an empty track can outlive its bar. Find every action that removes a graphic's bar while leaving its track (and say whether the rectangle itself survived on the canvas in each): e.g. dragging a bar's edge past its other edge to zero length (see dragging-a-bar-s-end-tracks-the-pointer-without), Delete or ripple delete with the bar selected, the Delete key's piece dropping (3e5d6ddc), a trim that clamps to nothing, cut or split leaving no piece, undo across the 'gets its own row' step, grouping, moving to another track.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 0.0024,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-26T14:04:20.098Z",
+  "updated": "2026-09-26T14:04:20.177Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Every such action is reproduced with a walk at Next defaults and listed in the task log with what happened to the layer and the track",
+    "A bar can never be trimmed or dragged below one frame; zero length is impossible, so a bar never silently disappears",
+    "Deleting a graphic's bar deletes the layer from the canvas too (one undo step, as Premiere's Delete does), and a track left empty by it shows as empty, never as a mystery",
+    "An empty track reads as empty and is useful: drop or drag any layer from the layers list or the canvas onto it; right-click the empty track: Add Rectangle / Text / Paste Here at the playhead; and a layer that is on the canvas but on no track can be put back by right-click Put on Timeline (from the canvas or layers list), landing from the playhead for 5 s",
+    "Right-click an empty track: Delete Track, Delete Empty Tracks; empty tracks are never created by the app itself",
+    "Undo restores the bar exactly after any of the actions above",
+    "Walk photographs: rectangle's bar, the action that used to lose it (now kept or cleanly deleted with the layer), an empty track receiving a layer by drag and by right-click"
+  ],
+  "log": [
+    {
+      "t": "2026-09-26T14:04:20.100Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-26T14:04:20.176Z",
+      "note": "seq 370 -> 0.0024"
+    }
+  ]
+}
