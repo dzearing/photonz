@@ -357,7 +357,8 @@ extension EditorState {
     /// mid-drag.
     func previewedStyle(of id: UUID) -> LayerStyle? {
         if let style = stylePreview?.styles[id] { return style }
-        return document?.layer(id: id)?.style
+        // On a keyed look, what it is at the playhead: the knob follows it.
+        return lookAtPlayhead(of: id)?.style
     }
 
     /// Live inspector-slider update over every layer the row speaks for:
@@ -373,10 +374,15 @@ extension EditorState {
         }
         var styles = stylePreview?.styles ?? [:]
         for id in ids {
-            guard var style = styles[id] ?? doc.layer(id: id)?.style else { continue }
+            guard var style = styles[id] ?? lookAtPlayhead(of: id)?.style else { continue }
             mutate(&style)
             styles[id] = style
-            doc.updateLayer(id: id) { $0.style = style }
+        }
+        // A keyed value previews as the key it is about to be, or the canvas
+        // would keep drawing the old key under the moving knob.
+        let previewed = styles
+        editingLooksHere(ids, in: &doc) { doc in
+            for (id, style) in previewed { doc.updateLayer(id: id) { $0.style = style } }
         }
         stylePreview = (ids, styles)
         submit(doc)
@@ -392,7 +398,7 @@ extension EditorState {
     func commitLayerStyle(ids: [UUID]) {
         guard let preview = stylePreview, preview.ids == ids else { return }
         stylePreview = nil
-        perform { doc in
+        performLooksHere(ids) { doc in
             for (id, style) in preview.styles {
                 doc.updateLayer(id: id) { $0.style = style }
             }
@@ -420,7 +426,7 @@ extension EditorState {
         guard !ids.isEmpty else { return }
         stylePreview = nil
         discardDragPreview()
-        perform { doc in _ = doc.updateLayerStyles(layerIDs: ids, mutate) }
+        performLooksHere(ids) { doc in _ = doc.updateLayerStyles(layerIDs: ids, mutate) }
         rememberStyleDefault(of: ids)
     }
 

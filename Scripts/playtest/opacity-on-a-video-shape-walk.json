@@ -1,0 +1,374 @@
+{
+ "out": "/tmp/photonz-playtest/opacity-on-a-video-shape-walk",
+ "seed": "Opacity changes a shape on a video, and animates with keys. At Next defaults with no flag changed, this walk draws a rectangle on a recording at one second and pulls Appearance > Opacity down, which dims it on the canvas and stays dimmed a second later; puts it back, keys Opacity at one second from the Animate a property picker, moves to three seconds and pulls the same Appearance slider to nothing, which is a second key rather than a change nobody can see (the user's report: keyed by the row's diamond, the slider moved and the picture did not); photographs one, two and three seconds fading out with the panel following the playhead; then does the plain pull again on a blank picture for comparison.",
+ "setup": {
+  "timelineOpen": true,
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "action",
+   "action": "videoSeekStart"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    500,
+    300
+   ],
+   "to": [
+    700,
+    420
+   ],
+   "steps": 10
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "expect",
+   "field": "Opacity",
+   "reads": "100"
+  },
+  {
+   "do": "press",
+   "control": "Slider",
+   "in": "Opacity",
+   "across": 0.3
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "describe",
+   "stage": "1-plain",
+   "note": "THE FIRST TEST: a rectangle nobody has keyed, pulled to about 30 in Appearance, is dimmed on the canvas at once"
+  },
+  {
+   "do": "expect",
+   "field": "Opacity",
+   "reads": "28"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-plain-pull-on-a-video"
+  },
+  {
+   "do": "render",
+   "name": "1-plain-pull-on-a-video-canvas"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "describe",
+   "stage": "2-plain-later",
+   "note": "and a second later it is still dimmed: an unkeyed value is the whole layer's"
+  },
+  {
+   "do": "expect",
+   "field": "Opacity",
+   "reads": "28"
+  },
+  {
+   "do": "render",
+   "name": "2-plain-a-second-later-canvas"
+  },
+  {
+   "do": "key",
+   "key": "z",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "field": "Opacity",
+   "reads": "100"
+  },
+  {
+   "do": "action",
+   "action": "videoSeekStart"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "reveal",
+   "control": "Properties section"
+  },
+  {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Opacity",
+   "in": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "3-keyed",
+   "note": "THE SECOND TEST: Opacity keyed at one second holding 100"
+  },
+  {
+   "do": "expect",
+   "control": "Key",
+   "in": "Opacity",
+   "reads": "on a key"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "control": "Key",
+   "in": "Opacity",
+   "reads": "between keys"
+  },
+  {
+   "do": "press",
+   "control": "Slider",
+   "in": "Opacity",
+   "across": 0.0
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "describe",
+   "stage": "4-second-key",
+   "note": "THE THIRD TEST, the report itself: at three seconds the Appearance slider pulled to nothing is a second key there, and the rectangle is gone from the canvas"
+  },
+  {
+   "do": "expect",
+   "control": "Key",
+   "in": "Opacity",
+   "reads": "on a key"
+  },
+  {
+   "do": "expect",
+   "control": "Key Opacity 2",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "field": "Opacity",
+   "reads": "0"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-second-key-at-three-seconds"
+  },
+  {
+   "do": "action",
+   "action": "videoSeekStart"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "5-one",
+   "note": "THE FOURTH TEST, three pictures of the fade: at one second it is solid and the slider says 100"
+  },
+  {
+   "do": "expect",
+   "field": "Opacity",
+   "reads": "100"
+  },
+  {
+   "do": "snapshot",
+   "name": "4-one-second"
+  },
+  {
+   "do": "render",
+   "name": "4-one-second-canvas"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "6-two",
+   "note": "at two seconds it is part way out, and the slider has followed the playhead down"
+  },
+  {
+   "do": "expect",
+   "control": "Key",
+   "in": "Opacity",
+   "reads": "between keys"
+  },
+  {
+   "do": "snapshot",
+   "name": "5-two-seconds"
+  },
+  {
+   "do": "render",
+   "name": "5-two-seconds-canvas"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "7-three",
+   "note": "at three seconds it has gone and the slider says 0"
+  },
+  {
+   "do": "expect",
+   "field": "Opacity",
+   "reads": "0"
+  },
+  {
+   "do": "snapshot",
+   "name": "6-three-seconds"
+  },
+  {
+   "do": "render",
+   "name": "6-three-seconds-canvas"
+  },
+  {
+   "do": "blank"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    200
+   ],
+   "to": [
+    500,
+    320
+   ],
+   "steps": 10
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "press",
+   "control": "Slider",
+   "in": "Opacity",
+   "across": 0.3
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "describe",
+   "stage": "8-picture",
+   "note": "THE FIFTH TEST: the same pull on a picture dims it the same way"
+  },
+  {
+   "do": "expect",
+   "field": "Opacity",
+   "reads": "28"
+  },
+  {
+   "do": "snapshot",
+   "name": "7-plain-pull-on-a-picture"
+  },
+  {
+   "do": "render",
+   "name": "7-plain-pull-on-a-picture-canvas"
+  }
+ ]
+}

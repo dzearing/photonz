@@ -19813,3 +19813,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Bug 2, keyed video: a move or resize where the Rotation keys had turned the layer wrote the stored angle back as a new key. The edit now lands on the pose (`PhotonzDocument.editPosedForCanvas`).
 - Walks: `a-turned-shape-keeps-its-turn-walk`, `a-turned-shape-keeps-its-turn-on-a-video-walk`. The harness tree prints `turned N°` and, for keyed layers, `drawn turned N°`.
 - Found: undo after a drag with Position and Size open takes two steps → `undo-after-a-drag-puts-a-shape-back-where-it-was` (p2, reproduced).
+
+## 2026-09-26 — Opacity changes a keyed shape on a video
+
+- User report: dragging Appearance > Opacity on a rectangle over a video had no effect. Reproduced at Next defaults: an UNKEYED rectangle dimmed fine; once keyed (the timeline row's diamond keys position, scale, rotation and opacity), the slider wrote the layer's own opacity, which a keyed value never reads. The slider said 28, the rectangle stayed solid, and Animating said 100.
+- Fix: `PhotonzCore/LooksAtThePlayhead.swift`. `lookPosed` gives each picked layer its keyed look values at the playhead, for the panel to read; `editLooks` runs any panel look edit so a keyed value becomes a key at the playhead and everything else stays the layer's own. The app routes the layer style slider (Opacity, blur Amount, shadow and glow Size), Corner Radius and Thickness through it (`EditorState+LooksAtThePlayhead.swift`), live preview and commit alike. Tests: `LooksAtThePlayheadTests` (11).
+- Walk: `opacity-on-a-video-shape-walk` (Next defaults): plain pull, key at 1s, pull to 0 at 3s, pictures at 1s, 2s and 3s, then a picture for comparison. Audit: `queue/audits/2026-09-26-opacity-on-a-video.json`.
+- Open: keys ease in and out by default, so half way reads 22% rather than 50%. Premiere's new keys are Linear. It's in the audit as a question for the user.
+- Perf: no composite-path change. The panel's look rows pose one layer per read, and only when that layer has keys.

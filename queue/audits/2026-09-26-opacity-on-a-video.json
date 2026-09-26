@@ -1,0 +1,27 @@
+{
+  "feature": "Opacity changes a shape on a video, and animates with keys",
+  "epic": "video-transitions-motion",
+  "summary": "Appearance > Opacity now changes a keyed shape on a video: at a moment with a key it rewrites that key, anywhere else it adds one, and the slider follows the playhead between keys. The same goes for a blur's Amount, a shadow's or glow's Size, Corner Radius and Thickness.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/opacity-on-a-video-shape-walk.json.",
+  "try": [
+    { "do": "Open a recording, park the playhead at 1s, draw a rectangle and drag Appearance > Opacity down to about 30.", "shot": "2026-09-26-opacity-on-a-video-1-plain.png" },
+    { "do": "Press the diamond on the rectangle's timeline row, then drag Opacity down again. This is the case that used to do nothing.", "shot": "2026-09-26-opacity-on-a-video-2-row-keyed.png" },
+    { "do": "Undo back to 100. In Properties, press Animate a property and pick Opacity at 1s." },
+    { "do": "Step to 3s and drag Appearance > Opacity to 0. A second key lands on the Opacity lane.", "shot": "2026-09-26-opacity-on-a-video-5-three-seconds.png" },
+    { "do": "Step back to 1s, then to 2s, and watch the rectangle and the slider.", "shot": "2026-09-26-opacity-on-a-video-4-two-seconds.png" },
+    { "do": "Press space and watch it fade out between 1s and 3s." },
+    { "do": "On a blank picture, draw a rectangle and drag Opacity. It dims exactly as before.", "shot": "2026-09-26-opacity-on-a-video-6-picture.png" }
+  ],
+  "evaluate": [
+    "When a value is keyed, does dragging Appearance > Opacity at a new moment adding a key feel like Premiere's stopwatch, or would you rather it asked?",
+    "Half way between 100 and 0 the rectangle reads 22%, not 50%, because keys ease in and out by default. Is that the fade you expect, or should new keys default to Linear the way Premiere's do?",
+    "The Appearance Opacity row and the Animating Opacity row now always agree. Is having both in the panel at once still useful, or is it one too many?",
+    "Does the slider moving by itself as you scrub read as the value following the playhead, or as something changing under you?"
+  ],
+  "rough": [
+    "Keys ease in and out by default (the mock's curve), so 1s, 2s and 3s read 100, 22 and 0 rather than the task's 100, about 50 and 0. I left the curve alone: it is the timeline bar's Easing default and changing it changes every key in the app.",
+    "The Appearance Opacity row has no key diamond of its own. The diamond lives on the same value in Properties > Animating, which is where the mock draws it.",
+    "Export and save and reopen were not driven by the walk. Both read the same keys the canvas draws (the exporter composites the same drawn-at-a-moment document), and the core tests check that document at 1s, 2s and 3s.",
+    "A panel press in a walk is one click, not a drag. The live preview during a real drag goes through the same key folding as the release, but no walk drags a panel slider."
+  ]
+}

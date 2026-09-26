@@ -571,8 +571,7 @@ extension PhotonzDocument {
             }
             restored.transform.rotation = stored.transform.rotation
         }
-        for property in [MotionProperty.opacity, .color, .blur, .strokeWidth,
-                         .cornerRadius, .shadow, .glow, .textSize] where keyed.contains(property) {
+        for property in MotionProperty.looks where keyed.contains(property) {
             guard let value = property.current(of: after), value != property.current(of: before),
                   let old = stored.keyStill(property) else { continue }
             keys.append((property, value))

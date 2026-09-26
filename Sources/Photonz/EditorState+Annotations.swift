@@ -639,7 +639,7 @@ extension EditorState {
         // previous style drag left in the preview would be read back over it.
         stylePreview = nil
         discardDragPreview()
-        doc.setOutlineWidth(layerIDs: targets, to: width)
+        editingLooksHere(targets, in: &doc) { $0.setOutlineWidth(layerIDs: targets, to: width) }
         submit(doc)
     }
 
@@ -651,7 +651,7 @@ extension EditorState {
         guard !targets.isEmpty else { return }
         stylePreview = nil
         discardDragPreview()
-        perform { $0.setOutlineWidth(layerIDs: targets, to: width) }
+        performLooksHere(targets) { $0.setOutlineWidth(layerIDs: targets, to: width) }
         rememberAnnotationDefaults(targets, in: doc, strokeWidth: width,
                                    arrowheadScale: nil, cornerRadii: nil)
         saveAnnotationStyles()
