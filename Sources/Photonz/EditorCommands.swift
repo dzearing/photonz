@@ -655,67 +655,76 @@ struct EditorCommands: Commands {
                     .disabled(!(editor?.canExportCaptions ?? false))
                 Divider()
             }
-            // I and O belong to the recording window here; a document with
-            // time spends them on its marks, above.
-            Button("Set Trim Start to Playhead") {
-                if let video { video.setTrimIn(video.currentTime) }
-            }
-            .keyboardShortcut(timed ? nil : KeyboardShortcut("i", modifiers: []))
-            .disabled(!hasVideo)
-            Button("Set Trim End to Playhead") {
-                if let video { video.setTrimOut(video.currentTime) }
-            }
-            .keyboardShortcut(timed ? nil : KeyboardShortcut("o", modifiers: []))
-            .disabled(!hasVideo)
-            Divider()
-            Button((video?.isCropping ?? false) ? "Finish Crop" : "Crop to Region") {
-                if let video {
-                    if video.isCropping { video.commitCrop() } else { video.beginCrop() }
-                }
-            }
-            .disabled(!hasVideo)
-            Button("Reset Crop") { video?.clearCrop() }
-                .disabled(!(video?.crop != nil))
-            Divider()
-            // The saved trim/crop is reversible: the untouched original is kept
-            // beside the recording, so this clears the edits and the next save
-            // puts the whole clip back.
-            Button("Revert to Original") { video?.revertToOriginal() }
-                .disabled(!(video?.canRevertToOriginal ?? false))
-            Divider()
-            // One way out, not three. The format and the size preset are
-            // chosen ON the sheet, where you can see what they cost, rather
-            // than in a submenu you had to get right before the save box
-            // appeared (Next, `next-recording-export-sheet`). No key of its
-            // own: File ▸ Export… carries ⇧⌘E for both editors.
-            if Experiments.shared.recordingExportSheetEnabled {
-                Button("Export…") { video?.isExportSheetPresented = true }
-                    .disabled(!hasVideo)
+            // A recording opened in the editor: every edit thrown away, back
+            // to the recording as it opened, in one undo step
+            // (`EditorState+RevertRecording`). The rows under it are the small
+            // recording window's, which only Current still opens.
+            if timed {
+                Button("Revert to Original") { editor?.revertToOriginal() }
+                    .disabled(!(editor?.canRevertToOriginal ?? false))
             } else {
-                Button("Export MP4…") {
-                    if let video { coordinator.saveRecording(video, as: .mp4) }
+                // I and O belong to the recording window here; a document with
+                // time spends them on its marks, above.
+                Button("Set Trim Start to Playhead") {
+                    if let video { video.setTrimIn(video.currentTime) }
                 }
+                .keyboardShortcut("i", modifiers: [])
                 .disabled(!hasVideo)
-                Menu("Export GIF") {
-                    ForEach(VideoExportQuality.allCases, id: \.self) { quality in
-                        Button(quality.label) {
-                            if let video {
-                                coordinator.saveRecording(video, as: .gif, quality: quality)
-                            }
-                        }
+                Button("Set Trim End to Playhead") {
+                    if let video { video.setTrimOut(video.currentTime) }
+                }
+                .keyboardShortcut("o", modifiers: [])
+                .disabled(!hasVideo)
+                Divider()
+                Button((video?.isCropping ?? false) ? "Finish Crop" : "Crop to Region") {
+                    if let video {
+                        if video.isCropping { video.commitCrop() } else { video.beginCrop() }
                     }
                 }
                 .disabled(!hasVideo)
-                Menu("Export HEIC") {
-                    ForEach(VideoExportQuality.allCases, id: \.self) { quality in
-                        Button(quality.label) {
-                            if let video {
-                                coordinator.saveRecording(video, as: .heic, quality: quality)
+                Button("Reset Crop") { video?.clearCrop() }
+                    .disabled(!(video?.crop != nil))
+                Divider()
+                // The saved trim/crop is reversible: the untouched original is kept
+                // beside the recording, so this clears the edits and the next save
+                // puts the whole clip back.
+                Button("Revert to Original") { video?.revertToOriginal() }
+                    .disabled(!(video?.canRevertToOriginal ?? false))
+                Divider()
+                // One way out, not three. The format and the size preset are
+                // chosen ON the sheet, where you can see what they cost, rather
+                // than in a submenu you had to get right before the save box
+                // appeared (Next, `next-recording-export-sheet`). No key of its
+                // own: File ▸ Export… carries ⇧⌘E for both editors.
+                if Experiments.shared.recordingExportSheetEnabled {
+                    Button("Export…") { video?.isExportSheetPresented = true }
+                        .disabled(!hasVideo)
+                } else {
+                    Button("Export MP4…") {
+                        if let video { coordinator.saveRecording(video, as: .mp4) }
+                    }
+                    .disabled(!hasVideo)
+                    Menu("Export GIF") {
+                        ForEach(VideoExportQuality.allCases, id: \.self) { quality in
+                            Button(quality.label) {
+                                if let video {
+                                    coordinator.saveRecording(video, as: .gif, quality: quality)
+                                }
                             }
                         }
                     }
+                    .disabled(!hasVideo)
+                    Menu("Export HEIC") {
+                        ForEach(VideoExportQuality.allCases, id: \.self) { quality in
+                            Button(quality.label) {
+                                if let video {
+                                    coordinator.saveRecording(video, as: .heic, quality: quality)
+                                }
+                            }
+                        }
+                    }
+                    .disabled(!hasVideo)
                 }
-                .disabled(!hasVideo)
             }
         }
 

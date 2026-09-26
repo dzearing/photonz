@@ -1,47 +1,40 @@
 {
   "out": "/tmp/photonz-playtest/trim-cancel-after-a-delete-walk",
-  "setup": { "flags": { "next-a-recording-is-a-document": false }, "forget": ["all"] },
+  "setup": { "forget": ["all"] },
   "steps": [
     { "do": "action", "action": "openSampleRecording" },
     { "do": "action", "action": "videoPause" },
     { "do": "action", "action": "videoSeekQuarter" },
-    { "do": "action", "action": "videoCut" },
-    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "clipSplit" },
     { "do": "action", "action": "videoSeekThreeQuarters" },
-    { "do": "action", "action": "videoCut" },
+    { "do": "action", "action": "clipSplit" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "action", "action": "videoSeekMiddle" },
     { "do": "wait", "seconds": 0.4 },
-    { "do": "expectRecording", "pieces": 3, "picked": 2 },
+    { "do": "expectRecording", "pieces": 3 },
+
+    { "do": "action", "action": "clipDeletePiece" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectRecording", "pieces": 2, "seconds": 4 },
+    { "do": "describe", "stage": "1-middle-piece-dropped", "note": "the middle piece is thrown away, so what is left is two two-second pieces, four seconds in all" },
+    { "do": "snapshot", "name": "1-middle-piece-dropped" },
 
     { "do": "action", "action": "videoBeginTrim" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "expectRecording", "picked": 2, "keeps": 3, "seconds": 8 },
-    { "do": "describe", "stage": "1-handles-open", "note": "trim mode on a recording in three pieces, the whole eight seconds still inside the window" },
-    { "do": "snapshot", "name": "1-handles-open" },
-
-    { "do": "action", "action": "videoTrimEnd" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "expectRecording", "picked": 3, "keeps": 2, "seconds": 6 },
-    { "do": "describe", "stage": "2-end-handle-on-the-last-join", "note": "the end handle has come back to the last join, so the last piece is on its way out, and dragging the handle put the playhead there, which makes that last piece the picked one" },
-    { "do": "snapshot", "name": "2-end-handle-on-the-last-join" },
-
-    { "do": "action", "action": "videoDeletePiece" },
-    { "do": "wait", "seconds": 1.4 },
-    { "do": "expectRecording", "pieces": 2, "picked": 2, "keeps": 2, "seconds": 6 },
-    { "do": "describe", "stage": "3-piece-dropped-window-whole-again", "note": "dropping that piece leaves a six second recording in two, and the window is the whole of what is left rather than a handle hanging past the end of the track" },
-    { "do": "snapshot", "name": "3-piece-dropped-window-whole-again" },
+    { "do": "expectRecording", "pieces": 2, "seconds": 4 },
+    { "do": "describe", "stage": "2-handles-open-on-what-is-left", "note": "Trim opens on what is left, four seconds between the handles, not the eight the recording had before the delete" },
+    { "do": "snapshot", "name": "2-handles-open-on-what-is-left" },
 
     { "do": "action", "action": "videoTrimStart" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "expectRecording", "pieces": 2, "picked": 1, "keeps": 2, "seconds": 4.5 },
-    { "do": "describe", "stage": "4-start-handle-moved", "note": "the start handle comes in a quarter of what is left, so there is a window for Cancel to throw away" },
-    { "do": "snapshot", "name": "4-start-handle-moved" },
+    { "do": "describe", "stage": "3-start-handle-moved", "note": "the in handle has come in, so there is a trim for Cancel to throw away" },
+    { "do": "snapshot", "name": "3-start-handle-moved" },
 
     { "do": "action", "action": "videoTrimCancel" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "expectRecording", "pieces": 2, "picked": 1, "keeps": 2, "seconds": 6 },
-    { "do": "describe", "stage": "5-cancel-gives-back-what-is-left", "note": "Cancel gives back the window the mode opened with, measured against what is left rather than what was there before the delete: six seconds, not eight. The dropped piece stays dropped, because Cancel calls off the trim and not the delete, and the Undo command still has that step" },
-    { "do": "snapshot", "name": "5-cancel-gives-back-what-is-left" }
+    { "do": "expectRecording", "pieces": 2, "seconds": 4 },
+    { "do": "expectTimeline", "lengthMS": 4000, "tool": "select" },
+    { "do": "describe", "stage": "4-cancel-gives-back-what-is-left", "note": "THE TEST: Cancel gives back exactly what the trim opened on, measured against what is left after the delete: four seconds in two pieces. The dropped piece stays dropped" },
+    { "do": "snapshot", "name": "4-cancel-gives-back-what-is-left" }
   ]
 }

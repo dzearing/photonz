@@ -1,0 +1,47 @@
+{
+  "feature": "One way to open a recording: the editor, with Trim, Save, Export and Revert",
+  "epic": "video-cutting",
+  "summary": "In Next every recording now opens in the editor and nowhere else: the small recording window and the switch that brought it back are gone. Trim works on a clip you have cut, catching on the cuts, and Video > Revert to Original puts the recording back as it opened.",
+  "setup": "Photonz Next, no switch changed from its default. The Screen Recording grant was on and the screen unlocked, so every picture here is a real capture of the window.",
+  "try": [
+    {
+      "do": "Open any .mp4 from Finder or history. It opens in the editor with the timeline, never the small window.",
+      "shot": "2026-09-26-trim-retire-5-opened-from-finder.png"
+    },
+    {
+      "do": "Split the clip twice with Command K, then press C until Trim is in hand. The cuts stay drawn on the bar and the clip's name sits on it.",
+      "shot": "2026-09-26-trim-retire-3-pieces-on-the-bar.png"
+    },
+    {
+      "do": "Drag the left handle toward the first cut and let go a few frames short of it. It lands on the cut. Hold Command to drag past without catching."
+    },
+    {
+      "do": "Bring the right handle onto the last cut. The capsule reads 0:04 kept.",
+      "shot": "2026-09-26-trim-retire-1-handles-on-the-cuts.png"
+    },
+    {
+      "do": "Press Return. Exactly the middle piece is kept, four seconds, one piece.",
+      "shot": "2026-09-26-trim-retire-2-middle-kept.png"
+    },
+    {
+      "do": "Press Command S. It saves a project and leaves the recording file untouched, and the playhead stays where it was."
+    },
+    {
+      "do": "Choose Video > Revert to Original. The whole eight seconds come back; Command Z brings the trim back.",
+      "shot": "2026-09-26-trim-retire-4-reverted.png"
+    }
+  ],
+  "evaluate": [
+    "Does a handle catching on a cut feel like Premiere's snap to an edit point, or does it grab too early or too late?",
+    "Is Video the right menu for Revert to Original, or would you look for it under File the way Photoshop has File > Revert?",
+    "With the small window gone, is there anything you used it for that you cannot now find in the editor?",
+    "Is it clear from the drawn bar which pieces a trim is about to drop?"
+  ],
+  "rough": [
+    "The small recording window's code is still in the app, because Current (the shipping release) still opens recordings in it and a Next change may not touch Current. Nothing in Next reaches it; it goes when Next is promoted.",
+    "Until today, putting a Trim handle on or past a cut and pressing Trim did nothing at all, silently. Fixed in this task, with tests.",
+    "The Trim button in the pictures looks grey like Cancel. It is the prominent style; it draws grey because the walk's window is never the key window. On your screen it is blue.",
+    "The two old-window guides (Trim a recording, Export MP4, GIF or HEIC) are gone. The editor's six video guides already cover cutting and exporting.",
+    "The old window's export sheet had a walk proving the file it weighed is the one Export hands over. The editor's video sheet does the same, but no walk proves it on the editor yet."
+  ]
+}

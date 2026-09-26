@@ -17,7 +17,6 @@ struct FlagDescriptionBudgetTests {
         "next-a-component-on-the-timeline": 254,
         "next-a-drag-says-its-numbers": 253,
         "next-a-layer-is-its-pixels": 213,
-        "next-a-recording-is-a-document": 251,
         "next-a-row-says-its-words": 232,
         "next-a-separated-row-says-its-words": 290,
         "next-a-separation-arrives-shut": 173,

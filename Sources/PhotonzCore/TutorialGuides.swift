@@ -2097,113 +2097,11 @@ public enum TutorialGuides {
                 body: "To check it, double click the file you saved. It opens in your browser and the bell rings on its own, with nothing else needed."),
         ])
 
-    // MARK: The Video track
-
-    /// The smallest track, and the only one that teaches in a window with no
-    /// canvas in it: a recording opens in the video window, which is one
-    /// picture and one floating controller over it.
-    ///
-    /// Trimming is the one edit in the app that is baked in when you save, and
-    /// the last card says so rather than leaving somebody to discover it. It
-    /// does not make anybody save: a guide that quietly rewrites a file on
-    /// its way past is not a guide.
-    public static let trimARecording = TutorialGuide(
-        id: "trim-a-recording",
-        track: .video,
-        title: "Trim a recording",
-        summary: "Cut a recording down to the part worth watching, and know what saving does to it.",
-        minutes: 2,
-        sample: .sampleRecording,
-        retiredBy: [FeatureCatalog.recordingIsADocumentFlag],
-        steps: [
-            TutorialStep(
-                id: "what-you-have",
-                anchor: .video(.preview),
-                title: "A recording, mostly waiting",
-                body: "It starts playing as soon as it opens. The first and last few seconds are nothing happening, which is what you are about to cut off."),
-            TutorialStep(
-                id: "getting-around-it",
-                anchor: .video(.transport),
-                title: "Getting around it",
-                body: "Space plays and pauses. Paused, the arrow keys step one frame at a time, which is how you land on the exact moment to cut at."),
-            TutorialStep(
-                id: "open-the-trim",
-                anchor: .video(.trim),
-                title: "Open the trim",
-                body: "Click the scissors. The playback line turns into the whole clip with a handle at each end.",
-                advance: .waitsFor(.trimModeOpened)),
-            TutorialStep(
-                id: "bring-the-start-in",
-                anchor: .video(.timeline),
-                title: "Bring the start in",
-                body: "Drag the left handle along to where something starts happening. The picture follows the handle, so you can see where you are landing.",
-                side: .above,
-                advance: .waitsFor(.trimStartMoved)),
-            TutorialStep(
-                id: "bring-the-end-back",
-                anchor: .video(.timeline),
-                title: "And the end back",
-                body: "Drag the right handle in to where it stops being worth watching. The length you are keeping reads out beside the scissors.",
-                side: .above,
-                advance: .waitsFor(.trimEndMoved)),
-            TutorialStep(
-                id: "keep-whats-between",
-                anchor: .video(.trimDone),
-                title: "Keep what is between them",
-                body: "Trim keeps what is between the handles. Nothing is thrown away: the ends are still in the recording, so you can pull them back or trim again from here.",
-                advance: .waitsFor(.trimApplied)),
-            TutorialStep(
-                id: "saving-writes-it-in",
-                anchor: .video(.save),
-                title: "Saving writes it into the file",
-                body: "Nothing on disk has changed yet. Saving puts the trim into the recording and keeps the original beside it, so Revert to Original in the Video menu brings the clip back."),
-        ])
-
-    /// The decision rather than the gesture: which of three shapes a recording
-    /// leaves the app in, and the one that skips the file entirely.
-    ///
-    /// It rings the Export button and says what is inside it. The rows are in a
-    /// menu, which is its own window and cannot be ringed, and picking one runs
-    /// a save dialog that would sit on top of the card. So the guide ends on
-    /// Copy, which is what most people want when they say send this to
-    /// somebody, and asks for no dialog at all.
-    public static let exportARecording = TutorialGuide(
-        id: "export-a-recording",
-        track: .video,
-        title: "Export MP4, GIF or HEIC",
-        summary: "Pick the shape a recording leaves in, or put it straight on the clipboard.",
-        minutes: 1,
-        sample: .sampleRecording,
-        retiredBy: [FeatureCatalog.recordingIsADocumentFlag],
-        steps: [
-            TutorialStep(
-                id: "three-ways-out",
-                anchor: .video(.export),
-                title: "Three ways out",
-                body: "MP4 keeps the picture and the sound and plays anywhere. GIF loops silently and needs no player. HEIC is a small animation for Apple devices."),
-            TutorialStep(
-                id: "how-good",
-                anchor: .video(.export),
-                title: "GIF and HEIC ask how good",
-                body: "High, Standard or Small. Standard is the one to start with, High is worth it when small text has to stay readable, and Small keeps the file down."),
-            TutorialStep(
-                id: "copy-it-instead",
-                anchor: .video(.copy),
-                title: "For a chat, copy it",
-                body: "This puts the recording straight on the clipboard with no file to find afterwards. Try Copy GIF, and paste it wherever you were going to send it.",
-                advance: .waitsFor(.recordingCopied)),
-            TutorialStep(
-                id: "what-comes-out",
-                anchor: .video(.preview),
-                title: "What you see is what comes out",
-                body: "A trim or a crop goes into everything you copy or export from here. The recording on disk stays as it was until you save."),
-        ])
-
     // MARK: The Video track, in the editor
 
     // A recording is a document now: it opens in the editor with the transport
-    // and the timeline under the picture, and the small recording window the
-    // two guides above teach is retired at Next. These six teach the editor a
+    // and the timeline under the picture, and the small recording window (and
+    // the two guides that taught it) is gone from Next. These six teach the editor a
     // Premiere or Final Cut person already half knows, with the keys they
     // already have in their fingers: Q and W, Command K, the Delete key, a
     // click on the cut for its transitions, Command T.
@@ -2230,7 +2128,7 @@ public enum TutorialGuides {
         summary: "Take the dead air off both ends, then cut a stretch out of the middle.",
         minutes: 2,
         sample: .videoRecording,
-        requires: [FeatureCatalog.recordingIsADocumentFlag, FeatureCatalog.cutRecordingFlag],
+        requires: [FeatureCatalog.cutRecordingFlag],
         steps: [
             TutorialStep(
                 id: "a-clip-on-v1",
@@ -2284,7 +2182,7 @@ public enum TutorialGuides {
         summary: "Bring another recording onto the timeline and let the two meet at a cut.",
         minutes: 1,
         sample: .videoRecording,
-        requires: [FeatureCatalog.recordingIsADocumentFlag, FeatureCatalog.libraryFlag,
+        requires: [FeatureCatalog.libraryFlag,
                    FeatureCatalog.droppingMediaFlag],
         steps: [
             TutorialStep(
@@ -2326,7 +2224,7 @@ public enum TutorialGuides {
         summary: "Put words over the video, then move them from one place to another.",
         minutes: 2,
         sample: .videoRecording,
-        requires: [FeatureCatalog.recordingIsADocumentFlag, FeatureCatalog.titleOnTheTimelineFlag],
+        requires: [FeatureCatalog.titleOnTheTimelineFlag],
         steps: [
             TutorialStep(
                 id: "pick-text",
@@ -2381,7 +2279,7 @@ public enum TutorialGuides {
         summary: "Click the cut between two clips and pick how one turns into the other.",
         minutes: 1,
         sample: .videoTwoClips,
-        requires: [FeatureCatalog.recordingIsADocumentFlag, FeatureCatalog.cutRecordingFlag,
+        requires: [FeatureCatalog.cutRecordingFlag,
                    FeatureCatalog.transitionsAtACutFlag],
         steps: [
             TutorialStep(
@@ -2423,7 +2321,7 @@ public enum TutorialGuides {
         summary: "Let the captions write themselves, fix a word, and choose how they leave.",
         minutes: 1,
         sample: .videoTalk,
-        requires: [FeatureCatalog.recordingIsADocumentFlag, FeatureCatalog.captionsFromTheSoundFlag],
+        requires: [FeatureCatalog.captionsFromTheSoundFlag],
         steps: [
             TutorialStep(
                 id: "they-write-themselves",
@@ -2465,7 +2363,7 @@ public enum TutorialGuides {
         summary: "Write the whole edit out as an MP4, a GIF or a HEIC, at the size you need.",
         minutes: 1,
         sample: .videoRecording,
-        requires: [FeatureCatalog.recordingIsADocumentFlag, FeatureCatalog.videoExportFlag],
+        requires: [FeatureCatalog.videoExportFlag],
         steps: [
             TutorialStep(
                 id: "open-the-sheet",

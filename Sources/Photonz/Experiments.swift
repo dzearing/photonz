@@ -504,15 +504,6 @@ extension Experiments {
         isEnabled(FeatureCatalog.drawnOnTheTimelineFlag)
     }
 
-    /// `next-a-recording-is-a-document`: whether opening a recording opens the
-    /// ordinary editor window, with the recording as a layer in it and a
-    /// timeline across the bottom, rather than the small video window.
-    ///
-    /// It takes away a way IN and never a document's contents: turning it off
-    /// puts the old window back, and the recording on disk is the same file it
-    /// always was, because nothing about a clip is written into pixels.
-    var recordingIsADocument: Bool { isEnabled(FeatureCatalog.recordingIsADocumentFlag) }
-
     /// `next-opening-a-recording`: whether a recording has one way in from
     /// wherever you ask (Open, Finder, history), whether the file is checked
     /// before a window opens so a missing or half-landed one says so instead of

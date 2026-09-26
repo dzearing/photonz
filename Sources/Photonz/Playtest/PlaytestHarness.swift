@@ -2579,30 +2579,8 @@ private final class Run {
                 throw Failure(description: "the newest thing in history is a picture, not a "
                     + "recording, so this step would open the picture editor")
             }
-            let url = newest.url.standardizedFileURL
-            if Experiments.shared.recordingIsADocument {
-                var landed: EditorState?
-                try await poll("the recording to open as a document", within: 20) {
-                    landed = PlaytestHarness.readyEditors.last {
-                        $0.recordingURL?.standardizedFileURL == url
-                    }
-                    return landed != nil
-                }
-                guard let landed else { throw Failure(description: "no editor opened the recording") }
-                try await adopt(landed, window: nil, step: step.name,
-                                subject: "the newest recording in history", number: number)
-                break
-            }
-            var opened: VideoEditorState?
-            try await poll("the recording to open", within: 20) {
-                opened = PlaytestHarness.readyRecordings.last { $0.url?.standardizedFileURL == url }
-                return opened != nil
-            }
-            guard let opened else {
-                throw Failure(description: "asking for the newest capture opened no recording window")
-            }
-            try await adoptRecording(opened, step: step.name,
-                                     subject: "the newest recording in history", number: number)
+            try await adoptRecordingDocument(at: newest.url, within: 20, step: step.name,
+                                             subject: "the newest recording in history", number: number)
 
         // Asking for a recording that is not there. Nothing is adopted: the
         // point of the step is that NO window opens, and what the walk checks
@@ -2623,14 +2601,8 @@ private final class Run {
         case .action(.openLandingRecording):
             let url = try Self.startLandingRecording()
             coordinator.openRecording(url)
-            var opened: VideoEditorState?
-            try await poll("the recording to open once it had landed", within: 30) {
-                opened = PlaytestHarness.readyRecordings.last { $0.url == url }
-                return opened != nil
-            }
-            guard let opened else { throw Failure(description: "no window opened for the landed file") }
-            try await adoptRecording(opened, step: step.name,
-                                     subject: "a recording that was still landing", number: number)
+            try await adoptRecordingDocument(at: url, within: 30, step: step.name,
+                                             subject: "a recording that was still landing", number: number)
 
         // A recording that is NOT in the capture folder, opened the way Finder
         // opens one: the same door a double-click, the dock and File ▸ Open all
@@ -2638,56 +2610,30 @@ private final class Run {
         case .action(.openRecordingFromDisk):
             let url = try Self.recordingOnDisk(named: "somewhere-else.mp4")
             coordinator.openFileWindow(url)
-            var opened: VideoEditorState?
-            try await poll("the recording from disk to open", within: 20) {
-                opened = PlaytestHarness.readyRecordings.last { $0.url == url }
-                return opened != nil
-            }
-            guard let opened else {
-                throw Failure(description: "opening \(url.lastPathComponent) the way Finder does "
-                    + "left no recording window")
-            }
-            try await adoptRecording(opened, step: step.name,
-                                     subject: "a recording from outside the capture folder", number: number)
+            try await adoptRecordingDocument(at: url, within: 20, step: step.name,
+                                             subject: "a recording from outside the capture folder",
+                                             number: number)
 
         // Shut the window holding the recording and ask for the same recording
         // again, through the door a person would use.
         case .action(.reopenSampleRecording):
-            if Experiments.shared.recordingIsADocument {
-                let editor = try requireEditor()
-                guard let url = editor.recordingURL else {
-                    throw Failure(description: "the window in front is not holding a recording")
-                }
-                editor.hostWindow?.close()
-                await sleep(1.0)
-                coordinator.openRecording(url)
-                var landed: EditorState?
-                try await poll("the recording to open again as a document", within: 20) {
-                    landed = PlaytestHarness.readyEditors.last {
-                        $0.recordingURL == url && $0 !== editor
-                    }
-                    return landed != nil
-                }
-                guard let landed else { throw Failure(description: "the recording did not open again") }
-                try await adopt(landed, window: nil, step: step.name,
-                                subject: "the same recording, opened again", number: number)
-                break
-            }
-            let recording = try requireRecording()
-            guard let url = recording.url else {
+            let editor = try requireEditor()
+            guard let url = editor.recordingURL else {
                 throw Failure(description: "the window in front is not holding a recording")
             }
-            recording.hostWindow?.close()
+            editor.hostWindow?.close()
             await sleep(1.0)
             coordinator.openRecording(url)
-            var reopened: VideoEditorState?
-            try await poll("the recording to open again", within: 20) {
-                reopened = PlaytestHarness.readyRecordings.last { $0.url == url && $0 !== recording }
-                return reopened != nil
+            var landed: EditorState?
+            try await poll("the recording to open again as a document", within: 20) {
+                landed = PlaytestHarness.readyEditors.last {
+                    $0.recordingURL == url && $0 !== editor
+                }
+                return landed != nil
             }
-            guard let reopened else { throw Failure(description: "the recording did not open again") }
-            try await adoptRecording(reopened, step: step.name,
-                                     subject: "the same recording, opened again", number: number)
+            guard let landed else { throw Failure(description: "the recording did not open again") }
+            try await adopt(landed, window: nil, step: step.name,
+                            subject: "the same recording, opened again", number: number)
 
         // A recording window with no guide in front of it, on the sample clip
         // the video guides bring. The walk moves into it, exactly as it would
@@ -2751,36 +2697,22 @@ private final class Run {
                 throw Failure(description: "couldn't write the sample recording")
             }
             coordinator.openWindow(.video(standardizing: url))
-            // With `next-a-recording-is-a-document` on there is no recording
-            // window to find: a recording opens the ordinary editor, so the
-            // walk takes over an `EditorState` exactly as it would for a
-            // screenshot (`docs/design/video.md`).
-            if Experiments.shared.recordingIsADocument {
-                var landed: EditorState?
-                try await poll("the sample recording to open as a document", within: 20) {
-                    // Not a window that has since been saved as a project:
-                    // that one holds the project now, not the fresh sample.
-                    landed = PlaytestHarness.readyEditors.last {
-                        $0.isRecordingDocument
-                            && $0.recordingURL?.lastPathComponent == TutorialSampleRecording.fileName
-                    }
-                    return landed != nil
+            // A recording opens the ordinary editor, so the walk takes over an
+            // `EditorState` exactly as it would for a screenshot
+            // (`docs/design/video.md`).
+            var landed: EditorState?
+            try await poll("the sample recording to open as a document", within: 20) {
+                // Not a window that has since been saved as a project:
+                // that one holds the project now, not the fresh sample.
+                landed = PlaytestHarness.readyEditors.last {
+                    $0.isRecordingDocument
+                        && $0.recordingURL?.lastPathComponent == TutorialSampleRecording.fileName
                 }
-                guard let landed else { throw Failure(description: "no editor opened the recording") }
-                try await adopt(landed, window: nil, step: step.name,
-                                subject: "the sample recording, as a document", number: number)
-                break
+                return landed != nil
             }
-            var opened: VideoEditorState?
-            try await poll("the sample recording to open", within: 20) {
-                opened = PlaytestHarness.readyRecordings.last {
-                    $0.url?.lastPathComponent == TutorialSampleRecording.fileName
-                }
-                return opened != nil
-            }
-            guard let opened else { throw Failure(description: "no recording window opened") }
-            try await adoptRecording(opened, step: step.name,
-                                     subject: "the sample recording", number: number)
+            guard let landed else { throw Failure(description: "no editor opened the recording") }
+            try await adopt(landed, window: nil, step: step.name,
+                            subject: "the sample recording, as a document", number: number)
 
         // Saving is its own case because it has to be WAITED for: a commit
         // re-encodes, and every one of these steps is only worth anything once
@@ -2971,6 +2903,22 @@ private final class Run {
             }
             note(number, step.name,
                  "stopped at \(reached)%, and nothing was left on the disk",
+                 state: describe())
+
+        // Revert to Original in the editor: the Video menu's row, on a
+        // recording opened as a document (`EditorState+RevertRecording`).
+        case .action(let action) where action == .videoRevertToOriginal && recording == nil:
+            let editor = try requireEditor()
+            guard editor.canRevertToOriginal else {
+                throw Failure(description: "Revert to Original is dimmed: "
+                    + (editor.recordingURL == nil ? "this window was not opened from a recording"
+                                                  : "nothing has changed since the recording opened"))
+            }
+            let before = editor.documentLengthMS
+            editor.revertToOriginal()
+            note(number, step.name,
+                 "put the recording back as it opened: \(before) ms became \(editor.documentLengthMS) ms, "
+                     + "\(editor.document?.layers.count ?? 0) layer(s)",
                  state: describe())
 
         case .action(let action) where action == .videoRevertToOriginal:
@@ -4275,6 +4223,24 @@ private final class Run {
             case .videoStepOneSecond: editor.scrubDocument(toMS: editor.documentTimeMS + 1000)
             case .videoStepBackOneSecond: editor.scrubDocument(toMS: editor.documentTimeMS - 1000)
             case .videoStepQuarterSecond: editor.scrubDocument(toMS: editor.documentTimeMS + 250)
+            // A hand bringing a handle up to the first cut (the last, for the
+            // end handle): half the catching distance short of it, and then
+            // three times that, which is a move rather than a wobble.
+            case .videoDragTrimNearCut, .videoDragTrimClearOfCut, .videoDragTrimEndNearCut:
+                guard let session = editor.trimSession,
+                      let start = editor.trimmedClipStartMS else {
+                    throw Failure(description: "\(action.rawValue) needs a trim in flight; add a "
+                        + "\"videoBeginTrim\" step first")
+                }
+                guard let first = session.cutsMS.first, let last = session.cutsMS.last else {
+                    throw Failure(description: "\(action.rawValue) needs a clip with a cut in it")
+                }
+                let reach = editor.clipSnapMS
+                switch action {
+                case .videoDragTrimNearCut: editor.dragTrimIn(toMS: start + first - reach / 2, catching: true)
+                case .videoDragTrimClearOfCut: editor.dragTrimIn(toMS: start + first - reach * 3, catching: true)
+                default: editor.dragTrimOut(toMS: start + last + reach / 2, catching: true)
+                }
             case .videoTrimStart, .videoTrimEnd:
                 guard let session = editor.trimSession,
                       let start = editor.trimmedClipStartMS else {
@@ -9717,11 +9683,9 @@ private final class Run {
         // The menu-bar scene hands the coordinator its openWindow action a
         // beat after launch.
         try await poll("the app's window opener", within: 5) { coordinator.openWindowAction != nil }
-        // A movie opens the way the app opens one, as a document where a
-        // recording is one (`next-a-recording-is-a-document`), so a walk can
-        // play any recording in its fixtures rather than only the sample.
-        if Experiments.shared.recordingIsADocument,
-           (UTType(filenameExtension: url.pathExtension)?.conforms(to: .movie)) == true {
+        // A movie opens the way the app opens one, as a document, so a walk
+        // can play any recording in its fixtures rather than only the sample.
+        if (UTType(filenameExtension: url.pathExtension)?.conforms(to: .movie)) == true {
             let wanted = url.standardizedFileURL
             coordinator.openRecording(wanted)
             var landed: EditorState?
@@ -9873,6 +9837,24 @@ private final class Run {
              "\(subject): nothing open, so the onboarding card is what is on screen; "
              + "window \(Int(window.frame.width))x\(Int(window.frame.height)) pt",
              state: describe())
+    }
+
+    /// Waits for the editor window a recording at `url` opened in, and moves
+    /// the walk into it. A recording is a document in Next, so this is the
+    /// one place every door into one (history, Finder, a file still landing)
+    /// comes out.
+    private func adoptRecordingDocument(at url: URL, within seconds: Double, step: String,
+                                        subject: String, number: Int) async throws {
+        let wanted = url.standardizedFileURL
+        var landed: EditorState?
+        try await poll("\(url.lastPathComponent) to open as a document", within: seconds) {
+            landed = PlaytestHarness.readyEditors.last { $0.recordingURL?.standardizedFileURL == wanted }
+            return landed != nil
+        }
+        guard let landed else {
+            throw Failure(description: "asking for \(url.lastPathComponent) opened no editor")
+        }
+        try await adopt(landed, window: nil, step: step, subject: subject, number: number)
     }
 
     /// Take over the window a video guide opened for itself.
@@ -10077,22 +10059,58 @@ private final class Run {
     private func checkRecording(pieces: Int?, picked: Int?, keeps: Int?,
                                 seconds: Double?, starts: Double? = nil,
                                 caught: Bool? = nil, playhead: Double? = nil) throws -> String {
-        // A recording opened as a DOCUMENT has no recording window behind it:
-        // its playhead is the document's own clock (`EditorState+Time`). That
-        // is the one claim that still means something there, so it is answered
-        // and the rest say plainly that they cannot be.
+        // A recording opened as a DOCUMENT has no recording window behind it,
+        // so each claim is read off the editor: the pieces of the clip in
+        // hand, which piece is picked, how long the trim keeps while one is
+        // running (else how long the document runs), where the in handle
+        // stands, and the document's own clock. `keeps` and `caught` belonged
+        // to the recording window's strip and have no meaning here.
         if recording == nil, let editor, editor.documentHasTime {
-            guard let playhead, pieces == nil, picked == nil, keeps == nil,
-                  seconds == nil, starts == nil, caught == nil else {
-                throw Failure(description: "this recording is open as a document, where the only "
-                    + "claim expectRecording can answer is \"playhead\"")
+            guard keeps == nil, caught == nil else {
+                throw Failure(description: "this recording is open as a document, where "
+                    + "expectRecording cannot answer \"keeps\" or \"caught\": those were the old "
+                    + "recording window's")
             }
+            let count = editor.clipInHandPieces?.count ?? 0
+            let picking = editor.selectedClipPieceIndex.map { $0 + 1 } ?? 0
+            let session = editor.trimSession
+            let windowMS = session?.keptMS ?? editor.documentLengthMS
             let at = Double(editor.documentTimeMS) / 1000
-            guard abs(playhead - at) <= 0.25 else {
-                throw Failure(description: "the playhead is at \(String(format: "%.2f", at))s, "
-                    + "not \(String(format: "%.2f", playhead))s")
+            let saying = "\(count) piece\(count == 1 ? "" : "s")"
+                + ", \(picking == 0 ? "none picked" : "piece \(picking) picked")"
+                + (session.map { ", trim open, keeping \($0.keepInMS)-\($0.keepOutMS) of \($0.wholeLengthMS) ms" }
+                    ?? ", trim closed")
+                + ", runs \(editor.documentLengthMS) ms"
+                + ", playhead at \(String(format: "%.2f", at))s"
+            var wrong: [String] = []
+            if let pieces, pieces != count { wrong.append("the clip is in \(count) pieces, not \(pieces)") }
+            if let picked, picked != picking {
+                wrong.append(picking == 0 ? "no piece is picked, not piece \(picked)"
+                                          : "piece \(picking) is picked, not piece \(picked)")
             }
-            return "the playhead is at \(String(format: "%.2f", at))s, as claimed"
+            if let seconds, abs(seconds - Double(windowMS) / 1000) > 0.05 {
+                wrong.append((session == nil ? "the recording runs " : "the trim keeps ")
+                    + "\(String(format: "%.2f", Double(windowMS) / 1000))s, not "
+                    + "\(String(format: "%.2f", seconds))s")
+            }
+            if let starts {
+                guard let session else {
+                    throw Failure(description: "\"starts\" is where the in handle stands, and no "
+                        + "trim is running: \(saying)")
+                }
+                if abs(starts - Double(session.keepInMS) / 1000) > 0.005 {
+                    wrong.append("the in handle is at \(String(format: "%.3f", Double(session.keepInMS) / 1000))s, "
+                        + "not \(String(format: "%.3f", starts))s")
+                }
+            }
+            if let playhead, abs(playhead - at) > 0.25 {
+                wrong.append("the playhead is at \(String(format: "%.2f", at))s, not "
+                    + "\(String(format: "%.2f", playhead))s")
+            }
+            guard wrong.isEmpty else {
+                throw Failure(description: wrong.joined(separator: "; ") + " (it reads: \(saying))")
+            }
+            return "as claimed: " + saying
         }
         let video = try requireRecording()
         let counted = video.trimmedPieceCount

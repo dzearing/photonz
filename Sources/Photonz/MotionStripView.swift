@@ -474,7 +474,29 @@ struct ClipTrimBar: View {
             RoundedRectangle(cornerRadius: 5)
                 .fill(Color.accentColor.opacity(0.85))
                 .frame(width: max(2, xOut - xIn), height: height)
+                .overlay(alignment: .leading) {
+                    // The clip's name, the way the mock labels the bar it has
+                    // hold of (`comp-video.html` §07).
+                    if xOut - xIn > 60 {
+                        Text(layerName)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(.white)
+                            .lineLimit(1)
+                            .padding(.leading, Self.gripWidth + 6)
+                            .padding(.trailing, Self.gripWidth + 4)
+                    }
+                }
                 .offset(x: xIn)
+            // A clip cut into pieces keeps its cuts on the bar while it is
+            // trimmed, so you can see what a handle is about to catch on and
+            // which pieces fall outside it.
+            ForEach(session?.cutsMS ?? [], id: \.self) { cut in
+                Rectangle()
+                    .fill(Color.black.opacity(0.45))
+                    .frame(width: 1.5, height: height)
+                    .offset(x: laneWidth * ruler.fraction(ofMS: start + Double(cut)) - 0.75)
+                    .allowsHitTesting(false)
+            }
             handle(atX: xIn, isStart: true)
             handle(atX: xOut, isStart: false)
         }
@@ -520,7 +542,11 @@ struct ClipTrimBar: View {
             .onChanged { value in
                 let ms = Int(editorState.motionStripRuler
                     .ms(atFraction: Double(value.location.x / laneWidth)).rounded())
-                isStart ? editorState.dragTrimIn(toMS: ms) : editorState.dragTrimOut(toMS: ms)
+                // Catches on a cut while the timeline snaps; Command frees
+                // the drag, as it frees every other drag on the timeline.
+                let catching = !NSEvent.modifierFlags.contains(.command)
+                isStart ? editorState.dragTrimIn(toMS: ms, catching: catching)
+                        : editorState.dragTrimOut(toMS: ms, catching: catching)
             }
     }
 

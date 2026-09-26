@@ -4,8 +4,8 @@ import SwiftUI
 /// What the **Next** release puts on screen: the next-generation Photonz.
 ///
 /// This file started as a copy of `CurrentExperience`, which is the shape every
-/// fork takes. Both releases still open the same shared editor, so nothing here
-/// diverges yet.
+/// fork takes. Both releases open the same shared image editor; the one place
+/// they part is a recording, which Next opens in that editor too.
 ///
 /// To make Next different, fork the file: copy it into this folder, rename the
 /// type with a `Next` prefix (one module, so names must stay unique), and point
@@ -22,8 +22,11 @@ enum NextExperience {
         ImageEditorRootView(windowID: windowID)
     }
 
+    /// A recording opens in the ordinary editor, as a document with time.
+    /// There is no second way in: the small recording window is Current's
+    /// alone, and it goes when Next is promoted (`docs/design/video.md` §7).
     @ViewBuilder
     static func videoEditor(url: URL) -> some View {
-        VideoEditorRootView(url: url)
+        ImageEditorRootView(windowID: .video(url))
     }
 }

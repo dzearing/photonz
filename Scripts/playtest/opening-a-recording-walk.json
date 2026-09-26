@@ -2,7 +2,7 @@
   "out": "/tmp/photonz-playtest/opening-a-recording-walk",
   "setup": {
     "forget": ["all"],
-    "flags": { "next-a-recording-is-a-document": false, "next-opening-a-recording": true },
+    "flags": { "next-opening-a-recording": true },
     "captures": ["sample-recording"]
   },
   "steps": [

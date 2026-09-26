@@ -80,9 +80,4 @@ struct TimelineIsTheLayerListTests {
         #expect(!FeatureCatalog.flags(for: .current)
             .contains { $0.name == FeatureCatalog.timelineIsTheLayerListFlag })
     }
-
-    @Test func itNeedsTheRecordingToOpenInTheEditor() {
-        #expect(FeatureCatalog.dependencies(of: FeatureCatalog.timelineIsTheLayerListFlag)
-            .contains(FeatureCatalog.recordingIsADocumentFlag))
-    }
 }

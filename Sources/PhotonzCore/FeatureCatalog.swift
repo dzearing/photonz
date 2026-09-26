@@ -178,8 +178,6 @@ public enum FeatureCatalog {
 
     public static let cutRecordingFlag = "next-cut-a-recording"
 
-    public static let recordingIsADocumentFlag = "next-a-recording-is-a-document"
-
     public static let openingARecordingFlag = "next-opening-a-recording"
 
     public static let droppingMediaFlag = "next-dropping-a-sound-or-a-video"
@@ -705,16 +703,6 @@ public enum FeatureCatalog {
                 enabledByDefaultIn: [.next]),
             Definition(
                 flag: FeatureFlag(
-                    name: recordingIsADocumentFlag,
-                    title: "A recording opens in the editor you already know",
-                    description: "A recording opens in its own little window today: one clip, a play button, handles to shorten it from either end, and none of the rest of the app. You cannot put a title on it, you cannot draw an arrow on it, you cannot see it in a layers list, and nothing you learned about editing a picture applies. With this on, opening a recording opens the ordinary editor window instead. The recording is a layer in it, named after the file, sitting in the layers list with everything else, and it takes a corner radius, an opacity, a drop shadow, an effect and a place in the stack exactly like a picture does, because as far as the rest of the app is concerned it is one. What is different is that the document now has a length, and that one fact is what puts a timeline across the bottom with the clip drawn as a bar on it and a transport under the picture: play, pause, step a frame either way, and a playhead you can drag. Whatever moment the playhead is on is the picture on the canvas, composited with everything else in the document at that moment, so an arrow you draw over the video is over the video. A document with no length in it, which is every screenshot and every drawing, is exactly what it was: no timeline, no transport, nothing new anywhere. Off means a recording opens the small window it opens today.",
-                    area: .motion,
-                    isEnabled: false,
-                    parameters: []),
-                releases: [.next],
-                enabledByDefaultIn: [.next]),
-            Definition(
-                flag: FeatureFlag(
                     name: videoExportFlag,
                     title: "An edited recording comes out as a video file",
                     description: "Everything the timeline can do to a recording could not leave the app. You can cut it into pieces, throw one away, carry them into a different order, speed a piece up, hold a frame, take the sound off the picture, put music under it and duck the music under a voice, and then Export wrote the recording you opened, ignoring every edit, while Export Sound wrote the sound on its own. With this on, Export on a document that has time writes a VIDEO of what plays in the window: the pieces in the order they are in, the ones you threw away absent, speed and held frames respected, every title, arrow and shape drawn over the picture, and the sound the mix you hear on space, level line and all, in step from the first frame to the last. The sheet offers the same three formats a recording already leaves through, MP4, GIF and HEIC, and the same size presets, because they mean the same thing whichever door they are asked for through. While it writes, a card says how far along it is and can stop it, and stopping leaves no half a file behind. A recording nobody has touched still goes out as a straight copy of its own file, so what is instant today stays instant. A document with no duration is untouched: a screenshot still leaves through the picture sheet it always did. Off means Export on a recording writes a still picture of it.",
@@ -722,8 +710,7 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next],
-                needs: [recordingIsADocumentFlag]),
+                enabledByDefaultIn: [.next]),
             Definition(
                 flag: FeatureFlag(
                     name: timelineZoomFlag,
@@ -733,8 +720,7 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next],
-                needs: [recordingIsADocumentFlag]),
+                enabledByDefaultIn: [.next]),
             Definition(
                 flag: FeatureFlag(
                     name: transitionsAtACutFlag,
@@ -744,8 +730,7 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next],
-                needs: [recordingIsADocumentFlag]),
+                enabledByDefaultIn: [.next]),
             Definition(
                 flag: FeatureFlag(
                     name: punchInFlag,
@@ -755,8 +740,7 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next],
-                needs: [recordingIsADocumentFlag]),
+                enabledByDefaultIn: [.next]),
             Definition(
                 flag: FeatureFlag(
                     name: titleOnTheTimelineFlag,
@@ -766,8 +750,7 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next],
-                needs: [recordingIsADocumentFlag]),
+                enabledByDefaultIn: [.next]),
             Definition(
                 flag: FeatureFlag(
                     name: captionsFromTheSoundFlag,
@@ -777,8 +760,7 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next],
-                needs: [recordingIsADocumentFlag]),
+                enabledByDefaultIn: [.next]),
             Definition(
                 flag: FeatureFlag(
                     name: componentOnTheTimelineFlag,
@@ -788,8 +770,7 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next],
-                needs: [recordingIsADocumentFlag]),
+                enabledByDefaultIn: [.next]),
             Definition(
                 flag: FeatureFlag(
                     name: drawnOnTheTimelineFlag,
@@ -799,8 +780,7 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next],
-                needs: [recordingIsADocumentFlag]),
+                enabledByDefaultIn: [.next]),
             Definition(
                 flag: FeatureFlag(
                     name: timelineIsTheLayerListFlag,
@@ -810,8 +790,7 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next],
-                needs: [recordingIsADocumentFlag]),
+                enabledByDefaultIn: [.next]),
             Definition(
                 flag: FeatureFlag(
                     name: soundOnTheTimelineFlag,
@@ -821,8 +800,7 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next],
-                needs: [recordingIsADocumentFlag]),
+                enabledByDefaultIn: [.next]),
             Definition(
                 flag: FeatureFlag(
                     name: scrubAuditionFlag,
@@ -832,8 +810,7 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next],
-                needs: [recordingIsADocumentFlag]),
+                enabledByDefaultIn: [.next]),
             Definition(
                 flag: FeatureFlag(
                     name: mixLoudnessFlag,
@@ -843,8 +820,7 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next],
-                needs: [recordingIsADocumentFlag]),
+                enabledByDefaultIn: [.next]),
             Definition(
                 flag: FeatureFlag(
                     name: motionStripFlag,

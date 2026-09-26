@@ -36,31 +36,19 @@ struct FeatureDependencyTests {
         }
     }
 
-    @Test("Everything that lives on the timeline needs the recording to open in the editor")
-    func timelineFeaturesNeedTheEditor() {
-        let timeline = [
-            FeatureCatalog.videoExportFlag,
-            FeatureCatalog.timelineZoomFlag,
-            FeatureCatalog.transitionsAtACutFlag,
-            FeatureCatalog.punchInFlag,
-            FeatureCatalog.titleOnTheTimelineFlag,
-            FeatureCatalog.captionsFromTheSoundFlag,
-            FeatureCatalog.componentOnTheTimelineFlag,
-            FeatureCatalog.drawnOnTheTimelineFlag,
-            FeatureCatalog.soundOnTheTimelineFlag,
-            FeatureCatalog.scrubAuditionFlag,
-            FeatureCatalog.mixLoudnessFlag,
-        ]
-        for name in timeline {
-            #expect(FeatureCatalog.dependencies(of: name).contains(FeatureCatalog.recordingIsADocumentFlag),
-                    "\(name) lives on the timeline but does not say it needs the editor")
+    @Test("A recording has one way in: no switch brings the old window back")
+    func theRecordingWindowSwitchIsGone() {
+        // Until 2026-09-26 `next-a-recording-is-a-document` chose between the
+        // editor and the small recording window, and everything on the
+        // timeline needed it. Next opens every recording in the editor now,
+        // so nothing may ask for it and no release may offer it.
+        for release in Release.allCases {
+            #expect(!FeatureCatalog.flags(for: release).contains { $0.name == "next-a-recording-is-a-document" })
         }
-    }
-
-    @Test("A recording opens in the editor by default in Next")
-    func aRecordingIsADocumentInNext() {
-        #expect(FeatureCatalog.defaultSettings(for: .next)
-            .isEnabled(FeatureCatalog.recordingIsADocumentFlag))
+        for flag in Release.allCases.flatMap({ FeatureCatalog.flags(for: $0) }) {
+            #expect(!FeatureCatalog.dependencies(of: flag.name).contains("next-a-recording-is-a-document"),
+                    "\(flag.name)")
+        }
     }
 
     @Test("An unknown flag needs nothing")

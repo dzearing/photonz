@@ -65,19 +65,21 @@ extension EditorState {
         documentMomentChanged()
     }
 
-    /// Drag the in handle, in the shown timeline's own milliseconds.
-    func dragTrimIn(toMS ms: Int) {
+    /// Drag the in handle, in the shown timeline's own milliseconds. A hand on
+    /// the handle (`catching`) catches on a cut while the timeline snaps, the
+    /// way a clip dragged along the track does (`clipSnapMS`).
+    func dragTrimIn(toMS ms: Int, catching: Bool = false) {
         guard var session = trimSession, let start = trimmedClipStartMS else { return }
-        session.dragIn(toMS: ms - start)
+        session.dragIn(toMS: catching ? session.caught(ms - start, withinMS: clipSnapMS) : ms - start)
         trimSession = session
         scrubDocument(toMS: start + session.keepInMS)
     }
 
     /// Drag the out handle, the same way round. The playhead lands on the last
     /// frame that is being kept rather than the first one that is not.
-    func dragTrimOut(toMS ms: Int) {
+    func dragTrimOut(toMS ms: Int, catching: Bool = false) {
         guard var session = trimSession, let start = trimmedClipStartMS else { return }
-        session.dragOut(toMS: ms - start)
+        session.dragOut(toMS: catching ? session.caught(ms - start, withinMS: clipSnapMS) : ms - start)
         trimSession = session
         scrubDocument(toMS: max(start, start + session.keepOutMS - MovieRef.frameStepMS))
     }
@@ -94,6 +96,7 @@ extension EditorState {
     func commitTrim() {
         guard let session = trimSession else { return }
         let landed = documentTimeMS - (trimmedClipStartMS ?? 0) - session.keepInMS
+        let piecesBefore = document?.layer(id: session.layerID)?.clipPieces?.count
         trimSession = nil
         if session.isChanged {
             perform { $0.applyTrim(session) }
@@ -101,6 +104,13 @@ extension EditorState {
         TutorialController.shared.note(.trimApplied, from: self)
         setTool(.select)
         selectedLayerID = session.layerID
+        // A trim across a cut throws pieces away, so the piece picked before
+        // it is not at the same place in the list any more, or not there at
+        // all. Nothing picked is the honest answer; the playhead still says
+        // which piece the next edit acts on.
+        if document?.layer(id: session.layerID)?.clipPieces?.count != piecesBefore {
+            selectedClipPieceIndex = nil
+        }
         // Land on the frame that was under the playhead, now that the frames
         // before the in point are not on the timeline any more.
         documentTimeMS = max(0, min(landed + (trimmedClipStartMS ?? 0), lastDocumentTimeMS))

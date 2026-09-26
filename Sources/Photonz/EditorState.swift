@@ -1110,6 +1110,11 @@ final class EditorState {
     /// It is what Save, Export and Revert to Original act on, and it is how the
     /// window knows there is an untouched file behind the clip.
     var recordingURL: URL?
+    /// The document the recording opened as, before anybody touched it: one
+    /// clip, the whole length. It is what Revert to Original puts back
+    /// (`EditorState+RevertRecording`), and nil for anything that was not
+    /// opened from a recording.
+    @ObservationIgnored var recordingAsOpened: PhotonzDocument?
 
     /// The files a project opened without, by name, because they were not
     /// where it was saved or beside it (`ProjectMedia`). Empty for everything
@@ -1423,10 +1428,9 @@ final class EditorState {
         // Deliberately NOT `sourceCaptureURL`. That is "Save writes the
         // flattened picture back over the file this came from", and the file
         // this came from is an eight second recording: ⌘S would have replaced
-        // somebody's video with a PNG of one frame of it. Saving a recording is
-        // the recording window's job until the tool that replaces it exists
-        // (`docs/design/video.md` §7), and until then this window says there is
-        // nothing here to save rather than writing something wrong.
+        // somebody's video with a PNG of one frame of it. Command S on a
+        // recording saves a project instead (`saveDocument`), and the
+        // recording on disk is never written over.
         Task { @MainActor [weak self] in
             guard let self else { return }
             guard let movie = await MovieLibrary.shared.movie(at: url) else {
@@ -1447,6 +1451,7 @@ final class EditorState {
             // so it opens as an ordinary document with no undo steps in it.
             if let shape { opened = shape(opened) }
             installDocument(opened, url: nil)
+            recordingAsOpened = opened
             // After the install, which clears it: this window holds a
             // recording, so Save writes a project (see `saveAffordance`).
             recordingURL = url

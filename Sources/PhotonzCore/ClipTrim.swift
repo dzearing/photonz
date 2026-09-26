@@ -37,6 +37,9 @@ public struct ClipTrimSession: Hashable, Sendable {
     /// The kept window as the handles have it right now.
     public private(set) var keepInMS: Int
     public private(set) var keepOutMS: Int
+    /// Where the cuts between the clip's pieces sit, in the same milliseconds
+    /// as the handles. What a handle dragged by hand catches on.
+    public let cutsMS: [Int]
 
     /// Opens a session on a clip. Nil for a layer that occupies no time:
     /// there is no in and out to move.
@@ -49,6 +52,25 @@ public struct ClipTrimSession: Hashable, Sendable {
         openedOutMS = before + time.lengthMS
         keepInMS = openedInMS
         keepOutMS = openedOutMS
+        var cuts: [Int] = []
+        if let pieces = layer.clipPieces, pieces.count > 1 {
+            var at = before
+            for index in 0..<(pieces.count - 1) {
+                at += pieces.piece(at: index)?.lengthMS ?? 0
+                cuts.append(at)
+            }
+        }
+        cutsMS = cuts
+    }
+
+    /// Where a handle dragged to `ms` lands: on the nearest cut when one is
+    /// within `tolerance`, else where the hand put it. A tolerance of nought
+    /// is snapping switched off.
+    public func caught(_ ms: Int, withinMS tolerance: Int) -> Int {
+        guard tolerance > 0,
+              let nearest = cutsMS.min(by: { abs($0 - ms) < abs($1 - ms) }),
+              abs(nearest - ms) <= tolerance else { return ms }
+        return nearest
     }
 
     /// How long the trim keeps.
@@ -89,11 +111,30 @@ public struct ClipTrimSession: Hashable, Sendable {
     /// which is the rule `Layer.setClipPieces` already holds every other edit
     /// to: a trim is not a reason for a clip to walk away from what somebody
     /// lined it up with.
+    ///
+    /// The handles run over the whole clip, cuts and all. A handle that lands
+    /// on a cut, or past one, throws away every piece wholly outside it and
+    /// trims the piece it stands in; what would be left of a piece shorter
+    /// than a piece may be goes too, so a handle a hair short of a cut keeps
+    /// no sliver of the piece before it. The frames are still in the
+    /// recording either way, so a second session finds them as spare.
     public func applied(to layer: Layer) -> Layer? {
         guard layer.id == layerID, isChanged, var pieces = layer.clipPieces else { return nil }
-        let atTheFront = keepInMS - openedInMS
-        let atTheBack = keepOutMS - openedOutMS
+        var atTheFront = keepInMS - openedInMS
+        var atTheBack = keepOutMS - openedOutMS
+        // In from the front: whole pieces first, then what is left of one.
+        while atTheFront > 0, pieces.count > 1, let first = pieces.piece(at: 0),
+              atTheFront > first.lengthMS - ClipPiece.shortestMS {
+            pieces.remove(at: 0)
+            atTheFront = max(0, atTheFront - first.lengthMS)
+        }
         if atTheFront != 0, !pieces.trimStart(ofPiece: 0, byMS: atTheFront) { return nil }
+        // In from the back, the same way round.
+        while atTheBack < 0, pieces.count > 1, let last = pieces.piece(at: pieces.count - 1),
+              -atTheBack > last.lengthMS - ClipPiece.shortestMS {
+            pieces.remove(at: pieces.count - 1)
+            atTheBack = min(0, atTheBack + last.lengthMS)
+        }
         if atTheBack != 0, !pieces.trimEnd(ofPiece: pieces.count - 1, byMS: atTheBack) { return nil }
         var next = layer
         next.setClipPieces(pieces)

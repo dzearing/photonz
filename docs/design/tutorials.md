@@ -1064,6 +1064,12 @@ thrown twice.
 
 ## The Video track
 
+> **Retired 2026-09-26.** The two guides below taught the small recording
+> window, which Next no longer opens (`docs/design/video.md` §7). Tutorials are
+> Next-only, so they could never be seen again and were deleted with their three
+> walks. This section is kept for what it learned; the track that replaced them
+> is "The Video track in the editor", below.
+
 The smallest track, and the only one that does not teach in the picture editor
 at all. A recording opens in a window of its own: one picture, and one floating
 glass controller over it. No tool bar, no docked panel, no layers.

@@ -1224,7 +1224,8 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .videoTrimCancel, .videoTrimReset, .videoPlay, .videoPause,
              .videoSeekQuarter, .videoSeekMiddle, .videoSeekThreeQuarters,
              .videoSeekStart, .videoStepOneSecond, .videoStepBackOneSecond,
-             .videoStepQuarterSecond: true
+             .videoStepQuarterSecond,
+             .videoDragTrimNearCut, .videoDragTrimClearOfCut, .videoDragTrimEndNearCut: true
         default: false
         }
     }

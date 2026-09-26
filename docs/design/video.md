@@ -290,34 +290,31 @@ that quietly stutters.
 
 ## 7. What happened to the old video editor
 
-Not retired yet, and deliberately not pretended otherwise.
+**Retired from Next on 2026-09-26.** Next has one way to open a recording: the
+editor, as a document with time. `next-a-recording-is-a-document`, the switch
+that chose between the editor and the small recording window, is deleted, so
+nothing in Experiments brings the window back. `NextExperience.videoEditor`
+hands a `.video` window id to the ordinary `ImageEditorRootView`.
 
-**Trim moved on 2026-09-20.** It is now a tool in the ordinary window, in
-Crop's slot, and `video-surface.md` §10 describes what was built. What is left
-in the old window is save, export, crop and revert to original, and one
-question about the first of those is with the user: a recording document can
-now be styled, and Save cannot mean both "write the video back" and "write a
-project holding the arrow you drew on it". The window stays the default until
-that is answered, which is why `next-a-recording-is-a-document` is still off.
+**The window's code is still in the tree, and that is on purpose.** Current,
+the shipping release, still opens every recording in it, and a Next task may
+not change Current (see `Sources/Photonz/Releases/README.md`). So
+`VideoEditorState`, `VideoEditorView`, `TrimTimeline` and `PlaybackScrubber`
+are Current's alone now: nothing in Next reaches them, and they go when Next
+is promoted and Current becomes Legacy.
 
-| Thing | What happened |
+| Thing | Where it went in Next |
 | --- | --- |
-| Trim | **Moved.** `Tool.trim`, `ClipTrimSession` (PhotonzCore), `EditorState+Trim`, handles on the clip's bar in `MotionStripView`, one glass capsule in `EditorView.trimActionBar`. `trim-is-a-tool-walk` drives the whole session. |
-| `VideoEditorState` | **Still standing.** It is what a recording opens with the flag off, and it still owns save, crop, export and revert to original. Its own trim is still there and still what that window uses; nothing has been taken away from anybody. |
-| `VideoEditorView` | Still standing, same reason. |
-| `TrimTimeline` | Untouched. It is bound to `VideoEditorState` and goes when that does. |
-| `PlaybackScrubber` | Untouched, same reason. |
-| `VideoCutList` | **Reused.** `ClipPieces(cutList:)` and `VideoCutList.layerTimes()` project a cut recording straight into the document model, so the two agree about time without either owning the other's arithmetic. |
-| `VideoExporter`, `VideoAssetCommit` | Untouched, and still what the old window's Export uses. A DOCUMENT with time leaves through `DocumentMovieWriter` instead (§8): the old exporter is a function of one file plus a cut list, and cannot say a reordered piece, a held frame, a second sound layer or an arrow drawn over the picture. |
-
-**Why there are two ways in for now.** Eleven walks drive the shipped trim flow
-through the old window, and the trim TOOL that replaces it (`video-surface.md`
-§10: Crop's slot, handles on the clip's bar, one capsule reading Cancel then
-Trim) is not built. Moving the window before the tool exists would take trim,
-save and export away from anybody who opened a recording. So the document path
-ships behind its own flag, off by default, and the old window stays the default
-until the tool and the walks move with it. That is one flag with two settings,
-not two editors nobody chose between, and the flag's whole job is to be deleted.
+| Trim | `Tool.trim` in Crop's slot, `ClipTrimSession` (PhotonzCore), `EditorState+Trim`, handles on the clip's bar in `MotionStripView`, one glass capsule in `EditorView.trimActionBar` (`video-surface.md` §10). The handles run over a cut clip's cuts, catch on them while the timeline snaps (Command frees the drag), and a handle on or past a cut throws away the pieces wholly outside it. |
+| Save | Command S saves a project (`EditorState.saveDocument`, §8a). The recording on disk is never written over, so a saved recording keeps its place in `RecordingPlaces`: nothing about the file changed. |
+| Save a copy | File ▸ Save As, a project. |
+| Export | The video sheet, `VideoExportDialog` (§8). |
+| Revert to Original | Video ▸ Revert to Original (`EditorState+RevertRecording`): every edit thrown away, back to the recording as it opened, as one undo step. Dimmed until something has changed. |
+| Crop | The ordinary Crop tool, on the canvas, as for any layer. |
+| The two old-window guides | `trim-a-recording` and `export-a-recording` are gone: tutorials are Next-only, and they only ever showed with the switch off. The editor's six video guides replace them. |
+| The old window's walks | The eleven trim walks were rewritten against the editor and pass; `opening-a-recording-walk` passes unchanged on the editor. The seven that only described the old window's own chrome (its cut strip, its button row, its export sheet, its save toast) were deleted; `cut-on-the-timeline-walk`, `delete-key-drops-a-timeline-piece-walk`, `an-edited-recording-comes-out-as-a-video-walk` and `command-s-saves-a-video-project-walk` cover the same ground in the editor. |
+| `VideoCutList` | **Reused.** `ClipPieces(cutList:)` projects a cut recording straight into the document model. |
+| `VideoExporter`, `VideoAssetCommit` | Current's recording window only. A document with time leaves through `DocumentMovieWriter` (§8). |
 
 ---
 

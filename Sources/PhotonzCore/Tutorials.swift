@@ -955,8 +955,6 @@ public enum TutorialCatalog {
         TutorialGuides.exportTheVideo,
         // The small recording window's two guides, offered only where that
         // window is still what a recording opens in.
-        TutorialGuides.trimARecording,
-        TutorialGuides.exportARecording,
     ]
 
     /// The guide the Help menu's own row runs, and the one first launch offers.

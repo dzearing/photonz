@@ -146,10 +146,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
-/// Root of an editor window. A `.video` id opens the in-app video editor with
-/// its own `VideoEditorState`; every other id opens the image editor. Branching
-/// up front keeps `EditorState` image-pure (no AVFoundation) and gives each
-/// surface its own focused-scene value for the menu commands.
+/// Root of an editor window. A `.video` id asks the running release how it
+/// opens a recording: Next opens it in the ordinary editor, as a document with
+/// time (`docs/design/video.md` §7), and Current still opens the small
+/// recording window with its own `VideoEditorState`. Every other id opens the
+/// image editor.
 ///
 /// Which version of those roots you get is the running release's call, so both
 /// go through `ReleaseExperience` rather than being named directly.
@@ -158,7 +159,7 @@ struct EditorRootView: View {
     @Environment(AppCoordinator.self) private var coordinator
 
     var body: some View {
-        if case .video(let url) = windowID, !Experiments.shared.recordingIsADocument {
+        if case .video(let url) = windowID {
             ReleaseExperience.videoEditor(url: url)
         } else {
             ReleaseExperience.imageEditor(windowID: windowID)

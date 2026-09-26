@@ -156,6 +156,114 @@ struct ClipTrimTests {
         #expect(after.piece(at: 1)?.sourceOutMS == 7000)
     }
 
+    /// The recording cut at two and six seconds: three pieces, 2 + 4 + 2.
+    private func cutInThree() throws -> Layer {
+        var clip = wholeRecording()
+        var pieces = try #require(clip.clipPieces)
+        let first = pieces.split(atMS: 2000)
+        let second = pieces.split(atMS: 6000)
+        #expect(first && second)
+        clip.setClipPieces(pieces)
+        return clip
+    }
+
+    // The handles run over the whole clip, cuts and all, the way they did in
+    // the recording window (`trim-catches-on-a-cut-walk`). A handle that lands
+    // on a cut or past it throws away every piece wholly outside it. Until
+    // 2026-09-26 the commit refused that outright and Trim did nothing at all.
+    @Test("handles on both cuts keep exactly the middle piece")
+    func handlesOnTheCutsKeepTheMiddle() throws {
+        let clip = try cutInThree()
+        var session = try #require(ClipTrimSession(layer: clip))
+        session.dragIn(toMS: 2000)
+        session.dragOut(toMS: 6000)
+        let trimmed = try #require(session.applied(to: clip))
+        let after = try #require(trimmed.clipPieces)
+        #expect(after.count == 1)
+        #expect(after.piece(at: 0)?.sourceInMS == 2000)
+        #expect(after.piece(at: 0)?.sourceOutMS == 6000)
+        #expect(trimmed.time?.lengthMS == 4000)
+        #expect(trimmed.time?.inMS == 0)
+    }
+
+    @Test("a handle dragged past a cut drops the piece behind it and trims the next")
+    func handlePastACut() throws {
+        let clip = try cutInThree()
+        var session = try #require(ClipTrimSession(layer: clip))
+        session.dragIn(toMS: 3000)
+        session.dragOut(toMS: 5000)
+        let trimmed = try #require(session.applied(to: clip))
+        let after = try #require(trimmed.clipPieces)
+        #expect(after.count == 1)
+        #expect(after.piece(at: 0)?.sourceInMS == 3000)
+        #expect(after.piece(at: 0)?.sourceOutMS == 5000)
+        #expect(trimmed.time?.lengthMS == 2000)
+    }
+
+    @Test("a handle a sliver short of a cut keeps no sliver of the piece before it")
+    func noSliverAtACut() throws {
+        let clip = try cutInThree()
+        var session = try #require(ClipTrimSession(layer: clip))
+        // One millisecond short of each cut: what is left of the outer pieces
+        // is shorter than a piece may be, so they go rather than the trim
+        // being refused.
+        session.dragIn(toMS: 1999)
+        session.dragOut(toMS: 6001)
+        let trimmed = try #require(session.applied(to: clip))
+        let after = try #require(trimmed.clipPieces)
+        #expect(after.count == 1)
+        #expect(after.piece(at: 0)?.sourceInMS == 2000)
+        #expect(after.piece(at: 0)?.sourceOutMS == 6000)
+    }
+
+    @Test("a trim across cuts is still one edit that Reset and a second session can undo")
+    func acrossCutsGivesBack() throws {
+        let clip = try cutInThree()
+        var session = try #require(ClipTrimSession(layer: clip))
+        session.dragIn(toMS: 2000)
+        session.dragOut(toMS: 6000)
+        let trimmed = try #require(session.applied(to: clip))
+        // What is thrown away is the pieces; the frames are still in the
+        // recording, so a second session sees them as spare either side.
+        let again = try #require(ClipTrimSession(layer: trimmed))
+        #expect(again.spareBeforeMS == 2000)
+        #expect(again.spareAfterMS == 2000)
+        #expect(again.wholeLengthMS == 8000)
+    }
+
+    // A handle dragged by hand catches on a cut, the way a Premiere trim
+    // snaps to an edit point, so landing exactly on one does not take a
+    // steady hand (`trim-catches-on-a-cut-walk`).
+    @Test("the session knows where the cuts are, in its own milliseconds")
+    func knowsTheCuts() throws {
+        let session = try #require(ClipTrimSession(layer: try cutInThree()))
+        #expect(session.cutsMS == [2000, 6000])
+        let whole = try #require(ClipTrimSession(layer: wholeRecording()))
+        #expect(whole.cutsMS.isEmpty)
+    }
+
+    @Test("a handle near a cut catches on it, and one clear of it does not")
+    func catchesNearACut() throws {
+        let session = try #require(ClipTrimSession(layer: try cutInThree()))
+        #expect(session.caught(1950, withinMS: 60) == 2000)
+        #expect(session.caught(6040, withinMS: 60) == 6000)
+        #expect(session.caught(1800, withinMS: 60) == 1800)
+        // No tolerance is snapping switched off: the hand goes where it goes.
+        #expect(session.caught(1950, withinMS: 0) == 1950)
+    }
+
+    @Test("the cuts are counted from where a previous trim left the clip")
+    func cutsAfterATrim() throws {
+        let clip = try cutInThree()
+        var first = try #require(ClipTrimSession(layer: clip))
+        first.dragIn(toMS: 1000)
+        let trimmed = try #require(first.applied(to: clip))
+        let again = try #require(ClipTrimSession(layer: trimmed))
+        // A second left spare at the front, then a one second piece: the cut
+        // is where it always was in the recording.
+        #expect(again.cutsMS == [2000, 6000])
+    }
+
     @Test("a trim the clip cannot take changes nothing")
     func refusesTheImpossible() throws {
         var clip = wholeRecording()

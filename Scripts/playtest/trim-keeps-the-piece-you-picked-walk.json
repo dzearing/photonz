@@ -1,49 +1,36 @@
 {
   "out": "/tmp/photonz-playtest/trim-keeps-the-piece-you-picked-walk",
-  "setup": { "flags": { "next-a-recording-is-a-document": false }, "forget": ["all"] },
+  "setup": { "forget": ["all"] },
   "steps": [
     { "do": "action", "action": "openSampleRecording" },
     { "do": "action", "action": "videoPause" },
     { "do": "action", "action": "videoSeekQuarter" },
-    { "do": "action", "action": "videoCut" },
-    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "clipSplit" },
     { "do": "action", "action": "videoSeekThreeQuarters" },
-    { "do": "action", "action": "videoCut" },
+    { "do": "action", "action": "clipSplit" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "action", "action": "videoSeekMiddle" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "expectRecording", "pieces": 3, "picked": 2 },
-    { "do": "describe", "stage": "1-middle-piece-picked", "note": "an eight second recording cut in three, playhead in the middle piece: the strip lights that block in the accent and the trash button is beside the cut" },
+    { "do": "describe", "stage": "1-middle-piece-picked", "note": "an eight second recording cut in three: the second split leaves you holding the piece before it, the middle one" },
     { "do": "snapshot", "name": "1-middle-piece-picked" },
 
     { "do": "action", "action": "videoBeginTrim" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "expectRecording", "pieces": 3, "picked": 2, "keeps": 3, "seconds": 8 },
-    { "do": "describe", "stage": "2-trim-keeps-the-pick", "note": "the trim handles open and the middle piece is STILL the picked one: it wears a white hairline and a slightly stronger fill, quiet enough that the accent handles and the accent window border still read as the window" },
+    { "do": "expectRecording", "pieces": 3, "picked": 2, "seconds": 8 },
+    { "do": "describe", "stage": "2-trim-keeps-the-pick", "note": "Trim opens on the clip the piece belongs to and the middle piece is STILL the picked one" },
     { "do": "snapshot", "name": "2-trim-keeps-the-pick" },
 
     { "do": "action", "action": "videoTrimStart" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "expectRecording", "pieces": 3, "picked": 2, "keeps": 2, "seconds": 6 },
-    { "do": "describe", "stage": "3-handle-in-pick-held", "note": "the start handle has come in to the first join, so the first piece is on its way out; the middle piece is still the picked one and the trash is still on the row" },
+    { "do": "expectRecording", "pieces": 3, "picked": 2, "seconds": 6, "starts": 2 },
+    { "do": "describe", "stage": "3-handle-in-pick-held", "note": "the in handle is on the first cut, so the first piece is on its way out; the pick has not moved" },
     { "do": "snapshot", "name": "3-handle-in-pick-held" },
 
-    { "do": "key", "key": "delete" },
-    { "do": "wait", "seconds": 1.4 },
-    { "do": "expectRecording", "pieces": 2, "picked": 2, "keeps": 1, "seconds": 2 },
-    { "do": "describe", "stage": "4-delete-took-the-picked-piece", "note": "Delete took the picked piece while the handles were open, and the window came with it: the start handle is where it was left and the end handle has slid back by the length that went, instead of both jumping to the ends" },
-    { "do": "snapshot", "name": "4-delete-took-the-picked-piece" },
-
-    { "do": "action", "action": "videoUndoEdit" },
-    { "do": "wait", "seconds": 1.2 },
-    { "do": "expectRecording", "pieces": 3, "picked": 2, "keeps": 2, "seconds": 6 },
-    { "do": "describe", "stage": "5-undo-brings-it-back", "note": "one undo puts the piece back and puts the window back with it, still in trim mode, still on the same pick" },
-    { "do": "snapshot", "name": "5-undo-brings-it-back" },
-
     { "do": "action", "action": "videoTrimDone" },
-    { "do": "wait", "seconds": 1.2 },
-    { "do": "expectRecording", "pieces": 2, "picked": 1, "keeps": 2, "seconds": 6 },
-    { "do": "describe", "stage": "6-done-lands-on-the-first-piece", "note": "Done keeps what the handles were showing and lands the playhead at the start, so the first of what is left is the picked one: the strip says so in the accent again" },
-    { "do": "snapshot", "name": "6-done-lands-on-the-first-piece" }
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectRecording", "pieces": 2, "picked": 0, "seconds": 6 },
+    { "do": "describe", "stage": "4-trim-lets-go-of-a-pick-that-moved", "note": "THE TEST: the trim dropped the first piece, so the piece that was number two is now number one. Nothing is left picked rather than the pick quietly landing on a different piece, and the clip stays picked" },
+    { "do": "snapshot", "name": "4-trim-lets-go-of-a-pick-that-moved" }
   ]
 }
