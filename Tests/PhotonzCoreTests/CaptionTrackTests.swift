@@ -98,15 +98,14 @@ final class CaptionTrackTests: XCTestCase {
 
     // MARK: - Editing a cue in place
 
-    func testAClickOnThePictureFindsTheCaptionOnScreenNotOneStillToCome() {
+    func testAClickOnThePictureFindsTheCaptionOnScreenNotOneStillToCome() throws {
         let document = documentWithCaptionTrack()
-        let band = document.captionLayers[0].frame
+        // Every cue fills the Captions layer's box; at 950 ms only the first is
+        // on screen, and the second (later in the stack) must not take the click.
+        let band = try XCTUnwrap(document.captionsLayers.first).frame
         let point = CGPoint(x: band.midX, y: band.midY)
-        // Every cue sits in the same band; at 950 ms only the first is on
-        // screen, and the second (later in the stack) must not take the click.
         let first = document.captionLayers[0].id
-        let atFirst = document.hidingWhatIsOffScreen(atTimeMS: 950).hitTest(point)
-        XCTAssertEqual(atFirst?.id, first)
+        XCTAssertEqual(document.hidingWhatIsOffScreen(atTimeMS: 950).hitTest(point)?.id, first)
         let second = document.captionLayers[1]
         let atSecond = document.hidingWhatIsOffScreen(atTimeMS: second.time?.inMS ?? 0).hitTest(point)
         XCTAssertEqual(atSecond?.id, second.id)
@@ -149,24 +148,6 @@ final class CaptionTrackTests: XCTestCase {
             XCTAssertEqual(content.colorHex, "#FFD76A")
             XCTAssertEqual(content.fontSize, 60)
             XCTAssertEqual(content.plateHex, "#000000CC")
-        }
-    }
-
-    func testPositionMovesEveryCaptionInsideTheTitleSafeArea() {
-        var document = documentWithCaptionTrack()
-        var look = CaptionLook.preset(.caption)
-        look.position = .top
-        document.applyCaptionLook(look)
-        let size = document.canvasSize
-        for layer in document.captionLayers {
-            XCTAssertEqual(layer.frame.minY, size.height * CaptionLayers.titleSafeInset, accuracy: 0.5)
-            guard case .text(let content) = layer.content else { return XCTFail("still text") }
-            XCTAssertEqual(content.verticalAlignment, .top)
-        }
-        look.position = .bottom
-        document.applyCaptionLook(look)
-        for layer in document.captionLayers {
-            XCTAssertEqual(layer.frame.maxY, size.height * (1 - CaptionLayers.titleSafeInset), accuracy: 0.5)
         }
     }
 

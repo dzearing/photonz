@@ -62,6 +62,7 @@ public struct ClipLine: Hashable, Sendable {
     /// The chip on the pane's header: what kind of thing is picked, in the
     /// mock's words.
     public static func kind(of layer: Layer) -> String {
+        if layer.isCaptionsLayer { return "Captions" }
         if layer.isCaption { return "Caption" }
         if layer.isComponentInstance { return "Instance" }
         switch TimePanelOrder.role(of: layer) {

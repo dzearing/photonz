@@ -10,7 +10,7 @@ import SwiftUI
 /// Pick three labels and one size reaches all three, in one undo step. Where
 /// they differ the menu says Mixed and choosing anything makes them agree. The
 /// ink is in the Color section with every other color; this is the type itself.
-private extension TextAlign {
+extension TextAlign {
     /// The picture on this row's segment. `text.align*` is the system's own
     /// family for it, and a screen reader and a scripted walk both name the
     /// segment from the symbol, so these stay the standard ones.

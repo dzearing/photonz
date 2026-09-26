@@ -19733,3 +19733,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Flag `next-anything-drawn-on-a-video-is-on-the-timeline` (Next default on; Current unchanged). Core: `DrawnOnTheTimeline.swift` (`drawnSpan`, `addLayerDrawn(_:atTimeMS:placingInTime:)`, `transformKeyDiamond`, `toggleTransformKey`), `DocumentTracks` names a placed graphic's track after it, `ClipLine.kind` Graphic. Tests `DrawnOnTheTimelineTests`. App: `EditorState+DrawnTime.swift` (every creation route), `TrackKeyDiamond` in `TimelineTrackRows.swift`, menu row in `EditorState+TimelineMenus`.
 - Walk `drawn-shape-gets-a-timeline-row-walk` at Next defaults (bar ends at 3.5s not 3s, so the 3s key has a layer on screen to drag). Audit `queue/audits/2026-09-25-drawn-on-the-timeline.json`.
 - Open: two untracked walks from the sharp-first-frame task use an `expectFrameSharp` step that does not exist, which fails the walk-setup tests while they sit in the tree.
+
+## 2026-09-25 — Captions are one layer
+
+- Captions are now one Captions layer (a group carrying `GroupContent.captionLook`): one row with a captions mark, not openable; one box every cue fills, moved/resized/rotated like any layer; the box grows up from its floor when the type grows. `CaptionLook.Position` is gone. Old caption groups are adopted on open (`adoptingCaptionGroups`).
+- Picked Captions layer: new Text section (`CaptionsTextInspector`), Layout section hidden.
+- Walk `captions-are-one-layer-walk`; audit `queue/audits/2026-09-25-captions-are-one-layer.json`.
+- Open: two untracked "opens sharp" walks from another task break the walk-setup tests while in the tree (logged on that task).

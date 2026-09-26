@@ -6,15 +6,21 @@ import Foundation
 //
 // The mock asks three things of captions beyond being written:
 //
-// - **One track.** Every cue sits on one Captions row of the timeline, side by
-//   side, the way Premiere's captions track holds them. The cues are still
-//   ordinary text layers with an in and an out; they land in one group, and a
-//   group made of nothing but captions IS the captions track's clip
-//   (`Layer.isCaptionGroup`), whose cues the timeline lays out in one lane.
-// - **One look.** Caption, Lower third or Karaoke, plus the font, size,
-//   colour, background and position, set once for every caption
-//   (`CaptionLook`, `applyCaptionLook`). The look is written on the document
-//   so the next lot of captions comes out wearing it too.
+// - **One layer, one track.** Captions are ONE layer of kind Captions
+//   (`Layer.isCaptionsLayer`): a row in the layers list, a box on the picture
+//   you move, size and rotate like a rectangle, and one Captions row on the
+//   timeline with every cue side by side, the way Premiere's captions track
+//   holds them. Inside, the transcript is one text layer per cue with an in and
+//   an out, and every cue fills the layer's box, so the box IS where the words
+//   sit and its width is their wrap width. There is no Bottom/Middle/Top: the
+//   user asked on 2026-09-25 for captions positioned "just like any other
+//   layer".
+// - **One look per layer.** Caption, Lower third or Karaoke, plus the font,
+//   size, colour and background, set once for every caption in the layer
+//   (`CaptionLook`, `applyCaptionLook`). It lives on the Captions layer, so a
+//   second Captions layer (another language, another speaker) wears its own;
+//   the document keeps the last one chosen for the next lot written from
+//   scratch.
 // - **A lit word.** The word being said lights up as the playhead passes it.
 //   Nothing about that is stored: the frame drawn at a moment carries it
 //   (`CaptionActiveWord`, applied in `DocumentTime.shownTree`), exactly the way
@@ -22,7 +28,8 @@ import Foundation
 
 // MARK: - The look
 
-/// How every caption in a document looks.
+/// How every caption in a Captions layer looks. Where the words sit is not
+/// part of it: that is the layer's own box, moved and sized like any other.
 public struct CaptionLook: Hashable, Codable, Sendable {
 
     /// The mock's three named styles.
@@ -34,27 +41,6 @@ public struct CaptionLook: Hashable, Codable, Sendable {
             case .caption: "Caption"
             case .lowerThird: "Lower third"
             case .karaoke: "Karaoke"
-            }
-        }
-    }
-
-    /// Where on the picture the words sit, always inside the title-safe area.
-    public enum Position: String, Hashable, Codable, Sendable, CaseIterable {
-        case bottom, middle, top
-
-        public var title: String {
-            switch self {
-            case .bottom: "Bottom"
-            case .middle: "Middle"
-            case .top: "Top"
-            }
-        }
-
-        var verticalAlignment: TextVerticalAlign {
-            switch self {
-            case .bottom: .bottom
-            case .middle: .middle
-            case .top: .top
             }
         }
     }
@@ -71,13 +57,12 @@ public struct CaptionLook: Hashable, Codable, Sendable {
     public var backgroundHex: String?
     /// The colour the word being said lights up in, or nil for none.
     public var activeHex: String?
-    public var position: Position
     public var alignment: TextAlign
 
     public init(preset: Preset, fontName: String = "SF Pro", weight: TextWeight = .semibold,
                 fontSize: CGFloat? = nil, colorHex: String = "#FFFFFF",
                 backgroundHex: String? = nil, activeHex: String? = nil,
-                position: Position = .bottom, alignment: TextAlign = .center) {
+                alignment: TextAlign = .center) {
         self.preset = preset
         self.fontName = fontName
         self.weight = weight
@@ -85,7 +70,6 @@ public struct CaptionLook: Hashable, Codable, Sendable {
         self.colorHex = colorHex
         self.backgroundHex = backgroundHex
         self.activeHex = activeHex
-        self.position = position
         self.alignment = alignment
     }
 
@@ -225,10 +209,36 @@ extension Layer {
         return lit
     }
 
-    /// A group holding nothing but captions: the clip a Captions track holds.
-    public var isCaptionGroup: Bool {
-        guard isGroup, !children.isEmpty else { return false }
-        return children.allSatisfy(\.isCaption)
+    /// A Captions layer: one layer holding a transcript, one cue each, in its
+    /// own look, every cue filling its box.
+    public var isCaptionsLayer: Bool { group?.captionLook != nil }
+
+    /// The clip a Captions track holds. The same thing as a Captions layer.
+    public var isCaptionGroup: Bool { isCaptionsLayer }
+
+    /// A Captions layer's look, or nil for every other layer. Setting it on a
+    /// group makes it a Captions layer.
+    public var captionsLook: CaptionLook? {
+        get { group?.captionLook }
+        set {
+            guard case .group(var group) = content else { return }
+            group.captionLook = newValue
+            content = .group(group)
+        }
+    }
+
+    /// A Captions layer given a new box: every cue fills it. The type keeps
+    /// its size, because a box is a wrap width, not a zoom.
+    func reboxingCaptions(to box: CGRect) -> Layer {
+        var layer = self
+        let box = box.standardized
+        layer.frame = box
+        layer.children = children.map { cue in
+            var cue = cue
+            cue.frame = CGRect(origin: .zero, size: box.size)
+            return cue
+        }
+        return layer
     }
 }
 
@@ -236,11 +246,23 @@ extension Layer {
 
 extension PhotonzDocument {
 
+    /// Every Captions layer in the document, top of the stack first.
+    public var captionsLayers: [Layer] {
+        var found: [Layer] = []
+        forEachLayer { if $0.isCaptionsLayer { found.append($0) } }
+        return found
+    }
+
+    /// The Captions layer holding a cue, or nil for a cue somebody moved out.
+    public func captionsLayer(holding cueID: UUID) -> Layer? {
+        captionsLayers.first { layer in layer.children.contains { $0.id == cueID } }
+    }
+
     /// The cues on a captions track, earliest first: every caption inside the
-    /// caption groups on it.
+    /// Captions layers on it.
     public func captionCueIDs(onTrack id: UUID) -> [UUID] {
         // The captions under this track's clips, in time order, read in place:
-        // a Captions group holds every cue, and copying each out to sort it
+        // a Captions layer holds every cue, and copying each out to sort it
         // was most of the cost of drawing a long captioned timeline.
         let clips = Set(clipIDs(onTrack: id))
         var cues: [(id: UUID, inMS: Int)] = []
@@ -253,16 +275,25 @@ extension PhotonzDocument {
         return cues.sorted { $0.inMS < $1.inMS }.map(\.id)
     }
 
-    /// Put these cues on the document as its captions, replacing any it had,
-    /// in `look` (or the look the document already has, or the standard one).
-    /// They land as one Captions group, which the timeline shows as one
-    /// Captions track.
+    /// Put these cues on the document as its captions, in `look` (or the look
+    /// the Captions layer already wears, or the document's last, or the
+    /// standard one).
+    ///
+    /// Written again, they replace the cues of the first Captions layer where
+    /// it is: its box, its look and its place in the stack are what somebody
+    /// chose, and a second press means new words, not a new layer. Otherwise
+    /// they land as a new Captions layer in the lower third.
     @discardableResult
     public mutating func landCaptions(_ cues: [CaptionCue], look: CaptionLook? = nil) -> UUID? {
         // Words somebody fixed by hand come back fixed where the same words
         // are heard the same way again (`CaptionWordFixes`).
         let fixed = CaptionWordFixes(self).applied(to: cues)
-        clearCaptions()
+        let existing = captionsLayers.first
+        // Any stray caption outside a Captions layer goes; the first Captions
+        // layer's cues are replaced below, and every OTHER Captions layer is
+        // somebody's own and stays.
+        let held = Set(captionsLayers.flatMap { $0.children.map(\.id) })
+        removeLayers(ids: Set(captionLayers.map(\.id)).subtracting(held))
         // Nothing is said after the film ends, so no line is on screen after
         // it either: a line lingering past the last frame would make the film
         // longer by the linger.
@@ -271,28 +302,59 @@ extension PhotonzDocument {
             guard cue.inMS < end - LayerTime.shortestMS else { return cue.outMS <= end ? cue : nil }
             return CaptionCue(words: cue.words, inMS: cue.inMS, outMS: min(cue.outMS, end))
         }
-        guard !cues.isEmpty else { return nil }
-        let chosen = look ?? captionLook ?? .standard
+        guard !cues.isEmpty else {
+            if let existing { removeLayers(ids: [existing.id]) }
+            return nil
+        }
+        let chosen = look ?? existing?.captionsLook ?? captionLook ?? .standard
         captionLook = chosen
-        let children = CaptionLayers.layers(for: cues, in: canvasSize, look: chosen)
-        let group = Layer(name: CaptionLayers.groupName, content: .group(GroupContent(children: children)),
-                          frame: CGRect(origin: .zero, size: .zero))
-        addLayer(group)
-        return group.id
+        let box = existing.map(\.frame)
+            ?? CaptionLayers.defaultBox(in: canvasSize, fontSize: chosen.resolvedFontSize(in: canvasSize))
+        let children = CaptionLayers.layers(for: cues, in: canvasSize, look: chosen, box: box.size)
+        if let existing {
+            updateLayer(id: existing.id) { layer in
+                layer.children = children
+                layer.captionsLook = chosen
+            }
+            return existing.id
+        }
+        var content = GroupContent(children: children)
+        content.captionLook = chosen
+        let layer = Layer(name: CaptionLayers.groupName, content: .group(content), frame: box)
+        addLayer(layer)
+        return layer.id
     }
 
-    /// Dress every caption in `look`, and keep it for the next ones.
+    /// Dress every Captions layer in `look`, and keep it for the next ones.
     public mutating func applyCaptionLook(_ look: CaptionLook) {
         captionLook = look
+        for layer in captionsLayers { applyCaptionLook(look, toCaptions: layer.id) }
+    }
+
+    /// Dress one Captions layer in `look`, leaving its box where it is and
+    /// every other Captions layer as it was. The document keeps the look for
+    /// the next captions written from scratch.
+    public mutating func applyCaptionLook(_ look: CaptionLook, toCaptions id: UUID) {
+        guard layer(id: id)?.isCaptionsLayer == true else { return }
+        captionLook = look
         let size = canvasSize
-        for caption in captionLayers {
-            let origin = parentOrigin(of: caption.id) ?? .zero
-            updateLayer(id: caption.id) { layer in
-                guard case .text(let content) = layer.content else { return }
-                let restyled = CaptionLayers.dress(layer, string: content.string, in: size, look: look)
-                layer.content = restyled.content
-                layer.style.shadow = restyled.style.shadow
-                layer.frame = restyled.frame.offsetBy(dx: -origin.x, dy: -origin.y)
+        updateLayer(id: id) { layer in
+            // New type needs room for two lines of itself: the box grows or
+            // shrinks up from its floor, where the words sit, and keeps the
+            // width somebody gave it.
+            let was = layer.captionsLook?.resolvedFontSize(in: size)
+            let font = look.resolvedFontSize(in: size)
+            if was != font {
+                let height = CaptionLayers.band(in: size, lines: 2, fontSize: font).height
+                let frame = layer.frame
+                layer.frame = CGRect(x: frame.minX, y: frame.maxY - height,
+                                     width: frame.width, height: height)
+            }
+            let box = layer.frame.size
+            layer.captionsLook = look
+            layer.children = layer.children.map { cue in
+                guard cue.isCaption, case .text(let content) = cue.content else { return cue }
+                return CaptionLayers.dress(cue, string: content.string, in: size, look: look, box: box)
             }
         }
     }
@@ -320,56 +382,77 @@ extension PhotonzDocument {
         guard !captionsListenedTo.contains(soundID) else { return }
         captionsListenedTo.append(soundID)
     }
+
+    /// A document saved when captions were a plain group of cues sitting in
+    /// canvas space, dressed by a document-wide look and placed by a
+    /// Bottom/Middle/Top setting, opened as Captions layers: the group gets
+    /// the box its cues were in, the cues fill it, and it wears the look.
+    /// Nothing moves on the picture and no word or time changes.
+    mutating func adoptingCaptionGroups() {
+        let look = captionLook ?? .standard
+        func adopt(_ list: inout [Layer]) {
+            for index in list.indices {
+                guard case .group(var group) = list[index].content else { continue }
+                if group.captionLook == nil, !group.children.isEmpty,
+                   group.children.allSatisfy(\.isCaption) {
+                    let origin = list[index].frame.origin
+                    let box = group.children.dropFirst().reduce(group.children[0].frame) {
+                        $0.union($1.frame)
+                    }.offsetBy(dx: origin.x, dy: origin.y)
+                    group.captionLook = look
+                    list[index].content = .group(group)
+                    list[index] = list[index].reboxingCaptions(to: box)
+                } else {
+                    adopt(&group.children)
+                    list[index].content = .group(group)
+                }
+            }
+        }
+        adopt(&layers)
+    }
 }
 
 extension CaptionLayers {
 
-    /// One layer per cue, dressed in `look`.
-    public static func layers(for cues: [CaptionCue], in size: CGSize, look: CaptionLook) -> [Layer] {
+    /// Where a fresh Captions layer lands: centred, across the picture inside
+    /// the title-safe inset, two lines tall, sitting on the title-safe floor,
+    /// which puts it in the lower third.
+    public static func defaultBox(in size: CGSize, fontSize: CGFloat) -> CGRect {
+        band(in: size, lines: 2, fontSize: fontSize)
+    }
+
+    /// One layer per cue, dressed in `look`, each filling a box this size.
+    public static func layers(for cues: [CaptionCue], in size: CGSize, look: CaptionLook,
+                              box: CGSize) -> [Layer] {
         cues.map { cue in
             var layer = Layer(name: name(for: cue), content: .text(TextContent(string: cue.text)),
                               frame: .zero)
-            layer = dress(layer, string: cue.text, in: size, look: look)
+            layer = dress(layer, string: cue.text, in: size, look: look, box: box)
             layer.time = LayerTime(inMS: cue.inMS, outMS: cue.outMS)
             layer.captionWords = cue.words
             return layer
         }
     }
 
-    /// A caption wearing `look`, in canvas coordinates.
-    static func dress(_ layer: Layer, string: String, in size: CGSize, look: CaptionLook) -> Layer {
+    /// A caption wearing `look`, filling its Captions layer's box. The last
+    /// line sits on the box's floor, so a one-line caption and a two-line one
+    /// share a baseline, the way subtitles do.
+    static func dress(_ layer: Layer, string: String, in size: CGSize, look: CaptionLook,
+                      box: CGSize) -> Layer {
         var layer = layer
         let font = look.resolvedFontSize(in: size)
         var content = TextContent(string: string, fontName: look.fontName, fontSize: font,
                                   colorHex: look.colorHex, weight: look.weight,
-                                  alignment: look.alignment,
-                                  verticalAlignment: look.position.verticalAlignment)
+                                  alignment: look.alignment, verticalAlignment: .bottom)
         content.staysOnOneLine = false
         content.plateHex = look.backgroundHex
         content.activeWordHex = look.activeHex
         content.activeWordSung = look.lightsEverythingSaid ? true : nil
         layer.content = .text(content)
-        layer.frame = band(in: size, lines: 2, fontSize: font, position: look.position)
+        layer.frame = CGRect(origin: .zero, size: box)
         layer.style.shadow = look.backgroundHex == nil
             ? TextBuilder.autoContrastShadow(forColorHex: look.colorHex) : nil
         return layer
-    }
-
-    /// The band a caption's box occupies at a position, inside the title-safe
-    /// inset on every side.
-    public static func band(in size: CGSize, lines: Int, fontSize: CGFloat,
-                            position: CaptionLook.Position) -> CGRect {
-        let bottom = band(in: size, lines: lines, fontSize: fontSize)
-        switch position {
-        case .bottom:
-            return bottom
-        case .top:
-            return CGRect(x: bottom.minX, y: size.height * titleSafeInset,
-                          width: bottom.width, height: bottom.height)
-        case .middle:
-            return CGRect(x: bottom.minX, y: (size.height - bottom.height) / 2,
-                          width: bottom.width, height: bottom.height)
-        }
     }
 
     /// A caption's name for retyped words.

@@ -232,7 +232,7 @@ extension EditorState {
         // before it: the captured one has no captions in it, so this quietly
         // selected nothing and left whatever was picked before still picked.
         // Captions that wrote themselves leave the selection where it was.
-        if !quietly { selectLayer(self.document?.captionLayers.first?.id) }
+        if !quietly { selectLayer(self.document?.captionsLayers.first?.id) }
         documentMomentChanged()
 
         if quietly {
@@ -335,15 +335,34 @@ extension EditorState {
         writeCaptionsFile(as: format, to: url.deletingPathExtension().appendingPathExtension(format.fileExtension))
     }
 
-    // MARK: - One look for every caption
+    // MARK: - One look per Captions layer
 
-    /// The look every caption wears now.
-    var captionLook: CaptionLook { document?.captionLook ?? .standard }
+    /// The Captions layer the panel is talking about: the one picked, the one
+    /// holding the picked cue, or else the first in the document.
+    var captionsLayerInFocus: Layer? {
+        guard let document else { return nil }
+        if let id = selectedLayerID, let picked = document.layer(id: id) {
+            if picked.isCaptionsLayer { return picked }
+            if picked.isCaption, let holder = document.captionsLayer(holding: id) { return holder }
+        }
+        return document.captionsLayers.first
+    }
 
-    /// Dress every caption in a new look, as one undo step.
+    /// The look the Captions layer in focus wears, or the one the next lot of
+    /// captions will come out in.
+    var captionLook: CaptionLook {
+        captionsLayerInFocus?.captionsLook ?? document?.captionLook ?? .standard
+    }
+
+    /// Dress the Captions layer in focus in a new look, as one undo step.
     func setCaptionLook(_ look: CaptionLook) {
-        guard hasCaptions || document?.captionLook != look else { return }
-        perform { $0.applyCaptionLook(look) }
+        if let layer = captionsLayerInFocus {
+            guard layer.captionsLook != look else { return }
+            perform { $0.applyCaptionLook(look, toCaptions: layer.id) }
+        } else {
+            guard document?.captionLook != look else { return }
+            perform { $0.captionLook = look }
+        }
         documentMomentChanged()
     }
 
@@ -355,12 +374,21 @@ extension EditorState {
         setCaptionLook(look)
     }
 
-    /// Pick one of the named styles. It keeps the font the person chose, where
-    /// they chose one, and takes everything else from the style.
+    /// Pick one of the named styles. It keeps the font and size the person
+    /// chose, and takes everything else from the style.
     func pickCaptionPreset(_ preset: CaptionLook.Preset) {
         var look = CaptionLook.preset(preset)
-        look.position = captionLook.position
+        look.fontName = captionLook.fontName
+        look.fontSize = captionLook.fontSize
         setCaptionLook(look)
+    }
+
+    /// Move the Captions layer in focus to a new box, as one undo step: what a
+    /// drag on the canvas lands as.
+    func moveCaptions(to box: CGRect) {
+        guard let layer = captionsLayerInFocus, layer.frame != box else { return }
+        perform { doc in doc.updateLayer(id: layer.id) { $0 = $0.resized(to: box) } }
+        documentMomentChanged()
     }
 
     // MARK: - A cue, in place

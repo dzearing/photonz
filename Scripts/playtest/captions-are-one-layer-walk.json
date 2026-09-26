@@ -1,0 +1,178 @@
+{
+  "out": "/tmp/photonz-playtest/captions-are-one-layer-walk",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "describe",
+      "stage": "why",
+      "note": "Captions are ONE layer of kind Captions: one row in the layers list, one box on the picture that every caption fills. It is picked, dragged and sized like a rectangle, and its type is set in an ordinary Text section. There is no Bottom/Middle/Top setting. Next at its defaults: no flag is set here."
+    },
+    {
+      "do": "action",
+      "action": "openSampleTalk"
+    },
+    {
+      "do": "action",
+      "action": "captionsWaitForThemselves"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-captions-written"
+    },
+    {
+      "do": "selectRow",
+      "row": "Captions"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectOneLayerPicked"
+    },
+    {
+      "do": "expect",
+      "menu": "Size",
+      "reads": "36 px"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-captions-picked-in-the-list"
+    },
+    {
+      "do": "drag",
+      "from": [
+        640,
+        690
+      ],
+      "to": [
+        640,
+        200
+      ],
+      "steps": 16
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectMovedTogether"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-dragged-to-the-top"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Size",
+      "choose": "64 px"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Size",
+      "reads": "64 px"
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectOneLayerPicked"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-bigger-type"
+    },
+    {
+      "do": "click",
+      "at": [
+        1000,
+        600
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        195
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectOneLayerPicked"
+    },
+    {
+      "do": "drag",
+      "from": [
+        1152,
+        147
+      ],
+      "to": [
+        900,
+        147
+      ],
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectOneLayerPicked"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-narrowed-by-its-handle"
+    },
+    {
+      "do": "key",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "key",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "undone"
+    }
+  ]
+}

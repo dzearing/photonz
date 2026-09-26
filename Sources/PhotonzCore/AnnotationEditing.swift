@@ -248,6 +248,9 @@ extension Layer {
         if measure != nil { return MeasureBuilder.resized(self, to: frame) }
         if zoomCallout != nil { return ZoomCalloutBuilder.resized(self, to: frame) }
         if let group {
+            // A Captions layer's box is where its words sit and how wide they
+            // wrap: every cue fills it, and the type keeps its size.
+            if group.captionLook != nil { return reboxingCaptions(to: frame) }
             // A copy is told how big it is and remembers being told, because
             // scaling what is inside one is work the next sync throws away.
             if group.instanceOf != nil, !placedByContainer {

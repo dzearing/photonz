@@ -204,6 +204,8 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         markOutMS = try c.decodeIfPresent(Int.self, forKey: .markOutMS)
         captionLook = try c.decodeIfPresent(CaptionLook.self, forKey: .captionLook)
         captionsListenedTo = try c.decodeIfPresent([UUID].self, forKey: .captionsListenedTo) ?? []
+        // Captions saved as a plain group of cues open as one Captions layer.
+        adoptingCaptionGroups()
     }
 
     /// A new document built around a base image, which becomes the bottom layer.

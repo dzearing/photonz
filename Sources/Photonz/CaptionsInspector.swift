@@ -150,38 +150,9 @@ struct CaptionsInspector: View {
         VideoKit.Segmented(options: CaptionLook.Preset.allCases.map { ($0, $0.title) },
                            selection: look.preset) { editorState.pickCaptionPreset($0) }
         .playtestControl("Caption style", detail: "the Captions section")
-        .panelHelp("One look for every caption.")
-        VideoKit.DropdownRow(label: "Font", value: look.fontName) {
-            ForEach(Self.fonts, id: \.self) { font in
-                Toggle(font, isOn: Binding(get: { look.fontName == font },
-                                           set: { _ in editorState.changeCaptionLook { $0.fontName = font } }))
-            }
-        }
-        .playtestField("Caption font")
-        VideoKit.DropdownRow(label: "Size", value: Self.sizeTitle(look.fontSize)) {
-            ForEach(Self.sizes, id: \.self) { size in
-                let value: CGFloat? = size == 0 ? nil : CGFloat(size)
-                Toggle(Self.sizeTitle(value), isOn: Binding(
-                    get: { look.fontSize == value },
-                    set: { _ in editorState.changeCaptionLook { $0.fontSize = value } }))
-            }
-        }
-        .playtestField("Caption size")
-        colourRow("Colour", value: look.colorHex, choices: Self.inks) { hex in
-            editorState.changeCaptionLook { $0.colorHex = hex ?? "#FFFFFF" }
-        }
-        colourRow("Background", value: look.backgroundHex, choices: Self.plates) { hex in
-            editorState.changeCaptionLook { $0.backgroundHex = hex }
-        }
+        .panelHelp("One look for every caption in this layer.")
         colourRow("Active", value: look.activeHex, choices: Self.actives) { hex in
             editorState.changeCaptionLook { $0.activeHex = hex }
-        }
-        VideoKit.FieldRow(label: "Position") {
-            VideoKit.Segmented(options: CaptionLook.Position.allCases.map { ($0, $0.title) },
-                               selection: look.position) { position in
-                editorState.changeCaptionLook { $0.position = position }
-            }
-            .playtestControl("Caption position", detail: "the Captions section")
         }
     }
 
@@ -309,5 +280,84 @@ private struct CaptionCueInFocusRows: View {
         .frame(height: 24)
         .background(RoundedRectangle(cornerRadius: 6).fill(VideoKit.Palette.glassThin))
         .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(VideoKit.Palette.edgeLo))
+    }
+}
+
+/// **Text**, for a picked Captions layer: the same font, size, weight, colour
+/// and alignment controls a text layer has, set once for every caption in the
+/// layer (`CaptionLook`). A Captions layer is picked, moved and sized like any
+/// other layer; this is where its type is.
+struct CaptionsTextInspector: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        let look = editorState.captionLook
+        let size = editorState.document?.canvasSize ?? .zero
+        VStack(alignment: .leading, spacing: 8) {
+            SelectionMenu(label: "Font",
+                          reading: StyleReading(value: look.fontName, isMixed: false),
+                          options: TextStyles.fontOptions(picked: [look.fontName]),
+                          title: { $0 },
+                          help: "The font of every caption") { font in
+                editorState.changeCaptionLook { $0.fontName = font }
+            }
+            HStack(alignment: .top, spacing: 8) {
+                let shown = look.resolvedFontSize(in: size)
+                SelectionMenu(label: "Size",
+                              reading: StyleReading(value: shown, isMixed: false),
+                              options: Self.sizes(with: shown),
+                              title: { TextStyles.sizeTitle($0) },
+                              spoken: { TextStyles.sizeWords($0) },
+                              help: "The size of every caption") { picked in
+                    editorState.changeCaptionLook { $0.fontSize = picked }
+                }
+                SelectionMenu(label: "Weight",
+                              reading: StyleReading(value: look.weight, isMixed: false),
+                              options: TextWeight.allCases,
+                              title: { $0.rawValue.capitalized },
+                              help: "The weight of every caption") { weight in
+                    editorState.changeCaptionLook { $0.weight = weight }
+                }
+            }
+            colourRow("Colour", value: look.colorHex, choices: CaptionsInspector.inks) { hex in
+                editorState.changeCaptionLook { $0.colorHex = hex ?? "#FFFFFF" }
+            }
+            colourRow("Background", value: look.backgroundHex, choices: CaptionsInspector.plates) { hex in
+                editorState.changeCaptionLook { $0.backgroundHex = hex }
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Align").font(.caption).foregroundStyle(.secondary)
+                Picker("Align", selection: Binding<TextAlign>(
+                    get: { look.alignment },
+                    set: { align in editorState.changeCaptionLook { $0.alignment = align } })) {
+                    ForEach(TextAlign.allCases, id: \.self) { align in
+                        Image(systemName: align.symbolName).tag(align)
+                    }
+                }
+                .pickerStyle(.segmented).labelsHidden().controlSize(.small)
+                .segmentToolTips(TextAlign.allCases.map(\.title), fallback: "Where the words sit across the box")
+            }
+            .playtestField("Caption align")
+        }
+        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
+        .padding(.vertical, 8)
+    }
+
+    /// The text sizes, plus the size the captions are at now.
+    static func sizes(with shown: CGFloat) -> [CGFloat] {
+        let base = TextStyles.fontSizes
+        return base.contains(shown) ? base : (base + [shown]).sorted()
+    }
+
+    private func colourRow(_ label: String, value: String?, choices: [(String, String?)],
+                           pick: @escaping (String?) -> Void) -> some View {
+        let name = choices.first { $0.1?.uppercased() == value?.uppercased() }?.0 ?? (value ?? "None")
+        return VideoKit.DropdownRow(label: label, value: name, swatch: value.map(CaptionsInspector.swatch)) {
+            ForEach(choices, id: \.0) { choice in
+                Toggle(choice.0, isOn: Binding(get: { choice.1?.uppercased() == value?.uppercased() },
+                                               set: { _ in pick(choice.1) }))
+            }
+        }
+        .playtestField("Caption \(label.lowercased())")
     }
 }

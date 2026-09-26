@@ -1,0 +1,29 @@
+{
+  "feature": "Captions are one layer",
+  "epic": "video-audio",
+  "summary": "Captions are now one layer called Captions: one row in the layers list, one box on the picture that you drag, size and rotate like a rectangle, and a Text section for its font, size, weight, colour, background and alignment. The Bottom, Middle and Top setting is gone.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording with somebody talking and let the captions write themselves.",
+  "try": [
+    { "do": "Click Captions in the layers list.", "shot": "2026-09-25-captions-one-layer-2-captions-picked-in-the-list.png" },
+    { "do": "Drag the words on the picture up to the top.", "shot": "2026-09-25-captions-one-layer-3-dragged-to-the-top.png" },
+    { "do": "In the Text section, set Size to 64 px.", "shot": "2026-09-25-captions-one-layer-4-bigger-type.png" },
+    { "do": "Drag the box's right handle inwards to wrap the words narrower.", "shot": "2026-09-25-captions-one-layer-5-narrowed-by-its-handle.png" },
+    { "do": "Click another layer, then click the words on the picture: Captions is picked again." },
+    { "do": "Double-click one word on the picture to fix just that word." },
+    { "do": "Press Command-Z twice." }
+  ],
+  "evaluate": [
+    "Does picking, moving and resizing Captions feel exactly like doing it to a rectangle?",
+    "Is the Text section where you expected the caption font and size to be?",
+    "When the type gets bigger the box grows upwards from its bottom edge. Is that the edge you want to stay put?",
+    "Should the style (Caption, Lower third, Karaoke) and the active word colour also move up into the Text section, or stay in Captions?"
+  ],
+  "rough": [
+    "Background is a colour list (None, Dark, Black, White) rather than the full colour picker a shape uses, and the plate has no corner radius control yet.",
+    "Effects (shadow, glow, stroke) apply to the whole Captions layer through the ordinary Effects list; they were not walked on a caption in this pass.",
+    "The rotate handle is there, but no walk rotated a Captions layer, and a word opened for fixing on a rotated layer sits level.",
+    "Animate a property is offered on the Captions layer; keyframing its opacity, position and scale belongs to the keyframe task and was not walked here.",
+    "Side by side with the captions mock (video-captions.html, Properties panel): the mock has no Text section and styles captions through a named Caption style plus a Text shadow effect; the shipped panel adds Text above Appearance because the user asked for the controls a text layer has. The mock's Guides (Safe areas) row is still missing (its own open task).",
+    "Duplicating a Captions layer gives a second one you can move and style on its own, but Write Again only rewrites the first."
+  ]
+}

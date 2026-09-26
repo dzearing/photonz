@@ -432,7 +432,13 @@ struct LayersRow: View, Equatable {
         ZStack {
             RoundedRectangle(cornerRadius: 4)
                 .fill(.quaternary)
-            if let thumbnail {
+            if display.isCaptions {
+                // The words on it come and go with the playhead, so a picture
+                // of one moment says less than the mark the timeline uses.
+                Image(systemName: "captions.bubble")
+                    .font(.system(size: 15))
+                    .foregroundStyle(.secondary)
+            } else if let thumbnail {
                 Image(decorative: thumbnail, scale: 1)
                     .resizable()
                     .scaledToFit()

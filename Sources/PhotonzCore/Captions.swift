@@ -667,8 +667,10 @@ extension PhotonzDocument {
 
     /// Take every caption out, leaving everything else exactly as it was.
     public mutating func clearCaptions() {
+        // Every Captions layer, whatever it was renamed to...
+        removeLayers(ids: Set(captionsLayers.map(\.id)))
         removeLayers(ids: Set(captionLayers.map(\.id)))
-        // ...and the group they were put in, now that it is empty.
+        // ...and a group some older build put them in, now that it is empty.
         let empty = allLayers.filter {
             $0.name == CaptionLayers.groupName && $0.group?.children.isEmpty == true
         }

@@ -729,6 +729,12 @@ struct InspectorPanel: View {
         if !editorState.textSelection.isEmpty {
             set.insert(.text)
         }
+        // A picked Captions layer is one layer with its own type: the Text
+        // section speaks for every caption in it, and the box is placed by the
+        // pointer, not by a layout (the user, 2026-09-25).
+        if selectedLayer?.isCaptionsLayer == true {
+            set.insert(.text)
+        }
         if let layer = selectedLayer {
             // A frame's own properties: its size, its clipping, its surface
             // (Next, `next-frames`). Only a frame has any of them.
@@ -867,6 +873,7 @@ struct InspectorPanel: View {
            set.contains(.editPoint) {
             set.formIntersection([.layers, .editPoint, .transition, .library])
         }
+        if selectedLayer?.isCaptionsLayer == true { set.remove(.placement) }
         return set
     }
 
@@ -1158,7 +1165,11 @@ struct InspectorPanel: View {
                 LensInspector(layer: layer)
             }
         case .text:
-            TextInspector()
+            if selectedLayer?.isCaptionsLayer == true {
+                CaptionsTextInspector()
+            } else {
+                TextInspector()
+            }
         case .measure:
             if let layer = selectedLayer, layer.measure != nil {
                 MeasureInspector(layer: layer)

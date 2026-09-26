@@ -3280,11 +3280,42 @@ private final class Run {
                     throw Failure(description: "picking \(preset.title) did not dress every caption")
                 }
             case .captionsPositionTop, .captionsPositionBottom:
-                let position: CaptionLook.Position = action == .captionsPositionTop ? .top : .bottom
-                editor.changeCaptionLook { $0.position = position }
-                guard editor.captionLook.position == position else {
-                    throw Failure(description: "the captions did not move to the \(position.title)")
+                // The Captions layer's box moved to the top of title-safe, or
+                // back to where a fresh one lands: what a drag does.
+                guard let document = editor.document, let layer = editor.captionsLayerInFocus else {
+                    throw Failure(description: "there is no Captions layer to move")
                 }
+                let size = document.canvasSize
+                var box = CaptionLayers.defaultBox(in: size, fontSize: editor.captionLook.resolvedFontSize(in: size))
+                box.size = layer.frame.size
+                if action == .captionsPositionTop { box.origin.y = size.height * CaptionLayers.titleSafeInset }
+                editor.moveCaptions(to: box)
+                let moved = editor.captionsLayerInFocus?.frame
+                guard moved == box, editor.document?.captionLayers.allSatisfy({
+                    editor.document?.canvasFrame(of: $0.id) == box
+                }) == true else {
+                    throw Failure(description: "the Captions layer did not move every caption to \(box)")
+                }
+            case .captionsExpectOneLayerPicked, .captionsExpectMovedTogether:
+                guard let document = editor.document, let id = editor.selectedLayerID,
+                      let layer = document.layer(id: id), layer.isCaptionsLayer else {
+                    throw Failure(description: "the Captions layer is not the one picked")
+                }
+                guard document.captionsLayers.count == 1 else {
+                    throw Failure(description: "\(document.captionsLayers.count) Captions layers, not one")
+                }
+                let box = layer.frame
+                guard document.captionLayers.allSatisfy({ document.canvasFrame(of: $0.id) == box }) else {
+                    throw Failure(description: "not every caption fills the Captions layer's box \(box)")
+                }
+                if action == .captionsExpectMovedTogether,
+                   box.midY > document.canvasSize.height / 3 {
+                    throw Failure(description: "the Captions box is at \(box), not in the top third")
+                }
+                let size = layer.captionsLook?.resolvedFontSize(in: document.canvasSize) ?? 0
+                note(number, step.name, "captions: one layer picked, box \(box), "
+                     + "\(document.captionLayers.count) captions filling it at \(Int(size)) pt",
+                     state: describe())
             case .captionsExpectLitWord:
                 guard let shown = editor.document?.drawn(atTimeMS: editor.documentTimeMS),
                       let lit = shown.allLayers.first(where: { $0.isCaption && $0.isVisible }),
@@ -4345,6 +4376,7 @@ private final class Run {
                  .captionsEditFirstInPlace, .captionsCommitFirstWords,
                  .captionsTrimFirstEnd, .captionsStyleCaption, .captionsStyleLowerThird,
                  .captionsStyleKaraoke, .captionsPositionTop, .captionsPositionBottom,
+                 .captionsExpectOneLayerPicked, .captionsExpectMovedTogether,
                  .captionsExpectLitWord, .captionsExportFiles, .captionsAutoOff,
                  .captionsAutoOn, .captionsExpectEditingOnCanvas,
                  .captionsWriteFilmWithFileBeside,

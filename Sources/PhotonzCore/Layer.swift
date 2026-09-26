@@ -844,6 +844,10 @@ public struct GroupContent: Hashable, Codable, Sendable {
     /// another document arrives here. False is a component that belongs to this
     /// document alone, which is every component made before the shelf existed.
     public var isShared: Bool = false
+    /// Set on a **Captions layer**: the look every caption inside it wears
+    /// (`CaptionLook.swift`). Its children are the transcript, one cue each,
+    /// and every one of them fills this group's box. Nil is an ordinary group.
+    public var captionLook: CaptionLook?
 
     public init(children: [Layer] = [], isFrame: Bool = false,
                 clipsContents: Bool? = nil, backgroundHex: String? = nil,
@@ -868,7 +872,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         case children, isFrame, clipsContents, backgroundHex, componentID, instanceOf
         case properties, overrides, followedStyle, instanceSize, contentPlacement, layout
         case versionID, versionName, instanceVersion, columns, shared, pieceTextStyles
-        case variantName
+        case variantName, captions
     }
 
     /// Only a frame writes the frame keys and only a main writes the component
@@ -913,6 +917,9 @@ public struct GroupContent: Hashable, Codable, Sendable {
         // A group that never had a placement set writes no key, so a document
         // saved before placement existed is byte for byte what it was.
         try c.encodeIfPresent(contentPlacement?.normalized, forKey: .contentPlacement)
+        // Only a Captions layer writes its look, so every other group is byte
+        // for byte what it was.
+        try c.encodeIfPresent(captionLook, forKey: .captions)
         // Only a group somebody asked to arrange itself writes this key, so a
         // document saved before stacks and grids existed is byte for byte what
         // it was.
@@ -954,6 +961,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         layout = try c.decodeIfPresent(GroupLayout.self, forKey: .layout)
         columns = try c.decodeIfPresent(FrameColumns.self, forKey: .columns)
         isShared = try c.decodeIfPresent(Bool.self, forKey: .shared) ?? false
+        captionLook = try c.decodeIfPresent(CaptionLook.self, forKey: .captions)
     }
 }
 
@@ -1774,6 +1782,9 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         copy.isARunOfText = isARunOfText
         // And a copy of a named box is still named after the same words.
         copy.labelledBy = labelledBy
+        // A copy of a caption says the same words at the same moments, so a
+        // copied Captions layer is a second transcript, not a pile of titles.
+        copy.captionWordsStorage = captionWordsStorage
         copy.repointComponentProperties(map)
         return copy
     }
@@ -1807,6 +1818,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         copy.time = time
         copy.isARunOfText = isARunOfText
         copy.labelledBy = labelledBy
+        copy.captionWordsStorage = captionWordsStorage
         map[id] = copy.id
         return copy
     }

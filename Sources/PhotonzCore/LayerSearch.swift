@@ -80,6 +80,7 @@ extension PhotonzDocument {
                     canTurnIntoPath: display.canTurnIntoPath,
                     separationNote: display.separationNote,
                     isSound: display.isSound,
+                    isCaptions: display.isCaptions,
                     piecesNote: display.piecesNote,
                     // The mask line rides with the row: it names the other
                     // layer outright, so it still says what happened to a

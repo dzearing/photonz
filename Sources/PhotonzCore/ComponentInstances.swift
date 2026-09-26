@@ -30,7 +30,9 @@ extension Layer {
 
     /// Whether this layer can be opened, dropped into and descended into: a
     /// group, but not a copy, whose contents belong to its original.
-    public var isOpenableGroup: Bool { isGroup && !isComponentInstance }
+    /// A Captions layer does not open either: its cues are its transcript,
+    /// edited on the canvas and the timeline, not rows of their own.
+    public var isOpenableGroup: Bool { isGroup && !isComponentInstance && !isCaptionsLayer }
 }
 
 /// What one sync did, so the app can say it out loud.

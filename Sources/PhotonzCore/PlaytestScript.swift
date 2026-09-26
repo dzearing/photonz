@@ -903,8 +903,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case captionsTrimFirstEnd
     /// Pick one of the named caption styles, for every caption at once.
     case captionsStyleCaption, captionsStyleLowerThird, captionsStyleKaraoke
-    /// Move every caption to the top of the picture, and back.
+    /// Move the Captions layer's box to the top of the picture, and back.
     case captionsPositionTop, captionsPositionBottom
+    /// Fail unless one Captions layer is picked and every caption fills its
+    /// box; `captionsExpectMovedTogether` also wants that box in the top third.
+    case captionsExpectOneLayerPicked, captionsExpectMovedTogether
     /// Fail unless the frame drawn at the playhead has the spoken word lit.
     case captionsExpectLitWord
     /// Write the captions out as SubRip and WebVTT into the walk's own
@@ -1123,6 +1126,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .captionsExpectOnePicked, .captionsWriteQuietly, .captionsExpectEndWithRecording, .captionsEditFirstInPlace, .captionsCommitFirstWords, .captionsTrimFirstEnd,
              .captionsStyleCaption, .captionsStyleLowerThird, .captionsStyleKaraoke,
              .captionsPositionTop, .captionsPositionBottom, .captionsExpectLitWord,
+             .captionsExpectOneLayerPicked, .captionsExpectMovedTogether,
              .captionsExportFiles, .captionsAutoOff, .captionsAutoOn, .captionsExpectEditingOnCanvas,
              .captionsWriteFilmWithFileBeside,
              .captionsWordOpenOnCanvas, .captionsWordOpenInLane, .captionsExpectWordOpen,
