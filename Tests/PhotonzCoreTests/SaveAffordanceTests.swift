@@ -17,24 +17,26 @@ struct SaveAffordanceTests {
         for isLoaded in [true, false] {
             for hasChanges in [true, false] {
                 for isSaving in [true, false] {
-                    for canSaveInPlace in [true, false] {
+                    for isUnsavedRecording in [true, false] {
                         let affordance = SaveAffordance.forDocument(isLoaded: isLoaded,
                                                                    hasChanges: hasChanges,
                                                                    isSaving: isSaving,
-                                                                   canSaveInPlace: canSaveInPlace)
-                        if affordance.closingOffersSave {
+                                                                   isUnsavedRecording: isUnsavedRecording)
+                        if affordance.asksBeforeClosing {
+                            // A close that asks always offers Save, and Save is
+                            // live and has something to write.
+                            #expect(affordance.closingOffersSave,
+                                    "\(affordance) asks before closing but does not offer Save")
                             #expect(affordance.isSaveEnabled,
                                     "\(affordance) offers Save on the way out but dims Save")
                             #expect(affordance.savesSomething,
                                     "\(affordance) offers Save on the way out but Save has nothing to do")
-                        }
-                        // A close that asks offers exactly one way to keep the
-                        // work: Save, or Export where Save cannot write it.
-                        if affordance.asksBeforeClosing {
-                            #expect(affordance.closingOffersSave != affordance.closingOffersExport,
-                                    "\(affordance) asks before closing but offers no one way to keep it")
                         } else {
                             #expect(!affordance.closingOffersSave && !affordance.closingOffersExport)
+                        }
+                        // Export on the way out is only ever offered BESIDE Save.
+                        if affordance.closingOffersExport {
+                            #expect(affordance.closingOffersSave)
                         }
                     }
                 }
@@ -43,17 +45,12 @@ struct SaveAffordanceTests {
     }
 
     // The other half of the same promise: a dimmed Save has to mean there is
-    // genuinely nothing to lose, or that closing stops and says how to keep it,
-    // so nothing is ever dropped quietly.
+    // genuinely nothing to lose, so nothing is ever dropped quietly.
     @Test("A dimmed Save never lets work go without a word")
     func dimmedSaveMeansNothingToLose() {
         for affordance in SaveAffordance.allCases where !affordance.isSaveEnabled {
-            if affordance == .nothingToSave {
-                #expect(!affordance.asksBeforeClosing)
-            } else {
-                #expect(affordance.asksBeforeClosing && affordance.closingOffersExport,
-                        "\(affordance) dims Save and would close without asking")
-            }
+            #expect(affordance == .nothingToSave)
+            #expect(!affordance.asksBeforeClosing)
         }
     }
 
@@ -103,36 +100,45 @@ struct SaveAffordanceTests {
             == .saving)
     }
 
-    // A recording opened as a document has nowhere to be saved IN PLACE until
-    // the Command S question is answered: writing it back would throw away the
-    // video. The edits are still work, so closing asks, and offers the two
-    // doors that keep them: Save As, which writes a project pointing at the
-    // recording (2026-09-24), and Export, which writes a video (2026-09-23).
-    @Test("Edits nothing can save in place ask before closing and offer Save As and Export")
-    func editsOnlyExportKeepsAskAndOfferExport() {
+    // Command S on a video saves the project (the card answered 2026-09-25):
+    // the recordings are never written over, and a recording that has never
+    // been saved anywhere gets the save box, exactly as an untitled document
+    // does in any Mac app and an untitled project does in Premiere. Closing an
+    // edited one asks with Save, and Export beside it, so trim and send is
+    // still two steps from the sheet.
+    @Test("An edited recording never saved keeps Save live and offers Export beside it")
+    func anEditedRecordingSavesAProject() {
         let affordance = SaveAffordance.forDocument(isLoaded: true, hasChanges: true,
-                                                   isSaving: false, canSaveInPlace: false)
-        #expect(affordance == .changesOnlyExportKeeps)
-        #expect(!affordance.isSaveEnabled)
+                                                   isSaving: false, isUnsavedRecording: true)
+        #expect(affordance == .unsavedRecording)
+        #expect(affordance.isSaveEnabled)
+        #expect(affordance.savesSomething)
         #expect(affordance.asksBeforeClosing)
+        #expect(affordance.closingOffersSave)
         #expect(affordance.closingOffersExport)
-        #expect(affordance.closingOffersSaveAs)
-        #expect(!affordance.closingOffersSave)
-        #expect(!affordance.savesSomething)
     }
 
-    @Test("An untouched window with nowhere to save closes without asking")
-    func untouchedWithNowhereToSaveClosesQuietly() {
+    // Untouched, it is exactly an untitled document: Save live (it opens the
+    // save box), and closing asks nothing because nothing would be lost.
+    @Test("An untouched recording keeps Save live and closes without asking")
+    func anUntouchedRecordingStillOffersSave() {
         let affordance = SaveAffordance.forDocument(isLoaded: true, hasChanges: false,
-                                                   isSaving: false, canSaveInPlace: false)
-        #expect(affordance == .nothingToSave)
+                                                   isSaving: false, isUnsavedRecording: true)
+        #expect(affordance == .upToDate)
+        #expect(affordance.isSaveEnabled)
         #expect(!affordance.asksBeforeClosing)
     }
 
-    @Test("Save As is offered on the way out only where Save itself cannot write")
-    func saveAsIsOfferedOnlyWhereSaveCannot() {
-        for affordance in SaveAffordance.allCases where affordance != .changesOnlyExportKeeps {
-            #expect(!affordance.closingOffersSaveAs, "\(affordance) offers Save As on close")
+    @Test("A recording still loading has nothing to save")
+    func aLoadingRecordingHasNothingToSave() {
+        #expect(SaveAffordance.forDocument(isLoaded: false, hasChanges: true, isSaving: false,
+                                           isUnsavedRecording: true) == .nothingToSave)
+    }
+
+    @Test("Export is offered on the way out only for a recording never saved")
+    func exportIsOfferedOnlyForAnUnsavedRecording() {
+        for affordance in SaveAffordance.allCases where affordance != .unsavedRecording {
+            #expect(!affordance.closingOffersExport, "\(affordance) offers Export on close")
         }
     }
 }

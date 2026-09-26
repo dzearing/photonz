@@ -25,12 +25,9 @@ protocol SaveableEditor: AnyObject {
     /// `completion(false)` when the save was cancelled, failed, or could not
     /// run at all.
     func performSave(completion: @escaping @MainActor (Bool) -> Void)
-    /// What the close confirmation's Export button runs where Save has nowhere
-    /// to write the changes (`SaveAffordance.changesOnlyExportKeeps`).
+    /// What the close confirmation's Export button runs, where it offers one
+    /// beside Save (`SaveAffordance.closingOffersExport`).
     func exportToKeepChanges()
-    /// What the same question's Save As button runs: somewhere new to keep the
-    /// changes. `completion(true)` once they are saved there.
-    func saveAsToKeepChanges(completion: @escaping @MainActor (Bool) -> Void)
 }
 
 extension SaveableEditor {
@@ -38,8 +35,6 @@ extension SaveableEditor {
     var hasUnsavedChanges: Bool { saveAffordance.asksBeforeClosing }
 
     func exportToKeepChanges() {}
-
-    func saveAsToKeepChanges(completion: @escaping @MainActor (Bool) -> Void) { completion(false) }
 }
 
 extension EditorState: SaveableEditor {
@@ -55,16 +50,6 @@ extension EditorState: SaveableEditor {
 
     func exportToKeepChanges() {
         isExportDialogPresented = true
-    }
-
-    func saveAsToKeepChanges(completion: @escaping @MainActor (Bool) -> Void) {
-        guard document != nil else {
-            completion(false)
-            return
-        }
-        saveDocumentAs()
-        // A cancelled save box leaves the edits where they were.
-        completion(!hasUnsavedChanges)
     }
 }
 
@@ -203,7 +188,8 @@ private final class CloseGuardDelegate: NSObject, NSWindowDelegate {
         return false // the sheet's completion closes the window when appropriate
     }
 
-    /// The standard three-option save sheet (Save / Cancel / Don't Save).
+    /// The standard three-option save sheet (Save / Cancel / Don't Save), with
+    /// Export as a fourth where the affordance offers it.
     /// `completion(true)` when the window resolved (saved or discarded, and
     /// closed); `completion(false)` when the user cancelled — used by the
     /// quit-review flow to abort termination.
@@ -213,23 +199,29 @@ private final class CloseGuardDelegate: NSObject, NSWindowDelegate {
             completion?(true)
             return
         }
-        if editorState.saveAffordance.closingOffersExport {
-            presentExportConfirmation(on: window, editorState: editorState, completion: completion)
-            return
-        }
+        // A recording never saved as a project offers Export beside Save, so
+        // a recording trimmed to send leaves as a video from here.
+        let offersExport = editorState.saveAffordance.closingOffersExport
         let alert = NSAlert()
         alert.messageText = "Do you want to save the changes made to “\(editorState.windowTitle)”?"
         alert.informativeText = "Your changes will be lost if you don't save them."
         alert.addButton(withTitle: "Save…")
+        if offersExport { alert.addButton(withTitle: "Export…") }
         alert.addButton(withTitle: "Cancel")
         alert.addButton(withTitle: "Don't Save")
+        // The buttons in the order they were added, so the answer is read off
+        // the list rather than off a position that moves with Export.
+        enum Answer { case save, export, cancel, dontSave }
+        let answers: [Answer] = [.save] + (offersExport ? [.export] : []) + [.cancel, .dontSave]
         alert.beginSheetModal(for: window) { [weak self] response in
             guard let self, let editorState = self.editorState else {
                 completion?(true)
                 return
             }
-            switch response {
-            case .alertFirstButtonReturn: // Save
+            let index = response.rawValue - NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
+            let answer = answers.indices.contains(index) ? answers[index] : .cancel
+            switch answer {
+            case .save:
                 // A cancelled Save-As panel (or a failed video commit) leaves
                 // the document dirty — the window stays open rather than
                 // silently dropping the edits.
@@ -241,57 +233,12 @@ private final class CloseGuardDelegate: NSObject, NSWindowDelegate {
                         completion?(false)
                     }
                 }
-            case .alertThirdButtonReturn: // Don't Save
-                window.close()
-                completion?(true)
-            default: // Cancel
-                completion?(false)
-            }
-        }
-    }
-
-    /// The same question for changes Save has nowhere to write in place: a
-    /// recording opened as a document, until the Command S question is
-    /// answered. It offers the two doors that keep them: Save As, which writes
-    /// a project that points at the recording and closes the window once it is
-    /// written, and Export, which leaves the window open with the export sheet
-    /// on it, so the close is cancelled rather than guessed at.
-    private func presentExportConfirmation(on window: NSWindow, editorState: any SaveableEditor,
-                                           completion: (@MainActor (Bool) -> Void)?) {
-        let offersSaveAs = editorState.saveAffordance.closingOffersSaveAs
-        let alert = NSAlert()
-        alert.messageText = "Do you want to keep the changes made to “\(editorState.windowTitle)”?"
-        alert.informativeText = offersSaveAs
-            ? "Save them as a project to keep editing later, or export a video."
-            : "A recording can’t be saved with its edits yet. Export it to keep them."
-        if offersSaveAs { alert.addButton(withTitle: "Save As…") }
-        alert.addButton(withTitle: "Export…")
-        alert.addButton(withTitle: "Cancel")
-        alert.addButton(withTitle: "Don’t Keep")
-        // The buttons in the order they were added, so the answer is read off
-        // the list rather than off a position that moves with Save As.
-        enum Answer { case saveAs, export, cancel, dontKeep }
-        let answers: [Answer] = (offersSaveAs ? [.saveAs] : []) + [.export, .cancel, .dontKeep]
-        alert.beginSheetModal(for: window) { [weak self] response in
-            guard let self, let editorState = self.editorState else {
-                completion?(true)
-                return
-            }
-            let index = response.rawValue - NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
-            let answer = answers.indices.contains(index) ? answers[index] : .cancel
-            switch answer {
-            case .saveAs:
-                // The alert is still leaving; the save box goes up after it.
-                DispatchQueue.main.async {
-                    editorState.saveAsToKeepChanges { saved in
-                        if saved { window.close() }
-                        completion?(saved)
-                    }
-                }
             case .export:
+                // The export sheet goes up on the window, which stays open:
+                // the close is cancelled rather than guessed at.
                 editorState.exportToKeepChanges()
                 completion?(false)
-            case .dontKeep:
+            case .dontSave:
                 window.close()
                 completion?(true)
             case .cancel:

@@ -438,10 +438,16 @@ disk still opens whole), and files each found one back with `MovieLibrary.adopt`
 found in neither place leaves its clips blank and is named on a sheet on the
 window; the project still opens.
 
-Command S on a recording that has never been saved stays dimmed: what it should
-do there is the Command S task's question. The close sheet on an edited
-recording offers Save As… first, then Export…. Once saved, the window is an
-ordinary package and Command S saves it in place.
+Command S on a video saves the project (the card answered 2026-09-25, option a):
+it never writes over a recording. On a recording that has never been saved,
+Save is live and opens the save box for a `.photonz` project, exactly as Save on
+any untitled document does and as Premiere does on an untitled project
+(`SaveAffordance.unsavedRecording`). The close sheet on an edited one is the
+ordinary save question with Export… beside Save…, so a trim to send is still
+one button from the sheet. Once saved, the window is an ordinary package and
+Command S saves it in place. Walk: `command-s-saves-a-video-project-walk` (a
+plain trim and a multi-clip edit, each checked on disk, the recording byte for
+byte unchanged).
 
 Walks: `a-video-edit-saves-as-a-project-walk` (edit, export, save, close,
 reopen, the document must equal the saved one, play, export again, Command S),

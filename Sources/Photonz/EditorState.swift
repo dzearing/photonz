@@ -1448,7 +1448,7 @@ final class EditorState {
             if let shape { opened = shape(opened) }
             installDocument(opened, url: nil)
             // After the install, which clears it: this window holds a
-            // recording, and that is what dims Save (see `saveAffordance`).
+            // recording, so Save writes a project (see `saveAffordance`).
             recordingURL = url
             openedFileURL = url
             // A recording opens SAVED: nothing has been done to it yet, and a
@@ -1685,19 +1685,17 @@ final class EditorState {
     /// other (`SaveAffordance`). An image save is synchronous, so there is no
     /// commit in flight to report.
     var saveAffordance: SaveAffordance {
-        // A recording opened as a document has nowhere to be saved IN PLACE
-        // yet: writing it back as a picture would destroy the video, and what
-        // Command S should do to it is the next task's question. So Save stays
-        // dimmed, and an EDITED one still stops the close: the sheet offers
-        // Save As, which writes a project pointing at the recording, and
-        // Export, which writes a video (`changesOnlyExportKeeps`). Once saved
-        // as a project it is an ordinary package and Save works as it does on
-        // any other.
+        // A recording that has never been saved as a project saves as one:
+        // Command S on a video saves the project and never writes over the
+        // recording (the card answered 2026-09-25). Save is live and opens the
+        // save box, as it does on any untitled document, and an edited one's
+        // close sheet offers Export beside Save (`unsavedRecording`). Once
+        // saved it is an ordinary package and Save writes it in place.
         .forDocument(isLoaded: document != nil,
                      hasChanges: ClosePrompt.needsSavePrompt(current: document,
                                                              savedBaseline: savedDocument),
                      isSaving: false,
-                     canSaveInPlace: !isRecordingDocument)
+                     isUnsavedRecording: isRecordingDocument)
     }
 
     /// The document was persisted somewhere the user considers safe (package
@@ -2503,14 +2501,16 @@ final class EditorState {
     /// that capture file — history items are real files, and Save means "save
     /// back to where it came from". Everything else runs Save As.
     /// True where this window is holding a recording and has never been saved
-    /// as a package. Everything about saving one is the recording window's
-    /// still (`docs/design/video.md` §7).
+    /// as a package (`docs/design/video.md` §7).
     var isRecordingDocument: Bool { recordingURL != nil && documentURL == nil }
 
     func saveDocument() {
-        // See `saveAffordance`: there is nowhere safe to put it yet.
-        if isRecordingDocument { return }
-        if let documentURL {
+        // Command S on a video saves the project, and a recording never saved
+        // as one gets the save box first. Never the capture write-back below:
+        // that flattens a picture over the file, and the file is a video.
+        if isRecordingDocument {
+            saveDocumentAs()
+        } else if let documentURL {
             save(to: documentURL)
         } else if let sourceCaptureURL, let store = captureCenter?.store,
                   store.entries.contains(where: { $0.url == sourceCaptureURL }),

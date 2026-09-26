@@ -2758,8 +2758,11 @@ private final class Run {
             if Experiments.shared.recordingIsADocument {
                 var landed: EditorState?
                 try await poll("the sample recording to open as a document", within: 20) {
+                    // Not a window that has since been saved as a project:
+                    // that one holds the project now, not the fresh sample.
                     landed = PlaytestHarness.readyEditors.last {
-                        $0.recordingURL?.lastPathComponent == TutorialSampleRecording.fileName
+                        $0.isRecordingDocument
+                            && $0.recordingURL?.lastPathComponent == TutorialSampleRecording.fileName
                     }
                     return landed != nil
                 }
@@ -2790,6 +2793,20 @@ private final class Run {
             let target: any SaveableEditor = try recording ?? requireEditor()
             let kind = recording == nil ? "document" : "recording"
             let before = target.saveAffordance
+            // A recording never saved as a project gets the save box, which a
+            // walk cannot answer: it is pointed at project.photonz in the
+            // walk's folder, as `saveProjectAs` does. And Command S on a video
+            // never writes over the recording, so the file is weighed before
+            // and after, byte for byte.
+            let savingEditor = recording == nil ? editor : nil
+            let recordingFile = savingEditor?.isRecordingDocument == true ? savingEditor?.recordingURL : nil
+            let projectURL = out.appendingPathComponent("project.photonz")
+            let recordingBefore = recordingFile.flatMap { try? Data(contentsOf: $0) }
+            if recordingFile != nil {
+                try? FileManager.default.removeItem(at: projectURL)
+                EditorState.playtestSaveAsURL = projectURL
+            }
+            defer { EditorState.playtestSaveAsURL = nil }
             var answer: Bool?
             target.performSave { answer = $0 }
             try await poll("the save to finish", within: 120) { answer != nil }
@@ -2797,8 +2814,27 @@ private final class Run {
                 throw Failure(description: "Command S reported that it did NOT save the \(kind) "
                     + "(it was \(before.rawValue) before the press)")
             }
+            // What `expectReopenedAsSaved` compares against: the document the
+            // last save wrote, in place or as a new project.
+            if let savingEditor, savingEditor.documentURL != nil { savedProjectDocument = savingEditor.document }
+            var landed = ""
+            if let recordingFile {
+                guard FileManager.default.fileExists(atPath: projectURL.path) else {
+                    throw Failure(description: "Command S on a recording never saved wrote no project at "
+                                  + projectURL.path)
+                }
+                guard let recordingBefore, (try? Data(contentsOf: recordingFile)) == recordingBefore else {
+                    throw Failure(description: "Command S changed the recording on disk at "
+                                  + "\(recordingFile.path): it must only ever write a project")
+                }
+                let table = (try? PackageIO.readMedia(from: projectURL)) ?? []
+                landed = "; wrote the project \(projectURL.lastPathComponent) pointing at "
+                    + (table.isEmpty ? "no files" : table.map(\.name).joined(separator: ", "))
+                    + ", and \(recordingFile.lastPathComponent) is byte for byte what it was "
+                    + "(\(recordingBefore.count) bytes)"
+            }
             note(number, step.name,
-                 "save: the \(kind) was \(before.rawValue), now \(target.saveAffordance.rawValue)",
+                 "save: the \(kind) was \(before.rawValue), now \(target.saveAffordance.rawValue)" + landed,
                  state: describe())
 
         case .action(let action) where action == .videoSave || action == .videoCloseAndSave:

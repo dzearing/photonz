@@ -11,12 +11,12 @@
     { "do": "wait", "seconds": 0.5 },
     { "do": "action", "action": "clipSplit" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "2-cut", "note": "a cut at the playhead: the recording has been edited, and nothing can save it in place yet" },
+    { "do": "describe", "stage": "2-cut", "note": "a cut at the playhead: the recording has been edited and has never been saved as a project" },
     { "do": "snapshot", "name": "2-cut-in-two" },
 
     { "do": "action", "action": "askToClose" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "describe", "stage": "3-closing-asks", "note": "THE OTHER TEST: closing an edited recording stops and asks whether to keep the changes, offering Save As (a project that points at the recording) beside Export, instead of dropping the cut without a word" },
+    { "do": "describe", "stage": "3-closing-asks", "note": "THE OTHER TEST: closing an edited recording stops and asks whether to save the changes, offering Save (a project that points at the recording) with Export beside it, instead of dropping the cut without a word" },
     { "do": "snapshot", "name": "3-closing-asks" },
 
     { "do": "action", "action": "answerCloseExport" },
@@ -40,7 +40,7 @@
     { "do": "wait", "seconds": 0.5 },
     { "do": "action", "action": "answerCloseFirst" },
     { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "6-saved-and-closed", "note": "a second cut, then Save As from the same question: the edit is saved as a project where the save box pointed and the window closes with nothing more to ask" },
+    { "do": "describe", "stage": "6-saved-and-closed", "note": "a second cut, then Save from the same question: the edit is saved as a project where the save box pointed and the window closes with nothing more to ask" },
     { "do": "open", "file": "/tmp/photonz-playtest/a-recording-opens-in-the-editor-at-defaults-walk/project.photonz" },
     { "do": "wait", "seconds": 1.2 },
     { "do": "action", "action": "expectReopenedAsSaved" },

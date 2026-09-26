@@ -19761,3 +19761,9 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Changed: the canvas camera knows the band the floating tool bar covers (`Viewport.obscuredBottom`, 64pt). Fit, centring, resize, reveal and framing use the part above it; a Cmd-0 fit keeps fitting as the window resizes until the camera is moved by hand. New walk step option `toolBar clearOfPicture`, new walk `a-fitted-picture-clears-the-tool-bar-walk`.
 - Not changed: the bar's own position (the video mock already puts it 16pt off the floor). Asked in the audit.
 - Next: the full sweep was requested because every canvas now sits 32pt higher.
+
+## 2026-09-26 — Command S on a video saves the project
+
+- The card answered a: Command S on a video saves the project and never writes over the recording. `SaveAffordance` drops the dimmed-Save case (`changesOnlyExportKeeps`, `canSaveInPlace`) for `unsavedRecording`: Save live, opens the save box, close sheet is the ordinary save question with Export… beside Save…. `EditorState.saveDocument` sends a never-saved recording to Save As (never the capture write-back).
+- Walk `command-s-saves-a-video-project-walk`: a plain trim and a multi-clip edit, each saved with Command S, the project checked on disk and reopened, the recording byte for byte unchanged. The harness `save` action points the save box at the walk folder for a never-saved recording.
+- Found on the way: clicking a cut no longer opens the transition picker on main (filed p1, clicking-a-cut-opens-the-transition-picker-again), and an intermittent EXC_GUARD at walk start (filed p2).

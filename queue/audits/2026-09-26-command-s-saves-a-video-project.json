@@ -1,0 +1,26 @@
+{
+  "feature": "Command S saves a video as a project",
+  "epic": "video-editing",
+  "summary": "Command S on a recording now saves your edit as a Photonz project, the choice you made on the card. The first press asks where to put it, later presses save in place, and the recording itself is never written over.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    { "do": "Open a screen recording from Capture History.", "shot": "2026-09-26-command-s-saves-a-video-project-trim-sc.png" },
+    { "do": "Park the playhead two seconds in and press Q to trim the start off." },
+    { "do": "Press Command W. The sheet asks to save, with Export beside Save.", "shot": "2026-09-26-command-s-saves-a-video-project-close-sheet-sc.png" },
+    { "do": "Press Cancel, then Command S, and save the project where the box suggests." },
+    { "do": "Open another recording, cut it with Command K and drag a second video onto the end of V1.", "shot": "2026-09-26-command-s-saves-a-video-project-edit-sc.png" },
+    { "do": "Press Command S, save, then make one more cut and press Command S again: no box this time." },
+    { "do": "Close the window and open the .photonz project from Finder." }
+  ],
+  "evaluate": [
+    "Is a save box on the first Command S what you expect, the way an untitled Premiere project does it?",
+    "Should Save be live on a recording you have not touched yet, or dimmed until you change something?",
+    "Is Export beside Save on the close sheet useful, or is it one button too many?",
+    "Does the project name the window takes after the save read right to you?"
+  ],
+  "rough": [
+    "The window's title bar still does not show the name, length or saved state the video mocks draw; that is its own task (a-video-window-says-its-name-size-length-and-whe).",
+    "The close sheet is four buttons stacked, as macOS draws any alert with four; the mocks draw no close sheet to compare it with.",
+    "The walk drives Command S through the same action File > Save runs, because the probe window never comes to the front for the real key chord."
+  ]
+}
