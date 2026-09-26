@@ -4,12 +4,12 @@
   "goal": "The Library shelf draws its tiles 68 points wide with a short fixed picture, three to a row, so a recording called Tutorial Sample.mp4 reads Tutor....mp4. The video mock draws them at least 96 wide with a 16 by 10 picture, two to a row in a resting dock, and no name cut.",
   "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 140,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T04:57:07.911Z",
-  "updated": "2026-09-25T12:22:27.810Z",
+  "updated": "2026-09-26T12:28:01.641Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video.html Library group (#gLibrary) and docs/design/mocks/shared/AGENTS.md ~line 1201: .libgrid repeat(auto-fill,minmax(96px,1fr)), .libtile .th aspect-ratio 16/10. App: Sources/PhotonzCore/LibraryShelfLayout.swift tileMinimumWidth = 68, fixed thumbnailHeight; LibraryShelfLayoutTests pin the numbers. Seen 2026-09-25 in /tmp/photonz-playtest/library-import-walk/2-imported-sc.png (Tutor....mp4). First raised by the manager on 2026-09-24 in the log of recordings-and-sounds-can-go-into-the-library-wi from queue/audits/2026-09-23-library-clips.json. Walks to rerun: shelf-tile-reveal-walk, library-shelf-height-walk, library-walk, starter-shelf-walk, library-import-walk.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-09-25T12:22:27.809Z",
       "note": "seq 360 -> 140"
+    },
+    {
+      "t": "2026-09-26T12:28:01.640Z",
+      "note": "seq 140 -> 80"
     }
   ]
 }

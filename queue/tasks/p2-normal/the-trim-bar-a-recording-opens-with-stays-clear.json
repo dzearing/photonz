@@ -1,25 +1,23 @@
 {
   "id": "the-trim-bar-a-recording-opens-with-stays-clear",
-  "title": "The trim bar a recording opens with stays clear of its captions",
-  "goal": "A screen recording opens with the trim bar floating over the bottom of the picture, and once its captions have written themselves that bar sits right on top of the bottom caption, so the first thing you see of your captions is half of one hidden.",
+  "title": "With Trim in hand, the trim bar stays clear of the captions and the notices",
+  "goal": "A recording no longer opens with Trim in hand (that changed on 2026-09-25), so the bar no longer covers a caption on open. It can still come up over a captioned recording when someone picks Trim, and a caption or a notice under it would be half hidden. Check whether that still happens and fix it if it does.",
   "epic": "video-audio",
   "priority": "p2-normal",
-  "seq": 90,
+  "seq": 330,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T06:02:48.695Z",
-  "updated": "2026-09-25T12:23:34.062Z",
+  "updated": "2026-09-26T12:28:03.558Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-23: Scripts/playtest.sh Scripts/playtest/captions-write-themselves-walk.json, picture 2-the-captions-wrote-themselves-sc.png (queue/audits/2026-09-23-captions-write-themselves-2-the-captions-wrote-themselves.png): the In 0:00 · Out 0:17 · Cancel · Trim capsule covers the middle of the caption line The transport bar and the timeline appear. The capsule comes from document.opensWithTrimInHand (EditorState.openRecordingAsDocument sets .trim). Options: lift the capsule above the caption band, or drop the fast-lane trim once the document has captions.",
   "acceptance": [
-    "With a recording just opened and its captions written, the bottom caption is fully visible with the trim bar up",
-    "A walk with no flags opens a talking recording and photographs the caption clear of the trim bar",
-    "A notice raised on the canvas (Sound added, Clip added, a refusal) is readable end to end while the trim bar is up and while a caption is on screen: nothing covers anything",
-    "A walk photographs the trim bar, a notice and a caption at once and the picture shows three separate things",
-    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
-    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+    "With a captioned recording open and Trim in hand, the bottom caption is fully visible with the trim bar up, or the log says with a picture that it already was",
+    "A notice raised on the canvas (Clip added, a refusal) is readable end to end while the trim bar is up and a caption is on screen",
+    "A walk with no flags picks Trim on a captioned recording and photographs the three things apart",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture"
   ],
   "log": [
     {
@@ -53,6 +51,14 @@
     {
       "t": "2026-09-25T12:23:34.061Z",
       "note": "digest 2026-09-25: the floating trim bar was in the rough list of three audits in the last day (timeline keys on open, video guides, and the first-frame picture of the cut guide). The real fix, trim-becomes-a-tool-and-the-recording-window-ret, waits on the Command S card, so this task is still the one that helps first."
+    },
+    {
+      "t": "2026-09-26T12:27:22.790Z",
+      "note": "triage 2026-09-26: bb6c6370 took the Trim-on-open fast lane out (opensWithTrimInHand no longer exists in Sources), so the original picture no longer happens on open. Retitled to the case that may remain, Trim picked by hand over captions, and moved to the back of p2 as an open question."
+    },
+    {
+      "t": "2026-09-26T12:28:03.557Z",
+      "note": "seq 90 -> 330"
     }
   ]
 }

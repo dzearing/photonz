@@ -5,14 +5,14 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 0.02,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T15:02:18.968Z",
-  "updated": "2026-09-25T15:02:19.053Z",
+  "updated": "2026-09-26T04:39:57.285Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Filed from the intake window.",
+  "notes": "Filed from the intake window.\n\nShipped: Viewport.obscuredBottom (PhotonzCore/Viewport.swift, tests in ViewportObscuredTests) drives fit, clamp, resized, revealing and framing. EditorChromeLayout.toolBarCovers = toolBarInset + toolBarHeight = 64. EditorState.fittedViewport/appPlaced: open, Cmd-0 and resize-while-untouched all fit above the bar; viewportTheAppFitted makes a Cmd-0 fit (or an open zoom reduced below 100% to fit the screen) keep fitting on resize, while 100% opens keep 100%. CanvasZoom smart magnify uses the same band. Walk step toolBar gained clearOfPicture:true (PlaytestScript + harness readToolBarClearOfPicture, measured from this window's own layout, not the shared probe). ToolBarLayoutProbe now forgets a group only if it still holds that view's frame. New walk a-fitted-picture-clears-the-tool-bar-walk + fixtures Tall portrait 900x2400.png / Wide panorama 3600x900.png. Bar NOT moved: mock video.html puts it 16px off the floor, same as the app.",
   "acceptance": [
     "Viewport fit (PhotonzCore, tested first) takes the obscured insets of floating chrome: the document is fitted and centred in the canvas area above the tool capsule (plus the standard margin), for images and videos, on open, on Fit (Cmd-0), and when the window resizes while fitted",
     "The tool capsule sits lower, a consistent small margin above the canvas's bottom edge (or above the timeline dock on a video), matching the mock's placement; the gap is measured in the audit",
@@ -27,6 +27,31 @@
     {
       "t": "2026-09-25T15:02:19.052Z",
       "note": "seq 350 -> 0.02"
+    },
+    {
+      "t": "2026-09-26T03:56:19.258Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T04:39:22.648Z",
+      "note": "Reproduced first: a-recording-opens-to-watch-walk 3-expanded-sc.png shows the tool bar over the bottom ~40pt of a fitted recording. Adversarial pass: centring only in fit() would snap the picture back down on the first scroll (clamp re-centres in the whole view), so the camera itself now knows the covered band (Viewport.obscuredBottom): content that fits the clear part is centred there, content between clear height and view height stays where it was put, bigger content scrolls edge to edge of the whole view so a person can still bring it under the bar. Mock check: video.html .tbar bottom is var(--s4)=16px, 12px only under a 620px canvas; the app is already 16pt, so the bar was NOT moved (asked in the audit instead)."
+    },
+    {
+      "t": "2026-09-26T04:39:22.697Z",
+      "note": "left rough: the tool settings row (Measure, Crop) above the bar is not counted as covered, on purpose (a fit that moved with every tool change would be worse); a tall fitted picture can meet it. Did not earn a task: no report of it and it is transient."
+    },
+    {
+      "t": "2026-09-26T04:39:22.749Z",
+      "note": "owns these walks: a-fitted-picture-clears-the-tool-bar-walk"
+    },
+    {
+      "t": "2026-09-26T04:39:57.283Z",
+      "note": "Fitted pictures and recordings now centre in the canvas above the floating tool bar (Viewport.obscuredBottom, 64pt band) on open, Cmd-0 and resize while fitted; zoomed/panned by hand is left alone. Verified: ViewportObscuredTests + full suite 9842 green (with another task's two untracked walks set aside), new walk a-fitted-picture-clears-the-tool-bar-walk passes at Next defaults (tall, wide, recording, tracks open, smaller window: picture ends 24pt above the bar every time), 35 related walks pass. Bar left at 16pt as the video mock places it; asked in audit queue/audits/2026-09-25-fit-above-tool-bar.json. Commit bb17ceed."
     }
-  ]
+  ],
+  "started": "2026-09-26T03:56:19.257Z",
+  "walks": [
+    "a-fitted-picture-clears-the-tool-bar-walk"
+  ],
+  "completed": "2026-09-26T04:39:57.284Z"
 }

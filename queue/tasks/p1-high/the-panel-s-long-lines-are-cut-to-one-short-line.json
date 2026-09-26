@@ -1,0 +1,60 @@
+{
+  "id": "the-panel-s-long-lines-are-cut-to-one-short-line",
+  "title": "The right hand panel says labels and tools, never sentences",
+  "goal": "The user, answering this task's card: no sentences in the panel, just labels and tools; an explanation, if one is needed, lives in a tip when you point at a label, or behind a question mark in the section header. Today a video's panel still shows lines like 'Any property can be keyed, even color and stroke width.', 'drag the diamonds on the lane' and 'Nothing yet. Add one with the plus above.', and dozens more across the other sections.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-24T09:07:18.011Z",
+  "updated": "2026-09-26T12:28:01.385Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed by panel-copy-and-flag-descriptions-have-a-length-b (2026-09-24). The gate is Tests/PhotonzCoreTests/PanelCopyBudgetTests.swift: it scans every panel file (name contains Inspector, ends PartSettings.swift or Panel.swift, or PanelSectionsFooter.swift) with CopyBudget.phrases(inSwift:) and fails any shown string over CopyBudget.panelLine (60) characters. `allowed` holds the 32 offenders of 2026-09-24 by their first 40 characters, per file; striking one off is enforced (theAllowanceOnlyShrinks). Biggest: PlacementInspector (12), ComponentPanel (5), FrameColumnsInspector (5), ArrangementInspector (2), ColorStylePanel (2), LayerEffectsInspector (2), BlendModeInspector, MotionList none (fixed), PanelSectionsFooter (1). A few may be strings the scanner cannot see are hover tips (built in a helper not named ...Help/...Tip): rename the helper to end in Help and it drops off. Read UX-PATTERNS §4 'How much a section may say' first: condition notes (reach notes, legibility notes) are a different register but still must fit the line. The budget (40 vs 60) has a card on this task; build to its answer.",
+  "acceptance": [
+    "No line of text shown in the right hand panel is longer than 40 characters, the limit the user picked on the card, and none is a sentence: the panel budget test enforces 40 and its allowance list is empty",
+    "On a video at Next defaults, with a clip picked and with a sound picked, the Properties, Time, Sound, Fades, Appearance, Effects and Captions sections show only labels, values and controls, in one picture in the audit set beside a before picture",
+    "No sentence that was the only place a limit or scope was written down is lost: it moved to the control's hover tip, or to a question mark in the section header where a section really needs explaining",
+    "The walks that read these sections still pass"
+  ],
+  "log": [
+    {
+      "t": "2026-09-24T09:07:18.013Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-24T09:07:55.836Z",
+      "note": "Waiting on the card: which line length (40 or 60 characters) the rewrite aims for"
+    },
+    {
+      "t": "2026-09-24T12:40:40.431Z",
+      "note": "seq 3280 -> 240"
+    },
+    {
+      "t": "2026-09-25T12:22:29.542Z",
+      "note": "seq 240 -> 290"
+    },
+    {
+      "t": "2026-09-25T12:23:33.905Z",
+      "note": "seq 290 -> 300"
+    },
+    {
+      "t": "2026-09-25T16:22:06.895Z",
+      "note": "decision \"How long may a line of text in the right hand panel be?\" resolved: Up to 40 characters (We should have no sentences in the panel, just labels and tools. it’s weird ui to have paragraphs where tools should be. We can have popovers when hovering over a label to maybe explain something if you’re curious. or even have a pane have a question mark icon in its header only if something needs explaining. But I am sick of seeing a bunch of text in tool panes)"
+    },
+    {
+      "t": "2026-09-26T12:26:36.613Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-09-26T12:26:36.663Z",
+      "note": "triage 2026-09-26: moved to p1 and the acceptance rewritten to the card's answer (40 characters, no sentences, explanations in hover tips or a header question mark). The user's words on the card ('I am sick of seeing a bunch of text in tool panes') are a direct complaint about the focus surface, and today's picture of a video's panel (/tmp/photonz-playtest/transition-picker-at-a-cut-walk/1-two-clips-meet-sc.png) still shows three sentences: Animating 'Any property can be keyed, even color and stroke width.', Fades 'drag the diamonds on the lane', Effects 'Nothing yet. Add one with the plus above.'. The budget in CopyBudget.panelLine is still 60, so those pass today."
+    },
+    {
+      "t": "2026-09-26T12:28:01.384Z",
+      "note": "seq 300 -> 30"
+    }
+  ]
+}

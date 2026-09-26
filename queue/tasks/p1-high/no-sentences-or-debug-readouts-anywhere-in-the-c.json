@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 0.004,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T15:10:52.373Z",
-  "updated": "2026-09-25T15:10:52.449Z",
+  "updated": "2026-09-26T00:06:54.441Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -29,6 +29,35 @@
     {
       "t": "2026-09-25T15:10:52.448Z",
       "note": "seq 350 -> 0.004"
+    },
+    {
+      "t": "2026-09-25T23:33:55.441Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T00:06:22.728Z",
+      "note": "owns these walks: timeline-bar-labels-only-walk, keyframe-anything-walk, tutorial-a-title-that-moves-walk, an-editing-session-walk, motion-path-walk, second-clip-on-the-timeline-walk, library-clip-onto-a-track-walk, library-import-walk, transition-picker-at-a-cut-walk"
+    },
+    {
+      "t": "2026-09-26T00:06:22.780Z",
+      "note": "Adversarial pass: a Premiere editor sees no readout on the timeline bar; value lives in Effect Controls (our panel), time in the transport. Risk found: removing Easing-for-new-keys left no way to set the curve before keying, so Easing now eases picked keys and also becomes the next keys' curve. Mock video.html .kfread removed with comment; video-transition-wt.html no overlap/no spare removed under the same user rule (in audit rough). Inventory: docs/design/chrome-copy-inventory.md. Before/after: queue/audits/2026-09-25-chrome-labels-*. Full test.sh: all green except 7 failures caused by two untracked leftover walks (a-recording-opens-sharp-walk, a-guide-recording-opens-sharp-walk, using the unknown step expectFrameSharp) from task a-recording-opens-on-a-sharp-first-frame; with them moved aside the walk suites pass (853 tests). Not committed by me. Left rough, not filed: EditorState.keyReadout wrapper removed but PhotonzDocument.keyReadout in core still exists with its tests; dead now, harmless."
+    },
+    {
+      "t": "2026-09-26T00:06:54.439Z",
+      "note": "Timeline bar: playhead readout pill removed; Easing only with keys picked and eases them. Drop label is 'Overwrite · V1 · 0:08' + '⌘ Insert'. Transition tiles lose 'no overlap'/'no spare'. CopyBudget.chromeFaults + ChromeCopyBudgetTests (video surfaces no allowance; shared chrome shrink-only list, filed the-shared-chrome-says-labels-not-sentences). Rule in UX-PATTERNS §4 and runner prompt; mocks edited with comments. Inventory docs/design/chrome-copy-inventory.md. Verified: new timeline-bar-labels-only-walk (Next defaults, 3 real captures) plus 8 affected walks pass; test.sh green apart from 7 failures caused by another task's untracked sharp-frame walks. Audit queue/audits/2026-09-25-chrome-labels.json. Commit 34757c2e."
     }
-  ]
+  ],
+  "started": "2026-09-25T23:33:55.440Z",
+  "walks": [
+    "timeline-bar-labels-only-walk",
+    "keyframe-anything-walk",
+    "tutorial-a-title-that-moves-walk",
+    "an-editing-session-walk",
+    "motion-path-walk",
+    "second-clip-on-the-timeline-walk",
+    "library-clip-onto-a-track-walk",
+    "library-import-walk",
+    "transition-picker-at-a-cut-walk"
+  ],
+  "completed": "2026-09-26T00:06:54.440Z"
 }

@@ -4,17 +4,17 @@
   "goal": "The descriptions under the switches in the Experiments window run to 179 words on average and 557 at worst, so nobody reads them. Rewrite each to say what the switch changes in a sentence or two, within the word budget the user picks.",
   "epic": "video-editing",
   "priority": "p2-normal",
-  "seq": 310,
-  "status": "blocked",
+  "seq": 320,
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T09:07:24.604Z",
-  "updated": "2026-09-25T12:23:33.958Z",
+  "updated": "2026-09-26T12:28:03.508Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by panel-copy-and-flag-descriptions-have-a-length-b (2026-09-24). Gate: Tests/PhotonzCoreTests/FlagDescriptionBudgetTests.swift, budget CopyBudget.flagDescriptionWords (40). `allowed` holds 92 of the 95 switches at their word count of 2026-09-24; none may grow, and one brought inside the budget must be struck off. Descriptions live in Sources/PhotonzCore/FeatureCatalog.swift. Longest: Turn Into Path 557, then 538, 520. Detail cut from a description belongs in docs/design or the tutorial, not the window. The Experiments window search reads descriptions (FeatureFlag search haystack), so keep the words someone would search for. Big job: fine to land in batches, lowering the allowance as each batch goes.",
   "acceptance": [
-    "Every switch description is within the word budget the user picked on this task's card",
+    "Every switch description is two short sentences at most and 40 words at most, the budget the user picked on the card",
     "The allowance list in the switch description test is empty",
     "Each description still says what Off means where that is not obvious"
   ],
@@ -38,6 +38,14 @@
     {
       "t": "2026-09-25T12:23:33.957Z",
       "note": "seq 300 -> 310"
+    },
+    {
+      "t": "2026-09-25T16:20:06.296Z",
+      "note": "decision \"How much should an Experiments switch say under its name?\" resolved: Two short sentences, up to 40 words"
+    },
+    {
+      "t": "2026-09-26T12:28:03.507Z",
+      "note": "seq 310 -> 320"
     }
   ]
 }

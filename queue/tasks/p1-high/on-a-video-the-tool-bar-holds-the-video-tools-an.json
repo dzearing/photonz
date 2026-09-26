@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 100,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:02:57.060Z",
-  "updated": "2026-09-25T12:22:27.596Z",
+  "updated": "2026-09-26T12:22:11.394Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video.html lines 384-416 (FLOATING TOOL BAR, D4 video inventory, #toolOvf More menu holding Title / Text, Shape, Measure when narrow) and docs/design/mocks/shared/UX-PATTERNS.md D4 'Video: Select . Blade/split . Title/Text . Shape . Measure . Hand . Zoom. (The timeline has its own Select/Blade in its local toolbar; they mirror the same tools.)'. The app has no Hand or Zoom tool anywhere (space-drag and the zoom slider do those jobs), so leave them out and say so in the audit rather than inventing two tools. Seen in /tmp/photonz-playtest/an-editing-session-walk/5-dissolve-sc.png (2026-09-24 04:44, Next defaults): sixteen buttons, no Blade; the timeline bar's Select/Blade is TimelineDock.swift toolButton('scissors') on editorState.isTimelineBlade. Machinery that exists: ToolBarLayout (PhotonzCore, families and groups, tested), the measured-fit overflow menu and overflowShortcuts in EditorView.swift ~1073, which today only appear when the bar runs out of room; docs/design/modes.md section 2 already says folding by GROUP into a permanently visible overflow, never one tool out of a group, and section 3 lists the way back (the key still arms it, with a quiet line). Why not a mode: the mode is one app-wide setting (swap-the-window-into-a-mode-from-a-chip-beside-t left rough), so switching every window into Video because one recording opened would fold other windows' panels; tie this to the document having time, as the timeline is. Build the fold in core so a-mode-is-written-down-so-pixel-art-can-be-added (which needs the same fold by mode) reuses it. trim-becomes-a-tool-and-the-recording-window-ret plans Trim in Crop's slot on a document with time; the mock's inventory has no Trim, so whichever lands second says in its log where Trim sits.",
@@ -56,6 +56,31 @@
     {
       "t": "2026-09-25T12:22:27.595Z",
       "note": "seq 240 -> 100"
+    },
+    {
+      "t": "2026-09-26T11:50:01.535Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T11:54:42.432Z",
+      "note": "pre-build review: (1) Blade is the timeline's own tool (timelineTool), not a canvas Tool, so the bar gets a Blade slot of its own that arms timelineTool and puts the canvas on Select; any other pick from the video bar puts the Blade down, so exactly one slot is lit, Premiere's one-tool rule. (2) A Premiere user expects the tool strip to hold Selection/Blade and B/V; B from the canvas today does nothing (only the timeline's B works), so the bar's Blade carries B as its own shortcut. (3) Hand and Zoom have no tool in the app (space-drag and the zoom slider do those jobs); left out, said in audit. (4) Trim rides in Crop's slot, so on a video Crop and Trim sit under More together with C still walking them. (5) A folded tool armed from More or its key does not pop into the bar (the bar stays the mock's five); instead the More button lights, and a key press says 'Line · Under More' in the canvas pill. (6) K/L/I/O/M only arm their tool once the canvas has the keyboard, so the More rows and Measure's tip print the letter only while it would work."
+    },
+    {
+      "t": "2026-09-26T12:19:43.013Z",
+      "note": "owns these walks: video-tool-bar-walk"
+    },
+    {
+      "t": "2026-09-26T12:21:43.375Z",
+      "note": "built: ToolBarFold (core, tested) + flag next-video-tool-bar on in Next; video bar in EditorView.videoToolsBar; Blade slot mirrors timelineTool; folded keys raise 'X · Under More'. Trim sits in Crop's slot under More, still on C (the trim task landed first). Verified: Scripts/test.sh 9884 passed; video-tool-bar-walk ok at Next defaults with 5 real captures; trim, timeline-keys, tutorial second clip, fitted-picture and 4 picture tool bar walks ok. an-editing-session-walk and premiere-keys-on-the-timeline-walk fail identically with the flag off (logged on walks-that-fail-in-the-full-sweep-5). Rough items: blade click on a clip does not cut -> filed a-click-on-a-clip-with-the-blade-cuts-it-there (p1, reproduced); one glass bar -> filed the-floating-tool-bar-is-one-glass-bar-as-the-mo; Hand/Zoom omitted, scissors glyph, More holding all tools, and letters hidden while the timeline has the keys stay here as notes (deliberate, per task notes)."
+    },
+    {
+      "t": "2026-09-26T12:22:11.392Z",
+      "note": "A recording at Next defaults shows Select | Blade, Title / Text, Shape | Measure plus an always-there More holding every other tool (ToolBarFold in core, tested; flag next-video-tool-bar on in Next; EditorView.videoToolsBar). The bar's Blade is the timeline's Blade, B arms it from either place, folded keys arm their tool with a 'Fill · Under More' pill, More lights for a folded tool, pictures keep their bar. Verified: Scripts/test.sh 9884 passed; video-tool-bar-walk ok at defaults with 5 real captures; trim, timeline-keys, fitted-picture and picture tool bar walks ok. Audit queue/audits/2026-09-26-video-tool-bar.json. The Blade click on a clip does not cut (pre-existing): filed a-click-on-a-clip-with-the-blade-cuts-it-there. Commit c6b356fa."
     }
-  ]
+  ],
+  "started": "2026-09-26T11:50:01.534Z",
+  "walks": [
+    "video-tool-bar-walk"
+  ],
+  "completed": "2026-09-26T12:22:11.393Z"
 }

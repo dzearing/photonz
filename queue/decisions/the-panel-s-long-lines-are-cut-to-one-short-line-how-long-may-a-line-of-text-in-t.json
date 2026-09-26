@@ -33,6 +33,11 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
-  "created": "2026-09-24T09:07:32.133Z"
+  "status": "resolved",
+  "created": "2026-09-24T09:07:32.133Z",
+  "answer": {
+    "choice": "b",
+    "note": "We should have no sentences in the panel, just labels and tools. it’s weird ui to have paragraphs where tools should be. We can have popovers when hovering over a label to maybe explain something if you’re curious. or even have a pane have a question mark icon in its header only if something needs explaining. But I am sick of seeing a bunch of text in tool panes",
+    "resolved": "2026-09-25T16:22:06.863Z"
+  }
 }

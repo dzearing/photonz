@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 80,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T06:02:42.624Z",
-  "updated": "2026-09-25T12:22:27.496Z",
+  "updated": "2026-09-26T08:34:27.777Z",
   "deps": [
     "fix-a-caption-one-word-at-a-time-on-the-canvas-a"
   ],
@@ -48,6 +48,31 @@
     {
       "t": "2026-09-25T12:22:27.495Z",
       "note": "seq 220 -> 80"
+    },
+    {
+      "t": "2026-09-26T08:05:52.576Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T08:10:18.705Z",
+      "note": "Pre-build review: Premiere/FCP both have title/action safe as a monitor toggle (default off there; the mock draws it on, so on, but only while captions exist and the timeline is open, so a recording opened to watch stays clean). Mock Reset is 'Reset this demo' (style back to A, guides on); in the app Reset puts the Captions layer's look and box back to a fresh one, words untouched, one undo. Clear reuses clearCaptions. Core: SafeAreaGuide/CaptionBadge/CaptionTrackBar/resetCaptions in CaptionGuides.swift, TimePanelOrder gains .captioned leading captions,text,keys; tests written first, 40 green."
+    },
+    {
+      "t": "2026-09-26T08:34:03.387Z",
+      "note": "owns these walks: captions-guides-and-track-bar-walk"
+    },
+    {
+      "t": "2026-09-26T08:34:27.723Z",
+      "note": "left rough, not filed: the AUTO badge reads the Captions language setting now rather than the language the captions were written in (nobody would notice unless they switch language after writing; audit asks). Guides/badge hidden while the timeline is tucked is a choice put to the user in the audit's evaluate list, not a defect. 'Write Ag...' truncation stays with the-captions-section-says-every-button-and-colou."
+    },
+    {
+      "t": "2026-09-26T08:34:27.775Z",
+      "note": "Shipped in f2ab5b31. Safe-area guides (title 90%, action 93%, mock labels) and the AUTO · EN badge over the picture while captions exist and the timeline is open; Guides row (Safe areas button, on by default) in the Captions section; Caption track bar over the ruler with Caption track, auto · word level, Clear, Reset (standard look + fresh box, words kept, one undo), Active word and playhead/length; Safe Areas and Reset Captions on the Captions track right-click menu; a picked caption opens the panel on Captions, Text, Properties (TimePanelOrder.captioned). Verified: CaptionGuidesTests + TimePanelOrderTests written first; Scripts/test.sh green (9857); captions-guides-and-track-bar-walk at Next defaults ok with 6 real captures; all 6 captions walks, caption-words-pop and a-long-captioned-recording ok. properties-pane-walk and fix-a-caption-word-walk fail identically on clean main (logged on walks-that-fail-in-the-full-sweep-5); an-editing-session-walk was already failing in the rotating check. Audit queue/audits/2026-09-26-captions-guides-and-track-bar.json."
     }
-  ]
+  ],
+  "started": "2026-09-26T08:05:52.575Z",
+  "walks": [
+    "captions-guides-and-track-bar-walk"
+  ],
+  "completed": "2026-09-26T08:34:27.776Z"
 }

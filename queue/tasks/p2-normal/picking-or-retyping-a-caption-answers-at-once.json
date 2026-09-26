@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-24T17:56:08.774Z",
-  "updated": "2026-09-25T12:23:32.558Z",
+  "updated": "2026-09-26T12:28:02.096Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by a-long-captioned-recording-edits-without-freezin (2026-09-24). Reproduced with a walk: openSampleTalk, captionsWaitForThemselves, wait, captionsEditFirstInPlace (select + beginRenamingClip), key escape, action selectCanvas, captionsEditFirstInPlace again, each followed by wait with longestUnderMS 5000. Output on the 17 s Sample Talk (10 captions): 'captionsEditFirstInPlace | longest 122.1ms; clipBar bodies 3, editorBody bodies 2, inspectorPanel bodies 6, layerThumbnail bodies 10, layersList bodies 9, layersRow bodies 16' and on the second pick 'longest 186.3ms'; escape 57.9ms; selectCanvas 54.8ms. On the five minute Long Talk (openLongTalk): 127.5ms and 188.9ms, so it does not grow with the number of captions. sample(1) of the Write Again path (which also picks the first caption) put most of it in NSHostingView.layout / CA commit: the panel switching to the text layer's sections and the layers list opening the Captions group to show the row. Worth checking whether the Arrange/Text sections and the layers list can avoid rebuilding when the picked layer is a caption.",
@@ -32,8 +32,10 @@
       "note": "seq 3310 -> 40"
     },
     {
-      "t": "2026-09-25T12:23:32.557Z",
-      "note": "seq 40 -> 40"
+      "t": "2026-09-26T12:28:02.095Z",
+      "note": "seq 40 -> 40",
+      "since": "2026-09-25T12:23:32.557Z",
+      "count": 2
     }
   ],
   "walks": []

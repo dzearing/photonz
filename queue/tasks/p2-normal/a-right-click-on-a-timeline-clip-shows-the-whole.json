@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-24T21:34:56.817Z",
-  "updated": "2026-09-25T12:23:32.971Z",
+  "updated": "2026-09-26T12:28:02.500Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-09-24 in Scripts/playtest.sh Scripts/playtest/ripple-trim-from-the-clip-menu-walk.json --no-build (screen unlocked, probe Screen Recording granted): /tmp/photonz-playtest/ripple-trim-from-the-clip-menu-walk/0-clip-menu-with-ripple-trim-sc.png shows Split at Playhead, Ripple Trim Start to Playhead, Ripple Trim End to Playhead and then a scroll chevron at the bottom of the screen. The Extract/Lift commit (c21c0fc1) already worked around the same thing on the ruler by moving rows to the top. Copy in queue/audits/2026-09-24-ripple-trim-menu-sc.png.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-09-25T12:23:32.970Z",
       "note": "seq 110 -> 120"
+    },
+    {
+      "t": "2026-09-26T12:28:02.499Z",
+      "note": "seq 120 -> 120"
     }
   ],
   "walks": []

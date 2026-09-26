@@ -4,12 +4,12 @@
   "goal": "The timing strip gives a layer name 86 points and cuts the middle out of anything longer, with nothing to hover and nothing to widen. Two layers called settings-capture-top and settings-capture-left read as the same row, so you cannot tell which lane you are about to drag. Make the name readable.",
   "epic": "icon-animate",
   "priority": "p2-normal",
-  "seq": 240,
+  "seq": 260,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T08:38:58.519Z",
-  "updated": "2026-09-25T12:23:33.594Z",
+  "updated": "2026-09-26T12:28:03.203Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured, not guessed. Sources/Photonz/MotionStripView.swift line 33 sets labelWidth to 92, and the layer heading at line 294 draws group.layerName at 10pt semibold in a frame of labelWidth - 6, so 86 points, with lineLimit(1) and truncationMode(.middle) and no help text. The lane titles under it get the same 86 minus a 10 point indent.\n\nThis was flagged twice in two days and by two different pieces of work, which is what takes it past a nit. The video design pass rough list: \"The label column is 92 points, which is what the shipping strip uses, and settings-capture does not fit in it. It ellipses in the mock exactly as it would in the app. That is honest and it is still not good: a layer name is the one thing in that column and it gets cut.\" The mock inherited the number from the shipping strip, so fixing the app fixes both.\n\nIt matters beyond icons. UX-PATTERNS D18 makes the icon timing strip and the video timeline ONE component, so whatever the column does here is what a video timeline full of clip names will do, and clip names are long.\n\nThe cheapest honest answer is a tooltip carrying the whole name plus keeping the middle truncation, and that needs no card because a tooltip is not a new control. A column you can drag wider IS a new control and would need one, so if that is the answer the runner wants, file the card rather than building it. Say in the audit which was chosen and why.",
@@ -61,6 +61,14 @@
     {
       "t": "2026-09-25T12:23:33.593Z",
       "note": "seq 230 -> 240"
+    },
+    {
+      "t": "2026-09-26T12:26:57.484Z",
+      "note": "digest 2026-09-26: the same cut-name problem is on the video timeline's row header: queue/audits/2026-09-25-drawn-on-the-timeline.json rough list says the 84 point header reads 'Recta...' for a Rectangle once the diamond and lanes arrow sit beside it. One answer for both strips if the code is shared."
+    },
+    {
+      "t": "2026-09-26T12:28:03.202Z",
+      "note": "seq 240 -> 260"
     }
   ],
   "source": "manager"

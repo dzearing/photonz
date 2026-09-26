@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-24T02:23:06.770Z",
-  "updated": "2026-09-25T12:23:33.024Z",
+  "updated": "2026-09-26T12:28:02.550Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the-video-properties-look-like-the-rest-of-the-d: SpeedInspector.placedInTime still has a Playhead row with Start Here and End Here because a placed layer bar has no .contextMenu (clip bars get TimelineClipMenu in ClipPiecesBar). EditorState startPlacedLayerHere/endPlacedLayerHere/setPlacedLayerFade already exist.",
@@ -44,6 +44,10 @@
     {
       "t": "2026-09-25T12:23:33.023Z",
       "note": "seq 120 -> 130"
+    },
+    {
+      "t": "2026-09-26T12:28:02.549Z",
+      "note": "seq 130 -> 130"
     }
   ]
 }

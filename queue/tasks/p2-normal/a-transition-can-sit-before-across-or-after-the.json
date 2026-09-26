@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-24T01:31:01.041Z",
-  "updated": "2026-09-25T12:23:33.075Z",
+  "updated": "2026-09-26T12:28:02.600Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-transition-wt.html #rowAlign, #rowHold, steps 7-8. Model today: ClipTransition has lengthMS only; beforeMS/afterMS are fixed at half each (ClipTransitions.swift). Alignment means storing an alignment on ClipTransition and changing beforeMS/afterMS and ClipCut.longestMS (spend from one side). Hold on black moves time, so it is an insert (rippleTime) plus a black piece or gap, not a property of the cut alone. Left out of click-a-cut-and-pick-a-transition-from-tiles because neither is in its acceptance. Also note: today a freshly dropped clip reads its file from the first frame, so it has no spare before its in point and cannot take any overlapping transition until its head is trimmed; Before/After placement is what lets that common case work, as it does in Premiere.",
@@ -54,6 +54,10 @@
     {
       "t": "2026-09-25T12:23:33.074Z",
       "note": "seq 130 -> 140"
+    },
+    {
+      "t": "2026-09-26T12:28:02.599Z",
+      "note": "seq 140 -> 140"
     }
   ]
 }

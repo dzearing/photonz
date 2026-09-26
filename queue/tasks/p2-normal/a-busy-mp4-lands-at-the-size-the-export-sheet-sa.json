@@ -1,0 +1,31 @@
+{
+  "id": "a-busy-mp4-lands-at-the-size-the-export-sheet-sa",
+  "title": "A busy MP4 lands at the size the Export sheet said",
+  "goal": "When a screen recording is full of fast-moving detail, like scrolling a page of text, the MP4 that lands can be twice the size the Export sheet quoted, so someone who picked Small to get under a chat limit finds their file does not fit.",
+  "epic": "video-share",
+  "priority": "p2-normal",
+  "seq": 180,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-25T14:32:08.837Z",
+  "updated": "2026-09-26T12:28:02.800Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Measured 2026-09-25 on an idle machine (the-export-size-test-fails-about-one-run-in-thre), 3 s 1280x800 scrolling-text source (VideoExportBudgetTests.scrollingText is the same picture), bytes landed against recipe.expectedBytes: at 300 px/s High 1,564,796 vs 1,382,400, Standard 1,104,754 vs 921,600, Small 546,480 vs 324,000 (+69%); at 900 px/s High 1,733,042, Standard 1,548,584 (+68%), Small 830,895 vs 324,000 (+156%). RecordingExport.weight shows min(budget, measuredCost) with 'about', so the sheet shows at most the budget. The system H.264 encoder treats AVVideoAverageBitRateKey as a target and overshoots on detail-heavy frames (key frame every 2 s). Tried adding kVTCompressionPropertyKey_DataRateLimits [bitrate/8 bytes, 1 s] via AVVideoCompressionPropertiesKey: Small at 900 px/s came to 490,901 (still +52%) and High at 300 px/s fell to 979,188 (-29%, under), so a hard limit alone is not the answer; a second-pass or a quality-based (not bitrate-based) estimate may be. The software encoder (EnableHardwareAcceleratedVideoEncoder false) overshoots far worse: Small 1,256,251. Pure noise overshoots ~10x at every choice but is not screen material. Under concurrent encodes the sizes also swing wildly (Standard 1.1 to 3.1 MB), which nothing in the app can control.",
+  "acceptance": [
+    "On a 3 second 1280x800 recording of text scrolling at 300 and at 900 pixels a second, each of High, Standard and Small lands within 25 per cent of the size the sheet shows for it",
+    "The same holds on the easy recordings the export tests already use, so an easy recording is not pushed far under its number",
+    "If the encoder cannot be held to the number, the sheet shows a number that the file really lands near, and a test says which"
+  ],
+  "log": [
+    {
+      "t": "2026-09-25T14:32:08.839Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-26T12:28:02.799Z",
+      "note": "seq 3400 -> 180"
+    }
+  ]
+}

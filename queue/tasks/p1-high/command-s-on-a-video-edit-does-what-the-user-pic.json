@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 50,
-  "status": "blocked",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T09:50:56.575Z",
-  "updated": "2026-09-25T12:22:27.338Z",
+  "updated": "2026-09-26T06:40:08.848Z",
   "deps": [
     "a-video-edit-can-be-saved-as-a-project-and-opene"
   ],
@@ -42,7 +42,37 @@
     {
       "t": "2026-09-25T12:22:27.337Z",
       "note": "seq 140 -> 50"
+    },
+    {
+      "t": "2026-09-25T16:19:51.696Z",
+      "note": "decision \"You cut a recording, dropped in a second clip, music and a title. What should Command S do?\" resolved: Command S saves the project"
+    },
+    {
+      "t": "2026-09-26T06:11:48.314Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T06:13:37.848Z",
+      "note": "adversarial pass before building: the card chose a (Command S saves the project). A Premiere editor pressing Command S on an untitled project gets a save box, then saves in place from then on; that is what this builds for a recording that has never been saved. Stops for a first-time user: none new, Save was dimmed before and is now live and opens the ordinary save box. Mock check: no video mock draws a save box or a close sheet (standard macOS); the title bar name/size/length/saved line is already filed as a-video-window-says-its-name-size-length-and-whe. Plan: SaveAffordance gets a case for an edited recording never saved anywhere (Save live, close asks with Save and Export beside it), the dimmed-Save case goes, the close sheet becomes the ordinary Save sheet with Export added, Current's recording window untouched (recordings are documents only in Next)."
+    },
+    {
+      "t": "2026-09-26T06:39:51.469Z",
+      "note": "owns these walks: command-s-saves-a-video-project-walk, a-recording-opens-in-the-editor-at-defaults-walk"
+    },
+    {
+      "t": "2026-09-26T06:39:51.520Z",
+      "note": "built option a. Verified: SaveAffordanceTests rewritten first; full suite 9858 green; command-s-saves-a-video-project-walk ok at Next defaults with 6 real captures (plain trim: Command S wrote project.photonz pointing at Tutorial Sample.mp4, recording byte for byte 151020 bytes unchanged, reopened equal; multi-clip: project pointing at the recording and b-roll, then a cut and Command S saved in place, reopened equal with 3 pieces + b-roll). Also ok: a-recording-opens-in-the-editor-at-defaults-walk, a-project-whose-files-moved-walk, close-a-trimmed-recording-walk, save-is-live-after-a-trim-walk, trim-save-send-walk. a-video-edit-saves-as-a-project-walk fails at the transition picker (step 34) on main WITHOUT this change too (stashed and rerun): filed p1 clicking-a-cut-opens-the-transition-picker-again. A walk run died once at setup with EXC_GUARD in an AX notification, before any step: filed p2 find-out-why-the-app-sometimes-dies-at-the-start. Rough items in the audit: title bar is its own task already; four stacked buttons and the stand-in for the key chord stay here, not filed (no mock to compare, harness limit)."
+    },
+    {
+      "t": "2026-09-26T06:40:08.846Z",
+      "note": "Command S on a video saves the project (card answer a), at Next defaults: on a recording never saved, Save is live and opens the save box for a .photonz project, then saves in place; the close sheet asks Save with Export beside it; the recording is never written over. SaveAffordance (core, tests first) is still the one answer the File menu, edited dot and close sheet read. Verified: full suite 9858 green; command-s-saves-a-video-project-walk ok with real captures (plain trim and multi-clip edit, each checked on disk and reopened, recording byte-identical); neighbouring save walks ok. Audit queue/audits/2026-09-26-command-s-saves-a-video-project.json. Commit 07ca6d2e."
     }
   ],
-  "source": "manager"
+  "source": "manager",
+  "started": "2026-09-26T06:11:48.313Z",
+  "walks": [
+    "command-s-saves-a-video-project-walk",
+    "a-recording-opens-in-the-editor-at-defaults-walk"
+  ],
+  "completed": "2026-09-26T06:40:08.847Z"
 }

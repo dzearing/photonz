@@ -1,0 +1,31 @@
+{
+  "id": "the-shared-chrome-says-labels-not-sentences",
+  "title": "The shared chrome says labels, not sentences",
+  "goal": "Outside the video editor, a few places still speak in sentences or say \"no X\": the empty picture (\"Drop a photo or screenshot here\"), the capture history when it is empty, the layers search when nothing matches, the Mode menu, the colour picker when nothing has been picked, and the recording crop hint. Each becomes a short label or shows nothing, the same rule the timeline bar now follows.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 50,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-26T00:05:54.858Z",
+  "updated": "2026-09-26T12:28:02.147Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by no-sentences-or-debug-readouts-anywhere-in-the-c (2026-09-25). The list lives in Tests/PhotonzCoreTests/ChromeCopyBudgetTests.swift `allowed`: EditorView emptyState, LayersListView search empty, TitlebarModeChip details and listBlurb, HistoryOverlay empty states and Screen Recording line, DesignedColorPicker emptyNote, VideoCropOverlay hint. These are shared with Current, which is why this task did not change them (it was scoped to Next). Toast messages are passed in by callers across EditorState and are not read by the test at all; a follow-up could read ToastController call sites. Rule: UX-PATTERNS §4 What the chrome may say.",
+  "acceptance": [
+    "Every entry on the shrink-only allowed list in ChromeCopyBudgetTests is rewritten as a label of 30 characters or less, or removed, and struck off the list",
+    "Current and Next both get the change, since these files are shared",
+    "A before and after picture of each surface is in the audit"
+  ],
+  "log": [
+    {
+      "t": "2026-09-26T00:05:54.860Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-26T12:28:02.146Z",
+      "note": "seq 3410 -> 50"
+    }
+  ]
+}

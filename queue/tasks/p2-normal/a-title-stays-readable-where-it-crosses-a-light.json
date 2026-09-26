@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-24T22:19:18.336Z",
-  "updated": "2026-09-25T12:23:33.175Z",
+  "updated": "2026-09-26T12:28:02.700Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen in a-title-reads-over-a-video-walk 2-a-title-over-the-recording-sc.png (click at 120,110 on Sample Talk puts Ship over the Ready card). TitleLook.shadow is the mock soft shadow (sigma fontSize*6/26, 45% black). Options: stronger or tighter second shadow, a colour picked from the frame under the words, or a plate like captions. The inline draft (CanvasTextEditing.styleTextEditor) sets no shadow on the NSTextView. Mock video.html .vframe .title uses text-shadow 0 2px 12px rgba(0,0,0,.4), so anything beyond that is going further than the mock, not away from it.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-09-25T12:23:33.174Z",
       "note": "seq 150 -> 160"
+    },
+    {
+      "t": "2026-09-26T12:28:02.699Z",
+      "note": "seq 160 -> 160"
     }
   ],
   "walks": [

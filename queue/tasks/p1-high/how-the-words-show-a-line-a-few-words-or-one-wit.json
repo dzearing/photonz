@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 0.018,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T15:10:08.488Z",
-  "updated": "2026-09-25T15:10:16.054Z",
+  "updated": "2026-09-26T03:41:46.827Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -31,6 +31,35 @@
     {
       "t": "2026-09-25T15:10:16.053Z",
       "note": "seq 360 -> 0.018"
+    },
+    {
+      "t": "2026-09-26T01:24:06.330Z",
+      "note": "from the Captions-layer task (2026-09-25): the Captions layer's Text section has Background as a four-colour list (None/Dark/Black/White), not the full colour picker, and the plate has no corner radius control; the style tiles and Active colour still sit in the Captions section. Whole-text glow/shadow/stroke go through the ordinary Effects list on the Captions layer, not walked yet."
+    },
+    {
+      "t": "2026-09-26T02:45:52.184Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T02:49:19.600Z",
+      "note": "Pre-build review. A CapCut/Submagic user expects: a row of style tiles that look like the result, a words-per-caption choice that re-splits the captions on the timeline (Premiere's 'Lines: single/double' + max length does the same), and a current-word treatment (colour, pill, scale pop). Design: (1) Show/Lines live on the Captions layer's look and REGROUP its cues (the transcript words pooled in time order, hand fixes kept by token, re-split into sentences / lines / N words); the timeline shows the new bars, exactly what CapCut does, one undo step. (2) The current word's treatment (colour, pill, glow, stroke, shadow, scale, motion, speed) and the said/coming shading are look fields; the moment drawn at a time carries a per-frame word paint (like the lit word today), so canvas and export draw identical frames from DocumentTime.drawn. (3) Whole-text glow/stroke/shadow are look fields written onto each cue as ordinary Effects entries, so presets set everything in one click. (4) Five preset tiles (Caption, Lower third, Karaoke from the mock plus Bold pop and Neon) previewed with the real rasterizer; a Save tile keeps the user's own look (app settings, all documents). Risk: the mock (video-captions.html) predates this and shows a 3-way segmented style bar and no current-word rows; the task's acceptance supersedes it with tiles, so the tiles replace the bar. 'Current word dim' is folded into the current word's own colour (a dim current word is not a thing anyone wants); Said offers Full/Dim/Lit (lit = karaoke), Coming offers Full/Dim/Hidden (hidden = words appear as said)."
+    },
+    {
+      "t": "2026-09-26T03:41:30.189Z",
+      "note": "owns these walks: caption-words-pop-walk"
+    },
+    {
+      "t": "2026-09-26T03:41:30.240Z",
+      "note": "left rough, not filed: (1) while a look draws the current word on its own the line sits 0.3 font higher in its box (room for the grow and glow), and double-click word fixing measures the unlifted line, so a hit can be a few points off; the hit slack covers it in the walk. (2) the Captions section now sits below Time and runs long, so the style tiles need a scroll; the panel-order question belongs to the dock layout work. (3) the mock's line 'The line is a text layer wearing a named style...' is not shipped: it describes a design-system link that does not exist. (4) the current word has no Dim of its own: its colour row is its treatment. Perf: popping caption 3.99 ms per frame at 1080p 2x (CaptionCostTests). captions-panel-keeps-its-margins-walk still fails at step 26 Animate > Position exactly as on clean main."
+    },
+    {
+      "t": "2026-09-26T03:41:46.825Z",
+      "note": "Shipped in b237059c. Captions section: Caption style tiles (Caption, Lower third, Karaoke, Bold pop, Neon, plus Save style for your own) playing the real caption; Show (Sentence/Line/3/2/1 word) regrouping the captions live, Lines 1/2; Said (Full/Dim/Lit) and Coming (Full/Dim/Hidden); Current word: Colour, Pill, Glow, Stroke, Shadow, Scale, Animation (None, Grow, Grow with bounce, Pop, Underline sweep), Speed. Text section: whole-text Glow, Stroke, Shadow. The moment is computed from time on the drawn frame, so canvas and export match; 3.99 ms/frame at 1080p 2x. Verified: CaptionWordStyleTests 24 + CaptionWordPaintRenderTests 10 + caption suites; caption-words-pop-walk at Next defaults (1 word, Grow with bounce, glow on the current word only, three moments mid-word at 1.13x, 1.23x, 1.20x; Bold pop; Save style), 7 real captures; 20/21 caption walks (margins walk fails at Animate > Position as on clean main). Audit queue/audits/2026-09-25-caption-words.json."
     }
-  ]
+  ],
+  "started": "2026-09-26T02:45:52.183Z",
+  "walks": [
+    "caption-words-pop-walk"
+  ],
+  "completed": "2026-09-26T03:41:46.826Z"
 }

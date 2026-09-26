@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 0.015,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T15:03:15.395Z",
-  "updated": "2026-09-25T15:03:15.487Z",
+  "updated": "2026-09-26T02:28:20.965Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -29,6 +29,39 @@
     {
       "t": "2026-09-25T15:03:15.486Z",
       "note": "seq 350 -> 0.015"
+    },
+    {
+      "t": "2026-09-26T01:24:50.019Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T01:28:05.830Z",
+      "note": "Adversarial review before building: (1) A QuickTime/Premiere source-monitor user expects picture + transport and nothing picked; today Trim is in hand and the clip picked, which is the complaint. (2) The mock (video.html .transport + #tlDock, dock.js/dock.css) keeps the transport and collapses the timeline to a 30pt rail under it: chevron, TIMELINE, the pick + time summary, 'click to expand'. That is what ships collapsed, so nothing new is invented. (3) Keys: J/K/L/space/arrows must keep working collapsed, so the timeline keeps the keyboard; edit keys (I/O, B, M, Q/W, ;/', ⌘K, ⌘T, zoom) open it. (4) Trim with nothing picked already finds the clip under the playhead, so dropping the fast lane costs one key, not a click. (5) Guides ring the tracks on their first card (cut-a-recording-down), so a guide's sample opens expanded. (6) No modifier-drag exists on the transport scrubber today, so that acceptance item has nothing to hook; noted rather than invented. (7) ~85 walks open a recording and then drive the timeline; the remembered choice must be forgettable per walk so they can say which state they start in. Plan: pure rules in PhotonzCore (which commands open it, how a document opens, the rail summary), a per-window video timeline state separate from the icon timing strip, remembered only on an explicit toggle."
+    },
+    {
+      "t": "2026-09-26T02:27:46.114Z",
+      "note": "Side by side with the mock (video.html .transport + #tlDock collapsed via dock.css .timeline[data-tl=closed] / dock.js .tlrail) against 1-opened-to-watch-sc.png: transport unchanged; rail matches the mock's row: chevron-up, TIMELINE uppercase faint, summary in mono ink (pick · time / length, just time / length with nothing picked, as the mock's data-tl-summary writes it), 'click to expand' faint at the right, ~30pt tall, hover lifts to glassThin. No layout, colour, control-type or copy-length differences found. Differences that are NOT this surface: soft first frame (a-recording-opens-on-a-sharp-first-frame) and the floating tool bar over the picture (a-picture-or-video-fits-above-the-tool-bar-not-u), both already open p1."
+    },
+    {
+      "t": "2026-09-26T02:27:46.165Z",
+      "note": "Walks: 92 walks that open a recording were run in batches. Guides (4) all pass. 27 needed the tracks showing or relied on the fast lane's pick; they now say setup.timelineOpen: true (new setup key: how a recording's timeline was last left by hand) and six pick their clip with selectRow. trim-is-a-tool now picks Trim up from the tucked state and proves Trim brings the tracks up. the-layers-row-says-how-many-pieces folds the tracks again after each cut, since a cut now opens them. Still failing exactly as in the 2026-09-25 sweep, not this task's: keys-copy-between-layers, punch-in-and-hold (now gets further, step 59 vs 17), captions-panel-keeps-its-margins (same step 25). a-recording-opens-sharp and a-guide-recording-opens-sharp are another runner's uncommitted walks using an unbuilt step; Scripts/test.sh is red on them alone (7 issues) and green (9819 tests) with them set aside, and they were put back untouched."
+    },
+    {
+      "t": "2026-09-26T02:27:46.214Z",
+      "note": "Left rough, not filed: dragging on the scrubber with a modifier has no gesture today, so nothing to hook (acceptance 3 otherwise met: B, I/O, M, Q/W, ;, ', ⌘K, ⌘T, S, zoom keys, right-click Split, Trim, and any document edit open it). Panel edits like Speed open the tracks too, by the any-edit rule; recorded in the audit's rough for the user to react to."
+    },
+    {
+      "t": "2026-09-26T02:27:46.265Z",
+      "note": "owns these walks: a-recording-opens-to-watch-walk"
+    },
+    {
+      "t": "2026-09-26T02:28:20.963Z",
+      "note": "A recording now opens to watch: nothing picked, arrow in hand, timeline tucked to the transport plus the mock's one TIMELINE row; the row, × and ⌥⌘T open/close it and that choice is remembered; edit keys, Split, Trim and any document edit open it by themselves; edited documents and guide samples open expanded. Fast lane removed from code, video-surface.md §10.3 and the trim task's acceptance. Core TimelineOpening tested; Scripts/test.sh green (9819) with another runner's two unbuilt walks set aside; new walk a-recording-opens-to-watch-walk at Next defaults passes with 5 real window captures; 92 video walks run, 27 migrated to setup.timelineOpen, remaining failures identical to the last sweep. Audit queue/audits/2026-09-25-recording-opens-to-watch.json. Commit bb6c6370."
     }
-  ]
+  ],
+  "started": "2026-09-26T01:24:50.018Z",
+  "walks": [
+    "a-recording-opens-to-watch-walk"
+  ],
+  "completed": "2026-09-26T02:28:20.964Z"
 }

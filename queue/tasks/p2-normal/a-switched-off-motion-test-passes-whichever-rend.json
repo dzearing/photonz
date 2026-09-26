@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-25T12:03:33.572Z",
-  "updated": "2026-09-25T12:23:32.456Z",
+  "updated": "2026-09-26T12:28:01.997Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-25 on main at 3f6a7c04 with the working tree stashed: `Scripts/test.sh --filter MotionRenderTests` -> `✘ Test aSwitchedOffMotionDrawsTheLayerAsItWasDrawn() recorded an issue at MotionRenderTests.swift:102:9: Expectation failed: (difference(still, drawn) → 0.007775) == (0 → 0.0)`, 3 of 3 runs. Run alone (`--filter aSwitchedOffMotionDrawsTheLayerAsItWasDrawn`) it passes 3 of 3, and a debug print showed the moved and stored documents are equal (frame and transform identical), so two renders of equal documents differ: likely shared renderer or cache state between tests of the 4 suites that filter matches. It also failed once in a full run the same day and passed in the next.",
@@ -27,8 +27,10 @@
       "note": "seq 3400 -> 20"
     },
     {
-      "t": "2026-09-25T12:23:32.454Z",
-      "note": "seq 20 -> 20"
+      "t": "2026-09-26T12:28:01.996Z",
+      "note": "seq 20 -> 20",
+      "since": "2026-09-25T12:23:32.454Z",
+      "count": 2
     }
   ]
 }

@@ -1,0 +1,42 @@
+{
+  "id": "walks-that-drag-a-clip-on-the-timeline-by-window",
+  "title": "Walks that drag a clip on the timeline by window point really move it",
+  "goal": "Several walks drag clips, sound levels and fade handles on the timeline by posting a mouse drag to the window, and pass without checking the result. On 2026-09-26 one of them was shown to move nothing at all, so those walks report green on gestures they never performed.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 210,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-26T09:17:44.209Z",
+  "updated": "2026-09-26T12:28:02.950Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-26. Scripts/playtest.sh Scripts/playtest/a-clip-s-sound-is-linked-under-it-walk.json --no-build -> 'walk complete', but 2-sound-dragged-sc.png shows Tutorial Sample still starting at 0s after step 'windowDrag from [691,943] to [864,943]' (should have slid about 1.5s). Separately, a probe walk with Select in hand did windowDrag from [907,854] to [1042,854] on a b-roll clip at 8s (clip's lane measured off the -sc.png of a 1728x990pt window) and expectClip startsAt 10 failed: b-roll still 8.00s to 16.00s. The window is kept invisible during walks (capture log: 'the window was still invisible, so it was shown for the one shot'); a theory, not confirmed, is that NSApp.postEvent to an ordered-out window never reaches SwiftUI hit testing. PlaytestHarness.swift case .windowDrag posts mouseMoved/Down/Dragged/Up via NSApp.postEvent. Other users of windowDrag: keys-copy-between-layers-walk, timeline-right-click-walk. The track-select-forward walk sidestepped it with a new dragClip step that drives EditorState like dragTiming does.",
+  "acceptance": [
+    "A windowDrag on a timeline clip in a walk moves that clip, and the walk claims where it landed with expectClip",
+    "a-clip-s-sound-is-linked-under-it-walk fails if its sound drag moves nothing",
+    "Every walk using windowDrag on the timeline either claims the result or is rewritten onto a step that drives the editor"
+  ],
+  "log": [
+    {
+      "t": "2026-09-26T09:17:44.211Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-26T09:18:33.216Z",
+      "note": "A rightClick step at the same window point [907,854] did reach b-roll's clip menu (16 rows, Select Forward chosen and it worked), so the point maps onto the clip; it is the posted drag that does not reach it."
+    },
+    {
+      "t": "2026-09-26T12:26:20.786Z",
+      "note": "triage 2026-09-26: posted left clicks on the timeline stopped answering in the same window (see clicking-a-cut-opens-the-transition-picker-again, p1). The drag that moves nothing may be the same cause; check this again once that lands before rewriting walks."
+    },
+    {
+      "t": "2026-09-26T12:28:02.949Z",
+      "note": "seq 3440 -> 210"
+    }
+  ],
+  "walks": [
+    "a-clip-s-sound-is-linked-under-it-walk"
+  ]
+}

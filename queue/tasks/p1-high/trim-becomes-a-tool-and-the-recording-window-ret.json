@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T19:20:02.577Z",
-  "updated": "2026-09-26T02:26:44.246Z",
+  "updated": "2026-09-26T07:54:35.134Z",
   "deps": [
     "a-video-edit-can-be-saved-as-a-project-and-opene",
     "command-s-on-a-video-edit-does-what-the-user-pic"
@@ -142,6 +142,34 @@
     {
       "t": "2026-09-26T02:26:44.245Z",
       "note": "Acceptance item 5 (a fresh recording opens with the clip picked and Trim in hand) is struck: the user turned the fast lane down on 2026-09-25, and a-recording-opens-to-watch-with-the-editing-tuck removed opensWithTrimInHand. A recording now opens to watch with the timeline tucked away; Trim with nothing picked still finds the clip under the playhead."
+    },
+    {
+      "t": "2026-09-26T06:55:01.927Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T06:57:54.185Z",
+      "note": "ADVERSARIAL REVIEW 2026-09-26, before building the rest. Save (Command S writes a project) and Export (the video sheet) already landed via their own tasks, so what is left is: one door in Next, Revert to Original on the document path, the old walks, and the old window's code. (1) The old window cannot be DELETED: Current, the shipping release, opens every recording in it, and a Next task may not change Current. So the retire is: Next has exactly one way to open a recording (the editor), with no switch that brings the small window back; next-a-recording-is-a-document is deleted; the old window's code stays as Current's alone and goes when Next is promoted. Acceptance item 9 is read that way and the audit says so. (2) The two old-window guides (trim-a-recording, export-a-recording) only ever showed in Next with that switch OFF (tutorials are Next-only), so with the switch gone they are unreachable anywhere and go. (3) Revert to Original in the old window meant 'put back the file a save overwrote'. On the document path Save never touches the recording, so the Premiere/Photoshop reading is File > Revert: throw every edit away and go back to the recording as it opened, as one undo step, offered only while the window holds a recording that has been edited. (4) The 20 walks that forced the switch off guard a window Next can no longer open: each is either moved onto the editor or deleted with the editor walk that covers it named in this log."
+    },
+    {
+      "t": "2026-09-26T07:54:11.415Z",
+      "note": "walks trim-save-send-walk, trim-with-pieces-walk, trim-catches-on-a-cut-walk, trim-cancel-after-a-delete-walk, trim-keeps-the-piece-you-picked-walk, trim-handle-freed-from-a-cut-walk, undo-while-trimming-walk, save-is-live-after-a-trim-walk, close-a-trimmed-recording-walk, tutorial-trim-a-recording-walk, tutorial-trim-a-recording-skipped-walk, trim-is-a-tool-walk -> trim-save-send-walk, trim-with-pieces-walk, trim-catches-on-a-cut-walk, trim-cancel-after-a-delete-walk, trim-keeps-the-piece-you-picked-walk, trim-handle-freed-from-a-cut-walk, undo-while-trimming-walk, save-is-live-after-a-trim-walk, close-a-trimmed-recording-walk, trim-is-a-tool-walk, opening-a-recording-walk"
+    },
+    {
+      "t": "2026-09-26T07:54:11.465Z",
+      "note": "BUILT the rest, 2026-09-26. (1) One door in Next: next-a-recording-is-a-document deleted (catalog, 12 needs entries, tests, 20 walks' setups); NextExperience.videoEditor opens a .video id in ImageEditorRootView; the harness's old-window branches for history, Finder, landing and reopen now adopt the editor (adoptRecordingDocument). (2) Revert to Original on the document path: Video menu row, EditorState+RevertRecording, one undo step back to the recording as it opened (recordingAsOpened); the old window's rows stay for Current only (Video menu 'if timed'). (3) BUG FOUND AND FIXED while moving the walks: on a clip cut in pieces, a Trim handle on or past a cut made commit refuse silently (ClipTrimSession.applied returned nil), so Trim did nothing. Reproduced with a scratch walk (cut at 2s and 6s, handles on the cuts, Trim: 'the recording runs 8.00s, not 4.00s'); now pieces wholly outside a handle are dropped, 4 new ClipTrimTests. (4) Handles dragged by hand catch on cuts while the timeline snaps (ClipTrimSession.cutsMS/caught, clipSnapMS, Command frees), 3 tests; the bar being trimmed now draws its cuts and the clip's name as comp-video.html 07 does. (5) A trim that drops pieces lets go of the picked piece index instead of leaving it pointing at a different piece. (6) Walks: 11 trim walks rewritten on the editor and passing (tutorial-trim x2 deleted with their guides), opening-a-recording passes unchanged on the editor; deleted cut-a-recording, delete-key-drops-a-piece, picked-piece-reads-first, recording-export-sheet, recording-export-weighing, saving-a-recording-says-so, video-bar-says-what-it-does and tutorial-export-a-recording (covered by cut-on-the-timeline, delete-key-drops-a-timeline-piece, an-edited-recording-comes-out-as-a-video, command-s-saves-a-video-project, tutorial-export-the-video). expectRecording answers pieces/picked/seconds/starts/playhead on a document."
+    },
+    {
+      "t": "2026-09-26T07:54:11.516Z",
+      "note": "ACCEPTANCE: 1 Save live, done by command-s task, re-verified (save-is-live-after-a-trim-walk). 2-4 done 2026-09-20. 5 struck. 6 Save (Command S = project), Save a copy (Save As), Export (video sheet, trim-save-send-walk exports), Revert to Original (new, trim-save-send-walk) all on the document path. 7 done, walks above pass. 8 the switch is deleted. 9 READ AS: Next never reaches VideoEditorState/VideoEditorView/TrimTimeline/PlaybackScrubber; they cannot be deleted because Current, the shipping release, still opens recordings in them and a Next task may not change Current; they go when Next is promoted (video.md 7, audit). 10 done 2026-09-20 and the old-window guide is now deleted. 11 Save never rewrites the recording any more, so its fingerprint and remembered place survive and the playhead stays put (save-is-live-after-a-trim-walk claims playhead 2.0s before and after); the 'cannot keep your place' line has no case left to say. Full suite 9845 green; neighbouring walks green (a-recording-opens-in-the-editor-at-defaults, command-s-saves-a-video-project, opening-a-recording-as-a-document, a-recording-is-a-document, tutorial-cut-a-recording-down, cut-on-the-timeline, delete-key-drops-a-timeline-piece, ripple-trim-to-playhead, a-recording-opens-to-watch, tutorial-export-the-video). Audit queue/audits/2026-09-26-trim-and-the-recording-window-retired.json."
+    },
+    {
+      "t": "2026-09-26T07:54:11.566Z",
+      "note": "LEFT ROUGH, not filed (nothing a person hits): no walk proves the editor's video sheet hands over the file it weighed (the old window's recording-export-weighing-walk did, for its own sheet); the export toast names the file in full, long only for the walk's uuid names; the old window's Next-only gated code (cut strip, recording export sheet) is unreachable anywhere now and goes with the window. The Crop slot flyout grouping question from 2026-09-21 is unchanged by this task."
+    },
+    {
+      "t": "2026-09-26T07:54:35.132Z",
+      "note": "Next has one way to open a recording: the editor. The switch that brought back the small window is deleted (its code stays for Current, which still ships it, and goes at promotion). Added Video > Revert to Original on the document path. Fixed Trim silently doing nothing on a cut clip with a handle on or past a cut; handles now catch on cuts while snapping, and the trimming bar draws cuts and the clip name. The 11 trim walks run on the editor and pass, opening-a-recording passes on the editor, old-window guides and walks retired. Full suite 9845 green, neighbouring video walks green. Audit queue/audits/2026-09-26-trim-and-the-recording-window-retired.json. Commit 47444337."
     }
   ],
   "walks": [
@@ -154,9 +182,9 @@
     "undo-while-trimming-walk",
     "save-is-live-after-a-trim-walk",
     "close-a-trimmed-recording-walk",
-    "tutorial-trim-a-recording-walk",
-    "tutorial-trim-a-recording-skipped-walk",
-    "trim-is-a-tool-walk"
+    "trim-is-a-tool-walk",
+    "opening-a-recording-walk"
   ],
-  "started": "2026-09-20T20:44:03.267Z"
+  "started": "2026-09-26T06:55:01.926Z",
+  "completed": "2026-09-26T07:54:35.133Z"
 }

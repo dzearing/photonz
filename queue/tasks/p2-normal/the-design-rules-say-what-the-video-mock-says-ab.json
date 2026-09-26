@@ -4,12 +4,12 @@
   "goal": "The shared design rules still say the panel beside a video's timeline lists every value that could be animated, and name the video mock as the model for that. The user's video mock was put back on 2026-09-23 and now lists only what is animating, with an Animate a property button for the rest, and the app shipped exactly that on 2026-09-25. A runner who reads the rule will build the old list back and fight the mock, so the rule has to say what the mock says.",
   "epic": "video-editing",
   "priority": "p2-normal",
-  "seq": 50,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T12:23:19.492Z",
-  "updated": "2026-09-25T12:23:32.609Z",
+  "updated": "2026-09-26T12:28:02.196Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the 2026-09-25 digest design review. docs/design/mocks/shared/UX-PATTERNS.md line ~2134 (D10 heading 'A property list shows what CAN be animated, not what is') and its last paragraph: '`pages/video.html` remains canonical for the printed catalogue. It is the CLIP spelling'. Against it: docs/design/mocks/pages/video.html line ~844 ('The pane lists what this clip IS animating; everything else is one click') and ~875 (Animate a property button), restored by 823fc26d; shipped by b009ac43 (the-properties-pane-opens-on-the-clip-line-and-l, audit queue/audits/2026-09-25-properties-pane.json). The mock is the floor: change the rule, never the mock.",
@@ -17,7 +17,8 @@
     "Rule D10 in the shared UX patterns doc says a video clip's panel lists only what the clip is animating, with a searchable Animate a property picker for everything else, and names the user's video mock as the reason",
     "D10 keeps what it exists to protect, written against the new spelling: the way to animate something is on screen before anything moves (the picker button and the 'nothing yet' line), and removing the last key never makes a value unreachable",
     "No other place in the shared docs (UX-PATTERNS D10 and D17, AGENTS.md, docs/design/video.md) still calls video.html the printed catalogue",
-    "The runner of a-moving-layer-shows-between-the-keys-in-propert can read one answer for where Curve and Path live, or the rule says plainly that the two mocks disagree and points at that task's card"
+    "The runner of a-moving-layer-shows-between-the-keys-in-propert can read one answer for where Curve and Path live, or the rule says plainly that the two mocks disagree and points at that task's card",
+    "The shared guide rule (D16) also says a guide never draws a closed rectangle, because a closed outline is the app's word for what you picked, and what to draw instead (a wash filling a band, or hairlines running off the edge), citing queue/audits/2026-09-20-icon-keylines-read-as-guides.json; nothing else in the doc shows a guide as a closed box"
   ],
   "log": [
     {
@@ -27,6 +28,14 @@
     {
       "t": "2026-09-25T12:23:32.608Z",
       "note": "seq 3400 -> 50"
+    },
+    {
+      "t": "2026-09-26T12:27:40.423Z",
+      "note": "triage 2026-09-26: folded in the-guide-rule-says-that-a-guide-never-closes-a (p3 since 2026-09-20): the same document, the same kind of scrub, one runner pass. Its acceptance is the last item here."
+    },
+    {
+      "t": "2026-09-26T12:28:02.195Z",
+      "note": "seq 50 -> 60"
     }
   ]
 }

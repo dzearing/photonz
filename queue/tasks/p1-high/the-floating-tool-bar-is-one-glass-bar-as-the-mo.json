@@ -1,0 +1,31 @@
+{
+  "id": "the-floating-tool-bar-is-one-glass-bar-as-the-mo",
+  "title": "The floating tool bar is one glass bar, as the mocks draw it",
+  "goal": "The mocks draw the tools, the More button, the colour pair and the zoom slider in one glass bar with hairlines between them. The app draws three or four separate glass capsules side by side. Make it the one bar the mocks show, on pictures and videos alike.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 130,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-26T12:20:11.772Z",
+  "updated": "2026-09-26T12:28:01.897Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found in the side-by-side for on-a-video-the-tool-bar-holds-the-video-tools-an (2026-09-26): queue/audits/2026-09-26-video-tool-bar-2-a-folded-tool-by-its-key-sc.png against docs/design/mocks/pages/video.html .tbar (lines ~384-416). Today EditorView.toolbar is an HStack of toolsBar/videoToolsBar + sideCapsules (colour capsule, grid chip, zoomBar), each its own .glassEffect capsule, inside one GlassEffectContainer so they morph. The grid chip has no place in the mock's bar; decide where it lives (a decision card if it would leave the bar). Many walks read group heights via the toolBar step (Tools/Grid/Zoom groups), so those claims change with this.",
+  "acceptance": [
+    "With a recording open at Next defaults, the tools, More, the colour pair (when a painting tool is in hand) and the zoom slider sit in one glass bar with hairlines, as video.html's floating tool bar draws it",
+    "A picture document's bar is the same one bar",
+    "A narrow window still folds tools into More before anything clips, and the bar still clears the fitted picture (a-fitted-picture-clears-the-tool-bar-walk passes)"
+  ],
+  "log": [
+    {
+      "t": "2026-09-26T12:20:11.774Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-26T12:28:01.896Z",
+      "note": "seq 370 -> 130"
+    }
+  ]
+}

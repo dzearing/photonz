@@ -1,22 +1,24 @@
 {
   "id": "clips-on-the-timeline-show-pictures-of-what-is-i",
   "title": "Clips on the timeline show pictures of what is in them",
-  "goal": "On a five minute recording the clip is one long coloured bar, so the only way to find the moment you want is to play or scrub. Premiere and Final Cut draw small pictures along each clip. The user decides whether clips here show pictures, as the mock draws plain coloured bars.",
+  "goal": "On a five minute recording the clip is one long coloured bar, so the only way to find a moment is to play or scrub. The user chose: at Fit the clips stay the coloured bars the mock draws, and once zoomed in far enough for a frame to be recognisable, small pictures of what is in the clip fade in along it.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 120,
-  "status": "blocked",
+  "seq": 60,
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:16:45.418Z",
-  "updated": "2026-09-25T12:22:27.702Z",
+  "updated": "2026-09-26T12:28:01.540Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24); gap report docs/design/video-vs-premiere.md. Picture: docs/design/video-vs-premiere/five-minutes-at-fit.jpg. Mock video.html (timeline section) draws clips as gradient bars with no pictures, so this departs from the mock and needs the user s yes before building.",
   "acceptance": [
-    "The user has answered the decision card on this task",
-    "If yes: a video clip on the timeline shows frames from its own recording along its length at every zoom, and a walk shows them on a five minute recording",
-    "If yes: a clip still reads as picked, and its name stays legible over the pictures",
+    "At Fit, clips look as they do today: the mock's coloured bars",
+    "Zoomed in far enough that a frame is recognisable, a video clip shows frames from its own recording along its length, fading in rather than popping",
+    "A picked clip still reads as picked, and its name stays legible over the pictures",
+    "Zooming and scrolling a five minute recording with pictures showing keeps every main thread pass under 50 ms",
+    "A walk at Next defaults on a five minute recording photographs Fit (no pictures) and a close zoom (pictures)",
     "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
     "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
@@ -36,6 +38,18 @@
     {
       "t": "2026-09-25T12:22:27.701Z",
       "note": "seq 260 -> 120"
+    },
+    {
+      "t": "2026-09-25T16:19:47.326Z",
+      "note": "decision \"Should clips on the timeline show small pictures of what is in them?\" resolved: Pictures only when zoomed in"
+    },
+    {
+      "t": "2026-09-26T12:26:36.741Z",
+      "note": "triage 2026-09-26: goal and acceptance rewritten to the answer the user picked on the card (b, pictures only when zoomed in); the 'if yes' items are gone."
+    },
+    {
+      "t": "2026-09-26T12:28:01.539Z",
+      "note": "seq 120 -> 60"
     }
   ]
 }

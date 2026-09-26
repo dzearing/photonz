@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T01:51:08.398Z",
-  "updated": "2026-09-25T12:22:27.286Z",
+  "updated": "2026-09-26T05:58:30.000Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-25: Scripts/playtest.sh Scripts/playtest/tutorial-add-a-second-clip-walk.json. After V1 is picked and b-roll.mp4 (written with sound by TutorialSampleRecording, same generator as the main clip whose waveform does draw) is placed with Add at Playhead, 3-command-inserts-sc.png and 4-where-they-meet-sc.png (a few seconds later) show the b-roll part of the Audio track as a flat line while the recording part shows its peaks. In tutorial-put-a-transition-on-a-cut-walk, where b-roll is in the document when it opens, its waveform does draw. EditorState+TimelineDrop.landTimelineFile calls SoundLibrary.loadWaveform only for a sound file (inAir.sound), never for a recording s own sound: likely the cause, unconfirmed.",
@@ -34,6 +34,28 @@
     {
       "t": "2026-09-25T12:22:27.285Z",
       "note": "seq 3370 -> 40"
+    },
+    {
+      "t": "2026-09-26T05:41:21.766Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T05:58:09.305Z",
+      "note": "owns these walks: tutorial-add-a-second-clip-walk, second-clip-on-the-timeline-walk"
+    },
+    {
+      "t": "2026-09-26T05:58:29.947Z",
+      "note": "Root cause confirmed: SoundLibrary.onWaveformLanded was declared but never set, so a bar drawn before its waveform was read was never redrawn. New expectWaveform step failed on tutorial-add-a-second-clip-walk (Library, Add at Playhead) and second-clip-on-the-timeline-walk (Finder drop) with 'shape HAS been read, so the bar was never told'; both pass after making SoundLibrary @Observable on its waveforms. Scripts/test.sh green (9857 tests); library-clip-onto-a-track, transition-picker-at-a-cut, tutorial-put-a-transition-on-a-cut, a-long-captioned-recording, an-editing-session walks ok. expectWaveform added to the lock-safe list by reading, not yet watched under a lock. Audit rough item (waveform look vs video-audio mock) left in the audit only: not changed by this task, no new task filed."
+    },
+    {
+      "t": "2026-09-26T05:58:29.998Z",
+      "note": "Added clips now draw their waveform on landing (SoundLibrary observable on waveforms, commit 9968c2d1). Verified by new expectWaveform claims in the second-clip tutorial walk (Library) and second-clip-on-the-timeline walk (Finder), failing before and passing after, at Next defaults; full test suite green. Audit: queue/audits/2026-09-26-a-clip-brought-onto-the-timeline-shows-its-sound.json"
     }
-  ]
+  ],
+  "started": "2026-09-26T05:41:21.765Z",
+  "walks": [
+    "tutorial-add-a-second-clip-walk",
+    "second-clip-on-the-timeline-walk"
+  ],
+  "completed": "2026-09-26T05:58:29.999Z"
 }

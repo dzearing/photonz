@@ -1,0 +1,27 @@
+{
+  "id": "x-7",
+  "title": "x",
+  "goal": "",
+  "epic": "",
+  "priority": "p2-normal",
+  "seq": 3420,
+  "status": "dropped",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-26T00:05:57.466Z",
+  "updated": "2026-09-26T00:06:03.369Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "",
+  "acceptance": [],
+  "log": [
+    {
+      "t": "2026-09-26T00:05:57.468Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-26T00:06:03.368Z",
+      "note": "created by mistake by a runner command; nothing to do"
+    }
+  ]
+}

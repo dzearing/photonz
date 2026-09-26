@@ -1,0 +1,31 @@
+{
+  "id": "find-out-why-the-app-sometimes-dies-at-the-start",
+  "title": "Find out why the app sometimes dies at the start of a walk",
+  "goal": "Now and then the app quits by itself in the first second of a scripted walk, inside a system accessibility message, before the walk has done anything. It has taken out at least four unrelated walks. Find out whether a person using the app could hit it too, and stop it.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-26T06:34:43.105Z",
+  "updated": "2026-09-26T12:28:02.047Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-09-26 06:22Z running Scripts/playtest.sh Scripts/playtest/command-s-saves-a-video-project-walk.json --no-build: 'Verdict: CRASHED EXC_GUARD in static PhotonzApp.$main() < Photonz_main', log.json stopped after the setup step (forgot settings, copied the scratch b-roll). Report ~/Library/Logs/DiagnosticReports/Photonz Probe-2026-09-25-232258.ips: EXC_GUARD GUARD_TYPE_MACH_PORT INVALID_OPTIONS on mach port 0; crashing thread main: mach_msg2_trap < mach_msg < HIServices _XMIGPostNotification < _AXUIElementPostNotificationWithInfo < AppKit _NSAccessibilityNotify < __CFRunLoopDoBlocks < NSApplication run. Same signature at 2026-09-25 22:32 (Photonz Probe-2026-09-25-223224.ips) and in sweeps: out-of-view-mark-walk (2026-09-21 06:00Z), multi-geometry-walk (11:16Z), each-corner-on-its-own-walk (grep EXC_GUARD queue/loop.log). The re-run of the same walk right after passed, so it is intermittent. Ghoztty Accessibility was denied on the Grants line each time; worth checking whether an AX notification posted while nothing is listening, or while the probe is not yet frontmost, is what trips the guard.",
+  "acceptance": [
+    "The cause is named in this task's log with the evidence for it",
+    "Either it is fixed and the walks that hit it pass ten runs in a row, or it is shown to happen only under the walk harness and the harness stops provoking it"
+  ],
+  "log": [
+    {
+      "t": "2026-09-26T06:34:43.107Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-26T12:28:02.046Z",
+      "note": "seq 3430 -> 30"
+    }
+  ],
+  "walks": []
+}

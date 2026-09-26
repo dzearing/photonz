@@ -1,0 +1,195 @@
+{
+  "id": "walks-that-fail-in-the-full-sweep-5",
+  "title": "Walks that fail in the full sweep",
+  "goal": "The scripted walks are the app driving itself, and some of them no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on. This serves the focus because the sweep is the only thing that tells a focus runner whether the change it just made broke anything: a sweep with failures nobody has named cannot say that, so every focus feature ships on a weaker claim than it should.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-09-23T00:59:10.437Z",
+  "updated": "2026-09-26T12:28:01.333Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-26T11:50:00Z: 595 of 622 walks passed in 151 minutes.\n\nFailing walks (27): a-painted-caption-takes-a-click-walk, a-video-edit-saves-as-a-project-walk, an-editing-session-walk, extract-a-marked-stretch-walk, fix-a-caption-word-walk, hold-on-a-frame-walk, import-key-leaves-invert-selection-walk, key-a-title-s-scale-walk, key-lanes-walk, keyframe-anything-walk, keys-copy-between-layers-walk, library-import-walk, panel-grip-walk, premiere-keys-on-the-timeline-walk, properties-pane-walk, punch-in-and-hold-walk, the-timeline-is-the-layer-list-walk, timeline-bar-labels-only-walk, timeline-right-click-walk, tracks-you-can-add-rename-group-walk, transition-picker-at-a-cut-walk, tutorial-export-a-spec-list-walk, tutorial-layers-and-undo-walk, tutorial-mark-it-up-walk, tutorial-put-a-transition-on-a-cut-walk, tutorial-save-export-copy-walk, tutorial-two-parts-out-of-phase-walk\n\nAlready named by another open task, so read that one before re-diagnosing (5):\n  a-video-edit-saves-as-a-project-walk -> clicking-a-cut-opens-the-transition-picker-again (that task says it owns this walk)\n  an-editing-session-walk -> on-a-video-the-tool-bar-holds-the-video-tools-an (guessed from its wording, so read it before believing it)\n  key-lanes-walk -> a-keyed-value-s-curve-opens-where-you-want-it (that task says it owns this walk)\n  library-import-walk -> library-tiles-are-as-wide-as-the-mock-draws-them (guessed from its wording, so read it before believing it)\n  transition-picker-at-a-cut-walk -> clicking-a-cut-opens-the-transition-picker-again (that task says it owns this walk)\n\n2 of those are guesses. A task stops being guessed at by naming its walks:\n  node queue/bin/queue.mjs walks <task id> <walk> [<walk> ...]\n  node queue/bin/queue.mjs walks <task id> --none      (it only mentions them in passing)\n\nThis task owns the other 22: a-painted-caption-takes-a-click-walk, extract-a-marked-stretch-walk, fix-a-caption-word-walk, hold-on-a-frame-walk, import-key-leaves-invert-selection-walk, key-a-title-s-scale-walk, keyframe-anything-walk, keys-copy-between-layers-walk, panel-grip-walk, premiere-keys-on-the-timeline-walk, properties-pane-walk, punch-in-and-hold-walk, the-timeline-is-the-layer-list-walk, timeline-bar-labels-only-walk, timeline-right-click-walk, tracks-you-can-add-rename-group-walk, tutorial-export-a-spec-list-walk, tutorial-layers-and-undo-walk, tutorial-mark-it-up-walk, tutorial-put-a-transition-on-a-cut-walk, tutorial-save-export-copy-walk, tutorial-two-parts-out-of-phase-walk\n\nStopped failing since the last sweep (3): captions-panel-keeps-its-margins-walk, motion-pivot-in-a-corner-walk, picker-controls-walk\n\nFull output: queue/sweep/2026-09-26-021918.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a-recording-opens-to-watch-with-the-editing-tuck: a-recording-opens-to-watch: every recording now opens with its timeline tucked away and 27 video walks were migrated; the whole video set should be seen once; a-picture-or-video-fits-above-the-tool-bar-not-u: Fitted pictures now centre above the tool bar (Viewport.obscuredBottom), so every canvas sits 32pt higher than before; document-space walks are immune and 35 view/window-space and fit walks passed, but the whole set should confirm\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
+  "acceptance": [
+    "Every walk the sweep block names as this task's own either passes or is rewritten to match what the app does now",
+    "Each one is run on its own and passes twice in a row",
+    "Any walk that was wrong rather than broken says so in this task log",
+    "Anything a walk found actually broken for a person (not walk drift) is fixed in the app, or filed with its reproduction if it is too big for this task"
+  ],
+  "log": [
+    {
+      "t": "2026-09-23T00:59:10.439Z",
+      "note": "created (sweep)"
+    },
+    {
+      "t": "2026-09-23T03:34:58.730Z",
+      "note": "rotating check 2026-09-23T03:34:58Z: punch-in-and-hold-walk, position-and-size-on-screen-walk, position-and-size-on-screen-walk failing out of the 50 walks it ran (348 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-23T06:16:48.142Z",
+      "note": "sweep 2026-09-23T06:16:47Z: 5 failing (hold-pushes-the-sound-walk, punch-in-and-hold-walk, speed-a-stretch-walk, save-is-live-after-a-trim-walk, switch-says-mixed-walk); stopped failing: dock-picked-first-walk"
+    },
+    {
+      "t": "2026-09-23T12:10:31.799Z",
+      "note": "seq 3090 -> 20"
+    },
+    {
+      "t": "2026-09-23T12:12:09.150Z",
+      "note": "seq 20 -> 20"
+    },
+    {
+      "t": "2026-09-23T12:18:57.409Z",
+      "note": "manager 2026-09-23 12:15Z, probe built 04:54 on HEAD 7012adbc, each walk run on its own with Scripts/playtest.sh --no-build: speed-a-stretch-walk passed first time. punch-in-and-hold-walk FAILED once (step 18: Scale reading reads 100%, not 200%) then passed on the next run. hold-pushes-the-sound-walk stopped after step 7 of 44 with no done.json and no crash report (step 6 wait: never went quiet, main thread longest 760ms after soundDetach), then passed all 44 steps on the next run. So the three video walks are intermittent, not broken: one reads a value before it lands, one loses the app part way. The second is the same no-crash-report death the sweep names for save-is-live-after-a-trim and switch-says-mixed."
+    },
+    {
+      "t": "2026-09-23T16:05:37.469Z",
+      "note": "rotating check 2026-09-23T16:05:37Z: layers-lazy-rows-walk failing out of the 50 walks it ran (221 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-23T18:37:14.226Z",
+      "note": "sweep 2026-09-23T18:37:13Z: 3 failing (layers-lazy-rows-walk, motion-pivot-in-a-corner-walk, panel-grip-walk); stopped failing: hold-pushes-the-sound-walk, punch-in-and-hold-walk, speed-a-stretch-walk, save-is-live-after-a-trim-walk, switch-says-mixed-walk"
+    },
+    {
+      "t": "2026-09-24T08:57:07.522Z",
+      "note": "sweep 2026-09-24T08:57:07Z: 2 failing (keys-copy-between-layers-walk, panel-grip-walk); stopped failing: layers-lazy-rows-walk, motion-pivot-in-a-corner-walk"
+    },
+    {
+      "t": "2026-09-24T11:35:01.228Z",
+      "note": "rotating check 2026-09-24T11:35:01Z: keys-copy-between-layers-walk failing out of the 50 walks it ran (270 onward in the rotation). keys-copy-between-layers-walk had its own script changed since the last check. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-24T11:55:23.942Z",
+      "note": "rotating check 2026-09-24T11:55:23Z: panel-grip-walk failing out of the 49 walks it ran (295 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-24T12:33:24.222Z",
+      "note": "rotating check 2026-09-24T12:33:24Z: playing-a-recording-never-blinks-walk failing out of the 50 walks it ran (344 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-24T12:35:22.405Z",
+      "note": "digest 2026-09-24: ran playing-a-recording-never-blinks-walk alone six times with Scripts/playtest.sh --no-build, status ok every time. The rotating check's miss (1 of 24 moments empty at moment 18, 10 held back) happened with 49 other walks running; treat it as a blank frame under load, not a flake to rerun away. If it shows again in a slice, it earns its own p1 bug against video playback."
+    },
+    {
+      "t": "2026-09-24T12:40:39.345Z",
+      "note": "seq 20 -> 30"
+    },
+    {
+      "t": "2026-09-24T17:45:01.892Z",
+      "note": "2026-09-24 keys-copy-between-layers-walk: on untouched HEAD c21c0fc1 it fails at step 50 (command+v dimmed, frozen menu bar) or 59 ('Key' in Scale reads on a key, not between keys) depending on the run; with the long-captions work it reaches step 77 and fails there because the canvas click at (620,330) at 4 s picks Tutorial Sample (the first title is off screen then), so keyLanesToggle has nothing keyed. Not caused by that change."
+    },
+    {
+      "t": "2026-09-24T18:11:45.694Z",
+      "note": "2026-09-24 ~11:20 local, three more walks red on untouched HEAD c21c0fc1 (built in a clean worktree, Scripts/playtest-all.sh --no-build --only <list>), identical with the long-captions change: premiere-keys-on-the-timeline-walk step 22 expectBox 'Tutorial Sample sits at (1, 0), claimed (0, 0), 1.0 pt out, allowed 0.5'; tracks-you-can-add-rename-group-walk step 88 'Track group Group 1 is in the panel, and this step says it should not be' (the step 85 command+z undo did not take the group off); tutorial-mark-it-up-walk step 33 waitFor tutorialStep(back-to-pointer) not within 6.0s. All three passed in the 08:57Z sweep, so something that landed today broke them."
+    },
+    {
+      "t": "2026-09-24T21:18:21.284Z",
+      "note": "sweep 2026-09-24T21:18:21Z: 17 failing (a-painted-caption-takes-a-click-walk, an-editing-session-walk, extract-a-marked-stretch-walk, key-a-title-s-scale-walk, key-lanes-walk, keys-copy-between-layers-walk, layers-lazy-rows-walk, panel-grip-walk, premiere-keys-on-the-timeline-walk, timeline-right-click-walk, tracks-you-can-add-rename-group-walk, transition-picker-at-a-cut-walk, tutorial-export-a-spec-list-walk, tutorial-layers-and-undo-walk, tutorial-mark-it-up-walk, tutorial-save-export-copy-walk, tutorial-two-parts-out-of-phase-walk)"
+    },
+    {
+      "t": "2026-09-24T22:33:26.213Z",
+      "note": "rotating check 2026-09-24T22:33:26Z: a-painted-caption-takes-a-click-walk, an-editing-session-walk failing out of the 50 walks it ran (585 onward in the rotation). a-painted-caption-takes-a-click-walk had its own script changed since the last check. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-24T23:11:23.903Z",
+      "note": "rotating check 2026-09-24T23:11:23Z: an-editing-session-walk failing out of the 50 walks it ran (31 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-25T00:20:34.729Z",
+      "note": "rotating check 2026-09-25T00:20:34Z: an-editing-session-walk failing out of the 50 walks it ran (79 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-25T00:53:58.930Z",
+      "note": "rotating check 2026-09-25T00:53:58Z: an-editing-session-walk failing out of the 50 walks it ran (126 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-25T02:45:05.522Z",
+      "note": "rotating check 2026-09-25T02:45:05Z: keys-copy-between-layers-walk failing out of the 50 walks it ran (217 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-25T04:05:56.799Z",
+      "note": "rotating check 2026-09-25T04:05:56Z: panel-grip-walk failing out of the 50 walks it ran (314 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-25T05:10:19.526Z",
+      "note": "rotating check 2026-09-25T05:10:19Z: picker-controls-walk, punch-in-and-hold-walk failing out of the 50 walks it ran (360 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-25T09:34:47.810Z",
+      "note": "sweep 2026-09-25T09:34:47Z: 5 failing (keys-copy-between-layers-walk, panel-grip-walk, picker-controls-walk, punch-in-and-hold-walk, tutorial-trim-a-recording-walk); stopped failing: a-painted-caption-takes-a-click-walk, an-editing-session-walk, extract-a-marked-stretch-walk, key-a-title-s-scale-walk, key-lanes-walk, layers-lazy-rows-walk, premiere-keys-on-the-timeline-walk, timeline-right-click-walk, tracks-you-can-add-rename-group-walk, transition-picker-at-a-cut-walk, tutorial-export-a-spec-list-walk, tutorial-layers-and-undo-walk, tutorial-mark-it-up-walk, tutorial-save-export-copy-walk, tutorial-two-parts-out-of-phase-walk"
+    },
+    {
+      "t": "2026-09-25T10:42:54.042Z",
+      "note": "rotating check 2026-09-25T10:42:53Z: keys-copy-between-layers-walk failing out of the 50 walks it ran (407 onward in the rotation). keys-copy-between-layers-walk had its own script changed since the last check. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-25T12:21:56.351Z",
+      "note": "triage 2026-09-25: the one walk the sweep said the app DIED in, tutorial-trim-a-recording-walk, passed on its own at 05:3x today (Scripts/playtest.sh Scripts/playtest/tutorial-trim-a-recording-walk.json --no-build, 7 of 7 guide steps, walk complete). Not reproduced, so no crash task. Its longest main-thread pass was 603 ms. If it dies again in a sweep, file it with the log."
+    },
+    {
+      "t": "2026-09-25T12:23:32.507Z",
+      "note": "seq 30 -> 30",
+      "since": "2026-09-25T12:22:28.169Z",
+      "count": 2
+    },
+    {
+      "t": "2026-09-25T23:33:55.218Z",
+      "note": "sweep 2026-09-25T23:33:54Z: 6 failing (captions-panel-keeps-its-margins-walk, keys-copy-between-layers-walk, motion-pivot-in-a-corner-walk, panel-grip-walk, picker-controls-walk, punch-in-and-hold-walk); stopped failing: tutorial-trim-a-recording-walk"
+    },
+    {
+      "t": "2026-09-26T02:45:51.986Z",
+      "note": "rotating check 2026-09-26T02:45:51Z: a-recording-opens-sharp-walk, captions-panel-keeps-its-margins-walk, keys-copy-between-layers-walk, punch-in-and-hold-walk failing out of the 50 walks it ran (9 onward in the rotation). captions-panel-keeps-its-margins-walk, keys-copy-between-layers-walk, punch-in-and-hold-walk had its own script changed since the last check. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-26T03:56:19.058Z",
+      "note": "rotating check 2026-09-26T03:56:18Z: captions-panel-keeps-its-margins-walk failing out of the 50 walks it ran (29 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-26T04:54:20.661Z",
+      "note": "rotating check 2026-09-26T04:54:20Z: component-uneven-room-walk failing out of the 50 walks it ran (78 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-26T05:41:21.567Z",
+      "note": "rotating check 2026-09-26T05:41:21Z: each-corner-on-its-own-walk, each-corner-on-its-own-walk failing out of the 50 walks it ran (126 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-26T06:55:01.722Z",
+      "note": "rotating check 2026-09-26T06:55:01Z: an-editing-session-walk, import-key-leaves-invert-selection-walk, key-a-title-s-scale-walk, key-lanes-walk, keyframe-anything-walk, keys-copy-between-layers-walk failing out of the 50 walks it ran (220 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-26T08:05:52.370Z",
+      "note": "rotating check 2026-09-26T08:05:52Z: an-editing-session-walk, library-import-walk failing out of the 50 walks it ran (267 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-26T08:33:40.810Z",
+      "note": "2026-09-26, found by captions-show-safe-area-guides-and-their-own-bar and reproduced on CLEAN main (47444337, that task's work stashed, probe rebuilt): properties-pane-walk fails step 10 (expectSections): 'the panel starts Time, Captions, not Properties, Time, Sound; all of it: Time, Captions' (no Properties/Sound section on the picked clip). fix-a-caption-word-walk fails step 38: 'the words are not back where they were: 2160, 2400, 2640, 3120, 3300, 3660 against 2160, 2640, 2880, 3360, 3540, 3900' (undo of the word drags leaves them moved). Both passed in the 2026-09-25T23:33Z sweep, so one of the commits since (bb17ceed..47444337) broke them. Commands: Scripts/playtest.sh Scripts/playtest/properties-pane-walk.json; Scripts/playtest.sh Scripts/playtest/fix-a-caption-word-walk.json --no-build."
+    },
+    {
+      "t": "2026-09-26T08:49:47.522Z",
+      "note": "rotating check 2026-09-26T08:49:47Z: an-editing-session-walk, panel-grip-walk failing out of the 50 walks it ran (306 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-26T11:50:01.312Z",
+      "note": "sweep 2026-09-26T11:50:00Z: 27 failing (a-painted-caption-takes-a-click-walk, a-video-edit-saves-as-a-project-walk, an-editing-session-walk, extract-a-marked-stretch-walk, fix-a-caption-word-walk, hold-on-a-frame-walk, import-key-leaves-invert-selection-walk, key-a-title-s-scale-walk, key-lanes-walk, keyframe-anything-walk, keys-copy-between-layers-walk, library-import-walk, panel-grip-walk, premiere-keys-on-the-timeline-walk, properties-pane-walk, punch-in-and-hold-walk, the-timeline-is-the-layer-list-walk, timeline-bar-labels-only-walk, timeline-right-click-walk, tracks-you-can-add-rename-group-walk, transition-picker-at-a-cut-walk, tutorial-export-a-spec-list-walk, tutorial-layers-and-undo-walk, tutorial-mark-it-up-walk, tutorial-put-a-transition-on-a-cut-walk, tutorial-save-export-copy-walk, tutorial-two-parts-out-of-phase-walk); stopped failing: captions-panel-keeps-its-margins-walk, motion-pivot-in-a-corner-walk, picker-controls-walk"
+    },
+    {
+      "t": "2026-09-26T12:19:42.962Z",
+      "note": "2026-09-26 (video tool bar task): an-editing-session-walk still fails at step 34 (no 'Cross dissolve' in 'At this cut') and premiere-keys-on-the-timeline-walk at step 22 (expectBox 1pt out); both fail identically with next-video-tool-bar forced off, so neither is the new tool bar."
+    },
+    {
+      "t": "2026-09-26T12:26:57.354Z",
+      "note": "triage 2026-09-26: failures went from 6 (sweep built on 025749a5, 2026-09-25 14:01 local) to 27 (built 02:19 local 2026-09-26) across twelve commits in one night. Grouped by symptom from queue/sweep/2026-09-26-021918.log so a runner can take them in clusters: (1) left clicks on the timeline answered by nothing, OWNED by clicking-a-cut-opens-the-transition-picker-again (p1, first): transition-picker-at-a-cut, a-video-edit-saves-as-a-project, an-editing-session, tutorial-put-a-transition-on-a-cut, a-painted-caption-takes-a-click, the-timeline-is-the-layer-list. (2) five picture guides stall on a waitFor tutorialStep: tutorial-export-a-spec-list (paste-it), tutorial-layers-and-undo (nothing-is-stuck), tutorial-mark-it-up (back-to-pointer), tutorial-save-export-copy (export-it), tutorial-two-parts-out-of-phase (drag-it-late); not video, so look at the shared changes (bb17ceed fit above the tool bar, 34757c2e labels). (3) Easing menu gone from the timeline bar unless keys are picked (34757c2e, on purpose): keyframe-anything step 57, timeline-bar-labels-only step 42, likely walk drift. (4) a recording now opens with nothing picked (bb6c6370): properties-pane step 10 (panel starts Time, Captions), timeline-right-click step 12 (Split at Playhead dimmed), likely walk drift but check that Split is not dimmed for a person with the clip under the pointer. (5) keys and Animating state: key-a-title-s-scale step 83, key-lanes step 65, punch-in-and-hold step 59. (6) one each: extract-a-marked-stretch (In/Out none after marking), fix-a-caption-word step 38 (word times not restored), hold-on-a-frame step 29, import-key-leaves-invert-selection step 13, keys-copy-between-layers step 54 (Command V has no action behind it), library-import step 10 (no notice pill), panel-grip step 27 (Library has no grab bar), premiere-keys-on-the-timeline step 22 (1pt out, likely the fit-above-tool-bar move), tracks-you-can-add-rename-group step 88. Moved to p1 behind the click fix: the sweep is how every focus runner learns whether it broke something, and 27 red walks cannot tell it."
+    },
+    {
+      "t": "2026-09-26T12:26:57.406Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-09-26T12:28:01.332Z",
+      "note": "seq 30 -> 20"
+    }
+  ],
+  "standing": "walk-sweep"
+}

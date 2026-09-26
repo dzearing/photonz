@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-24T23:56:58.863Z",
-  "updated": "2026-09-25T12:23:33.225Z",
+  "updated": "2026-09-26T12:28:02.750Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-09-24 during the-export-sheet-lets-you-pick-the-size-of-the-v: Scripts/playtest.sh Scripts/playtest/export-a-video-at-1080p-walk.json --no-build -> [20 writeVideo] five-minutes-at-1080p.mp4 is 17 MB, written in 342447 ms; it runs 319.24s at 1728 x 1080 px ... made frame by frame from the document. Load average about 3-4 at the time. Path: EditorState.writeVideo -> DocumentFrames (composites every frame at canvas size 2880x1800, then DocumentMovieWriter fits to plan.size). Likely wins: composite at the output size rather than the canvas size, decode with hardware, pipeline frame fetch and encode. An untouched recording at Full is still a verbatim copy and is not affected.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-09-25T12:23:33.224Z",
       "note": "seq 160 -> 170"
+    },
+    {
+      "t": "2026-09-26T12:28:02.749Z",
+      "note": "seq 170 -> 170"
     }
   ],
   "walks": [

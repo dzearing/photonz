@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 0.005,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T15:10:08.404Z",
-  "updated": "2026-09-25T15:10:16.001Z",
+  "updated": "2026-09-26T01:24:26.395Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window. The word-editing task (fix-a-caption-one-word-at-a-time-on-the-canvas-a) now builds on this layer.",
@@ -32,6 +32,32 @@
     {
       "t": "2026-09-25T15:10:16.000Z",
       "note": "seq 350 -> 0.005"
+    },
+    {
+      "t": "2026-09-26T00:49:44.953Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T00:59:37.795Z",
+      "note": "Design: the Captions layer is a group carrying its own CaptionLook (GroupContent.captionLook, Layer.isCaptionsLayer). Its children stay the transcript (one text cue each, with words and times) because the word editing, word lane, cue bars and stretch cuts that shipped yesterday all address cues by id; every cue fills the layer's box (local 0,0,w,h), so moving/resizing the box moves and rewraps every caption. Position enum removed. Old documents (group at origin, cues in canvas space, document-wide look) are adopted on decode. Pre-build review: a Photoshop/Premiere user expects one row, one box with handles, and the Text controls in the panel; a new content case would have meant rewriting all cue-by-id tooling, so the group-backed kind was chosen."
+    },
+    {
+      "t": "2026-09-26T01:24:06.277Z",
+      "note": "owns these walks: captions-are-one-layer-walk, captions-write-themselves-walk"
+    },
+    {
+      "t": "2026-09-26T01:24:06.433Z",
+      "note": "left rough, not filed (no person-visible defect found, each noted in the audit): a rotated Captions layer opens a fixed word level; Effects and Animate a property on the Captions layer were not walked; Write Again rewrites only the first Captions layer. Duplicate now keeps caption words (Layer.duplicated/reidentified copy captionWordsStorage), found by CaptionsLayerTests."
+    },
+    {
+      "t": "2026-09-26T01:24:26.393Z",
+      "note": "Shipped in 3ac98a03. Captions land as ONE Captions layer (group carrying its own CaptionLook; cues are the transcript and all fill its box): one row with the captions mark in the layers list (not openable), one Captions track; picked from the list or by clicking the words, dragged anywhere, side handles set the wrap width, bigger type grows the box up from its floor; default box centred in the lower third inside title-safe. Bottom/Middle/Top is gone. Picked Captions layer shows a Text section (font, size, weight, colour, background, align), Appearance and Effects, the Captions section, no Layout section. Old caption groups open as one Captions layer in place (same words, times, look). Duplicate keeps caption words so several Captions layers place and style independently. Double-click word fixing unchanged (fix-a-caption-word-walk green). Verified: CaptionsLayerTests (13) + caption suites; captions-are-one-layer-walk at Next defaults with 5 real captures; all 20 caption walks green except captions-panel-keeps-its-margins-walk (known clean-main failure on the clip's Animate > Position, owned elsewhere). Full suite green except 7 walk-setup tests broken by two untracked walks from the opens-sharp task (logged there; pass with them aside). Not done here: plate corner radius, walking Effects/rotation/keyframes on captions (audit rough; styling folded into how-the-words-show). Audit queue/audits/2026-09-25-captions-are-one-layer.json."
     }
-  ]
+  ],
+  "started": "2026-09-26T00:49:44.952Z",
+  "walks": [
+    "captions-are-one-layer-walk",
+    "captions-write-themselves-walk"
+  ],
+  "completed": "2026-09-26T01:24:26.394Z"
 }

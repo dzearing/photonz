@@ -1,0 +1,54 @@
+{
+  "id": "clicking-a-cut-opens-the-transition-picker-again",
+  "title": "A click on the timeline does its job again: the Blade cuts, a cut opens its picker, a bar gets picked",
+  "goal": "Since the evening of 2026-09-25, clicking things on the video timeline does nothing: a click on the join between two clips no longer opens the transition picker, a click with the Blade leaves the clip whole, and a click on a caption's bar picks nothing. Right-clicks still open their menus. Find the one change that stopped the clicks and put them back, so a transition, a cut and a pick can be made by clicking, as in Premiere.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-26T06:34:33.137Z",
+  "updated": "2026-09-26T12:28:01.280Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-26 on main at 9968c2d1 with no local changes (stashed): Scripts/probe-app.sh; Scripts/playtest-all.sh --no-build transition-picker-at-a-cut-walk -> FAILED step 18 (expect): no control called \"Cross dissolve\" is in the panel (panel lists 'Edit point Tutorial Sample to b-roll' but no picker). a-video-edit-saves-as-a-project-walk -> FAILED step 34 (press): no control called \"Cross dissolve\" in \"At this cut\"; its 4-picker-sc.png shows the click landed on the join between the two Sample Talk pieces on V1 and no picker opened. Both passed in the 2026-09-25T23:33Z sweep (617/623), so the break is in a commit after it: 34757c2e (timeline bar says labels), 3235cde1 (drawn things get their own row), 3ac98a03 (captions one layer), bb6c6370, b237059c, bb17ceed, 688177b1, 9968c2d1 (clip shows its sound). Found by the runner of command-s-on-a-video-edit-does-what-the-user-pic.",
+  "acceptance": [
+    "At Next defaults, with two clips on V1, a click on the join between them opens the transition picker at that cut",
+    "With the Blade armed (tool bar, the timeline's bar or B), one click in the middle of a clip leaves it in two pieces and puts the playhead at the click; the same on its linked sound",
+    "A click on a caption's bar picks that one caption, and Shift-click on a second clip adds it to the pick",
+    "transition-picker-at-a-cut-walk, a-video-edit-saves-as-a-project-walk, an-editing-session-walk, tutorial-put-a-transition-on-a-cut-walk, a-painted-caption-takes-a-click-walk and the-timeline-is-the-layer-list-walk pass",
+    "the-timeline-is-the-one-in-the-mock-walk checks its Blade click with expectClip pieces 2, and video-tool-bar-walk's Blade step does the same",
+    "The log says which commit stopped the clicks and whether a real click by a person at the Mac was broken too, or only the clicks the walks post"
+  ],
+  "log": [
+    {
+      "t": "2026-09-26T06:34:33.139Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-26T12:26:20.535Z",
+      "note": "triage 2026-09-26 spot-check: reproduced on a fresh probe build of c6b356fa. Scripts/playtest.sh Scripts/playtest/transition-picker-at-a-cut-walk.json -> step 18 (expect): no control called \"Cross dissolve\" is in the panel, after [16 press] 'Edit point Tutorial Sample to b-roll' at window (964, 96), one click. (964, 96) counted from the bottom of the 990pt window is the V1 join in 1-two-clips-meet-sc.png, so the click lands in the right place and nothing answers it. Same with /tmp/vtb-g.json (the Blade task's walk): step 14 expectClip, Tutorial Sample is in 1 pieces, not 2, playhead unmoved. Merged the Blade task into this one: same symptom (a left click on the timeline answered by nothing), same window. Also the same cluster in the 11:50Z sweep: a-painted-caption-takes-a-click-walk step 8 (0 layers picked after a click on a caption bar) and the-timeline-is-the-layer-list-walk step 19 (shift-click did not add Sample Talk). Right-clicks at the same points still reach their menus. Window: every one of these passed in the sweep built on 025749a5 (2026-09-25 07:32 local) and failed on 9968c2d1 and later. Commits in between that touch the timeline: 34757c2e (TimelineDock), 3235cde1 (TimelineTrackRows, new drawn-layer rows), bb6c6370 (TimelineDock: tucked rail, .clipped(), isMotionStripOpen split); bisect those first. Moved to the top of p1: it takes out the focus's end-to-end editing-session walk."
+    },
+    {
+      "t": "2026-09-26T12:26:20.586Z",
+      "note": "seq 350 -> 5"
+    },
+    {
+      "t": "2026-09-26T12:26:20.636Z",
+      "note": "walks transition-picker-at-a-cut-walk, a-video-edit-saves-as-a-project-walk -> transition-picker-at-a-cut-walk, a-video-edit-saves-as-a-project-walk, an-editing-session-walk, tutorial-put-a-transition-on-a-cut-walk, a-painted-caption-takes-a-click-walk, the-timeline-is-the-layer-list-walk"
+    },
+    {
+      "t": "2026-09-26T12:28:01.279Z",
+      "note": "seq 5 -> 10"
+    }
+  ],
+  "walks": [
+    "transition-picker-at-a-cut-walk",
+    "a-video-edit-saves-as-a-project-walk",
+    "an-editing-session-walk",
+    "tutorial-put-a-transition-on-a-cut-walk",
+    "a-painted-caption-takes-a-click-walk",
+    "the-timeline-is-the-layer-list-walk"
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 20,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T12:26:26.172Z",
-  "updated": "2026-09-25T12:22:29.707Z",
+  "updated": "2026-09-26T12:27:40.525Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the daily digest of 2026-09-20 as a rule scrub. Evidence: queue/audits/2026-09-20-icon-keylines-read-as-guides.json, whose summary is 'Nothing the app draws to help you place things closes a rectangle any more, so the only outlined rectangle on the canvas is the thing you have picked.' D16 today (docs/design/mocks/shared/UX-PATTERNS.md line 2459) covers over-your-work, wash-or-hairline and never-in-the-export, and says nothing about closed outlines, which is why the keyline shipped as a dashed rectangle first and had to be redone. Same audit records a cost worth carrying into the rule: the square keyline lost its corner rounding when it stopped being a rounded rectangle, and corner ticks were the alternative. Parked at p3 because design-system is staged next and this does not unblock the video focus.",
@@ -34,6 +34,14 @@
     {
       "t": "2026-09-25T12:22:29.706Z",
       "note": "seq 30 -> 20"
+    },
+    {
+      "t": "2026-09-26T12:27:40.473Z",
+      "note": "triage 2026-09-26: folded into the-design-rules-say-what-the-video-mock-says-ab as its last acceptance item; a rule only runners read does not earn its own slot, and both are scrubs of the same shared UX patterns doc."
+    },
+    {
+      "t": "2026-09-26T12:27:40.524Z",
+      "note": "folded into the-design-rules-say-what-the-video-mock-says-ab"
     }
   ]
 }

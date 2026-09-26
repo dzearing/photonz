@@ -4,12 +4,12 @@
   "goal": "When a picked layer has two or more keys, Properties shows the move walkthrough mock's Between the keys section: the Curve dropdown for how fast it travels, the Path control for where it travels, and the mock's one-line note, plus the Animate command menu with Key at playhead, Curve the path and Easing.",
   "epic": "video-transitions-motion",
   "priority": "p1-high",
-  "seq": 180,
+  "seq": 120,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T12:03:27.116Z",
-  "updated": "2026-09-25T12:23:34.009Z",
+  "updated": "2026-09-26T12:28:01.846Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From a-moving-layer-draws-its-path-on-the-canvas-and (2026-09-25). That task shipped the Path control as a row under Position in the Animating list (PropertyKeysInspector.MotionPathRow), because the app follows video.html's Animating panel; video-move-wt.html instead draws Transform / Animate / Between the keys (Curve select + Path seg + pPathNote). The two mocks disagree on panel structure: if building both is not possible, open a decision card rather than picking. Core already has MotionPathShape and PhotonzDocument.shapeMotionPath; easing per key is KeyEase via LayerMotion.easing(key:).",
@@ -32,6 +32,10 @@
     {
       "t": "2026-09-25T12:23:34.008Z",
       "note": "digest 2026-09-25: the shared rule D10 still calls video.html the printed catalogue, which the user's restored mock no longer is; the-design-rules-say-what-the-video-mock-says-ab (p2) fixes the rule. Read the mocks, not D10, for this one."
+    },
+    {
+      "t": "2026-09-26T12:28:01.845Z",
+      "note": "seq 180 -> 120"
     }
   ]
 }

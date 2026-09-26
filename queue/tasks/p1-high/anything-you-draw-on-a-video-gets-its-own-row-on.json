@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 0.0045,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T21:07:16.741Z",
-  "updated": "2026-09-25T21:07:16.823Z",
+  "updated": "2026-09-26T00:49:19.913Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window. Related done tasks: tracks (63fc06b1), move A to B (4760f7d7), keyframe anything.",
@@ -30,6 +30,35 @@
     {
       "t": "2026-09-25T21:07:16.822Z",
       "note": "seq 350 -> 0.0045"
+    },
+    {
+      "t": "2026-09-26T00:07:24.330Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T00:09:35.747Z",
+      "note": "Reproduced at Next defaults: Scripts/playtest.sh Scripts/playtest/drawn-shape-gets-a-timeline-row-walk.json -> step 14 FAILED: no field 'Timing Rectangle'; the timeline shows only 'Track V1' and 'Track Audio' after drawing a rectangle at 1s. Capture 1-drawn-sc.png shows the rectangle on the canvas and no row."
+    },
+    {
+      "t": "2026-09-26T00:23:59.596Z",
+      "note": "owns these walks: drawn-shape-gets-a-timeline-row-walk"
+    },
+    {
+      "t": "2026-09-26T00:45:32.856Z",
+      "note": "Adversarial review before building: (1) K collides twice (Premiere Stop on the timeline, Lens tool on the canvas) so the key lives on the row header diamond and the bar's right-click instead; (2) acceptance's 1s-3s bar with a key at 3s is impossible, the layer is off screen at its own out point, so the walk ends the bar at 3.5s; (3) a Premiere user expects a graphic to land on the timeline at the playhead (Premiere uses a fixed 5s); here it runs to the end of the shot as asked, 5s only at the very end; (4) resize under a keyed Scale is uniform, a one-sided stretch is not keyed."
+    },
+    {
+      "t": "2026-09-26T00:45:32.908Z",
+      "note": "left rough (not filed, below the bar or pre-existing): header name truncates to 'Recta...' in the 84pt gutter beside the diamond; before a layer arrives its diamonds read 'on a key' (the key clock clamps to the first key, same in the panel); the picked layer's motion path stays drawn while it is off screen; renders ('render' step) ignore the playhead so only -sc captures show absence."
+    },
+    {
+      "t": "2026-09-26T00:49:19.911Z",
+      "note": "Shipped in 3235cde1 behind next-anything-drawn-on-a-video-is-on-the-timeline (Next default on). Shapes, lines, pen paths, lenses, callouts, measurements, pastes and dropped pictures drawn on a video get a span from the playhead to the end of the clip under it (5s at the very end, the hold on a held frame) and their own row named after them; header key diamond keys position/scale/rotation/opacity in one press, a later canvas drag/resize makes the next key; bar right-click Add Key/Remove Key; chip says Graphic. K not bound (Stop on timeline, Lens on canvas). Verified: DrawnOnTheTimelineTests (18) + full suite 9807 green; walk drawn-shape-gets-a-timeline-row-walk at Next defaults (tweens at 1/2/3s, absent at 0.5 and 3.5s; bar ends 3.5s so the 3s key is draggable) plus 16 related walks green. Audit queue/audits/2026-09-25-drawn-on-the-timeline.json."
     }
-  ]
+  ],
+  "started": "2026-09-26T00:07:24.329Z",
+  "walks": [
+    "drawn-shape-gets-a-timeline-row-walk"
+  ],
+  "completed": "2026-09-26T00:49:19.912Z"
 }

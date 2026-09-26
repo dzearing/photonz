@@ -5,11 +5,11 @@
   "epic": "video-share",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T22:53:19.192Z",
-  "updated": "2026-09-25T12:22:27.181Z",
+  "updated": "2026-09-25T14:32:42.338Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Intake detail (the goal as first filed, moved here by triage 2026-09-23): Running the test suite before a commit comes back red about a third of the time, on a video export test that nobody has touched. The rule is that the suite must be green before every commit, so a test that fails at random either stops honest work or teaches people to ignore a red suite. Make that test tell the truth every time it runs.\n\nReproduced 2026-09-22 while finishing resizing-one-piece-inside-a-turned-card-moves-th. Three back-to-back full runs of Scripts/test.sh on the same commit: run 1 failed with 1 issue, run 2 failed with 3 issues, run 3 passed with 9094 tests. The issue named each time:\n\n  x Test \"What lands is inside the budget it was given, and not far under it\" recorded an issue at VideoExportBudgetTests.swift:155:9: Expectation failed: (Self.bytes(of: tighter) -> 125039) < (landed -> 116723)\n\nTests/PhotonzMediaTests/VideoExportBudgetTests.swift:155 is the last line of theBudgetPredictsTheFile: it exports the same 3-second 1280x800 synthetic source at VideoExportQuality.standard and again at .small, and claims the .small file is the smaller of the two. Both land around 120KB, so on that source the hardware encoder is near its own floor and the bitrate ceiling is not what is deciding the size; which file comes out smaller is then down to the encoder, not to the recipe. Self.busySource(seconds:3,size:) is the source. Either give it a source with enough detail that both budgets actually bind, or make the claim about the recipe rather than about the bytes.",
@@ -183,7 +183,37 @@
     {
       "t": "2026-09-25T12:22:27.180Z",
       "note": "seq 20 -> 20"
+    },
+    {
+      "t": "2026-09-25T13:20:07.371Z",
+      "note": "2026-09-25 full Scripts/test.sh run (9769 tests): both VideoExportBudgetTests 'What lands is inside the budget' (126923 < 125414 failed) and AnimatedExportWeighTests 'written twice' (standard < high false) failed together; both passed on an immediate --filter rerun. Seen during fix-a-caption-one-word-at-a-time-on-the-canvas-a."
+    },
+    {
+      "t": "2026-09-25T13:31:51.432Z",
+      "note": "2026-09-25 06:3x: on CLEAN main (71696a26, work stashed) a full Scripts/test.sh fails VideoExportBudgetTests 'What lands is inside the budget' (tighter 121102 !< landed 116102); it failed 3 of 3 full runs this morning at load ~5, passing only when run alone. It is no longer one run in three on this machine."
+    },
+    {
+      "t": "2026-09-25T13:49:47.806Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-25T14:08:20.601Z",
+      "note": "Reproduced 2026-09-25 with instrumented full Scripts/test.sh under 8 bounded CPU burners: HEIC short High 280327 vs 259311 bytes with the SAME 48 frames at 640x400 and no skipped frames, plus MP4 twice drift 0.071. So frames are not being dropped; the system encoders (HEVC for HEIC, H.264 for MP4) decide differently when other encodes share the machine. Alone every export is byte-stable (standard 133283, small 121102). Under 6 concurrent in-process encodes + 10 burners: MP4 twice drift up to 19%; on a scrolling-text source Standard/Small ratio 0.29-1.62 even with RequireHardwareAcceleratedVideoEncoder, so it is not a software fallback. Diagnostic test kept at /tmp/ZZExportDiagTests.swift (not committed)."
+    },
+    {
+      "t": "2026-09-25T14:32:20.157Z",
+      "note": "Can the Export sheet show a person two different sizes for the same choice? MP4: no. Its number is arithmetic (min of budget and what the recording already costs), the same every time. GIF: no. A GIF written twice is byte-identical, busy machine or quiet. HEIC: yes, across two openings of the sheet on a busy machine. Each opening re-weighs by writing the file, and the HEVC encoder can come out up to about 30% different (280,327 vs 259,311; 208,988 vs 285,616). But what lands is always the number on screen: ExportWeigh.take hands the weighed scratch file to putWeighedFileInPlace, which moves it into place instead of writing again. The one exception is a failed move or copy, where the export writes afresh and a HEIC can land off the number. Not filed: it needs a failed move within the temp volume on a busy machine, and the picture is still right. Comments that claimed a HEIC always weighs the same (ExportWeigh, AppCoordinator, EditorState+VideoExport, RecordingExportWeighingTests) now say the handover is what makes the number true."
+    },
+    {
+      "t": "2026-09-25T14:32:20.210Z",
+      "note": "left rough (runner guidance, not the app): in zsh, 'kill $PIDS' on a space-joined string does not word-split, so bounded burners survived until pkill. Arrays (pids+=($!); kill \"${pids[@]}\") work. Also 'timeout' is not installed on this Mac; perl -e 'alarm N; 1 while 1' is a self-bounding burner. Not a task: nothing a person sees."
+    },
+    {
+      "t": "2026-09-25T14:32:42.336Z",
+      "note": "Reproduced under load: the system HEVC/H.264 encoders write different byte counts for the same frames when other encodes share the machine (no frames dropped). Rewrote the claims in VideoExportBudgetTests and AnimatedExportWeighTests to hold on a busy machine. The MP4 budget comparison now runs on scrolling text that spends its budget, both choices pinned to the same picture size, lightest of three; it catches two injected regressions. GIF stays byte-exact twice. HEIC is frame-exact twice. Presets are checked by frame count. Sheet answer is in the log: only a HEIC can show two numbers across two openings on a busy machine, and what lands is always the number shown, because the weighed file is moved into place. Scripts/test.sh green 5 in a row (9,770 tests), 3 with 8-12 CPU burners. Commit 025749a5. Filed a-busy-mp4-lands-at-the-size-the-export-sheet-sa (p2): on fast-scrolling text an MP4 lands up to 2.6x over the size quoted."
     }
   ],
-  "walks": []
+  "walks": [],
+  "started": "2026-09-25T13:49:47.805Z",
+  "completed": "2026-09-25T14:32:42.337Z"
 }

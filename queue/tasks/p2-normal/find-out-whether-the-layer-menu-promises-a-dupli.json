@@ -4,12 +4,12 @@
   "goal": "The right-click menu on a layer prints Command D beside Duplicate, but Command D is Deselect in the menu bar, so a person who learns the key from the menu may get the wrong thing. Check what pressing it really does and make the printed key and the real key agree.",
   "epic": "video-cutting",
   "priority": "p2-normal",
-  "seq": 180,
+  "seq": 190,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T00:14:57.434Z",
-  "updated": "2026-09-25T12:23:33.278Z",
+  "updated": "2026-09-26T12:28:02.850Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Not reproduced, only read: LayerCommandMenu.swift appends .command(\"Duplicate\", .command(\"d\")); EditorCommands.swift binds Deselect to keyboardShortcut(\"d\", modifiers: .command) with a comment that Duplicate Layer has no key and Cmd-J duplicates when nothing is marqueed. The timeline clip menu (EditorState+TimelineMenus.swift) prints Cmd-J for Duplicate for this reason. Found 2026-09-23 by the right-click task.",
@@ -45,6 +45,10 @@
     {
       "t": "2026-09-25T12:23:33.277Z",
       "note": "seq 170 -> 180"
+    },
+    {
+      "t": "2026-09-26T12:28:02.849Z",
+      "note": "seq 180 -> 190"
     }
   ]
 }

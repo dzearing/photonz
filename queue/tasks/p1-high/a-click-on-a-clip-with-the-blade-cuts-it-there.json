@@ -1,0 +1,39 @@
+{
+  "id": "a-click-on-a-clip-with-the-blade-cuts-it-there",
+  "title": "A click on a clip with the Blade cuts it there",
+  "goal": "With the Blade in hand, clicking a clip on the timeline is meant to cut it in two at that spot, the way Premiere's razor does. Today the click does nothing: the clip stays whole and the playhead does not move.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 360,
+  "status": "dropped",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-26T12:06:50.963Z",
+  "updated": "2026-09-26T12:26:20.737Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-26 on main + the video tool bar change. Walk /tmp/vtb-g.json = the first 12 steps of Scripts/playtest/the-timeline-is-the-one-in-the-mock-walk.json (setup timelineOpen, press 'Timeline Blade', press 'Blade Tutorial Sample') plus {expectClip clip 'Tutorial Sample' pieces 2}: `Scripts/playtest.sh /tmp/vtb-g.json --no-build` -> step 14 (expectClip): Tutorial Sample is in 1 pieces, not 2; the timeline: Tutorial Sample on V1 0.00s to 8.00s. Its picture 1b-bladed-sc.png shows both Blades lit, the clip whole and the playhead still at 0:02 where videoSeekQuarter left it, so the tap never reached TimelineBlade.onTapGesture (TimelineTrackRows.swift ~678, which would move the playhead and split). The existing walk only DESCRIBES the cut and never checked it. `press` delivers a real window mouse down/up through NSApp's queue (PlaytestHarness ~5320), so this is the app's hit testing, not a canvas-only click; same result arming the Blade by B, by the timeline's bar, and by the tool bar's Blade, with the timeline opened by setup or by the Blade. Not yet confirmed with a person's own click (no Accessibility grant to drive the pointer), which is the first thing to do.",
+  "acceptance": [
+    "With the Blade armed (from the tool bar, the timeline's bar or B), one click in the middle of a clip leaves it in two pieces and puts the playhead at the click",
+    "the-timeline-is-the-one-in-the-mock-walk checks the cut with expectClip pieces 2 after its Blade click, and video-tool-bar-walk's Blade step does the same",
+    "A click with the Blade on the linked sound cuts the clip too"
+  ],
+  "log": [
+    {
+      "t": "2026-09-26T12:06:50.965Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-26T12:26:20.686Z",
+      "note": "triage 2026-09-26: reproduced (/tmp/vtb-g.json, step 14: 1 piece, not 2) and folded into clicking-a-cut-opens-the-transition-picker-again, which now carries this task's acceptance: both are a left click on the timeline answered by nothing, from the same window of commits."
+    },
+    {
+      "t": "2026-09-26T12:26:20.736Z",
+      "note": "duplicate of clicking-a-cut-opens-the-transition-picker-again"
+    }
+  ],
+  "walks": [
+    "the-timeline-is-the-one-in-the-mock-walk",
+    "video-tool-bar-walk"
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 90,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T06:42:36.666Z",
-  "updated": "2026-09-25T12:22:27.546Z",
+  "updated": "2026-09-26T09:18:55.605Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of premiere-s-keys-work-on-the-timeline (2026-09-23). The key map already returns .trackSelectForwardTool for A on a focused timeline (Sources/PhotonzCore/TimelineKeys.swift); EditorState+TimelineKeys.perform(timelineCommand:) returns false for it so A falls through to the Arrow tool. Needs: multi-clip carry in ClipPiecesBar.carry / EditorState clipBarDrag (one layer today), and a third tool beside Select and Blade in TimelineDock.localBar (isTimelineBlade becomes a tool enum). The mock (docs/design/mocks/pages/video.html) draws only Select and Blade, so a third button goes beyond it; keep it the same size and face.",
@@ -33,7 +33,35 @@
     {
       "t": "2026-09-25T12:22:27.545Z",
       "note": "seq 230 -> 90"
+    },
+    {
+      "t": "2026-09-26T08:49:47.726Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T09:18:33.269Z",
+      "note": "walks none -> track-select-forward-walk"
+    },
+    {
+      "t": "2026-09-26T09:18:33.319Z",
+      "note": "Adversarial pass before building: a Premiere editor expects A = Track Select Forward, click picks clip + everything after on all tracks, Shift-click = that track only (Premiere's Shift-A is Track Select BACKWARD, so acceptance's 'Shift-A' was read as Shift-click, Premiere's real behaviour). Premiere also carries a multi-selection with the plain arrow, so a body drag on any picked clip now carries all picked clips (Select tool too). Mock draws only Select and Blade; third button added same size/face, as task notes allowed; raised in audit evaluate."
+    },
+    {
+      "t": "2026-09-26T09:18:33.369Z",
+      "note": "Built: PhotonzCore/TrackSelectForward.swift (TimelineTool enum, clipsForward, moveClips) + ClipBarDrag.alongStartsMS + clipBarEdges(excluding: Set) with tests (TrackSelectForwardTests). App: EditorState.timelineTool (isTimelineBlade now computed), A picks the tool and opens a tucked timeline, V puts it down; TimelineDock third button; TimelineTrackSelect press target per clip; ClipBarDragSession.along carries picked clips in one undo step; 'Select Forward' on the clip right-click menu. Walk: Scripts/playtest/track-select-forward-walk.json (no flags) with a new dragClip step, green; right-click row checked in a scratch walk."
+    },
+    {
+      "t": "2026-09-26T09:18:33.419Z",
+      "note": "left rough (did not earn tasks): several picked clips cannot change track together; only the grabbed clip snaps; no Track Select Backward. Filed separately: walks-that-drag-a-clip-on-the-timeline-by-window (posted windowDrag never reaches timeline clips, so the real mouse press on TimelineTrackSelect is verified by build + editor-level walk, not a posted drag)."
+    },
+    {
+      "t": "2026-09-26T09:18:55.603Z",
+      "note": "Shipped in ff3460e4. A on a focused timeline picks up Track Select Forward (third button in the timeline bar), V puts it down; a press on a clip picks it and every clip starting at or after it on every unlocked track (Shift: its own track), and the drag carries the lot as one undo step; any drag on a multi-picked clip carries all picked clips with Select too; Select Forward on the clip right-click menu. Core tested first (TrackSelectForwardTests), full suite green (9872). Walk track-select-forward-walk green at Next defaults via new dragClip step, 5 real captures; audit queue/audits/2026-09-26-track-select-forward.json. Filed walks-that-drag-a-clip-on-the-timeline-by-window: posted windowDrags never reach timeline clips."
     }
   ],
-  "walks": []
+  "walks": [
+    "track-select-forward-walk"
+  ],
+  "started": "2026-09-26T08:49:47.725Z",
+  "completed": "2026-09-26T09:18:55.604Z"
 }

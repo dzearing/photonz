@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T01:51:08.324Z",
-  "updated": "2026-09-25T12:22:27.235Z",
+  "updated": "2026-09-26T05:23:36.125Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-25 while building the video guides: Scripts/playtest.sh Scripts/playtest/tutorial-cut-a-recording-down-walk.json (probe, Next defaults, Screen Recording granted, screen unlocked). 1-a-clip-on-v1-sc.png at 0:00, after a 1s wait: the Ready card and the 0 counter are visibly blurred. 6-throw-a-piece-away-sc.png at 0:02 in the same run is sharp. The same blur shows at 0:00 in tutorial-put-a-transition-on-a-cut-walk (two clips, no trim fast lane) and tutorial-add-a-second-clip-walk, so it is not the Trim tool. Suspect the frame fetched at open (EditorState.openRecordingAsDocument -> documentMomentChanged) is a low-resolution one that is never replaced until the moment changes. Captures are copied in queue/audits/2026-09-25-video-guides-cut-sc.png.",
@@ -34,6 +34,57 @@
     {
       "t": "2026-09-25T12:22:27.234Z",
       "note": "seq 3360 -> 30"
+    },
+    {
+      "t": "2026-09-25T14:47:44.596Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-25T21:02:34.342Z",
+      "note": "ran out of turn with 7 file(s) still changed: Sources/Photonz/EditorState+Time.swift, Sources/Photonz/MovieFrames.swift, Sources/Photonz/Playtest/PlaytestHarness.swift, Sources/PhotonzCore/PlaytestScript.swift, Tests/PhotonzCoreTests/PlaytestScriptTests.swift, Sources/PhotonzCore/MovieFrameReads.swift, Tests/PhotonzCoreTests/MovieFrameReadsTests.swift. Put aside so the next task started clean; restore with `git stash apply 53cb3396b7c558f858e4254988c3da102b79d4d2` before carrying on."
+    },
+    {
+      "t": "2026-09-25T21:02:39.104Z",
+      "note": "runner exited without finalizing; reset to pending (attempt 1)"
+    },
+    {
+      "t": "2026-09-26T00:06:22.831Z",
+      "note": "Note from no-sentences-or-debug-readouts-anywhere-in-the-c: the untracked walks a-recording-opens-sharp-walk.json and a-guide-recording-opens-sharp-walk.json in Scripts/playtest use a step expectFrameSharp that the harness does not know, which fails 7 tests in Scripts/test.sh (PlaytestWalkSetupTests and others) while they sit in the tree."
+    },
+    {
+      "t": "2026-09-26T00:45:32.962Z",
+      "note": "Seen from anything-you-draw task: the untracked Scripts/playtest/a-recording-opens-sharp-walk.json and a-guide-recording-opens-sharp-walk.json use step 'expectFrameSharp', which is not a step; while they sit in the tree Scripts/test.sh fails 8 walk-setup tests (PlaytestWalkSetupTests etc: 'step 4: \"expectFrameSharp\" is not a step'). Suite is green with them moved aside."
+    },
+    {
+      "t": "2026-09-26T01:24:06.382Z",
+      "note": "seen by the captions-are-one-layer runner: the untracked walks Scripts/playtest/a-recording-opens-sharp-walk.json and a-guide-recording-opens-sharp-walk.json use a step 'expectFrameSharp' the harness does not have, so Scripts/test.sh fails 7 walk-setup tests (PlaytestWalkSetupTests, PlaytestLockSafetyTests, TutorialAnchorAuditTests) while they sit in the tree. Left untouched; with them moved aside the same suites pass (377 tests)."
+    },
+    {
+      "t": "2026-09-26T04:54:20.864Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T04:54:20.870Z",
+      "note": "a previous attempt at this task left 7 file(s) changed; they are set aside. Restore them with `git stash apply 53cb3396b7c558f858e4254988c3da102b79d4d2` and carry on, or start over and leave the stash alone."
+    },
+    {
+      "t": "2026-09-26T05:23:10.117Z",
+      "note": "owns these walks: a-recording-opens-sharp-walk, a-guide-recording-opens-sharp-walk"
+    },
+    {
+      "t": "2026-09-26T05:23:10.166Z",
+      "note": "Picked up the previous attempt's stash. Reproduced before trusting it: with the fetcher fix held back, a-recording-opens-sharp-walk FAILED (read 431 wide, shown 2160 wide, after 3s) and a-guide-recording-opens-sharp-walk FAILED (Tutorial Sample read 160 wide, shown 1280 wide). Cause: the first frame is asked for before the canvas fits its window (an eighth of the size); the fit's full-size ask was skipped because that small read was still under way, so the small one was filed and drawn until the playhead moved. Fix: MovieFrameReads (PhotonzCore, tested) lets a bigger ask start its own read and never lets a smaller landing replace a bigger one; MovieFrameFetcher uses it. MovieFrames.swift is shared, so Current gets the fix too (a bug fix, not a Next feature). New walk step expectFrameSharp; added to the lock-safe list by reading, not watching (screen was unlocked), with a comment saying so."
+    },
+    {
+      "t": "2026-09-26T05:23:26.262Z",
+      "note": "Recordings now open sharp at 0:00. The fit's full-size read of the first frame was dropped while the small pre-fit read was in flight; MovieFrameReads (PhotonzCore, tested) now lets a bigger ask read again and never lets a smaller landing win. Reproduced first: both new walks (a-recording-opens-sharp-walk from the Finder, a-guide-recording-opens-sharp-walk from a guide) failed without the fix and pass with it, Next defaults, real captures. Scripts/test.sh green (9854 tests); tutorial-cut, transition, second-clip, opens-to-watch and an-editing-session walks pass. Audit: queue/audits/2026-09-25-sharp-first-frame.json. Commit 688177b1."
     }
-  ]
+  ],
+  "started": "2026-09-26T04:54:20.863Z",
+  "failures": 0,
+  "walks": [
+    "a-recording-opens-sharp-walk",
+    "a-guide-recording-opens-sharp-walk"
+  ],
+  "completed": "2026-09-26T05:23:26.263Z"
 }
