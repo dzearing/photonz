@@ -19755,3 +19755,9 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Panel: `CaptionStyleInspector.swift` (style tiles playing `CaptionLook.previewText`, Show, Lines, Said, Coming, Current word rows); Text section got Glow, Stroke, Shadow.
 - Walk `caption-words-pop-walk` (Next defaults, 7 captures); audit `queue/audits/2026-09-25-caption-words.json`.
 - Open: the two untracked "opens sharp" walks still fail 7 walk-setup tests while in the tree; `captions-panel-keeps-its-margins-walk` still fails at Animate > Position as on clean main.
+
+## 2026-09-25 — A picture or video fits above the tool bar
+
+- Changed: the canvas camera knows the band the floating tool bar covers (`Viewport.obscuredBottom`, 64pt). Fit, centring, resize, reveal and framing use the part above it; a Cmd-0 fit keeps fitting as the window resizes until the camera is moved by hand. New walk step option `toolBar clearOfPicture`, new walk `a-fitted-picture-clears-the-tool-bar-walk`.
+- Not changed: the bar's own position (the video mock already puts it 16pt off the floor). Asked in the audit.
+- Next: the full sweep was requested because every canvas now sits 32pt higher.

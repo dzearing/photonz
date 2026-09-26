@@ -45,6 +45,15 @@ struct EditorChromeLayoutTests {
         #expect(EditorChromeLayout.toolBarHeight == 48)
     }
 
+    @Test func aFitClearsExactlyTheBarsBand() {
+        // The band a fit keeps clear runs from the floor to the bar's top edge:
+        // the bar's frame in any canvas starts exactly that far up.
+        #expect(EditorChromeLayout.toolBarCovers == 64)
+        let canvas = CGSize(width: 900, height: 600)
+        let bar = EditorChromeLayout.toolBarFrame(canvasSize: canvas, toolBarWidth: 500)
+        #expect(bar.minY == canvas.height - EditorChromeLayout.toolBarCovers)
+    }
+
     @Test func windowFloorIsSaneAndBelowTheCollapseThreshold() {
         // The responsive behavior must be able to kick in ABOVE the floor, so
         // the auto-collapse threshold must sit strictly above the floor.

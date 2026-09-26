@@ -1,0 +1,27 @@
+{
+  "feature": "A picture or video fits above the tool bar",
+  "epic": "video-editing",
+  "summary": "A fitted picture or recording now sits in the part of the canvas above the floating tool bar, so the bar never hides its bottom edge. That holds on open, on Fit, and while the window resizes.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    { "do": "Open a screen recording. The bottom of the picture, where captions sit, ends above the tool bar.", "shot": "2026-09-25-fit-above-tool-bar-recording.png" },
+    { "do": "Click the TIMELINE row to bring the tracks up. The recording refits into the shorter canvas, still above the bar.", "shot": "2026-09-25-fit-above-tool-bar-tracks.png" },
+    { "do": "Compare with how it looked before this change: the bar sat over the bottom of the recording.", "shot": "2026-09-25-fit-above-tool-bar-before.png" },
+    { "do": "Open a tall portrait picture and press Command-0.", "shot": "2026-09-25-fit-above-tool-bar-tall.png" },
+    { "do": "Drag the window's corner to make it shorter. The picture keeps fitting above the bar." },
+    { "do": "Open a wide picture and press Command-0. It sits centred in the space above the bar.", "shot": "2026-09-25-fit-above-tool-bar-wide.png" },
+    { "do": "Zoom in with a pinch, then scroll down. The bottom of the picture can go under the bar, because you moved it there yourself." },
+    { "do": "Put the video mock next to it: in both, the bar floats 16pt off the canvas floor, just above the transport.", "shot": "2026-09-25-fit-above-tool-bar-mock.png" }
+  ],
+  "evaluate": [
+    "Does the gap above the bar (24pt, the same margin a fit leaves at the top) look balanced to you?",
+    "The bar still floats 16pt off the floor, which is where the video mock puts it. Do you still want it lower, for example 12pt as the mock does on a narrow window?",
+    "A small picture now sits 32pt higher than before, centred in the space above the bar rather than in the whole canvas. Does that look right, or does it look too high?",
+    "After Command-0, the picture keeps fitting as you resize the window, like Preview. A picture opened at 100% keeps its 100%. Is that the behaviour you expect?"
+  ],
+  "rough": [
+    "I did not move the bar lower. The video mock places it 16pt off the canvas floor, exactly where it already was, so moving it would have meant going away from the mock. The evaluate question above asks whether you want it lower anyway.",
+    "Only the tool bar counts as covered space. The tool settings row that appears above it for some tools (Measure, Crop) can still overlap the bottom of a tall picture. It comes and goes as you switch tools, so fitting around it would make the picture jump every time you picked up a tool.",
+    "The bar in the app is 48pt tall and the mock's is 40pt. That was already the case and is not part of this change."
+  ]
+}

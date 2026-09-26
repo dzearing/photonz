@@ -1981,10 +1981,16 @@ private final class Run {
         case .reveal(let control, let inRow):
             try await reveal(control, in: inRow, number: number)
 
-        case .toolBar(let stage):
-            let row = Self.readToolBar()
+        case .toolBar(let stage, let clearOfPicture):
+            var row = Self.readToolBar()
+            var said = Self.outlineToolBar(row)
+            if clearOfPicture == true {
+                let (clear, verdict) = try readToolBarClearOfPicture()
+                row["clearOfPicture"] = clear
+                said += "; " + verdict
+            }
             write(json: row, to: "toolbar-\(stage).json")
-            note(number, step.name, Self.outlineToolBar(row), state: row)
+            note(number, step.name, said, state: row)
 
         case .panelEdge(let stage):
             let edge = Self.readPanelEdge()
@@ -7885,6 +7891,52 @@ private final class Run {
         return present == true
             ? "the \(thing.rawValue) \"\(named)\"\(onRow) is in the panel, as claimed"
             : "no \(thing.rawValue) \"\(named)\"\(onRow) in the panel, as claimed"
+    }
+
+    /// Whether the tool bar sits wholly below the picture on the canvas, in
+    /// the same window space the bar measures itself in (top-left origin).
+    /// Throws when the two overlap: something fitted is under the bar.
+    private func readToolBarClearOfPicture() throws -> ([String: Any], String) {
+        let canvas = try requireCanvas()
+        let editor = try requireEditor()
+        guard let viewport = editor.viewport else {
+            throw Failure(description: "the editor has no viewport yet")
+        }
+        guard editor.toolBarWidth > 0, let content = canvas.window?.contentView else {
+            throw Failure(description: "the tool bar has not been measured, so there is nothing to hold the picture against")
+        }
+        // The window's own content view, top-left origin: the space the bar's
+        // groups measure themselves in.
+        func topLeft(_ rect: CGRect) -> CGRect {
+            let base = canvas.convert(rect, to: nil)
+            return CGRect(x: base.minX, y: content.bounds.height - base.maxY,
+                          width: base.width, height: base.height)
+        }
+        let picture = topLeft(viewport.documentFrameInView)
+        let canvasBottom = topLeft(canvas.bounds).maxY
+        // The whole row (tools, colours, grid, zoom) as THIS window lays it
+        // out, from the width it measured. Not the shared probe: that holds
+        // one frame per group for the whole app, and a window closing as the
+        // next opens can leave it holding the other window's.
+        let row = topLeft(EditorChromeLayout.toolBarFrame(canvasSize: canvas.bounds.size,
+                                                          toolBarWidth: editor.toolBarWidth))
+        let gap = row.minY - picture.maxY
+        let overlapsAcross = picture.minX < row.maxX && row.minX < picture.maxX
+        let facts: [String: Any] = [
+            "picture": ["x": Int(picture.minX.rounded()), "top": Int(picture.minY.rounded()),
+                        "bottom": Int(picture.maxY.rounded()), "width": Int(picture.width.rounded())],
+            "barTop": Int(row.minY.rounded()), "barBottom": Int(row.maxY.rounded()),
+            "canvasBottom": Int(canvasBottom.rounded()),
+            "barOffFloor": Int((canvasBottom - row.maxY).rounded()),
+            "gapAboveBar": Int(gap.rounded()),
+            "zoom": viewport.zoom,
+        ]
+        guard gap >= -0.5 || !overlapsAcross else {
+            throw Failure(description: "the tool bar covers the bottom \(Int((-gap).rounded()))pt of the picture "
+                + "(picture bottom \(Int(picture.maxY.rounded())), bar top \(Int(row.minY.rounded())))")
+        }
+        return (facts, "the picture ends \(Int(gap.rounded()))pt above the bar, which floats "
+            + "\(Int((canvasBottom - row.maxY).rounded()))pt off the canvas floor, as claimed")
     }
 
     /// Every glass group along the bottom of the canvas, left to right, with

@@ -12,22 +12,32 @@ public struct Viewport: Equatable, Sendable {
     public var zoom: CGFloat
     /// View-space position of the document's top-left corner.
     public var origin: CGPoint
+    /// How many view points along the bottom of the view floating chrome
+    /// covers (the tool bar). Fitting and centring use only the part above
+    /// it, so a fitted picture never has its bottom edge under the bar; a
+    /// person scrolling a bigger picture can still bring it under on purpose.
+    public var obscuredBottom: CGFloat
 
     public static let minZoom: CGFloat = 1.0 / 32.0
     public static let maxZoom: CGFloat = 32
 
-    public init(documentSize: CGSize, viewSize: CGSize, zoom: CGFloat, origin: CGPoint) {
+    public init(documentSize: CGSize, viewSize: CGSize, zoom: CGFloat, origin: CGPoint,
+                obscuredBottom: CGFloat = 0) {
         self.documentSize = documentSize
         self.viewSize = viewSize
         self.zoom = zoom
         self.origin = origin
+        self.obscuredBottom = obscuredBottom
     }
 
-    /// A viewport showing the whole document centered (⌘0). Never upscales:
-    /// a document smaller than the view is shown at 100%, not stretched.
-    public static func fit(documentSize: CGSize, in viewSize: CGSize, padding: CGFloat = 24) -> Viewport {
+    /// A viewport showing the whole document centered (⌘0) in the part of the
+    /// view `obscuredBottom` leaves clear. Never upscales: a document smaller
+    /// than the view is shown at 100%, not stretched.
+    public static func fit(documentSize: CGSize, in viewSize: CGSize, padding: CGFloat = 24,
+                           obscuredBottom: CGFloat = 0) -> Viewport {
+        let covered = Self.cover(obscuredBottom, view: viewSize.height)
         let usable = CGSize(width: max(1, viewSize.width - padding * 2),
-                            height: max(1, viewSize.height - padding * 2))
+                            height: max(1, viewSize.height - covered - padding * 2))
         var zoom: CGFloat = 1
         if documentSize.width > 0, documentSize.height > 0 {
             zoom = min(usable.width / documentSize.width,
@@ -35,8 +45,20 @@ public struct Viewport: Equatable, Sendable {
                        1)
         }
         zoom = min(max(zoom, minZoom), maxZoom)
-        return Viewport(documentSize: documentSize, viewSize: viewSize, zoom: zoom, origin: .zero)
+        return Viewport(documentSize: documentSize, viewSize: viewSize, zoom: zoom, origin: .zero,
+                        obscuredBottom: obscuredBottom)
             .clamped()
+    }
+
+    /// The height of the part of the view nothing covers.
+    public var clearHeight: CGFloat {
+        viewSize.height - Self.cover(obscuredBottom, view: viewSize.height)
+    }
+
+    /// A cover can never be negative or taller than the view it covers.
+    private static func cover(_ obscured: CGFloat, view: CGFloat) -> CGFloat {
+        guard obscured.isFinite, view.isFinite else { return 0 }
+        return min(max(0, obscured), max(0, view))
     }
 
     /// The document's frame in view coordinates.
@@ -95,7 +117,7 @@ public struct Viewport: Equatable, Sendable {
         guard !rect.isNull, !rect.isInfinite, rect.width > 0, rect.height > 0, zoom > 0
         else { return self }
         let room = CGSize(width: max(1, viewSize.width - padding * 2),
-                          height: max(1, viewSize.height - padding * 2))
+                          height: max(1, clearHeight - padding * 2))
         let fitting = min(zoom, room.width / rect.width, room.height / rect.height)
         let next = min(max(fitting, Self.minZoom), Self.maxZoom)
 
@@ -107,7 +129,8 @@ public struct Viewport: Equatable, Sendable {
         }
         let box = CGRect(origin: moved.viewPoint(fromDocument: rect.origin),
                          size: CGSize(width: rect.width * moved.zoom, height: rect.height * moved.zoom))
-        let wanted = CGRect(origin: .zero, size: viewSize).insetBy(dx: padding, dy: padding)
+        let wanted = CGRect(origin: .zero, size: CGSize(width: viewSize.width, height: clearHeight))
+            .insetBy(dx: padding, dy: padding)
         var delta = CGPoint.zero
         // Per axis, the shortest push that puts the box back inside. A box
         // wider than the room is pushed only until its near edge lines up, so
@@ -141,7 +164,7 @@ public struct Viewport: Equatable, Sendable {
         guard !companion.isNull, !companion.isInfinite,
               companion.width > 0, companion.height > 0 else { return revealing(rect, padding: padding) }
         let pair = rect.union(companion)
-        let room = CGSize(width: viewSize.width - padding * 2, height: viewSize.height - padding * 2)
+        let room = CGSize(width: viewSize.width - padding * 2, height: clearHeight - padding * 2)
         guard pair.width * zoom <= room.width, pair.height * zoom <= room.height
         else { return revealing(rect, padding: padding) }
         return revealing(pair, padding: padding)
@@ -168,7 +191,7 @@ public struct Viewport: Equatable, Sendable {
               viewSize.width > 0, viewSize.height > 0 else { return self }
         guard min(rect.width, rect.height) * zoom < minimumSide else { return revealing(rect) }
         let room = CGSize(width: max(1, viewSize.width - padding * 2),
-                          height: max(1, viewSize.height - padding * 2))
+                          height: max(1, clearHeight - padding * 2))
         var wanted = min(room.width / rect.width, room.height / rect.height)
         if wanted >= 2 { wanted = wanted.rounded(.down) }
         wanted = min(max(wanted, Self.minZoom), Self.maxZoom)
@@ -176,26 +199,39 @@ public struct Viewport: Equatable, Sendable {
         var next = self
         next.zoom = wanted
         next.origin = CGPoint(x: viewSize.width / 2 - rect.midX * wanted,
-                              y: viewSize.height / 2 - rect.midY * wanted)
+                              y: clearHeight / 2 - rect.midY * wanted)
         return next.clamped()
     }
 
-    /// Adopts a new view size, keeping the document point at the view center fixed.
+    /// Adopts a new view size, keeping the document point at the middle of the
+    /// clear part of the view fixed.
     public func resized(viewSize newSize: CGSize) -> Viewport {
-        let centerDoc = documentPoint(fromView: CGPoint(x: viewSize.width / 2, y: viewSize.height / 2))
+        let centerDoc = documentPoint(fromView: CGPoint(x: viewSize.width / 2, y: clearHeight / 2))
         var next = self
         next.viewSize = newSize
         next.origin = CGPoint(x: newSize.width / 2 - centerDoc.x * zoom,
-                              y: newSize.height / 2 - centerDoc.y * zoom)
+                              y: next.clearHeight / 2 - centerDoc.y * zoom)
         return next.clamped()
     }
 
     /// Per axis: content smaller than the view is centered; content larger than
     /// the view scrolls but never past its edges.
+    ///
+    /// Vertically, "smaller" means smaller than the CLEAR part, and centred
+    /// means centred in it. Content taller than the clear part but no taller
+    /// than the view stays where it was put, inside the view, so neither a fit
+    /// nor a scroll ever makes it jump.
     public func clamped() -> Viewport {
         var next = self
         next.origin.x = Self.clampAxis(origin: origin.x, content: documentSize.width * zoom, view: viewSize.width)
-        next.origin.y = Self.clampAxis(origin: origin.y, content: documentSize.height * zoom, view: viewSize.height)
+        let content = documentSize.height * zoom
+        let clear = clearHeight
+        if content <= clear || content > viewSize.height {
+            next.origin.y = Self.clampAxis(origin: origin.y, content: content,
+                                           view: content <= clear ? clear : viewSize.height)
+        } else {
+            next.origin.y = min(max(origin.y, 0), viewSize.height - content)
+        }
         if !next.origin.x.isFinite { next.origin.x = 0 }
         if !next.origin.y.isFinite { next.origin.y = 0 }
         return next

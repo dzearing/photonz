@@ -29,7 +29,11 @@ import SwiftUI
         groups[name] = frame
     }
 
-    func forget(_ name: String) {
+    /// Forgets `name` only if what is recorded is still `frame`, the last
+    /// thing the disappearing view wrote: when one window closes as another
+    /// opens, the new window's bar must not be forgotten along with the old.
+    func forget(_ name: String, ifStill frame: CGRect?) {
+        guard let frame, groups[name] == frame else { return }
         groups.removeValue(forKey: name)
     }
 
@@ -45,10 +49,24 @@ extension View {
     /// name a walk reads it back by. Put it on the group's outermost view, the
     /// one that draws the capsule, so the measurement is the capsule.
     func toolBarGroupProbe(_ name: String) -> some View {
-        onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
-            ToolBarLayoutProbe.shared.record(name, frame: frame)
-        }
-        .onDisappear { ToolBarLayoutProbe.shared.forget(name) }
+        modifier(ToolBarGroupProbe(name: name))
+    }
+}
+
+private struct ToolBarGroupProbe: ViewModifier {
+    let name: String
+    /// What this view last recorded. Not drawn, so it never redraws the bar.
+    @State private var recorded = Recorded()
+
+    final class Recorded { var frame: CGRect? }
+
+    func body(content: Content) -> some View {
+        content
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
+                recorded.frame = frame
+                ToolBarLayoutProbe.shared.record(name, frame: frame)
+            }
+            .onDisappear { ToolBarLayoutProbe.shared.forget(name, ifStill: recorded.frame) }
     }
 }
 

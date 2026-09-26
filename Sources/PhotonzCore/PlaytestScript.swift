@@ -3099,7 +3099,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// The row is a set of separate capsules that each set their own size, so
     /// "they line up" is a claim about numbers. This is how a walk proves it
     /// rather than photographing it and hoping.
-    case toolBar(stage: String)
+    ///
+    /// `clearOfPicture: true` also claims the bar sits wholly below the
+    /// document's frame on the canvas, so nothing that was fitted is under it,
+    /// and fails the walk when the two overlap.
+    case toolBar(stage: String, clearOfPicture: Bool?)
     /// Write the measured frame of every icon parked on the inspector panel's
     /// trailing edge to the log and to `panel-edge-<stage>.json`: each one's
     /// centre line, given as a distance in from the panel's own right edge.
@@ -4191,7 +4195,8 @@ public enum PlaytestStep: Sendable, Equatable {
         case "menus":
             self = .menus(stage: try f.string("stage"), menu: try f.optionalString("menu"))
         case "toolBar":
-            self = .toolBar(stage: try f.string("stage"))
+            self = .toolBar(stage: try f.string("stage"),
+                            clearOfPicture: try f.optionalFlag("clearOfPicture"))
         case "panelEdge":
             self = .panelEdge(stage: try f.string("stage"))
         case "panelStart":

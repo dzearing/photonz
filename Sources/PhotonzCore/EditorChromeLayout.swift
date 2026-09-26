@@ -57,6 +57,14 @@ public enum EditorChromeLayout {
     /// invisible: the hint chip spent its life at 14pt, fully covered.
     public static let aboveToolBar: CGFloat = toolBarInset + toolBarHeight + toolBarStackGap
 
+    /// The band along the bottom of the canvas the floating bar covers, from
+    /// the floor to the bar's top edge. Fitting a picture (on open, ⌘0, a
+    /// resize while fitted) centres it in the canvas ABOVE this band, so the
+    /// bar never sits over the bottom of what was fitted (`Viewport.obscuredBottom`).
+    /// Only the bar: the tool settings capsule comes and goes with the tool,
+    /// and a fit that moved every time you picked up Measure would be worse.
+    public static let toolBarCovers: CGFloat = toolBarInset + toolBarHeight
+
     /// The same band, with the tool settings capsule standing in between.
     ///
     /// The capsule (`ToolSettingsBar`) rides on its own row above the bar for

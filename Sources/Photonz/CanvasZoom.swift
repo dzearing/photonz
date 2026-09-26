@@ -44,7 +44,8 @@ extension CanvasNSView {
     /// Two-finger double-tap: toggle between fit and 100% at the cursor.
     override func smartMagnify(with event: NSEvent) {
         guard let viewport else { return }
-        let fit = Viewport.fit(documentSize: viewport.documentSize, in: viewport.viewSize)
+        let fit = Viewport.fit(documentSize: viewport.documentSize, in: viewport.viewSize,
+                               obscuredBottom: viewport.obscuredBottom)
         if abs(viewport.zoom - fit.zoom) < 0.001 {
             let anchor = convert(event.locationInWindow, from: nil)
             commit(viewport.zoomed(to: viewport.zoom >= 1 ? 2 : 1, anchorInView: anchor))

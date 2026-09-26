@@ -1269,6 +1269,24 @@ final class EditorState {
     /// The camera as the app last placed it on its own, so a resize can tell
     /// whether anybody has moved it since.
     @ObservationIgnored private var viewportTheAppPlaced: Viewport?
+    /// Whether that camera was a FIT (on open, ⌘0) rather than a planned
+    /// zoom like 100%. A fit nobody has touched keeps fitting as the window
+    /// resizes, Preview-style, so a picture that fitted never ends up under
+    /// the tool bar because the window got shorter.
+    @ObservationIgnored private var viewportTheAppFitted = false
+
+    /// The camera that shows the whole document in the canvas above the
+    /// floating tool bar (`EditorChromeLayout.toolBarCovers`).
+    private func fittedViewport(documentSize: CGSize, in size: CGSize) -> Viewport {
+        .fit(documentSize: documentSize, in: size, obscuredBottom: EditorChromeLayout.toolBarCovers)
+    }
+
+    /// Records a camera the app placed on its own, so a resize can tell
+    /// whether anybody has moved it since.
+    private func appPlaced(_ placed: Viewport?, fitted: Bool) {
+        viewportTheAppPlaced = placed
+        viewportTheAppFitted = placed != nil && fitted
+    }
 
     var zoom: CGFloat { viewport?.zoom ?? 1 }
 
@@ -2307,7 +2325,8 @@ final class EditorState {
         // its rows say their words the same as if it had just come apart.
         forgetWordsReadOffPictures()
         defer { readWordsOffRuns() }
-        viewport = .fit(documentSize: document.canvasSize, in: canvasViewSize)
+        viewport = fittedViewport(documentSize: document.canvasSize, in: canvasViewSize)
+        appPlaced(canvasViewSize == .zero ? nil : viewport, fitted: true)
         selection = nil
         selectionTargetsPixels = false
         selectedLayerID = nil
@@ -2808,8 +2827,12 @@ final class EditorState {
             pendingOpenScale = nil
             let zoom = scale / max(1, document.pixelScale)
             viewport = Viewport(documentSize: document.canvasSize, viewSize: size,
-                                zoom: zoom, origin: .zero).clamped()
-            viewportTheAppPlaced = viewport
+                                zoom: zoom, origin: .zero,
+                                obscuredBottom: EditorChromeLayout.toolBarCovers).clamped()
+            // 100% is a choice worth keeping through a resize; a zoom brought
+            // down only so the picture fits the screen is a fit, and keeps
+            // fitting until somebody moves the camera.
+            appPlaced(viewport, fitted: scale < 1)
             takePendingFocus()
             revealHostWindowIfHidden()
             return
@@ -2819,13 +2842,14 @@ final class EditorState {
         // fitting while nobody has moved the camera: its timeline arrives
         // under the canvas a moment after the first layout, and a picture
         // fitted to the taller view had its bottom, where captions sit,
-        // under the tool bar and the transport.
+        // under the tool bar and the transport. A picture the app FITTED keeps
+        // fitting the same way until somebody moves the camera.
         let untouched = viewportTheAppPlaced == current
-        let refit = hadNoSize || (documentHasTime && untouched)
+        let refit = hadNoSize || (untouched && (documentHasTime || viewportTheAppFitted))
         viewport = refit
-            ? .fit(documentSize: current.documentSize, in: size)
+            ? fittedViewport(documentSize: current.documentSize, in: size)
             : current.resized(viewSize: size)
-        viewportTheAppPlaced = refit ? viewport : nil
+        appPlaced(refit ? viewport : nil, fitted: true)
         takePendingFocus()
     }
 
@@ -3459,7 +3483,8 @@ final class EditorState {
 
     func zoomToFit() {
         guard let viewport else { return }
-        self.viewport = .fit(documentSize: viewport.documentSize, in: viewport.viewSize)
+        self.viewport = fittedViewport(documentSize: viewport.documentSize, in: viewport.viewSize)
+        appPlaced(self.viewport, fitted: true)
     }
 
     /// Actual size = the image at its on-screen POINT size (Preview-style): a

@@ -1,0 +1,60 @@
+{
+  "out": "/tmp/photonz-playtest/a-fitted-picture-clears-the-tool-bar-walk",
+  "seed": "The user, 2026-09-25: 'when the video or image is centered, we should try to center above the toolbar so its not covered up.' At Next defaults with no flag set, a tall portrait picture, a wide picture and a recording are each fitted (on open, with Cmd-0, and again when the window gets smaller) and every time the whole picture ends above the floating tool bar. Zoomed in by hand, the camera is left alone.",
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "open", "file": "fixtures/Tall portrait 900x2400.png" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "toolBar", "stage": "1-tall-opened", "clearOfPicture": true },
+    { "do": "describe", "stage": "1-tall-opened", "note": "a tall portrait picture opened the way the Finder opens one: the window sized to it, the whole picture above the bar" },
+    { "do": "snapshot", "name": "1-tall-opened" },
+
+    { "do": "open", "file": "fixtures/Tall portrait 900x2400.png", "width": 1440, "height": 900 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "toolBar", "stage": "2-tall-fitted", "clearOfPicture": true },
+    { "do": "describe", "stage": "2-tall-fitted", "note": "THE TEST: Cmd-0 fits the tall picture into the canvas above the bar, so its bottom edge is not under it" },
+    { "do": "snapshot", "name": "2-tall-fitted" },
+
+    { "do": "action", "action": "windowLaptop" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "toolBar", "stage": "3-tall-window-smaller", "clearOfPicture": true },
+    { "do": "describe", "stage": "3-tall-window-smaller", "note": "the window got smaller while the picture was fitted: it keeps fitting, still above the bar" },
+    { "do": "snapshot", "name": "3-tall-window-smaller" },
+
+    { "do": "open", "file": "fixtures/Wide panorama 3600x900.png", "width": 1440, "height": 900 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "toolBar", "stage": "4-wide-fitted", "clearOfPicture": true },
+    { "do": "describe", "stage": "4-wide-fitted", "note": "a wide picture fitted with Cmd-0 sits centred in the canvas above the bar" },
+    { "do": "snapshot", "name": "4-wide-fitted" },
+
+    { "do": "open", "file": "fixtures/Full screen Retina recording 3456x2234.mp4", "width": 1440, "height": 900 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "toolBar", "stage": "5-recording-opened", "clearOfPicture": true },
+    { "do": "describe", "stage": "5-recording-opened", "note": "THE TEST: a recording opens to watch, fitted above the bar, which floats over the canvas just above the transport" },
+    { "do": "snapshot", "name": "5-recording-opened" },
+
+    { "do": "press", "control": "Show Timing" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "toolBar", "stage": "6-recording-tracks-open", "clearOfPicture": true },
+    { "do": "describe", "stage": "6-recording-tracks-open", "note": "the tracks came up under the canvas and the recording refitted into the shorter canvas, still clear of the bar" },
+    { "do": "snapshot", "name": "6-recording-tracks-open" },
+
+    { "do": "action", "action": "windowLaptop" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "toolBar", "stage": "7-recording-window-smaller", "clearOfPicture": true },
+    { "do": "describe", "stage": "7-recording-window-smaller", "note": "a smaller window: the recording still fits above the bar" },
+
+    { "do": "action", "action": "zoomIn" },
+    { "do": "action", "action": "zoomIn" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "toolBar", "stage": "8-zoomed-by-hand" },
+    { "do": "describe", "stage": "8-zoomed-by-hand", "note": "zoomed in by hand: the picture is bigger than the canvas and may run under the bar, on purpose" },
+    { "do": "snapshot", "name": "8-zoomed-by-hand" }
+  ]
+}

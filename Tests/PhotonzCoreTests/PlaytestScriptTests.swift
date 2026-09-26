@@ -14,6 +14,21 @@ struct PlaytestScriptTests {
         try PlaytestScript.decode(Data(json.utf8))
     }
 
+    @Test("A toolBar step can claim the bar is clear of the fitted picture")
+    func toolBarCanClaimItIsClearOfThePicture() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "toolBar", "stage": "a" },
+                     { "do": "toolBar", "stage": "b", "clearOfPicture": true } ] }
+        """)
+        guard case .toolBar(let first, let unclaimed) = script.steps[0],
+              case .toolBar(_, let claimed) = script.steps[1] else {
+            Issue.record("toolBar"); return
+        }
+        #expect(first == "a")
+        #expect(unclaimed == nil)
+        #expect(claimed == true)
+    }
+
     @Test("A writePicture step leaves the canvas out unless the walk asks for it")
     func writePictureLeavesTheCanvasOutByDefault() throws {
         let script = try decode("""
