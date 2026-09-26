@@ -94,6 +94,19 @@ public enum TextRasterizer {
             CTFrameDraw(frame, context)
         }
 
+        // A caption at a moment whose word does more than change colour
+        // (`CaptionWordStyle.swift`) is drawn in its own pass.
+        if let paint = text.wordPaint {
+            // A word that grows and glows needs room under the last line, or
+            // its descenders and its halo are cut off at the foot of the box.
+            let room = paint.drawnAlone ? min(box.height * 0.25, text.fontSize * 0.3) : 0
+            let raised = CGRect(x: box.minX, y: box.minY + room, width: box.width,
+                                height: box.height - room)
+            let path = CGPath(rect: laidOutBox(text, in: raised), transform: nil)
+            drawMoment(text, paint: paint, outlines: outlines, path: path, box: box, in: context)
+            return context.makeImage()
+        }
+
         // Outer border: draw fat border-colored glyphs underneath, then the
         // normal fill on top, so the stroke shows only OUTSIDE the letters —
         // it grows outward with the fill intact. (A single centered stroke
@@ -120,11 +133,13 @@ public enum TextRasterizer {
     /// One rounded plate behind all the lines, as wide as the widest of them
     /// plus a little air, the way the mock's caption box hugs its words.
     private static func drawPlate(for text: TextContent, hex: String, laidOutIn path: CGPath,
-                                  bounds box: CGRect, in context: CGContext) {
+                                  bounds box: CGRect, in context: CGContext, through limit: Int? = nil,
+                                  including extra: CGRect? = nil,
+                                  attributed: NSAttributedString? = nil) {
         guard text.fontSize > 0, !text.string.isEmpty,
               let rgba = RGBA(hex: hex) else { return }
         let frame = CTFramesetterCreateFrame(
-            CTFramesetterCreateWithAttributedString(attributedString(text)),
+            CTFramesetterCreateWithAttributedString(attributed ?? attributedString(text)),
             CFRange(location: 0, length: 0), path, nil)
         guard let lines = CTFrameGetLines(frame) as? [CTLine], !lines.isEmpty else { return }
         var origins = [CGPoint](repeating: .zero, count: lines.count)
@@ -144,10 +159,23 @@ public enum TextRasterizer {
             case .right: 1
             }
             let pen = CGFloat(CTLineGetPenOffsetForFlush(line, flush, Double(path.boundingBox.width)))
-            let x = base.x + (text.alignment == nil || text.alignment == .left ? origin.x : pen)
-            let rect = CGRect(x: x, y: base.y + origin.y - descent, width: width, height: ascent + descent)
+            var x = base.x + (text.alignment == nil || text.alignment == .left ? origin.x : pen)
+            var inked = width
+            // Only as far as the words drawn so far, where the rest wait.
+            if let limit {
+                let span = CTLineGetStringRange(line)
+                guard limit > span.location else { continue }
+                let to = min(limit, span.location + span.length)
+                let x0 = CTLineGetOffsetForStringIndex(line, span.location, nil)
+                let x1 = CTLineGetOffsetForStringIndex(line, to, nil)
+                x = base.x + origin.x + x0
+                inked = max(0, x1 - x0)
+                guard inked > 0 else { continue }
+            }
+            let rect = CGRect(x: x, y: base.y + origin.y - descent, width: inked, height: ascent + descent)
             union = union.union(rect)
         }
+        if let extra, !union.isNull { union = union.union(extra) }
         guard !union.isNull else { return }
         let plate = union.insetBy(dx: -text.fontSize * 0.45, dy: -text.fontSize * 0.2)
             .intersection(box)
@@ -158,6 +186,209 @@ public enum TextRasterizer {
         context.addPath(CGPath(roundedRect: plate, cornerWidth: radius, cornerHeight: radius, transform: nil))
         context.fillPath()
         context.restoreGState()
+    }
+
+    // MARK: - A caption's words at a moment
+
+    /// A caption drawn at one moment: the words either side of the one being
+    /// said shaded as the look says, and the word itself drawn on its own on
+    /// top, mid-motion, with its pill, glow, shadow, outline and underline.
+    ///
+    /// Everything is laid out once, exactly as the plain words are, so the
+    /// word grows about where it already sits and the words around it never
+    /// move.
+    private static func drawMoment(_ text: TextContent, paint: CaptionWordPaint, outlines: [TextOutline],
+                                   path: CGPath, box: CGRect, in context: CGContext) {
+        let length = (text.string as NSString).length
+        let start = min(max(0, paint.word.location), length)
+        let end = min(max(start, paint.word.location + paint.word.length), length)
+        let word = NSRange(location: start, length: end - start)
+        let said = NSRange(location: 0, length: start)
+        let coming = NSRange(location: end, length: length - end)
+        let lit = paint.colorHex.flatMap(RGBA.init(hex:))
+
+        // A word bigger than its line would run into the words either side,
+        // so the line opens up round it by as much as it has grown, the way
+        // the social caption tools push the words apart.
+        let still = word.length > 0 ? wordPlace(text, range: word, laidOutIn: path) : nil
+        let room = paint.drawnAlone ? max(0, (paint.scale - 1) * (still?.rect.width ?? 0)) : 0
+        func spaced(_ attributed: NSAttributedString) -> NSAttributedString {
+            guard room > 0.5 else { return attributed }
+            let mutable = NSMutableAttributedString(attributedString: attributed)
+            let kern = NSAttributedString.Key(kCTKernAttributeName as String)
+            if start > 0 { mutable.addAttribute(kern, value: room / 2, range: NSRange(location: start - 1, length: 1)) }
+            if end > start, end < length {
+                mutable.addAttribute(kern, value: room / 2, range: NSRange(location: end - 1, length: 1))
+            }
+            return mutable
+        }
+        func draw(_ attributed: NSAttributedString) {
+            let frame = CTFramesetterCreateFrame(CTFramesetterCreateWithAttributedString(spaced(attributed)),
+                                                 CFRange(location: 0, length: 0), path, nil)
+            CTFrameDraw(frame, context)
+        }
+        let ink = RGBA(hex: text.colorHex) ?? RGBA(r: 1, g: 1, b: 1)
+        /// The words, shaded: `wordAlpha` for the word being said, the rest as
+        /// the look says. `recolour` lights the word and karaoke's sung words.
+        func shaded(_ attributed: NSAttributedString, fill: RGBA, stroke: RGBA?, wordAlpha: CGFloat,
+                    recolour: Bool) -> NSAttributedString {
+            let mutable = NSMutableAttributedString(attributedString: attributed)
+            let sung = recolour && paint.said == .lit ? (lit ?? fill) : fill
+            paintRange(mutable, said, fill: sung, stroke: stroke, alpha: paint.said.opacity)
+            paintRange(mutable, coming, fill: fill, stroke: stroke, alpha: paint.coming.opacity)
+            paintRange(mutable, word, fill: recolour ? (lit ?? fill) : fill, stroke: stroke, alpha: wordAlpha)
+            return mutable
+        }
+        let restAlpha: CGFloat = paint.drawnAlone ? 0 : 1
+
+        if text.fontSize > 0 {
+            for outline in outlines.filter({ $0.width > 0 }).sorted(by: { $0.width > $1.width }) {
+                var underlay = text
+                underlay.colorHex = outline.colorHex
+                let edge = RGBA(hex: outline.colorHex) ?? RGBA(r: 0, g: 0, b: 0)
+                draw(shaded(attributedString(underlay, borderWidth: outline.width * 2,
+                                             borderColorHex: outline.colorHex),
+                            fill: edge, stroke: edge, wordAlpha: restAlpha, recolour: false))
+            }
+        }
+        let place = word.length > 0
+            ? wordPlace(text, range: word, laidOutIn: path, attributed: spaced(attributedString(text)),
+                        trailing: end < length ? room / 2 : 0)
+            : nil
+        if let plateHex = text.plateHex {
+            // Words still to come that are not drawn yet take no plate either,
+            // and a word grown past its line takes the plate with it.
+            var grown: CGRect?
+            if let place, paint.drawnAlone, paint.scale > 1 {
+                let rect = place.rect
+                grown = rect.insetBy(dx: -rect.width * (paint.scale - 1) / 2,
+                                     dy: -rect.height * (paint.scale - 1) / 2)
+            }
+            drawPlate(for: text, hex: plateHex, laidOutIn: path, bounds: box, in: context,
+                      through: paint.coming == .hidden ? end : nil, including: grown,
+                      attributed: spaced(attributedString(text)))
+        }
+        draw(shaded(attributedString(text), fill: ink, stroke: nil, wordAlpha: restAlpha, recolour: true))
+
+        guard paint.drawnAlone, let place else { return }
+        let font = text.fontSize
+        // The word alone: everything else in the string drawn clear, so it
+        // lands exactly where the line put it.
+        func alone(_ attributed: NSAttributedString, fill: RGBA, stroke: RGBA?) -> NSAttributedString {
+            let mutable = NSMutableAttributedString(attributedString: attributed)
+            paintRange(mutable, said, fill: fill, stroke: stroke, alpha: 0)
+            paintRange(mutable, coming, fill: fill, stroke: stroke, alpha: 0)
+            paintRange(mutable, word, fill: fill, stroke: stroke, alpha: 1)
+            return mutable
+        }
+        context.saveGState()
+        context.translateBy(x: place.rect.midX, y: place.rect.midY)
+        context.scaleBy(x: paint.scale, y: paint.scale)
+        context.translateBy(x: -place.rect.midX, y: -place.rect.midY)
+
+        if let pill = paint.pillHex.flatMap(RGBA.init(hex:)) {
+            let shape = place.rect.insetBy(dx: -font * 0.24, dy: -font * 0.06)
+            let radius = min(shape.height / 2, font * 0.32)
+            context.setFillColor(CGColor(srgbRed: pill.r, green: pill.g, blue: pill.b, alpha: pill.a))
+            context.addPath(CGPath(roundedRect: shape, cornerWidth: radius, cornerHeight: radius, transform: nil))
+            context.fillPath()
+        }
+        let fill = alone(attributedString(text), fill: lit ?? ink, stroke: nil)
+        if let glow = paint.glowHex.flatMap(RGBA.init(hex:)) {
+            let color = CGColor(srgbRed: glow.r, green: glow.g, blue: glow.b, alpha: glow.a)
+            context.saveGState()
+            // A wide soft bloom and a tight bright core, the way a glow reads.
+            context.setShadow(offset: .zero, blur: font * 0.6, color: color)
+            draw(fill)
+            context.setShadow(offset: .zero, blur: font * 0.22, color: color)
+            draw(fill)
+            context.restoreGState()
+        }
+        if paint.shadow {
+            context.saveGState()
+            context.setShadow(offset: CGSize(width: 0, height: -font * 0.08), blur: font * 0.14,
+                              color: CGColor(srgbRed: 0, green: 0, blue: 0, alpha: 0.85))
+            draw(fill)
+            context.restoreGState()
+        }
+        // The whole text's own outline goes round this word too, under the
+        // word's own.
+        for outline in outlines.filter({ $0.width > 0 }).sorted(by: { $0.width > $1.width }) {
+            var underlay = text
+            underlay.colorHex = outline.colorHex
+            let edge = RGBA(hex: outline.colorHex) ?? RGBA(r: 0, g: 0, b: 0)
+            draw(alone(attributedString(underlay, borderWidth: outline.width * 2,
+                                        borderColorHex: outline.colorHex), fill: edge, stroke: edge))
+        }
+        if let strokeHex = paint.strokeHex {
+            var underlay = text
+            underlay.colorHex = strokeHex
+            let edge = RGBA(hex: strokeHex) ?? RGBA(r: 0, g: 0, b: 0)
+            draw(alone(attributedString(underlay, borderWidth: max(1, font * 0.07) * 2,
+                                        borderColorHex: strokeHex), fill: edge, stroke: edge))
+        }
+        draw(fill)
+        if let sweep = paint.underline, sweep > 0 {
+            let bar = lit ?? ink
+            let height = max(2, font * 0.09)
+            let line = CGRect(x: place.rect.minX, y: place.baseline - font * 0.12 - height,
+                              width: place.rect.width * min(1, sweep), height: height)
+            context.setFillColor(CGColor(srgbRed: bar.r, green: bar.g, blue: bar.b, alpha: bar.a))
+            context.addPath(CGPath(roundedRect: line, cornerWidth: height / 2, cornerHeight: height / 2,
+                                   transform: nil))
+            context.fillPath()
+        }
+        context.restoreGState()
+    }
+
+    /// Where a stretch of the words is drawn, in the context's own bottom-up
+    /// points, and the baseline under it.
+    private static func wordPlace(_ text: TextContent, range: NSRange, laidOutIn path: CGPath,
+                                  attributed: NSAttributedString? = nil,
+                                  trailing: CGFloat = 0) -> (rect: CGRect, baseline: CGFloat)? {
+        let frame = CTFramesetterCreateFrame(
+            CTFramesetterCreateWithAttributedString(attributed ?? attributedString(text)),
+            CFRange(location: 0, length: 0), path, nil)
+        guard let lines = CTFrameGetLines(frame) as? [CTLine], !lines.isEmpty else { return nil }
+        var origins = [CGPoint](repeating: .zero, count: lines.count)
+        CTFrameGetLineOrigins(frame, CFRange(location: 0, length: 0), &origins)
+        let base = path.boundingBox.origin
+        var union = CGRect.null
+        var baseline: CGFloat = 0
+        for (line, origin) in zip(lines, origins) {
+            let span = CTLineGetStringRange(line)
+            let from = max(range.location, span.location)
+            let to = min(range.location + range.length, span.location + span.length)
+            guard to > from else { continue }
+            var ascent: CGFloat = 0, descent: CGFloat = 0, leading: CGFloat = 0
+            _ = CTLineGetTypographicBounds(line, &ascent, &descent, &leading)
+            let x0 = CTLineGetOffsetForStringIndex(line, from, nil)
+            let x1 = CTLineGetOffsetForStringIndex(line, to, nil)
+            let y = base.y + origin.y
+            if union.isNull { baseline = y }
+            union = union.union(CGRect(x: base.x + origin.x + min(x0, x1), y: y - descent,
+                                       width: abs(x1 - x0), height: ascent + descent))
+        }
+        // The room opened after the word is not part of it.
+        guard !union.isNull else { return nil }
+        union.size.width = max(0, union.width - trailing)
+        return (union, baseline)
+    }
+
+    /// Draw a stretch of the words in `fill` (and its outline in `stroke`) at
+    /// `alpha` of their own opacity.
+    private static func paintRange(_ string: NSMutableAttributedString, _ range: NSRange, fill: RGBA,
+                                   stroke: RGBA?, alpha: CGFloat) {
+        guard range.length > 0 else { return }
+        string.addAttribute(NSAttributedString.Key(kCTForegroundColorAttributeName as String),
+                            value: CGColor(srgbRed: fill.r, green: fill.g, blue: fill.b, alpha: fill.a * alpha),
+                            range: range)
+        if let stroke {
+            string.addAttribute(NSAttributedString.Key(kCTStrokeColorAttributeName as String),
+                                value: CGColor(srgbRed: stroke.r, green: stroke.g, blue: stroke.b,
+                                               alpha: stroke.a * alpha),
+                                range: range)
+        }
     }
 
     /// The words with the lit stretch drawn in its own colour. A stretch that

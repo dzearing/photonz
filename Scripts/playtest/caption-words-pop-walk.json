@@ -1,0 +1,178 @@
+{
+  "out": "/tmp/photonz-playtest/caption-words-pop-walk",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "describe",
+      "stage": "why",
+      "note": "How the words of a caption show, at Next defaults with no flag set: style tiles that play the real caption, Show (a sentence, a line, or a few words at a time) regrouping the captions, and the word being said with its own colour, pill, glow, size and motion. The user asked on 2026-09-25 for one word at a time with a soft grow and bounce, and a glow on the current word rather than the whole text."
+    },
+    {
+      "do": "action",
+      "action": "openSampleTalk"
+    },
+    {
+      "do": "action",
+      "action": "captionsWaitForThemselves"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "selectRow",
+      "row": "Captions"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectOneLayerPicked"
+    },
+    {
+      "do": "reveal",
+      "control": "Caption style Caption"
+    },
+    {
+      "do": "panel",
+      "stage": "1-captions-picked"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-captions-picked"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Show",
+      "choose": "1 word"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Animation",
+      "choose": "Grow with bounce"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Current word glow",
+      "choose": "Yellow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "reveal",
+      "control": "Current word shadow"
+    },
+    {
+      "do": "panel",
+      "stage": "2-one-word-growing-with-a-glow"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-one-word-growing-with-a-glow"
+    },
+    {
+      "do": "action",
+      "action": "captionsSeekIntoNextWord"
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectOneWordPopping"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-the-word-just-starting-to-grow"
+    },
+    {
+      "do": "action",
+      "action": "captionsStepIntoWord"
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectOneWordPopping"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-past-its-size-on-the-bounce"
+    },
+    {
+      "do": "action",
+      "action": "captionsStepIntoWord"
+    },
+    {
+      "do": "action",
+      "action": "captionsStepIntoWord"
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectOneWordPopping"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-settled-at-its-size"
+    },
+    {
+      "do": "press",
+      "control": "Caption style Bold pop"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "captionsSeekIntoNextWord"
+    },
+    {
+      "do": "action",
+      "action": "captionsStepIntoWord"
+    },
+    {
+      "do": "reveal",
+      "control": "Caption style Bold pop"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-bold-pop-in-one-click"
+    },
+    {
+      "do": "press",
+      "control": "Save caption style"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panel",
+      "stage": "7-kept-as-my-style"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-kept-as-my-style"
+    }
+  ]
+}

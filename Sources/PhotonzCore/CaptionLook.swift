@@ -32,15 +32,18 @@ import Foundation
 /// part of it: that is the layer's own box, moved and sized like any other.
 public struct CaptionLook: Hashable, Codable, Sendable {
 
-    /// The mock's three named styles.
+    /// The named styles: the mock's three, and two the social tools made
+    /// familiar (`CaptionWordStyle.swift`).
     public enum Preset: String, Hashable, Codable, Sendable, CaseIterable {
-        case caption, lowerThird, karaoke
+        case caption, lowerThird, karaoke, boldPop, neon
 
         public var title: String {
             switch self {
             case .caption: "Caption"
             case .lowerThird: "Lower third"
             case .karaoke: "Karaoke"
+            case .boldPop: "Bold pop"
+            case .neon: "Neon"
             }
         }
     }
@@ -55,28 +58,107 @@ public struct CaptionLook: Hashable, Codable, Sendable {
     /// The plate behind the words, or nil for words straight on the picture
     /// wearing the readable shadow.
     public var backgroundHex: String?
-    /// The colour the word being said lights up in, or nil for none.
-    public var activeHex: String?
     public var alignment: TextAlign
+
+    /// How many words show at a time, and how many lines a caption may fill.
+    public var show: CaptionGrouping
+    public var lines: Int
+    /// Words already said, and words still to come.
+    public var said: CaptionWordShade
+    public var coming: CaptionWordShade
+    /// The word being said.
+    public var word: CaptionWordLook
+    /// A glow, an outline and a shadow on the whole text, or nil for none.
+    public var glowHex: String?
+    public var strokeHex: String?
+    public var shadow: CaptionShadow
+
+    /// The colour the word being said lights up in, or nil for none.
+    public var activeHex: String? {
+        get { word.colorHex }
+        set { word.colorHex = newValue }
+    }
 
     public init(preset: Preset, fontName: String = "SF Pro", weight: TextWeight = .semibold,
                 fontSize: CGFloat? = nil, colorHex: String = "#FFFFFF",
                 backgroundHex: String? = nil, activeHex: String? = nil,
-                alignment: TextAlign = .center) {
+                alignment: TextAlign = .center, show: CaptionGrouping = .line, lines: Int = 1,
+                said: CaptionWordShade = .full, coming: CaptionWordShade = .full,
+                word: CaptionWordLook = CaptionWordLook(), glowHex: String? = nil,
+                strokeHex: String? = nil, shadow: CaptionShadow = .auto) {
         self.preset = preset
         self.fontName = fontName
         self.weight = weight
         self.fontSize = fontSize
         self.colorHex = colorHex
         self.backgroundHex = backgroundHex
-        self.activeHex = activeHex
         self.alignment = alignment
+        self.show = show
+        self.lines = lines
+        self.said = said
+        self.coming = coming
+        self.word = word
+        self.glowHex = glowHex
+        self.strokeHex = strokeHex
+        self.shadow = shadow
+        if let activeHex { self.word.colorHex = activeHex }
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case preset, fontName, weight, fontSize, colorHex, backgroundHex, activeHex, alignment
+        case show, lines, said, coming, word, glowHex, strokeHex, shadow
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        preset = try c.decode(Preset.self, forKey: .preset)
+        fontName = try c.decode(String.self, forKey: .fontName)
+        weight = try c.decode(TextWeight.self, forKey: .weight)
+        fontSize = try c.decodeIfPresent(CGFloat.self, forKey: .fontSize)
+        colorHex = try c.decode(String.self, forKey: .colorHex)
+        backgroundHex = try c.decodeIfPresent(String.self, forKey: .backgroundHex)
+        alignment = try c.decode(TextAlign.self, forKey: .alignment)
+        // Everything below postdates the first captions: a look saved before
+        // shows a line at a time, and an old karaoke look still lights what
+        // was sung.
+        show = try c.decodeIfPresent(CaptionGrouping.self, forKey: .show) ?? .line
+        lines = try c.decodeIfPresent(Int.self, forKey: .lines) ?? 1
+        said = try c.decodeIfPresent(CaptionWordShade.self, forKey: .said)
+            ?? (preset == .karaoke ? .lit : .full)
+        coming = try c.decodeIfPresent(CaptionWordShade.self, forKey: .coming) ?? .full
+        word = try c.decodeIfPresent(CaptionWordLook.self, forKey: .word) ?? CaptionWordLook()
+        if let active = try c.decodeIfPresent(String.self, forKey: .activeHex) { word.colorHex = active }
+        glowHex = try c.decodeIfPresent(String.self, forKey: .glowHex)
+        strokeHex = try c.decodeIfPresent(String.self, forKey: .strokeHex)
+        shadow = try c.decodeIfPresent(CaptionShadow.self, forKey: .shadow) ?? .auto
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(preset, forKey: .preset)
+        try c.encode(fontName, forKey: .fontName)
+        try c.encode(weight, forKey: .weight)
+        try c.encodeIfPresent(fontSize, forKey: .fontSize)
+        try c.encode(colorHex, forKey: .colorHex)
+        try c.encodeIfPresent(backgroundHex, forKey: .backgroundHex)
+        try c.encodeIfPresent(activeHex, forKey: .activeHex)
+        try c.encode(alignment, forKey: .alignment)
+        try c.encode(show, forKey: .show)
+        try c.encode(lines, forKey: .lines)
+        try c.encode(said, forKey: .said)
+        try c.encode(coming, forKey: .coming)
+        try c.encode(word, forKey: .word)
+        try c.encodeIfPresent(glowHex, forKey: .glowHex)
+        try c.encodeIfPresent(strokeHex, forKey: .strokeHex)
+        try c.encode(shadow, forKey: .shadow)
     }
 
     /// The yellow the mock lights the spoken word in.
     public static let activeYellow = "#FFD76A"
     /// The mock's plate: black at sixty per cent, which reads over anything.
     public static let plate = "#00000099"
+    /// The mock's karaoke cyan.
+    public static let karaokeCyan = "#12C2E9"
 
     /// A named style as it comes.
     public static func preset(_ preset: Preset) -> CaptionLook {
@@ -87,7 +169,21 @@ public struct CaptionLook: Hashable, Codable, Sendable {
             CaptionLook(preset: .lowerThird, weight: .medium, backgroundHex: "#000000B3",
                         alignment: .left)
         case .karaoke:
-            CaptionLook(preset: .karaoke, weight: .bold, activeHex: activeYellow)
+            // The mock's Karaoke / Pop: words to come at half white, sung
+            // words white, the one being sung in cyan.
+            CaptionLook(preset: .karaoke, weight: .bold, activeHex: karaokeCyan, said: .full,
+                        coming: .dim)
+        case .boldPop:
+            CaptionLook(preset: .boldPop, weight: .bold, show: .threeWords, coming: .full,
+                        word: CaptionWordLook(colorHex: activeYellow, scale: 1.25,
+                                              motion: .growBounce, speedMS: 240),
+                        strokeHex: "#000000", shadow: .deep)
+        case .neon:
+            CaptionLook(preset: .neon, weight: .bold, colorHex: "#E9FDFF", show: .twoWords,
+                        coming: .dim,
+                        word: CaptionWordLook(colorHex: "#FFFFFF", glowHex: "#FF4FD8", scale: 1.15,
+                                              motion: .grow, speedMS: 180),
+                        glowHex: "#12C2E9", shadow: CaptionShadow.none)
         }
     }
 
@@ -95,12 +191,24 @@ public struct CaptionLook: Hashable, Codable, Sendable {
     public static let standard = preset(.caption)
 
     /// Karaoke lights every word said so far, not just the one being said.
-    public var lightsEverythingSaid: Bool { preset == .karaoke }
+    public var lightsEverythingSaid: Bool { said == .lit }
+
+    /// Whether this look is `style` in a font and size somebody chose: the
+    /// styles keep your font and size when you pick one, so they are not what
+    /// makes it that style.
+    public func wears(_ style: CaptionLook) -> Bool {
+        var mine = self
+        mine.fontName = style.fontName
+        mine.fontSize = style.fontSize
+        mine.preset = style.preset
+        return mine == style
+    }
 
     /// The size the words are drawn at on a picture this size.
     public func resolvedFontSize(in size: CGSize) -> CGFloat {
         let base = fontSize ?? CaptionLayers.fontSize(in: size)
-        return preset == .karaoke && fontSize == nil ? (base * 1.2).rounded() : base
+        let bigger: Set<Preset> = [.karaoke, .boldPop, .neon]
+        return bigger.contains(preset) && fontSize == nil ? (base * 1.2).rounded() : base
     }
 }
 
@@ -131,7 +239,7 @@ public enum CaptionActiveWord {
 
     /// A stretch of a string, counted in UTF-16 units the way text layout
     /// counts them.
-    public struct Span: Hashable, Sendable {
+    public struct Span: Hashable, Codable, Sendable {
         public var location: Int
         public var length: Int
         public init(location: Int, length: Int) {
@@ -197,13 +305,21 @@ extension Layer {
     /// This caption as drawn at `ms`: the word being said lit, where its look
     /// lights one. Everything that is not an on-screen caption comes back as
     /// it was.
-    func withSpokenWordLit(atTimeMS ms: Int) -> Layer {
+    func withSpokenWordLit(atTimeMS ms: Int, look: CaptionLook? = nil) -> Layer {
         guard isVisible, let words = captionWords, let time,
-              case .text(var content) = content, let hex = content.activeWordHex,
-              let span = CaptionActiveWord.range(in: content.string, words: words, cue: time,
-                                                 atMS: ms, sung: content.activeWordSung == true)
-        else { return self }
-        content.highlight = TextHighlight(location: span.location, length: span.length, colorHex: hex)
+              case .text(var content) = content else { return self }
+        // A look that does more than colour the word (a pop, a pill, dimmed
+        // words either side) hands the moment to the rasterizer whole
+        // (`CaptionWordStyle.swift`).
+        if let paint = look?.wordPaint(for: content.string, words: words, cue: time, atMS: ms) {
+            content.wordPaint = paint
+        }
+        if let hex = content.activeWordHex,
+           let span = CaptionActiveWord.range(in: content.string, words: words, cue: time,
+                                              atMS: ms, sung: content.activeWordSung == true) {
+            content.highlight = TextHighlight(location: span.location, length: span.length, colorHex: hex)
+        }
+        guard content.wordPaint != nil || content.highlight != nil else { return self }
         var lit = self
         lit.content = .text(content)
         return lit
@@ -311,17 +427,22 @@ extension PhotonzDocument {
         let box = existing.map(\.frame)
             ?? CaptionLayers.defaultBox(in: canvasSize, fontSize: chosen.resolvedFontSize(in: canvasSize))
         let children = CaptionLayers.layers(for: cues, in: canvasSize, look: chosen, box: box.size)
+        let regroups = chosen.show != .line || chosen.lines != 1
         if let existing {
             updateLayer(id: existing.id) { layer in
                 layer.children = children
                 layer.captionsLook = chosen
             }
+            if regroups { regroupCaptions(existing.id) }
             return existing.id
         }
         var content = GroupContent(children: children)
         content.captionLook = chosen
         let layer = Layer(name: CaptionLayers.groupName, content: .group(content), frame: box)
         addLayer(layer)
+        // Written in the look's grouping: a style of three words at a time
+        // writes three words at a time.
+        if regroups { regroupCaptions(layer.id) }
         return layer.id
     }
 
@@ -338,6 +459,7 @@ extension PhotonzDocument {
         guard layer(id: id)?.isCaptionsLayer == true else { return }
         captionLook = look
         let size = canvasSize
+        var pendingRegroup = false
         updateLayer(id: id) { layer in
             // New type needs room for two lines of itself: the box grows or
             // shrinks up from its floor, where the words sit, and keeps the
@@ -351,12 +473,18 @@ extension PhotonzDocument {
                                      width: frame.width, height: height)
             }
             let box = layer.frame.size
+            let regroups = layer.captionsLook?.show != look.show || layer.captionsLook?.lines != look.lines
+                || (was != font && look.show.usesLines)
             layer.captionsLook = look
             layer.children = layer.children.map { cue in
                 guard cue.isCaption, case .text(let content) = cue.content else { return cue }
                 return CaptionLayers.dress(cue, string: content.string, in: size, look: look, box: box)
             }
+            if regroups { pendingRegroup = true }
         }
+        // Showing a different number of words at a time splits the words into
+        // captions again (`CaptionWordStyle.swift`).
+        if pendingRegroup { regroupCaptions(id) }
     }
 
     /// Retype one caption. Its words keep their timings where they still line
@@ -450,9 +578,39 @@ extension CaptionLayers {
         content.activeWordSung = look.lightsEverythingSaid ? true : nil
         layer.content = .text(content)
         layer.frame = CGRect(origin: .zero, size: box)
-        layer.style.shadow = look.backgroundHex == nil
-            ? TextBuilder.autoContrastShadow(forColorHex: look.colorHex) : nil
+        layer.style.effects = effects(for: look, fontSize: font)
         return layer
+    }
+
+    /// The whole text's shadow, glow and outline, as ordinary Effects entries
+    /// on each caption, so they draw the way any label's do.
+    static func effects(for look: CaptionLook, fontSize font: CGFloat) -> [LayerEffect] {
+        var effects: [LayerEffect] = []
+        switch look.shadow {
+        case .auto:
+            if look.backgroundHex == nil {
+                effects.append(.shadow(TextBuilder.autoContrastShadow(forColorHex: look.colorHex)))
+            }
+        case .none:
+            break
+        case .soft:
+            effects.append(.shadow(ShadowStyle(radius: (font * 0.2).rounded(),
+                                               offset: CGSize(width: 0, height: (font * 0.05).rounded()),
+                                               colorHex: "#000000", opacity: 0.75)))
+        case .deep:
+            effects.append(.shadow(ShadowStyle(radius: (font * 0.06).rounded(),
+                                               offset: CGSize(width: 0, height: (font * 0.08).rounded()),
+                                               colorHex: "#000000", opacity: 0.95)))
+        }
+        if let glow = look.glowHex {
+            effects.append(.glow(GlowEffect(colorHex: glow, radius: (font * 0.3).rounded(),
+                                            size: (font * 0.06).rounded(), opacity: 0.9)))
+        }
+        if let stroke = look.strokeHex {
+            effects.append(.border(BorderEffect(width: max(1, (font * 0.07).rounded()), colorHex: stroke,
+                                                position: .outside, follows: .letters)))
+        }
+        return effects
     }
 
     /// A caption's name for retyped words.

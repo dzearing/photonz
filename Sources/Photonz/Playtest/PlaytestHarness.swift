@@ -3331,6 +3331,51 @@ private final class Run {
                                   count: end - min(highlight.location, end))
                 note(number, step.name, "captions: \"\(word)\" is lit in \(highlight.colorHex) "
                      + "at \(editor.documentTimeMS) ms", state: describe())
+            case .captionsSeekIntoNextWord, .captionsStepIntoWord:
+                let now = editor.documentTimeMS
+                if action == .captionsSeekIntoNextWord {
+                    let starts = (editor.document?.captionLayers ?? []).flatMap { cue -> [Int] in
+                        guard let words = cue.captionWords, let time = cue.time else { return [] }
+                        return CaptionCue.words(words, fittedTo: time).map(\.startMS)
+                    }.sorted()
+                    guard let next = starts.first(where: { $0 > now + 60 }) else {
+                        throw Failure(description: "no word is said after \(now) ms")
+                    }
+                    editor.scrubDocument(toMS: next + 40)
+                } else {
+                    editor.scrubDocument(toMS: now + 90)
+                }
+                try await Task.sleep(for: .milliseconds(150))
+                let at = editor.documentTimeMS
+                guard let shown = editor.document?.drawn(atTimeMS: at),
+                      let cue = shown.allLayers.first(where: { $0.isCaption && $0.isVisible }),
+                      case .text(let content) = cue.content else {
+                    throw Failure(description: "no caption is on screen at \(at) ms")
+                }
+                let scale = content.wordPaint.map { String(format: "%.2f", $0.scale) } ?? "1 (no motion)"
+                note(number, step.name, "captions: \"\(content.string)\" at \(at) ms, the word drawn at "
+                     + "\(scale)x", state: describe())
+            case .captionsExpectOneWordPopping:
+                let at = editor.documentTimeMS
+                let look = editor.captionLook
+                guard look.show == .oneWord, look.word.motion == .growBounce,
+                      look.word.glowHex != nil, look.glowHex == nil else {
+                    throw Failure(description: "the look is not one word at a time with the current "
+                        + "word growing with a bounce and glowing alone: \(look)")
+                }
+                guard let shown = editor.document?.drawn(atTimeMS: at),
+                      let cue = shown.allLayers.first(where: { $0.isCaption && $0.isVisible }),
+                      case .text(let content) = cue.content, let paint = content.wordPaint else {
+                    throw Failure(description: "no caption with a moving word is on screen at \(at) ms")
+                }
+                guard !content.string.contains(" ") else {
+                    throw Failure(description: "\"\(content.string)\" is on screen: more than one word")
+                }
+                guard paint.glowHex != nil, cue.style.effects.compactMap(\.glow).isEmpty else {
+                    throw Failure(description: "the glow is not on the current word alone")
+                }
+                note(number, step.name, "captions: \"\(content.string)\" alone on screen, glowing, "
+                     + "drawn at \(String(format: "%.2f", paint.scale))x", state: describe())
             case .captionsExportFiles:
                 for format in CaptionFileFormat.allCases {
                     let url = out.appendingPathComponent("captions.\(format.fileExtension)")
@@ -4378,6 +4423,7 @@ private final class Run {
                  .captionsStyleKaraoke, .captionsPositionTop, .captionsPositionBottom,
                  .captionsExpectOneLayerPicked, .captionsExpectMovedTogether,
                  .captionsExpectLitWord, .captionsExportFiles, .captionsAutoOff,
+                 .captionsSeekIntoNextWord, .captionsStepIntoWord, .captionsExpectOneWordPopping,
                  .captionsAutoOn, .captionsExpectEditingOnCanvas,
                  .captionsWriteFilmWithFileBeside,
                  .captionsWordOpenOnCanvas, .captionsWordOpenInLane, .captionsExpectWordOpen,

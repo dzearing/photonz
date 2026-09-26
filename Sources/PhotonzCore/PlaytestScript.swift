@@ -321,7 +321,8 @@ public struct PlaytestSetup: Sendable, Equatable {
 /// starts. The probe keeps its settings between runs on purpose — that is what
 /// a person's app does — so a walk that changes one of these says which.
 public enum PlaytestMemory: String, CaseIterable, Sendable, Hashable, Codable {
-    /// The font, size, weight and colour a new text block is made in.
+    /// The font, size, weight and colour a new text block is made in, and the
+    /// caption styles somebody kept.
     case text
     /// The recent colours, the foreground and background fills, and which
     /// tab the colour picker opens on.
@@ -929,6 +930,15 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case captionsExpectOneLayerPicked, captionsExpectMovedTogether
     /// Fail unless the frame drawn at the playhead has the spoken word lit.
     case captionsExpectLitWord
+    /// Put the playhead 40 ms into the next word said after it, where the
+    /// word being said has only just started its motion
+    /// (`CaptionWordStyle.swift`); `captionsStepIntoWord` moves 90 ms further
+    /// into the same word. Both note the word and how big it is drawn.
+    case captionsSeekIntoNextWord, captionsStepIntoWord
+    /// Fail unless the frame drawn at the playhead shows one word at a time,
+    /// the word being said growing with a bounce and glowing on its own while
+    /// the text itself does not.
+    case captionsExpectOneWordPopping
     /// Write the captions out as SubRip and WebVTT into the walk's own
     /// folder, and fail unless both files read back as what they claim.
     case captionsExportFiles
@@ -1145,6 +1155,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .captionsExpectOnePicked, .captionsWriteQuietly, .captionsExpectEndWithRecording, .captionsEditFirstInPlace, .captionsCommitFirstWords, .captionsTrimFirstEnd,
              .captionsStyleCaption, .captionsStyleLowerThird, .captionsStyleKaraoke,
              .captionsPositionTop, .captionsPositionBottom, .captionsExpectLitWord,
+             .captionsSeekIntoNextWord, .captionsStepIntoWord, .captionsExpectOneWordPopping,
              .captionsExpectOneLayerPicked, .captionsExpectMovedTogether,
              .captionsExportFiles, .captionsAutoOff, .captionsAutoOn, .captionsExpectEditingOnCanvas,
              .captionsWriteFilmWithFileBeside,

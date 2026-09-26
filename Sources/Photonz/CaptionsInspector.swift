@@ -25,7 +25,8 @@ struct CaptionsInspector: View {
             if editorState.hasCaptions && !editorState.isWritingCaptions {
                 CaptionCueInFocusRows()
                 Divider().padding(.vertical, 2)
-                style
+                CaptionWordsInspector()
+                Divider().padding(.vertical, 2)
                 timing
                 file
             }
@@ -139,23 +140,6 @@ struct CaptionsInspector: View {
 
     // MARK: - One look for every caption
 
-    @ViewBuilder private var style: some View {
-        let look = editorState.captionLook
-        // The mock's style bar spans the section (`#styleSeg`, width 100%).
-        // The system's segmented control cannot shrink below its own words,
-        // and its three names came out 1.5pt wider than the panel has, so the
-        // dock slid every section past both of its edges whenever a document
-        // had captions (`panelMargins`, 2026-09-24). The kit's bar shares out
-        // the width the row has.
-        VideoKit.Segmented(options: CaptionLook.Preset.allCases.map { ($0, $0.title) },
-                           selection: look.preset) { editorState.pickCaptionPreset($0) }
-        .playtestControl("Caption style", detail: "the Captions section")
-        .panelHelp("One look for every caption in this layer.")
-        colourRow("Active", value: look.activeHex, choices: Self.actives) { hex in
-            editorState.changeCaptionLook { $0.activeHex = hex }
-        }
-    }
-
     private func colourRow(_ label: String, value: String?, choices: [(String, String?)],
                            pick: @escaping (String?) -> Void) -> some View {
         let name = choices.first { $0.1?.uppercased() == value?.uppercased() }?.0 ?? (value ?? "None")
@@ -184,8 +168,6 @@ struct CaptionsInspector: View {
                                              ("Black", "#000000"), ("Cyan", "#7FE7FF")]
     static let plates: [(String, String?)] = [("None", nil), ("Dark", CaptionLook.plate),
                                                ("Black", "#000000"), ("White", "#FFFFFFE6")]
-    static let actives: [(String, String?)] = [("None", nil), ("Yellow", CaptionLook.activeYellow),
-                                                ("Cyan", "#7FE7FF"), ("Pink", "#FF7AB6")]
 
     // MARK: - Timing and the way out
 
@@ -325,6 +307,24 @@ struct CaptionsTextInspector: View {
             colourRow("Background", value: look.backgroundHex, choices: CaptionsInspector.plates) { hex in
                 editorState.changeCaptionLook { $0.backgroundHex = hex }
             }
+            // The whole text's own glow, outline and shadow; the word being
+            // said has its own in the Captions section.
+            CaptionColourRow(label: "Glow", field: "Caption glow", value: look.glowHex,
+                             choices: CaptionColourRow.bright) { hex in
+                editorState.changeCaptionLook { $0.glowHex = hex }
+            }
+            CaptionColourRow(label: "Stroke", field: "Caption stroke", value: look.strokeHex,
+                             choices: CaptionColourRow.edges) { hex in
+                editorState.changeCaptionLook { $0.strokeHex = hex }
+            }
+            VideoKit.DropdownRow(label: "Shadow", value: look.shadow.title) {
+                ForEach(CaptionShadow.allCases, id: \.self) { shadow in
+                    Toggle(shadow.title, isOn: Binding(get: { look.shadow == shadow }, set: { _ in
+                        editorState.changeCaptionLook { $0.shadow = shadow }
+                    }))
+                }
+            }
+            .playtestField("Caption shadow")
             VStack(alignment: .leading, spacing: 2) {
                 Text("Align").font(.caption).foregroundStyle(.secondary)
                 Picker("Align", selection: Binding<TextAlign>(

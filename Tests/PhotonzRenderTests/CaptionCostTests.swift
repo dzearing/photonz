@@ -33,4 +33,27 @@ struct CaptionCostTests {
             #expect(each < 200)
         }
     }
+
+    /// A caption whose word pops is drawn again on every frame the word is
+    /// moving, so one draw has to fit inside a frame at 60 frames a second
+    /// with room left for the picture: a 1080p caption box at 2x, the word
+    /// grown, glowing, stroked and on a plate (`CaptionWordStyle.swift`).
+    @Test func drawingAPoppingCaptionFitsInAFrame() {
+        var text = TextContent(string: "Capture the screen and let it", fontSize: 58, colorHex: "#FFFFFF",
+                               weight: .bold, alignment: .center, verticalAlignment: .bottom)
+        text.plateHex = "#00000099"
+        text.wordPaint = CaptionWordPaint(word: CaptionActiveWord.Span(location: 12, length: 6),
+                                          said: .dim, coming: .dim, colorHex: "#FFD76A",
+                                          glowHex: "#FF4FD8", strokeHex: "#000000", shadow: true,
+                                          scale: 1.25, drawnAlone: true)
+        let size = CGSize(width: 1536, height: 151)
+        _ = TextRasterizer.rasterize(text, size: size, scale: 2)
+        let each = PerfClock.fastestCallMS(batches: 5, callsPerBatch: 5) {
+            _ = TextRasterizer.rasterize(text, size: size, scale: 2)
+        }
+        print("[perf] popping caption at 1080p, 2x: \(String(format: "%.2f", each))ms per frame")
+        if MachineSpeed.isGating {
+            #expect(each < 8, "half a 60fps frame at most")
+        }
+    }
 }

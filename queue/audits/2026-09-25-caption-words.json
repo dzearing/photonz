@@ -1,0 +1,29 @@
+{
+  "feature": "How the words of a caption show",
+  "epic": "video-audio",
+  "summary": "Captions can show a sentence, a line, 3, 2 or 1 word at a time, and the word being said can have its own colour, pill, glow, stroke, shadow and size, with a Grow, a soft bounce, a Pop or an underline sweep. Five style tiles play the real caption and set all of it in one click, and your own tweak can be saved as a style.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a screen recording with somebody talking; the captions write themselves.",
+  "try": [
+    { "do": "Click Captions in the layers list and scroll the panel to Caption style.", "shot": "2026-09-25-caption-words-1-captions-picked.png" },
+    { "do": "Set Show to 1 word, Animation to Grow with bounce, and the Current word Glow to Yellow.", "shot": "2026-09-25-caption-words-2-one-word-growing-with-a-glow.png" },
+    { "do": "Press space and watch each word land with a soft spring and a glow of its own.", "shot": "2026-09-25-caption-words-4-past-its-size-on-the-bounce.png" },
+    { "do": "Click the Bold pop tile.", "shot": "2026-09-25-caption-words-6-bold-pop-in-one-click.png" },
+    { "do": "Drag Scale and Speed under Current word until it feels right, then click Save style.", "shot": "2026-09-25-caption-words-7-kept-as-my-style.png" },
+    { "do": "Set Coming to Hidden and play: the words appear as they are said." },
+    { "do": "Export the film and compare a popping word with the canvas." }
+  ],
+  "evaluate": [
+    "Is the Grow with bounce soft enough, or does it read as a jolt at the default speed?",
+    "Do the five tiles make it quicker to get a good look than CapCut or Submagic?",
+    "Is 3 words the right default for Bold pop, or should it be 2?",
+    "Is Current word the right place for the pop controls, or should they sit above Show?",
+    "Would you rather Show changes stay out of the timeline (the bars stay as lines) instead of re-splitting it into many small bars?"
+  ],
+  "rough": [
+    "The mock (video-captions.html) draws a three-way segmented style bar and a line of copy about the design system; the task asked for preview tiles, so tiles replace the bar and that line is not shipped, since there is no design-system link for it to be true about.",
+    "The Captions section is long now and sits below Time in the panel, so reaching the style tiles takes a scroll.",
+    "Picking Show re-splits the captions on the timeline (1 word gives one bar per word, the way CapCut does); captions you retimed by hand are re-derived from their words' times.",
+    "While a look makes the current word grow, the line sits a little higher in its box so the grown word and its glow are not cut off at the bottom. Double-click word fixing measures the unlifted line, so it can be off by a few points.",
+    "A popping caption costs about 4 ms to draw at 1080p on this machine (measured in the test suite). A full-length export was not timed frame by frame."
+  ]
+}

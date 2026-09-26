@@ -385,6 +385,47 @@ extension EditorState {
         setCaptionLook(look)
     }
 
+    /// Wear a whole look at once: a style tile, named or one of your own.
+    func pickCaptionStyle(_ style: CaptionLook, keepingType: Bool) {
+        var look = style
+        if keepingType {
+            look.fontName = captionLook.fontName
+            look.fontSize = captionLook.fontSize
+        }
+        setCaptionLook(look)
+    }
+
+    /// The caption styles somebody has kept, for every recording
+    /// (`CaptionStyleLibrary`).
+    static var captionStyles: CaptionStyleLibrary {
+        get {
+            guard let data = UserDefaults.standard.data(forKey: captionStylesKey),
+                  let library = try? JSONDecoder().decode(CaptionStyleLibrary.self, from: data)
+            else { return CaptionStyleLibrary() }
+            return library
+        }
+        set {
+            guard let data = try? JSONEncoder().encode(newValue) else { return }
+            UserDefaults.standard.set(data, forKey: captionStylesKey)
+        }
+    }
+    static let captionStylesKey = "captions.savedStyles"
+
+    /// Keep the look in focus as a style of your own.
+    func saveCaptionStyle() {
+        var library = Self.captionStyles
+        library.save(captionLook)
+        Self.captionStyles = library
+        captionSettingsTick += 1
+    }
+
+    func removeCaptionStyle(id: UUID) {
+        var library = Self.captionStyles
+        library.remove(id: id)
+        Self.captionStyles = library
+        captionSettingsTick += 1
+    }
+
     /// Move the Captions layer in focus to a new box, as one undo step: what a
     /// drag on the canvas lands as.
     func moveCaptions(to box: CGRect) {

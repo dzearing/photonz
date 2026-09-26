@@ -19747,3 +19747,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Core: `TimelineOpening.swift` (`opensOpen`, `railSummary`, `PhotonzDocument.isUntouchedRecording`, `TimelineKeyCommand.opensTheTimeline`), tests `TimelineOpeningTests`. App: `isMotionStripOpen` now routes between the icon strip's `isTimingStripOpen` and a per-window `isVideoTimelineOpen`; `TimelineDock` is one view in both states. Walk harness: `setup.timelineOpen`, `expectTimeline` claims `open` and `tool`.
 - Walk `a-recording-opens-to-watch-walk` at Next defaults; audit `queue/audits/2026-09-25-recording-opens-to-watch.json`. 27 video walks now say `timelineOpen: true` (six also pick their clip).
 - Open: the two untracked "opens sharp" walks still fail the walk-setup tests while in the tree.
+
+## 2026-09-25 — How the words of a caption show
+
+- `CaptionLook` grew Show (`CaptionGrouping`: Sentence, Line, 3/2/1 words) and Lines, Said/Coming shading (`CaptionWordShade`), the current word's own look (`CaptionWordLook`: colour, pill, glow, stroke, shadow, scale, motion, speed) and whole-text glow/stroke/shadow (written onto each cue as ordinary Effects). Show regroups a Captions layer's cues (`regroupCaptions`, words pooled as shown, hand fixes kept). Presets: Caption, Lower third, Karaoke (now the mock's: coming dim, active cyan), Bold pop, Neon. `CaptionStyleLibrary` keeps the user's own styles (app defaults `captions.savedStyles`, forgotten by a walk's `forget: text`).
+- The moment: `DocumentTime.shownTree` hands a Captions layer's look to its cues; `CaptionLook.wordPaint` puts a `CaptionWordPaint` on the frame's `TextContent`, and `TextRasterizer.drawMoment` draws it (scaled word about its centre, the line opened by the growth, plate grown round it, glow/shadow/stroke/pill/underline, said/coming alpha). Canvas and export share it. ~4 ms per frame at 1080p 2x (`CaptionCostTests`).
+- Panel: `CaptionStyleInspector.swift` (style tiles playing `CaptionLook.previewText`, Show, Lines, Said, Coming, Current word rows); Text section got Glow, Stroke, Shadow.
+- Walk `caption-words-pop-walk` (Next defaults, 7 captures); audit `queue/audits/2026-09-25-caption-words.json`.
+- Open: the two untracked "opens sharp" walks still fail 7 walk-setup tests while in the tree; `captions-panel-keeps-its-margins-walk` still fails at Animate > Position as on clean main.

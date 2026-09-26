@@ -25,7 +25,8 @@ extension PlaytestMemory {
     var defaultsKeys: [String] {
         switch self {
         case .text:
-            [EditorState.textStylesKey]
+            // ...and the caption styles somebody kept, which are text styles too.
+            [EditorState.textStylesKey, EditorState.captionStylesKey]
         case .color:
             [EditorState.recentColorsKey, EditorState.foregroundFillKey, EditorState.backgroundFillKey,
              DesignedColorPicker.scopeKey]

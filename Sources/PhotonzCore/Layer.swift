@@ -68,6 +68,11 @@ public struct TextContent: Hashable, Codable, Sendable {
     /// on the frame drawn at a moment, the way a clip carries the frame of its
     /// recording, so the document itself never has a word lit.
     public var highlight: TextHighlight?
+    /// How a caption's words are drawn at this moment, beyond a lit colour:
+    /// the word being said mid-pop, its pill and glow, and the words either
+    /// side of it dimmed or waiting (`CaptionWordStyle.swift`). Like
+    /// `highlight`, set only on the frame drawn at a moment.
+    public var wordPaint: CaptionWordPaint?
 
     public init(string: String, fontName: String = "SF Pro", fontSize: CGFloat = 24,
                 colorHex: String = "#FFFFFF", weight: TextWeight = .regular,
@@ -103,6 +108,7 @@ public struct TextContent: Hashable, Codable, Sendable {
         activeWordHex = try container.decodeIfPresent(String.self, forKey: .activeWordHex)
         activeWordSung = try container.decodeIfPresent(Bool.self, forKey: .activeWordSung)
         highlight = try container.decodeIfPresent(TextHighlight.self, forKey: .highlight)
+        wordPaint = try container.decodeIfPresent(CaptionWordPaint.self, forKey: .wordPaint)
     }
 }
 

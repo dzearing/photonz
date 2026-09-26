@@ -272,7 +272,8 @@ extension Layer {
     /// this moment hidden. A layer already hidden by hand stays hidden: the
     /// timeline decides when something COULD be on screen, and the eye in the
     /// layers list still decides whether it is.
-    func shownTree(atTimeMS ms: Int, framesInHand: MovieFramesInHand? = nil) -> Layer {
+    func shownTree(atTimeMS ms: Int, framesInHand: MovieFramesInHand? = nil,
+                   captionLook: CaptionLook? = nil) -> Layer {
         var shown = self
         if !isOnScreen(atTimeMS: ms) { shown.isVisible = false }
         // ...and whatever IS on screen and plays a recording shows the frame
@@ -281,9 +282,15 @@ extension Layer {
         // (`MovieClip.swift`).
         if shown.isVisible { shown = shown.playing(atTimeMS: ms, framesInHand: framesInHand) }
         // ...and a caption lights the word being said (`CaptionLook.swift`).
-        if shown.isVisible, shown.isCaption { shown = shown.withSpokenWordLit(atTimeMS: ms) }
+        // A Captions layer's look is what says how its words move.
+        if shown.isVisible, shown.isCaption {
+            shown = shown.withSpokenWordLit(atTimeMS: ms, look: captionLook)
+        }
         if shown.isGroup {
-            shown.children = children.map { $0.shownTree(atTimeMS: ms, framesInHand: framesInHand) }
+            let look = captionsLook ?? captionLook
+            shown.children = children.map {
+                $0.shownTree(atTimeMS: ms, framesInHand: framesInHand, captionLook: look)
+            }
         }
         return shown
     }

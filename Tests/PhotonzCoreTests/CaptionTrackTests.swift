@@ -161,7 +161,8 @@ final class CaptionTrackTests: XCTestCase {
         XCTAssertNotNil(karaoke.activeHex)
         XCTAssertNotEqual(caption, lower)
         XCTAssertNotEqual(caption, karaoke)
-        XCTAssertEqual(CaptionLook.Preset.allCases.map(\.title), ["Caption", "Lower third", "Karaoke"])
+        XCTAssertEqual(CaptionLook.Preset.allCases.map(\.title),
+                       ["Caption", "Lower third", "Karaoke", "Bold pop", "Neon"])
     }
 
     func testNewCaptionsComeOutInTheDocumentsLook() {
