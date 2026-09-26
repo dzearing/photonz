@@ -71,7 +71,7 @@ public struct ClipLine: Hashable, Sendable {
             if layer.isText { return "Title" }
             // A shape, a line, a picture placed in time: Premiere's Graphic.
             return layer.isPlacedInTime && !layer.isGroup ? "Graphic" : "Clip"
-        case .playing, nil: return "Clip"
+        case .playing, .captioned, nil: return "Clip"
         }
     }
 }

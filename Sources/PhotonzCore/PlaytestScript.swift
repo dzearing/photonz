@@ -930,6 +930,13 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case captionsExpectOneLayerPicked, captionsExpectMovedTogether
     /// Fail unless the frame drawn at the playhead has the spoken word lit.
     case captionsExpectLitWord
+    /// Fail unless the safe-area guides and the AUTO badge are over the
+    /// picture and the Caption track bar reads a word being said;
+    /// `captionsExpectNoGuides` wants the guides gone and the badge still up.
+    case captionsExpectGuides, captionsExpectNoGuides
+    /// Fail unless the Captions layer wears the standard look in the box a
+    /// fresh one lands in: what the Caption track bar's Reset does.
+    case captionsExpectReset
     /// Put the playhead 40 ms into the next word said after it, where the
     /// word being said has only just started its motion
     /// (`CaptionWordStyle.swift`); `captionsStepIntoWord` moves 90 ms further
@@ -1155,6 +1162,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .captionsExpectOnePicked, .captionsWriteQuietly, .captionsExpectEndWithRecording, .captionsEditFirstInPlace, .captionsCommitFirstWords, .captionsTrimFirstEnd,
              .captionsStyleCaption, .captionsStyleLowerThird, .captionsStyleKaraoke,
              .captionsPositionTop, .captionsPositionBottom, .captionsExpectLitWord,
+             .captionsExpectGuides, .captionsExpectNoGuides, .captionsExpectReset,
              .captionsSeekIntoNextWord, .captionsStepIntoWord, .captionsExpectOneWordPopping,
              .captionsExpectOneLayerPicked, .captionsExpectMovedTogether,
              .captionsExportFiles, .captionsAutoOff, .captionsAutoOn, .captionsExpectEditingOnCanvas,

@@ -406,6 +406,11 @@ struct TimelineDock: View {
 
     // MARK: - The grid
 
+    /// Whether a Captions track has captions on it, which is when its bar is up.
+    private var showsCaptionTrackBar: Bool {
+        editorState.timelineTrackRows.contains { $0.isCaptions && !$0.clips.isEmpty }
+    }
+
     private var grid: some View {
         GeometryReader { geo in
             let laneWidth = max(1, geo.size.width - Self.lanesLeading)
@@ -413,6 +418,13 @@ struct TimelineDock: View {
                 if editorState.isTimelineOpenedOut {
                     TimelineOverviewBar(laneWidth: laneWidth)
                         .padding(.leading, Self.lanesLeading)
+                        .padding(.bottom, 4)
+                }
+                // The Caption track's bar, over the ruler as the captions
+                // mock draws its dock's bar, so the playhead never runs
+                // through its words.
+                if showsCaptionTrackBar {
+                    CaptionTrackBarView()
                         .padding(.bottom, 4)
                 }
                 VStack(alignment: .leading, spacing: 0) {
@@ -552,7 +564,8 @@ struct TimelineDock: View {
         rows += TimelineAddTrackRow.height + Self.rowSpacing
         let content = Self.rulerHeight + rows + Self.rowSpacing
         let overview = editorState.isTimelineOpenedOut ? TimelineOverviewBar.height + 4 : 0
-        return overview + min(Self.bodyCeiling, content)
+        let captionBar = showsCaptionTrackBar ? CaptionTrackBarView.height + 4 : 0
+        return overview + captionBar + min(Self.bodyCeiling, content)
     }
 
     /// One track's full height: its lane, the lanes of anything moving on

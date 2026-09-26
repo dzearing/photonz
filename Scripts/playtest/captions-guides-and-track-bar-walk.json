@@ -1,0 +1,47 @@
+{
+  "out": "/tmp/photonz-playtest/captions-guides-and-track-bar-walk",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "describe",
+      "stage": "why",
+      "note": "The captions mock draws title-safe and action-safe guides over the picture, an AUTO · EN badge at its top, and a Caption track bar over the Captions track with Clear, Reset, the word being said and the time. Picking the captions opens the panel on the Captions options. Next at its defaults: no flag is set here."
+    },
+    { "do": "action", "action": "openSampleTalk" },
+    { "do": "action", "action": "captionsWaitForThemselves" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "snapshot", "name": "0-opened-to-watch" },
+    { "do": "press", "control": "Show Timing" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "captionsSeekIntoNextWord" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "captionsExpectGuides" },
+    { "do": "snapshot", "name": "1-guides-badge-and-bar" },
+    { "do": "selectRow", "row": "Captions" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "captionsExpectOneLayerPicked" },
+    { "do": "expectSections", "leading": ["Captions", "Text"] },
+    { "do": "snapshot", "name": "2-captions-first-in-the-panel" },
+    { "do": "press", "control": "Safe areas" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "captionsExpectNoGuides" },
+    { "do": "snapshot", "name": "3-guides-off" },
+    { "do": "press", "control": "Safe areas" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "action", "action": "captionsExpectGuides" },
+    { "do": "action", "action": "captionsStyleKaraoke" },
+    { "do": "action", "action": "captionsPositionTop" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "snapshot", "name": "4-styled-and-moved" },
+    { "do": "press", "control": "Caption Track Reset" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "captionsExpectReset" },
+    { "do": "snapshot", "name": "5-reset" }
+  ]
+}

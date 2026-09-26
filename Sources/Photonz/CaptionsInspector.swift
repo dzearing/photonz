@@ -20,6 +20,7 @@ struct CaptionsInspector: View {
         let _ = editorState.captionSettingsTick
         VStack(alignment: .leading, spacing: 6) {
             language
+            if editorState.hasCaptions { guides }
             auto
             if editorState.isWritingCaptions { listening } else { generate }
             if editorState.hasCaptions && !editorState.isWritingCaptions {
@@ -69,6 +70,19 @@ struct CaptionsInspector: View {
     static func title(of id: String) -> String {
         let name = Locale.current.localizedString(forLanguageCode: id) ?? id
         return "\(name) (\(id))"
+    }
+
+    /// The title-safe and action-safe guides over the picture, on or off.
+    private var guides: some View {
+        VideoKit.FieldRow(label: "Guides") {
+            Button { editorState.toggleSafeAreas() } label: {
+                Label("Safe areas", systemImage: "viewfinder")
+            }
+            .buttonStyle(CaptionBarButtonStyle(filled: EditorState.showsSafeAreas))
+            .accessibilityValue(EditorState.showsSafeAreas ? "On" : "Off")
+            .panelHelp("Show title and action safe areas")
+            .playtestControl("Safe areas", detail: EditorState.showsSafeAreas ? "on" : "off")
+        }
     }
 
     private var auto: some View {

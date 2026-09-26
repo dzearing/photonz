@@ -3313,6 +3313,33 @@ private final class Run {
                 note(number, step.name, "captions: one layer picked, box \(box), "
                      + "\(document.captionLayers.count) captions filling it at \(Int(size)) pt",
                      state: describe())
+            case .captionsExpectGuides, .captionsExpectNoGuides:
+                let wanted = action == .captionsExpectGuides
+                guard editor.showsSafeAreaGuides == wanted else {
+                    throw Failure(description: "the safe-area guides are \(wanted ? "not " : "")over the picture")
+                }
+                guard let badge = editor.captionBadge else {
+                    throw Failure(description: "the AUTO badge is not on the picture")
+                }
+                let word = editor.captionWordBeingSaid
+                if wanted, word == nil {
+                    throw Failure(description: "the Caption track bar has no word being said at \(editor.documentTimeMS) ms")
+                }
+                note(number, step.name, "captions: guides \(wanted ? "on" : "off"), badge \(badge.uppercased()), "
+                     + "active word \(word ?? "none"), "
+                     + CaptionTrackBar.time(atMS: editor.documentTimeMS, ofMS: editor.documentLengthMS),
+                     state: describe())
+            case .captionsExpectReset:
+                guard let document = editor.document, let layer = editor.captionsLayerInFocus else {
+                    throw Failure(description: "there is no Captions layer to have been reset")
+                }
+                let size = document.canvasSize
+                let fresh = CaptionLayers.defaultBox(in: size, fontSize: CaptionLook.standard.resolvedFontSize(in: size))
+                guard layer.captionsLook == .standard, layer.frame == fresh else {
+                    throw Failure(description: "the Captions layer is at \(layer.frame) in "
+                                  + "\(layer.captionsLook?.preset.title ?? "no look"), not reset to \(fresh)")
+                }
+                note(number, step.name, "captions: reset to the standard look at \(fresh)", state: describe())
             case .captionsExpectLitWord:
                 guard let shown = editor.document?.drawn(atTimeMS: editor.documentTimeMS),
                       let lit = shown.allLayers.first(where: { $0.isCaption && $0.isVisible }),
@@ -4438,6 +4465,7 @@ private final class Run {
                  .captionsStyleKaraoke, .captionsPositionTop, .captionsPositionBottom,
                  .captionsExpectOneLayerPicked, .captionsExpectMovedTogether,
                  .captionsExpectLitWord, .captionsExportFiles, .captionsAutoOff,
+                 .captionsExpectGuides, .captionsExpectNoGuides, .captionsExpectReset,
                  .captionsSeekIntoNextWord, .captionsStepIntoWord, .captionsExpectOneWordPopping,
                  .captionsAutoOn, .captionsExpectEditingOnCanvas,
                  .captionsWriteFilmWithFileBeside,

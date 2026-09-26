@@ -63,6 +63,23 @@ struct TimePanelOrderTests {
         #expect(TimePanelOrder.role(of: Self.sound()) == .heard)
     }
 
+    static func captions() -> Layer {
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 1920, height: 1080))
+        doc.addLayer(clip())
+        doc.landCaptions(CaptionCues.cues(from: [
+            TranscribedWord("Capture", startMS: 200, endMS: 700),
+            TranscribedWord("it.", startMS: 700, endMS: 1_200),
+        ]))
+        return doc.captionsLayers.first ?? still()
+    }
+
+    @Test func aCaptionsLayerIsForCaptioningAndSoIsOneOfItsCues() {
+        let layer = Self.captions()
+        #expect(layer.isCaptionsLayer)
+        #expect(TimePanelOrder.role(of: layer) == .captioned)
+        #expect(layer.children.first.flatMap { TimePanelOrder.role(of: $0) } == .captioned)
+    }
+
     @Test func aLayerWithNoTimeHasNoRoleAndTheOrderIsLeftAlone() {
         #expect(TimePanelOrder.role(of: Self.still()) == nil)
         #expect(TimePanelOrder.arrange(Self.saved, for: nil) == Self.saved)
@@ -86,6 +103,13 @@ struct TimePanelOrderTests {
     @Test func aSoundLeadsWithItsPropertiesThenItsLevelThenItsTime() {
         let order = TimePanelOrder.arrange(Self.saved, for: .heard)
         #expect(Array(order.prefix(5)) == ["layers", "keys", "sound", "fades", "speed"])
+    }
+
+    /// The captions mock opens its panel on the captions' own options, then
+    /// their style (`video-captions.html`, Properties).
+    @Test func aCaptionLeadsWithTheCaptionsOptionsThenItsType() {
+        let order = TimePanelOrder.arrange(Self.saved, for: .captioned)
+        #expect(Array(order.prefix(4)) == ["layers", "captions", "text", "keys"])
     }
 
     /// Fades sit straight under Sound wherever Sound leads, as the audio mock

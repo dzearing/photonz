@@ -3,7 +3,7 @@ import Foundation
 /// **In a document with time, the panel leads with what the picked layer is
 /// for.** A rule, not a list somebody keeps by hand.
 ///
-/// Every one of them opens on Properties (raw id `keys`): the clip line that
+/// Every one but captions opens on Properties (raw id `keys`): the clip line that
 /// names it and says when it runs, then what about it is animating, as
 /// `video.html` draws its dock (2026-09-25). After that:
 ///
@@ -12,6 +12,8 @@ import Foundation
 /// - A title, or anything else placed on the timeline, is for being ON SCREEN
 ///   and read: when it is on and how it fades (Time), its words (Text).
 /// - A sound is for being HEARD: its level (Sound), its fades, then its time.
+/// - Captions are for CAPTIONING: the captions' own options (Captions), then
+///   their type (Text), as the captions mock opens its panel.
 ///
 /// Those sections go straight under Layers, in that order. Everything else
 /// keeps the order the dock has saved, so a person's own arrangement of the
@@ -34,6 +36,8 @@ public enum TimePanelOrder {
         case onScreen
         /// A piece of sound.
         case heard
+        /// A Captions layer, or one of its cues.
+        case captioned
 
         /// The rule in words, for the design doc and a walk's log.
         public var purpose: String {
@@ -41,6 +45,7 @@ public enum TimePanelOrder {
             case .playing: "A clip is for playing: what is animating, how fast, how loud."
             case .onScreen: "A title is for being read: what is animating, when it is on, its words."
             case .heard: "A sound is for being heard: what is animating, its level, its fades, then its time."
+            case .captioned: "Captions are for reading along: their options, their type, then what is animating."
             }
         }
     }
@@ -54,12 +59,14 @@ public enum TimePanelOrder {
         case .playing: ["keys", "speed", "sound", "fades"]
         case .onScreen: ["keys", "speed", "text"]
         case .heard: ["keys", "sound", "fades", "speed"]
+        case .captioned: ["captions", "text", "keys"]
         }
     }
 
     /// What this layer is for, or nil when it has no time and the rule does
     /// not apply.
     public static func role(of layer: Layer) -> Role? {
+        if layer.isCaptionsLayer || layer.isCaption { return .captioned }
         guard layer.time != nil else { return nil }
         if layer.movie != nil { return .playing }
         if layer.sound != nil { return .heard }

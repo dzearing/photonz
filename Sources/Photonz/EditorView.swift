@@ -360,6 +360,9 @@ struct EditorView: View {
     private var canvas: some View {
         if editorState.hasDocument {
             EditorCanvasSurface()
+                // The safe-area guides and the AUTO · EN badge, under the word
+                // field so a word open for typing is never behind a guide.
+                .overlay(alignment: .topLeading) { CaptionGuidesOverlay() }
                 // One word of a caption, open for typing over itself.
                 .overlay(alignment: .topLeading) { CaptionWordCanvasOverlay() }
                 .overlay(alignment: .bottom) {

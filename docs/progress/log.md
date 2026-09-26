@@ -19775,3 +19775,9 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Fixed: Trim on a cut clip with a handle on/past a cut did nothing; handles now catch on cuts while snapping; the trimming bar draws cuts and the clip name.
 - Old-window guides and walks retired; the eleven trim walks run on the editor.
 - Next: the Crop slot flyout grouping question is still open.
+
+## 2026-09-26 — Captions: safe-area guides, the Auto badge and the Caption track bar
+
+- `CaptionGuides.swift` (core, tested first): `SafeAreaGuide` (action 93%, title 90%, the mock's labels), `CaptionBadge` ("Auto · en"), `CaptionTrackBar` readings, `PhotonzDocument.resetCaptions` (standard look, fresh box, words kept). `TimePanelOrder` gains `.captioned`: a picked Captions layer or cue leads with Captions, Text, Properties.
+- App: `CaptionGuidesOverlay` over the canvas (guides + AUTO · EN, only with captions and the timeline open), Guides row with a Safe areas button in the Captions section (one app-wide switch, on by default as the mock opens), `CaptionTrackBarView` over the ruler (Caption track, auto · word level, Clear, Reset, Active word, time), and Safe Areas / Reset Captions on the Captions track's right-click menu.
+- Walk `captions-guides-and-track-bar-walk` at Next defaults, 6 real captures. properties-pane-walk and fix-a-caption-word-walk fail on clean main too (logged on the standing walk task).

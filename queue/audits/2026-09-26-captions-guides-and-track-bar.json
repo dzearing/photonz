@@ -1,0 +1,28 @@
+{
+  "feature": "Captions: safe-area guides, the Auto badge and the Caption track bar",
+  "epic": "video-audio",
+  "summary": "With captions on a recording and the timeline open, title-safe and action-safe guides and an AUTO · EN badge sit over the picture, a Caption track bar over the timeline reads the word being said and the time with Clear and Reset, and picking the captions opens the panel on the Captions options.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording with speech and let its captions write themselves.",
+  "try": [
+    { "do": "Open the timeline (click the TIMELINE row under the transport, or press Option-Command-T).", "shot": "2026-09-26-captions-guides-1-guides-badge-and-bar-sc.png" },
+    { "do": "Scrub the playhead across the Words lane and watch Active word and the time in the Caption track bar." },
+    { "do": "Click the caption words on the picture to pick the Captions layer.", "shot": "2026-09-26-captions-guides-2-captions-first-in-the-panel-sc.png" },
+    { "do": "Click Safe areas in the Captions section's Guides row to hide the guides, then again to bring them back.", "shot": "2026-09-26-captions-guides-3-guides-off-sc.png" },
+    { "do": "Pick the Karaoke style and drag the captions to the top of the picture." },
+    { "do": "Click Reset in the Caption track bar.", "shot": "2026-09-26-captions-guides-5-reset-sc.png" },
+    { "do": "Right-click the Captions track header: Safe Areas and Reset Captions are there too." }
+  ],
+  "evaluate": [
+    "Should the guides and the badge stay hidden while a recording is open only to watch (timeline tucked), as they are now?",
+    "Is Reset putting the look and the place back, while leaving the words alone, what you expect Reset to do?",
+    "Does the Caption track bar belong at the top of the timeline, over the ruler, or would you rather it sat directly above the Captions track row?",
+    "Are the guide labels (8 pt, as the mock draws them) readable enough at your usual zoom?"
+  ],
+  "rough": [
+    "The mock calls the section 'Title / Text tool options'; here it stays the Captions section, with the app's Auto switch between Guides and Generate.",
+    "The mock's Reset says 'Reset this demo'. In the app it puts the Captions layer back in the standard look and the box a fresh one lands in, as one undo step.",
+    "The bar sits over the ruler rather than inside the track list, because a playhead line ran through its words when it sat directly above the Captions track.",
+    "The badge names the language set in the Captions section now, not the one the captions were first written in.",
+    "The Generate button still reads 'Write Ag...' at this panel width; that is owned by another open task."
+  ]
+}

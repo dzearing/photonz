@@ -302,6 +302,8 @@ extension EditorState {
             .submenu("Export Subtitles", CaptionFileFormat.allCases.map { format in
                 .command(format.title + "…", enabled: canExportCaptions) { self.exportCaptions(as: format) }
             }),
+            .toggle("Safe Areas", isOn: Self.showsSafeAreas) { self.toggleSafeAreas() },
+            .command("Reset Captions", enabled: canResetCaptions) { self.resetCaptions() },
             .command("Clear Captions", enabled: canClearCaptions, destructive: true) { self.clearCaptions() },
         ]
     }
