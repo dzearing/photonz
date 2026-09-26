@@ -1,0 +1,34 @@
+{
+  "id": "a-rotated-shape-keeps-its-rotation-when-you-move",
+  "title": "A rotated shape keeps its rotation when you move or resize it",
+  "goal": "User 2026-09-26: 'I rotate a rectangle. Then I move it or scale it and it loses its rotation.' Work lost on the most basic edit there is; Photoshop and every editor keep rotation through move and scale. Not yet known whether it happens on a plain picture, only on a video (where moves and scales can write keyframes that may not carry the rotation), or both; reproduce every case before fixing.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 0.002,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-26T13:57:27.112Z",
+  "updated": "2026-09-26T13:57:27.199Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Reproduced first with walks at Next defaults: rotate a rectangle 30 degrees, then move it by dragging, by arrow keys, and by the panel; then resize it from a corner handle, an edge handle, with Shift, and by the panel; on a screenshot document and on a recording, with and without keys already on the layer; record which cases drop the rotation",
+    "Core tests (PhotonzCore, written first) for every failing case: move and resize preserve rotation exactly; resize handles act in the shape's own rotated frame (dragging a corner of a rotated rectangle resizes along its rotated sides, as Photoshop's free transform does)",
+    "On a layer with keys, a move or resize at a new moment writes position/scale keys that carry the current rotation, never a rotation of zero; an unkeyed rotation stays static",
+    "The same holds for every shape kind (ellipse, line, arrow, path, text, image, sticker, component, group) and for multi-selection",
+    "Undo restores the exact pre-edit rotation",
+    "Walk photographs a rotated rectangle before and after each move and resize, on a picture and on a video"
+  ],
+  "log": [
+    {
+      "t": "2026-09-26T13:57:27.114Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-26T13:57:27.198Z",
+      "note": "seq 370 -> 0.002"
+    }
+  ]
+}
