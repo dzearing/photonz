@@ -288,6 +288,11 @@ extension Experiments {
     /// false and keeps one button per tool.
     var toolGroupsEnabled: Bool { isEnabled(FeatureCatalog.toolGroupsFlag) }
 
+    /// `next-video-tool-bar`: whether a document with time folds the tool bar
+    /// to the video's own row (`ToolBarFold.video`), everything else under
+    /// More. Rides on the families bar, so it needs `next-tool-groups` too.
+    var videoToolBarEnabled: Bool { isEnabled(FeatureCatalog.videoToolBarFlag) }
+
     /// `next-tool-bar-feedback`: whether the floating tool bar's buttons (and
     /// the inspector toggle) show the shared hover fill and pressed shrink of
     /// `IconActionButtonStyle`. Exists only in the Next release's catalog, so

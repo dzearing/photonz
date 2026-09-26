@@ -69,6 +69,8 @@ public enum FeatureCatalog {
 
     public static let toolGroupsFlag = "next-tool-groups"
 
+    public static let videoToolBarFlag = "next-video-tool-bar"
+
     public static let toolBarFeedbackFlag = "next-tool-bar-feedback"
 
     public static let toolTipsFlag = "next-tool-tips"
@@ -506,6 +508,16 @@ public enum FeatureCatalog {
                     name: toolGroupsFlag,
                     title: "Tool bar families",
                     description: "The floating tool bar groups its tools into families in a fixed order: pick, cut and measure the picture; draw on it; paint it. Line, Rectangle and Ellipse share one Shapes button that remembers the last one you used (Shift plus their letter cycles), and Resize Image moves into the Crop button's list and the Image menu. Off means one button per tool in the old order.",
+                    area: .tools,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: videoToolBarFlag,
+                    title: "A video has its own tool bar",
+                    description: "A document with time shows Select, Blade, Title / Text, Shape and Measure, and every other tool waits under More, still on its key. Off means a video shows the whole picture tool bar.",
                     area: .tools,
                     isEnabled: false,
                     parameters: []),

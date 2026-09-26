@@ -1,0 +1,29 @@
+{
+  "feature": "A video has its own tool bar",
+  "epic": "video-editing",
+  "summary": "A recording now opens with the video's five tools in the bar, Select, Blade, Title / Text, Shape and Measure, and every picture tool waits under More, still on its key. The bar's Blade is the timeline's Blade.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any screen recording.",
+  "try": [
+    { "do": "Open a recording and look at the tool bar: Select, Blade, Title / Text, Shape, Measure, then More.", "shot": "2026-09-26-video-tool-bar-1-the-video-tool-bar-sc.png" },
+    { "do": "Press G. Fill is in hand, More lights, and the pill under the picture says Fill, Under More.", "shot": "2026-09-26-video-tool-bar-2-a-folded-tool-by-its-key-sc.png" },
+    { "do": "Click the scissors in the tool bar. The timeline comes up and its own Blade lights too." },
+    { "do": "Press T. Title / Text is in hand and both Blades go out." },
+    { "do": "Click More and pick Arrow. The five slots stay put and More stays lit.", "shot": "2026-09-26-video-tool-bar-5-arrow-from-more-sc.png" },
+    { "do": "Click the picture, then press K. The Lens comes up from under More and the pill says so; press B and the Blade is back.", "shot": "2026-09-26-video-tool-bar-6-keys-from-the-canvas-sc.png" },
+    { "do": "Open a screenshot. Its tool bar is exactly the one it had before." }
+  ],
+  "evaluate": [
+    "Does the bar read as a video editor's tool strip the moment a recording opens?",
+    "When a folded tool is in hand, is a lit More button enough to tell you where it went, or should the tool show in the bar while you hold it?",
+    "Is Fill, Under More the right amount of words for a key that picked up a hidden tool?",
+    "Should picking a tool from the bar put the Blade down, as it does now, the way Premiere's tool strip works?"
+  ],
+  "rough": [
+    "A click on a clip with the Blade does not cut it, from this bar or the timeline's own. That was already so before this change, and no walk had ever checked it; it is filed as its own task.",
+    "The mock's Hand and Zoom are left out: the app has no such tools (space-drag and the zoom slider do those jobs).",
+    "The mock draws tools, colours and zoom in ONE glass bar; the app still draws separate capsules side by side, on pictures too. Filed as its own task.",
+    "The Blade wears the scissors the timeline's own Blade wears, not the mock's blade glyph, so the two read as one tool.",
+    "The mock's More holds only the three tools a narrow window pushes out; this More holds every other tool, as the task asked. Crop and Trim sit there together, still on C.",
+    "While the timeline has the keys, More's rows and Measure's tip leave off K, L, I, O, M, A and W, because those letters are the timeline's until you click the picture."
+  ]
+}

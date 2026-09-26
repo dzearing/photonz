@@ -453,6 +453,14 @@ struct FeatureCatalogTests {
         #expect(FeatureCatalog.toolGroupsFlag == "next-tool-groups")
     }
 
+    @Test func theVideoToolBarFlagIsNextOnlyAndOnByDefault() {
+        // A document with time folds the bar to Select, Blade, Title, Shape
+        // and Measure. Next only; Current's video keeps the picture's bar.
+        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.videoToolBarFlag))
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.videoToolBarFlag })
+        #expect(FeatureCatalog.videoToolBarFlag == "next-video-tool-bar")
+    }
+
     @Test func theToolBarFeedbackFlagIsNextOnlyAndOnByDefault() {
         // Tool bar buttons show the shared hover fill and pressed shrink that
         // every other icon button in the app has. Next only; Current keeps

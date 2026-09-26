@@ -177,6 +177,10 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// rarely where a person just let go, so without a word a clip that
         /// arrives somewhere else in time reads as a drop that did nothing.
         case clipAdded(name: String)
+        /// A tool's letter picked up a tool that is folded under More on this
+        /// bar (a document with time, `ToolBarFold`). The tool is in hand and
+        /// nothing on the bar shows it, so a word says where it lives.
+        case toolUnderMore(tool: String)
         /// ⌘T put nothing on (`DefaultTransition.swift`). A key that does
         /// nothing reads as a key that is broken, so it says why.
         case defaultTransitionRefused(DefaultTransitionRefusal)
@@ -333,6 +337,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .soundDetached: return "Sound taken off"
         case .soundAdded: return "Sound added"
         case .clipAdded: return "Clip added"
+        case .toolUnderMore(let tool): return tool
         case .defaultTransitionRefused: return "No transition added"
         case .defaultTransitionSet: return "Default transition"
         case .landedOnTrack(_, _, _, let isSound): return isSound ? "Sound added" : "Clip added"
@@ -391,6 +396,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "\u{2318}T now puts \(kind.title) on a cut"
         case .clipAdded(let name):
             return "\(name) is on the timeline at the playhead"
+        case .toolUnderMore:
+            return "Under More"
         case .landedOnTrack(let name, let track, let ms, _):
             return "\(name) is on \(track) at \(CaptionProgress.clock(ms))"
         case .mediaWouldNotOpen(let name):

@@ -37,6 +37,15 @@ import SwiftUI
         groups.removeValue(forKey: name)
     }
 
+    /// What the tool bar last drew: its slots in front by name, the rows under
+    /// its More button, and the one slot lit ("More" for a folded tool in
+    /// hand). Nil until a bar has drawn.
+    var slots: ToolBarSlotsReading?
+    /// What each row under More does, by its title: the same action the open
+    /// menu's row runs, so a walk can pick one without an open menu.
+    var moreRows: [String] = []
+    var pickMoreRow: (@MainActor (String) -> Void)?
+
     /// The groups on screen, left to right.
     var measured: [(name: String, frame: CGRect)] {
         order.compactMap { name in groups[name].map { (name, $0) } }
@@ -50,6 +59,31 @@ extension View {
     /// one that draws the capsule, so the measurement is the capsule.
     func toolBarGroupProbe(_ name: String) -> some View {
         modifier(ToolBarGroupProbe(name: name))
+    }
+}
+
+/// One reading of the tool bar's slots (`ToolBarLayoutProbe.slots`).
+struct ToolBarSlotsReading: Equatable {
+    var shown: [String]
+    var more: [String]
+    var lit: String?
+}
+
+extension View {
+    /// Records what the tool bar is showing, so a walk can read the slots back
+    /// by name rather than photographing them.
+    func toolBarSlotsProbe(shown: [String], more: [String], lit: String?) -> some View {
+        onChange(of: ToolBarSlotsReading(shown: shown, more: more, lit: lit), initial: true) { _, now in
+            ToolBarLayoutProbe.shared.slots = now
+        }
+    }
+
+    /// Registers what each row under More does (`ToolBarLayoutProbe.moreRows`).
+    func toolBarMoreProbe(_ rows: [String], pick: @escaping @MainActor (String) -> Void) -> some View {
+        onChange(of: rows, initial: true) { _, now in
+            ToolBarLayoutProbe.shared.moreRows = now
+            ToolBarLayoutProbe.shared.pickMoreRow = pick
+        }
     }
 }
 
@@ -74,6 +108,8 @@ private struct ToolBarGroupProbe: ViewModifier {
 
 extension View {
     func toolBarGroupProbe(_ name: String) -> some View { self }
+    func toolBarSlotsProbe(shown: [String], more: [String], lit: String?) -> some View { self }
+    func toolBarMoreProbe(_ rows: [String], pick: @escaping @MainActor (String) -> Void) -> some View { self }
 }
 
 #endif

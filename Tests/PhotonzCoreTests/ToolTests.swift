@@ -457,6 +457,7 @@ struct ToolBarLayoutTests {
                 let family = ToolGroup.containing(tool)?.tools ?? [tool]
                 for member in family { counts[member, default: 0] += 1 }
             case .group(let group): for tool in group.tools { counts[tool, default: 0] += 1 }
+            case .blade: break
             }
         }
         return counts

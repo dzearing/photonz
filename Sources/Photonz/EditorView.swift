@@ -782,7 +782,9 @@ struct EditorView: View {
             if editorState.isAdjustingGrid {
                 gridAdjustBar
             } else {
-                if toolbarVisibleCount >= toolbarSlots.count {
+                if let fold = videoFold {
+                    videoToolsBar(fold, visibleCount: toolbarVisibleCount)
+                } else if toolbarVisibleCount >= toolbarSlots.count {
                     toolsBar
                 } else {
                     compactToolsBar(visibleCount: toolbarVisibleCount)
@@ -1004,6 +1006,8 @@ struct EditorView: View {
         // the image instead of picking the tool.
         .contentShape(.capsule)
         .toolBarGroupProbe("Tools")
+        .toolBarSlotsProbe(shown: toolbarSlots.map(\.title), more: [],
+                           lit: activeSlot?.title)
         // One spring drives every toolbar transition: the accent circle
         // sliding between tools, conditional segments, and the capsule resize.
         .animation(.spring(duration: 0.3), value: editorState.activeTool)
@@ -1103,13 +1107,98 @@ struct EditorView: View {
         .glassEffect(.regular, in: .capsule)
         .contentShape(.capsule)
         .toolBarGroupProbe("Tools")
+        .toolBarSlotsProbe(shown: visible.map(\.title), more: overflow.map(\.title),
+                           lit: active?.title)
         .animation(.spring(duration: 0.3), value: editorState.activeTool)
+    }
+
+    /// The bar a document with time gets (`ToolBarFold.video`): Select, then
+    /// Blade, Title / Text and Shape, then Measure, with a More button that is
+    /// always there holding every other tool, as `video.html` draws it. A
+    /// narrow window folds the trailing slots into the same More. A folded
+    /// tool in hand does not jump into the row: the More button lights.
+    private func videoToolsBar(_ fold: ToolBarFold, visibleCount: Int) -> some View {
+        let front = toolbarSlots
+        let visible = Array(front.prefix(visibleCount))
+        let more = front.filter { !visible.contains($0) } + foldedSlots(fold)
+        let lit = fold.lit(activeTool: editorState.activeTool,
+                           bladeInHand: editorState.isTimelineBlade).map(ToolbarSlot.init)
+        let families = fold.shown.map { $0.map(ToolbarSlot.init).filter(visible.contains) }
+            .filter { !$0.isEmpty }
+        return HStack(spacing: 14) {
+            ForEach(Array(families.enumerated()), id: \.offset) { index, family in
+                if index > 0 { Divider().frame(height: 20) }
+                ForEach(family, id: \.self) { slotButton($0) }
+            }
+            if !more.isEmpty {
+                overflowMenu(more, lit: lit.map(more.contains) ?? false)
+            }
+            contextualToolOptions
+        }
+        .background { overflowShortcuts(more, announce: true) }
+        .background { magnifyShortcut }
+        .buttonStyle(.borderless)
+        .padding(.horizontal, 18)
+        .frame(height: EditorChromeLayout.toolBarGroupHeight)
+        .glassEffect(.regular, in: .capsule)
+        .contentShape(.capsule)
+        .toolBarGroupProbe("Tools")
+        .toolBarSlotsProbe(shown: visible.map(\.title), more: more.map(\.title),
+                           lit: lit.map { more.contains($0) ? "More" : $0.title })
+        .animation(.spring(duration: 0.3), value: editorState.activeTool)
+        .animation(.spring(duration: 0.3), value: editorState.isTimelineBlade)
+    }
+
+    /// The fold this window's bar uses, nil for the picture's whole bar. Only
+    /// a document with time folds, and only on the families bar it folds from.
+    private var videoFold: ToolBarFold? {
+        guard Experiments.shared.videoToolBarEnabled, Experiments.shared.toolGroupsEnabled,
+              editorState.documentHasTime else { return nil }
+        return .video(of: ToolBarLayout.bar(withFrame: Experiments.shared.framesEnabled,
+                                            withLens: Experiments.shared.lensEnabled,
+                                            withPen: Experiments.shared.penEnabled))
+    }
+
+    /// The slots under a video's More, in bar order. Resize stays beside Crop
+    /// while the Crop flyout is not there to hold it.
+    private func foldedSlots(_ fold: ToolBarFold) -> [ToolbarSlot] {
+        var slots = fold.folded.map(ToolbarSlot.init)
+        if !Experiments.shared.toolOptionsEnabled, let crop = slots.firstIndex(of: .crop) {
+            slots.insert(.resize, at: crop + 1)
+        }
+        return slots
+    }
+
+    /// Whether the bar may print `key` beside a tool. On a video the letters
+    /// the timeline takes while it has the keyboard only reach their tool once
+    /// the picture is clicked, so they are not promised until then.
+    private func barTeachesKey(_ key: Character?) -> Bool {
+        guard let key, videoFold != nil, editorState.timelineHasKeyboard else { return true }
+        return TimelineKeys.leavesToTheCanvas(key)
+    }
+
+    private func barTeachesKey(of tool: Tool) -> Bool { barTeachesKey(tool.shortcutKey) }
+
+    /// The Blade on a video's bar: the timeline's own Blade, lit whichever bar
+    /// armed it. B arms it from the canvas; while the timeline has the
+    /// keyboard the timeline's B gets there first and does the same.
+    private var bladeButton: some View {
+        Button {
+            armBladeFromBar()
+        } label: {
+            Image(systemName: "scissors").font(.system(size: 15, weight: .medium))
+        }
+        .buttonStyle(.tool(isActive: editorState.isTimelineBlade, in: toolbarNamespace))
+        .toolTip("Blade", key: "B", fallback: "Blade (B)")
+        .accessibilityLabel("Blade")
+        .playtestControl("Blade", detail: "the tool bar")
+        .keyboardShortcut("b", modifiers: [])
     }
 
     /// The trailing "…" menu that lists the tools that didn't fit. Picking one
     /// activates it (and, since the active tool is never overflowed, it then
     /// pops back into the visible row).
-    private func overflowMenu(_ slots: [ToolbarSlot]) -> some View {
+    private func overflowMenu(_ slots: [ToolbarSlot], lit: Bool = false) -> some View {
         Menu {
             ForEach(slots, id: \.self) { slot in
                 Button {
@@ -1122,17 +1211,23 @@ struct EditorView: View {
                 // hiding it. Nothing here fires: a SwiftUI Menu cannot carry a
                 // shortcut for a closed menu, which is what the stand-ins below
                 // are for.
-                .keyboardShortcut(slot.keyEquivalent.map { KeyboardShortcut($0, modifiers: []) })
+                .keyboardShortcut(barTeachesKey(slot.shortcutKey)
+                    ? slot.keyEquivalent.map { KeyboardShortcut($0, modifiers: []) } : nil)
             }
         } label: {
             Image(systemName: "ellipsis")
                 .font(.system(size: 15, weight: .semibold))
         }
         .menuStyle(.button)
-        .buttonStyle(.tool())
+        // Lit while the tool in hand is one of the rows: a video's bar keeps
+        // its five slots still, so this is where a folded tool shows it is up.
+        .buttonStyle(.tool(isActive: lit, in: lit ? toolbarNamespace : nil))
         .menuIndicator(.hidden)
         .fixedSize()
         .toolTip("More tools")
+        .toolBarMoreProbe(slots.map(\.title)) { title in
+            if let slot = slots.first(where: { $0.title == title }) { activateSlot(slot) }
+        }
         // Where a guide's ring lands when the tool a step names has been
         // pushed off the bar by a narrow window. Only on the bar while
         // something really is in here, which is exactly when a step needs it
@@ -1219,6 +1314,8 @@ struct EditorView: View {
         case pen
         /// Line, Rectangle and Ellipse as one family. Only in the grouped bar.
         case shapes
+        /// The timeline's Blade, on a video's bar (`ToolBarFold.video`).
+        case blade
 
         /// The slot for one entry of `ToolBarLayout`.
         init(_ entry: ToolBarLayout.Entry) {
@@ -1229,6 +1326,7 @@ struct EditorView: View {
             // (`docs/design/video-surface.md` §10.2): no slot moves, and the
             // family lives inside the button rather than beside it.
             case .group(.bounds): self = .crop
+            case .blade: self = .blade
             case .tool(let tool): self = ToolbarSlot.allCases.first { $0.tool == tool } ?? .select
             }
         }
@@ -1262,6 +1360,7 @@ struct EditorView: View {
             case .fill: "Fill"
             case .frame: "Frame"
             case .pen: "Pen"
+            case .blade: "Blade"
             }
         }
 
@@ -1285,6 +1384,7 @@ struct EditorView: View {
             case .fill: "drop"
             case .frame: "macwindow"
             case .pen: "pencil.tip"
+            case .blade: "scissors"
             }
         }
 
@@ -1297,6 +1397,7 @@ struct EditorView: View {
             case .marquee: "m"
             // Each shape keeps its own letter, so the family prints none.
             case .shapes, .resize: nil
+            case .blade: "b"
             default: tool?.shortcutKey
             }
         }
@@ -1321,7 +1422,7 @@ struct EditorView: View {
             case .fill: .fill
             case .frame: .frame
             case .pen: .pen
-            case .marquee, .shapes, .resize: nil
+            case .marquee, .shapes, .resize, .blade: nil
             }
         }
     }
@@ -1336,10 +1437,11 @@ struct EditorView: View {
         let pen = Experiments.shared.penEnabled
         guard Experiments.shared.toolGroupsEnabled else {
             return ToolbarSlot.allCases.filter {
-                $0 != .shapes && ($0 != .frame || frames) && ($0 != .lens || lens)
+                $0 != .shapes && $0 != .blade && ($0 != .frame || frames) && ($0 != .lens || lens)
                     && ($0 != .zoomCallout || !lens) && ($0 != .pen || pen)
             }
         }
+        if let fold = videoFold { return fold.shownEntries.map(ToolbarSlot.init) }
         var slots = ToolBarLayout.bar(withFrame: frames, withLens: lens, withPen: pen)
             .entries.map(ToolbarSlot.init)
         if !Experiments.shared.toolOptionsEnabled, let crop = slots.firstIndex(of: .crop) {
@@ -1372,12 +1474,13 @@ struct EditorView: View {
                 selectionGroupButton
             }
         case .shapes: groupButton(.shapes)
+        case .blade: bladeButton
         case .arrow: toolButton(.arrow, "arrow.up.right", "Arrow")
         case .line: toolButton(.line, "line.diagonal", "Line")
         case .rectangle: toolButton(.rectangle, "rectangle", "Rectangle")
         case .ellipse: toolButton(.ellipse, "circle", "Ellipse")
         case .highlight: toolButton(.highlight, "highlighter", "Highlight")
-        case .text: toolButton(.text, "character.cursor.ibeam", "Text")
+        case .text: toolButton(.text, "character.cursor.ibeam", videoFold == nil ? "Text" : "Title / Text")
         case .crop: cropToolButton
         case .resize: resizeButton
         case .zoomCallout: toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout")
@@ -1400,7 +1503,7 @@ struct EditorView: View {
     /// its own rows either (the same limitation the selection group works
     /// around below), so the overflowed slots get invisible stand-ins. Only
     /// the OVERFLOWED ones, so a letter is never registered twice.
-    private func overflowShortcuts(_ slots: [ToolbarSlot]) -> some View {
+    private func overflowShortcuts(_ slots: [ToolbarSlot], announce: Bool = false) -> some View {
         ZStack {
             ForEach(slots, id: \.self) { slot in
                 // A family slot stands for several tools, so it carries the
@@ -1410,17 +1513,26 @@ struct EditorView: View {
                 // is how a second press of M could go nowhere.
                 if let group = slot.group {
                     ToolGroupShortcuts(group: group,
-                                       pick: { pickWithKey($0, in: group) },
-                                       cycle: { cycleGroup(group) })
+                                       pick: { pickWithKey($0, in: group); if announce { sayUnderMore() } },
+                                       cycle: { cycleGroup(group); if announce { sayUnderMore() } })
                 } else if let key = slot.keyEquivalent {
-                    Button("") { activateSlot(slot) }
-                        .keyboardShortcut(key, modifiers: [])
+                    Button("") {
+                        activateSlot(slot)
+                        if announce { sayUnderMore() }
+                    }
+                    .keyboardShortcut(key, modifiers: [])
                 }
             }
         }
         .opacity(0)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+
+    /// A key picked up a tool that is folded under More: the pill under the
+    /// canvas names it and says where it lives, since nothing on the bar does.
+    private func sayUnderMore() {
+        editorState.raiseCanvasNotice(.toolUnderMore(tool: editorState.activeTool.barTitle))
     }
 
     /// Z, once the Zoom Callout has become the Lens set to Magnify.
@@ -1449,13 +1561,42 @@ struct EditorView: View {
     private func activateSlot(_ slot: ToolbarSlot) {
         switch slot {
         case .resize: editorState.isResizeDialogPresented = true
+        case .blade: armBladeFromBar()
         default:
             if let group = slot.group {
-                editorState.setTool(editorState.lastTool(in: group))
+                pickFromBar(editorState.lastTool(in: group))
             } else if let tool = slot.tool {
-                editorState.setTool(tool)
+                pickFromBar(tool)
             }
         }
+    }
+
+    /// A tool picked from the bar, by a click or its key. On a video's bar
+    /// that also puts the Blade down: one tool in hand at a time, the way
+    /// Premiere's tool strip works, so the bar never has two slots lit.
+    private func pickFromBar(_ tool: Tool) {
+        editorState.setTool(tool)
+        if videoFold != nil, editorState.isTimelineBlade { editorState.isTimelineBlade = false }
+    }
+
+    /// The Blade, from the bar: the same Blade the timeline's own bar holds.
+    /// The canvas goes back to Select, because a click on the picture has
+    /// nothing to cut, and a tucked-away timeline comes up to be cut on.
+    private func armBladeFromBar() {
+        editorState.setTool(.select)
+        editorState.perform(timelineCommand: .bladeTool)
+    }
+
+    /// Whether the bar lights `tool`'s button. On a video's bar the Blade in
+    /// hand outranks the canvas tool (`ToolBarFold.lit`).
+    private func barLights(_ tool: Tool) -> Bool {
+        editorState.activeTool == tool && !(videoFold != nil && editorState.isTimelineBlade)
+    }
+
+    /// Whether the bar lights the family's slot.
+    private func barLights(_ group: ToolGroup) -> Bool {
+        ToolGroup.containing(editorState.activeTool) == group
+            && !(videoFold != nil && editorState.isTimelineBlade)
     }
 
     /// One family of tools as one slot: the button wears the member used
@@ -1464,11 +1605,11 @@ struct EditorView: View {
         ToolGroupButton(
             group: group,
             remembered: editorState.lastTool(in: group),
-            isActive: ToolGroup.containing(editorState.activeTool) == group,
+            isActive: barLights(group),
             namespace: toolbarNamespace,
             hint: hint,
-            activate: { editorState.setTool($0) },
-            pickRemembered: { editorState.setTool(editorState.lastTool(in: group)) },
+            activate: { pickFromBar($0) },
+            pickRemembered: { pickFromBar(editorState.lastTool(in: group)) },
             pick: { pickWithKey($0, in: group) },
             cycle: { cycleGroup(group) })
         // A family slot answers to the member it is wearing right now, which is
@@ -1488,13 +1629,13 @@ struct EditorView: View {
     private func pickWithKey(_ key: Character, in group: ToolGroup) {
         guard let tool = group.tool(forKey: key, active: editorState.activeTool,
                                     remembered: editorState.lastTool(in: group)) else { return }
-        editorState.setTool(tool)
+        pickFromBar(tool)
     }
 
     /// Shift plus a family letter: the member after the one the family's
     /// button stands for. Read live, never from a rendered snapshot.
     private func cycleGroup(_ group: ToolGroup) {
-        editorState.setTool(group.next(after: editorState.lastTool(in: group)))
+        pickFromBar(group.next(after: editorState.lastTool(in: group)))
     }
 
     /// The colour capsule, and only for a tool that puts colour on the picture.
@@ -1998,19 +2139,20 @@ struct EditorView: View {
         return ToolModeButton(
             toolTitle: "Measure",
             key: Tool.measure.keyEquivalent,
-            isActive: editorState.activeTool == .measure,
+            showsKey: barTeachesKey(of: .measure),
+            isActive: barLights(.measure),
             modes: modes.map {
                 ToolMode(mode: $0, title: $0.title, symbol: $0.symbol, help: $0.help)
             },
             selection: $state.measureToolMode,
             namespace: toolbarNamespace,
-            activate: { editorState.setTool(.measure) },
+            activate: { pickFromBar(.measure) },
             pressedKey: {
                 // Read the tool live: I picks Measure up, and once it is in hand
                 // the same key walks the modes.
                 guard editorState.activeTool == .measure,
                       Experiments.shared.measureModesEnabled else {
-                    editorState.setTool(.measure)
+                    pickFromBar(.measure)
                     return
                 }
                 editorState.measureToolMode = editorState.measureToolMode
@@ -2749,13 +2891,13 @@ struct EditorView: View {
     private func toolButton(_ tool: Tool, help: String,
                             modifiers: EventModifiers = [],
                             @ViewBuilder icon: () -> some View) -> some View {
-        let isActive = editorState.activeTool == tool
+        let isActive = barLights(tool)
         let shiftHint = modifiers.contains(.shift) ? "⇧" : ""
-        let keyLabel = tool.shortcutHint.map { "\(shiftHint)\($0)" }
+        let keyLabel = barTeachesKey(of: tool) ? tool.shortcutHint.map { "\(shiftHint)\($0)" } : nil
         let keyHint = keyLabel.map { " (\($0))" } ?? ""
         let key = tool.keyEquivalent
         return Button {
-            editorState.setTool(tool)
+            pickFromBar(tool)
         } label: {
             icon()
         }

@@ -82,6 +82,11 @@ struct ToolModeButton<Mode: Hashable>: View {
     /// Comes from `Tool.shortcutKey`; nil for a tool whose letter is resolved
     /// by a group rather than by the tool itself.
     let key: KeyEquivalent?
+    /// Whether the tip and the list print the key. False on a video while the
+    /// timeline has the keyboard and the letter is the timeline's
+    /// (`TimelineKeys.leavesToTheCanvas`): the key still works once the
+    /// picture is clicked, and a tip must not promise it before then.
+    var showsKey: Bool = true
     /// Whether this tool is the one in hand.
     let isActive: Bool
     /// Every mode on offer, in cycle order. One entry means no menu.
@@ -130,7 +135,8 @@ struct ToolModeButton<Mode: Hashable>: View {
     }
 
     private var keyLabel: String? {
-        key.map { String(describing: $0.character).uppercased() }
+        guard showsKey else { return nil }
+        return key.map { String(describing: $0.character).uppercased() }
     }
 
     /// " (A)", or nothing at all when the tool has no letter of its own.

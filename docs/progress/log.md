@@ -19788,3 +19788,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - App: `EditorState.timelineTool` (`isTimelineBlade` kept as a computed view), A picks the tool and opens a tucked timeline, V puts it down; a third button in the timeline bar; `TimelineTrackSelect` press target per clip (⇧ = its track only); a body drag on any clip in a multi-pick carries every picked clip as one undo step (`ClipBarDragSession.along`), Select included; Select Forward on the clip menu.
 - Walk `track-select-forward-walk` at Next defaults via a new `dragClip` step (drives the editor like `dragTiming`), 5 real captures, audit written.
 - Found: posted `windowDrag`s never reach timeline clips, so walks using them pass without moving anything. Filed `walks-that-drag-a-clip-on-the-timeline-by-window`.
+
+## 2026-09-26 — A video has its own tool bar
+
+- A document with time folds the tool bar to Select | Blade, Title / Text, Shape | Measure, with a More button that is always there holding every other tool (`ToolBarFold` in `PhotonzCore/ToolBarLayout.swift`, tested in `VideoToolBarTests`; flag `next-video-tool-bar`, on in Next). The fold is by slot, so a family is never split; a mode can reuse it.
+- The bar's Blade (`ToolBarLayout.Entry.blade`) is the timeline's `timelineTool`; one slot lit at a time, any bar pick puts the Blade down, B arms it from the canvas too. A folded tool picked by its key raises the canvas pill "<Tool> · Under More" (`CopyConfirmation.Subject.toolUnderMore`); More lights while a folded tool is in hand.
+- `TimelineKeys.leavesToTheCanvas` decides which letters the bar may print while the timeline has the keyboard.
+- Walk: `video-tool-bar-walk` (Next defaults). The `toolBar` step now claims `slots`, `more`, `lit` and can `choose` a More row.
+- Found: a Blade click on a clip never cuts (pre-existing, never checked by a walk) → `a-click-on-a-clip-with-the-blade-cuts-it-there`. The mock's one glass bar → `the-floating-tool-bar-is-one-glass-bar-as-the-mo`.

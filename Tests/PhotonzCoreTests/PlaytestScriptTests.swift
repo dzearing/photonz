@@ -20,13 +20,31 @@ struct PlaytestScriptTests {
         { "steps": [ { "do": "toolBar", "stage": "a" },
                      { "do": "toolBar", "stage": "b", "clearOfPicture": true } ] }
         """)
-        guard case .toolBar(let first, let unclaimed) = script.steps[0],
-              case .toolBar(_, let claimed) = script.steps[1] else {
+        guard case .toolBar(let first, let unclaimed, _) = script.steps[0],
+              case .toolBar(_, let claimed, _) = script.steps[1] else {
             Issue.record("toolBar"); return
         }
         #expect(first == "a")
         #expect(unclaimed == nil)
         #expect(claimed == true)
+    }
+
+    @Test("A toolBar step can claim the slots in front, the rows under More and the lit slot")
+    func toolBarCanClaimItsSlots() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "toolBar", "stage": "a" },
+                     { "do": "toolBar", "stage": "b", "slots": ["Select", "Blade"],
+                       "more": ["Arrow"], "lit": "Blade", "choose": "Arrow" } ] }
+        """)
+        guard case .toolBar(_, _, let none) = script.steps[0],
+              case .toolBar(_, _, let claim?) = script.steps[1] else {
+            Issue.record("toolBar"); return
+        }
+        #expect(none == nil)
+        #expect(claim.slots == ["Select", "Blade"])
+        #expect(claim.more == ["Arrow"])
+        #expect(claim.lit == "Blade")
+        #expect(claim.choose == "Arrow")
     }
 
     @Test("A writePicture step leaves the canvas out unless the walk asks for it")

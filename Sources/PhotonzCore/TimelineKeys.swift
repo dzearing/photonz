@@ -111,6 +111,19 @@ public enum TimelineKeys {
     /// How many frames ⇧← and ⇧→ travel: Premiere's five.
     public static let shiftStepFrames = 5
 
+    /// Whether a plain press of `letter` still reaches its picture tool while
+    /// the timeline has the keyboard. False for the letters the timeline
+    /// takes (K, L, I, O, M, A, W, B...); true for V, which puts the
+    /// timeline's tool down and carries on to Select, and for every letter the
+    /// timeline has no use for. A surface teaching a tool's letter on a video
+    /// asks this before promising it.
+    public static func leavesToTheCanvas(_ letter: Character) -> Bool {
+        switch command(for: TimelineKeyPress(key: .letter(letter)), timelineFocused: true) {
+        case nil, .selectTool?: true
+        default: false
+        }
+    }
+
     /// What a press does, or nil where the timeline leaves it to whatever
     /// would have had it anyway.
     ///

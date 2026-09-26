@@ -3133,7 +3133,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `clearOfPicture: true` also claims the bar sits wholly below the
     /// document's frame on the canvas, so nothing that was fitted is under it,
     /// and fails the walk when the two overlap.
-    case toolBar(stage: String, clearOfPicture: Bool?)
+    ///
+    /// `slots`, `more` and `lit` claim what the bar is made of: the slots in
+    /// front by name, left to right; the rows under its More button; and the
+    /// one slot lit (a slot under More lights as "More"). Each left out is not
+    /// claimed. `choose` picks a row under More first.
+    case toolBar(stage: String, clearOfPicture: Bool?, claim: PlaytestToolBarClaim?)
     /// Write the measured frame of every icon parked on the inspector panel's
     /// trailing edge to the log and to `panel-edge-<stage>.json`: each one's
     /// centre line, given as a distance in from the panel's own right edge.
@@ -4245,8 +4250,14 @@ public enum PlaytestStep: Sendable, Equatable {
         case "menus":
             self = .menus(stage: try f.string("stage"), menu: try f.optionalString("menu"))
         case "toolBar":
+            let slots = f.has("slots") ? try f.optionalStrings("slots") : nil
+            let more = f.has("more") ? fields["more"] as? [String] : nil
+            let lit = try f.optionalString("lit")
+            let choose = try f.optionalString("choose")
+            let claim = slots == nil && more == nil && lit == nil && choose == nil
+                ? nil : PlaytestToolBarClaim(slots: slots, more: more, lit: lit, choose: choose)
             self = .toolBar(stage: try f.string("stage"),
-                            clearOfPicture: try f.optionalFlag("clearOfPicture"))
+                            clearOfPicture: try f.optionalFlag("clearOfPicture"), claim: claim)
         case "panelEdge":
             self = .panelEdge(stage: try f.string("stage"))
         case "panelStart":
@@ -4444,5 +4455,27 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
         open != nil || tool != nil || timelineTool != nil || snapping != nil || playheadMS != nil || keyboard != nil || rate != nil || blade != nil || markInMS != nil
             || markOutMS != nil || hasIn != nil || hasOut != nil || markers != nil
             || rulerMatches != nil || rulerAtPlayhead != nil || lengthMS != nil
+    }
+}
+
+/// What a `toolBar` step claims the bar is made of. Nil fields are not claimed.
+public struct PlaytestToolBarClaim: Hashable, Sendable {
+    /// The slots in front, by name, left to right.
+    public var slots: [String]?
+    /// The rows under the bar's More button, top to bottom. Empty claims the
+    /// bar has no More at all.
+    public var more: [String]?
+    /// The one lit slot's name; "More" when the tool in hand is folded.
+    public var lit: String?
+    /// A row under More to pick BEFORE anything is read, the way a person
+    /// picks it from the open menu (the row's own action, run in the app).
+    public var choose: String?
+
+    public init(slots: [String]? = nil, more: [String]? = nil, lit: String? = nil,
+                choose: String? = nil) {
+        self.slots = slots
+        self.more = more
+        self.lit = lit
+        self.choose = choose
     }
 }

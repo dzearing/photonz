@@ -149,6 +149,10 @@ public struct ToolBarLayout: Hashable, Sendable {
     public enum Entry: Hashable, Sendable {
         case tool(Tool)
         case group(ToolGroup)
+        /// The timeline's Blade. Not a canvas tool (a click on the picture has
+        /// nothing to cut), so it is not a `Tool`: it is the same Blade the
+        /// timeline's own bar holds, and only a document with time shows it.
+        case blade
     }
 
     public let families: [[Entry]]
@@ -211,5 +215,83 @@ public struct ToolBarLayout: Hashable, Sendable {
             drawing,
             [.tool(.fill)],
         ])
+    }
+}
+
+/// A tool bar with some of its slots in front and the rest folded under More.
+///
+/// The fold is by SLOT, so a family is never split: naming one member of a
+/// family keeps the whole family in front (`docs/design/modes.md` §2). Every
+/// folded tool keeps its key and its row under More; nothing is removed. A
+/// document with time uses it for the bar `video.html` draws, and a mode
+/// written down as a record can reuse it for its own front row.
+public struct ToolBarFold: Hashable, Sendable {
+    /// The slots in front, in families, a hairline between each.
+    public let shown: [[ToolBarLayout.Entry]]
+    /// Every slot of the full bar that is not in front, in bar order.
+    public let folded: [ToolBarLayout.Entry]
+
+    /// Folds `layout` down to `front`. A front slot the layout does not hold
+    /// (the Blade, which only a document with time has) is kept as it is.
+    public init(_ layout: ToolBarLayout, front: [[ToolBarLayout.Entry]]) {
+        var seen: Set<ToolBarLayout.Entry> = []
+        var shown: [[ToolBarLayout.Entry]] = []
+        for family in front {
+            var kept: [ToolBarLayout.Entry] = []
+            for entry in family {
+                let slot = Self.slot(for: entry, in: layout)
+                if seen.insert(slot).inserted { kept.append(slot) }
+            }
+            if !kept.isEmpty { shown.append(kept) }
+        }
+        self.shown = shown
+        self.folded = layout.entries.filter { !seen.contains($0) }
+    }
+
+    /// The slot in `layout` that `entry` stands for: a member of a family is
+    /// the family's slot, so asking for Rectangle keeps all three shapes.
+    private static func slot(for entry: ToolBarLayout.Entry,
+                             in layout: ToolBarLayout) -> ToolBarLayout.Entry {
+        switch entry {
+        case .tool(let tool): layout.entry(for: tool) ?? entry
+        case .group(let group): group.tools.lazy.compactMap { layout.entry(for: $0) }.first ?? entry
+        case .blade: entry
+        }
+    }
+
+    /// The front row every document with time gets: Select, then Blade,
+    /// Title / Text and Shape, then Measure (UX-PATTERNS D4, video). The mock's
+    /// Hand and Zoom are not tools in this app (space-drag and the zoom slider
+    /// do those jobs), so they are not here.
+    public static let videoFront: [[ToolBarLayout.Entry]] = [
+        [.tool(.select)],
+        [.blade, .tool(.text), .group(.shapes)],
+        [.tool(.measure)],
+    ]
+
+    /// `layout`, folded to the video's front row.
+    public static func video(of layout: ToolBarLayout) -> ToolBarFold {
+        ToolBarFold(layout, front: videoFront)
+    }
+
+    /// Every slot in front, families flattened.
+    public var shownEntries: [ToolBarLayout.Entry] { shown.flatMap { $0 } }
+
+    /// The slot, in front or under More, that stands for `tool`.
+    public func entry(for tool: Tool) -> ToolBarLayout.Entry? {
+        ToolBarLayout(families: shown + [folded]).entry(for: tool)
+    }
+
+    /// Whether `tool` lives under More.
+    public func isFolded(_ tool: Tool) -> Bool {
+        entry(for: tool).map(folded.contains) ?? false
+    }
+
+    /// The one slot that is lit. The Blade in hand outranks the canvas tool,
+    /// because arming it is putting everything else down, and a bar with two
+    /// tools lit is a bar that cannot say which one a click will use.
+    public func lit(activeTool: Tool, bladeInHand: Bool) -> ToolBarLayout.Entry? {
+        if bladeInHand, shownEntries.contains(.blade) { return .blade }
+        return entry(for: activeTool)
     }
 }

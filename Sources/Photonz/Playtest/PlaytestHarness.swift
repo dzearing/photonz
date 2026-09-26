@@ -1991,13 +1991,33 @@ private final class Run {
         case .reveal(let control, let inRow):
             try await reveal(control, in: inRow, number: number)
 
-        case .toolBar(let stage, let clearOfPicture):
+        case .toolBar(let stage, let clearOfPicture, let claim):
+            if let choose = claim?.choose {
+                let rows = ToolBarLayoutProbe.shared.moreRows
+                guard rows.contains(choose), let pick = ToolBarLayoutProbe.shared.pickMoreRow else {
+                    throw Failure(description: "there is no row called \"\(choose)\" under More; the rows are "
+                        + (rows.isEmpty ? "none" : rows.joined(separator: ", ")))
+                }
+                pick(choose)
+                await sleep(0.3)
+            }
             var row = Self.readToolBar()
             var said = Self.outlineToolBar(row)
             if clearOfPicture == true {
                 let (clear, verdict) = try readToolBarClearOfPicture()
                 row["clearOfPicture"] = clear
                 said += "; " + verdict
+            }
+            if let reading = ToolBarLayoutProbe.shared.slots {
+                row["slots"] = reading.shown
+                row["more"] = reading.more
+                row["lit"] = reading.lit ?? NSNull()
+                said += "; slots " + reading.shown.joined(separator: ", ")
+                    + "; under More " + (reading.more.isEmpty ? "nothing" : reading.more.joined(separator: ", "))
+                    + "; lit " + (reading.lit ?? "nothing")
+            }
+            if let claim {
+                try checkToolBar(claim, against: ToolBarLayoutProbe.shared.slots)
             }
             write(json: row, to: "toolbar-\(stage).json")
             note(number, step.name, said, state: row)
@@ -7236,6 +7256,26 @@ private final class Run {
             }
             return "a click \(where_) is taken by \(took), over the picture"
         }
+    }
+
+    /// What the tool bar claims to be made of, against what it last drew.
+    private func checkToolBar(_ claim: PlaytestToolBarClaim, against reading: ToolBarSlotsReading?) throws {
+        guard let reading else {
+            throw Failure(description: "the tool bar has not said what it is showing, so there is nothing to check")
+        }
+        var wrong: [String] = []
+        if let want = claim.slots, want != reading.shown {
+            wrong.append("its slots are " + reading.shown.joined(separator: ", ")
+                + ", not " + want.joined(separator: ", "))
+        }
+        if let want = claim.more, want != reading.more {
+            wrong.append("under More it has " + (reading.more.isEmpty ? "nothing" : reading.more.joined(separator: ", "))
+                + ", not " + (want.isEmpty ? "nothing" : want.joined(separator: ", ")))
+        }
+        if let want = claim.lit, want != reading.lit {
+            wrong.append("it lights \(reading.lit ?? "nothing"), not \(want)")
+        }
+        guard wrong.isEmpty else { throw Failure(description: "the tool bar: " + wrong.joined(separator: "; ")) }
     }
 
     /// What the notice pill under the canvas is saying right now.
