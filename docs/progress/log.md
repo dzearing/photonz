@@ -19805,3 +19805,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - `Scripts/probe-app.sh` now says `· a system alert is in front` on its Grants line with what to do, and a walk that fails while one is up says so in its error (`PlaytestHarness.systemAlertInFront`).
 - the-timeline-is-the-one-in-the-mock-walk and video-tool-bar-walk now check the Blade click: 2 pieces and the playhead at the click, then a click on the linked sound makes 3.
 - Asked for a full sweep: the 02:19 one (27 failed) was measured behind the alert.
+
+## 2026-09-26 — A turned shape keeps its turn when moved or resized
+
+- User report: a rotated rectangle loses its rotation when moved or scaled. Walked every case (drag, arrows, corner, edge, Shift, panel X/W; picture and recording; Position, Scale, Rotation keyed). The stored angle survived every unkeyed case.
+- Bug 1, what the user saw: the picture floated under the pointer during a drag was the turned drawing cut to the upright box, so corners were sliced flat until mouse-up. Now padded by the turned reach (`Layer.dragSpritePadding`); a turned layer's resize re-renders live rather than stretching a sprite with the turn baked in (`resizeScalesUniformly`).
+- Bug 2, keyed video: a move or resize where the Rotation keys had turned the layer wrote the stored angle back as a new key. The edit now lands on the pose (`PhotonzDocument.editPosedForCanvas`).
+- Walks: `a-turned-shape-keeps-its-turn-walk`, `a-turned-shape-keeps-its-turn-on-a-video-walk`. The harness tree prints `turned N°` and, for keyed layers, `drawn turned N°`.
+- Found: undo after a drag with Position and Size open takes two steps → `undo-after-a-drag-puts-a-shape-back-where-it-was` (p2, reproduced).
