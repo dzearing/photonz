@@ -114,4 +114,57 @@ public enum SoundFile {
         if samplesInBucket > 0 { peaks.append(min(1, loudest)) }
         return peaks
     }
+
+    // MARK: - How loud it is
+
+    /// The integrated loudness, in LUFS, of the stretches of a file a segment
+    /// plays (`LoudnessMeter`), or nil where the file has no sound or those
+    /// stretches are silence. What Normalize Loudness measures before it sets
+    /// the gain, read off the file itself because a waveform's peaks say
+    /// nothing about how loud something sounds.
+    public static func loudnessLUFS(at url: URL, sourceRangesMS ranges: [Range<Int>]) async -> Double? {
+        let asset = AVURLAsset(url: url)
+        guard let track = try? await asset.loadTracks(withMediaType: .audio).first else { return nil }
+        var meter: LoudnessMeter?
+        for range in ranges where !range.isEmpty {
+            let timeRange = CMTimeRange(
+                start: CMTime(value: CMTimeValue(range.lowerBound), timescale: 1000),
+                duration: CMTime(value: CMTimeValue(range.count), timescale: 1000))
+            guard let reader = try? AVAssetReader(asset: asset) else { return nil }
+            reader.timeRange = timeRange
+            let output = AVAssetReaderTrackOutput(track: track, outputSettings: [
+                AVFormatIDKey: kAudioFormatLinearPCM,
+                AVLinearPCMBitDepthKey: 32,
+                AVLinearPCMIsFloatKey: true,
+                AVLinearPCMIsBigEndianKey: false,
+                AVLinearPCMIsNonInterleaved: false,
+            ])
+            guard reader.canAdd(output) else { return nil }
+            reader.add(output)
+            guard reader.startReading() else { return nil }
+            var samples: [Float] = []
+            while let buffer = output.copyNextSampleBuffer() {
+                defer { CMSampleBufferInvalidate(buffer) }
+                if meter == nil,
+                   let format = CMSampleBufferGetFormatDescription(buffer),
+                   let basic = CMAudioFormatDescriptionGetStreamBasicDescription(format) {
+                    meter = LoudnessMeter(sampleRate: basic.pointee.mSampleRate,
+                                          channels: max(1, Int(basic.pointee.mChannelsPerFrame)))
+                }
+                guard let block = CMSampleBufferGetDataBuffer(buffer) else { continue }
+                let length = CMBlockBufferGetDataLength(block)
+                let count = length / MemoryLayout<Float>.size
+                guard count > 0 else { continue }
+                if samples.count != count { samples = [Float](repeating: 0, count: count) }
+                let copied = samples.withUnsafeMutableBytes { raw -> OSStatus in
+                    guard let base = raw.baseAddress else { return -1 }
+                    return CMBlockBufferCopyDataBytes(block, atOffset: 0, dataLength: count * 4,
+                                                      destination: base)
+                }
+                guard copied == noErr else { continue }
+                meter?.add(interleaved: samples)
+            }
+        }
+        return meter?.integratedLUFS
+    }
 }

@@ -208,6 +208,83 @@ extension EditorState {
 
     }
 
+    // MARK: - Gain and Normalize
+
+    /// The layers a right-click on one sound acts on: everything picked that
+    /// has sound when the clicked one is among the picks, the way Premiere
+    /// normalizes every selected clip at once, and otherwise just the one.
+    func soundLayers(actingOn id: UUID) -> [UUID] {
+        guard let document else { return [] }
+        let picked = actionableLayerIDs
+        let ids = picked.contains(id) ? Array(picked) : [id]
+        return ids.filter { document.layer(id: $0)?.sound != nil }
+    }
+
+    /// Set the picked layer's gain, in decibels: the Gain row in the panel.
+    func setSoundClipGain(_ dB: Double) {
+        guard let id = soundLayerInHand?.id else { return }
+        setSoundClipGain([id: dB])
+    }
+
+    /// Set gain on several layers as one step to undo.
+    func setSoundClipGain(_ gains: [UUID: Double]) {
+        guard let document else { return }
+        var levels: [UUID: AudioLevel] = [:]
+        for (id, dB) in gains {
+            guard let layer = document.layer(id: id), layer.sound != nil else { continue }
+            var level = layer.soundLevel ?? AudioLevel()
+            let before = level
+            level.clipGainDB = dB
+            if level != before { levels[id] = level }
+        }
+        guard !levels.isEmpty else { return }
+        perform { doc in
+            for (id, level) in levels { doc.updateLayer(id: id) { $0.setSoundLevel(level) } }
+        }
+        followAudio()
+    }
+
+    /// **Normalize**: bring each layer's loudest peak, over the stretch it
+    /// plays, to -1 dBFS. Written as gain, so it can be undone or changed
+    /// and the file is never touched.
+    func normalizeSound(layers ids: [UUID]) async {
+        var gains: [UUID: Double] = [:]
+        for id in ids {
+            guard let layer = document?.layer(id: id), let sound = layer.sound,
+                  let pieces = layer.clipPieces, let wave = await soundShape(of: sound),
+                  let peak = AudioNormalize.peakDBFS(of: wave, playedBy: pieces)
+            else { continue }
+            gains[id] = AudioNormalize.gainDB(toPeak: AudioNormalize.peakTargetDBFS, fromPeakDBFS: peak)
+        }
+        setSoundClipGain(gains)
+    }
+
+    /// **Normalize Loudness**: bring each layer to a loudness target (-14
+    /// LUFS for the web, -16 for a podcast), measured off the file over the
+    /// stretch it plays, and never past -1 dBFS at its loudest peak.
+    func normalizeSoundLoudness(layers ids: [UUID], to target: AudioNormalize.Target) async {
+        var gains: [UUID: Double] = [:]
+        for id in ids {
+            guard let layer = document?.layer(id: id), let sound = layer.sound,
+                  let pieces = layer.clipPieces,
+                  let url = SoundLibrary.shared.url(for: sound)
+            else { continue }
+            let ranges = AudioNormalize.sourceRangesMS(playedBy: pieces)
+            guard let lufs = await SoundFile.loudnessLUFS(at: url, sourceRangesMS: ranges) else { continue }
+            let peak = await soundShape(of: sound).flatMap { AudioNormalize.peakDBFS(of: $0, playedBy: pieces) }
+            gains[id] = AudioNormalize.gainDB(toLoudness: target.lufs, fromLUFS: lufs, peakDBFS: peak)
+        }
+        setSoundClipGain(gains)
+    }
+
+    /// A sound's shape, read now if the timeline has not read it yet.
+    private func soundShape(of sound: SoundRef) async -> Waveform? {
+        if let known = SoundLibrary.shared.waveform(for: sound) { return known }
+        guard let url = SoundLibrary.shared.url(for: sound),
+              let reading = await SoundFile.read(at: url), !reading.waveform.isEmpty else { return nil }
+        return reading.waveform
+    }
+
     /// What the mix is called before anybody renames it: the document's own
     /// name, so a mix off a recording lands beside it under the same word.
     var mixFileName: String {

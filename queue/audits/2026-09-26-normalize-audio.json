@@ -1,0 +1,27 @@
+{
+  "feature": "Normalize audio, and quiet sound you can see",
+  "epic": "video-audio",
+  "summary": "A quiet recording's sound now shows on its track, and right-click Normalize brings it up to a normal level as a gain you can see, change and undo.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a screen recording whose system audio came in quiet (walk: Scripts/playtest/normalize-quiet-system-audio-walk.json, fixture peaks at -32.7 dB).",
+  "try": [
+    { "do": "Open a recording with quiet system audio and click its clip on V1.", "shot": "2026-09-26-normalize-audio-1-quiet-sc.png" },
+    { "do": "Right-click the green audio segment and choose Normalize > Peaks to -1 dB.", "shot": "2026-09-26-normalize-audio-2-normalized-sc.png" },
+    { "do": "Read the +31.7 dB tag on the segment and the Gain row in the Sound panel." },
+    { "do": "Press ⌘Z, then press Normalize under the Gain row.", "shot": "2026-09-26-normalize-audio-3-panel-normalize-sc.png" },
+    { "do": "Right-click the segment and choose Normalize > Loudness for Web, -14 LUFS.", "shot": "2026-09-26-normalize-audio-4-loudness-sc.png" },
+    { "do": "Drag the Gain slider, or type a number in its box, and press space to listen." },
+    { "do": "Export the video and listen to it." }
+  ],
+  "evaluate": [
+    "Before you normalize, does your own quiet system audio now show clearly enough on the track?",
+    "Is Normalize where you reached for it: the segment's right-click menu, and the button under Gain?",
+    "Should new recordings with system audio be normalized automatically when they open? The capture is not the quiet part (the file comes in at the level the playing app made it), so this was left for you to decide.",
+    "Is the +N dB tag on the segment useful, or noise?"
+  ],
+  "rough": [
+    "Your recordings are quiet at the source, not in the capture: a -9 dB test tone recorded at -8.7 dB with the Mac's volume at 6 of 100. The microphone mixed with system audio could not be checked, because the test app has no microphone permission.",
+    "There is no mock for Gain or Normalize. The mock's Sound panel has one Volume row (slider and a 0.0 dB reading); the app keeps its Level row, and adds Gain above it with the Normalize button on the line under, because the panel is too narrow for the slider, the box and the button on one line.",
+    "In the mock the waveform follows the Volume level. Here it follows Gain only, as Premiere's does: pulling the level down leaves the waveform the same size.",
+    "Normalizing loudness reads the whole file first, so on a long recording the gain lands a moment after you choose it, with no progress shown."
+  ]
+}

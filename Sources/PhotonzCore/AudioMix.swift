@@ -57,11 +57,55 @@ public struct AudioLevel: Hashable, Codable, Sendable {
     /// what every fade written before the curve existed does.
     public var fadeCurve: EasingCurve
 
+    /// Gain: a boost or cut in decibels applied BEFORE the fader and its
+    /// line, the way Premiere's clip gain sits under its volume rubber band.
+    /// It is what Normalize writes, and why a recording forty decibels down
+    /// can be brought up without the level line leaving its lane: the fader
+    /// stops at +6 dB, gain goes as far as a quiet recording needs.
+    public var clipGainDB: Double {
+        get { storedClipGainDB }
+        set { storedClipGainDB = Self.boundedClipGainDB(newValue) }
+    }
+    private var storedClipGainDB: Double
+
     public init(gain: Double = AudioLevel.unityGain, points: [AudioLevelPoint] = [],
-                fadeCurve: EasingCurve = .linear) {
+                fadeCurve: EasingCurve = .linear, clipGainDB: Double = 0) {
         self.gain = Self.bounded(gain)
         self.points = Self.tidied(points)
         self.fadeCurve = fadeCurve
+        self.storedClipGainDB = Self.boundedClipGainDB(clipGainDB)
+    }
+
+    /// How far gain may go either way. Forty eight decibels up brings the
+    /// quietest recording measured (a -45 dBFS peak) to a normal level.
+    public static let clipGainRangeDB: ClosedRange<Double> = -48...48
+
+    static func boundedClipGainDB(_ dB: Double) -> Double {
+        guard dB.isFinite else { return 0 }
+        return min(max(clipGainRangeDB.lowerBound, dB), clipGainRangeDB.upperBound)
+    }
+
+    /// Gain as the number the mix multiplies by.
+    public var clipGain: Double { pow(10, clipGainDB / 20) }
+
+    /// What the segment on the timeline wears: `+18.0 dB`, or nothing at all
+    /// where there is no gain.
+    public var clipGainLabel: String? {
+        clipGainDB == 0 ? nil : clipGainField
+    }
+
+    /// What the panel's Gain row shows, nought included.
+    public var clipGainField: String {
+        String(format: "%@%.1f dB", clipGainDB > 0 ? "+" : "", clipGainDB)
+    }
+
+    /// A gain somebody typed, with or without its plus sign and its dB.
+    public static func clipGainDB(typed: String) -> Double? {
+        var text = typed.trimmingCharacters(in: .whitespaces).lowercased()
+        if text.hasSuffix("db") { text = String(text.dropLast(2)).trimmingCharacters(in: .whitespaces) }
+        if text.hasPrefix("+") { text.removeFirst() }
+        guard let dB = Double(text), dB.isFinite else { return nil }
+        return dB
     }
 
     /// A level held inside what a level control may ask for.
@@ -183,7 +227,9 @@ public struct AudioLevel: Hashable, Codable, Sendable {
 
     /// Whether this is the level a layer has when nobody has touched it, which
     /// is what decides whether it is written down at all.
-    public var isUntouched: Bool { gain == Self.unityGain && points.isEmpty && fadeCurve == .linear }
+    public var isUntouched: Bool {
+        gain == Self.unityGain && points.isEmpty && fadeCurve == .linear && clipGainDB == 0
+    }
 
     // MARK: - Fades
 
@@ -266,7 +312,7 @@ public struct AudioLevel: Hashable, Codable, Sendable {
         return String(format: "%.1f dB", dB)
     }
 
-    private enum CodingKeys: String, CodingKey { case gain, points, fadeCurve }
+    private enum CodingKeys: String, CodingKey { case gain, points, fadeCurve, clipGainDB }
 
     /// A level nobody has touched writes nothing, so every document written
     /// before sound existed reads back identical.
@@ -275,13 +321,15 @@ public struct AudioLevel: Hashable, Codable, Sendable {
         if gain != Self.unityGain { try c.encode(gain, forKey: .gain) }
         if !points.isEmpty { try c.encode(points, forKey: .points) }
         if fadeCurve != .linear { try c.encode(fadeCurve, forKey: .fadeCurve) }
+        if clipGainDB != 0 { try c.encode(clipGainDB, forKey: .clipGainDB) }
     }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.init(gain: try c.decodeIfPresent(Double.self, forKey: .gain) ?? Self.unityGain,
                   points: try c.decodeIfPresent([AudioLevelPoint].self, forKey: .points) ?? [],
-                  fadeCurve: try c.decodeIfPresent(EasingCurve.self, forKey: .fadeCurve) ?? .linear)
+                  fadeCurve: try c.decodeIfPresent(EasingCurve.self, forKey: .fadeCurve) ?? .linear,
+                  clipGainDB: try c.decodeIfPresent(Double.self, forKey: .clipGainDB) ?? 0)
     }
 }
 
@@ -418,20 +466,22 @@ extension PhotonzDocument {
     static func ramps(for level: AudioLevel, startMS: Int, lengthMS: Int,
                       layerInMS: Int) -> [AudioGainRamp] {
         let endMS = startMS + lengthMS
+        // Gain is a stage before the fader: it multiplies the whole shape.
+        let boost = level.clipGain
         // Points are measured from the layer's start; the ramps are measured
         // from the document's, so every moment moves along by the layer's in.
         // The same corners the lane draws, so a curved fade plays as drawn.
         let moments = level.moments(fromMS: startMS - layerInMS, toMS: endMS - layerInMS)
             .map { layerInMS + $0 }
         guard moments.count > 1 else {
-            let gain = level.gain(atLayerMS: startMS - layerInMS)
+            let gain = level.gain(atLayerMS: startMS - layerInMS) * boost
             return [AudioGainRamp(fromMS: startMS, toMS: endMS, fromGain: gain, toGain: gain)]
         }
         return (0..<(moments.count - 1)).map { index in
             let from = moments[index], to = moments[index + 1]
             return AudioGainRamp(fromMS: from, toMS: to,
-                                 fromGain: level.gain(atLayerMS: from - layerInMS),
-                                 toGain: level.gain(atLayerMS: to - layerInMS))
+                                 fromGain: level.gain(atLayerMS: from - layerInMS) * boost,
+                                 toGain: level.gain(atLayerMS: to - layerInMS) * boost)
         }
     }
 }

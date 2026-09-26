@@ -375,6 +375,32 @@ the same amount.
 
 ---
 
+## 5d. Gain and Normalize (2026-09-26)
+
+The user: system audio "barely registers" on the tracks. Measured before
+changing anything: ScreenCaptureKit takes system audio at unity, before the
+Mac's output volume (a -9.0 dBFS tone came back at -8.7 dBFS with the volume at
+6 of 100; `--audio-capture-diag` in the probe reproduces it). The recordings
+are quiet because the SOURCES are quiet (their own files: -25 to -45 dBFS
+peaks, -40 to -65 LUFS), and the waveform drew straight amplitude, so a -30
+dBFS peak was three per cent of the lane.
+
+- **Gain** (`AudioLevel.clipGainDB`, -48 to +48 dB) is a stage before the
+  fader, like Premiere's clip gain under its volume band. It multiplies every
+  ramp in `audioMix()`, so playback, export, the meter and the headroom guard
+  all honour it with no new code path. AVAudioMix ramps and
+  `AVAudioMixerNode.volume` both take values far above 1 (x50 measured linear).
+- **Normalize** (right-click ▸ Normalize ▸ Peaks to -1 dB, or the panel's
+  button) reads the peak off the waveform over the stretches the pieces play.
+  **Loudness for Web / Podcast** measures BS.1770 integrated loudness off the
+  file (`LoudnessMeter`, `SoundFile.loudnessLUFS`) and never lets the peak pass
+  -1 dBFS. Several picked sounds normalize together, one undo step.
+- **The waveform draws in decibels** (`Waveform.drawnHeight`, 54 dB of
+  range) and includes the gain, so a Normalize grows it. The segment wears the
+  gain as a small `+N dB` label.
+- Normalizing new recordings automatically on open was left out: the capture
+  is not the quiet part. It is a question in the audit for the user.
+
 ## 6. Where it is in the window
 
 | What | Where |

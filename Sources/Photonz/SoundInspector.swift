@@ -14,6 +14,7 @@ struct SoundInspector: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             if editorState.soundLayerInHand != nil {
+                gain
                 level
                 if editorState.soundLevelInHand.changesOverTime {
                     points
@@ -23,6 +24,61 @@ struct SoundInspector: View {
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 6)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Gain, before the fader: dragged on the slider, typed in the box, or
+    /// set by Normalize beside it, the way Premiere's Audio Gain sits apart
+    /// from its Volume.
+    private var gain: some View {
+        let dB = editorState.soundLevelInHand.clipGainDB
+        let range = AudioLevel.clipGainRangeDB
+        return VStack(alignment: .leading, spacing: 4) {
+            VideoKit.FieldRow(label: "Gain") {
+                HStack(spacing: 6) {
+                    Slider(value: Binding(
+                        get: { dB },
+                        // Whole decibels while dragging: finer than that is
+                        // what the box is for.
+                        set: { editorState.setSoundClipGain($0.rounded()) }
+                    ), in: range)
+                    .controlSize(.small)
+                    .frame(minWidth: 60)
+                    .playtestField("Gain")
+                    .panelHelp("Boost or cut before the level.")
+                    PanelNumberField(
+                        showing: .number(Self.spell(dB)),
+                        label: "Gain in dB",
+                        identity: editorState.soundLayerInHand?.id,
+                        suffix: "dB",
+                        width: .fixed(40),
+                        floor: CGFloat(range.lowerBound),
+                        ceiling: CGFloat(range.upperBound),
+                        playtest: ("Gain in dB", "Sound"),
+                        spell: { Self.spell(Double($0)) },
+                        land: { typed in
+                            editorState.setSoundClipGain(Double(typed))
+                            return .number(Self.spell(editorState.soundLevelInHand.clipGainDB))
+                        })
+                    .panelReadout(editorState.soundLevelInHand.clipGainField)
+                }
+            }
+            // Under the box it sets, in the control column.
+            VideoKit.FieldRow(label: "") {
+                Button("Normalize") {
+                    guard let id = editorState.soundLayerInHand?.id else { return }
+                    let ids = editorState.soundLayers(actingOn: id)
+                    Task { await editorState.normalizeSound(layers: ids) }
+                }
+                .controlSize(.small)
+                .playtestControl("Normalize", detail: "Sound")
+                .panelHelp("Bring the loudest peak to -1 dB.")
+            }
+        }
+    }
+
+    /// A gain as the box spells it: one place, signed when it is a boost.
+    static func spell(_ dB: Double) -> String {
+        abs(dB) < 0.05 ? "0.0" : String(format: "%+.1f", dB)
     }
 
     private var level: some View {

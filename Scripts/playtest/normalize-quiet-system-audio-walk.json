@@ -1,0 +1,39 @@
+{
+  "out": "/tmp/photonz-playtest/normalize-quiet-system-audio-walk",
+  "seed": "A screen recording whose system audio came in quiet (peak -32.7 dBFS, -42.7 LUFS, the level the user's own recordings measured on 2026-09-25), at Next defaults with no flag set. The waveform draws in decibels so the quiet sound is visible at all; right-click the audio segment, Normalize > Peaks to -1 dB, and the segment wears +31.7 dB, the Gain row says so, and the waveform grows. Undo takes it back; the panel's Normalize button does the same; Normalize > Loudness for Web sets a smaller gain because the peak ceiling holds it.",
+  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "open", "file": "fixtures/Quiet system audio recording 1280x800.mp4", "width": 1440, "height": 900 },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "tool", "tool": "select" },
+    { "do": "press", "control": "Quiet system audio recording 1280x800 clip" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "field": "Gain in dB", "reads": "0.0" },
+    { "do": "describe", "stage": "1-quiet", "note": "The quiet recording picked: its system audio drawn in decibels on the Audio track, small but visible; the Sound section's Gain row at 0.0 dB with Normalize beside it" },
+    { "do": "panel", "stage": "1-quiet" },
+    { "do": "snapshot", "name": "1-quiet" },
+
+    { "do": "rightClick", "at": [576, 850], "space": "window", "choose": "Normalize > Peaks to -1 dB" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expect", "field": "Gain in dB", "reads": "+31.7" },
+    { "do": "describe", "stage": "2-normalized", "note": "Right-click, Normalize > Peaks to -1 dB: the segment wears +31.7 dB, the waveform fills its lane, the Gain row reads +31.7" },
+    { "do": "panel", "stage": "2-normalized" },
+    { "do": "snapshot", "name": "2-normalized" },
+
+    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "field": "Gain in dB", "reads": "0.0" },
+    { "do": "press", "control": "Normalize" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expect", "field": "Gain in dB", "reads": "+31.7" },
+    { "do": "describe", "stage": "3-panel-normalize", "note": "Undo put the gain back to nothing; the panel's Normalize button set the same +31.7 dB" },
+    { "do": "snapshot", "name": "3-panel-normalize" },
+
+    { "do": "rightClick", "at": [576, 850], "space": "window", "choose": "Normalize > Loudness for Web, -14 LUFS" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "expect", "field": "Gain in dB", "reads": "+28.7" },
+    { "do": "describe", "stage": "4-loudness", "note": "Normalize > Loudness for Web: +28.7 dB (the fixture measures -42.7 LUFS in ffmpeg), less than the peak normalize, so the loudest peak stays under -1 dB" },
+    { "do": "panel", "stage": "4-loudness" },
+    { "do": "snapshot", "name": "4-loudness" }
+  ]
+}

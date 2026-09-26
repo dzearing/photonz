@@ -15,10 +15,16 @@ import SwiftUI
 ///
 /// Mirrored about the middle the way every waveform everywhere is, because a
 /// sound read as a block growing up from the floor reads as a bar chart.
+///
+/// Drawn in decibels (`Waveform.drawnHeight`), as Premiere's logarithmic
+/// waveforms are: a straight scale drew a screen recording's system audio,
+/// forty decibels down, as a flat line. `gainDB` is the segment's gain, so a
+/// Normalize grows the drawing with it.
 struct SoundWaveform: View {
     let columns: [Float]
     /// The mock's `.wave i` on the dock (the audio ink at .7), white elsewhere.
     var color: Color = .white.opacity(0.55)
+    var gainDB: Double = 0
 
     var body: some View {
         Canvas { context, size in
@@ -30,7 +36,8 @@ struct SoundWaveform: View {
                 // Never nothing at all: a hairline through the quiet parts is
                 // what makes a stretch of silence read as silence rather than
                 // as a gap in the drawing.
-                let half = max(0.5, CGFloat(column) * (middle - 1))
+                let half = max(0.5, CGFloat(Waveform.drawnHeight(ofPeak: column, gainDB: gainDB))
+                               * (middle - 1))
                 let x = CGFloat(index) * step
                 path.addRect(CGRect(x: x, y: middle - half,
                                     width: max(0.75, step - 0.35), height: half * 2))

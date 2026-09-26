@@ -19836,3 +19836,15 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Fix: renders of a document with time draw from `ImageStore.snapshot()`; `canvasGeometryDocument` poses at `shownMomentMS` (the picture's moment) so outline and handles sit on the picture; a hand scrub asks for at most one picture per display refresh (`DisplayFrames`, leading move drawn at once); a recording is composited at `CompositeScale.forShown(zoom x backing)`; frame reads go through `MovieFrameQueue` (one per lane, stale reads dropped), read three moves ahead in the direction of travel, the budget drops the frame farthest from the playhead, and a hand's stand-in is the nearest frame (`MovieFramesInHand.nearest/travel`).
 - After, four runs in a row: 0 empty, 0 frames off the outline, picture at most 1 display frame behind; composite 1ms median in app. Perf: 17ms -> 7.5ms a refresh for 3456x2234 + 5 graphics (`ScrubCompositePerfTests`).
 - Open: scrubbing back fast across what looks like a key frame gap freezes the video frame ~0.5s -> `scrubbing-back-fast-keeps-the-video-picture-movi` (p2).
+
+## 2026-09-26 — Normalize audio, and quiet system audio (go loop)
+
+- Measured first: ScreenCaptureKit records system audio at unity, before the
+  output volume (-9.0 dBFS tone → -8.7 dBFS at volume 6/100; probe-only
+  `--audio-capture-diag`). The user's recordings are quiet at the source
+  (-25 to -45 dBFS peaks); the linear waveform hid them.
+- Shipped: clip gain on `AudioLevel`, Normalize (peaks -1 dB) and Normalize
+  Loudness (-14 / -16 LUFS, BS.1770 `LoudnessMeter`) on the segment's
+  right-click menu and the Sound panel, dB-scaled waveform that follows gain,
+  `+N dB` segment tag. Walk: `normalize-quiet-system-audio-walk`.
+- Open: auto-normalize new recordings on open is a question in the audit.

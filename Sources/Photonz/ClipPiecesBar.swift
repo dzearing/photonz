@@ -319,8 +319,25 @@ struct ClipPiecesBar: View {
                         count: Int(shown.width),
                         fromSourceMS: item.sourceInMS + Int(file * Double(shown.startFraction)),
                         toSourceMS: item.sourceInMS + Int(file * Double(shown.endFraction))),
-                        color: kind.map { $0.ink.opacity(0.7) } ?? .white.opacity(0.55))
+                        color: kind.map { $0.ink.opacity(0.7) } ?? .white.opacity(0.55),
+                        gainDB: soundLevel?.clipGainDB ?? 0)
                         .padding(.vertical, 2)
+                }
+            }
+            .overlay(alignment: .bottomLeading) {
+                // The gain Normalize wrote, where Premiere puts a clip's
+                // badges: on the clip, small, out of the waveform's way.
+                if isSound, let gain = soundLevel?.clipGainLabel, shown.width > 48 {
+                    Text(gain)
+                        .font(.system(size: 9, weight: .semibold))
+                        .monospacedDigit()
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 1)
+                        .background(Capsule().fill(.black.opacity(0.45)))
+                        .padding(3)
+                        .allowsHitTesting(false)
+                        .accessibilityLabel("Gain \(gain)")
                 }
             }
             .overlay {
@@ -389,6 +406,11 @@ struct ClipPiecesBar: View {
                                 help: Self.help(pieces, index: index)))
             .offset(x: shown.x)
         }
+    }
+
+    /// How loud this layer's sound is set to play, gain included.
+    private var soundLevel: AudioLevel? {
+        editorState.document?.layer(id: layerID)?.soundLevel
     }
 
     /// The shape of this layer's sound, once it has been read off the file.
@@ -1004,6 +1026,7 @@ struct ClipPiecesBar: View {
         }
         if isSound, let level = editorState.document?.layer(id: layerID)?.soundLevel {
             if level.gain != AudioLevel.unityGain { words += ", level \(level.label)" }
+            if let gain = level.clipGainLabel { words += ", gain \(gain)" }
             let fadeIn = level.fadeInMS
             let fadeOut = level.fadeOutMS(lengthMS: pieces.totalLengthMS)
             if fadeIn > 0 { words += ", fade in \(ClipBarCopy.length(fadeIn))" }

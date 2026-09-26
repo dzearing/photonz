@@ -116,6 +116,11 @@ extension EditorState {
                 self.detachSound()
             })
         }
+        // How loud its sound is at the source: Premiere's Audio Gain, on the
+        // clip where the hand already is.
+        if Experiments.shared.soundOnTheTimelineEnabled, layer.sound != nil {
+            rows.append(contentsOf: soundGainMenuRows(layerID: layerID))
+        }
         // A title, a piece of clip art: how it comes on and goes off.
         rows.append(contentsOf: titleAnimationMenuRows(layerID: layerID))
         // Where it is, its size, its angle and its opacity, keyed at the
@@ -147,6 +152,28 @@ extension EditorState {
         rows.append(.command("Ripple Delete", TimelineMenuKeys.rippleDelete, destructive: true) {
             self.rippleDelete(layerID: layerID, piece: onePiece ? nil : index)
         })
+        return rows
+    }
+
+    /// **Normalize ▸** and, once a sound has gain, **Reset Gain**. Every
+    /// picked sound when the clicked one is among the picks.
+    func soundGainMenuRows(layerID: UUID) -> [MenuRow] {
+        let ids = soundLayers(actingOn: layerID)
+        guard !ids.isEmpty else { return [] }
+        var normalize: [MenuRow] = [
+            .command("Peaks to -1 dB") { Task { await self.normalizeSound(layers: ids) } },
+            .separator,
+        ]
+        normalize += AudioNormalize.Target.allCases.map { target in
+            .command(target.title) { Task { await self.normalizeSoundLoudness(layers: ids, to: target) } }
+        }
+        var rows: [MenuRow] = [.submenu("Normalize", normalize)]
+        let gained = ids.contains { (document?.layer(id: $0)?.soundLevel?.clipGainDB ?? 0) != 0 }
+        if gained {
+            rows.append(.command("Reset Gain") {
+                self.setSoundClipGain(Dictionary(uniqueKeysWithValues: ids.map { ($0, 0.0) }))
+            })
+        }
         return rows
     }
 
