@@ -56,7 +56,11 @@ struct TransitionPicker: View {
             editorState.closeTransitionPicker()
         } label: {
             VideoKit.Tile(name: kind.title,
-                          detail: afford ? kind.note : "no spare",
+                          // One the cut cannot pay for is greyed, and its
+                          // tip says why: never a "no spare" caption. A dip
+                          // says nothing under its name, but keeps the line
+                          // so the grid's rows stay one height.
+                          detail: kind.note ?? " ",
                           isSelected: isOn, isDisabled: !afford, emphasis: .cut,
                           thumbnailHeight: 26) {
                 VideoKit.AnimatedTransitionThumbnail(style: Self.style(kind))

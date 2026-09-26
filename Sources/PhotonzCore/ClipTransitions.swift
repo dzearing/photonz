@@ -69,9 +69,10 @@ public enum ClipTransitionKind: String, CaseIterable, Hashable, Codable, Sendabl
         }
     }
 
-    /// The few words under its name in the picker, saying what it costs.
-    public var note: String {
-        needsOverlap ? "needs overlap" : "no overlap"
+    /// The few words under its name in the picker, saying what it costs;
+    /// nothing for one that costs nothing, never a "no overlap".
+    public var note: String? {
+        needsOverlap ? "needs overlap" : nil
     }
 }
 

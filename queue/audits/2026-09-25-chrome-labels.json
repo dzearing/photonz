@@ -1,0 +1,45 @@
+{
+  "feature": "The timeline bar and picker say labels, not sentences",
+  "epic": "video-editing",
+  "summary": "The playhead readout pill is gone from the timeline bar, Easing only shows while keys are picked and applies to them, the drop label reads Overwrite or Insert with the track and time, and the transition picker no longer captions tiles with \"no overlap\" or \"no spare\".",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    {
+      "do": "Look at the bar as it was before this change, with a title picked: the Playhead readout sat left of Easing.",
+      "shot": "2026-09-25-chrome-labels-before-2-layer-picked-sc.png"
+    },
+    {
+      "do": "Open a recording, type a title, key its Position at two times, and look at the bar with the title picked: no readout, no Easing.",
+      "shot": "2026-09-25-chrome-labels-after-2-layer-picked-sc.png"
+    },
+    {
+      "do": "Click one of the title's keys on its Position lane: EASING appears at the right of the bar, reading that key's curve.",
+      "shot": "2026-09-25-chrome-labels-after-3-key-picked-sc.png"
+    },
+    {
+      "do": "Choose Ease Out from Easing, then play across the key to see it leave slowly."
+    },
+    {
+      "do": "Drag a video file over the timeline and read the bar: Overwrite · V1 · 0:08, and ⌘ Insert beside it.",
+      "shot": "2026-09-25-chrome-labels-after-drop-label-sc.png"
+    },
+    {
+      "do": "Click the cut between two clips to open the transition picker and read the tiles.",
+      "shot": "2026-09-25-chrome-labels-after-picker-sc.png"
+    }
+  ],
+  "evaluate": [
+    "With a layer picked, do you miss the readout at all, or is the panel's value enough?",
+    "Should Easing also stay available with nothing picked, so you can choose the curve before making keys, or is only-with-keys-picked right?",
+    "Does Overwrite · V1 · 0:08 read clearly while dragging, or would you rather see only the time?",
+    "In the picker, is \"needs overlap\" under four tiles still worth its line, or should every tile be just its name?"
+  ],
+  "rough": [
+    "Easing now sets the picked keys' curve AND the curve the next new keys get. That second part is invisible; it keeps a key made right after looking the same as its neighbours.",
+    "With picked keys on different curves Easing reads Mixed.",
+    "The dip tiles keep an empty caption line so the grid stays even.",
+    "The transition picker mock (video-transition-wt.html) was edited to match: the dips' \"no overlap\" and the \"no spare\" state are gone, with a comment citing this task. Same treatment as the timeline mock's readout, under the user's no \"no X\" rule. Say so if you want them back.",
+    "No before picture of the drop label: the old walk stopped before it. The old words were \"b-roll lands on V1 at 0:08\" and \"... goes in on V1 at 0:03, pushing what is after\".",
+    "Shared chrome outside video (empty states, Mode menu, colour picker notes) still has sentences. Those files are shared with Current and are filed as the-shared-chrome-says-labels-not-sentences."
+  ]
+}

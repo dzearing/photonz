@@ -29,7 +29,7 @@
     { "do": "describe", "stage": "2-music-kept-on-the-shelf", "note": "THE FIRST TEST: music brought in from the Finder and then deleted from the timeline. The Audio track is empty, and the music is still on the shelf as Sample Music.m4a, the way a Premiere bin keeps what the sequence no longer uses" },
     { "do": "snapshot", "name": "2-music-kept-on-the-shelf" },
 
-    { "do": "dropOnTimeline", "tile": "Sample Music.m4a", "track": "Audio", "seconds": 1.0, "release": false, "hold": "3-tile-in-the-air", "says": "lands on Audio at 0:01" },
+    { "do": "dropOnTimeline", "tile": "Sample Music.m4a", "track": "Audio", "seconds": 1.0, "release": false, "hold": "3-tile-in-the-air", "says": "Overwrite · Audio · 0:01" },
     { "do": "describe", "stage": "3-tile-in-the-air", "note": "THE SECOND TEST: the music tile held over the empty Audio track one second in. The lane shows the same dashed ghost a file from the Finder draws, the length of the music" },
     { "do": "dropOnTimeline", "tile": "Sample Music.m4a", "track": "Audio", "seconds": 1.0 },
     { "do": "wait", "seconds": 1.0 },
@@ -43,7 +43,7 @@
     { "do": "describe", "stage": "4-snapped-onto-the-end", "note": "THE THIRD TEST: the recording's own tile let go a few points short of the end of V1 snapped onto it, so the two clips butt together at eight seconds with an edit point between them" },
     { "do": "snapshot", "name": "5-recording-twice" },
 
-    { "do": "dropOnTimeline", "tile": "Tutorial Sample.mp4", "track": "V1", "seconds": 3.0, "insert": true, "release": false, "says": "pushing what is after" },
+    { "do": "dropOnTimeline", "tile": "Tutorial Sample.mp4", "track": "V1", "seconds": 3.0, "insert": true, "release": false, "says": "Insert · V1 · 0:03" },
     { "do": "dropOnTimeline", "tile": "Tutorial Sample.mp4", "track": "V1", "seconds": 3.0, "insert": true },
     { "do": "wait", "seconds": 1.0 },
     { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 3.0, "endsAt": 11.0, "count": 4 },

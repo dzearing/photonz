@@ -20,7 +20,7 @@
     { "do": "describe", "stage": "1-one-recording", "note": "An eight second screen recording on V1, the playhead two seconds in" },
     { "do": "snapshot", "name": "1-one-recording" },
 
-    { "do": "dropOnTimeline", "file": "scratch/b-roll.mp4", "track": "V1", "seconds": 7.96, "release": false, "hold": "2-b-roll-in-the-air", "says": "lands on V1 at 0:08" },
+    { "do": "dropOnTimeline", "file": "scratch/b-roll.mp4", "track": "V1", "seconds": 7.96, "release": false, "hold": "2-b-roll-in-the-air", "says": "Overwrite · V1 · 0:08" },
     { "do": "describe", "stage": "2-b-roll-in-the-air", "note": "THE FIRST TEST: b-roll held over V1 a few points short of the end of the recording. The lane shows a dashed ghost the length of the file, snapped onto the end of the recording, and the bar over the tracks says where it lands and that the command key inserts" },
     { "do": "dropOnTimeline", "file": "scratch/b-roll.mp4", "track": "V1", "seconds": 7.96 },
     { "do": "wait", "seconds": 1.0 },
@@ -34,13 +34,13 @@
     { "do": "describe", "stage": "3-three-clips", "note": "THE SECOND TEST: screen recording, b-roll and outro butt together on V1, the way the mock's V1 holds clip-01 and clip-02, with an edit point at each join" },
     { "do": "snapshot", "name": "4-recording-b-roll-outro" },
 
-    { "do": "dropOnTimeline", "file": "scratch/Sample Music.m4a", "track": "V1", "seconds": 4.0, "hold": "5-music-in-the-air", "says": "at 0:04" },
+    { "do": "dropOnTimeline", "file": "scratch/Sample Music.m4a", "track": "V1", "seconds": 4.0, "hold": "5-music-in-the-air", "says": "· 0:04" },
     { "do": "wait", "seconds": 1.0 },
     { "do": "expectClip", "clip": "Sample Music", "track": "Audio 2", "startsAt": 4.0, "count": 1 },
     { "do": "describe", "stage": "4-sound-at-a-moment", "note": "THE THIRD TEST: music let go over the picture track four seconds in, with the playhead at two. It went to a new Audio track under the picture, and it starts at four seconds, where it was let go, not at the playhead" },
     { "do": "snapshot", "name": "6-music-at-four-seconds" },
 
-    { "do": "dropOnTimeline", "file": "scratch/cutaway.mp4", "track": "V1", "seconds": 3.0, "insert": true, "release": false, "hold": "7-insert-in-the-air", "says": "pushing what is after" },
+    { "do": "dropOnTimeline", "file": "scratch/cutaway.mp4", "track": "V1", "seconds": 3.0, "insert": true, "release": false, "hold": "7-insert-in-the-air", "says": "Insert · V1 · 0:03" },
     { "do": "dropOnTimeline", "file": "scratch/cutaway.mp4", "track": "V1", "seconds": 3.0, "insert": true },
     { "do": "wait", "seconds": 1.0 },
     { "do": "expectClip", "clip": "cutaway", "track": "V1", "startsAt": 3.0, "endsAt": 11.0, "count": 1 },

@@ -614,8 +614,11 @@
         <span class="tsep"></span>
         <div class="seg" id="zoomSeg"><button>Fit</button><button class="on">1x</button><button>2x</button><button>4x</button></div>
         <span class="tspacer"></span>
-        <span class="kfread">Playhead <b id="kfReadV">Opacity 100%</b> @ <span id="kfReadT">4.12s</span></span>
-        <span class="tsep"></span>
+        <!-- The playhead readout (.kfread, "Playhead Opacity 100% @ 4.12s") stood here.
+             The user turned it down on 2026-09-25 ("big sentences into the ui ... completely
+             unprofessional ux"): the time is in the transport and the value in the panel.
+             Queue task no-sentences-or-debug-readouts-anywhere-in-the-c. The app shows
+             Easing only while keys are picked, since it is the curve those keys move through. -->
         <span class="lbl">Easing</span>
         <span class="select sm" id="easeSel" tabindex="0" role="button" aria-haspopup="menu" title="The curve new keys are given"><span class="lead" id="easeVal">Ease in out</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
       </div>

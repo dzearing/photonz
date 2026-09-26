@@ -310,8 +310,13 @@
     },
     {
       "do": "expect",
-      "field": "Playhead Readout",
-      "reads": "Playhead Position 700, 400 @ 2.00s"
+      "field": "Position X",
+      "reads": "700"
+    },
+    {
+      "do": "expect",
+      "field": "Position Y",
+      "reads": "400"
     },
     {
       "do": "action",
@@ -323,8 +328,13 @@
     },
     {
       "do": "expect",
-      "field": "Playhead Readout",
-      "reads": "Playhead Position 620, 330 @ 1.00s"
+      "field": "Position X",
+      "reads": "620"
+    },
+    {
+      "do": "expect",
+      "field": "Position Y",
+      "reads": "330"
     },
     {
       "do": "describe",

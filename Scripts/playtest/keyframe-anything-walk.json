@@ -1,6 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/keyframe-anything-walk",
- "seed": "Keyframe anything. At Next defaults with no flag changed, this walk sets the timeline bar's Easing to Ease Out, types a title on a recording and keys its Position, Scale and Blur at one and two seconds from the panel's diamonds, reads the bar's Playhead readout, photographs the lanes and the title half way, then picks the recording, dips its volume to -18 dB at two seconds and back, and keys a crop wiping in from the left, photographing the level line and the crop lane.",
+ "seed": "Keyframe anything. At Next defaults with no flag changed, this walk types a title on a recording and keys its Position, Scale and Blur at one and two seconds from the panel's diamonds, picks each value's first key and sets the timeline bar's Easing on it to Ease Out, photographs the lanes and the title half way, then picks the recording, dips its volume to -18 dB at two seconds and back, and keys a crop wiping in from the left, photographing the level line and the crop lane.",
  "setup": {
   "forget": [
    "all"
@@ -76,26 +76,7 @@
   {
    "do": "expect",
    "menu": "Easing",
-   "reads": "Ease In and Out"
-  },
-  {
-   "do": "panelMenu",
-   "menu": "Easing",
-   "choose": "Ease Out"
-  },
-  {
-   "do": "wait",
-   "seconds": 0.4
-  },
-  {
-   "do": "expect",
-   "menu": "Easing",
-   "reads": "Ease Out"
-  },
-  {
-   "do": "expect",
-   "field": "Playhead Readout",
-   "reads": "Playhead no animated property @ 1.00s"
+   "present": false
   },
   {
    "do": "reveal",
@@ -240,12 +221,7 @@
   {
    "do": "describe",
    "stage": "1-title-keyed",
-   "note": "THE FIRST TEST: with Easing on the timeline bar set to Ease Out, the title's Position, Scale and Blur keyed at one and two seconds from the panel's diamonds. One lane per keyed value opens under the Title track, and the bar reads the value last touched under the playhead"
-  },
-  {
-   "do": "expect",
-   "field": "Playhead Readout",
-   "reads": "Playhead Blur 8 px @ 2.00s"
+   "note": "THE FIRST TEST: the title's Position, Scale and Blur keyed at one and two seconds from the panel's diamonds. One lane per keyed value opens under the Title track, and the timeline bar carries no readout and no Easing until a key is picked"
   },
   {
    "do": "expect",
@@ -273,8 +249,75 @@
    "name": "1-title-lanes"
   },
   {
-   "do": "action",
-   "action": "videoStepBackOneSecond"
+   "do": "press",
+   "control": "Key Position 1"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "menu": "Easing",
+   "reads": "Ease In and Out"
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Easing",
+   "choose": "Ease Out"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "menu": "Easing",
+   "reads": "Ease Out"
+  },
+  {
+   "do": "press",
+   "control": "Key Scale 1"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Easing",
+   "choose": "Ease Out"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "menu": "Easing",
+   "reads": "Ease Out"
+  },
+  {
+   "do": "press",
+   "control": "Key Blur 1"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Easing",
+   "choose": "Ease Out"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "menu": "Easing",
+   "reads": "Ease Out"
   },
   {
    "do": "action",

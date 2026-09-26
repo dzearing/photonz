@@ -966,7 +966,7 @@ struct OutOfViewMark: View {
                 glyph.playtestTarget("Out of view", kind: .row, detail: place(state))
             }
         }
-        .panelHelp(explanation)
+        .panelHelp(outOfViewHelp)
     }
 
     /// Whether pressing this would do anything: a layer that can come back, a
@@ -995,7 +995,7 @@ struct OutOfViewMark: View {
         outOfView.container.map { "cut off by \($0)" } ?? "hiding \(outOfView.hiddenInside)"
     }
 
-    private var explanation: String {
+    private var outOfViewHelp: String {
         var lines: [String] = []
         if let container = outOfView.container {
             if outOfView.canReturn {

@@ -276,8 +276,13 @@
   },
   {
    "do": "expect",
-   "field": "Playhead Readout",
-   "reads": "Playhead Position 820, 380 @ 3.00s"
+   "field": "Position X",
+   "reads": "820"
+  },
+  {
+   "do": "expect",
+   "field": "Position Y",
+   "reads": "380"
   },
   {
    "do": "snapshot",

@@ -48,7 +48,9 @@ struct EditPointTransitionTests {
         #expect(ClipTransitionKind.allCases.filter(\.needsOverlap)
                 == [.dissolve, .push, .wipe, .blurThrough])
         #expect(ClipTransitionKind.push.note == "needs overlap")
-        #expect(ClipTransitionKind.dipToWhite.note == "no overlap")
+        // A dip needs nothing, so its tile says nothing: no "no overlap"
+        // (`no-sentences-or-debug-readouts-anywhere-in-the-c`, 2026-09-25).
+        #expect(ClipTransitionKind.dipToWhite.note == nil)
     }
 
     // MARK: - What the cut can afford

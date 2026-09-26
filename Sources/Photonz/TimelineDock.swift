@@ -161,14 +161,14 @@ struct TimelineDock: View {
             }
             Spacer(minLength: 8)
             if let hover = editorState.timelineFileHover {
-                // What letting go does, where the timeline's own words go,
-                // and the one key that changes it.
+                // What letting go does, as a label, and the one key that
+                // changes it.
                 Text(hover.note)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(VideoKit.Palette.ink)
                     .lineLimit(1)
                 if hover.landing.allowed, hover.landing.edit == .overwrite {
-                    Text("⌘ inserts")
+                    Text("⌘ Insert")
                         .font(.system(size: 11))
                         .foregroundStyle(VideoKit.Palette.faint)
                         .fixedSize()
@@ -194,77 +194,47 @@ struct TimelineDock: View {
                       + (editorState.isTimelineSnapping ? ", snapping" : ", snapping off"))
     }
 
-    /// The right end of the bar, as `video.html` draws it: the keyed value
-    /// under the playhead (`.kfread`, "Playhead Opacity 100% @ 4.12s"), then
-    /// Easing, the curve a NEW key is given (`#easeSel`). The same six eases
+    /// The right end of the bar: Easing (`#easeSel`), only while keys are
+    /// picked, because it is the curve THEY move through. The same six eases
     /// a key's right-click offers, so the question has one list of answers.
+    /// The mock's playhead readout (`.kfread`) stood before it until the user
+    /// turned it down on 2026-09-25: the time is in the transport, the value
+    /// in the panel, and a bar of controls carries no sentence about state.
     @ViewBuilder private var keyBar: some View {
-        // A layer picked with nothing keyed still says so, as the mock does;
-        // with nothing picked there is nothing to read.
-        if editorState.keyLayer != nil {
-            let reading = editorState.keyReadout ?? "no animated property"
-            let time = PhotonzDocument.playheadSeconds(editorState.documentTimeMS)
-            // Stepped aside when the bar has no room, as the mock's narrow
-            // layout drops it (`@media ... .tlbar .kfread{display:none}`),
-            // rather than pushing Easing off the end.
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 0) {
-                    readoutPill(reading, at: time)
-                    Rectangle().fill(VideoKit.Palette.line).frame(width: 1, height: 18)
-                        .padding(.horizontal, 5)
-                }
-                Color.clear.frame(width: 0, height: 0)
+        if editorState.keySelection != nil {
+            HStack(spacing: 4) {
+                Text("EASING")
+                    .font(.system(size: 10, weight: .semibold))
+                    .tracking(0.9)
+                    .foregroundStyle(VideoKit.Palette.faint)
+                    .fixedSize()
+                easingMenu
             }
+            .playtestField("Easing")
         }
-        HStack(spacing: 4) {
-            Text("EASING")
-                .font(.system(size: 10, weight: .semibold))
-                .tracking(0.9)
-                .foregroundStyle(VideoKit.Palette.faint)
-                .fixedSize()
-            easingMenu
-        }
-        .playtestField("Easing")
-    }
-
-    private func readoutPill(_ reading: String, at time: String) -> some View {
-        HStack(spacing: 6) {
-            Text("Playhead").foregroundStyle(VideoKit.Palette.ink)
-            Text(reading).fontWeight(.semibold).foregroundStyle(VideoKit.Palette.comp)
-            Text("@ \(time)").foregroundStyle(VideoKit.Palette.ink)
-        }
-        .font(.system(size: 11, design: .monospaced))
-        .monospacedDigit()
-        .lineLimit(1)
-        .fixedSize()
-        .padding(.horizontal, 8)
-        .padding(.vertical, 3)
-        .background(RoundedRectangle(cornerRadius: 6).fill(VideoKit.Palette.panel2))
-        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(VideoKit.Palette.edgeLo))
-        .panelReadout("Playhead \(reading) @ \(time)")
-        .playtestField("Playhead Readout")
     }
 
     private var easingMenu: some View {
-        VideoKit.SelectFace(value: editorState.newKeyEase.title, size: .small)
+        let shown = editorState.pickedKeysEase?.title ?? "Mixed"
+        return VideoKit.SelectFace(value: shown, size: .small)
             .frame(width: 124)
             .overlay {
                 Menu {
                     ForEach(KeyEase.allCases, id: \.self) { ease in
                         Toggle(ease.title, isOn: Binding(
-                            get: { editorState.newKeyEase == ease },
-                            set: { if $0 { editorState.newKeyEase = ease } }))
+                            get: { editorState.pickedKeysEase == ease },
+                            set: { if $0 { editorState.easePickedKeys(ease) } }))
                     }
                 } label: {
-                    Text(editorState.newKeyEase.title).foregroundStyle(Color.clear)
+                    Text(shown).foregroundStyle(Color.clear)
                 }
                 .menuStyle(.borderlessButton)
                 .menuIndicator(.hidden)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .opacity(0.011)
                 .accessibilityLabel("Easing")
-                .accessibilityValue(editorState.newKeyEase.title)
-                .panelHelp("The curve new keys are given")
+                .accessibilityValue(shown)
+                .panelHelp("The curve the picked keys move through")
                 .playtestControl("Easing", detail: "Timeline")
             }
     }

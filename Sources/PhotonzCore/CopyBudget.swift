@@ -15,6 +15,12 @@ public enum CopyBudget {
     /// about forty at the panel's default width; sixty is the hard wall.
     public static let panelLine = 60
 
+    /// The longest thing the chrome outside the panel may say, in characters:
+    /// the timeline, the transport, the tool bar, canvas overlays, popovers,
+    /// toasts and empty states. A label or a value, never a sentence
+    /// (`no-sentences-or-debug-readouts-anywhere-in-the-c`, 2026-09-25).
+    public static let chromeLine = 30
+
     /// The longest description an Experiments switch may carry, in words.
     public static let flagDescriptionWords = 40
 
@@ -42,6 +48,55 @@ public enum CopyBudget {
         text.count > panelLine
     }
 
+    /// What is wrong with a piece of chrome copy.
+    public enum ChromeFault: String, Sendable, CaseIterable {
+        /// Over `chromeLine` characters.
+        case long
+        /// Says something in a sentence: ends on a full stop, or has two.
+        case sentence
+        /// Reads like a debug value: `@`, or raw milliseconds.
+        case debug
+        /// "no X": a placeholder where nothing should be shown at all.
+        case placeholder
+        /// An explanation in brackets.
+        case parenthetical
+    }
+
+    /// Every rule a piece of chrome copy breaks, in `ChromeFault` order.
+    public static func chromeFaults(_ text: String) -> [ChromeFault] {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        var faults: [ChromeFault] = []
+        if trimmed.count > chromeLine { faults.append(.long) }
+        let endsOnAStop = trimmed.hasSuffix(".") && !trimmed.hasSuffix("...")
+        if endsOnAStop || trimmed.contains(". ") { faults.append(.sentence) }
+        if trimmed.contains("@") || trimmed.contains(interpolation + "ms") { faults.append(.debug) }
+        if trimmed.lowercased().hasPrefix("no ") { faults.append(.placeholder) }
+        if bracketsExplain(trimmed) { faults.append(.parenthetical) }
+        return faults
+    }
+
+    /// Brackets holding words, as against a shortcut: "(slowed)", not "(B)".
+    static func bracketsExplain(_ text: String) -> Bool {
+        var inside: String?
+        for c in text {
+            if c == "(" { inside = ""; continue }
+            if c == ")", let words = inside {
+                if words.filter(\.isLetter).count > 1 { return true }
+                inside = nil
+                continue
+            }
+            inside?.append(c)
+        }
+        return false
+    }
+
+    /// A string the code uses as a name rather than words: a key, a
+    /// coordinate space, a symbol. One unbroken lower-case-led run.
+    public static func isIdentifier(_ text: String) -> Bool {
+        guard let first = text.first, first.isLowercase else { return false }
+        return text.allSatisfy { $0.isLetter || $0.isNumber || $0 == "." || $0 == "_" || $0 == "-" }
+    }
+
     public static func words(in text: String) -> Int {
         text.split(whereSeparator: { $0.isWhitespace }).count
     }
@@ -60,6 +115,10 @@ public enum CopyBudget {
     static let hiddenCalls: Set<String> = [
         "accessibilityIdentifier", "print", "fatalError", "precondition", "preconditionFailure",
         "assert", "assertionFailure", "NSLog",
+        // Probes a scripted walk reads, compiled out of a release, and what a
+        // screen reader says: none of it is drawn.
+        "panelReadout", "playtestControl", "playtestField", "playtestHover", "panelStartProbe",
+        "tutorialAnchor", "accessibilityLabel", "accessibilityValue", "accessibilityHint",
     ]
     static let hiddenLabels: Set<String> = [
         "systemName", "named", "forKey", "identifier", "id", "key", "defaultsKey",
@@ -68,6 +127,7 @@ public enum CopyBudget {
     static func isTooltipLabel(_ label: String) -> Bool {
         let lower = label.lowercased()
         return lower.hasSuffix("help") || lower.hasSuffix("tip") || lower.hasSuffix("tooltip")
+            || lower == "hint"
     }
 
     /// A declaration whose name says it holds a hover tip: `help`,
@@ -75,6 +135,14 @@ public enum CopyBudget {
     static func isTooltipName(_ name: String) -> Bool {
         let lower = name.lowercased()
         return isTooltipLabel(name) || lower.hasSuffix("helptext") || lower.hasSuffix("tiptext")
+    }
+
+    /// A declaration whose name says it holds words for a scripted walk or a
+    /// screen reader: `readout`, `readoutText`, `trackSummary`.
+    static func isProbeWordsName(_ name: String) -> Bool {
+        let lower = name.lowercased()
+        return lower.hasPrefix("playtest") || lower.hasSuffix("readout") || lower.hasSuffix("readouttext")
+            || lower.hasSuffix("summary") || lower.hasSuffix("description")
     }
 
     private enum Register { case copy, tooltip, hidden }
@@ -109,6 +177,8 @@ public enum CopyBudget {
         /// Depth of a declaration named for a tip (`placeHelp`, `helpText`)
         /// whose body or value is still to come.
         var tipDeclaration: Int?
+        /// The same for a declaration named for a probe's words (`readout`).
+        var probeDeclaration: Int?
 
         init(_ chars: [Character]) { self.chars = chars }
 
@@ -152,6 +222,10 @@ public enum CopyBudget {
                         reg = .tooltip
                         tipDeclaration = nil
                     }
+                    if probeDeclaration == frames.count {
+                        reg = .hidden
+                        probeDeclaration = nil
+                    }
                     var text = readLiteral()
                     while let next = gluedLiteralStart() {
                         i = next.index
@@ -173,6 +247,7 @@ public enum CopyBudget {
                     if naming {
                         naming = false
                         if CopyBudget.isTooltipName(ident) { tipDeclaration = frames.count }
+                        if CopyBudget.isProbeWordsName(ident) { probeDeclaration = frames.count }
                         continue
                     }
                     if ["func", "var", "let"].contains(ident) {
@@ -198,13 +273,16 @@ public enum CopyBudget {
                 case "{":
                     let named = tipDeclaration == frames.count
                     if named { tipDeclaration = nil }
-                    frames.append(Frame(register: named ? .tooltip : .copy, closer: "}"))
+                    let probe = probeDeclaration == frames.count
+                    if probe { probeDeclaration = nil }
+                    frames.append(Frame(register: probe ? .hidden : named ? .tooltip : .copy, closer: "}"))
                 case ")", "]", "}":
                     if let last = frames.last, last.closer == c { frames.removeLast() }
                 case ",":
                     if !frames.isEmpty { frames[frames.count - 1].argument = .copy }
                 case "\n", ";":
                     if tipDeclaration == frames.count { tipDeclaration = nil }
+                    if probeDeclaration == frames.count { probeDeclaration = nil }
                     if let last = frames.last, last.endsAtNewline || c == ";" {
                         frames[frames.count - 1].argument = .copy
                     }

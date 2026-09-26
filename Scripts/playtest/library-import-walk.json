@@ -35,7 +35,7 @@
     { "do": "describe", "stage": "4-music-on-the-shelf", "note": "Let go, the music is a tile on the shelf and not a clip on any track" },
     { "do": "snapshot", "name": "4-music-on-the-shelf" },
 
-    { "do": "dropOnTimeline", "tile": "Sample Music.m4a", "track": "Audio", "seconds": 1.0, "release": false, "hold": "5-tile-over-the-empty-track", "says": "lands on Audio at 0:01" },
+    { "do": "dropOnTimeline", "tile": "Sample Music.m4a", "track": "Audio", "seconds": 1.0, "release": false, "hold": "5-tile-over-the-empty-track", "says": "Overwrite · Audio · 0:01" },
     { "do": "dropOnTimeline", "tile": "Sample Music.m4a", "track": "Audio", "seconds": 1.0 },
     { "do": "wait", "seconds": 1.0 },
     { "do": "expectClip", "clip": "Sample Music", "track": "Audio", "startsAt": 1.0, "count": 1 },

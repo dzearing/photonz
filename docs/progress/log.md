@@ -19718,3 +19718,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - A hand fix remembers what was heard (`TranscribedWord.heardAs`), so Write Again puts the same fix on the same mishearing at the same moment (`CaptionWordFixes`, applied in `landCaptions`).
 - Core: `CaptionWordEdits.swift` (`CaptionWordRef`, `CaptionWordGrab`, `CaptionWordHit`, `CaptionWordSnap`), tests `CaptionWordEditTests`. Render: `TextRasterizer.wordRects`, tests `TextWordRectsTests`. App: `EditorState+CaptionWords.swift`, `CaptionWordField.swift`, `CaptionWordsLane.swift`.
 - Walk `fix-a-caption-word-walk` at Next defaults; `captions-write-themselves-walk` now expects the word, not the line. `captions-panel-keeps-its-margins-walk` fails on clean main too (logged on its owning task). Full suite: only `VideoExportBudgetTests` fails, and it fails identically on clean main (logged on the export-size flake task). Audit `queue/audits/2026-09-25-fix-a-caption-word.json`.
+
+## 2026-09-25 — Chrome says labels, not sentences
+
+- Timeline bar: the mock's playhead readout pill is gone (user rejected it); Easing shows only while keys are picked and eases them (and the next keys made). Drop label is `Overwrite · V1 · 0:08` / `⌘ Insert`. Transition tiles drop "no overlap" / "no spare".
+- `CopyBudget.chromeFaults` + `ChromeCopyBudgetTests`: chrome outside the panel is held to 30 characters, no sentence, no `@`/raw ms, no "no X", no bracketed explanation. Video surfaces have no allowance; shared chrome has a shrink-only list, filed as `the-shared-chrome-says-labels-not-sentences`.
+- Rule in UX-PATTERNS §4 "What the chrome may say" (v2.3) and the runner prompt. Inventory: `docs/design/chrome-copy-inventory.md`. New walk `timeline-bar-labels-only-walk`.
+- Open: the untracked `a-recording-opens-sharp` walks from another task use an unknown step and fail 7 tests while they sit in the tree.

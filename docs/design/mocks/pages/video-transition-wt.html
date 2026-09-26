@@ -212,10 +212,14 @@
                  to, and it knows what this cut can pay for -->
             <div class="popover pop" id="transPick" style="position:absolute;right:var(--s4);bottom:56px;z-index:14">
               <div class="pickhead">At this cut <span class="sp" id="pickSpare">spare 2.0s / 1.5s</span></div>
+              <!-- 2026-09-25, queue task no-sentences-or-debug-readouts-anywhere-in-the-c: the user
+                   ruled out "no X" placeholders in chrome. The dips' "no overlap" caption is gone (a dip
+                   costs nothing, so its tile says nothing), and a tile the cut cannot afford is greyed
+                   with its reason in the hover tip instead of turning its caption into "no spare". -->
               <div class="libgrid">
                 <div class="libtile" id="txDiss" tabindex="0"><span class="th tx-diss"></span><span class="cap"><span class="nm">Cross dissolve</span><span class="mt" id="mtDiss">needs overlap</span></span></div>
-                <div class="libtile" id="txBlack" tabindex="0"><span class="th tx-black"></span><span class="cap"><span class="nm">Dip to black</span><span class="mt">no overlap</span></span></div>
-                <div class="libtile" id="txWhite" tabindex="0"><span class="th tx-white"></span><span class="cap"><span class="nm">Dip to white</span><span class="mt">no overlap</span></span></div>
+                <div class="libtile" id="txBlack" tabindex="0"><span class="th tx-black"></span><span class="cap"><span class="nm">Dip to black</span></span></div>
+                <div class="libtile" id="txWhite" tabindex="0"><span class="th tx-white"></span><span class="cap"><span class="nm">Dip to white</span></span></div>
                 <div class="libtile" id="txPush" tabindex="0"><span class="th tx-push"></span><span class="cap"><span class="nm">Push</span><span class="mt" id="mtPush">needs overlap</span></span></div>
                 <div class="libtile" id="txWipe" tabindex="0"><span class="th tx-wipe"></span><span class="cap"><span class="nm">Wipe</span><span class="mt" id="mtWipe">needs overlap</span></span></div>
                 <div class="libtile" id="txBlur" tabindex="0"><span class="th tx-blur"></span><span class="cap"><span class="nm">Blur through</span><span class="mt" id="mtBlur">needs overlap</span></span></div>
@@ -563,7 +567,7 @@
           data-class="#btnExpand=open|#xband=blk|#txDiss=off|#txPush=off|#txWipe=off|#txBlur=off"
           data-pop="#transPick"
           data-css="#clipA=width:38.095%|#clipB=left:52.381%;width:28.571%|#clipC=left:80.952%;width:19.048%|#cut1=left:38.095%|#cut2=left:80.952%|#spareA=left:80.952%;width:3.81%|#xband=left:35.714%;width:19.048%|#fadeOut=left:35.714%;width:2.381%|#fadeIn=left:52.381%;width:2.381%|#xClipA=width:38.095%|#xClipB=left:52.381%;width:28.571%|#xFadeOut=left:35.714%;width:2.381%|#xFadeIn=left:52.381%;width:2.381%|#frBlk=opacity:0|#frB=opacity:1|#scrubFill=width:81%|#scrubKnob=left:81%|#playhead=--t:0.81"
-          data-set="#propKind=Edit point|#tcCur=0:17|#docLen=0:21|#tcEnd=0:21|#pCutAt=at 0:17|#pOutName=b-roll|#pInName=outro|#pSpareA=0.8s|#pSpareB=none|#pickSpare=spare 0.8s / none|#spareALb=0.8s spare|#mtDiss=no spare|#mtPush=no spare|#mtWipe=no spare|#mtBlur=no spare|#pTransState=None|#pSpareNote=outro.mov was exported from its own first frame, so there is nothing before its in point to borrow. b-roll has 0.8s spare on its side, but an overlap has to come from both.|#pickNote=The dips are still fine here, because they never needed an overlap. Forcing a dissolve would mean shortening the cut, which moves outro and everything after it, so Photonz offers that rather than doing it quietly.">
+          data-set="#propKind=Edit point|#tcCur=0:17|#docLen=0:21|#tcEnd=0:21|#pCutAt=at 0:17|#pOutName=b-roll|#pInName=outro|#pSpareA=0.8s|#pSpareB=none|#pickSpare=spare 0.8s / none|#spareALb=0.8s spare|#mtDiss=needs overlap|#mtPush=needs overlap|#mtWipe=needs overlap|#mtBlur=needs overlap|#pTransState=None|#pSpareNote=outro.mov was exported from its own first frame, so there is nothing before its in point to borrow. b-roll has 0.8s spare on its side, but an overlap has to come from both.|#pickNote=The dips are still fine here, because they never needed an overlap. Forcing a dissolve would mean shortening the cut, which moves outro and everything after it, so Photonz offers that rather than doing it quietly.">
         <div class="wt-cap vid">
           <span class="wt-n">10</span>
           <p class="wt-do">the <b>second seam</b>, between b-roll and outro</p>

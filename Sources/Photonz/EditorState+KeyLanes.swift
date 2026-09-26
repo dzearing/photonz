@@ -114,6 +114,21 @@ extension EditorState {
         keySelection = all.isEmpty ? nil : KeySelection(layerID: layerID, refs: all)
     }
 
+    /// The ease every picked key shares, for the timeline bar's Easing;
+    /// nil when nothing is picked or the picked keys differ.
+    var pickedKeysEase: KeyEase? {
+        guard let keySelection, let document else { return nil }
+        return document.keysEase(layerID: keySelection.layerID, keySelection.refs)
+    }
+
+    /// Easing chosen on the timeline bar: the picked keys take it, and so do
+    /// the keys made after, the way a tool keeps the last setting you gave it.
+    func easePickedKeys(_ ease: KeyEase) {
+        newKeyEase = ease
+        guard let keySelection else { return }
+        easeKeys(layerID: keySelection.layerID, keySelection.refs, ease)
+    }
+
     func clearKeySelection() {
         if keySelection != nil { keySelection = nil }
     }

@@ -10,23 +10,19 @@ struct TimelineFileHover: Equatable {
     var name: String
     var landing: ClipLanding
 
-    /// The words for it, in the bar over the tracks and on the ghost's help.
+    /// The label for it, in the bar over the tracks and on a refused ghost:
+    /// the edit, the track and the time, the way Premiere's drag says Insert
+    /// or Overwrite. Never a sentence (`no-sentences-or-debug-readouts-anywhere-in-the-c`).
     var note: String {
-        let moment = CaptionProgress.clock(landing.startMS)
-        guard landing.allowed else {
-            return landing.isLocked ? "\(landing.trackName) is locked"
-                                    : "No room on \(landing.trackName)"
-        }
+        guard landing.allowed else { return landing.isLocked ? "Locked" : "Occupied" }
+        let edit = landing.edit == .insert ? "Insert" : "Overwrite"
         let track: String
         if case .newTrack = landing.target {
-            track = "a new track, \(landing.trackName)"
+            track = "New \(landing.trackName)"
         } else {
             track = landing.trackName
         }
-        switch landing.edit {
-        case .overwrite: return "\(name) lands on \(track) at \(moment)"
-        case .insert: return "\(name) goes in on \(track) at \(moment), pushing what is after"
-        }
+        return "\(edit) · \(track) · \(CaptionProgress.clock(landing.startMS))"
     }
 }
 

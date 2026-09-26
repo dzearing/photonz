@@ -228,11 +228,4 @@ extension EditorState {
     /// and every key made before this dropdown plays exactly as it did.
     var newKeyEaseToWrite: KeyEase? { newKeyEase == .easeInAndOut ? nil : newKeyEase }
 
-    /// What the timeline bar says after "Playhead": the value last touched
-    /// on the picked layer, or its first keyed one, and its reading here.
-    var keyReadout: String? {
-        guard let layer = keyLayer, let document else { return nil }
-        return document.keyReadout(layerID: layer.id, preferring: activeKeyProperty,
-                                   atDocumentTimeMS: documentTimeMS)
-    }
 }

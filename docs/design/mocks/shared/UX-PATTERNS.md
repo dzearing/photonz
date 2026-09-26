@@ -1,6 +1,13 @@
 # Photonz — UX patterns & interaction model (the app's spine)
 
-**Status: v2.2. D18 is rewritten at the user's direction (2026-09-23): a
+**Status: v2.3. §4 gains "What the chrome may say": outside the panel (the
+timeline, transport, tool bar, canvas overlays, HUDs, popovers, toasts, empty
+states, status pills) the app shows labels and values, never a sentence about
+state, a debug reading or a "no X", and an empty state is empty or one short
+label. Mock text that reads like a debug value is not copied: it is raised as a
+card. Written 2026-09-25 after the user turned down the timeline bar's
+"Playhead no animated property @ 0.00s" (`no-sentences-or-debug-readouts-anywhere-in-the-c`);
+`ChromeCopyBudgetTests` holds it. v2.2: D18 is rewritten at the user's direction (2026-09-23): a
 document with time has TRACKS (video, titles, audio, captions), named,
 renamable, groupable, each holding many clips, and a clip can move between
 them. The v2.0 D18 ("a timeline row is a LAYER") is withdrawn, and so is its
@@ -1072,6 +1079,40 @@ section that wants to explain itself has to obey.
 - **Nothing is deleted without a home.** Where a sentence was the ONLY place a
   limit or a scope was written down, it moves to the control's hover tip or to
   the section header before the line goes.
+
+#### What the chrome may say
+
+**Outside the panel, the app shows labels and values. Never a sentence.**
+Settled 2026-09-25, when the user pointed at the timeline bar's "Playhead no
+animated property @ 0.00s" and called it "completely unprofessional ux". That
+pill had been copied faithfully from `video.html`; the user rejected it anyway,
+and the mock was changed to match. Premiere, Final Cut and Photoshop put values
+and controls in their chrome, never a line about what state things are in.
+
+This covers everything that is not the right hand panel: the timeline and its
+bar, the transport, the tool bar and its options, canvas overlays and HUDs,
+popovers, toasts, empty states and status pills.
+
+- **A label or a value, 30 characters at most.** "Overwrite · V1 · 0:08", not
+  "b-roll lands on V1 at 0:08". "Ease Out", not "the curve new keys are given".
+- **No sentence about state.** Nothing ending on a full stop, nothing that
+  narrates what is happening. What a control does goes in its hover tip.
+- **No debug readings.** No `@`, no raw milliseconds, no ids, no bracketed
+  explanation. A shortcut in brackets, "(B)", is fine.
+- **No "no X" placeholders.** When there is nothing to show, show nothing: a
+  control that only acts on a selection is absent until there is one (Easing on
+  the timeline bar appears when keys are picked), a tile that cannot be chosen
+  is greyed with its reason in the tip, not captioned "no spare".
+- **An empty state is empty, or ONE short label.** "No captures" at most, never
+  a line of instructions.
+- **Mock text that reads like a debug value is not copied.** A mock is the
+  floor for layout and controls, but a readout like `.kfread` is raised as a
+  decision card before it is built, not shipped because the mock drew it.
+
+`ChromeCopyBudgetTests` reads the chrome's own source and fails a new string that
+breaks any of these. Its list of older offenders only shrinks, and the video
+surfaces have none. Hover tips, walk probes (`panelReadout`, `playtestControl`)
+and screen-reader words are not drawn, so the test does not read them.
 
 #### The line under a section
 
