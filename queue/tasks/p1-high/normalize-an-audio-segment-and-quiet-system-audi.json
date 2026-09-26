@@ -1,0 +1,35 @@
+{
+  "id": "normalize-an-audio-segment-and-quiet-system-audi",
+  "title": "Normalize an audio segment, and quiet system audio shows and sounds right",
+  "goal": "User 2026-09-26: 'when we have audio tracks, I'd like an option to normalize the audio. Recording with system audio seems to barely register on the audio histogram on the tracks.' Two parts: a Normalize action like Premiere's Audio Gain > Normalize (and Final Cut's loudness), and finding out why system audio records so quiet: whether the capture itself is low (ScreenCaptureKit system-audio level, mixing with the mic) or the waveform draws on a linear scale so quiet audio looks flat. Reproduce with a real recording that has system audio before changing anything.",
+  "epic": "video-audio",
+  "priority": "p1-high",
+  "seq": 0.03,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-26T13:53:22.392Z",
+  "updated": "2026-09-26T13:53:26.485Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Reproduced first: record 10 s of system audio at a normal listening volume, measure its peak and loudness (dBFS / LUFS) from the file, and photograph its waveform; say whether the capture is quiet, the drawing is misleading, or both",
+    "Right-click an audio segment (or several selected): Normalize, bringing peaks to -1 dBFS by default; Normalize to Loudness in the same submenu targets -14 LUFS (web) or -16 LUFS (podcast); the gain is a non-destructive value on the segment, undoable, and shown on the segment as a small +N dB label",
+    "A Gain row in the panel for a selected audio segment shows the current gain in dB and can be dragged or typed, and a Normalize button sits beside it",
+    "The waveform draws on a scale that makes quiet speech and system audio visible (dB-scaled or auto-scaled per track, as Premiere does), and redraws when gain changes",
+    "If the capture is quiet: system audio is recorded at unity level, and new recordings with system audio can be normalized automatically on open (one checkbox in Settings, on by default)",
+    "The mix meter and export honour the gain; normalizing never clips (the existing loudness guard still applies)",
+    "A walk at Next defaults opens a recording with quiet system audio, normalizes it from the right-click menu, and photographs the waveform before and after"
+  ],
+  "log": [
+    {
+      "t": "2026-09-26T13:53:22.394Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-26T13:53:26.484Z",
+      "note": "seq 370 -> 0.03"
+    }
+  ]
+}

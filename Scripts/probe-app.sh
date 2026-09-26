@@ -89,6 +89,22 @@ ARGS=()
 # somebody working on the harness itself wants: the run still records that the
 # screen was locked, so it is a way to watch the machinery, never a way to earn
 # a pass. See Sources/Photonz/Playtest/PlaytestScreenState.swift.
+# Never launch while somebody is using the Mac (queue/bin/person-at-mac.sh):
+# the probe driving itself made the user's machine unusable on 2026-09-26. Wait
+# for the keyboard and mouse to have been left alone for PHOTONZ_WALK_IDLE
+# seconds (default 60), up to PHOTONZ_WALK_IDLE_WAIT (default 240), then give
+# up with exit 6, which means DEFERRED: nothing ran, nothing is broken.
+WAITED=0
+until queue/bin/person-at-mac.sh away "${PHOTONZ_WALK_IDLE:-60}"; do
+  if (( WAITED == 0 )); then
+    echo "==> Somebody is using this Mac; waiting for them to step away before launching the probe."
+  fi
+  if (( WAITED >= ${PHOTONZ_WALK_IDLE_WAIT:-240} )); then
+    echo "==> Verdict: DEFERRED  somebody was using this Mac for ${WAITED}s, so the probe was not launched"
+    exit 6
+  fi
+  sleep 5; WAITED=$((WAITED + 5))
+done
 ENVS=()
 [[ -n "${PHOTONZ_PLAYTEST_PACE:-}" ]] && ENVS=(--env "PHOTONZ_PLAYTEST_PACE=$PHOTONZ_PLAYTEST_PACE")
 [[ "${PHOTONZ_ALLOW_LOCKED_WALK:-}" == "1" ]] && ENVS+=(--env "PHOTONZ_ALLOW_LOCKED_WALK=1")

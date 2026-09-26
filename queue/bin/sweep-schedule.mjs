@@ -12,7 +12,7 @@
 // THE SCHEDULE. Written here once, and every place that tells a human about it
 // reads it from queue/bin/sweep.sh schedule rather than typing it out again.
 //
-//   The full set runs at most once every FLOOR HOURS (12), so twice a day, and
+//   The full set runs at most once every FLOOR HOURS (24), so once a day, and
 //   only when code has landed since the last one. Requests pile up in between
 //   and are all served by the next run.
 //
@@ -34,9 +34,9 @@
 //
 // Drill: queue/bin/sweep-schedule-drill.mjs
 export const DEFAULTS = {
-  // Hours between whole-set runs. Twelve, so twice a day: a full sweep is 113
+  // Hours between whole-set runs. 24, once a day (was twelve until 2026-09-26, when walks made the user's Mac unusable): a full sweep is 113
   // minutes at 544 walks, which is 16 per cent of a day at this floor.
-  floorHours: 12,
+  floorHours: 24,
   // How long a rotating check is allowed to take, in walks-worth of time. Ten
   // minutes is about fifty walks, which is a twelfth of the set and short
   // enough that it never reads as the loop stalling.
@@ -269,7 +269,7 @@ if (isMain) {
   const f = DEFAULTS.floorHours;
   console.log(`The walk sweep's schedule
 
-  The full set runs at most once every ${f} hours, so twice a day, and only when
+  The full set runs at most once every ${f} hours, so once a day, and only when
   code has landed since the last one. Asking for a sweep does not start one: the
   requests pile up and the next run serves them all.
 

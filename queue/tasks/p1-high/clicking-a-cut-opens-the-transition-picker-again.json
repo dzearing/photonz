@@ -5,14 +5,14 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-26T06:34:33.137Z",
-  "updated": "2026-09-26T12:28:01.280Z",
+  "updated": "2026-09-26T13:11:06.545Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Reproduced 2026-09-26 on main at 9968c2d1 with no local changes (stashed): Scripts/probe-app.sh; Scripts/playtest-all.sh --no-build transition-picker-at-a-cut-walk -> FAILED step 18 (expect): no control called \"Cross dissolve\" is in the panel (panel lists 'Edit point Tutorial Sample to b-roll' but no picker). a-video-edit-saves-as-a-project-walk -> FAILED step 34 (press): no control called \"Cross dissolve\" in \"At this cut\"; its 4-picker-sc.png shows the click landed on the join between the two Sample Talk pieces on V1 and no picker opened. Both passed in the 2026-09-25T23:33Z sweep (617/623), so the break is in a commit after it: 34757c2e (timeline bar says labels), 3235cde1 (drawn things get their own row), 3ac98a03 (captions one layer), bb6c6370, b237059c, bb17ceed, 688177b1, 9968c2d1 (clip shows its sound). Found by the runner of command-s-on-a-video-edit-does-what-the-user-pic.",
+  "notes": "Reproduced 2026-09-26 on main at 9968c2d1 with no local changes (stashed): Scripts/probe-app.sh; Scripts/playtest-all.sh --no-build transition-picker-at-a-cut-walk -> FAILED step 18 (expect): no control called \"Cross dissolve\" is in the panel (panel lists 'Edit point Tutorial Sample to b-roll' but no picker). a-video-edit-saves-as-a-project-walk -> FAILED step 34 (press): no control called \"Cross dissolve\" in \"At this cut\"; its 4-picker-sc.png shows the click landed on the join between the two Sample Talk pieces on V1 and no picker opened. Both passed in the 2026-09-25T23:33Z sweep (617/623), so the break is in a commit after it: 34757c2e (timeline bar says labels), 3235cde1 (drawn things get their own row), 3ac98a03 (captions one layer), bb6c6370, b237059c, bb17ceed, 688177b1, 9968c2d1 (clip shows its sound). Found by the runner of command-s-on-a-video-edit-does-what-the-user-pic. | RESOLVED 2026-09-26: no commit. A 'Photonz (Probe) quit unexpectedly' dialog (UserNotificationCenter, from the EXC_GUARD crash at 2026-09-25 23:22:53) held the front, so NSApp.isActive and window.isKeyWindow stayed false (logged at the press: key=false active=false) and a non-key window drops synthesized clicks on SwiftUI tap/drag gestures; Buttons fire. Bisect: 34757c2e^ and bb6c6370 both failed today, so the window was environment. Every /tmp/photonz-playtest log.json since 09-26 00:00 has appActive false (~640 runs). After killall UserNotificationCenter the probe is key+active and all six walks pass on unchanged HEAD. Guard: probe-app.sh Grants line '· a system alert is in front', and PlaytestHarness appends systemAlertInFront to a failed walk's error.",
   "acceptance": [
     "At Next defaults, with two clips on V1, a click on the join between them opens the transition picker at that cut",
     "With the Blade armed (tool bar, the timeline's bar or B), one click in the middle of a clip leaves it in two pieces and puts the playhead at the click; the same on its linked sound",
@@ -41,6 +41,34 @@
     {
       "t": "2026-09-26T12:28:01.279Z",
       "note": "seq 5 -> 10"
+    },
+    {
+      "t": "2026-09-26T12:29:45.035Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T13:10:47.000Z",
+      "note": "Reproduced on HEAD (step 18). Bisect in place: builds of 34757c2e^ (before the suspect window) and bb6c6370 fail identically today, so it is not a commit in the window."
+    },
+    {
+      "t": "2026-09-26T13:10:47.000Z",
+      "note": "Temporary hit-test diagnostic at the press: the click reaches the timeline's scroll view, but window key=false and app active=false. Buttons in the timeline (Timeline Blade) still fire; tap/drag gestures (edit point, clip body, blade lane) do not. lsappinfo front = com.apple.UserNotificationCenter; the probe photographed that window: 'Photonz (Probe) quit unexpectedly', from the 2026-09-25 23:22:53 EXC_GUARD crash (folded into find-out-why-the-app-sometimes-dies-at-the-start)."
+    },
+    {
+      "t": "2026-09-26T13:10:47.000Z",
+      "note": "Which commit: none. A person's real click was not broken: the break was the alert keeping the probe from ever taking focus, and a person's click on the window makes it active. HEAD's click handling is intact: with the alert closed all six walks pass unchanged. Not exercised: a person physically clicking (no Accessibility grant here to drive a real pointer)."
+    },
+    {
+      "t": "2026-09-26T13:10:47.000Z",
+      "note": "Closed the alert with killall UserNotificationCenter (Ignore). Walks pass: transition-picker-at-a-cut, a-video-edit-saves-as-a-project, an-editing-session, tutorial-put-a-transition-on-a-cut, a-painted-caption-takes-a-click, the-timeline-is-the-layer-list. Added expectClip pieces 2 + playhead to the-timeline-is-the-one-in-the-mock-walk and video-tool-bar-walk (plus a sound-lane Blade click to 3 pieces, playhead 2000ms); both pass."
+    },
+    {
+      "t": "2026-09-26T13:10:47.000Z",
+      "note": "Guard: probe-app.sh Grants line flags a system alert in front, and a failed walk's error says so. Could not raise a crash dialog on demand to see the new branch fire live (kill -SEGV of an inactive probe shows no dialog); the branch was checked with a forced value. Asked for a full sweep, since the 02:19 sweep ran behind the alert. Noted the possible same cause on walks-that-drag-a-clip-on-the-timeline-by-window. Scripts/test.sh: 9884 tests passed."
+    },
+    {
+      "t": "2026-09-26T13:11:06.543Z",
+      "note": "No commit broke the clicks: a 'Photonz (Probe) quit unexpectedly' alert (from the 2026-09-25 23:22 EXC_GUARD crash) held the front for 13h, so the probe was never active or key and synthesized clicks on SwiftUI tap/drag gestures were dropped (Buttons still fired). A person's real click was not broken. Closed the alert; all six walks pass on unchanged HEAD; the Blade checks were added to the-timeline-is-the-one-in-the-mock-walk and video-tool-bar-walk and both pass. probe-app.sh Grants line and failed walks now flag a system alert in front. 8f940789, 9884 tests green, full sweep requested."
     }
   ],
   "walks": [
@@ -50,5 +78,7 @@
     "tutorial-put-a-transition-on-a-cut-walk",
     "a-painted-caption-takes-a-click-walk",
     "the-timeline-is-the-layer-list-walk"
-  ]
+  ],
+  "started": "2026-09-26T12:29:45.034Z",
+  "completed": "2026-09-26T13:11:06.544Z"
 }

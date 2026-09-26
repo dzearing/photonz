@@ -1,0 +1,34 @@
+{
+  "id": "dragging-a-bar-s-end-tracks-the-pointer-without",
+  "title": "Dragging a bar's end tracks the pointer without flickering",
+  "goal": "User 2026-09-26: 'when I drag a rectangle to the video, then try to resize the duration in the track by grabbing the right edge, I move it left and it seems to flicker while dragging left. Like it doesn't want to just track with the mouse. Busted.' The row itself landed in 3235cde1 (anything drawn on a video gets its own row). Reproduce first, frame by frame, then fix. Candidate causes to test, not assume: snapping toggling on and off near the playhead or a clip edge as the pointer moves (see the done task a-trim-handle-catches-on-a-cut-as-it-passes), the drag reading the bar's live frame as its origin so each move feeds back into the next, a clamp against the clip under it fighting the pointer, or the whole timeline re-laying out on every change (ClipBarDrag.swift, TimelineTrackRows.swift). Standard: in Premiere and Final Cut the edge sits under the pointer every frame, snapping only when within a few points and letting go cleanly.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 0.003,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-26T13:53:09.051Z",
+  "updated": "2026-09-26T13:53:09.127Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Reproduced first: a walk at Next defaults draws a rectangle on a recording, drags its bar's right edge left in 30+ small steps, records the edge's x and the pointer's x at every step, and shows the mismatch or jitter today",
+    "Core test (PhotonzCore): an edge drag computed from the drag's START state and the pointer delta, never from the live frame; the out point is monotonic in the pointer and equals it to within one frame except while snapped",
+    "Snapping engages within a small fixed distance of the playhead, other edges and keys, holds while inside it, and releases cleanly when leaving, with no alternation between two positions; holding Cmd (or N, as in Premiere) turns snapping off for the drag",
+    "The same holds for the left edge, for moving a whole bar, for a clip's trim handles and for a caption word chip",
+    "The bar redraws only itself while dragging, at 60fps, with no other row re-laying out; measured in the walk",
+    "After the fix the walk shows the edge within one frame of the pointer at every step, and photographs the bar mid-drag"
+  ],
+  "log": [
+    {
+      "t": "2026-09-26T13:53:09.053Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-26T13:53:09.126Z",
+      "note": "seq 370 -> 0.003"
+    }
+  ]
+}

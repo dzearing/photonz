@@ -238,6 +238,14 @@ for walk in Scripts/playtest/*.json; do
       break
     fi
     continue
+  elif (( code == 6 )); then
+    # Somebody is using the Mac. Stop the whole batch rather than launching the
+    # probe again under their hands; the walks not run are unknown, not passing.
+    printf '%4ds  DEFERRED  somebody is using the Mac\n' $((SECONDS - WALK_BEGAN))
+    echo
+    echo "==> STOPPING: somebody is using the Mac. The walks answered above are real; the rest did not run."
+    DEFERRED=1
+    break
   elif (( code == 3 )); then
     BLIND_RUN=0
     # The screen is locked and THIS walk looks a control up by name, so it did
@@ -341,6 +349,7 @@ echo
 # Exit 5 means THE RUN WENT BLIND: the app stopped launching, so a stretch of
 # the set was never put in front of anything. It outranks the lock, because a
 # locked run at least had an app.
+(( ${DEFERRED:-0} )) && exit 6
 (( ${#BLIND[@]} )) && exit 5
 (( LOCKED )) && exit 3
 exit $(( ${#FAILED[@]} + ${#CRASHED[@]} == 0 ? 0 : 1 ))

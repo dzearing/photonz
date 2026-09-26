@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-23T00:59:10.437Z",
-  "updated": "2026-09-26T12:28:01.333Z",
+  "updated": "2026-09-26T13:46:19.122Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-26T11:50:00Z: 595 of 622 walks passed in 151 minutes.\n\nFailing walks (27): a-painted-caption-takes-a-click-walk, a-video-edit-saves-as-a-project-walk, an-editing-session-walk, extract-a-marked-stretch-walk, fix-a-caption-word-walk, hold-on-a-frame-walk, import-key-leaves-invert-selection-walk, key-a-title-s-scale-walk, key-lanes-walk, keyframe-anything-walk, keys-copy-between-layers-walk, library-import-walk, panel-grip-walk, premiere-keys-on-the-timeline-walk, properties-pane-walk, punch-in-and-hold-walk, the-timeline-is-the-layer-list-walk, timeline-bar-labels-only-walk, timeline-right-click-walk, tracks-you-can-add-rename-group-walk, transition-picker-at-a-cut-walk, tutorial-export-a-spec-list-walk, tutorial-layers-and-undo-walk, tutorial-mark-it-up-walk, tutorial-put-a-transition-on-a-cut-walk, tutorial-save-export-copy-walk, tutorial-two-parts-out-of-phase-walk\n\nAlready named by another open task, so read that one before re-diagnosing (5):\n  a-video-edit-saves-as-a-project-walk -> clicking-a-cut-opens-the-transition-picker-again (that task says it owns this walk)\n  an-editing-session-walk -> on-a-video-the-tool-bar-holds-the-video-tools-an (guessed from its wording, so read it before believing it)\n  key-lanes-walk -> a-keyed-value-s-curve-opens-where-you-want-it (that task says it owns this walk)\n  library-import-walk -> library-tiles-are-as-wide-as-the-mock-draws-them (guessed from its wording, so read it before believing it)\n  transition-picker-at-a-cut-walk -> clicking-a-cut-opens-the-transition-picker-again (that task says it owns this walk)\n\n2 of those are guesses. A task stops being guessed at by naming its walks:\n  node queue/bin/queue.mjs walks <task id> <walk> [<walk> ...]\n  node queue/bin/queue.mjs walks <task id> --none      (it only mentions them in passing)\n\nThis task owns the other 22: a-painted-caption-takes-a-click-walk, extract-a-marked-stretch-walk, fix-a-caption-word-walk, hold-on-a-frame-walk, import-key-leaves-invert-selection-walk, key-a-title-s-scale-walk, keyframe-anything-walk, keys-copy-between-layers-walk, panel-grip-walk, premiere-keys-on-the-timeline-walk, properties-pane-walk, punch-in-and-hold-walk, the-timeline-is-the-layer-list-walk, timeline-bar-labels-only-walk, timeline-right-click-walk, tracks-you-can-add-rename-group-walk, tutorial-export-a-spec-list-walk, tutorial-layers-and-undo-walk, tutorial-mark-it-up-walk, tutorial-put-a-transition-on-a-cut-walk, tutorial-save-export-copy-walk, tutorial-two-parts-out-of-phase-walk\n\nStopped failing since the last sweep (3): captions-panel-keeps-its-margins-walk, motion-pivot-in-a-corner-walk, picker-controls-walk\n\nFull output: queue/sweep/2026-09-26-021918.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a-recording-opens-to-watch-with-the-editing-tuck: a-recording-opens-to-watch: every recording now opens with its timeline tucked away and 27 video walks were migrated; the whole video set should be seen once; a-picture-or-video-fits-above-the-tool-bar-not-u: Fitted pictures now centre above the tool bar (Viewport.obscuredBottom), so every canvas sits 32pt higher than before; document-space walks are immune and 35 view/window-space and fit walks passed, but the whole set should confirm\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -189,7 +189,34 @@
     {
       "t": "2026-09-26T12:28:01.332Z",
       "note": "seq 30 -> 20"
+    },
+    {
+      "t": "2026-09-26T13:23:19.407Z",
+      "note": "rotating check 2026-09-26T13:23:19Z: punch-in-and-hold-walk failing out of the 50 walks it ran (354 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-26T13:23:19.614Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T13:30:15.403Z",
+      "note": "2026-09-26 13:35Z, HEAD 8f940789, probe rebuilt, the 22 owned walks run with playtest-all.sh --no-build --only: 18 pass (the 02:19 sweep ran behind the 'quit unexpectedly' alert, see clicking-a-cut-opens-the-transition-picker-again). Still red: hold-on-a-frame step 29 (waitFor tool arrow), keys-copy-between-layers step 81 (nothing keyed), panel-grip step 27 (Library has no grab bar), punch-in-and-hold step 59 (no Scale field)."
+    },
+    {
+      "t": "2026-09-26T13:46:18.680Z",
+      "note": "runner failed (exit 143, attempt 1): ▸ Bash Scripts/playtest-all.sh --no-build --only /tmp/wfs5/list.txt 2>&1 | grep -E \"FAILED|CRASHED|COULD NOT|ran out…"
+    },
+    {
+      "t": "2026-09-26T13:46:19.121Z",
+      "note": "ran out of turn with 4 file(s) still changed: Scripts/playtest/hold-on-a-frame-walk.json, Scripts/playtest/keys-copy-between-layers-walk.json, Scripts/playtest/panel-grip-walk.json, Scripts/playtest/punch-in-and-hold-walk.json. Put aside so the next task started clean; restore with `git stash apply 4b55ac5d4bcd2557e01962f895e8c112ce057457` before carrying on."
     }
   ],
-  "standing": "walk-sweep"
+  "standing": "walk-sweep",
+  "started": "2026-09-26T13:23:19.613Z",
+  "failures": 1,
+  "lastError": {
+    "at": "2026-09-26T13:46:18.679Z",
+    "exit": 143,
+    "message": "▸ Bash Scripts/playtest-all.sh --no-build --only /tmp/wfs5/list.txt 2>&1 | grep -E \"FAILED|CRASHED|COULD NOT|ran out…"
+  }
 }

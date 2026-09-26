@@ -25,11 +25,11 @@ const asked = [{ t: ago(0.1), by: 'a-task', why: 'it landed code' }];
 
 console.log('when a whole-set run is allowed');
 check('nobody asked, so nothing runs',
-  decide({ now, requests: [], latest: swept(20), head: 'new' }).run === 'nothing');
+  decide({ now, requests: [], latest: swept(26), head: 'new' }).run === 'nothing');
 check('no sweep has ever run, so the first one runs whatever else is true',
   decide({ now, requests: asked, latest: null, head: 'new' }).run === 'full');
-check('twelve hours have passed and code has landed, so the full set runs',
-  decide({ now, requests: asked, latest: swept(13), head: 'new' }).run === 'full');
+check('a day has passed and code has landed, so the full set runs',
+  decide({ now, requests: asked, latest: swept(25), head: 'new' }).run === 'full');
 check('two hours have passed, so the full set does NOT run',
   decide({ now, requests: asked, latest: swept(2), head: 'new' }).run !== 'full',
   decide({ now, requests: asked, latest: swept(2), head: 'new' }));
@@ -40,9 +40,9 @@ check('a runner that asked for one straight away gets one inside the floor',
 check('the floor is a knob, so a drill can move it',
   decide({ now, requests: asked, latest: swept(3), head: 'new', floorHours: 2 }).run === 'full');
 check('the last full sweep already covered this exact commit, so nothing runs',
-  decide({ now, requests: asked, latest: swept(20, { head: 'same' }), head: 'same' }).run === 'nothing');
+  decide({ now, requests: asked, latest: swept(26, { head: 'same' }), head: 'same' }).run === 'nothing');
 check('...and it says so rather than going quiet',
-  /already covered/.test(decide({ now, requests: asked, latest: swept(20, { head: 'same' }), head: 'same' }).why));
+  /already covered/.test(decide({ now, requests: asked, latest: swept(26, { head: 'same' }), head: 'same' }).why));
 
 console.log('the rotating check in between');
 check('nothing new has landed since the last rotating check, so it does not repeat',
@@ -55,9 +55,9 @@ check('new code since the last rotating check, so it runs again',
 
 console.log('a locked screen');
 check('the lock-safe part has already run against this commit, so nothing runs',
-  decide({ now, requests: asked, latest: swept(20, { head: 'same', complete: false, partial: true }), head: 'same', screenLocked: true }).run === 'nothing');
+  decide({ now, requests: asked, latest: swept(26, { head: 'same', complete: false, partial: true }), head: 'same', screenLocked: true }).run === 'nothing');
 check('new code and the floor elapsed, so the lock-safe part runs again',
-  decide({ now, requests: asked, latest: swept(20, { head: 'old', complete: false, partial: true }), head: 'new', screenLocked: true }).run === 'full');
+  decide({ now, requests: asked, latest: swept(26, { head: 'old', complete: false, partial: true }), head: 'new', screenLocked: true }).run === 'full');
 check('inside the floor a locked screen still gets the rotating check',
   decide({ now, requests: asked, latest: swept(2, { head: 'old', complete: false, partial: true }), head: 'new', screenLocked: true }).run === 'slice');
 
@@ -103,7 +103,7 @@ check('the end to end editing session walk is in every check',
   DEFAULTS.everyCheck.includes('an-editing-session-walk'), DEFAULTS.everyCheck);
 
 console.log('defaults');
-check('the floor is twelve hours', DEFAULTS.floorHours === 12, DEFAULTS.floorHours);
+check('the floor is a day (2026-09-26: walks took the user\'s Mac away)', DEFAULTS.floorHours === 24, DEFAULTS.floorHours);
 check('a rotating check is budgeted at ten minutes', DEFAULTS.sliceMinutes === 10, DEFAULTS.sliceMinutes);
 
 console.log(failures ? `\n${failures} check(s) failed` : '\nall checks passed');

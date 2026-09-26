@@ -103,6 +103,8 @@ The machine you run on is the user's. Anything you start, you finish.
   ONE more turn to finish, once per claim, and says so in your log. A second
   stop is a failure like any other.
 
+- **Walks wait for the person to step away, and stop when they come back.** On 2026-09-26 the user could not type while the loop tested: the probe took their keyboard and focus. So `Scripts/probe-app.sh` and every walk now launch only after the Mac has had no keyboard or mouse input for a minute (`queue/bin/person-at-mac.sh`), and a walk quits the probe the moment input arrives. Either way the walk prints `Verdict: DEFERRED` and exits **6**: it did not run, nothing is broken, never file it and never count it as a failure. Do the rest of your task (tests, code, the audit text), try the walk again once near the end, and if it is still deferred say so in the task log and on the audit (`"setup"` names the walk to run) rather than waiting out the person. Never set `PHOTONZ_IGNORE_PERSON=1` yourself: that switch is for a person running a walk by hand while they watch.
+
 - **Run the walks you touched, never the whole sweep.** There are two checks and
   they are not interchangeable. While you build, run the one or few walks your
   change affects: each costs about ten seconds.

@@ -50,7 +50,7 @@ minute day, 58 per cent of its wall clock against 41 per cent building
 
 The schedule now:
 
-* **The full set runs at most once every twelve hours**, so twice a day, and
+* **The full set runs at most once every twenty four hours**, so once a day, and
   only when code has landed since the last one. Requests pile up in between and
   the next run serves them all.
 * **In between, after any task that lands code, a rotating check**: about ten
@@ -68,6 +68,18 @@ The schedule now:
 `queue/bin/sweep.sh schedule` prints this, out of the code that runs it
 (`queue/bin/sweep-schedule.mjs`), and `queue/bin/sweep.sh status` says why
 nothing is running right now.
+
+### Walks never run under the person's hands
+
+Walks drive the probe, and on 2026-09-26 the user could not even type while the
+loop tested. So nothing that drives the probe starts while somebody is using the
+Mac, and anything running stops when they come back (`queue/bin/person-at-mac.sh`,
+HIDIdleTime): a walk needs a minute with no keyboard or mouse input, the
+rotating check five minutes, the whole set fifteen; a walk that sees input quits
+the probe and exits 6 (`DEFERRED`, never a failure), and a sweep that sees input
+puts itself down and its request goes back on the pile. The whole set runs at
+most once a day. `PHOTONZ_IGNORE_PERSON=1` is for a person running a walk by
+hand while they watch.
 
 ### A locked screen stops names, not the app
 

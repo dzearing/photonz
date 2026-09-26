@@ -14,7 +14,8 @@
 #
 # Exits 0 when done.json says "ok", 1 when the walk failed or ran out of time,
 # 3 when the screen was locked and the walk could not run at all, 4 when THE
-# APP DIED part way through, and 5 when THE APP WOULD NOT START at all. Those
+# APP DIED part way through, 5 when THE APP WOULD NOT START at all, and 6 when
+# it was DEFERRED because somebody was using the Mac (queue/bin/person-at-mac.sh). Those
 # last two print what really happened rather than "no done.json", which is what
 # a merely slow walk says: a crash and an app that never came up are both news
 # about the app, and neither is news about the walk.
@@ -74,6 +75,11 @@ set +e
 Scripts/probe-app.sh --playtest "$SCRIPT_ABS" ${NO_BUILD:+"$NO_BUILD"}
 LAUNCH_CODE=$?
 set -e
+if (( LAUNCH_CODE == 6 )); then
+  echo "==> This walk was DEFERRED: somebody is using the Mac, so it never ran. Not a failure."
+  echo "==> Verdict: DEFERRED  somebody is using the Mac"
+  exit 6
+fi
 if (( LAUNCH_CODE != 0 )); then
   echo "!! THE APP WOULD NOT START (probe-app.sh exit $LAUNCH_CODE), so this walk never ran. That is not" >&2
   echo "   the walk failing and it is not the app being broken in the way the walk was about to" >&2
@@ -107,6 +113,13 @@ echo "==> Waiting up to ${TIMEOUT}s for $OUT/done.json"
 DIED=0
 for ((i = 0; i < TIMEOUT * 2; i++)); do
   [[ -f "$OUT/done.json" ]] && break
+  # The person came back: stop driving the probe and give them their Mac.
+  if (( i > 4 )) && queue/bin/person-at-mac.sh here 3; then
+    Scripts/probe-app.sh --quit >/dev/null 2>&1
+    echo "==> This walk was INTERRUPTED: somebody started using the Mac, so the probe was quit. Not a failure."
+    echo "==> Verdict: DEFERRED  somebody started using the Mac"
+    exit 6
+  fi
   if ! probe_alive; then
     # It may have written done.json and exited between two polls, so look once
     # more after giving that write a moment to land.

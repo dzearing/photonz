@@ -114,6 +114,10 @@ request)
 # -------------------------------------------------------------------- due ----
 # Exit 0 when there is a sweep to run. The loop tests this between tasks.
 due)
+  # Never while somebody is using the Mac: a sweep drives the probe for two
+  # hours, and on 2026-09-26 the user could not type while one ran. The request
+  # simply stays pending until the Mac has been left alone long enough.
+  queue/bin/person-at-mac.sh away "${PHOTONZ_SWEEP_IDLE:-900}" || exit 1
   # One question, one answer: queue/bin/sweep-schedule.mjs weighs the pending
   # requests, when the last whole-set run began, whether code has landed since,
   # and whether the screen is locked. Exit 0 means run the whole set.
@@ -127,6 +131,8 @@ due)
 # ------------------------------------------------------------- slice-due ----
 # Exit 0 when the rotating check should run instead of the whole set.
 slice-due)
+  # Same rule as the whole set, with a shorter absence (ten minutes of walks).
+  queue/bin/person-at-mac.sh away "${PHOTONZ_SLICE_IDLE:-300}" || exit 1
   LOCKED_FLAG=""
   screen_locked && LOCKED_FLAG="--locked"
   RUN=$(queue/bin/sweep-schedule.mjs --decide $LOCKED_FLAG 2>/dev/null \
@@ -211,11 +217,17 @@ slice)
   Scripts/playtest-all.sh --only "$PICK" > "$RUNLOG" 2>&1 &
   SLICE_PID=$!
   SLICE_TIMED_OUT=0
+  SLICE_PERSON=0
   while kill -0 "$SLICE_PID" 2>/dev/null; do
-    sleep 5
-    if (( SECONDS - began_s > SLICE_CAP )); then
+    sleep 3
+    queue/bin/person-at-mac.sh here 3 && SLICE_PERSON=1
+    if (( SLICE_PERSON || SECONDS - began_s > SLICE_CAP )); then
       SLICE_TIMED_OUT=1
-      echo "!! The rotating check passed its ${SLICE_CAP}s cap; stopping it."
+      if (( SLICE_PERSON )); then
+        echo "!! Somebody is using the Mac: stopping the rotating check so it stops driving the probe."
+      else
+        echo "!! The rotating check passed its ${SLICE_CAP}s cap; stopping it."
+      fi
       kill -TERM "$SLICE_PID" 2>/dev/null; sleep 2; kill -KILL "$SLICE_PID" 2>/dev/null
       # A SIGKILL leaves playtest-all.sh's EXIT trap unrun, so put down by pid
       # any hold it took on the Mac, and never with pkill.
@@ -232,7 +244,8 @@ slice)
   [[ -s "$RUNLOG" && -n "$(tail -c1 "$RUNLOG" 2>/dev/null)" ]] && echo
   took=$(( SECONDS - began_s ))
   if (( SLICE_TIMED_OUT )); then
-    echo "!! The rotating check was stopped on the clock after $((took / 60))m $((took % 60))s. What it reached is above; the rest of its walks never ran, and the rotation stays where it was so they run next time."
+    if (( SLICE_PERSON )); then echo "!! The rotating check was stopped after $((took / 60))m $((took % 60))s because somebody started using the Mac. What it reached is above; the rest run next time."; else
+    echo "!! The rotating check was stopped on the clock after $((took / 60))m $((took % 60))s. What it reached is above; the rest of its walks never ran, and the rotation stays where it was so they run next time."; fi
   elif (( SLICE_CODE == 3 )); then
     echo "==> Some of these walks could not run: the Mac's screen is locked, so a walk that looks a control up by name was refused. The ones that ran are real."
   fi
@@ -519,7 +532,13 @@ run)
   TIMED_OUT=0
   LAST_REPORTED=0
   while kill -0 "$SWEEP_PID" 2>/dev/null; do
-    sleep 15
+    sleep 3
+    # The person came back: put the sweep down within seconds and give them
+    # their Mac. What it reached is kept and its request goes back on the pile.
+    if (( ! INTERRUPTED )) && queue/bin/person-at-mac.sh here 3; then
+      INTERRUPTED=1
+      echo "!! Somebody is using the Mac: stopping the walk sweep so it stops driving the probe."
+    fi
     # playtest-all prints one padded line per walk, ending in "ok", "FAILED" or
     # "CRASHED" (the app died in it).
     # grep -c exits 1 on no match, so `|| echo 0` would print the count AND a
