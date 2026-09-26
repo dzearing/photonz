@@ -3592,6 +3592,40 @@ struct PlaytestScriptTests {
         }
     }
 
+    // MARK: - Is a recording's frame read at the size it is shown at?
+
+    @Test("An expectFrameSharp step claims every clip on screen is drawn from a frame read big enough")
+    func expectFrameSharpClaimsTheFrameSize() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectFrameSharp" } ] }
+        """)
+        guard case .expectFrameSharp(let within) = script.steps[0] else {
+            Issue.record("expectFrameSharp"); return
+        }
+        #expect(within == 3)
+        #expect(script.steps[0].name == "expectFrameSharp")
+    }
+
+    @Test("An expectFrameSharp step can say how long to wait for the frame")
+    func expectFrameSharpWaits() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectFrameSharp", "within": 1.5 } ] }
+        """)
+        guard case .expectFrameSharp(let within) = script.steps[0] else {
+            Issue.record("expectFrameSharp"); return
+        }
+        #expect(within == 1.5)
+    }
+
+    @Test("A negative wait for a sharp frame is refused when the script is read")
+    func expectFrameSharpRefusesANegativeWait() throws {
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "expectFrameSharp", "within": -1 } ] }
+            """)
+        }
+    }
+
     // MARK: - What the recording on disk says
 
     // A walk that trims and saves has to be able to ask the FILE, not the app.

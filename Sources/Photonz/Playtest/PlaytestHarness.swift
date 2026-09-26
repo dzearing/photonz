@@ -1863,6 +1863,9 @@ private final class Run {
             note(number, step.name, try await checkSharp(absent: absent, within: within),
                  state: describe())
 
+        case .expectFrameSharp(let within):
+            note(number, step.name, try await checkFrameSharp(within: within), state: describe())
+
         case .expectLanding(let near, let within, let absent):
             note(number, step.name, try checkLanding(near: near, within: within, absent: absent),
                  state: describe())
@@ -6520,6 +6523,40 @@ private final class Run {
     /// asked for a tenth of a second after whatever changed and drawn off the
     /// main thread. A step that read the state the instant it ran would pass
     /// or fail on the machine's mood.
+    /// Every clip on screen at the playhead is drawn from a frame read at
+    /// least as big as the canvas shows it (`expectFrameSharp`). A recording
+    /// used to open on a first frame read an eighth of the size, before the
+    /// canvas had fitted its window, and keep it until the playhead moved.
+    private func checkFrameSharp(within: Double) async throws -> String {
+        let editor = try requireEditor()
+        guard editor.shownDocument?.hasTime == true else {
+            throw Failure(description: "there is no recording in this document to look at")
+        }
+        func said(_ frames: [(name: String, wanted: CGFloat, read: CGFloat?)]) -> String {
+            frames.map { frame in
+                let read = frame.read.map { "read \(Int($0)) wide" } ?? "not read yet"
+                return "\(frame.name) \(read), shown \(Int(frame.wanted)) wide"
+            }.joined(separator: "; ")
+        }
+        let began = CACurrentMediaTime()
+        var frames = editor.movieFrameReadWidths()
+        while true {
+            guard !frames.isEmpty else {
+                throw Failure(description: "no clip is on at the playhead, so there is no frame to look at")
+            }
+            if frames.allSatisfy({ ($0.read ?? 0) >= $0.wanted - 1 }) {
+                let waited = Self.round1(CGFloat(CACurrentMediaTime() - began))
+                return "every frame on screen at \(editor.documentTimecode) is read at the size it is "
+                    + "shown: \(said(frames)), after \(waited)s"
+            }
+            guard CACurrentMediaTime() - began < within else { break }
+            await sleep(0.05)
+            frames = editor.movieFrameReadWidths()
+        }
+        throw Failure(description: "the picture at \(editor.documentTimecode) is a small read stretched "
+            + "up, so it draws blurred: \(said(frames)). Waited \(Self.round1(CGFloat(within)))s.")
+    }
+
     private func checkSharp(absent: Bool, within: Double) async throws -> String {
         let editor = try requireEditor()
         func reading() -> (tile: CrispTile?, matches: Bool) {

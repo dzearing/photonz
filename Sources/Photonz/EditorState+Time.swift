@@ -246,6 +246,20 @@ extension EditorState {
         movieFrames.fetch(wanted, size: movieDecodeSize(in: document))
     }
 
+    /// For each frame the moment under the playhead draws: how wide it is worth
+    /// reading at this zoom, and how wide the copy in hand was read (nil when
+    /// it has not been read yet). What a walk reads to tell a sharp frame from
+    /// a small read stretched up (`expectFrameSharp`).
+    func movieFrameReadWidths() -> [(name: String, wanted: CGFloat, read: CGFloat?)] {
+        guard let document = shownDocument else { return [] }
+        let size = movieDecodeSize(in: document)
+        return document.movieFrames(atTimeMS: documentTimeMS).map { request in
+            (name: document.layer(id: request.layerID)?.name ?? "a dissolve's second picture",
+             wanted: size(request).width,
+             read: store.image(for: request.ref).map { CGFloat($0.width) })
+        }
+    }
+
     /// How big each frame is worth reading: as many pixels as the canvas
     /// shows it with, which for a full-screen Retina recording in a window is
     /// usually well under its own size (`MovieRef.decodePixelSize`).

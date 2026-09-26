@@ -135,6 +135,12 @@ public enum PlaytestLockSafety {
         // the sharp copy it is drawing and the camera it was drawn for, which
         // are its own state and not a name.
         "expectSharp",
+        // Added 2026-09-25 by reading, NOT yet watched under a lock (the screen
+        // was unlocked all day): it asks the editor how wide each frame on
+        // screen was read and how wide it is shown, the same kind of own state
+        // as expectSharp, never a name. A guide walk has to be lock safe, so
+        // the first locked sweep is its watch; if it refuses there, take it out.
+        "expectFrameSharp",
         // Watched on 2026-09-19, forced under a lock: it asks the app's own
         // toast controller what the corner is saying, so there is no name to
         // look up and nothing for a lock to take away.

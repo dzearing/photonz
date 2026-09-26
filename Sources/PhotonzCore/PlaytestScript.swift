@@ -2881,6 +2881,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `absent: true` is the other claim, for at or below 1:1 where a second
     /// copy would buy nothing.
     case expectSharp(absent: Bool, within: Double)
+    /// CLAIMS that every clip on screen at the playhead is drawn from a frame
+    /// read at least as big as the canvas shows it, rather than a small read
+    /// stretched up. A recording used to open on a first frame read before the
+    /// canvas had fitted its window, an eighth of the size, which stayed until
+    /// the playhead moved. Waits up to `within` seconds (three unless said
+    /// otherwise), since a frame is read off the main actor.
+    case expectFrameSharp(within: Double)
     /// What the pill riding under a drag says right now, or that there is no
     /// pill at all. The absent form is how a walk proves the reading goes the
     /// instant the button comes up rather than lingering over the canvas.
@@ -3182,7 +3189,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "clickRuler", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectCue", "expectEdited", "expectFeet", "expectField", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "clickRuler", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWindows", "exportQuality", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag",
     ].sorted()
@@ -3256,6 +3263,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectPath: "expectPath"
         case .expectChrome: "expectChrome"
         case .expectSharp: "expectSharp"
+        case .expectFrameSharp: "expectFrameSharp"
         case .expectReadout: "expectReadout"
         case .expectLanding: "expectLanding"
         case .expectHint: "expectHint"
@@ -3817,6 +3825,12 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("within", "a number of seconds to wait is zero or more, not \(within)")
             }
             self = .expectSharp(absent: absent, within: within)
+        case "expectFrameSharp":
+            let within = try f.optionalNumber("within") ?? 3
+            guard within >= 0 else {
+                throw f.invalid("within", "a number of seconds to wait is zero or more, not \(within)")
+            }
+            self = .expectFrameSharp(within: within)
         case "expectMeasures":
             guard fields["count"] != nil else {
                 throw f.invalid("count", "expectMeasures has to say how many measurements must be on the canvas; 0 means none should have landed")

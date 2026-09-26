@@ -1,0 +1,13 @@
+{
+  "out": "/tmp/photonz-playtest/a-guide-recording-opens-sharp-walk",
+  "seed": "The recording a video guide writes and opens, at Next defaults with no flag set, shows its first frame sharp without the playhead being moved. The Ready card and its counter used to be blurred at 0:00 in every video guide and sharp the moment the playhead moved.",
+  "setup": { "forget": ["tutorials"] },
+  "steps": [
+    { "do": "startGuide", "guide": "cut-a-recording-down" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "a-clip-on-v1", "timeout": 40 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "expectFrameSharp", "within": 3 },
+    { "do": "describe", "stage": "1-guide-opened-sharp", "note": "THE TEST: the guide's recording just opened at 0:00, and the frame on screen is read at the size the canvas shows it, so the Ready card and the 0 are crisp" },
+    { "do": "snapshot", "name": "1-guide-opened-sharp" }
+  ]
+}

@@ -213,7 +213,10 @@ final class MovieFrameFetcher {
     private let store: ImageStore
     /// Decoded frames, oldest first, so the one to drop is always at the front.
     private var resident: [Resident] = []
-    private var inFlight: Set<UUID> = []
+    /// Which frames are being read and how big, so a frame asked for bigger
+    /// while a smaller read of it is under way is read again rather than left
+    /// at the smaller size (`MovieFrameReads`).
+    private var reads = MovieFrameReads()
 
     /// Called on the main actor whenever a frame lands, so the canvas can
     /// redraw with a picture it did not have a moment ago.
@@ -239,26 +242,35 @@ final class MovieFrameFetcher {
     }
 
     /// Ask for everything a moment needs, each frame read at the size it comes
-    /// back from `size`. Frames already filed at least that big cost nothing; a
-    /// frame filed smaller (the canvas was zoomed in since) is read again, and
-    /// the smaller one keeps showing until the bigger one lands.
+    /// back from `size`. Frames already filed, or already being read, at least
+    /// that big cost nothing; a frame filed or being read smaller (the canvas
+    /// was zoomed in, or fitted to its window, since) is read again, and the
+    /// smaller one keeps showing until the bigger one lands.
     func fetch(_ requests: [MovieFrameRequest], size: (MovieFrameRequest) -> CGSize) {
-        for request in requests where !inFlight.contains(request.ref.id) {
+        for request in requests {
             let wanted = size(request)
-            if let filed = store.image(for: request.ref),
-               CGFloat(filed.width) >= wanted.width - 1 { continue }
-            guard let url = MovieLibrary.shared.url(for: request.movie) else { continue }
-            inFlight.insert(request.ref.id)
+            guard let url = MovieLibrary.shared.url(for: request.movie),
+                  reads.start(request.ref.id, width: wanted.width, filedWidth: filedWidth(request.ref))
+            else { continue }
             Task { [weak self] in
                 let image = await MovieDecoder.shared.frame(of: request.movie, at: url,
                                                             sourceMS: request.sourceMS, size: wanted)
                 guard let self else { return }
-                inFlight.remove(request.ref.id)
-                guard let image else { return }
+                // A bigger read of the same frame may have landed first, and
+                // the smaller one must never draw over it.
+                guard reads.finish(request.ref.id, width: wanted.width,
+                                   landedWidth: image.map { CGFloat($0.width) },
+                                   filedWidth: filedWidth(request.ref)),
+                      let image
+                else { return }
                 file(image, for: request)
                 onFrameLanded?()
             }
         }
+    }
+
+    private func filedWidth(_ ref: ImageRef) -> CGFloat? {
+        store.image(for: ref).map { CGFloat($0.width) }
     }
 
     /// Decode one frame at the recording's own size and wait for it. Used

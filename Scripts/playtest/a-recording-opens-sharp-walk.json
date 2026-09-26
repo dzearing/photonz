@@ -1,0 +1,18 @@
+{
+  "out": "/tmp/photonz-playtest/a-recording-opens-sharp-walk",
+  "seed": "A recording opened the way the Finder opens one, at Next defaults with no flag set, shows its first frame sharp without the playhead being moved. It used to open on a frame read before the canvas had fitted its window, an eighth of the size, stretched up and blurred until the playhead moved.",
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "open", "file": "fixtures/Full screen Retina recording 3456x2234.mp4", "width": 1440, "height": 900 },
+    { "do": "expectFrameSharp", "within": 3 },
+    { "do": "describe", "stage": "1-opened-sharp", "note": "THE TEST: the recording just opened, playhead at 0:00 and never moved, and the frame on screen is read at the size the canvas shows it" },
+    { "do": "snapshot", "name": "1-opened-sharp" },
+
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectFrameSharp", "within": 0 },
+    { "do": "describe", "stage": "2-still-sharp", "note": "a second later, still nothing pressed, and nothing has swapped a smaller read back in" },
+    { "do": "snapshot", "name": "2-still-sharp" }
+  ]
+}

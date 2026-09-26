@@ -141,8 +141,12 @@ What keeps it now:
 6. **Frames are read at the size they are shown**, in eighths of the
    recording's size (`MovieRef.decodePixelSize`), which is what lets the
    16-frame budget stay small. Zooming in reads the frame on screen again; the
-   smaller one shows until the sharper one lands. Writing a file always reads
-   at the recording's own size.
+   smaller one shows until the sharper one lands. A read under way only
+   answers for asks at its size or smaller (`MovieFrameReads`): the first frame
+   is asked for before the canvas has fitted its window, an eighth of the size,
+   and until 2026-09-25 the fit's full-size ask was dropped because that small
+   read was still going, so every recording opened blurred at 0:00. Writing a
+   file always reads at the recording's own size.
 
 ---
 

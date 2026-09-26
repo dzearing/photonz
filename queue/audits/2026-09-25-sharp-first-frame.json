@@ -1,0 +1,22 @@
+{
+  "feature": "A recording opens on a sharp first frame",
+  "epic": "video-editing",
+  "summary": "A recording now opens sharp at 0:00. Before, the first picture was a small thumbnail stretched up, and it stayed blurred until you moved the playhead.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    { "do": "Open a full-screen screen recording from the Finder.", "shot": "2026-09-25-sharp-first-frame-1.png" },
+    { "do": "Without touching anything, look at small text in the first frame. It should be as crisp as it is a few seconds in." },
+    { "do": "Start the Cut a recording down guide from the Tutorials window.", "shot": "2026-09-25-sharp-first-frame-2.png" },
+    { "do": "At 0:00, look at the Ready card and the 0 under it. Compare with the blurred one from before: 2026-09-25-video-guides-cut-sc.png." },
+    { "do": "Press Command-plus to zoom in, and check the frame sharpens again a moment later." }
+  ],
+  "evaluate": [
+    "Does the first frame of your own recordings look sharp the moment the window opens?",
+    "Is there a visible soft-to-sharp flash as the window opens, and if so, does it bother you?",
+    "Does zooming in still sharpen the picture after a short moment?"
+  ],
+  "rough": [
+    "For a split second as the window opens you may still see the small read before the full-size one lands. By the time the walk has finished opening the file, the full-size frame is already in.",
+    "Nothing here changes a mock surface, so there is no side-by-side with a mock page. The change is how big the first frame is read, not what is drawn."
+  ]
+}
