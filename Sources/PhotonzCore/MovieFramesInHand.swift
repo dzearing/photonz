@@ -23,6 +23,20 @@ public struct MovieFramesInHand: Equatable, Sendable {
 
     private var frames: [UUID: Set<Int>] = [:]
 
+    /// Which way the playhead is going, which decides which side of a missing
+    /// frame the stand-in comes from: the side it came FROM, since that is the
+    /// frame just shown.
+    public enum Travel: Equatable, Sendable { case forward, backward }
+    public var travel: Travel = .forward
+
+    /// A hand on the playhead rather than a clock. A clock never shows a frame
+    /// from the far side of the one it wants, because it is about to show that
+    /// frame next and going back to it is a stutter. A hand wants whatever is
+    /// NEAREST: scrubbing back over ground played through earlier, the frame
+    /// behind could be a second of film away while the one just shown is one
+    /// frame off (`scrubbing-is-smooth-never-goes-black-and-the-pic`).
+    public var nearest = false
+
     public init() {}
 
     public mutating func insert(movie: UUID, frameIndex: Int) {
@@ -39,17 +53,21 @@ public struct MovieFramesInHand: Equatable, Sendable {
     }
 
     /// The frame to draw where `wanted` is asked for: that frame if it is in
-    /// hand, else the newest one before it, else the nearest one after it, else
-    /// nil when nothing of this recording has been read at all.
+    /// hand, else a stand-in, else nil when nothing of this recording has been
+    /// read at all.
     ///
-    /// Before wins over after because a player going forward has just SHOWN the
-    /// one before; after is only there so a scrub backwards keeps its picture
-    /// instead of going empty.
+    /// Played by a clock, the stand-in is the nearest frame on the side the
+    /// playhead came from (the one just shown), and only failing that the
+    /// nearest on the other side. Moved by a hand (`nearest`), it is simply the
+    /// nearest, with a tie going to the side the hand came from.
     public func frameIndexToShow(_ wanted: Int, of movie: UUID) -> Int? {
         guard let held = frames[movie], !held.isEmpty else { return nil }
         if held.contains(wanted) { return wanted }
-        if let before = held.filter({ $0 < wanted }).max() { return before }
-        return held.filter { $0 > wanted }.min()
+        let before = held.filter { $0 < wanted }.max()
+        let after = held.filter { $0 > wanted }.min()
+        let (behind, ahead) = travel == .forward ? (before, after) : (after, before)
+        guard nearest, let behind, let ahead else { return behind ?? ahead }
+        return abs(ahead - wanted) < abs(behind - wanted) ? ahead : behind
     }
 }
 

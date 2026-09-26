@@ -195,7 +195,9 @@ actor MovieDecoder {
 final class MovieFrameFetcher {
 
     /// How many decoded frames one window keeps. Sixteen 1080p frames is about
-    /// 130MB, which is the most a preview is worth.
+    /// 130MB, which is the most a preview is worth. The ones let go are the
+    /// farthest from the playhead, so a scrub that turns round finds the
+    /// frames it has just shown still there.
     static let frameBudget = 16
 
     /// How far ahead of the playhead frames are read while it plays. A
@@ -204,6 +206,12 @@ final class MovieFrameFetcher {
     /// never dropped before it is shown.
     static let playAheadFrames = 8
 
+    /// How many moves ahead of a hand scrubbing frames are read, at the
+    /// stride the hand is moving. Few, because a hand turns round: a frame read
+    /// for a move that never comes is a read the frame under the hand waited
+    /// behind.
+    static let scrubAheadMoves = 3
+
     private struct Resident {
         let ref: ImageRef
         let movie: UUID
@@ -211,16 +219,33 @@ final class MovieFrameFetcher {
     }
 
     private let store: ImageStore
-    /// Decoded frames, oldest first, so the one to drop is always at the front.
+    /// Decoded frames, in the order they landed.
     private var resident: [Resident] = []
     /// Which frames are being read and how big, so a frame asked for bigger
     /// while a smaller read of it is under way is read again rather than left
     /// at the smaller size (`MovieFrameReads`).
     private var reads = MovieFrameReads()
 
+    private struct Read: Sendable {
+        let request: MovieFrameRequest
+        let size: CGSize
+        let url: URL
+    }
+    /// Reads waiting to start, and how many are running: one per lane of the
+    /// decoder, so a read asked for now starts the moment a lane is free
+    /// rather than queuing inside the decoder behind one the hand has left.
+    private var queue = MovieFrameQueue<Read>(capacity: MovieDecoder.lanes)
+    /// Which frame each recording's playhead is on, last anybody asked.
+    private var focus: [UUID: Int] = [:]
+
     /// Called on the main actor whenever a frame lands, so the canvas can
     /// redraw with a picture it did not have a moment ago.
     var onFrameLanded: (() -> Void)?
+
+    /// The frames most recently let go to stay inside the budget, newest last.
+    /// A walk reads it to tell a frame that was never read from one that was
+    /// read and then dropped (`expectScrubSmooth`).
+    private(set) var dropped: [UUID] = []
 
     init(store: ImageStore) {
         self.store = store
@@ -246,16 +271,47 @@ final class MovieFrameFetcher {
     /// that big cost nothing; a frame filed or being read smaller (the canvas
     /// was zoomed in, or fitted to its window, since) is read again, and the
     /// smaller one keeps showing until the bigger one lands.
+    ///
+    /// Each call is what the playhead wants NOW, most wanted first: the frame
+    /// under it, then the ones it is heading for. Only a few reads run at once
+    /// (`MovieFrameQueue`), and any read the last call asked for that has not
+    /// started yet is forgotten, so a hand flinging the playhead across a clip
+    /// never leaves a queue of frames it has already passed standing between
+    /// it and the frame it is on.
     func fetch(_ requests: [MovieFrameRequest], size: (MovieFrameRequest) -> CGSize) {
-        for request in requests {
-            let wanted = size(request)
-            guard let url = MovieLibrary.shared.url(for: request.movie),
-                  reads.start(request.ref.id, width: wanted.width, filedWidth: filedWidth(request.ref))
-            else { continue }
+        var wanted: [Read] = []
+        var asked = Set<UUID>()
+        var focused = Set<UUID>()
+        for request in requests where asked.insert(request.ref.id).inserted {
+            // The first frame asked of a recording is where its playhead is,
+            // which is what the budget keeps the frames around.
+            if focused.insert(request.movie.id).inserted {
+                focus[request.movie.id] = request.movie.frameIndex(atSourceMS: request.sourceMS)
+            }
+            let width = size(request)
+            if let filed = filedWidth(request.ref), filed >= width.width - 1 { continue }
+            guard let url = MovieLibrary.shared.url(for: request.movie) else { continue }
+            wanted.append(Read(request: request, size: width, url: url))
+        }
+        queue.replace(with: wanted)
+        startReads()
+    }
+
+    /// Start whatever the queue lets start.
+    private func startReads() {
+        while let read = queue.take() {
+            let request = read.request, wanted = read.size, url = read.url
+            guard reads.start(request.ref.id, width: wanted.width, filedWidth: filedWidth(request.ref))
+            else {
+                queue.finished()
+                continue
+            }
             Task { [weak self] in
                 let image = await MovieDecoder.shared.frame(of: request.movie, at: url,
                                                             sourceMS: request.sourceMS, size: wanted)
                 guard let self else { return }
+                queue.finished()
+                defer { startReads() }
                 // A bigger read of the same frame may have landed first, and
                 // the smaller one must never draw over it.
                 guard reads.finish(request.ref.id, width: wanted.width,
@@ -296,8 +352,13 @@ final class MovieFrameFetcher {
         resident.removeAll { $0.ref.id == request.ref.id }
         resident.append(Resident(ref: request.ref, movie: request.movie.id,
                                  frameIndex: request.movie.frameIndex(atSourceMS: request.sourceMS)))
-        while resident.count > Self.frameBudget {
-            store.remove(resident.removeFirst().ref)
+        while resident.count > Self.frameBudget,
+              let farthest = MovieFrameQueue<Read>.farthest(resident.map { ($0.movie, $0.frameIndex) },
+                                                            from: focus) {
+            let gone = resident.remove(at: farthest).ref
+            store.remove(gone)
+            dropped.append(gone.id)
+            if dropped.count > 512 { dropped.removeFirst(dropped.count - 512) }
         }
     }
 }

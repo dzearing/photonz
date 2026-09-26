@@ -113,3 +113,52 @@ struct PlaybackNeverBlinksTests {
         #expect(big.b > 200 && big.r < 40)
     }
 }
+
+/// Scrubbing never goes black (`scrubbing-is-smooth-never-goes-black-and-the-pic`).
+///
+/// Reproduced by `scrub-never-blacks-out-walk`: the canvas chose a frame in
+/// hand, then a newer frame landing dropped it from the store to stay inside
+/// the budget, all before the render got its turn, and the clip drew as
+/// nothing. A render now draws from the pictures as they were when it was
+/// asked for.
+@Suite("A render draws the pictures that were there when it was asked for")
+struct ScrubNeverGoesBlackTests {
+
+    @Test("A snapshot keeps a picture the store has since let go")
+    func aSnapshotKeepsWhatWasThere() throws {
+        let store = ImageStore()
+        let ref = ImageRef(id: UUID(), pixelSize: CGSize(width: 8, height: 8))
+        store.register(try #require(SolidImage.make(size: CGSize(width: 8, height: 8), hex: "#FF0000")),
+                       as: ref)
+        let snapshot = store.snapshot()
+        store.remove(ref)
+        #expect(store.image(for: ref) == nil)
+        #expect(snapshot.image(for: ref) != nil)
+        // ...and something filed afterwards is not in a snapshot taken before.
+        let later = store.register(try #require(SolidImage.make(size: CGSize(width: 8, height: 8),
+                                                                hex: "#00FF00")))
+        #expect(snapshot.image(for: later) == nil)
+    }
+
+    @Test("A frame dropped from the store while its render waits still draws")
+    func aDroppedFrameStillDraws() async throws {
+        let movie = PlaybackNeverBlinksTests.movie()
+        let document = PhotonzDocument.recording(movie, name: "Take 1")
+        let store = ImageStore()
+        try PlaybackNeverBlinksTests.file(movie, frame: 10, hex: "#FF0000", in: store)
+        var inHand = MovieFramesInHand()
+        inHand.insert(movie: movie.id, frameIndex: 10)
+        let drawn = document.drawn(atTimeMS: PlaybackNeverBlinksTests.ms(12), framesInHand: inHand)
+
+        final class Box: @unchecked Sendable { var image: CGImage? }
+        let box = Box()
+        let scheduler = RenderScheduler(store: store) { box.image = $0 }
+        let asked = store.snapshot()
+        // The budget lets frame 10 go between the ask and the draw.
+        store.remove(movie.frameRef(atSourceMS: PlaybackNeverBlinksTests.ms(10)))
+        await scheduler.submit(drawn, store: asked)
+        await scheduler.waitUntilIdle()
+        let middle = try PlaybackNeverBlinksTests.middle(box.image)
+        #expect(middle.a == 255 && middle.r > 200, "the clip drew as nothing")
+    }
+}

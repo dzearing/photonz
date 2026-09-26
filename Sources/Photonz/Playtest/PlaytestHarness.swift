@@ -1916,6 +1916,10 @@ private final class Run {
                  try await checkPlaybackNeverBlank(name: name, seconds: seconds, moments: moments),
                  state: describe())
 
+        case .expectScrubSmooth(let name, let moves):
+            note(number, step.name, try await checkScrubSmooth(name: name, moves: moves),
+                 state: describe())
+
         case .expectBox(let layer, let at, let size, let corner, let onScreen, let reachable, let within):
             note(number, step.name,
                  try checkBox(layer, at: at, size: size, corner: corner, onScreen: onScreen,
@@ -7420,6 +7424,240 @@ private final class Run {
             + "looked \(moments) times (\(name)-1.png to \(name)-\(looks.count).png), "
             + "the clip on screen was drawn in every one (\(seen.sorted().joined(separator: ", "))); "
             + lateness + gapNote
+    }
+
+    /// One display frame of a scrub, as the canvas showed it
+    /// (`expectScrubSmooth`).
+    private struct ScrubLook {
+        let index: Int
+        let phase: String
+        let handMS: Int
+        let playheadMS: Int
+        let shownMS: Int?
+        let wantedFrames: [Int]
+        let shownFrames: [Int?]
+        let empty: Bool
+        let cause: String?
+        let drawn: CGRect?
+        let outline: CGRect?
+        let model: CGRect?
+        let lagFrames: Int
+        let newPicture: Bool
+
+        static func drift(_ a: CGRect?, _ b: CGRect?) -> CGFloat {
+            guard let a, let b else { return 0 }
+            return max(abs(a.minX - b.minX), abs(a.minY - b.minY),
+                       abs(a.width - b.width), abs(a.height - b.height))
+        }
+
+        var json: [String: Any] {
+            func box(_ r: CGRect?) -> Any {
+                guard let r else { return NSNull() }
+                return [Double(r.minX), Double(r.minY), Double(r.width), Double(r.height)]
+                    .map { ($0 * 10).rounded() / 10 }
+            }
+            return ["look": index, "phase": phase, "handMS": handMS, "playheadMS": playheadMS,
+                    "pictureMS": shownMS.map { $0 as Any } ?? NSNull(),
+                    "wantedFrames": wantedFrames, "shownFrames": shownFrames.map { $0.map { $0 as Any } ?? NSNull() },
+                    "empty": empty, "cause": cause.map { $0 as Any } ?? NSNull(),
+                    "drawnBox": box(drawn), "outlineBox": box(outline), "modelBox": box(model),
+                    "drawnVsOutline": Double(Self.drift(drawn, outline)),
+                    "drawnVsModel": Double(Self.drift(drawn, model)),
+                    "pictureBehindPlayheadFrames": lagFrames, "newPicture": newPicture]
+        }
+    }
+
+    /// Scrubs the playhead with a hand's calls and looks at the canvas at
+    /// every display frame (`expectScrubSmooth`).
+    ///
+    /// Forward in `moves` moves, back in `moves` moves, one per refresh, then
+    /// a fling: three passes across the clip, three moves a refresh, which is
+    /// a hand going faster than any composite can follow. Each look records
+    /// what the picture on screen was drawn at against where the playhead and
+    /// the picked layer's outline are, so "the rectangle lags its outline" is a
+    /// number of points rather than a feeling.
+    private func checkScrubSmooth(name: String, moves: Int) async throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.shownDocument, document.hasTime else {
+            throw Failure(description: "there is no recording in this document to scrub")
+        }
+        let clips = document.allLayers.filter { $0.isClip && $0.isVisible }
+        guard !clips.isEmpty else {
+            throw Failure(description: "there is no recording in this document to scrub")
+        }
+        guard let watchedID = editor.selectedLayerID, let watched = document.layer(id: watchedID),
+              !watched.isClip else {
+            throw Failure(description: "pick a graphic layer first: a scrub is checked against the "
+                + "picked layer's outline, and nothing but a clip is picked")
+        }
+        guard let view = editor.hostWindow?.contentView else {
+            throw Failure(description: "the editor has no window to take display frames from")
+        }
+        let frames = DisplayFrames(view: view)
+        defer { frames.invalidate() }
+
+        let length = editor.documentLengthMS
+        let low = length / 10, high = length * 9 / 10
+        var plan: [(phase: String, moves: [Int])] = []
+        for step in 0...moves { plan.append(("forward", [low + (high - low) * step / moves])) }
+        for step in (0..<moves).reversed() { plan.append(("back", [low + (high - low) * step / moves])) }
+        for pass in 0..<3 {
+            let flingSteps = 12
+            for step in 0..<flingSteps {
+                let along = pass % 2 == 0 ? step : flingSteps - 1 - step
+                let base = low + (high - low) * along / (flingSteps - 1)
+                let spread = (high - low) / (flingSteps * 3)
+                let toward = pass % 2 == 0 ? 1 : -1
+                plan.append(("fling", [base, base + toward * spread, base + toward * 2 * spread]))
+            }
+        }
+
+        editor.pauseDocument()
+        editor.scrubDocument(toMS: low)
+        await sleep(0.8)
+        let timesBefore = editor.recentCompositeTimes.count
+        editor.beginPlayheadDrag()
+        var looks: [ScrubLook] = []
+        var pictures: [CGImage] = []
+        // Every place the playhead has been, and the display frame it was put
+        // there in, so a picture drawn at a move part way through a frame is
+        // still found.
+        var playheads: [(frame: Int, ms: Int)] = []
+        var lastPicture: CGImage?
+        for (index, entry) in plan.enumerated() {
+            for ms in entry.moves {
+                editor.dragPlayhead(toMS: ms)
+                playheads.append((index, editor.documentTimeMS))
+            }
+            await frames.next()
+            let playhead = editor.documentTimeMS
+            let shownMS = editor.shownMomentMS
+            let drawnDocument = editor.shownDrawnDocument
+            // A recording is composited at the size it is shown
+            // (`CompositeScale`), so what was drawn is read back at document
+            // size before it is compared with anything.
+            let drawnScale = drawnDocument.map { $0.canvasSize.width / max(1, document.canvasSize.width) } ?? 1
+            func unscaled(_ rect: CGRect?) -> CGRect? {
+                rect.map { CGRect(x: $0.minX / drawnScale, y: $0.minY / drawnScale,
+                                  width: $0.width / drawnScale, height: $0.height / drawnScale) }
+            }
+            let picture = editor.renderedImage
+            let newPicture = picture != nil && picture !== lastPicture
+            lastPicture = picture
+
+            var wanted: [Int] = [], shown: [Int?] = []
+            var causes: [String] = []
+            for clip in clips {
+                guard let movie = clip.movie,
+                      let source = clip.movieFrameSourceMS(atTimeMS: playhead) else { continue }
+                wanted.append(movie.frameIndex(atSourceMS: source))
+                guard let drawnClip = drawnDocument?.layer(id: clip.id), drawnClip.isVisible,
+                      case .image(let ref) = drawnClip.content else { shown.append(nil); continue }
+                let frame = movie.frameIndex(ofFrameID: ref.id)
+                shown.append(frame)
+                if editor.movieFrames.has(ref) {
+                    causes.append("frame \(frame.map(String.init) ?? "?") is in the store")
+                } else if editor.movieFrames.dropped.contains(ref.id) {
+                    causes.append("frame \(frame.map(String.init) ?? "?") was dropped from the store "
+                        + "after the picture chose it")
+                } else {
+                    causes.append("frame \(frame.map(String.init) ?? "?") was never read")
+                }
+            }
+            var empty = false
+            if let picture, let look = Self.quarter(of: picture) {
+                pictures.append(look)
+                let clipIDs = Set(clips.map(\.id))
+                let on = (drawnDocument ?? document).allLayers.filter {
+                    $0.isClip && $0.isVisible && clipIDs.contains($0.id)
+                }
+                if let first = on.first {
+                    let scale = CGFloat(look.width) / max(1, document.canvasSize.width)
+                    let frame = on.dropFirst().reduce(unscaled(first.frame) ?? first.frame) {
+                        $0.union(unscaled($1.frame) ?? $1.frame)
+                    }
+                    let area = CGRect(x: frame.minX * scale, y: frame.minY * scale,
+                                      width: frame.width * scale, height: frame.height * scale)
+                    empty = Self.transparentShare(of: look, in: area) > 0.9
+                }
+            } else {
+                empty = true
+            }
+            let lag: Int
+            if let shownMS, let at = playheads.last(where: { $0.ms == shownMS }) {
+                lag = index - at.frame
+            } else {
+                lag = index + 1
+            }
+            let model = document.posedForCanvas(atTimeMS: playhead).canvasLayer(id: watchedID)?.frame
+            looks.append(ScrubLook(index: index + 1, phase: entry.phase, handMS: entry.moves.last ?? 0,
+                                   playheadMS: playhead, shownMS: shownMS,
+                                   wantedFrames: wanted, shownFrames: shown, empty: empty,
+                                   cause: empty ? causes.joined(separator: "; ") : nil,
+                                   drawn: unscaled(drawnDocument?.canvasLayer(id: watchedID)?.frame),
+                                   outline: editor.canvasGeometryDocument?.canvasLayer(id: watchedID)?.frame,
+                                   model: model, lagFrames: lag, newPicture: newPicture))
+            // One real photograph of the window half way back, the hand still
+            // on the playhead, so the picture and its outline can be seen
+            // together mid-scrub rather than only after the hand lets go.
+            if index == moves + moves / 2, let window = editor.hostWindow {
+                await screenCapture(window, name: "\(name)-mid-scrub")
+            }
+        }
+        editor.endPlayheadDrag()
+        let times = Array(editor.recentCompositeTimes.dropFirst(min(timesBefore, editor.recentCompositeTimes.count)))
+        func percentile(_ values: [Double], _ share: Double) -> Double {
+            let sorted = values.sorted()
+            guard !sorted.isEmpty else { return 0 }
+            return sorted[min(sorted.count - 1, Int(Double(sorted.count) * share))]
+        }
+        let drawNote = String(format: "each composite took %.1fms median, %.1fms at p90, %.1fms at worst; "
+                              + "ask to picture %.1fms median, %.1fms at p90",
+                              percentile(times.map(\.drawMS), 0.5), percentile(times.map(\.drawMS), 0.9),
+                              times.map(\.drawMS).max() ?? 0,
+                              percentile(times.map(\.sinceAskedMS), 0.5), percentile(times.map(\.sinceAskedMS), 0.9))
+
+        for (index, look) in pictures.enumerated() {
+            try writePNG(look, name: "\(name)-\(index + 1)")
+        }
+        write(json: ["looks": looks.map(\.json)], to: "\(name).json")
+
+        let travel = looks.compactMap(\.model).map(\.minX)
+        let moved = (travel.max() ?? 0) - (travel.min() ?? 0)
+        let empties = looks.filter(\.empty)
+        let worstOutline = looks.map { ScrubLook.drift($0.drawn, $0.outline) }.max() ?? 0
+        let offOutline = looks.filter { ScrubLook.drift($0.drawn, $0.outline) > 1 }.count
+        let worstModel = looks.map { ScrubLook.drift($0.drawn, $0.model) }.max() ?? 0
+        let worstLag = looks.map(\.lagFrames).max() ?? 0
+        let lagged = looks.filter { $0.lagFrames > 1 }.count
+        let held = looks.filter { look in zip(look.wantedFrames, look.shownFrames).contains { $0 != $1 } }.count
+        let fresh = looks.filter(\.newPicture).count
+        let summary = "\(looks.count) display frames (\(moves) moves forward, \(moves) back, 36 flung), "
+            + "\(fresh) of them a new picture; the picked layer moved \(Int(moved))pt over the scrub; "
+            + "drawn vs its outline off by up to \(String(format: "%.1f", worstOutline))pt "
+            + "(\(offOutline) frames over 1pt); drawn vs the playhead's pose off by up to "
+            + "\(String(format: "%.1f", worstModel))pt; the picture trailed the playhead by up to "
+            + "\(worstLag) display frame(s) (\(lagged) frames over 1); \(held) looks held a nearby "
+            + "frame while the wanted one was read; \(drawNote); the numbers are in \(name).json"
+        guard moved >= 1 else {
+            throw Failure(description: "the picked layer never moved over the scrub, so nothing about "
+                + "how it follows the playhead was checked: key its Position first. " + summary)
+        }
+        guard empties.isEmpty else {
+            let first = empties.prefix(4).map { "look \($0.index) (\($0.phase), playhead \($0.playheadMS)ms): "
+                + ($0.cause ?? "no picture at all") }
+            throw Failure(description: "the clip area was EMPTY at \(empties.count) of \(looks.count) "
+                + "display frames: " + first.joined(separator: " | ") + ". " + summary)
+        }
+        guard offOutline == 0 else {
+            throw Failure(description: "the picked layer was drawn away from its own outline at "
+                + "\(offOutline) of \(looks.count) display frames. " + summary)
+        }
+        guard lagged == 0 else {
+            throw Failure(description: "the picture trailed the playhead by more than one display frame at "
+                + "\(lagged) of \(looks.count) display frames. " + summary)
+        }
+        return summary
     }
 
     /// A picture at a quarter of its size, or nil where it could not be drawn.

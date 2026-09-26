@@ -110,6 +110,17 @@ final class EditorState {
     /// observation so counting costs no view rebuild.
     @ObservationIgnored private(set) var canvasFrameCount = 0
 
+    /// The moment of a recording the picture on the canvas was drawn at, and
+    /// the document it was drawn from, which is not always where the playhead
+    /// is: a hand scrubbing moves the playhead faster than a composite can
+    /// follow. Nil before the first picture of a document with time lands.
+    private(set) var shownMomentMS: Int?
+    @ObservationIgnored private(set) var shownDrawnDocument: PhotonzDocument?
+    /// The last few composites of a document with time: how long each took to
+    /// draw and how long from the ask to the picture. A walk reads them to say
+    /// what a scrub costs (`expectScrubSmooth`).
+    @ObservationIgnored private(set) var recentCompositeTimes: [(drawMS: Double, sinceAskedMS: Double)] = []
+
     /// Zoomed in, the canvas would be stretching one document-sized picture
     /// over four or sixteen screen pixels each, which is what makes a label you
     /// placed go soft while the one you are typing stays sharp. This is the
@@ -371,7 +382,18 @@ final class EditorState {
             if viewport != oldValue { refreshCrispTile() }
             // Zoomed in on a recording: the frame on screen was read for the
             // old zoom and is worth reading again at the new one.
-            if viewport?.zoom != oldValue?.zoom { refetchMovieFramesForZoom() }
+            if viewport?.zoom != oldValue?.zoom {
+                refetchMovieFramesForZoom()
+                // ...and composited again if the zoom moved it to another
+                // size (`CompositeScale`), or a zoom in would show the picture
+                // composited for the zoom it left, stretched.
+                let backing = hostWindow?.backingScaleFactor ?? 2
+                if documentHasTime, let document = shownDocument,
+                   CompositeScale.forShown((viewport?.zoom ?? 1) * backing)
+                    != CompositeScale.forShown((oldValue?.zoom ?? 1) * backing) {
+                    submit(document)
+                }
+            }
         }
     }
     /// The selected REGION (Photoshop-style) in document coordinates: any
@@ -1042,6 +1064,20 @@ final class EditorState {
     /// dropped.
     @ObservationIgnored var documentPlaybackStartedAt: Date?
     @ObservationIgnored var documentPlaybackStartedAtMS: Int = 0
+    /// A hand is on the playhead: between `beginPlayheadDrag` and
+    /// `endPlayheadDrag` (`EditorState+Time`).
+    @ObservationIgnored var playheadInHand = false
+    /// Which way the playhead last moved and how far one move took it, so
+    /// frames are read ahead in the direction it is going and a frame still
+    /// being read is stood in for from the side it came from.
+    @ObservationIgnored var playheadTravel: MovieFramesInHand.Travel = .forward
+    @ObservationIgnored var playheadStrideMS = MovieRef.frameStepMS
+    /// The display's refresh, which paces the picture while a hand scrubs:
+    /// at most one new picture asked for per refresh, however fast the moves
+    /// come (`DisplayFrames`).
+    @ObservationIgnored var scrubFrames: DisplayFrames?
+    @ObservationIgnored var momentAwaitingRefresh = false
+    @ObservationIgnored var momentAskedAtRefresh = -1
     /// How fast, and which way, it is playing: 1 for Space and the Play
     /// button, anything on J and L's ladder for a shuttle, negative backwards
     /// (`EditorState+TimelineKeys`).
@@ -3784,6 +3820,8 @@ final class EditorState {
     func rerender() {
         guard let document = history?.current else {
             renderedImage = nil
+            shownMomentMS = nil
+            shownDrawnDocument = nil
             viewport = nil
             selection = nil
             cropRect = nil
@@ -3916,8 +3954,13 @@ final class EditorState {
         // window has, so a decode that runs late holds the picture rather than
         // blanking it (`MovieFramesInHand.swift`).
         if document.hasTime {
-            document = document.drawn(atTimeMS: documentTimeMS,
-                                      framesInHand: movieFramesStorage?.inHand)
+            // Which side a stand-in comes from: the side the playhead came
+            // from, and for anything but the clock, simply the nearest frame
+            // (`MovieFramesInHand.nearest`).
+            var inHand = movieFramesStorage?.inHand
+            inHand?.travel = playheadTravel
+            inHand?.nearest = !isDocumentPlaying
+            document = document.drawn(atTimeMS: documentTimeMS, framesInHand: inHand)
         }
         // The inline editor overlay stands in for the layer being edited.
         if let id = editingTextLayerID {
@@ -4028,27 +4071,53 @@ final class EditorState {
     /// Hands a document (committed or move-preview) to the render scheduler.
     func submit(_ document: PhotonzDocument) {
         let submitted = document
-        let document = displayDocument(document)
+        var document = displayDocument(document)
+        // A recording is composited at the size it is shown rather than at
+        // its own (`CompositeScale`): a full-screen Retina recording fitted in
+        // a window is shown at under half its pixels, and drawing all of them
+        // every refresh of a scrub kept the picture behind the hand.
+        if document.hasTime {
+            let scale = CompositeScale.forShown(zoom * (hostWindow?.backingScaleFactor ?? 2))
+            if scale < 1 {
+                let size = CGSize(width: (document.canvasSize.width * scale).rounded(),
+                                  height: (document.canvasSize.height * scale).rounded())
+                document = document.magnified(by: scale)
+                document.canvasSize = size
+            }
+        }
         // Not while the motion preview is running. A sharp copy of a moving
         // picture is stale before it lands, and asking for one thirty times a
         // second would clear the tile thirty times a second, which every view
         // reading it is told about whether or not the value changed.
         defer { if !isMotionPlaying { refreshCrispTile(showing: submitted) } }
         if scheduler == nil {
-            scheduler = RenderScheduler(store: store) { [weak self] image in
+            scheduler = RenderScheduler(store: store, onDelivery: { [weak self] frame in
                 await MainActor.run {
                     // Drop the frame if the document was closed while rendering.
                     guard let self, self.history != nil else { return }
-                    self.renderedImage = image
+                    self.renderedImage = frame.image
+                    self.shownDrawnDocument = frame.document
+                    let moment = frame.document.hasTime ? frame.stamp : nil
+                    if self.shownMomentMS != moment { self.shownMomentMS = moment }
+                    if moment != nil {
+                        self.recentCompositeTimes.append((frame.drawMS, frame.sinceAskedMS))
+                        if self.recentCompositeTimes.count > 400 { self.recentCompositeTimes.removeFirst(100) }
+                    }
                     self.canvasFrameCount += 1
                     if self.clearPreviewAfterNextFrame {
                         self.clearPreviewAfterNextFrame = false
                         self.dragPreview = nil
                     }
                 }
-            }
+            })
         }
         guard let scheduler else { return }
-        Task { await scheduler.submit(document) }
+        let moment = documentTimeMS
+        // A recording's frames come and go many times a second, so its render
+        // draws from the pictures as they were at this moment: a frame the
+        // budget lets go while the render waits its turn would otherwise draw
+        // as nothing (`scrubbing-is-smooth-never-goes-black-and-the-pic`).
+        let pictures = document.hasTime ? store.snapshot() : nil
+        Task { await scheduler.submit(document, store: pictures, stamp: moment) }
     }
 }

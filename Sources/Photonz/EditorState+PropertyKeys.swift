@@ -198,8 +198,16 @@ extension EditorState {
     var canvasGeometryDocument: PhotonzDocument? {
         guard let document else { return nil }
         guard documentHasTime else { return document }
-        return document.posedForCanvas(atTimeMS: documentTimeMS)
-            .hidingWhatIsOffScreen(atTimeMS: documentTimeMS)
+        // Posed at the moment the PICTURE on the canvas was drawn at, which
+        // trails the playhead while a composite is being drawn. Posing at the
+        // playhead put the outline a frame or two ahead of the very layer it
+        // outlines whenever the playhead moved, and a keyed rectangle visibly
+        // lagged its own selection (`scrubbing-is-smooth-never-goes-black-and-the-pic`).
+        // Handles, outlines and clicks all read this, so they all sit on what
+        // you can see.
+        let moment = shownMomentMS ?? documentTimeMS
+        return document.posedForCanvas(atTimeMS: moment)
+            .hidingWhatIsOffScreen(atTimeMS: moment)
     }
 
     /// The canvas edit `mutate` makes to layer `id`, with every change to a

@@ -2961,6 +2961,20 @@ public enum PlaytestStep: Sendable, Equatable {
     /// how playing a full-screen recording flickered while every walk that
     /// played one passed (`playing-a-recording-never-blinks`).
     case expectPlaybackNeverBlank(name: String, seconds: Double, moments: Int)
+    /// Takes hold of the playhead and scrubs it forward and back in `moves`
+    /// small moves each way, one per display frame the way a hand does, then
+    /// flings it across the clip several moves a frame. At every display frame
+    /// it looks at what the canvas shows: the moment of the picture, the frame
+    /// of each clip, whether the clip area is empty, and where the picked
+    /// layer is drawn against where its outline is and where the playhead says
+    /// it is. Every look goes to `<name>-<n>.png` and the numbers to
+    /// `<name>.json`. Fails on any empty look, and on any look where the picked
+    /// layer's picture and its outline disagree.
+    ///
+    /// The user saw a scrub black out for a frame or two and a rectangle trail
+    /// its own outline (`scrubbing-is-smooth-never-goes-black-and-the-pic`),
+    /// neither of which a snapshot taken after the hand lets go can see.
+    case expectScrubSmooth(name: String, moves: Int)
     /// Where a named layer's box must have landed, in the two spaces that
     /// matter.
     ///
@@ -3217,7 +3231,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "clickRuler", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "clickRuler", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag",
     ].sorted()
@@ -3304,6 +3318,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectLayers: "expectLayers"
         case .expectTimeline: "expectTimeline"
         case .expectPlaybackNeverBlank: "expectPlaybackNeverBlank"
+        case .expectScrubSmooth: "expectScrubSmooth"
         case .expectBox: "expectBox"
         case .expectField: "expectField"
         case .expectCaption: "expectCaption"
@@ -4168,6 +4183,13 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .expectPlaybackNeverBlank(name: try f.string("name"), seconds: seconds,
                                              moments: Int(moments))
+        case "expectScrubSmooth":
+            let moves = try f.optionalNumber("moves") ?? 64
+            guard moves >= 4, moves <= 400, moves == moves.rounded() else {
+                throw f.invalid("moves", "a scrub is a whole number of moves each way, "
+                    + "at least 4 and at most 400, not \(moves)")
+            }
+            self = .expectScrubSmooth(name: try f.string("name"), moves: Int(moves))
         case "expectCaption":
             func word<V: CaptionClaimWord>(_ field: String) throws -> V? {
                 guard let raw = try f.optionalString(field) else { return nil }

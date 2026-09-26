@@ -61,6 +61,8 @@ extension EditorState {
     func scrubDocument(toMS ms: Int) {
         let landing = min(max(0, ms), lastDocumentTimeMS)
         guard landing != documentTimeMS else { return }
+        playheadTravel = landing < documentTimeMS ? .backward : .forward
+        playheadStrideMS = max(MovieRef.frameStepMS, abs(landing - documentTimeMS))
         documentTimeMS = landing
         // A scrub while it plays takes over: the clock restarts from where the
         // hand put the playhead rather than snapping back to where it had got
@@ -77,7 +79,7 @@ extension EditorState {
         // under it, so somebody hunting for a word can hear it go by
         // (`ScrubAudition.swift`). Does nothing unless a drag is in hand.
         auditionScrub()
-        documentMomentChanged()
+        if playheadInHand { askForMomentByRefresh() } else { documentMomentChanged() }
     }
 
     // MARK: Dragging the playhead
@@ -88,14 +90,65 @@ extension EditorState {
     // where it stops (`ScrubAudition.swift`).
 
     /// A hand took hold of the playhead.
-    func beginPlayheadDrag() { beginScrubAudition() }
+    func beginPlayheadDrag() {
+        playheadInHand = true
+        beginScrubAudition()
+    }
 
     /// ...and moved it. The same landing as any other scrub, so the canvas,
     /// the ruler and the sound all follow one call.
     func dragPlayhead(toMS ms: Int) { scrubDocument(toMS: ms) }
 
-    /// ...and let go.
-    func endPlayheadDrag() { endScrubAudition() }
+    /// ...and let go. Whatever the last refresh had not yet drawn is drawn now.
+    func endPlayheadDrag() {
+        playheadInHand = false
+        scrubFrames?.stop()
+        if momentAwaitingRefresh {
+            momentAwaitingRefresh = false
+            documentMomentChanged()
+        }
+        endScrubAudition()
+    }
+
+    /// While a hand scrubs, the picture is asked for at most once per display
+    /// refresh. A trackpad sends moves faster than a screen shows pictures, and
+    /// asking for a picture per move queued work the screen could never show.
+    /// The first move in a refresh is drawn at once, so pacing never adds a
+    /// frame of lag; any more in the same refresh are drawn together at the
+    /// next refresh, as one picture of the last of them (`scrubbing-is-smooth-never-goes-black-and-the-pic`).
+    ///
+    /// A frame landing while the hand is on the playhead only ever waits for
+    /// the next refresh (`atOnce: false`): it is never worth making the hand's
+    /// own next move wait behind it.
+    func askForMomentByRefresh(atOnce: Bool = true) {
+        if scrubFrames == nil, let view = hostWindow?.contentView {
+            scrubFrames = DisplayFrames(view: view)
+        }
+        guard let frames = scrubFrames else {
+            documentMomentChanged()
+            return
+        }
+        if atOnce, frames.count > momentAskedAtRefresh {
+            momentAskedAtRefresh = frames.count
+            momentAwaitingRefresh = false
+            documentMomentChanged()
+        } else {
+            momentAwaitingRefresh = true
+        }
+        frames.run { [weak self] in
+            guard let self else { return }
+            guard momentAwaitingRefresh else {
+                // A refresh with nothing new: nothing to draw until the hand
+                // moves again.
+                if !playheadInHand { scrubFrames?.stop() }
+                return
+            }
+            // What is left over from the refresh just gone. It does not use up
+            // the new refresh's own first move, which is still drawn at once.
+            momentAwaitingRefresh = false
+            documentMomentChanged()
+        }
+    }
 
     /// One frame on, or back with a negative count. The step is the grid frames
     /// are fetched on, so stepping always lands on a frame that can be drawn.
@@ -133,6 +186,7 @@ extension EditorState {
         if isDocumentPlaying {
             guard rate != documentPlaybackRate else { return }
             documentPlaybackRate = rate
+            playheadTravel = rate < 0 ? .backward : .forward
             timelineShuttle.playing(at: rate)
             restartDocumentClock()
             playsSoundAtRate ? startAudio() : stopAudio()
@@ -144,6 +198,7 @@ extension EditorState {
         if rate > 0, documentTimeMS >= lastDocumentTimeMS { documentTimeMS = 0 }
         if rate < 0, documentTimeMS <= 0 { return }
         documentPlaybackRate = rate
+        playheadTravel = rate < 0 ? .backward : .forward
         timelineShuttle.playing(at: rate)
         isDocumentPlaying = true
         // Anything left listening to a hand stands down: the whole mix is
@@ -218,19 +273,26 @@ extension EditorState {
         // which is what turns a pair of points into a duck you can hear
         // (`EditorState+Audio.swift`).
         followAudio()
-        let wanted = document.movieFrames(atTimeMS: documentTimeMS)
+        var wanted = document.movieFrames(atTimeMS: documentTimeMS)
         if !wanted.isEmpty {
-            let size = movieDecodeSize(in: document)
-            movieFrames.fetch(wanted, size: size)
-            // ...and the stretch just ahead, so playing forward is decoding
-            // ahead of the playhead rather than behind it.
-            if isDocumentPlaying {
-                for step in 1...MovieFrameFetcher.playAheadFrames {
-                    let ahead = documentTimeMS + step * MovieRef.frameStepMS
-                    guard ahead <= lastDocumentTimeMS else { break }
-                    movieFrames.fetch(document.movieFrames(atTimeMS: ahead), size: size)
+            // ...and the stretch just ahead IN THE DIRECTION IT IS GOING, so
+            // playing is decoding ahead of the playhead rather than behind it,
+            // backwards as much as forwards, and a hand scrubbing finds the
+            // frame it is about to reach already read. A hand reads a few
+            // moves ahead at the stride it is moving at; a clock reads a
+            // quarter second ahead.
+            let way = playheadTravel == .backward ? -1 : 1
+            let (count, stride) = isDocumentPlaying
+                ? (MovieFrameFetcher.playAheadFrames, MovieRef.frameStepMS)
+                : (playheadInHand ? MovieFrameFetcher.scrubAheadMoves : 0, playheadStrideMS)
+            if count > 0 {
+                for step in 1...count {
+                    let ahead = documentTimeMS + way * step * stride
+                    guard ahead >= 0, ahead <= lastDocumentTimeMS else { break }
+                    wanted += document.movieFrames(atTimeMS: ahead)
                 }
             }
+            movieFrames.fetch(wanted, size: movieDecodeSize(in: document))
         }
         submit(document)
     }
@@ -288,6 +350,12 @@ extension EditorState {
             for layer in document.allLayers where layer.isClip {
                 thumbnailCache[layer.id] = nil
             }
+        }
+        // A hand scrubbing: the landing is drawn with the next refresh's
+        // picture rather than as one of its own.
+        if playheadInHand {
+            askForMomentByRefresh(atOnce: false)
+            return
         }
         submit(document)
     }

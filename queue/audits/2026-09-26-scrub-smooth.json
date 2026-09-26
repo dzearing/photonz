@@ -1,0 +1,26 @@
+{
+  "feature": "Scrubbing is smooth and never goes black",
+  "epic": "video-editing",
+  "summary": "Dragging the playhead over a recording no longer flashes an empty frame, and a moving shape stays inside its own selection outline the whole way, forwards, backwards and flung.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a full-screen Retina screen recording.",
+  "try": [
+    { "do": "Draw a rectangle on the recording near the left, then open Animate a property and pick Position.", "shot": "2026-09-26-scrub-keyed-sc.png" },
+    { "do": "Move the playhead to 3s and drag the rectangle to the right side of the picture." },
+    { "do": "With the rectangle still picked, drag the scrubber thumb slowly forward across the whole clip." },
+    { "do": "Drag it back again, slowly, then quickly.", "shot": "2026-09-26-scrub-mid-scrub-sc.png" },
+    { "do": "Fling the thumb back and forth as fast as you can." },
+    { "do": "Let go, then press Space to play it through." }
+  ],
+  "evaluate": [
+    "Did the picture ever go black or blank while you dragged, in either direction?",
+    "Does the rectangle stay inside its blue outline while you drag, including a fast fling?",
+    "Does the rectangle feel like it moves with your hand, or does it still trail the thumb?",
+    "Scrubbing back fast, does the video itself freeze for a moment while the rectangle keeps moving?"
+  ],
+  "rough": [
+    "The picture, the rectangle and the outline move together, but all three can sit one display frame behind the playhead line on the timeline. The render is now about 1ms a refresh in the app, so this is the handoff to the screen, not the drawing.",
+    "Scrubbing back fast on a 60fps recording can leave the VIDEO frame frozen for about half a second while the graphics keep moving; filed as scrubbing-back-fast-keeps-the-video-picture-movi.",
+    "A recording is now composited at the size it is shown, so zoomed out its shapes and text are drawn at screen size rather than scaled down from full size. Zooming past 100% draws sharp as before.",
+    "No mock covers scrubbing; this is behaviour only, judged against Premiere and Final Cut, where graphics stay on their outline during a scrub."
+  ]
+}

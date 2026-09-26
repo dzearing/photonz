@@ -2464,6 +2464,29 @@ struct PlaytestScriptTests {
         #expect(PlaytestStep.names.contains("expectPlaybackNeverBlank"))
     }
 
+    // A scrub blacked out for a frame or two and a rectangle trailed its own
+    // outline, and no snapshot taken after the hand lets go can see either
+    // (`scrubbing-is-smooth-never-goes-black-and-the-pic`).
+    @Test("An expectScrubSmooth step scrubs a number of moves each way, 64 unless it says")
+    func expectScrubSmoothParses() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectScrubSmooth", "name": "scrub", "moves": 80 },
+                     { "do": "expectScrubSmooth", "name": "again" } ] }
+        """)
+        guard case .expectScrubSmooth(let name, let moves) = script.steps[0],
+              case .expectScrubSmooth(_, let fallback) = script.steps[1] else {
+            Issue.record("expectScrubSmooth"); return
+        }
+        #expect(name == "scrub")
+        #expect(moves == 80)
+        #expect(fallback == 64)
+        #expect(script.steps[0].name == "expectScrubSmooth")
+        #expect(PlaytestStep.names.contains("expectScrubSmooth"))
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "expectScrubSmooth", "name": "x", "moves": 2 } ] }"#)
+        }
+    }
+
     @Test("An expectPlaybackNeverBlank step defaults to three seconds and twenty moments")
     func expectPlaybackNeverBlankDefaults() throws {
         let script = try decode("""

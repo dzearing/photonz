@@ -33,6 +33,19 @@ public final class ImageStore: @unchecked Sendable {
         return images[ref.id]
     }
 
+    /// A store holding exactly the pictures this one holds now, which nothing
+    /// done to this one afterwards can change. Cheap: the pictures are shared,
+    /// not copied. A render handed one draws what was there when it was asked
+    /// for, however many frames of a recording come and go while it waits its
+    /// turn (`RenderScheduler.submit(_:store:stamp:)`).
+    public func snapshot() -> ImageStore {
+        let copy = ImageStore()
+        lock.lock()
+        copy.images = images
+        lock.unlock()
+        return copy
+    }
+
     public func remove(_ ref: ImageRef) {
         lock.lock()
         images[ref.id] = nil

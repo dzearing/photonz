@@ -99,6 +99,21 @@ public struct MovieRef: Hashable, Codable, Sendable {
                  pixelSize: pixelSize)
     }
 
+    /// Which frame of this recording a picture reference is, or nil when it is
+    /// not one of this recording's frames. The way back from `frameRef`, so
+    /// whatever reads a drawn document can say which frame it actually shows.
+    public func frameIndex(ofFrameID frame: UUID) -> Int? {
+        let mine = withUnsafeBytes(of: id.uuid) { Array($0) }
+        let theirs = withUnsafeBytes(of: frame.uuid) { Array($0) }
+        guard mine[0..<8] == theirs[0..<8] else { return nil }
+        var index: UInt64 = 0
+        for offset in (0..<8).reversed() {
+            index = (index << 8) | UInt64(mine[15 - offset] ^ theirs[15 - offset])
+        }
+        let found = Int(Int64(bitPattern: index))
+        return found >= 0 ? found : nil
+    }
+
     /// The recording's id with the frame number folded into its tail. Two
     /// frames of one recording differ; two recordings never meet, because the
     /// leading bytes are the recording's own random ones.

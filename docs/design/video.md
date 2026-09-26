@@ -126,8 +126,9 @@ What keeps it now:
 
 4. **A late frame holds the last one.** The canvas draws
    `drawn(atTimeMS:framesInHand:)` with `MovieFrameFetcher.inHand`, and a frame
-   not in hand is stood in for by the newest one that is, at or before the
-   moment (`MovieFramesInHand.swift`). An export leaves the hand out and waits
+   not in hand is stood in for by the nearest one that is on the side the
+   playhead came from, at or before the moment when playing forward
+   (`MovieFramesInHand.swift`; a hand scrubbing takes the nearest, item 10). An export leaves the hand out and waits
    for every frame it writes. The renderer's incremental cache also notices a
    picture that lands, or is read again bigger, under a reference the document
    already pointed at, so the landing redraw is never answered with the old
@@ -147,6 +148,32 @@ What keeps it now:
    and until 2026-09-25 the fit's full-size ask was dropped because that small
    read was still going, so every recording opened blurred at 0:00. Writing a
    file always reads at the recording's own size.
+
+Scrubbing (a hand on the playhead) adds four more, since 2026-09-26
+(`scrubbing-is-smooth-never-goes-black-and-the-pic`, walk
+`scrub-never-blacks-out-walk`, which scrubs at every display frame and
+measures each one):
+
+7. **A render draws the pictures that were there when it was asked for.** The
+   frame budget used to drop a frame between the canvas choosing it and the
+   render drawing it, and the clip drew as nothing. A document with time is
+   submitted with `ImageStore.snapshot()`.
+8. **The outline sits on the picture, not the playhead.** The composite trails
+   the playhead by up to a display frame, so `canvasGeometryDocument` poses
+   keyed layers at `shownMomentMS`, the moment the picture on screen was drawn
+   at. Handles, outlines and clicks all sit on what you can see.
+9. **One picture per refresh, drawn at the size it is shown.** While a hand
+   scrubs, the first move in a display refresh is drawn at once and the rest
+   wait for the next refresh (`DisplayFrames`); a landing frame never takes a
+   refresh of its own. A document with time is composited at
+   `CompositeScale.forShown(zoom x backing)`: a fitted Retina recording costs
+   7.5ms a refresh instead of 17ms.
+10. **Reads follow the hand.** At most one read per decoder lane runs; reads a
+   newer moment no longer wants are dropped before they start
+   (`MovieFrameQueue`); three moves ahead are read in the direction of travel;
+   the budget lets go of the frame farthest from the playhead; and a frame
+   still being read is stood in for by the NEAREST frame in hand, ties to the
+   side the hand came from (a clock still never shows a frame from ahead).
 
 ---
 

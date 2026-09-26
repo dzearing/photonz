@@ -1,0 +1,42 @@
+{
+  "out": "/tmp/photonz-playtest/scrub-never-blacks-out-walk",
+  "seed": "Scrubbing a full-screen Retina recording at Next defaults, with a rectangle keyed to cross the picture: the playhead is dragged forward and back one move per display frame and then flung, and at every display frame the clip area must be drawn and the rectangle must be drawn where its own outline is.",
+  "setup": {
+    "forget": ["all"],
+    "timelineOpen": true
+  },
+  "steps": [
+    { "do": "open", "file": "fixtures/Full screen Retina recording 3456x2234.mp4", "width": 1440, "height": 900 },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [360, 260], "to": [560, 380], "steps": 8 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "reveal", "control": "Properties section" },
+    { "do": "press", "control": "Animate a property" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Position", "in": "Animate a property" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "press", "control": "Position X Value" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "key", "key": "a", "modifiers": ["command"] },
+    { "do": "type", "text": "2600" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-keyed", "note": "a rectangle on a 3456 by 2234 recording, keyed to travel from the left of the picture at the start to the right at 3s, and picked so its outline shows" },
+    { "do": "snapshot", "name": "1-keyed" },
+
+    { "do": "expectScrubSmooth", "name": "scrub", "moves": 64 },
+    { "do": "describe", "stage": "2-scrubbed", "note": "THE TEST: the playhead dragged forward and back one move per display frame and flung across the clip three moves a frame; at every display frame the clip area was drawn and the rectangle sat inside its own outline" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "2-after-the-scrub" }
+  ]
+}
