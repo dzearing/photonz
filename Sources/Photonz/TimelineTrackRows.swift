@@ -593,8 +593,27 @@ struct TimelineTrackMenu: View {
 
     var body: some View {
         let acted = editorState.tracksActedOn(from: track.id)
+        let isEmpty = editorState.isTrackEmpty(track.id)
         if track.kind == .captions {
             MenuRowsView(rows: editorState.captionTrackMenuRows())
+            Divider()
+        }
+        // An empty picture track is somewhere to put something, from the
+        // playhead: a new shape, a title, what is on the clipboard, or a layer
+        // that is on the canvas and on no track.
+        if isEmpty, track.kind == .video, !track.isLocked {
+            Button("Add Rectangle") { editorState.addRectangle(onTrack: track.id) }
+            Button("Add Text") { editorState.addText(onTrack: track.id) }
+            Button("Paste Here") { editorState.paste(onTrack: track.id) }
+                .disabled(!editorState.canPasteLayerOrPicture)
+            let loose = editorState.layersOffTheTimeline
+            if !loose.isEmpty {
+                Menu("Put Layer Here") {
+                    ForEach(loose) { layer in
+                        Button(layer.name) { editorState.putLayerOnTimeline(layer.id, onTrack: track.id) }
+                    }
+                }
+            }
             Divider()
         }
         Button("Rename…") { editorState.beginRenamingTrack(track.id) }
@@ -620,6 +639,9 @@ struct TimelineTrackMenu: View {
         Button("Add Track Below") { editorState.addTrack(track.kind, at: index + 1) }
         Divider()
         Button("Delete Track", role: .destructive) { editorState.deleteTrack(track.id) }
+        if editorState.hasEmptyTracks {
+            Button("Delete Empty Tracks", role: .destructive) { editorState.deleteEmptyTracks() }
+        }
     }
 }
 

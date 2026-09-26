@@ -1199,6 +1199,10 @@ final class EditorState {
     /// out and read when a clip is carried over them. Not watched: nothing is
     /// drawn from it.
     @ObservationIgnored var trackDropRows: [UUID: TrackDropRow] = [:]
+    /// Set for the length of one of a track menu's Add rows: whatever the edit
+    /// makes lands on this track at this moment, in the same step
+    /// (`EditorState+EmptyTracks`).
+    @ObservationIgnored var landingTrack: (trackID: UUID, atMS: Int)?
     /// A sound or a recording held over the timeline: where it would land if
     /// it were let go of now, which the lanes draw as a ghost
     /// (`EditorState+TimelineDrop`).
@@ -3583,7 +3587,19 @@ final class EditorState {
         // reads the stack, so the closure may read it too; recording runs no
         // caller code at all.
         var report = EditReport()
-        if let prepared = history?.preparing(mutate) {
+        // Two things every edit carries, in its own step: a layer it made lands
+        // on the track a track's menu asked for, and a track the app made for a
+        // layer goes when the edit leaves it with nothing on it, so a deleted
+        // or grouped shape never leaves a row behind (`EmptyTracks.swift`).
+        let landing = landingTrack
+        if let prepared = history?.preparing({ document in
+            let was = document
+            mutate(&document)
+            if let landing {
+                document.landNewLayers(since: was, onTrack: landing.trackID, atMS: landing.atMS)
+            }
+            document.dropTracksEmptied(since: was)
+        }) {
             report = history?.record(prepared) ?? EditReport()
         }
         rerender()

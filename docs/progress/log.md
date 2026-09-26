@@ -19821,3 +19821,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Walk: `opacity-on-a-video-shape-walk` (Next defaults): plain pull, key at 1s, pull to 0 at 3s, pictures at 1s, 2s and 3s, then a picture for comparison. Audit: `queue/audits/2026-09-26-opacity-on-a-video.json`.
 - Open: keys ease in and out by default, so half way reads 22% rather than 50%. Premiere's new keys are Linear. It's in the audit as a question for the user.
 - Perf: no composite-path change. The panel's look rows pose one layer per read, and only when that layer has keys.
+
+## 2026-09-26 — A shape's bar never vanishes from its track
+
+- Reproduced (EmptyTracksTests): Delete / ripple delete / extract / lift over a shape took the layer and left its track empty; grouping or carrying it to a new track left its own row empty; an end dragged past the other left a 10ms (one pixel) bar.
+- `LayerTime.shortestMS` is now one frame (33ms); a one-piece bar draws at least 6pt.
+- `EditorState.perform` drops tracks the app made for a shape, title or group when the edit empties them, in the same undo step (`EmptyTracks.swift`). V1, Audio and tracks the person added stay.
+- An empty picture track's right-click: Add Rectangle, Add Text, Paste Here, Put Layer Here; every track: Delete Empty Tracks. The layer and canvas menus offer Put on Timeline for a layer on no track.
+- Walk `a-shape-s-bar-keeps-its-track-walk`; audit `queue/audits/2026-09-26-empty-tracks.json`.

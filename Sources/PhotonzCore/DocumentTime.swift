@@ -30,11 +30,13 @@ import Foundation
 /// `VideoCutList` already strikes, said in the document's own units.
 public struct LayerTime: Hashable, Codable, Sendable {
 
-    /// The shortest stretch there is. A layer occupying no time is a bar of no
-    /// width, which is a bar nobody can take hold of again once they let go —
-    /// the same floor `MotionStripDrag` puts under a motion, for the same
-    /// reason.
-    public static let shortestMS = 10
+    /// The shortest stretch there is: one frame. A layer occupying no time is
+    /// a bar of no width, which is a bar nobody can take hold of again once
+    /// they let go, and one shorter than a frame is never on screen at all.
+    /// Until 2026-09-26 this was ten milliseconds, and a rectangle's end
+    /// dragged past its start left a bar a pixel wide that read as gone
+    /// (`a-shape-s-bar-never-vanishes-from-its-track-and`).
+    public static let shortestMS = MovieRef.frameStepMS
 
     /// When the layer arrives, never before the document's own first frame.
     public private(set) var inMS: Int

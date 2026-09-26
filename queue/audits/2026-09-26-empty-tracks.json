@@ -1,0 +1,28 @@
+{
+  "feature": "A shape's bar never vanishes from its track, and an empty track can take one back",
+  "epic": "video-cutting",
+  "summary": "Deleting, grouping or carrying away a shape no longer leaves an empty row behind, a bar can never be dragged shorter than a frame, and an empty track's right-click menu adds a rectangle or text to it, pastes onto it, or puts a stray layer on it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any recording and open the timeline.",
+  "try": [
+    { "do": "Draw a rectangle on the recording with the rectangle tool.", "shot": "2026-09-26-empty-tracks-1-rectangle-bar.png" },
+    { "do": "Press Delete. The rectangle and its Rectangle row both go; press Cmd+Z and both come back.", "shot": "2026-09-26-empty-tracks-2-deleted-with-its-row.png" },
+    { "do": "Drag the rectangle bar's right end left, past its start. It stops at one frame and stays a bar you can grab." },
+    { "do": "Click the + under the track headers, choose Video Track, then drag the rectangle's bar up onto the new empty track. Its old row goes.", "shot": "2026-09-26-empty-tracks-7-bar-on-the-empty-track.png" },
+    { "do": "Add another video track and right-click it: choose Add Text.", "shot": "2026-09-26-empty-tracks-8-empty-track-menu.png" },
+    { "do": "Check that the words land on that track from the playhead.", "shot": "2026-09-26-empty-tracks-9-text-added-to-the-empty-track.png" },
+    { "do": "Add one more track, right-click it and choose Delete Empty Tracks.", "shot": "2026-09-26-empty-tracks-10-empty-tracks-cleared.png" }
+  ],
+  "evaluate": [
+    "Is it right that deleting a shape also removes the row the app made for it, while a track you added yourself stays until you delete it?",
+    "V1 and Audio stay when their recording is carried off or deleted, the way Premiere keeps them. Is that what you expect?",
+    "Is Add Rectangle / Add Text / Paste Here on an empty track's right-click menu where you would look for it?",
+    "Is a one frame bar, drawn at least 6 points wide, easy enough to grab back and stretch?"
+  ],
+  "rough": [
+    "Add Text lands a layer called Text and the title look runs from the playhead to the end of the shot, not five seconds; only Put on Timeline gives exactly five seconds.",
+    "The layers list cannot be dragged onto a track in Next: with the timeline open the timeline IS the layers list, so the two are never on screen together. A bar carried up or down is the drag.",
+    "Put on Timeline (canvas and layer right-click) and the empty track's Put Layer Here are covered by tests only: at Next defaults every shape drawn on a video already gets a bar, so a layer on no track only comes from older documents, and no walk can make one without turning a flag off.",
+    "Paste Here lands in the paste's own undo step but was not walked, because a walk's clipboard is the person's clipboard.",
+    "The mock (video.html, the timeline) draws no track right-click menu, so the rows follow Premiere's names: Delete Track, Delete Empty Tracks."
+  ]
+}

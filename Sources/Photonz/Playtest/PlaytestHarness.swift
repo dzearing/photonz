@@ -3943,7 +3943,12 @@ private final class Run {
                     throw Failure(description: "the carry is not showing where it would land")
                 }
             case .clipCarryUpATrackHeld, .clipCarryToNewTrackOnTopHeld:
-                guard let id = editor.clipInHandID, let document = editor.document,
+                // The clip in hand, or a picked shape or title's bar: every bar
+                // on the timeline carries between tracks the same way.
+                let placed = editor.selectedLayerID.flatMap { picked in
+                    editor.document?.trackID(ofClip: picked) != nil ? picked : nil
+                }
+                guard let id = editor.clipInHandID ?? placed, let document = editor.document,
                       let own = document.trackID(ofClip: id) else {
                     throw Failure(description: "there is no clip picked to carry to another track")
                 }

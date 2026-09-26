@@ -283,7 +283,10 @@ struct ClipPiecesBar: View {
         // than as one long bar. It comes out of the piece, never out of the
         // clip, so the bar still ends exactly where the clip does.
         let raw = laneWidth * ruler.fraction(spanningMS: Double(length))
-        let width = max(2, raw - (index == pieces.count - 1 ? 0 : 1.5))
+        // A bar in one piece is never narrower than something a pointer can
+        // take hold of: a frame long, zoomed out, is otherwise a hairline that
+        // reads as gone (`a-shape-s-bar-never-vanishes-from-its-track-and`).
+        let width = max(pieces.count == 1 ? 6 : 2, raw - (index == pieces.count - 1 ? 0 : 1.5))
         // Only the part of the piece that is on screen is drawn. Opened right
         // out, a five minute clip's bar is a hundred and eighty thousand
         // points wide, and a waveform sampled across the whole of it is a

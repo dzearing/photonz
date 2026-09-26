@@ -65,6 +65,12 @@ enum LayerCommandList {
             rows.append(contentsOf: animate)
             rows.append(.separator)
         }
+        // On the canvas of a video and on no track: back onto the timeline,
+        // from the playhead, on a row of its own (`EmptyTracks.swift`).
+        if editorState.canPutOnTimeline(id) {
+            rows.append(.command("Put on Timeline") { editorState.putLayerOnTimeline(id) })
+            rows.append(.separator)
+        }
 
         rows.append(.command("Duplicate", .command("d")) { editorState.duplicateLayer(id: id) })
         // Where Photoshop keeps them, under the names it uses for the same

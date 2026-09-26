@@ -145,7 +145,10 @@ struct RippleTrimTests {
         let (doc, clip) = Self.talk()
         #expect(doc.rippleTrimStretch(clip: clip, atMS: 11_995, .start) == nil)
         #expect(doc.rippleTrimStretch(clip: clip, atMS: 5, .end) == nil)
-        #expect(doc.rippleTrimStretch(clip: clip, atMS: 11_990, .start) == 0..<11_990)
+        // A sliver is anything under a frame (`LayerTime.shortestMS`).
+        #expect(doc.rippleTrimStretch(clip: clip, atMS: 11_990, .start) == nil)
+        let aFrameLeft = 12_000 - LayerTime.shortestMS
+        #expect(doc.rippleTrimStretch(clip: clip, atMS: aFrameLeft, .start) == 0..<aFrameLeft)
     }
 
     @Test("A playhead outside the clip trims nothing")
