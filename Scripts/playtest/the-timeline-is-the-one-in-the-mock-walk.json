@@ -62,6 +62,16 @@
       "seconds": 0.8
     },
     {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "pieces": 2
+    },
+    {
+      "do": "expectTimeline",
+      "playheadMS": 4000,
+      "withinMS": 600
+    },
+    {
       "do": "describe",
       "stage": "1b-bladed",
       "note": "THE BLADE TEST: with the Blade lit, one click in the middle of the recording's track cut it there. The playhead jumped to four seconds and the clip is two pieces, the one before the cut ringed"

@@ -502,6 +502,17 @@ private final class Run {
             // PHOTONZ_PLAYTEST_PACE=full.
             "secondsSaved": (pacedAway * 100).rounded() / 100,
         ]
+        // A system alert in front (the "quit unexpectedly" dialog after a
+        // crash, usually) keeps every app from taking focus, and a window
+        // that is never key takes no synthesized click on a SwiftUI tap or
+        // drag: buttons still fire, a cut, a clip or the Blade does nothing.
+        // Say so on the failure itself, where the sweep and the runner read
+        // it, rather than leave a night of walks failing for no visible
+        // reason, as happened on 2026-09-25 (`Scripts/probe-app.sh`).
+        if status != "ok", Self.aSystemAlertIsInFront {
+            error = (error ?? status) + " " + Self.systemAlertInFront
+            done["systemAlertInFront"] = true
+        }
         if let error { done["error"] = error }
         if locked { done["screenLocked"] = true }
         // What this run photographed, by file name, plus the one line that says
@@ -11110,6 +11121,19 @@ private final class Run {
     ///
     /// App-level commands (Capture, New Window, Open) are built live and stay
     /// live, so those shortcuts a walk really can press.
+    /// Whether the app in front is the system's alert agent, which is what
+    /// shows "quit unexpectedly" after a crash.
+    static var aSystemAlertIsInFront: Bool {
+        !NSApp.isActive
+            && NSWorkspace.shared.frontmostApplication?.bundleIdentifier == "com.apple.UserNotificationCenter"
+    }
+
+    /// What a failed walk says when a system alert held the front throughout.
+    static let systemAlertInFront =
+        "[A system alert is in front of every app (usually \"Photonz (Probe) quit unexpectedly\"), "
+        + "so the probe never had focus and no click on a timeline gesture could land. "
+        + "Close the alert and run the walk again before believing this failure.]"
+
     static let frozenMenuBar =
         "macOS will not give a background app focus, so SwiftUI leaves the probe's menu bar frozen at its launch state: "
         + "every window-scoped command is dimmed and empty for the whole walk, however the document changes."

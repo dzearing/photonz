@@ -174,7 +174,20 @@ if [[ -s "$AWAKE_PIDFILE" ]]; then
   fi
 fi
 
+# Is a system alert holding the front? While one is up (the "quit unexpectedly"
+# dialog after a crash is the usual one) no app can become active, so the probe's
+# window is never key, and a key window is what a SwiftUI tap or drag needs
+# before it will take a click. Buttons still fire, so nothing looks wrong
+# except that every click on the timeline does nothing. From 2026-09-25 23:22
+# to 09-26 12:50 one "Photonz (Probe) quit unexpectedly" dialog did exactly
+# that to every walk (clicking-a-cut-opens-the-transition-picker-again).
+FRONT="$(lsappinfo info -only bundleid "$(lsappinfo front 2>/dev/null)" 2>/dev/null \
+  | sed -n 's/.*="\(.*\)"/\1/p' || true)"
+ALERT_IN_FRONT=no
+if [[ "$FRONT" == "com.apple.UserNotificationCenter" ]]; then ALERT_IN_FRONT=yes; fi
+
 LINE="==> Grants: probe Screen Recording $SCREEN · $TERM_APP Accessibility $AX · screen $LOCKED"
+if [[ "$ALERT_IN_FRONT" == yes ]]; then LINE="$LINE · a system alert is in front"; fi
 if [[ "$HELD_AWAKE" == yes ]]; then LINE="$LINE · the loop is holding this Mac awake"; fi
 if [[ "$AUTOMATION" != "unknown" ]]; then LINE="$LINE · Automation $AUTOMATION"; fi
 echo "$LINE"
@@ -194,6 +207,14 @@ if [[ "$LOCKED" == "locked" ]]; then
     echo "    the NEXT one. Only a person logging in clears this, and until somebody does, every"
     echo "    run here is a run on a locked screen."
   fi
+fi
+if [[ "$ALERT_IN_FRONT" == yes ]]; then
+  echo "    A SYSTEM ALERT IS IN FRONT, usually \"Photonz (Probe) quit unexpectedly\" after a"
+  echo "    crash. Until it goes, no app can take focus: buttons still work, but a click on"
+  echo "    the timeline (a cut, a clip, the Blade, a caption bar) does NOTHING, and every"
+  echo "    walk that makes one fails for a reason that is not in the app. Somebody at the"
+  echo "    Mac clicks Ignore on it; or, knowing it is the probe's crash dialog, run"
+  echo "    \`killall UserNotificationCenter\`, which closes it the same way."
 fi
 if [[ "$SCREEN" != "granted" ]]; then
   echo "    No real screenshots: the probe can only write offscreen renders, and an audit"

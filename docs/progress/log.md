@@ -19796,3 +19796,12 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - `TimelineKeys.leavesToTheCanvas` decides which letters the bar may print while the timeline has the keyboard.
 - Walk: `video-tool-bar-walk` (Next defaults). The `toolBar` step now claims `slots`, `more`, `lit` and can `choose` a More row.
 - Found: a Blade click on a clip never cuts (pre-existing, never checked by a walk) → `a-click-on-a-clip-with-the-blade-cuts-it-there`. The mock's one glass bar → `the-floating-tool-bar-is-one-glass-bar-as-the-mo`.
+
+## 2026-09-26 — Timeline clicks: no commit broke them, a crash dialog did
+
+- Clicking a cut, the Blade on a clip, a caption bar and shift-click on a clip all failed in every walk from 2026-09-25 23:40 on. No code caused it: the build from before the suspect window failed the same way today, and HEAD passed all six walks untouched once the cause was gone.
+- Cause: the probe crashed at 23:22:53 (EXC_GUARD in AppKit's accessibility notify, 2s after launch; `find-out-why-the-app-sometimes-dies-at-the-start`) and macOS's "Photonz (Probe) quit unexpectedly" alert stayed in front for 13 hours. With a system alert in front no app can become active, the probe's window is never key, and a non-key window takes no synthesized click on a SwiftUI tap or drag gesture. Buttons still fire, which is why only the timeline looked dead. Every walk log since 09-26 00:00 has `appActive: false`; before, mostly true.
+- Closed the alert (`killall UserNotificationCenter`, same as Ignore). transition-picker-at-a-cut, a-video-edit-saves-as-a-project, an-editing-session, tutorial-put-a-transition-on-a-cut, a-painted-caption-takes-a-click, the-timeline-is-the-layer-list: all pass.
+- `Scripts/probe-app.sh` now says `· a system alert is in front` on its Grants line with what to do, and a walk that fails while one is up says so in its error (`PlaytestHarness.systemAlertInFront`).
+- the-timeline-is-the-one-in-the-mock-walk and video-tool-bar-walk now check the Blade click: 2 pieces and the playhead at the click, then a click on the linked sound makes 3.
+- Asked for a full sweep: the 02:19 one (27 failed) was measured behind the alert.
