@@ -4,7 +4,7 @@
   "steps": [
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
     { "do": "wait", "seconds": 1.2 },
-    { "do": "toolBar", "stage": "1-wide" },
+    { "do": "toolBar", "stage": "1-wide", "capsules": 1 },
     { "do": "snapshot", "name": "1-wide" },
 
     { "do": "action", "action": "showGrid" },

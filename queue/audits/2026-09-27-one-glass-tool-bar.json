@@ -1,0 +1,27 @@
+{
+  "feature": "The floating tool bar is one glass bar",
+  "epic": "video-editing",
+  "summary": "The tools, More, the colour pair, the grid and the zoom now sit in one glass bar with a hairline between each, as the video mock's floating tool bar draws it. Before, they were three or four separate glass capsules side by side. Pictures and recordings get the same bar.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/one-glass-tool-bar-walk.json.",
+  "try": [
+    { "do": "Open a screen recording and look at the bar under the picture.", "shot": "2026-09-27-one-glass-tool-bar-1-video-sc.png" },
+    { "do": "Press G to pick up the bucket, which is under More.", "shot": "2026-09-27-one-glass-tool-bar-2-video-colour-sc.png" },
+    { "do": "Press V: the colour pair leaves and the bar shrinks in place." },
+    { "do": "Open a screenshot and pick the rectangle (R).", "shot": "2026-09-27-one-glass-tool-bar-3-picture-sc.png" },
+    { "do": "Make the window narrow until tools fold into More.", "shot": "2026-09-27-one-glass-tool-bar-4-narrow-sc.png" },
+    { "do": "Click on the glass between two tools, just above or below them: nothing is drawn on the picture." }
+  ],
+  "evaluate": [
+    "Does the bar now read as the one surface the mock draws, rather than a row of pills?",
+    "Is the hairline between the tools and the colours the right weight next to the ones between tool families?",
+    "When the colour pair comes and goes as you switch tools, does the bar grow and shrink smoothly enough?",
+    "Should the grid button stay on the bar beside the zoom, although the mock does not draw it?"
+  ],
+  "rough": [
+    "The mock has no grid button on the bar. The app keeps it as its own section between the colours and the zoom rather than dropping a feature.",
+    "The mock's bar is tighter: 4pt between tools where the app has 14pt, and 18pt hairlines where the app's are 20pt. The spacing inside the tools is unchanged by this task.",
+    "The mock's video bar ends its tools with Hand (H) and Zoom (Z). The app has neither tool (space-drag and the slider do those jobs), which the video tool bar task left out on purpose.",
+    "The mock's zoom reads a plain 100%; the app's percentage is a menu with a chevron that opens the zoom stops, as before.",
+    "Current keeps its separate capsules: the one bar is a Next setting, on by default."
+  ]
+}

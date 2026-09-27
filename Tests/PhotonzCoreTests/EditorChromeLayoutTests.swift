@@ -699,4 +699,51 @@ struct GridToolBarCapsuleTests {
             #expect(content == width - 28)
         }
     }
+
+    // MARK: One glass bar
+
+    @Test func theOneBarAlwaysHasItsToolsAndItsZoom() {
+        // The tools and the zoom are on the bar whatever is in hand, the way
+        // video.html's floating tool bar draws them: nothing else in between.
+        #expect(EditorChromeLayout.toolBarSections(showsColor: false, showsGrid: false)
+                == [.tools, .zoom])
+    }
+
+    @Test func theOneBarPutsTheColourPairBetweenTheToolsAndTheZoom() {
+        // The mock's order: the tool strip and More, then the colour pair and
+        // its swap, then the zoom slider.
+        #expect(EditorChromeLayout.toolBarSections(showsColor: true, showsGrid: false)
+                == [.tools, .color, .zoom])
+    }
+
+    @Test func theOneBarKeepsTheGridBesideTheZoom() {
+        // The mock has no grid on its bar. The app keeps it, as a section of
+        // the same bar beside the zoom, since both are about how the canvas is
+        // being looked at.
+        #expect(EditorChromeLayout.toolBarSections(showsColor: true, showsGrid: true)
+                == [.tools, .color, .grid, .zoom])
+        #expect(EditorChromeLayout.toolBarSections(showsColor: false, showsGrid: true)
+                == [.tools, .grid, .zoom])
+    }
+
+    @Test func aHairlineSitsBetweenEveryPairOfSectionsAndNowhereElse() {
+        // A hairline before a section exactly when something came before it:
+        // never at the ends of the bar, never two in a row where a section
+        // is missing.
+        let sections = EditorChromeLayout.toolBarSections(showsColor: false, showsGrid: true)
+        let hairlines = sections.indices.filter {
+            EditorChromeLayout.toolBarHasHairline(before: $0)
+        }
+        #expect(hairlines == [1, 2])
+        #expect(!EditorChromeLayout.toolBarHasHairline(before: 0))
+    }
+
+    @Test func theOneBarKeepsTheRowHeightAndSpacesItsHairlinesLikeTheFamilies() {
+        // One bar is still the 48pt row everything clears. The hairline
+        // between sections sits as far from its neighbours as the one between
+        // tool families does, so the whole bar reads with one rhythm.
+        #expect(EditorChromeLayout.toolBarHeight == 48)
+        #expect(EditorChromeLayout.toolBarSectionSpacing == 14)
+        #expect(EditorChromeLayout.toolBarEndPadding == 18)
+    }
 }

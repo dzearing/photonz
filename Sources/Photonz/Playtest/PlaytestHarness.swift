@@ -7535,6 +7535,10 @@ private final class Run {
         if let want = claim.lit, want != reading.lit {
             wrong.append("it lights \(reading.lit ?? "nothing"), not \(want)")
         }
+        let capsules = ToolBarLayoutProbe.shared.capsules
+        if let want = claim.capsules, want != capsules {
+            wrong.append("it draws \(capsules) glass capsule\(capsules == 1 ? "" : "s"), not \(want)")
+        }
         guard wrong.isEmpty else { throw Failure(description: "the tool bar: " + wrong.joined(separator: "; ")) }
     }
 
@@ -8629,7 +8633,15 @@ private final class Run {
         let heights = Set(groups.compactMap { $0["height"] as? Int })
         let centers = Set(groups.compactMap { $0["centerY"] as? Int })
         let zoom = ZoomReadoutProbe.shared
+        let bar = ToolBarLayoutProbe.shared.bar
         return ["groups": groups,
+                // The one glass bar the groups are sections of, when it is
+                // drawn whole; NSNull while each group is its own capsule.
+                "bar": bar.map { ["x": Int($0.minX.rounded()), "width": Int($0.width.rounded()),
+                                  "height": Int($0.height.rounded()),
+                                  "top": Int($0.minY.rounded()), "bottom": Int($0.maxY.rounded())] as Any }
+                    ?? NSNull(),
+                "capsules": ToolBarLayoutProbe.shared.capsules,
                 "heights": heights.sorted(), "centerLines": centers.sorted(),
                 "linedUp": heights.count <= 1 && centers.count <= 1,
                 // What the zoom percentage has been asked to do, since it is
@@ -8852,7 +8864,9 @@ private final class Run {
         let linedUp = (row["linedUp"] as? Bool ?? false)
             ? "they line up"
             : "they DO NOT line up: heights \(row["heights"] ?? []), centres \(row["centerLines"] ?? [])"
-        return line + " — " + linedUp + zoom
+        let capsules = row["capsules"] as? Int ?? groups.count
+        let glass = capsules == 1 ? "; one glass bar" : "; \(capsules) glass capsules"
+        return line + " — " + linedUp + glass + zoom
     }
 
     private func readPanel() throws -> [String: Any] {

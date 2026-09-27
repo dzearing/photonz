@@ -47,6 +47,21 @@ struct PlaytestScriptTests {
         #expect(claim.choose == "Arrow")
     }
 
+    @Test("A toolBar step can claim how many glass capsules the bottom row draws")
+    func toolBarCanClaimItsCapsules() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "toolBar", "stage": "a", "capsules": 1 },
+                     { "do": "toolBar", "stage": "b", "slots": ["Select"] } ] }
+        """)
+        guard case .toolBar(_, _, let claim?) = script.steps[0],
+              case .toolBar(_, _, let other?) = script.steps[1] else {
+            Issue.record("toolBar"); return
+        }
+        #expect(claim.capsules == 1)
+        #expect(claim.slots == nil)
+        #expect(other.capsules == nil)
+    }
+
     @Test("A writePicture step leaves the canvas out unless the walk asks for it")
     func writePictureLeavesTheCanvasOutByDefault() throws {
         let script = try decode("""

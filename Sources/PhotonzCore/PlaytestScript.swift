@@ -3203,7 +3203,8 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `slots`, `more` and `lit` claim what the bar is made of: the slots in
     /// front by name, left to right; the rows under its More button; and the
     /// one slot lit (a slot under More lights as "More"). Each left out is not
-    /// claimed. `choose` picks a row under More first.
+    /// claimed. `choose` picks a row under More first. `capsules` claims how
+    /// many glass capsules the row draws (1 for the one bar the mocks draw).
     case toolBar(stage: String, clearOfPicture: Bool?, claim: PlaytestToolBarClaim?)
     /// Write the measured frame of every icon parked on the inspector panel's
     /// trailing edge to the log and to `panel-edge-<stage>.json`: each one's
@@ -4350,8 +4351,10 @@ public enum PlaytestStep: Sendable, Equatable {
             let more = f.has("more") ? fields["more"] as? [String] : nil
             let lit = try f.optionalString("lit")
             let choose = try f.optionalString("choose")
-            let claim = slots == nil && more == nil && lit == nil && choose == nil
-                ? nil : PlaytestToolBarClaim(slots: slots, more: more, lit: lit, choose: choose)
+            let capsules = try f.optionalNumber("capsules").map { Int($0) }
+            let claim = slots == nil && more == nil && lit == nil && choose == nil && capsules == nil
+                ? nil : PlaytestToolBarClaim(slots: slots, more: more, lit: lit, choose: choose,
+                                             capsules: capsules)
             self = .toolBar(stage: try f.string("stage"),
                             clearOfPicture: try f.optionalFlag("clearOfPicture"), claim: claim)
         case "panelEdge":
@@ -4569,12 +4572,17 @@ public struct PlaytestToolBarClaim: Hashable, Sendable {
     /// A row under More to pick BEFORE anything is read, the way a person
     /// picks it from the open menu (the row's own action, run in the app).
     public var choose: String?
+    /// How many glass capsules the bottom row draws: 1 when the tools, the
+    /// colours and the zoom are the one bar the mocks draw
+    /// (`next-one-glass-tool-bar`), one per group when they are not.
+    public var capsules: Int?
 
     public init(slots: [String]? = nil, more: [String]? = nil, lit: String? = nil,
-                choose: String? = nil) {
+                choose: String? = nil, capsules: Int? = nil) {
         self.slots = slots
         self.more = more
         self.lit = lit
         self.choose = choose
+        self.capsules = capsules
     }
 }

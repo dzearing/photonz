@@ -10,7 +10,7 @@
     { "do": "toolBar", "stage": "1-opened",
       "slots": ["Select", "Blade", "Text", "Shapes", "Measure"],
       "more": ["Selection", "Crop", "Arrow", "Highlight", "Lens", "Frame", "Pen", "Fill"],
-      "lit": "Select" },
+      "lit": "Select", "capsules": 1 },
     { "do": "snapshot", "name": "1-the-video-tool-bar" },
 
     { "do": "key", "key": "g" },

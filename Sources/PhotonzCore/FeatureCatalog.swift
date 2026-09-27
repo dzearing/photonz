@@ -73,6 +73,8 @@ public enum FeatureCatalog {
 
     public static let toolBarFeedbackFlag = "next-tool-bar-feedback"
 
+    public static let oneGlassToolBarFlag = "next-one-glass-tool-bar"
+
     public static let toolTipsFlag = "next-tool-tips"
 
     public static let blankCanvasFlag = "next-blank-canvas"
@@ -526,6 +528,16 @@ public enum FeatureCatalog {
                     name: videoToolBarFlag,
                     title: "A video has its own tool bar",
                     description: "A document with time shows Select, Blade, Title / Text, Shape and Measure, and every other tool waits under More, still on its key. Off means a video shows the whole picture tool bar.",
+                    area: .tools,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: oneGlassToolBarFlag,
+                    title: "The tool bar is one glass bar",
+                    description: "The tools, More, the colour pair and the zoom sit in one glass bar with a hairline between each, on pictures and videos alike. Off means each is its own glass capsule.",
                     area: .tools,
                     isEnabled: false,
                     parameters: []),

@@ -18,23 +18,41 @@ import SwiftUI
 @MainActor final class ToolBarLayoutProbe {
     static let shared = ToolBarLayoutProbe()
 
+    /// One view's last word: which group it is and where it was drawn, and
+    /// when, so the newest word for a name wins.
+    private struct Entry { var name: String; var frame: CGRect; var stamp: Int }
+
+    /// Every live view's last measurement. Kept PER VIEW rather than per name
+    /// because two windows can each draw a bar: a recording opened from an
+    /// empty window has the empty one draw, animate and close beside it. With
+    /// one frame per name, the closing window's last writes replaced the
+    /// recording window's and its goodbye then removed them, so the bar still
+    /// on screen was missing from the register until something moved it.
+    private var entries: [ObjectIdentifier: Entry] = [:]
+    private var stamp = 0
+
     /// Every group currently on screen, by the name the bar gave it, in the
-    /// window's coordinates.
-    var groups: [String: CGRect] = [:]
+    /// window's coordinates: the most recent word from a live view.
+    var groups: [String: CGRect] {
+        var newest: [String: Entry] = [:]
+        for entry in entries.values where (newest[entry.name]?.stamp ?? -1) < entry.stamp {
+            newest[entry.name] = entry
+        }
+        return newest.mapValues(\.frame)
+    }
     /// Draw order, so the log reads left to right instead of alphabetically.
     var order: [String] = []
 
-    func record(_ name: String, frame: CGRect) {
+    func record(_ name: String, frame: CGRect, by writer: ObjectIdentifier) {
         if !order.contains(name) { order.append(name) }
-        groups[name] = frame
+        stamp += 1
+        entries[writer] = Entry(name: name, frame: frame, stamp: stamp)
     }
 
-    /// Forgets `name` only if what is recorded is still `frame`, the last
-    /// thing the disappearing view wrote: when one window closes as another
-    /// opens, the new window's bar must not be forgotten along with the old.
-    func forget(_ name: String, ifStill frame: CGRect?) {
-        guard let frame, groups[name] == frame else { return }
-        groups.removeValue(forKey: name)
+    /// Forgets what the disappearing view wrote, and nothing else: the same
+    /// group in a window still open reads on.
+    func forget(by writer: ObjectIdentifier) {
+        entries.removeValue(forKey: writer)
     }
 
     /// What the tool bar last drew: its slots in front by name, the rows under
@@ -45,6 +63,28 @@ import SwiftUI
     /// menu's row runs, so a walk can pick one without an open menu.
     var moreRows: [String] = []
     var pickMoreRow: (@MainActor (String) -> Void)?
+
+    /// The one glass bar the groups sit in when the bar is drawn whole
+    /// (`next-one-glass-tool-bar`); nil while each group is its own capsule.
+    var bar: CGRect?
+
+    /// How many glass capsules the row draws: the one bar, or one per group.
+    var capsules: Int { bar == nil ? groups.count : 1 }
+
+    private var bars: [ObjectIdentifier: Entry] = [:]
+
+    func recordBar(_ frame: CGRect, by writer: ObjectIdentifier) {
+        stamp += 1
+        bars[writer] = Entry(name: "Bar", frame: frame, stamp: stamp)
+        bar = newestBar
+    }
+
+    func forgetBar(by writer: ObjectIdentifier) {
+        bars.removeValue(forKey: writer)
+        bar = newestBar
+    }
+
+    private var newestBar: CGRect? { bars.values.max { $0.stamp < $1.stamp }?.frame }
 
     /// The groups on screen, left to right.
     var measured: [(name: String, frame: CGRect)] {
@@ -59,6 +99,33 @@ extension View {
     /// one that draws the capsule, so the measurement is the capsule.
     func toolBarGroupProbe(_ name: String) -> some View {
         modifier(ToolBarGroupProbe(name: name))
+    }
+}
+
+extension View {
+    /// Registers this view as the ONE glass bar the groups are sections of.
+    func toolBarGlassProbe() -> some View {
+        modifier(ToolBarGlassProbe())
+    }
+}
+
+private struct ToolBarGlassProbe: ViewModifier {
+    @State private var recorded = ToolBarGroupProbe.Recorded()
+
+    func body(content: Content) -> some View {
+        content
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
+                recorded.frame = frame
+                ToolBarLayoutProbe.shared.recordBar(frame, by: ObjectIdentifier(recorded))
+            }
+            // Back from a disappearance with its geometry unchanged, which
+            // does not fire the geometry change again (`ToolBarGroupProbe`).
+            .onAppear {
+                if let frame = recorded.frame {
+                    ToolBarLayoutProbe.shared.recordBar(frame, by: ObjectIdentifier(recorded))
+                }
+            }
+            .onDisappear { ToolBarLayoutProbe.shared.forgetBar(by: ObjectIdentifier(recorded)) }
     }
 }
 
@@ -89,7 +156,8 @@ extension View {
 
 private struct ToolBarGroupProbe: ViewModifier {
     let name: String
-    /// What this view last recorded. Not drawn, so it never redraws the bar.
+    /// This view's identity in the register. Not drawn, so it never redraws
+    /// the bar.
     @State private var recorded = Recorded()
 
     final class Recorded { var frame: CGRect? }
@@ -98,9 +166,19 @@ private struct ToolBarGroupProbe: ViewModifier {
         content
             .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
                 recorded.frame = frame
-                ToolBarLayoutProbe.shared.record(name, frame: frame)
+                ToolBarLayoutProbe.shared.record(name, frame: frame, by: ObjectIdentifier(recorded))
             }
-            .onDisappear { ToolBarLayoutProbe.shared.forget(name, ifStill: recorded.frame) }
+            // A window opened with a recording is hidden and shown again once
+            // it has drawn: every view on it says goodbye and comes back in
+            // the same place, and a geometry that did not change never fires
+            // again, so the bar was gone from the register until something
+            // moved. Coming back puts back what it last measured.
+            .onAppear {
+                if let frame = recorded.frame {
+                    ToolBarLayoutProbe.shared.record(name, frame: frame, by: ObjectIdentifier(recorded))
+                }
+            }
+            .onDisappear { ToolBarLayoutProbe.shared.forget(by: ObjectIdentifier(recorded)) }
     }
 }
 
@@ -108,6 +186,7 @@ private struct ToolBarGroupProbe: ViewModifier {
 
 extension View {
     func toolBarGroupProbe(_ name: String) -> some View { self }
+    func toolBarGlassProbe() -> some View { self }
     func toolBarSlotsProbe(shown: [String], more: [String], lit: String?) -> some View { self }
     func toolBarMoreProbe(_ rows: [String], pick: @escaping @MainActor (String) -> Void) -> some View { self }
 }

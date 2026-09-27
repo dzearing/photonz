@@ -461,6 +461,17 @@ struct FeatureCatalogTests {
         #expect(FeatureCatalog.videoToolBarFlag == "next-video-tool-bar")
     }
 
+    @Test func theOneGlassToolBarFlagIsNextOnlyAndOnByDefault() {
+        // The tools, the colour pair and the zoom are one glass bar with
+        // hairlines, as the mocks draw it. Next only; Current keeps its row
+        // of separate capsules.
+        #expect(FeatureCatalog.oneGlassToolBarFlag == "next-one-glass-tool-bar")
+        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.oneGlassToolBarFlag))
+        #expect(FeatureCatalog.flags(for: .next).contains { $0.name == FeatureCatalog.oneGlassToolBarFlag })
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.oneGlassToolBarFlag })
+        #expect(!FeatureCatalog.defaultSettings(for: .current).isEnabled(FeatureCatalog.oneGlassToolBarFlag))
+    }
+
     @Test func theToolBarFeedbackFlagIsNextOnlyAndOnByDefault() {
         // Tool bar buttons show the shared hover fill and pressed shrink that
         // every other icon button in the app has. Next only; Current keeps

@@ -294,6 +294,46 @@ public enum EditorChromeLayout {
         return min(maximum, current + Int(slack / toolBarWidestSlotWidth))
     }
 
+    // MARK: One glass bar
+
+    /// One part of the floating tool bar when it is drawn as ONE glass bar
+    /// (`next-one-glass-tool-bar`), the way `video.html` draws it: the tools
+    /// and More, the colour pair, the grid, the zoom, with a hairline between
+    /// each. Before, each was its own capsule side by side.
+    public enum ToolBarSection: String, Sendable, CaseIterable {
+        case tools, color, grid, zoom
+    }
+
+    /// The sections on the bar right now, left to right.
+    ///
+    /// The tools and the zoom are always there. The colour pair is there only
+    /// for a tool that paints (`Tool.colorControl`), and the grid only on a
+    /// canvas roomy enough for it (`gridChipParts`). The mock draws no grid;
+    /// it stays beside the zoom because both are about how the canvas is being
+    /// looked at.
+    public static func toolBarSections(showsColor: Bool, showsGrid: Bool) -> [ToolBarSection] {
+        var sections: [ToolBarSection] = [.tools]
+        if showsColor { sections.append(.color) }
+        if showsGrid { sections.append(.grid) }
+        sections.append(.zoom)
+        return sections
+    }
+
+    /// Whether a hairline goes before the section at `index`: between every
+    /// pair of sections, never at either end of the bar.
+    public static func toolBarHasHairline(before index: Int) -> Bool {
+        index > 0
+    }
+
+    /// How far a hairline between sections sits from what is either side of
+    /// it: the same as the tools' own spacing, so a hairline between the tools
+    /// and the colours reads exactly like one between two tool families.
+    public static let toolBarSectionSpacing: CGFloat = 14
+
+    /// The room between the glass's rounded ends and the first and last
+    /// control on the bar, which is what the tools' own capsule always had.
+    public static let toolBarEndPadding: CGFloat = 18
+
     /// The narrowest canvas that still gets the zoom slider in the tool bar.
     ///
     /// The slider is 110pt of a bar that also has to hold the tools, and it is

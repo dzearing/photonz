@@ -1,0 +1,33 @@
+{
+  "out": "/tmp/photonz-playtest/one-glass-tool-bar-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "toolBar", "stage": "1-video", "capsules": 1,
+      "slots": ["Select", "Blade", "Text", "Shapes", "Measure"] },
+    { "do": "describe", "stage": "1-video", "note": "a recording opened at Next defaults, no flag touched: the tools, More and the zoom are ONE glass bar with a hairline between them, as video.html's floating tool bar draws it" },
+    { "do": "snapshot", "name": "1-video-one-bar" },
+
+    { "do": "key", "key": "g" },
+    { "do": "waitFor", "condition": "tool", "value": "fill" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "toolBar", "stage": "2-video-painting", "capsules": 1, "lit": "More" },
+    { "do": "describe", "stage": "2-video-painting", "note": "with the bucket in hand the colour pair joins the same bar between the tools and the zoom, hairlines either side, rather than floating beside it in a capsule of its own" },
+    { "do": "snapshot", "name": "2-video-colour-pair" },
+
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "toolBar", "stage": "3-picture", "capsules": 1, "clearOfPicture": true },
+    { "do": "describe", "stage": "3-picture", "note": "a picture's bar is the same one bar: its tool families, the grid and the zoom, hairlines between" },
+    { "do": "snapshot", "name": "3-picture-one-bar" },
+
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 700, "height": 700 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "toolBar", "stage": "4-picture-narrow", "capsules": 1, "clearOfPicture": true },
+    { "do": "describe", "stage": "4-picture-narrow", "note": "a narrow window folds the trailing tools into More before anything clips, and the bar stays one glass bar" },
+    { "do": "snapshot", "name": "4-picture-narrow" }
+  ]
+}

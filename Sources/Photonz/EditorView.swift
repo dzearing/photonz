@@ -788,7 +788,8 @@ struct EditorView: View {
     }
 
     /// Three glass bars: tools, fill colors, zoom — grouped in one
-    /// GlassEffectContainer so the capsules morph together. Shows
+    /// GlassEffectContainer so the capsules morph together. In Next they are
+    /// sections of ONE glass bar instead (`oneGlassBar`). Shows
     /// `toolbarVisibleCount` leading tools inline (the full bar when that's all
     /// of them, so there is zero regression at large sizes); the rest collapse
     /// into the "…" overflow menu. The count is driven by `reconcileToolbarCount`
@@ -802,14 +803,11 @@ struct EditorView: View {
             // belongs to the zero point and the guides.
             if editorState.isAdjustingGrid {
                 gridAdjustBar
+            } else if isOneGlassBar {
+                oneGlassBar
+                    .background { fillColorShortcuts }
             } else {
-                if let fold = videoFold {
-                    videoToolsBar(fold, visibleCount: toolbarVisibleCount)
-                } else if toolbarVisibleCount >= toolbarSlots.count {
-                    toolsBar
-                } else {
-                    compactToolsBar(visibleCount: toolbarVisibleCount)
-                }
+                toolsSection
                 sideCapsules
                     .background { fillColorShortcuts }
             }
@@ -938,11 +936,8 @@ struct EditorView: View {
     /// feature.
     @ViewBuilder private var gridChip: some View {
         @Bindable var state = editorState
-        let parts = EditorChromeLayout.gridChipParts(
-            canvasWidth: canvasContentWidth,
-            isGridVisible: editorState.canvasGrid.isVisible)
-        if Experiments.shared.canvasGridEnabled, editorState.hasDocument,
-           !parts.isEmpty {
+        let parts = gridChipParts
+        if !parts.isEmpty {
             let showing = editorState.canvasGrid.isVisible
             HStack(spacing: 8) {
                 Button { editorState.showGridSettings() } label: {
@@ -979,11 +974,69 @@ struct EditorView: View {
                 }
             }
             .fixedSize()
-            .padding(.horizontal, 12)
-            .frame(height: EditorChromeLayout.toolBarGroupHeight)
-            .glassEffect(.regular, in: .capsule)
-            .contentShape(.capsule)
-            .toolBarGroupProbe("Grid")
+            .toolBarGroup("Grid", padding: 12, isSection: isOneGlassBar)
+        }
+    }
+
+    /// What the grid's capsule carries on this canvas, and nothing at all
+    /// with the grid feature off or no document open.
+    private var gridChipParts: [EditorChromeLayout.GridChipPart] {
+        guard Experiments.shared.canvasGridEnabled, editorState.hasDocument else { return [] }
+        return EditorChromeLayout.gridChipParts(canvasWidth: canvasContentWidth,
+                                                isGridVisible: editorState.canvasGrid.isVisible)
+    }
+
+    /// Whether the bar is ONE glass bar with hairlines between its sections,
+    /// as the mocks draw it (`next-one-glass-tool-bar`), rather than a row of
+    /// separate capsules.
+    private var isOneGlassBar: Bool { Experiments.shared.oneGlassToolBarEnabled }
+
+    /// The tools, the colours, the grid and the zoom as sections of one glass
+    /// bar, a hairline between each: `video.html`'s floating tool bar, on a
+    /// picture and a video alike. Which sections are on it is
+    /// `EditorChromeLayout.toolBarSections`, tested.
+    ///
+    /// The colour section coming and going resizes this one capsule, so the
+    /// resize rides the same spring as the tools, on a TOOL change only: the
+    /// 10.7 note on `toolsBar` is why nothing here animates on a selection.
+    private var oneGlassBar: some View {
+        let sections = EditorChromeLayout.toolBarSections(
+            showsColor: editorState.activeTool.colorControl != .hidden,
+            showsGrid: !gridChipParts.isEmpty)
+        return HStack(spacing: EditorChromeLayout.toolBarSectionSpacing) {
+            ForEach(Array(sections.enumerated()), id: \.element) { index, section in
+                if EditorChromeLayout.toolBarHasHairline(before: index) {
+                    Divider().frame(height: 20)
+                }
+                toolBarSection(section)
+            }
+        }
+        .padding(.horizontal, EditorChromeLayout.toolBarEndPadding)
+        .frame(height: EditorChromeLayout.toolBarGroupHeight)
+        .glassEffect(.regular, in: .capsule)
+        .contentShape(.capsule)
+        .toolBarGlassProbe()
+        .animation(.spring(duration: 0.3), value: editorState.activeTool)
+    }
+
+    @ViewBuilder private func toolBarSection(_ section: EditorChromeLayout.ToolBarSection) -> some View {
+        switch section {
+        case .tools: toolsSection
+        case .color: colorBar
+        case .grid: gridChip
+        case .zoom: zoomBar
+        }
+    }
+
+    /// The tools as the bar has room for them: the video's fold, the whole
+    /// picture bar, or the leading tools and a More.
+    @ViewBuilder private var toolsSection: some View {
+        if let fold = videoFold {
+            videoToolsBar(fold, visibleCount: toolbarVisibleCount)
+        } else if toolbarVisibleCount >= toolbarSlots.count {
+            toolsBar
+        } else {
+            compactToolsBar(visibleCount: toolbarVisibleCount)
         }
     }
 
@@ -1016,17 +1069,14 @@ struct EditorView: View {
         }
         .background { magnifyShortcut }
         .buttonStyle(.borderless)
-        .padding(.horizontal, 18)
-        .frame(height: EditorChromeLayout.toolBarGroupHeight)
-        .glassEffect(.regular, in: .capsule)
         // The bar absorbs clicks on the whole capsule it draws, not just
         // on the controls: the glass has a 10pt rim above and below the
         // 28pt control row, and without this a click that lands on the
         // rim falls through to the picture behind the bar — with Measure
         // active, aiming slightly high at a tool started a measurement on
-        // the image instead of picking the tool.
-        .contentShape(.capsule)
-        .toolBarGroupProbe("Tools")
+        // the image instead of picking the tool. (`toolBarGroup` gives the
+        // capsule that shape, or the one bar it is a section of.)
+        .toolBarGroup("Tools", padding: 18, isSection: isOneGlassBar)
         .toolBarSlotsProbe(shown: toolbarSlots.map(\.title), more: [],
                            lit: activeSlot?.title)
         // One spring drives every toolbar transition: the accent circle
@@ -1123,11 +1173,7 @@ struct EditorView: View {
         .background { overflowShortcuts(overflow) }
         .background { magnifyShortcut }
         .buttonStyle(.borderless)
-        .padding(.horizontal, 18)
-        .frame(height: EditorChromeLayout.toolBarGroupHeight)
-        .glassEffect(.regular, in: .capsule)
-        .contentShape(.capsule)
-        .toolBarGroupProbe("Tools")
+        .toolBarGroup("Tools", padding: 18, isSection: isOneGlassBar)
         .toolBarSlotsProbe(shown: visible.map(\.title), more: overflow.map(\.title),
                            lit: active?.title)
         .animation(.spring(duration: 0.3), value: editorState.activeTool)
@@ -1159,11 +1205,7 @@ struct EditorView: View {
         .background { overflowShortcuts(more, announce: true) }
         .background { magnifyShortcut }
         .buttonStyle(.borderless)
-        .padding(.horizontal, 18)
-        .frame(height: EditorChromeLayout.toolBarGroupHeight)
-        .glassEffect(.regular, in: .capsule)
-        .contentShape(.capsule)
-        .toolBarGroupProbe("Tools")
+        .toolBarGroup("Tools", padding: 18, isSection: isOneGlassBar)
         .toolBarSlotsProbe(shown: visible.map(\.title), more: more.map(\.title),
                            lit: lit.map { more.contains($0) ? "More" : $0.title })
         .animation(.spring(duration: 0.3), value: editorState.activeTool)
@@ -1690,11 +1732,7 @@ struct EditorView: View {
                 }
             }
             .buttonStyle(.borderless)
-            .padding(.horizontal, 12)
-            .frame(height: EditorChromeLayout.toolBarGroupHeight)
-            .glassEffect(.regular, in: .capsule)
-            .contentShape(.capsule)
-            .toolBarGroupProbe("Color")
+            .toolBarGroup("Color", padding: 12, isSection: isOneGlassBar)
         }
     }
 
@@ -2050,11 +2088,7 @@ struct EditorView: View {
             }
             .playtestControl("Zoom level", detail: "Tool bar")
         }
-        .padding(.horizontal, 14)
-        .frame(height: EditorChromeLayout.toolBarGroupHeight)
-        .glassEffect(.regular, in: .capsule)
-        .contentShape(.capsule)
-        .toolBarGroupProbe("Zoom")
+        .toolBarGroup("Zoom", padding: 14, isSection: isOneGlassBar)
         .disabled(!editorState.hasDocument)
     }
 
@@ -3127,4 +3161,36 @@ extension Tool {
 /// of them are always the same editor (`ImageEditorRootView`).
 extension EditorView: Equatable {
     nonisolated static func == (lhs: EditorView, rhs: EditorView) -> Bool { true }
+}
+
+/// How one group along the bottom of the canvas (the tools, the colours, the
+/// grid, the zoom) draws itself: its own glass capsule, or, when the bar is
+/// the one glass bar the mocks draw, a bare section of it that leaves the
+/// glass, the ends and the click shape to the bar. Either way it is the one
+/// row height and registers under its name for a walk to read back.
+private struct ToolBarGroupChrome: ViewModifier {
+    let name: String
+    let padding: CGFloat
+    let isSection: Bool
+
+    func body(content: Content) -> some View {
+        if isSection {
+            content
+                .frame(height: EditorChromeLayout.toolBarGroupHeight)
+                .toolBarGroupProbe(name)
+        } else {
+            content
+                .padding(.horizontal, padding)
+                .frame(height: EditorChromeLayout.toolBarGroupHeight)
+                .glassEffect(.regular, in: .capsule)
+                .contentShape(.capsule)
+                .toolBarGroupProbe(name)
+        }
+    }
+}
+
+private extension View {
+    func toolBarGroup(_ name: String, padding: CGFloat, isSection: Bool) -> some View {
+        modifier(ToolBarGroupChrome(name: name, padding: padding, isSection: isSection))
+    }
 }

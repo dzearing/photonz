@@ -293,6 +293,12 @@ extension Experiments {
     /// More. Rides on the families bar, so it needs `next-tool-groups` too.
     var videoToolBarEnabled: Bool { isEnabled(FeatureCatalog.videoToolBarFlag) }
 
+    /// `next-one-glass-tool-bar`: whether the floating tool bar is ONE glass
+    /// bar with hairlines between the tools, the colours, the grid and the
+    /// zoom (`EditorChromeLayout.toolBarSections`). Next only, so Current keeps
+    /// its separate capsules.
+    var oneGlassToolBarEnabled: Bool { isEnabled(FeatureCatalog.oneGlassToolBarFlag) }
+
     /// `next-tool-bar-feedback`: whether the floating tool bar's buttons (and
     /// the inspector toggle) show the shared hover fill and pressed shrink of
     /// `IconActionButtonStyle`. Exists only in the Next release's catalog, so
