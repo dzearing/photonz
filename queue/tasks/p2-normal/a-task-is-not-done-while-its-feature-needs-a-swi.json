@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T12:12:00.509Z",
-  "updated": "2026-09-27T12:11:15.694Z",
+  "updated": "2026-09-27T22:05:12.903Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence, checked 2026-09-23 by the digest pass: Sources/PhotonzCore/FeatureCatalog.swift, the recordingIsADocumentFlag entry (next-a-recording-is-a-document) has enabledByDefaultIn: [] while the video features under it (next-sound-on-the-timeline, next-open-out-the-timeline, next-hear-the-scrub, next-export-the-video and more) are enabledByDefaultIn: [.next]. The 2026-09-22 digest told the user video cutting was genuinely tryable end to end. runner-prompt.md now says it in prose (Default config, section around line 308); prose was not enough last time. The fix for the flag itself is a-recording-opens-in-the-video-editor-for-real-i; this task is the gate so the next parent switch cannot hide a feature the same way. Walk setups carry flags in their JSON (see a-walk-can-switch-a-feature-off-before-it-runs, done).",
@@ -51,6 +51,29 @@
     {
       "t": "2026-09-27T12:11:15.693Z",
       "note": "seq 70 -> 90"
+    },
+    {
+      "t": "2026-09-27T21:51:34.743Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T22:05:06.572Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-09-27T22:05:06.625Z",
+      "note": "Built: queue/bin/flag-defaults.mjs reads each switch's default straight from FeatureCatalog.swift; queue.mjs status <id> done (runner path only; the dashboard and sweep-report are not gated) refuses an app task when every walk it names switches ON something off at the release's defaults, naming walk and switch, unless queue.mjs off-by-default <id> \"<why>\" says so. Audits carry switched:{...}; auditIndex judges it against the catalog and the Ready to try card and report show Not reachable yet. FlagDefaultsReaderTests holds the reader to the catalog and runs queue/bin/reach-drill.mjs (22 checks) inside Scripts/test.sh. Checked against the real queue: no open or done task naming walks would be refused today; a-separation-arrives-shut-walk alone would be."
+    },
+    {
+      "t": "2026-09-27T22:05:06.678Z",
+      "note": "left rough: an app task that names no walks is not judged at all, so a runner can skip the gate by not naming any. Making walks mandatory would refuse every non-UI app task; the runner prompt now tells UI tasks to name theirs. Did not earn a task: file it if a feature slips through that way. No audit written: this is loop infrastructure, and the one visible change (the Not reachable yet label) was checked on a sandbox dashboard on port 8799 with a forced and a plain audit."
+    },
+    {
+      "t": "2026-09-27T22:05:12.901Z",
+      "note": "Shipped in 14c10691: done on an app task is refused when every walk it names switches on something off at Next defaults (read from FeatureCatalog.swift via queue/bin/flag-defaults.mjs), with an off-by-default escape in words; audits record switched and the dashboard shows Not reachable yet. Verified by FlagDefaultsReaderTests + reach-drill (22 checks) in a green Scripts/test.sh (10,141 tests), and on a sandbox dashboard."
     }
-  ]
+  ],
+  "started": "2026-09-27T21:51:34.742Z",
+  "walks": [],
+  "completed": "2026-09-27T22:05:12.902Z"
 }
