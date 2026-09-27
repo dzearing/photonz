@@ -27,10 +27,17 @@ const AUDIT_ASSETS = join(ROOT, '..', '..', '..', 'queue', 'audits');
 // the elegance of a push, on localhost, for a mock server.
 const LR = `<script>(function(){
 var rev=null;
+// A page (or a page framed inside this one) can hold the reload while
+// somebody is looking at something a reload would throw away, such as the
+// dashboard's screenshot viewer: window.__holdReload() returning true. The
+// change is not lost, it reloads on the first tick after the hold lifts.
+function held(){try{if(window.__holdReload&&window.__holdReload())return true;
+  var fs=document.querySelectorAll('iframe');for(var i=0;i<fs.length;i++){var w=fs[i].contentWindow;
+  if(w&&w.__holdReload&&w.__holdReload())return true;}}catch(e){}return false;}
 function tick(){
   if(document.hidden)return;
   fetch('/__rev',{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){
-    if(rev!==null&&t!==rev){location.reload();return;}
+    if(rev!==null&&t!==rev){if(held())return;location.reload();return;}
     rev=t;
   }).catch(function(){});
 }

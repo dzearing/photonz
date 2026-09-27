@@ -349,6 +349,18 @@
   /* what is true of this particular picture and not of the app: a capture taken
      while the Mac was locked is the real window with its colours dimmed, and
      a reader who is not told that files the dimming as a bug */
+  /* Screenshot viewer: click any audit picture to see it large (2026-09-27). */
+  #dashboard .db-asec img,#dashboard .db-md img{cursor:zoom-in}
+  .db-lb{position:fixed;inset:0;z-index:1000;background:rgba(8,8,12,.86);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    overflow:hidden;opacity:0;transition:opacity .16s ease;touch-action:none;cursor:grab}
+  .db-lb.on{opacity:1}
+  .db-lb.drag{cursor:grabbing}
+  .db-lb img{position:absolute;left:0;top:0;transform-origin:0 0;max-width:none;max-height:none;user-select:none;-webkit-user-drag:none;
+    box-shadow:0 20px 60px rgba(0,0,0,.5);border-radius:6px;image-rendering:auto}
+  .db-lb .db-lbzoom{position:absolute;right:16px;bottom:16px;font:600 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:#fff;
+    background:rgba(0,0,0,.55);border-radius:6px;padding:6px 8px;pointer-events:none}
+  .db-lb .db-lbx{position:absolute;right:14px;top:14px;width:30px;height:30px;border-radius:15px;border:0;background:rgba(0,0,0,.55);
+    color:#fff;font-size:16px;line-height:30px;cursor:pointer}
   #dashboard .db-ashotnote{max-width:460px;margin-top:4px;font-size:10.5px;line-height:1.5;color:var(--faint)}
   #dashboard .db-acomposer{grid-column:1/-1;margin-top:var(--s2);display:flex;flex-direction:column;gap:var(--s2)}
   #dashboard .db-acta{display:flex;gap:var(--s2);justify-content:flex-end}
@@ -2163,6 +2175,79 @@
   if (q && ['summary', 'objectives', 'tasks', 'audits', 'data', 'digest'].indexOf(q) >= 0) setTab(q, false);
   load();
   setInterval(function () { if (!document.hidden) load(); }, 4000);
+})();
+</script>
+<script>
+// Screenshot viewer. Click an audit picture: it opens fitted to the window.
+// Pinch (or Cmd/Ctrl + scroll) zooms around the pointer, scroll or drag pans,
+// double-click toggles fit and 100%, Esc or a click on the backdrop closes.
+(function () {
+  var root = document.getElementById('dashboard'); if (!root) return;
+  var lb = null, img, badge, s = 1, fit = 1, x = 0, y = 0, gStart = 1, drag = null, moved = false;
+  function apply() { img.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')'; badge.textContent = Math.round(s * 100) + '%'; }
+  function fitNow() {
+    var W = innerWidth, H = innerHeight, w = img.naturalWidth || 1, h = img.naturalHeight || 1;
+    fit = Math.min((W - 64) / w, (H - 64) / h, 1); s = fit; x = (W - w * s) / 2; y = (H - h * s) / 2; apply();
+  }
+  function zoomAt(k, cx, cy) {
+    var ns = Math.min(Math.max(s * k, fit * 0.5, 0.05), 16); k = ns / s;
+    x = cx - (cx - x) * k; y = cy - (cy - y) * k; s = ns; apply();
+  }
+  function close() {
+    if (!lb) return; var el = lb; lb = null; el.classList.remove('on');
+    setTimeout(function () { el.remove(); }, 170);
+    document.removeEventListener('keydown', onKey, true);
+  }
+  function onKey(e) {
+    if (!lb) return;
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); }
+    else if (e.key === '0' || e.key === 'f') fitNow();
+    else if (e.key === '1') zoomAt(1 / s, innerWidth / 2, innerHeight / 2);
+    else if (e.key === '=' || e.key === '+') zoomAt(1.25, innerWidth / 2, innerHeight / 2);
+    else if (e.key === '-') zoomAt(0.8, innerWidth / 2, innerHeight / 2);
+  }
+  function open(src, alt) {
+    close();
+    lb = document.createElement('div'); lb.className = 'db-lb'; lb.setAttribute('role', 'dialog'); lb.setAttribute('aria-label', 'Screenshot');
+    img = document.createElement('img'); img.alt = alt || ''; img.draggable = false;
+    badge = document.createElement('div'); badge.className = 'db-lbzoom';
+    var x0 = document.createElement('button'); x0.className = 'db-lbx'; x0.setAttribute('aria-label', 'Close'); x0.textContent = '\u00d7';
+    x0.onclick = close;
+    lb.appendChild(img); lb.appendChild(badge); lb.appendChild(x0); document.body.appendChild(lb);
+    img.onload = function () { fitNow(); requestAnimationFrame(function () { lb && lb.classList.add('on'); }); };
+    img.src = src;
+    lb.addEventListener('wheel', function (e) {
+      e.preventDefault();
+      if (e.ctrlKey || e.metaKey) zoomAt(Math.exp(-e.deltaY * 0.01), e.clientX, e.clientY);
+      else { x -= e.deltaX; y -= e.deltaY; apply(); }
+    }, { passive: false });
+    // Safari/WebKit trackpad pinch
+    lb.addEventListener('gesturestart', function (e) { e.preventDefault(); gStart = s; });
+    lb.addEventListener('gesturechange', function (e) { e.preventDefault(); zoomAt(gStart * e.scale / s, e.clientX, e.clientY); });
+    lb.addEventListener('pointerdown', function (e) {
+      if (e.target === x0) return;
+      drag = { px: e.clientX, py: e.clientY, x: x, y: y }; moved = false; lb.setPointerCapture(e.pointerId); lb.classList.add('drag');
+    });
+    lb.addEventListener('pointermove', function (e) {
+      if (!drag) return; var dx = e.clientX - drag.px, dy = e.clientY - drag.py;
+      if (Math.abs(dx) + Math.abs(dy) > 3) moved = true; x = drag.x + dx; y = drag.y + dy; apply();
+    });
+    lb.addEventListener('pointerup', function (e) {
+      var was = drag; drag = null; lb && lb.classList.remove('drag');
+      if (was && !moved && e.target === lb) close();
+    });
+    lb.addEventListener('dblclick', function (e) {
+      if (Math.abs(s - fit) < 0.001) zoomAt(1 / s, e.clientX, e.clientY); else fitNow();
+    });
+    addEventListener('resize', function () { if (lb && Math.abs(s - fit) < 0.001) fitNow(); });
+    document.addEventListener('keydown', onKey, true);
+  }
+  // Hold the dev server's live reload while the viewer is open (dev-server.mjs).
+  window.__holdReload = function () { return !!lb; };
+  root.addEventListener('click', function (e) {
+    var t = e.target;
+    if (t && t.tagName === 'IMG' && t.closest('.db-asec, .db-md')) { e.preventDefault(); e.stopPropagation(); open(t.currentSrc || t.src, t.alt); }
+  }, true);
 })();
 </script>
 </body>
