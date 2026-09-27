@@ -164,7 +164,18 @@ elif (( DIED )); then
   CRASH="$(node Scripts/crash-report.mjs --since "$RUN_BEGAN_MS" --wait 10 2>/dev/null || true)"
   echo "!! THE APP DIED part way through this walk. It is gone and it left no done.json," >&2
   echo "   which is not the same news as a walk that merely ran slowly." >&2
-  if [[ -n "$CRASH" ]]; then
+  if [[ -n "$CRASH" ]] && grep -q '^    Known macOS fault:' <<<"$CRASH" \
+      && [[ -z "${PHOTONZ_PLAYTEST_RERUN:-}" && -z "$KEEP" ]]; then
+    # macOS killed the app, not the app itself (Scripts/crash-report.mjs,
+    # SYSTEM_FAULTS): about once in several thousand launches, never twice in a
+    # row. So the walk gets one more run and ITS verdict is the walk's. This line
+    # is deliberately not a "Verdict:", so playtest-all never reads the first
+    # try as the answer.
+    printf '%s\n' "$CRASH"
+    echo "==> First try: CRASHED  $(printf '%s' "$CRASH" | head -1). Running the walk once more."
+    Scripts/probe-app.sh --quit >/dev/null 2>&1 || true
+    PHOTONZ_PLAYTEST_RERUN=1 exec "$PWD/Scripts/playtest.sh" "$SCRIPT_ABS" --no-build
+  elif [[ -n "$CRASH" ]]; then
     printf '%s\n' "$CRASH" | tail -n +2
     echo "   The frames run from where it died down to what was being done; read < as \"called from\"."
     echo "==> Verdict: CRASHED  $(printf '%s' "$CRASH" | head -1)"

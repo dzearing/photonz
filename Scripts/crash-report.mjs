@@ -56,9 +56,7 @@ const GENERIC_ASI = /^(abort\(\) called|Abort trap.*)$/;
 // frames are dropped because "EditorState.history.getter" at
 // "/<compiler-generated>" names nothing a person can go and look at.
 function appFrames(body, appImageIndexes) {
-  const thread = body.threads?.[body.faultingThread ?? -1]
-    || body.threads?.find((t) => t.triggered)
-    || null;
+  const thread = faultingThread(body);
   const out = [];
   for (const f of thread?.frames || []) {
     if (!appImageIndexes.has(f.imageIndex)) continue;
@@ -74,6 +72,43 @@ function appFrames(body, appImageIndexes) {
 }
 
 const shorten = (s, n) => (s.length <= n ? s : `${s.slice(0, n - 1)}…`);
+
+// Crashes that are macOS's own, recognised by their whole shape, never by one
+// frame. Each has an id, the words for the walk's line, and the explanation.
+//
+// macos-ax-notify: AppKit posts an accessibility notification to every app
+// that is watching this one (a window switcher such as Ztabby watches every app
+// and every window). HIServices sends it to that watcher's port by NAME, and
+// when the watcher has dropped its port and the name has been reused for one of
+// our own kernel objects (a thread, the task) the send is one the kernel
+// forbids, so it kills the app on the spot: EXC_GUARD, GUARD_TYPE_MACH_PORT,
+// "INVALID_OPTIONS on mach port 0 (guarded with 0x8001030400000011)". Reproduced
+// exactly on 2026-09-27 by sending HIServices' own message (COPY_SEND,
+// MACH_SEND_MSG|MACH_SEND_TIMEOUT) to mach_task_self() and mach_thread_self()
+// from a ten-line C program: same guard, same codes. It lands in the first
+// seconds of a launch, when both the watcher's subscriptions and our threads
+// are churning, about once in several thousand launches of the probe. Other
+// apps meet it too (mpv #12632, zed #9261). Nothing in Photonz sends that
+// message, so there is nothing of ours to fix; the walk is run once more.
+const SYSTEM_FAULTS = [{
+  id: 'macos-ax-notify',
+  matches: (body, thread) => body.exception?.type === 'EXC_GUARD'
+    && body.exception?.subtype === 'GUARD_TYPE_MACH_PORT'
+    && ((body.exception?.violations || []).includes('INVALID_OPTIONS')
+      || /INVALID_OPTIONS/.test(body.exception?.message || ''))
+    && (thread?.frames || []).slice(0, 8).some((f) => /^_XMIGPostNotification$|^_AXUIElementPostNotification/.test(f.symbol || '')),
+  line: 'EXC_GUARD in macOS posting an accessibility notification (a macOS fault, not the app)',
+  detail: [
+    '    Known macOS fault: macOS killed the app while sending an accessibility notification to',
+    '    another app that watches windows (a window switcher). Nothing in Photonz sends that',
+    '    message, and it happens about once in several thousand launches, so the walk is run',
+    '    once more rather than filed. See Scripts/crash-report.mjs (macos-ax-notify).',
+  ],
+}];
+
+function faultingThread(body) {
+  return body.threads?.[body.faultingThread ?? -1] || body.threads?.find((t) => t.triggered) || null;
+}
 
 export function readCrashReport(file) {
   let text;
@@ -92,6 +127,7 @@ export function readCrashReport(file) {
     else if (!img.CFBundleIdentifier && img.name && head.app_name && img.name === head.app_name) appImageIndexes.add(i);
   });
   const frames = appFrames(body, appImageIndexes);
+  const fault = SYSTEM_FAULTS.find((f) => f.matches(body, faultingThread(body))) || null;
   const exception = body.exception?.type || 'crash';
   const signal = body.exception?.signal || body.termination?.indicator || '';
   const asi = Object.values(body.asi || {})
@@ -116,7 +152,9 @@ export function readCrashReport(file) {
     // frame of the app's own code and the two under it, because the top frame
     // of a Swift abort is usually a getter and the frame that names the thing
     // the user did is the third one down.
-    summary: where ? `${what} in ${where}` : `${what}, no frame in the app's own code`,
+    summary: fault ? fault.line : where ? `${what} in ${where}` : `${what}, no frame in the app's own code`,
+    // Set when the crash is macOS's own (SYSTEM_FAULTS above), never the app's.
+    systemFault: fault?.id || '',
   };
 }
 
@@ -181,6 +219,10 @@ export function crashLines(r) {
       `    from ${ago(r.agoSeconds || 0)} before this walk. Treat it as the likely shape of the crash, not as proof.`,
     );
   }
+  // The marker playtest.sh reruns a walk on. Only on a report that is this
+  // crash's own: a stale one is the likely shape of the crash, not proof of it.
+  const fault = SYSTEM_FAULTS.find((f) => f.id === r.systemFault);
+  if (fault && !r.stale) lines.push(...fault.detail);
   if (r.indicator) lines.push(`    ${r.indicator}`);
   for (const m of r.messages) lines.push(`    ${m}`);
   for (const f of r.frames) lines.push(`    ${f.symbol}  ${f.file}${f.line ? `:${f.line}` : ''}`);
@@ -197,7 +239,9 @@ if (isMain) {
     return i >= 0 && argv[i + 1] !== undefined ? argv[i + 1] : fallback;
   };
   const file = opt('--file', '');
-  const dir = opt('--dir', REPORTS_DIR);
+  // PHOTONZ_CRASH_REPORTS_DIR lets a drill hand playtest.sh a crash it made up,
+  // so the rerun on a known macOS fault can be proved without waiting for one.
+  const dir = opt('--dir', process.env.PHOTONZ_CRASH_REPORTS_DIR || REPORTS_DIR);
   const bundleId = opt('--bundle', PROBE_BUNDLE_ID);
   const sinceMs = Number(opt('--since', 0)) || 0;
   const waitS = Number(opt('--wait', 0)) || 0;

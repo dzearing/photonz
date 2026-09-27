@@ -220,6 +220,9 @@ for walk in Scripts/playtest/*.json; do
   code=$?
   if (( code == 0 )); then
     verdict="ok"
+    # playtest.sh reran it because macOS killed the first try (a known macOS
+    # fault, Scripts/crash-report.mjs). The pass is real; say it took two.
+    grep -q '^==> First try: CRASHED' <<<"$out" && verdict="ok  on a rerun: the first try hit a macOS fault"
     PASSED=$((PASSED + 1))
     BLIND_RUN=0
   elif (( code == 5 )); then

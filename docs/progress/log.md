@@ -19917,3 +19917,9 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Timeline bar Easing sized by a hidden face with the widest ease; Edit point spare values kept whole; Properties clip line puts a long name above its times; `VideoKit.Tile` names shrink to 85% before cutting.
 - New walk step `labelsWhole`: Vision reads the window in pieces and fails on any label cut with an ellipsis outside the picture and the clip lanes (`CutLabelRule`). In captions margins, timeline bar, library import and editing session walks.
 - Next: labelsWhole under a lock is unproven; the narrowest dock still gives way on purpose.
+
+## 2026-09-27 · The probe's crash at the start of a walk is macOS's
+
+- Cause: AppKit sends an accessibility notification to a window-watching app (Ztabby) by a port name that has died and been reused for one of the probe's own kernel objects, and the kernel kills the sender. A C program sending HIServices' message to `mach_task_self()` dies with the byte-identical guard. Same crash is reported against mpv and Zed. Nothing in Photonz to fix.
+- `Scripts/crash-report.mjs` names it `macos-ax-notify` ("a macOS fault, not the app"); `playtest.sh` reruns such a walk once; `playtest-all.sh` shows `ok  on a rerun`. Drill in `Scripts/crash-report-drill.mjs`; `PHOTONZ_CRASH_REPORTS_DIR` lets a drill supply a report.
+- The four walks it hit passed 10 runs in a row each. Open: the one-off SIGSEGV report of 2026-09-26 06:03 is a different crash, seen once.

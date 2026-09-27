@@ -146,6 +146,70 @@ check('and a fresh report of its own is never called stale',
   findCrashReportOrRecent({ dir: DIR2, bundleId: PROBE, sinceMs: runStarted }).stale === undefined);
 check('how long ago, roughly', [ago(3), ago(45), ago(600), ago(9000)].join() === '3s,45s,10m,3h');
 
+// ---- 6b. the macOS fault that is not the app's ------------------------------
+// The crash of 2026-09-25 23:22 ("Photonz Probe-2026-09-25-232258.ips") and
+// three more like it: AppKit posting an accessibility notification to another
+// app's observer (a window switcher watching every app) sent it to a port name
+// that had died and been reused by a kernel object, and the kernel killed the
+// app for it. Nothing of ours is on the stack but main(), so the old line read
+// "EXC_GUARD in static PhotonzApp.$main()", which sends a person hunting in
+// PhotonzApp.swift for a bug that is in macOS.
+console.log('a macOS accessibility fault');
+const axBody = {
+  faultingThread: 0,
+  exception: {
+    type: 'EXC_GUARD', subtype: 'GUARD_TYPE_MACH_PORT', violations: ['INVALID_OPTIONS'],
+    message: ' INVALID_OPTIONS on mach port 0 (guarded with 0x8001030400000011)',
+  },
+  threads: [{
+    triggered: true,
+    frames: [
+      { symbol: 'mach_msg2_trap', imageIndex: 1 },
+      { symbol: 'mach_msg', imageIndex: 1 },
+      { symbol: '_XMIGPostNotification', imageIndex: 2 },
+      { symbol: '_AXUIElementPostNotificationWithInfo', imageIndex: 2 },
+      { symbol: '_NSAccessibilityNotify', imageIndex: 3 },
+      { symbol: '-[NSApplication run]', imageIndex: 3 },
+      { symbol: 'static PhotonzApp.$main()', sourceFile: 'PhotonzApp.swift', imageIndex: 0 },
+      { symbol: 'Photonz_main', sourceFile: 'PhotonzApp.swift', imageIndex: 0 },
+    ],
+  }],
+  usedImages: [
+    { name: 'Photonz Probe', CFBundleIdentifier: PROBE },
+    { name: 'libsystem_kernel.dylib' },
+    { name: 'HIServices' },
+    { name: 'AppKit' },
+  ],
+};
+const DIR3 = fs.mkdtempSync(path.join(os.tmpdir(), 'photonz-crash-drill-ax-'));
+fs.writeFileSync(path.join(DIR3, 'Photonz Probe-2026-09-25-232258.ips'),
+  JSON.stringify(header('2026-09-25 23:22:53.00 -0700')) + '\n' + JSON.stringify(axBody));
+r = readCrashReport(path.join(DIR3, 'Photonz Probe-2026-09-25-232258.ips'));
+check('it is recognised as the known macOS fault', r && r.systemFault === 'macos-ax-notify', r && r.systemFault);
+check('the line says it is macOS and not the app, and never blames main()',
+  r && /macOS/.test(r.summary) && !/PhotonzApp/.test(r.summary), r && r.summary);
+check('the detail carries the marker playtest.sh reruns on',
+  crashLines(r).some((l) => l.startsWith('    Known macOS fault:')), crashLines(r));
+const axRun = crashTimeMs('2026-09-25 23:22:51.00 -0700');
+const staleAx = findCrashReportOrRecent({ dir: DIR3, bundleId: PROBE, sinceMs: axRun + 60000, fallbackSeconds: 600 });
+check('a report that is not this crash\'s own never carries the rerun marker',
+  staleAx && staleAx.stale && !crashLines(staleAx).some((l) => l.startsWith('    Known macOS fault:')), staleAx && crashLines(staleAx));
+// The same guard anywhere else is not this fault: an app of ours sending to a
+// bad port is our bug and must stay one.
+const ownGuard = JSON.parse(JSON.stringify(axBody));
+ownGuard.threads[0].frames.splice(2, 3, { symbol: 'MyPort.send()', sourceFile: 'MyPort.swift', sourceLine: 12, imageIndex: 0 });
+fs.writeFileSync(path.join(DIR3, 'Photonz Probe-2026-09-25-232300.ips'),
+  JSON.stringify(header('2026-09-25 23:23:00.00 -0700')) + '\n' + JSON.stringify(ownGuard));
+r = readCrashReport(path.join(DIR3, 'Photonz Probe-2026-09-25-232300.ips'));
+check('the same guard from our own code is not excused', r && !r.systemFault && /MyPort\.send/.test(r.summary), r && r.summary);
+const segv = JSON.parse(JSON.stringify(axBody));
+segv.exception = { type: 'EXC_CRASH', signal: 'SIGSEGV' };
+fs.writeFileSync(path.join(DIR3, 'Photonz Probe-2026-09-25-232310.ips'),
+  JSON.stringify(header('2026-09-25 23:23:10.00 -0700')) + '\n' + JSON.stringify(segv));
+r = readCrashReport(path.join(DIR3, 'Photonz Probe-2026-09-25-232310.ips'));
+check('nor is a different crash that happens to be in the same place', r && !r.systemFault, r && r.systemFault);
+fs.rmSync(DIR3, { recursive: true, force: true });
+
 // ---- 7. reading the stamp ---------------------------------------------------
 console.log('the stamp on a report');
 check('a zone behind UTC reads right', crashTimeMs('2026-09-18 01:22:38.00 -0700') === Date.parse('2026-09-18T08:22:38Z'));

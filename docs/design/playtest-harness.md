@@ -85,6 +85,22 @@ that said in the same line: `no report of its own; the crash 77s earlier was
 `node Scripts/crash-report.mjs --file "<report>.ips"`; the drill is
 `node Scripts/crash-report-drill.mjs`.
 
+One crash is macOS's and not the app's, and it gets one rerun instead of a
+verdict. About once in several thousand launches the probe dies in its first
+seconds with `EXC_GUARD ... INVALID_OPTIONS on mach port 0` inside
+`_XMIGPostNotification < _AXUIElementPostNotificationWithInfo`: AppKit sends an
+accessibility notification to another app that watches windows (a window
+switcher), by a port name that has died and been reused for one of the probe's
+own kernel objects, and the kernel kills the sender. A ten-line C program that
+sends HIServices' own message to `mach_task_self()` dies with the identical
+guard and codes (2026-09-27). Nothing in Photonz sends that message, so
+`crash-report.mjs` names it `macos-ax-notify` and says "a macOS fault, not the
+app"; `playtest.sh` prints `==> First try: CRASHED ...` (not a `Verdict:`) and
+runs the walk once more, and `playtest-all.sh` marks a pass that took two as
+`ok  on a rerun: the first try hit a macOS fault`. A second one in a row is
+reported as CRASHED like any other. `PHOTONZ_CRASH_REPORTS_DIR` points
+`crash-report.mjs` at another folder, so a drill can hand it a report.
+
 `Scripts/playtest-all.sh` counts crashes apart from failures
 (`==> 3 passed, 1 failed, 2 crashed`), lists what each died in above the counts,
 and still puts their names in the list under it, so the sweep files them like
