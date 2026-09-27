@@ -430,7 +430,24 @@ struct LibraryPanel: View {
         .environment(\.libraryTile, tileMetrics)
     }
 
+    @ViewBuilder
     private var emptyState: some View {
+        // A video's empty Media shelf is where it gets its first recording
+        // (`video.html`, New video step 2, Fill the Library), so it offers
+        // Import rather than a paragraph about pictures.
+        if scope == .media, LibrarySearch.normalized(query).isEmpty,
+           editorState.document?.hasTime == true, editorState.canImportMedia {
+            Button("Import Media…") { editorState.importMediaFromPanel() }
+                .controlSize(.small)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 18)
+                .playtestControl("Import Media…", detail: "the empty Media shelf")
+        } else {
+            emptyMessageText
+        }
+    }
+
+    private var emptyMessageText: some View {
         Text(scope.emptyMessage(searching: query))
             .font(.caption)
             .foregroundStyle(.secondary)

@@ -315,6 +315,25 @@ struct PlaytestScriptTests {
         #expect(scale == 1)
     }
 
+    @Test("A blankVideo step starts from an empty window through File, New Video")
+    func blankVideoDecodes() throws {
+        let script = try decode("""
+        {
+          "out": "/tmp/walk/out",
+          "steps": [
+            { "do": "blankVideo", "width": 1300, "height": 900, "card": "empty-card" },
+            { "do": "blankVideo" }
+          ]
+        }
+        """)
+        guard case .blankVideo(let window, let card) = script.steps[0] else { Issue.record("blankVideo"); return }
+        #expect(window == CGSize(width: 1300, height: 900))
+        #expect(card == "empty-card")
+        #expect(script.steps[0].name == "blankVideo")
+        guard case .blankVideo(nil, nil) = script.steps[1] else { Issue.record("bare blankVideo"); return }
+        #expect(PlaytestLockSafety.canRunLocked([script.steps[1]]))
+    }
+
     @Test("A blank step can say the document counts in twos, the way a Retina capture does")
     func blankTakesAPixelScale() throws {
         let script = try decode("""

@@ -194,6 +194,8 @@ final class EditorState {
     #endif
     /// The "how big?" sheet the empty window's Blank canvas row opens.
     var isBlankCanvasDialogPresented = false
+    /// File ▸ New Video's size and length sheet.
+    var isBlankVideoDialogPresented = false
     /// The size sheet Layer ▸ New Frame… opens (Next, `next-frames`).
     /// A guide points at it and waits for it, the same way Export does.
     var isNewFrameDialogPresented = false {
@@ -1406,9 +1408,11 @@ final class EditorState {
     /// file's own, never the release tag `windowTitle` may add.
     var titleLine: WindowTitleLine? {
         guard let document, document.hasTime else { return nil }
-        let name = (documentURL ?? openedFileURL)?.lastPathComponent ?? untitledName
-        return WindowTitleLine(fileName: name, pictureSize: document.canvasSize,
-                               lengthMS: documentLengthMS, affordance: saveAffordance)
+        let file = documentURL ?? openedFileURL
+        return WindowTitleLine(fileName: file?.lastPathComponent ?? untitledName,
+                               pictureSize: document.canvasSize,
+                               lengthMS: documentLengthMS, affordance: saveAffordance,
+                               hasFile: file != nil || recordingURL != nil)
     }
 
     /// The .photonz document package type. The bundle's Info.plist exports
@@ -1577,6 +1581,29 @@ final class EditorState {
         installDocument(.withBaseImage(ref), url: nil)
     }
 
+    /// Starts a video from nothing (File ▸ New Video): an empty timeline of
+    /// `size` and `lengthMS`, an empty V1 over an empty Audio track, and the
+    /// Library open on Media so Import is right there (`video.html`, the New
+    /// video on ramp, steps 1 and 2). No pixels at all: the frame is black
+    /// until something lands on a track.
+    func newBlankVideo(size: CGSize, lengthMS: Int) {
+        installDocument(.emptyVideo(size: size, lengthMS: lengthMS), url: nil)
+        if Experiments.shared.libraryEnabled { showMediaShelf(revealing: nil) }
+    }
+
+    /// How this window opens another one holding a blank video. Set by the
+    /// window root, like `openBlankCanvasWindow`.
+    @ObservationIgnored var openBlankVideoWindow: ((CGSize, Int) -> Void)?
+
+    /// Answers the New Video sheet: an empty window fills itself, a window
+    /// already holding something keeps it and the video opens in a new one.
+    func createBlankVideo(size: CGSize, lengthMS: Int) {
+        switch BlankCanvas.destination(windowHasDocument: document != nil) {
+        case .thisWindow: newBlankVideo(size: size, lengthMS: lengthMS)
+        case .newWindow: openBlankVideoWindow?(size, lengthMS)
+        }
+    }
+
     /// How this window opens another one holding a blank canvas. Set once by
     /// the window root, which is where the app coordinator lives; the editor
     /// itself stays free of window plumbing.
@@ -1649,6 +1676,17 @@ final class EditorState {
                 // asks. Only reached when the question came from a window with
                 // no canvas of its own to ask over.
                 isBlankCanvasDialogPresented = true
+                #if PHOTONZ_PLAYTEST
+                PlaytestHarness.register(self)
+                #endif
+            }
+        case .blankVideo(_, let size, let lengthMS):
+            untitledName = Self.nextUntitledName()
+            if let size {
+                newBlankVideo(size: size, lengthMS: lengthMS)
+            } else {
+                // Asked from somewhere with no window to hang the sheet on.
+                isBlankVideoDialogPresented = true
                 #if PHOTONZ_PLAYTEST
                 PlaytestHarness.register(self)
                 #endif

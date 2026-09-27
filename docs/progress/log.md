@@ -19883,3 +19883,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Resting dock: two to a row, 114pt tiles, 106x66 picture; Tutorial Sample.mp4 and Sample Music.m4a read whole. All 15 shelf/library walks pass at Next defaults.
 - Audit `queue/audits/2026-09-27-library-tiles.json` with the mock beside the shelf.
 - Filed: the card look itself (border, edge-to-edge picture, left name, length line) as `library-tiles-look-like-the-mock-s-cards-with-th`.
+
+## 2026-09-27 — A new video starts from an empty timeline
+
+- File ▸ New Video… (and Blank video on the empty window's card), Next only via `next-blank-video`: size + length sheet (`NewVideoDialog`), `PhotonzDocument.emptyVideo` gives an empty V1 over an empty Audio track; the Library opens on Media, whose empty shelf now offers Import Media… on a video.
+- A document with time reads black inside its frame on the canvas, matching the movie writer. The title line no longer says "saved" for a never-saved document.
+- Walk harness: `blankVideo` step, `newVideoDialog`/`createVideo`/`importMedia` actions, `expectTimeline.tracks`. New walk `new-empty-video-walk` (lock-safe, no front needed).
+- Open question for the user (audit rough): build the mock's empty-timeline hint sentence, which the chrome copy budget forbids?

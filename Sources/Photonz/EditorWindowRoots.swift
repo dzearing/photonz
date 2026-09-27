@@ -43,6 +43,9 @@ struct ImageEditorRootView: View {
                 editorState.openBlankCanvasWindow = { [coordinator] size in
                     coordinator.newBlankCanvasWindow(size: size)
                 }
+                editorState.openBlankVideoWindow = { [coordinator] size, lengthMS in
+                    coordinator.newBlankVideoWindow(size: size, lengthMS: lengthMS)
+                }
                 // A recording let go on a window holding a still picture opens
                 // in a window of its own, the way a Photonz document dropped on
                 // a canvas always has (`MediaDrop`). It goes through the same

@@ -1,0 +1,42 @@
+{
+  "out": "/tmp/photonz-playtest/new-empty-video-walk",
+  "seed": "A new video starts from an empty timeline (video.html, the New video on ramp: 1 New, empty; 2 Fill the Library; 3 Drop a first clip). File > New Video on an empty window, answered as Return answers it: 1920 by 1080 for ten seconds, an empty V1 over an empty Audio track, the timeline open and the Library open on Media. Then File > Import Media puts a recording on the shelf, and its tile dragged onto the empty V1 four seconds in lands there and makes the video long enough to hold it. At Next defaults, no flag set.",
+  "setup": {
+    "forget": ["all"],
+    "scratch": [
+      "sample:recording as b-roll.mp4"
+    ]
+  },
+  "steps": [
+    { "do": "blankVideo", "width": 1400, "height": 900, "card": "1-empty-window" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectTimeline", "tracks": ["V1", "Audio"], "lengthMS": 10000, "open": true },
+    { "do": "expectLayers", "count": 0 },
+    { "do": "expect", "control": "Import Media…", "present": true },
+    { "do": "describe", "stage": "2-empty-video", "note": "THE FIRST TEST: File > New Video made a 1920 by 1080 video ten seconds long with nothing on it. The timeline is open on an empty V1 over an empty Audio track, and the Library is open on Media, ready for Import" },
+    { "do": "snapshot", "name": "2-empty-video" },
+
+    { "do": "action", "action": "newVideoDialog" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-sheet", "note": "The New Video sheet: a size, picked from five or typed, and a length" },
+    { "do": "snapshot", "name": "3-new-video-sheet" },
+    { "do": "action", "action": "closeSheets" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "importPicks", "files": ["scratch/b-roll.mp4"] },
+    { "comment": "File > Import Media (Shift Command I), the menu command itself: the key only reaches the menu with the probe in front.", "do": "action", "action": "importMedia" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "expectNotice", "says": "b-roll.mp4 is in the Library" },
+    { "do": "expectClip", "clip": "b-roll", "count": 0 },
+    { "do": "describe", "stage": "4-imported", "note": "THE SECOND TEST: Import put b-roll.mp4 on the Library shelf and nowhere else; the timeline is still empty" },
+    { "do": "snapshot", "name": "4-imported" },
+
+    { "do": "dropOnTimeline", "tile": "b-roll.mp4", "track": "V1", "seconds": 4.0, "release": false, "hold": "5-tile-over-v1" },
+    { "do": "dropOnTimeline", "tile": "b-roll.mp4", "track": "V1", "seconds": 4.0 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 4.0, "count": 1 },
+    { "do": "expectTimeline", "tracks": ["V1", "Audio"], "lengthMS": 12000 },
+    { "do": "describe", "stage": "6-first-clip", "note": "THE THIRD TEST: the tile dragged onto the empty V1 landed there four seconds in, and the video grew from ten seconds to hold all of it" },
+    { "do": "snapshot", "name": "6-first-clip" }
+  ]
+}

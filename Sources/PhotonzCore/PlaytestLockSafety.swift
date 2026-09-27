@@ -135,6 +135,9 @@ public enum PlaytestLockSafety {
         // the sharp copy it is drawing and the camera it was drawn for, which
         // are its own state and not a name.
         "expectSharp",
+        // Added 2026-09-27 by reading: `blank`'s own door with the New Video
+        // sheet in place of the canvas, so nothing in it looks a name up.
+        "blankVideo",
         // Added 2026-09-25 by reading, NOT yet watched under a lock (the screen
         // was unlocked all day): it asks the editor how wide each frame on
         // screen was read and how wide it is shown, the same kind of own state
@@ -397,6 +400,7 @@ public enum PlaytestLockSafety {
         // The onboarding card only exists before a canvas does, so `blank` is
         // the only step that can photograph it.
         case .blank(_, _, let card, _): card != nil
+        case .blankVideo(_, let card): card != nil
         default: false
         }
     }

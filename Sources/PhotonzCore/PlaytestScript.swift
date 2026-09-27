@@ -1306,6 +1306,12 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// pressing Return in it does. A sheet cannot be typed into from a walk,
     /// so this is how a walk proves where the canvas lands.
     case createCanvas
+    /// File ▸ New Video's sheet, and the answer to it with the size and
+    /// length it opens on (1920 × 1080, ten seconds), which is pressing Return.
+    case newVideoDialog, createVideo
+    /// File ▸ Import Media…, the menu command itself, for a walk that cannot
+    /// reach the menu bar from behind (an `importPicks` step names the files).
+    case importMedia
     /// Throw away every picture the layers panel has made, so the next line
     /// measures what a document costs to open COLD. Nothing a person can do,
     /// and nothing the shipping app carries: it is the one moment worth
@@ -2104,6 +2110,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// see a component cross between them at the size it should be
     /// (`SharedComponentScale`).
     case blank(canvas: CGSize, window: CGSize?, card: String?, pixelScale: CGFloat)
+    /// Start a VIDEO from nothing: a new empty window, File ▸ New Video's
+    /// sheet put up over it and answered the way Return answers it (1920 ×
+    /// 1080, ten seconds), so the window holds an empty timeline. `window` and
+    /// `card` are `blank`'s.
+    case blankVideo(window: CGSize?, card: String?)
     /// Let the editor finish what the step before started. It ends the moment
     /// the app goes quiet, which is why a walk's waits cost seconds rather than
     /// minutes.
@@ -3262,7 +3273,7 @@ public enum PlaytestStep: Sendable, Equatable {
 
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
-        "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
+        "action", "appKey", "appearance", "blank", "blankVideo", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
@@ -3280,6 +3291,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectTutorialStep: "expectTutorialStep"
         case .appearance: "appearance"
         case .blank: "blank"
+        case .blankVideo: "blankVideo"
         case .wait: "wait"
         case .key: "key"
         case .shortcut: "shortcut"
@@ -3409,6 +3421,10 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .blank(canvas: canvas, window: window, card: try f.optionalString("card"),
                           pixelScale: CGFloat(scale))
+        case "blankVideo":
+            let width = try f.optionalNumber("width"), height = try f.optionalNumber("height")
+            let window: CGSize? = if let width, let height { CGSize(width: width, height: height) } else { nil }
+            self = .blankVideo(window: window, card: try f.optionalString("card"))
         case "wait":
             let bound = try f.optionalNumber("longestUnderMS")
             if let bound, !(bound > 0 && bound.isFinite) {
@@ -4213,12 +4229,13 @@ public enum PlaytestStep: Sendable, Equatable {
                 snapping: fields["snapping"] as? Bool,
                 open: fields["open"] as? Bool,
                 tool: try f.optionalString("tool"),
-                timelineTool: f.has("timelineTool") ? try f.enumValue("timelineTool", TimelineTool.self) : nil)
+                timelineTool: f.has("timelineTool") ? try f.enumValue("timelineTool", TimelineTool.self) : nil,
+                tracks: f.has("tracks") ? try f.optionalStrings("tracks") : nil)
             guard claim.claimsSomething else {
                 throw f.invalid("playheadMS", "expectTimeline has to claim something: \"playheadMS\", "
                     + "\"keyboard\", \"rate\", \"blade\", \"markInMS\", \"markOutMS\", \"hasIn\", "
                     + "\"hasOut\", \"markers\", \"rulerMatches\", \"rulerAtPlayhead\", \"lengthMS\", "
-                    + "\"open\", \"tool\" or \"timelineTool\"")
+                    + "\"open\", \"tool\", \"timelineTool\" or \"tracks\"")
             }
             self = .expectTimeline(claim)
         case "expectPlaybackNeverBlank":
@@ -4498,13 +4515,16 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
     public var tool: String?
     /// The timeline's own tool: Select, Track Select Forward or the Blade.
     public var timelineTool: TimelineTool?
+    /// The tracks by name, top to bottom, empty ones included.
+    public var tracks: [String]?
 
     public init(playheadMS: Int? = nil, withinMS: Int = 0, keyboard: Keyboard? = nil, rate: Double? = nil,
                 blade: Bool? = nil, markInMS: Int? = nil, markOutMS: Int? = nil,
                 hasIn: Bool? = nil, hasOut: Bool? = nil, markers: Int? = nil,
                 rulerMatches: Bool? = nil, rulerAtPlayhead: String? = nil, lengthMS: Int? = nil,
                 snapping: Bool? = nil, open: Bool? = nil, tool: String? = nil,
-                timelineTool: TimelineTool? = nil) {
+                timelineTool: TimelineTool? = nil, tracks: [String]? = nil) {
+        self.tracks = tracks
         self.open = open
         self.tool = tool
         self.timelineTool = timelineTool
@@ -4527,7 +4547,7 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
     public var claimsSomething: Bool {
         open != nil || tool != nil || timelineTool != nil || snapping != nil || playheadMS != nil || keyboard != nil || rate != nil || blade != nil || markInMS != nil
             || markOutMS != nil || hasIn != nil || hasOut != nil || markers != nil
-            || rulerMatches != nil || rulerAtPlayhead != nil || lengthMS != nil
+            || rulerMatches != nil || rulerAtPlayhead != nil || lengthMS != nil || tracks != nil
     }
 }
 

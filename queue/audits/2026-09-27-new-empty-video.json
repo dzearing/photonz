@@ -1,0 +1,26 @@
+{
+  "feature": "A new video starts from an empty timeline",
+  "epic": "video-editing",
+  "summary": "You can start a video from nothing: File > New Video (or Blank video on an empty window) asks for a size and a length and opens an empty timeline, V1 over Audio, with the Library ready for Import. Drag a tile onto V1 and the first clip lands there.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/new-empty-video-walk.json.",
+  "try": [
+    { "do": "Open a new empty window (Shift Command N) and click Blank video on its card, or choose File > New Video.", "shot": "2026-09-27-new-empty-video-1-empty-window-sc.png" },
+    { "do": "Press Return to take HD 1080p for 10 seconds.", "shot": "2026-09-27-new-empty-video-3-new-video-sheet-sc.png" },
+    { "do": "Look at what opens: a black 1920 x 1080 frame, an empty V1 over an empty Audio track, the Library on Media.", "shot": "2026-09-27-new-empty-video-2-empty-video-sc.png" },
+    { "do": "Click Import Media… on the empty shelf (or File > Import Media, Shift Command I) and pick a recording.", "shot": "2026-09-27-new-empty-video-4-imported-sc.png" },
+    { "do": "Drag its tile onto V1 about four seconds in and let go.", "shot": "2026-09-27-new-empty-video-5-tile-over-v1-sc.png" },
+    { "do": "Read the title bar and the end of the transport: the video grew to hold the clip.", "shot": "2026-09-27-new-empty-video-6-first-clip-sc.png" }
+  ],
+  "evaluate": [
+    "Is File > New Video where you would look for it, coming from Premiere's New Sequence?",
+    "Should the sheet ask for a length at all, or should a new video just be as long as what you put on it?",
+    "Does the empty Media shelf's Import Media… button feel like the obvious next step?",
+    "Is a black frame the right look for an empty video, or do you want the canvas grid showing through?"
+  ],
+  "rough": [
+    "The mock prints a hint under the empty tracks ('A 1920 x 1080 timeline with no clips. Import media, or open a capture from history, to begin.'). It is not built: the chrome rule allows a label of 30 characters at most there, and the empty tracks plus the Import button say it. Say if you want it.",
+    "The length you pick is a floor, not a cap: a short clip leaves black to the end of it, a long one makes the video longer. Premiere has no length at all on a new sequence.",
+    "No keyboard shortcut for New Video: Command N is New Layer, Shift Command N New Window, Option Command N New from Clipboard.",
+    "A new video that was never saved no longer reads 'saved' in its title line; it says nothing until there is a file or an edit."
+  ]
+}

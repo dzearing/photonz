@@ -31,8 +31,11 @@ public struct WindowTitleLine: Sendable, Equatable {
     ///   - lengthMS: how long the document runs; zero or nil leaves it out.
     ///   - affordance: what Save means right now. The line says edited exactly
     ///     when closing would stop and ask, so the two can never disagree.
+    ///   - hasFile: false for a document never written anywhere (a new empty
+    ///     video). Unchanged, it is not "saved", since nothing was: the line
+    ///     says neither word until there is a file or an edit.
     public init(fileName: String, pictureSize: CGSize?, lengthMS: Int?,
-                affordance: SaveAffordance) {
+                affordance: SaveAffordance, hasFile: Bool = true) {
         let stem = (fileName as NSString).deletingPathExtension
         name = stem.isEmpty ? fileName : stem
         var parts: [String] = []
@@ -45,7 +48,7 @@ public struct WindowTitleLine: Sendable, Equatable {
         details = parts.joined(separator: Self.separator)
         switch affordance {
         case .nothingToSave: state = nil
-        case .upToDate: state = .saved
+        case .upToDate: state = hasFile ? .saved : nil
         case .unsavedChanges, .unsavedRecording, .saving: state = .edited
         }
     }

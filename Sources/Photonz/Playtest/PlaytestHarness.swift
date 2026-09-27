@@ -692,6 +692,9 @@ private final class Run {
             try await blank(canvas: canvas, window: size, card: card, pixelScale: pixelScale,
                             number: number)
 
+        case .blankVideo(let size, let card):
+            try await blankVideo(window: size, card: card, number: number)
+
         case .open(let file, let size):
             let url = try fileURL(file)
             try await open(url, size: size, number: number)
@@ -4773,6 +4776,15 @@ private final class Run {
             case .createCanvas:
                 editor.isBlankCanvasDialogPresented = false
                 editor.createBlankCanvas(size: BlankCanvas.defaultPreset.size)
+            case .newVideoDialog: editor.isBlankVideoDialogPresented = true
+            case .importMedia:
+                actionDetail = editor.canImportMedia ? "File ▸ Import Media…"
+                    : "Import Media is dimmed here, so nothing was imported"
+                editor.importMediaFromPanel()
+            case .createVideo:
+                editor.isBlankVideoDialogPresented = false
+                editor.createBlankVideo(size: BlankVideo.defaultPreset.size,
+                                        lengthMS: BlankVideo.lengthMS(seconds: BlankVideo.defaultLengthSeconds))
             case .group: editor.groupSelection()
             case .ungroup: editor.ungroupSelection()
             case .stackSelection: editor.stackSelection(.stack)
@@ -5321,6 +5333,7 @@ private final class Run {
                 editor.isExportDialogPresented = false
                 editor.isNewFrameDialogPresented = false
                 editor.isBlankCanvasDialogPresented = false
+                editor.isBlankVideoDialogPresented = false
                 editor.isResizeDialogPresented = false
                 editor.isCanvasSizeDialogPresented = false
             case .videoBeginTrim, .videoTrimStart, .videoTrimEnd, .videoTrimDone, .videoTrimCancel,
@@ -10451,6 +10464,38 @@ private final class Run {
                         number: number)
     }
 
+    /// A new empty window, File ▸ New Video's sheet put up over it and then
+    /// answered as Return answers it, through the same door the sheet uses.
+    private func blankVideo(window: CGSize?, card: String?, number: Int) async throws {
+        try await poll("the app's window opener", within: 5) { coordinator.openWindowAction != nil }
+        let before = Set(PlaytestHarness.knownEditors.map { ObjectIdentifier($0) })
+        coordinator.openWindowAction?(.fresh(UUID()))
+        var fresh: EditorState?
+        try await poll("an empty editor window", within: 15) {
+            fresh = PlaytestHarness.knownEditors.last { !before.contains(ObjectIdentifier($0)) }
+            return fresh != nil
+        }
+        guard let fresh else { throw Failure(description: "no empty window appeared") }
+        if let card {
+            try await photographEmptyWindow(fresh, window: window, name: card, number: number)
+        }
+        guard Experiments.shared.blankVideoEnabled else {
+            throw Failure(description: "File has no New Video in this release: next-blank-video is off")
+        }
+        fresh.isBlankVideoDialogPresented = true
+        await sleep(0.3)
+        fresh.isBlankVideoDialogPresented = false
+        let size = BlankVideo.defaultPreset.size
+        let length = BlankVideo.lengthMS(seconds: BlankVideo.defaultLengthSeconds)
+        fresh.createBlankVideo(size: size, lengthMS: length)
+        guard fresh.document?.hasTime == true else {
+            throw Failure(description: "New Video left the window without a timeline")
+        }
+        try await adopt(fresh, window: window, step: "blankVideo",
+                        subject: "empty video \(Int(size.width))x\(Int(size.height)), \(length / 1000)s",
+                        number: number)
+    }
+
     /// The empty window before anything is in it: the onboarding card, which
     /// stops existing the moment a document arrives.
     private func photographEmptyWindow(_ fresh: EditorState, window size: CGSize?,
@@ -10628,6 +10673,13 @@ private final class Run {
         }
         if let want = claim.snapping, want != editor.isTimelineSnapping {
             wrong.append(editor.isTimelineSnapping ? "the timeline is snapping" : "snapping is off")
+        }
+        if let want = claim.tracks {
+            let names = editor.document?.timelineTracks.map(\.name) ?? []
+            if names != want {
+                wrong.append("the tracks are \(names.isEmpty ? "none" : names.joined(separator: ", ")), "
+                             + "not \(want.joined(separator: ", "))")
+            }
         }
         if let want = claim.lengthMS, editor.documentLengthMS != want {
             wrong.append("the timeline runs \(editor.documentLengthMS)ms, not \(want)ms")
@@ -12370,7 +12422,7 @@ private final class Run {
     /// The dialogs a walk can wait on, by the words at the top of each. A sheet
     /// is drawn by the app rather than by AppKit, so there is no window in the
     /// list carrying its name: the editor is what knows.
-    private static let dialogNames = ["Resize Image", "Canvas Size", "Export", "New Frame", "Blank Canvas"]
+    private static let dialogNames = ["Resize Image", "Canvas Size", "Export", "New Frame", "Blank Canvas", "New Video"]
 
     private static func knowsDialog(_ name: String) -> Bool {
         dialogNames.contains { $0.caseInsensitiveCompare(name) == .orderedSame }
@@ -12386,6 +12438,7 @@ private final class Run {
         case "export": editor.isExportDialogPresented
         case "new frame": editor.isNewFrameDialogPresented
         case "blank canvas": editor.isBlankCanvasDialogPresented
+        case "new video": editor.isBlankVideoDialogPresented
         default: nil
         }
     }

@@ -777,6 +777,17 @@ final class AppCoordinator {
         openWindow(.blankCanvas(UUID(), size))
     }
 
+    /// File ▸ New Video, once a size and length have been chosen.
+    func newBlankVideoWindow(size: CGSize, lengthMS: Int) {
+        openWindow(.blankVideo(UUID(), size, lengthMS))
+    }
+
+    /// File ▸ New Video asked with no window to hang the sheet on: a window
+    /// opens empty and asks.
+    func newBlankVideoWindowAskingForSize() {
+        openWindow(.blankVideo(UUID(), nil, BlankVideo.lengthMS(seconds: BlankVideo.defaultLengthSeconds)))
+    }
+
     /// File ▸ New Blank Canvas asked from somewhere with no canvas to hang a
     /// sheet over (a recording window): open a window and let it ask for the
     /// size itself.

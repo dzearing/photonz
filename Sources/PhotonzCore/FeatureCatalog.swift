@@ -77,6 +77,8 @@ public enum FeatureCatalog {
 
     public static let blankCanvasFlag = "next-blank-canvas"
 
+    public static let blankVideoFlag = "next-blank-video"
+
     public static let windowCaptureFlag = "next-window-capture"
     public static let windowCaptureShadow = "shadow"
 
@@ -1182,6 +1184,16 @@ public enum FeatureCatalog {
                     name: blankCanvasFlag,
                     title: "Start from a blank canvas",
                     description: "You can start a picture from nothing instead of only opening, pasting or capturing one. Choose File \u{25B8} New Blank Canvas from any window, or click Blank canvas on an empty window\u{2019}s card: pick a size (Desktop, Phone, Tablet, Square, or type your own) and you land on a white canvas every tool draws on right away. Asking from a window that already holds a picture leaves that picture alone and opens the canvas in a new window. Off means the File menu row is gone and a new window offers open, capture and paste only.",
+                    area: .canvas,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: blankVideoFlag,
+                    title: "Start a video from an empty timeline",
+                    description: "File \u{25B8} New Video starts a video from nothing: pick a size and a length, and you get an empty V1 over an empty Audio track, the Library open for Import. Off means a video only starts from a recording.",
                     area: .canvas,
                     isEnabled: false,
                     parameters: []),

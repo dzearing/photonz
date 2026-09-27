@@ -271,6 +271,18 @@ struct EditorCommands: Commands {
                     }
                 }
             }
+            // A video from nothing, the mock's New video (`video.html`, step
+            // 1): Premiere's File ▸ New ▸ Sequence, with no shortcut for the
+            // same reason New Blank Canvas has none.
+            if Experiments.shared.blankVideoEnabled {
+                Button("New Video…") {
+                    if let editor {
+                        editor.isBlankVideoDialogPresented = true
+                    } else {
+                        coordinator.newBlankVideoWindowAskingForSize()
+                    }
+                }
+            }
             Button("New from Clipboard") { coordinator.newFromClipboardWindow() }
                 .keyboardShortcut("n", modifiers: [.command, .option])
             Button("Open…") { coordinator.presentOpenPanel() }

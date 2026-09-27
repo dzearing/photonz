@@ -59,6 +59,7 @@ enum EditorReadWatch {
         ("iconPreviewTiles", { _ = e.iconPreviewTiles }),
         ("isAdjustingGrid", { _ = e.isAdjustingGrid }),
         ("isBlankCanvasDialogPresented", { _ = e.isBlankCanvasDialogPresented }),
+        ("isBlankVideoDialogPresented", { _ = e.isBlankVideoDialogPresented }),
         ("isCanvasSizeDialogPresented", { _ = e.isCanvasSizeDialogPresented }),
         ("isExportDialogPresented", { _ = e.isExportDialogPresented }),
         ("isGridSettingsPresented", { _ = e.isGridSettingsPresented }),

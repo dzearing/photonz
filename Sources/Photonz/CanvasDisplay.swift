@@ -277,6 +277,11 @@ extension CanvasNSView {
         // A callout flight holds the pre-commit composite so the baked-in
         // callout doesn't show at its destination before the sprite lands.
         contentLayer.contents = calloutHoldImage ?? image
+        // A video has no transparency: the movie it writes is black wherever
+        // nothing is drawn (`DocumentMovieWriter`), so its frame reads black
+        // here too, and an empty new video shows its frame rather than
+        // nothing at all (`BlankVideo`).
+        contentLayer.backgroundColor = document?.hasTime == true ? CGColor(gray: 0, alpha: 1) : nil
         contentLayer.frame = viewport.documentFrameInView
         contentLayer.shadowPath = CGPath(rect: contentLayer.bounds, transform: nil)
         // Past 2× the user is inspecting pixels — show them squarely instead of smearing.

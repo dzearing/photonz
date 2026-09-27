@@ -362,6 +362,11 @@ struct EditorView: View {
                             opensNewWindow: BlankCanvas.destination(
                                 windowHasDocument: editorState.hasDocument) == .newWindow)
         }
+        .sheet(isPresented: $editorState.isBlankVideoDialogPresented) {
+            NewVideoDialog(onCreate: { editorState.createBlankVideo(size: $0, lengthMS: $1) },
+                           opensNewWindow: BlankCanvas.destination(
+                               windowHasDocument: editorState.hasDocument) == .newWindow)
+        }
         .sheet(isPresented: $editorState.isNewFrameDialogPresented) {
             NewFrameDialog()
         }
@@ -702,7 +707,7 @@ struct EditorView: View {
     /// where getting a picture IN is a control rather than a key, which is why
     /// the first guide in Basics is built on them.
     enum EmptyEditorStart: String {
-        case open, capture, paste, blank
+        case open, capture, paste, blank, video
 
         var anchor: TutorialAnchor { .startHere(rawValue) }
     }
@@ -734,6 +739,11 @@ struct EditorView: View {
                     if Experiments.shared.blankCanvasEnabled {
                         onboardingRow(.blank, "rectangle.badge.plus", "Blank canvas", "") {
                             editorState.isBlankCanvasDialogPresented = true
+                        }
+                    }
+                    if Experiments.shared.blankVideoEnabled {
+                        onboardingRow(.video, "film", "Blank video", "") {
+                            editorState.isBlankVideoDialogPresented = true
                         }
                     }
                 }

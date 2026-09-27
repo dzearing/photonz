@@ -49,6 +49,17 @@ struct WindowTitleLineTests {
         }
     }
 
+    @Test("A new video nobody has saved or changed claims neither saved nor edited")
+    func neverSavedSaysNeither() {
+        let fresh = WindowTitleLine(fileName: "Untitled 1", pictureSize: CGSize(width: 1920, height: 1080),
+                                    lengthMS: 10_000, affordance: .upToDate, hasFile: false)
+        #expect(fresh.state == nil)
+        #expect(fresh.text == "Untitled 1 · 1920 x 1080 · 0:10")
+        let touched = WindowTitleLine(fileName: "Untitled 1", pictureSize: CGSize(width: 1920, height: 1080),
+                                      lengthMS: 12_000, affordance: .unsavedChanges, hasFile: false)
+        #expect(touched.state == .edited)
+    }
+
     @Test("A saved project is named without its package extension")
     func projectName() {
         let line = WindowTitleLine(fileName: "My Edit.photonz",

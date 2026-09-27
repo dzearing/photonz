@@ -371,6 +371,11 @@ extension Experiments {
     /// unchanged.
     var blankCanvasEnabled: Bool { isEnabled(FeatureCatalog.blankCanvasFlag) }
 
+    /// `next-blank-video`: File ▸ New Video and the empty window's Blank video
+    /// row, which start a video from an empty timeline. Exists only in the
+    /// Next release's catalog, so Current never offers either.
+    var blankVideoEnabled: Bool { isEnabled(FeatureCatalog.blankVideoFlag) }
+
     /// `next-layer-groups`: whether ⌘G / ⇧⌘G exist, and whether a click on the
     /// canvas picks a whole group (with double click going inside it and Escape
     /// coming back out). Exists only in the Next release's catalog, so Current
