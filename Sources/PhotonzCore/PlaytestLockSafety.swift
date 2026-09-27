@@ -147,6 +147,12 @@ public enum PlaytestLockSafety {
         // so the first locked sweep is its watch; if it refuses there, take
         // it out.
         "expectWaveform",
+        // Added 2026-09-27 by reading, NOT yet watched under a lock: it asks
+        // the strips of pictures along a clip what they are drawing, which
+        // they tell the harness themselves, never a name. The first locked
+        // run of clip-pictures-when-zoomed-in-walk is its watch; if it refuses
+        // there, take it out.
+        "expectClipPictures",
         // Added 2026-09-26 by reading, NOT yet watched under a lock: it holds
         // the playhead through the editor's own calls and reads the pictures
         // and moments the editor is holding, never a name. The first locked

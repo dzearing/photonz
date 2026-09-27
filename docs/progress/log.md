@@ -19862,3 +19862,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Fixed on the way: the clip's Sound Gain row needed 212pt in a 192pt row at the narrowest dock and pushed the whole panel 19.5pt past its dock; `captions-panel-keeps-its-margins-walk` passes again.
 - New walk `panel-rows-read-as-one-column-walk`; audit `queue/audits/2026-09-27-panel-rows-one-column.json`.
 - Open: Layout's menu values still callout size (mock select text is 11.5pt).
+
+## 2026-09-27 — Clips on the timeline show pictures of what is in them (go loop)
+
+- Zoomed in past Fit, a video clip shows frames of its own recording along it; at Fit it stays the mock's coloured bar (the user's answer, option b). `ClipFilmstrip` in core (tested first) decides when and lays tiles on a doubling ladder anchored to the piece; `ClipFilmstripView.swift` reads them on two picture lanes of `MovieDecoder` apart from the playhead's, LIFO, bounded LRU of 400. The clip's colour stays as a 3pt band and its name sits in a dark pill.
+- New walk `clip-pictures-when-zoomed-in-walk` (five minute talk, Next defaults): zoom and scroll passes 15 to 33ms with pictures. New step `expectClipPictures`, new action `timelinePanAlong`.
+- Fixed on the way: `Scripts/test.sh`'s video kit check, broken by `e37a8618`; the gallery supplies a `PanelFieldRow` stand-in.
+- Filed: the first long playhead jump on a zoomed captioned long recording stalls about half a second, with or without pictures (`jumping-the-playhead-far-along-a-zoomed-in-long`).
+- Open: the card's hover-to-see-the-frame at Fit is not built; pictures are small in the 28pt lane (asked in the audit).

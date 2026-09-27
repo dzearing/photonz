@@ -26,6 +26,31 @@ extension View {
     func kitControl(_ name: String, detail: String = "") -> some View { self }
 }
 
+// The kit's row asks for `PanelFieldRow`, the app's one panel row, which drops
+// a control too wide for its row under its name (Sources/Photonz/
+// PanelFieldRow.swift). Here every sheet row is wide enough, so the mock's
+// `.irow` as it is drawn beside its name is all it needs.
+struct PanelFieldRow<Control: View>: View {
+    let label: String
+    @ViewBuilder let control: Control
+
+    init(_ label: String, @ViewBuilder control: () -> Control) {
+        self.label = label
+        self.control = control()
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(label)
+                .font(.system(size: 10.5))
+                .foregroundStyle(K.Palette.faint)
+                .lineLimit(1)
+                .frame(width: K.Metrics.rowLabelWidth, alignment: .leading)
+            control
+        }
+    }
+}
+
 // MARK: - The sheets, one per piece, with the mock page's data
 
 struct TransportSheet: View {

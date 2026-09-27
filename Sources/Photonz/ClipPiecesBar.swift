@@ -299,10 +299,15 @@ struct ClipPiecesBar: View {
         // the width of the window instead of by the zoom.
         let shown = TimelineSpan.drawn(x: x, width: width, across: laneWidth)
         let picked = isPiecePicked(index, of: pieces.count)
+        let pictures = picturesOpacity
         if shown.width > 0 {
         RoundedRectangle(cornerRadius: cornerRadius)
             .fill(fill(item, picked: picked))
-            .overlay { kitFace(item, width: shown.width, hiddenLeading: max(0, -shown.x)) }
+            .overlay(alignment: .topLeading) {
+                filmstrip(item, index: index, pieceWidth: raw, shown: shown, pictures: pictures)
+            }
+            .overlay { kitFace(item, width: shown.width, hiddenLeading: max(0, -shown.x),
+                               pictures: pictures) }
             .frame(width: shown.width, height: barHeight)
             .overlay {
                 // The sound itself, drawn from the stretch of the file this
@@ -453,6 +458,47 @@ struct ClipPiecesBar: View {
         }
     }
 
+    // MARK: Pictures along the clip
+
+    /// The recording this bar is a clip of, where it is a video clip on the
+    /// dock. Nil for everything that has no pictures to show: a sound, a
+    /// caption, a shape, the timing strip.
+    private var pictureMovie: MovieRef? {
+        guard let kind, kind == .video || kind == .videoAlternate, !isLinkedSound else { return nil }
+        return editorState.document?.layer(id: layerID)?.movie
+    }
+
+    /// How strongly the pictures along this clip show: none at Fit, and in
+    /// full once the timeline is opened out far enough for each picture to
+    /// stand for a short stretch (`ClipFilmstrip.opacity`).
+    private var picturesOpacity: Double {
+        guard let movie = pictureMovie, laneWidth > 0 else { return 0 }
+        let ruler = editorState.motionStripRuler
+        let strip = max(1, barHeight - ClipFilmstripStrip.band)
+        let aspect = movie.pixelSize.height > 0 ? movie.pixelSize.width / movie.pixelSize.height : 16.0 / 9
+        let msPerTile = Double(ClipFilmstrip.tileWidth(height: strip, aspect: aspect))
+            * ruler.spanMS / Double(laneWidth)
+        return ClipFilmstrip.opacity(zoom: editorState.timelineWindow, msPerTile: msPerTile)
+    }
+
+    /// The row of pictures inside one piece, faded in and out as the timeline
+    /// opens out past Fit and comes back to it.
+    @ViewBuilder
+    private func filmstrip(_ item: ClipPiece?, index: Int, pieceWidth: CGFloat,
+                           shown: TimelineSpan, pictures: Double) -> some View {
+        ZStack(alignment: .topLeading) {
+            if pictures > 0, let item, let movie = pictureMovie {
+                ClipFilmstripStrip(layerID: layerID, pieceIndex: index, movie: movie, piece: item,
+                                   pieceWidth: pieceWidth,
+                                   visibleFrom: shown.startFraction * pieceWidth,
+                                   visibleWidth: shown.width, height: barHeight,
+                                   opacity: pictures)
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeOut(duration: 0.25), value: pictures > 0)
+    }
+
     /// What the dock draws inside a piece: the lit top edge every clip in the
     /// mock has, a veil over a held frame, and the clip's name where there is
     /// room to read it.
@@ -460,7 +506,7 @@ struct ClipPiecesBar: View {
     /// window, so the name stays in sight on a zoomed timeline rather than
     /// sliding out with the clip's start.
     @ViewBuilder private func kitFace(_ piece: ClipPiece?, width: CGFloat,
-                                      hiddenLeading: CGFloat) -> some View {
+                                      hiddenLeading: CGFloat, pictures: Double = 0) -> some View {
         if let kind {
             ZStack(alignment: isSound ? .topLeading : .leading) {
                 if let border = kind.border {
@@ -483,7 +529,12 @@ struct ClipPiecesBar: View {
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .shadow(color: .black.opacity(0.35), radius: 1)
-                        .padding(.leading, isSound ? 14 : 8)
+                        // Over pictures the name sits in a dark pill, so it
+                        // reads on a white window as well as on a dark one.
+                        .padding(.horizontal, pictures > 0 ? 5 : 0)
+                        .padding(.vertical, pictures > 0 ? 1 : 0)
+                        .background(Capsule().fill(Color.black.opacity(0.55 * pictures)))
+                        .padding(.leading, isSound ? 14 : (pictures > 0 ? 4 : 8))
                         .padding(.trailing, 8)
                         .padding(.top, isSound ? 3 : 0)
                         .frame(maxWidth: width - hiddenLeading - 4, alignment: .leading)

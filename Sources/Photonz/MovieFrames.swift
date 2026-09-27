@@ -167,6 +167,35 @@ actor MovieDecoder {
         return lanes[lane]
     }
 
+    // MARK: Pictures along a clip
+
+    /// How many generators read the small pictures along a clip on the
+    /// timeline (`ClipFilmstripFrames`). Fewer than the playhead has, and
+    /// apart from its lanes, so a zoomed timeline filling in never makes the
+    /// picture under the playhead wait, and never throws away the playhead's
+    /// generators the way a new size for the SAME lanes would.
+    static let pictureLanes = 2
+
+    private var pictureGenerators: [UUID: [AVAssetImageGenerator]] = [:]
+    private var nextPictureLane: [UUID: Int] = [:]
+
+    /// One small picture of a recording for the timeline, at most `size`.
+    func picture(of movie: MovieRef, at url: URL, sourceMS: Int, size: CGSize) async -> CGImage? {
+        let lanes = pictureGenerators[movie.id] ?? (0..<Self.pictureLanes).map { _ in
+            Self.makeGenerator(url: url, size: size)
+        }
+        pictureGenerators[movie.id] = lanes
+        let lane = nextPictureLane[movie.id, default: 0]
+        nextPictureLane[movie.id] = (lane + 1) % lanes.count
+        let generator = lanes[lane]
+        let time = CMTime(value: CMTimeValue(sourceMS), timescale: 1000)
+        return await withCheckedContinuation { continuation in
+            generator.generateCGImageAsynchronously(for: time) { image, _, _ in
+                continuation.resume(returning: image)
+            }
+        }
+    }
+
     private static func makeGenerator(url: URL, size: CGSize) -> AVAssetImageGenerator {
         let generator = AVAssetImageGenerator(asset: AVURLAsset(url: url))
         generator.appliesPreferredTrackTransform = true

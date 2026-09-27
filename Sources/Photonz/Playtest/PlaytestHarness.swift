@@ -2041,6 +2041,10 @@ private final class Run {
             note(number, step.name, try await checkWaveform(clip: clip, within: within),
                  state: describe())
 
+        case .expectClipPictures(let clip, let absent, let within):
+            note(number, step.name, try await checkClipPictures(clip: clip, absent: absent, within: within),
+                 state: describe())
+
         case .expectLanding(let near, let within, let absent):
             note(number, step.name, try checkLanding(near: near, within: within, absent: absent),
                  state: describe())
@@ -4346,6 +4350,18 @@ private final class Run {
                         + (inward ? "further in" : "further out"))
                 }
                 inward ? editor.zoomTimelineIn() : editor.zoomTimelineOut()
+            case .timelinePanAlong:
+                guard editor.isTimelineOpenedOut else {
+                    throw Failure(description: "the timeline is showing the whole document, so "
+                        + "there is nowhere to scroll it along to")
+                }
+                let before = editor.timelineWindow.startMS
+                editor.panTimeline(byMS: editor.timelineWindow
+                    .visibleMS(documentMS: editor.timelineLengthForZoomMS) / 3)
+                guard editor.timelineWindow.startMS > before else {
+                    throw Failure(description: "the timeline is already at the end of the document "
+                        + "(\(editor.timelineWindowReading)), so it did not scroll")
+                }
             case .timelineFit:
                 guard editor.isTimelineOpenedOut else {
                     throw Failure(description: "the timeline is already showing the whole "
@@ -5339,8 +5355,8 @@ private final class Run {
                  .keyLanesToggle, .keyLanesPickAtPlayhead, .keyLanesPickAll,
                  .keyLanesPickedLater, .keyLanesPickedCopyLater, .keyLanesPickedHold,
                  .keyLanesPickedBezier, .keyLanesHandleLater, .goToNextKey, .goToPreviousKey,
-                 .timelineZoomIn, .timelineZoomOut, .timelineFit, .timelineFiveMinutes,
-                 .clipHoldToFiveMinutes:
+                 .timelineZoomIn, .timelineZoomOut, .timelineFit, .timelinePanAlong,
+                 .timelineFiveMinutes, .clipHoldToFiveMinutes:
                 break  // handled above, in the branch that drives the timeline
             }
             await sleep(0.2)
@@ -6843,6 +6859,48 @@ private final class Run {
         }
         throw Failure(description: "the picture at \(editor.documentTimecode) is a small read stretched "
             + "up, so it draws blurred: \(said(frames)). Waited \(Self.round1(CGFloat(within)))s.")
+    }
+
+    /// Whether the clip's bar shows pictures along it: every strip on screen
+    /// drawn in full, and every picture it asks for read. Absent is the other
+    /// way: no strip showing at all, the clip its plain coloured bar.
+    private func checkClipPictures(clip: String, absent: Bool, within: Double) async throws -> String {
+        let editor = try requireEditor()
+        guard let layer = editor.document?.flattenedLayers.first(where: { $0.name == clip }) else {
+            throw Failure(description: "there is no clip called \(clip) in the document")
+        }
+        guard layer.movie != nil else {
+            throw Failure(description: "\(clip) is not a recording, so it has no pictures to show")
+        }
+        func reading() -> (tiles: Int, read: Int, opacity: Double) {
+            let strips = DrawnFilmstrips.shared.strips(of: layer.id).filter { $0.opacity > 0 }
+            let keys = strips.flatMap(\.keys)
+            let read = keys.filter { ClipFilmstripFrames.shared.cached($0) != nil }.count
+            return (keys.count, read, strips.map(\.opacity).min() ?? 0)
+        }
+        let began = CACurrentMediaTime()
+        var now = reading()
+        while true {
+            let waited = Self.round1(CGFloat(CACurrentMediaTime() - began))
+            if absent, now.tiles == 0 {
+                return "\(clip) is its plain coloured bar, no pictures along it, after \(waited)s"
+            }
+            if !absent, now.tiles > 0, now.read == now.tiles, now.opacity >= 0.999 {
+                return "\(clip) shows \(now.tiles) pictures of what is in it along its bar, "
+                    + "every one read, after \(waited)s"
+            }
+            guard CACurrentMediaTime() - began < within else { break }
+            await sleep(0.05)
+            now = reading()
+        }
+        if absent {
+            throw Failure(description: "\(clip) still shows \(now.tiles) pictures along its bar after "
+                + "\(Self.round1(CGFloat(within)))s, at \(Int(now.opacity * 100))%")
+        }
+        throw Failure(description: now.tiles == 0
+            ? "\(clip)'s bar shows no pictures at all after \(Self.round1(CGFloat(within)))s"
+            : "\(clip)'s bar has \(now.read) of \(now.tiles) pictures read, at \(Int(now.opacity * 100))%, "
+                + "after \(Self.round1(CGFloat(within)))s")
     }
 
     private func checkWaveform(clip: String, within: Double) async throws -> String {

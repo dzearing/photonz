@@ -1,0 +1,29 @@
+{
+  "feature": "Clips on the timeline show pictures of what is in them",
+  "epic": "video-cutting",
+  "summary": "Zoom the timeline in and a video clip shows small frames of its own recording along its length, so you can find a moment by looking instead of playing. At Fit the clip is the coloured bar the mock draws, as you chose.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording a few minutes long with the timeline showing. Walk: Scripts/playtest/clip-pictures-when-zoomed-in-walk.json.",
+  "try": [
+    { "do": "Open a five minute recording and look at its clip at Fit.", "shot": "2026-09-27-clip-pictures-1-five-minutes-at-fit-sc.png" },
+    { "do": "Press 2x on the timeline bar (or =).", "shot": "2026-09-27-clip-pictures-2-first-step-in-pictures-sc.png" },
+    { "do": "Press = three more times to get to about twenty seconds across the width." },
+    { "do": "Click the clip to pick it.", "shot": "2026-09-27-clip-pictures-3-close-zoom-picked-sc.png" },
+    { "do": "Drag the overview bar over the ruler to scroll along the recording.", "shot": "2026-09-27-clip-pictures-4-further-along-pictures-sc.png" },
+    { "do": "Pinch the timeline slowly between Fit and 2x and watch the pictures fade." },
+    { "do": "Press Fit." }
+  ],
+  "evaluate": [
+    "At 2x on a five minute recording, can you tell roughly where a moment is from the pictures alone?",
+    "Is the strip of clip colour kept along the top enough to tell a clip's kind, or would you rather see more colour?",
+    "Does the name in its dark pill read well over the pictures?",
+    "Do the pictures fade in at the right zoom, or should they start later (or already at Fit on a short clip)?",
+    "Are the pictures big enough in a 28 point lane to be worth having, or should a video lane get taller when zoomed in?"
+  ],
+  "rough": [
+    "This departs from video.html's timeline, which draws plain gradient bars at every zoom. You chose the departure on the card (pictures only when zoomed in). Beside the mock: at Fit it matches; zoomed in, the gradient is covered by pictures except for a 3 point band along the top, and the name sits in a dark pill instead of straight on the gradient.",
+    "The pictures are small: the compact video lane is 28 points, so each is about 25 points tall. The sample recording is mostly a dark window with a white card, so its frames read as a row of little white cards.",
+    "The mitigation on the card, a hover over the clip at Fit showing the frame under the pointer, is not built. At Fit a five minute clip is still one blank bar.",
+    "On a zoomed, captioned five minute recording, the first long jump of the playhead holds the app about half a second. It does that with the pictures switched off too (493ms off, about 600ms on), so it is filed on its own rather than fixed here. Zooming and scrolling with pictures stayed under 34ms a pass.",
+    "Only video clips show pictures. A picture layer or a component clip on the timeline stays its coloured bar."
+  ]
+}

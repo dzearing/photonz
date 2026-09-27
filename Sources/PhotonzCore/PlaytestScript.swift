@@ -1140,6 +1140,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Fit: the whole recording back across the width, in one press, from
     /// however far in.
     case timelineFit
+    /// Slide the opened out window a third of its width later, the way
+    /// dragging the overview bar over the ruler does: SCROLLING along the
+    /// recording at the same zoom, rather than jumping the playhead there.
+    /// Refuses at Fit, where there is nothing to slide.
+    case timelinePanAlong
     /// **Make this document five minutes long**, which is the length of a real
     /// screen recording and the length the timeline is unreadable at.
     ///
@@ -1198,8 +1203,8 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .keyLanesToggle, .keyLanesPickAtPlayhead, .keyLanesPickAll,
              .keyLanesPickedLater, .keyLanesPickedCopyLater, .keyLanesPickedHold,
              .keyLanesPickedBezier, .keyLanesHandleLater, .goToNextKey, .goToPreviousKey,
-             .timelineZoomIn, .timelineZoomOut, .timelineFit, .timelineFiveMinutes,
-             .clipHoldToFiveMinutes: true
+             .timelineZoomIn, .timelineZoomOut, .timelineFit, .timelinePanAlong,
+             .timelineFiveMinutes, .clipHoldToFiveMinutes: true
         default: false
         }
     }
@@ -2935,6 +2940,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// that until 2026-09-26, and a picture of a flat line looks like a quiet
     /// clip. This reads what the bar last drew, not what the app has read.
     case expectWaveform(clip: String, within: Double)
+    /// CLAIMS that the clip named `clip` shows pictures of what is in it along
+    /// its bar on the timeline, every picture on screen read and the strip in
+    /// full, waiting up to `within` seconds (three unless said otherwise) for
+    /// them to land. With `absent` it claims the opposite: the clip is its
+    /// plain coloured bar, which is what it is at Fit (`ClipFilmstrip`).
+    case expectClipPictures(clip: String, absent: Bool, within: Double)
     /// What the pill riding under a drag says right now, or that there is no
     /// pill at all. The absent form is how a walk proves the reading goes the
     /// instant the button comes up rather than lingering over the canvas.
@@ -3255,7 +3266,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "clickRuler", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "clickRuler", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag",
     ].sorted()
@@ -3333,6 +3344,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectSharp: "expectSharp"
         case .expectFrameSharp: "expectFrameSharp"
         case .expectWaveform: "expectWaveform"
+        case .expectClipPictures: "expectClipPictures"
         case .expectReadout: "expectReadout"
         case .expectLanding: "expectLanding"
         case .expectHint: "expectHint"
@@ -3918,6 +3930,13 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("within", "a number of seconds to wait is zero or more, not \(within)")
             }
             self = .expectWaveform(clip: try f.string("clip"), within: within)
+        case "expectClipPictures":
+            let within = try f.optionalNumber("within") ?? 3
+            guard within >= 0 else {
+                throw f.invalid("within", "a number of seconds to wait is zero or more, not \(within)")
+            }
+            self = .expectClipPictures(clip: try f.string("clip"),
+                                       absent: try f.optionalFlag("absent") ?? false, within: within)
         case "expectMeasures":
             guard fields["count"] != nil else {
                 throw f.invalid("count", "expectMeasures has to say how many measurements must be on the canvas; 0 means none should have landed")

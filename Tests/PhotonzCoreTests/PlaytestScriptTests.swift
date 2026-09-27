@@ -3693,6 +3693,60 @@ struct PlaytestScriptTests {
         }
     }
 
+    // MARK: - Are pictures drawn along a clip?
+
+    @Test("An expectClipPictures step claims a clip shows pictures of what is in it")
+    func expectClipPicturesClaimsThem() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectClipPictures", "clip": "Long Talk" } ] }
+        """)
+        guard case .expectClipPictures(let clip, let absent, let within) = script.steps[0] else {
+            Issue.record("expectClipPictures"); return
+        }
+        #expect(clip == "Long Talk")
+        #expect(absent == false)
+        #expect(within == 3)
+        #expect(script.steps[0].name == "expectClipPictures")
+    }
+
+    @Test("An expectClipPictures step can claim there are none, and say how long to wait")
+    func expectClipPicturesAbsent() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectClipPictures", "clip": "Long Talk", "absent": true, "within": 0.5 } ] }
+        """)
+        guard case .expectClipPictures(_, let absent, let within) = script.steps[0] else {
+            Issue.record("expectClipPictures"); return
+        }
+        #expect(absent)
+        #expect(within == 0.5)
+    }
+
+    @Test("An expectClipPictures step has to name its clip and wait zero seconds or more")
+    func expectClipPicturesRefusesNonsense() throws {
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "expectClipPictures" } ] }"#)
+        }
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "expectClipPictures", "clip": "a", "within": -1 } ] }"#)
+        }
+    }
+
+    @Test("A walk can scroll an opened out timeline along, the way the overview bar does")
+    func timelinePanAlongIsAnAction() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "action", "action": "timelinePanAlong" } ] }
+        """)
+        guard case .action(let action) = script.steps[0] else {
+            Issue.record("timelinePanAlong"); return
+        }
+        #expect(action == .timelinePanAlong)
+    }
+
+    @Test("An expectClipPictures step survives a locked screen: it reads the bar, not a name")
+    func expectClipPicturesIsLockSafe() {
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectClipPictures"))
+    }
+
     // MARK: - Is a clip's sound drawn on its bar?
 
     @Test("An expectWaveform step claims a clip's bar is drawing the shape of its sound")
