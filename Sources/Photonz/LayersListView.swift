@@ -766,13 +766,13 @@ struct LayersListView: View {
         if editorState.isSearchingLayers {
             let all = editorState.searchableLayerCount
             // While the words in a freshly separated screenshot are still being
-            // read, "No layer says that" is a wrong answer given a second
-            // early: the piece holding that word is in the list, and its row is
-            // about to say so. Say what is actually happening instead
-            // (`EditorState+RunWords`).
-            let words = showing == 0
-                ? (editorState.readingWordsOffPictures
-                    ? "Still reading the words" : "No layer says that")
+            // read, "0 of 142" is a wrong answer given a second early: the
+            // piece holding that word is in the list, and its row is about to
+            // say so. Say what is actually happening instead
+            // (`EditorState+RunWords`). Nothing found is a count like any
+            // other, never a sentence (`ChromeCopyBudgetTests`).
+            let words = showing == 0 && editorState.readingWordsOffPictures
+                ? "Still reading the words"
                 : "\(showing) of \(all)"
             Text(words)
                 .font(.caption)

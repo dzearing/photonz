@@ -128,8 +128,19 @@ Pictures: `queue/audits/2026-09-25-chrome-labels-*.png` (before and after of the
 
 ## Outside the video surfaces
 
-Still breaking the rule on 2026-09-25, shared with the Current release and held on the shrink-only list in
-`ChromeCopyBudgetTests.allowed`: the empty picture's "Drop a photo or screenshot here", the layers search's
-"No layer says that", the Mode menu's two row details and its blurb, the capture history's empty states and its
-Screen Recording line, the colour picker's "Nothing painted yet." and "Nothing picked yet.", and the recording crop's
-"Drag to select the area to keep". Toast messages are passed in by callers across the app and are not read by the test.
+Cleared on 2026-09-27 (`the-shared-chrome-says-labels-not-sentences`), in both releases since the files are shared,
+and `ChromeCopyBudgetTests.allowed` is now empty:
+
+| Where | Was | Now |
+| --- | --- | --- |
+| Empty window | Drop a photo or screenshot here | Drop an image here |
+| Layers search, nothing found | No layer says that | 0 of 142 (the same count as a hit) |
+| Mode list | a two-sentence blurb over the modes | nothing: the list opens on the modes, as the modes mock draws it |
+| Mode list, walk details | two long phrases | unfolds every section, resets this mode |
+| Capture history, empty | No captures yet. ⇧⌘4 grabs a rectangle, ... | ⇧⌘4 Rectangle, ⇧⌘3 Full Screen, ⇧⌘5 Record |
+| Capture history, filter empty | No screenshots yet. / No videos yet. | 0 screenshots / 0 videos |
+| Capture history, no grant | Photonz needs Screen Recording access to take screenshots. | Screen Recording is off |
+| Colour picker, empty row | Nothing painted yet. / Nothing picked yet. | an empty row at a swatch's height |
+| Recording crop (Current's window) | Drag to select the area to keep | Drag to crop |
+
+Toast messages are passed in by callers across the app and are not read by the test.

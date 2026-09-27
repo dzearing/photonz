@@ -1,0 +1,28 @@
+{
+  "feature": "The shared chrome says labels, not sentences",
+  "epic": "video-editing",
+  "summary": "The empty window, the Mode list, the layers search, the capture history and the colour picker now say short labels or nothing, in both Photonz and Photonz Next. No sentence and no \"No X\" is left in the chrome outside the panel, and the test that guards it now has no exceptions.",
+  "setup": "Photonz Dev, release Next (Current gets the same change: these files are shared), no flag changed from its default. Walk: Scripts/playtest/chrome-says-labels-walk.json.",
+  "try": [
+    { "do": "Open a new empty window and read the line under the picture icon. Before: Drop a photo or screenshot here.", "shot": "2026-09-27-chrome-labels-empty-before-sc.png" },
+    { "do": "Read it now: Drop an image here.", "shot": "2026-09-27-chrome-labels-empty-after-sc.png" },
+    { "do": "Click the Everything chip beside the traffic lights. Before, a two-sentence paragraph sat over the modes.", "shot": "2026-09-27-chrome-labels-mode-before-sc.png" },
+    { "do": "Now the list opens straight onto the modes, as the modes mock draws it.", "shot": "2026-09-27-chrome-labels-mode-after-sc.png" },
+    { "do": "Separate a screenshot into layers, type a word that is nowhere in it into Find a layer. Before: No layer says that.", "shot": "2026-09-27-chrome-labels-search-before-sc.png" },
+    { "do": "Now the line reads 0 of 173, the same shape as 3 of 173 when something matches.", "shot": "2026-09-27-chrome-labels-search-after-sc.png" },
+    { "do": "Open the capture history (⇧⌘H) on a Mac with no captures: it shows ⇧⌘4 Rectangle, ⇧⌘3 Full Screen, ⇧⌘5 Record. Filter to Videos with none: 0 videos." }
+  ],
+  "evaluate": [
+    "Is \"Drop an image here\" clear enough that a screenshot counts as an image?",
+    "Does the Mode list read fine without the paragraph, or did you use it to learn what a mode is?",
+    "Does 0 of 173 tell you the search found nothing as quickly as the sentence did?",
+    "In an empty capture history, do the three keys read as how to make your first capture?",
+    "Is \"Screen Recording is off\" beside Open Setup enough to know what to do?"
+  ],
+  "rough": [
+    "The capture history's empty states and its Screen Recording line have no picture: the history reads your real Screenshots folder, which is never empty on this Mac, and the probe holds the grant, so neither state can be reached without touching your files.",
+    "The colour picker's empty Recent and Document rows now show an empty row instead of \"Nothing picked yet.\", but no picture of it: Recent starts with eight default swatches, so the empty row is never reached from a fresh start.",
+    "The recording crop hint (now \"Drag to crop\") lives only in Current's small recording window, which no walk can switch to, so it has no picture.",
+    "The Mode list still differs from the modes mock in ways this task did not touch: the mock has a Pixel art mode and an Edit modes… row, and draws no one-line summary under each mode."
+  ]
+}

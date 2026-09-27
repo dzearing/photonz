@@ -68,13 +68,6 @@ struct DesignedColorPicker: View {
             case .recent: return "Recent"
             }
         }
-        var emptyNote: String {
-            switch self {
-            case .document: return "Nothing painted yet."
-            case .recent: return "Nothing picked yet."
-            default: return ""
-            }
-        }
     }
 
     @State private var color = PickerColor()
@@ -291,10 +284,9 @@ struct DesignedColorPicker: View {
 
             let swatches = scopeSwatches
             if swatches.isEmpty {
-                Text(scope.emptyNote)
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-                    .frame(height: 22, alignment: .leading)
+                // Nothing painted or picked yet: an empty row, held at a
+                // swatch's height so the picker does not jump.
+                Color.clear.frame(height: 22)
             } else {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 22), spacing: 5)],
                           alignment: .leading, spacing: 5) {

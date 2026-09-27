@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-26T00:05:54.858Z",
-  "updated": "2026-09-27T12:11:15.595Z",
+  "updated": "2026-09-27T21:15:28.391Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by no-sentences-or-debug-readouts-anywhere-in-the-c (2026-09-25). The list lives in Tests/PhotonzCoreTests/ChromeCopyBudgetTests.swift `allowed`: EditorView emptyState, LayersListView search empty, TitlebarModeChip details and listBlurb, HistoryOverlay empty states and Screen Recording line, DesignedColorPicker emptyNote, VideoCropOverlay hint. These are shared with Current, which is why this task did not change them (it was scoped to Next). Toast messages are passed in by callers across EditorState and are not read by the test at all; a follow-up could read ToastController call sites. Rule: UX-PATTERNS §4 What the chrome may say.",
@@ -30,6 +30,34 @@
     {
       "t": "2026-09-27T12:11:15.594Z",
       "note": "seq 50 -> 70"
+    },
+    {
+      "t": "2026-09-27T21:02:23.382Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T21:15:28.186Z",
+      "note": "owns these walks: chrome-says-labels-walk"
+    },
+    {
+      "t": "2026-09-27T21:15:28.235Z",
+      "note": "Adversarial pass: the Mode list mock (modes.html popup) draws no blurb, so dropping it moves toward the mock. Layers search: a zero count reads as a value (0 of N) like a hit; 'Still reading the words' kept (a label, 23 chars, true state). Capture history: the key hints kept as three label+key pairs, the way a menu shows keys, rather than dropped, so a first-timer still sees how to capture."
+    },
+    {
+      "t": "2026-09-27T21:15:28.287Z",
+      "note": "Changed: EditorView 'Drop an image here'; LayersListView '0 of N'; TitlebarModeChip blurb removed, walk details shortened; HistoryOverlay key hints / '0 captures|screenshots|videos' / 'Screen Recording is off'; DesignedColorPicker empty row (emptyNote removed); VideoCropOverlay 'Drag to crop'. ChromeCopyBudgetTests.allowed emptied first (TDD, 6 files red), then green. Full suite 10139 passed. Walks ok: chrome-says-labels (new), find-a-layer, separated-rows-say-their-words, window-modes, history-tooltips."
+    },
+    {
+      "t": "2026-09-27T21:15:28.339Z",
+      "note": "left rough: capture history empty states can't be photographed (the probe reads the real ~/Pictures/Screenshots, never empty) and the colour picker's empty row is unreachable from a fresh start (Recent seeds 8 default swatches); crop hint is Current-only with no walk path. None earned a task: the copy is verified by ChromeCopyBudgetTests."
+    },
+    {
+      "t": "2026-09-27T21:15:28.390Z",
+      "note": "left rough: Mode list vs modes mock still lacks Pixel art and 'Edit modes…', and draws per-mode summaries the mock does not. Modes epic is outside the video focus; not filed."
     }
+  ],
+  "started": "2026-09-27T21:02:23.380Z",
+  "walks": [
+    "chrome-says-labels-walk"
   ]
 }

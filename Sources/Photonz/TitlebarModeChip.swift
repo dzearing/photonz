@@ -168,10 +168,6 @@ struct WindowModeList: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(WindowModeCopy.listTitle)
                 .font(.subheadline.weight(.semibold))
-            Text(WindowModeCopy.listBlurb)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
             VStack(alignment: .leading, spacing: 1) {
                 ForEach(WindowModes.swappable) { mode in
                     row(mode)
@@ -183,7 +179,7 @@ struct WindowModeList: View {
             // foot of the panel, and says so by landing you in Everything.
             action(WindowModeCopy.showEverything,
                    symbol: "arrow.uturn.backward",
-                   detail: "hands every folded section back and leaves the mode",
+                   detail: "unfolds every section",
                    enabled: modes.mode.id != WindowModes.everythingID || modes.isBent) {
                 modes.showEverything()
             }
@@ -192,7 +188,7 @@ struct WindowModeList: View {
             if modes.isBent, modes.mode.id != WindowModes.everythingID {
                 action(WindowModeCopy.resetMode(modes.mode.title),
                        symbol: "arrow.counterclockwise",
-                       detail: "puts this mode back the way it shipped",
+                       detail: "resets this mode",
                        enabled: true) {
                     modes.resetCurrent()
                 }
@@ -279,8 +275,6 @@ enum WindowModeCopy {
     static let chipTooltip = "What this window is set up for"
     static let menuTitle = "Mode"
     static let listTitle = "Mode"
-    static let listBlurb = "A mode folds the panel down to what one job needs. "
-        + "It never touches the document, and everything it folds is one click from coming back."
     static let showEverything = "Show Everything"
     static func resetMode(_ title: String) -> String { "Reset \(title)" }
     static func modeControl(_ title: String) -> String { "\(title) mode" }

@@ -19930,3 +19930,9 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - The five caption style tiles rebuilt and re-set their words on every pick (the Captions section follows the pick): `CaptionStylePreview` is `.equatable()` on its look. The Text section's Font, Size and Weight menus read the pick when chosen and are `.equatable()` (`SelectionMenu: Equatable`), so picks that change nothing they show skip them.
 - Walk actions `captionsPickFirst` / `captionsPickNext` (one click on a cue's bar). Walk `caption-pick-answers-at-once-walk`, guard at 80ms like the long-captions walk.
 - Open: caption to caption is mostly 34-46ms, sometimes 51-58; about 30ms of any click in a video window is the timeline and window bookkeeping. The style tiles keep the window busy while idle: filed `a-recording-with-captions-sits-quiet-while-nothi`.
+
+## 2026-09-27 · The shared chrome says labels, not sentences (go loop)
+
+- `ChromeCopyBudgetTests.allowed` is empty. Empty window "Drop an image here"; layers search nothing found "0 of N"; Mode list blurb gone (the modes mock draws none), its walk details shortened; capture history empty shows three key+label pairs, filtered empty "0 videos", no grant "Screen Recording is off"; colour picker empty row is blank at swatch height; Current's crop hint "Drag to crop". Shared files, so Current and Next both.
+- New walk `chrome-says-labels-walk` photographs the empty window, Mode list, picker and search, and checks the search line reads "0 of 173". Audit `queue/audits/2026-09-27-chrome-labels-shared.json` with before/after.
+- Open: capture history's empty states can't be photographed (the probe reads the real Screenshots folder); the picker's empty row is unreachable from a fresh start.

@@ -718,7 +718,7 @@ struct EditorView: View {
                 Image(systemName: "photo.badge.plus")
                     .font(.system(size: 56, weight: .light))
                     .foregroundStyle(.secondary)
-                Text("Drop a photo or screenshot here")
+                Text("Drop an image here")
                     .font(.title3)
                     .foregroundStyle(.secondary)
             }

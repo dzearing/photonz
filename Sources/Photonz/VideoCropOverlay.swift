@@ -38,7 +38,7 @@ struct VideoCropOverlay: View {
                         .fill(.black.opacity(0.35))
                         .frame(width: display.width, height: display.height)
                         .offset(x: display.minX, y: display.minY)
-                    Text("Drag to select the area to keep")
+                    Text("Drag to crop")
                         .font(.callout.weight(.medium))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 12)

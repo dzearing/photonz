@@ -57,7 +57,7 @@ struct HistoryOverlay: View {
     @ViewBuilder
     private var content: some View {
         if allEntries.isEmpty {
-            emptyMessage("No captures yet. ⇧⌘4 grabs a rectangle, ⇧⌘3 the full screen, ⇧⌘5 records.")
+            firstCaptureKeys
         } else if entries.isEmpty {
             emptyMessage(filterEmptyMessage)
         } else {
@@ -72,11 +72,32 @@ struct HistoryOverlay: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    /// A count, never a sentence: the filter above already says what kind.
     private var filterEmptyMessage: String {
         switch filter {
-        case .all: return "No captures yet."
-        case .screenshots: return "No screenshots yet."
-        case .videos: return "No videos yet."
+        case .all: return "0 captures"
+        case .screenshots: return "0 screenshots"
+        case .videos: return "0 videos"
+        }
+    }
+
+    /// Nothing captured yet: the three keys that make one, as a menu shows
+    /// them, rather than a sentence about it.
+    private var firstCaptureKeys: some View {
+        HStack(spacing: 20) {
+            captureKey("⇧⌘4", "Rectangle")
+            captureKey("⇧⌘3", "Full Screen")
+            captureKey("⇧⌘5", "Record")
+        }
+        .font(.callout)
+        .foregroundStyle(.secondary)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func captureKey(_ keys: String, _ label: String) -> some View {
+        HStack(spacing: 6) {
+            Text(keys).foregroundStyle(.tertiary)
+            Text(label)
         }
     }
 
@@ -142,7 +163,7 @@ struct HistoryOverlay: View {
     private var permissionHint: some View {
         HStack(spacing: 8) {
             Image(systemName: "exclamationmark.shield")
-            Text("Photonz needs Screen Recording access to take screenshots.")
+            Text("Screen Recording is off")
             Button("Open Setup…") {
                 coordinator.hideHistory()
                 coordinator.showWelcome()

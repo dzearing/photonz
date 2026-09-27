@@ -62,26 +62,11 @@ struct ChromeCopyBudgetTests {
         return Array(Set(found + videoFiles)).sorted()
     }
 
-    /// Over the rules on 2026-09-25, outside the video surfaces. All of them
-    /// are shared with Current (`the-shared-chrome-says-labels-not-sentences`).
-    static let allowed: [String: [String]] = [
-        "EditorView.swift": ["Drop a photo or screenshot here"],
-        "LayersListView.swift": ["No layer says that"],
-        "TitlebarModeChip.swift": [
-            "hands every folded section back and leav",
-            "puts this mode back the way it shipped",
-            "A mode folds the panel down to what one ",
-        ],
-        "HistoryOverlay.swift": [
-            "No captures yet. ⇧⌘4 grabs a rectangle, ",
-            "No captures yet.",
-            "No screenshots yet.",
-            "No videos yet.",
-            "Photonz needs Screen Recording access to",
-        ],
-        "DesignedColorPicker.swift": ["Nothing painted yet.", "Nothing picked yet."],
-        "VideoCropOverlay.swift": ["Drag to select the area to keep"],
-    ]
+    /// Over the rules on 2026-09-25, outside the video surfaces. Emptied on
+    /// 2026-09-27 (`the-shared-chrome-says-labels-not-sentences`): the empty
+    /// picture, the layers search, the Mode list, the capture history, the
+    /// colour picker and the recording crop all say labels now. Keep it empty.
+    static let allowed: [String: [String]] = [:]
 
     static func offenders(in file: String) throws -> [(phrase: CopyBudget.Phrase, faults: [CopyBudget.ChromeFault])] {
         let text = try String(contentsOf: sources.appendingPathComponent(file), encoding: .utf8)
