@@ -289,13 +289,15 @@ private struct ClipLineRow: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // One line, the mock's way, with a long name cut short beside the
-            // times; only when that would leave it under a few words does the
-            // name go above them, never down to a lone ellipsis (2026-09-25,
-            // at 220pt it read "...").
+            // One line, the mock's way, when the whole name fits beside the
+            // times; otherwise the name goes above them and reads whole. It
+            // was cut short beside them until 2026-09-27, and "Tutorial
+            // Sam..." at the dock's default width was the one clip name every
+            // tutorial showed.
             ViewThatFits(in: .horizontal) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    name.frame(idealWidth: 72, maxWidth: .infinity, alignment: .leading)
+                    name.fixedSize()
+                    Spacer(minLength: 0)
                     times
                 }
                 VStack(alignment: .leading, spacing: 2) {

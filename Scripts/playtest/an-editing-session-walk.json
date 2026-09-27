@@ -56,6 +56,10 @@
       "name": "1-opened"
     },
     {
+      "do": "labelsWhole",
+      "stage": "1-opened"
+    },
+    {
       "do": "action",
       "action": "videoSeekMiddle"
     },
@@ -113,6 +117,10 @@
       "name": "2-cut"
     },
     {
+      "do": "labelsWhole",
+      "stage": "2-cut"
+    },
+    {
       "do": "dropOnTimeline",
       "file": "scratch/b-roll.mp4",
       "track": "V1",
@@ -165,6 +173,10 @@
       "name": "4-picker"
     },
     {
+      "do": "labelsWhole",
+      "stage": "4-picker"
+    },
+    {
       "do": "press",
       "control": "Cross dissolve",
       "in": "At this cut"
@@ -186,6 +198,10 @@
     {
       "do": "snapshot",
       "name": "5-dissolve"
+    },
+    {
+      "do": "labelsWhole",
+      "stage": "5-dissolve"
     },
     {
       "do": "key",
@@ -308,6 +324,10 @@
     {
       "do": "snapshot",
       "name": "6-title-at-b"
+    },
+    {
+      "do": "labelsWhole",
+      "stage": "6-title-at-b"
     },
     {
       "do": "expect",

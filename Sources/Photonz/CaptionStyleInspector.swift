@@ -65,13 +65,13 @@ struct CaptionWordsInspector: View {
     @ViewBuilder private func currentWord(_ word: CaptionWordLook) -> some View {
         heading("Current word").padding(.top, 6)
         CaptionColourRow(label: "Colour", value: word.colorHex, noneTitle: "Text colour",
-                         choices: CaptionColourRow.bright) { hex in change { $0.word.colorHex = hex } }
+                         choices: CaptionColourNames.bright) { hex in change { $0.word.colorHex = hex } }
         CaptionColourRow(label: "Pill", value: word.pillHex,
-                         choices: CaptionColourRow.bright) { hex in change { $0.word.pillHex = hex } }
+                         choices: CaptionColourNames.bright) { hex in change { $0.word.pillHex = hex } }
         CaptionColourRow(label: "Glow", value: word.glowHex,
-                         choices: CaptionColourRow.bright) { hex in change { $0.word.glowHex = hex } }
+                         choices: CaptionColourNames.bright) { hex in change { $0.word.glowHex = hex } }
         CaptionColourRow(label: "Stroke", value: word.strokeHex,
-                         choices: CaptionColourRow.edges) { hex in change { $0.word.strokeHex = hex } }
+                         choices: CaptionColourNames.edges) { hex in change { $0.word.strokeHex = hex } }
         VideoKit.FieldRow(label: "Shadow") {
             Toggle("Shadow", isOn: Binding(get: { word.shadow },
                                            set: { on in change { $0.word.shadow = on } }))
@@ -133,26 +133,16 @@ struct CaptionColourRow: View {
     var field: String? = nil
     let value: String?
     var noneTitle = "None"
-    let choices: [(String, String)]
+    let choices: [CaptionColourNames.Choice]
     let pick: (String?) -> Void
 
-    static let bright: [(String, String)] = [
-        ("Yellow", CaptionLook.activeYellow), ("Cyan", CaptionLook.karaokeCyan), ("Pink", "#FF4FD8"),
-        ("Green", "#3ECF8E"), ("White", "#FFFFFF"), ("Black", "#000000"),
-    ]
-    static let edges: [(String, String)] = [
-        ("Black", "#000000"), ("White", "#FFFFFF"), ("Yellow", CaptionLook.activeYellow),
-        ("Cyan", CaptionLook.karaokeCyan), ("Pink", "#FF4FD8"),
-    ]
-
     var body: some View {
-        let name = value.flatMap { hex in choices.first { $0.1.uppercased() == hex.uppercased() }?.0 }
-            ?? (value ?? noneTitle)
+        let name = CaptionColourNames.name(of: value, among: choices, none: noneTitle)
         VideoKit.DropdownRow(label: label, value: name, swatch: value.map(CaptionsInspector.swatch)) {
             Toggle(noneTitle, isOn: Binding(get: { value == nil }, set: { _ in pick(nil) }))
-            ForEach(choices, id: \.0) { choice in
-                Toggle(choice.0, isOn: Binding(get: { choice.1.uppercased() == value?.uppercased() },
-                                               set: { _ in pick(choice.1) }))
+            ForEach(choices, id: \.name) { choice in
+                Toggle(choice.name, isOn: Binding(get: { choice.hex?.uppercased() == value?.uppercased() },
+                                                  set: { _ in pick(choice.hex) }))
             }
         }
         .playtestField(field ?? "Current word \(label.lowercased())")

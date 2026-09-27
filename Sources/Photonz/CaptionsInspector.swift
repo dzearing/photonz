@@ -98,34 +98,54 @@ struct CaptionsInspector: View {
         }
     }
 
-    /// How many there are, and the button that writes them (again).
+    /// The button that writes them (again), and how many there are.
+    ///
+    /// The button is never cut short: it keeps its whole label, and in a dock
+    /// too narrow for it beside its name the row drops it under the name. The
+    /// count sits beside it while there is room and steps away when there is
+    /// not; the Cue row still says which of how many is on screen. Until
+    /// 2026-09-27 both shared the row's 148pt and the button read "Write Ag...".
     private var generate: some View {
         VideoKit.FieldRow(label: "Generate") {
-            HStack(spacing: 6) {
-                Button {
-                    editorState.writeCaptions()
-                } label: {
-                    Label(editorState.hasCaptions ? "Write Again" : "Auto captions", systemImage: "sparkles")
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 6) {
+                    generateButton
+                    if let count { countReading(count) }
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.small)
-                .disabled(!editorState.canWriteCaptions)
-                .playtestField("Write Captions")
-                .panelHelp("Listen on this Mac, never uploaded, and write the words.")
-                Text(count)
-                    .font(.system(size: 10.5))
-                    .foregroundStyle(VideoKit.Palette.faint)
-                    .lineLimit(1)
-                    .panelReadout(count)
-                    .playtestField("Captions reading")
-                    .panelHelp(editorState.captionsReading)
+                generateButton
             }
         }
     }
 
-    /// How many there are, in two words.
-    private var count: String {
-        guard editorState.hasCaptions else { return "None yet" }
+    private var generateButton: some View {
+        Button {
+            editorState.writeCaptions()
+        } label: {
+            Label(editorState.hasCaptions ? "Rewrite" : "Auto captions", systemImage: "sparkles")
+                .lineLimit(1)
+        }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.small)
+        .fixedSize()
+        .disabled(!editorState.canWriteCaptions)
+        .playtestField("Write Captions")
+        .panelHelp("Listen on this Mac, never uploaded, and write the words.")
+    }
+
+    private func countReading(_ count: String) -> some View {
+        Text(count)
+            .font(.system(size: 10.5))
+            .foregroundStyle(VideoKit.Palette.faint)
+            .lineLimit(1)
+            .fixedSize()
+            .panelReadout(count)
+            .playtestField("Captions reading")
+            .panelHelp(editorState.captionsReading)
+    }
+
+    /// How many there are, in two words, or nothing before there are any.
+    private var count: String? {
+        guard editorState.hasCaptions else { return nil }
         let cues = editorState.captionCount
         return "\(cues) caption\(cues == 1 ? "" : "s")"
     }
@@ -154,18 +174,6 @@ struct CaptionsInspector: View {
 
     // MARK: - One look for every caption
 
-    private func colourRow(_ label: String, value: String?, choices: [(String, String?)],
-                           pick: @escaping (String?) -> Void) -> some View {
-        let name = choices.first { $0.1?.uppercased() == value?.uppercased() }?.0 ?? (value ?? "None")
-        return VideoKit.DropdownRow(label: label, value: name, swatch: value.map(Self.swatch)) {
-            ForEach(choices, id: \.0) { choice in
-                Toggle(choice.0, isOn: Binding(get: { choice.1?.uppercased() == value?.uppercased() },
-                                               set: { _ in pick(choice.1) }))
-            }
-        }
-        .playtestField("Caption \(label.lowercased())")
-    }
-
     static func swatch(_ hex: String) -> AnyShapeStyle {
         let rgba = RGBA(hex: hex) ?? RGBA(r: 1, g: 1, b: 1)
         return AnyShapeStyle(Color(.sRGB, red: rgba.r, green: rgba.g, blue: rgba.b, opacity: rgba.a))
@@ -178,10 +186,6 @@ struct CaptionsInspector: View {
         guard let size else { return "Auto" }
         return "\(Int(size)) px"
     }
-    static let inks: [(String, String?)] = [("White", "#FFFFFF"), ("Yellow", "#FFD76A"),
-                                             ("Black", "#000000"), ("Cyan", "#7FE7FF")]
-    static let plates: [(String, String?)] = [("None", nil), ("Dark", CaptionLook.plate),
-                                               ("Black", "#000000"), ("White", "#FFFFFFE6")]
 
     // MARK: - Timing and the way out
 
@@ -315,20 +319,20 @@ struct CaptionsTextInspector: View {
                     editorState.changeCaptionLook { $0.weight = weight }
                 }
             }
-            colourRow("Colour", value: look.colorHex, choices: CaptionsInspector.inks) { hex in
+            colourRow("Colour", value: look.colorHex, choices: CaptionColourNames.inks) { hex in
                 editorState.changeCaptionLook { $0.colorHex = hex ?? "#FFFFFF" }
             }
-            colourRow("Background", value: look.backgroundHex, choices: CaptionsInspector.plates) { hex in
+            colourRow("Background", value: look.backgroundHex, choices: CaptionColourNames.plates) { hex in
                 editorState.changeCaptionLook { $0.backgroundHex = hex }
             }
             // The whole text's own glow, outline and shadow; the word being
             // said has its own in the Captions section.
             CaptionColourRow(label: "Glow", field: "Caption glow", value: look.glowHex,
-                             choices: CaptionColourRow.bright) { hex in
+                             choices: CaptionColourNames.bright) { hex in
                 editorState.changeCaptionLook { $0.glowHex = hex }
             }
             CaptionColourRow(label: "Stroke", field: "Caption stroke", value: look.strokeHex,
-                             choices: CaptionColourRow.edges) { hex in
+                             choices: CaptionColourNames.edges) { hex in
                 editorState.changeCaptionLook { $0.strokeHex = hex }
             }
             VideoKit.DropdownRow(label: "Shadow", value: look.shadow.title) {
@@ -363,13 +367,13 @@ struct CaptionsTextInspector: View {
         return base.contains(shown) ? base : (base + [shown]).sorted()
     }
 
-    private func colourRow(_ label: String, value: String?, choices: [(String, String?)],
+    private func colourRow(_ label: String, value: String?, choices: [CaptionColourNames.Choice],
                            pick: @escaping (String?) -> Void) -> some View {
-        let name = choices.first { $0.1?.uppercased() == value?.uppercased() }?.0 ?? (value ?? "None")
+        let name = CaptionColourNames.name(of: value, among: choices)
         return VideoKit.DropdownRow(label: label, value: name, swatch: value.map(CaptionsInspector.swatch)) {
-            ForEach(choices, id: \.0) { choice in
-                Toggle(choice.0, isOn: Binding(get: { choice.1?.uppercased() == value?.uppercased() },
-                                               set: { _ in pick(choice.1) }))
+            ForEach(choices, id: \.name) { choice in
+                Toggle(choice.name, isOn: Binding(get: { choice.hex?.uppercased() == value?.uppercased() },
+                                                  set: { _ in pick(choice.hex) }))
             }
         }
         .playtestField("Caption \(label.lowercased())")

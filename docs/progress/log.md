@@ -19910,3 +19910,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - The three dots on Properties list Reset to Defaults under Copy Look and Paste Look (documents with time), each item with the mock's icon. Dimmed when there is nothing to put back.
 - Core: `PropertiesReset.swift`. Every key goes (fades and punch-ins are keys), rotation 0, opacity 100, volume points cleared and gain to unity. The look and the layer's unkeyed place and size stay; the app does not store where a layer was first put down. One `perform`, one undo.
 - Walk: `properties-reset-walk` (no flags).
+
+## 2026-09-27 — Video chrome labels read whole (go loop)
+
+- Captions: Generate button never cuts (Rewrite, count beside it when it fits); Background and every caption colour row name the colour via `CaptionColourNames` (PhotonzCore, tested), never a hex.
+- Timeline bar Easing sized by a hidden face with the widest ease; Edit point spare values kept whole; Properties clip line puts a long name above its times; `VideoKit.Tile` names shrink to 85% before cutting.
+- New walk step `labelsWhole`: Vision reads the window in pieces and fails on any label cut with an ellipsis outside the picture and the clip lanes (`CutLabelRule`). In captions margins, timeline bar, library import and editing session walks.
+- Next: labelsWhole under a lock is unproven; the narrowest dock still gives way on purpose.

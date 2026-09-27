@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/captions-panel-keeps-its-margins-walk",
-  "seed": "The Captions section keeps the panel's margins and never makes the panel wider than its dock, at the default width and at the narrowest, with no flag changed.",
+  "seed": "The Captions section keeps the panel's margins and never makes the panel wider than its dock, at the default width and at the narrowest, with no flag changed. Every label on the window reads whole at the default width (Rewrite beside its caption count, Background naming its colour), and in the narrowest dock the Rewrite button and the Background name still read whole.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -24,7 +24,10 @@
       "do": "action",
       "action": "videoPause"
     },
-    { "do": "selectRow", "row": "Sample Talk" },
+    {
+      "do": "selectRow",
+      "row": "Sample Talk"
+    },
     {
       "do": "action",
       "action": "videoSeekQuarter"
@@ -53,6 +56,18 @@
     {
       "do": "snapshot",
       "name": "1-captions-written"
+    },
+    {
+      "do": "labelsWhole",
+      "stage": "1-captions-written",
+      "words": [
+        "Rewrite",
+        "10 captions"
+      ]
+    },
+    {
+      "do": "labelsWhole",
+      "stage": "1-captions-written-everything"
     },
     {
       "do": "action",
@@ -86,6 +101,48 @@
     {
       "do": "snapshot",
       "name": "2-lower-third"
+    },
+    {
+      "do": "selectRow",
+      "row": "Captions"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "reveal",
+      "control": "align left"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Caption background",
+      "reads": "Darker"
+    },
+    {
+      "do": "describe",
+      "stage": "2b-lower-third-background",
+      "note": "The Captions layer picked after Lower third: Background names the style's plate, Darker, never a code like #000000B3."
+    },
+    {
+      "do": "labelsWhole",
+      "stage": "2b-lower-third-background"
+    },
+    {
+      "do": "snapshot",
+      "name": "2b-lower-third-background"
+    },
+    {
+      "do": "selectRow",
+      "row": "Sample Talk"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
     },
     {
       "do": "action",
@@ -158,6 +215,59 @@
     {
       "do": "snapshot",
       "name": "3-the-narrowest-dock"
+    },
+    {
+      "do": "labelsWhole",
+      "stage": "3-the-narrowest-dock",
+      "words": [
+        "Rewrite"
+      ]
+    },
+    {
+      "do": "selectRow",
+      "row": "Captions"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "reveal",
+      "control": "align left"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Caption background",
+      "reads": "Darker"
+    },
+    {
+      "do": "describe",
+      "stage": "3b-the-narrowest-dock-background",
+      "note": "The Captions layer picked after Lower third: Background names the style's plate, Darker, never a code like #000000B3."
+    },
+    {
+      "do": "labelsWhole",
+      "stage": "3b-the-narrowest-dock-background",
+      "words": [
+        "Background",
+        "Darker"
+      ]
+    },
+    {
+      "do": "snapshot",
+      "name": "3b-the-narrowest-dock-background"
+    },
+    {
+      "do": "selectRow",
+      "row": "Sample Talk"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
     },
     {
       "do": "action",

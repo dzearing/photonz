@@ -19,8 +19,8 @@ struct EditPointInspector: View {
                     CutField(key: "In", value: cut.incomingName)
                 }
                 HStack(spacing: 7) {
-                    CutField(key: "Spare after", value: spare(cut.cut.spareAfterOutMS))
-                    CutField(key: "Spare before", value: spare(cut.cut.spareBeforeInMS))
+                    CutField(key: "Spare after", value: spare(cut.cut.spareAfterOutMS), keepsValueWhole: true)
+                    CutField(key: "Spare before", value: spare(cut.cut.spareBeforeInMS), keepsValueWhole: true)
                 }
             }
             .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
@@ -42,9 +42,15 @@ struct EditPointInspector: View {
 
 /// One `.field` of the mock: a small key on the left and its value on the
 /// right, in a box.
+///
+/// A clip's name gives way in the middle when the box is short. A few seconds
+/// of spare never does: at the dock's default width "Spare before" left its
+/// value a point short and it read "..." (2026-09-27), so there the key
+/// shrinks a little instead and both read whole.
 private struct CutField: View {
     let key: String
     let value: String
+    var keepsValueWhole = false
 
     var body: some View {
         HStack(spacing: 6) {
@@ -52,6 +58,7 @@ private struct CutField: View {
                 .font(.system(size: 10))
                 .foregroundStyle(VideoKit.Palette.faint)
                 .lineLimit(1)
+                .minimumScaleFactor(keepsValueWhole ? 0.8 : 1)
                 .layoutPriority(1)
             Spacer(minLength: 4)
             Text(value)
@@ -60,6 +67,8 @@ private struct CutField: View {
                 .foregroundStyle(VideoKit.Palette.ink)
                 .lineLimit(1)
                 .truncationMode(.middle)
+                .fixedSize(horizontal: keepsValueWhole, vertical: false)
+                .layoutPriority(keepsValueWhole ? 2 : 0)
                 .panelReadout(value)
         }
         .padding(.horizontal, 8)

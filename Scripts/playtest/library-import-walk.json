@@ -26,6 +26,7 @@
     { "do": "expect", "control": "b-roll.mp4", "present": true },
     { "do": "describe", "stage": "2-imported", "note": "THE FIRST TEST: File > Import Media put b-roll.mp4 on the Library shelf and nowhere else. The Library, hidden a moment ago, is open on Media with the new tile in view, and the timeline still holds one clip" },
     { "do": "snapshot", "name": "2-imported" },
+    { "do": "labelsWhole", "stage": "2-imported" },
 
     { "do": "dropOnLibrary", "file": "scratch/Sample Music.m4a", "release": false, "hold": "3-music-over-the-shelf" },
     { "do": "describe", "stage": "3-music-over-the-shelf", "note": "THE SECOND TEST: music from the Finder held over the Library. The shelf wears the accent ring that says it will keep it; the rest of the panel stays quiet" },
@@ -43,6 +44,7 @@
     { "do": "expectClip", "clip": "Sample Music", "track": "Audio", "startsAt": 1.0, "count": 1 },
     { "do": "describe", "stage": "6-first-clip-from-the-shelf", "note": "THE THIRD TEST: the music tile dragged onto the empty Audio track landed there one second in, the mock's step 3" },
     { "do": "snapshot", "name": "6-first-clip-from-the-shelf" },
+    { "do": "labelsWhole", "stage": "6-first-clip-from-the-shelf" },
 
     { "do": "panelMenu", "menu": "Add to Library", "shot": "7-plus-menu" },
     { "do": "importPicks", "files": ["scratch/Sample Music.m4a"] },

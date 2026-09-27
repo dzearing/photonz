@@ -486,7 +486,7 @@ extension PhotonzDocument {
 
 // MARK: - A fix survives the captions being written again
 
-/// The words somebody fixed by hand, remembered across Write Again.
+/// The words somebody fixed by hand, remembered across Rewrite.
 ///
 /// Writing captions again replaces every line. Without this, every name and
 /// every "a lot" a person had fixed would come back misheard. So before the old

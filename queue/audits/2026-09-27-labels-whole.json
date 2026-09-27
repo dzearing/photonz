@@ -1,0 +1,29 @@
+{
+  "feature": "Every label in the video chrome reads whole",
+  "epic": "video-editing",
+  "summary": "At the default window size no button, value or name in the video editor is cut short any more: the Captions button reads Rewrite beside its count, Background names its colour, Easing reads Ease In and Out, and clip and Library names read whole. A walk step now reads every word on the window and fails on any cut one.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: captions-panel-keeps-its-margins-walk, timeline-bar-labels-only-walk, library-import-walk, an-editing-session-walk.",
+  "try": [
+    { "do": "Open a screen recording with somebody talking and wait for its captions to write themselves.", "shot": "2026-09-27-labels-whole-1-rewrite.png" },
+    { "do": "In Captions, pick the Lower third style, then click the Captions row in Layers and look at Background.", "shot": "2026-09-27-labels-whole-2-background.png" },
+    { "do": "Drag the panel's edge to its narrowest and look at the Generate row.", "shot": "2026-09-27-labels-whole-3-narrowest.png" },
+    { "do": "Key a title's Position twice and click one of its keys; read Easing at the right of the timeline bar.", "shot": "2026-09-27-labels-whole-4-easing.png" },
+    { "do": "Cut a stretch out of a recording and click the jump cut; read Spare before in Edit point.", "shot": "2026-09-27-labels-whole-5-spare.png" },
+    { "do": "Import Tutorial Sample.mp4 into the Library and read its tile.", "shot": "2026-09-27-labels-whole-6-library.png" },
+    { "do": "Drag Sample Music from the Library to the timeline and read the clip line at the top of Properties.", "shot": "2026-09-27-labels-whole-7-clip-line.png" }
+  ],
+  "evaluate": [
+    "Does Rewrite say what the button does once captions are there, or would you rather it kept the mock's Auto captions?",
+    "Is the caption count beside the button worth keeping, given the Cue row under it already says 3 of 10?",
+    "Does Darker read as the right name for the Lower third plate beside Dark and Black?",
+    "Is a long clip name on its own line above the times better than one line with the name cut short?",
+    "Is a Library name set slightly smaller to fit better than one cut at its end?"
+  ],
+  "rough": [
+    "The mock's Generate button says Auto captions and nothing else. The app says Rewrite once captions exist, with the count beside it, because the task asked for the count; Auto captions and the count do not fit together at the default width.",
+    "The mock draws the clip line as one line. A name too long to sit beside the times now goes above them rather than being cut.",
+    "In the narrowest dock some things still give way on purpose: the language reads English (e..., and the Lower third and Save style tiles are cut. Rewrite and Darker stay whole there.",
+    "The word check cannot tell a value cut all the way down to ... from a three dot menu button, so a value that loses every letter is still found by eye (Spare before was found that way and fixed).",
+    "The word check has not been run on a locked screen yet, so it is not in any tutorial walk."
+  ]
+}

@@ -30,10 +30,14 @@ extension VideoKit {
             VStack(alignment: .leading, spacing: 0) {
                 thumbnailWell
                 VStack(alignment: .leading, spacing: 1) {
+                    // A name a few points too long for the card ("Tutorial
+                    // Sample.mp4" on a Library card at the dock's resting
+                    // width) sets a little smaller rather than losing its end.
                     Text(name)
                         .font(.system(size: 10.5, weight: .medium))
                         .foregroundStyle(Palette.ink)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                         .truncationMode(.tail)
                     if let detail {
                         Text(detail)

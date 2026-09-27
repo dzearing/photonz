@@ -1,6 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/timeline-bar-labels-only-walk",
- "seed": "The timeline bar says labels and values, never sentences. At Next defaults with no flag changed, this walk photographs the bar over a recording three times: with nothing picked, with a title picked, and with one of the title's keys picked. The first two show the tools and the zoom and nothing else at the right end; only the third shows Easing, set here to Ease Out on the picked key. No playhead readout appears in any of them.",
+ "seed": "The timeline bar says labels and values, never sentences. At Next defaults with no flag changed, this walk photographs the bar over a recording three times: with nothing picked, with a title picked, and with one of the title's keys picked. The first two show the tools and the zoom and nothing else at the right end; only the third shows Easing, set here to Ease Out on the picked key. No playhead readout appears in any of them. With the key picked, Easing reads Ease In and Out whole, and no label on the window is cut short.",
  "setup": {"front": true, "forget": ["all"]},
  "steps": [
   {"do": "action", "action": "openSampleRecording"},
@@ -45,6 +45,9 @@
   {"do": "press", "control": "Key Position 1"},
   {"do": "wait", "seconds": 0.5},
   {"do": "expect", "menu": "Easing", "reads": "Ease In and Out"},
+  {"do": "labelsWhole", "stage": "3-key-picked-ease-in-and-out", "words": ["Ease In and Out"]},
+  {"do": "labelsWhole", "stage": "3-key-picked-everything"},
+  {"do": "snapshot", "name": "3a-ease-in-and-out-whole"},
   {"do": "panelMenu", "menu": "Easing", "choose": "Ease Out"},
   {"do": "wait", "seconds": 0.4},
   {"do": "expect", "menu": "Easing", "reads": "Ease Out"},

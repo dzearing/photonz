@@ -246,10 +246,23 @@ struct TimelineDock: View {
         }
     }
 
+    /// The ease whose name is widest. The face is sized by a hidden copy of
+    /// itself showing this one, so it reads every ease whole and keeps one
+    /// width whatever the picked keys read. It was a fixed 124 until
+    /// 2026-09-27, a few points short of "Ease In and Out" ("Ease In and...").
+    static let widestEase: String = {
+        let font = NSFont.systemFont(ofSize: 11, weight: .medium)
+        return (KeyEase.allCases.map(\.title) + ["Mixed"])
+            .max { ($0 as NSString).size(withAttributes: [.font: font]).width
+                < ($1 as NSString).size(withAttributes: [.font: font]).width } ?? "Mixed"
+    }()
+
     private var easingMenu: some View {
         let shown = editorState.pickedKeysEase?.title ?? "Mixed"
-        return VideoKit.SelectFace(value: shown, size: .small)
-            .frame(width: 124)
+        return VideoKit.SelectFace(value: Self.widestEase, size: .small)
+            .hidden()
+            .fixedSize()
+            .overlay { VideoKit.SelectFace(value: shown, size: .small) }
             .overlay {
                 Menu {
                     ForEach(KeyEase.allCases, id: \.self) { ease in

@@ -3231,6 +3231,15 @@ public enum PlaytestStep: Sendable, Equatable {
     /// closer to either edge than the margin. `"report": true` writes the
     /// numbers and passes, for a survey of a panel nobody has fixed yet.
     case panelMargins(stage: String, reportOnly: Bool)
+    /// Read every word on the window off a picture of it and fail on any
+    /// label the chrome cut short with an ellipsis (`CutLabelRule`): the
+    /// panel, the timeline's bar, the track headers, the Library, anywhere
+    /// but the picture being edited and the clips on the lanes. Writes what
+    /// it read to `labels-<stage>.json`. `"words"` names labels that must
+    /// each be read whole somewhere on the window, for a narrowed dock where
+    /// some other label is allowed to give way; `"report": true` writes what
+    /// it read and passes.
+    case labelsWhole(stage: String, words: [String], reportOnly: Bool)
     /// Put the probe into light or dark for the shots that follow, so one walk
     /// can photograph a surface both ways. It changes THIS app only, never the
     /// machine's setting, so nothing outside the probe notices.
@@ -3285,7 +3294,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
         "clickRuler", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
-        "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
+        "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag",
     ].sorted()
 
@@ -3398,6 +3407,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .panelEdge: "panelEdge"
         case .panelStart: "panelStart"
         case .panelMargins: "panelMargins"
+        case .labelsWhole: "labelsWhole"
         case .action: "action"
         }
     }
@@ -4363,6 +4373,9 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .panelStart(stage: try f.string("stage"))
         case "panelMargins":
             self = .panelMargins(stage: try f.string("stage"), reportOnly: try f.optionalFlag("report") ?? false)
+        case "labelsWhole":
+            self = .labelsWhole(stage: try f.string("stage"), words: try f.optionalStrings("words"),
+                                reportOnly: try f.optionalFlag("report") ?? false)
         case "appearance":
             self = .appearance(try f.enumValue("value", PlaytestAppearance.self))
         case "action":

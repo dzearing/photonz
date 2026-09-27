@@ -2234,6 +2234,46 @@ private final class Run {
             }
             note(number, step.name, verdict, state: margins)
 
+        case .labelsWhole(let stage, let wanted, let reportOnly):
+            let window = try requireWindow()
+            guard let content = window.contentView else { throw Failure(description: "the window has no content view") }
+            let readings = try PlaytestLabelReader.read(try picture(of: content), size: content.bounds.size,
+                                                        panel: PanelEdgeProbe.shared.panel)
+            let zones = try contentZones(in: content)
+            let cut = CutLabelRule.cut(readings, outside: zones)
+            let words = readings.filter { reading in
+                !zones.contains { $0.contains(CGPoint(x: reading.frame.midX, y: reading.frame.midY)) }
+            }
+            write(json: ["read": words.map { ["text": $0.text, "frame": Self.rectJSON($0.frame)] },
+                         "leftOut": zones.map(Self.rectJSON),
+                         "cut": cut.map(\.text)] as [String: Any],
+                  to: "labels-\(stage).json")
+            guard !words.isEmpty else {
+                throw Failure(description: "no words could be read off the window at all, so nothing was "
+                    + "checked for being cut short")
+            }
+            let missing = CutLabelRule.missing(wanted, in: words)
+            var trouble: [String] = []
+            if !missing.isEmpty {
+                trouble.append("not read whole anywhere on the window: "
+                    + missing.map { "\"\($0)\"" }.joined(separator: ", "))
+            }
+            // With words named, those are the claim: something else in a
+            // narrowed dock may give way.
+            if wanted.isEmpty, !cut.isEmpty {
+                trouble.append("\(cut.count) label\(cut.count == 1 ? " is" : "s are") cut short: "
+                    + cut.map { "\"\($0.text)\" at \(Int($0.frame.minX)),\(Int($0.frame.minY))" }
+                        .joined(separator: "; "))
+            }
+            if !trouble.isEmpty && !reportOnly {
+                throw Failure(description: trouble.joined(separator: "; "))
+            }
+            note(number, step.name, trouble.isEmpty
+                 ? "all \(words.count) runs of words on the window read whole "
+                    + "(the picture and the clips on the lanes left out)"
+                    + (wanted.isEmpty ? "" : ", " + wanted.map { "\"\($0)\"" }.joined(separator: ", ") + " among them")
+                 : "report only: " + trouble.joined(separator: "; "))
+
         case .describe(let stage, let text):
             note(number, stage, text ?? "", state: describe())
 
@@ -12843,15 +12883,53 @@ private final class Run {
             + "setup \(said), tour offer \(answer)"
     }
 
-    private func snapshot(_ view: NSView, name: String) throws {
+    /// The window's content drawn offscreen, exactly as `snapshot` writes it.
+    private func picture(of view: NSView) throws -> NSBitmapImageRep {
         guard let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else {
-            throw Failure(description: "could not make a bitmap for \(name)")
+            throw Failure(description: "could not make a bitmap of the window")
         }
         view.cacheDisplay(in: view.bounds, to: rep)
         drawScrollingPanels(in: view, into: rep)
         drawTitleBar(over: view, into: rep)
         drawTooltip(over: view, into: rep)
         fillBackground(of: view, into: rep)
+        return rep
+    }
+
+    /// Where the words are the document's and not the app's, in the content
+    /// view's points, top-left origin: the picture on the canvas and the
+    /// clips on the timeline's lanes (`labelsWhole`).
+    private func contentZones(in content: NSView) throws -> [CGRect] {
+        var zones: [CGRect] = []
+        func topLeft(_ windowRect: CGRect) -> CGRect {
+            let local = content.convert(windowRect, from: nil)
+            return CGRect(x: local.minX, y: content.isFlipped ? local.minY : content.bounds.height - local.maxY,
+                          width: local.width, height: local.height)
+        }
+        if let editor = try? requireEditor(), let document = editor.document,
+           let viewport = editor.viewport, let canvas {
+            let a = viewport.viewPoint(fromDocument: .zero)
+            let b = viewport.viewPoint(fromDocument: CGPoint(x: document.canvasSize.width,
+                                                              y: document.canvasSize.height))
+            let inCanvas = CGRect(x: min(a.x, b.x), y: min(a.y, b.y), width: abs(b.x - a.x), height: abs(b.y - a.y))
+            zones.append(topLeft(canvas.convert(inCanvas, to: nil)))
+        }
+        if let editor = try? requireEditor(), editor.timelineTracksFrame.width > 0 {
+            // SwiftUI's global frame is the window's, top-left origin.
+            var lanes = editor.timelineTracksFrame
+            lanes.origin.x += TimelineDock.lanesLeading
+            lanes.size.width -= TimelineDock.lanesLeading
+            zones.append(lanes)
+        }
+        return zones
+    }
+
+    private static func rectJSON(_ rect: CGRect) -> [Int] {
+        [Int(rect.minX), Int(rect.minY), Int(rect.width), Int(rect.height)]
+    }
+
+    private func snapshot(_ view: NSView, name: String) throws {
+        let rep = try picture(of: view)
         guard let png = rep.representation(using: .png, properties: [:]) else {
             throw Failure(description: "could not encode \(name).png")
         }

@@ -2344,7 +2344,7 @@ public enum TutorialGuides {
                 id: "one-look",
                 anchor: .panelSection("captions"),
                 title: "One look for every line",
-                body: "Change the style here and every caption follows. Write Again listens afresh if the sound has changed.",
+                body: "Change the style here and every caption follows. Rewrite listens afresh if the sound has changed.",
                 prepare: [.showPanel, .revealTarget]),
             TutorialStep(
                 id: "on-the-way-out",
