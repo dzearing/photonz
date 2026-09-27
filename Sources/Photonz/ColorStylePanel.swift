@@ -166,7 +166,7 @@ struct ColorStyleControl: View, Equatable {
                         // where there IS one to widen: nobody can tick a border
                         // into being a fill colour.
                         if borrowed.contains(where: \.isSavedColor) {
-                            Button("Change what a color is for in the Library") {
+                            Button("Set what it is for in the Library") {
                                 editorState.showStylesShelf()
                             }
                         }
@@ -1227,6 +1227,7 @@ struct LibraryStyleInspector: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .panelHelp(standingHelp(style))
                 HStack(spacing: 6) {
                     Button("Select What Uses This") {
                         editorState.selectLayersUsingColorStyle(styleID: style.id)
@@ -1276,9 +1277,17 @@ struct LibraryStyleInspector: View {
     /// would repaint, which is the one fact somebody about to change it needs.
     private func standing(_ style: ColorStyle) -> String {
         switch editorState.colorStyleUsageCount(styleID: style.id) {
-        case 0: return "Nothing uses this yet. Pick it from a color row to paint with it."
-        case 1: return "1 color uses this. Changing it repaints that color."
-        case let count: return "\(count) colors use this. Changing it repaints them all in one step."
+        case 0: return "Not used yet"
+        case 1: return "Used by 1 color"
+        case let count: return "Used by \(count) colors"
+        }
+    }
+
+    private func standingHelp(_ style: ColorStyle) -> String {
+        switch editorState.colorStyleUsageCount(styleID: style.id) {
+        case 0: return "Pick it from a color row to paint with it"
+        case 1: return "Changing it repaints that color"
+        default: return "Changing it repaints them all in one step"
         }
     }
 

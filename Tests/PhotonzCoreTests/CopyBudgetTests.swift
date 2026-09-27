@@ -103,6 +103,48 @@ struct CopyBudgetTests {
         #expect(CopyBudget.overPanelBudget(fits + "a"))
     }
 
+    @Test func thePanelLineIsFortyCharacters() {
+        // The user's answer on this task's card, 2026-09-25: labels and tools,
+        // never sentences, and no line past forty.
+        #expect(CopyBudget.panelLine == 40)
+    }
+
+    @Test func aSentenceEndsOnAStopOrHasTwo() {
+        #expect(CopyBudget.isSentence("Nothing yet. Add one with the plus above."))
+        #expect(CopyBudget.isSentence("Pick one layer to add motion."))
+        #expect(CopyBudget.isSentence("One. Two"))
+        #expect(!CopyBudget.isSentence("Following the screen"))
+        #expect(!CopyBudget.isSentence("Loading..."))
+        #expect(!CopyBudget.isSentence("0.5 s"))
+    }
+
+    @Test func aTipDeclaredOverTwoLinesIsStillATip() {
+        let source = """
+        static let arrangementHelp =
+            "Free leaves everything where you put it. Stack lines them up along one direction "
+            + "with a gap you type."
+        static let shown = "Arrangement"
+        """
+        #expect(texts(source) == ["Arrangement"])
+        #expect(tips(source).count == 1)
+    }
+
+    @Test func aDialogsMessageIsNotPanelCopy() {
+        let source = """
+        private var stopAlertMessage: String {
+            return "Its \\(n) keys go, and it keeps the value it has now."
+        }
+        private var emptyMessage: String { "Shown on screen" }
+        Text("Keys")
+        """
+        #expect(texts(source) == ["Shown on screen", "Keys"])
+    }
+
+    @Test func aButtonsSymbolIsNotCopy() {
+        let source = #"Label("Add transition", systemImage: "rectangle.righthalf.inset.filled.arrow.right")"#
+        #expect(texts(source) == ["Add transition"])
+    }
+
     @Test func wordsAreCountedBySpaces() {
         #expect(CopyBudget.words(in: "Off means the built-in timing.") == 5)
         #expect(CopyBudget.words(in: "  two   words ") == 2)

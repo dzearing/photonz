@@ -173,13 +173,15 @@ struct PlacementInspector: View {
                     editorState.setPlacement(ids: ids, vertical: nil)
                 }
             }
-            Text(resolved.map {
+            let caption = resolved.map {
                 childCaption($0, flow, stale: stale, arranges: arranges,
                              arrangement: arrangement(of: container))
-            } ?? manyCaption(flow))
+            } ?? manyCaption(flow)
+            Text(caption.line)
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
+                .panelHelp(caption.help)
         }
     }
 
@@ -312,7 +314,7 @@ struct PlacementInspector: View {
 
     private func childCaption(_ resolved: ResolvedPlacement, _ flow: PlacementEditing,
                               stale: String?, arranges: Bool,
-                              arrangement: GroupLayout?) -> String {
+                              arrangement: GroupLayout?) -> Caption {
         // The one layer in an arranged group that is not being arranged. Left
         // unsaid, its rows read like any other layer's while it is doing
         // something else entirely, and the Stretch that puts it there looks
@@ -321,15 +323,17 @@ struct PlacementInspector: View {
         // may be stretched both ways as well, and what it IS doing then is
         // being in front, not being the surface.
         if arranges, resolved.floats {
-            return "Placed by hand, in front of the rest, with the others arranged as though "
-                + "it were not there. Horizontal and Vertical say which edges it holds when "
-                + "the group is resized."
+            return Caption(line: "Placed by hand, in front",
+                           help: "Placed by hand, in front of the rest, with the others arranged as though "
+                               + "it were not there. Horizontal and Vertical say which edges it holds when "
+                               + "the group is resized.")
         }
         if arranges, resolved.isSurface {
             // The Role row right above names it, so this says the one thing the
             // name does not: what being it looks like.
-            return "Painted to the group's own edges instead of being lined up with the "
-                + "others, with the rest arranged on top of it."
+            return Caption(line: "Painted to the group's edges",
+                           help: "Painted to the group's own edges instead of being lined up with the "
+                               + "others, with the rest arranged on top of it.")
         }
         // The same thing said about one direction: a hairline across a bar, a
         // rail down a panel. Stretch is the size of the box, which is the one
@@ -338,25 +342,28 @@ struct PlacementInspector: View {
         // lining up.
         if arranges, resolved.stepsOutOfTheFlow(of: arrangement) {
             let way = arrangement?.flowsHorizontally == true ? "Across" : "Down"
-            return "\(way) is the way this group runs, so Stretch here spans the whole group "
-                + "and paints this to the group's own edges instead of giving it a place in "
-                + "the line. Change it and it lines up with the others again."
+            return Caption(line: "Spans the whole group",
+                           help: "\(way) is the way this group runs, so Stretch here spans the whole group "
+                               + "and paints this to the group's own edges instead of giving it a place in "
+                               + "the line. Change it and it lines up with the others again.")
         }
         // Taking the room the stack has left over is the loudest thing a piece
         // can be doing, and it is not on either menu the other branches talk
         // about, so it is said first.
         if only?.fillsTheFlow == true, flow.canFill, let owner = flow.flowNoun {
-            return "This takes the room \(owner) has left once everything else, the gaps and "
-                + "the room at its edges have taken theirs. Set it back and it goes to the size "
-                + "it was before."
+            return Caption(line: "Takes the room left over",
+                           help: "This takes the room \(owner) has left once everything else, the gaps and "
+                               + "the room at its edges have taken theirs. Set it back and it goes to the size "
+                               + "it was before.")
         }
         // A rule sitting on the axis the flow took over is the one thing on
         // these rows nobody expects, so when there is one it is what the
         // caption talks about: saying "following the group" over a row that is
         // offering to clear a rule reads as a contradiction.
         if let stale, let owner = flow.flowNoun {
-            return "\(stale) is still set where \(owner) decides. It changes nothing now, "
-                + "and comes back if the direction changes."
+            return Caption(line: "\(stale) is ignored here",
+                           help: "\(stale) is still set where \(owner) decides. It changes nothing now, "
+                               + "and comes back if the direction changes.")
         }
         // Stretch means something different for words than it does for a box:
         // the box fills, and where the words sit in it is the Text section's
@@ -366,7 +373,8 @@ struct PlacementInspector: View {
         let stretches = (flow.canSetHorizontal && resolved.horizontal == .stretch)
             || (flow.canSetVertical && resolved.vertical == .stretch)
         if only?.text != nil, stretches {
-            return "Stretch fills the box with the words placed by Align, in Text."
+            return Caption(line: "Words placed by Align, in Text",
+                           help: "Stretch fills the box with the words placed by Align, in Text.")
         }
         // A stack with nothing to spare is the one place the row above went
         // quiet, so this is where it says why, with the number that would
@@ -374,19 +382,21 @@ struct PlacementInspector: View {
         // rather than as a second line: the section is short on room, and
         // "following the group" is the less useful of the two things to say.
         if let missing = flow.noRoomToFill {
-            return missing
+            return Caption(line: "No room left over", help: missing)
         }
         // Same again for who is following whom: a rule left on the axis the
         // flow decides changes nothing, so it does not make this layer an
         // exception to anything.
         if (!flow.canSetHorizontal || resolved.followsHorizontal),
            (!flow.canSetVertical || resolved.followsVertical) {
-            return isOnAScreen
-                ? "Following the screen. Pick something here to give this one layer its own rule."
-                : "Following the group. Pick something here to give this one layer its own rule."
+            return Caption(line: isOnAScreen ? "Following the screen" : "Following the group",
+                           help: "Pick something here to give this one layer its own rule.")
         }
-        return isOnAScreen ? "This layer's own rule, which wins over the screen's."
-                           : "This layer's own rule, which wins over the group's."
+        return isOnAScreen
+            ? Caption(line: "Own rule, over the screen's",
+                      help: "This layer's own rule, which wins over the screen's.")
+            : Caption(line: "Own rule, over the group's",
+                      help: "This layer's own rule, which wins over the group's.")
     }
 
     /// The line under the rows when they speak for SEVERAL layers.
@@ -396,28 +406,28 @@ struct PlacementInspector: View {
     /// told to stretch to. None of that survives being said about four layers
     /// at once, so this says the two things that are still true of all of them
     /// — who is deciding, and that one pick here reaches every one.
-    private func manyCaption(_ flow: PlacementEditing) -> String {
+    private func manyCaption(_ flow: PlacementEditing) -> Caption {
         // No counting here: the heading right above already says how many, and
         // "All 2 are following the group" is a sentence nobody says out loud.
         if selection.fills.value == true, flow.canFill, let owner = flow.flowNoun {
-            return "These all take the room \(owner) has left, shared equally, once everything "
-                + "else, the gaps and the room at its edges have taken theirs."
+            return Caption(line: "All share the room left over",
+                           help: "These all take the room \(owner) has left, shared equally, once everything "
+                               + "else, the gaps and the room at its edges have taken theirs.")
         }
         if let missing = flow.noRoomToFill {
-            return missing
+            return Caption(line: "No room left over", help: missing)
         }
         let following = (!flow.canSetHorizontal || selection.horizontal.follows)
             && (!flow.canSetVertical || selection.vertical.follows)
         if following {
-            return isOnAScreen
-                ? "All following the screen. Pick to override."
-                : "All following the group. Pick to override."
+            return Caption(line: isOnAScreen ? "All following the screen" : "All following the group",
+                           help: "Pick something here to give them their own rule.")
         }
         // Not following: every row already shows its own pick, so the only
         // thing left to say is whose rule these beat, which nothing shows.
         return isOnAScreen
-            ? "These win over the screen's rule."
-            : "These win over the group's rule."
+            ? Caption(line: "Own rules, over the screen's", help: "These win over the screen's rule.")
+            : Caption(line: "Own rules, over the group's", help: "These win over the group's rule.")
     }
 
     // MARK: - What everything inside these groups does
@@ -523,14 +533,16 @@ struct PlacementInspector: View {
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .panelHelp(PhotonzDocument.instanceArrangementReason)
             }
             // With an arrangement on, the Arrangement rows say what happens in
             // words already, so this would be the second caption in a row.
             if showsFollowCaption {
-                Text(contentsCaption)
+                Text(contentsCaption.line)
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .panelHelp(contentsCaption.help)
             }
             // The reach promise that used to sit here went on 2026-09-14
             // (UX-PATTERNS §4, "How much a section may say"): one pick reaching
@@ -557,16 +569,19 @@ struct PlacementInspector: View {
     private func answer(_ title: String?) -> String { title ?? MixedValue.text }
 
     /// The line under the Contents rows for a group that arranges nothing.
-    private var contentsCaption: String {
+    private var contentsCaption: Caption {
         guard contents.count == 1, let one = contents.groups.first else {
-            return "Everything inside these \(contents.plural) follows this when they are "
-                + "resized, unless a layer says otherwise for itself."
+            return Caption(line: "Everything inside follows this",
+                           help: "Everything inside these \(contents.plural) follows this when they are "
+                               + "resized, unless a layer says otherwise for itself.")
         }
         return one.isFrame
-            ? "Everything on this screen follows this when the screen is resized, "
-                + "unless a layer says otherwise for itself."
-            : "Everything inside follows this when the group is resized, "
-                + "unless a layer says otherwise for itself."
+            ? Caption(line: "Everything on it follows this",
+                      help: "Everything on this screen follows this when the screen is resized, "
+                          + "unless a layer says otherwise for itself.")
+            : Caption(line: "Everything inside follows this",
+                      help: "Everything inside follows this when the group is resized, "
+                          + "unless a layer says otherwise for itself.")
     }
 
     // MARK: - The pieces that are not following
@@ -764,4 +779,12 @@ struct FillingRow {
     let answer: String
     let fill: String
     let set: (Bool) -> Void
+}
+
+/// A line under the Layout rows: a short label, and what it means in its
+/// hover tip. The panel holds labels and tools, never sentences (the user,
+/// 2026-09-25).
+private struct Caption {
+    let line: String
+    let help: String
 }

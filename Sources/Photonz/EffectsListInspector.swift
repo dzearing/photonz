@@ -88,13 +88,18 @@ struct EffectsListInspector: View {
     /// something the plus's own hover tip already says word for word ("Add an
     /// effect: a shadow, a glow, a border or a blur") and the menu itself lists
     /// the moment you press it.
-    private static let nothingYet = "Nothing yet. Add one with the plus above."
+    ///
+    /// A label since 2026-09-27, not a sentence: where the plus is goes in the
+    /// line's hover tip (the user: labels and tools, never sentences).
+    private static let nothingYet = "No effects"
+    private static let nothingYetHelp = "Add a shadow, a glow, a border or a blur with the plus above"
 
     private var empty: some View {
         Text(Self.nothingYet)
             .font(.caption2)
             .foregroundStyle(.tertiary)
             .fixedSize(horizontal: false, vertical: true)
+            .panelHelp(Self.nothingYetHelp)
             .playtestField("Effects Empty")
             // Said out loud for the same reason the Motion list says its own
             // empty line: `expect field` reads typing boxes and readouts, and a
@@ -592,8 +597,9 @@ private struct BorderPositionRow: View {
 
     /// Why the Position popup is not here, in the place it would have been.
     @ViewBuilder private var lineNote: some View {
-        let words = "An open path is a line, so the border runs down the middle of it."
+        let words = "Centered on the line"
         Text(words)
+            .panelHelp("An open path is a line, so the border runs down the middle of it")
             .font(.caption2)
             .foregroundStyle(.tertiary)
             .fixedSize(horizontal: false, vertical: true)
@@ -718,6 +724,12 @@ private struct BorderOffsetRow: View {
         }
     }
 
+    private func centerHelp(kept: CGFloat) -> String {
+        kept > 0
+            ? "Center straddles the edge. The \(points(Double(kept))) offset comes back on Inside or Outside"
+            : "Center straddles the edge, so it has no offset"
+    }
+
     /// Why the Offset row is not here, in the place it would have been.
     @ViewBuilder private var centerNote: some View {
         let borders = editorState.layerStyleSelection.borders(at: row.index)
@@ -728,11 +740,9 @@ private struct BorderOffsetRow: View {
         // centred: two lines of small print explaining a missing row is a row
         // of its own. It says the number is kept, so nobody has to guess
         // whether switching to Center threw it away.
-        let words = kept > 0
-            ? "Center straddles the edge. The \(points(Double(kept))) offset "
-                + "comes back on Inside or Outside."
-            : "Center straddles the edge, so it has no offset."
+        let words = kept > 0 ? "Offset \(points(Double(kept))) kept" : "No offset on Center"
         Text(words)
+            .panelHelp(centerHelp(kept: kept))
             .font(.caption2)
             .foregroundStyle(.tertiary)
             .fixedSize(horizontal: false, vertical: true)

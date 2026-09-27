@@ -106,10 +106,11 @@ struct TransitionInspector: View {
                     .playtestField("At the cut")
                 }
                 if let warning = warning(inHand.cut) {
-                    Text(warning)
+                    Text(warning.line)
                         .font(.system(size: 10.5))
                         .foregroundStyle(.orange)
                         .fixedSize(horizontal: false, vertical: true)
+                        .panelHelp(warning.help)
                         .playtestField("Transition warning")
                 }
             }
@@ -122,16 +123,17 @@ struct TransitionInspector: View {
     /// The one hint this section ever shows, and only when something is off:
     /// a later trim took the spare a transition was spending, or both sides
     /// read the same frames so a dissolve would show nothing.
-    private func warning(_ cut: ClipCut) -> String? {
+    /// A label, with the reason in its hover tip.
+    private func warning(_ cut: ClipCut) -> (line: String, help: String)? {
         if cut.transition != nil, cut.drawnTransition == nil {
-            return "No spare left here, so this cut plays hard."
+            return (line: "Plays as a hard cut", help: "No spare footage is left at this cut")
         }
         if let drawn = cut.drawnTransition, let asked = cut.transition, drawn.lengthMS < asked.lengthMS {
             let now = ClipTransitionCopy.seconds(drawn.lengthMS)
-            return "Playing at \(now): a trim took its spare."
+            return (line: "Shortened to \(now)", help: "A trim took the spare footage it was using")
         }
         if cut.isContinuous, cut.transition?.kind.needsOverlap ?? false {
-            return "Both sides are the same frames, so this shows nothing."
+            return (line: "Shows nothing here", help: "Both sides are the same frames")
         }
         return nil
     }

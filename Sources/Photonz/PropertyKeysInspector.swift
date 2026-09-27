@@ -23,16 +23,10 @@ struct PropertyKeysInspector: View {
                 ClipLineRow(line: line)
             }
             AnimatingHeader()
+            // Nothing under the header while nothing is keyed: its own count
+            // already reads "nothing yet", and what can be keyed is the
+            // section's question mark.
             let rows = editorState.animatingRows
-            if rows.isEmpty {
-                Text(Self.nothingYet)
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.vertical, 2)
-                    .panelReadout(Self.nothingYet)
-                    .playtestField("Animating Empty")
-            }
             ForEach(rows, id: \.self) { property in
                 PropertyKeyRow(property: property)
                 // Where it travels sits under where it is: the mock's Path
@@ -51,13 +45,15 @@ struct PropertyKeysInspector: View {
             Button("Remove Keys", role: .destructive) { editorState.confirmStopKeying() }
             Button("Cancel", role: .cancel) { editorState.cancelStopKeying() }
         } message: {
-            Text(stopMessage)
+            Text(stopAlertMessage)
         }
     }
 
-    /// The mock's empty line, in the app's own names for the two values it
-    /// points at (Color, Stroke width).
-    static let nothingYet = "Any property can be keyed, even color and stroke width."
+    /// What the section header's question mark says. It was the mock's line
+    /// under an empty list ("Any property can be keyed, including colours and
+    /// border width"); the panel holds labels and tools, never sentences.
+    static let sectionHelp = "Any property can be keyed, even color and stroke width. "
+        + "Pick one from Animate a property to key it at the playhead"
 
     private var asking: Binding<Bool> {
         Binding(get: { editorState.keyStopQuestion != nil },
@@ -68,7 +64,7 @@ struct PropertyKeysInspector: View {
         "Stop animating \((editorState.keyStopQuestion?.title ?? "").lowercased())?"
     }
 
-    private var stopMessage: String {
+    private var stopAlertMessage: String {
         guard let property = editorState.keyStopQuestion else { return "" }
         return "Its \(editorState.keyCount(property)) keys go, and it keeps the value it has now."
     }

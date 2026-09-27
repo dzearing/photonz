@@ -61,28 +61,16 @@ struct BlendModeRow: View {
                 }
                 Spacer()
             }
+            // What the mode does is the button's hover tip, not a line under
+            // it: the panel holds labels and tools, never sentences (the user,
+            // 2026-09-25). Normal says nothing, as it always did.
             button(reading)
-            // The sentence for whatever the row is currently reading, without
-            // being asked for. A person who never opens the list still learns
-            // what Multiply is doing to their screenshot, and while the list IS
-            // open this line follows the pointer down it.
-            //
-            // Not under Normal, though. Every layer in the document is Normal,
-            // so a line there would be two rows of small print on every panel
-            // forever, explaining the thing that needs no explaining: painting
-            // over. It appears the moment somebody chooses otherwise, which is
-            // the moment it means something.
-            if !reading.isMixed, let mode = reading.value, mode != .normal {
-                Text(mode.explanation)
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
             if let note = reachNote {
-                Text(note)
+                Text(note.line)
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .panelHelp(note.help)
             }
         }
         .playtestField("Blending")
@@ -122,10 +110,18 @@ struct BlendModeRow: View {
                          detail: reading.isMixed
                             ? LayerStyleSelection.mixedText
                             : (reading.value?.title ?? PhotonzCore.BlendMode.normal.title))
-        .panelHelp("How the picked layers mix with what is under them. "
-                   + "Opacity says how much of what is below shows through; this says how "
-                   + "the two are mixed once it does.")
+        .panelHelp(modeHelp(reading))
         .popover(isPresented: $isOpen, arrowEdge: .bottom) { list }
+    }
+
+    /// The button's hover tip: what the mode it reads does, once it is not
+    /// Normal, ahead of what the row is for.
+    private func modeHelp(_ reading: StyleReading<PhotonzCore.BlendMode>) -> String {
+        let row = "How the picked layers mix with what is under them. "
+            + "Opacity says how much of what is below shows through; this says how "
+            + "the two are mixed once it does."
+        guard !reading.isMixed, let mode = reading.value, mode != .normal else { return row }
+        return mode.explanation + " " + row
     }
 
     private var list: some View {
@@ -135,7 +131,7 @@ struct BlendModeRow: View {
             }
         }
         .padding(6)
-        .frame(width: 288)
+        .frame(width: 180)
         // Whatever closed it — Escape, a click outside, a choice — the canvas
         // must not be left wearing a mode nobody chose.
         .onDisappear {
@@ -161,14 +157,10 @@ struct BlendModeRow: View {
                     .font(.caption2.weight(.semibold))
                     .opacity(!committed.isMixed && committed.value == mode ? 1 : 0)
                     .frame(width: 11, alignment: .leading)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(mode.title).font(.callout)
-                    Text(mode.explanation)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .multilineTextAlignment(.leading)
-                }
+                // The name only: resting on the row paints the mode on the
+                // canvas, which says what it does better than a sentence, and
+                // the words are its hover tip for anybody who wants them.
+                Text(mode.title).font(.callout)
                 Spacer(minLength: 0)
             }
             .padding(.vertical, 4)
@@ -176,6 +168,7 @@ struct BlendModeRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .panelHelp(mode.explanation)
         .background(RoundedRectangle(cornerRadius: 5)
             .fill(isHovered ? AnyShapeStyle(.selection) : AnyShapeStyle(.clear)))
         // The preview itself. Resting on a row paints it on the canvas and
@@ -195,14 +188,14 @@ struct BlendModeRow: View {
     /// Said only when the row is leaving a picked layer out, which over a
     /// selection means a highlight mark is in it. A row that quietly skipped
     /// one would be a row you could not trust.
-    private var reachNote: String? {
+    private var reachNote: (line: String, help: String)? {
         let all = editorState.layerStyleSelection
         let mine = all.mixable
         guard !mine.isEmpty, mine.count < all.count else { return nil }
         let fixed = all.count - mine.count
-        return "Blending applies to \(mine.count) of the \(all.count) selected layers. "
-            + "The other \(fixed == 1 ? "one is a highlight" : "\(fixed) are highlights"), "
-            + "and a highlight always mixes with the words under it."
+        return (line: "Reaches \(mine.count) of \(all.count) layers",
+                help: "The other \(fixed == 1 ? "one is a highlight" : "\(fixed) are highlights"), "
+                    + "and a highlight always mixes with the words under it")
     }
 }
 
@@ -219,12 +212,11 @@ struct FixedMixingNote: View {
             // One short line: a highlighter has no Blending to set because
             // mixing with the words under it is what makes it one. The full
             // sentence used to take three lines to say that twice.
-            Text(all.count == 1
-                 ? "A highlight always mixes, so it has no Blending."
-                 : "Highlights always mix, so they have no Blending.")
+            Text(all.count == 1 ? "No Blending on a highlight" : "No Blending on highlights")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
+                .panelHelp("A highlight always mixes with the words under it")
                 .panelStartProbe(.row, owner: "Blending note")
         }
     }

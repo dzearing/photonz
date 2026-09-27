@@ -1065,17 +1065,21 @@ section that wants to explain itself has to obey.
   HEADER for a scope: a word beside the heading costs no line at all and
   survives the section being collapsed (`sectionAccessory` in
   `InspectorPanel.swift` already does this for Columns and Library).
-- **One sentence, one line.** About forty characters at the panel's default
-  width. Two facts will not fit, and that is the point: the second one belongs
-  in a hover tip.
-- **An empty section still says one short line**, because a section with
-  nothing in it at all reads as broken.
-- **A CONDITION the panel is in is not section prose, and this budget does not
-  cap it.** A row speaking for three of five layers, colours that disagree, a
-  number kept while its row is hidden: those are readouts of state, said by the
-  row they belong to and shown only while that state holds. `row.reachNote`,
-  `corners.note`, `unlinkNote`, `legibilityNote` are all this register and all
-  stay.
+- **A label, never a sentence, forty characters at most.** The user settled it
+  on 2026-09-25: "no sentences in the panel, just labels and tools". No line
+  ends on a full stop or holds two. What a line cannot say in forty characters
+  goes in its hover tip, or, where a whole section needs explaining, behind a
+  question mark in the section header (`SectionHelpMark`,
+  `InspectorPanel.sectionHelp`). `PanelCopyBudgetTests` enforces it, with no
+  allowance.
+- **An empty section says one short label or nothing**: "No effects", with
+  where the plus is in its hover tip. Nothing at all when the header already
+  says it (Animating's "nothing yet").
+- **A CONDITION the panel is in is a label too.** A row speaking for three of
+  five layers, colours that disagree, a number kept while its row is hidden:
+  those are readouts of state, said by the row they belong to and shown only
+  while that state holds, as a short label ("Reaches 2 of 3 layers") with the
+  why in its hover tip.
 - **Nothing is deleted without a home.** Where a sentence was the ONLY place a
   limit or a scope was written down, it moves to the control's hover tip or to
   the section header before the line goes.

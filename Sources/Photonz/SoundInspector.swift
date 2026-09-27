@@ -131,8 +131,9 @@ struct SoundFadesInspector: View {
     @Environment(EditorState.self) private var editorState
     @State private var isDrawing = false
 
-    /// The section header's muted note, as the mock words it.
-    static let headerNote = "drag the diamonds on the lane"
+    /// What the section header's question mark says. The mock printed its
+    /// first half beside the title; the panel holds labels, not sentences.
+    static let headerHelp = "Drag the diamonds on the lane to set a fade, or type it"
 
     var body: some View {
         VStack(alignment: .leading, spacing: 7) {

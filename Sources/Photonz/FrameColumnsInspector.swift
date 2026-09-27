@@ -34,7 +34,7 @@ struct FrameColumnsInspector: View {
                 set: { editorState.setFrameColumnsVisible($0) }))
                 .font(.callout)
                 .toggleStyle(.checkbox)
-                .panelHelp(FrameColumnsCopy.showCaption)
+                .panelHelp(FrameColumnsCopy.showHelp)
                 .playtestControl(FrameColumnsCopy.show,
                                  detail: "Columns on \(layer.name), "
                                      + (isShowing ? "shown" : "hidden"))
@@ -59,12 +59,13 @@ struct FrameColumnsInspector: View {
                               value: Double(columns.margin)) {
                         editorState.setFrameColumnMargin(CGFloat($0))
                     }
-                    .panelHelp(FrameColumnsCopy.marginCaption)
+                    .panelHelp(FrameColumnsCopy.marginHelp)
                 } else {
-                    Text(FrameColumnsCopy.followsPadding(editorState.columnsTargetPadding))
+                    Text(FrameColumnsCopy.followsPadding)
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                         .fixedSize(horizontal: false, vertical: true)
+                        .panelHelp(FrameColumnsCopy.followsPaddingHelp(editorState.columnsTargetPadding))
                 }
                 // What the three numbers actually come out as. It is the thing
                 // a person is really working out in their head while they type
@@ -74,6 +75,8 @@ struct FrameColumnsInspector: View {
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .panelHelp(editorState.columnsTargetColumnWidth.map { $0 >= 1 } == true
+                               ? FrameColumnsCopy.columnWidthHelp : FrameColumnsCopy.noRoomHelp)
             }
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
@@ -130,7 +133,7 @@ struct FrameColumnsInspector: View {
 enum FrameColumnsCopy {
     static let section = "Columns"
     static let show = "Show columns"
-    static let showCaption = "Draw this screen's columns over it, and pull a drag to their edges."
+    static let showHelp = "Draw this screen's columns over it, and pull a drag to their edges."
     static let count = "Columns"
     static let gutter = "Gutter"
     static let margin = "Margin"
@@ -139,20 +142,25 @@ enum FrameColumnsCopy {
     static let menuItem = MenuToggleNames.showColumns
 
     static func columnWidth(_ points: Int) -> String {
-        "Each column comes out \(DocumentUnit.text(CGFloat(points))) wide. Dragging pulls to the column edges; hold Command to drag free."
+        "Each column \(DocumentUnit.text(CGFloat(points))) wide"
     }
 
-    static let noRoom = "These numbers leave no room for a column on this screen, so nothing is drawn."
+    static let columnWidthHelp = "Dragging pulls to the column edges; hold Command to drag free."
+
+    static let noRoom = "No room for a column"
+    static let noRoomHelp = "These numbers leave no room for a column on this screen, so nothing is drawn."
 
     /// Why there is a margin here at all, on a screen that keeps no room at
     /// its edges. Give the screen padding and this row goes away, because the
     /// padding is then the only inset it has.
-    static let marginCaption = "This screen keeps no room at its edges, so the columns use this margin. "
+    static let marginHelp = "This screen keeps no room at its edges, so the columns use this margin. "
         + "Give it padding in Layout and they follow the padding instead."
 
     /// What stands in for the Margin row once the screen has padding: one
     /// inset, named, and where to change it.
-    static func followsPadding(_ padding: GroupPadding) -> String {
+    static let followsPadding = "Margin follows the Padding"
+
+    static func followsPaddingHelp(_ padding: GroupPadding) -> String {
         let room = padding.uniform.map { "\(DocumentUnit.text($0)) on every side" }
             ?? padding.inWords
         return "The columns start where this screen's padding does, \(room). "

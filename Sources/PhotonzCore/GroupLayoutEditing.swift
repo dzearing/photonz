@@ -21,8 +21,9 @@ extension PhotonzDocument {
     /// it already shows, and those three lines were a fifth of the whole
     /// section. So the foot carries the half somebody can act on and the why
     /// stays on the Arrangement row's tooltip.
-    public static let instanceArrangementShortReason =
-        "Edit Original changes this for every copy."
+    /// A label, not a sentence, since 2026-09-27: the panel says labels and
+    /// tools (the user, 2026-09-25).
+    public static let instanceArrangementShortReason = "Edit Original to change every copy"
 
     /// Whether "Stack" or "Grid" would do anything: exactly one unlocked group
     /// is picked, and it is not a copy. A photo has no contents to arrange, a

@@ -81,7 +81,7 @@ struct KeyRows: View {
                        read: { $0.key?.spill ?? 0 }) { $0.key?.spill = $1 }
             }
             if noWall {
-                Text("Nothing to key here. Scrub to the backdrop.")
+                Text("No backdrop to key here")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -164,11 +164,15 @@ struct MaskedByRow: View {
                        + "under it in the layers list. That layer stops drawing and becomes "
                        + "the shape instead.")
             .popover(isPresented: $isOpen, arrowEdge: .bottom) { list }
-            if let matte {
-                Text(sentence(for: matte))
+            // Which layer does the cutting, the one thing the row's value does
+            // not say. What that means is in its hover tip.
+            if let matte, let name = editorState.matteSourceName {
+                Text("From \(name)")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .panelHelp(explanationHelp(for: matte))
             }
         }
         .playtestField("Masked by")
@@ -178,16 +182,19 @@ struct MaskedByRow: View {
     private var list: some View {
         VStack(alignment: .leading, spacing: 0) {
             choice(nil, title: MaskedByRow.nothing,
-                   explanation: "Draws all of this layer, and the layer under it too.")
+                   help: "Draws all of this layer, and the layer under it too")
             ForEach(LayerMatte.allCases, id: \.self) { kind in
-                choice(kind, title: kind.title, explanation: sentence(for: kind))
+                choice(kind, title: kind.title, help: explanationHelp(for: kind))
             }
         }
         .padding(6)
-        .frame(width: 300)
+        .frame(width: 200)
     }
 
-    private func choice(_ kind: LayerMatte?, title: String, explanation: String) -> some View {
+    /// One choice: its name, and what it does in its hover tip. The list
+    /// used to print a sentence under every name; the panel and what it opens
+    /// hold labels, not sentences (the user, 2026-09-25).
+    private func choice(_ kind: LayerMatte?, title: String, help: String) -> some View {
         let current = reading.value ?? nil
         return Button {
             editorState.setMatte(kind, ids: selection.layerIDs)
@@ -198,14 +205,7 @@ struct MaskedByRow: View {
                     .font(.caption2.weight(.semibold))
                     .opacity(!reading.isMixed && current == kind ? 1 : 0)
                     .frame(width: 11, alignment: .leading)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(title).font(.callout)
-                    Text(explanation)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .multilineTextAlignment(.leading)
-                }
+                Text(title).font(.callout)
                 Spacer(minLength: 0)
             }
             .padding(.vertical, 4)
@@ -213,6 +213,7 @@ struct MaskedByRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .panelHelp(help)
         .playtestControl(title, detail: "Masked by")
     }
 
@@ -220,13 +221,13 @@ struct MaskedByRow: View {
     /// use: "Shows this layer only where Matte shape has something drawn" beats
     /// "the layer below", because the layer below is a thing you then have to
     /// go and find.
-    private func sentence(for matte: LayerMatte) -> String {
+    private func explanationHelp(for matte: LayerMatte) -> String {
         guard let name = editorState.matteSourceName else { return matte.explanation }
         switch matte {
         case .shape:
-            return "Shows this layer only where \(name) is drawn."
+            return "Shows this layer only where \(name) is drawn"
         case .brightness:
-            return "Shows this layer where \(name) is light."
+            return "Shows this layer where \(name) is light"
         }
     }
 }

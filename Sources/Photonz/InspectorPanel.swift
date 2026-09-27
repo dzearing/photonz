@@ -964,10 +964,33 @@ struct InspectorPanel: View {
             }
     }
 
+    /// A section's header furniture and, where the section needs explaining,
+    /// the question mark that explains it. The panel says labels and tools,
+    /// never sentences (the user, 2026-09-25): what a section cannot show by
+    /// itself lives behind that mark, not under its rows.
+    private func sectionAccessory(_ id: InspectorSectionID) -> AnyView? {
+        let furniture = sectionFurniture(id)
+        guard let help = Self.sectionHelp(id) else { return furniture }
+        return AnyView(HStack(spacing: 6) {
+            if let furniture { furniture }
+            SectionHelpMark(section: id.title, text: help)
+        })
+    }
+
+    /// What a section's question mark says. Only for a section whose way of
+    /// working cannot be seen in its rows.
+    static func sectionHelp(_ id: InspectorSectionID) -> String? {
+        switch id {
+        case .fades: SoundFadesInspector.headerHelp
+        case .keys: PropertyKeysInspector.sectionHelp
+        default: nil
+        }
+    }
+
     /// Header furniture for sections that carry any: the Measurements group's
     /// count badge and panel menu (§6), and the Library's scope, so a
     /// collapsed Library still says what it is set to.
-    private func sectionAccessory(_ id: InspectorSectionID) -> AnyView? {
+    private func sectionFurniture(_ id: InspectorSectionID) -> AnyView? {
         switch id {
         case .effects where Experiments.shared.shapePartsEnabled:
             // The plus that makes Effects a list you add to. It rides the
@@ -998,17 +1021,9 @@ struct InspectorPanel: View {
                 .foregroundStyle(VideoKit.Palette.faint)
                 .panelReadout(note)
                 .playtestField("\(id.title) header"))
-        case .fades:
-            // The mock's `.sec-h .mut`: where the other way to set them is.
-            // Shrunk rather than cut short in the narrowest dock, because the
-            // note is the whole of what it says.
-            return AnyView(Text(SoundFadesInspector.headerNote)
-                .font(.system(size: 10.5, weight: .medium))
-                .foregroundStyle(VideoKit.Palette.faint)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-                .panelReadout(SoundFadesInspector.headerNote)
-                .playtestField("Fades header"))
+        // The mock's `.sec-h .mut` note ("drag the diamonds on the lane") is
+        // the Fades question mark now: the user asked on 2026-09-25 for no
+        // sentences in the panel, the explanation behind a mark in the header.
         case .keys:
             return AnyView(PropertyKeysSectionAccessory())
         case .library:
@@ -1501,4 +1516,33 @@ private struct SectionDrag: Equatable {
 
     /// Let everything the selection asked for be built on the next pass.
     func allow(_ target: [InspectorSectionID]) { mounted = target }
+}
+
+/// The question mark on a section header: rest on it and it says how the
+/// section works, click it and the same words stay up. The one place a section
+/// may explain itself, so its rows stay labels and tools.
+struct SectionHelpMark: View {
+    let section: String
+    let text: String
+    @State private var isOpen = false
+
+    var body: some View {
+        Button { isOpen.toggle() } label: {
+            Image(systemName: "questionmark.circle")
+                .font(.system(size: 11))
+                .foregroundStyle(.tertiary)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("About \(section)")
+        .panelHelp(text)
+        .playtestControl("\(section) help", detail: section)
+        .popover(isPresented: $isOpen, arrowEdge: .bottom) {
+            Text(text)
+                .font(.callout)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(width: 220, alignment: .leading)
+                .padding(10)
+        }
+    }
 }

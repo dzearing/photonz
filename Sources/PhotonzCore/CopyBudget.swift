@@ -11,9 +11,10 @@ import Foundation
 /// `FlagDescriptionBudgetTests`).
 public enum CopyBudget {
 
-    /// The longest line a panel may show, in characters. UX-PATTERNS asks for
-    /// about forty at the panel's default width; sixty is the hard wall.
-    public static let panelLine = 60
+    /// The longest line a panel may show, in characters. Sixty until
+    /// 2026-09-25, when the user picked forty on the card and added that the
+    /// panel holds labels and tools, never sentences.
+    public static let panelLine = 40
 
     /// The longest thing the chrome outside the panel may say, in characters:
     /// the timeline, the transport, the tool bar, canvas overlays, popovers,
@@ -48,6 +49,13 @@ public enum CopyBudget {
         text.count > panelLine
     }
 
+    /// Says something in a sentence: ends on a full stop, or holds two.
+    public static func isSentence(_ text: String) -> Bool {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let endsOnAStop = trimmed.hasSuffix(".") && !trimmed.hasSuffix("...")
+        return endsOnAStop || trimmed.contains(". ")
+    }
+
     /// What is wrong with a piece of chrome copy.
     public enum ChromeFault: String, Sendable, CaseIterable {
         /// Over `chromeLine` characters.
@@ -67,8 +75,7 @@ public enum CopyBudget {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         var faults: [ChromeFault] = []
         if trimmed.count > chromeLine { faults.append(.long) }
-        let endsOnAStop = trimmed.hasSuffix(".") && !trimmed.hasSuffix("...")
-        if endsOnAStop || trimmed.contains(". ") { faults.append(.sentence) }
+        if isSentence(trimmed) { faults.append(.sentence) }
         if trimmed.contains("@") || trimmed.contains(interpolation + "ms") { faults.append(.debug) }
         if trimmed.lowercased().hasPrefix("no ") { faults.append(.placeholder) }
         if bracketsExplain(trimmed) { faults.append(.parenthetical) }
@@ -119,9 +126,11 @@ public enum CopyBudget {
         // screen reader says: none of it is drawn.
         "panelReadout", "playtestControl", "playtestField", "playtestHover", "panelStartProbe",
         "tutorialAnchor", "accessibilityLabel", "accessibilityValue", "accessibilityHint",
+        // A timing log line, probe builds only.
+        "note",
     ]
     static let hiddenLabels: Set<String> = [
-        "systemName", "named", "forKey", "identifier", "id", "key", "defaultsKey",
+        "systemName", "systemImage", "named", "forKey", "identifier", "id", "key", "defaultsKey",
     ]
 
     static func isTooltipLabel(_ label: String) -> Bool {
@@ -143,6 +152,13 @@ public enum CopyBudget {
         let lower = name.lowercased()
         return lower.hasPrefix("playtest") || lower.hasSuffix("readout") || lower.hasSuffix("readouttext")
             || lower.hasSuffix("summary") || lower.hasSuffix("description")
+    }
+
+    /// A declaration whose name says it holds an alert's words, which a sheet
+    /// shows rather than the panel: `stopAlertMessage`. A macOS alert speaks
+    /// in sentences.
+    static func isDialogWordsName(_ name: String) -> Bool {
+        name.lowercased().hasSuffix("alertmessage")
     }
 
     private enum Register { case copy, tooltip, hidden }
@@ -179,6 +195,9 @@ public enum CopyBudget {
         var tipDeclaration: Int?
         /// The same for a declaration named for a probe's words (`readout`).
         var probeDeclaration: Int?
+        /// The last punctuation read, so a declaration ending its line on `=`
+        /// carries on to the next.
+        var lastSignificant: Character = " "
 
         init(_ chars: [Character]) { self.chars = chars }
 
@@ -233,6 +252,7 @@ public enum CopyBudget {
                         text += readLiteral()
                     }
                     pendingIdent = ""
+                    lastSignificant = "\""
                     if reg != .hidden {
                         phrases.append(Phrase(text: text, line: startLine, isTooltip: reg == .tooltip))
                     }
@@ -244,10 +264,13 @@ public enum CopyBudget {
                         ident.append(ch); advance()
                     }
                     pendingIdent = ident
+                    lastSignificant = "a"
                     if naming {
                         naming = false
                         if CopyBudget.isTooltipName(ident) { tipDeclaration = frames.count }
-                        if CopyBudget.isProbeWordsName(ident) { probeDeclaration = frames.count }
+                        if CopyBudget.isProbeWordsName(ident) || CopyBudget.isDialogWordsName(ident) {
+                            probeDeclaration = frames.count
+                        }
                         continue
                     }
                     if ["func", "var", "let"].contains(ident) {
@@ -281,8 +304,11 @@ public enum CopyBudget {
                 case ",":
                     if !frames.isEmpty { frames[frames.count - 1].argument = .copy }
                 case "\n", ";":
-                    if tipDeclaration == frames.count { tipDeclaration = nil }
-                    if probeDeclaration == frames.count { probeDeclaration = nil }
+                    // `static let help =` with its words on the next line is
+                    // still the same declaration.
+                    let continues = c == "\n" && lastSignificant == "="
+                    if !continues, tipDeclaration == frames.count { tipDeclaration = nil }
+                    if !continues, probeDeclaration == frames.count { probeDeclaration = nil }
                     if let last = frames.last, last.endsAtNewline || c == ";" {
                         frames[frames.count - 1].argument = .copy
                     }
@@ -292,6 +318,7 @@ public enum CopyBudget {
                 if !c.isWhitespace {
                     pendingIdent = ""
                     naming = false
+                    lastSignificant = c
                 }
                 advance()
             }

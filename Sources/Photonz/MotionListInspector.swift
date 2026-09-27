@@ -46,6 +46,7 @@ struct MotionListInspector: View {
             .font(.caption2)
             .foregroundStyle(.tertiary)
             .fixedSize(horizontal: false, vertical: true)
+            .panelHelp(Self.nothingYetHelp)
             .playtestField("Motion Empty")
             // Said out loud, or a walk cannot tell this line from a Motion
             // section that failed to draw anything at all: `expect field` reads
@@ -55,7 +56,8 @@ struct MotionListInspector: View {
             .panelStartProbe(.row, owner: "Motion empty")
     }
 
-    private static let nothingYet = "Nothing moves yet. Add one with the plus above."
+    private static let nothingYet = "No motion"
+    private static let nothingYetHelp = "Add a motion with the plus above"
 
     /// The line for a selection of two or more. The section above this one
     /// speaks for everything picked, so a Motion section that simply left the
@@ -72,7 +74,7 @@ struct MotionListInspector: View {
             .panelStartProbe(.row, owner: "Motion one layer")
     }
 
-    private static let oneAtATime = "Pick one layer to add motion."
+    private static let oneAtATime = "One layer at a time"
     private static let oneAtATimeHelp = "What moves is one layer's own numbers, so motion is set on one layer at a time."
 }
 

@@ -125,15 +125,18 @@ struct ArrangementInspector: View {
         // explanations is a report nobody reads. Still the section's own
         // vocabulary though: same size, no colour, no icon. A warning badge
         // would be a new idiom on this panel and that is not mine to invent.
+        // A label since 2026-09-27; the edges and the size that would fix it
+        // are its hover tip (the user: labels and tools, never sentences).
         if let overflow = one?.overflow {
-            Text(overflow.sentence)
+            Text("Contents run past the edge")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+                .panelHelp(overflow.sentence)
                 .playtestControl("Contents overflow", detail: overflow.sentence)
         }
-        if let sentence = sentence() {
-            Text(sentence)
+        ForEach(missingControlLines(), id: \.self) { line in
+            Text(line)
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -155,10 +158,9 @@ struct ArrangementInspector: View {
     /// What is left is the two things that are NOT on screen anywhere: why the
     /// spread switch is missing, and that a stack given a size across is only
     /// filled once the row below says Stretch. One short line each.
-    private func sentence() -> String? {
-        guard let one else { return nil }
-        let parts = [spreadSentence(one.layout), fillSentence(one)].compactMap { $0 }
-        return parts.isEmpty ? nil : parts.joined(separator: " ")
+    private func missingControlLines() -> [String] {
+        guard let one else { return [] }
+        return [spreadSentence(one.layout), fillSentence(one)].compactMap { $0 }
     }
 
     // MARK: - A copy, which follows its original
@@ -205,11 +207,11 @@ struct ArrangementInspector: View {
         } else {
             // Three copies of three different originals have no four numbers
             // in common, so there is nothing to put on a row.
-            Text("These \(contents.count) copies arrange their contents the way their "
-                 + "originals do.")
+            Text("Arranged by their originals")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
+                .panelHelp("These \(contents.count) copies arrange their contents the way their originals do")
         }
         // A copy has the same two answers to more room as its original, and it
         // is the one place a person actually turns the room up, on the knob a
@@ -714,8 +716,8 @@ struct ArrangementInspector: View {
         // Every row that can spread can also wrap, so the only row that names
         // both is one with no width at all.
         let alsoWrap = layout.flowsHorizontally && !contents.canWrap
-        return "Nothing to \(alsoWrap ? "spread or wrap" : "spread") until "
-            + "\(layout.direction.isHorizontal ? "Width" : "Height") is Fixed."
+        return "Set \(layout.direction.isHorizontal ? "Width" : "Height") to Fixed to "
+            + (alsoWrap ? "spread or wrap" : "spread")
     }
 
     /// Where the switch is that makes a stack's rows fill the size it was
@@ -735,7 +737,7 @@ struct ArrangementInspector: View {
         let placement = group.contents
         let fills = flowsAcross ? placement.vertical == .stretch : placement.horizontal == .stretch
         guard !fills else { return nil }
-        return "Set \(flowsAcross ? "Vertical" : "Horizontal") below to Stretch to fill it."
+        return "Set \(flowsAcross ? "Vertical" : "Horizontal") to Stretch to fill"
     }
 
     /// One labelled row. The label never wraps: "Arrangement" broken over two

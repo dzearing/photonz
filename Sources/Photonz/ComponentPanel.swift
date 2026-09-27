@@ -213,6 +213,7 @@ struct ComponentInspector: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .panelHelp("Editing the original changes every copy that follows it")
             }
             if let componentID, editorState.sharedLibraryEnabled {
                 ComponentShareRow(componentID: componentID)
@@ -256,11 +257,9 @@ struct ComponentInspector: View {
     private var standing: String {
         guard let componentID,
               let count = editorState.document?.instanceCount(of: componentID), count > 0 else {
-            return "This is the original. Copies you place will follow it."
+            return "Original"
         }
-        return count == 1
-            ? "This is the original. 1 copy follows it."
-            : "This is the original. \(count) copies follow it."
+        return count == 1 ? "Original, 1 copy follows" : "Original, \(count) copies follow"
     }
 
     private func commit() {
@@ -306,6 +305,7 @@ struct ComponentShareRow: View {
                 .font(.caption)
                 .foregroundStyle(isMissing ? AnyShapeStyle(.orange) : AnyShapeStyle(.secondary))
                 .fixedSize(horizontal: false, vertical: true)
+                .panelHelp(noteHelp)
             if isMissing {
                 Button("Put it back on the shelf") {
                     editorState.reshareComponent(componentID)
@@ -318,12 +318,14 @@ struct ComponentShareRow: View {
     }
 
     private var note: String {
-        if isMissing {
-            return "Its shared original has gone. This drawing is its own from here on."
-        }
-        return isShared
-            ? "On the Library shelf of every document. Editing it here changes it everywhere."
-            : "In this document only."
+        if isMissing { return "Shared original gone" }
+        return isShared ? "In every document's Library" : "In this document only"
+    }
+
+    private var noteHelp: String {
+        if isMissing { return "Its shared original has gone. This drawing is its own from here on." }
+        return isShared ? "Editing it here changes it in every document"
+                        : "Share it to put it on the Library shelf of every document"
     }
 }
 
@@ -465,10 +467,11 @@ struct StarterComponentInspector: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Comes with the app. Adding it puts it in this picture, along with the colors it is painted from.")
+                Text("Comes with the app")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .panelHelp("Adding it puts it in this picture, along with the colors it is painted from")
                 Button("Add to Picture") {
                     editorState.insertStarterComponent(starter, at: editorState.visibleCanvasCentre)
                 }
@@ -1013,10 +1016,12 @@ struct ComponentPieceInspector: View {
                         .lineLimit(2)
                         .truncationMode(.middle)
                 }
-                Text("\(pieceName) is part of a copy. What it shows comes from the original, so it is set with the properties below.")
+                Text("Part of a copy")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .panelHelp("\(pieceName) is part of a copy. What it shows comes from the original, "
+                               + "so it is set with the properties below.")
                 ComponentInstanceProperties(
                     selection: editorState.componentKnobSelection(instances: [piece.instance]))
                 if canExposeWording {
@@ -1391,10 +1396,11 @@ struct ComponentPropertyList: View {
                 addMenu
             }
             if variants.isEmpty && properties.isEmpty {
-                Text("Nothing yet. What you add here is what a copy may set.")
+                Text("No properties")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .panelHelp("What you add here is what a copy may set")
             } else {
                 ForEach(variants) { variant in
                     ComponentVariantPropertyRow(property: variant, layerID: layerID)
@@ -1563,10 +1569,11 @@ struct ComponentInstanceProperties: View {
             }
             versionRow
             if properties.isEmpty, !selection.hasVersions {
-                Text("The original has given this component no properties yet. Select it to add one.")
+                Text("No properties")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .panelHelp("The original has given this component none yet. Select the original to add one.")
             } else {
                 ForEach(properties) { property in
                     VStack(alignment: .leading, spacing: 6) {
@@ -1924,7 +1931,7 @@ private struct InstanceRoomKnob: View {
         let numbers = room.isUniform
             ? "The room kept clear inside the edges, on all four sides."
             : "\(room.inWords). " + FourSidedNumber.levelUp(part: "side")
-        return numbers + following
+        return numbers + followingHelp
     }
 
     /// The sentence that says which sides are this copy's own, added to the
@@ -1934,7 +1941,7 @@ private struct InstanceRoomKnob: View {
     /// may still be the original's, so a row that only printed them would be
     /// hiding the one fact that decides whether the next edit to the component
     /// reaches this copy.
-    private var following: String {
+    private var followingHelp: String {
         let own = GroupPadding.Side.allCases.filter {
             editorState.componentRoomSideIsOwn(instances: instances,
                                                property: property.id, side: $0)
@@ -2119,7 +2126,7 @@ private struct InstanceColorKnob: View {
                         }
                     }
                     if borrowedColors.contains(where: \.isSavedColor) {
-                        Button("Change what a color is for in the Library") {
+                        Button("Set what it is for in the Library") {
                             editorState.showStylesShelf()
                         }
                     }

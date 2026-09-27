@@ -58,10 +58,11 @@ struct EffectsInspector: View {
                 // it, so it cannot be read as speaking for the whole section:
                 // Opacity and Blur still reach every picked layer.
                 if let reach = borderReachNote(selection, borders) {
-                    Text(reach)
+                    Text(reach.line)
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                         .fixedSize(horizontal: false, vertical: true)
+                        .panelHelp(reach.help)
                 }
             }
             SelectionStyleNotes(notes: [selection.note])
@@ -74,12 +75,12 @@ struct EffectsInspector: View {
     /// something that can take one. Nothing when the row is not there at all:
     /// a lone rectangle is not missing a Border, it has its Thickness.
     private func borderReachNote(_ selection: LayerStyleSelection,
-                                 _ borders: LayerStyleSelection) -> String? {
+                                 _ borders: LayerStyleSelection) -> (line: String, help: String)? {
         guard !borders.isEmpty, borders.count < selection.count else { return nil }
         let shapes = selection.count - borders.count
         let verb = shapes == 1 ? "draws its own outline" : "draw their own outline"
-        return "Border applies to \(borders.count) of the \(selection.count) selected layers. "
-            + "The other \(shapes == 1 ? "one" : "\(shapes)") \(verb): use Thickness."
+        return (line: "Reaches \(borders.count) of \(selection.count) layers",
+                help: "The other \(shapes == 1 ? "one" : "\(shapes)") \(verb): use Thickness")
     }
 }
 
@@ -179,10 +180,11 @@ struct ShadowInspector: View {
             // gives the rest one too" (found on the probe, 2026-09-08). The
             // list's row says its reach itself.
             if showsSwitch, let reach = shadowReachNote(selection, shadows) {
-                Text(reach)
+                Text(reach.line)
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .panelHelp(reach.help)
             }
             if !shadows.isEmpty {
                 let at = index
@@ -242,13 +244,13 @@ struct ShadowInspector: View {
     /// section may say"). What is left is a note reporting a condition, which
     /// that rule does not cap.
     private func shadowReachNote(_ selection: LayerStyleSelection,
-                                 _ shadows: LayerStyleSelection) -> String? {
+                                 _ shadows: LayerStyleSelection) -> (line: String, help: String)? {
         let picked = selection.count
         let shadowed = shadows.count
         guard picked > 1, shadowed > 0, shadowed < picked else { return nil }
         let verb = shadowed == 1 ? "has" : "have"
-        return "\(shadowed) of the \(picked) selected layers \(verb) a shadow. "
-            + "The rows below change those; the switch gives the rest one too."
+        return (line: "\(shadowed) of \(picked) \(verb) a shadow",
+                help: "The rows below change those; the switch gives the rest one too")
     }
 
     private func shadowSwitchHelp(_ selection: LayerStyleSelection,
@@ -263,7 +265,7 @@ struct ShadowInspector: View {
 
     private func shadowColorNote(_ shadows: LayerStyleSelection, at index: Int) -> String? {
         guard shadows.reading({ $0.shadow(at: index)?.colorHex ?? "#000000" }).isMixed else { return nil }
-        return "Shadow colors differ. Picking one paints them all."
+        return "Shadow colors differ"
     }
 }
 

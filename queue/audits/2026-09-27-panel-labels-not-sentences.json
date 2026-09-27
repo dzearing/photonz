@@ -1,0 +1,26 @@
+{
+  "feature": "The right hand panel says labels and tools, never sentences",
+  "epic": "video-editing",
+  "summary": "No line in the panel runs past 40 characters or reads as a sentence any more. Explanations moved into hover tips, and Properties and Fades got a question mark in their header.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: transition-picker-at-a-cut-walk (clip picked) and sound-fades-in-the-panel-walk (sound picked).",
+  "try": [
+    { "do": "Open a recording and click the second clip on the timeline. Compare the panel with the before picture.", "shot": "2026-09-27-panel-labels-clip-after.png" },
+    { "do": "Before, for comparison: the same panel with the three sentences.", "shot": "2026-09-27-panel-labels-clip-before.png" },
+    { "do": "Add Sample Music from the Library and click it. Compare with its before picture.", "shot": "2026-09-27-panel-labels-sound-after.png" },
+    { "do": "Before, for comparison: Fades with 'drag the diamonds on the lane' beside its title.", "shot": "2026-09-27-panel-labels-sound-before.png" },
+    { "do": "Rest the pointer on the question mark beside Fades, then click it." },
+    { "do": "Rest on 'No effects' under Effects, then open Blending and rest on Multiply." }
+  ],
+  "evaluate": [
+    "Does the panel now read as labels and tools, with no paragraphs left in the video sections?",
+    "Is the question mark in a section header the right place for 'drag the diamonds on the lane' and 'any property can be keyed'?",
+    "Is 'No effects' under an empty Effects list right, or would you rather that line showed nothing at all?",
+    "The Blending and Masked by lists now show names only, and each explanation is the row's hover tip. Do you miss the line under each name?"
+  ],
+  "rough": [
+    "Two lines the mocks print are now behind the question marks: 'drag the diamonds on the lane' (video-audio.html, Fades) and 'Any property can be keyed' (video.html, Animating). Your answer on the card ('no sentences in the panel') came after the mocks, so I followed it.",
+    "The Animating empty line is gone rather than shortened, because the header beside it already says 'nothing yet'.",
+    "The test reads every panel file, but a few lines are built in shared model code where it cannot see them. The ones I found (Blending's explanation, a stack's 'no room left over', a copy's arrangement note, the overflow report) were cut by hand. Another one could still be hiding.",
+    "The question mark shows its words as a hover tip and in a small popover when clicked. It is a new control in the section header, so judge whether it fits beside the kind chip and the drag handle."
+  ]
+}

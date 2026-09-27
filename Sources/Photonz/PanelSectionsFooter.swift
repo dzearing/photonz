@@ -148,11 +148,8 @@ struct PanelSectionsList: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Sections")
                 .font(.subheadline.weight(.semibold))
-            Text("Everything else follows the document: a section arrives when "
-                 + "you start doing the thing it is for.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+                .panelHelp("Everything else follows the document: a section arrives when "
+                           + "you start doing the thing it is for.")
             VStack(alignment: .leading, spacing: 2) {
                 ForEach(Array(zip(offered, rows)), id: \.0) { section, row in
                     line(section, row)
@@ -235,7 +232,7 @@ struct PanelSectionsList: View {
     private static func reason(_ reason: PanelSectionVisibility.Reason) -> String {
         switch reason {
         case .automaticallyIn: "Automatic"
-        case .automaticallyOut: "Automatic, not needed in this document yet"
+        case .automaticallyOut: "Automatic, not needed yet"
         case .turnedOn: "Always shown"
         case .turnedOff: "Always hidden"
         }

@@ -177,10 +177,11 @@ struct CollageInspector: View {
                 // drop target. The other two gestures it used to spell out
                 // (absorbing a layer, swapping two cells) are discovered by
                 // dragging, which is the gesture this line has already taught.
-                Text("Drop photos from the history or Finder into a cell.")
+                Text("Drop photos into a cell")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .panelHelp("Drag photos in from the capture history or Finder")
             }
             .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
             .padding(.vertical, 8)
