@@ -2,6 +2,7 @@
   "out": "/tmp/photonz-playtest/import-key-leaves-invert-selection-walk",
   "seed": "Shift Command I is two commands: File > Import Media (the video mock's key) and Photoshop's Edit > Invert Selection. With a marquee drawn on a picture it must stay Invert Selection and import nothing. At Next defaults, no flag set.",
   "setup": {
+    "front": true,
     "forget": [
       "all"
     ]

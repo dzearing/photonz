@@ -85,11 +85,17 @@ rotating check.
 So walks and the rotating check run while the person is at the Mac. Only these
 still wait for them to step away (`queue/bin/person-at-mac.sh`, HIDIdleTime):
 
-* **a walk that PHOTOGRAPHS an open menu** (66 of them,
-  `queue/bin/walk-needs-the-mac.mjs`): an open menu takes every key on the Mac
-  while it is up. It waits a minute of no input (inside a rotating check it does
-  not wait, it is skipped and comes round in the whole set), and quits the probe
-  the moment input arrives: exit 6, `DEFERRED`, never a failure;
+* **a walk that needs the Mac to itself** (93 of them,
+  `queue/bin/walk-needs-the-mac.mjs` names the steps): one that PHOTOGRAPHS an
+  open menu (an open menu takes every key on the Mac while it is up), one that
+  makes a real drag (`windowDrag`, `dragGrip`: SwiftUI starts a drag only in the
+  active app, so the probe takes the front for the drag and hands it straight
+  back), and one whose setup says `"front": true` (the probe is the active app
+  for the whole walk: a live menu bar, clicks SwiftUI takes only in the app in
+  front; 27 walks, found on 2026-09-26 when the probe stopped coming forward and
+  38 walks went red). It waits a minute of no input (inside a rotating check it
+  does not wait, it is skipped and comes round in the whole set), and quits the
+  probe the moment input arrives: exit 6, `DEFERRED`, never a failure;
 * **`Scripts/probe-app.sh` with no walk**: nothing tells the app a walk is
   driving it, so opening a file brings it to the front like any app;
 * **the whole set**: fifteen minutes of absence, and it puts itself down when

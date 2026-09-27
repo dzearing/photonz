@@ -175,9 +175,18 @@ for (const l of lines.filter(inWalk)) {
 // window over the canary) is still a theft.
 const onlyMenus = [...took.values()].every(why => [...why].every(w =>
   w === "a probe menu held the keys" || w === "canary window not key"));
-const verdict = !took.size ? "clean" : expected && onlyMenus ? "menu shown" : "TOOK FOCUS";
+// A real drag takes the front on purpose for as long as the button is down
+// (walk-needs-the-mac.mjs names those steps); a theft anywhere else in the
+// walk, or at a drag step the walk did not declare, is still a theft.
+const declared = new Set((expected.match(/step \d+ \((?:windowDrag|dragGrip)/g) || []).map(s => s.match(/\d+/)[0]));
+const menuOnly = why => [...why].every(w => w === "a probe menu held the keys" || w === "canary window not key");
+const wholeWalk = /setup front/.test(expected);
+const asDeclared = wholeWalk || [...took.entries()].every(([at, why]) =>
+  menuOnly(why) || declared.has((at.match(/^step (\d+)/) || [])[1]));
+const verdict = !took.size ? "clean" : expected && onlyMenus ? "menu shown"
+  : expected && asDeclared ? "as declared" : "TOOK FOCUS";
 console.log(`${name.padEnd(48)} ${verdict.padEnd(10)} ${lost}/${ticks} ticks lost, ${covered} covered, walk exit ${code}`);
-if (verdict === "menu shown") console.log(`    expected: it ${expected}`);
+if (verdict === "menu shown" || verdict === "as declared") console.log(`    expected: it ${expected}`);
 for (const [at, why] of took) console.log(`    ${at}: ${[...why].join("; ")}`);
 process.exit(verdict === "TOOK FOCUS" ? 1 : 0);
 NODE

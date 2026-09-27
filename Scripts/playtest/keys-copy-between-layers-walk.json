@@ -394,11 +394,9 @@
    "action": "keyLanesToggle"
   },
   {
-   "do": "click",
-   "at": [
-    620,
-    330
-   ]
+   "comment": "Picked by its row, not a canvas click: the first title runs 1s to 4s, so at 4s it is no longer on the canvas to click.",
+   "do": "selectRow",
+   "row": "Ship it faster"
   },
   {
    "do": "wait",

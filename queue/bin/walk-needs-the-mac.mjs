@@ -14,14 +14,25 @@
 //   rightClick / panelMenu + "shot"   a picture of the menu it opened
 //   panelMenu + "clicking"            opened by a real click, to prove the click opens it
 //
+// And one more that is not a menu: a REAL DRAG. SwiftUI starts a drag only in
+// the active app, so `windowDrag` and `dragGrip` bring the probe to the front
+// for the length of the drag and hand it straight back (PlaytestHarness,
+// takeTheFrontForADrag). Measured 2026-09-26: with the probe in the back the
+// ruler's scrub and a bar's end did nothing at all.
+//
+//   windowDrag / dragGrip             the probe holds the front while the button is down
+//   setup "front": true               the probe is the active app for the whole walk
+//
 //   queue/bin/walk-needs-the-mac.mjs <walk.json>
 import fs from 'node:fs';
 
-export function stepsThatOpenAMenu(walk) {
+export function stepsThatNeedTheMac(walk) {
   const found = [];
+  if (walk.setup && walk.setup.front === true) found.push('every step (setup front: the probe is the active app throughout)');
   (walk.steps || []).forEach((step, i) => {
     const n = i + 1;
     if (step.do === 'menuShot') found.push(`step ${n} (menuShot)`);
+    else if (step.do === 'windowDrag' || step.do === 'dragGrip') found.push(`step ${n} (${step.do}, a real drag)`);
     else if ((step.do === 'rightClick' || step.do === 'panelMenu') && step.shot) found.push(`step ${n} (${step.do} with a picture)`);
     else if (step.do === 'panelMenu' && step.clicking) found.push(`step ${n} (panelMenu opened by a click)`);
   });
@@ -33,8 +44,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   if (!file) { console.error('usage: walk-needs-the-mac.mjs <walk.json>'); process.exit(2); }
   let walk;
   try { walk = JSON.parse(fs.readFileSync(file, 'utf8')); } catch { process.exit(1); }
-  const steps = stepsThatOpenAMenu(walk);
+  const steps = stepsThatNeedTheMac(walk);
   if (!steps.length) process.exit(1);
-  console.log(`puts a menu on screen at ${steps.join(', ')}`);
+  console.log(`needs the Mac to itself at ${steps.join(', ')}`);
   process.exit(0);
 }

@@ -232,3 +232,36 @@ struct PlaytestTimelineSetupTests {
         }
     }
 }
+
+/// A walk that needs the probe to be the active app for the whole run (a live
+/// menu bar, a press SwiftUI only takes in the app in front) says so, and waits
+/// for the Mac to itself like a walk that photographs an open menu.
+@Suite("A walk says it needs the probe in front")
+struct PlaytestFrontSetupTests {
+
+    @Test("it reads a yes")
+    func reads() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "setup": { "forget": ["all"], "front": true }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(script.setup.front == true)
+        #expect(PlaytestSetup(front: true).isEmpty == false)
+    }
+
+    @Test("saying nothing leaves the probe in the back")
+    func unsaid() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "setup": { "forget": ["all"] }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(script.setup.front == false)
+    }
+
+    @Test("it is a yes or a no")
+    func onlyABool() {
+        #expect(throws: PlaytestScriptError.self) {
+            try PlaytestScript.decode(Data("""
+            { "setup": { "front": "please" }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+            """.utf8))
+        }
+    }
+}

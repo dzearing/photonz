@@ -38,7 +38,7 @@
     { "do": "panel", "stage": "4-longer" },
     { "do": "snapshot", "name": "hold-4-held-for-five-seconds" },
 
-    { "do": "key", "key": "a" },
+    { "do": "tool", "tool": "arrow" },
     { "do": "waitFor", "condition": "tool", "value": "arrow" },
     { "do": "drag", "from": [900, 560], "to": [640, 430] },
     { "do": "wait", "seconds": 0.8 },

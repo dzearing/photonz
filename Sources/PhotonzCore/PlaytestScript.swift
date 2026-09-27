@@ -201,11 +201,22 @@ public struct PlaytestSetup: Sendable, Equatable {
     /// (`TimelineOpening`) and a walk that then looks for a clip on V1 is a
     /// walk about something else.
     public var timelineOpen: Bool?
+    /// The probe is the ACTIVE app for the whole walk.
+    ///
+    /// A walk leaves the person's keyboard alone and never brings the probe
+    /// forward (2026-09-26), which costs two things a few walks are about: the
+    /// menu bar is frozen at its launch state, so a chord cannot prove which
+    /// row it reaches, and SwiftUI ignores some presses in an app that is not
+    /// in front. A walk that needs either says so, and because an active probe
+    /// takes the person's keys it waits for them to be away and stops when
+    /// they come back (`queue/bin/walk-needs-the-mac.mjs`).
+    public var front: Bool
 
     public init(forget: [PlaytestMemory] = [], captures: [String] = [],
                 scratch: [String] = [], expectNoControl: [String] = [],
-                flags: [PlaytestFlagChoice] = [], timelineOpen: Bool? = nil) {
+                flags: [PlaytestFlagChoice] = [], timelineOpen: Bool? = nil, front: Bool = false) {
         self.timelineOpen = timelineOpen
+        self.front = front
         self.forget = forget
         self.captures = captures
         self.scratch = scratch
@@ -215,11 +226,11 @@ public struct PlaytestSetup: Sendable, Equatable {
 
     public var isEmpty: Bool {
         forget.isEmpty && captures.isEmpty && scratch.isEmpty && expectNoControl.isEmpty
-            && flags.isEmpty && timelineOpen == nil
+            && flags.isEmpty && timelineOpen == nil && !front
     }
 
     /// The known keys, named in the error when a walk uses another one.
-    static let knownKeys = ["captures", "expectNoControl", "flags", "forget", "scratch", "timelineOpen"]
+    static let knownKeys = ["captures", "expectNoControl", "flags", "forget", "front", "scratch", "timelineOpen"]
 
     /// The word a walk writes in `forget` to start from a machine that has
     /// never run Photonz.
@@ -262,7 +273,8 @@ public struct PlaytestSetup: Sendable, Equatable {
                   expectNoControl: try Self.words(fields["expectNoControl"],
                                                   field: "expectNoControl"),
                   flags: try Self.choices(fields["flags"]),
-                  timelineOpen: try Self.yesOrNo(fields["timelineOpen"], field: "timelineOpen"))
+                  timelineOpen: try Self.yesOrNo(fields["timelineOpen"], field: "timelineOpen"),
+                  front: try Self.yesOrNo(fields["front"], field: "front") ?? false)
     }
 
     private static func yesOrNo(_ raw: Any?, field: String) throws -> Bool? {
@@ -596,6 +608,9 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// because both are menu chords, and because what they leave on the
     /// clipboard is only visible after a paste.
     case copy, copyMerged, cut
+    /// Edit ▸ Paste, called directly: copied keys land at the playhead,
+    /// anything else lands as a layer, exactly as the menu row decides.
+    case paste
     case hideInspector, showInspector, zoomIn, zoomOut, zoomToFit
     /// What the window is set up for (`WindowModes`, `next-window-modes`). Each
     /// one is View ▸ Mode ▸ … and ⌃1 … ⌃4, so every one of them hangs off the

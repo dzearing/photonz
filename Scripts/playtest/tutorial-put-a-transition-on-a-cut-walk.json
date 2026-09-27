@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/tutorial-put-a-transition-on-a-cut-walk",
   "seed": "The Video track's transition guide at Next defaults with no flag set: the recording opens with b-roll already butted onto it on V1, each holding back a second so the cut can pay for a dissolve. A click on the cut opens the tiles right there, Cross dissolve goes on, and the step moves on only because the document really gained a transition.",
-  "setup": { "forget": ["tutorials"] },
+  "setup": { "front": true, "forget": ["tutorials"] },
   "steps": [
     { "do": "startGuide", "guide": "put-a-transition-on-a-cut" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "two-clips-one-cut", "timeout": 40 },

@@ -8,8 +8,9 @@
 # harness and the app, and queue/bin/focus-drill.sh measured every walk clean
 # the same evening, so an ordinary walk now runs while somebody works. What
 # still asks this script, and waits or stops for the person:
-#   - a walk that photographs an open menu (queue/bin/walk-needs-the-mac.mjs),
-#     in Scripts/probe-app.sh and Scripts/playtest.sh: a menu takes every key;
+#   - a walk that needs the Mac to itself (queue/bin/walk-needs-the-mac.mjs:
+#     a picture of an open menu, a real drag, or `setup.front`), in
+#     Scripts/probe-app.sh and Scripts/playtest.sh: each takes every key;
 #   - Scripts/probe-app.sh with no walk: it brings the app to the front;
 #   - the whole walk set (queue/bin/sweep.sh due and run), two hours of it;
 #   - the focus drill itself, whose stand-in for the person takes the front.

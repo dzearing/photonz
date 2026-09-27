@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/tutorial-two-parts-out-of-phase-walk",
   "seed": "The eighth guide of the Icons track, and the one the animating half exists for. It opens on the bell with BOTH parts already swinging in perfect step, which is the thing that looks wrong: two parts of one drawing moving at the same instant read as one stamped shape being waved. The only act in the guide is dragging the clapper's bar late on the timing strip, because that is the one thing a column of numbers cannot show you: a lag is a comparison, so it needs both bars on one ruler at once. The walk photographs the lockstep and the lag so the difference is on the record.",
-  "setup": { "forget": ["tutorials", "panel", "frames", "groups", "tools", "shapes", "grid"] },
+  "setup": { "front": true, "forget": ["tutorials", "panel", "frames", "groups", "tools", "shapes", "grid"] },
   "steps": [
     { "do": "appearance", "value": "light" },
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 1000 },

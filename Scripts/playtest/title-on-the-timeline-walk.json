@@ -35,7 +35,7 @@
     { "do": "wait", "seconds": 0.9 },
     { "do": "describe", "stage": "3-before-it-arrives", "note": "THE SECOND TEST, two claims at once: at the start of the recording the words are not there, and neither is their selection box. A layer that is not on screen at this moment draws no chrome, which is what used to make a mark read as being there and broken" },
     { "do": "expectPicked", "layers": ["Shipping today"], "outline": "none" },
-    { "do": "expect", "field": "Timing Shipping today", "present": true },
+    { "do": "expect", "field": "Shipping today clip", "present": true },
     { "do": "snapshot", "name": "title-2-before-it-arrives" },
 
     { "do": "action", "action": "titleDragEndLater" },

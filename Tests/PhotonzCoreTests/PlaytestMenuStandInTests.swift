@@ -39,11 +39,16 @@ struct PlaytestMenuStandInTests {
         #expect(PlaytestMenuStandIn.action(for: key("z"), modifiers: [.shift, .command]) == .redo)
     }
 
-    @Test("The copies and the cut carry their chords too")
+    @Test("The copies, the cut and the paste carry their chords too")
     func clipboard() {
         #expect(PlaytestMenuStandIn.action(for: key("c"), modifiers: [.command]) == .copy)
         #expect(PlaytestMenuStandIn.action(for: key("c"), modifiers: [.command, .shift]) == .copyMerged)
         #expect(PlaytestMenuStandIn.action(for: key("x"), modifiers: [.command]) == .cut)
+        // A copy with no paste to go with it: `keys-copy-between-layers-walk`
+        // copied keys with ⌘C and then stopped on ⌘V (2026-09-26).
+        #expect(PlaytestMenuStandIn.action(for: key("v"), modifiers: [.command]) == .paste)
+        // Paste Look is its own chord, not a near miss of this one.
+        #expect(PlaytestMenuStandIn.action(for: key("v"), modifiers: [.command, .option, .shift]) == .pasteLook)
     }
 
     @Test("The zoom chords carry theirs")

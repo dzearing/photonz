@@ -291,8 +291,8 @@
     },
     {
       "do": "expect",
-      "field": "Scale",
-      "reads": "100"
+      "field": "Animating Count",
+      "reads": "nothing yet"
     },
     {
       "do": "describe",

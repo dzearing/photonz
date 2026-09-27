@@ -1,13 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/panel-grip",
   "setup": {
-    "forget": ["panel", "groups", "tools", "measure"],
-    "captures": [
-      "fixtures/photonz-grip-tile-1.png",
-      "fixtures/photonz-grip-tile-2.png",
-      "fixtures/photonz-grip-tile-3.png",
-      "fixtures/photonz-grip-tile-4.png"
-    ]
+    "forget": ["panel", "groups", "tools", "measure"]
   },
   "steps": [
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
@@ -36,6 +30,11 @@
     { "do": "dragHandle", "area": "Layers", "by": 400 },
     { "do": "snapshot", "name": "6-all-the-way-open" },
 
+    { "comment": "The Library holds this document's own pictures (since 2026-09-23), not the capture folder, so four are dropped in to give it more than one row.", "do": "dropImage", "file": "fixtures/photonz-grip-tile-1.png", "at": [200, 200] },
+    { "do": "dropImage", "file": "fixtures/photonz-grip-tile-2.png", "at": [300, 200] },
+    { "do": "dropImage", "file": "fixtures/photonz-grip-tile-3.png", "at": [400, 200] },
+    { "do": "dropImage", "file": "fixtures/photonz-grip-tile-4.png", "at": [500, 200] },
+    { "do": "wait", "seconds": 0.8 },
     { "do": "action", "action": "showLibrary" },
     { "do": "wait", "seconds": 1.2 },
     { "do": "panel", "stage": "library" },

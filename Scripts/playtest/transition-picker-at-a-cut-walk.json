@@ -2,6 +2,7 @@
   "out": "/tmp/photonz-playtest/transition-picker-at-a-cut-walk",
   "seed": "Click the cut between two clips and a picker opens right there, AT THIS CUT, with six animated tiles that each say whether they need an overlap; the ones the cut cannot pay for say no spare. Picking one puts it on the cut as a band over both clips, and Properties shows Edit point and Transition as short label and value rows with Type and Length dropdowns. At Next defaults, no flag set.",
   "setup": {
+    "front": true,
     "forget": [
       "all"
     ],

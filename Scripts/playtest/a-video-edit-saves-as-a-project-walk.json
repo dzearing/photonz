@@ -2,6 +2,7 @@
   "out": "/tmp/photonz-playtest/a-video-edit-saves-as-a-project-walk",
   "seed": "An edited video saved as a project and opened again, at Next defaults with no flag touched: the talking sample recording is cut with Command K twice and Delete, the b-roll let go on the end of V1, a cross dissolve put on the jump cut, a title typed and keyed from A to B, the sample music dropped under it, and the captions write themselves. The edit is exported, saved as a project the way File > Save As does, the window closed, the project opened from disk, and the walk fails unless the document that comes back is the one that was saved, every file is found, it plays without a blank frame, and it exports the same length with its sound.",
   "setup": {
+    "front": true,
     "forget": [
       "all"
     ],

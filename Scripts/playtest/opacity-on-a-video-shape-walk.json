@@ -2,6 +2,7 @@
  "out": "/tmp/photonz-playtest/opacity-on-a-video-shape-walk",
  "seed": "Opacity changes a shape on a video, and animates with keys. At Next defaults with no flag changed, this walk draws a rectangle on a recording at one second and pulls Appearance > Opacity down, which dims it on the canvas and stays dimmed a second later; puts it back, keys Opacity at one second from the Animate a property picker, moves to three seconds and pulls the same Appearance slider to nothing, which is a second key rather than a change nobody can see (the user's report: keyed by the row's diamond, the slider moved and the picture did not); photographs one, two and three seconds fading out with the panel following the playhead; then does the plain pull again on a blank picture for comparison.",
  "setup": {
+  "front": true,
   "timelineOpen": true,
   "forget": [
    "all"

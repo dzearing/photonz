@@ -112,8 +112,9 @@ echo "==> Waiting up to ${TIMEOUT}s for $OUT/done.json"
 # walks crashing that way cost 22 minutes of every sweep and read as nothing at
 # all; the crash behind them was found by a person reading a stack trace.
 DIED=0
-# A walk that photographs an open menu takes every key on the Mac while the
-# menu is up, so it is the one walk that stops when the person comes back.
+# A walk that photographs an open menu, makes a real drag or holds the front
+# for the whole run (queue/bin/walk-needs-the-mac.mjs) takes the person's keys
+# while it does, so it is the walk that stops when the person comes back.
 # Every other walk leaves their keyboard, focus and screen alone
 # (queue/bin/focus-drill.sh) and carries on while they work.
 NEEDS_THE_MAC=0

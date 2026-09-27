@@ -96,8 +96,9 @@ ARGS=()
 # leaves the person's keyboard, focus and screen alone (measured over all of
 # them on 2026-09-26), so a walk launches whoever is at the Mac. Two launches
 # still wait:
-#   - a walk that photographs an open menu (queue/bin/walk-needs-the-mac.mjs):
-#     an open menu takes every key on the Mac while it is up;
+#   - a walk that needs the Mac to itself (queue/bin/walk-needs-the-mac.mjs):
+#     it photographs an open menu, makes a real drag, or holds the front, and
+#     each of those takes every key on the Mac while it lasts;
 #   - a launch with no walk at all: nothing tells the app a walk is driving it,
 #     so opening a file brings it to the front like any app.
 # They wait for PHOTONZ_WALK_IDLE seconds of no input (default 60), up to

@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/extract-a-marked-stretch-walk",
-  "setup": { "forget": ["all"] },
+  "setup": { "front": true, "forget": ["all"] },
   "steps": [
     { "do": "action", "action": "openSampleRecording" },
     { "do": "wait", "seconds": 2.0 },

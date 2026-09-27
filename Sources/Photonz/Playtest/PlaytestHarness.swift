@@ -203,6 +203,8 @@ private final class Run {
     /// Guide steps this walk says have nothing to ring, as "<guide>/<step>".
     /// Named in the walk's setup block, and turned into the opposite check.
     private var expectNoControl: Set<String> = []
+    /// `setup.front`: the probe is the active app for the whole walk.
+    private var holdsTheFront = false
 
     /// How a `wait` step spends its seconds: watching for the editor to go
     /// quiet, or sleeping the whole number the way walks used to.
@@ -310,10 +312,13 @@ private final class Run {
         // Nothing an earlier walk in this probe saw counts against this one.
         TutorialController.shared.clearAnchorVerdicts()
         expectNoControl = Set(script.setup.expectNoControl)
+        holdsTheFront = script.setup.front
+        if holdsTheFront { note(0, "setup", "the probe holds the front for this walk (setup front)") }
         var completed = 0
         for (index, step) in script.steps.enumerated() {
             let number = index + 1
             do {
+                await holdTheFront()
                 try await perform(step, number: number)
                 PlaytestHarness.sendWindowsBehindThePerson()
                 completed = number
@@ -776,6 +781,21 @@ private final class Run {
             let window = try requireWindow()
             let chord = Self.chord(key, modifiers)
             guard let destination = Self.menuItem(carrying: key, modifiers: modifiers) else {
+                // A row that depends on the editor in front (Video ▸ Go to Next
+                // Key) is not dimmed but GONE once SwiftUI rebuilds the menu bar
+                // for an app with no key window, which it does after a real drag
+                // has held the front and handed it back
+                // (`takeTheFrontForADrag`). Where the chord has a stand-in, the
+                // walk still means that command, so run it and say so.
+                if let written = PlaytestMenuStandIn.action(for: key, modifiers: modifiers) {
+                    let standIn = onTheTimeline(written)
+                    note(number, step.name,
+                         "no menu item carries \(chord) right now: \(Self.frozenMenuBar) "
+                         + "The chord has a stand-in, so the walk ran what the press meant, `action \(standIn.rawValue)`, "
+                         + "directly instead. This says nothing about whether the menu would be live for a person.")
+                    try await perform(.action(standIn), number: number)
+                    return
+                }
                 throw Failure(description: "no menu item carries \(chord); a `menus` step lists every shortcut the app has")
             }
             let title = destination.item.title
@@ -1436,6 +1456,7 @@ private final class Run {
                         clickCount: 1, pressure: pressure) else { return }
                 NSApp.postEvent(event, atStart: false)
             }
+            let front = await takeTheFrontForADrag()
             // The pointer arrives first, as it does under a hand, or SwiftUI
             // has nothing to begin a gesture from (`pickUpTile`).
             post(.mouseMoved, at: a, pressure: 0)
@@ -1450,8 +1471,9 @@ private final class Run {
             }
             post(.leftMouseUp, at: b, pressure: 0)
             await sleep(0.3)
+            await giveTheFrontBack(front)
             note(number, "windowDrag", "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue), "
-                 + "posted to the window in \(steps) moves")
+                 + "posted to the window in \(steps) moves\(front.note)")
         case .dragGrip(let control, let by, let steps, let within, let hold, let modifiers):
             // A grip on the timeline pulled by real mouse moves, and where it
             // was DRAWN read back after every one (`GripTrace`). The fault it
@@ -1477,6 +1499,7 @@ private final class Run {
                         clickCount: 1, pressure: pressure) else { return }
                 NSApp.postEvent(event, atStart: false)
             }
+            let front = await takeTheFrontForADrag()
             post(.mouseMoved, at: start, pressure: 0)
             await sleep(0.15)
             post(.leftMouseDown, at: start, pressure: 1)
@@ -1502,11 +1525,12 @@ private final class Run {
             }
             post(.leftMouseUp, at: CGPoint(x: start.x + by, y: start.y), pressure: 0)
             await sleep(0.3)
+            await giveTheFrontBack(front)
             let trace = GripTrace(samples)
             let data = try JSONSerialization.data(withJSONObject: readings, options: [.prettyPrinted])
             try data.write(to: out.appendingPathComponent("grip-trace-\(number).json"))
             note(number, "dragGrip", "\(control) pulled \(short(CGPoint(x: by, y: 0))) in \(steps) moves: "
-                 + trace.summary + held)
+                 + trace.summary + held + front.note)
             if let within, !trace.follows(within: within) {
                 throw Failure(description: "\(control) did not follow the pointer within \(within)pt: "
                     + trace.summary + " (every step is in grip-trace-\(number).json)")
@@ -4655,6 +4679,8 @@ private final class Run {
             case .copy: if !editor.copyPickedKeys() { editor.copySelectedLayer() }
             case .copyMerged: editor.copyMerged()
             case .cut: if !editor.cutPickedKeys() { editor.cutSelectedLayer() }
+            // The same split Edit ▸ Paste makes (`EditorCommands`).
+            case .paste: if !editor.pasteKeysAtPlayhead() { editor.paste() }
             case .hideAllMeasurements: editor.setAllMeasurementsVisible(false)
             case .showAllMeasurements: editor.setAllMeasurementsVisible(true)
             case .forgetThumbnails: editor.forgetLayerThumbnails()
@@ -9484,9 +9510,15 @@ private final class Run {
                 // 2026-09-26: `menuWillOpen`, `menuNeedsUpdate` and the
                 // pop-up notification all left it empty), so that callback is
                 // made, and nothing is shown.
+                //
+                // Made even when the menu already has rows: they are whatever it
+                // held the last time it was built, and a SwiftUI `Menu` builds
+                // again only in this callback. `point-a-copy-at-another-walk`
+                // made a Button component and then read the Card menu as
+                // "Card, Nav Bar", the rows from before (2026-09-26).
                 let showing = NSSelectorFromString("popUpButtonCell:willShowMenu:")
                 var told = false
-                if menu.items.isEmpty, let cell = button.cell,
+                if let cell = button.cell,
                    let coordinator = menu.delegate as? NSObject, coordinator.responds(to: showing) {
                     coordinator.perform(showing, with: cell, with: menu)
                     told = true
@@ -12882,6 +12914,65 @@ private final class Run {
         } catch {
             captureFailed(name, "\(error)")
         }
+    }
+
+    /// Keeps the probe the active app, with the walk's window key, for a walk
+    /// that said `front` (`PlaytestSetup.front`): what every walk had until
+    /// 2026-09-26, when opening a recording stopped bringing the probe forward
+    /// (`AppFront`). A walk that opens a recording to get a live menu bar, and
+    /// one whose presses SwiftUI takes only in the app in front, need it back.
+    private func holdTheFront() async {
+        guard holdsTheFront, !NSApp.isActive || window.map({ !$0.isKeyWindow }) == true else { return }
+        NSApp.activate(ignoringOtherApps: true)
+        window?.makeKey()
+        _ = try? await poll("the front", within: 1) { NSApp.isActive }
+    }
+
+    /// Who had the front before a drag took it, and what to say about it.
+    private struct HeldFront {
+        let before: NSRunningApplication?
+        let took: Bool
+        var note: String {
+            took ? "; the probe held the front for the drag and handed it back to "
+                + (before?.localizedName ?? "nobody")
+                : "; the probe could NOT take the front, so SwiftUI may have ignored the drag"
+        }
+    }
+
+    /// Brings the probe to the front for the length of one real drag.
+    ///
+    /// SwiftUI starts a drag only in the ACTIVE app. Since a walk stopped
+    /// activating the probe (`AppFront`, 2026-09-26) every drag a walk posted
+    /// on the timeline went nowhere: the ruler's scrub left the playhead at
+    /// 0:00 and a bar's end never followed the pointer. Measured the same
+    /// night with `timeline-right-click-walk`: it passed on 26ab36db, failed on
+    /// 37854689, and passed again with the probe activated for its drags, and
+    /// did NOT pass with the window lifted to the front, made key, reported
+    /// key and active by a swizzle, or with the events handed straight to the
+    /// hosting view. Only real activation does it.
+    ///
+    /// So these two steps take the front, which is why
+    /// `queue/bin/walk-needs-the-mac.mjs` names them: a walk that has one waits
+    /// for the person to step away and stops the moment they come back, as a
+    /// walk photographing an open menu does. The front goes back to whoever
+    /// had it as soon as the button is let go.
+    private func takeTheFrontForADrag() async -> HeldFront {
+        let before = NSWorkspace.shared.frontmostApplication
+        if NSApp.isActive { return HeldFront(before: nil, took: true) }
+        NSApp.activate(ignoringOtherApps: true)
+        _ = try? await poll("the front", within: 1) { NSApp.isActive }
+        return HeldFront(before: before, took: NSApp.isActive)
+    }
+
+    private func giveTheFrontBack(_ front: HeldFront) async {
+        if let before = front.before, before.processIdentifier != getpid(), !before.isTerminated {
+            before.activate()
+            // The switch lands a beat later, and a menu the next step opens in
+            // the middle of it is closed by it.
+            _ = try? await poll("the front handed back", within: 1) { !NSApp.isActive }
+            await sleep(0.2)
+        }
+        PlaytestHarness.sendWindowsBehindThePerson()
     }
 
     /// Puts a window the walk drives behind every other app's windows.

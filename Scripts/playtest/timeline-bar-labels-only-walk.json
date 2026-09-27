@@ -1,7 +1,7 @@
 {
  "out": "/tmp/photonz-playtest/timeline-bar-labels-only-walk",
  "seed": "The timeline bar says labels and values, never sentences. At Next defaults with no flag changed, this walk photographs the bar over a recording three times: with nothing picked, with a title picked, and with one of the title's keys picked. The first two show the tools and the zoom and nothing else at the right end; only the third shows Easing, set here to Ease Out on the picked key. No playhead readout appears in any of them.",
- "setup": {"forget": ["all"]},
+ "setup": {"front": true, "forget": ["all"]},
  "steps": [
   {"do": "action", "action": "openSampleRecording"},
   {"do": "wait", "seconds": 2.0},

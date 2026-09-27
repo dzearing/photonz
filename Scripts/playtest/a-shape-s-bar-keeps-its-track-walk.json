@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/a-shape-s-bar-keeps-its-track-walk",
   "seed": "A shape's bar never vanishes from its track, and an empty track can take one back. At Next defaults with no flag changed, this walk draws a rectangle on a recording and finds its bar on its own Rectangle row; deletes it with the Delete key and finds the row gone with it, then undoes and finds the bar back exactly; draws a second rectangle and groups the two, finding neither of their rows left behind empty, then undoes both; adds an empty video track and carries the rectangle's bar up onto it, leaving no empty row where it was; adds another empty track and right-clicks it to Add Text, which lands words on it at the playhead; and adds one more and clears it with Delete Empty Tracks.",
-  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "setup": { "front": true, "timelineOpen": true, "forget": ["all"] },
   "steps": [
     { "do": "action", "action": "openSampleRecording" },
     { "do": "wait", "seconds": 2.0 },

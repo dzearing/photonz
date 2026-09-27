@@ -2,6 +2,7 @@
   "out": "/tmp/photonz-playtest/key-a-title-s-scale-walk",
   "seed": "The Properties pane beside a title lists only what is animating. This walk opens a recording at Next defaults with no flag changed, types a title on it, picks Scale from Animate a property and keys it at two moments the way Premiere does: picking starts keying with a key at the playhead, a new value typed at a later moment is a second key, the diamond is hollow between them and filled on them and adds or takes off the key under the playhead, the arrows step between them, undo takes a key back in one step, and the row's cross turns keying off, asking first.",
   "setup": {
+    "front": true,
     "forget": [
       "all"
     ]

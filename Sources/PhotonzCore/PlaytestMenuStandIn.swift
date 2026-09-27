@@ -49,6 +49,7 @@ public enum PlaytestMenuStandIn {
         Chord(key: "c", modifiers: [.command]): .copy,
         Chord(key: "c", modifiers: [.command, .shift]): .copyMerged,
         Chord(key: "x", modifiers: [.command]): .cut,
+        Chord(key: "v", modifiers: [.command]): .paste,
         Chord(key: "=", modifiers: [.command]): .zoomIn,
         Chord(key: "-", modifiers: [.command]): .zoomOut,
         Chord(key: "0", modifiers: [.command]): .zoomToFit,
