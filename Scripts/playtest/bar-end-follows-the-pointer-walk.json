@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/bar-end-follows-the-pointer-walk",
   "seed": "A bar's end sits under the pointer (user report 2026-09-26: dragging a rectangle's bar end left flickered). At Next defaults with no flag changed, this walk draws a rectangle on a recording at one second, then pulls its bar's right end left in forty small real mouse moves, reading where the end was drawn after every one against where the pointer was. It must stay within two points of the hand and never jump back. Then the same for its left end, and for the whole bar slid along, and it photographs the bar mid-drag.",
-  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "setup": { "front": true, "timelineOpen": true, "forget": ["all"] },
   "steps": [
     { "do": "action", "action": "openSampleRecording" },
     { "do": "wait", "seconds": 2.0 },
@@ -23,7 +23,7 @@
 
     { "do": "dragGrip", "control": "Rectangle clip end", "by": -160, "steps": 40, "within": 2, "hold": "2-end-mid-drag" },
     { "do": "expectBuilds", "view": "trackRow", "atMost": 60 },
-    { "do": "describe", "stage": "2-builds", "note": "Forty moves with three tracks on screen: every row rebuilt at every move was 132 row builds and 130 bar builds before 2026-09-26. Only the rectangle's row and bar may follow the hand; the others build once at the grab and once at the let go." },
+    { "do": "describe", "stage": "2-builds", "note": "Forty moves with three tracks on screen: every row rebuilt at every move was 132 row builds and 130 bar builds before 2026-09-26. Only the rectangle's row and bar may follow the hand; the others build once at the grab and once at the let go. The walk keeps the probe in front the whole time, as a person's app is while they drag: a drag that took the front and handed it back rebuilt every row twice more and read 63 to 65 (2026-09-27)." },
     { "do": "wait", "seconds": 0.5 },
     { "do": "describe", "stage": "2-end-pulled", "note": "THE FIRST TEST: the bar's right end, pulled left in forty small moves, stayed under the pointer at every one and never jumped back" },
     { "do": "snapshot", "name": "3-end-let-go" },

@@ -70,6 +70,20 @@ struct PanelMarginRuleTests {
         #expect(PanelMarginRule.breaches(of: [elsewhere], in: panel).isEmpty)
     }
 
+    @Test func somethingThatOnlyGrazesThePanelIsNotItsBusiness() {
+        // The title bar line (2026-09-27) spans the whole window and its bottom
+        // edge dips a point into the panel's top: window chrome, not a row.
+        let title = PanelMarginRule.Item(name: "Window title",
+                                         frame: CGRect(x: 0, y: panel.minY - 32, width: panel.maxX, height: 33))
+        #expect(PanelMarginRule.breaches(of: [title], in: panel).isEmpty)
+    }
+
+    @Test func aRowSpillingPastTheLeftEdgeIsStillCaught() {
+        // Its middle is still in the panel, so it is still the panel's row.
+        let breaches = PanelMarginRule.breaches(of: [row("Wide", from: -40, to: 266)], in: panel)
+        #expect(breaches == [PanelMarginRule.Breach(name: "Wide", side: .leading, inset: -40)])
+    }
+
     @Test func bothSidesOfOneRowAreBothReported() {
         let breaches = PanelMarginRule.breaches(of: [row("Reframe", from: 2, to: 279)], in: panel)
         #expect(breaches.map(\.side) == [.leading, .trailing])

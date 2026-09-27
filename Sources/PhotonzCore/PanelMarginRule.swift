@@ -68,12 +68,12 @@ public enum PanelMarginRule {
     /// margin, leading before trailing, in the order the items came.
     ///
     /// Something with no size (not laid out, or folded away) is not measured,
-    /// and neither is anything that does not overlap the panel at all: a
-    /// sheet's buttons and the Settings window carry the same markers.
+    /// and neither is anything that is not in the panel: a sheet's buttons and
+    /// the Settings window carry the same markers.
     public static func breaches(of items: [Item], in panel: CGRect) -> [Breach] {
         items.flatMap { item -> [Breach] in
             guard item.frame.width > 0, item.frame.height > 0,
-                  item.frame.intersects(panel) else { return [] }
+                  belongs(item.frame, to: panel) else { return [] }
             let leading = item.frame.minX - panel.minX
             let trailing = panel.maxX - item.frame.maxX
             var found: [Breach] = []
@@ -85,6 +85,15 @@ public enum PanelMarginRule {
             }
             return found
         }
+    }
+
+    /// Whether something drawn at `frame` is one of the panel's rows: its
+    /// middle is inside the panel. Overlapping is not enough, because the
+    /// title bar line spans the whole window and grazes the panel's top by a
+    /// point (2026-09-27), while a row that spills out past an edge still has
+    /// its middle in the panel and is still caught.
+    public static func belongs(_ frame: CGRect, to panel: CGRect) -> Bool {
+        panel.contains(CGPoint(x: frame.midX, y: frame.midY))
     }
 
     /// How much wider than its dock the panel came out, or nil when it fits.

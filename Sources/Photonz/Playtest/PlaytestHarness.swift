@@ -8689,12 +8689,12 @@ private final class Run {
             // global space and so the panel frame's own.
             var box = content.convert(view.bounds, from: view)
             if !content.isFlipped { box.origin.y = content.bounds.height - box.maxY }
-            guard box.width > 0, box.height > 0, box.intersects(panel) else { continue }
+            guard box.width > 0, box.height > 0, PanelMarginRule.belongs(box, to: panel) else { continue }
             let label = view.detail.isEmpty ? view.name : "\(view.name) (\(view.detail))"
             items.append(PanelMarginRule.Item(name: label, frame: box))
         }
         items += Self.accessibleLeaves(in: content, window: host)
-            .filter { $0.frame.width > 0 && $0.frame.height > 0 && $0.frame.intersects(panel) }
+            .filter { $0.frame.width > 0 && $0.frame.height > 0 && PanelMarginRule.belongs($0.frame, to: panel) }
         items.sort { lhs, rhs in
             lhs.frame.minY == rhs.frame.minY ? lhs.frame.minX < rhs.frame.minX
                                              : lhs.frame.minY < rhs.frame.minY

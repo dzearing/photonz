@@ -84,7 +84,7 @@
   {
    "do": "expect",
    "field": "Opacity",
-   "reads": "28"
+   "reads": "24"
   },
   {
    "do": "snapshot",
@@ -110,7 +110,7 @@
   {
    "do": "expect",
    "field": "Opacity",
-   "reads": "28"
+   "reads": "24"
   },
   {
    "do": "render",
@@ -361,7 +361,7 @@
   {
    "do": "expect",
    "field": "Opacity",
-   "reads": "28"
+   "reads": "24"
   },
   {
    "do": "snapshot",
