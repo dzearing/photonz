@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T11:13:36.648Z",
-  "updated": "2026-09-27T12:11:15.293Z",
+  "updated": "2026-09-27T16:55:02.167Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by every-panel-follows-the-design-system (2026-09-24). Reproduce: Scripts/playtest.sh Scripts/playtest/captions-write-themselves-walk.json --no-build; 2-the-captions-wrote-themselves-sc.png shows the Generate button as \"Write Ag...\" beside \"10 captions\"; 6-lower-third-at-the-top-sc.png shows Background as \"#000000B3\". CaptionsInspector.generate puts a borderedProminent button with label \"Write Again\" and the count in a 148pt column; colourRow names a value only when it is one of Self.plates, and the Lower third preset (CaptionLook.Preset) sets a plate that is not in that list. In the narrowest dock the button reads \"W...\".",
@@ -56,9 +56,42 @@
       "note": "seq 10 -> 10",
       "since": "2026-09-25T12:22:28.068Z",
       "count": 4
+    },
+    {
+      "t": "2026-09-27T12:30:48.401Z",
+      "note": "From walks-that-fail-in-the-full-sweep-6: captions-panel-keeps-its-margins-walk failed in the 2026-09-27 sweep only because panelMargins counted the title bar line as a panel row. The margin check is fixed, and the walk passes on its own at that commit."
+    },
+    {
+      "t": "2026-09-27T15:49:43.947Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T16:54:44.225Z",
+      "note": "Reproduced before fixing: captions-panel-keeps-its-margins-walk 2-lower-third-sc.png showed Generate as 'Write Ag...' beside '10 captions' (PanelFieldRow measured the control at zero width, so the button squeezed instead of the row stacking); Lower third's plate #000000B3 was not on the Background list; timeline-bar-labels-only-walk read 'Ease In and...' (Easing face fixed at 124pt); an-editing-session 4-picker showed Spare before '...' ; library-import 2-imported 'Tutorial Sample....' and clip line 'Sample Mu...'."
+    },
+    {
+      "t": "2026-09-27T16:54:44.276Z",
+      "note": "Adversarial pass: the mock's button says Auto captions and has no count; Auto captions plus the count do not fit the 148pt control column, so the label became Rewrite (was Write Again) and the count steps away when there is no room (Cue row still says N of M). A Premiere user reads Rewrite as re-transcribe. Asked in the audit rather than blocking."
+    },
+    {
+      "t": "2026-09-27T16:54:44.327Z",
+      "note": "left rough: narrowest dock (220pt) still gives way on purpose (English (e..., Lower..., Save s...), matching the margins walk's stated rule that a bar cuts a label before the panel grows; not filed. labelsWhole cannot tell a lone '...' value from a three-dot menu icon (Vision reads both as bullets), so a value cut to nothing but the ellipsis is not caught; not filed, log only. labelsWhole not yet watched under a lock, so it is kept out of tutorial walks (PlaytestLockSafetyTests requires guide walks to run locked)."
+    },
+    {
+      "t": "2026-09-27T16:54:44.378Z",
+      "note": "walks captions-panel-keeps-its-margins-walk -> captions-panel-keeps-its-margins-walk, timeline-bar-labels-only-walk, library-import-walk, an-editing-session-walk"
+    },
+    {
+      "t": "2026-09-27T16:55:02.165Z",
+      "note": "Shipped d7d2034c: Captions Generate button reads Rewrite whole (count beside it at the default dock; the row drops it under its name in a narrow dock rather than cutting); every caption colour row names its colour (Lower third Background reads Darker; CaptionColourNames in PhotonzCore, tested); timeline bar Easing reads Ease In and Out whole; Edit point Spare before reads its seconds; Properties clip line and Library tile names read whole. New walk step labelsWhole reads every word on the window with Vision and fails on any label cut with an ellipsis (outside the picture and clip lanes); captions-panel-keeps-its-margins-walk checks Rewrite and Darker at the default and narrowest dock, and timeline-bar-labels-only, library-import and an-editing-session walks read the whole window at Next defaults. Verified: Scripts/test.sh 10125 green, 44 touched walks pass. Audit: queue/audits/2026-09-27-labels-whole.json with 7 real window captures."
     }
   ],
   "walks": [
-    "captions-panel-keeps-its-margins-walk"
-  ]
+    "captions-panel-keeps-its-margins-walk",
+    "timeline-bar-labels-only-walk",
+    "library-import-walk",
+    "an-editing-session-walk"
+  ],
+  "started": "2026-09-27T15:49:43.946Z",
+  "completed": "2026-09-27T16:55:02.166Z"
 }
