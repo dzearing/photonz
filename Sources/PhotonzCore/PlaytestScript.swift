@@ -1407,6 +1407,9 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case exportDialogAsVideo, exportDialogAsSmallGIF
     /// ...and on MP4 at 1080p, the Size row's middle answer.
     case exportDialogAsVideo1080p
+    /// ...and on the Whole video where In and Out are set, the Range row's
+    /// second answer.
+    case exportDialogAsWholeVideo
     /// ...and already on the picture, which is the fourth answer on that same
     /// row: one frame of the document, at the moment the playhead is on.
     case exportDialogAsFrame
@@ -2443,11 +2446,15 @@ public enum PlaytestStep: Sendable, Equatable {
     /// picture's size in the file rather than the app's idea of it. `size` is
     /// the sheet's Size row (`full`, `p1080`, `p720`), and `estimateFactor`
     /// fails the step when the sheet's number and the file that landed are
-    /// further apart than that many times either way.
+    /// further apart than that many times either way. `range` is the sheet's
+    /// Range row (`marked`, the default, or `whole`), and `startsAtMS` claims
+    /// the file's first picture is the document's at that moment, which is
+    /// what proves a marked export starts at the In rather than at nought.
     case writeVideo(name: String, format: String, quality: String?,
                     seconds: Double?, within: Double,
                     width: Double?, height: Double?, sound: Bool?, copied: Bool?,
-                    size: String? = nil, estimateFactor: Double? = nil)
+                    size: String? = nil, estimateFactor: Double? = nil,
+                    range: String? = nil, startsAtMS: Int? = nil)
     /// Write ONE FRAME of the document out as a picture, exactly as choosing
     /// PNG on that same sheet and picking a place would, then read the file
     /// back and check it (`EditorState.exportStillFrame`).
@@ -3698,7 +3705,9 @@ public enum PlaytestStep: Sendable, Equatable {
                                sound: try f.optionalFlag("sound"),
                                copied: try f.optionalFlag("copied"),
                                size: try f.optionalString("size"),
-                               estimateFactor: try f.optionalNumber("estimateFactor"))
+                               estimateFactor: try f.optionalNumber("estimateFactor"),
+                               range: try f.optionalString("range"),
+                               startsAtMS: try f.optionalNumber("startsAtMS").map { Int($0) })
         case "writeFrame":
             self = .writeFrame(name: try f.string("name"),
                                atMS: try f.optionalNumber("atMS").map { Int($0) },

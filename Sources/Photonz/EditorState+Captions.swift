@@ -332,9 +332,15 @@ extension EditorState {
 
     /// When a video is exported with a subtitle file beside it: the same name
     /// as the film, with the subtitle's own extension.
-    func writeCaptionsBeside(film url: URL, as format: CaptionFileFormat) {
-        guard hasCaptions else { return }
-        writeCaptionsFile(as: format, to: url.deletingPathExtension().appendingPathExtension(format.fileExtension))
+    /// A film of a marked stretch carries the words said inside it, timed
+    /// from its own start (`CaptionCue.windowed`).
+    func writeCaptionsBeside(film url: URL, as format: CaptionFileFormat,
+                             range: VideoExportRange = .marked) {
+        guard hasCaptions, let document else { return }
+        let cues = CaptionCue.windowed(document.captionCues, to: document.exportRangeMS(range))
+        guard !cues.isEmpty else { return }
+        writeCaptionsFile(cues, as: format,
+                          to: url.deletingPathExtension().appendingPathExtension(format.fileExtension))
     }
 
     // MARK: - One look per Captions layer

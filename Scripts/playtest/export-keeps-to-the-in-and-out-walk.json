@@ -1,0 +1,60 @@
+{
+  "out": "/tmp/photonz-playtest/export-keeps-to-the-in-and-out-walk",
+  "seed": "Export keeps to the In and Out marks, at Next defaults with no flag touched: the eight second sample opens, Set In and Set Out from the ruler's right-click menu mark 4.0s to 6.0s, the Export sheet shows a Range row on In to Out with the length line saying 0:02 of 0:08, the MP4 that lands runs two seconds and opens on the picture at the In, and Whole video writes all eight seconds.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "describe", "stage": "why", "note": "A person could mark an In and an Out but Export still wrote the whole video. Premiere writes Source In/Out when the marks are set, with Entire Source a choice away; this walk marks two seconds of the sample from the ruler menu and checks the file that lands" },
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "toggleTimingStrip" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectTimeline", "lengthMS": 8000, "open": true },
+
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "0-set-in", "note": "a walk's right click cannot put the pointer over the ruler, so the menu acts at the playhead, the ruler's own fallback: Set In at 4.0s" },
+    { "do": "rightClick", "at": [750, 860], "space": "window", "choose": "Set In" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "videoSeekThreeQuarters" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "rightClick", "at": [750, 860], "space": "window", "choose": "Set Out" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "markInMS": 4000, "markOutMS": 6000, "lengthMS": 8000 },
+    { "do": "snapshot", "name": "1-marked" },
+
+    { "do": "action", "action": "exportDialogAsVideo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Export range", "reads": "In to Out" },
+    { "do": "describe", "stage": "2-the-sheet", "note": "Export with the marks set: a Range row under Format, on In to Out, and the line under the rows says the file runs 0:02 of 0:08" },
+    { "do": "snapshot", "name": "2-the-sheet-on-in-to-out" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "writeVideo", "name": "in-to-out", "format": "mp4", "quality": "standard", "seconds": 2.0, "within": 0.15, "copied": false, "startsAtMS": 4000 },
+
+    { "do": "action", "action": "exportDialogAsWholeVideo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Export range", "reads": "Whole video" },
+    { "do": "describe", "stage": "3-whole-video", "note": "the same sheet on Whole video: the line under the rows says 0:08" },
+    { "do": "snapshot", "name": "3-the-sheet-on-whole-video" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "writeVideo", "name": "whole-video", "format": "mp4", "quality": "standard", "range": "whole", "seconds": 8.0, "within": 0.15, "startsAtMS": 0 },
+
+    { "do": "rightClick", "at": [750, 860], "space": "window", "choose": "Clear In and Out" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "hasIn": false, "hasOut": false },
+    { "do": "action", "action": "exportDialogAsVideo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Export range", "present": false },
+    { "do": "describe", "stage": "4-no-marks", "note": "with no marks there is nothing to choose: no Range row, and the sheet is the one it always was" },
+    { "do": "snapshot", "name": "4-the-sheet-with-no-marks" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "writeVideo", "name": "no-marks", "format": "mp4", "quality": "standard", "seconds": 8.0, "within": 0.15 }
+  ]
+}

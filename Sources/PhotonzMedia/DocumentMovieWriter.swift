@@ -199,7 +199,7 @@ public enum DocumentMovieWriter {
                 try? FileManager.default.removeItem(at: destination)
                 throw CancellationError()
             }
-            guard let picture = await frames(plan.timeMS(at: index)) else { continue }
+            guard let picture = await frames(plan.documentTimeMS(at: index)) else { continue }
             CGImageDestinationAddImage(dest, fitted(picture, to: plan.size), frameProps as CFDictionary)
             wroteAny = true
             onProgress?(Double(index + 1) / Double(plan.frameCount))
@@ -222,7 +222,9 @@ public enum DocumentMovieWriter {
         var last: CGImage?
         for index in 0..<plan.frameCount {
             try Task.checkCancellation()
-            let picture = await frames(plan.timeMS(at: index)) ?? last
+            // The document's moment, which is the file's own counted on from
+            // the In where the export keeps to the marks.
+            let picture = await frames(plan.documentTimeMS(at: index)) ?? last
             guard let picture else { continue }
             last = picture
             while !input.isReadyForMoreMediaData {

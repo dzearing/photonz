@@ -187,6 +187,8 @@ final class EditorState {
     var playtestOpensExportAtQuality: VideoExportQuality?
     /// Probe only: the Size row the sheet opens on, for the same reason.
     var playtestOpensExportAtSize: VideoExportSize?
+    /// Probe only: the Range row opens on the Whole video rather than In to Out.
+    var playtestOpensExportOnWholeVideo = false
     /// Probe only: open that same sheet on the picture instead, so a walk can
     /// photograph the frame answer without clicking inside a sheet
     /// (`PlaytestAction.exportDialogAsFrame`).

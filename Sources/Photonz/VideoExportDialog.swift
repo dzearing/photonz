@@ -28,6 +28,12 @@ import SwiftUI
 /// is 1080p. The size owns the pixels, so beside it Quality says only how
 /// smooth the file runs and what is spent on it.
 ///
+/// **A Range row where the In and Out are set**: In to Out, picked, or the
+/// Whole video, the way Premiere's Export offers Source In/Out and Entire
+/// Source (`VideoExportRange`). The line under the rows says how long the file
+/// runs against the whole ("0:04 of 0:10"). With no marks there is nothing to
+/// choose and the row stays away.
+///
 /// The sheet only CHOOSES. Pressing Export… hands to the save box and then to
 /// `EditorState.writeVideo`, so the fast path for an untouched recording is
 /// still a verbatim file copy.
@@ -44,6 +50,11 @@ struct VideoExportDialog: View {
     /// Words on the picture, or in a file beside it. Offered only on a film
     /// with captions in it.
     @State private var captions: CaptionExport = .burnedIn
+    /// Which stretch is written: the marks, or all of it. Offered only where
+    /// the marks enclose something less than the whole video.
+    @State private var range: VideoExportRange = .marked
+    /// Whether the document has marks worth offering, read when the sheet opens.
+    @State private var offersRange = false
     /// Everything the lines are worked out from, read once when the sheet
     /// opens: nothing can edit the document while its own window is behind a
     /// sheet.
@@ -61,6 +72,9 @@ struct VideoExportDialog: View {
     /// what it will weigh. There is no formula for an animated picture, so the
     /// only honest number comes from writing one (`ExportWeigh`).
     @State private var weigh = ExportWeigh()
+
+    /// The name a walk finds the Range row by.
+    static let rangeLabel = "Export range"
 
     private var offersQuality: Bool { RecordingExport.offersQuality(choice) }
 
@@ -117,6 +131,16 @@ struct VideoExportDialog: View {
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
+            }
+            if choice.format != nil, offersRange {
+                ExportSheetRow("Range") {
+                    Picker("Range", selection: $range) {
+                        ForEach(VideoExportRange.allCases, id: \.self) { Text($0.title).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .playtestControl(Self.rangeLabel, detail: range.title)
+                }
             }
             if choice.format != nil, sizes.count > 1 {
                 ExportSheetRow("Size") {
@@ -187,7 +211,9 @@ struct VideoExportDialog: View {
         .onAppear {
             choice = RecordingExportMemory.choice
             quality = RecordingExportMemory.quality(for: choice.format ?? .mp4)
-            source = editor.videoExportSource
+            offersRange = editor.document?.offersMarkedExport ?? false
+            range = .marked
+            source = editor.videoExportSource(range)
             size = RecordingExportMemory.size(for: choice.format ?? .mp4)
                 .offeredOrFull(for: source.sourceSize, format: choice.format ?? .mp4)
             #if PHOTONZ_PLAYTEST
@@ -202,6 +228,11 @@ struct VideoExportDialog: View {
             if let asked = editor.playtestOpensExportAtQuality {
                 quality = asked
                 editor.playtestOpensExportAtQuality = nil
+            }
+            if editor.playtestOpensExportOnWholeVideo {
+                range = .whole
+                source = editor.videoExportSource(range)
+                editor.playtestOpensExportOnWholeVideo = false
             }
             if let asked = editor.playtestOpensExportAtSize {
                 size = asked.offeredOrFull(for: source.sourceSize, format: choice.format ?? .mp4)
@@ -226,6 +257,10 @@ struct VideoExportDialog: View {
             weighTheAnimation()
         }
         .onChange(of: quality) { _, _ in weighTheAnimation() }
+        .onChange(of: range) { _, now in
+            source = editor.videoExportSource(now)
+            weighTheAnimation()
+        }
         .onChange(of: size) { _, _ in weighTheAnimation() }
         .onDisappear {
             weighing?.cancel()
@@ -266,9 +301,10 @@ struct VideoExportDialog: View {
         guard let format = choice.format, format.isAnimatedImage else { weigh.stop(); return }
         let quality = quality
         let size = chosenSize
+        let range = range
         weigh.weigh(format: format, quality: quality, size: size) { [editor] url, onProgress in
             try await editor.writeVideo(format: format, quality: quality, size: size, to: url,
-                                        onProgress: onProgress)
+                                        range: range, onProgress: onProgress)
         }
     }
 
@@ -285,7 +321,7 @@ struct VideoExportDialog: View {
         dismiss()
         if let format = choice.format {
             editor.exportVideo(format: format, quality: quality, size: size, weighed: weighed,
-                               captions: format == .mp4 ? captions : .burnedIn)
+                               captions: format == .mp4 ? captions : .burnedIn, range: range)
         } else {
             editor.exportStillFrame(atMS: momentMS, weighed: stillFile)
         }

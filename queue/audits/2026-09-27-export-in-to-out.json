@@ -1,0 +1,27 @@
+{
+  "feature": "Export keeps to the In and Out marks",
+  "epic": "video-cutting",
+  "summary": "With an In and an Out set, Export writes only the marked stretch, starting on the picture at the In, with its sound and any subtitle file moved along with it. A Range row on the sheet switches to the whole video.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any recording and open the timeline's tracks.",
+  "switched": {},
+  "try": [
+    { "do": "Move the playhead to 0:04, right-click the ruler and choose Set In.", "shot": "2026-09-27-export-in-to-out-1-marked-sc.png" },
+    { "do": "Move the playhead to 0:06, right-click the ruler and choose Set Out." },
+    { "do": "Choose File > Export. The Range row reads In to Out, and the line under the rows says 0:02 of 0:08.", "shot": "2026-09-27-export-in-to-out-2-the-sheet-on-in-to-out-sc.png" },
+    { "do": "Press Export… and save. Open the file: it runs two seconds and opens on the picture at 0:04." },
+    { "do": "Open Export again and pick Whole video. The line says 0:08 and the file is the whole recording.", "shot": "2026-09-27-export-in-to-out-3-the-sheet-on-whole-video-sc.png" },
+    { "do": "Right-click the ruler, choose Clear In and Out, and open Export. There is no Range row.", "shot": "2026-09-27-export-in-to-out-4-the-sheet-with-no-marks-sc.png" }
+  ],
+  "evaluate": [
+    "Is In to Out the right thing for the sheet to pick by default whenever marks are set, as Premiere does?",
+    "Is Range, directly under Format, where you would look for it?",
+    "Is \"0:02 of 0:08\" on the line under the rows enough to tell you only the stretch will be written?",
+    "Should Export also be on the ruler's right-click menu when a stretch is marked?"
+  ],
+  "rough": [
+    "No mock draws a Range row on the export sheet (export-share.html has none), so it follows Premiere's Export: Source In/Out or Entire Source, as two segments, In to Out and Whole video.",
+    "The sheet always opens on In to Out and does not remember Whole video from one export to the next.",
+    "Playing still runs to the end with marks set. Premiere's Play In to Out is filed as its own task (play-in-to-out-plays-only-the-marked-stretch).",
+    "The sheet's size estimate for the two second stretch said about 37 KB and 46 KB landed. That is within the \"about\" the line promises, but under."
+  ]
+}

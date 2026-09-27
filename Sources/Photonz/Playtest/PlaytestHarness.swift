@@ -1802,13 +1802,14 @@ private final class Run {
 
         case .writeVideo(let name, let format, let quality, let seconds, let within,
                          let width, let height, let sound, let copied, let size,
-                         let estimateFactor):
+                         let estimateFactor, let range, let startsAtMS):
             note(number, step.name,
                  try await writeVideoFile(name: name, format: format, quality: quality,
                                           seconds: seconds, within: within,
                                           width: width, height: height,
                                           sound: sound, copied: copied, size: size,
-                                          estimateFactor: estimateFactor),
+                                          estimateFactor: estimateFactor,
+                                          range: range, startsAtMS: startsAtMS),
                  state: describe())
 
         case .writeFrame(let name, let atMS, let width, let height):
@@ -5332,6 +5333,10 @@ private final class Run {
             case .exportDialogAsVideo1080p:
                 editor.playtestOpensExportOnRecordingFormat = .mp4
                 editor.playtestOpensExportAtSize = .p1080
+                editor.isExportDialogPresented = true
+            case .exportDialogAsWholeVideo:
+                editor.playtestOpensExportOnRecordingFormat = .mp4
+                editor.playtestOpensExportOnWholeVideo = true
                 editor.isExportDialogPresented = true
             case .exportDialogAsSVG:
                 // Asked for on the sheet itself rather than written into the
@@ -11504,7 +11509,8 @@ private final class Run {
                                 seconds: Double?, within: Double,
                                 width: Double?, height: Double?,
                                 sound: Bool?, copied: Bool?, size: String? = nil,
-                                estimateFactor: Double? = nil) async throws -> String {
+                                estimateFactor: Double? = nil, range: String? = nil,
+                                startsAtMS: Int? = nil) async throws -> String {
         let editor = try requireEditor()
         guard let document = editor.document, document.hasTime else {
             throw Failure(description: "this window holds no document with time in it, "
@@ -11524,10 +11530,21 @@ private final class Run {
         } else {
             preset = RecordingExportMemory.quality(for: recordingFormat)
         }
+        // The Range row as the sheet would hand it: In to Out unless asked.
+        let stretch: VideoExportRange
+        if let range {
+            guard let named = VideoExportRange(rawValue: range) else {
+                throw Failure(description: "\(range) is not a range on the sheet: "
+                    + VideoExportRange.allCases.map(\.rawValue).joined(separator: ", "))
+            }
+            stretch = named
+        } else {
+            stretch = .marked
+        }
         // The Size row as the sheet would hand it: what was asked, or what
         // this format was last exported at, shown as Full where the document
         // is too small for it.
-        let source = editor.videoExportSource
+        let source = editor.videoExportSource(stretch)
         let pickedSize: VideoExportSize
         if let size {
             guard let named = VideoExportSize(rawValue: size) else {
@@ -11543,7 +11560,7 @@ private final class Run {
         let weighed = try await weighAnimated(recordingFormat, quality: preset, size: chosenSize) {
             [editor] url, onProgress in
             try await editor.writeVideo(format: recordingFormat, quality: preset, size: chosenSize,
-                                        to: url, onProgress: onProgress)
+                                        to: url, range: stretch, onProgress: onProgress)
         }
         let said = RecordingExport.sizeLine(format: recordingFormat, quality: preset,
                                             source: source, weighing: weighed, size: chosenSize)
@@ -11553,7 +11570,7 @@ private final class Run {
         let started = Date()
         do {
             try await editor.writeVideo(format: recordingFormat, quality: preset, size: chosenSize,
-                                        to: destination)
+                                        to: destination, range: stretch)
         } catch {
             throw Failure(description: "writing the document as \(format) failed: \(error)")
         }
@@ -11591,6 +11608,12 @@ private final class Run {
                 wrong.append(sound
                     ? "the document has a mix in it and the file that landed is silent"
                     : "the document makes no sound and the file that landed has a sound track")
+            }
+            if let startsAtMS {
+                let (fact, trouble) = await firstPicture(of: destination, isTheDocumentAt: startsAtMS,
+                                                         editor: editor)
+                facts.append(fact)
+                if let trouble { wrong.append(trouble) }
             }
         } else {
             let (frames, size) = animatedFacts(of: destination)
@@ -11647,6 +11670,75 @@ private final class Run {
                 + facts.joined(separator: "; "))
         }
         return facts.joined(separator: "; ")
+    }
+
+    /// Whether the first picture of a written film is the document's picture
+    /// at a moment: both squeezed to a thumbnail and compared a channel at a
+    /// time, against the document at nought as well, so the log says which it
+    /// resembles. An encoded picture is never byte for byte its source, so
+    /// "the same" is within a few levels of 255.
+    private func firstPicture(of film: URL, isTheDocumentAt ms: Int,
+                              editor: EditorState) async -> (String, String?) {
+        let generator = AVAssetImageGenerator(asset: AVURLAsset(url: film))
+        generator.appliesPreferredTrackTransform = true
+        generator.requestedTimeToleranceBefore = .zero
+        generator.requestedTimeToleranceAfter = .zero
+        guard let first = try? await generator.image(at: .zero).image,
+              let atMoment = await editor.stillFrame(atMS: ms).flatMap(ImageCodec.decode),
+              let atStart = await editor.stillFrame(atMS: 0).flatMap(ImageCodec.decode),
+              let film = Self.thumbnail(first),
+              let moment = Self.thumbnail(atMoment),
+              let start = Self.thumbnail(atStart)
+        else {
+            return ("its first picture could not be compared",
+                    "the file's first picture or the document's at \(ms)ms could not be read")
+        }
+        // Counted as the pixels that clearly differ rather than an average: an
+        // encoded film is a few levels off its source everywhere, and what
+        // tells two moments of a screen recording apart is a bar and some
+        // digits, which an average drowns.
+        let offMoment = Self.pixelsApart(film, moment)
+        let offStart = Self.pixelsApart(film, start)
+        let alike = Self.pixelsApart(moment, start) == 0
+        let fact = "its first picture has \(offMoment) of \(Self.thumbnailPixels) pixels clearly "
+            + "unlike the document at \(ms)ms and \(offStart) unlike the document at 0ms"
+            + (alike && ms != 0 ? ", and those two moments look alike" : "")
+        let close = offMoment * 100 <= Self.thumbnailPixels && (ms == 0 || alike || offMoment < offStart)
+        return (fact, close ? nil
+            : "the file does not start on the document's picture at \(ms)ms (\(fact))")
+    }
+
+    private static let thumbnailWidth = 160, thumbnailHeight = 100
+    private static var thumbnailPixels: Int { thumbnailWidth * thumbnailHeight }
+
+    private static func thumbnail(_ image: CGImage) -> [UInt8]? {
+        let width = thumbnailWidth, height = thumbnailHeight
+        var pixels = [UInt8](repeating: 0, count: width * height * 4)
+        let drew: Bool = pixels.withUnsafeMutableBytes { bytes in
+            guard let context = CGContext(data: bytes.baseAddress, width: width, height: height,
+                                          bitsPerComponent: 8, bytesPerRow: width * 4,
+                                          space: CGColorSpace(name: CGColorSpace.sRGB)
+                                              ?? CGColorSpaceCreateDeviceRGB(),
+                                          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+            else { return false }
+            context.interpolationQuality = .medium
+            context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+            return true
+        }
+        return drew ? pixels : nil
+    }
+
+    /// How many pixels of two thumbnails are more than a fifth of the way
+    /// apart, averaged over the three channels.
+    private static func pixelsApart(_ one: [UInt8], _ other: [UInt8]) -> Int {
+        guard one.count == other.count, !one.isEmpty else { return thumbnailPixels }
+        var apart = 0
+        for pixel in stride(from: 0, to: one.count, by: 4) {
+            var total = 0
+            for channel in 0..<3 { total += abs(Int(one[pixel + channel]) - Int(other[pixel + channel])) }
+            if total > 3 * 50 { apart += 1 }
+        }
+        return apart
     }
 
     /// Write ONE FRAME of the open document out as a picture and then READ

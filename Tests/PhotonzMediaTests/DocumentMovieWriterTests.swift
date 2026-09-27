@@ -83,6 +83,28 @@ struct DocumentMovieWriterTests {
         #expect(late.b > 200 && late.r < 60)
     }
 
+    @Test("A marked stretch writes a file as long as the stretch, starting at the In")
+    func aMarkedStretchStartsAtTheIn() async throws {
+        // A four second document, red for its first three seconds and blue
+        // after; marks at 2.0s and 4.0s. The file is two seconds long and
+        // opens on the last red second, then turns blue at its own 1.0s.
+        let plan = DocumentVideoExport.plan(range: 2000..<4000,
+                                            canvasSize: CGSize(width: 320, height: 240),
+                                            format: .mp4, quality: .standard)
+        let size = plan.size
+        let out = Self.folder.appendingPathComponent("marked-stretch.mp4")
+        try await DocumentMovieWriter.write(plan: plan, mix: [], soundURLs: [:], to: out,
+                                            frames: { ms in
+            ms < 3000 ? Self.solid((1, 0, 0), size: size) : Self.solid((0, 0, 1), size: size)
+        })
+        let seconds = try await AVURLAsset(url: out).load(.duration).seconds
+        #expect(abs(seconds - 2) < 0.15)
+        let early = try await Self.colour(of: out, atSeconds: 0.3)
+        #expect(early.r > 200 && early.b < 60)
+        let late = try await Self.colour(of: out, atSeconds: 1.5)
+        #expect(late.b > 200 && late.r < 60)
+    }
+
     @Test("A document with no sound in it writes a file with no sound track")
     func noSoundMeansNoSoundTrack() async throws {
         let plan = DocumentVideoExport.plan(durationMS: 600,

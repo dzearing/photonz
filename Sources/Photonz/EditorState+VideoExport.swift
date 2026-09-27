@@ -41,23 +41,32 @@ extension EditorState {
     /// An edited document is weighed off the recordings its clips play, a
     /// second at a time (`RecordingExport.footageBytesPerSecond`), because
     /// the encoder's budget is a ceiling a screen recording never gets near.
-    var videoExportSource: RecordingExport.Source {
+    var videoExportSource: RecordingExport.Source { videoExportSource(.marked) }
+
+    /// The same, for the stretch the sheet's Range row has picked. A marked
+    /// stretch says how long it is against the whole ("0:04 of 0:10"), and is
+    /// never a verbatim copy: the file on disk is the whole recording.
+    func videoExportSource(_ range: VideoExportRange) -> RecordingExport.Source {
         let seconds = Double(documentLengthMS) / 1000
+        let span = document?.exportRangeMS(range) ?? 0..<0
+        let kept = Double(span.count) / 1000
+        let partial = document.map { span != $0.exportRangeMS(.whole) } ?? false
         let untouched = document?.untouchedRecording
         let bytes = untouched
             .flatMap { MovieLibrary.shared.url(for: $0) }
             .flatMap { try? $0.resourceValues(forKeys: [.fileSizeKey]).fileSize } ?? 0
         let canvas = document?.canvasSize ?? .zero
-        return RecordingExport.Source(sourceDuration: seconds, keptDuration: seconds,
+        let mix = document.map { AudioMixSegment.windowed($0.audioMix(), to: span) } ?? []
+        return RecordingExport.Source(sourceDuration: seconds, keptDuration: kept,
                                       sourceSize: canvas,
-                                      fileBytes: bytes, isEdited: untouched == nil,
+                                      fileBytes: bytes, isEdited: untouched == nil || partial,
                                       sourceFPS: DocumentVideoExport.movieFPS,
-                                      hasAudio: document?.audioMix().isEmpty == false,
+                                      hasAudio: !mix.isEmpty,
                                       playheadTime: Double(documentTimeMS) / 1000,
                                       footageBytesPerSecond: untouched == nil
                                         ? RecordingExport.footageBytesPerSecond(footage, at: canvas)
                                         : nil,
-                                      captionedSeconds: document?.captionedSeconds ?? 0)
+                                      captionedSeconds: document?.captionedSeconds(in: span) ?? 0)
     }
 
     /// Every recording file the document's clips play, weighed once each.
@@ -86,7 +95,8 @@ extension EditorState {
     ///   file that lands, which a second write could not promise for a HEIC.
     func exportVideo(format: RecordingFormat, quality: VideoExportQuality,
                      size: VideoExportSize? = nil,
-                     weighed: URL? = nil, captions: CaptionExport = .burnedIn) {
+                     weighed: URL? = nil, captions: CaptionExport = .burnedIn,
+                     range: VideoExportRange = .marked) {
         guard let document, document.hasTime else { return }
         // The sheet remembers the size that was PICKED; the one handed here
         // may be Full only because this document is too small for the pick.
@@ -102,7 +112,7 @@ extension EditorState {
             return
         }
         startVideoExport(format: format, quality: quality, size: size, to: url,
-                         weighed: weighed, captions: captions)
+                         weighed: weighed, captions: captions, range: range)
     }
 
     /// What the file is called before anybody renames it: the document's own
@@ -118,7 +128,8 @@ extension EditorState {
     /// same frames.
     func startVideoExport(format: RecordingFormat, quality: VideoExportQuality,
                           size: VideoExportSize? = nil, to url: URL,
-                          weighed: URL? = nil, captions: CaptionExport = .burnedIn) {
+                          weighed: URL? = nil, captions: CaptionExport = .burnedIn,
+                          range: VideoExportRange = .marked) {
         guard videoExport == nil else { return }
         // Already written, to answer what it would weigh: move it into place
         // and there is nothing to watch.
@@ -134,7 +145,7 @@ extension EditorState {
             guard let self else { return }
             do {
                 try await writeVideo(format: format, quality: quality, size: size, to: url,
-                                     captions: captions) { done in
+                                     captions: captions, range: range) { done in
                     Task { @MainActor in run.fraction = done }
                 }
                 videoExport = nil
@@ -143,7 +154,9 @@ extension EditorState {
                 raiseCanvasNotice(.videoWritten(file: url.lastPathComponent))
                 // The words as a file beside the film, named after it, where
                 // a player looks for them.
-                if let file = captions.file { writeCaptionsBeside(film: url, as: file) }
+                if let file = captions.file {
+                    writeCaptionsBeside(film: url, as: file, range: range)
+                }
             } catch is CancellationError {
                 // Stopped on purpose, and `DocumentMovieWriter` took the
                 // half-written file with it. The sheet going away is the whole
@@ -235,9 +248,15 @@ extension EditorState {
     func writeVideo(format: RecordingFormat, quality: VideoExportQuality,
                     size: VideoExportSize? = nil, to url: URL,
                     captions: CaptionExport = .burnedIn,
+                    range: VideoExportRange = .marked,
                     onProgress: (@Sendable (Double) -> Void)? = nil) async throws {
         guard let document = document?.forExport(captions: captions), document.hasTime
         else { throw CocoaError(.fileNoSuchFile) }
+        // The In to the Out where they are set, and all of it otherwise
+        // (`VideoExportRange`): a stretch is the window's own pictures and mix
+        // over it, on a clock that starts at the In.
+        let span = document.exportRangeMS(range)
+        let whole = span == document.exportRangeMS(.whole)
 
         // The recording nobody has touched is already the answer: copy the file
         // rather than photographing it back into existence. Only at the top
@@ -245,7 +264,8 @@ extension EditorState {
         // on disk, and that cannot be done by copying it
         // (`RecordingExport.copiesVerbatim`), and neither is a size that
         // shrinks the picture.
-        if format == .mp4, quality == .high,
+        // A stretch of it cannot be copied either: the file is all of it.
+        if format == .mp4, quality == .high, whole,
            !(size?.shrinks(document.canvasSize) ?? false),
            let movie = document.untouchedRecording,
            let source = MovieLibrary.shared.url(for: movie) {
@@ -255,10 +275,10 @@ extension EditorState {
             return
         }
 
-        let plan = DocumentVideoExport.plan(durationMS: document.documentDurationMS,
+        let plan = DocumentVideoExport.plan(range: span,
                                             canvasSize: document.canvasSize,
                                             format: format, quality: quality, size: size)
-        let mix = document.audioMix()
+        let mix = AudioMixSegment.windowed(document.audioMix(), to: span)
         let soundURLs = SoundLibrary.shared.urls(for: mix)
         let pictures = DocumentFrames(document: document, store: store,
                                       movieURLs: MovieLibrary.shared.urls(in: document))

@@ -1,0 +1,28 @@
+{
+  "id": "play-in-to-out-plays-only-the-marked-stretch",
+  "title": "Play In to Out plays only the marked stretch",
+  "goal": "With an In and an Out set on the timeline, a person can play just the marked stretch and stop at the Out, the way Premiere's Play In to Out does, so they can check a stretch before exporting or extracting it. Plain play keeps running to the end as it does today.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 3440,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-27T23:53:20.520Z",
+  "updated": "2026-09-27T23:53:20.523Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split out of export-and-playback-keep-to-the-in-and-out-marks, whose title named playback but whose acceptance covered export only; export shipped there. Premiere binds Play In to Out to Cmd+Shift+Space on Mac (check before binding: TimelineMenuKeys). Marks: PhotonzDocument.markedRangeMS / exportRangeMS(.marked) in Sources/PhotonzCore/VideoExportRange.swift. Ruler menu rows: EditorState+TimelineMenus.swift timelineRulerMenuRows.",
+  "acceptance": [
+    "With In and Out set, Play In to Out (Premiere's key, and a row on the ruler right-click menu) starts at the In and stops at the Out",
+    "Plain Space play is unchanged",
+    "With no marks set the command is absent or plays the whole video",
+    "A walk at Next defaults sets marks, plays In to Out and checks the playhead stops at the Out"
+  ],
+  "log": [
+    {
+      "t": "2026-09-27T23:53:20.522Z",
+      "note": "created (manual)"
+    }
+  ]
+}

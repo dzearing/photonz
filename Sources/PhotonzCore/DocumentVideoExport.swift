@@ -36,9 +36,14 @@ public struct VideoFramePlan: Hashable, Sendable {
     public let videoBitsPerSecond: Int
     /// What it is allowed to spend on the sound.
     public let audioBitsPerSecond: Int
+    /// The moment of the document the file starts at: the In, where an
+    /// export keeps to the marks (`VideoExportRange`), and nought otherwise.
+    public let startMS: Int
 
     public init(frameCount: Int, fps: Double, size: CGSize, durationMS: Int,
-                videoBitsPerSecond: Int = 0, audioBitsPerSecond: Int = 128_000) {
+                videoBitsPerSecond: Int = 0, audioBitsPerSecond: Int = 128_000,
+                startMS: Int = 0) {
+        self.startMS = max(0, startMS)
         self.frameCount = max(0, frameCount)
         self.fps = max(1, fps)
         self.size = size
@@ -62,6 +67,13 @@ public struct VideoFramePlan: Hashable, Sendable {
     public func timeMS(at index: Int) -> Int {
         let raw = Int((Double(max(0, index)) * 1000 / fps).rounded())
         return min(raw, max(0, durationMS - 1))
+    }
+
+    /// The moment of the DOCUMENT the picture at `index` is of: the file's own
+    /// moment, counted on from where the file starts. Never at or past the
+    /// Out, for the same reason `timeMS(at:)` never reaches the duration.
+    public func documentTimeMS(at index: Int) -> Int {
+        startMS + timeMS(at: index)
     }
 }
 
@@ -89,7 +101,18 @@ public enum DocumentVideoExport {
                             format: RecordingFormat,
                             quality: VideoExportQuality,
                             size chosen: VideoExportSize? = nil) -> VideoFramePlan {
-        let length = max(0, durationMS)
+        plan(range: 0..<max(0, durationMS), canvasSize: canvasSize, format: format,
+             quality: quality, size: chosen)
+    }
+
+    /// The same, for a stretch of the document: the file runs as long as the
+    /// stretch and its first picture is the one at the stretch's start.
+    public static func plan(range: Range<Int>, canvasSize: CGSize,
+                            format: RecordingFormat,
+                            quality: VideoExportQuality,
+                            size chosen: VideoExportSize? = nil) -> VideoFramePlan {
+        let start = max(0, range.lowerBound)
+        let length = max(0, range.upperBound - start)
         // A movie is photographed on the document's own frame grid and then
         // encoded within the budget the choice allows, so the choice means the
         // same thing here as it does on a recording (`VideoExportRecipe`).
@@ -100,14 +123,16 @@ public enum DocumentVideoExport {
         guard length > 0 else {
             return VideoFramePlan(frameCount: 0, fps: fps, size: size, durationMS: 0,
                                   videoBitsPerSecond: recipe.videoBitsPerSecond,
-                                  audioBitsPerSecond: recipe.audioBitsPerSecond)
+                                  audioBitsPerSecond: recipe.audioBitsPerSecond,
+                                  startMS: start)
         }
         // At least one picture for anything with any length at all: a held
         // frame lasting a tenth of a second is still a thing somebody made.
         let count = max(1, Int((Double(length) / 1000 * fps).rounded()))
         return VideoFramePlan(frameCount: count, fps: fps, size: size, durationMS: length,
                               videoBitsPerSecond: recipe.videoBitsPerSecond,
-                              audioBitsPerSecond: recipe.audioBitsPerSecond)
+                              audioBitsPerSecond: recipe.audioBitsPerSecond,
+                              startMS: start)
     }
 
     /// The nearest size with an even number of pixels on each side, never
