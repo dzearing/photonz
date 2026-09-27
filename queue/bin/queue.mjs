@@ -23,6 +23,11 @@
 //                                            failing list says so instead of guessing it from the
 //                                            task's wording. --none says the walks it names are only
 //                                            examples. With no arguments it prints what the task says
+//   node queue/bin/queue.mjs off-by-default <id> ["why" | --clear]
+//                                            this task's feature is meant to stay behind a switch
+//                                            that is off by default. Without it, `status <id> done`
+//                                            on an app task is refused when every walk it names
+//                                            turns on a switch that is off at the release's defaults
 //   node queue/bin/queue.mjs needs-screen <id> [on|off] ["why"]
 //                                            this task can only be answered with somebody logged in
 //                                            at the Mac (a menu reading, a live screenshot). It stays
@@ -117,7 +122,7 @@ try {
       q.writeStatus({ note: args.join(' ') });
       break;
     case 'status':
-      out(q.setStatus(args[0], args[1], args.slice(2).join(' ')).id);
+      out(q.setStatus(args[0], args[1], args.slice(2).join(' '), { checkReach: true }).id);
       break;
     case 'add':
       out(added(q.addTask({ title: args[0], priority: args[1] || 'p2-normal', notes: args.slice(2).join(' ') })));
@@ -171,6 +176,21 @@ try {
         : [];
       if (missing.length) console.error(`No such walk: ${missing.join(', ')} (${library}/<name>.json). Recorded anyway; fix it if that is a typo.`);
       out(q.setWalks(args[0], list).id);
+      break;
+    }
+    // A feature meant to stay off by default, said in words, so `status done`
+    // does not refuse it for having only walks that switch it on.
+    case 'off-by-default': {
+      if (!args[0]) throw new Error('usage: queue.mjs off-by-default <id> ["why" | --clear]');
+      const t = q.readTaskDetail(args[0]);
+      if (!t) throw new Error(`no task ${args[0]}`);
+      if (args.length === 1) {
+        out(t.offByDefault ? `deliberately off by default: ${t.offByDefault}` : 'not said; done needs a walk that reaches it at defaults');
+        break;
+      }
+      const why = args[1] === '--clear' ? '' : args.slice(1).join(' ');
+      if (args[1] !== '--clear' && !why.trim()) throw new Error('say why it is off by default, in words');
+      out(q.setOffByDefault(args[0], why).id);
       break;
     }
     case 'needs-screen': {

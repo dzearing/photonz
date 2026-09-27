@@ -332,7 +332,7 @@ Write the findings into the task log. A mock assumption the app cannot deliver b
 **Before you call it ready**, review the built thing the same way, on the real app: run it, use it as a person would, and be honest about what feels clumsy. Fix what you can, and record what you could not.
 
 **Two checks every UI task must pass before `done`:**
-1. **Default config.** At least one walk reaches the feature with NO `flags` in its setup, i.e. exactly as a person running Next gets it. A walk that forces a flag proves nothing about what the user sees.
+1. **Default config.** At least one walk reaches the feature with NO `flags` in its setup, i.e. exactly as a person running Next gets it. A walk that forces a flag proves nothing about what the user sees. **The queue checks this for you:** name the task's walks (`queue.mjs walks <id> <walk> ...`) and `queue.mjs status <id> done` on an app task is refused, naming the walk and the switch, when every walk it names switches ON something that is off at Next defaults. The defaults are read from `FeatureCatalog.swift` itself (`node queue/bin/flag-defaults.mjs` lists them), so the fix is to turn the switch on by default there or to name a walk that needs no switch, never to reword anything. A feature that is genuinely meant to stay off by default says so in words first: `queue.mjs off-by-default <id> "<why>"`.
 2. **Side by side with the mock.** Put a picture of the shipped surface next to the matching mock frame (name the page and section) and list every difference in the audit. Differences in layout, colour, control type, spacing or copy length are defects to fix in this task or to file as p1, not notes. A criterion that needs a person's judgement becomes a decision card for the user; a runner never ticks it.
 
 ## When a feature is ready: write its audit
@@ -347,6 +347,7 @@ A feature is not done when it compiles. It is done when the user can try it and 
   "epic": "measure-redline",
   "summary": "One or two plain sentences: what you can now do that you could not before.",
   "setup": "Photonz Dev, release Next, no flag changed from its default. If a step needs a flag turned on by hand, the feature is not reachable and the task is not done.",
+  "switched": {},
   "try": [
     { "do": "One short imperative step. Name the exact key, menu item or gesture.", "shot": "2026-08-23-measure-1.png", "shotNote": "Only when the picture was taken under a lock: the line the walk handed you." },
     { "do": "The next step. Aim for five to eight steps total, not twenty." }
@@ -362,6 +363,7 @@ A feature is not done when it compiles. It is done when the user can try it and 
 
 Rules that keep it usable:
 
+- **`switched` is every switch the setup changes from Next's defaults**, in a walk's shape (`{ "next-some-feature": true }`), and `{}` when it changes none. The dashboard reads each one against the app's own list of switches and shows an audit that changed any as **Not reachable yet**, so leaving one out does not hide it from the check on `done`, and putting one in is the honest thing when a step really does need it.
 - **`try` is five to eight steps.** If it needs more, the feature is too big to playtest in one sitting: audit the slice that is ready.
 - **Every step is one action.** No paragraphs, no background, no justification.
 - **Ship a real screenshot.** If the walk's `Window captures:` line named real pictures, at least one step carries a `shot`, and it is a `-sc.png` from a playtest, copied next to the audit under `queue/audits/` and referenced by file name only. A locked screen is not an excuse: run a walk that survives a lock, or force one and take the pictures it reaches, and put the label the walk hands you in that step's `shotNote` so the picture says it was taken under a lock. The one case with no picture at all is a missing Screen Recording grant; say that in `rough` in one plain sentence and use the offscreen renders. An audit that quietly shows a render as if it were the app is the thing this rule exists to stop.

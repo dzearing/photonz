@@ -8,6 +8,7 @@ import { join, dirname, basename, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
+import { readCatalog, flagDefaults, forcedOn } from './flag-defaults.mjs';
 
 // The queue lives at <repo>/queue. PHOTONZ_QUEUE_DIR points every writer at a
 // throwaway copy instead, which is how the runner-failure drill
@@ -441,9 +442,90 @@ export function setSeq(id, seq) {
   return t;
 }
 
-export function setStatus(id, status, note = '') {
+// ---- reachable at defaults ---------------------------------------------------
+// For five days in September 2026 the loop built about twenty video features,
+// audited them and called them ready to try while every one sat behind a
+// switch that was off by default, so the user opening a recording saw none of
+// it. Walks switch features on in their setup, so every walk passed. Prose in
+// the runner prompt did not stop it; this does: an app task is not done while
+// every walk it names has to switch something on that a person running the
+// release does not have on. The defaults come from the app's own list of
+// switches (flag-defaults.mjs), never from what an audit or a runner says.
+
+// The switch list the check reads: the repo's own, or for a queue pointed at a
+// copy (a drill), the copy's when it carries one.
+function catalogDefaults(release) {
+  const local = join(REPO, 'Sources', 'PhotonzCore', 'FeatureCatalog.swift');
+  return flagDefaults(release, existsSync(local) ? readCatalog(local) : readCatalog());
+}
+
+// The `flags` a walk's setup sets, or null when there is no such walk.
+export function walkSetupFlags(name) {
+  const file = join(REPO, 'Scripts', 'playtest', `${name}.json`);
+  if (!existsSync(file)) return null;
+  const walk = readJSON(file, {});
+  return (walk && walk.setup && walk.setup.flags) || {};
+}
+
+// Whether `t` may be called done as far as reachability goes.
+//   { refused, why, walks: [{ walk, forced: [...] }], release }
+// Only an app task that names its walks is judged; a walk file that does not
+// exist is left out rather than counted either way. One walk reaching the
+// feature at defaults is enough, since the others may be about the old way.
+export function reachCheck(t, { defaults = null } = {}) {
+  const release = t.release === 'current' ? 'current' : 'next';
+  const pass = (why = '') => ({ refused: false, why, walks: [], release });
+  if ((t.area || 'app') !== 'app') return pass();
+  if (typeof t.offByDefault === 'string' && t.offByDefault.trim()) return pass(`deliberately off by default: ${t.offByDefault.trim()}`);
+  const names = Array.isArray(t.walks) ? t.walks : [];
+  const flagsOn = defaults || catalogDefaults(release);
+  const walks = names
+    .map((walk) => ({ walk, setup: walkSetupFlags(walk) }))
+    .filter((w) => w.setup !== null)
+    .map(({ walk, setup }) => ({ walk, forced: forcedOn(setup, flagsOn) }));
+  if (!walks.length || walks.some((w) => w.forced.length === 0)) return pass();
+  const label = release === 'current' ? 'Photonz' : 'Next';
+  const each = walks.map((w) => `${w.walk} turns on ${w.forced.join(', ')}`).join('; ');
+  return {
+    refused: true,
+    why: `every walk this task names turns on a switch that is off for a person running ${label}: ${each}`,
+    walks,
+    release,
+  };
+}
+
+// Say in so many words that a task's feature is meant to be off by default, so
+// the reachability check lets it through. An empty reason takes it back.
+export function setOffByDefault(id, why = '') {
   const t = findTask(id);
   if (!t) throw new Error(`no task ${id}`);
+  const reason = String(why || '').trim();
+  if (reason) t.offByDefault = reason; else delete t.offByDefault;
+  appendLog(t, reason ? `deliberately off by default: ${reason}` : 'no longer said to be off by default');
+  saveTask(t);
+  appendEvent('task_off_by_default', { id, ...(reason ? { why: reason } : {}) });
+  return t;
+}
+
+// `checkReach` is the runner's path (queue.mjs status). The dashboard, where
+// the user marks things by hand, and the sweep closing its own standing task
+// do not go through it.
+export function setStatus(id, status, note = '', { checkReach = false } = {}) {
+  const t = findTask(id);
+  if (!t) throw new Error(`no task ${id}`);
+  if (status === 'done' && checkReach && t.status !== 'done') {
+    const reach = reachCheck(t);
+    if (reach.refused) {
+      appendLog(t, `not done yet: ${reach.why}`);
+      saveTask(t);
+      appendEvent('task_done_refused', { id, walks: reach.walks });
+      throw new Error(`Not done: ${reach.why}.\n`
+        + `A feature exists only if a person running ${reach.release === 'current' ? 'Photonz' : 'Next'} with default settings can reach it. Do one of these:\n`
+        + `  - switch it on by default in Sources/PhotonzCore/FeatureCatalog.swift\n`
+        + `  - name a walk that reaches it without switching anything on: node queue/bin/queue.mjs walks ${id} <walk> ...\n`
+        + `  - if it is meant to stay off, say why: node queue/bin/queue.mjs off-by-default ${id} "<why>"`);
+    }
+  }
   // Blocking is only ever the answer to a question that is still open. If the
   // question has already been answered, blocking strands the task: nothing
   // returns a task to the queue except an answer, so it waits forever on
@@ -1659,6 +1741,25 @@ export function readAudit(name) {
 //
 // The day a report landed comes from its FILE NAME (YYYY-MM-DD-slug.json),
 // which is also the sort key, so ordering never depends on reading anything.
+// The switches an audit's setup changed from the release's defaults, judged
+// against the app's own list rather than the audit's word for it. An audit
+// records them as `"switched": { "<switch>": true|false }`, the same shape a
+// walk's setup uses; a bare list of names means each was switched on. Naming
+// a switch at the value it already has is not a change. Any change at all
+// means a person running the release as it ships cannot try the audit as
+// written, so the dashboard shows it as not reachable yet.
+export function auditSwitchesChanged(a, defaults = null) {
+  const raw = a && a.switched;
+  if (!raw || typeof raw !== 'object') return [];
+  const said = Array.isArray(raw) ? Object.fromEntries(raw.map((n) => [String(n), true])) : raw;
+  let flagsOn = defaults;
+  if (!flagsOn) { try { flagsOn = catalogDefaults(a.release === 'current' ? 'current' : 'next'); } catch { flagsOn = {}; } }
+  return Object.entries(said)
+    .filter(([name, on]) => typeof on === 'boolean' && (name in flagsOn ? flagsOn[name] !== on : on))
+    .map(([name]) => name)
+    .sort();
+}
+
 let auditIndexCache = null; // { key, rows }
 export function auditIndex() {
   let names;
@@ -1666,6 +1767,9 @@ export function auditIndex() {
   names.sort().reverse();
   let stamp = 0;
   for (const n of names) { try { stamp += statSync(join(AUDITS, n)).mtimeMs; } catch { /* raced with a write */ } }
+  // A switch turned on by default in the app changes what an audit's
+  // `switched` means, so the list of switches is part of the key.
+  try { stamp += statSync(join(REPO, 'Sources', 'PhotonzCore', 'FeatureCatalog.swift')).mtimeMs; } catch { /* a queue with no app beside it */ }
   const key = names.length + ':' + stamp;
   if (auditIndexCache && auditIndexCache.key === key) return auditIndexCache.rows;
   const rows = [];
@@ -1684,6 +1788,7 @@ export function auditIndex() {
       steps: (a.try || []).length,
       questions: (a.evaluate || []).length,
       rough: (a.rough || []).length,
+      switched: auditSwitchesChanged(a),
     });
   }
   auditIndexCache = { key, rows };
