@@ -131,8 +131,11 @@ due)
 # ------------------------------------------------------------- slice-due ----
 # Exit 0 when the rotating check should run instead of the whole set.
 slice-due)
-  # Same rule as the whole set, with a shorter absence (ten minutes of walks).
-  queue/bin/person-at-mac.sh away "${PHOTONZ_SLICE_IDLE:-300}" || exit 1
+  # No wait for the person, unlike the whole set: every walk leaves their
+  # keyboard, focus and screen alone (queue/bin/focus-drill.sh --all, measured
+  # over the whole set on 2026-09-26), so ten minutes of walks run while they
+  # work. The walks that photograph an open menu are the exception, and each of
+  # those is skipped on its own while somebody is here (Scripts/probe-app.sh).
   LOCKED_FLAG=""
   screen_locked && LOCKED_FLAG="--locked"
   RUN=$(queue/bin/sweep-schedule.mjs --decide $LOCKED_FLAG 2>/dev/null \
@@ -214,20 +217,17 @@ slice)
   # An explicit cap is taken at its word, floor and all: that is how the cap is
   # proved to fire in a minute rather than in twenty.
   SLICE_CAP=${PHOTONZ_SLICE_MAX_SECONDS:-$SLICE_CAP}
-  Scripts/playtest-all.sh --only "$PICK" > "$RUNLOG" 2>&1 &
+  # A walk that photographs an open menu does not wait for the person to step
+  # away inside a rotating check: it is skipped at once and comes round again
+  # in the whole set, which only runs when nobody is here.
+  PHOTONZ_WALK_IDLE_WAIT="${PHOTONZ_WALK_IDLE_WAIT:-0}" Scripts/playtest-all.sh --only "$PICK" > "$RUNLOG" 2>&1 &
   SLICE_PID=$!
   SLICE_TIMED_OUT=0
-  SLICE_PERSON=0
   while kill -0 "$SLICE_PID" 2>/dev/null; do
     sleep 3
-    queue/bin/person-at-mac.sh here 3 && SLICE_PERSON=1
-    if (( SLICE_PERSON || SECONDS - began_s > SLICE_CAP )); then
+    if (( SECONDS - began_s > SLICE_CAP )); then
       SLICE_TIMED_OUT=1
-      if (( SLICE_PERSON )); then
-        echo "!! Somebody is using the Mac: stopping the rotating check so it stops driving the probe."
-      else
-        echo "!! The rotating check passed its ${SLICE_CAP}s cap; stopping it."
-      fi
+      echo "!! The rotating check passed its ${SLICE_CAP}s cap; stopping it."
       kill -TERM "$SLICE_PID" 2>/dev/null; sleep 2; kill -KILL "$SLICE_PID" 2>/dev/null
       # A SIGKILL leaves playtest-all.sh's EXIT trap unrun, so put down by pid
       # any hold it took on the Mac, and never with pkill.
@@ -244,8 +244,7 @@ slice)
   [[ -s "$RUNLOG" && -n "$(tail -c1 "$RUNLOG" 2>/dev/null)" ]] && echo
   took=$(( SECONDS - began_s ))
   if (( SLICE_TIMED_OUT )); then
-    if (( SLICE_PERSON )); then echo "!! The rotating check was stopped after $((took / 60))m $((took % 60))s because somebody started using the Mac. What it reached is above; the rest run next time."; else
-    echo "!! The rotating check was stopped on the clock after $((took / 60))m $((took % 60))s. What it reached is above; the rest of its walks never ran, and the rotation stays where it was so they run next time."; fi
+    echo "!! The rotating check was stopped on the clock after $((took / 60))m $((took % 60))s. What it reached is above; the rest of its walks never ran, and the rotation stays where it was so they run next time."
   elif (( SLICE_CODE == 3 )); then
     echo "==> Some of these walks could not run: the Mac's screen is locked, so a walk that looks a control up by name was refused. The ones that ran are real."
   fi
@@ -259,9 +258,9 @@ slice)
   # Keep the last five rotating-check logs; they are small but there are many.
   ls -t "$SDIR"/slice-*.log 2>/dev/null | tail -n +6 | while IFS= read -r old; do rm -f "$old"; done
   # Then whether a walk still takes a person's keyboard, focus or screen: a
-  # stand-in for the person holds the front through four walks, one per way a
-  # walk was ever seen doing it (queue/bin/focus-drill.sh, about a minute and
-  # a half). Only on an unlocked Mac nobody is using, since the stand-in takes
+  # stand-in for the person holds the front through eight walks, one per way a
+  # walk was ever seen doing it (queue/bin/focus-drill.sh, about three
+  # minutes). Only on an unlocked Mac nobody is using, since the stand-in takes
   # the front, and a lock gives the front to the login window whatever a walk does.
   if (( SLICE_TIMED_OUT == 0 )) \
      && ! node -e 'process.exit(JSON.parse(require("fs").readFileSync("dist/probe-grants.json","utf8")).screenLocked ? 0 : 1)' 2>/dev/null; then

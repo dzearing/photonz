@@ -69,27 +69,35 @@ The schedule now:
 (`queue/bin/sweep-schedule.mjs`), and `queue/bin/sweep.sh status` says why
 nothing is running right now.
 
-### Walks never run under the person's hands
+### Walks run while the person works
 
 Walks drive the probe, and on 2026-09-26 the user could not even type while the
-loop tested. So nothing that drives the probe starts while somebody is using the
-Mac, and anything running stops when they come back (`queue/bin/person-at-mac.sh`,
-HIDIdleTime): a walk needs a minute with no keyboard or mouse input, the
-rotating check five minutes, the whole set fifteen; a walk that sees input quits
-the probe and exits 6 (`DEFERRED`, never a failure), and a sweep that sees input
-puts itself down and its request goes back on the pile. The whole set runs at
-most once a day. `PHOTONZ_IGNORE_PERSON=1` is for a person running a walk by
-hand while they watch.
+loop tested. The fix landed the same day: a walk never activates the probe,
+keeps its windows (sheets, the history strip, toasts, the Welcome window
+included) one level under every other app's, never lets them take key, and
+reads or picks from a menu without opening it on screen.
+`queue/bin/focus-drill.sh` proves it: a stand-in for the person holds the front
+while walks run and every walk and step that took a key or covered their window
+is named. `--all` measured all 630 walks that evening and every one read clean
+or showed only the menu it photographs; its standing set runs after every
+rotating check.
 
-The gate is a stopgap. The real fix landed the same day: a walk no longer
-activates the probe, keeps its windows one level under every other app's, and
-reads or picks from a menu without opening it on screen. The one exception is a
-walk that PHOTOGRAPHS an open menu (66 of them, `queue/bin/walk-needs-the-mac.mjs`),
-which takes the keys for about a second per picture. `queue/bin/focus-drill.sh`
-proves it: a stand-in for the person holds the front while walks run and every
-walk and step that took a key or covered their window is named. Its standing
-set runs after every rotating check; `--all --slice i/n` runs the whole set in
-pieces. The gate stays until the whole set has measured clean.
+So walks and the rotating check run while the person is at the Mac. Only these
+still wait for them to step away (`queue/bin/person-at-mac.sh`, HIDIdleTime):
+
+* **a walk that PHOTOGRAPHS an open menu** (66 of them,
+  `queue/bin/walk-needs-the-mac.mjs`): an open menu takes every key on the Mac
+  while it is up. It waits a minute of no input (inside a rotating check it does
+  not wait, it is skipped and comes round in the whole set), and quits the probe
+  the moment input arrives: exit 6, `DEFERRED`, never a failure;
+* **`Scripts/probe-app.sh` with no walk**: nothing tells the app a walk is
+  driving it, so opening a file brings it to the front like any app;
+* **the whole set**: fifteen minutes of absence, and it puts itself down when
+  they come back, its request going back on the pile. It runs at most once a day.
+
+`PHOTONZ_IGNORE_PERSON=1` is for a person running a walk by hand while they
+watch. Anything new that puts up a window or panel during a walk is run through
+`queue/bin/focus-drill.sh <walk>` and must read `clean`.
 
 ### A locked screen stops names, not the app
 

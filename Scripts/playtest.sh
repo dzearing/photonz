@@ -15,7 +15,8 @@
 # Exits 0 when done.json says "ok", 1 when the walk failed or ran out of time,
 # 3 when the screen was locked and the walk could not run at all, 4 when THE
 # APP DIED part way through, 5 when THE APP WOULD NOT START at all, and 6 when
-# it was DEFERRED because somebody was using the Mac (queue/bin/person-at-mac.sh). Those
+# it was DEFERRED because somebody was using the Mac (queue/bin/person-at-mac.sh; only
+# a walk that photographs an open menu waits for them, see probe-app.sh). Those
 # last two print what really happened rather than "no done.json", which is what
 # a merely slow walk says: a crash and an app that never came up are both news
 # about the app, and neither is news about the walk.
@@ -111,10 +112,16 @@ echo "==> Waiting up to ${TIMEOUT}s for $OUT/done.json"
 # walks crashing that way cost 22 minutes of every sweep and read as nothing at
 # all; the crash behind them was found by a person reading a stack trace.
 DIED=0
+# A walk that photographs an open menu takes every key on the Mac while the
+# menu is up, so it is the one walk that stops when the person comes back.
+# Every other walk leaves their keyboard, focus and screen alone
+# (queue/bin/focus-drill.sh) and carries on while they work.
+NEEDS_THE_MAC=0
+queue/bin/walk-needs-the-mac.mjs "$SCRIPT_ABS" >/dev/null 2>&1 && NEEDS_THE_MAC=1
 for ((i = 0; i < TIMEOUT * 2; i++)); do
   [[ -f "$OUT/done.json" ]] && break
   # The person came back: stop driving the probe and give them their Mac.
-  if (( i > 4 )) && queue/bin/person-at-mac.sh here 3; then
+  if (( NEEDS_THE_MAC && i > 4 )) && queue/bin/person-at-mac.sh here 3; then
     Scripts/probe-app.sh --quit >/dev/null 2>&1
     echo "==> This walk was INTERRUPTED: somebody started using the Mac, so the probe was quit. Not a failure."
     echo "==> Verdict: DEFERRED  somebody started using the Mac"

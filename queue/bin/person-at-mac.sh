@@ -4,11 +4,17 @@
 #
 # Walks drive the probe app, and on 2026-09-26 the user reported that while the
 # loop tested, their machine was unusable: they could not type, and saying
-# "stop testing" took pulling focus back five times. So nothing that drives the
-# probe starts while somebody is at the keyboard, and a walk that is running
-# stops the moment they touch it. Walks themselves never move the real cursor
-# or post events through the HID system (PlaytestPointer.swift), so only a
-# person resets this clock.
+# "stop testing" took pulling focus back five times. That was fixed in the
+# harness and the app, and queue/bin/focus-drill.sh measured every walk clean
+# the same evening, so an ordinary walk now runs while somebody works. What
+# still asks this script, and waits or stops for the person:
+#   - a walk that photographs an open menu (queue/bin/walk-needs-the-mac.mjs),
+#     in Scripts/probe-app.sh and Scripts/playtest.sh: a menu takes every key;
+#   - Scripts/probe-app.sh with no walk: it brings the app to the front;
+#   - the whole walk set (queue/bin/sweep.sh due and run), two hours of it;
+#   - the focus drill itself, whose stand-in for the person takes the front.
+# Walks themselves never move the real cursor or post events through the HID
+# system (PlaytestPointer.swift), so only a person resets this clock.
 #
 #   queue/bin/person-at-mac.sh idle          seconds since the last input
 #   queue/bin/person-at-mac.sh away <secs>   exit 0 when idle at least that long

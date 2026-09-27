@@ -196,6 +196,7 @@ BLIND_AFTER=5
 BLIND_RUN=0
 BLIND_FROM=""
 BLIND=()
+DEFERRED_WALKS=()
 # How long the run took, and how long each walk in it took, because "the full
 # run takes about four hours" was a guess nobody could check. Every walk prints
 # its own seconds and the run prints its total, so a walk that has started
@@ -239,13 +240,15 @@ for walk in Scripts/playtest/*.json; do
     fi
     continue
   elif (( code == 6 )); then
-    # Somebody is using the Mac. Stop the whole batch rather than launching the
-    # probe again under their hands; the walks not run are unknown, not passing.
-    printf '%4ds  DEFERRED  somebody is using the Mac\n' $((SECONDS - WALK_BEGAN))
-    echo
-    echo "==> STOPPING: somebody is using the Mac. The walks answered above are real; the rest did not run."
+    # Somebody is using the Mac and this walk photographs an open menu, which
+    # takes every key while it is up, so it waited for them and gave up. Only
+    # such walks wait (Scripts/probe-app.sh); every other walk leaves the
+    # person alone, so the run carries on with them. Not run is unknown, not
+    # passing.
+    printf '%4ds  DEFERRED  somebody is using the Mac, and this walk photographs an open menu\n' $((SECONDS - WALK_BEGAN))
+    DEFERRED_WALKS+=("$name")
     DEFERRED=1
-    break
+    continue
   elif (( code == 3 )); then
     BLIND_RUN=0
     # The screen is locked and THIS walk looks a control up by name, so it did
@@ -336,6 +339,7 @@ COUNTS="==> $PASSED passed, ${#FAILED[@]} failed"
 (( LOCKED )) && COUNTS="$COUNTS, $COULD_NOT_RUN could not run"
 (( ${#BLIND[@]} )) && COUNTS="$COUNTS, ${#BLIND[@]} could not start"
 echo "$COUNTS"
+(( ${#DEFERRED_WALKS[@]} )) && echo "==> ${#DEFERRED_WALKS[@]} waited for the person at the Mac and did not run: ${DEFERRED_WALKS[*]}"
 (( ${#FAILED[@]} == 0 )) || printf '    %s\n' "${FAILED[@]}"
 (( ${#CRASHED[@]} == 0 )) || printf '    %s\n' "${CRASHED[@]}"
 printf '==> %d walks in %dm %02ds' "$RAN" $((TOTAL / 60)) $((TOTAL % 60))
@@ -349,7 +353,10 @@ echo
 # Exit 5 means THE RUN WENT BLIND: the app stopped launching, so a stretch of
 # the set was never put in front of anything. It outranks the lock, because a
 # locked run at least had an app.
-(( ${DEFERRED:-0} )) && exit 6
+# Exit 6 means some walks WAITED for the person and did not run, and nothing
+# else is worth saying: a failure or a lock says more.
 (( ${#BLIND[@]} )) && exit 5
 (( LOCKED )) && exit 3
-exit $(( ${#FAILED[@]} + ${#CRASHED[@]} == 0 ? 0 : 1 ))
+(( ${#FAILED[@]} + ${#CRASHED[@]} )) && exit 1
+(( ${DEFERRED:-0} )) && exit 6
+exit 0

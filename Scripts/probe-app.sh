@@ -89,15 +89,32 @@ ARGS=()
 # somebody working on the harness itself wants: the run still records that the
 # screen was locked, so it is a way to watch the machinery, never a way to earn
 # a pass. See Sources/Photonz/Playtest/PlaytestScreenState.swift.
-# Never launch while somebody is using the Mac (queue/bin/person-at-mac.sh):
-# the probe driving itself made the user's machine unusable on 2026-09-26. Wait
-# for the keyboard and mouse to have been left alone for PHOTONZ_WALK_IDLE
-# seconds (default 60), up to PHOTONZ_WALK_IDLE_WAIT (default 240), then give
-# up with exit 6, which means DEFERRED: nothing ran, nothing is broken.
+# Whether the person at the Mac has to step away first (queue/bin/person-at-mac.sh).
+# On 2026-09-26 the probe driving itself made the user's machine unusable, so
+# until the whole walk set had been measured with queue/bin/focus-drill.sh every
+# launch waited for the keyboard and mouse to be left alone. Every walk now
+# leaves the person's keyboard, focus and screen alone (measured over all of
+# them on 2026-09-26), so a walk launches whoever is at the Mac. Two launches
+# still wait:
+#   - a walk that photographs an open menu (queue/bin/walk-needs-the-mac.mjs):
+#     an open menu takes every key on the Mac while it is up;
+#   - a launch with no walk at all: nothing tells the app a walk is driving it,
+#     so opening a file brings it to the front like any app.
+# They wait for PHOTONZ_WALK_IDLE seconds of no input (default 60), up to
+# PHOTONZ_WALK_IDLE_WAIT (default 240), then give up with exit 6, which means
+# DEFERRED: nothing ran, nothing is broken.
+MUST_WAIT=1
+if [[ -n "$PLAYTEST" ]] && ! queue/bin/walk-needs-the-mac.mjs "$PLAYTEST" >/dev/null 2>&1; then
+  MUST_WAIT=0
+fi
 WAITED=0
-until queue/bin/person-at-mac.sh away "${PHOTONZ_WALK_IDLE:-60}"; do
+until (( ! MUST_WAIT )) || queue/bin/person-at-mac.sh away "${PHOTONZ_WALK_IDLE:-60}"; do
   if (( WAITED == 0 )); then
-    echo "==> Somebody is using this Mac; waiting for them to step away before launching the probe."
+    if [[ -n "$PLAYTEST" ]]; then
+      echo "==> Somebody is using this Mac, and this walk $(queue/bin/walk-needs-the-mac.mjs "$PLAYTEST"); waiting for them to step away."
+    else
+      echo "==> Somebody is using this Mac; waiting for them to step away before launching the probe with no walk to drive."
+    fi
   fi
   if (( WAITED >= ${PHOTONZ_WALK_IDLE_WAIT:-240} )); then
     echo "==> Verdict: DEFERRED  somebody was using this Mac for ${WAITED}s, so the probe was not launched"
