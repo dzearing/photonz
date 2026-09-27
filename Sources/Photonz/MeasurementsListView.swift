@@ -12,16 +12,21 @@ import SwiftUI
 /// safety net.
 struct MeasurementsSectionAccessory: View {
     @Environment(EditorState.self) private var editorState
+    /// The count badge. Off where the header draws the count as its chip,
+    /// beside the title (`next-dock-headers`).
+    var showsCount = true
 
     var body: some View {
         HStack(spacing: 6) {
-            Text("\(editorState.measurementCount)")
-                .font(.caption.weight(.semibold))
-                .monospacedDigit()
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 1)
-                .background(Capsule().fill(.quaternary))
+            if showsCount {
+                Text("\(editorState.measurementCount)")
+                    .font(.caption.weight(.semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 1)
+                    .background(Capsule().fill(.quaternary))
+            }
             // The same commands as the menu bar's Measure menu, in its order
             // and under its names (§6's mirror rule), so nothing learned here
             // is wrong there. Each is off when it would change nothing.
@@ -41,7 +46,9 @@ struct MeasurementsSectionAccessory: View {
                 }
                 .disabled(count == 0)
             } label: {
-                Image(systemName: "ellipsis.circle")
+                // The mock's `ic-more` beside the mock's headings, so every
+                // group's menu is the same three dots.
+                Image(systemName: showsCount ? "ellipsis.circle" : "ellipsis")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }

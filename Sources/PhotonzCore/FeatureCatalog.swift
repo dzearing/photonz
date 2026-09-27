@@ -230,6 +230,8 @@ public enum FeatureCatalog {
 
     public static let libraryTilesAsCardsFlag = "next-library-tiles-as-cards"
 
+    public static let dockHeadersFlag = "next-dock-headers"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -1274,6 +1276,16 @@ public enum FeatureCatalog {
                     name: libraryTilesAsCardsFlag,
                     title: "Library tiles are cards",
                     description: "Library tiles are at least 96 points wide, two to a row in a resting dock, with a 16 by 10 picture, so long names read whole. Off means smaller tiles, three to a row.",
+                    area: .panel,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: dockHeadersFlag,
+                    title: "Panel group headings as the mocks draw them",
+                    description: "Each panel group has a small capital title, a chip beside it saying what it holds, such as Clip, Media or an effect count, and its buttons at the far edge. Off means title case headings ending in a grip.",
                     area: .panel,
                     isEnabled: false,
                     parameters: []),

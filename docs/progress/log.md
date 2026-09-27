@@ -19890,3 +19890,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - A document with time reads black inside its frame on the canvas, matching the movie writer. The title line no longer says "saved" for a never-saved document.
 - Walk harness: `blankVideo` step, `newVideoDialog`/`createVideo`/`importMedia` actions, `expectTimeline.tracks`. New walk `new-empty-video-walk` (lock-safe, no front needed).
 - Open question for the user (audit rough): build the mock's empty-timeline hint sentence, which the chrome copy budget forbids?
+
+## 2026-09-27 — The dock headings match the mock
+
+- Behind `next-dock-headers` (on in Next): every dock group heading is the mock's `.dgrp-h`: chevron, 10pt small capitals in the faint ink with .09em tracking, a chip right after the title, the group's own buttons at the far edge, no grip (the header is still the drag handle). Rules in `DockGroupHeader` (PhotonzCore, `DockGroupHeaderTests`); drawn by `CollapsibleSection.mockHeaderRow` and `DockHeaderChip`.
+- Chips: Properties Kind (Clip/Title/Audio), Library Scope, Effects Count, Measurements Count (count chips vanish at zero). Properties ends in a ⋯ menu (`PropertiesPanelMenu`) with Copy Look and Paste Look. The image panel takes the same headings on purpose.
+- New walk `dock-headers-walk` (front). Audit `queue/audits/2026-09-27-dock-headers.json` with the mock beside the dock.
+- Filed: Reset to defaults for that menu as `the-properties-menu-puts-a-clip-back-the-way-it`.

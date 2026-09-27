@@ -491,6 +491,10 @@ struct CollapsibleSection<Content: View>: View {
     /// Optional header furniture between the title and the drag grip — the
     /// Measurements section puts its count badge and panel menu here.
     var accessory: AnyView?
+    /// The mock's `.cnt`: what the group holds, in a pill right after the
+    /// title (`Clip`, `Media`, `2`). Drawn only with the mock's headings on
+    /// (`next-dock-headers`); without them a section says it in `accessory`.
+    var chip: DockHeaderChip.Content?
     /// The height this body is allowed, past which it scrolls inside itself so
     /// the sections under it stay where they are. Nil is the normal case: the
     /// body is drawn whole, because the dock has room for all of it. See
@@ -513,6 +517,8 @@ struct CollapsibleSection<Content: View>: View {
     /// Whether this header's press has travelled far enough to have picked the
     /// section up. See `headerGesture`.
     @State private var isCarrying = false
+    /// The pointer on the header, which lights the mock's heading up in ink.
+    @State private var isHovering = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -554,20 +560,8 @@ struct CollapsibleSection<Content: View>: View {
     }
 
     private var header: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "chevron.right")
-                .font(.system(size: PanelSectionLook.Section.chevronSize,
-                              weight: PanelSectionLook.Section.chevronWeight))
-                .foregroundStyle(.secondary)
-                .rotationEffect(.degrees(isCollapsed ? 0 : 90))
-            Text(title)
-                .font(PanelSectionLook.Section.titleFont)
-            Spacer(minLength: 8)
-            if let accessory { accessory }
-            Image(systemName: "line.3.horizontal")
-                .font(.system(size: 11))
-                .foregroundStyle(.tertiary)
-                .panelEdgeIcon("section grip", of: title)
+        Group {
+            if Experiments.shared.dockHeadersEnabled { mockHeaderRow } else { classicHeaderRow }
         }
         // Where a walk reads the heading's own leading edge back as a number,
         // so "the section's content lines up with its heading" is a
@@ -584,10 +578,52 @@ struct CollapsibleSection<Content: View>: View {
         .frame(minHeight: DockMetrics.headerRowHeight)
         .contentShape(Rectangle())
         .gesture(headerGesture)
+        .playtestHover { isHovering = $0 }
         .panelHelp("Drag to reorder • click to collapse")
         // Named for a scripted walk, so one can collapse a section, or pick it
         // up, by the words on it.
         .playtestControl("\(title) section", detail: "a dock section header")
+    }
+
+    /// The heading every mock draws (`.dgrp-h`): chevron, a small capital
+    /// title in the faint ink, the chip right beside it, and the group's own
+    /// buttons at the far edge. No grip: the whole header is the handle, and
+    /// the help on it says so.
+    private var mockHeaderRow: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "chevron.right")
+                .font(.system(size: 9, weight: .bold))
+                .foregroundStyle(VideoKit.Palette.faint)
+                .rotationEffect(.degrees(isCollapsed ? 0 : 90))
+            Text(DockGroupHeader.title(title))
+                .font(.system(size: DockGroupHeader.titleSize, weight: .semibold))
+                .tracking(DockGroupHeader.titleTracking)
+                .foregroundStyle(isHovering ? VideoKit.Palette.ink : VideoKit.Palette.faint)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .accessibilityLabel(title)
+            if let chip { DockHeaderChip(content: chip) }
+            Spacer(minLength: 8)
+            if let accessory { accessory }
+        }
+    }
+
+    private var classicHeaderRow: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "chevron.right")
+                .font(.system(size: PanelSectionLook.Section.chevronSize,
+                              weight: PanelSectionLook.Section.chevronWeight))
+                .foregroundStyle(.secondary)
+                .rotationEffect(.degrees(isCollapsed ? 0 : 90))
+            Text(title)
+                .font(PanelSectionLook.Section.titleFont)
+            Spacer(minLength: 8)
+            if let accessory { accessory }
+            Image(systemName: "line.3.horizontal")
+                .font(.system(size: 11))
+                .foregroundStyle(.tertiary)
+                .panelEdgeIcon("section grip", of: title)
+        }
     }
 
     /// Click to collapse, drag to reorder — ONE gesture, which is the only way
@@ -616,6 +652,33 @@ struct CollapsibleSection<Content: View>: View {
                 isCarrying = false
                 onReorderEnd()
             }
+    }
+}
+
+/// The mock's `.cnt` pill beside a dock group's title: 10pt mono in the dim
+/// ink on the thin glass, with the low edge round it.
+struct DockHeaderChip: View {
+    struct Content: Equatable {
+        let text: String
+        /// What a walk reads it by (`Properties Kind`, `Library Scope`).
+        let field: String
+    }
+
+    let content: Content
+
+    var body: some View {
+        Text(content.text)
+            .font(.system(size: 10, weight: .semibold, design: .monospaced))
+            .monospacedDigit()
+            .foregroundStyle(VideoKit.Palette.dim)
+            .lineLimit(1)
+            .fixedSize()
+            .padding(.horizontal, DockGroupHeader.chipHorizontalPadding)
+            .padding(.vertical, DockGroupHeader.chipVerticalPadding)
+            .background(Capsule().fill(VideoKit.Palette.glassThin))
+            .overlay(Capsule().strokeBorder(VideoKit.Palette.edgeLo))
+            .panelReadout(content.text)
+            .playtestField(content.field)
     }
 }
 

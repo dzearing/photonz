@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T10:22:59.313Z",
-  "updated": "2026-09-27T12:11:15.043Z",
+  "updated": "2026-09-27T13:01:35.093Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the side by side for the-properties-pane-opens-on-the-clip-line-and-l (queue/audits/2026-09-25-properties-pane-side-by-side.png). Mock: docs/design/mocks/pages/video.html .dgrp-h (.ttl uppercase letter-spaced, .cnt pill, .btn ghost icon ic-more). App: the dock section header in InspectorPanel/InspectorDockLayout draws the title and a grip (≡). The Properties kind pill already exists (PropertyKeysSectionAccessory) and Library shows its scope as plain text. This is the whole dock, so check the image lens too.",
@@ -39,6 +39,36 @@
     {
       "t": "2026-09-27T12:11:15.042Z",
       "note": "seq 100 -> 30"
+    },
+    {
+      "t": "2026-09-27T12:31:25.342Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T13:01:21.613Z",
+      "note": "review before building: the mock draws a DIFFERENT trailing control per group (Properties ⋯, Effects +, Library +, Graph none), so only Properties gains a menu; Effects and Library keep their existing plus. The mock's #propMenu holds Copy properties and Reset to defaults: Copy Look/Paste Look already exist (Layer menu, right click) and work on a clip, so the menu uses them under their app names; Reset has no action in the app, filed as the-properties-menu-puts-a-clip-back-the-way-it (p1). The header is shared with Current, so the look is behind a new Next-only flag next-dock-headers, on by default; the image lens takes it too because every image mock draws the same .dgrp-h."
+    },
+    {
+      "t": "2026-09-27T13:01:21.666Z",
+      "note": "built: DockGroupHeader (PhotonzCore, tested in DockGroupHeaderTests) for title caps, tracking and chip rules; CollapsibleSection draws the mock row (chevron, 10pt semibold faint caps with .09em tracking, chip, spacer, buttons, no grip; ink on hover) with the flag on and the old row with it off; InspectorPanel.sectionChip gives Properties Kind, Library Scope, Effects Count, Measurements Count; PropertiesPanelMenu in PropertyKeysInspector.swift. New walk Scripts/playtest/dock-headers-walk.json (front: true, since the clip press needs the probe in front, the same as properties-pane-walk)."
+    },
+    {
+      "t": "2026-09-27T13:01:21.717Z",
+      "note": "left rough: the mock's header buttons sit on a faint round ghost backing and the app draws the bare glyph; a small visual nit, not filed. The image mock's Layers heading has a count chip and a ⋯ menu the image panel lacks; image-editing is a later epic, so not filed. Graph group: covered by a-keyed-value-s-curve-opens-where-you-want-it."
+    },
+    {
+      "t": "2026-09-27T13:01:21.767Z",
+      "note": "owns these walks: dock-headers-walk, properties-pane-walk"
+    },
+    {
+      "t": "2026-09-27T13:01:35.091Z",
+      "note": "Next dock headings are the mock's .dgrp-h behind next-dock-headers (on by default): small caps title, chip beside it (Properties Clip/Title/Audio, Library scope, Effects and Measurements counts), buttons at the far edge, no grip; Properties ends in a ⋯ menu with Copy Look and Paste Look. Pictures change on purpose (same headings). Verified: DockGroupHeaderTests + full suite green (10,065), dock-headers-walk and 8 related walks green at Next defaults with real captures, side by side in the audit. Reset to defaults filed as the-properties-menu-puts-a-clip-back-the-way-it."
     }
-  ]
+  ],
+  "started": "2026-09-27T12:31:25.341Z",
+  "walks": [
+    "dock-headers-walk",
+    "properties-pane-walk"
+  ],
+  "completed": "2026-09-27T13:01:35.092Z"
 }

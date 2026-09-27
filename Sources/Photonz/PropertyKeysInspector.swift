@@ -109,6 +109,32 @@ struct PropertyKeysSectionAccessory: View {
     }
 }
 
+/// The three dots at the end of the Properties header (`video.html`,
+/// `#propMenu`): take the picked thing's look, or put one on it. The same two
+/// commands as the Layer menu and a layer's right click, under the same names,
+/// so nothing learned here is wrong there.
+struct PropertiesPanelMenu: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        Menu {
+            Button("Copy Look") { editorState.copyLook() }
+                .disabled(!editorState.canCopyLook)
+            Button("Paste Look") { editorState.pasteLook() }
+                .disabled(!editorState.canPasteLook)
+        } label: {
+            Image(systemName: "ellipsis")
+                .font(.system(size: 11, weight: .medium))
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .accessibilityLabel("Properties Menu")
+        .panelHelp("Copy or paste the look")
+        .playtestControl("Properties Menu", detail: "the three dots on the Properties header")
+    }
+}
+
 /// `Sample Talk        2.0s → 14.9s  12.9s · 1.0x`: the mock's `.cliphead`.
 /// A readout, not a form: trimming is the clip's edges on the timeline, and
 /// speed is the Time section and the clip's right-click.

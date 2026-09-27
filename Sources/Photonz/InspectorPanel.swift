@@ -338,6 +338,7 @@ struct InspectorPanel: View {
                                     },
                                     onReorderEnd: { endSectionDrag(in: sections) },
                                     accessory: sectionAccessory(id),
+                                    chip: sectionChip(id),
                                     // Two sections bound themselves — the layers
                                     // list and the Library shelf both had their
                                     // own scroller and grab bar since long before
@@ -971,9 +972,13 @@ struct InspectorPanel: View {
     private func sectionAccessory(_ id: InspectorSectionID) -> AnyView? {
         let furniture = sectionFurniture(id)
         guard let help = Self.sectionHelp(id) else { return furniture }
+        // With the mock's headings the group's own buttons end the row (the
+        // Properties menu is the last thing on it), so the mark goes first.
+        let helpFirst = Experiments.shared.dockHeadersEnabled
         return AnyView(HStack(spacing: 6) {
+            if helpFirst { SectionHelpMark(section: id.title, text: help) }
             if let furniture { furniture }
-            SectionHelpMark(section: id.title, text: help)
+            if !helpFirst { SectionHelpMark(section: id.title, text: help) }
         })
     }
 
@@ -984,6 +989,31 @@ struct InspectorPanel: View {
         case .fades: SoundFadesInspector.headerHelp
         case .keys: PropertyKeysInspector.sectionHelp
         default: nil
+        }
+    }
+
+    /// The mock's `.cnt` beside a section's title, with its headings on
+    /// (`next-dock-headers`): what Properties has picked, the Library's scope,
+    /// how many effects and measurements there are. Nil without them, where
+    /// the same facts ride `sectionFurniture` as they always have.
+    private func sectionChip(_ id: InspectorSectionID) -> DockHeaderChip.Content? {
+        guard Experiments.shared.dockHeadersEnabled else { return nil }
+        let text: String?
+        switch id {
+        case .keys:
+            text = DockGroupHeader.chip(editorState.keyLayerKind)
+            return text.map { .init(text: $0, field: "Properties Kind") }
+        case .library:
+            text = (LibraryScope(rawValue: libraryScopeRaw) ?? .media).title
+            return text.map { .init(text: $0, field: "Library Scope") }
+        case .effects where Experiments.shared.shapePartsEnabled:
+            text = DockGroupHeader.countChip(editorState.layerEffectRows.count)
+            return text.map { .init(text: $0, field: "Effects Count") }
+        case .measurements:
+            text = DockGroupHeader.countChip(editorState.measurementCount)
+            return text.map { .init(text: $0, field: "Measurements Count") }
+        default:
+            return nil
         }
     }
 
@@ -1010,7 +1040,8 @@ struct InspectorPanel: View {
                 AddMotionButton()
             })
         case .measurements:
-            return AnyView(MeasurementsSectionAccessory())
+            return AnyView(MeasurementsSectionAccessory(
+                showsCount: !Experiments.shared.dockHeadersEnabled))
         case .editPoint, .transition:
             // The mock's `.sec-h .mut`: where the cut is, and what is on it.
             let note = id == .editPoint ? EditPointInspector.headerNote(editorState)
@@ -1025,13 +1056,19 @@ struct InspectorPanel: View {
         // the Fades question mark now: the user asked on 2026-09-25 for no
         // sentences in the panel, the explanation behind a mark in the header.
         case .keys:
+            // With the mock's headings the kind is the chip and the header
+            // ends in the pane's menu, as `video.html` draws `#gProps`.
+            if Experiments.shared.dockHeadersEnabled { return AnyView(PropertiesPanelMenu()) }
             return AnyView(PropertyKeysSectionAccessory())
         case .library:
             let scope = LibraryScope(rawValue: libraryScopeRaw) ?? .media
+            let chipped = Experiments.shared.dockHeadersEnabled
             return AnyView(HStack(spacing: 6) {
-                Text(scope.title)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                if !chipped {
+                    Text(scope.title)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
                 // The mock's `.dgrp-h` plus: the ways something gets onto the
                 // shelf (`video.html`, #libMenu).
                 if editorState.canImportMedia { LibraryAddMenu() }

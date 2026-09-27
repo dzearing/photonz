@@ -1,0 +1,27 @@
+{
+  "id": "the-properties-menu-puts-a-clip-back-the-way-it",
+  "title": "The Properties menu puts a clip back the way it came in",
+  "goal": "The three dot menu on the Properties heading of a video should offer Reset to defaults, as the video mock draws it, so one click takes a clip or title back to where it started: no keys, full opacity, its original place and size.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 370,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-27T13:01:01.527Z",
+  "updated": "2026-09-27T13:01:01.530Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found building the-dock-headers-match-the-mock-small-caps-title (2026-09-27). The menu exists now (PropertiesPanelMenu in Sources/Photonz/PropertyKeysInspector.swift) with Copy Look and Paste Look, the app names for what the mock calls Copy properties. Reset to defaults has no action behind it yet: needs a pure PhotonzCore rule for what a layer kind resets to (keys cleared via PropertyKeys, transform and opacity defaults) under History.perform, TDD. Walk to extend: Scripts/playtest/dock-headers-walk.json (panelMenu \"Properties Menu\").",
+  "acceptance": [
+    "The Properties menu on a video lists Reset to defaults under the copy row, as video.html #propMenu draws it",
+    "Choosing it on a keyed title leaves nothing animating and its position, size, rotation and opacity back at their starting values, in one undo",
+    "A walk at Next defaults chooses it from the menu and reads the result"
+  ],
+  "log": [
+    {
+      "t": "2026-09-27T13:01:01.529Z",
+      "note": "created (manual)"
+    }
+  ]
+}

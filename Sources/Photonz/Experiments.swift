@@ -473,6 +473,11 @@ extension Experiments {
         isEnabled(FeatureCatalog.libraryTilesAsCardsFlag) ? .card : .compact
     }
 
+    /// The dock's group headings as the mocks draw `.dgrp-h`: small capitals,
+    /// a chip beside the title, no grip (`DockGroupHeader`). Exists only in
+    /// the Next release's catalog, so Current keeps its title case headings.
+    var dockHeadersEnabled: Bool { isEnabled(FeatureCatalog.dockHeadersFlag) }
+
     /// `next-hear-the-scrub`: whether dragging the playhead plays the sound
     /// under it (`ScrubAudition.swift`). Leans on the one above: with no sound
     /// on the timeline there is nothing under the playhead to hear.

@@ -1,0 +1,29 @@
+{
+  "feature": "Panel group headings as the mock draws them",
+  "epic": "video-editing",
+  "summary": "Every group in the panel now has the mock's heading: a small capital title, a chip right beside it saying what it holds (Clip, Title, Media, an effect count), and its own button at the far edge. Properties ends in a three dot menu with Copy Look and Paste Look.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/dock-headers-walk.json.",
+  "try": [
+    { "do": "Open a recording and click its clip on the timeline.", "shot": "2026-09-27-dock-headers-1-a-clip-sc.png" },
+    { "do": "Read the Properties heading: PROPERTIES, a Clip chip beside it, three dots at the right." },
+    { "do": "Click the three dots and choose Copy Look." },
+    { "do": "Click the plus on the Effects heading and add a Shadow, then a Blur; the chip reads 2." },
+    { "do": "Choose View > Library, then fold the groups above Effects by clicking their headings.", "shot": "2026-09-27-dock-headers-4-headings-sc.png" },
+    { "do": "Compare the headings with the video mock's dock.", "shot": "2026-09-27-dock-headers-side-by-side.png" },
+    { "do": "Open a screenshot, measure something, and read the LAYERS and MEASUREMENTS headings.", "shot": "2026-09-27-dock-headers-picture-measurements-sc.png" }
+  ],
+  "evaluate": [
+    "Do the small capital headings read as quieter than the rows under them, the way the mock intends, without getting hard to find?",
+    "Does a chip beside the title tell you what a folded group holds at a glance?",
+    "Is Copy Look and Paste Look what you expect behind the three dots on Properties, or do you want the mock's words, Copy properties?",
+    "With the grip gone, is it still clear you can drag a heading to reorder the groups?"
+  ],
+  "rough": [
+    "Pictures changed on purpose: the image panel takes the same headings (every image mock draws .dgrp-h too), so Layers, Measurements and the rest are small capitals and Measurements' count moved beside its title.",
+    "The Properties menu has Copy Look and Paste Look, the names the Layer menu already uses; the mock's Reset to defaults has nothing behind it yet and is filed as its own task.",
+    "The mock's header buttons sit on a faint round backing; the app draws the bare glyph.",
+    "The question marks on Properties and Fades are the app's own (asked for on 2026-09-25) and are not in the mock.",
+    "The mock's Graph group is not in the app; an open task covers the keyed value's curve.",
+    "The image mock's Layers heading has a count chip and a three dot menu; the image panel does not have them yet."
+  ]
+}
