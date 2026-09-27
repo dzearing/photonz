@@ -1,0 +1,32 @@
+{
+  "id": "a-recording-with-captions-sits-quiet-while-nothi",
+  "title": "A recording with captions sits quiet while nothing is happening",
+  "goal": "With a captioned recording open and nothing playing, the app keeps the main thread more than half busy, because the five caption style tiles in the panel animate their sample words thirty times a second and every tick lays the whole window out again. The Mac runs warm for nothing and every click lands on top of that work.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 3430,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-27T19:11:08.116Z",
+  "updated": "2026-09-27T19:11:11.782Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found 2026-09-27 by picking-or-retyping-a-caption-answers-at-once. Repro: a walk with openSampleTalk, captionsWaitForThemselves, wait 1.5 → 'never went quiet (46 of 46 slices busy, busiest 29.2ms); mainBusy 811.8ms over 857 passes, longest 14.1ms'. Same after captionsPickFirst: 0.6s waits read mainBusy 380-440ms over ~430 passes. sample(1) of the probe idle for 8s with a caption picked: 4526 main-thread samples, 1893 in NSWindow layoutIfNeeded, 598 in TimelineView UpdateFilter of which 566 in CaptionStylePreview.frame(atMS:) (532 TextRasterizer.rasterize). Each of the five tiles (CaptionStyleInspector.swift) runs its own TimelineView(.animation(minimumInterval: 1/30)) and re-rasterizes the preview text every tick; memoizing the last frame by TextContent does not help because previewText carries per-tick animation state (tried, never hit). Ideas: one shared clock for all tiles, a lower rate between word changes, pre-rendered frames per style, or rasterizing off the main thread.",
+  "acceptance": [
+    "With the Sample Talk open, captions written and nothing playing, a walk's wait reads the main thread quiet (not 'never went quiet') for most of a 1.5s wait",
+    "The style tiles still show their words moving the way they do now, or a still frame when Reduce Motion is on",
+    "Picking a caption does not get slower (caption-pick-answers-at-once-walk stays green)"
+  ],
+  "log": [
+    {
+      "t": "2026-09-27T19:11:08.118Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-27T19:11:11.781Z",
+      "note": "walks caption-pick-answers-at-once-walk -> none"
+    }
+  ],
+  "walks": []
+}

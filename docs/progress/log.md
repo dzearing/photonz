@@ -19923,3 +19923,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Cause: AppKit sends an accessibility notification to a window-watching app (Ztabby) by a port name that has died and been reused for one of the probe's own kernel objects, and the kernel kills the sender. A C program sending HIServices' message to `mach_task_self()` dies with the byte-identical guard. Same crash is reported against mpv and Zed. Nothing in Photonz to fix.
 - `Scripts/crash-report.mjs` names it `macos-ax-notify` ("a macOS fault, not the app"); `playtest.sh` reruns such a walk once; `playtest-all.sh` shows `ok  on a rerun`. Drill in `Scripts/crash-report-drill.mjs`; `PHOTONZ_CRASH_REPORTS_DIR` lets a drill supply a report.
 - The four walks it hit passed 10 runs in a row each. Open: the one-off SIGSEGV report of 2026-09-26 06:03 is a different crash, seen once.
+
+## 2026-09-27 · Picking a caption answers at once (go loop)
+
+- Picking a caption after the canvas was 110-121ms: the dock built the six sections a caption brings in one catch-up pass. `PanelSectionArrival.next` (PhotonzCore, tested) now brings waiting sections in one per pass, top down; a pick that swaps every section shows its first at once instead of all. Now 38-47ms.
+- The five caption style tiles rebuilt and re-set their words on every pick (the Captions section follows the pick): `CaptionStylePreview` is `.equatable()` on its look. The Text section's Font, Size and Weight menus read the pick when chosen and are `.equatable()` (`SelectionMenu: Equatable`), so picks that change nothing they show skip them.
+- Walk actions `captionsPickFirst` / `captionsPickNext` (one click on a cue's bar). Walk `caption-pick-answers-at-once-walk`, guard at 80ms like the long-captions walk.
+- Open: caption to caption is mostly 34-46ms, sometimes 51-58; about 30ms of any click in a video window is the timeline and window bookkeeping. The style tiles keep the window busy while idle: filed `a-recording-with-captions-sits-quiet-while-nothi`.

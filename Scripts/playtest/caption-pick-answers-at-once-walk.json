@@ -1,0 +1,38 @@
+{
+  "out": "/tmp/photonz-playtest/caption-pick-answers-at-once-walk",
+  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "describe", "stage": "why", "note": "Fixing captions is picking them one after another, and a double click on one opens its words for typing. Picking the first caption after the canvas held the window for 110 to 190ms (2026-09-24): the panel built all six sections a caption brings (Text, Properties, Arrange, Appearance, Effects, Layout) in one pass, and the five style tiles set their words again on every pick. Now the sections arrive one per pass, top down, and a tile whose style did not change is left alone. On a quiet Mac each press below takes 35 to 50ms; the walk fails at 80ms, as a-long-captioned-recording-walk does, because the same presses read 30 to 40 percent slower while another window keeps the Mac busy, and every freeze this guards against was 110ms or more." },
+    { "do": "action", "action": "openSampleTalk" },
+    { "do": "action", "action": "captionsWaitForThemselves" },
+    { "do": "wait", "seconds": 1.5 },
+
+    { "do": "describe", "stage": "pick", "note": "One click on the first caption's bar, from nothing picked." },
+    { "do": "action", "action": "captionsPickFirst" },
+    { "do": "wait", "seconds": 0.8, "longestUnderMS": 80 },
+
+    { "do": "describe", "stage": "open", "note": "The second click of the double click: the words open for typing over the bar." },
+    { "do": "action", "action": "captionsEditFirstInPlace" },
+    { "do": "wait", "seconds": 0.6, "longestUnderMS": 80 },
+    { "do": "snapshot", "name": "1-first-caption-open-for-typing" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "describe", "stage": "one-after-another", "note": "The next three captions, one click each." },
+    { "do": "action", "action": "captionsPickNext" },
+    { "do": "wait", "seconds": 0.6, "longestUnderMS": 80 },
+    { "do": "action", "action": "captionsPickNext" },
+    { "do": "wait", "seconds": 0.6, "longestUnderMS": 80 },
+    { "do": "action", "action": "captionsPickNext" },
+    { "do": "wait", "seconds": 0.6, "longestUnderMS": 80 },
+    { "do": "snapshot", "name": "2-fourth-caption-picked" },
+
+    { "do": "describe", "stage": "again", "note": "Away to the canvas and back: the caption's sections have to arrive again." },
+    { "do": "action", "action": "selectCanvas" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "captionsPickFirst" },
+    { "do": "wait", "seconds": 0.8, "longestUnderMS": 80 },
+    { "do": "action", "action": "captionsEditFirstInPlace" },
+    { "do": "wait", "seconds": 0.6, "longestUnderMS": 80 }
+  ]
+}

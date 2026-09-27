@@ -449,17 +449,13 @@ struct InspectorPanel: View {
                 }
                 .inspectorLayoutProbe(sections: sections)
                 // A section the selection asked for that has not been built yet
-                // gets the next pass to itself. Departures are already on screen by
-                // now (they leave in the click's own pass), so this only ever fires
-                // for arrivals, and a click that keeps the same sections — moving
-                // the selection from one group to another — never reaches it at all.
-                .onChange(of: wanted) { _, latest in
-                    guard arrivals.isWaiting(for: latest) else { return }
-                    DispatchQueue.main.async {
-                        arrivals.allow(latest)
-                        arrivalPass &+= 1
-                    }
-                }
+                // gets a later pass to itself, one section per pass, top down.
+                // Departures are already on screen by now (they leave in the
+                // click's own pass), so this only ever fires for arrivals, and a
+                // click that keeps the same sections — moving the selection from
+                // one group to another — never reaches it at all.
+                .onChange(of: wanted) { catchUp() }
+                .onChange(of: arrivalPass) { catchUp() }
                 // The app opened the Library for you: put it where you can see it.
                 // On appear too, because showing the shelf opens the dock as well,
                 // and then this panel is born with the request already waiting.
@@ -523,6 +519,20 @@ struct InspectorPanel: View {
             end: { endSectionDrag(in: sections) },
             cancel: cancelSectionDrag,
             sections: sections)
+    }
+
+    /// One more waiting section, a pass from now; the pass it makes asks for
+    /// the next through `arrivalPass`, until nothing is waiting.
+    private func catchUp() {
+        guard !arrivals.isCatchingUp, arrivals.isWaiting(for: orderedAvailableSections) else { return }
+        arrivals.isCatchingUp = true
+        DispatchQueue.main.async {
+            arrivals.isCatchingUp = false
+            let latest = orderedAvailableSections
+            guard arrivals.isWaiting(for: latest) else { return }
+            arrivals.allowNext(latest)
+            arrivalPass &+= 1
+        }
     }
 
     // MARK: Sharing out the height the dock has, and revealing
@@ -1561,8 +1571,15 @@ private struct SectionDrag: Equatable {
                                       mounted: mounted.map(\.rawValue))
     }
 
-    /// Let everything the selection asked for be built on the next pass.
-    func allow(_ target: [InspectorSectionID]) { mounted = target }
+    /// A catch-up pass is on its way, so a second one is not asked for.
+    var isCatchingUp = false
+
+    /// Let the next section the selection asked for be built on the next pass.
+    func allowNext(_ target: [InspectorSectionID]) {
+        mounted = PanelSectionArrival.next(target: target.map(\.rawValue),
+                                           mounted: mounted.map(\.rawValue))
+            .compactMap(InspectorSectionID.init(rawValue:))
+    }
 }
 
 /// The question mark on a section header: rest on it and it says how the

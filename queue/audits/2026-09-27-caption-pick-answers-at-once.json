@@ -1,0 +1,23 @@
+{
+  "feature": "Picking or retyping a caption answers at once",
+  "epic": "video-editing",
+  "summary": "Clicking a caption on the timeline no longer holds the window for a tenth of a second: the first pick went from 110-120ms to about 40ms, and opening its words to retype takes 30-40ms.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the Sample Talk (or any recording with speech) and let the captions write themselves.",
+  "try": [
+    { "do": "Click an empty spot on the canvas so nothing is picked." },
+    { "do": "Click a caption's bar on the Captions track.", "shot": "2026-09-27-caption-pick-2-fourth-picked-sc.png" },
+    { "do": "Double-click the same bar and retype a word, then press Return.", "shot": "2026-09-27-caption-pick-1-open-for-typing-sc.png" },
+    { "do": "Click the next caption, then the one after, as fast as you would when fixing them." },
+    { "do": "Scroll the panel down while a caption is picked and watch Text, Properties and the rest fill in." }
+  ],
+  "evaluate": [
+    "Does clicking from one caption to the next feel instant, the way Premiere's caption track does?",
+    "Does the double click open the words for typing without a hitch?",
+    "When you pick a caption after the canvas, do you ever see the lower panel sections arrive a moment after the top one?"
+  ],
+  "rough": [
+    "Measured on a quiet Mac: picking after the canvas 38-47ms, caption to caption mostly 34-46ms with an occasional 51-58ms, opening the words 30-48ms. The 50ms target holds most of the time, not every time: about 30ms of every click in a video window (Escape alone costs 30-50ms) is the timeline and the window's own bookkeeping, not the caption.",
+    "The panel now builds the sections a caption brings one per frame, top down, instead of all at once. The Captions section you are looking at is there at once; Text, Properties, Arrange and the rest land over the next five or six frames.",
+    "With captions on screen the window never goes idle: the five style tiles animate their words 30 times a second and each tick re-lays out the window. Filed as its own task."
+  ]
+}

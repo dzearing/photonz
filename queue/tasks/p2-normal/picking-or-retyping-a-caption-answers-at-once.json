@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T17:56:08.774Z",
-  "updated": "2026-09-27T12:11:15.444Z",
+  "updated": "2026-09-27T19:11:11.837Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by a-long-captioned-recording-edits-without-freezin (2026-09-24). Reproduced with a walk: openSampleTalk, captionsWaitForThemselves, wait, captionsEditFirstInPlace (select + beginRenamingClip), key escape, action selectCanvas, captionsEditFirstInPlace again, each followed by wait with longestUnderMS 5000. Output on the 17 s Sample Talk (10 captions): 'captionsEditFirstInPlace | longest 122.1ms; clipBar bodies 3, editorBody bodies 2, inspectorPanel bodies 6, layerThumbnail bodies 10, layersList bodies 9, layersRow bodies 16' and on the second pick 'longest 186.3ms'; escape 57.9ms; selectCanvas 54.8ms. On the five minute Long Talk (openLongTalk): 127.5ms and 188.9ms, so it does not grow with the number of captions. sample(1) of the Write Again path (which also picks the first caption) put most of it in NSHostingView.layout / CA commit: the panel switching to the text layer's sections and the layers list opening the Captions group to show the row. Worth checking whether the Arrange/Text sections and the layers list can avoid rebuilding when the picked layer is a caption.",
@@ -36,7 +36,54 @@
       "note": "seq 40 -> 40",
       "since": "2026-09-25T12:23:32.557Z",
       "count": 3
+    },
+    {
+      "t": "2026-09-27T17:52:53.399Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T19:11:11.836Z",
+      "note": "walks none -> caption-pick-answers-at-once-walk"
+    },
+    {
+      "t": "2026-09-27T19:11:44.000Z",
+      "note": "reproduced: repro walk (openSampleTalk, captionsWaitForThemselves, captionsEditFirstInPlace, escape, selectCanvas, ...) longest 110.4 / 110.8 / 133.2ms per pick+open. Split with a new captionsPickFirst action: the single click was 112-121ms, opening the words after it 29-64ms."
+    },
+    {
+      "t": "2026-09-27T19:11:44.000Z",
+      "note": "adversarial review: the goal's real flow is picking caption after caption (Premiere's caption track is instant) and a double click to retype. The mock asks nothing new; this is purely cost. Knock-outs (panel hidden, sections dropped one at a time, timeline hidden) on caption-to-caption picks: panel ~20ms (mostly the Text section), timeline ~15ms, the rest ~10ms (SwiftUI accessibility focus walk the harness's in-process reads switch on)."
+    },
+    {
+      "t": "2026-09-27T19:11:44.000Z",
+      "note": "cause of the 110ms: canvas shows [Canvas, Time, Captions]; a caption asks for [Captions, Text, Properties, Arrange, Appearance, Effects, Layout, Time]; the arrival catch-up built all six new sections in ONE pass. Fix: PanelSectionArrival.next, one section per pass, top down (InspectorPanel.catchUp). Pick from canvas now 38-47ms."
+    },
+    {
+      "t": "2026-09-27T19:11:44.000Z",
+      "note": "also: CaptionStylePreview .equatable() (5 tile bodies per pick -> 0, counted), SelectionMenu Equatable + TextInspector menus read pickedIDs at call time and are .equatable(). Caption to caption now mostly 34-46ms, occasionally 51-58."
+    },
+    {
+      "t": "2026-09-27T19:11:44.000Z",
+      "note": "tried and reverted: memoizing a style tile's frame by TextContent never hits (previewText carries per-tick animation state)."
+    },
+    {
+      "t": "2026-09-27T19:11:44.000Z",
+      "note": "left rough (not filed, would not clear the bar alone): ~30ms of any click in a video window is floor (Escape alone 30-50ms): timeline rows re-running for every selection change and SwiftUI's focus walk. The 500ms passes seen three times during knock-out batches (captionsEditFirstInPlace after 6 picks) did not reproduce in 4 clean runs + 3 stall-loop runs (edits 34-56ms); recorded here only."
+    },
+    {
+      "t": "2026-09-27T19:11:44.000Z",
+      "note": "filed: a-recording-with-captions-sits-quiet-while-nothi (style tiles keep the main thread >50% busy while idle)."
+    },
+    {
+      "t": "2026-09-27T19:11:44.000Z",
+      "note": "walks run green: caption-pick-answers-at-once-walk (new, no flags, 2 real captures), an-editing-session, captions-panel-keeps-its-margins, dock-headers, fix-a-caption-word, transition-picker-at-a-cut, a-long-captioned-recording, captions-are-one-layer, dock-component-first, dock-picked-first, panel-sections, layer-pick-latency, dock-fits-the-window, a-title-reads-over-a-video, font-menu-one-width, label-weight, label-size, menu-says-its-whole-value, panel-rows-read-as-one-column, style-on-a-copy, text-style-arming, text-style. Scripts/test.sh: 10128 tests passed."
+    },
+    {
+      "t": "2026-09-27T19:11:44.000Z",
+      "note": "walk guard is 80ms, not 50: the same presses read 30-40% slower on a busy Mac (a-long-captioned-recording-walk's reasoning) and caption-to-caption touches 51-58ms on a quiet one; 80 still fails the old 110-190ms freeze."
     }
   ],
-  "walks": []
+  "walks": [
+    "caption-pick-answers-at-once-walk"
+  ],
+  "started": "2026-09-27T17:52:53.398Z"
 }

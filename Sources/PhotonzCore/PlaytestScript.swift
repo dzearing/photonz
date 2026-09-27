@@ -937,6 +937,9 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// heard in: after a stretch is cut out, the lines for the words that went
     /// have to go with them rather than play over what comes next.
     case captionsExpectEndWithRecording
+    /// Pick the first caption the way one click on its bar does, or the one
+    /// after the caption picked, the way fixing captions goes.
+    case captionsPickFirst, captionsPickNext
     /// Open the first caption's words for typing over its bar, the way a
     /// double click on it does; `captionsCommitFirstWords` types the fix in.
     case captionsEditFirstInPlace, captionsCommitFirstWords
@@ -1185,7 +1188,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .captionsNudgeLater, .captionsNudgeEarlier,
              .captionsCorrectFirstWord, .captionsClear, .captionsExpectSound,
              .captionsExpectTimingsKept, .captionsWaitForThemselves, .captionsExpectOneTrack,
-             .captionsExpectOnePicked, .captionsWriteQuietly, .captionsExpectEndWithRecording, .captionsEditFirstInPlace, .captionsCommitFirstWords, .captionsTrimFirstEnd,
+             .captionsExpectOnePicked, .captionsWriteQuietly, .captionsExpectEndWithRecording, .captionsPickFirst, .captionsPickNext, .captionsEditFirstInPlace, .captionsCommitFirstWords, .captionsTrimFirstEnd,
              .captionsStyleCaption, .captionsStyleLowerThird, .captionsStyleKaraoke,
              .captionsPositionTop, .captionsPositionBottom, .captionsExpectLitWord,
              .captionsExpectGuides, .captionsExpectNoGuides, .captionsExpectReset,

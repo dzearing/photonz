@@ -199,7 +199,7 @@ struct CaptionStyleTiles: View {
                       pick: @escaping () -> Void) -> some View {
         Button(action: pick) {
             VideoKit.Tile(name: name, isSelected: isSelected, thumbnailHeight: 34) {
-                CaptionStylePreview(look: style)
+                CaptionStylePreview(look: style).equatable()
             }
         }
         .buttonStyle(.plain)
@@ -211,8 +211,18 @@ struct CaptionStyleTiles: View {
 /// A caption in `look`, playing its words on a dark frame: the rasterizer the
 /// film is drawn with, at tile size. Holds one moment still for anyone who
 /// has asked for less motion.
-struct CaptionStylePreview: View {
+///
+/// Equatable on its look, and drawn `.equatable()`: the Captions section
+/// follows the picked caption, so every pick re-ran all five tiles and set
+/// their words again in the click's own pass: five tile bodies a pick before,
+/// none after (2026-09-27, `caption-pick-answers-at-once-walk`). A style does
+/// not change when the pick does, so the tile keeps its frame.
+struct CaptionStylePreview: View, Equatable {
     let look: CaptionLook
+
+    nonisolated static func == (lhs: CaptionStylePreview, rhs: CaptionStylePreview) -> Bool {
+        lhs.look == rhs.look
+    }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.displayScale) private var displayScale
 
@@ -254,3 +264,4 @@ struct CaptionStylePreview: View {
         return Color(.sRGB, red: rgba.r, green: rgba.g, blue: rgba.b, opacity: 0.9)
     }
 }
+

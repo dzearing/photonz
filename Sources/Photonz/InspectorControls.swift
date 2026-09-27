@@ -524,3 +524,18 @@ struct SelectionMenu<Value: Hashable & Sendable>: View {
         .panelHelp(MenuTip.text(about: help, showing: saidTitle, isClipped: isClipped))
     }
 }
+
+/// Two menus showing the same words are the same menu, closures aside, so a
+/// caller whose closures read the selection when they RUN can draw it
+/// `.equatable()` and a pick that changes nothing the menu says costs it
+/// nothing. Picking one caption after another was rebuilding the Text
+/// section's Font, Size and Weight lists on every click, for identical lists
+/// (2026-09-27, `caption-pick-answers-at-once-walk`). Only for callers whose
+/// `choose` does not capture what was picked: a skipped update keeps the old
+/// closure.
+extension SelectionMenu: Equatable {
+    nonisolated static func == (lhs: SelectionMenu, rhs: SelectionMenu) -> Bool {
+        lhs.label == rhs.label && lhs.reading == rhs.reading && lhs.options == rhs.options
+            && lhs.help == rhs.help && lhs.pinnedWidth == rhs.pinnedWidth
+    }
+}

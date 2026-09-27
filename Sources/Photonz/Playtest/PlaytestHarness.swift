@@ -3468,6 +3468,18 @@ private final class Run {
                 note(number, step.name,
                      "captions: the last one ends at \(String(format: "%.2fs", Double(last) / 1000)), the recording at "
                         + "\(String(format: "%.2fs", Double(end) / 1000))", state: describe())
+            case .captionsPickFirst, .captionsPickNext:
+                let cues = (editor.document?.captionLayers ?? [])
+                    .sorted { ($0.time?.inMS ?? 0) < ($1.time?.inMS ?? 0) }
+                let picked = cues.firstIndex { $0.id == editor.selectedLayerID }
+                let index = action == .captionsPickNext ? picked.map { ($0 + 1) % cues.count } ?? 0 : 0
+                guard cues.indices.contains(index) else {
+                    throw Failure(description: "there is no caption to pick")
+                }
+                // What one click on the cue's bar does (ClipPiecesBar).
+                editor.clearKeySelection()
+                editor.selectClipPiece(layerID: cues[index].id, index: nil)
+                note(number, step.name, "captions: picked cue \(index + 1) of \(cues.count)", state: describe())
             case .captionsEditFirstInPlace:
                 guard let first = editor.document?.captionLayers.first else {
                     throw Failure(description: "there is no caption to edit")
@@ -4719,7 +4731,7 @@ private final class Run {
                  .captionsExpectSound, .captionsExpectTimingsKept, .captionsWaitForThemselves,
                  .captionsExpectOneTrack, .captionsExpectOnePicked, .captionsWriteQuietly,
                  .captionsExpectEndWithRecording,
-                 .captionsEditFirstInPlace, .captionsCommitFirstWords,
+                 .captionsPickFirst, .captionsPickNext, .captionsEditFirstInPlace, .captionsCommitFirstWords,
                  .captionsTrimFirstEnd, .captionsStyleCaption, .captionsStyleLowerThird,
                  .captionsStyleKaraoke, .captionsPositionTop, .captionsPositionBottom,
                  .captionsExpectOneLayerPicked, .captionsExpectMovedTogether,

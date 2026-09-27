@@ -81,16 +81,17 @@ struct PanelSectionArrivalTests {
         #expect(PanelSectionArrival.isWaiting(target: target, mounted: []) == false)
     }
 
-    @Test func aPickThatSharesNoSectionWithTheLastShowsAllOfItAtOnce() {
+    @Test func aPickThatSharesNoSectionWithTheLastShowsItsFirstAtOnce() {
         // On a video the Layers list is not in the dock (the timeline is the
         // layer list), so picking a cut after a clip swaps EVERY section.
         // Holding them all back left the dock empty, and with nothing mounted
         // nothing counted as waiting, so it stayed empty for good (found
-        // 2026-09-24, `transition-picker-at-a-cut-walk`).
+        // 2026-09-24, `transition-picker-at-a-cut-walk`). The top section
+        // answers in the click's own pass and the rest follow it.
         let target = ["editPoint", "transition"]
         let mounted = ["speed", "sound", "keys"]
-        #expect(PanelSectionArrival.showing(target: target, mounted: mounted) == target)
-        #expect(PanelSectionArrival.isWaiting(target: target, mounted: mounted) == false)
+        #expect(PanelSectionArrival.showing(target: target, mounted: mounted) == ["editPoint"])
+        #expect(PanelSectionArrival.isWaiting(target: target, mounted: mounted))
     }
 
     @Test func anEmptyTargetShowsNothing() {
@@ -100,17 +101,51 @@ struct PanelSectionArrivalTests {
 
     // MARK: The waiting always ends
 
-    @Test func theHeldBackSectionsArriveOnTheNextPass() {
-        // The catch-up pass mounts exactly what the selection asked for, and
-        // then nothing is waiting: the panel can never settle part-built.
-        let mounted = ["layers", "library"]
-        let target = ["layers", "geometry", "effects", "library"]
-        let first = PanelSectionArrival.showing(target: target, mounted: mounted)
-        #expect(PanelSectionArrival.isWaiting(target: target, mounted: mounted))
-        // Next pass: the dock is allowed everything the selection asked for.
-        let second = PanelSectionArrival.showing(target: target, mounted: target)
-        #expect(second == target)
-        #expect(PanelSectionArrival.isWaiting(target: target, mounted: target) == false)
-        #expect(first != second)
+    @Test func theHeldBackSectionsArriveOnePerPassFromTheTop() {
+        // Picking a caption after the canvas asks for six sections the dock
+        // has never built. Building all six in one pass held the window for a
+        // tenth of a second (2026-09-24, `caption-pick-answers-at-once-walk`);
+        // one per pass keeps every pass short, and the top one, the one on
+        // screen, comes first.
+        let target = ["captions", "text", "properties", "arrange", "time"]
+        var mounted = ["canvas", "time", "captions"]
+        #expect(PanelSectionArrival.showing(target: target, mounted: mounted) == ["captions", "time"])
+        var passes: [[String]] = []
+        while PanelSectionArrival.isWaiting(target: target, mounted: mounted) {
+            mounted = PanelSectionArrival.next(target: target, mounted: mounted)
+            passes.append(PanelSectionArrival.showing(target: target, mounted: mounted))
+            #expect(passes.count <= target.count)
+            if passes.count > target.count { break }
+        }
+        #expect(passes == [
+            ["captions", "text", "time"],
+            ["captions", "text", "properties", "time"],
+            ["captions", "text", "properties", "arrange", "time"],
+        ])
+    }
+
+    @Test func theCatchUpDropsWhatTheSelectionNoLongerWants() {
+        let target = ["layers", "geometry", "library"]
+        #expect(PanelSectionArrival.next(target: target, mounted: ["layers", "shadow", "library"])
+                == ["layers", "geometry", "library"])
+    }
+
+    @Test func theCatchUpOfASettledDockIsTheTarget() {
+        let target = ["layers", "geometry"]
+        #expect(PanelSectionArrival.next(target: target, mounted: target) == target)
+        #expect(PanelSectionArrival.next(target: [], mounted: ["layers"]).isEmpty)
+    }
+
+    @Test func aSwapOfEverySectionFillsInWithoutEverShowingAnEmptyDock() {
+        let target = ["editPoint", "transition", "time"]
+        var mounted = ["speed", "sound"]
+        var shown = [PanelSectionArrival.showing(target: target, mounted: mounted)]
+        while PanelSectionArrival.isWaiting(target: target, mounted: mounted), shown.count <= target.count {
+            mounted = PanelSectionArrival.next(target: target, mounted: mounted)
+            shown.append(PanelSectionArrival.showing(target: target, mounted: mounted))
+        }
+        #expect(shown.allSatisfy { !$0.isEmpty })
+        #expect(shown.last == target)
+        #expect(shown.count == 3)
     }
 }

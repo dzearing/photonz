@@ -38,17 +38,18 @@ public enum PanelSectionArrival {
     /// opening has no previous frame to protect, and holding everything back
     /// would be a visible flash of an empty dock.
     ///
-    /// ...and the same when nothing in `target` is mounted: holding all of it
-    /// back is that same empty dock, and one that shares nothing with the last
-    /// pass would leave nothing mounted and so nothing counted as waiting. It
-    /// never happened while the layers list was in every dock; on a video the
+    /// When nothing in `target` is mounted, the top section of it answers at
+    /// once and the rest follow a pass at a time (`next`). Holding all of it
+    /// back is an empty dock, and one that shares nothing with the last pass
+    /// would leave nothing mounted and so nothing counted as waiting. It never
+    /// happened while the layers list was in every dock; on a video the
     /// timeline stands in for the list (`TimelineIsTheLayerList`), and picking
     /// a cut after a clip swaps every section at once.
     public static func showing(target: [String], mounted: [String]) -> [String] {
         guard !mounted.isEmpty else { return target }
         let have = Set(mounted)
         let built = target.filter { have.contains($0) }
-        return built.isEmpty ? target : built
+        return built.isEmpty ? Array(target.prefix(1)) : built
     }
 
     /// True when the selection has asked for a section the dock has not built,
@@ -56,5 +57,21 @@ public enum PanelSectionArrival {
     /// for is on screen, which is how the panel can never settle part-built.
     public static func isWaiting(target: [String], mounted: [String]) -> Bool {
         showing(target: target, mounted: mounted) != target
+    }
+
+    /// What the dock has built after one catch-up pass: what it shows now and
+    /// the highest section still waiting, never more than one.
+    ///
+    /// All the waiting sections used to arrive in a single pass. Picking a
+    /// caption after the canvas asks for six the dock has never built, and
+    /// building them together held the window for a tenth of a second
+    /// (2026-09-24, `caption-pick-answers-at-once-walk`); one at a time, top
+    /// down, every pass stays short and the section you are looking at is
+    /// never the one kept waiting.
+    public static func next(target: [String], mounted: [String]) -> [String] {
+        let shown = showing(target: target, mounted: mounted)
+        let have = Set(shown)
+        guard let arriving = target.first(where: { !have.contains($0) }) else { return target }
+        return target.filter { have.contains($0) || $0 == arriving }
     }
 }

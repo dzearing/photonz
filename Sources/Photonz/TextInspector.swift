@@ -77,8 +77,11 @@ struct TextInspector: View {
                               title: { $0 },
                               help: help("font", selection.count),
                               pinnedWidth: Self.fontMenuWidth) {
-                    editorState.setTextStyle(ids: ids, fontName: $0)
+                    editorState.setTextStyle(ids: pickedIDs, fontName: $0)
                 }
+                // The three menus read the pick when chosen, not when drawn, so
+                // they can skip picks that change nothing they show.
+                .equatable()
                 PanelPair {
                     SelectionMenu(label: "Size",
                                   reading: selection.number { $0.fontSize },
@@ -92,15 +95,17 @@ struct TextInspector: View {
                                   title: { TextStyles.sizeTitle($0) },
                                   spoken: { TextStyles.sizeWords($0) },
                                   help: help("size", selection.count)) {
-                        editorState.setTextStyle(ids: ids, fontSize: $0)
+                        editorState.setTextStyle(ids: pickedIDs, fontSize: $0)
                     }
+                    .equatable()
                     SelectionMenu(label: "Weight",
                                   reading: selection.reading { $0.weight },
                                   options: TextWeight.allCases,
                                   title: { $0.rawValue.capitalized },
                                   help: help("weight", selection.count)) {
-                        editorState.setTextStyle(ids: ids, weight: $0)
+                        editorState.setTextStyle(ids: pickedIDs, weight: $0)
                     }
+                    .equatable()
                 }
                 // Where the words sit inside their own boxes. Only tells while
                 // a box is bigger than its words, which is what a box told to
@@ -209,6 +214,9 @@ struct TextInspector: View {
             .playtestField(label)
         }
     }
+
+    /// The text picked at the moment a menu is used.
+    private var pickedIDs: [UUID] { editorState.textSelection.layerIDs }
 
     /// What a menu says it is. Over a selection it says how far it reaches, so
     /// a menu reading Mixed also says what it is mixed about.
