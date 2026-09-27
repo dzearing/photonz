@@ -1,5 +1,6 @@
 import AVFoundation
 import AppKit
+import CoreImage
 import Foundation
 import PhotonzCore
 import PhotonzRender
@@ -213,6 +214,93 @@ actor MovieDecoder {
     }
 }
 
+/// Reads a stretch of a recording in one pass and hands over each grid frame
+/// in it, small (`MovieSweep`).
+///
+/// Not on `MovieDecoder`'s actor: a pass runs for a couple of hundred
+/// milliseconds, and the actor answering a sharp frame must never wait behind
+/// it. Nothing here outlives one pass, so nothing is shared.
+enum MovieSweeper {
+
+    private static let context = CIContext(options: [.cacheIntermediates: false])
+
+    /// Read `frames` of `movie` from start to end, handing each grid frame to
+    /// `deliver` at most `size` big, as soon as it is read. Stops as soon as
+    /// the task is cancelled. Answers false when the recording cannot be read
+    /// this way at all (a turn that is not a right angle), so the caller goes
+    /// back to reading exact frames.
+    static func sweep(movie: MovieRef, url: URL, frames: ClosedRange<Int>, size: CGSize,
+                      deliver: @escaping @Sendable (Int, CGImage) -> Void) async -> Bool {
+        let asset = AVURLAsset(url: url)
+        guard let track = try? await asset.loadTracks(withMediaType: .video).first,
+              let transform = try? await track.load(.preferredTransform),
+              let orientation = orientation(of: transform),
+              let reader = try? AVAssetReader(asset: asset)
+        else { return false }
+        let step = MovieRef.frameStepMS
+        reader.timeRange = CMTimeRange(
+            start: CMTime(value: CMTimeValue(frames.lowerBound * step), timescale: 1000),
+            end: CMTime(value: CMTimeValue((frames.upperBound + 1) * step), timescale: 1000))
+        // The decoder's own format: asking for RGB made the pass three times
+        // slower, and only the frames kept are converted.
+        let output = AVAssetReaderTrackOutput(track: track, outputSettings: [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange,
+        ])
+        output.alwaysCopiesSampleData = false
+        guard reader.canAdd(output) else { return false }
+        reader.add(output)
+        guard reader.startReading() else { return false }
+
+        var grid = MovieSweepGrid(frames: frames)
+        var previous: CVPixelBuffer?
+        func hand(_ indices: [Int], _ buffer: CVPixelBuffer?) {
+            guard !indices.isEmpty, let buffer,
+                  let image = picture(of: buffer, orientation: orientation, size: size) else { return }
+            for index in indices { deliver(index, image) }
+        }
+        // Stopped between samples only: `cancelReading` from another thread
+        // while a sample is being read crashes (tried 2026-09-27).
+        while !Task.isCancelled, let sample = output.copyNextSampleBuffer() {
+            guard let buffer = CMSampleBufferGetImageBuffer(sample) else { continue }
+            let ms = CMSampleBufferGetPresentationTimeStamp(sample).seconds * 1000
+            hand(grid.arrived(atMS: ms), previous)
+            previous = buffer
+        }
+        if Task.isCancelled {
+            reader.cancelReading()
+        } else if reader.status == .completed {
+            hand(grid.finished(), previous)
+        }
+        return true
+    }
+
+    /// One decoded frame, turned the way the recording is shown and at most
+    /// `size` big, in the recording's own colours.
+    private static func picture(of buffer: CVPixelBuffer, orientation: CGImagePropertyOrientation,
+                                size: CGSize) -> CGImage? {
+        var image = CIImage(cvPixelBuffer: buffer).oriented(orientation)
+        let scale = min(1, size.width / max(1, image.extent.width))
+        image = image.samplingLinear().transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+        let extent = image.extent.integral
+        let colors = CVBufferCopyAttachments(buffer, .shouldPropagate)
+            .flatMap { CVImageBufferCreateColorSpaceFromAttachments($0)?.takeRetainedValue() }
+            ?? CGColorSpace(name: CGColorSpace.sRGB)
+        return context.createCGImage(image, from: extent, format: .RGBA8, colorSpace: colors)
+    }
+
+    /// The four right-angle turns a recording's track can carry, and nil for
+    /// anything else.
+    private static func orientation(of transform: CGAffineTransform) -> CGImagePropertyOrientation? {
+        switch (transform.a.rounded(), transform.b.rounded(), transform.c.rounded(), transform.d.rounded()) {
+        case (1, 0, 0, 1): return .up
+        case (0, 1, -1, 0): return .right
+        case (0, -1, 1, 0): return .left
+        case (-1, 0, 0, -1): return .down
+        default: return nil
+        }
+    }
+}
+
 /// Decodes the frames one window is asking for and files them in its
 /// `ImageStore` under the reference the document already points at.
 ///
@@ -245,7 +333,23 @@ final class MovieFrameFetcher {
         let ref: ImageRef
         let movie: UUID
         let frameIndex: Int
+        /// Read in passing for a moving hand, small (`MovieSweep`). Counted
+        /// against its own budget, since a stretch of them costs about as much
+        /// as a handful of sharp ones.
+        var rough = false
     }
+
+    /// The one-pass read running for each recording, and which grid frames it
+    /// covers.
+    private struct Sweep {
+        let token: UUID
+        let frames: ClosedRange<Int>
+        let task: Task<Void, Never>
+    }
+    private var sweeps: [UUID: Sweep] = [:]
+    /// Recordings a one-pass read cannot turn the right way up, which a moving
+    /// hand reads frame by frame as before.
+    private var unsweepable = Set<UUID>()
 
     private let store: ImageStore
     /// Decoded frames, in the order they landed.
@@ -307,23 +411,88 @@ final class MovieFrameFetcher {
     /// started yet is forgotten, so a hand flinging the playhead across a clip
     /// never leaves a queue of frames it has already passed standing between
     /// it and the frame it is on.
-    func fetch(_ requests: [MovieFrameRequest], size: (MovieFrameRequest) -> CGSize) {
+    ///
+    /// While a hand is moving the playhead (`handMoving`), nothing is read one
+    /// exact frame at a time: the stretch it is heading into is read in one
+    /// pass instead and filed small (`MovieSweep`), and a frame already in
+    /// hand at any size is good enough until the hand holds still. Any other
+    /// call stops those passes, so the sharp frame it asks for has the decoder
+    /// to itself.
+    func fetch(_ requests: [MovieFrameRequest], size: (MovieFrameRequest) -> CGSize,
+               handMoving: Bool = false, backward: Bool = false) {
+        if !handMoving { stopSweeps() }
         var wanted: [Read] = []
         var asked = Set<UUID>()
         var focused = Set<UUID>()
         for request in requests where asked.insert(request.ref.id).inserted {
+            let width = size(request)
+            guard let url = MovieLibrary.shared.url(for: request.movie) else { continue }
             // The first frame asked of a recording is where its playhead is,
             // which is what the budget keeps the frames around.
             if focused.insert(request.movie.id).inserted {
-                focus[request.movie.id] = request.movie.frameIndex(atSourceMS: request.sourceMS)
+                let frame = request.movie.frameIndex(atSourceMS: request.sourceMS)
+                focus[request.movie.id] = frame
+                if handMoving, !unsweepable.contains(request.movie.id) {
+                    sweep(request.movie, url: url, around: frame, backward: backward,
+                          size: MovieSweep.roughSize(for: width))
+                }
             }
-            let width = size(request)
+            if handMoving, !unsweepable.contains(request.movie.id) { continue }
             if let filed = filedWidth(request.ref), filed >= width.width - 1 { continue }
-            guard let url = MovieLibrary.shared.url(for: request.movie) else { continue }
+            if handMoving, has(request.ref) { continue }
             wanted.append(Read(request: request, size: width, url: url))
         }
         queue.replace(with: wanted)
         startReads()
+    }
+
+    // MARK: Reading a stretch in one pass
+
+    /// Start reading the stretch a hand on `frame` is heading into, unless
+    /// it is in hand already or being read (`MovieSweep.next`).
+    private func sweep(_ movie: MovieRef, url: URL, around frame: Int, backward: Bool, size: CGSize) {
+        guard let frames = MovieSweep.next(
+            handFrame: frame, backward: backward, movie: movie,
+            inHand: { [self] in has(movie.frameRef(atSourceMS: $0 * MovieRef.frameStepMS)) },
+            running: sweeps[movie.id]?.frames)
+        else { return }
+        sweeps[movie.id]?.task.cancel()
+        let token = UUID()
+        let file: @MainActor @Sendable (Int, CGImage) -> Void = { [weak self] index, image in
+            self?.fileRough(image, movie: movie, frameIndex: index)
+        }
+        let finished: @MainActor @Sendable (Bool) -> Void = { [weak self] swept in
+            guard let self else { return }
+            if !swept { unsweepable.insert(movie.id) }
+            if sweeps[movie.id]?.token == token { sweeps[movie.id] = nil }
+        }
+        let task = Task.detached(priority: .userInitiated) {
+            let swept = await MovieSweeper.sweep(movie: movie, url: url, frames: frames, size: size) { index, image in
+                Task { @MainActor in file(index, image) }
+            }
+            await finished(swept)
+        }
+        sweeps[movie.id] = Sweep(token: token, frames: frames, task: task)
+    }
+
+    /// Stop every one-pass read: the hand holds still, or let go, or the clock
+    /// took over.
+    private func stopSweeps() {
+        for sweep in sweeps.values { sweep.task.cancel() }
+        sweeps.removeAll()
+    }
+
+    /// A frame a one-pass read reached. Filed unless something at least as
+    /// big is filed already; the budget lets go of whichever small frames are
+    /// farthest from the playhead.
+    private func fileRough(_ image: CGImage, movie: MovieRef, frameIndex: Int) {
+        let ref = movie.frameRef(atSourceMS: frameIndex * MovieRef.frameStepMS)
+        if let filed = filedWidth(ref), filed >= CGFloat(image.width) { return }
+        store.register(image, as: ref)
+        resident.removeAll { $0.ref.id == ref.id }
+        resident.append(Resident(ref: ref, movie: movie.id, frameIndex: frameIndex, rough: true))
+        keepInsideBudget()
+        onFrameLanded?()
     }
 
     /// Start whatever the queue lets start.
@@ -381,13 +550,23 @@ final class MovieFrameFetcher {
         resident.removeAll { $0.ref.id == request.ref.id }
         resident.append(Resident(ref: request.ref, movie: request.movie.id,
                                  frameIndex: request.movie.frameIndex(atSourceMS: request.sourceMS)))
-        while resident.count > Self.frameBudget,
-              let farthest = MovieFrameQueue<Read>.farthest(resident.map { ($0.movie, $0.frameIndex) },
-                                                            from: focus) {
-            let gone = resident.remove(at: farthest).ref
-            store.remove(gone)
-            dropped.append(gone.id)
-            if dropped.count > 512 { dropped.removeFirst(dropped.count - 512) }
+        keepInsideBudget()
+    }
+
+    /// Let go of the frames farthest from the playhead until the sharp ones
+    /// and the small ones are each inside their own budget.
+    private func keepInsideBudget() {
+        for (rough, budget) in [(false, Self.frameBudget), (true, MovieSweep.roughBudget)] {
+            while resident.count(where: { $0.rough == rough }) > budget {
+                let kind = resident.indices.filter { resident[$0].rough == rough }
+                guard let farthest = MovieFrameQueue<Read>.farthest(
+                    kind.map { (resident[$0].movie, resident[$0].frameIndex) }, from: focus) else { break }
+                let gone = resident.remove(at: kind[farthest]).ref
+                store.remove(gone)
+                dropped.append(gone.id)
+                if dropped.count > 512 { dropped.removeFirst(dropped.count - 512) }
+            }
         }
     }
 }
+

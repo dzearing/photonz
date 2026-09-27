@@ -1074,6 +1074,11 @@ final class EditorState {
     /// being read is stood in for from the side it came from.
     @ObservationIgnored var playheadTravel: MovieFramesInHand.Travel = .forward
     @ObservationIgnored var playheadStrideMS = MovieRef.frameStepMS
+    /// A hand on the playhead that has held still for `MovieSweep.settleMS`,
+    /// which is when the frame under it is read sharp; and the wait that
+    /// decides it, started again by every move (`EditorState+Time`).
+    @ObservationIgnored var playheadSettled = true
+    @ObservationIgnored var playheadSettleTask: Task<Void, Never>?
     /// The display's refresh, which paces the picture while a hand scrubs:
     /// at most one new picture asked for per refresh, however fast the moves
     /// come (`DisplayFrames`).

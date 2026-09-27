@@ -79,7 +79,26 @@ extension EditorState {
         // under it, so somebody hunting for a word can hear it go by
         // (`ScrubAudition.swift`). Does nothing unless a drag is in hand.
         auditionScrub()
-        if playheadInHand { askForMomentByRefresh() } else { documentMomentChanged() }
+        if playheadInHand {
+            // A moving hand is shown frames read in passing, small; holding
+            // still is what earns the sharp one (`MovieSweep`).
+            playheadSettled = false
+            waitForPlayheadToSettle()
+            askForMomentByRefresh()
+        } else {
+            documentMomentChanged()
+        }
+    }
+
+    /// Start the wait for a hand on the playhead to hold still, over again.
+    private func waitForPlayheadToSettle() {
+        playheadSettleTask?.cancel()
+        playheadSettleTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(MovieSweep.settleMS))
+            guard let self, !Task.isCancelled, !playheadSettled else { return }
+            playheadSettled = true
+            documentMomentChanged()
+        }
     }
 
     // MARK: Dragging the playhead
@@ -103,7 +122,13 @@ extension EditorState {
     func endPlayheadDrag() {
         playheadInHand = false
         scrubFrames?.stop()
-        if momentAwaitingRefresh {
+        playheadSettleTask?.cancel()
+        // Letting go is holding still for good: whatever the last refresh had
+        // not drawn is drawn, and the frame under the playhead is read sharp
+        // if the hand was still moving when it let go.
+        let unsettled = !playheadSettled
+        playheadSettled = true
+        if momentAwaitingRefresh || unsettled {
             momentAwaitingRefresh = false
             documentMomentChanged()
         }
@@ -284,7 +309,8 @@ extension EditorState {
             let way = playheadTravel == .backward ? -1 : 1
             let (count, stride) = isDocumentPlaying
                 ? (MovieFrameFetcher.playAheadFrames, MovieRef.frameStepMS)
-                : (playheadInHand ? MovieFrameFetcher.scrubAheadMoves : 0, playheadStrideMS)
+                : (playheadInHand && !playheadSettled ? MovieFrameFetcher.scrubAheadMoves : 0,
+                   playheadStrideMS)
             if count > 0 {
                 for step in 1...count {
                     let ahead = documentTimeMS + way * step * stride
@@ -292,7 +318,11 @@ extension EditorState {
                     wanted += document.movieFrames(atTimeMS: ahead)
                 }
             }
-            movieFrames.fetch(wanted, size: movieDecodeSize(in: document))
+            // A hand still moving is fed the stretch it is heading into, read
+            // in one pass and kept small; anything else reads exact frames.
+            let handMoving = playheadInHand && !playheadSettled && !isDocumentPlaying
+            movieFrames.fetch(wanted, size: movieDecodeSize(in: document),
+                              handMoving: handMoving, backward: playheadTravel == .backward)
         }
         submit(document)
     }
@@ -345,8 +375,10 @@ extension EditorState {
         // frame lands. So a row first drawn before the first frame was decoded
         // would stay blank for the life of the window. Not while playing: a
         // thumbnail redrawn thirty times a second is a thumbnail nobody can
-        // read and a core spent on nothing.
-        if !isDocumentPlaying {
+        // read and a core spent on nothing. Nor while a hand is moving the
+        // playhead: frames read in passing land dozens a second then, and the
+        // sharp one read when it holds still redraws the row.
+        if !isDocumentPlaying, !playheadInHand || playheadSettled {
             for layer in document.allLayers where layer.isClip {
                 thumbnailCache[layer.id] = nil
             }

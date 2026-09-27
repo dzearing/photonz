@@ -7912,6 +7912,52 @@ private final class Run {
                 await screenCapture(window, name: "\(name)-mid-scrub")
             }
         }
+        // How long the picture sat on one frame while the frame wanted moved
+        // on: the look count of the longest such run in each direction
+        // (`scrubbing-back-fast-keeps-the-video-picture-movi`).
+        func longestHeld(_ phase: String) -> (looks: Int, startMS: Int?) {
+            var best = 0, run = 0, bestStart: Int?, runStart: Int?
+            var previous: [Int?]?
+            for look in looks where look.phase == phase {
+                let moved = look.shownFrames != look.wantedFrames.map { Optional($0) }
+                if moved, look.shownFrames == previous {
+                    run += 1
+                } else {
+                    run = 0
+                    runStart = look.playheadMS
+                }
+                if run > best { best = run; bestStart = runStart }
+                previous = look.shownFrames
+            }
+            return (best, bestStart)
+        }
+        let heldForward = longestHeld("forward"), heldBack = longestHeld("back")
+
+        // Then the hand stops where going back was hardest and holds still:
+        // the frame under it has to come in sharp, and soon.
+        let settleAt = heldBack.startMS ?? (low + high) / 2
+        editor.dragPlayhead(toMS: settleAt)
+        let settleStart = Date()
+        var settledMS: Int?
+        while Date().timeIntervalSince(settleStart) < 2 {
+            await frames.next()
+            let reads = editor.movieFrameReadWidths()
+            let under = clips.compactMap { clip -> Int? in
+                guard let movie = clip.movie,
+                      let source = clip.movieFrameSourceMS(atTimeMS: editor.documentTimeMS) else { return nil }
+                return movie.frameIndex(atSourceMS: source)
+            }
+            let drawn = clips.compactMap { clip -> Int? in
+                guard let movie = clip.movie, let layer = editor.shownDrawnDocument?.layer(id: clip.id),
+                      case .image(let ref) = layer.content else { return nil }
+                return movie.frameIndex(ofFrameID: ref.id)
+            }
+            if !reads.isEmpty, drawn == under,
+               reads.allSatisfy({ ($0.read ?? 0) >= $0.wanted - 1 }) {
+                settledMS = Int(Date().timeIntervalSince(settleStart) * 1000)
+                break
+            }
+        }
         editor.endPlayheadDrag()
         let times = Array(editor.recentCompositeTimes.dropFirst(min(timesBefore, editor.recentCompositeTimes.count)))
         func percentile(_ values: [Double], _ share: Double) -> Double {
@@ -7946,7 +7992,11 @@ private final class Run {
             + "(\(offOutline) frames over 1pt); drawn vs the playhead's pose off by up to "
             + "\(String(format: "%.1f", worstModel))pt; the picture trailed the playhead by up to "
             + "\(worstLag) display frame(s) (\(lagged) frames over 1); \(held) looks held a nearby "
-            + "frame while the wanted one was read; \(drawNote); the numbers are in \(name).json"
+            + "frame while the wanted one was read; the picture sat on one frame while the wanted one "
+            + "moved for up to \(heldForward.looks) display frames going forward and "
+            + "\(heldBack.looks) going back; stopped at \(settleAt)ms, the frame under the playhead "
+            + (settledMS.map { "came in sharp in \($0)ms" } ?? "was still not in sharp after 2s")
+            + "; \(drawNote); the numbers are in \(name).json"
         guard moved >= 1 else {
             throw Failure(description: "the picked layer never moved over the scrub, so nothing about "
                 + "how it follows the playhead was checked: key its Position first. " + summary)
@@ -7964,6 +8014,16 @@ private final class Run {
         guard lagged == 0 else {
             throw Failure(description: "the picture trailed the playhead by more than one display frame at "
                 + "\(lagged) of \(looks.count) display frames. " + summary)
+        }
+        // A sixth of a second: past that a picture standing still under a
+        // moving hand reads as the app freezing.
+        guard heldBack.looks < 10 else {
+            throw Failure(description: "going back, the picture sat on one frame for \(heldBack.looks) "
+                + "display frames while the playhead moved on. " + summary)
+        }
+        guard let settledMS, settledMS <= 250 else {
+            throw Failure(description: "the hand stopped and the frame under it did not come in sharp "
+                + "within a quarter second. " + summary)
         }
         return summary
     }

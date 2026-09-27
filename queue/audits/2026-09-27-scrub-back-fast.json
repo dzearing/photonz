@@ -1,0 +1,24 @@
+{
+  "feature": "Scrubbing back fast keeps the picture moving",
+  "epic": "video-editing",
+  "summary": "Dragging the playhead backwards quickly over a screen recording no longer freezes the video picture for half a second: the picture follows the hand, a little softer while it moves, and turns sharp when you hold still.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a full-screen screen recording (the walk uses Scripts/playtest/fixtures/Full screen Retina recording 3456x2234.mp4) and open the timeline.",
+  "try": [
+    { "do": "Drag the playhead to near the end of the recording and hold it there until the picture is sharp." },
+    { "do": "Drag it quickly back towards the start without letting go.", "shot": "2026-09-27-scrub-back-fast-mid-scrub-sc.png" },
+    { "do": "Stop moving, still holding the playhead, and watch the picture sharpen." },
+    { "do": "Drag forward and back across the same stretch a few times, fast and slow." },
+    { "do": "Let go and press Space to play from there." }
+  ],
+  "evaluate": [
+    "Does the picture keep moving with your hand the whole way back, with no stretch where it sits still?",
+    "Is the softer picture while you drag acceptable, or does it look broken rather than rough?",
+    "When you stop, does it turn sharp quickly enough that you never wait for it?",
+    "Does playing from where you let go look exactly as it did before?"
+  ],
+  "rough": [
+    "While the hand moves, the picture is read at most 800 pixels wide, so on a big canvas zoomed in it is visibly soft until you hold still (Premiere and Final Cut do the same while scrubbing).",
+    "Holding still for about 30ms counts as stopping; at the far end of a two second stretch the sharp frame took about 230ms to arrive, just inside the quarter second the task asked for.",
+    "No surface changed, so there is no mock to compare against: this is how the existing timeline scrub feels, not what it looks like."
+  ]
+}

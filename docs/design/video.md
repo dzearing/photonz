@@ -149,7 +149,7 @@ What keeps it now:
    read was still going, so every recording opened blurred at 0:00. Writing a
    file always reads at the recording's own size.
 
-Scrubbing (a hand on the playhead) adds four more, since 2026-09-26
+Scrubbing (a hand on the playhead) adds five more, since 2026-09-26
 (`scrubbing-is-smooth-never-goes-black-and-the-pic`, walk
 `scrub-never-blacks-out-walk`, which scrubs at every display frame and
 measures each one):
@@ -174,6 +174,21 @@ measures each one):
    the budget lets go of the frame farthest from the playhead; and a frame
    still being read is stood in for by the NEAREST frame in hand, ties to the
    side the hand came from (a clock still never shows a frame from ahead).
+11. **A moving hand is fed a stretch, not frames** (2026-09-27,
+   `scrubbing-back-fast-keeps-the-video-picture-movi`). An exact frame costs
+   a decode of every frame since the key frame before it (1.9s into a two
+   second key-frame interval: 177ms), and exact reads do not run side by side
+   (five at once took 700ms each), so going backwards the picture sat still for
+   20 display frames. While a hand moves, `MovieSweeper` reads the 1.5s it is
+   heading into in ONE `AVAssetReader` pass (a whole two second stretch, every
+   grid frame kept: about 220ms) and files each grid frame at most 800 wide
+   under its own reference, on a budget of its own (`MovieSweep.roughBudget`).
+   No exact reads run while it moves. Holding still for `MovieSweep.settleMS`
+   (30ms) or letting go stops the pass and reads the frame under the playhead
+   sharp through the ordinary upgrade path (`MovieFrameReads`). The walk now
+   fails if, going back, the picture sits on one frame for 10 display frames,
+   or a stop takes over 250ms to turn sharp. Cancelling an `AVAssetReader`
+   from another thread while it reads crashes, so a pass stops between samples.
 
 ---
 
