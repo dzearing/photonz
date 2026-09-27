@@ -13,6 +13,36 @@ import CoreGraphics
 /// and the arithmetic cannot drift apart.
 public enum LibraryShelfLayout {
 
+    // MARK: How big a tile is
+
+    /// How a release sizes its tiles. Everything that depends on how wide a
+    /// tile is takes one of these, so the grid, the height arithmetic and the
+    /// tile views all agree on the same tile.
+    public struct Sizing: Equatable, Sendable {
+        /// The narrowest a tile may be before the grid drops a column.
+        public var minimumWidth: CGFloat
+        /// The picture's width over its height, so it grows with the tile.
+        /// Nil keeps the picture at the fixed `thumbnailHeight` however wide
+        /// the tile is.
+        public var pictureAspect: CGFloat?
+
+        public init(minimumWidth: CGFloat, pictureAspect: CGFloat?) {
+            self.minimumWidth = minimumWidth
+            self.pictureAspect = pictureAspect
+        }
+
+        /// The shelf Current ships: 68 point tiles with a 44 point picture,
+        /// three to a row in a resting dock.
+        public static let compact = Sizing(minimumWidth: tileMinimumWidth, pictureAspect: nil)
+
+        /// The shelf the video mock draws (`.libgrid` is
+        /// `repeat(auto-fill,minmax(96px,1fr))`, `.libtile .th` is
+        /// `aspect-ratio:16/10`): two cards to a row in a resting dock, each
+        /// picture keeping its shape as the card grows, so a card reads as a
+        /// card and a name like "Tutorial Sample.mp4" reads whole.
+        public static let card = Sizing(minimumWidth: 96, pictureAspect: 16.0 / 10.0)
+    }
+
     // MARK: What a tile is made of
 
     /// The narrowest a tile may be before the grid drops a column.
@@ -73,24 +103,46 @@ public enum LibraryShelfLayout {
 
     /// How many tiles fit across `width`, which is what an adaptive grid works
     /// out for itself. Always at least one, however narrow the dock is pulled.
-    public static func columnCount(width: CGFloat) -> Int {
+    public static func columnCount(width: CGFloat, sizing: Sizing = .compact) -> Int {
         guard width > 0 else { return 1 }
-        let columns = Int((width + tileSpacing) / (tileMinimumWidth + tileSpacing))
+        let columns = Int((width + tileSpacing) / (sizing.minimumWidth + tileSpacing))
         return max(1, columns)
     }
 
+    /// How wide each tile is drawn at `width`: an adaptive grid shares out
+    /// what is left after the gaps equally. Before the dock is measured there
+    /// is no width, and a tile stands at its minimum.
+    public static func tileWidth(width: CGFloat, sizing: Sizing = .compact) -> CGFloat {
+        guard width > 0 else { return sizing.minimumWidth }
+        let columns = CGFloat(columnCount(width: width, sizing: sizing))
+        return (width - tileSpacing * (columns - 1)) / columns
+    }
+
+    /// How tall the picture well is at `width`. Whole points, so the tile
+    /// views and this arithmetic land on the same pixel.
+    public static func thumbnailHeight(width: CGFloat, sizing: Sizing = .compact) -> CGFloat {
+        guard let aspect = sizing.pictureAspect, aspect > 0 else { return thumbnailHeight }
+        let picture = tileWidth(width: width, sizing: sizing) - tilePadding * 2
+        return max(1, (picture / aspect).rounded(.down))
+    }
+
+    /// One tile, top to bottom, at `width`.
+    public static func tileHeight(width: CGFloat, sizing: Sizing = .compact) -> CGFloat {
+        tilePadding * 2 + thumbnailHeight(width: width, sizing: sizing) + captionSpacing + captionHeight
+    }
+
     /// How many rows `tileCount` tiles wrap into at `width`.
-    public static func rowCount(tileCount: Int, width: CGFloat) -> Int {
+    public static func rowCount(tileCount: Int, width: CGFloat, sizing: Sizing = .compact) -> Int {
         guard tileCount > 0 else { return 0 }
-        let columns = columnCount(width: width)
+        let columns = columnCount(width: width, sizing: sizing)
         return (tileCount + columns - 1) / columns
     }
 
     /// The height the grid would take if nothing capped it.
-    public static func contentHeight(tileCount: Int, width: CGFloat) -> CGFloat {
-        let rows = rowCount(tileCount: tileCount, width: width)
+    public static func contentHeight(tileCount: Int, width: CGFloat, sizing: Sizing = .compact) -> CGFloat {
+        let rows = rowCount(tileCount: tileCount, width: width, sizing: sizing)
         guard rows > 0 else { return 0 }
-        return CGFloat(rows) * tileHeight
+        return CGFloat(rows) * tileHeight(width: width, sizing: sizing)
             + CGFloat(rows - 1) * tileSpacing
             + gridVerticalPadding * 2
     }
@@ -140,6 +192,15 @@ public enum LibraryShelfLayout {
         gridVerticalPadding + tileHeight + tileSpacing + max(0, peek)
     }
 
+    /// The same floor for a shelf whose tiles grow with the dock: one whole
+    /// row at `width`, and the sliver. A card shelf pulled wider has taller
+    /// cards, so its floor rises with it, or the caption of the row it keeps
+    /// would be the part the dock cuts away.
+    public static func squeezeFloor(peek: CGFloat, width: CGFloat, sizing: Sizing) -> CGFloat {
+        let measured = width > 0 ? width : sizing.minimumWidth
+        return gridVerticalPadding + tileHeight(width: measured, sizing: sizing) + tileSpacing + max(0, peek)
+    }
+
     /// The height the shelf actually takes: its content, but never more than
     /// the ceiling the drag handle sets, so the sections under it stay in view
     /// and a long shelf scrolls on its own.
@@ -147,9 +208,10 @@ public enum LibraryShelfLayout {
     /// Before anything has measured the dock, `width` is zero and there is no
     /// honest answer, so the shelf stands at its ceiling for that one frame
     /// rather than guessing a tall column and visibly collapsing.
-    public static func shelfHeight(tileCount: Int, width: CGFloat, cap: CGFloat) -> CGFloat {
+    public static func shelfHeight(tileCount: Int, width: CGFloat, cap: CGFloat,
+                                   sizing: Sizing = .compact) -> CGFloat {
         guard width > 0 else { return cap }
-        return min(contentHeight(tileCount: tileCount, width: width), cap)
+        return min(contentHeight(tileCount: tileCount, width: width, sizing: sizing), cap)
     }
 
     // MARK: Putting one tile on screen
@@ -159,10 +221,10 @@ public enum LibraryShelfLayout {
     /// height is: a lazy grid has not built the row a tile is on until that row
     /// is on screen, so a tile below the fold cannot be asked where it is —
     /// which is exactly the tile that needs moving.
-    public static func tileTop(index: Int, width: CGFloat) -> CGFloat {
+    public static func tileTop(index: Int, width: CGFloat, sizing: Sizing = .compact) -> CGFloat {
         guard index > 0 else { return gridVerticalPadding }
-        let row = index / columnCount(width: width)
-        return gridVerticalPadding + CGFloat(row) * (tileHeight + tileSpacing)
+        let row = index / columnCount(width: width, sizing: sizing)
+        return gridVerticalPadding + CGFloat(row) * (tileHeight(width: width, sizing: sizing) + tileSpacing)
     }
 
     /// What the shelf should do to put the tile at `index` on screen: the same
@@ -181,9 +243,10 @@ public enum LibraryShelfLayout {
     ///     negative once it has been scrolled down.
     ///   - viewportHeight: how tall the shelf's visible area is.
     public static func tileReveal(index: Int, width: CGFloat,
-                                  gridTop: CGFloat, viewportHeight: CGFloat) -> DockReveal.Action {
-        DockReveal.action(sectionTop: gridTop + tileTop(index: index, width: width),
-                          sectionHeight: tileHeight,
+                                  gridTop: CGFloat, viewportHeight: CGFloat,
+                                  sizing: Sizing = .compact) -> DockReveal.Action {
+        DockReveal.action(sectionTop: gridTop + tileTop(index: index, width: width, sizing: sizing),
+                          sectionHeight: tileHeight(width: width, sizing: sizing),
                           viewportHeight: viewportHeight)
     }
 

@@ -226,6 +226,8 @@ public enum FeatureCatalog {
 
     public static let panelRowsInOneColumnFlag = "next-panel-rows-in-one-column"
 
+    public static let libraryTilesAsCardsFlag = "next-library-tiles-as-cards"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -1250,6 +1252,16 @@ public enum FeatureCatalog {
                     name: panelRowsInOneColumnFlag,
                     title: "Every panel row has its name in one column",
                     description: "Every panel row puts a short grey name in one left column with its control beside it, so sections line up. A control too wide drops under its name. Off means older sections stack names over controls.",
+                    area: .panel,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: libraryTilesAsCardsFlag,
+                    title: "Library tiles are cards",
+                    description: "Library tiles are at least 96 points wide, two to a row in a resting dock, with a 16 by 10 picture, so long names read whole. Off means smaller tiles, three to a row.",
                     area: .panel,
                     isEnabled: false,
                     parameters: []),

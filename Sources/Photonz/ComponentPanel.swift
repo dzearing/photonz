@@ -491,6 +491,8 @@ struct StarterComponentInspector: View {
 /// and double click selects it on the canvas so the shelf is a way back to the
 /// thing as well as a list of it.
 struct LibraryComponentTile: View {
+    /// How big the shelf is drawing its tiles right now (`LibraryTileMetrics`).
+    @Environment(\.libraryTile) private var tileMetrics
     @Environment(EditorState.self) private var editorState
     let entry: LibraryEntry
     let layer: Layer
@@ -556,8 +558,8 @@ struct LibraryComponentTile: View {
         // touches the app's state: a change made while the drag is being handed
         // over redraws the tile and SwiftUI asks for the item all over again.
         .onDrag(dragItem, preview: {
-            thumbnail.frame(width: max(wellWidth, LibraryShelfLayout.tileMinimumWidth),
-                            height: LibraryShelfLayout.thumbnailHeight)
+            thumbnail.frame(width: max(wellWidth, tileMetrics.pictureWidth),
+                            height: tileMetrics.pictureHeight)
         })
         .panelHelp(helpText)
         // The same closure a walk picks the tile up with, so an unmanned run
@@ -584,7 +586,7 @@ struct LibraryComponentTile: View {
     private var thumbnail: some View {
         RoundedRectangle(cornerRadius: 5)
             .fill(.quaternary)
-            .frame(height: LibraryShelfLayout.thumbnailHeight)
+            .frame(height: tileMetrics.pictureHeight)
             .overlay(alignment: alignment) {
                 if let image, placement.size.width > 0 {
                     Image(decorative: image, scale: 1)
@@ -655,7 +657,7 @@ struct LibraryComponentTile: View {
     /// be until the grid has said, so the first frame draws something sensible
     /// rather than nothing.
     private var measuredWellWidth: CGFloat {
-        wellWidth > 0 ? wellWidth : LibraryShelfLayout.tileMinimumWidth - LibraryShelfLayout.tilePadding * 2
+        wellWidth > 0 ? wellWidth : tileMetrics.tileWidth - LibraryShelfLayout.tilePadding * 2
     }
 
     /// Where the picture sits. Decided against the inset well, because a
@@ -664,12 +666,12 @@ struct LibraryComponentTile: View {
     private var placement: LibraryShelfLayout.TilePicture {
         let air = LibraryShelfLayout.picturePadding
         let inset = CGSize(width: measuredWellWidth - air * 2,
-                           height: LibraryShelfLayout.thumbnailHeight - air * 2)
+                           height: tileMetrics.pictureHeight - air * 2)
         let fitted = LibraryShelfLayout.picture(componentSize, in: inset)
         guard fitted.crop != .none else { return fitted }
         return LibraryShelfLayout.picture(componentSize,
                                           in: CGSize(width: measuredWellWidth,
-                                                     height: LibraryShelfLayout.thumbnailHeight))
+                                                     height: tileMetrics.pictureHeight))
     }
 
     /// A cut picture is anchored at the edge it is NOT cut on, so what you see

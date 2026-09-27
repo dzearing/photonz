@@ -1245,11 +1245,12 @@ struct InspectorPanel: View {
             // box and grab bar around it, which it may not — and takes the
             // ceiling back the same way the layers list does.
             LibraryPanel(dockCeiling: ceiling,
-                         onMetrics: { natural, extras in
+                         onMetrics: { natural, extras, floor in
                              record(bodyHeight: natural, for: .library)
                              if budget.listExtras[.library] != extras {
                                  budget.listExtras[.library] = extras
                              }
+                             if budget.shelfFloor != floor { budget.shelfFloor = floor }
                          })
         case .libraryItem:
             // The picked tile's section, named and filled by the scope it came

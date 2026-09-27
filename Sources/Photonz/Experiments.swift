@@ -461,6 +461,13 @@ extension Experiments {
     /// the Next release's catalog, so Current always reads false.
     var panelRowsInOneColumnEnabled: Bool { isEnabled(FeatureCatalog.panelRowsInOneColumnFlag) }
 
+    /// The Library shelf's tiles as the video mock draws them: 96 point cards
+    /// with a 16 by 10 picture (`LibraryShelfLayout.Sizing.card`). Exists only
+    /// in the Next release's catalog, so Current keeps its 68 point tiles.
+    var libraryTileSizing: LibraryShelfLayout.Sizing {
+        isEnabled(FeatureCatalog.libraryTilesAsCardsFlag) ? .card : .compact
+    }
+
     /// `next-hear-the-scrub`: whether dragging the playhead plays the sound
     /// under it (`ScrubAudition.swift`). Leans on the one above: with no sound
     /// on the timeline there is nothing under the playhead to hear.

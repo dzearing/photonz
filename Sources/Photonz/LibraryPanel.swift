@@ -57,7 +57,24 @@ struct LibraryPanel: View {
     /// Told how tall the shelf would be with only the grab bar pressing on it,
     /// and what the picker, search box and grab bar around it cost, so the dock
     /// can budget for both separately: the shelf scrolls and they do not.
-    var onMetrics: ((_ shelfNatural: CGFloat, _ extras: CGFloat) -> Void)?
+    var onMetrics: ((_ shelfNatural: CGFloat, _ extras: CGFloat, _ floor: CGFloat) -> Void)?
+
+    /// How this release sizes its tiles: the mock's cards in Next, the older
+    /// 68 point tiles in Current.
+    private var sizing: LibraryShelfLayout.Sizing { Experiments.shared.libraryTileSizing }
+
+    /// The least the dock may squeeze the shelf to: one whole row of tiles at
+    /// the width the shelf has, and a sliver of the next. A card shelf's row
+    /// grows with the dock, so this is the shelf's to say, not the dock's.
+    private var squeezeFloor: CGFloat {
+        LibraryShelfLayout.squeezeFloor(peek: DockMetrics.bodyPeek, width: shelfWidth, sizing: sizing)
+    }
+
+    /// What each tile is drawn at, handed down to the tile views so the
+    /// picture and the arithmetic above are the same numbers.
+    private var tileMetrics: LibraryTileMetrics {
+        LibraryTileMetrics(width: shelfWidth, sizing: sizing)
+    }
 
     static let scopeKey = "library.scope"
     /// How tall the shelf may get, remembered across launches.
@@ -110,14 +127,17 @@ struct LibraryPanel: View {
         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { total in
             let extras = max(0, total - shelfHeight)
             if chromeHeight != extras { chromeHeight = extras }
-            onMetrics?(unpressedShelfHeight, extras)
+            onMetrics?(unpressedShelfHeight, extras, squeezeFloor)
         }
-        .onAppear { onMetrics?(unpressedShelfHeight, chromeHeight) }
+        .onAppear { onMetrics?(unpressedShelfHeight, chromeHeight, squeezeFloor) }
         // A shelf that gained a row without growing — because the dock was
         // already pressing on it — changes what it is ASKING for and nothing
         // else, so the measurement above never fires and the dock would keep
         // budgeting for the old shelf.
-        .onChange(of: unpressedShelfHeight) { onMetrics?(unpressedShelfHeight, chromeHeight) }
+        .onChange(of: unpressedShelfHeight) { onMetrics?(unpressedShelfHeight, chromeHeight, squeezeFloor) }
+        // A wider dock makes a card shelf's row taller without changing what
+        // the shelf holds, so its floor moves on its own.
+        .onChange(of: squeezeFloor) { onMetrics?(unpressedShelfHeight, chromeHeight, squeezeFloor) }
         // Switching scope with a search still running would show an empty
         // shelf for a reason that is not on screen anymore.
         .onChange(of: scopeRaw) { query = "" }
@@ -315,7 +335,7 @@ struct LibraryPanel: View {
         guard !isEmpty else { return 0 }
         return LibraryShelfLayout.shelfHeight(
             tileCount: tileCount, width: shelfWidth,
-            cap: min(maxHeight, dockCeiling ?? .greatestFiniteMagnitude))
+            cap: min(maxHeight, dockCeiling ?? .greatestFiniteMagnitude), sizing: sizing)
     }
 
     /// ...and what it would be if the dock were NOT pressing on it: its tiles,
@@ -325,7 +345,7 @@ struct LibraryPanel: View {
     private var unpressedShelfHeight: CGFloat {
         guard !isEmpty else { return 0 }
         return LibraryShelfLayout.shelfHeight(tileCount: tileCount, width: shelfWidth,
-                                              cap: maxHeight)
+                                              cap: maxHeight, sizing: sizing)
     }
 
     @ViewBuilder
@@ -383,7 +403,7 @@ struct LibraryPanel: View {
     }
 
     private var grid: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: LibraryShelfLayout.tileMinimumWidth),
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: sizing.minimumWidth),
                                     spacing: LibraryShelfLayout.tileSpacing)],
                   alignment: .leading, spacing: LibraryShelfLayout.tileSpacing) {
             ForEach(visibleClips, id: \.entry.id) { pair in
@@ -407,6 +427,7 @@ struct LibraryPanel: View {
             }
         }
         .padding(.vertical, LibraryShelfLayout.gridVerticalPadding)
+        .environment(\.libraryTile, tileMetrics)
     }
 
     private var emptyState: some View {
@@ -453,7 +474,8 @@ struct LibraryPanel: View {
         guard let index = shelfIndex(of: id), shelfWidth > 0 else { return }
         let action = LibraryShelfLayout.tileReveal(index: index, width: shelfWidth,
                                                    gridTop: shelfReveal.gridTop,
-                                                   viewportHeight: shelfHeight)
+                                                   viewportHeight: shelfHeight,
+                                                   sizing: sizing)
         guard action != .none else { return }
         withAnimation(.easeInOut(duration: 0.28)) {
             proxy.scrollTo(id, anchor: action == .top ? .top : .bottom)
@@ -499,7 +521,7 @@ struct LibraryPanel: View {
     /// ceiling for that one frame, exactly as `shelfHeight` does.
     private var shelfContentHeight: CGFloat {
         guard shelfWidth > 0 else { return maxHeight }
-        return LibraryShelfLayout.contentHeight(tileCount: tileCount, width: shelfWidth)
+        return LibraryShelfLayout.contentHeight(tileCount: tileCount, width: shelfWidth, sizing: sizing)
     }
 
     /// The grab bar decides for itself whether there is anything to resize: an
@@ -519,6 +541,43 @@ struct LibraryPanel: View {
     }
 }
 
+/// How big the shelf is drawing its tiles, handed from the shelf to every tile
+/// view in it through the environment. A tile cannot work this out for itself
+/// without measuring, and a tile that measured would draw its first frame at
+/// the wrong height and jump; the shelf already knows its width.
+struct LibraryTileMetrics: Equatable {
+    /// The tile, padding and all.
+    var tileWidth: CGFloat
+    /// The picture well at the top of the tile.
+    var pictureHeight: CGFloat
+    /// How wide the picture is drawn when it is picked up and dragged.
+    var pictureWidth: CGFloat
+
+    init(width: CGFloat, sizing: LibraryShelfLayout.Sizing) {
+        tileWidth = LibraryShelfLayout.tileWidth(width: width, sizing: sizing)
+        pictureHeight = LibraryShelfLayout.thumbnailHeight(width: width, sizing: sizing)
+        // Current's shelf picked its pictures up at the narrowest a tile gets,
+        // and keeps doing so; a card is picked up at the size it is drawn.
+        pictureWidth = sizing.pictureAspect == nil
+            ? LibraryShelfLayout.tileMinimumWidth
+            : tileWidth - LibraryShelfLayout.tilePadding * 2
+    }
+
+    /// What a tile draws at anywhere the shelf has not said: Current's tile.
+    static let compact = LibraryTileMetrics(width: 0, sizing: .compact)
+}
+
+private struct LibraryTileMetricsKey: EnvironmentKey {
+    static let defaultValue = LibraryTileMetrics.compact
+}
+
+extension EnvironmentValues {
+    var libraryTile: LibraryTileMetrics {
+        get { self[LibraryTileMetricsKey.self] }
+        set { self[LibraryTileMetricsKey.self] = newValue }
+    }
+}
+
 /// The shelf's live measurements for the tile reveal: how far it is scrolled,
 /// and whether a reveal is waiting on layout. Held by reference so writing it
 /// during a scroll does not redraw the shelf.
@@ -531,6 +590,8 @@ struct LibraryPanel: View {
 /// it (which is the app's one selection, so the canvas lets go), double click
 /// places it again, and it drags onto the canvas as the very same picture.
 private struct LibraryTile: View {
+    /// How big the shelf is drawing its tiles right now (`LibraryTileMetrics`).
+    @Environment(\.libraryTile) private var tileMetrics
     let item: LibraryEntry
     let media: DocumentMediaItem
     @Environment(EditorState.self) private var editorState
@@ -566,8 +627,8 @@ private struct LibraryTile: View {
         // state: a change made while the drag is being handed over redraws the
         // tile and SwiftUI asks for the item all over again.
         .onDrag(dragItem, preview: {
-            thumbnail.frame(width: LibraryShelfLayout.tileMinimumWidth,
-                            height: LibraryShelfLayout.thumbnailHeight)
+            thumbnail.frame(width: tileMetrics.pictureWidth,
+                            height: tileMetrics.pictureHeight)
         })
         .panelHelp("\(item.name) • \(item.detail). Double click to place it again.")
         // The same closure a walk picks the tile up with, so an unmanned run
@@ -589,14 +650,14 @@ private struct LibraryTile: View {
         }
     }
 
-    /// The picture, filling a fixed 44pt-tall well and cropped to it. The
+    /// The picture, filling the well the shelf sizes and cropped to it. The
     /// image goes in an OVERLAY rather than a stack: an overlay never gets a
     /// say in its host's size, so a wide screenshot fills the well instead of
     /// stretching the tile across its neighbours.
     private var thumbnail: some View {
         RoundedRectangle(cornerRadius: 5)
             .fill(.quaternary)
-            .frame(height: LibraryShelfLayout.thumbnailHeight)
+            .frame(height: tileMetrics.pictureHeight)
             .overlay {
                 if let image = editorState.store.image(for: media.image) {
                     Image(decorative: image, scale: 1)

@@ -244,6 +244,8 @@ struct TextStyleRow: View {
 /// saved colour is carried onto a swatch. What travels is the style itself, so
 /// the text follows the name afterwards.
 struct LibraryTextStyleTile: View {
+    /// How big the shelf is drawing its tiles right now (`LibraryTileMetrics`).
+    @Environment(\.libraryTile) private var tileMetrics
     @Environment(EditorState.self) private var editorState
     let entry: LibraryEntry
     let style: TextStyle
@@ -302,7 +304,7 @@ struct LibraryTextStyleTile: View {
                     .minimumScaleFactor(0.5)
                     .padding(.horizontal, 6)
             }
-            .frame(height: LibraryShelfLayout.thumbnailHeight)
+            .frame(height: tileMetrics.pictureHeight)
             .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(.primary.opacity(0.12)))
             Text(entry.name)
                 .font(.system(size: LibraryShelfLayout.captionFontSize))

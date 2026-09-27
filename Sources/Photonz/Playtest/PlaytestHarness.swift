@@ -9743,15 +9743,17 @@ private final class Run {
         return try panelTarget(name, kind: .tile)
     }
 
-    /// One row of tiles plus the gap under it: how far one turn of the shelf's
-    /// wheel goes.
+    /// One row of Current's tiles plus the gap under it: how far one turn of
+    /// the shelf's wheel goes. Next's cards are taller, which only means a
+    /// card row takes a turn and a bit; the hunt looks again after every turn.
     private static let shelfRowStep =
         LibraryShelfLayout.tileHeight + LibraryShelfLayout.tileSpacing
 
     /// The most turns a tile hunt may take. `LibraryPanel.maxTiles` is 60, and
     /// the narrowest shelf draws one to a row, so this covers the longest shelf
-    /// the app will build and then stops rather than spinning.
-    private static let shelfTurnLimit = 70
+    /// the app will build and then stops rather than spinning. A card at the
+    /// narrowest dock is about two turns tall, hence two turns a tile.
+    private static let shelfTurnLimit = 130
 
     /// Picks a tile up off the Library shelf and lets it go on the picture,
     /// through the canvas's own drag destination — the same calls a drag from

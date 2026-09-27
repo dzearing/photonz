@@ -1,0 +1,26 @@
+{
+  "feature": "Library tiles at the mock's width",
+  "epic": "video-editing",
+  "summary": "The Library shelf now draws its tiles at least 96 points wide, two to a row in a resting dock, and the picture keeps a 16 by 10 shape as the tile grows, so Tutorial Sample.mp4 and Sample Music.m4a read whole instead of Tutor....mp4.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a screen recording, open the Library section in the right dock.",
+  "try": [
+    { "do": "Open a recording and look at the Library's Media tab.", "shot": "2026-09-27-library-tiles-media-sc.png" },
+    { "do": "Compare with the mock's Library: video.html, Library group.", "shot": "2026-09-27-library-tiles-mock.png" },
+    { "do": "Drag the dock's left edge wider until a third tile fits on the row, then narrow it again." },
+    { "do": "Switch to Comps and read the starter components' names.", "shot": "2026-09-27-library-tiles-comps-sc.png" },
+    { "do": "Collapse the sections above the Library so it has room, then open them again and watch the shelf keep one whole row." },
+    { "do": "Drag a recording tile onto the timeline and check the picture that follows the pointer." }
+  ],
+  "evaluate": [
+    "Do two tiles to a row feel right in a resting dock, or does the shelf now take too much of the panel?",
+    "Does every name you have on the shelf read whole?",
+    "When you widen the dock, do the tiles grow and then snap to three across the way you expect?",
+    "Do the starter components still read at a glance at the bigger size?"
+  ],
+  "rough": [
+    "The tiles are the mock's size but not yet its card: the mock draws a bordered card with the picture edge to edge, the name left aligned in brighter type and the length on a second line; the app keeps a centred grey name and the length on the picture. Filed as library-tiles-look-like-the-mock-s-cards-with-th.",
+    "Mock tile at a 256 point dock: 112 by 105 with a 110 by 69 picture. App at its 264 point dock: 114 by 90 with a 106 by 66 picture inset 4 points. The height gap is the mock's second caption line.",
+    "At the narrowest dock one tile fills the row and stands about 139 points tall, exactly as the mock's rule does. It is honest but big.",
+    "Current keeps its 68 point tiles; only Next has the new size."
+  ]
+}

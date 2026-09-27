@@ -19876,3 +19876,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - `WindowTitleLine` (PhotonzCore, tested) + `TitlebarDocumentLine` (app): video windows show `name · W x H · m:ss · saved|edited` centred in the title bar, as video.html draws it. Edited follows `SaveAffordance`, so it matches the close prompt.
 - Walk: `a-video-window-says-its-name-walk` (Next defaults). Audit: `queue/audits/2026-09-27-video-title-line.json`.
 - Open: should picture windows carry the same line (image mocks draw it)? Asked in the audit.
+
+## 2026-09-27 — Library tiles are as wide as the mock draws them (go loop)
+
+- Behind `next-library-tiles-as-cards` (on in Next): `LibraryShelfLayout.Sizing.card` (96pt minimum, 16:10 picture, tested first in `LibraryShelfCardSizingTests`) against `.compact` (Current's 68pt/44pt). Tile width, picture height, row height, reveal and squeeze floor are now functions of the shelf width; the shelf hands `LibraryTileMetrics` to every tile view through the environment and reports its width-aware floor to the dock (`DockBudgetScratch.shelfFloor`).
+- Resting dock: two to a row, 114pt tiles, 106x66 picture; Tutorial Sample.mp4 and Sample Music.m4a read whole. All 15 shelf/library walks pass at Next defaults.
+- Audit `queue/audits/2026-09-27-library-tiles.json` with the mock beside the shelf.
+- Filed: the card look itself (border, edge-to-edge picture, left name, length line) as `library-tiles-look-like-the-mock-s-cards-with-th`.

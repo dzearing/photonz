@@ -256,6 +256,8 @@ private struct EffectStyleControl: View {
 /// border as a ringed one and a blur as a soft one, so the four kinds are told
 /// apart at a glance without reading a word.
 struct LibraryEffectStyleTile: View {
+    /// How big the shelf is drawing its tiles right now (`LibraryTileMetrics`).
+    @Environment(\.libraryTile) private var tileMetrics
     @Environment(EditorState.self) private var editorState
     let entry: LibraryEntry
     let style: EffectStyle
@@ -276,9 +278,9 @@ struct LibraryEffectStyleTile: View {
     private var tile: some View {
         VStack(spacing: LibraryShelfLayout.captionSpacing) {
             EffectSample(effect: style.effect,
-                         side: LibraryShelfLayout.thumbnailHeight)
+                         side: tileMetrics.pictureHeight)
                 .frame(maxWidth: .infinity)
-                .frame(height: LibraryShelfLayout.thumbnailHeight)
+                .frame(height: tileMetrics.pictureHeight)
             Text(entry.name)
                 .font(.system(size: LibraryShelfLayout.captionFontSize))
                 .lineLimit(1)

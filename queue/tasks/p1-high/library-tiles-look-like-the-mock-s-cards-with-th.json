@@ -1,0 +1,35 @@
+{
+  "id": "library-tiles-look-like-the-mock-s-cards-with-th",
+  "title": "Library tiles look like the mock's cards, with the name and length under the picture",
+  "goal": "The Library shelf's tiles are now the mock's size, but they still look like the old ones: a picture with a centred grey name under it and the length stamped on the picture. The video mock draws each tile as a bordered card, picture edge to edge on top, the name left aligned in brighter type and its length (or \"component\") on a second quiet line under it.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 370,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-27T08:41:49.655Z",
+  "updated": "2026-09-27T08:41:49.658Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found side by side in queue/audits/2026-09-27-library-tiles-mock.png vs 2026-09-27-library-tiles-media-sc.png. Mock CSS (docs/design/mocks/shared/dist/photonz-ds.css ~3619): .libtile border 1px edge-lo, radius r3, background glass-thin, overflow hidden; .th edge to edge aspect 16/10; .cap padding 5px 7px 6px, gap 1; .nm 10.5px weight 560 ink, left, ellipsis; .mt 9px mono faint. Measured in the mock at a 256 dock: tile 112x105, picture 110x69. App today (after library-tiles-are-as-wide-as-the-mock-draws-them): tile 114x90, picture 106x66 inset 4pt, name centred 10pt secondary, length as a corner badge in the picture. Tile views: LibraryPanel.swift LibraryTile, LibraryClipTile.swift, ComponentPanel.swift LibraryComponentTile, ColorStylePanel/TextStylePanel/EffectStylePanel tiles; they read LibraryTileMetrics from the environment. A second caption line changes tileHeight(width:sizing:) in LibraryShelfLayout.Sizing.card: add it there (measure the line) so the grid arithmetic stays exact. Keep Current on .compact.",
+  "acceptance": [
+    "Every Library tile at Next defaults is a bordered, rounded card with its picture edge to edge across the top, like video.html's Library",
+    "The name sits left aligned under the picture in the mock's brighter, slightly heavier type, and a recording's or sound's length sits on a quiet mono line under the name instead of on the picture",
+    "Components and Styles tiles use the same card, with a short second line where the mock gives one",
+    "The shelf height, reveal and squeeze floor still match what is drawn (LibraryShelfLayout tests and the shelf walks pass)",
+    "A picture of the shelf sits beside video.html's Library in the audit, differences listed"
+  ],
+  "log": [
+    {
+      "t": "2026-09-27T08:41:49.657Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "library-import-walk",
+    "starter-shelf-walk",
+    "library-shelf-height-walk",
+    "shelf-tile-reveal-walk"
+  ]
+}

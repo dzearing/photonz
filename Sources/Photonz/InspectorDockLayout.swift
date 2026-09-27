@@ -275,6 +275,10 @@ struct DockBudgetScratch: Equatable {
     /// the one the floor pays to draw whole; nil means nobody has said, and the
     /// first open pane stands in.
     var listFocus: [InspectorSectionID: Int] = [:]
+    /// The least the Library shelf may be squeezed to, as the shelf works it
+    /// out at the width it has: its tiles can grow with the dock, so its row
+    /// height is the shelf's to say. Nil until the shelf has said.
+    var shelfFloor: CGFloat?
 }
 
 // MARK: - Sharing out the height the dock has
@@ -408,7 +412,9 @@ struct DockBudgetScratch: Equatable {
         // handed a number that has no honest way to spend it. A shelf that fits
         // in one row never spends the sliver, because the budget never draws a
         // list taller than its own content.
-        if id == .library { return LibraryShelfLayout.squeezeFloor(peek: DockMetrics.bodyPeek) }
+        if id == .library {
+            return budget.shelfFloor ?? LibraryShelfLayout.squeezeFloor(peek: DockMetrics.bodyPeek)
+        }
         guard let panes = budget.listPanes[id], !panes.isEmpty else {
             return DockMetrics.listFloor
         }

@@ -16,6 +16,8 @@ import UniformTypeIdentifiers
 /// under the name, where Premiere's icon view puts it: the shelf is height
 /// capped and every tile on it is one height (`LibraryShelfLayout`).
 struct LibraryClipTile: View {
+    /// How big the shelf is drawing its tiles right now (`LibraryTileMetrics`).
+    @Environment(\.libraryTile) private var tileMetrics
     let item: LibraryEntry
     let clip: DocumentClipItem
     @Environment(EditorState.self) private var editorState
@@ -47,8 +49,8 @@ struct LibraryClipTile: View {
         .onTapGesture(count: 2) { addAtPlayhead() }
         .onTapGesture { editorState.selectLibraryItem(item.id) }
         .onDrag(dragItem, preview: {
-            thumbnail.frame(width: LibraryShelfLayout.tileMinimumWidth,
-                            height: LibraryShelfLayout.thumbnailHeight)
+            thumbnail.frame(width: tileMetrics.pictureWidth,
+                            height: tileMetrics.pictureHeight)
         })
         .contextMenu {
             Button("Add at Playhead") { addAtPlayhead() }
@@ -71,7 +73,7 @@ struct LibraryClipTile: View {
     private var thumbnail: some View {
         RoundedRectangle(cornerRadius: 5)
             .fill(clip.isSound ? AnyShapeStyle(Self.soundWell) : AnyShapeStyle(.quaternary))
-            .frame(height: LibraryShelfLayout.thumbnailHeight)
+            .frame(height: tileMetrics.pictureHeight)
             .overlay {
                 if let poster {
                     Image(decorative: poster, scale: 1)

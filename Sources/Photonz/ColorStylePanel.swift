@@ -1085,6 +1085,8 @@ struct SelectionColorInspector: View {
 /// Somewhere that cannot wear one — a shadow's colour, another app — still
 /// takes the colour, and the swatch says so before you let go.
 struct LibraryStyleTile: View {
+    /// How big the shelf is drawing its tiles right now (`LibraryTileMetrics`).
+    @Environment(\.libraryTile) private var tileMetrics
     @Environment(EditorState.self) private var editorState
     let entry: LibraryEntry
     let style: ColorStyle
@@ -1112,7 +1114,7 @@ struct LibraryStyleTile: View {
                 // Under it, so a ramp that fades to nothing reads as fading
                 // rather than as a paler orange.
                 .background(CheckerBoard(square: 4).clipShape(RoundedRectangle(cornerRadius: 5)))
-                .frame(height: LibraryShelfLayout.thumbnailHeight)
+                .frame(height: tileMetrics.pictureHeight)
                 .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(.primary.opacity(0.12)))
             Text(entry.name)
                 .font(.system(size: LibraryShelfLayout.captionFontSize))
