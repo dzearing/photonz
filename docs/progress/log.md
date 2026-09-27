@@ -19904,3 +19904,9 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Core: `StretchCurve.swift`. The four curves keys can say are written onto the two keys (timeline Easing and key right-click follow); the shaped four ride a new per-stretch `MotionStop.curve` / `LayerMotion.fromCurve`, cleared by any per-key ease. Drawn curves become the two keys' Bezier handles.
 - Video menu > Animate: Key at Playhead, Curve the Path, Easing. Walk stand-ins: actions `keyAtPlayhead`, `curveThePath`, `easingEaseOutBack`.
 - Walk: `between-the-keys-walk`. Shared `VideoKit.Segmented` plate now fills its column.
+
+## 2026-09-27 · Reset to Defaults on the Properties menu
+
+- The three dots on Properties list Reset to Defaults under Copy Look and Paste Look (documents with time), each item with the mock's icon. Dimmed when there is nothing to put back.
+- Core: `PropertiesReset.swift`. Every key goes (fades and punch-ins are keys), rotation 0, opacity 100, volume points cleared and gain to unity. The look and the layer's unkeyed place and size stay; the app does not store where a layer was first put down. One `perform`, one undo.
+- Walk: `properties-reset-walk` (no flags).

@@ -1,0 +1,25 @@
+{
+  "feature": "Reset to Defaults on the Properties menu",
+  "epic": "video-editing",
+  "summary": "The three dots on the Properties heading now offer Reset to Defaults under Copy Look and Paste Look. One click clears every key on the picked clip or title and puts its rotation, opacity and volume back to their defaults. One undo brings it all back.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/properties-reset-walk.json.",
+  "try": [
+    { "do": "Open a screen recording and type a title on it with the text tool." },
+    { "do": "In Properties, use Animate a property to key Scale, then move the playhead and type 160. Do the same with Opacity at 40.", "shot": "2026-09-27-properties-reset-1.png" },
+    { "do": "Click the three dots at the right end of the Properties heading.", "shot": "2026-09-27-properties-reset-menu.png" },
+    { "do": "Choose Reset to Defaults.", "shot": "2026-09-27-properties-reset-2.png" },
+    { "do": "Press Command-Z once, then Shift-Command-Z." },
+    { "do": "Pick a title nobody has animated and open the same menu: Reset to Defaults is dimmed." }
+  ],
+  "evaluate": [
+    "Is 'back where it was before it was animated' what you expect Reset to mean, or should a title also jump back to the middle of the picture the way Premiere's Motion reset does?",
+    "Should Reset also take the volume of a clip back to 0 dB, as it does now, or leave the sound alone?",
+    "Is it right that the look (shadow, blur, colour, a flip) stays untouched by Reset?",
+    "Does the menu read right with Paste Look between the mock's two items?"
+  ],
+  "rough": [
+    "The mock's menu has two rows (Copy properties, Reset to defaults). The app has three: Copy Look and Paste Look came from the earlier headings task, which kept the names the Layer menu already uses. Items are Title Case like every other menu in the app, where the mock writes sentence case.",
+    "Reset keeps the place and size a layer has WITHOUT keys. A title that was dragged somewhere while nothing was keyed stays at that spot, because the app does not remember where a layer was first put down.",
+    "A size set by removing Scale keys (which keeps the size at the playhead) is now the layer's own size, so Reset does not undo it."
+  ]
+}

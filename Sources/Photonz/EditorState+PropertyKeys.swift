@@ -173,6 +173,20 @@ extension EditorState {
         perform { $0.removeKey(layerID: layer.id, property, atDocumentTimeMS: time) }
     }
 
+    // MARK: Reset to Defaults
+
+    /// Whether the Properties menu's Reset to Defaults has anything to put
+    /// back on the picked layer (`PropertiesReset.swift`).
+    var canResetProperties: Bool { keyLayer?.hasPropertiesToReset ?? false }
+
+    /// The Properties menu's Reset to Defaults: every key gone, no turn, full
+    /// opacity and volume, in one step one undo puts back.
+    func resetPropertiesToDefaults() {
+        guard let layer = keyLayer, layer.hasPropertiesToReset else { return }
+        activeKeyProperty = nil
+        perform { $0.resetPropertiesToDefaults(layerID: layer.id) }
+    }
+
     /// The arrows: put the playhead on the key before or after it.
     func stepToKey(_ property: KeyedProperty, forward: Bool) {
         guard let moment = neighbourKey(property, forward: forward) else { return }

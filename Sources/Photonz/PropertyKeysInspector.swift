@@ -250,16 +250,24 @@ struct PropertyKeysSectionAccessory: View {
 /// The three dots at the end of the Properties header (`video.html`,
 /// `#propMenu`): take the picked thing's look, or put one on it. The same two
 /// commands as the Layer menu and a layer's right click, under the same names,
-/// so nothing learned here is wrong there.
+/// so nothing learned here is wrong there. Under them, in a document with
+/// time, the mock's Reset to defaults: the picked thing back the way it came in.
 struct PropertiesPanelMenu: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
         Menu {
-            Button("Copy Look") { editorState.copyLook() }
+            // Each with the mock's icon beside it: copy, and the undo arrow.
+            Button("Copy Look", systemImage: "doc.on.doc") { editorState.copyLook() }
                 .disabled(!editorState.canCopyLook)
-            Button("Paste Look") { editorState.pasteLook() }
+            Button("Paste Look", systemImage: "doc.on.clipboard") { editorState.pasteLook() }
                 .disabled(!editorState.canPasteLook)
+            if editorState.documentHasTime {
+                Button("Reset to Defaults", systemImage: "arrow.uturn.backward") {
+                    editorState.resetPropertiesToDefaults()
+                }
+                .disabled(!editorState.canResetProperties)
+            }
         } label: {
             Image(systemName: "ellipsis")
                 .font(.system(size: 11, weight: .medium))
@@ -268,7 +276,7 @@ struct PropertiesPanelMenu: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .accessibilityLabel("Properties Menu")
-        .panelHelp("Copy or paste the look")
+        .panelHelp("Copy the look, or reset")
         .playtestControl("Properties Menu", detail: "the three dots on the Properties header")
     }
 }
