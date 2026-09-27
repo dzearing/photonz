@@ -1704,7 +1704,12 @@ private final class Run {
             }
             guard let content = window.contentView else { throw Failure(description: "the window has no content view") }
             try await requireTheCardIsInThePicture(of: window)
-            try snapshot(content, name: name)
+            // Drawing the whole window offscreen and writing it out is the
+            // harness's work, about 580ms on a zoomed five minute timeline,
+            // and it is not a pass the app made anybody wait through. Layout
+            // the app still owes is laid out first, on the app's account.
+            content.layoutSubtreeIfNeeded()
+            try harnessWork { try snapshot(content, name: name) }
             await screenCapture(window, name: name)
             note(number, step.name, "\(name).png \(Int(content.bounds.width))x\(Int(content.bounds.height)) pt")
 
@@ -4506,6 +4511,13 @@ private final class Run {
                 throw Failure(description: "\(action.rawValue) needs a document that runs for a "
                     + "length of time, and this one does not")
             }
+            // Zeroed like every other action, so the `wait` after a seek
+            // reports the seek. It used to carry the slowest pass since the
+            // last zoom, snapshot included, and a picture taken at 16x read
+            // as the playhead's jump freezing the app for 580ms (2026-09-27).
+            MainThreadMeter.shared.install()
+            MainThreadMeter.shared.reset()
+            ViewBuildMeter.shared.reset()
             switch action {
             case .videoBeginTrim: editor.setTool(.trim)
             case .videoTrimDone: editor.commitTrim()
@@ -12895,6 +12907,16 @@ private final class Run {
             + "setup \(said), tour offer \(answer)"
     }
 
+    /// Runs work that is the harness's own, not the app's, and takes its time
+    /// off the main thread meter, so a `wait` judging the app never counts a
+    /// picture the walk took. Synchronous only: time spent suspended is the
+    /// app's to use and stays on its account.
+    private func harnessWork<T>(_ work: () throws -> T) rethrows -> T {
+        let began = CACurrentMediaTime()
+        defer { MainThreadMeter.shared.exclude(CACurrentMediaTime() - began) }
+        return try work()
+    }
+
     /// The window's content drawn offscreen, exactly as `snapshot` writes it.
     private func picture(of view: NSView) throws -> NSBitmapImageRep {
         guard let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else {
@@ -13122,7 +13144,7 @@ private final class Run {
             let image = try await photograph(window, as: scWindow)
             if hidden { window.alphaValue = 0 }
             let rep = NSBitmapImageRep(cgImage: image)
-            guard let png = rep.representation(using: .png, properties: [:]) else {
+            guard let png = harnessWork({ rep.representation(using: .png, properties: [:]) }) else {
                 captureFailed(name, "the window came back but would not encode as a PNG")
                 return
             }
