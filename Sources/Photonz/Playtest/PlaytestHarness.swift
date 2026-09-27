@@ -840,11 +840,19 @@ private final class Run {
             // application-wide event monitor is the only thing that sees a
             // press this way — and that is what takes the history overlay down
             // on Esc or on a click outside it.
-            let window = try appKeyTarget()
+            //
+            // The history strip is the one window that takes the keys while it
+            // is up, and a walk's strip is never key (it would take the
+            // person's keyboard: `AppFront.showFloating`). With no key window
+            // NSApp routes a key press nowhere after its monitors have seen it,
+            // so the strip is handed the press itself.
+            let strip = NSApp.windows.first { $0.isVisible && $0.title == "Capture History" }
+            let window = try strip ?? appKeyTarget()
             let flags = eventFlags(modifiers)
             for down in [true, false] {
                 guard let event = keyEvent(key, flags: flags, down: down, in: window) else { continue }
                 NSApp.sendEvent(event)
+                if window === strip, NSApp.keyWindow == nil, window.isVisible { window.sendEvent(event) }
             }
             await sleep(0.2)
             note(number, step.name, "\(Self.chord(key, modifiers)) sent through the app",
@@ -2346,7 +2354,7 @@ private final class Run {
             defer { EditorState.playtestSaveAsURL = nil }
             let savingDocument = editor?.document
             let title = chosen.title
-            chosen.performClick(nil)
+            Self.answerOutOfSight(sheet, on: closing) { chosen.performClick(nil) }
             await sleep(0.8)
             let exporting = editor?.isExportDialogPresented == true
             let saved = FileManager.default.fileExists(atPath: projectURL.path)
@@ -8891,6 +8899,24 @@ private final class Run {
         // value in and every row reads the real document. So a walk that wants
         // a live View menu opens the history first (⇧⌘H is app level, so it
         // always lands) and leaves it up.
+        //
+        // A walk's strip no longer takes key when it opens, since that took
+        // the keyboard of the person at the Mac for the rest of the walk
+        // (`AppFront.showFloating`). A picture of an open menu takes their keys
+        // anyway, for its one second, so the strip is made key for exactly
+        // that long and put back behind them afterwards.
+        let strip = NSApp.windows.first { $0.isVisible && $0.title == "Capture History" }
+        let keyedTheStrip = strip != nil && NSApp.keyWindow == nil
+        if keyedTheStrip, let strip {
+            strip.makeKey()
+            await sleep(0.3)
+        }
+        defer {
+            if keyedTheStrip, let strip, strip.isVisible {
+                strip.orderOut(nil)
+                strip.orderBack(nil)
+            }
+        }
         menu.update()
         let shotURL = out.appendingPathComponent("\(shotName)-sc.png")
         let noteURL = out.appendingPathComponent("menu-shot.txt")
@@ -12429,7 +12455,11 @@ private final class Run {
                 // the screen. Sheets only, on purpose: an ordinary window can
                 // carry a default button cell too, and 279 walks press ⏎ at
                 // the editor expecting it to go to a field.
-                button.performClick(nil)
+                if let parent = window.sheetParent {
+                    Self.answerOutOfSight(window, on: parent) { button.performClick(nil) }
+                } else {
+                    button.performClick(nil)
+                }
                 takenBy = "the default button \"\((button.title as String?) ?? "")\""
             } else {
                 // Nothing claimed it as a shortcut, so it is ordinary typing,
@@ -12871,6 +12901,23 @@ private final class Run {
     /// tenth of a second of the walk's window over the person's work (focus
     /// drill, 2026-09-26). One level down, the front of its level is still
     /// behind every other app's window.
+    /// Answers a question sheet with the sheet already invisible.
+    ///
+    /// A sheet sits under the person's work like the window it hangs on, but
+    /// answering it hands it to AppKit's closing animation, which lifts it to
+    /// an ordinary window's level and fades it out over everything for about
+    /// a fifth of a second: the close question in
+    /// close-a-trimmed-recording-walk was drawn over the person's window at
+    /// alpha 0.4 as it went (focus drill, 2026-09-26). Nothing is looking at
+    /// a sheet once it has been answered, so it fades from nothing. If the
+    /// answer did not take it down, it is shown again.
+    static func answerOutOfSight(_ sheet: NSWindow, on parent: NSWindow, _ answer: () -> Void) {
+        let alpha = sheet.alphaValue
+        sheet.alphaValue = 0
+        answer()
+        if parent.attachedSheet === sheet { sheet.alphaValue = alpha }
+    }
+
     static func keepBehindThePerson(_ window: NSWindow) {
         window.level = PlaytestHarness.walkWindowLevel
         window.orderBack(nil)

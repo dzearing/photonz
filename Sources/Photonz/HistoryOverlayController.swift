@@ -80,8 +80,7 @@ final class HistoryOverlayController {
 
         panel.alphaValue = 0
         panel.setFrame(layout.hiddenFrame, display: true)
-        panel.orderFrontRegardless()
-        panel.makeKey()
+        AppFront.showFloating(panel)
         self.panel = panel
 
         NSAnimationContext.runAnimationGroup { ctx in

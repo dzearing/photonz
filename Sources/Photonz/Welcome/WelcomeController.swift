@@ -80,7 +80,7 @@ final class WelcomeController: NSObject, NSWindowDelegate {
     func present(capture: CaptureCenter) {
         if let panel {
             AppFront.activate()
-            panel.makeKeyAndOrderFront(nil)
+            AppFront.present(panel)
             return
         }
         self.capture = capture
@@ -124,7 +124,7 @@ final class WelcomeController: NSObject, NSWindowDelegate {
         panel.setContentSize(hosting.fittingSize)
         panel.center()
         AppFront.activate()
-        panel.makeKeyAndOrderFront(nil)
+        AppFront.present(panel)
         self.panel = panel
 
         // Register with TCC right away (we're frontmost) so the Screen

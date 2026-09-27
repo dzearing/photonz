@@ -36,6 +36,46 @@ enum AppFront {
         app.activate()
     }
 
+    /// Show a panel that floats over every app and takes the keys, the way
+    /// the capture history strip comes down over whatever a person is doing.
+    ///
+    /// A non-activating panel that makes itself key takes the keyboard from
+    /// the app a person is typing in without that app ever losing the front:
+    /// during a walk the strip sat over the person's window and swallowed
+    /// every key they typed (focus drill, 2026-09-26, history-menu-title-walk).
+    /// A walk's strip goes under their windows instead and leaves the keys
+    /// where they are; its presses are handed to the app directly. The same
+    /// goes for a toast in the screen's corner (`takingKeys: false`), which
+    /// sat over the person's work for as long as it was up
+    /// (opening-a-recording-walk).
+    static func showFloating(_ panel: NSPanel, takingKeys: Bool = true) {
+        #if PHOTONZ_PLAYTEST
+        if aWalkIsDriving {
+            panel.level = PlaytestHarness.walkWindowLevel
+            panel.orderBack(nil)
+            return
+        }
+        #endif
+        panel.orderFrontRegardless()
+        if takingKeys { panel.makeKey() }
+    }
+
+    /// Bring a window of the app's own forward and give it the keys, as
+    /// `makeKeyAndOrderFront` does, for a person and never for a walk: the
+    /// Welcome window floats over every app, and during a walk it sat over the
+    /// person's work for as long as it was open (focus drill, 2026-09-26,
+    /// never-granting-walk). A walk's goes under their windows instead.
+    static func present(_ window: NSWindow) {
+        #if PHOTONZ_PLAYTEST
+        if aWalkIsDriving {
+            window.level = PlaytestHarness.walkWindowLevel
+            window.orderBack(nil)
+            return
+        }
+        #endif
+        window.makeKeyAndOrderFront(nil)
+    }
+
     /// Show a panel that hangs on `window` (a tooltip, a guide's card).
     ///
     /// `orderFront` on a child window lifts the whole family, so during a walk

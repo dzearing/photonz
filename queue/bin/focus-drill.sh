@@ -28,6 +28,12 @@
 # on screen (rightClick, panelMenu, including SwiftUI's own Add Effect menu); a
 # press's release lifted the walk's window over the person's
 # (PlaytestHarness.keepBehindThePerson and walkWindowLevel).
+# The run over every walk that evening found four more: answering a question
+# sheet faded it out over the person's window (answerOutOfSight); the capture
+# history strip made itself key and floated over every app, taking their keys
+# for the rest of the walk (AppFront.showFloating), and so did a toast in the
+# screen's corner; and the Welcome window floated over their work while it was
+# open (AppFront.present).
 #
 # Exits 0 when every walk that ran was clean or only showed a menu it
 # photographs, 1 when one took focus, and 6 (DEFERRED) when somebody was using
@@ -41,6 +47,10 @@ CHECK=(
   effects-remembered-walk
   locked-layer-key-press-walk
   tutorial-a-title-that-moves-walk
+  close-a-trimmed-recording-walk
+  history-menu-title-walk
+  never-granting-walk
+  opening-a-recording-walk
 )
 
 WALKS=()
@@ -56,7 +66,9 @@ while (( $# )); do
   shift
 done
 if (( ALL )); then
-  mapfile_all() { ls Scripts/playtest/*-walk.json | sort; }
+  # Every walk the full sweep runs, which is every script in the folder, not
+  # only the ones whose names end in -walk.
+  mapfile_all() { ls Scripts/playtest/*.json | sort; }
   i=0; part="${SLICE%%/*}"; of="${SLICE##*/}"
   [[ -n "$SLICE" ]] || { part=1; of=1; }
   while IFS= read -r f; do

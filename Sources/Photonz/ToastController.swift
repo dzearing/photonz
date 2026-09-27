@@ -95,7 +95,7 @@ final class ToastController {
                               y: vf.minY + margin,
                               width: size.width, height: size.height), display: true)
         panel.alphaValue = 1
-        panel.orderFrontRegardless()
+        AppFront.showFloating(panel, takingKeys: false)
         layout(animated: true)
     }
 
@@ -138,7 +138,7 @@ final class ToastController {
                               y: vf.minY + margin,
                               width: size.width, height: size.height), display: true)
         panel.alphaValue = 1
-        panel.orderFrontRegardless()
+        AppFront.showFloating(panel, takingKeys: false)
         layout(animated: true)
     }
 
@@ -175,7 +175,7 @@ final class ToastController {
                               y: vf.minY + margin,
                               width: size.width, height: size.height), display: true)
         panel.alphaValue = 1
-        panel.orderFrontRegardless()
+        AppFront.showFloating(panel, takingKeys: false)
         layout(animated: true)
         return progress
     }
