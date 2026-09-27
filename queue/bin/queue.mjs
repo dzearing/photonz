@@ -8,8 +8,12 @@
 //   node queue/bin/queue.mjs stopped         mark the loop stopped
 //   node queue/bin/queue.mjs note <msg>      update the live status note (shown on the dashboard)
 //   node queue/bin/queue.mjs status <id> <pending|in_progress|blocked|done|dropped> [note]
-//   node queue/bin/queue.mjs add <title> [priority] [notes]
-//   node queue/bin/queue.mjs addjson '<json>'   preferred: carries goal + acceptance checklist
+//                                            with only an id it prints the task and changes nothing
+//   node queue/bin/queue.mjs add <title> [priority] [notes] [--dry-run]
+//   node queue/bin/queue.mjs addjson '<json>' [--dry-run]
+//                                            preferred: carries goal + acceptance checklist.
+//                                            --dry-run prints what would be filed and files nothing.
+//                                            A title needs at least three words
 //   node queue/bin/queue.mjs search [--all] <words>
 //                                            open tasks whose title, goal, checklist, working detail
 //                                            or log mention those words. Search BEFORE filing a
@@ -99,6 +103,37 @@ const added = (t) => {
   return t.id;
 };
 
+// Filing is the one command a runner tries out, and trying it out used to file
+// a real task: nine stray tasks titled "x" between 2026-09-23 and 09-26, one of
+// them from `addjson '{"title":"x"}' --dry-run`, whose flag was ignored. So a
+// flag is either understood or refused, never dropped on the floor, and a title
+// too short to say what the task is about is refused before anything is written.
+const MIN_TITLE_WORDS = 3;
+const fileTask = (rawArgs, fields) => {
+  const flags = rawArgs.filter((a) => /^--/.test(a));
+  const unknown = flags.filter((f) => f !== '--dry-run');
+  if (unknown.length) throw new Error(`unknown option ${unknown.join(', ')}; the only one is --dry-run. Nothing was filed.`);
+  const title = String(fields.title || '').trim();
+  const words = title.split(/\s+/).filter(Boolean).length;
+  if (words < MIN_TITLE_WORDS) {
+    throw new Error(`Refused: the title "${title}" has ${words} word${words === 1 ? '' : 's'}. A task title needs at least three words that name the outcome, so it says what the task is about on the dashboard. Nothing was filed.`);
+  }
+  fields = { ...fields, title };
+  if (!flags.includes('--dry-run')) return added(q.addTask(fields));
+  const t = q.draftTask(fields);
+  const lines = [`Dry run: nothing was filed. This is what would be:`,
+    `  id        ${t.id}`, `  priority  ${t.priority} (seq ${t.seq})`, `  title     ${t.title}`];
+  if (t.epic) lines.push(`  epic      ${t.epic}`);
+  if (t.goal) lines.push(`  goal      ${t.goal}`);
+  for (const a of t.acceptance || []) lines.push(`  [ ]       ${a}`);
+  const near = q.similarTasks(`${t.title} ${t.goal || ''}`);
+  if (near.length) {
+    lines.push('Open tasks that already talk about this:');
+    for (const r of near) lines.push(`  ${r.priority}\t${r.id}\t${r.title}`);
+  }
+  return lines.join('\n');
+};
+
 try {
   switch (cmd) {
     case 'next': {
@@ -121,17 +156,31 @@ try {
     case 'note':
       q.writeStatus({ note: args.join(' ') });
       break;
-    case 'status':
+    // With only an id this READS: people type `status <id>` meaning "show me
+    // this task", and on 2026-09-23 that wiped a finished task's status.
+    case 'status': {
+      if (!args[0]) throw new Error(`usage: queue.mjs status <id> [${q.STATUSES.join('|')}] [note]`);
+      if (args.length === 1) {
+        const t = q.readTaskDetail(args[0]);
+        if (!t) throw new Error(`no task ${args[0]}`);
+        const last = (t.log || []).slice(-3).map((e) => `  ${e.t}  ${e.note}`);
+        out([`${t.id}`, `  status    ${t.status}`, `  priority  ${t.priority} (seq ${t.seq})`, `  title     ${t.title}`,
+          ...(t.goal ? [`  goal      ${t.goal}`] : []), ...(last.length ? ['last log lines:', ...last] : [])].join('\n'));
+        break;
+      }
       out(q.setStatus(args[0], args[1], args.slice(2).join(' '), { checkReach: true }).id);
       break;
-    case 'add':
-      out(added(q.addTask({ title: args[0], priority: args[1] || 'p2-normal', notes: args.slice(2).join(' ') })));
+    }
+    case 'add': {
+      const pos = args.filter((a) => !/^--/.test(a));
+      out(fileTask(args, { title: pos[0], priority: pos[1] || 'p2-normal', notes: pos.slice(2).join(' ') }));
       break;
+    }
     // the structured form, and the one to prefer: it can carry the plain-language
     // goal and the acceptance checklist, which the positional form cannot.
     //   queue.mjs addjson '{"title":"...","goal":"...","acceptance":["..."],"priority":"p2-normal","notes":"..."}'
     case 'addjson':
-      out(added(q.addTask(JSON.parse(args[0]))));
+      out(fileTask(args, JSON.parse(args.find((a) => !/^--/.test(a)) || '{}')));
       break;
     // Search first, file second. The default is the OPEN queue, because the
     // question this answers is "is somebody already on this?".

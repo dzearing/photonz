@@ -222,6 +222,7 @@ export function searchTasksMode(q) {
 // The statuses a follow-up could be folded into. A done or dropped task matches
 // too when asked for, because a finding that matches a finished task is usually
 // a regression and belongs in that history.
+export const STATUSES = ['pending', 'in_progress', 'blocked', 'done', 'dropped'];
 export const OPEN_STATUSES = new Set(['pending', 'in_progress', 'blocked']);
 
 // The rows behind `queue.mjs search`: the same match as the dashboard, resolved
@@ -293,7 +294,17 @@ const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 48).rep
 //              because it is read last and by an agent.
 // The dashboard renders them in that order, so a task is legible before it is
 // implementable.
-export function addTask({ title, goal = '', epic = '', priority = 'p2-normal', notes = '', release = 'next', area = 'app', acceptance = [], source = 'manual', seq = null, walks = null }) {
+export function addTask(fields) {
+  const task = draftTask(fields);
+  saveTask(task);
+  appendEvent('task_created', { id: task.id, priority: task.priority, title: task.title });
+  return task;
+}
+
+// The task addTask WOULD write, with its id and seq worked out, and nothing
+// saved. `queue.mjs add --dry-run` prints this, so trying the command out never
+// files a real task (nine stray tasks titled "x" in three days, 2026-09-23/26).
+export function draftTask({ title, goal = '', epic = '', priority = 'p2-normal', notes = '', release = 'next', area = 'app', acceptance = [], source = 'manual', seq = null, walks = null }) {
   ensureDirs();
   if (!PRIORITIES.includes(priority)) priority = 'p2-normal';
   const all = readAllTasks();
@@ -321,8 +332,6 @@ export function addTask({ title, goal = '', epic = '', priority = 'p2-normal', n
   // declaredWalks in sweep-notes.mjs): absent is "nobody has said", empty is
   // "I mention walks and own none of them", so an empty array is NOT dropped.
   if (Array.isArray(walks)) task.walks = normalizeWalks(walks);
-  saveTask(task);
-  appendEvent('task_created', { id, priority, title });
   return task;
 }
 
@@ -513,6 +522,13 @@ export function setOffByDefault(id, why = '') {
 export function setStatus(id, status, note = '', { checkReach = false } = {}) {
   const t = findTask(id);
   if (!t) throw new Error(`no task ${id}`);
+  // A status the queue does not know is refused before anything is written.
+  // On 2026-09-23 `queue.mjs status <id>` (meant as "show me this task") wrote
+  // `undefined` here: the task lost its status key, the history gained a
+  // task_undefined event, and the task vanished from the dashboard.
+  if (!STATUSES.includes(status)) {
+    throw new Error(`"${status}" is not a task status. Use one of: ${STATUSES.join(', ')}`);
+  }
   if (status === 'done' && checkReach && t.status !== 'done') {
     const reach = reachCheck(t);
     if (reach.refused) {
@@ -546,6 +562,9 @@ export function setStatus(id, status, note = '', { checkReach = false } = {}) {
     if (settled) return settled;
   }
   const prev = t.status;
+  // The same status again with nothing to say changes nothing, so nothing is
+  // written and the history does not pretend something happened.
+  if (prev === status && !note) return t;
   t.status = status;
   // Moving a parked task anywhere else un-parks it and gives it a clean slate,
   // so the dashboard's "put it back in the queue" really is a fresh start.
