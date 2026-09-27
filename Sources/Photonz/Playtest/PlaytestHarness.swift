@@ -4757,6 +4757,10 @@ private final class Run {
                     window.setFrame(NSRect(x: visible.minX + 40, y: visible.maxY - 720 - 40,
                                            width: 1200, height: 720), display: true)
                 }
+            case .keyAtPlayhead: editor.keyAtPlayhead()
+            case .curveThePath:
+                editor.setMotionPathShape(editor.motionPathShape == .curved ? .straight : .curved)
+            case .easingEaseOutBack: editor.curveBetweenKeys(.easeOutBack)
             case .zoomIn: editor.zoomIn()
             case .zoomOut: editor.zoomOut()
             case .zoomToFit: editor.zoomToFit()

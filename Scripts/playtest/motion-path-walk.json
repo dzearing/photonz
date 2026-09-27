@@ -226,7 +226,7 @@
   {
    "do": "describe",
    "stage": "1-straight",
-   "note": "THE FIRST TEST: a title keyed at (120, 380) at one second and (820, 380) at three. With it picked, the canvas draws the route it travels as a dashed line through its middle, a ring on each key and a square half way along; Properties says Path Straight under Position"
+   "note": "THE FIRST TEST: a title keyed at (120, 380) at one second and (820, 380) at three. With it picked, the canvas draws the route it travels as a dashed line through its middle, a ring on each key and a square half way along; Properties says Path Straight under Between the keys"
   },
   {
    "do": "expect",

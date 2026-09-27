@@ -556,6 +556,28 @@ struct EditorCommands: Commands {
                     .keyboardShortcut("k", modifiers: .option)
                     .disabled(!(editor?.canGoToKey(forward: false) ?? false))
                 Divider()
+                // The mock's Animate commands (`video-move-wt.html`,
+                // `#cmdMenu`). No K for Key at Playhead: K is the Lens on the
+                // canvas and Premiere's Stop on the timeline.
+                Section("Animate") {
+                    Button("Key at Playhead") { editor?.keyAtPlayhead() }
+                        .disabled(!(editor?.canKeyAtPlayhead ?? false))
+                    Toggle(MenuToggleNames.curveThePath, isOn: Binding(
+                        get: { editor?.motionPathShape == .curved },
+                        set: { editor?.setMotionPathShape($0 ? .curved : .straight) }))
+                        .disabled(editor?.motionPathShape == nil)
+                    // The same list as Between the keys' Curve, acting on the
+                    // stretch under the playhead.
+                    Menu("Easing") {
+                        ForEach(Array(EasingCurve.named.enumerated()), id: \.offset) { _, curve in
+                            Toggle(curve.title, isOn: Binding(
+                                get: { editor?.betweenKeysCurve == curve },
+                                set: { if $0 { editor?.curveBetweenKeys(curve) } }))
+                        }
+                    }
+                    .disabled(editor?.betweenKeysCurve == nil)
+                }
+                Divider()
             }
             if editor?.documentHasTime ?? false {
                 Button("Add Marker") { if let editor { editor.addMarker(atMS: editor.documentTimeMS) } }

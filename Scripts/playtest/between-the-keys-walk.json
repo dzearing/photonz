@@ -1,0 +1,385 @@
+{
+ "out": "/tmp/photonz-playtest/between-the-keys-walk",
+ "seed": "Between the keys, as the move walkthrough draws it. At Next defaults with no flag changed, this walk types a title on the sample recording, keys its Position at one second and three from the panel, parks the playhead at two, reads the Between the keys section (Ease in out, Path Straight, the mock's note behind its question mark), photographs it and its Curve menu, picks Linear and reads the title half way along, then drives the Video menu's Animate rows: Easing, Ease out back; Curve the Path; Key at Playhead.",
+ "setup": {
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "action",
+   "action": "videoSeekStart"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "tool",
+   "tool": "text"
+  },
+  {
+   "do": "click",
+   "at": [
+    620,
+    330
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "type",
+   "text": "Ship it"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "reveal",
+   "control": "Properties section"
+  },
+  {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position",
+   "in": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position X Value"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "120"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position Y Value"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "380"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "field": "Path",
+   "present": false
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Position X Value"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "820"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position Y Value"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "380"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "field": "Between the keys",
+   "present": true
+  },
+  {
+   "do": "action",
+   "action": "videoStepBackOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "1-section",
+   "note": "THE FIRST TEST: a title keyed at (120, 380) at one second and (820, 380) at three, with the playhead at two. Under the Animating list Properties shows Between the keys, reading Ease in out, with the Curve dropdown, the Path control on Straight and the mock's line about easing and path behind the header's question mark"
+  },
+  {
+   "do": "expect",
+   "field": "Between the keys",
+   "reads": "Ease in out"
+  },
+  {
+   "do": "expect",
+   "menu": "Curve",
+   "reads": "Ease in out"
+  },
+  {
+   "do": "expect",
+   "field": "Path",
+   "reads": "Path Straight"
+  },
+  {
+   "do": "expect",
+   "reads": "Easing is how fast it travels. The path is where it travels. They are separate on purpose: a straight move can still ease, and an arc can still run at a flat rate.",
+   "tooltip": "Between the keys help"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-between-the-keys"
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Curve",
+   "shot": "2-curve-menu"
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Curve",
+   "choose": "Linear"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "2-linear",
+   "note": "THE SECOND TEST: Curve, Linear. The stretch under the playhead now runs at a flat rate, so half way in time the title is half way along: 470 across"
+  },
+  {
+   "do": "expect",
+   "field": "Between the keys",
+   "reads": "Linear"
+  },
+  {
+   "do": "expect",
+   "field": "Position X",
+   "reads": "470"
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Curve",
+   "choose": "Ease in out"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "field": "Between the keys",
+   "reads": "Ease in out"
+  },
+  {
+   "do": "action",
+   "action": "easingEaseOutBack"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "describe",
+   "stage": "3-menu-easing",
+   "note": "THE THIRD TEST: Video, Animate, Easing, Ease out back. The Curve dropdown follows the menu"
+  },
+  {
+   "do": "expect",
+   "field": "Between the keys",
+   "reads": "Ease out back"
+  },
+  {
+   "do": "expect",
+   "menu": "Curve",
+   "reads": "Ease out back"
+  },
+  {
+   "do": "action",
+   "action": "curveThePath"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "4-curve-the-path",
+   "note": "THE FOURTH TEST: Video, Animate, Curve the Path. The route arcs, the Path control flips to Curved and the question mark's line becomes the mock's line about the handle"
+  },
+  {
+   "do": "expect",
+   "field": "Path",
+   "reads": "Path Curved"
+  },
+  {
+   "do": "expect",
+   "reads": "The handle is the curve’s control point. Drag it and the graphic arcs; double-click it and the path snaps back to straight.",
+   "tooltip": "Between the keys help"
+  },
+  {
+   "do": "snapshot",
+   "name": "4-curved"
+  },
+  {
+   "do": "action",
+   "action": "keyAtPlayhead"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "5-key-at-playhead",
+   "note": "THE FIFTH TEST: Video, Animate, Key at Playhead, at two seconds. Position gets a third key right here holding where the title already is, so nothing on the canvas moves and the diamond fills"
+  },
+  {
+   "do": "expect",
+   "control": "Key",
+   "in": "Position",
+   "reads": "on a key"
+  },
+  {
+   "do": "snapshot",
+   "name": "5-keyed-here"
+  }
+ ]
+}

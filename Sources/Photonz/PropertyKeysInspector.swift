@@ -29,15 +29,14 @@ struct PropertyKeysInspector: View {
             let rows = editorState.animatingRows
             ForEach(rows, id: \.self) { property in
                 PropertyKeyRow(property: property)
-                // Where it travels sits under where it is: the mock's Path
-                // control, Straight or Curved, once a move has two keys
-                // (`video-move-wt.html`, "Between the keys").
-                if property == .motion(.position), let shape = editorState.motionPathShape {
-                    MotionPathRow(shape: shape)
-                }
             }
             AnimatePropertyButton()
                 .padding(.top, 4)
+            // How it gets from one key to the next, once something has two
+            // (`video-move-wt.html`, `#secEase`).
+            if editorState.betweenKeysProperty != nil {
+                BetweenKeysSection()
+            }
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 6)
@@ -70,6 +69,141 @@ struct PropertyKeysInspector: View {
     }
 }
 
+/// `Between the keys  Ease in out`, then Curve and Path: the mock's `#secEase`
+/// (`video-move-wt.html` steps 5 to 7). Curve is how fast the stretch under
+/// the playhead travels, from the one list of curve names every page with
+/// timing offers; Path is where a move travels. The mock prints a line under
+/// them (`#pPathNote`) that changes once the path bends; the user's answer of
+/// 2026-09-25 (no sentences in the panel, explain behind a question mark in
+/// the header) puts those same words behind the header's question mark.
+private struct BetweenKeysSection: View {
+    @Environment(EditorState.self) private var editorState
+    @State private var isDrawing = false
+
+    static let straightHelp = "Easing is how fast it travels. The path is where it travels. "
+        + "They are separate on purpose: a straight move can still ease, "
+        + "and an arc can still run at a flat rate."
+    static let curvedHelp = "The handle is the curve\u{2019}s control point. Drag it and the graphic arcs; "
+        + "double-click it and the path snaps back to straight."
+
+    var body: some View {
+        let curve = editorState.betweenKeysCurve
+        let name = curve.map(StretchCurve.title) ?? ""
+        VStack(alignment: .leading, spacing: 4) {
+            Rectangle()
+                .fill(VideoKit.Palette.line)
+                .frame(height: 1)
+                .padding(.top, 8)
+                .padding(.bottom, 4)
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text("Between the keys")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.primary)
+                Spacer(minLength: 4)
+                Text(name)
+                    .font(.system(size: 10.5, weight: .medium))
+                    .foregroundStyle(VideoKit.Palette.faint)
+                    .lineLimit(1)
+                    .panelReadout(name)
+                    .playtestField("Between the keys")
+                SectionHelpMark(section: "Between the keys", text: help)
+            }
+            .padding(.bottom, 2)
+            VideoKit.DropdownRow(label: "Curve", value: name) {
+                curveItems(current: curve)
+            }
+            .frame(minHeight: 24)
+            .playtestField("Curve")
+            .panelHelp("How fast it travels between these two keys")
+            .popover(isPresented: $isDrawing, arrowEdge: .leading) {
+                CurveEditor(curve: curve ?? PropertyKeys.curve) { drawn in
+                    editorState.curveBetweenKeys(drawn)
+                    isDrawing = false
+                }
+            }
+            if let shape = editorState.motionPathShape {
+                MotionPathRow(shape: shape)
+            }
+        }
+    }
+
+    /// What the question mark says: the mock's own line for a move, which
+    /// turns to the handle once the path bends, and the easing half of it for
+    /// anything else.
+    private var help: String {
+        switch editorState.motionPathShape {
+        case .curved?: Self.curvedHelp
+        case .straight?: Self.straightHelp
+        case nil: Self.easingHelp
+        }
+    }
+
+    static let easingHelp = "Easing is how fast it changes between these two keys."
+
+    /// The mock's curve menu (`curve.js`): the four standard curves, the four
+    /// shaped ones, each with its shape beside its name, then Draw a curve.
+    @ViewBuilder
+    private func curveItems(current: EasingCurve?) -> some View {
+        Section("Standard") {
+            ForEach(Array(EasingCurve.named.prefix(4).enumerated()), id: \.offset) { _, curve in
+                item(curve, current: current)
+            }
+        }
+        Section("Shaped") {
+            ForEach(Array(EasingCurve.named.dropFirst(4).enumerated()), id: \.offset) { _, curve in
+                item(curve, current: current)
+            }
+        }
+        Divider()
+        Button("Draw a curve\u{2026}") { isDrawing = true }
+    }
+
+    private func item(_ curve: EasingCurve, current: EasingCurve?) -> some View {
+        Toggle(isOn: Binding(get: { current == curve },
+                             set: { if $0 { editorState.curveBetweenKeys(curve) } })) {
+            Label {
+                Text(curve.title)
+            } icon: {
+                Image(nsImage: CurveMenuImage.image(for: curve))
+            }
+        }
+    }
+}
+
+/// A curve's shape as a small template picture, for a menu row: a menu cannot
+/// draw a SwiftUI view beside its words, only a picture, and a template one
+/// takes the row's own colour when it is highlighted.
+@MainActor
+enum CurveMenuImage {
+    private static var made: [String: NSImage] = [:]
+
+    static func image(for curve: EasingCurve) -> NSImage {
+        if let image = made[curve.title] { return image }
+        let side: CGFloat = 16
+        let image = NSImage(size: NSSize(width: side, height: side), flipped: false) { rect in
+            let inset: CGFloat = 2.5
+            let width = rect.width - inset * 2
+            let height = rect.height - inset * 2
+            let path = NSBezierPath()
+            let steps = 40
+            for step in 0...steps {
+                let t = Double(step) / Double(steps)
+                let value = min(max(curve.value(at: t), -0.25), 1.25)
+                let point = NSPoint(x: inset + width * t, y: inset + height * (value + 0.25) / 1.5)
+                if step == 0 { path.move(to: point) } else { path.line(to: point) }
+            }
+            path.lineWidth = 1.4
+            path.lineJoinStyle = .round
+            NSColor.black.setStroke()
+            path.stroke()
+            return true
+        }
+        image.isTemplate = true
+        made[curve.title] = image
+        return image
+    }
+}
+
 /// `Path  [Straight | Curved]`: the mock's Path control. Straight puts every
 /// stretch back on its line; Curved arcs a straight path up and over, which is
 /// a place to drag the handle on the canvas from.
@@ -78,11 +212,15 @@ private struct MotionPathRow: View {
     let shape: MotionPathShape
 
     var body: some View {
-        VideoKit.FieldRow(label: "Path") {
+        // The name over a control the width of the section: the mock gives
+        // this row one column (`grid-template-columns:1fr`), unlike Curve.
+        VStack(alignment: .leading, spacing: 4) {
+            PanelRowLabel(text: "Path")
             VideoKit.Segmented(options: MotionPathShape.allCases.map { ($0, $0.title) },
                                selection: shape) { editorState.setMotionPathShape($0) }
         }
-        .frame(minHeight: 24)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 2)
         .panelReadout("Path \(shape.title)")
         .playtestField("Path")
         .help("Drag the square on the path in the canvas to bend it. Double-click it to straighten.")

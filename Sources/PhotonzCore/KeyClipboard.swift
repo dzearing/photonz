@@ -33,15 +33,20 @@ public struct CopiedKeys: Hashable, Codable, Sendable {
         /// move (`MotionStop.bend`). Nil on the last one: its next key is
         /// whatever the paste lands before, which the arc was never drawn to.
         public var bend: CGPoint?
+        /// The curve picked for the stretch to the next COPIED key of the same
+        /// value (`MotionStop.curve`). Nil on the last one, as with `bend`.
+        public var curve: EasingCurve?
 
         public init(property: MotionProperty, offsetMS: Int, value: MotionValue,
-                    ease: KeyEase, handles: KeyHandles? = nil, bend: CGPoint? = nil) {
+                    ease: KeyEase, handles: KeyHandles? = nil, bend: CGPoint? = nil,
+                    curve: EasingCurve? = nil) {
             self.property = property
             self.offsetMS = offsetMS
             self.value = value
             self.ease = ease
             self.handles = handles
             self.bend = bend
+            self.curve = curve
         }
     }
 
@@ -99,7 +104,8 @@ extension PhotonzDocument {
         let keys = found.map { item in
             CopiedKeys.Key(property: item.property, offsetMS: item.ms - earliest, value: item.stop.value,
                            ease: item.ease, handles: item.ease == .bezier ? item.stop.handles : nil,
-                           bend: lastOfEach[item.property] == item.ms ? nil : item.stop.bend)
+                           bend: lastOfEach[item.property] == item.ms ? nil : item.stop.bend,
+                           curve: lastOfEach[item.property] == item.ms ? nil : item.stop.curve)
         }
         .sorted {
             ($0.property == $1.property) ? $0.offsetMS < $1.offsetMS
@@ -141,7 +147,7 @@ extension PhotonzDocument {
                 let clock = clipKeyClock(layer, atDocumentMS: ms + key.offsetMS)
                 list.removeAll { abs($0.atMS - clock) <= PropertyKeys.nearMS }
                 list.append(MotionStop(atMS: clock, value: key.value, ease: key.ease, handles: key.handles,
-                                       bend: key.bend))
+                                       bend: key.bend, curve: key.curve))
                 landed.insert(KeyRef(motionID: base.id, clockMS: clock))
             }
             made.append(base.rebuilt(from: list))

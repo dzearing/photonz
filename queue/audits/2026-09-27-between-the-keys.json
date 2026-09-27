@@ -1,0 +1,29 @@
+{
+  "feature": "Between the keys in Properties",
+  "epic": "video-transitions-motion",
+  "summary": "A layer with two keys now shows a Between the keys section under Animating: a Curve dropdown with the eight named curves (and Draw a curve) for the stretch the playhead is in, and the Path control. The Video menu gains Key at Playhead, Curve the Path and Easing.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/between-the-keys-walk.json.",
+  "try": [
+    { "do": "Open a recording, type a title, and key its Position at 1s and again at 3s with a different X.", "shot": "2026-09-27-between-the-keys-1.png" },
+    { "do": "Park the playhead at 2s and open Curve under Between the keys.", "shot": "2026-09-27-between-the-keys-2-menu.png" },
+    { "do": "Pick Linear and scrub: the title now travels at a flat rate." },
+    { "do": "Right-click either key on the Position lane: it reads Linear too." },
+    { "do": "Choose Video > Animate > Easing > Ease out back, then Video > Animate > Curve the Path.", "shot": "2026-09-27-between-the-keys-3-curved.png" },
+    { "do": "Hover the question mark beside the curve name in the section header." },
+    { "do": "With the playhead between keys, choose Video > Animate > Key at Playhead.", "shot": "2026-09-27-between-the-keys-4-keyed.png" }
+  ],
+  "evaluate": [
+    "Is Curve under Between the keys where you would look for how a move eases, rather than a key's right-click?",
+    "When a shaped curve (back, elastic, steps) is on a stretch, the key right-click still shows the keys' own ease. Is that confusing, or fine?",
+    "Is it clear which value the section is about when more than one thing is animating (it follows the last value you touched, then Position)?",
+    "Does the mock's note belong behind the question mark, or should it be printed under Path as the move walkthrough draws it?"
+  ],
+  "rough": [
+    "The mock prints its note under Path. Your 2026-09-25 answer (no sentences in the panel, explain behind a question mark) came later, so the note sits behind the section header's question mark instead, and it switches to the handle line once the path bends, as the mock's does.",
+    "The mock's window has a small command popover; the app's window command menu is the menu bar, so the three rows live in the Video menu under an Animate heading.",
+    "Key at Playhead has no K: K is already the Lens on the canvas and Stop on the timeline.",
+    "Linear, Ease in, Ease out and Ease in out are written onto the two keys, so the timeline Easing and a key's right-click follow. The shaped four are kept on the stretch itself, and those two places keep showing the keys' own eases until one of them is changed, which takes the shaped curve back off.",
+    "The app keeps video.html's Animating list above the section, so Transform and Animate are not separate sections as the move walkthrough draws them. New stretches start at Ease in out (the app's key default) where the mock starts at Linear.",
+    "The curve thumbnails in the menu are small monochrome shapes, not the mock's accent-coloured ones: a macOS menu draws its icons in the row colour."
+  ]
+}

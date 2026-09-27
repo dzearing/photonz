@@ -19897,3 +19897,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Chips: Properties Kind (Clip/Title/Audio), Library Scope, Effects Count, Measurements Count (count chips vanish at zero). Properties ends in a ⋯ menu (`PropertiesPanelMenu`) with Copy Look and Paste Look. The image panel takes the same headings on purpose.
 - New walk `dock-headers-walk` (front). Audit `queue/audits/2026-09-27-dock-headers.json` with the mock beside the dock.
 - Filed: Reset to defaults for that menu as `the-properties-menu-puts-a-clip-back-the-way-it`.
+
+## 2026-09-27 · Between the keys in Properties
+
+- A layer with two keys shows Between the keys under Animating: Curve (the eight named curves plus Draw a curve) for the stretch under the playhead, and the Path control, moved here from under Position. The mock's note is the section header's question mark (user's 2026-09-25 answer).
+- Core: `StretchCurve.swift`. The four curves keys can say are written onto the two keys (timeline Easing and key right-click follow); the shaped four ride a new per-stretch `MotionStop.curve` / `LayerMotion.fromCurve`, cleared by any per-key ease. Drawn curves become the two keys' Bezier handles.
+- Video menu > Animate: Key at Playhead, Curve the Path, Easing. Walk stand-ins: actions `keyAtPlayhead`, `curveThePath`, `easingEaseOutBack`.
+- Walk: `between-the-keys-walk`. Shared `VideoKit.Segmented` plate now fills its column.

@@ -122,7 +122,11 @@ extension VideoKit {
                             // Middle and Top fit whole beside a row label at
                             // the dock's default width.
                             .padding(.horizontal, 6)
-                            .frame(maxHeight: .infinity)
+                            // The whole column, so the plate is the segment's
+                            // width and not its word's once the bar has room
+                            // to spare (a full-width Path read as a pill round
+                            // "Straight" beside a wide empty "Curved").
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .background {
                                 if isOn {
                                     Capsule()

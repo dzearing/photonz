@@ -640,14 +640,20 @@ public struct MotionStop: Hashable, Codable, Sendable {
     /// path; nil is a straight run, which is every key nobody has bent, so
     /// those encode nothing new.
     public var bend: CGPoint?
+    /// The curve the stretch LEAVING this key runs on, where somebody picked
+    /// one for the stretch that a pair of keys cannot say (a bounce, steps:
+    /// `StretchCurve`). It wins over both keys' eases until either key is
+    /// eased again. Nil on every stretch nobody has, so those encode nothing new.
+    public var curve: EasingCurve?
 
     public init(atMS: Int, value: MotionValue, ease: KeyEase? = nil, handles: KeyHandles? = nil,
-                bend: CGPoint? = nil) {
+                bend: CGPoint? = nil, curve: EasingCurve? = nil) {
         self.atMS = atMS
         self.value = value
         self.ease = ease
         self.handles = handles
         self.bend = bend
+        self.curve = curve
     }
 
     /// The control point of the stretch LEAVING this key, in that stretch's
@@ -800,6 +806,9 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
     /// How the path leaving From bends (`MotionStop.bend`). To has no path
     /// leaving it, and the keys in between carry their own.
     public var fromBend: CGPoint?
+    /// The curve the stretch leaving From runs on, where somebody picked one
+    /// for it (`MotionStop.curve`).
+    public var fromCurve: EasingCurve?
     public var repeats: MotionRepeat
     /// What a TURN turns around, and nil on everything else: a fade and a
     /// slide have no axis, and a pivot sitting unused on one would be a number
@@ -905,7 +914,7 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
     /// where there were three.
     public var keys: [MotionStop] {
         var list = [MotionStop(atMS: timing.startMS, value: from, ease: fromEase, handles: fromHandles,
-                               bend: fromBend)]
+                               bend: fromBend, curve: fromCurve)]
         for stop in (stops ?? []).sorted(by: { $0.atMS < $1.atMS })
         where stop.atMS > timing.startMS && stop.atMS < timing.endMS {
             list.append(stop)
@@ -968,6 +977,7 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
     /// neither key has been eased, which is every motion made before keys
     /// could be, and otherwise what the two keys say (`KeyEase`).
     func segmentCurve(leaving left: MotionStop, arriving right: MotionStop) -> EasingCurve {
+        if let chosen = left.curve { return chosen }
         if left.ease == nil, right.ease == nil { return curve }
         let fallback = KeyEase(following: curve)
         let leaving = left.ease ?? fallback

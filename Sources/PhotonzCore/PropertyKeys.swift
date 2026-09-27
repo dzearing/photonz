@@ -99,6 +99,10 @@ extension LayerMotion {
             list[index].handles = nil
         }
         list[index].ease = ease
+        // A per-key ease is the stronger say: a curve picked for either
+        // stretch this key ends gives way to it (`StretchCurve`).
+        list[index].curve = nil
+        if index > 0 { list[index - 1].curve = nil }
         return rebuilt(from: list)
     }
 
@@ -152,11 +156,15 @@ extension LayerMotion {
         let at = max(0, ms)
         // A key landing part way along an arc splits the arc rather than
         // flattening it (`bendsSplitting`).
+        // A key landing part way along a stretch with a curve of its own
+        // splits it into two stretches on that curve.
+        let left = list.filter { $0.atMS < at }.max { $0.atMS < $1.atMS }
+        let shaped = list.contains { $0.atMS > at } ? left?.curve : nil
         if let split = bendsSplitting(atMS: at, value: value) {
             list[split.index].bend = split.left
-            list.append(MotionStop(atMS: at, value: value, bend: split.right))
+            list.append(MotionStop(atMS: at, value: value, bend: split.right, curve: shaped))
         } else {
-            list.append(MotionStop(atMS: at, value: value))
+            list.append(MotionStop(atMS: at, value: value, curve: shaped))
         }
         let made = rebuilt(from: list)
         guard let ease, let index = made.keyframes.firstIndex(where: { $0.atMS == at }) else { return made }
@@ -183,6 +191,7 @@ extension LayerMotion {
         made.fromEase = first.ease
         made.fromHandles = first.handles
         made.fromBend = sorted.count > 1 ? first.bend : nil
+        made.fromCurve = sorted.count > 1 ? first.curve : nil
         if sorted.count == 1 {
             made.to = first.value
             made.toEase = first.ease

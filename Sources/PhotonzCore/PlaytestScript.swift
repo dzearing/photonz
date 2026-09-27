@@ -611,6 +611,12 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Edit ▸ Paste, called directly: copied keys land at the playhead,
     /// anything else lands as a layer, exactly as the menu row decides.
     case paste
+    /// The Video menu's Animate rows (`video-move-wt.html`, `#cmdMenu`). They
+    /// hang off the focused window, which a walk never has, so the menu is
+    /// dimmed for the whole of one: Key at Playhead, Curve the Path (flipped
+    /// the way its tick flips it), and Easing, Ease out back, the one shaped
+    /// curve a walk needs to show the keys cannot say.
+    case keyAtPlayhead, curveThePath, easingEaseOutBack
     case hideInspector, showInspector, zoomIn, zoomOut, zoomToFit
     /// What the window is set up for (`WindowModes`, `next-window-modes`). Each
     /// one is View ▸ Mode ▸ … and ⌃1 … ⌃4, so every one of them hangs off the
