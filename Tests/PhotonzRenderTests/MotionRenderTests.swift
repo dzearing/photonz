@@ -1,7 +1,9 @@
 import CoreGraphics
 import Foundation
+import ImageIO
 import PhotonzCore
 import Testing
+import UniformTypeIdentifiers
 @testable import PhotonzRender
 
 /// A motion has to reach the PIXELS, and only the pixels.
@@ -94,12 +96,36 @@ struct MotionRenderTests {
     }
 
     /// A motion switched off draws nothing at all, whatever the clock says.
+    ///
+    /// This failed 3 of 3 runs of its suite on 2026-09-25 (difference 0.0078,
+    /// about what a 12 degree turn of the box moves) with the two documents
+    /// equal, and could not be made to fail again on 2026-09-27, on that commit
+    /// or later, alone, loaded or beside the whole render target. So when it
+    /// fails it says which half broke and keeps both pictures.
     @Test func aSwitchedOffMotionDrawsTheLayerAsItWasDrawn() throws {
         var document = swinging()
         document.layers[0].motions?[0].isOn = false
-        let still = try #require(render(document.moved(toMotionTimeMS: 450)))
+        let moved = document.moved(toMotionTimeMS: 450)
+        #expect(moved.layers == document.layers, "the model turned a layer whose motion is off")
+        let still = try #require(render(moved))
         let drawn = try #require(render(document))
-        #expect(difference(still, drawn) == 0)
+        let apart = difference(still, drawn)
+        #expect(apart == 0, "equal documents drew different pictures: \(keep(still, drawn))")
+    }
+
+    /// Writes a failing pair where the next person can open them, and says where.
+    private func keep(_ still: CGImage, _ drawn: CGImage) -> String {
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("photonz-switched-off-motion-\(UUID().uuidString.prefix(8))")
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        for (name, image) in [("still", still), ("drawn", drawn)] {
+            let url = folder.appendingPathComponent("\(name).png")
+            guard let destination = CGImageDestinationCreateWithURL(
+                url as CFURL, UTType.png.identifier as CFString, 1, nil) else { continue }
+            CGImageDestinationAddImage(destination, image, nil)
+            CGImageDestinationFinalize(destination)
+        }
+        return folder.path
     }
 
     /// Opacity and colour reach the pixels too, not just the transform: the
