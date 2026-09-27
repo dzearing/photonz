@@ -19870,3 +19870,9 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Fixed on the way: `Scripts/test.sh`'s video kit check, broken by `e37a8618`; the gallery supplies a `PanelFieldRow` stand-in.
 - Filed: the first long playhead jump on a zoomed captioned long recording stalls about half a second, with or without pictures (`jumping-the-playhead-far-along-a-zoomed-in-long`).
 - Open: the card's hover-to-see-the-frame at Fit is not built; pictures are small in the 28pt lane (asked in the audit).
+
+## 2026-09-27 — A video window says its name, size, length and saved in its title bar
+
+- `WindowTitleLine` (PhotonzCore, tested) + `TitlebarDocumentLine` (app): video windows show `name · W x H · m:ss · saved|edited` centred in the title bar, as video.html draws it. Edited follows `SaveAffordance`, so it matches the close prompt.
+- Walk: `a-video-window-says-its-name-walk` (Next defaults). Audit: `queue/audits/2026-09-27-video-title-line.json`.
+- Open: should picture windows carry the same line (image mocks draw it)? Asked in the audit.

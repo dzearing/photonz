@@ -295,6 +295,17 @@ struct EditorView: View {
         // the toolbar's width and the background paints as a visible column
         // against the window's own background.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // A video's name, size, length and saved or edited, centred in the
+        // title bar's strip level with the traffic lights, as the video mocks
+        // draw it. Nothing for a picture, whose title bar stays as it was.
+        .overlay(alignment: .top) {
+            VStack(spacing: 0) {
+                TitlebarDocumentLine()
+                Spacer(minLength: 0)
+            }
+            .ignoresSafeArea(.container, edges: .top)
+            .allowsHitTesting(false)
+        }
         .fileImporter(isPresented: $editorState.isImporterPresented,
                       allowedContentTypes: Experiments.shared.openingARecording
                           ? [.image, EditorState.photonzType] + RecordingContentTypes.all

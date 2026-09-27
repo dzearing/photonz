@@ -1,0 +1,26 @@
+{
+  "feature": "A video window says its name, size, length and whether it is saved",
+  "epic": "video-editing",
+  "summary": "A video window's title bar now carries one quiet line, centred: the name in bold, then the picture size, the length, and saved or edited, the way video.html draws it. It turns to edited the moment you change something and back to saved, with the project's name, when you save.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/a-video-window-says-its-name-walk.json.",
+  "try": [
+    { "do": "Open a screen recording (File > Open, or the sample from Tutorials). Read the middle of the title bar.", "shot": "2026-09-27-video-title-line-1-opened-sc.png" },
+    { "do": "Put the playhead in the middle and press Command K. Watch the last word of the line.", "shot": "2026-09-27-video-title-line-2-cut-sc.png" },
+    { "do": "Press Command S and save the project as \"project\".", "shot": "2026-09-27-video-title-line-3-saved-sc.png" },
+    { "do": "Compare the line with the video.html title bar: mock on top, the app's three states under it.", "shot": "2026-09-27-video-title-line-beside-the-mock.png" },
+    { "do": "Open a still picture and look at its title bar: it has no line." },
+    { "do": "Make the window narrow: the size and length go first, then only the name is left." }
+  ],
+  "evaluate": [
+    "Does the line read as the window's name at a glance, the way a Mac title does?",
+    "Is edited in the warning colour the right weight, or should it be as faint as saved?",
+    "Should a still picture's title bar carry the same line (name and size), as the image mocks draw it?",
+    "Does the length agree with the end of the transport in every edit you tried?"
+  ],
+  "rough": [
+    "The mock's title bar also holds the Ask button on the right; the app has the panel toggle there and no Ask. Not part of this task.",
+    "The app keeps its mode chip (Everything) at the left of the bar, which the video mock does not draw; the chip came from the modes study.",
+    "Pictures get no line yet, though every image mock draws name and size in the same place.",
+    "In full screen the line goes away with the title bar; that was built but not watched on a real full-screen window."
+  ]
+}

@@ -1400,6 +1400,17 @@ final class EditorState {
         return Experiments.shared.decorated(windowTitle: name)
     }
 
+    /// The quiet line a video window's title bar carries: name, picture size,
+    /// length, saved or edited (`WindowTitleLine`). Nil for anything without
+    /// time, which keeps its title bar exactly as it was. The name is the
+    /// file's own, never the release tag `windowTitle` may add.
+    var titleLine: WindowTitleLine? {
+        guard let document, document.hasTime else { return nil }
+        let name = (documentURL ?? openedFileURL)?.lastPathComponent ?? untitledName
+        return WindowTitleLine(fileName: name, pictureSize: document.canvasSize,
+                               lengthMS: documentLengthMS, affordance: saveAffordance)
+    }
+
     /// The .photonz document package type. The bundle's Info.plist exports
     /// the same identifier so Finder treats packages as files.
     static let photonzType = UTType(exportedAs: "com.photonz.document", conformingTo: .package)
