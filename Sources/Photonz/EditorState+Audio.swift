@@ -30,6 +30,39 @@ extension EditorState {
     /// How loud the picked layer is, and how that changes as it runs.
     var soundLevelInHand: AudioLevel { soundLayerInHand?.soundLevel ?? AudioLevel() }
 
+    // MARK: - The picked sound's channel
+
+    /// The track whose Mute and Solo the Channel section switches: the very
+    /// switches on that track's header, never a second mute of its own.
+    var soundChannelTrack: DocumentTrack? {
+        guard let id = soundLayerInHand?.id, let document,
+              let track = document.soundTrackID(ofLayer: id) else { return nil }
+        return document.track(id: track)
+    }
+
+    /// The name beside the Channel header: the file the sound came from.
+    var soundChannelFileName: String? {
+        guard let id = soundLayerInHand?.id else { return nil }
+        return document?.soundFileName(ofLayer: id)
+    }
+
+    /// Mute and Solo in the Channel section: one undo step each, the same one
+    /// the track header's button takes.
+    func toggleSoundChannelMuted() {
+        guard let track = soundChannelTrack?.id else { return }
+        toggleTrackMuted(track)
+    }
+
+    func toggleSoundChannelSolo() {
+        guard let track = soundChannelTrack?.id else { return }
+        toggleTrackSolo(track)
+    }
+
+    /// The Volume slider: the fader, set in the mock's decibels.
+    func setSoundVolume(sliderDB dB: Double) {
+        setSoundGain(AudioLevel.volumeGain(sliderDB: dB))
+    }
+
     // MARK: - Taking the sound off the picture
 
     /// Whether Detach Sound would do anything: a clip is in hand, its recording

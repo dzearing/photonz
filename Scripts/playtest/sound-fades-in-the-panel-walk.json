@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/sound-fades-in-the-panel-walk",
-  "seed": "A piece of music picked, with nothing switched from its default. Under Sound the panel has a Fades section as the audio mock draws it: In and Out boxes side by side and a Curve dropdown, with a question mark on its header that says the diamonds on the lane set a fade too. Typing a length into In fades the music in, and the level line on its bar rises out of silence; Out does the same at the end; the curve bends both; and each of those is one step to undo.",
+  "seed": "A piece of music picked, with nothing switched from its default. Under Channel the panel has a Fades section as the audio mock draws it: In and Out boxes side by side and a Curve dropdown, with a question mark on its header that says the diamonds on the lane set a fade too. Typing a length into In fades the music in, and the level line on its bar rises out of silence; Out does the same at the end; the curve bends both; and each of those is one step to undo.",
   "setup": {
     "forget": ["all"]
   },
@@ -14,8 +14,8 @@
     { "do": "action", "action": "videoSeekStart" },
     { "do": "action", "action": "soundAddSample" },
     { "do": "wait", "seconds": 1.5 },
-    { "do": "describe", "stage": "1-music-picked", "note": "The sample music is picked. The panel shows Properties, then Sound with its Level, then Fades: In 0.0s and Out 0.0s in two boxes, and Curve reading Linear, with a question mark beside the header and no sentence in the section" },
-    { "do": "expectSections", "leading": ["Properties", "Sound", "Fades"] },
+    { "do": "describe", "stage": "1-music-picked", "note": "The sample music is picked. The panel shows Properties, then Channel with Mute, Solo and Volume, then Fades: In 0.0s and Out 0.0s in two boxes, and Curve reading Linear, with a question mark beside the header and no sentence in the section" },
+    { "do": "expectSections", "leading": ["Properties", "Channel", "Fades"] },
     { "do": "expectInView", "field": "Fade in" },
     { "do": "expect", "field": "Fade in", "reads": "0.0s" },
     { "do": "expect", "field": "Fade out", "reads": "0.0s" },

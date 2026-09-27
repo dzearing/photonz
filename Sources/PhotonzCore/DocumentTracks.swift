@@ -347,6 +347,27 @@ extension PhotonzDocument {
         trackLayout().linked.first { $0.value.contains(id) }?.key
     }
 
+    // MARK: A sound's channel
+
+    /// The track whose Mute and Solo a layer's sound answers to, the ones the
+    /// Channel section's buttons switch: the audio track a clip's own sound is
+    /// drawn on, or the track a piece of sound sits on. Nil for a layer that
+    /// makes no sound.
+    public func soundTrackID(ofLayer id: UUID) -> UUID? {
+        guard let layer = layer(id: id), layer.sound != nil else { return nil }
+        if layer.hasLinkedSound { return linkedSoundTrackID(ofClip: id) }
+        return trackID(ofClip: id)
+    }
+
+    /// What the Channel section's header calls a layer's sound: the file it
+    /// came from as the document remembers it (a recording's own sound shares
+    /// its recording's id, so it is named by that file), else the layer's own
+    /// name. Nil for a layer that makes no sound.
+    public func soundFileName(ofLayer id: UUID) -> String? {
+        guard let layer = layer(id: id), let sound = layer.sound else { return nil }
+        return media.first { $0.id == sound.id }?.name ?? layer.name
+    }
+
     /// V1, V2...; Audio, Audio 2...; Captions, Captions 2...
     /// "Title", then "Title 2", for the tracks words land on by themselves.
     static func freeTitleTrackName(used: Set<String>) -> String {

@@ -1,24 +1,118 @@
 import PhotonzCore
 import SwiftUI
 
-/// **Sound**: how loud the picked layer is (`docs/design/video-audio.md`,
-/// `pages/video-audio.html`), as label and value rows.
+/// **Channel**: the picked sound's strip, as `pages/video-audio.html` draws
+/// `#propBody` (`docs/design/video-audio.md`).
 ///
-/// A fader and, once the level changes over time, how many points its line on
-/// the bar has, with Flatten beside it. The fades have a section of their own
-/// under this one, as the mock draws them (`SoundFadesInspector`). Detach
-/// Audio is a verb, so it is on the clip's right-click menu.
+/// Mute and Solo under the header, then Volume in decibels; the file the
+/// sound came from rides the header beside the title. Mute and Solo are the
+/// switches on the sound's own track, the ones on its header in the timeline,
+/// so the two places can never disagree. Once the level changes over time, how
+/// many points its line on the bar has, with Flatten beside it. The fades have
+/// a section of their own under this one, as the mock draws them
+/// (`SoundFadesInspector`), and Gain sits under those (`SoundGainInspector`),
+/// apart from Volume the way Premiere's Audio Gain is. Detach Audio is a verb,
+/// so it is on the clip's right-click menu.
 struct SoundInspector: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             if editorState.soundLayerInHand != nil {
-                gain
-                level
+                switches
+                volume
                 if editorState.soundLevelInHand.changesOverTime {
                     points
                 }
+            }
+        }
+        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// What the header says beside Channel: the file the sound came from.
+    static func headerNote(_ editorState: EditorState) -> String? {
+        editorState.soundChannelFileName
+    }
+
+    /// The mock's `.btnrow`: Mute lights red, Solo lights in the accent.
+    private var switches: some View {
+        let track = editorState.soundChannelTrack
+        return HStack(spacing: 8) {
+            ChannelSwitch(title: "Mute",
+                          symbol: track?.isMuted == true ? "speaker.slash.fill" : "speaker.wave.2",
+                          isOn: track?.isMuted == true,
+                          tint: AnyShapeStyle(VideoKit.Palette.crit),
+                          help: "Silence this track.") {
+                editorState.toggleSoundChannelMuted()
+            }
+            ChannelSwitch(title: "Solo", symbol: "headphones",
+                          isOn: track?.isSolo == true,
+                          tint: AnyShapeStyle(VideoKit.Palette.accent),
+                          help: "Hear only this track.") {
+                editorState.toggleSoundChannelSolo()
+            }
+        }
+        .disabled(track == nil)
+    }
+
+    /// The fader, in the mock's decibels. Muted, it dims and stops taking the
+    /// hand, as the mock's does: the level it would play at is kept for when
+    /// the track comes back.
+    private var volume: some View {
+        let level = editorState.soundLevelInHand
+        let muted = editorState.soundChannelTrack?.isMuted == true
+        return VideoKit.FieldRow(label: "Volume") {
+            HStack(spacing: 8) {
+                Slider(value: Binding(
+                    get: { AudioLevel.volumeSliderDB(forGain: level.gain) },
+                    set: { editorState.setSoundVolume(sliderDB: $0) }
+                ), in: AudioLevel.volumeRangeDB)
+                .controlSize(.small)
+                .playtestField("Volume")
+                .panelHelp("How loud this layer plays.")
+                Text(level.label)
+                    .font(.system(size: 11, weight: .medium))
+                    .monospacedDigit()
+                    .foregroundStyle(VideoKit.Palette.ink)
+                    .fixedSize()
+                    .panelReadout(level.label)
+                    .playtestField("Volume reading")
+            }
+        }
+        .disabled(muted)
+        .opacity(muted ? 0.45 : 1)
+    }
+
+    /// The level's line on the bar, counted, and the way to take it off.
+    private var points: some View {
+        let count = editorState.soundLevelInHand.points.count
+        return VideoKit.FieldRow(label: "Points") {
+            HStack(spacing: 6) {
+                VideoKit.ValueFace(value: "\(count) on the bar")
+                    .panelReadout("\(count) on the bar")
+                Button("Flatten") { editorState.clearSoundLevelPoints() }
+                    .controlSize(.small)
+                    .playtestField("Flatten Level")
+                    .panelHelp("Take every point off the level line.")
+            }
+        }
+    }
+}
+
+/// **Gain**: boost or cut before the Volume fader, and Normalize, which sets
+/// it from the sound's own peaks. Its own section under Fades, where the mock
+/// keeps what differs per selection (`#chExtra`), so the Channel strip holds
+/// the one Volume row the mock draws. Normalize is on the segment's
+/// right-click menu as well.
+struct SoundGainInspector: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if editorState.soundLayerInHand != nil {
+                gain
             }
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
@@ -44,7 +138,7 @@ struct SoundInspector: View {
                     .controlSize(.small)
                     .frame(minWidth: PanelSliderRow.trackMinimum)
                     .playtestField("Gain")
-                    .panelHelp("Boost or cut before the level.")
+                    .panelHelp("Boost or cut before the volume.")
                     PanelNumberField(
                         showing: .number(Self.spell(dB)),
                         label: "Gain in dB",
@@ -53,7 +147,7 @@ struct SoundInspector: View {
                         width: .fixed(40),
                         floor: CGFloat(range.lowerBound),
                         ceiling: CGFloat(range.upperBound),
-                        playtest: ("Gain in dB", "Sound"),
+                        playtest: ("Gain in dB", "Gain"),
                         spell: { Self.spell(Double($0)) },
                         land: { typed in
                             editorState.setSoundClipGain(Double(typed))
@@ -70,7 +164,7 @@ struct SoundInspector: View {
                     Task { await editorState.normalizeSound(layers: ids) }
                 }
                 .controlSize(.small)
-                .playtestControl("Normalize", detail: "Sound")
+                .playtestControl("Normalize", detail: "Gain")
                 .panelHelp("Bring the loudest peak to -1 dB.")
             }
         }
@@ -79,42 +173,6 @@ struct SoundInspector: View {
     /// A gain as the box spells it: one place, signed when it is a boost.
     static func spell(_ dB: Double) -> String {
         abs(dB) < 0.05 ? "0.0" : String(format: "%+.1f", dB)
-    }
-
-    private var level: some View {
-        VideoKit.FieldRow(label: "Level") {
-            HStack(spacing: 8) {
-                Slider(value: Binding(
-                    get: { editorState.soundLevelInHand.gain },
-                    set: { editorState.setSoundGain($0) }
-                ), in: 0...AudioLevel.loudestGain)
-                .controlSize(.small)
-                .playtestField("Level")
-                .panelHelp("How loud this layer plays.")
-                Text(editorState.soundLevelInHand.label)
-                    .font(.system(size: 11, weight: .medium))
-                    .monospacedDigit()
-                    .foregroundStyle(VideoKit.Palette.ink)
-                    .fixedSize()
-                    .panelReadout(editorState.soundLevelInHand.label)
-                    .playtestField("Level reading")
-            }
-        }
-    }
-
-    /// The level's line on the bar, counted, and the way to take it off.
-    private var points: some View {
-        let count = editorState.soundLevelInHand.points.count
-        return VideoKit.FieldRow(label: "Points") {
-            HStack(spacing: 6) {
-                VideoKit.ValueFace(value: "\(count) on the bar")
-                    .panelReadout("\(count) on the bar")
-                Button("Flatten") { editorState.clearSoundLevelPoints() }
-                    .controlSize(.small)
-                    .playtestField("Flatten Level")
-                    .panelHelp("Take every point off the level line.")
-            }
-        }
     }
 }
 
@@ -248,5 +306,62 @@ private struct SoundFadeField: View {
 
     private func reach(_ typed: Int) {
         draft = AudioLevel.fadeLabel(ms: typed == ms ? ms : land(typed))
+    }
+}
+
+/// One of the Channel's two switches, the mock's `.btn.sm`: quiet (`ghost`)
+/// until pressed, then filled in its colour, red for Mute (`danger`) and the
+/// accent for Solo (`primary`), and filled for as long as it is on.
+private struct ChannelSwitch: View {
+    let title: String
+    let symbol: String
+    let isOn: Bool
+    let tint: AnyShapeStyle
+    let help: String
+    let action: () -> Void
+
+    @State private var hovering = false
+    @Environment(\.isEnabled) private var isEnabled
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: symbol)
+                    .font(.system(size: 11, weight: .semibold))
+                    .frame(width: 13, height: 13)
+                Text(title)
+                    .font(.system(size: 11.5, weight: .semibold))
+            }
+            .foregroundStyle(ink)
+            .padding(.horizontal, 12)
+            .frame(height: 24)
+            .background { Capsule().fill(fill) }
+            .overlay {
+                Capsule().strokeBorder(!isOn && hovering ? AnyShapeStyle(VideoKit.Palette.edgeLo)
+                                                         : AnyShapeStyle(Color.clear))
+            }
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .opacity(isEnabled ? 1 : 0.42)
+        .playtestHover { hovering = $0 }
+        .animation(.easeOut(duration: 0.12), value: isOn)
+        .animation(.easeOut(duration: 0.12), value: hovering)
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(isOn ? .isSelected : [])
+        .panelHelp(help)
+        .playtestControl(title, detail: "Channel")
+        .panelReadout(isOn ? "On" : "Off")
+        .playtestField(title)
+    }
+
+    private var ink: AnyShapeStyle {
+        if isOn { return AnyShapeStyle(Color.white) }
+        return hovering ? AnyShapeStyle(VideoKit.Palette.ink) : AnyShapeStyle(VideoKit.Palette.dim)
+    }
+
+    private var fill: AnyShapeStyle {
+        if isOn { return tint }
+        return hovering ? AnyShapeStyle(VideoKit.Palette.glassThin) : AnyShapeStyle(Color.clear)
     }
 }

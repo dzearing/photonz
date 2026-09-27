@@ -17,7 +17,7 @@ struct TimePanelOrderTests {
 
     static let saved = ["layers", "measureTool", "arrange", "component", "text", "geometry",
                         "color", "effects", "keys", "reframe", "motion", "editPoint",
-                        "transition", "speed", "sound", "fades", "captions", "library"]
+                        "transition", "speed", "sound", "fades", "gain", "captions", "library"]
 
     static func clip() -> Layer {
         var layer = Layer(name: "Recording",
@@ -92,7 +92,7 @@ struct TimePanelOrderTests {
 
     @Test func aClipLeadsWithItsPropertiesThenHowItPlaysThenHowLoud() {
         let order = TimePanelOrder.arrange(Self.saved, for: .playing)
-        #expect(Array(order.prefix(5)) == ["layers", "keys", "speed", "sound", "fades"])
+        #expect(Array(order.prefix(6)) == ["layers", "keys", "speed", "sound", "fades", "gain"])
     }
 
     @Test func aTitleLeadsWithItsPropertiesThenWhenItIsOnThenItsWords() {
@@ -102,7 +102,7 @@ struct TimePanelOrderTests {
 
     @Test func aSoundLeadsWithItsPropertiesThenItsLevelThenItsTime() {
         let order = TimePanelOrder.arrange(Self.saved, for: .heard)
-        #expect(Array(order.prefix(5)) == ["layers", "keys", "sound", "fades", "speed"])
+        #expect(Array(order.prefix(6)) == ["layers", "keys", "sound", "fades", "gain", "speed"])
     }
 
     /// The captions mock opens its panel on the captions' own options, then
@@ -119,6 +119,16 @@ struct TimePanelOrderTests {
             let lead = TimePanelOrder.leads(role)
             guard let sound = lead.firstIndex(of: "sound") else { continue }
             #expect(lead.indices.contains(sound + 1) && lead[sound + 1] == "fades")
+        }
+    }
+
+    /// Gain sits straight under Fades, in the audio mock's per-selection slot
+    /// under the channel strip (`#chExtra`), so the strip keeps its one Volume.
+    @Test func gainFollowsTheFadesWhereverTheyLead() {
+        for role in TimePanelOrder.Role.allCases {
+            let lead = TimePanelOrder.leads(role)
+            guard let fades = lead.firstIndex(of: "fades") else { continue }
+            #expect(lead.indices.contains(fades + 1) && lead[fades + 1] == "gain")
         }
     }
 

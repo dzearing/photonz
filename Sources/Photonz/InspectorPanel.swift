@@ -677,6 +677,7 @@ struct InspectorPanel: View {
         if Experiments.shared.soundOnTheTimelineEnabled, editorState.soundLayerInHand != nil {
             set.insert(.sound)
             set.insert(.fades)
+            set.insert(.gain)
         }
         // Having the app write the captions (Next, `next-captions-from-the-sound`).
         // Present for the whole document rather than for what is picked: unlike
@@ -1042,14 +1043,20 @@ struct InspectorPanel: View {
         case .measurements:
             return AnyView(MeasurementsSectionAccessory(
                 showsCount: !Experiments.shared.dockHeadersEnabled))
-        case .editPoint, .transition:
-            // The mock's `.sec-h .mut`: where the cut is, and what is on it.
-            let note = id == .editPoint ? EditPointInspector.headerNote(editorState)
-                                        : TransitionInspector.headerNote(editorState)
+        case .editPoint, .transition, .sound:
+            // The mock's `.sec-h .mut`: where the cut is, what is on it, and
+            // which file the picked sound came from.
+            let note = switch id {
+            case .editPoint: EditPointInspector.headerNote(editorState)
+            case .transition: TransitionInspector.headerNote(editorState)
+            default: SoundInspector.headerNote(editorState)
+            }
             guard let note else { return nil }
             return AnyView(Text(note)
                 .font(.system(size: 10.5, weight: .medium))
                 .foregroundStyle(VideoKit.Palette.faint)
+                .lineLimit(1)
+                .truncationMode(.middle)
                 .panelReadout(note)
                 .playtestField("\(id.title) header"))
         // The mock's `.sec-h .mut` note ("drag the diamonds on the lane") is
@@ -1264,6 +1271,8 @@ struct InspectorPanel: View {
             SoundInspector()
         case .fades:
             SoundFadesInspector()
+        case .gain:
+            SoundGainInspector()
         case .captions:
             CaptionsInspector()
         case .shadow:

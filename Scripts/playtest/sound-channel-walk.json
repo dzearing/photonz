@@ -1,0 +1,64 @@
+{
+  "out": "/tmp/photonz-playtest/sound-channel-walk",
+  "seed": "A piece of music picked, with nothing switched from its default. The panel opens on a Channel section as the audio mock draws it: the file name beside the header, Mute and Solo under it, and a Volume slider reading in decibels. Mute and Solo are the very switches on the music's track header, so pressing one in the panel lights it on the timeline too, each is one step to undo, and while the music is muted its Volume row dims. Picking the recording instead points the same strip at the recording's own sound and its Audio track.",
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "windowLaptop" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "soundAddSample" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "describe", "stage": "1-music-picked", "note": "The sample music is picked. Under Properties the panel has CHANNEL with Sample Music.m4a beside it, Mute and Solo as two quiet buttons under the header, and Volume with its slider at the middle-right and 0.0 dB at the end; Fades under that, then Gain" },
+    { "do": "expectSections", "leading": ["Properties", "Channel", "Fades", "Gain"] },
+    { "do": "expect", "field": "Channel header", "reads": "Sample Music.m4a" },
+    { "do": "expect", "field": "Mute", "reads": "Off" },
+    { "do": "expect", "field": "Solo", "reads": "Off" },
+    { "do": "expect", "field": "Volume reading", "reads": "0.0 dB" },
+    { "do": "expect", "control": "Track Audio 2 Mute", "present": false },
+    { "do": "panel", "stage": "1-music-picked" },
+    { "do": "snapshot", "name": "1-music-picked" },
+
+    { "do": "press", "control": "Mute" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-muted", "note": "Mute pressed in the panel. The button fills red with a crossed-out speaker, the Volume row dims, and the music's track header on the timeline shows its lit mute switch" },
+    { "do": "expect", "field": "Mute", "reads": "On" },
+    { "do": "expect", "control": "Track Audio 2 Mute", "present": true },
+    { "do": "panel", "stage": "2-muted" },
+    { "do": "snapshot", "name": "2-muted" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "field": "Mute", "reads": "Off" },
+    { "do": "expect", "control": "Track Audio 2 Mute", "present": false },
+
+    { "do": "press", "control": "Solo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-soloed", "note": "Undo took the mute back in one step; Solo pressed. The Solo button fills in the accent, and the music's track header shows its lit S switch" },
+    { "do": "expect", "field": "Solo", "reads": "On" },
+    { "do": "expect", "field": "Mute", "reads": "Off" },
+    { "do": "expect", "control": "Track Audio 2 Solo", "present": true },
+    { "do": "panel", "stage": "3-soloed" },
+    { "do": "snapshot", "name": "3-soloed" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "field": "Solo", "reads": "Off" },
+    { "do": "expect", "control": "Track Audio 2 Solo", "present": false },
+
+    { "do": "move", "control": "Track Audio 2" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Track Audio 2 Solo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-solo-from-the-header", "note": "Solo pressed on the music's track header instead: the panel's Solo button lights with it, because they are one switch" },
+    { "do": "expect", "field": "Solo", "reads": "On" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "field": "Solo", "reads": "Off" }
+  ]
+}

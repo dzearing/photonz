@@ -9,7 +9,7 @@
     { "do": "press", "control": "Quiet system audio recording 1280x800 clip" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expect", "field": "Gain in dB", "reads": "0.0" },
-    { "do": "describe", "stage": "1-quiet", "note": "The quiet recording picked: its system audio drawn in decibels on the Audio track, small but visible; the Sound section's Gain row at 0.0 dB with Normalize beside it" },
+    { "do": "describe", "stage": "1-quiet", "note": "The quiet recording picked: its system audio drawn in decibels on the Audio track, small but visible; the Gain section under Fades at 0.0 dB with Normalize under it" },
     { "do": "panel", "stage": "1-quiet" },
     { "do": "snapshot", "name": "1-quiet" },
 

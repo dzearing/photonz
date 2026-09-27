@@ -305,6 +305,26 @@ public struct AudioLevel: Hashable, Codable, Sendable {
         bounded(pow(10, dB / 20))
     }
 
+    /// The Channel section's Volume slider, in decibels, end to end as the
+    /// audio mock draws it (`pages/video-audio.html`, `#chVol`). Silence is
+    /// Mute's job, so the slider's foot is a quiet level rather than none.
+    public static let volumeRangeDB: ClosedRange<Double> = -24...6
+
+    /// Where the Volume slider sits for a level: its decibels, held to the
+    /// slider's ends, and the foot for silence.
+    public static func volumeSliderDB(forGain gain: Double) -> Double {
+        guard let dB = decibels(forGain: gain) else { return volumeRangeDB.lowerBound }
+        return min(max(volumeRangeDB.lowerBound, dB), volumeRangeDB.upperBound)
+    }
+
+    /// The level a Volume slider position asks for, on the mock's half
+    /// decibel steps and held to the slider's ends.
+    public static func volumeGain(sliderDB dB: Double) -> Double {
+        let stepped = (dB * 2).rounded() / 2
+        let held = min(max(volumeRangeDB.lowerBound, stepped), volumeRangeDB.upperBound)
+        return held == 0 ? unityGain : gain(forDecibels: held)
+    }
+
     /// What the panel says: `0.0 dB` at the level it was recorded at, and
     /// `Silent` where there is no number to give.
     public var label: String {

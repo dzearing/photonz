@@ -422,7 +422,7 @@ points is a smear and a level line has nowhere to be dragged.
 | The mock | What landed | Why |
 | --- | --- | --- |
 | Audio tracks are lanes on the timeline dock | Kept, exactly | It is the thesis, and it came free: a sound is a layer with a time, so the strip already drew it |
-| The selected track's channel strip opens in Properties | Kept, as the Sound section | |
+| The selected track's channel strip opens in Properties | Kept, as the Channel section: file name, Mute and Solo (the track's own switches), Volume in dB; Gain and Normalize in a Gain section under Fades | |
 | Source files live in Library, scope Media | **Not built.** Add Sound opens a file; the shelf is a follow-up | The shelf is not what makes sound work, and the task said not to invent a third place for media — this invents none, it just has no shelf yet |
 | Live VU meters over the canvas | **Built, somewhere else** | Cut on 2026-09-21 as answering nothing about the edit. That was right about a meter with ballistics and wrong about the fact underneath it: a mix that adds up past full scale writes a broken file. The meter is in the transport rather than on the canvas, and it reads the plan rather than the engine (§5c) |
 | Mute and Solo | **Cut** | A level at nought IS mute. Solo is a mixer's product |

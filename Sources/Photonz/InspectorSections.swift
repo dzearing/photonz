@@ -150,6 +150,10 @@ enum InspectorSectionID: String, CaseIterable {
     // (`pages/video-audio.html`, the Fades section). Directly under Sound,
     // where the mock puts it, and present exactly when Sound is.
     case fades
+    // Boost or cut before the Volume fader, and Normalize. Under Fades, in the
+    // audio mock's per-selection slot (`#chExtra`), so the Channel strip above
+    // keeps the one Volume row the mock draws; present exactly when Channel is.
+    case gain
     // Having the app write the words off the sound (Next,
     // `next-captions-from-the-sound`). Directly under Sound, because it is the
     // one thing you do WITH a recording's sound that is not about how loud it
@@ -198,8 +202,11 @@ enum InspectorSectionID: String, CaseIterable {
         case .editPoint: "Edit point"
         case .transition: "Transition"
         case .speed: "Time"
-        case .sound: "Sound"
+        // The audio mock's channel strip (`pages/video-audio.html`,
+        // `#propBody`); the raw id stays `sound` for saved orders.
+        case .sound: "Channel"
         case .fades: "Fades"
+        case .gain: "Gain"
         case .captions: "Captions"
         case .shadow: "Shadow"
         case .library: "Library"

@@ -1,0 +1,27 @@
+{
+  "feature": "The picked sound's Channel strip",
+  "epic": "video-editing",
+  "summary": "Picking a sound opens a Channel section like the audio mock: the file name in its header, Mute and Solo buttons, and a Volume slider in decibels. Mute and Solo are the same switches as the ones on the track header, so the panel and the timeline always agree.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The walk that checks it is Scripts/playtest/sound-channel-walk.json.",
+  "try": [
+    { "do": "Open a recording, then drop a piece of music on the timeline so it is picked.", "shot": "2026-09-27-sound-channel-1-music-picked-sc.png" },
+    { "do": "Check the panel: CHANNEL with the file name at the right of the header, Mute and Solo under it, then Volume at 0.0 dB." },
+    { "do": "Press Mute.", "shot": "2026-09-27-sound-channel-2-muted-sc.png" },
+    { "do": "Press Cmd+Z once, then press Solo.", "shot": "2026-09-27-sound-channel-3-soloed-sc.png" },
+    { "do": "Point at the music's track header and press its S switch, and watch the panel's Solo button." },
+    { "do": "Drag Volume down, then pick the recording clip and look at its Channel." },
+    { "do": "Scroll to the Gain section under Fades and press Normalize." }
+  ],
+  "evaluate": [
+    "Muted, the button turns red and the Volume row dims, and the track header's mute lights up. Does that read clearly as the sound being off?",
+    "Is it right for Solo in the panel to light in the accent while the track header's S lights in amber?",
+    "Gain and Normalize now have their own section under Fades rather than sitting beside Volume. Is that where you would look for them?",
+    "Volume stops at -24 dB, as the mock's slider does, and silence is Mute's job. Is that low enough?"
+  ],
+  "rough": [
+    "Gain is not in the mock. It moved out of the Channel section into its own Gain section under Fades, in the mock's slot for extras that depend on what is picked, so Channel has the mock's one Volume row. Normalize is still on the segment's right-click menu too.",
+    "The Points and Flatten row still shows under Volume once the level changes over time. The mock does not draw it, but without it there is no way to clear a level line from the panel.",
+    "Volume is still set per sound, not per track. The mock's strip is per track, and with one sound on a track the two read the same. Mute and Solo do work on the whole track.",
+    "The Volume slider is the system slider, like the panel's other rows, not the mock's slider with a value bubble."
+  ]
+}
