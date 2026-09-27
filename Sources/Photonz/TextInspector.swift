@@ -79,7 +79,7 @@ struct TextInspector: View {
                               pinnedWidth: Self.fontMenuWidth) {
                     editorState.setTextStyle(ids: ids, fontName: $0)
                 }
-                HStack(alignment: .top, spacing: 8) {
+                PanelPair {
                     SelectionMenu(label: "Size",
                                   reading: selection.number { $0.fontSize },
                                   options: sizes(selection),
@@ -134,7 +134,7 @@ struct TextInspector: View {
     private func alignRow(_ selection: TextLayerSelection, ids: [UUID]) -> some View {
         let across = selection.reading { $0.usedAlignment }
         let down = selection.reading { $0.usedVerticalAlignment }
-        return HStack(alignment: .top, spacing: 8) {
+        return PanelPair {
             captioned("Across", isMixed: across.isMixed) {
                 Picker("Words across the box", selection: Binding<TextAlign?>(
                     get: { across.isMixed ? nil : across.value },
@@ -187,15 +187,27 @@ struct TextInspector: View {
     @ViewBuilder private func captioned<Content: View>(_ label: String,
                                                        isMixed: Bool = false,
                                                        @ViewBuilder _ content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack(spacing: 6) {
-                Text(label).font(.caption).foregroundStyle(.secondary)
-                if isMixed { MixedWord() }
-                Spacer(minLength: 0)
+        if Experiments.shared.panelRowsInOneColumnEnabled {
+            // The mock's row: Mixed follows the buttons, since the label
+            // column holds the name and nothing else.
+            PanelFieldRow(label) {
+                HStack(spacing: 6) {
+                    content().fixedSize()
+                    if isMixed { MixedWord() }
+                }
             }
-            content()
+            .playtestField(label)
+        } else {
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(label).font(.caption).foregroundStyle(.secondary)
+                    if isMixed { MixedWord() }
+                    Spacer(minLength: 0)
+                }
+                content()
+            }
+            .playtestField(label)
         }
-        .playtestField(label)
     }
 
     /// What a menu says it is. Over a selection it says how far it reaches, so

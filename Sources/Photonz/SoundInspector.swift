@@ -42,7 +42,7 @@ struct SoundInspector: View {
                         set: { editorState.setSoundClipGain($0.rounded()) }
                     ), in: range)
                     .controlSize(.small)
-                    .frame(minWidth: 60)
+                    .frame(minWidth: PanelSliderRow.trackMinimum)
                     .playtestField("Gain")
                     .panelHelp("Boost or cut before the level.")
                     PanelNumberField(

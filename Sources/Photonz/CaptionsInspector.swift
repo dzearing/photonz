@@ -297,7 +297,7 @@ struct CaptionsTextInspector: View {
                           help: "The font of every caption") { font in
                 editorState.changeCaptionLook { $0.fontName = font }
             }
-            HStack(alignment: .top, spacing: 8) {
+            PanelPair {
                 let shown = look.resolvedFontSize(in: size)
                 SelectionMenu(label: "Size",
                               reading: StyleReading(value: shown, isMixed: false),

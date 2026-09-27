@@ -344,6 +344,22 @@ enum ColorPartLayout {
     /// tracks run the full width.
     static var nameLeading: CGFloat { EditorChromeLayout.panelSubsectionIndent }
 
+    /// The name column of a row that leads with a tick (or holds the tick
+    /// column open), so its control lands where every other row's does. In
+    /// Next that is the mock's line, 88 in from the row (`PanelRowLayout`):
+    /// the tick column, a gap, this, a gap. In Current it is the old column.
+    @MainActor static var tickedNameWidth: CGFloat {
+        guard Experiments.shared.panelRowsInOneColumnEnabled else { return labelWidth }
+        return PanelRowLayout.controlLeading - switchWidth - 2 * spacing
+    }
+
+    /// The name column of a row with no tick in front of it: a shadow's Kind,
+    /// a border's Position. The same line again, reached without the tick.
+    @MainActor static var nameWidth: CGFloat {
+        guard Experiments.shared.panelRowsInOneColumnEnabled else { return labelWidth }
+        return PanelRowLayout.controlLeading - spacing
+    }
+
 }
 
 /// The head of every row in the panel's two lists: the tick, then the name.
@@ -390,11 +406,11 @@ struct PanelRowHead<Switch: View>: View {
                     .overlay(alignment: .leading) { switchControl }
             }
             Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .panelRowName()
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
-                .frame(width: ColorPartLayout.labelWidth,
+                .frame(width: leadsWithColumn ? ColorPartLayout.tickedNameWidth
+                                              : ColorPartLayout.nameWidth,
                        height: ColorPartLayout.rowHeight, alignment: .leading)
         }
     }
@@ -458,11 +474,10 @@ struct ColorPartRow: View {
         // rather than beside the field.
         HStack(alignment: .top, spacing: ColorPartLayout.spacing) {
             Text(part)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .panelRowName()
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
-                .frame(width: ColorPartLayout.labelWidth,
+                .frame(width: ColorPartLayout.tickedNameWidth,
                        height: ColorPartLayout.rowHeight, alignment: .leading)
             // The switch column is ALWAYS this wide, blank or not: a modifier
             // on a nil optional view reserves nothing, which is what put a

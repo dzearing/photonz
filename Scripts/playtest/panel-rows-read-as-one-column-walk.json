@@ -1,0 +1,195 @@
+{
+  "out": "/tmp/photonz-playtest/panel-rows-read-as-one-column-walk",
+  "seed": "In a video document, every section of the panel reads like the mock's rows: a small faint name in one left column and its control beside it. Text, Appearance and Effects on a title read the same as Time, Sound and Captions on the clip, at Next defaults with no flag changed.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleTalk"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        120,
+        110
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Ship it faster."
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-a-title",
+      "note": "A title over the recording: its Time and Text rows. Font, Size and Weight are one row each, the names small and faint in one column."
+    },
+    {
+      "do": "reveal",
+      "control": "align left"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panelMargins",
+      "stage": "1-a-title"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-a-title"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-appearance-and-effects",
+      "note": "Appearance and the title's shadow: Opacity's track and box sit beside its name, and so does every setting of the shadow."
+    },
+    {
+      "do": "reveal",
+      "control": "Blending"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panelMargins",
+      "stage": "2-appearance-and-effects"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-appearance-and-effects"
+    },
+    {
+      "do": "expect",
+      "control": "Kind",
+      "present": true
+    },
+    {
+      "do": "reveal",
+      "control": "Kind"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "snapshot",
+      "name": "3-the-shadow"
+    },
+    {
+      "do": "selectRow",
+      "row": "Sample Talk"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-the-clip",
+      "note": "The clip: Sound, Appearance and Captions in one picture, every name in the same column."
+    },
+    {
+      "do": "reveal",
+      "control": "Blending"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panelMargins",
+      "stage": "4-the-clip"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-the-clip"
+    },
+    {
+      "do": "action",
+      "action": "dockNarrowest"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-the-clip-in-the-narrowest-dock",
+      "note": "At the narrowest dock a control that cannot sit beside its name drops under it rather than pushing the panel wider."
+    },
+    {
+      "do": "reveal",
+      "control": "Blending"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panelMargins",
+      "stage": "5-the-clip-in-the-narrowest-dock"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-the-clip-in-the-narrowest-dock"
+    }
+  ]
+}

@@ -224,6 +224,8 @@ public enum FeatureCatalog {
 
     public static let timelineIsTheLayerListFlag = "next-the-timeline-is-the-layer-list"
 
+    public static let panelRowsInOneColumnFlag = "next-panel-rows-in-one-column"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -1239,6 +1241,16 @@ public enum FeatureCatalog {
                     title: "Turn a silenced question back on",
                     description: "A command that is about to take away something you cannot see going asks you first, and that question carries a “Don’t ask again” box. Ticking it used to be permanent: the question went quiet for good and there was nowhere in the app to bring it back, so somebody who ticked it on their first day, or by accident, had given up that warning forever. With this on, Photonz has a Settings window, on Command-comma and in the menu bar menu, and its page lists every question you have silenced by the name of the command that asks it, one line saying what that question was protecting, and a button that starts it asking again from the very next time you use the command. Silence nothing and the page says so in one sentence rather than showing a row of switches, because a list of warnings you have not turned off is an invitation to go and turn them off. Off means there is no Settings window and “Don’t ask again” is a door that locks behind you.",
                     area: .app,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: panelRowsInOneColumnFlag,
+                    title: "Every panel row has its name in one column",
+                    description: "Every panel row puts a short grey name in one left column with its control beside it, so sections line up. A control too wide drops under its name. Off means older sections stack names over controls.",
+                    area: .panel,
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

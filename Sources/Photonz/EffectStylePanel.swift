@@ -40,9 +40,8 @@ struct EffectStyleRow: View {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .firstTextBaseline, spacing: ColorPartLayout.spacing) {
                     Text("Style")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .frame(width: ColorPartLayout.labelWidth, alignment: .leading)
+                        .panelRowName()
+                        .frame(width: ColorPartLayout.nameWidth, alignment: .leading)
                     EffectStyleControl(row: row)
                     Spacer(minLength: 0)
                 }

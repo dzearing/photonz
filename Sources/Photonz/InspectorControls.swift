@@ -228,6 +228,39 @@ struct LayerStyleSlider: View, Equatable {
     }
 
     var body: some View {
+        Group {
+            if Experiments.shared.panelRowsInOneColumnEnabled {
+                // The mock's row: the name in the label column, the track and
+                // its box beside it (`PanelFieldRow`).
+                PanelFieldRow(label) {
+                    HStack(spacing: 6) {
+                        track.frame(minWidth: PanelSliderRow.trackMinimum)
+                        readout
+                        if let field {
+                            InstanceStyleRevert(reach: reach, field: field)
+                        }
+                    }
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack {
+                        Text(label).font(.caption).foregroundStyle(.secondary)
+                        if let field {
+                            InstanceStyleRevert(reach: reach, field: field)
+                        }
+                        Spacer()
+                        readout
+                    }
+                    track
+                }
+            }
+        }
+        // The row lends its word to whatever sits on it, so the revert arrow on
+        // a Blur row reads as Blur's and not as the Border row's.
+        .playtestField(label)
+    }
+
+    private var readout: some View {
         // Held onto by hand rather than read off `self` later: the closures
         // below outlive the pass that built them now, and an @Environment read
         // from a stale view is not something to rely on. The object itself
@@ -235,44 +268,38 @@ struct LayerStyleSlider: View, Equatable {
         let state = editorState
         let reach = reach
         let apply = apply
-        return VStack(alignment: .leading, spacing: 2) {
-            HStack {
-                Text(label).font(.caption).foregroundStyle(.secondary)
-                if let field {
-                    InstanceStyleRevert(reach: reach, field: field)
-                }
-                Spacer()
-                SliderReadout(
-                    typing: typing, label: label, value: CGFloat(knob),
-                    isMixed: reading.isMixed,
-                    range: CGFloat(range.lowerBound)...CGFloat(range.upperBound),
-                    identity: reach, isEnabled: isEnabled,
-                    // ONE undo step, the same as a pull on the knob is: a
-                    // typed number is a one-shot edit with no preview behind
-                    // it, so it goes the way the steppers and the switches go.
-                    land: { value in
-                        let ids = state.layerIDs(reaching: reach)
-                        state.setLayerStyle(ids: ids) { apply(&$0, Double(value)) }
-                    })
-            }
-            Slider(value: Binding(
-                get: { knob },
-                set: { v in
-                    state.previewLayerStyle(ids: state.layerIDs(reaching: reach)) { apply(&$0, v) }
-                }),
-                   in: range) { editing in
-                if !editing { state.commitLayerStyle(ids: state.layerIDs(reaching: reach)) }
-            }
-            .controlSize(.small)
-            .disabled(!isEnabled)
-            // Named so a walk can move it: a press lands in the middle of the
-            // track, which is what putting the knob there by hand does. Without
-            // this, everything in Effects could be photographed and never used.
-            .playtestControl("Slider", detail: label)
+        return SliderReadout(
+            typing: typing, label: label, value: CGFloat(knob),
+            isMixed: reading.isMixed,
+            range: CGFloat(range.lowerBound)...CGFloat(range.upperBound),
+            identity: reach, isEnabled: isEnabled,
+            // ONE undo step, the same as a pull on the knob is: a
+            // typed number is a one-shot edit with no preview behind
+            // it, so it goes the way the steppers and the switches go.
+            land: { value in
+                let ids = state.layerIDs(reaching: reach)
+                state.setLayerStyle(ids: ids) { apply(&$0, Double(value)) }
+            })
+    }
+
+    private var track: some View {
+        let state = editorState
+        let reach = reach
+        let apply = apply
+        return Slider(value: Binding(
+            get: { knob },
+            set: { v in
+                state.previewLayerStyle(ids: state.layerIDs(reaching: reach)) { apply(&$0, v) }
+            }),
+               in: range) { editing in
+            if !editing { state.commitLayerStyle(ids: state.layerIDs(reaching: reach)) }
         }
-        // The row lends its word to whatever sits on it, so the revert arrow on
-        // a Blur row reads as Blur's and not as the Border row's.
-        .playtestField(label)
+        .controlSize(.small)
+        .disabled(!isEnabled)
+        // Named so a walk can move it: a press lands in the middle of the
+        // track, which is what putting the knob there by hand does. Without
+        // this, everything in Effects could be photographed and never used.
+        .playtestControl("Slider", detail: label)
     }
 }
 
@@ -363,35 +390,49 @@ struct ShapeSlider: View, Equatable {
         let round = round
         let preview = preview
         let commit = commit
-        return VStack(alignment: .leading, spacing: 2) {
-            HStack {
-                Text(label).font(.caption).foregroundStyle(.secondary)
-                Spacer()
-                SliderReadout(
-                    typing: typing, label: label, value: knob, isMixed: showsMixed,
-                    range: range, format: format,
-                    identity: reach, isEnabled: isEnabled,
-                    // The commit is ONE undo step on its own — it is what the
-                    // end of a drag calls — so a typed number costs exactly
-                    // what a pull costs. The shapes clamp it to the same ends
-                    // the box already held it inside, so there is nothing for
-                    // them to refuse.
-                    land: { value in commit(state.layerIDs(reaching: reach), round(value)) })
+        let readout = SliderReadout(
+            typing: typing, label: label, value: knob, isMixed: showsMixed,
+            range: range, format: format,
+            identity: reach, isEnabled: isEnabled,
+            // The commit is ONE undo step on its own — it is what the
+            // end of a drag calls — so a typed number costs exactly
+            // what a pull costs. The shapes clamp it to the same ends
+            // the box already held it inside, so there is nothing for
+            // them to refuse.
+            land: { value in commit(state.layerIDs(reaching: reach), round(value)) })
+        let track = Slider(value: Binding(
+            get: { knob },
+            set: { v in
+                draft = v
+                preview(state.layerIDs(reaching: reach), round(v))
+            }), in: range) { editing in
+            if !editing {
+                commit(state.layerIDs(reaching: reach), round(draft ?? knob))
+                draft = nil
             }
-            Slider(value: Binding(
-                get: { knob },
-                set: { v in
-                    draft = v
-                    preview(state.layerIDs(reaching: reach), round(v))
-                }), in: range) { editing in
-                if !editing {
-                    commit(state.layerIDs(reaching: reach), round(draft ?? knob))
-                    draft = nil
+        }
+        .controlSize(.small)
+        .disabled(!isEnabled)
+        .playtestControl("Slider", detail: label)
+        return Group {
+            if Experiments.shared.panelRowsInOneColumnEnabled {
+                // The mock's row (`PanelFieldRow`), as `LayerStyleSlider`.
+                PanelFieldRow(label) {
+                    HStack(spacing: 6) {
+                        track.frame(minWidth: PanelSliderRow.trackMinimum)
+                        readout
+                    }
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack {
+                        Text(label).font(.caption).foregroundStyle(.secondary)
+                        Spacer()
+                        readout
+                    }
+                    track
                 }
             }
-            .controlSize(.small)
-            .disabled(!isEnabled)
-            .playtestControl("Slider", detail: label)
         }
         .playtestField(label)
     }
@@ -442,8 +483,7 @@ struct SelectionMenu<Value: Hashable & Sendable>: View {
         // showing Mixed is only useful if the row beside it says WHAT is
         // mixed, and with three menus in a row the shape of the word is not
         // enough: "Regular" and "Mixed" both look like a weight.
-        VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(.caption).foregroundStyle(.secondary)
+        PanelNamedControl(label) {
             Picker(label, selection: Binding<Value?>(
                 get: { reading.isMixed ? nil : reading.value },
                 set: { if let value = $0 { choose(value) } })) {
@@ -471,6 +511,8 @@ struct SelectionMenu<Value: Hashable & Sendable>: View {
             .frame(width: pinnedWidth)
             .accessibilityLabel(label)
         }
+        .frame(maxWidth: Experiments.shared.panelRowsInOneColumnEnabled ? .infinity : nil,
+               alignment: .leading)
         // The caption names the row, and the row names the menu for a walk.
         // A menu wears its own value — "24 px" one moment, "48 px" the next —
         // so a walk that named it by its words would stop working the first

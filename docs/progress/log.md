@@ -19855,3 +19855,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Fixed: the probe no longer activates itself during a walk (`AppFront`); guides no longer order their window in front; menus a walk only reads or picks from are never opened on screen (SwiftUI `Menu` rows via `popUpButtonCell:willShowMenu:`); walk windows sit one level under ordinary windows and go back behind the person after every step, 30 ms after a press, and via a 20 ms off-main watcher.
 - Walks that photograph an open menu (66, `queue/bin/walk-needs-the-mac.mjs`) still take the keys for about a second per picture.
 - The drill's standing set runs after every rotating check. Next: run `--all --slice i/n` overnight, then relax the idle gate (task `walks-run-while-the-person-works-once-the-whole`).
+
+## 2026-09-27 — Every panel row has its name in one column (go loop)
+
+- Shipped behind `next-panel-rows-in-one-column` (on in Next): `PanelFieldRow` (the mock's `.irow`, one Layout that drops the control under the name only when it cannot fit) and `PanelRowLayout` in core (76pt column, 12pt gap, 10.5pt faint). Appearance (Opacity, Blending, Masked by, Key, Corner Radius, part rows), Effects (sliders, Style, Color, Kind, Follows, Position), Text (Style, Font, Size, Weight, Across, Down; Size/Weight now two rows) and Layout rows use it. `VideoKit.FieldRow` now draws through it too, so video rows stack when they must.
+- Fixed on the way: the clip's Sound Gain row needed 212pt in a 192pt row at the narrowest dock and pushed the whole panel 19.5pt past its dock; `captions-panel-keeps-its-margins-walk` passes again.
+- New walk `panel-rows-read-as-one-column-walk`; audit `queue/audits/2026-09-27-panel-rows-one-column.json`.
+- Open: Layout's menu values still callout size (mock select text is 11.5pt).

@@ -34,45 +34,9 @@ struct KeyRows: View {
 
     private var rows: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
-                Text("Key").font(.caption).foregroundStyle(.secondary)
-                Spacer(minLength: 6)
-                if key.value ?? nil == nil {
-                    // Nothing keyed yet, so the whole row is one button. The
-                    // colour is read off the picture rather than asked for,
-                    // which is the difference between keying a green screen in
-                    // one click and keying it with an eyedropper and a guess.
-                    Button("Key it") { keyIt() }
-                        .controlSize(.small)
-                        .playtestControl("Key it", detail: "Key")
-                        .panelHelp("Make the colour behind the subject transparent. "
-                                   + "The colour is read off the edges of the picture.")
-                } else {
-                    Toggle("", isOn: Binding(get: { isOn },
-                                             set: { editorState.setKeyIsOn($0, ids: selection.layerIDs) }))
-                        .labelsHidden()
-                        .toggleStyle(.switch)
-                        .controlSize(.mini)
-                        .playtestControl("Key", detail: isOn ? "on" : "off")
-                }
-            }
+            keyHead
             if let current = key.value ?? nil {
-                HStack(spacing: 8) {
-                    ColorWellButton(hex: current.colorHex, name: "Key", wellKey: "key") { hex in
-                        editorState.setLayerStyle(ids: selection.layerIDs) { $0.key?.colorHex = hex }
-                    }
-                    Text(current.colorHex)
-                        .font(.caption2.monospaced())
-                        .foregroundStyle(.secondary)
-                        .panelReadout(current.colorHex)
-                    Spacer(minLength: 0)
-                    Button("Key it again") { keyIt() }
-                        .controlSize(.small)
-                        .buttonStyle(.link)
-                        .font(.caption2)
-                        .playtestControl("Key it again", detail: "Key")
-                }
-                .opacity(isOn ? 1 : 0.45)
+                keyColour(current)
                 slider("Tolerance", help: "How much of the colour goes",
                        read: { $0.key?.tolerance ?? 0 }) { $0.key?.tolerance = $1 }
                 slider("Softness", help: "How gently the edge fades",
@@ -91,6 +55,71 @@ struct KeyRows: View {
         }
         .playtestField("Key")
         .panelStartProbe(.row, owner: "Key")
+    }
+
+    /// The row's name and its switch, or the one button that keys it.
+    @ViewBuilder
+    private var keyHead: some View {
+        if Experiments.shared.panelRowsInOneColumnEnabled {
+            PanelFieldRow("Key") { keySwitch }
+        } else {
+            HStack(spacing: 6) {
+                Text("Key").font(.caption).foregroundStyle(.secondary)
+                Spacer(minLength: 6)
+                keySwitch
+            }
+        }
+    }
+
+    /// The colour being keyed out, in the control column under the switch.
+    @ViewBuilder
+    private func keyColour(_ current: ChromaKey) -> some View {
+        if Experiments.shared.panelRowsInOneColumnEnabled {
+            PanelFieldRow("") { keyColourControls(current) }
+        } else {
+            keyColourControls(current)
+        }
+    }
+
+    @ViewBuilder
+    private var keySwitch: some View {
+        if key.value ?? nil == nil {
+            // Nothing keyed yet, so the whole row is one button. The
+            // colour is read off the picture rather than asked for,
+            // which is the difference between keying a green screen in
+            // one click and keying it with an eyedropper and a guess.
+            Button("Key it") { keyIt() }
+                .controlSize(.small)
+                .playtestControl("Key it", detail: "Key")
+                .panelHelp("Make the colour behind the subject transparent. "
+                           + "The colour is read off the edges of the picture.")
+        } else {
+            Toggle("", isOn: Binding(get: { isOn },
+                                     set: { editorState.setKeyIsOn($0, ids: selection.layerIDs) }))
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .controlSize(.mini)
+                .playtestControl("Key", detail: isOn ? "on" : "off")
+        }
+    }
+
+    private func keyColourControls(_ current: ChromaKey) -> some View {
+        HStack(spacing: 8) {
+            ColorWellButton(hex: current.colorHex, name: "Key", wellKey: "key") { hex in
+                editorState.setLayerStyle(ids: selection.layerIDs) { $0.key?.colorHex = hex }
+            }
+            Text(current.colorHex)
+                .font(.caption2.monospaced())
+                .foregroundStyle(.secondary)
+                .panelReadout(current.colorHex)
+            Spacer(minLength: 0)
+            Button("Key it again") { keyIt() }
+                .controlSize(.small)
+                .buttonStyle(.link)
+                .font(.caption2)
+                .playtestControl("Key it again", detail: "Key")
+        }
+        .opacity(isOn ? 1 : 0.45)
     }
 
     private func keyIt() {
@@ -140,30 +169,7 @@ struct MaskedByRow: View {
     private var rows: some View {
         let matte = reading.value ?? nil
         return VStack(alignment: .leading, spacing: 2) {
-            HStack {
-                Text("Masked by").font(.caption).foregroundStyle(.secondary)
-                Spacer()
-            }
-            Button {
-                isOpen = true
-            } label: {
-                HStack(spacing: 4) {
-                    Text(words)
-                        .foregroundStyle(MixedLook.style(reading.isMixed, otherwise: .primary))
-                        .panelReadout(words)
-                    Spacer(minLength: 6)
-                    Image(systemName: "chevron.up.chevron.down")
-                        .font(.system(size: 8, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                }
-                .contentShape(Rectangle())
-            }
-            .controlSize(.small)
-            .playtestControl("Masked by", detail: words)
-            .panelHelp("Cut this layer to the shape, or the brightness, of the layer directly "
-                       + "under it in the layers list. That layer stops drawing and becomes "
-                       + "the shape instead.")
-            .popover(isPresented: $isOpen, arrowEdge: .bottom) { list }
+            PanelNamedControl("Masked by") { button }
             // Which layer does the cutting, the one thing the row's value does
             // not say. What that means is in its hover tip.
             if let matte, let name = editorState.matteSourceName {
@@ -177,6 +183,29 @@ struct MaskedByRow: View {
         }
         .playtestField("Masked by")
         .panelStartProbe(.row, owner: "Masked by")
+    }
+
+    private var button: some View {
+        Button {
+            isOpen = true
+        } label: {
+            HStack(spacing: 4) {
+                Text(words)
+                    .foregroundStyle(MixedLook.style(reading.isMixed, otherwise: .primary))
+                    .panelReadout(words)
+                Spacer(minLength: 6)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(size: 8, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            }
+            .contentShape(Rectangle())
+        }
+        .controlSize(.small)
+        .playtestControl("Masked by", detail: words)
+        .panelHelp("Cut this layer to the shape, or the brightness, of the layer directly "
+                   + "under it in the layers list. That layer stops drawing and becomes "
+                   + "the shape instead.")
+        .popover(isPresented: $isOpen, arrowEdge: .bottom) { list }
     }
 
     private var list: some View {

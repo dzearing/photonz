@@ -740,12 +740,19 @@ struct PlacementInspector: View {
     // MARK: - Furniture
 
     private func row(_ title: String, @ViewBuilder control: () -> some View) -> some View {
-        HStack(spacing: 8) {
-            Text(title)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-            Spacer(minLength: 8)
-            control()
+        Group {
+            if Experiments.shared.panelRowsInOneColumnEnabled {
+                // The mock's row (`PanelFieldRow`).
+                PanelFieldRow(title) { control() }
+            } else {
+                HStack(spacing: 8) {
+                    Text(title)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                    Spacer(minLength: 8)
+                    control()
+                }
+            }
         }
         // Lends the row's word to whatever it holds, so a scripted walk can
         // say which of two rows wearing the same answer it means.

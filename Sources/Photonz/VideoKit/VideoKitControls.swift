@@ -54,18 +54,18 @@ extension VideoKit {
 extension VideoKit {
     /// A panel row (`inspector.css` `.irow`): a short label in a 76pt column
     /// and the control taking the rest. A label, never a sentence.
+    ///
+    /// The one row every section of the panel draws (`PanelFieldRow`), so a
+    /// control too wide to sit beside its name drops under it here too. Until
+    /// 2026-09-27 this row could not: the Sound section's Gain track and box
+    /// needed 212pt beside a 192pt row in the narrowest dock, and the whole
+    /// panel grew 19.5pt past its dock whenever a clip was picked.
     struct FieldRow<Control: View>: View {
         let label: String
-        var labelWidth: CGFloat = Metrics.rowLabelWidth
         @ViewBuilder let control: Control
 
         var body: some View {
-            HStack(spacing: 12) {
-                Text(label)
-                    .font(.system(size: 10.5))
-                    .foregroundStyle(Palette.faint)
-                    .lineLimit(1)
-                    .frame(width: labelWidth, alignment: .leading)
+            PanelFieldRow(label) {
                 control
                     .frame(maxWidth: .infinity, alignment: .leading)
             }

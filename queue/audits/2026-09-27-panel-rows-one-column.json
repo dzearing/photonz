@@ -1,0 +1,29 @@
+{
+  "feature": "Every panel row has its name in one column",
+  "epic": "video-editing",
+  "summary": "Appearance, Effects, Text and Layout now draw their rows like the video sections and the mock: a small grey name in one left column with its control beside it. A video document's panel reads as one panel, not two.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The walk is Scripts/playtest/panel-rows-read-as-one-column-walk.json.",
+  "try": [
+    { "do": "Open a screen recording, press T, click the canvas, type a title and press Command Return.", "shot": "2026-09-27-panel-rows-1-title-sc.png" },
+    { "do": "Scroll the panel to Text and Appearance: Font, Size, Weight, Opacity and Blending each sit on one line, the names in the same column as Playhead and Fade above." },
+    { "do": "Scroll on to the title's Shadow: Style, Color, Kind and every slider sit beside their names.", "shot": "2026-09-27-panel-rows-2-shadow-sc.png" },
+    { "do": "Click the recording's clip on the timeline and look at Sound, Fades, Appearance and Captions together.", "shot": "2026-09-27-panel-rows-3-clip-sc.png" },
+    { "do": "Drag the panel's left edge in as far as it goes: a row whose control will not fit drops it under the name, and the panel stays inside its dock.", "shot": "2026-09-27-panel-rows-4-narrowest-sc.png" },
+    { "do": "Open a plain picture, draw a rectangle and add a Shadow: the picture panel reads the same way.", "shot": "2026-09-27-panel-rows-5-picture-sc.png" },
+    { "do": "Compare with the mock's Properties panel (left) and the app now (right).", "shot": "2026-09-27-panel-rows-side-by-side.png" }
+  ],
+  "evaluate": [
+    "Does the panel now read as one thing when you scroll from Time down to Captions?",
+    "Is the grey name small enough to stay out of the way but still easy to read while redlining?",
+    "At the narrowest dock, is Opacity dropping its track under its name better than a cramped track beside it?",
+    "Are the Effects settings, stepped in under their effect with their own column, clear enough, or should they line up with Appearance's controls?",
+    "Is Size and Weight as two rows, rather than side by side, worth the extra height?"
+  ],
+  "rough": [
+    "Side by side with video.html PROPERTIES: names, size, colour and the 76pt column match. The mock's property rows show a number box alone; Appearance and Effects keep a track beside the box, the way the mock's Audio Level and Duck rows draw a bar beside the name.",
+    "The Effects settings take their column from their own stepped-in start, so their controls sit 24pt right of Appearance's. The mock's frame has Effects folded shut, so there is nothing to measure that against.",
+    "Menu values in the Layout section of a screen (Left, Top) are still the callout size, bigger than the mock's 11.5pt select text. Only the names were in scope here.",
+    "The Fill and Outline rows keep their tick in front of the name, so their names start 24pt in; their swatches still land on the shared control line.",
+    "Current is unchanged: all of this sits behind a Next switch in the Experiments window (The panel, 'Every panel row has its name in one column'), on by default in Next."
+  ]
+}

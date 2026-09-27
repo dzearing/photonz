@@ -30,7 +30,10 @@ struct PartsInspector: View {
         let corners = editorState.corneredRadiusSelection
         // Wider than the gap inside a part (6), so the eye groups a part with
         // the settings under it without either being pushed off the margin.
-        VStack(alignment: .leading, spacing: 16) {
+        // In Next the rows are the mock's, one line each, and they keep the
+        // same 10pt rhythm as Text and the video sections beside them.
+        VStack(alignment: .leading,
+               spacing: Experiments.shared.panelRowsInOneColumnEnabled ? 10 : 16) {
             // Opacity leads, always. It is the one thing EVERY layer has,
             // whatever it is made of, so it is the row that never moves.
             //

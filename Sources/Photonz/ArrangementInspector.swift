@@ -359,10 +359,7 @@ struct ArrangementInspector: View {
         let across = contents.direction.value?.isHorizontal ?? true
         let gap = contents.gap
         HStack(spacing: 6) {
-            Text("Gap")
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .fixedSize()
+            layoutName("Gap")
             if offered {
                 Button {
                     editorState.updateArrangement(ids: ids) { $0.spreadsGap = !spreading }
@@ -382,7 +379,7 @@ struct ArrangementInspector: View {
                     : "Share the room left over between them, so the first and the last sit at the two ends.")
                 .playtestControl("Spread", detail: "Layout")
             }
-            Spacer(minLength: 8)
+            if !Experiments.shared.panelRowsInOneColumnEnabled { Spacer(minLength: 8) }
             PanelNumberField(
                 // Spread is a real state rather than an absence, so it stands
                 // in the box's own place and is drawn like a value; Mixed is
@@ -492,11 +489,8 @@ struct ArrangementInspector: View {
         let reading = contents.padding
         let room = reading.value ?? .none
         HStack(spacing: 6) {
-            Text("Padding")
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .fixedSize()
-            Spacer(minLength: 8)
+            layoutName("Padding")
+            if !Experiments.shared.panelRowsInOneColumnEnabled { Spacer(minLength: 8) }
             PanelNumberField(
                 showing: NumberBox.showing(reading.isMixed ? nil : room.uniform,
                                            standingIn: standIn(reading)),
@@ -773,7 +767,17 @@ struct ArrangementInspector: View {
         // canvas and 6pt off the window whenever a screen was picked (measured
         // by `panelMargins`, 2026-09-24). One line when it fits, two when not.
         Group {
-            if mixed {
+            if Experiments.shared.panelRowsInOneColumnEnabled, chevron == nil {
+                // The mock's row (`PanelFieldRow`): it drops the control under
+                // the name by itself when the two will not share the line, so
+                // a Mixed word or a narrow dock needs no case of its own.
+                PanelFieldRow(title) {
+                    HStack(spacing: 6) {
+                        control()
+                        if mixed { MixedWord().fixedSize() }
+                    }
+                }
+            } else if mixed {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 8) {
                         rowHead(title, chevron: chevron, open: open, chevronHelp: chevronHelp)
@@ -820,8 +824,7 @@ struct ArrangementInspector: View {
                      control: "Limits", detail: title, toggle: chevron)
         } else {
             Text(title)
-                .font(.callout)
-                .foregroundStyle(.secondary)
+                .layoutRowName()
                 .fixedSize()
         }
     }
@@ -866,8 +869,7 @@ struct ArrangementInspector: View {
             HStack(spacing: ColorPartLayout.spacing) {
                 PanelFoldChevron(isFolded: !isOpen)
                 Text(title)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .layoutRowName()
                     .fixedSize()
             }
             .contentShape(.rect)
@@ -875,6 +877,43 @@ struct ArrangementInspector: View {
         .buttonStyle(.plain)
         .panelHelp(help)
         .playtestControl(control, detail: detail)
+    }
+}
+
+/// The Layout section's own row names: the mock's small faint label in Next,
+/// the callout they always were in Current.
+private struct LayoutRowNameLook: ViewModifier {
+    func body(content: Content) -> some View {
+        if Experiments.shared.panelRowsInOneColumnEnabled {
+            content.panelRowName()
+        } else {
+            content.font(.callout).foregroundStyle(.secondary)
+        }
+    }
+}
+
+extension View {
+    fileprivate func layoutRowName() -> some View { modifier(LayoutRowNameLook()) }
+}
+
+extension ArrangementInspector {
+    /// The name of a row that lays its own controls out after it (Gap,
+    /// Padding): in Next it holds the label column, so what follows starts on
+    /// the line every other row's control starts on.
+    @ViewBuilder
+    fileprivate func layoutName(_ title: String) -> some View {
+        if Experiments.shared.panelRowsInOneColumnEnabled {
+            Text(title)
+                .panelRowName()
+                .lineLimit(1)
+                // The row's own 6pt gap follows, so the column is short by it.
+                .frame(width: PanelRowLayout.controlLeading - 6, alignment: .leading)
+        } else {
+            Text(title)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize()
+        }
     }
 }
 

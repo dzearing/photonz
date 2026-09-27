@@ -459,9 +459,8 @@ private struct EffectColorRow: View {
         if let target = ColorTarget(effect: row) {
             HStack(alignment: .top, spacing: ColorPartLayout.spacing) {
                 Text("Color")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .frame(width: ColorPartLayout.labelWidth,
+                    .panelRowName()
+                    .frame(width: ColorPartLayout.nameWidth,
                            height: ColorPartLayout.rowHeight, alignment: .leading)
                 // The KIND's word rather than the row's, so two borders both
                 // offer "Saved border colors" instead of one of them offering
@@ -512,9 +511,8 @@ private struct BorderFollowsRow: View {
             let reading = borders.reading { $0.borderEffect(at: row.index)?.follows ?? .letters }
             HStack(alignment: .firstTextBaseline, spacing: ColorPartLayout.spacing) {
                 Text("Follows")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .frame(width: ColorPartLayout.labelWidth, alignment: .leading)
+                    .panelRowName()
+                    .frame(width: ColorPartLayout.nameWidth, alignment: .leading)
                 Picker("Follows", selection: Binding(
                     get: { reading.isMixed ? nil : reading.value },
                     set: { new in
@@ -616,9 +614,8 @@ private struct BorderPositionRow: View {
         let reading = borders.reading { $0.borderEffect(at: row.index)?.position ?? .outside }
         HStack(alignment: .firstTextBaseline, spacing: ColorPartLayout.spacing) {
             Text("Position")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .frame(width: ColorPartLayout.labelWidth, alignment: .leading)
+                .panelRowName()
+                .frame(width: ColorPartLayout.nameWidth, alignment: .leading)
             Picker("Position", selection: Binding(
                 get: { reading.isMixed ? nil : reading.value },
                 set: { new in
@@ -770,9 +767,8 @@ private struct GlowKindRow: View {
         let reading = glows.reading { $0.glowEffect(at: row.index)?.kind ?? .outer }
         HStack(alignment: .firstTextBaseline, spacing: ColorPartLayout.spacing) {
             Text("Kind")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .frame(width: ColorPartLayout.labelWidth, alignment: .leading)
+                .panelRowName()
+                .frame(width: ColorPartLayout.nameWidth, alignment: .leading)
             Picker("Kind", selection: Binding(
                 get: { reading.isMixed ? nil : reading.value },
                 set: { new in
@@ -872,9 +868,8 @@ private struct ShadowKindRow: View {
             .reading { $0.shadow(at: index)?.kind ?? .drop }
         HStack(alignment: .firstTextBaseline, spacing: ColorPartLayout.spacing) {
             Text("Kind")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .frame(width: ColorPartLayout.labelWidth, alignment: .leading)
+                .panelRowName()
+                .frame(width: ColorPartLayout.nameWidth, alignment: .leading)
             Picker("Kind", selection: Binding(
                 get: { reading.isMixed ? nil : reading.value },
                 set: { new in

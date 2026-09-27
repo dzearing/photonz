@@ -348,102 +348,27 @@ struct CornerRadiusRow: View {
     }
 
     var body: some View {
-        let ids = selection.layerIDs
         VStack(alignment: .leading, spacing: 2) {
-            HStack(spacing: 6) {
-                heading
-                if let only = selection.soleStyleRoundedID {
-                    InstanceStyleRevert(layerID: only, field: .cornerRadius)
-                }
-                Spacer(minLength: 8)
-                PanelNumberField(
-                    showing: showing,
-                    label: "Corner Radius",
-                    identity: selection.layerIDs,
-                    suffix: DocumentUnit.word,
-                    // Grown only for the four numbers written out, which is
-                    // the one thing here that is longer than a word.
-                    width: .fitting(least: 48, most: 110),
-                    // The wall is NOT given to the box as its floor. A number
-                    // typed under it has to land on it and say why, and a box
-                    // that clamps on its own would swallow that silently
-                    // (`CornerRadiusSelection.typed`). Nought is the box's own
-                    // bottom, because there is no such thing as a corner
-                    // rounded less than square.
-                    floor: 0,
-                    ceiling: CGFloat(selection.limit),
-                    wholeNumbers: true,
-                    help: sliderHelp
-                ) { number in
-                    let took = selection.typed(number)
-                    if took.refused { answer = selection.wallSentence }
-                    // Landing the number it already wears would be an undo
-                    // step that changes nothing you can see, which is what a
-                    // down arrow held against the wall would otherwise spend.
-                    if took.radius != CGFloat(knob.rounded()) {
-                        editorState.commitCornerRadius(ids: ids, took.radius.rounded())
-                    }
-                    return .number(String(Int(took.radius.rounded())))
-                }
-                .disabled(ids.isEmpty)
-                .panelReadout(readout)
-                if canOpenCorners {
-                    FourSidedButton(
-                        isOpen: $cornersOpen,
-                        help: "Round each of the four corners on its own.",
-                        control: "Twist", detail: cornersOpen ? "open" : "shut"
-                    ) {
-                        FourSidedPopout(heading: "Corner Radius", shape: .corners,
-                                        numbers: cornerNumbers(ids: ids))
+            if Experiments.shared.panelRowsInOneColumnEnabled {
+                // The mock's row (`PanelFieldRow`): the track and its box
+                // beside the name, as every other slider in the panel.
+                PanelFieldRow("Corner Radius") {
+                    HStack(spacing: 6) {
+                        track.frame(minWidth: PanelSliderRow.trackMinimum)
+                        box
+                        revert
                     }
                 }
-            }
-            Slider(value: Binding(
-                get: { knob },
-                set: { v in
-                    draft = v
-                    editorState.previewCornerRadius(ids: ids, CGFloat(v.rounded()))
-                }), in: range) { editing in
-                if !editing {
-                    editorState.commitCornerRadius(ids: ids, CGFloat((draft ?? knob).rounded()))
-                    draft = nil
+            } else {
+                HStack(spacing: 6) {
+                    heading
+                    revert
+                    Spacer(minLength: 8)
+                    box
                 }
+                track
             }
-            .controlSize(.small)
-            // Named on the LIVE slider rather than on the padded row, so a
-            // walk pressing a fraction of the way along presses a fraction of
-            // the range it can actually reach. A press at 0.3 of a row whose
-            // first three tenths are spent lands on the wall and moves nothing.
-            .playtestControl("Slider", detail: "Corner Radius")
-            // The live slider starts at the wall, so its own fill measures
-            // what YOU added rather than what was already there: a knob
-            // resting on the floor shows no fill at all.
-            .padding(.leading, spentWidth)
-            .disabled(ids.isEmpty)
-            // Spent end to end: the knob stops taking the pointer, and the row
-            // is NOT dimmed. Dimming says broken or waiting, and this one has
-            // simply been spent.
-            .allowsHitTesting(!selection.isSpent)
-            .overlay(alignment: .leading) { spentTrack }
-            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { rowWidth = $0 }
-            .help(sliderHelp)
-            // A control that can only act over part of its range answers a
-            // click on the row, in the line under it, rather than leaving the
-            // reason to a hover tip nobody has asked for.
-            if let said = answer {
-                Text(said)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    // Named, so a walk can claim the sentence a refused number
-                    // raises rather than only photograph it. The Room answer
-                    // under Padding carries the same handle. It goes BEFORE
-                    // the transition: a name put on the far side of one is
-                    // never registered, so the sentence was on screen in a
-                    // photograph and missing from every walk that looked.
-                    .playtestControl("Wall answer", detail: said)
-                    .transition(.opacity)
-            }
+            answerLine
         }
         .contentShape(.rect)
         // Simultaneous, not `onTapGesture`: the row's own click has to answer
@@ -455,6 +380,115 @@ struct CornerRadiusRow: View {
         .playtestField("Corner Radius")
         .task(id: answer) { await fadeAnswer() }
         .onChange(of: selection.layerIDs) { cornersOpen = false; answer = nil }
+    }
+
+    /// The way back for a copy of a component that rounded itself.
+    @ViewBuilder
+    private var revert: some View {
+        if let only = selection.soleStyleRoundedID {
+            InstanceStyleRevert(layerID: only, field: .cornerRadius)
+        }
+    }
+
+    /// The number, and the control that opens the four corners.
+    @ViewBuilder
+    private var box: some View {
+        let ids = selection.layerIDs
+        PanelNumberField(
+            showing: showing,
+            label: "Corner Radius",
+            identity: selection.layerIDs,
+            suffix: DocumentUnit.word,
+            // Grown only for the four numbers written out, which is
+            // the one thing here that is longer than a word.
+            width: .fitting(least: 48, most: 110),
+            // The wall is NOT given to the box as its floor. A number
+            // typed under it has to land on it and say why, and a box
+            // that clamps on its own would swallow that silently
+            // (`CornerRadiusSelection.typed`). Nought is the box's own
+            // bottom, because there is no such thing as a corner
+            // rounded less than square.
+            floor: 0,
+            ceiling: CGFloat(selection.limit),
+            wholeNumbers: true,
+            help: sliderHelp
+        ) { number in
+            let took = selection.typed(number)
+            if took.refused { answer = selection.wallSentence }
+            // Landing the number it already wears would be an undo
+            // step that changes nothing you can see, which is what a
+            // down arrow held against the wall would otherwise spend.
+            if took.radius != CGFloat(knob.rounded()) {
+                editorState.commitCornerRadius(ids: ids, took.radius.rounded())
+            }
+            return .number(String(Int(took.radius.rounded())))
+        }
+        .disabled(ids.isEmpty)
+        .panelReadout(readout)
+        if canOpenCorners {
+            FourSidedButton(
+                isOpen: $cornersOpen,
+                help: "Round each of the four corners on its own.",
+                control: "Twist", detail: cornersOpen ? "open" : "shut"
+            ) {
+                FourSidedPopout(heading: "Corner Radius", shape: .corners,
+                                numbers: cornerNumbers(ids: ids))
+            }
+        }
+    }
+
+    private var track: some View {
+        let ids = selection.layerIDs
+        return Slider(value: Binding(
+            get: { knob },
+            set: { v in
+                draft = v
+                editorState.previewCornerRadius(ids: ids, CGFloat(v.rounded()))
+            }), in: range) { editing in
+            if !editing {
+                editorState.commitCornerRadius(ids: ids, CGFloat((draft ?? knob).rounded()))
+                draft = nil
+            }
+        }
+        .controlSize(.small)
+        // Named on the LIVE slider rather than on the padded row, so a
+        // walk pressing a fraction of the way along presses a fraction of
+        // the range it can actually reach. A press at 0.3 of a row whose
+        // first three tenths are spent lands on the wall and moves nothing.
+        .playtestControl("Slider", detail: "Corner Radius")
+        // The live slider starts at the wall, so its own fill measures
+        // what YOU added rather than what was already there: a knob
+        // resting on the floor shows no fill at all.
+        .padding(.leading, spentWidth)
+        .disabled(ids.isEmpty)
+        // Spent end to end: the knob stops taking the pointer, and the row
+        // is NOT dimmed. Dimming says broken or waiting, and this one has
+        // simply been spent.
+        .allowsHitTesting(!selection.isSpent)
+        .overlay(alignment: .leading) { spentTrack }
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { rowWidth = $0 }
+        .help(sliderHelp)
+    }
+
+    /// A control that can only act over part of its range answers a click on
+    /// the row, in the line under it, rather than leaving the reason to a
+    /// hover tip nobody has asked for.
+    @ViewBuilder
+    private var answerLine: some View {
+        if let said = answer {
+            Text(said)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                // Named, so a walk can claim the sentence a refused number
+                // raises rather than only photograph it. The Room answer
+                // under Padding carries the same handle. It goes BEFORE
+                // the transition: a name put on the far side of one is
+                // never registered, so the sentence was on screen in a
+                // photograph and missing from every walk that looked.
+                .playtestControl("Wall answer", detail: said)
+                .transition(.opacity)
+        }
     }
 
     /// The row's own word. It opens nothing: the four corners come out of the

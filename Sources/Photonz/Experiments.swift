@@ -456,6 +456,11 @@ extension Experiments {
     /// that list (`TimelineIsTheLayerList`).
     var timelineIsTheLayerListEnabled: Bool { isEnabled(FeatureCatalog.timelineIsTheLayerListFlag) }
 
+    /// Every panel row with its name small and faint in the mock's 76pt
+    /// column and its control beside it (`PanelRowLayout`). Exists only in
+    /// the Next release's catalog, so Current always reads false.
+    var panelRowsInOneColumnEnabled: Bool { isEnabled(FeatureCatalog.panelRowsInOneColumnFlag) }
+
     /// `next-hear-the-scrub`: whether dragging the playhead plays the sound
     /// under it (`ScrubAudition.swift`). Leans on the one above: with no sound
     /// on the timeline there is nothing under the playhead to hear.

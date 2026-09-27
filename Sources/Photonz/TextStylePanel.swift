@@ -158,12 +158,18 @@ struct TextStyleRow: View {
     var body: some View {
         if editorState.textStylesEnabled, !editorState.textStyleSelection.isEmpty {
             VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 6) {
-                    Text("Style")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    TextStyleControl()
-                    Spacer(minLength: 0)
+                Group {
+                    if Experiments.shared.panelRowsInOneColumnEnabled {
+                        PanelFieldRow("Style") { TextStyleControl() }
+                    } else {
+                        HStack(spacing: 6) {
+                            Text("Style")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            TextStyleControl()
+                            Spacer(minLength: 0)
+                        }
+                    }
                 }
                 // Named, so a walk reaches this menu by the word beside it
                 // rather than by the glyph on it.

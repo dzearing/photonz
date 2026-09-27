@@ -54,17 +54,16 @@ struct BlendModeRow: View {
     private var rows: some View {
         let reading = showing
         return VStack(alignment: .leading, spacing: 2) {
-            HStack {
-                Text("Blending").font(.caption).foregroundStyle(.secondary)
-                if let only = soleLayerID(selection.layerIDs) {
-                    InstanceStyleRevert(layerID: only, field: .blendMode)
-                }
-                Spacer()
-            }
             // What the mode does is the button's hover tip, not a line under
             // it: the panel holds labels and tools, never sentences (the user,
             // 2026-09-25). Normal says nothing, as it always did.
-            button(reading)
+            PanelNamedControl("Blending") {
+                button(reading)
+            } accessory: {
+                if let only = soleLayerID(selection.layerIDs) {
+                    InstanceStyleRevert(layerID: only, field: .blendMode)
+                }
+            }
             if let note = reachNote {
                 Text(note.line)
                     .font(.caption2)
