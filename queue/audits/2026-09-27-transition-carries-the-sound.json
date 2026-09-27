@@ -1,0 +1,27 @@
+{
+  "feature": "A transition carries the sound across the cut",
+  "epic": "video-transitions-motion",
+  "summary": "A transition on a cut now does to the sound what it does to the picture. A cross dissolve (and push, wipe, blur through) cross-fades the two clips' own sound over its length, a dip takes the sound through silence on the cut, in playback and in the exported file.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open the sample talk, drag its end in to 0:07, and drop b-roll onto V1 right after it." },
+    { "do": "Click the cut between the two clips and pick Cross dissolve in the picker.", "shot": "2026-09-27-transition-carries-the-sound-1.png" },
+    { "do": "Put the playhead a second before the cut and press space: the talk fades out as the b-roll's sound fades in, with no click on the cut." },
+    { "do": "Set Length to 2.0s and play across it again: the sound blend stretches with the picture." },
+    { "do": "Change Type to Dip to black and play across the cut: the sound dips to silence on the black frame.", "shot": "2026-09-27-transition-carries-the-sound-2.png" },
+    { "do": "Export the video and play the file across the cut." },
+    { "do": "Add music on its own audio track across the cut and play it: the music carries straight through, untouched." }
+  ],
+  "evaluate": [
+    "Does the dissolve sound like one smooth change, with no dip in loudness halfway through?",
+    "Is 0.4s long enough for the sound, or do you want the sound blend longer than the picture's?",
+    "Does a dip to black going through silence feel right, or should the sound only duck partway?",
+    "Does the exported file sound the same across the cut as playback did?"
+  ],
+  "rough": [
+    "The Audio lane still draws the two linked sound pieces meeting at the cut. Nothing on the sound marks the cross-fade, or shows that the talk's sound now runs 0.2s past the cut. The mock draws the sound as one plain bar, so this was left as is.",
+    "The sound always follows the picture's transition. There is no separate audio-only transition, and no way to keep the sound hard while the picture dissolves.",
+    "Checked on the plan the player and exporter are handed, and by reading the exported file back in a test. No agent can listen, so how it actually sounds is yours to judge."
+  ]
+}

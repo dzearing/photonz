@@ -403,10 +403,16 @@ public struct AudioMixSegment: Hashable, Sendable {
     /// The level end to end, with no hole in it: the first ramp starts at
     /// `startMS` and the last ends at `endMS`.
     public let ramps: [AudioGainRamp]
+    /// Which of its layer's voices plays it. Nought, except where a transition
+    /// on a join inside one clip has two of its pieces sounding at once
+    /// (`TransitionSound.swift`): the second is on the other voice, so each
+    /// can follow its own level where a player keeps one fader per voice.
+    public let voice: Int
 
     public init(layerID: UUID, sound: SoundRef, startMS: Int, lengthMS: Int,
                 sourceInMS: Int, sourceLengthMS: Int, speedPercent: Int,
-                ramps: [AudioGainRamp]) {
+                ramps: [AudioGainRamp], voice: Int = 0) {
+        self.voice = voice
         self.layerID = layerID
         self.sound = sound
         self.startMS = startMS
@@ -447,6 +453,10 @@ extension PhotonzDocument {
         // Visited rather than flattened: asked on every step of the playhead,
         // and a captioned talk has 170 layers with no sound to copy past.
         var mix: [AudioMixSegment] = []
+        // Where each piece's sound landed in the list, and what it needs to be
+        // re-shaped by a transition on either side of it.
+        var heard: [TransitionSoundPiece: HeardPiece] = [:]
+        var crossings: [TransitionSoundCrossing] = []
         forEachLayer { layer in
             guard let sound = layer.sound, layer.isVisible, !silenced.contains(layer.id),
                   let time = layer.time,
@@ -454,19 +464,25 @@ extension PhotonzDocument {
             else { return }
             let level = layer.soundLevel ?? AudioLevel()
             guard !level.isSilent else { return }
-            mix += pieces.playback.compactMap { piece in
-                guard piece.playsSound else { return nil }
+            for (index, piece) in pieces.playback.enumerated() where piece.playsSound {
                 let start = time.inMS + piece.startMS
-                return AudioMixSegment(
+                heard[TransitionSoundPiece(layerID: layer.id, index: index)] =
+                    HeardPiece(at: mix.count, level: level, layerInMS: time.inMS)
+                mix.append(AudioMixSegment(
                     layerID: layer.id, sound: sound,
                     startMS: start, lengthMS: piece.lengthMS,
                     sourceInMS: piece.sourceInMS, sourceLengthMS: piece.sourceLengthMS,
                     speedPercent: piece.speedPercent,
                     ramps: Self.ramps(for: level, startMS: start, lengthMS: piece.lengthMS,
-                                      layerInMS: time.inMS))
+                                      layerInMS: time.inMS)))
+            }
+            if pieces.hasAnyTransition {
+                crossings += Self.soundCrossings(inClip: layer.id, pieces: pieces, inMS: time.inMS)
             }
         }
-        return mix
+        guard !heard.isEmpty else { return mix }
+        crossings += editPointSoundCrossings()
+        return crossings.isEmpty ? mix : Self.carryingTransitions(crossings, over: mix, heard: heard)
     }
 
     /// What can be heard at a moment: everything laid over it, which is what a

@@ -19949,3 +19949,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - `queue.mjs add`/`addjson` honour `--dry-run` (print the draft and its near-twins, write nothing), refuse a title under three words, and refuse any flag they do not know instead of ignoring it. `queue-lib.mjs` gains `draftTask`, which `addTask` now saves.
 - `queue.mjs status <id>` with no status word prints the task. `setStatus` refuses a word outside `STATUSES` (so the dashboard path is covered too) and writes nothing for the same status again with no note.
 - New `queue/bin/queue-cli-drill.mjs`, 23 checks against a throwaway queue. Next: nothing owed by this task.
+
+## 2026-09-27: a transition carries the sound across the cut
+
+- A transition on a cut now shapes the sound in `audioMix()` (`TransitionSound.swift`): overlap kinds cross-fade at equal power, running the outgoing sound on into its spare and starting the incoming early. Dips go through silence on the cut. Plain splits, detached sound and music are untouched.
+- `AudioMixSegment.voice` added so two pieces of one clip can sound at once; the player keeps one fader per voice.
+- Tests: `TransitionSoundTests`, `TransitionSoundExportTests` (reads the exported file back). Walk: `transition-carries-the-sound-walk` (new actions `clipPickEditPoint`, `soundExpectCutCarried`).
+- Next: the Audio lane does not draw the cross-fade (audit rough line).

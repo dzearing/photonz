@@ -199,7 +199,8 @@ public struct AudioHeadroom: Hashable, Sendable {
                 ramps: segment.ramps.map {
                     AudioGainRamp(fromMS: $0.fromMS, toMS: $0.toMS,
                                   fromGain: $0.fromGain * trim, toGain: $0.toGain * trim)
-                })
+                },
+                voice: segment.voice)
         }
     }
 

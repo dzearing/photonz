@@ -3960,6 +3960,71 @@ private final class Run {
                         + "\(String(format: "%.2f", ratio)), so what plays peaks at "
                         + "\(String(format: "%.2f", after.peak))",
                      state: describe())
+            case .soundExpectCutCarried:
+                guard let inHand = editor.cutInHand else {
+                    throw Failure(description: "there is no cut in hand to listen across; "
+                        + "press the cut first")
+                }
+                let (outgoing, incoming): (UUID, UUID)
+                switch inHand.place {
+                case let .join(clip, _): (outgoing, incoming) = (clip, clip)
+                case let .edit(out, into): (outgoing, incoming) = (out, into)
+                }
+                let at = inHand.atMS
+                let mix = editor.audioMix.filter(\.isAudible)
+                // A side of the cut is a piece that sounds up to it (the
+                // outgoing one) or from it (the incoming one), within the
+                // transition's reach either way.
+                let reach = inHand.cut.drawnTransition.map { max($0.beforeMS, $0.afterMS) } ?? 0
+                let outSide = mix.filter { $0.layerID == outgoing && $0.startMS < at
+                    && $0.endMS >= at && $0.endMS <= at + reach }
+                let inSide = mix.filter { $0.layerID == incoming && $0.endMS > at
+                    && $0.startMS <= at && $0.startMS >= at - reach }
+                guard !outSide.isEmpty else {
+                    throw Failure(description: "nothing of the outgoing side is sounding up to "
+                        + "the cut at \(at) ms, so there is no sound to carry across it")
+                }
+                func level(_ sides: [AudioMixSegment], _ ms: Int) -> Double {
+                    sides.filter { $0.contains(ms: ms) }.map { $0.gain(atMS: ms) }.max() ?? 0
+                }
+                let said: String
+                switch inHand.cut.drawnTransition {
+                case nil:
+                    guard outSide.allSatisfy({ $0.endMS == at }),
+                          inSide.allSatisfy({ $0.startMS == at }) else {
+                        throw Failure(description: "the cut is hard and the sound still overlaps "
+                            + "it: the outgoing sound runs to \(outSide.map(\.endMS).max() ?? 0) ms")
+                    }
+                    said = "a hard cut, and the sound switches right on it at \(at) ms"
+                case let transition? where transition.kind.needsOverlap:
+                    let out = level(outSide, at), into = level(inSide, at)
+                    guard outSide.contains(where: { $0.endMS == at + transition.afterMS }) else {
+                        throw Failure(description: "a \(transition.kind.title) is on the cut and "
+                            + "the outgoing sound stops at \(outSide.map(\.endMS).max() ?? 0) ms "
+                            + "instead of running on to \(at + transition.afterMS) ms")
+                    }
+                    guard out > 0.5, out < 0.9, inSide.isEmpty || (into > 0.5 && into < 0.9) else {
+                        throw Failure(description: "on the cut the outgoing sound is at "
+                            + String(format: "%.2f", out) + " and the incoming at "
+                            + String(format: "%.2f", into) + ", not crossing at equal power")
+                    }
+                    said = "a \(transition.kind.title.lowercased()) cross-fades the sound over "
+                        + "\(transition.lengthMS) ms: on the cut the outgoing sound is at "
+                        + String(format: "%.2f", out) + " and the incoming at "
+                        + String(format: "%.2f", into)
+                case let transition?:
+                    let before = level(outSide, at - transition.beforeMS)
+                    let onCut = max(level(outSide, at - 1), level(inSide, at))
+                    guard before > 0.5, onCut < 0.05 else {
+                        throw Failure(description: "a \(transition.kind.title) is on the cut and "
+                            + "the sound is at " + String(format: "%.2f", onCut)
+                            + " on it, from " + String(format: "%.2f", before) + " where it began")
+                    }
+                    said = "a \(transition.kind.title.lowercased()) takes the sound from "
+                        + String(format: "%.2f", before) + " down to "
+                        + String(format: "%.2f", onCut) + " on the cut"
+                }
+                note(number, step.name, "sound: " + said, state: describe())
             case .soundExpectMeterReads:
                 guard !editor.audioPlan.isEmpty else {
                     throw Failure(description: "there is no sound in this document, so the meter "
@@ -4331,6 +4396,14 @@ private final class Run {
                     throw Failure(description: "this clip has no cuts at all; cut it first")
                 }
                 editor.selectClipCut(layerID: id, index: first.index)
+            case .clipPickEditPoint:
+                guard let document = editor.document,
+                      let point = document.timelineTracks.lazy
+                          .flatMap({ document.editPoints(onTrack: $0.id) }).first else {
+                    throw Failure(description: "no two clips meet on a track, so there is no "
+                        + "edit point to pick")
+                }
+                editor.pickEditPoint(point)
             case .clipTransitionDissolve, .clipTransitionDipToBlack:
                 let kind: ClipTransitionKind =
                     action == .clipTransitionDissolve ? .dissolve : .dipToBlack
@@ -4733,7 +4806,7 @@ private final class Run {
             // each one can refuse the walk rather than quietly doing nothing.
             case .soundDetach, .soundAddSample, .soundDuck, .soundLevelHalf,
                  .soundExpectPlaying, .soundExportMix, .soundScrubAcrossIt,
-                 .soundExpectMixOver, .soundExpectMeterReads,
+                 .soundExpectMixOver, .soundExpectMeterReads, .soundExpectCutCarried,
                  .videoSeekStart: break
             // Captions, handled in full above for the same reason: each one
             // refuses the walk rather than quietly doing nothing.
@@ -5430,7 +5503,7 @@ private final class Run {
                  .clipSlideOntoPlayheadHeld, .clipCarryLastToFrontHeld, .clipDragRelease,
                  .clipSlideShortOfPlayhead,
                  .clipCarryUpATrackHeld, .clipCarryToNewTrackOnTopHeld, .tracksGroupPicked,
-                 .clipPickCut, .clipPickFirstCut, .clipTransitionDissolve, .clipTransitionDipToBlack,
+                 .clipPickCut, .clipPickFirstCut, .clipPickEditPoint, .clipTransitionDissolve, .clipTransitionDipToBlack,
                  .clipTransitionHardCut, .clipTransitionDragLonger, .clipBlurComesOn,
                  .titleDragStartEarlier, .titleDragEndLater, .clipKeyAtPlayheadLater,
                  .keyLanesToggle, .keyLanesPickAtPlayhead, .keyLanesPickAll,

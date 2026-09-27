@@ -1030,6 +1030,13 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// playhead: high where there is sound and nothing where there is none.
     /// A meter that never moves photographs exactly like one that does.
     case soundExpectMeterReads
+    /// Fail the walk unless the sound the player is handed does at the cut in
+    /// hand what the picture does there: a cross-fade at equal power where
+    /// both shots are on screen together, silence on the cut where the
+    /// picture dips, and a switch right on the cut where nothing is on it.
+    /// The one thing about a transition's sound that can be checked without
+    /// ears (`TransitionSound.swift`).
+    case soundExpectCutCarried
     /// Drag the playhead across a sound and back again, through the very three
     /// calls the timeline's own hand makes, and fail the walk unless sound came
     /// out of it: grains forward, grains backward, every layer under the
@@ -1123,6 +1130,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// `clipPickCut` cannot do: reach a join the playhead is nowhere near,
     /// which is exactly what a walk needs after it has rearranged the pieces.
     case clipPickFirstCut
+    /// Pick the first edit point between two clips, the way a click on it
+    /// does, for a walk that is about what the cut then does rather than about
+    /// the click (`transition-picker-at-a-cut-walk` clicks it for real).
+    case clipPickEditPoint
     /// Put a cross dissolve on the cut in hand. Fails the walk when the cut
     /// cannot pay for one, which is the whole point of the refusal: a dissolve
     /// with no spare media either side is not quietly made shorter.
@@ -1200,13 +1211,13 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .captionsExpectWordFixed, .captionsExpectTabbedOn, .captionsWordDragEarlier,
              .captionsWordStretchLastLater, .captionsExpectWordDragsUndone, .captionsWordSplitAndMerge,
              .soundExpectPlaying, .soundExportMix, .soundScrubAcrossIt,
-             .soundExpectMixOver, .soundExpectMeterReads,
+             .soundExpectMixOver, .soundExpectMeterReads, .soundExpectCutCarried,
              .clipDragStartIn, .clipDragStartBackOut, .clipDragEndIn,
              .clipCarryLastToFront, .clipSlideLater,
              .clipSlideOntoPlayheadHeld, .clipCarryLastToFrontHeld, .clipDragRelease,
              .clipSlideShortOfPlayhead,
              .clipCarryUpATrackHeld, .clipCarryToNewTrackOnTopHeld, .tracksGroupPicked,
-             .clipPickCut, .clipPickFirstCut, .clipTransitionDissolve, .clipTransitionDipToBlack,
+             .clipPickCut, .clipPickFirstCut, .clipPickEditPoint, .clipTransitionDissolve, .clipTransitionDipToBlack,
              .clipTransitionHardCut, .clipTransitionDragLonger, .clipBlurComesOn,
              .titleDragStartEarlier, .titleDragEndLater, .clipKeyAtPlayheadLater,
              .keyLanesToggle, .keyLanesPickAtPlayhead, .keyLanesPickAll,

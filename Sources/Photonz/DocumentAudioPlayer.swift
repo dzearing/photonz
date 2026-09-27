@@ -27,9 +27,21 @@ final class DocumentAudioPlayer {
     static let segmentBudget = 48
 
     private let engine = AVAudioEngine()
-    /// One mixer per layer: the layer's level is this node's volume, and
-    /// following a level over time is setting it as the playhead moves.
-    private var mixers: [UUID: AVAudioMixerNode] = [:]
+    /// One mixer per voice of a layer: the level is this node's volume, and
+    /// following a level over time is setting it as the playhead moves. A
+    /// layer has one voice, except while a transition on a join inside it has
+    /// two of its pieces sounding at once, each on its own fader
+    /// (`AudioMixSegment.voice`).
+    private var mixers: [Voice: AVAudioMixerNode] = [:]
+
+    private struct Voice: Hashable {
+        let layerID: UUID
+        let voice: Int
+        init(_ segment: AudioMixSegment) {
+            layerID = segment.layerID
+            voice = segment.voice
+        }
+    }
     private var playing: [(node: AVAudioPlayerNode, extra: [AVAudioNode])] = []
     private var running = false
 
@@ -81,7 +93,7 @@ final class DocumentAudioPlayer {
                 files[segment.sound.id] = opened
                 file = opened
             }
-            let mixer = layerMixer(for: segment.layerID)
+            let mixer = voiceMixer(for: Voice(segment))
             let node = AVAudioPlayerNode()
             engine.attach(node)
             var extra: [AVAudioNode] = []
@@ -132,12 +144,12 @@ final class DocumentAudioPlayer {
     /// second and a duck is a third of a second long.
     func follow(_ mix: [AudioMixSegment], atMS ms: Int) {
         guard running else { return }
-        var wanted: [UUID: Float] = [:]
+        var wanted: [Voice: Float] = [:]
         for segment in mix where segment.contains(ms: ms) {
-            wanted[segment.layerID] = Float(segment.gain(atMS: ms))
+            wanted[Voice(segment)] = Float(segment.gain(atMS: ms))
         }
-        for (layerID, mixer) in mixers {
-            mixer.volume = wanted[layerID] ?? 0
+        for (voice, mixer) in mixers {
+            mixer.volume = wanted[voice] ?? 0
         }
     }
 
@@ -157,12 +169,12 @@ final class DocumentAudioPlayer {
 
     // MARK: - The pieces of it
 
-    private func layerMixer(for layerID: UUID) -> AVAudioMixerNode {
-        if let known = mixers[layerID] { return known }
+    private func voiceMixer(for voice: Voice) -> AVAudioMixerNode {
+        if let known = mixers[voice] { return known }
         let mixer = AVAudioMixerNode()
         engine.attach(mixer)
         engine.connect(mixer, to: engine.mainMixerNode, format: nil)
-        mixers[layerID] = mixer
+        mixers[voice] = mixer
         return mixer
     }
 

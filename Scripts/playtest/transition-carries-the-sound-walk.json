@@ -1,0 +1,156 @@
+{
+  "out": "/tmp/photonz-playtest/transition-carries-the-sound-walk",
+  "seed": "Pick the edit point between the sample talk and b-roll butted on after it and put a transition on it (the click and the picker themselves are transition-picker-at-a-cut-walk's to prove), and the sound does what the picture does: a cross dissolve cross-fades the two clips' sound at equal power over its length, a dip to black takes the sound through silence on the cut, and a hard cut switches the sound right on the cut. Checked on the very plan the player and the export are handed, at Next defaults, no flag set.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "scratch": [
+      "sample:recording as b-roll.mp4"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "clipDragEndIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 7.0,
+      "count": 1
+    },
+    {
+      "do": "dropOnTimeline",
+      "file": "scratch/b-roll.mp4",
+      "track": "V1",
+      "seconds": 6.95
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "clipDragStartIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "track": "V1",
+      "startsAt": 7.0,
+      "count": 1
+    },
+    {
+      "do": "action",
+      "action": "clipPickEditPoint"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "soundExpectCutCarried"
+    },
+    {
+      "do": "describe",
+      "stage": "1-hard-cut",
+      "note": "Two clips meet at 0:07 with nothing on the cut: the talk's sound stops on the cut and the b-roll's starts there"
+    },
+    {
+      "do": "action",
+      "action": "clipTransitionDissolve"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Cross dissolve"
+    },
+    {
+      "do": "action",
+      "action": "soundExpectCutCarried"
+    },
+    {
+      "do": "describe",
+      "stage": "2-dissolve",
+      "note": "THE TEST: a cross dissolve picked from the picker at the cut. The talk's sound runs on into its spare and fades out while the b-roll's starts early and fades in, crossing at equal power on the cut, the way the picture blends"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-a-dissolve-carries-the-sound"
+    },
+    {
+      "do": "action",
+      "action": "soundExportMix"
+    },
+    {
+      "do": "action",
+      "action": "clipTransitionDipToBlack"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "soundExpectCutCarried"
+    },
+    {
+      "do": "describe",
+      "stage": "3-dip",
+      "note": "A dip to black takes the sound through silence on the cut along with the picture"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-a-dip-dips-the-sound"
+    },
+    {
+      "do": "action",
+      "action": "clipTransitionHardCut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "soundExpectCutCarried"
+    },
+    {
+      "do": "describe",
+      "stage": "4-hard-again",
+      "note": "Taking the transition off puts the sound back to switching right on the cut"
+    }
+  ]
+}

@@ -479,3 +479,25 @@ segment is a drag on the clip.
   handle at each top corner of a sound segment. Dragging the level line up or
   down is the fader; a click on the line pins a point. The rest of the segment
   picks up and moves the clip.
+
+## A transition carries the sound (2026-09-27)
+
+A transition on a cut shapes the sound of the two pieces it joins, in
+`audioMix()` itself (`Sources/PhotonzCore/TransitionSound.swift`), so playback
+and export hear the same blend.
+
+- **Kinds that overlap** (cross dissolve, push, wipe, blur through): the
+  outgoing sound runs on past its out point and the incoming starts before its
+  in point, by the same spare the picture spends, and they cross at equal power
+  (cos/sin, Premiere's Constant Power, Final Cut's +3 dB). Followed by ramps no
+  coarser than a curved fade's.
+- **Dips**: each side fades inside the time it already has, to silence on the
+  cut. Nothing is spent.
+- A continuous cut (plain split) with an overlap kind is left alone: both sides
+  are the same samples.
+- Only a clip's own sound. Detached sound and unlinked music are untouched.
+- Two pieces of one clip sounding at once (a dissolve on a join) are on
+  different `AudioMixSegment.voice`s, and the player keeps one fader per voice.
+
+Walk: `transition-carries-the-sound-walk` (`soundExpectCutCarried` reads the
+plan at the cut in hand). Export: `TransitionSoundExportTests`.
