@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T12:23:19.492Z",
-  "updated": "2026-09-27T12:11:15.644Z",
+  "updated": "2026-09-27T21:36:28.716Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the 2026-09-25 digest design review. docs/design/mocks/shared/UX-PATTERNS.md line ~2134 (D10 heading 'A property list shows what CAN be animated, not what is') and its last paragraph: '`pages/video.html` remains canonical for the printed catalogue. It is the CLIP spelling'. Against it: docs/design/mocks/pages/video.html line ~844 ('The pane lists what this clip IS animating; everything else is one click') and ~875 (Animate a property button), restored by 823fc26d; shipped by b009ac43 (the-properties-pane-opens-on-the-clip-line-and-l, audit queue/audits/2026-09-25-properties-pane.json). The mock is the floor: change the rule, never the mock.",
@@ -45,6 +45,24 @@
     {
       "t": "2026-09-27T12:11:15.643Z",
       "note": "seq 60 -> 80"
+    },
+    {
+      "t": "2026-09-27T21:30:29.959Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T21:36:28.613Z",
+      "note": "Checked each rule against its source: video.html renderProps (Animating header 'N of 13 properties' / 'nothing yet', rows with diamond and ×, Animate a property picker, grouped and searchable), a-moving-layer-shows-between-the-keys-in-propert (done 2026-09-27: Curve and Path in a Between the keys section under Animating), the two 2026-09-27 audits for the sentence-budget cases. Rewrote D10, the checklist line, AGENTS.md's D10 bullet and docs/design/video-surface.md item 5 (the only other doc calling video.html a printed catalogue; docs/design/video.md never did). D16 gains an explicit 'never a closed rectangle' bullet. §4 gains 'When the mock prints a sentence longer than the budget'. The runner prompt's 'a line printed in the mock ships as drawn' contradicted that answer, so it now points at the same rule. Scripts/test.sh green (10,139 tests)."
+    },
+    {
+      "t": "2026-09-27T21:36:28.665Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-09-27T21:36:28.715Z",
+      "note": "left rough: docs/design/video-surface.md item 3 still says 'Fixed: rows are layers', which D18's 2026-09-23 rewrite withdrew; the doc's own read-first banner already says the tracks came back, so it misleads nobody who reads the top. Not filed."
     }
-  ]
+  ],
+  "started": "2026-09-27T21:30:29.957Z",
+  "walks": []
 }

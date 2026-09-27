@@ -336,13 +336,12 @@ owed and the audit says so.
    not. The spare-media drawing in `comp-video` §03 is the answer and it should
    not wait for transitions to arrive. *Carried into the design: trimmed media
    draws outside the clip, at low contrast, on the clip you have picked.*
-5. **"How do I animate this?"** D10's obligation. On a clip the answer is the
-   diamond on every property row; on a layer's panel it is the plus on Motion's
-   header. Two spellings, and video uses the SECOND one, because a clip in
-   Photonz is a layer and its panel is a layer's panel. `video.html` prints the
-   clip catalogue in the dock, which is D10's first spelling, and D10's own
-   2026-09-17 amendment says that spelling is for a surface whose whole job is
-   time. *A clip's panel gets Motion with a plus, like every other layer.*
+5. **"How do I animate this?"** D10's obligation. *Superseded 2026-09-27:*
+   this item used to say `video.html` prints a catalogue of every property with
+   a diamond on each row, and that a clip should get a layer's Motion plus
+   instead. The mock does neither: its Properties pane lists only what the clip
+   is animating, with an **Animate a property** picker under it for everything
+   else, and the app shipped that on 2026-09-25. D10 now says so.
 6. **"Why did my panel jump?"** Opening the strip takes 235 points off the dock
    and whatever you were reading moves. Nothing in the design fixes this; §4
    names it.

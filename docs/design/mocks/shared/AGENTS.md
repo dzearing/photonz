@@ -307,11 +307,14 @@ Everything must work in BOTH light and dark (tokens handle it; just use them).
 - **No Layers group in a workspace that has a timeline.** The timeline is the
   layer list: same objects, same groups, same order, plus when each starts and
   stops. Layers stays in the image and UI lenses, where it is the only inventory.
-- **Property lists render the CATALOGUE, not the keyed set** (D10). Every
-  animatable property gets a row and a key diamond, including dormant ones, so
-  the way to animate something is visible on a clip nobody has touched. Three
-  diamond states: dim outline (dormant) / coloured outline (animated, no key
-  here) / filled (key here).
+- **A clip's Animating list shows what it IS animating** (D10), as
+  `pages/video.html` draws it: one row per keyed property, each its own editor
+  with a key diamond (filled: key here; outlined: none here) and an × to stop.
+  Everything else is the **Animate a property** button under the rows, a
+  grouped, searchable picker over the whole catalogue, always present, so the
+  way to animate something is visible on a clip nobody has touched. Curve and
+  Path are not rows: they live in the Between the keys section under it
+  (`pages/video-move-wt.html`).
 - **Video/timeline primitives are components** — never re-author them per page.
   `.clip` (with `.lbl`, `.edge.l/.r` trim handles, `.speed` badge, `.kfm` key
   marks) · `.editpt` the cut · the overlap family `.xband` (`.sel`, `.blk`

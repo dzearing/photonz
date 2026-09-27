@@ -19936,3 +19936,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - `ChromeCopyBudgetTests.allowed` is empty. Empty window "Drop an image here"; layers search nothing found "0 of N"; Mode list blurb gone (the modes mock draws none), its walk details shortened; capture history empty shows three key+label pairs, filtered empty "0 videos", no grant "Screen Recording is off"; colour picker empty row is blank at swatch height; Current's crop hint "Drag to crop". Shared files, so Current and Next both.
 - New walk `chrome-says-labels-walk` photographs the empty window, Mode list, picker and search, and checks the search line reads "0 of 173". Audit `queue/audits/2026-09-27-chrome-labels-shared.json` with before/after.
 - Open: capture history's empty states can't be photographed (the probe reads the real Screenshots folder); the picker's empty row is unreachable from a fresh start.
+
+## 2026-09-27 — The design rules say what the video mock says about Animating
+
+- UX-PATTERNS v2.4: D10 rewritten. A clip's Animating list shows only what it is animating, with an always-present Animate a property picker for the rest, as `pages/video.html` draws it and the app shipped on 2026-09-25. Curve and Path live in Between the keys (`video-move-wt.html`). The old "print the whole catalogue" rule is withdrawn; AGENTS.md and video-surface.md follow.
+- D16 says outright that a guide never draws a closed rectangle (wash or run-off hairlines instead).
+- §4 gains "When the mock prints a sentence longer than the budget": budget wins, sentence moves behind the section's question mark (or the control's tip in chrome), audit names it, mock untouched. The runner prompt now says the same.
+- Next: nothing owed by this task.

@@ -1,6 +1,13 @@
 # Photonz — UX patterns & interaction model (the app's spine)
 
-**Status: v2.3. §4 gains "What the chrome may say": outside the panel (the
+**Status: v2.4. D10 is rewritten to say what the user's video mock says (2026-09-27):
+a clip's Animating list shows only what the clip is animating, with an Animate a
+property picker under it for everything else; the old "print the whole
+catalogue" rule, which named `video.html` as its model, is withdrawn. D16 says
+outright that a guide never draws a closed rectangle. §4 gains "When the mock
+prints a sentence longer than the budget": the budget wins, the sentence moves
+behind the section's question mark or the control's tip, and the audit names it.
+v2.3. §4 gains "What the chrome may say": outside the panel (the
 timeline, transport, tool bar, canvas overlays, HUDs, popovers, toasts, empty
 states, status pills) the app shows labels and values, never a sentence about
 state, a debug reading or a "no X", and an empty state is empty or one short
@@ -1113,6 +1120,35 @@ popovers, toasts, empty states and status pills.
   floor for layout and controls, but a readout like `.kfread` is raised as a
   decision card before it is built, not shipped because the mock drew it.
 
+#### When the mock prints a sentence longer than the budget
+
+A mock is the floor for layout, controls and copy, and the two budgets above
+are the user's own answers (2026-09-25): forty characters in the panel, thirty
+in the chrome, no sentences. When a mock page prints a line longer than that,
+the two collide, and until 2026-09-27 every runner decided it alone. Settled
+here once:
+
+1. **The budget wins.** The user answered the budgets after the mocks were
+   drawn and said them about every surface, so the later answer rules. The line
+   does not ship where the mock prints it.
+2. **The sentence is moved, never dropped.** In the panel it goes behind the
+   **question mark beside its section's header** (`SectionHelpMark`), in the
+   mock's own words. In the chrome, which has no section header, it goes in the
+   hover tip of the control it is about. An empty state has neither: it shows
+   nothing or one short label, and the mock's line goes nowhere on screen.
+3. **The audit names it.** Every mock line moved or left out is a line in the
+   audit's `rough`, quoting the mock's words and saying where they went, so the
+   user can disagree with any one of them. A line moved quietly is a departure
+   from the mock, not a trim (the transition picker's overlap line, 2026-09-23).
+4. **The mock page is not edited.** The line stays in the mock as drawn; only
+   where the app puts it changes.
+
+Worked cases: `2026-09-27-panel-labels-not-sentences` put "drag the diamonds
+on the lane" (`video-audio.html`, Fades) and "Any property can be keyed"
+(`video.html`, Animating) behind the question marks of their sections, and
+`2026-09-27-new-empty-video` left the mock's empty-timeline hint off screen and
+named it.
+
 `ChromeCopyBudgetTests` reads the chrome's own source and fails a new string that
 breaks any of these. Its list of older offenders only shrinks, and the video
 surfaces have none. Hover tips, walk probes (`panelReadout`, `playtestControl`)
@@ -1714,8 +1750,10 @@ Every editor/scenario page must satisfy:
 - [ ] Controls are canonical `.btn`/`.seg`/etc. with real states.
 - [ ] **Transport bar holds time controls only** (D8): nothing but volume,
       skip, play/pause, loop, the two timecodes and the scrubber shares that row.
-- [ ] **Every animatable property shows how to animate it** (D10): property
-      rows list the whole catalogue, not only the keyed ones.
+- [ ] **The way to animate anything is on screen before anything moves**
+      (D10): a clip's Animating list shows only what it is animating, with an
+      Animate a property picker under it that is always present, and a
+      property whose last key goes is back in that picker.
 - [ ] **Every dock can be pushed away** (D9): from a control on the dock
       itself, with a visible way back the whole time it is away, and it comes
       back to the size it had. A bottom dock collapsed to a row names what is
@@ -2176,73 +2214,79 @@ as the only way back. The reason was never the number of groups.
 
 ---
 
-### D10 — A property list shows what CAN be animated, not what is
+### D10 — A property list shows what IS animating, and the way to animate anything else is always on screen
 
-Rendering only already-keyed properties hides the mechanism exactly when it is
-needed most: on a clip with nothing animated there is nothing to click, and on a
-clip with three keyed properties it looks as though those are the only three that
-exist. Neither is true.
+Rewritten 2026-09-27 to say what the user's video mock says. The version before
+this one told every clip inspector to print a **catalogue**, a dormant row with
+a key diamond for every property the clip could animate, and named
+`pages/video.html` as the model for it. The user's video mock does not draw
+that. Restored on 2026-09-23 (commit 823fc26d), its Properties pane lists only
+what the selected clip IS animating, and reaches everything else through one
+**Animate a property** button; the app shipped exactly that on 2026-09-25
+(task `the-properties-pane-opens-on-the-clip-line-and-l`, audit
+`2026-09-25-properties-pane`). The mock is the floor, so the rule follows it.
 
-So the inspector renders a **catalogue** — every property the selected kind can
-animate — and the keyed set is only a record of what it currently *is* animating.
-Every row carries the same control, so "how do I animate this?" has one answer
-everywhere: click the diamond on its row. The diamond carries three states, and
-they must be distinguishable at 8px:
+**Why the mock is right about it.** "Anything should be able to be animated"
+is the actual rule, and a printed list cannot keep up with it. Five rows implied
+a clip has five animatable properties, and there was no room for the ones that
+obviously matter: colours, border width, corner radius, shadow, and one more
+for every effect added and every override a component instance carries. A list
+you scroll is fine at eleven properties and impossible at ninety; a picker is
+the same gesture at both.
 
-| state | look | click does |
-| --- | --- | --- |
-| dormant | dim outline, quietest thing in the row | starts animating it, first key at the playhead |
-| animated, no key here | outline in the property colour | adds a key at the playhead |
-| animated, key here | solid fill | removes that key |
+**The rule, as the mock draws it** (`pages/video.html`, the Properties pane):
 
-Clearing the last key retires the property to dormant rather than deleting the
-row — one key is a constant, not an animation, and a row that vanishes when you
-undo the thing that created it is a trapdoor.
+1. **An Animating section lists what this clip is animating, and nothing
+   else.** Its header counts them ("2 of 13 properties"), or says **nothing
+   yet** when the clip has no keys. Each row is the property's own editor at the
+   playhead: a number is a typed stepper, a colour is a swatch. A row carries its
+   key diamond (solid when a key sits at the playhead, which removes it; outlined
+   when not, which sets one) and an × that stops animating it.
+2. **Everything else is one button away.** Under the rows, always present,
+   **Animate a property** opens a picker over the whole catalogue for this kind
+   of clip, grouped and searchable. Choosing one adds its row with a first key
+   at the playhead. The picker and the row's diamond start a property the same
+   way, so both make the same first key.
+3. **The catalogue is per kind, and it grows.** A visual clip offers its
+   transform, opacity, corner radius, border, fill and border colours, blur,
+   shadow and saturation, grouped as Transform, Appearance and Effects; an audio
+   clip offers volume, pan and duck; an effect or a component override adds its own. The picker
+   is built from the clip in front of you, never printed once.
 
-The catalogue is per kind: a visual clip offers Opacity/Position/Scale/Rotation/
-Blur, an audio clip offers Volume/Pan. Canonical page: `pages/video.html`.
+**What D10 exists to protect, written against this spelling.**
 
-**Which surfaces print the catalogue, and which show only what is** (added
-2026-09-17; the app now answers this both ways, and both are right). D10 was
-written for a video clip inspector and then read as though it governed every
-surface where something can be animated. It does not. Next's Motion section
-lists only the properties that ARE moving, and the catalogue of what could move
-lives behind the plus on its header — one item per thing the layer in front of
-you actually has, each showing the value it is wearing now
-(`MotionProperty.offered(for:)`). That is not a slip: it is the answered model
-(decision `say-where-animating-an-icon-and-editing-a-video`, answered b with the
-user's correction that motion is a property applied like an effect and that
-there is no canned list of motions).
+- **The way to animate something is on screen before anything moves.** On a
+  clip nobody has touched, the header says "nothing yet" and the Animate a
+  property button sits right under it, so "how do I animate this?" has one
+  visible answer on every clip. A pane that shows only what is moving and offers
+  no visible door to what COULD move is the failure this rule names; the button
+  is what keeps the video pane out of it. It is never hidden behind a hover,
+  never moved into a menu, and never dropped for want of height.
+- **Removing the last key never makes a value unreachable.** One key is a
+  constant, not an animation, so clearing a property's last key, or pressing its
+  ×, takes the row out of Animating and puts the property straight back in the
+  picker, and one undo brings the keys back. Nothing a person animated can
+  leave the pane and also leave the picker.
 
-Two questions decide which spelling a surface gets, and on every surface so far
-they agree:
+**Where Curve and Path live.** Not in the Animating rows. The move walkthrough
+(`pages/video-move-wt.html`, step 6) draws a **Between the keys** section under
+Animating that appears once the picked thing has two or more keys: a Curve
+dropdown for how fast it travels between them (the one list, D17) and a Path
+control for where it travels. The two mocks do not disagree about this; they
+draw two sections of the same pane, and the app ships both (task
+`a-moving-layer-shows-between-the-keys-in-propert`). A row of Animating says
+what moves and what value it has now; Between the keys says how it gets from one
+key to the next.
 
-- **Is time the surface's whole job?** The inspector beside a timeline has
-  nothing else to say about a clip, so five dormant rows cost nothing and buy
-  the answer to "how do I animate this" for free. A layer's panel column is
-  shared with Appearance, Effects, Arrange and the rest, where room is the
-  binding constraint (section 3's height rule), and a permanent catalogue there
-  is a second inspector stacked on the first.
-- **Is the animatable set fixed by KIND?** Every visual clip offers the same
-  five properties, so a catalogue can be printed once and be true. A layer's set
-  is decided by the layer in front of you: a photograph has no colour to
-  animate, and a rectangle has no stroke width now that a box's edge is a Border
-  in the Effects list. A list that has to be built from the thing you picked is
-  built when it is asked for.
-
-**What both spellings owe, which is the part D10 exists to protect.** "How do I
-animate this?" has ONE answer on a surface, and that answer is on screen before
-anything is animated: the diamond on every row where the catalogue is printed,
-the plus on the Motion header where it is not, and a section that says in words
-that nothing moves yet rather than being empty. A surface that shows only what
-is moving and offers no visible door to what COULD is the failure D10 names, and
-the plus is what keeps Next out of it. The second obligation carries too: losing
-the last of something must not be a trapdoor. On a printed catalogue the row
-retires to dormant instead of vanishing; where there is no catalogue, whatever
-leaves the list is back in the plus's menu and one undo press away.
-
-`pages/video.html` remains canonical for the printed catalogue. It is the CLIP
-spelling, and nothing on it should be copied into a document layer's panel.
+**A document layer's Motion section spells the same rule.** Next's Motion
+section, in a layer's panel column, lists only the properties that are moving,
+and the plus on its header offers one item per thing the layer in front of you
+actually has, each showing the value it is wearing now
+(`MotionProperty.offered(for:)`; decision
+`say-where-animating-an-icon-and-editing-a-video`, answered b: motion is a
+property applied like an effect, and there is no canned list of motions). The
+clip's button and the layer's plus are the same door in two places; nothing on
+`pages/video.html` should be copied into a layer's panel beyond that.
 
 ---
 
@@ -2690,6 +2734,15 @@ avoids it the same five ways:
 - **Washes and hairlines, never a solid fill and never a hard outline.** What is
   underneath stays completely readable through it. A guide with a border is a
   rectangle somebody drew.
+- **A guide never draws a closed rectangle.** A closed outline round an area is
+  the app's word for what you picked (the selection, below), so a guide that
+  closes one says "this is selected" whatever else it means. Where a guide has
+  to mark out an area, draw a **wash filling the band** it keeps clear, or
+  **hairlines running off the edges** of the frame so no four of them meet in a
+  box. The icon frame's keylines are the worked case (audit
+  `2026-09-20-icon-keylines-read-as-guides`): the margin became a wash between
+  the frame's edge and the live area, and the square keyline became four
+  hairlines that run out past the frame. A circle is exempt by its shape.
 - **Ink sunk out of the way.** The canvas grid is the accent colour mixed most
   of the way into grey; the columns are a soft warm wash. Nothing saturated,
   nothing a layer would plausibly be painted.
