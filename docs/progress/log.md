@@ -19943,3 +19943,9 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - D16 says outright that a guide never draws a closed rectangle (wash or run-off hairlines instead).
 - §4 gains "When the mock prints a sentence longer than the budget": budget wins, sentence moves behind the section's question mark (or the control's tip in chrome), audit names it, mock untouched. The runner prompt now says the same.
 - Next: nothing owed by this task.
+
+## 2026-09-27 · The queue command never files or rewrites a task by mistake (go loop)
+
+- `queue.mjs add`/`addjson` honour `--dry-run` (print the draft and its near-twins, write nothing), refuse a title under three words, and refuse any flag they do not know instead of ignoring it. `queue-lib.mjs` gains `draftTask`, which `addTask` now saves.
+- `queue.mjs status <id>` with no status word prints the task. `setStatus` refuses a word outside `STATUSES` (so the dashboard path is covered too) and writes nothing for the same status again with no note.
+- New `queue/bin/queue-cli-drill.mjs`, 23 checks against a throwaway queue. Next: nothing owed by this task.
