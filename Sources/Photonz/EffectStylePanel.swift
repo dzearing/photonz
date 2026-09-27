@@ -276,28 +276,10 @@ struct LibraryEffectStyleTile: View {
     }
 
     private var tile: some View {
-        VStack(spacing: LibraryShelfLayout.captionSpacing) {
-            EffectSample(effect: style.effect,
-                         side: tileMetrics.pictureHeight)
-                .frame(maxWidth: .infinity)
-                .frame(height: tileMetrics.pictureHeight)
-            Text(entry.name)
-                .font(.system(size: LibraryShelfLayout.captionFontSize))
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .foregroundStyle(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+        LibraryShelfTile(name: entry.name, meta: LibraryTileCaption.effectStyle,
+                         isSelected: isSelected) {
+            EffectSample(effect: style.effect, side: tileMetrics.pictureHeight, fillsWidth: true)
         }
-        .frame(maxWidth: .infinity)
-        .padding(LibraryShelfLayout.tilePadding)
-        .background(
-            RoundedRectangle(cornerRadius: 7)
-                .fill(isSelected ? AnyShapeStyle(.tint.opacity(0.18)) : AnyShapeStyle(.clear))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 7)
-                .strokeBorder(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.clear), lineWidth: 1.5)
-        )
-        .contentShape(Rectangle())
     }
 }
 
@@ -321,6 +303,9 @@ struct EffectSample: View {
     /// How wide the whole sample is drawn, so the section can show a bigger one
     /// than a tile does.
     var side: CGFloat = 46
+    /// Paper across whatever width it is given rather than a square of it, with
+    /// no corners or outline of its own: the tile it sits in already has both.
+    var fillsWidth = false
 
     /// How much of the sample the plate takes, leaving the rest as the room a
     /// shadow or a halo needs to be seen at all.
@@ -335,13 +320,23 @@ struct EffectSample: View {
     private let ink = Color(white: 0.66)
 
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 5).fill(paper)
-            plate.frame(width: plateSide, height: plateSide)
+        if fillsWidth {
+            ZStack {
+                Rectangle().fill(paper)
+                plate.frame(width: plateSide, height: plateSide)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: side)
+            .clipped()
+        } else {
+            ZStack {
+                RoundedRectangle(cornerRadius: 5).fill(paper)
+                plate.frame(width: plateSide, height: plateSide)
+            }
+            .frame(width: side, height: side)
+            .clipShape(RoundedRectangle(cornerRadius: 5))
+            .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(.primary.opacity(0.15)))
         }
-        .frame(width: side, height: side)
-        .clipShape(RoundedRectangle(cornerRadius: 5))
-        .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(.primary.opacity(0.15)))
     }
 
     @ViewBuilder private var plate: some View {

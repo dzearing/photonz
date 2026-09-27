@@ -1085,8 +1085,6 @@ struct SelectionColorInspector: View {
 /// Somewhere that cannot wear one — a shadow's colour, another app — still
 /// takes the colour, and the swatch says so before you let go.
 struct LibraryStyleTile: View {
-    /// How big the shelf is drawing its tiles right now (`LibraryTileMetrics`).
-    @Environment(\.libraryTile) private var tileMetrics
     @Environment(EditorState.self) private var editorState
     let entry: LibraryEntry
     let style: ColorStyle
@@ -1105,34 +1103,16 @@ struct LibraryStyleTile: View {
     }
 
     var body: some View {
-        VStack(spacing: LibraryShelfLayout.captionSpacing) {
+        LibraryShelfTile(name: entry.name, meta: LibraryTileCaption.colorStyle,
+                         isSelected: isSelected) {
             // The tile IS the style: a saved ramp is drawn as the ramp, aimed
             // the way it was aimed, because a shelf of flat squares is a shelf
             // you cannot pick a gradient off.
             PaintFill(paint: style.paint)
-                .clipShape(RoundedRectangle(cornerRadius: 5))
                 // Under it, so a ramp that fades to nothing reads as fading
                 // rather than as a paler orange.
-                .background(CheckerBoard(square: 4).clipShape(RoundedRectangle(cornerRadius: 5)))
-                .frame(height: tileMetrics.pictureHeight)
-                .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(.primary.opacity(0.12)))
-            Text(entry.name)
-                .font(.system(size: LibraryShelfLayout.captionFontSize))
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .foregroundStyle(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+                .background(CheckerBoard(square: 4))
         }
-        .frame(maxWidth: .infinity)
-        .padding(LibraryShelfLayout.tilePadding)
-        .background(
-            RoundedRectangle(cornerRadius: 7)
-                .fill(isSelected ? AnyShapeStyle(.tint.opacity(0.18)) : AnyShapeStyle(.clear))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 7)
-                .strokeBorder(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.clear), lineWidth: 1.5)
-        )
-        .contentShape(Rectangle())
         .onTapGesture { editorState.selectLibraryItem(entry.id) }
         // Pulling the tile carries the colour; a plain click still picks the
         // tile, which is what SwiftUI does with the two on one view.

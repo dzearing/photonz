@@ -25,10 +25,15 @@ public enum LibraryShelfLayout {
         /// Nil keeps the picture at the fixed `thumbnailHeight` however wide
         /// the tile is.
         public var pictureAspect: CGFloat?
+        /// Whether a tile is the mock's bordered card, picture edge to edge
+        /// with a name and a quiet second line under it, rather than a padded
+        /// picture with a centred name.
+        public var isCard: Bool
 
-        public init(minimumWidth: CGFloat, pictureAspect: CGFloat?) {
+        public init(minimumWidth: CGFloat, pictureAspect: CGFloat?, isCard: Bool = false) {
             self.minimumWidth = minimumWidth
             self.pictureAspect = pictureAspect
+            self.isCard = isCard
         }
 
         /// The shelf Current ships: 68 point tiles with a 44 point picture,
@@ -40,7 +45,7 @@ public enum LibraryShelfLayout {
         /// `aspect-ratio:16/10`): two cards to a row in a resting dock, each
         /// picture keeping its shape as the card grows, so a card reads as a
         /// card and a name like "Tutorial Sample.mp4" reads whole.
-        public static let card = Sizing(minimumWidth: 96, pictureAspect: 16.0 / 10.0)
+        public static let card = Sizing(minimumWidth: 96, pictureAspect: 16.0 / 10.0, isCard: true)
     }
 
     // MARK: What a tile is made of
@@ -67,6 +72,31 @@ public enum LibraryShelfLayout {
     /// The air around a picture that is drawn whole inside its well. A picture
     /// that has to be cut off gives this up and goes edge to edge.
     public static let picturePadding: CGFloat = 3
+
+    // MARK: The card the mock draws
+
+    /// The card's outline (`.libtile` is `border:1px solid var(--edge-lo)`).
+    /// The picture sits inside it, edge to edge.
+    public static let cardBorder: CGFloat = 1
+    /// The card's corners (`border-radius:var(--r3)`).
+    public static let cardCornerRadius: CGFloat = 10
+    /// The caption's padding (`.cap` is `padding:5px 7px 6px`).
+    public static let cardCaptionTop: CGFloat = 5
+    public static let cardCaptionBottom: CGFloat = 6
+    public static let cardCaptionHorizontal: CGFloat = 7
+    /// The gap between the name and the line under it (`gap:1px`).
+    public static let cardCaptionGap: CGFloat = 1
+    /// The name (`.nm` is 10.5px at weight 560, in `--ink`).
+    public static let cardNameFontSize: CGFloat = 10.5
+    /// One line of that name, measured with ImageRenderer on 2026-09-27.
+    public static let cardNameHeight: CGFloat = 13
+    /// The quiet line under it (`.mt` is 9px mono in `--faint`).
+    public static let cardMetaFontSize: CGFloat = 9
+    /// One line of that, measured the same way.
+    public static let cardMetaHeight: CGFloat = 11
+    /// Everything under a card's picture, top padding to bottom padding.
+    public static let cardCaptionHeight: CGFloat =
+        cardCaptionTop + cardNameHeight + cardCaptionGap + cardMetaHeight + cardCaptionBottom
 
     // MARK: The words in the corners of a tile picture
 
@@ -118,17 +148,24 @@ public enum LibraryShelfLayout {
         return (width - tileSpacing * (columns - 1)) / columns
     }
 
+    /// How wide the picture is at `width`: inside the card's border, or
+    /// inside the compact tile's padding.
+    public static func pictureWidth(width: CGFloat, sizing: Sizing = .compact) -> CGFloat {
+        tileWidth(width: width, sizing: sizing) - (sizing.isCard ? cardBorder : tilePadding) * 2
+    }
+
     /// How tall the picture well is at `width`. Whole points, so the tile
     /// views and this arithmetic land on the same pixel.
     public static func thumbnailHeight(width: CGFloat, sizing: Sizing = .compact) -> CGFloat {
         guard let aspect = sizing.pictureAspect, aspect > 0 else { return thumbnailHeight }
-        let picture = tileWidth(width: width, sizing: sizing) - tilePadding * 2
-        return max(1, (picture / aspect).rounded(.down))
+        return max(1, (pictureWidth(width: width, sizing: sizing) / aspect).rounded(.down))
     }
 
     /// One tile, top to bottom, at `width`.
     public static func tileHeight(width: CGFloat, sizing: Sizing = .compact) -> CGFloat {
-        tilePadding * 2 + thumbnailHeight(width: width, sizing: sizing) + captionSpacing + captionHeight
+        let picture = thumbnailHeight(width: width, sizing: sizing)
+        if sizing.isCard { return cardBorder * 2 + picture + cardCaptionHeight }
+        return tilePadding * 2 + picture + captionSpacing + captionHeight
     }
 
     /// How many rows `tileCount` tiles wrap into at `width`.
@@ -199,6 +236,24 @@ public enum LibraryShelfLayout {
     public static func squeezeFloor(peek: CGFloat, width: CGFloat, sizing: Sizing) -> CGFloat {
         let measured = width > 0 ? width : sizing.minimumWidth
         return gridVerticalPadding + tileHeight(width: measured, sizing: sizing) + tileSpacing + max(0, peek)
+    }
+
+    /// The dock width a shelf is laid out for at rest: the dock's 264 points
+    /// less its two 14 point margins.
+    public static let restingWidth: CGFloat = 236
+    /// The dock's peek at the next thing past a cut (`DockMetrics.bodyPeek`).
+    public static let restingPeek: CGFloat = 22
+
+    /// How tall the shelf may get before anyone has dragged its grab bar.
+    ///
+    /// Current's 220 was chosen for 64 point rows. A card row is 108, so 220
+    /// cut a resting card shelf's second row straight through the line under
+    /// its names. A card shelf starts at two whole rows at rest, and a sliver
+    /// of the third that says there is more.
+    public static func defaultCap(sizing: Sizing) -> CGFloat {
+        guard sizing.isCard else { return 220 }
+        return gridVerticalPadding + (tileHeight(width: restingWidth, sizing: sizing) + tileSpacing) * 2
+            + restingPeek
     }
 
     /// The height the shelf actually takes: its content, but never more than

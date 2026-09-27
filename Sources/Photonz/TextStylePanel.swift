@@ -244,8 +244,6 @@ struct TextStyleRow: View {
 /// saved colour is carried onto a swatch. What travels is the style itself, so
 /// the text follows the name afterwards.
 struct LibraryTextStyleTile: View {
-    /// How big the shelf is drawing its tiles right now (`LibraryTileMetrics`).
-    @Environment(\.libraryTile) private var tileMetrics
     @Environment(EditorState.self) private var editorState
     let entry: LibraryEntry
     let style: TextStyle
@@ -294,9 +292,10 @@ struct LibraryTextStyleTile: View {
     }
 
     private var tile: some View {
-        VStack(spacing: LibraryShelfLayout.captionSpacing) {
+        LibraryShelfTile(name: entry.name, meta: LibraryTileCaption.textStyle,
+                         isSelected: isSelected) {
             ZStack {
-                RoundedRectangle(cornerRadius: 5).fill(plate)
+                Rectangle().fill(plate)
                 Text(TextStyleNaming.sample)
                     .font(.system(size: Self.sampleSize, weight: weight(style.treatment.weight)))
                     .foregroundStyle(Color(hex: style.treatment.colorHex))
@@ -304,25 +303,7 @@ struct LibraryTextStyleTile: View {
                     .minimumScaleFactor(0.5)
                     .padding(.horizontal, 6)
             }
-            .frame(height: tileMetrics.pictureHeight)
-            .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(.primary.opacity(0.12)))
-            Text(entry.name)
-                .font(.system(size: LibraryShelfLayout.captionFontSize))
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .foregroundStyle(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
         }
-        .frame(maxWidth: .infinity)
-        .padding(LibraryShelfLayout.tilePadding)
-        .background(
-            RoundedRectangle(cornerRadius: 7)
-                .fill(isSelected ? AnyShapeStyle(.tint.opacity(0.18)) : AnyShapeStyle(.clear))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 7)
-                .strokeBorder(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.clear), lineWidth: 1.5)
-        )
-        .contentShape(Rectangle())
     }
 }
 

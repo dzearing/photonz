@@ -29,7 +29,8 @@ struct LibraryPanel: View {
     @AppStorage(LibraryPanel.scopeKey) private var scopeRaw = LibraryScope.media.rawValue
     /// The tile area's max height, resizable and persisted, the same way the
     /// layers area is: a long shelf must not shove the rest of the dock off
-    /// the bottom.
+    /// the bottom. Its first value is the release's own: two whole rows of
+    /// cards in Next (`LibraryShelfLayout.defaultCap`).
     @AppStorage(LibraryPanel.heightKey) private var maxHeight = 220.0
     @State private var query = ""
     /// How much room the shelf has across, which is all that has to be
@@ -58,6 +59,14 @@ struct LibraryPanel: View {
     /// and what the picker, search box and grab bar around it cost, so the dock
     /// can budget for both separately: the shelf scrolls and they do not.
     var onMetrics: ((_ shelfNatural: CGFloat, _ extras: CGFloat, _ floor: CGFloat) -> Void)?
+
+    init(dockCeiling: CGFloat? = nil,
+         onMetrics: ((_ shelfNatural: CGFloat, _ extras: CGFloat, _ floor: CGFloat) -> Void)? = nil) {
+        self.dockCeiling = dockCeiling
+        self.onMetrics = onMetrics
+        let firstCap = LibraryShelfLayout.defaultCap(sizing: Experiments.shared.libraryTileSizing)
+        _maxHeight = AppStorage(wrappedValue: Double(firstCap), Self.heightKey)
+    }
 
     /// How this release sizes its tiles: the mock's cards in Next, the older
     /// 68 point tiles in Current.
@@ -569,15 +578,21 @@ struct LibraryTileMetrics: Equatable {
     var pictureHeight: CGFloat
     /// How wide the picture is drawn when it is picked up and dragged.
     var pictureWidth: CGFloat
+    /// How wide the picture well is drawn on the shelf.
+    var wellWidth: CGFloat
+    /// Whether the tile is the mock's bordered card (`LibraryShelfTile`).
+    var isCard: Bool
 
     init(width: CGFloat, sizing: LibraryShelfLayout.Sizing) {
         tileWidth = LibraryShelfLayout.tileWidth(width: width, sizing: sizing)
         pictureHeight = LibraryShelfLayout.thumbnailHeight(width: width, sizing: sizing)
+        wellWidth = LibraryShelfLayout.pictureWidth(width: width, sizing: sizing)
+        isCard = sizing.isCard
         // Current's shelf picked its pictures up at the narrowest a tile gets,
         // and keeps doing so; a card is picked up at the size it is drawn.
         pictureWidth = sizing.pictureAspect == nil
             ? LibraryShelfLayout.tileMinimumWidth
-            : tileWidth - LibraryShelfLayout.tilePadding * 2
+            : wellWidth
     }
 
     /// What a tile draws at anywhere the shelf has not said: Current's tile.
@@ -616,25 +631,9 @@ private struct LibraryTile: View {
     private var isSelected: Bool { editorState.selectedLibraryItemID == item.id }
 
     var body: some View {
-        VStack(spacing: LibraryShelfLayout.captionSpacing) {
-            thumbnail
-            Text(item.name)
-                .font(.system(size: LibraryShelfLayout.captionFontSize))
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .foregroundStyle(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
-        }
-        .frame(maxWidth: .infinity)
-        .padding(LibraryShelfLayout.tilePadding)
-        .background(
-            RoundedRectangle(cornerRadius: 7)
-                .fill(isSelected ? AnyShapeStyle(.tint.opacity(0.18)) : AnyShapeStyle(.clear))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 7)
-                .strokeBorder(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.clear), lineWidth: 1.5)
-        )
-        .contentShape(Rectangle())
+        LibraryShelfTile(name: item.name,
+                         meta: LibraryTileCaption.pictureSize(media.image.pixelSize),
+                         isSelected: isSelected) { thumbnail }
         // Double click first: SwiftUI hands a tap to the highest count that
         // matches, and a single-click-only gesture would swallow both.
         .onTapGesture(count: 2) { place() }
@@ -646,6 +645,7 @@ private struct LibraryTile: View {
         .onDrag(dragItem, preview: {
             thumbnail.frame(width: tileMetrics.pictureWidth,
                             height: tileMetrics.pictureHeight)
+                .clipShape(RoundedRectangle(cornerRadius: 5))
         })
         .panelHelp("\(item.name) • \(item.detail). Double click to place it again.")
         // The same closure a walk picks the tile up with, so an unmanned run
@@ -672,7 +672,7 @@ private struct LibraryTile: View {
     /// say in its host's size, so a wide screenshot fills the well instead of
     /// stretching the tile across its neighbours.
     private var thumbnail: some View {
-        RoundedRectangle(cornerRadius: 5)
+        Rectangle()
             .fill(.quaternary)
             .frame(height: tileMetrics.pictureHeight)
             .overlay {
@@ -682,8 +682,7 @@ private struct LibraryTile: View {
                         .scaledToFill()
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: 5))
-            .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(.primary.opacity(0.12)))
+            .clipped()
     }
 
     private func place() {

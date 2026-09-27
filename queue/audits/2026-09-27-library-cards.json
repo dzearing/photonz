@@ -1,0 +1,28 @@
+{
+  "feature": "Library tiles are the mock's cards",
+  "epic": "video-editing",
+  "summary": "Every tile on the Library shelf is now the video mock's card: a bordered, rounded card with the picture edge to edge on top, the name left aligned under it in brighter type, and a quiet mono line under the name. A recording or sound says its length there, a picture its size, a component whether it is a starter or how many copies it has, and a style whether it is a paint, a type or an effect.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "try": [
+    { "do": "Open a video document with a recording and a sound in it, and look at the Library's Media shelf.", "shot": "2026-09-27-library-cards-side-by-side.png" },
+    { "do": "Read the line under each name: 0:08 on the recording, 0:14 on the sound, no length stamped on the picture.", "shot": "2026-09-27-library-cards-media-sc.png" },
+    { "do": "Click a picture tile on the Media shelf of a screenshot document: it rings in blue and says its size, 1440 × 960.", "shot": "2026-09-27-library-cards-picture-sc.png" },
+    { "do": "Switch the shelf to Comps: the five starters are the same card, each saying starter under its name, picked in violet.", "shot": "2026-09-27-library-cards-comps-sc.png" },
+    { "do": "Save a shadow as a style and switch to Styles: its card says effect, a saved colour says paint, a text style says type.", "shot": "2026-09-27-library-cards-styles-sc.png" },
+    { "do": "Hover a card: its border warms to the accent and it lifts a point, as the mock's tiles do." },
+    { "do": "On a fresh shelf with five starters, see two whole rows of cards and a sliver of the third before you drag the grab bar." }
+  ],
+  "evaluate": [
+    "Does the shelf now read as the mock's Library at a glance, next to video.html?",
+    "Is the line under the name the right thing for each kind: length, pixel size, starter or copies, paint or type or effect?",
+    "Is a long name like Tutorial Sample.mp4 cut at the end acceptable, or would you rather keep the extension (Tutorial…ple.mp4)?",
+    "Does starting the shelf two rows tall (256 points instead of 220) feel right, or is it taking too much of the dock?"
+  ],
+  "rough": [
+    "A long name is cut at its end with an ellipsis, as the mock's CSS does, so Tutorial Sample.mp4 reads Tutorial Sample.... The mock's own names are all short enough to fit.",
+    "A card is 108 points tall at rest where the mock measures 105: SwiftUI draws the 10.5 point name and 9 point mono line a point or two taller than the browser does. The padding is the mock's exactly.",
+    "The sound card keeps its waveform glyph over the green well; the mock's music.wav is the plain green gradient.",
+    "The dock around the shelf is still the app's lighter grey panel, not the mock's dark glass; that is the panel's look, not the tile's.",
+    "The Library's first height is two rows of cards now (256 points), so on a fresh shelf the dock gives the Library 36 points more than before. Anyone who already dragged the grab bar keeps their own height."
+  ]
+}

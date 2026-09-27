@@ -529,25 +529,10 @@ struct LibraryComponentTile: View {
     }
 
     var body: some View {
-        VStack(spacing: LibraryShelfLayout.captionSpacing) {
-            thumbnail
-            Text(entry.name)
-                .font(.system(size: LibraryShelfLayout.captionFontSize))
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .foregroundStyle(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
-        }
-        .frame(maxWidth: .infinity)
-        .padding(LibraryShelfLayout.tilePadding)
-        .background(
-            RoundedRectangle(cornerRadius: 7)
-                .fill(isSelected ? AnyShapeStyle(.tint.opacity(0.18)) : AnyShapeStyle(.clear))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 7)
-                .strokeBorder(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.clear), lineWidth: 1.5)
-        )
-        .contentShape(Rectangle())
+        // The line under the name is the shelf's own detail: "starter",
+        // "shared", "main", "3 variants • 2 copies".
+        LibraryShelfTile(name: entry.name, meta: entry.detail,
+                         isSelected: isSelected, isComponent: true) { thumbnail }
         // Double click PLACES, the way it already does on a Media tile: one
         // gesture for "give me one of these" everywhere on the shelf. Finding
         // the original is the Select Original button in the section below.
@@ -560,6 +545,7 @@ struct LibraryComponentTile: View {
         .onDrag(dragItem, preview: {
             thumbnail.frame(width: max(wellWidth, tileMetrics.pictureWidth),
                             height: tileMetrics.pictureHeight)
+                .clipShape(RoundedRectangle(cornerRadius: 5))
         })
         .panelHelp(helpText)
         // The same closure a walk picks the tile up with, so an unmanned run
@@ -584,7 +570,7 @@ struct LibraryComponentTile: View {
     /// edge instead: the first half of a nav bar at a size you can see tells
     /// you far more than the whole of one drawn as a nine point grey line.
     private var thumbnail: some View {
-        RoundedRectangle(cornerRadius: 5)
+        Rectangle()
             .fill(.quaternary)
             .frame(height: tileMetrics.pictureHeight)
             .overlay(alignment: alignment) {
@@ -594,8 +580,7 @@ struct LibraryComponentTile: View {
                         .frame(width: placement.size.width, height: placement.size.height)
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: 5))
-            .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(.primary.opacity(0.12)))
+            .clipped()
             .overlay(alignment: .topLeading) {
                 ComponentMark(size: 9).padding(3)
             }
@@ -605,21 +590,16 @@ struct LibraryComponentTile: View {
             // on a nine point badge is a gesture nobody lands. Choosing happens
             // in the section below, where the names have room to be read.
             .overlay(alignment: .bottomTrailing) {
-                if let shelfVersion { cornerWord(shelfVersion.name) }
+                if let shelfVersion { LibraryTileCornerWord(text: shelfVersion.name) }
             }
             // Where this component came from, for the two kinds a drop would
             // bring INTO the document: one you shared from another file, and
-            // one of the app's own. A component already in this file wears
-            // nothing, because that is the shelf's ordinary case and marking
-            // every one of those tiles would say nothing.
-            //
-            // In the corner of the picture rather than under the name on
-            // purpose: the shelf is height-capped, so a second caption line
-            // would cost every row of tiles some of the shelf. The two words
-            // can never collide, because a starter and a shared component
-            // never have a version to name.
+            // one of the app's own. A card says it on the line under the name;
+            // the compact tile has no such line, so it says it in the corner.
+            // The two corner words can never collide, because a starter and a
+            // shared component never have a version to name.
             .overlay(alignment: .bottomLeading) {
-                if let tag = origin.tag { cornerWord(tag) }
+                if !tileMetrics.isCard, let tag = origin.tag { LibraryTileCornerWord(text: tag) }
             }
             // The tile's own width, which is whatever the adaptive grid handed
             // it. How much of a long component fits depends on it, so the tile
@@ -633,21 +613,6 @@ struct LibraryComponentTile: View {
         ComponentShelfOrigin(isStarter: starter != nil, isShared: shared != nil)
     }
 
-    /// One little word in the corner of the picture. A LABEL, not a control:
-    /// the tile is already a click, a double click and a drag, and a fourth
-    /// gesture on a nine point badge is a gesture nobody lands.
-    private func cornerWord(_ text: String) -> some View {
-        Text(text)
-            .font(.system(size: LibraryShelfLayout.tileBadgeFontSize, weight: .medium))
-            .lineLimit(1)
-            .truncationMode(.tail)
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, LibraryShelfLayout.tileBadgeHorizontalPadding)
-            .padding(.vertical, LibraryShelfLayout.tileBadgeVerticalPadding)
-            .background(Capsule().fill(.regularMaterial))
-            .padding(LibraryShelfLayout.tileBadgeInset)
-    }
-
     /// How big the component itself is, which is all that is needed to place
     /// its picture — and is known before the picture has been drawn, so the
     /// tile asks for the right one the first time.
@@ -657,7 +622,7 @@ struct LibraryComponentTile: View {
     /// be until the grid has said, so the first frame draws something sensible
     /// rather than nothing.
     private var measuredWellWidth: CGFloat {
-        wellWidth > 0 ? wellWidth : tileMetrics.tileWidth - LibraryShelfLayout.tilePadding * 2
+        wellWidth > 0 ? wellWidth : tileMetrics.wellWidth
     }
 
     /// Where the picture sits. Decided against the inset well, because a

@@ -1,6 +1,10 @@
 {
   "out": "/tmp/photonz-playtest/library-shelf-height",
-  "setup": { "forget": ["all"] },
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
   "steps": [
     {
       "do": "blank",
@@ -20,7 +24,7 @@
     {
       "do": "describe",
       "stage": "1-two-rows",
-      "note": "five starters wrap into two rows, and the shelf ends right under them"
+      "note": "five starters wrap into three rows of cards: two whole rows show and a sliver of the third says there is more"
     },
     {
       "do": "snapshot",
@@ -74,24 +78,16 @@
     {
       "do": "describe",
       "stage": "3-back",
-      "note": "clearing the search puts all five back and the shelf grows to two rows again"
+      "note": "clearing the search puts all five back: two whole rows and a sliver again"
     },
     {
       "do": "snapshot",
       "name": "shelf-3-back"
     },
     {
-      "do": "drag",
-      "from": [
-        1107,
-        417
-      ],
-      "to": [
-        1107,
-        350
-      ],
-      "space": "view",
-      "steps": 12
+      "do": "dragHandle",
+      "area": "Library",
+      "by": -67
     },
     {
       "do": "wait",
@@ -107,17 +103,9 @@
       "name": "shelf-4-capped"
     },
     {
-      "do": "drag",
-      "from": [
-        1107,
-        373
-      ],
-      "to": [
-        1107,
-        490
-      ],
-      "space": "view",
-      "steps": 12
+      "do": "dragHandle",
+      "area": "Library",
+      "by": 117
     },
     {
       "do": "wait",
@@ -126,7 +114,7 @@
     {
       "do": "describe",
       "stage": "5-restored",
-      "note": "pulling the bar back down raises the ceiling again, and the shelf hugs its two rows"
+      "note": "pulling the bar back down raises the ceiling again, and the shelf shows more of its rows"
     },
     {
       "do": "snapshot",

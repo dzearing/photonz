@@ -12,9 +12,9 @@ import UniformTypeIdentifiers
 /// as the same file dragged in from the Finder would, ghost, snapping and ⌘
 /// insert included, because what the drag carries IS that file.
 ///
-/// The length sits in the corner of the picture rather than on a second line
-/// under the name, where Premiere's icon view puts it: the shelf is height
-/// capped and every tile on it is one height (`LibraryShelfLayout`).
+/// The length sits on the card's quiet line under the name, as the mock draws
+/// it. Current's compact tile has no second line, so there it stays in the
+/// corner of the picture, where Premiere's icon view puts it.
 struct LibraryClipTile: View {
     /// How big the shelf is drawing its tiles right now (`LibraryTileMetrics`).
     @Environment(\.libraryTile) private var tileMetrics
@@ -27,30 +27,13 @@ struct LibraryClipTile: View {
     private var isSelected: Bool { editorState.selectedLibraryItemID == item.id }
 
     var body: some View {
-        VStack(spacing: LibraryShelfLayout.captionSpacing) {
-            thumbnail
-            Text(item.name)
-                .font(.system(size: LibraryShelfLayout.captionFontSize))
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .foregroundStyle(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
-        }
-        .frame(maxWidth: .infinity)
-        .padding(LibraryShelfLayout.tilePadding)
-        .background(
-            RoundedRectangle(cornerRadius: 7)
-                .fill(isSelected ? AnyShapeStyle(.tint.opacity(0.18)) : AnyShapeStyle(.clear))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 7)
-                .strokeBorder(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.clear), lineWidth: 1.5)
-        )
-        .contentShape(Rectangle())
+        LibraryShelfTile(name: item.name, meta: clip.length, isSelected: isSelected) { thumbnail }
         .onTapGesture(count: 2) { addAtPlayhead() }
         .onTapGesture { editorState.selectLibraryItem(item.id) }
         .onDrag(dragItem, preview: {
             thumbnail.frame(width: tileMetrics.pictureWidth,
                             height: tileMetrics.pictureHeight)
+                .clipShape(RoundedRectangle(cornerRadius: 5))
         })
         .contextMenu {
             Button("Add at Playhead") { addAtPlayhead() }
@@ -71,7 +54,7 @@ struct LibraryClipTile: View {
     }
 
     private var thumbnail: some View {
-        RoundedRectangle(cornerRadius: 5)
+        Rectangle()
             .fill(clip.isSound ? AnyShapeStyle(Self.soundWell) : AnyShapeStyle(.quaternary))
             .frame(height: tileMetrics.pictureHeight)
             .overlay {
@@ -86,22 +69,12 @@ struct LibraryClipTile: View {
                                                       : AnyShapeStyle(.tertiary))
                 }
             }
-            .overlay(alignment: .bottomTrailing) { lengthBadge }
-            .clipShape(RoundedRectangle(cornerRadius: 5))
-            .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(.primary.opacity(0.12)))
-    }
-
-    /// How long it runs, in the corner: the mock's `.mt`, mono and faint.
-    private var lengthBadge: some View {
-        Text(clip.length)
-            .font(.system(size: LibraryShelfLayout.tileBadgeFontSize, weight: .medium, design: .monospaced))
-            .monospacedDigit()
-            .lineLimit(1)
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, LibraryShelfLayout.tileBadgeHorizontalPadding)
-            .padding(.vertical, LibraryShelfLayout.tileBadgeVerticalPadding)
-            .background(Capsule().fill(.regularMaterial))
-            .padding(LibraryShelfLayout.tileBadgeInset)
+            // How long it runs, in the corner, only where the tile has no
+            // line under its name to say it on.
+            .overlay(alignment: .bottomTrailing) {
+                if !tileMetrics.isCard { LibraryTileCornerWord(text: clip.length, monospaced: true) }
+            }
+            .clipped()
     }
 
     /// The mock's sound tile: `linear-gradient(180deg,#26463a,#1c3a30)`.
