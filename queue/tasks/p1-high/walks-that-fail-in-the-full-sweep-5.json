@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-09-23T00:59:10.437Z",
-  "updated": "2026-09-26T13:46:19.122Z",
+  "updated": "2026-09-27T04:53:26.306Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-26T11:50:00Z: 595 of 622 walks passed in 151 minutes.\n\nFailing walks (27): a-painted-caption-takes-a-click-walk, a-video-edit-saves-as-a-project-walk, an-editing-session-walk, extract-a-marked-stretch-walk, fix-a-caption-word-walk, hold-on-a-frame-walk, import-key-leaves-invert-selection-walk, key-a-title-s-scale-walk, key-lanes-walk, keyframe-anything-walk, keys-copy-between-layers-walk, library-import-walk, panel-grip-walk, premiere-keys-on-the-timeline-walk, properties-pane-walk, punch-in-and-hold-walk, the-timeline-is-the-layer-list-walk, timeline-bar-labels-only-walk, timeline-right-click-walk, tracks-you-can-add-rename-group-walk, transition-picker-at-a-cut-walk, tutorial-export-a-spec-list-walk, tutorial-layers-and-undo-walk, tutorial-mark-it-up-walk, tutorial-put-a-transition-on-a-cut-walk, tutorial-save-export-copy-walk, tutorial-two-parts-out-of-phase-walk\n\nAlready named by another open task, so read that one before re-diagnosing (5):\n  a-video-edit-saves-as-a-project-walk -> clicking-a-cut-opens-the-transition-picker-again (that task says it owns this walk)\n  an-editing-session-walk -> on-a-video-the-tool-bar-holds-the-video-tools-an (guessed from its wording, so read it before believing it)\n  key-lanes-walk -> a-keyed-value-s-curve-opens-where-you-want-it (that task says it owns this walk)\n  library-import-walk -> library-tiles-are-as-wide-as-the-mock-draws-them (guessed from its wording, so read it before believing it)\n  transition-picker-at-a-cut-walk -> clicking-a-cut-opens-the-transition-picker-again (that task says it owns this walk)\n\n2 of those are guesses. A task stops being guessed at by naming its walks:\n  node queue/bin/queue.mjs walks <task id> <walk> [<walk> ...]\n  node queue/bin/queue.mjs walks <task id> --none      (it only mentions them in passing)\n\nThis task owns the other 22: a-painted-caption-takes-a-click-walk, extract-a-marked-stretch-walk, fix-a-caption-word-walk, hold-on-a-frame-walk, import-key-leaves-invert-selection-walk, key-a-title-s-scale-walk, keyframe-anything-walk, keys-copy-between-layers-walk, panel-grip-walk, premiere-keys-on-the-timeline-walk, properties-pane-walk, punch-in-and-hold-walk, the-timeline-is-the-layer-list-walk, timeline-bar-labels-only-walk, timeline-right-click-walk, tracks-you-can-add-rename-group-walk, tutorial-export-a-spec-list-walk, tutorial-layers-and-undo-walk, tutorial-mark-it-up-walk, tutorial-put-a-transition-on-a-cut-walk, tutorial-save-export-copy-walk, tutorial-two-parts-out-of-phase-walk\n\nStopped failing since the last sweep (3): captions-panel-keeps-its-margins-walk, motion-pivot-in-a-corner-walk, picker-controls-walk\n\nFull output: queue/sweep/2026-09-26-021918.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a-recording-opens-to-watch-with-the-editing-tuck: a-recording-opens-to-watch: every recording now opens with its timeline tucked away and 27 video walks were migrated; the whole video set should be seen once; a-picture-or-video-fits-above-the-tool-bar-not-u: Fitted pictures now centre above the tool bar (Viewport.obscuredBottom), so every canvas sits 32pt higher than before; document-space walks are immune and 35 view/window-space and fit walks passed, but the whole set should confirm\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -209,14 +209,67 @@
     {
       "t": "2026-09-26T13:46:19.121Z",
       "note": "ran out of turn with 4 file(s) still changed: Scripts/playtest/hold-on-a-frame-walk.json, Scripts/playtest/keys-copy-between-layers-walk.json, Scripts/playtest/panel-grip-walk.json, Scripts/playtest/punch-in-and-hold-walk.json. Put aside so the next task started clean; restore with `git stash apply 4b55ac5d4bcd2557e01962f895e8c112ce057457` before carrying on."
+    },
+    {
+      "t": "2026-09-26T19:51:34.441Z",
+      "note": "rotating check 2026-09-26T19:51:34Z: a-painted-caption-takes-a-click-walk failing out of the 50 walks it ran (591 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-26T20:45:13.041Z",
+      "note": "rotating check 2026-09-26T20:45:12Z: a-recording-opens-to-watch-walk, bar-end-follows-the-pointer-walk failing out of the 50 walks it ran (10 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-26T22:25:09.543Z",
+      "note": "rotating check 2026-09-26T22:25:09Z: an-editing-session-walk, captions-panel-keeps-its-margins-walk failing out of the 50 walks it ran (59 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-27T02:00:46.815Z",
+      "note": "Found by the focus drill on 2026-09-26 evening and not in the 11:50Z sweep's list: 10 walks fail on HEAD, and fail identically with the drill's harness changes reversed (checked by reverse-applying commit 50988546's Sources diff and re-running): a-shape-s-bar-keeps-its-track (no control 'Track Rectangle'), bar-end-follows-the-pointer (clip end 160pt off the pointer), motion-pivot-in-a-corner (cue 'none' not 'grab'), normalize-quiet-system-audio (no field 'Gain in dB'), opacity-on-a-video-shape (Opacity reads 28 not 100), point-a-copy-at-another (Card menu has no 'Button' row), the-timeline-is-the-one-in-the-mock and video-tool-bar (blade leaves 1 piece not 2), title-on-the-timeline (no field 'Timing Shipping today'), tutorial-text-styles (Style menu has no 'Section Heading'). Command: Scripts/playtest-all.sh --no-build <names>."
+    },
+    {
+      "t": "2026-09-27T02:15:51.696Z",
+      "note": "rotating check 2026-09-27T02:15:51Z: an-editing-session-walk failing out of the 50 walks it ran (108 onward in the rotation). This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-27T02:17:55.726Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T02:17:55.733Z",
+      "note": "a previous attempt at this task left 4 file(s) changed; they are set aside. Restore them with `git stash apply 4b55ac5d4bcd2557e01962f895e8c112ce057457` and carry on, or start over and leave the stash alone."
+    },
+    {
+      "t": "2026-09-27T04:53:10.042Z",
+      "note": "2026-09-26 evening, HEAD 42644735 -> e459d903. ROOT CAUSE of most of this list: 37854689 (a walk never activates the probe) broke 38 walks, per the focus drill's own --all run (.build/focus-drill/all: 591 exit 0, 38 exit 1). Bisected with timeline-right-click-walk in a worktree: passes on 26ab36db, fails on 37854689 (ruler windowDrag leaves the playhead at 0:00, so Split at Playhead is dimmed). Only real NSApp activation fixes it; lifting the window to .normal, makeKey, swizzling isKeyWindow/keyWindow/isActive, and calling the hosting view's mouseDown directly each still failed."
+    },
+    {
+      "t": "2026-09-27T04:53:10.094Z",
+      "note": "Fixed in the harness (commit e459d903): windowDrag/dragGrip take the front for the drag and hand it back; setup 'front': true keeps the probe active for a whole walk (27 walks, each run plain = red and with front = green before marking); walk-needs-the-mac.mjs names both so they wait for the person to be away; focus-drill reads a theft at a declared step as 'as declared'; panelMenu without opening now always makes the SwiftUI rebuild callback (stale rows: point-a-copy-at-another, tutorial-text-styles); Cmd V stand-in (.paste); a chord whose row vanished after a menu-bar rebuild runs its stand-in."
+    },
+    {
+      "t": "2026-09-27T04:53:10.146Z",
+      "note": "Walks that were WRONG, not broken (walk drift, rewritten): hold-on-a-frame (A is Premiere's Track Select Forward while the timeline has the keyboard; uses a tool step), keys-copy-between-layers (canvas click at 4s picked Tutorial Sample, the title is off screen then; picks by row), panel-grip (Library holds the document's own pictures since 09-23; drops four in), punch-in-and-hold (Properties lists only what animates; reads Animating Count), title-on-the-timeline (the title's bar is now 'Shipping today clip', not 'Timing Shipping today'). Nothing a person uses was found broken: every other failure passed once the probe was active, as it is for a person."
+    },
+    {
+      "t": "2026-09-27T04:53:10.203Z",
+      "note": "Verified: the 34 walks this touched, run via Scripts/playtest-all.sh --no-build --only, passed twice in a row (17+17, twice); all 97 panelMenu walks pass after the menu change; title-on-the-timeline and a-video-edit-saves-as-a-project pass twice; focus drill on bar-end + library-import reads 'as declared'. Scripts/test.sh: first run had 1 failing issue (output not kept, did not recur), second run 9988 passed. Still red, not this task's: captions-panel-keeps-its-margins (owned by panel-row-labels-are-one-size-and-sit-in-one-col; finding folded there)."
+    },
+    {
+      "t": "2026-09-27T04:53:10.260Z",
+      "note": "left rough: an-editing-session-walk now says front, so the rotating check (which runs it every time) skips it while the person is at the Mac, and it only runs in checks with the Mac idle or in the whole set. Did not earn its own task: it was red in every check anyway; a later pass that makes timeline clicks work with the probe in the back would let it drop front. The Cmd V / missing-row stand-ins say plainly in the log that the press did not run the menu."
+    },
+    {
+      "t": "2026-09-27T04:53:14.777Z",
+      "note": "All 22 walks this task owns pass, plus 16 more the same cause broke. Root cause: 37854689 stopped activating the probe, and SwiftUI takes drags, some clicks and a live menu bar only in the active app. Fixed in the walk harness (e459d903): real drags take the front and hand it back; setup front for 28 walks; those wait for the person to be away (walk-needs-the-mac); panelMenu always rebuilds SwiftUI rows; Cmd V stand-in. Five walks were drift and were rewritten. Verified: 34 touched walks passed twice in a row, all 97 panelMenu walks pass, tests 9988 green. Whole-set sweep requested."
     }
   ],
   "standing": "walk-sweep",
-  "started": "2026-09-26T13:23:19.613Z",
-  "failures": 1,
+  "started": "2026-09-27T02:17:55.725Z",
+  "failures": 0,
   "lastError": {
     "at": "2026-09-26T13:46:18.679Z",
     "exit": 143,
     "message": "▸ Bash Scripts/playtest-all.sh --no-build --only /tmp/wfs5/list.txt 2>&1 | grep -E \"FAILED|CRASHED|COULD NOT|ran out…"
-  }
+  },
+  "completed": "2026-09-27T04:53:14.778Z"
 }

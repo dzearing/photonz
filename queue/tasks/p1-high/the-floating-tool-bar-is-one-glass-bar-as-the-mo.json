@@ -4,12 +4,12 @@
   "goal": "The mocks draw the tools, the More button, the colour pair and the zoom slider in one glass bar with hairlines between them. The app draws three or four separate glass capsules side by side. Make it the one bar the mocks show, on pictures and videos alike.",
   "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 130,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-26T12:20:11.772Z",
-  "updated": "2026-09-26T12:28:01.897Z",
+  "updated": "2026-09-27T12:11:15.194Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the side-by-side for on-a-video-the-tool-bar-holds-the-video-tools-an (2026-09-26): queue/audits/2026-09-26-video-tool-bar-2-a-folded-tool-by-its-key-sc.png against docs/design/mocks/pages/video.html .tbar (lines ~384-416). Today EditorView.toolbar is an HStack of toolsBar/videoToolsBar + sideCapsules (colour capsule, grid chip, zoomBar), each its own .glassEffect capsule, inside one GlassEffectContainer so they morph. The grid chip has no place in the mock's bar; decide where it lives (a decision card if it would leave the bar). Many walks read group heights via the toolBar step (Tools/Grid/Zoom groups), so those claims change with this.",
@@ -26,6 +26,10 @@
     {
       "t": "2026-09-26T12:28:01.896Z",
       "note": "seq 370 -> 130"
+    },
+    {
+      "t": "2026-09-27T12:11:15.193Z",
+      "note": "seq 130 -> 60"
     }
   ]
 }

@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T12:16:45.418Z",
-  "updated": "2026-09-26T12:28:01.540Z",
+  "updated": "2026-09-27T07:35:10.080Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by measure-the-video-editor-against-premiere-and-fi (2026-09-24); gap report docs/design/video-vs-premiere.md. Picture: docs/design/video-vs-premiere/five-minutes-at-fit.jpg. Mock video.html (timeline section) draws clips as gradient bars with no pictures, so this departs from the mock and needs the user s yes before building.",
@@ -50,6 +50,35 @@
     {
       "t": "2026-09-26T12:28:01.539Z",
       "note": "seq 120 -> 60"
+    },
+    {
+      "t": "2026-09-27T06:58:57.195Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T07:01:45.397Z",
+      "note": "Adversarial review before building: (1) a first-time user zooms in with = or the zoom steps and sees frames appear; nothing to learn, which is the point. (2) Premiere/FCP editors expect frames along the whole clip at any zoom; the user chose bars at Fit, so pictures appear from the first zoom step. (3) Risks: decoding frames on scroll could stall the main thread or starve the playhead picture of decode time; pictures could hide the clip colour and name. Plan: pure layout/threshold in PhotonzCore (ClipFilmstrip, TDD), tiles anchored to the clip on a power-of-two time ladder so panning reuses frames and a pinch does not re-decode every tile, small separate decode lanes off the main actor, a bounded LRU of small frames, the clip's colour kept as a band along the top and the name in a dark pill over the pictures. Mock video.html draws no pictures; the departure is the user's answer (b) on the card."
+    },
+    {
+      "t": "2026-09-27T07:07:45.371Z",
+      "note": "owns these walks: clip-pictures-when-zoomed-in-walk"
+    },
+    {
+      "t": "2026-09-27T07:34:27.968Z",
+      "note": "Built: ClipFilmstrip (PhotonzCore, 16 tests written first) decides when pictures show (never at Fit; full from 1.5x once a tile stands for 8s or less, fading out by 16s) and lays tiles on a doubling ladder anchored to the piece. ClipFilmstripView.swift reads them on 2 picture lanes of MovieDecoder kept apart from the playhead's lanes, LIFO, 4 in flight, a read nobody waits for is never started, 400-picture LRU. ClipPiecesBar draws the strip over the colour with a 3pt band kept and the name in a dark pill. New walk step expectClipPictures and action timelinePanAlong. Also fixed Scripts/test.sh's video kit check, broken by e37a8618 (VideoKit.FieldRow called the app's PanelFieldRow): the gallery now supplies a stand-in, as it does for kitHover."
+    },
+    {
+      "t": "2026-09-27T07:34:28.020Z",
+      "note": "Review after building: zoom steps 18 to 33ms and scrolls 15 to 28ms longest pass with pictures, 41 pictures read within the wait; picked ring reads over the pictures; at Fit none. Side by side with video.html timeline: matches at Fit; zoomed, the gradient is under the pictures except a 3pt band, name in a pill (the approved departure). Seek freeze (pre-existing, 493ms with pictures off) filed as jumping-the-playhead-far-along-a-zoomed-in-long. Left rough, not filed: (1) the card's mitigation, hovering at Fit shows the frame under the pointer, is not built; it is an idea, not a defect, and it is in the audit's rough list for the user to react to. (2) pictures are small in the 28pt compact lane; asked as an evaluate question in the audit. (3) picking the clip costs about 60ms from the panel rebuild (755 Captions section bodies), not the bar; seen once."
+    },
+    {
+      "t": "2026-09-27T07:35:10.078Z",
+      "note": "Zoomed in past Fit, video clips show frames of their recording along them (fading in, 3pt colour band kept, name in a dark pill, picked ring unchanged); at Fit the mock's bar. Core ClipFilmstrip (tested), ClipFilmstripView + picture lanes in MovieDecoder, ClipPiecesBar. Verified by clip-pictures-when-zoomed-in-walk at Next defaults on a 5 minute talk: Fit none, 2x and 16x pictures all read, zoom/scroll passes 15-33ms, 6 real captures; audit queue/audits/2026-09-27-clip-pictures-when-zoomed-in.json. Test suite green (10018). Commit b7275bbb. Pre-existing first-jump stall filed as jumping-the-playhead-far-along-a-zoomed-in-long."
     }
-  ]
+  ],
+  "started": "2026-09-27T06:58:57.193Z",
+  "walks": [
+    "clip-pictures-when-zoomed-in-walk"
+  ],
+  "completed": "2026-09-27T07:35:10.079Z"
 }

@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 80,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T04:57:07.911Z",
-  "updated": "2026-09-27T08:29:07.617Z",
+  "updated": "2026-09-27T08:46:03.404Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video.html Library group (#gLibrary) and docs/design/mocks/shared/AGENTS.md ~line 1201: .libgrid repeat(auto-fill,minmax(96px,1fr)), .libtile .th aspect-ratio 16/10. App: Sources/PhotonzCore/LibraryShelfLayout.swift tileMinimumWidth = 68, fixed thumbnailHeight; LibraryShelfLayoutTests pin the numbers. Seen 2026-09-25 in /tmp/photonz-playtest/library-import-walk/2-imported-sc.png (Tutor....mp4). First raised by the manager on 2026-09-24 in the log of recordings-and-sounds-can-go-into-the-library-wi from queue/audits/2026-09-23-library-clips.json. Walks to rerun: shelf-tile-reveal-walk, library-shelf-height-walk, library-walk, starter-shelf-walk, library-import-walk. DONE 2026-09-27: LibraryShelfLayout.Sizing (.compact Current, .card Next via flag next-library-tiles-as-cards); every size is width(shelf)-dependent via tileWidth/thumbnailHeight/tileHeight(width:sizing:). LibraryPanel passes LibraryTileMetrics down the environment (\\.libraryTile) and reports its floor through onMetrics' third arg into DockBudgetScratch.shelfFloor. PlaytestHarness shelfTurnLimit raised 70 -> 130 for taller cards.",
@@ -51,6 +51,10 @@
     {
       "t": "2026-09-27T10:05:00.000Z",
       "note": "Verified: Scripts/test.sh 10044 tests green; 15 shelf/library walks pass (playtest-all shelf library), library-import-walk shows Tutorial Sample.mp4, b-roll.mp4, Sample Music.m4a whole, two to a row. Side by side with video.html's Library: size now matches (114x90 vs mock 112x105; the height gap is the mock's second caption line); the card look (border, edge-to-edge picture, left name, length line) differs and is filed p1 as library-tiles-look-like-the-mock-s-cards-with-th."
+    },
+    {
+      "t": "2026-09-27T08:46:03.402Z",
+      "note": "Next's Library shelf draws 96pt+ tiles, two to a row at rest, with a 16:10 picture (LibraryShelfLayout.Sizing.card behind next-library-tiles-as-cards, on in Next). Names read whole. Verified by Scripts/test.sh (10044 green) and 15 shelf/library walks at Next defaults; audit 2026-09-27-library-tiles.json with the mock beside the shelf. Card look filed p1."
     }
   ],
   "started": "2026-09-27T08:22:35.255Z",
@@ -60,5 +64,6 @@
     "library-shelf-height-walk",
     "library-walk",
     "starter-shelf-walk"
-  ]
+  ],
+  "completed": "2026-09-27T08:46:03.403Z"
 }

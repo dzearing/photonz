@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T11:13:27.990Z",
-  "updated": "2026-09-26T12:28:01.489Z",
+  "updated": "2026-09-27T06:40:40.975Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by every-panel-follows-the-design-system (2026-09-24). Reproduce: Scripts/playtest.sh Scripts/playtest/captions-panel-keeps-its-margins-walk.json --no-build, picture 1-captions-written-sc.png (copied to queue/audits/2026-09-24-panel-margins-4-captions.png): Appearance Opacity/Blending labels are .callout (12pt) secondary stacked over full-width controls, Captions Language/Font/Size are VideoKit.FieldRow 10.5pt faint in a 76pt column. The mock uses .irow everywhere (docs/design/mocks/shared/components/inspector.css:314 and :343). The picture sections are the ones the user redlines with daily, so the restyle is large and visible: if it should stop short of the mock anywhere, that is a decision card, not a quiet choice. VideoKit.FieldRow is the piece to reuse; ColorPartLayout owns the Appearance rows. Rows that cannot fit their control beside the label should drop it under the label (ViewThatFits), as ArrangementInspector.row and PropertyKeyRow now do.",
@@ -40,10 +40,41 @@
     {
       "t": "2026-09-26T12:28:01.488Z",
       "note": "seq 110 -> 50"
+    },
+    {
+      "t": "2026-09-27T04:53:09.990Z",
+      "note": "2026-09-26 21:00 (walks-that-fail-in-the-full-sweep-5, HEAD e459d903): captions-panel-keeps-its-margins-walk still fails step 30 with the probe in the back AND in front: 'the panel is 19.5pt wider than its 220pt dock ... Position Y ends 12.8pt from the panel's right edge, not 14pt'. Not the focus-commit breakage, so it stays with this task."
+    },
+    {
+      "t": "2026-09-27T05:59:46.526Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T06:40:13.418Z",
+      "note": "walks every-panel-keeps-its-margins-walk, captions-panel-keeps-its-margins-walk -> every-panel-keeps-its-margins-walk, captions-panel-keeps-its-margins-walk, panel-rows-read-as-one-column-walk"
+    },
+    {
+      "t": "2026-09-27T06:40:13.471Z",
+      "note": "Before building: reproduced on main e459d903: Appearance Opacity/Blending/Masked by stacked .caption labels over full width controls beside Captions' 10.5pt faint 76pt column; captions-panel-keeps-its-margins-walk failed step 30 (panel 19.5pt wider than its 220pt dock). Premiere/Photoshop check: both panels put a name column left and the control right, so the mock row is what their users expect. Current must not change, so everything is behind a new Next flag next-panel-rows-in-one-column."
+    },
+    {
+      "t": "2026-09-27T06:40:13.523Z",
+      "note": "Found the 19.5pt overflow: the clip's Sound Gain row (VideoKit.FieldRow) needed 76+12+60 track+6+58 box = 212pt in a 192pt row. FieldRow now draws through PanelFieldRow (stacks when it cannot fit) and the Gain track minimum is 40. All three panel walks pass; Scripts/test.sh 9997 tests pass."
+    },
+    {
+      "t": "2026-09-27T06:40:13.575Z",
+      "note": "left rough (no task, below the bar): Layout section menu values (Left, Top) keep callout size vs mock select 11.5pt; Effects settings take their 88pt column from their stepped-in start so their controls sit 24pt right of Appearance's; Fill/Outline names start after the tick. All in the audit's rough list for the user to react to."
+    },
+    {
+      "t": "2026-09-27T06:40:40.973Z",
+      "note": "Appearance, Effects, Text and Layout rows now draw the mock's .irow (10.5pt faint name in a 76pt column, control beside, dropping under only when it cannot fit) via PanelFieldRow/PanelRowLayout behind next-panel-rows-in-one-column (Next default on). VideoKit.FieldRow shares it, which fixed the 19.5pt narrow-dock overflow (Sound Gain row). Verified: test.sh 9997 green; every-panel/captions margins walks and new panel-rows-read-as-one-column-walk pass at default and narrowest dock; audit 2026-09-27-panel-rows-one-column.json with mock side by side. Commit e37a8618."
     }
   ],
   "walks": [
     "every-panel-keeps-its-margins-walk",
-    "captions-panel-keeps-its-margins-walk"
-  ]
+    "captions-panel-keeps-its-margins-walk",
+    "panel-rows-read-as-one-column-walk"
+  ],
+  "started": "2026-09-27T05:59:46.525Z",
+  "completed": "2026-09-27T06:40:40.974Z"
 }

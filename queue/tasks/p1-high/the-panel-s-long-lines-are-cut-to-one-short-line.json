@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T09:07:18.011Z",
-  "updated": "2026-09-26T12:28:01.385Z",
+  "updated": "2026-09-27T05:38:52.745Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by panel-copy-and-flag-descriptions-have-a-length-b (2026-09-24). The gate is Tests/PhotonzCoreTests/PanelCopyBudgetTests.swift: it scans every panel file (name contains Inspector, ends PartSettings.swift or Panel.swift, or PanelSectionsFooter.swift) with CopyBudget.phrases(inSwift:) and fails any shown string over CopyBudget.panelLine (60) characters. `allowed` holds the 32 offenders of 2026-09-24 by their first 40 characters, per file; striking one off is enforced (theAllowanceOnlyShrinks). Biggest: PlacementInspector (12), ComponentPanel (5), FrameColumnsInspector (5), ArrangementInspector (2), ColorStylePanel (2), LayerEffectsInspector (2), BlendModeInspector, MotionList none (fixed), PanelSectionsFooter (1). A few may be strings the scanner cannot see are hover tips (built in a helper not named ...Help/...Tip): rename the helper to end in Help and it drops off. Read UX-PATTERNS §4 'How much a section may say' first: condition notes (reach notes, legibility notes) are a different register but still must fit the line. The budget (40 vs 60) has a card on this task; build to its answer.",
@@ -55,6 +55,35 @@
     {
       "t": "2026-09-26T12:28:01.384Z",
       "note": "seq 300 -> 30"
+    },
+    {
+      "t": "2026-09-27T05:11:16.950Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T05:38:42.455Z",
+      "note": "owns these walks: sound-fades-in-the-panel-walk"
+    },
+    {
+      "t": "2026-09-27T05:38:42.507Z",
+      "note": "Review before building: the mocks print two of the offending lines themselves (video-audio.html Fades 'drag the diamonds on the lane', video.html 'Any property can be keyed'); the user's card answer (no sentences, explain behind a header question mark) is later and more specific, so both moved behind a new header question mark (SectionHelpMark: hover tip + click popover). Said so in the audit's rough."
+    },
+    {
+      "t": "2026-09-27T05:38:42.558Z",
+      "note": "Built: CopyBudget.panelLine 60 -> 40, new CopyBudget.isSentence; PanelCopyBudgetTests fails any shown line over 40 or a sentence, allowance list and shrink test removed (all 32 + the new 40-char offenders cut). Scanner fixes, unit tested: a tip declared as 'static let xHelp =' with its words on the next line is a tip; 'systemImage:' is not copy; '...AlertMessage' declarations are an alert's, not the panel's; the probe-only ViewBuildMeter note() log line is hidden. About 65 lines cut to labels across 15 panel files with each explanation moved to .panelHelp; Blending and Masked by popover lists show names only (explanation per row as tip); core instanceArrangementShortReason shortened. Files are shared with Current, so Current gets the shorter copy too (the user's rule is about the panel, not a release). UX-PATTERNS §4 updated to the 40/no-sentence rule."
+    },
+    {
+      "t": "2026-09-27T05:38:42.609Z",
+      "note": "Verified: Scripts/test.sh 9990 tests green; 11 walks green (sound-fades-in-the-panel updated to read the Fades question mark's tip via expect tooltip, plus transition-picker-at-a-cut, transitions-at-a-cut, border-offset, motion-swings-a-layer, layers-combine, group-says-it-overflows, fill-the-flow(+menu), panel-sections, placement). Before/after captures (screen recording granted, screen unlocked) in queue/audits/2026-09-27-panel-labels-*.png. Left rough, no task: panel text built in PhotonzCore (e.g. LayerStyleSelection.note, GroupOverflow.sentence as a tip) is invisible to the source scan; the ones found were cut by hand."
+    },
+    {
+      "t": "2026-09-27T05:38:52.743Z",
+      "note": "No panel line over 40 characters or written as a sentence: PanelCopyBudgetTests enforces 40 + no sentences with an empty allowance. About 65 lines across 15 panel files cut to labels, explanations moved to hover tips; Fades and Properties got a header question mark (hover tip + click popover). 9990 tests green, 11 affected walks green at Next defaults, before/after captures of a clip and a sound picked in queue/audits/2026-09-27-panel-labels-not-sentences.json. Commit b83c109e."
     }
-  ]
+  ],
+  "started": "2026-09-27T05:11:16.948Z",
+  "walks": [
+    "sound-fades-in-the-panel-walk"
+  ],
+  "completed": "2026-09-27T05:38:52.744Z"
 }

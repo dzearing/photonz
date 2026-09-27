@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 0.0024,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-26T14:04:20.098Z",
-  "updated": "2026-09-26T14:04:20.177Z",
+  "updated": "2026-09-26T17:04:20.787Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -30,6 +30,39 @@
     {
       "t": "2026-09-26T14:04:20.176Z",
       "note": "seq 370 -> 0.0024"
+    },
+    {
+      "t": "2026-09-26T16:26:53.625Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T17:03:58.159Z",
+      "note": "owns these walks: a-shape-s-bar-keeps-its-track-walk"
+    },
+    {
+      "t": "2026-09-26T17:03:58.211Z",
+      "note": "Reproduced in core (EmptyTracksTests, rectangle over an 8s take with tracks written down). Layer GONE + track left EMPTY: Delete/⌫ on the bar (timeline ⌫ = lift -> deleteSelectedLayers), ripple delete, Extract or Lift over its whole stretch. Layer KEPT + its Rectangle track left EMPTY: grouping it (group got a new V2 row), carrying it to a new track (moveClipToNewTrack). Layer KEPT, bar looks GONE: dragging one end past the other left a 10ms bar (~1px). Deleting the recording left V1 empty. Split everything / ripple deleting a recording piece: bar kept. Most likely user path: grouping (rectangle still in the layers list, its row empty) or ⌫ with the bar picked."
+    },
+    {
+      "t": "2026-09-26T17:03:58.262Z",
+      "note": "Fixed: LayerTime.shortestMS is one frame (33ms, MovieRef.frameStepMS) so no trim goes below a frame; a one-piece bar draws at least 6pt. EditorState.perform runs dropTracksEmptied(since:) inside every edit's own step: a track the app made for a shape/title/group (id == that layer's id, not media) goes when the edit empties it; V1/Audio and tracks the person added stay. New EmptyTracks.swift: emptyTrackIDs, deleteEmptyTracks, putOnTimeline(id, atMS, onTrack) (5s from the playhead, last 5s near the end), landNewLayers. Track right-click on an empty picture track: Add Rectangle, Add Text, Paste Here, Put Layer Here > (off-timeline layers); every track menu: Delete Empty Tracks. Layer row + canvas menus: Put on Timeline when a layer is on no track."
+    },
+    {
+      "t": "2026-09-26T17:03:58.313Z",
+      "note": "Decided: no drag from the layers list onto a track, because in Next the open timeline IS the layers list (TimelineIsTheLayerList), so the two never share the screen; a bar carried onto an empty track is the drag. Harness: clipCarryUpATrackHeld now carries a picked shape's bar too. Walk a-shape-s-bar-keeps-its-track-walk: 81 steps ok, 10 real captures (Delete takes row, undo restores, group leaves no empty rows, carry onto empty track, Add Text on empty track, Delete Empty Tracks). Neighbour walks (tracks, drawn shape row, library clip, track select, opacity, turned shape, captions track) 8/8 ok. Scripts/test.sh 9932 tests green. RippleTrimTests sliver case moved to the one-frame floor."
+    },
+    {
+      "t": "2026-09-26T17:03:58.364Z",
+      "note": "left rough: Add Text lands a layer named Text running playhead to end of shot (not 5s); Put on Timeline / Put Layer Here only reachable from older docs at defaults, covered by tests not walks; Paste Here not walked (shared clipboard); a 409ms hitch on the first Add Text (font/title look first use) seen once in the walk log. None earned its own task."
+    },
+    {
+      "t": "2026-09-26T17:04:20.785Z",
+      "note": "Every way a shape's bar left an empty row is fixed: tracks the app made for a shape/title/group go with the edit that empties them (same undo step), bars stop at one frame and draw at least 6pt, an empty track's right-click adds a rectangle/text/paste or puts a stray layer on it, Delete Empty Tracks, and Put on Timeline on layer and canvas menus. Verified by EmptyTracksTests, the new a-shape-s-bar-keeps-its-track-walk (81 steps, 10 real captures), 8 neighbour walks, Scripts/test.sh 9932 green. Commit 2f0c378f; audit queue/audits/2026-09-26-empty-tracks.json."
     }
-  ]
+  ],
+  "started": "2026-09-26T16:26:53.624Z",
+  "walks": [
+    "a-shape-s-bar-keeps-its-track-walk"
+  ],
+  "completed": "2026-09-26T17:04:20.786Z"
 }

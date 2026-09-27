@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 0.003,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-26T13:53:09.051Z",
-  "updated": "2026-09-26T13:53:09.127Z",
+  "updated": "2026-09-26T19:39:11.019Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -29,6 +29,47 @@
     {
       "t": "2026-09-26T13:53:09.126Z",
       "note": "seq 370 -> 0.003"
+    },
+    {
+      "t": "2026-09-26T18:43:51.869Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T19:35:08.585Z",
+      "note": "owns these walks: bar-end-follows-the-pointer-walk"
+    },
+    {
+      "t": "2026-09-26T19:35:24.776Z",
+      "note": "Reproduced 2026-09-26 with a new walk step, dragGrip (real mouse events posted to the window, grip position read back after each move): bar-end-follows-the-pointer-walk at Next defaults, Rectangle clip end pulled -160pt in 40 moves -> '41 steps, worst 160.0pt off the pointer, went back on itself 19 times'. The trace (grip-trace-17.json) alternated: grip under the pointer on odd moves, back at the grab point on even moves."
+    },
+    {
+      "t": "2026-09-26T19:35:24.827Z",
+      "note": "Cause: ClipPiecesBar's edge DragGesture read the hand in the grip's own .local space, and the grip is drawn where the drag has it (.offset), so each move of the grip was subtracted from the next reading. Not snapping, not a clamp. Same pattern in the strip's body carry, key diamonds, fade handles, transition band ends (ClipPiecesBar + TimelineLaneDrop) and KeyLanesView key drags; all now read in ClipPiecesBar.handSpace (.global). Trim tool handles and caption word/cue lanes were already in a fixed space. TimelineTrackSelect already carried a comment about exactly this."
+    },
+    {
+      "t": "2026-09-26T19:35:24.877Z",
+      "note": "Also: an edge held at its start by a magnet it already lines up with (rectangle end = recording end) reported no catch, so no snap line; ClipBarDrag.landing now keeps snappedTo on an unmoved landing (GripTraceTests). Cmd held on an edge drag frees it of every magnet (EditorState.updateClipBarDrag free:), matching Cmd on the canvas and in Trim; S still toggles snapping for the whole timeline. Walk proves it: same drag caught 3 without Cmd, 0 with."
+    },
+    {
+      "t": "2026-09-26T19:35:24.927Z",
+      "note": "Rebuilds: 40 moves rebuilt every track row (132) and every bar (130) because the ruler and each row's keyed-lanes check read the whole clipBarDrag session. Now EditorState keeps clipBarInHandIDs and clipBarHeldTimelineMS (set only at grab and let go), bars read shownDocument(forClip:), rows are Equatable (.equatable()) and use keyLanesAtRest: 53 row and 52 bar builds (the dragged one per move, the rest at grab and release). Walk claims trackRow atMost 60. Also moved the piece's walk marker before its .offset so a clip not starting at 0 is pressed where it is drawn."
+    },
+    {
+      "t": "2026-09-26T19:35:24.978Z",
+      "note": "Adversarial review: a Premiere/FCP user expects the edge to stay glued to the pointer, snap within a few points, and let go cleanly; that now holds for right end, left end and body (0.0pt worst, 0 reversals). Mock (video.html .clip) draws no end grips or drag pill; the app's grips and pill predate this task and are unchanged. At 60fps: each move was redrawn within the walk's 30ms read window at every step; no frame timer was run."
+    },
+    {
+      "t": "2026-09-26T19:35:25.027Z",
+      "note": "left rough (log only): the right hand panel still rebuilds each move of a bar drag (~35 of 40); not a row, not visible as jank in the walk, no task. The older motion strip's timing bars (MotionStripView drag at ~715/842) use .local translation and were not measured; not on the video timeline at Next defaults, so no task until someone sees it. keys-copy-between-layers-walk fails at step 81 exactly as in the 2026-09-25 sweep, already on walks-that-fail-in-the-full-sweep-5."
+    },
+    {
+      "t": "2026-09-26T19:39:11.017Z",
+      "note": "Shipped in 9d689bd9. Bar ends, whole bars, key diamonds, fade handles and transition band ends read the pointer in a fixed space, so the edge no longer jumps back every other move; Cmd drags an edge free of magnets; only the dragged row and bar rebuild per move (132->53 rows, 130->52 bars over 40 moves). Verified by bar-end-follows-the-pointer-walk at Next defaults (new dragGrip step: 0.0pt worst, 0 reversals for right end, left end and body; was 160pt and 19 reversals), GripTraceTests, full suite 9963 green. Audit: queue/audits/2026-09-26-bar-end-follows-the-pointer.json"
     }
-  ]
+  ],
+  "started": "2026-09-26T18:43:51.868Z",
+  "walks": [
+    "bar-end-follows-the-pointer-walk"
+  ],
+  "completed": "2026-09-26T19:39:11.018Z"
 }

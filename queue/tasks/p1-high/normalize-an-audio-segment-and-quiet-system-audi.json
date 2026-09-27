@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 0.03,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-26T13:53:22.392Z",
-  "updated": "2026-09-26T13:53:26.485Z",
+  "updated": "2026-09-26T20:30:43.376Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -30,6 +30,31 @@
     {
       "t": "2026-09-26T13:53:26.484Z",
       "note": "seq 370 -> 0.03"
+    },
+    {
+      "t": "2026-09-26T19:51:34.651Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T19:59:13.223Z",
+      "note": "Reproduced. (1) The user's recent recordings are quiet in the FILE: ffmpeg ebur128/volumedetect on ~/Pictures/Screenshots 'Recording 2026-09-25 at 08.01.27.mp4' peak -27.3 dBFS / -40.0 LUFS; '04.52.10' -24.9 dBFS / -39.5 LUFS; '2026-09-06 22.29.13' -36.7 dBFS / -65.1 LUFS; '2026-09-02' -45.3 dBFS / -63.3 LUFS. (2) The capture itself is at unity: new probe-only --audio-capture-diag records through the real ScreenRecorder (SCRecordingOutput, system audio) while afplay plays a -9.0 dBFS tone; the recording read back -8.7 dBFS peak with the Mac's output volume at 6 of 100. So SCK takes system audio before the output volume and adds no attenuation; with --with-microphone the pre-tone stretch read -91 dB (the probe has no mic grant), so mic mixing is unverified. (3) The drawing IS misleading: SoundFile.peaks is linear and SoundWaveform draws column*halfHeight, so a -30 dBFS peak is 3% of the lane. Verdict: capture not quiet, sources quiet, drawing misleading. Plan: dB-scaled waveform that follows gain, a non-destructive clip gain (dB) on the level, Normalize (peaks -1 dBFS) and Normalize Loudness (-14/-16 LUFS, BS.1770) from the right-click menu and a Gain row in the Sound panel. The auto-normalize-on-open checkbox is conditional on a quiet capture, which it is not; left to the user as an audit question. Checked: AVMutableAudioMix setVolumeRamp and AVAudioMixerNode.volume both honour x50 linearly (quiet.m4a peak 0.011 -> 0.551), so gain rides the existing ramps."
+    },
+    {
+      "t": "2026-09-26T20:30:21.911Z",
+      "note": "owns these walks: normalize-quiet-system-audio-walk"
+    },
+    {
+      "t": "2026-09-26T20:30:21.963Z",
+      "note": "Built: AudioLevel.clipGainDB (-48..+48, multiplies every ramp so playback, export, meter and headroom guard honour it); AudioNormalize (peak from waveform over played pieces; loudness targets -14/-16 capped at -1 dBFS peak); LoudnessMeter (BS.1770, calibration test -3.01 LUFS passes); SoundFile.loudnessLUFS; Waveform.drawnHeight (dB scale, 54 dB range, follows gain). App: right-click Normalize > Peaks to -1 dB / Loudness for Web / Podcast, Reset Gain (acts on every picked sound, one undo); Sound panel Gain row (slider + typed box) with Normalize under it; +N dB tag on the segment. Walk normalize-quiet-system-audio-walk at Next defaults: ok, 4 real captures; Loudness for Web gave +28.7 dB, matching ffmpeg's -42.7 LUFS reading. Neighbouring walks (linked sound, sound on the timeline, fades, mix meter, scrub, keyframes, panel order) ok. Full suite 9,985 green. Not built: auto-normalize-on-open (conditional on a quiet capture, which it is not; asked in the audit). Left rough, not filed: Normalize Loudness on a long file lands after a pause with no progress shown (audit rough)."
+    },
+    {
+      "t": "2026-09-26T20:30:43.374Z",
+      "note": "Reproduced first: capture is at unity (-9.0 dBFS tone recorded at -8.7 with volume 6/100), the user's recordings are quiet at the source (-25 to -45 dBFS peaks), and the linear waveform hid them. Shipped in 26ab36db: non-destructive gain on the segment, right-click Normalize (peaks -1 dB, loudness -14/-16 LUFS, BS.1770), Gain row + Normalize in the Sound panel, dB waveform that follows gain, +N dB tag. Export and meter honour it (tested). Walk normalize-quiet-system-audio-walk ok at Next defaults with 4 real captures; full suite green. Auto-normalize on open not built (capture is not quiet); asked in audit 2026-09-26-normalize-audio."
     }
-  ]
+  ],
+  "started": "2026-09-26T19:51:34.650Z",
+  "walks": [
+    "normalize-quiet-system-audio-walk"
+  ],
+  "completed": "2026-09-26T20:30:43.375Z"
 }

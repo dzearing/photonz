@@ -4,12 +4,12 @@
   "goal": "A new title over a video is white with a soft shadow, which reads on dark footage but nearly disappears where the words cross something light, like a white window or card in a screen recording, and while typing the words have no shadow at all. The title should stay legible wherever it is put, without the person restyling it.",
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
-  "seq": 160,
+  "seq": 170,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T22:19:18.336Z",
-  "updated": "2026-09-26T12:28:02.700Z",
+  "updated": "2026-09-27T12:11:16.107Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen in a-title-reads-over-a-video-walk 2-a-title-over-the-recording-sc.png (click at 120,110 on Sample Talk puts Ship over the Ready card). TitleLook.shadow is the mock soft shadow (sigma fontSize*6/26, 45% black). Options: stronger or tighter second shadow, a colour picked from the frame under the words, or a plate like captions. The inline draft (CanvasTextEditing.styleTextEditor) sets no shadow on the NSTextView. Mock video.html .vframe .title uses text-shadow 0 2px 12px rgba(0,0,0,.4), so anything beyond that is going further than the mock, not away from it.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-09-26T12:28:02.699Z",
       "note": "seq 160 -> 160"
+    },
+    {
+      "t": "2026-09-27T12:11:16.106Z",
+      "note": "seq 160 -> 170"
     }
   ],
   "walks": [

@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 0.002,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-26T13:57:27.112Z",
-  "updated": "2026-09-26T15:40:29.840Z",
+  "updated": "2026-09-26T15:40:47.462Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -45,11 +45,16 @@
     {
       "t": "2026-09-26T15:40:29.839Z",
       "note": "Fix: Layer.dragSpritePadding (core, tested) pads the sprite by renderBounds ∪ turnedReach; beginLayerDrag uses it. Layer.resizeScalesUniformly is false for a rotation or skew, so a turned layer's resize re-renders live instead of stretching the sprite. PhotonzDocument.editPosedForCanvas (core, tested) puts the pose on the layer before the hand's edit, then folds into keys; EditorState.foldingIntoKeys calls it. Tests: DragSpritePaddingTests, TurnedDragSpriteTests (render: sprite ink 20000 at 20/45/90/135 deg; failed with old padding, lost up to half), ResizePreviewScalingTests (+2), RotationSurvivesMoveAndResizeTests (every kind: rectangle, ellipse, line, arrow, path, text, image, group; keyed place/size/turn; turn back to stored angle still keys; Escape leaves nothing). Adversarial: Photoshop keeps the turn through move and Free Transform scale and resizes along the turned sides; ours already resized in the turned frame. Stickers and components are a picture and a group in the model, covered by image and group. Left rough: undo with Position and Size open takes two steps (filed undo-after-a-drag-puts-a-shape-back-where-it-was, p2, reproduced); drawn angle at 2s between keys 20@1s and 0@3s read 4 deg, not investigated (ease/playhead position, not a lost turn)."
+    },
+    {
+      "t": "2026-09-26T15:40:47.460Z",
+      "note": "Reproduced and fixed (762c458b). Mid-drag the turned shape's floating picture was cut to its upright box (corners sliced flat, read as rotation lost): now padded by the turned reach, and a turned layer's resize re-renders live. On a video with Rotation keyed, a move/resize wrote the stored angle back as a new key: the edit now lands on the pose (PhotonzDocument.editPosedForCanvas). Core+render tests written first; full suite green (9903). Two walks at Next defaults photograph the turned rectangle mid-move and after each move and resize, on a picture and a recording, with keys. Audit queue/audits/2026-09-26-turned-shape-keeps-its-turn.json. Unkeyed model never lost the turn in any case walked."
     }
   ],
   "started": "2026-09-26T15:08:20.628Z",
   "walks": [
     "a-turned-shape-keeps-its-turn-walk",
     "a-turned-shape-keeps-its-turn-on-a-video-walk"
-  ]
+  ],
+  "completed": "2026-09-26T15:40:47.461Z"
 }

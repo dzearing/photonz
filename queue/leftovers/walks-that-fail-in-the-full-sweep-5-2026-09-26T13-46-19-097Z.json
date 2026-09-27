@@ -1,0 +1,21 @@
+{
+  "id": "walks-that-fail-in-the-full-sweep-5-2026-09-26T13-46-19-097Z",
+  "task": "walks-that-fail-in-the-full-sweep-5",
+  "kind": "task",
+  "label": "Walks that fail in the full sweep",
+  "title": "Walks that fail in the full sweep",
+  "outcome": "failed",
+  "at": "2026-09-26T13:46:19.097Z",
+  "files": [
+    "Scripts/playtest/hold-on-a-frame-walk.json",
+    "Scripts/playtest/keys-copy-between-layers-walk.json",
+    "Scripts/playtest/panel-grip-walk.json",
+    "Scripts/playtest/punch-in-and-hold-walk.json"
+  ],
+  "count": 4,
+  "state": "stashed",
+  "stash": "4b55ac5d4bcd2557e01962f895e8c112ce057457",
+  "restore": "git stash apply 4b55ac5d4bcd2557e01962f895e8c112ce057457",
+  "why": "",
+  "handed": "2026-09-27T02:17:55.732Z"
+}

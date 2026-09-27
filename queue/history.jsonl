@@ -7574,3 +7574,208 @@
 {"t":"2026-09-26T12:28:03.759Z","ev":"task_resequenced","id":"find-out-whether-delete-layer-and-the-fill-keys","from":50,"to":40}
 {"t":"2026-09-26T12:28:35.576Z","ev":"triage","summary":"open 52 -> 50 (p1 12->13, p2 35->33, p3 5->4). merged 2 (Blade click into the timeline click keeper; guide closed-rectangle rule into the design rules scrub), moved 2 up to p1 (panel says labels not sentences, per the user card answer; walks that fail in the full sweep, 6 -> 27 red), reset 0, groomed 5 (click keeper, panel lines, clip pictures and experiments acceptance to the card answers, trim bar retitled after its premise went), spot-checked 2 new p1 bugs (both reproduced), resequenced all open tasks to steps of 10, leftovers none"}
 {"t":"2026-09-26T12:29:29.249Z","ev":"digest","file":"2026-09-26.md"}
+{"t":"2026-09-26T12:29:45.041Z","ev":"task_started","id":"clicking-a-cut-opens-the-transition-picker-again","title":"A click on the timeline does its job again: the Blade cuts, a cut opens its picker, a bar gets picked","priority":"p1-high"}
+{"t":"2026-09-26T13:10:18.063Z","ev":"task_note","id":"find-out-why-the-app-sometimes-dies-at-the-start"}
+{"t":"2026-09-26T13:10:28.242Z","ev":"task_note","id":"walks-that-drag-a-clip-on-the-timeline-by-window"}
+{"t":"2026-09-26T13:11:06.546Z","ev":"task_done","id":"clicking-a-cut-opens-the-transition-picker-again","from":"in_progress","note":"No commit broke the clicks: a 'Photonz (Probe) quit unexpectedly' alert (from the 2026-09-25 23:22 EXC_GUARD crash) held the front for 13h, so the probe was never active or key and synthesized clicks on SwiftUI tap/drag gestures were dropped (Buttons still fired). A person's real click was not broken. Closed the alert; all six walks pass on unchanged HEAD; the Blade checks were added to the-timeline-is-the-one-in-the-mock-walk and video-tool-bar-walk and both pass. probe-app.sh Grants line and failed walks now flag a system alert in front. 8f940789, 9884 tests green, full sweep requested."}
+{"t":"2026-09-26T13:23:19.409Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-5"}
+{"t":"2026-09-26T13:23:19.496Z","ev":"slice_pass","walks":50,"passed":49,"failed":1,"seconds":707,"of":623,"rotating":true}
+{"t":"2026-09-26T13:23:19.620Z","ev":"task_started","id":"walks-that-fail-in-the-full-sweep-5","title":"Walks that fail in the full sweep","priority":"p1-high"}
+{"t":"2026-09-26T13:30:15.405Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-5"}
+{"t":"2026-09-26T13:46:18.685Z","ev":"runner_failed","id":"walks-that-fail-in-the-full-sweep-5","kind":"task","exit":143,"consecutive":1,"outcome":"failed","environment":false,"signIn":false,"reason":null,"error":"▸ Bash Scripts/playtest-all.sh --no-build --only /tmp/wfs5/list.txt 2>&1 | grep -E \"FAILED|CRASHED|COULD NOT|ran out…"}
+{"t":"2026-09-26T13:46:19.098Z","ev":"leftovers","id":"walks-that-fail-in-the-full-sweep-5","task":"walks-that-fail-in-the-full-sweep-5","state":"stashed","count":4,"stash":"4b55ac5d4bcd2557e01962f895e8c112ce057457"}
+{"t":"2026-09-26T13:53:09.055Z","ev":"task_created","id":"dragging-a-bar-s-end-tracks-the-pointer-without","priority":"p1-high","title":"Dragging a bar's end tracks the pointer without flickering"}
+{"t":"2026-09-26T13:53:09.128Z","ev":"task_resequenced","id":"dragging-a-bar-s-end-tracks-the-pointer-without","from":370,"to":0.003}
+{"t":"2026-09-26T13:53:22.396Z","ev":"task_created","id":"normalize-an-audio-segment-and-quiet-system-audi","priority":"p1-high","title":"Normalize an audio segment, and quiet system audio shows and sounds right"}
+{"t":"2026-09-26T13:53:26.486Z","ev":"task_resequenced","id":"normalize-an-audio-segment-and-quiet-system-audi","from":370,"to":0.03}
+{"t":"2026-09-26T13:53:57.381Z","ev":"task_created","id":"a-walk-never-takes-the-keyboard-the-pointer-or-f","priority":"p1-high","title":"A walk never takes the keyboard, the pointer or focus from the person"}
+{"t":"2026-09-26T13:53:57.463Z","ev":"task_resequenced","id":"a-walk-never-takes-the-keyboard-the-pointer-or-f","from":370,"to":0.035}
+{"t":"2026-09-26T13:57:27.116Z","ev":"task_created","id":"a-rotated-shape-keeps-its-rotation-when-you-move","priority":"p1-high","title":"A rotated shape keeps its rotation when you move or resize it"}
+{"t":"2026-09-26T13:57:27.200Z","ev":"task_resequenced","id":"a-rotated-shape-keeps-its-rotation-when-you-move","from":370,"to":0.002}
+{"t":"2026-09-26T14:00:22.064Z","ev":"task_created","id":"scrubbing-is-smooth-never-goes-black-and-the-pic","priority":"p1-high","title":"Scrubbing is smooth, never goes black, and the picture moves with the playhead"}
+{"t":"2026-09-26T14:00:22.142Z","ev":"task_resequenced","id":"scrubbing-is-smooth-never-goes-black-and-the-pic","from":370,"to":0.0025}
+{"t":"2026-09-26T14:01:17.394Z","ev":"task_created","id":"opacity-changes-a-shape-on-a-video-and-animates","priority":"p1-high","title":"Opacity changes a shape on a video, and animates with keys"}
+{"t":"2026-09-26T14:01:17.472Z","ev":"task_resequenced","id":"opacity-changes-a-shape-on-a-video-and-animates","from":370,"to":0.0022}
+{"t":"2026-09-26T14:04:20.102Z","ev":"task_created","id":"a-shape-s-bar-never-vanishes-from-its-track-and","priority":"p1-high","title":"A shape's bar never vanishes from its track, and an empty track can take one back"}
+{"t":"2026-09-26T14:04:20.178Z","ev":"task_resequenced","id":"a-shape-s-bar-never-vanishes-from-its-track-and","from":370,"to":0.0024}
+{"t":"2026-09-26T15:08:20.253Z","ev":"loop_started","pid":45279}
+{"t":"2026-09-26T15:08:20.297Z","ev":"loop_awake","held":true,"pid":45289,"screenLocked":false}
+{"t":"2026-09-26T15:08:20.635Z","ev":"task_started","id":"a-rotated-shape-keeps-its-rotation-when-you-move","title":"A rotated shape keeps its rotation when you move or resize it","priority":"p1-high"}
+{"t":"2026-09-26T15:39:57.815Z","ev":"task_created","id":"undo-after-a-drag-puts-a-shape-back-where-it-was","priority":"p2-normal","title":"Undo after a drag puts a shape back where it was, even with Position and Size open"}
+{"t":"2026-09-26T15:40:29.728Z","ev":"task_walks","id":"a-rotated-shape-keeps-its-rotation-when-you-move","walks":["a-turned-shape-keeps-its-turn-walk","a-turned-shape-keeps-its-turn-on-a-video-walk"]}
+{"t":"2026-09-26T15:40:29.789Z","ev":"task_note","id":"a-rotated-shape-keeps-its-rotation-when-you-move"}
+{"t":"2026-09-26T15:40:29.841Z","ev":"task_note","id":"a-rotated-shape-keeps-its-rotation-when-you-move"}
+{"t":"2026-09-26T15:40:47.463Z","ev":"task_done","id":"a-rotated-shape-keeps-its-rotation-when-you-move","from":"in_progress","note":"Reproduced and fixed (762c458b). Mid-drag the turned shape's floating picture was cut to its upright box (corners sliced flat, read as rotation lost): now padded by the turned reach, and a turned layer's resize re-renders live. On a video with Rotation keyed, a move/resize wrote the stored angle back as a new key: the edit now lands on the pose (PhotonzDocument.editPosedForCanvas). Core+render tests written first; full suite green (9903). Two walks at Next defaults photograph the turned rectangle mid-move and after each move and resize, on a picture and a recording, with keys. Audit queue/audits/2026-09-26-turned-shape-keeps-its-turn.json. Unkeyed model never lost the turn in any case walked."}
+{"t":"2026-09-26T15:54:37.086Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":776,"of":625,"rotating":true}
+{"t":"2026-09-26T15:54:37.215Z","ev":"task_started","id":"opacity-changes-a-shape-on-a-video-and-animates","title":"Opacity changes a shape on a video, and animates with keys","priority":"p1-high"}
+{"t":"2026-09-26T16:14:22.841Z","ev":"task_note","id":"opacity-changes-a-shape-on-a-video-and-animates"}
+{"t":"2026-09-26T16:14:22.891Z","ev":"task_note","id":"opacity-changes-a-shape-on-a-video-and-animates"}
+{"t":"2026-09-26T16:14:22.943Z","ev":"task_note","id":"opacity-changes-a-shape-on-a-video-and-animates"}
+{"t":"2026-09-26T16:14:22.996Z","ev":"task_walks","id":"opacity-changes-a-shape-on-a-video-and-animates","walks":["opacity-on-a-video-shape-walk"]}
+{"t":"2026-09-26T16:14:49.767Z","ev":"task_done","id":"opacity-changes-a-shape-on-a-video-and-animates","from":"in_progress","note":"Reproduced: an unkeyed shape dimmed fine; a keyed one (the timeline row's diamond keys opacity) ignored Appearance > Opacity, because the slider wrote the layer's own value and a keyed value is read from its keys. Fixed in PhotonzCore/LooksAtThePlayhead.swift (lookPosed, editLooks) and EditorState+LooksAtThePlayhead.swift: Opacity, blur Amount, shadow and glow Size, Corner Radius and Thickness now key at the playhead when keyed, change the whole layer when not, and read the value at the playhead. Verified: LooksAtThePlayheadTests (11), full suite 9914 green, walk opacity-on-a-video-shape-walk at Next defaults (1s/2s/3s read 100/22/0; half way is 22 rather than 50 because keys ease in and out by default, raised in the audit), plus five neighbouring walks ok. Commit 0c69197d. Audit queue/audits/2026-09-26-opacity-on-a-video.json."}
+{"t":"2026-09-26T16:26:53.505Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":700,"of":626,"rotating":true}
+{"t":"2026-09-26T16:26:53.630Z","ev":"task_started","id":"a-shape-s-bar-never-vanishes-from-its-track-and","title":"A shape's bar never vanishes from its track, and an empty track can take one back","priority":"p1-high"}
+{"t":"2026-09-26T17:03:58.161Z","ev":"task_walks","id":"a-shape-s-bar-never-vanishes-from-its-track-and","walks":["a-shape-s-bar-keeps-its-track-walk"]}
+{"t":"2026-09-26T17:03:58.213Z","ev":"task_note","id":"a-shape-s-bar-never-vanishes-from-its-track-and"}
+{"t":"2026-09-26T17:03:58.264Z","ev":"task_note","id":"a-shape-s-bar-never-vanishes-from-its-track-and"}
+{"t":"2026-09-26T17:03:58.315Z","ev":"task_note","id":"a-shape-s-bar-never-vanishes-from-its-track-and"}
+{"t":"2026-09-26T17:03:58.366Z","ev":"task_note","id":"a-shape-s-bar-never-vanishes-from-its-track-and"}
+{"t":"2026-09-26T17:04:20.788Z","ev":"task_done","id":"a-shape-s-bar-never-vanishes-from-its-track-and","from":"in_progress","note":"Every way a shape's bar left an empty row is fixed: tracks the app made for a shape/title/group go with the edit that empties them (same undo step), bars stop at one frame and draw at least 6pt, an empty track's right-click adds a rectangle/text/paste or puts a stray layer on it, Delete Empty Tracks, and Put on Timeline on layer and canvas menus. Verified by EmptyTracksTests, the new a-shape-s-bar-keeps-its-track-walk (81 steps, 10 real captures), 8 neighbour walks, Scripts/test.sh 9932 green. Commit 2f0c378f; audit queue/audits/2026-09-26-empty-tracks.json."}
+{"t":"2026-09-26T17:18:15.588Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":810,"of":627,"rotating":true}
+{"t":"2026-09-26T17:18:15.719Z","ev":"task_started","id":"scrubbing-is-smooth-never-goes-black-and-the-pic","title":"Scrubbing is smooth, never goes black, and the picture moves with the playhead","priority":"p1-high"}
+{"t":"2026-09-26T17:29:14.075Z","ev":"task_walks","id":"scrubbing-is-smooth-never-goes-black-and-the-pic","walks":["scrub-never-blacks-out-walk"]}
+{"t":"2026-09-26T17:34:30.268Z","ev":"task_note","id":"scrubbing-is-smooth-never-goes-black-and-the-pic"}
+{"t":"2026-09-26T18:30:41.238Z","ev":"task_created","id":"scrubbing-back-fast-keeps-the-video-picture-movi","priority":"p2-normal","title":"Scrubbing back fast keeps the video picture moving instead of freezing for half a second"}
+{"t":"2026-09-26T18:31:10.265Z","ev":"task_note","id":"scrubbing-is-smooth-never-goes-black-and-the-pic"}
+{"t":"2026-09-26T18:31:39.420Z","ev":"task_done","id":"scrubbing-is-smooth-never-goes-black-and-the-pic","from":"in_progress","note":"Scrubbing no longer blanks and a moving shape stays on its outline (commit 33932f22). Reproduced first with new walk scrub-never-blacks-out-walk (Next defaults, 3456x2234, keyed rectangle, every display frame measured): before, 1 of 165 frames EMPTY (frame budget dropped the stand-in between choosing and drawing it: theory 1 true) and the rectangle off its outline at 125 of 165 frames. After, 4 runs: 0 empty, 0 off the outline, picture at most 1 display frame behind the playhead (not exactly at it; graphics-only compositing measured as costly as the full composite, so it was not the fix). Fixes: store snapshot per render, outline posed at the picture's moment, one picture per display refresh, reads queued latest-wins with directional read-ahead and farthest-first eviction, nearest stand-in for a hand, composite at shown size (17ms -> 7.5ms). Full suite green; 17 neighbour walks ok, 3 others fail identically without this change. Audit queue/audits/2026-09-26-scrub-smooth.json. Follow-up p2: scrubbing-back-fast-keeps-the-video-picture-movi."}
+{"t":"2026-09-26T18:43:51.747Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":706,"of":628,"rotating":true}
+{"t":"2026-09-26T18:43:51.875Z","ev":"task_started","id":"dragging-a-bar-s-end-tracks-the-pointer-without","title":"Dragging a bar's end tracks the pointer without flickering","priority":"p1-high"}
+{"t":"2026-09-26T19:07:50.362Z","ev":"decision_resolved","id":"a-keyed-value-s-curve-opens-where-you-want-it-where-should-a-keyed-value-s-cur","taskId":"a-keyed-value-s-curve-opens-where-you-want-it","choice":"a"}
+{"t":"2026-09-26T19:07:50.384Z","ev":"task_unblocked","id":"a-keyed-value-s-curve-opens-where-you-want-it","decision":"a-keyed-value-s-curve-opens-where-you-want-it-where-should-a-keyed-value-s-cur"}
+{"t":"2026-09-26T19:35:08.587Z","ev":"task_walks","id":"dragging-a-bar-s-end-tracks-the-pointer-without","walks":["bar-end-follows-the-pointer-walk"]}
+{"t":"2026-09-26T19:35:24.778Z","ev":"task_note","id":"dragging-a-bar-s-end-tracks-the-pointer-without"}
+{"t":"2026-09-26T19:35:24.829Z","ev":"task_note","id":"dragging-a-bar-s-end-tracks-the-pointer-without"}
+{"t":"2026-09-26T19:35:24.879Z","ev":"task_note","id":"dragging-a-bar-s-end-tracks-the-pointer-without"}
+{"t":"2026-09-26T19:35:24.929Z","ev":"task_note","id":"dragging-a-bar-s-end-tracks-the-pointer-without"}
+{"t":"2026-09-26T19:35:24.980Z","ev":"task_note","id":"dragging-a-bar-s-end-tracks-the-pointer-without"}
+{"t":"2026-09-26T19:35:25.029Z","ev":"task_note","id":"dragging-a-bar-s-end-tracks-the-pointer-without"}
+{"t":"2026-09-26T19:39:11.020Z","ev":"task_done","id":"dragging-a-bar-s-end-tracks-the-pointer-without","from":"in_progress","note":"Shipped in 9d689bd9. Bar ends, whole bars, key diamonds, fade handles and transition band ends read the pointer in a fixed space, so the edge no longer jumps back every other move; Cmd drags an edge free of magnets; only the dragged row and bar rebuild per move (132->53 rows, 130->52 bars over 40 moves). Verified by bar-end-follows-the-pointer-walk at Next defaults (new dragGrip step: 0.0pt worst, 0 reversals for right end, left end and body; was 160pt and 19 reversals), GripTraceTests, full suite 9963 green. Audit: queue/audits/2026-09-26-bar-end-follows-the-pointer.json"}
+{"t":"2026-09-26T19:51:34.443Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-5"}
+{"t":"2026-09-26T19:51:34.532Z","ev":"slice_pass","walks":50,"passed":49,"failed":1,"seconds":709,"of":629,"rotating":true}
+{"t":"2026-09-26T19:51:34.657Z","ev":"task_started","id":"normalize-an-audio-segment-and-quiet-system-audi","title":"Normalize an audio segment, and quiet system audio shows and sounds right","priority":"p1-high"}
+{"t":"2026-09-26T19:59:13.225Z","ev":"task_note","id":"normalize-an-audio-segment-and-quiet-system-audi"}
+{"t":"2026-09-26T20:30:21.913Z","ev":"task_walks","id":"normalize-an-audio-segment-and-quiet-system-audi","walks":["normalize-quiet-system-audio-walk"]}
+{"t":"2026-09-26T20:30:21.965Z","ev":"task_note","id":"normalize-an-audio-segment-and-quiet-system-audi"}
+{"t":"2026-09-26T20:30:43.377Z","ev":"task_done","id":"normalize-an-audio-segment-and-quiet-system-audi","from":"in_progress","note":"Reproduced first: capture is at unity (-9.0 dBFS tone recorded at -8.7 with volume 6/100), the user's recordings are quiet at the source (-25 to -45 dBFS peaks), and the linear waveform hid them. Shipped in 26ab36db: non-destructive gain on the segment, right-click Normalize (peaks -1 dB, loudness -14/-16 LUFS, BS.1770), Gain row + Normalize in the Sound panel, dB waveform that follows gain, +N dB tag. Export and meter honour it (tested). Walk normalize-quiet-system-audio-walk ok at Next defaults with 4 real captures; full suite green. Auto-normalize on open not built (capture is not quiet); asked in audit 2026-09-26-normalize-audio."}
+{"t":"2026-09-26T20:45:13.043Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-5"}
+{"t":"2026-09-26T20:45:13.127Z","ev":"slice_pass","walks":50,"passed":48,"failed":2,"seconds":844,"of":630,"rotating":true}
+{"t":"2026-09-26T20:45:13.254Z","ev":"task_started","id":"a-walk-never-takes-the-keyboard-the-pointer-or-f","title":"A walk never takes the keyboard, the pointer or focus from the person","priority":"p1-high"}
+{"t":"2026-09-26T22:11:25.154Z","ev":"task_created","id":"walks-run-while-the-person-works-once-the-whole","priority":"p1-high","title":"Walks run while the person works, once the whole set measures clean"}
+{"t":"2026-09-26T22:11:57.972Z","ev":"task_walks","id":"a-walk-never-takes-the-keyboard-the-pointer-or-f","walks":["a-clip-s-sound-is-linked-under-it-walk","effects-remembered-walk","locked-layer-key-press-walk","tutorial-a-title-that-moves-walk"]}
+{"t":"2026-09-26T22:11:58.022Z","ev":"task_note","id":"a-walk-never-takes-the-keyboard-the-pointer-or-f"}
+{"t":"2026-09-26T22:11:58.072Z","ev":"task_note","id":"a-walk-never-takes-the-keyboard-the-pointer-or-f"}
+{"t":"2026-09-26T22:11:58.123Z","ev":"task_note","id":"a-walk-never-takes-the-keyboard-the-pointer-or-f"}
+{"t":"2026-09-26T22:11:58.175Z","ev":"task_note","id":"a-walk-never-takes-the-keyboard-the-pointer-or-f"}
+{"t":"2026-09-26T22:11:58.225Z","ev":"task_note","id":"a-walk-never-takes-the-keyboard-the-pointer-or-f"}
+{"t":"2026-09-26T22:12:23.376Z","ev":"task_done","id":"a-walk-never-takes-the-keyboard-the-pointer-or-f","from":"in_progress","note":"Walks no longer activate the probe, raise its windows over other apps, or open menus they only read (37854689). Measured by queue/bin/focus-drill.sh (full-screen stand-in holds the front): standing set of 4 and a 30-walk spread clean, pictures still real. Menu photos (66 walks) still take the keys about 1s per picture. Drill runs after every rotating check. Whole-set measurement and relaxing the idle gate moved to walks-run-while-the-person-works-once-the-whole (p1). Tests 9985 passed."}
+{"t":"2026-09-26T22:25:09.545Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-5"}
+{"t":"2026-09-26T22:26:19.788Z","ev":"slice_pass","walks":50,"passed":48,"failed":2,"seconds":740,"of":630,"rotating":true}
+{"t":"2026-09-26T22:26:19.941Z","ev":"task_started","id":"walks-run-while-the-person-works-once-the-whole","title":"Walks run while the person works, once the whole set measures clean","priority":"p1-high"}
+{"t":"2026-09-26T23:02:00.384Z","ev":"task_note","id":"walks-run-while-the-person-works-once-the-whole"}
+{"t":"2026-09-27T02:00:46.817Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-5"}
+{"t":"2026-09-27T02:03:18.485Z","ev":"task_walks","id":"walks-run-while-the-person-works-once-the-whole","walks":["close-a-trimmed-recording-walk","history-menu-title-walk","history-thumbnail-shapes-walk","never-granting-walk","opening-a-recording-walk","menu-checkmarks-walk","panel-name-walk"]}
+{"t":"2026-09-27T02:03:18.537Z","ev":"task_note","id":"walks-run-while-the-person-works-once-the-whole"}
+{"t":"2026-09-27T02:03:18.588Z","ev":"task_note","id":"walks-run-while-the-person-works-once-the-whole"}
+{"t":"2026-09-27T02:03:18.639Z","ev":"task_note","id":"walks-run-while-the-person-works-once-the-whole"}
+{"t":"2026-09-27T02:03:18.690Z","ev":"task_done","id":"walks-run-while-the-person-works-once-the-whole","from":"in_progress","note":"Every walk (630) measured with the focus drill; 5 that took focus fixed (sheets, history strip, toasts, Welcome window stay under the person's work). Walks and the rotating check now run while the person works; menu-photographing walks, bare probe launches and the whole set still wait. CLAUDE.md and runner prompt updated. Commits 50988546, 42644735; 9985 tests pass."}
+{"t":"2026-09-27T02:15:51.698Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-5"}
+{"t":"2026-09-27T02:17:55.581Z","ev":"slice_pass","walks":50,"passed":49,"failed":1,"seconds":726,"of":630,"rotating":true}
+{"t":"2026-09-27T02:17:55.734Z","ev":"leftovers_handed","id":"walks-that-fail-in-the-full-sweep-5","task":"walks-that-fail-in-the-full-sweep-5","count":1}
+{"t":"2026-09-27T02:17:55.736Z","ev":"task_started","id":"walks-that-fail-in-the-full-sweep-5","title":"Walks that fail in the full sweep","priority":"p1-high"}
+{"t":"2026-09-27T04:53:09.992Z","ev":"task_note","id":"panel-row-labels-are-one-size-and-sit-in-one-col"}
+{"t":"2026-09-27T04:53:10.044Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-5"}
+{"t":"2026-09-27T04:53:10.096Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-5"}
+{"t":"2026-09-27T04:53:10.148Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-5"}
+{"t":"2026-09-27T04:53:10.205Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-5"}
+{"t":"2026-09-27T04:53:10.262Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-5"}
+{"t":"2026-09-27T04:53:14.780Z","ev":"task_done","id":"walks-that-fail-in-the-full-sweep-5","from":"in_progress","note":"All 22 walks this task owns pass, plus 16 more the same cause broke. Root cause: 37854689 stopped activating the probe, and SwiftUI takes drags, some clicks and a live menu bar only in the active app. Fixed in the walk harness (e459d903): real drags take the front and hand it back; setup front for 28 walks; those wait for the person to be away (walk-needs-the-mac); panelMenu always rebuilds SwiftUI rows; Cmd V stand-in. Five walks were drift and were rewritten. Verified: 34 touched walks passed twice in a row, all 97 panelMenu walks pass, tests 9988 green. Whole-set sweep requested."}
+{"t":"2026-09-27T05:11:16.810Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":931,"of":630,"rotating":true}
+{"t":"2026-09-27T05:11:16.956Z","ev":"task_started","id":"the-panel-s-long-lines-are-cut-to-one-short-line","title":"The right hand panel says labels and tools, never sentences","priority":"p1-high"}
+{"t":"2026-09-27T05:38:42.457Z","ev":"task_walks","id":"the-panel-s-long-lines-are-cut-to-one-short-line","walks":["sound-fades-in-the-panel-walk"]}
+{"t":"2026-09-27T05:38:42.509Z","ev":"task_note","id":"the-panel-s-long-lines-are-cut-to-one-short-line"}
+{"t":"2026-09-27T05:38:42.560Z","ev":"task_note","id":"the-panel-s-long-lines-are-cut-to-one-short-line"}
+{"t":"2026-09-27T05:38:42.611Z","ev":"task_note","id":"the-panel-s-long-lines-are-cut-to-one-short-line"}
+{"t":"2026-09-27T05:38:52.746Z","ev":"task_done","id":"the-panel-s-long-lines-are-cut-to-one-short-line","from":"in_progress","note":"No panel line over 40 characters or written as a sentence: PanelCopyBudgetTests enforces 40 + no sentences with an empty allowance. About 65 lines across 15 panel files cut to labels, explanations moved to hover tips; Fades and Properties got a header question mark (hover tip + click popover). 9990 tests green, 11 affected walks green at Next defaults, before/after captures of a clip and a sound picked in queue/audits/2026-09-27-panel-labels-not-sentences.json. Commit b83c109e."}
+{"t":"2026-09-27T05:59:46.380Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":1102,"of":630,"rotating":true}
+{"t":"2026-09-27T05:59:46.532Z","ev":"task_started","id":"panel-row-labels-are-one-size-and-sit-in-one-col","title":"Panel row labels are one size and sit in one column in every section","priority":"p1-high"}
+{"t":"2026-09-27T06:40:13.420Z","ev":"task_walks","id":"panel-row-labels-are-one-size-and-sit-in-one-col","walks":["every-panel-keeps-its-margins-walk","captions-panel-keeps-its-margins-walk","panel-rows-read-as-one-column-walk"]}
+{"t":"2026-09-27T06:40:13.473Z","ev":"task_note","id":"panel-row-labels-are-one-size-and-sit-in-one-col"}
+{"t":"2026-09-27T06:40:13.525Z","ev":"task_note","id":"panel-row-labels-are-one-size-and-sit-in-one-col"}
+{"t":"2026-09-27T06:40:13.577Z","ev":"task_note","id":"panel-row-labels-are-one-size-and-sit-in-one-col"}
+{"t":"2026-09-27T06:40:40.976Z","ev":"task_done","id":"panel-row-labels-are-one-size-and-sit-in-one-col","from":"in_progress","note":"Appearance, Effects, Text and Layout rows now draw the mock's .irow (10.5pt faint name in a 76pt column, control beside, dropping under only when it cannot fit) via PanelFieldRow/PanelRowLayout behind next-panel-rows-in-one-column (Next default on). VideoKit.FieldRow shares it, which fixed the 19.5pt narrow-dock overflow (Sound Gain row). Verified: test.sh 9997 green; every-panel/captions margins walks and new panel-rows-read-as-one-column-walk pass at default and narrowest dock; audit 2026-09-27-panel-rows-one-column.json with mock side by side. Commit e37a8618."}
+{"t":"2026-09-27T06:58:57.045Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":946,"of":631,"rotating":true}
+{"t":"2026-09-27T06:58:57.202Z","ev":"task_started","id":"clips-on-the-timeline-show-pictures-of-what-is-i","title":"Clips on the timeline show pictures of what is in them","priority":"p1-high"}
+{"t":"2026-09-27T07:01:45.399Z","ev":"task_note","id":"clips-on-the-timeline-show-pictures-of-what-is-i"}
+{"t":"2026-09-27T07:07:45.373Z","ev":"task_walks","id":"clips-on-the-timeline-show-pictures-of-what-is-i","walks":["clip-pictures-when-zoomed-in-walk"]}
+{"t":"2026-09-27T07:34:15.174Z","ev":"task_created","id":"jumping-the-playhead-far-along-a-zoomed-in-long","priority":"p2-normal","title":"Jumping the playhead far along a zoomed in long recording never freezes the app"}
+{"t":"2026-09-27T07:34:27.919Z","ev":"task_walks","id":"jumping-the-playhead-far-along-a-zoomed-in-long","walks":[]}
+{"t":"2026-09-27T07:34:27.972Z","ev":"task_note","id":"clips-on-the-timeline-show-pictures-of-what-is-i"}
+{"t":"2026-09-27T07:34:28.022Z","ev":"task_note","id":"clips-on-the-timeline-show-pictures-of-what-is-i"}
+{"t":"2026-09-27T07:35:10.081Z","ev":"task_done","id":"clips-on-the-timeline-show-pictures-of-what-is-i","from":"in_progress","note":"Zoomed in past Fit, video clips show frames of their recording along them (fading in, 3pt colour band kept, name in a dark pill, picked ring unchanged); at Fit the mock's bar. Core ClipFilmstrip (tested), ClipFilmstripView + picture lanes in MovieDecoder, ClipPiecesBar. Verified by clip-pictures-when-zoomed-in-walk at Next defaults on a 5 minute talk: Fit none, 2x and 16x pictures all read, zoom/scroll passes 15-33ms, 6 real captures; audit queue/audits/2026-09-27-clip-pictures-when-zoomed-in.json. Test suite green (10018). Commit b7275bbb. Pre-existing first-jump stall filed as jumping-the-playhead-far-along-a-zoomed-in-long."}
+{"t":"2026-09-27T07:50:20.901Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":756,"of":632,"rotating":true}
+{"t":"2026-09-27T07:50:21.054Z","ev":"task_started","id":"a-video-window-says-its-name-size-length-and-whe","title":"A video window says its name, size, length and whether it is saved in its title bar","priority":"p1-high"}
+{"t":"2026-09-27T08:08:51.282Z","ev":"task_walks","id":"a-video-window-says-its-name-size-length-and-whe","walks":["a-video-window-says-its-name-walk"]}
+{"t":"2026-09-27T08:08:51.335Z","ev":"task_note","id":"a-video-window-says-its-name-size-length-and-whe"}
+{"t":"2026-09-27T08:08:51.386Z","ev":"task_note","id":"a-video-window-says-its-name-size-length-and-whe"}
+{"t":"2026-09-27T08:08:51.438Z","ev":"task_note","id":"a-video-window-says-its-name-size-length-and-whe"}
+{"t":"2026-09-27T08:08:51.489Z","ev":"task_note","id":"a-video-window-says-its-name-size-length-and-whe"}
+{"t":"2026-09-27T08:09:07.105Z","ev":"task_done","id":"a-video-window-says-its-name-size-length-and-whe","from":"in_progress","note":"Video windows show name · W x H · length · saved/edited centred in the title bar as video.html draws it (WindowTitleLine in PhotonzCore, TitlebarDocumentLine in the app). Verified by a-video-window-says-its-name-walk at Next defaults (saved, edited after Command K, project name + saved after Command S, no line on a picture, 3 real captures), full test suite green, audit queue/audits/2026-09-27-video-title-line.json with the mock side by side. Commit 943c406d."}
+{"t":"2026-09-27T08:22:35.100Z","ev":"slice_pass","walks":50,"passed":48,"failed":2,"seconds":660,"of":633,"rotating":true}
+{"t":"2026-09-27T08:22:35.264Z","ev":"task_started","id":"library-tiles-are-as-wide-as-the-mock-draws-them","title":"Library tiles are as wide as the mock draws them, so a file name reads whole","priority":"p1-high"}
+{"t":"2026-09-27T08:29:07.618Z","ev":"task_walks","id":"library-tiles-are-as-wide-as-the-mock-draws-them","walks":["library-import-walk","shelf-tile-reveal-walk","library-shelf-height-walk","library-walk","starter-shelf-walk"]}
+{"t":"2026-09-27T08:41:49.659Z","ev":"task_created","id":"library-tiles-look-like-the-mock-s-cards-with-th","priority":"p1-high","title":"Library tiles look like the mock's cards, with the name and length under the picture"}
+{"t":"2026-09-27T08:46:03.405Z","ev":"task_done","id":"library-tiles-are-as-wide-as-the-mock-draws-them","from":"in_progress","note":"Next's Library shelf draws 96pt+ tiles, two to a row at rest, with a 16:10 picture (LibraryShelfLayout.Sizing.card behind next-library-tiles-as-cards, on in Next). Names read whole. Verified by Scripts/test.sh (10044 green) and 15 shelf/library walks at Next defaults; audit 2026-09-27-library-tiles.json with the mock beside the shelf. Card look filed p1."}
+{"t":"2026-09-27T09:00:46.352Z","ev":"slice_pass","walks":50,"passed":49,"failed":1,"seconds":672,"of":633,"rotating":true}
+{"t":"2026-09-27T09:00:46.512Z","ev":"task_started","id":"a-new-video-starts-from-an-empty-timeline","title":"A new video starts from an empty timeline","priority":"p1-high"}
+{"t":"2026-09-27T09:34:10.371Z","ev":"task_walks","id":"a-new-video-starts-from-an-empty-timeline","walks":["new-empty-video-walk"]}
+{"t":"2026-09-27T09:34:30.040Z","ev":"task_done","id":"a-new-video-starts-from-an-empty-timeline","from":"in_progress","note":"File > New Video… and the empty window's Blank video row (Next, next-blank-video on by default) open a size+length sheet and an empty timeline: empty V1 over empty Audio, black 1920x1080 frame, Library on Media with Import Media… on its empty shelf; a tile dragged onto V1 lands the first clip and the length grows (10s -> 12s in the walk). Verified: BlankVideoTests (12) + full suite 10,058 green; new-empty-video-walk passes at Next defaults with 6 real window captures, and the blank-canvas/library walks (11) pass. Audit queue/audits/2026-09-27-new-empty-video.json. Commit 5e32467e."}
+{"t":"2026-09-27T12:07:21.871Z","ev":"task_created","id":"walks-that-fail-in-the-full-sweep-6","priority":"p2-normal","title":"Walks that fail in the full sweep"}
+{"t":"2026-09-27T12:07:21.951Z","ev":"sweep_pass","walks":633,"passed":625,"failed":8,"seconds":9085,"complete":true,"total":634}
+{"t":"2026-09-27T12:10:32.313Z","ev":"task_dropped","id":"find-out-whether-delete-layer-and-the-fill-keys","from":"pending","note":"duplicate of find-out-whether-the-layer-menu-promises-a-dupli (folded: both are menu rows printing a key that does not reach them)"}
+{"t":"2026-09-27T12:10:32.365Z","ev":"task_dropped","id":"a-mistyped-status-command-stops-wiping-a-tasks-s","from":"pending","note":"duplicate of trying-out-addjson-never-files-a-real-task (folded: both are queue command slips that quietly change the queue; one runner pass)"}
+{"t":"2026-09-27T12:10:32.421Z","ev":"task_note","id":"find-out-whether-the-layer-menu-promises-a-dupli"}
+{"t":"2026-09-27T12:10:32.472Z","ev":"task_note","id":"trying-out-addjson-never-files-a-real-task"}
+{"t":"2026-09-27T12:10:52.760Z","ev":"task_reprioritized","id":"walks-that-fail-in-the-full-sweep-6","from":"p2-normal","to":"p1-high"}
+{"t":"2026-09-27T12:10:52.810Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-6"}
+{"t":"2026-09-27T12:10:52.861Z","ev":"task_note","id":"the-design-rules-say-what-the-video-mock-says-ab"}
+{"t":"2026-09-27T12:10:52.912Z","ev":"task_note","id":"library-tiles-look-like-the-mock-s-cards-with-th"}
+{"t":"2026-09-27T12:10:52.964Z","ev":"task_note","id":"jumping-the-playhead-far-along-a-zoomed-in-long"}
+{"t":"2026-09-27T12:11:14.945Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep-6","from":3460,"to":10}
+{"t":"2026-09-27T12:11:14.995Z","ev":"task_resequenced","id":"a-video-document-shows-the-library-in-its-dock","from":40,"to":20}
+{"t":"2026-09-27T12:11:15.044Z","ev":"task_resequenced","id":"the-dock-headers-match-the-mock-small-caps-title","from":100,"to":30}
+{"t":"2026-09-27T12:11:15.095Z","ev":"task_resequenced","id":"the-picked-sound-opens-on-the-channel-strip-the","from":110,"to":40}
+{"t":"2026-09-27T12:11:15.144Z","ev":"task_resequenced","id":"a-moving-layer-shows-between-the-keys-in-propert","from":120,"to":50}
+{"t":"2026-09-27T12:11:15.195Z","ev":"task_resequenced","id":"the-floating-tool-bar-is-one-glass-bar-as-the-mo","from":130,"to":60}
+{"t":"2026-09-27T12:11:15.244Z","ev":"task_resequenced","id":"library-tiles-look-like-the-mock-s-cards-with-th","from":370,"to":70}
+{"t":"2026-09-27T12:11:15.294Z","ev":"task_resequenced","id":"the-captions-section-says-every-button-and-colou","from":10,"to":10}
+{"t":"2026-09-27T12:11:15.344Z","ev":"task_resequenced","id":"a-switched-off-motion-test-passes-whichever-rend","from":20,"to":20}
+{"t":"2026-09-27T12:11:15.394Z","ev":"task_resequenced","id":"find-out-why-the-app-sometimes-dies-at-the-start","from":30,"to":30}
+{"t":"2026-09-27T12:11:15.445Z","ev":"task_resequenced","id":"picking-or-retyping-a-caption-answers-at-once","from":40,"to":40}
+{"t":"2026-09-27T12:11:15.496Z","ev":"task_resequenced","id":"jumping-the-playhead-far-along-a-zoomed-in-long","from":3450,"to":50}
+{"t":"2026-09-27T12:11:15.546Z","ev":"task_resequenced","id":"scrubbing-back-fast-keeps-the-video-picture-movi","from":3440,"to":60}
+{"t":"2026-09-27T12:11:15.596Z","ev":"task_resequenced","id":"the-shared-chrome-says-labels-not-sentences","from":50,"to":70}
+{"t":"2026-09-27T12:11:15.645Z","ev":"task_resequenced","id":"the-design-rules-say-what-the-video-mock-says-ab","from":60,"to":80}
+{"t":"2026-09-27T12:11:15.695Z","ev":"task_resequenced","id":"a-task-is-not-done-while-its-feature-needs-a-swi","from":70,"to":90}
+{"t":"2026-09-27T12:11:15.746Z","ev":"task_resequenced","id":"trying-out-addjson-never-files-a-real-task","from":90,"to":100}
+{"t":"2026-09-27T12:11:15.798Z","ev":"task_resequenced","id":"a-transition-carries-the-sound-across-the-cut-to","from":100,"to":110}
+{"t":"2026-09-27T12:11:15.848Z","ev":"task_resequenced","id":"export-and-playback-keep-to-the-in-and-out-marks","from":110,"to":120}
+{"t":"2026-09-27T12:11:15.900Z","ev":"task_resequenced","id":"a-right-click-on-a-timeline-clip-shows-the-whole","from":120,"to":130}
+{"t":"2026-09-27T12:11:15.952Z","ev":"task_resequenced","id":"a-title-bar-on-the-timeline-has-a-right-click-me","from":130,"to":140}
+{"t":"2026-09-27T12:11:16.003Z","ev":"task_resequenced","id":"a-transition-can-sit-before-across-or-after-the","from":140,"to":150}
+{"t":"2026-09-27T12:11:16.055Z","ev":"task_resequenced","id":"one-step-puts-a-transition-on-every-cut","from":150,"to":160}
+{"t":"2026-09-27T12:11:16.108Z","ev":"task_resequenced","id":"a-title-stays-readable-where-it-crosses-a-light","from":160,"to":170}
+{"t":"2026-09-27T12:11:16.162Z","ev":"task_resequenced","id":"a-five-minute-recording-exports-in-less-time-tha","from":170,"to":180}
+{"t":"2026-09-27T12:11:16.218Z","ev":"task_resequenced","id":"a-busy-mp4-lands-at-the-size-the-export-sheet-sa","from":180,"to":190}
+{"t":"2026-09-27T12:11:16.274Z","ev":"task_resequenced","id":"find-out-whether-the-layer-menu-promises-a-dupli","from":190,"to":200}
+{"t":"2026-09-27T12:11:16.326Z","ev":"task_resequenced","id":"undo-after-a-drag-puts-a-shape-back-where-it-was","from":3430,"to":210}
+{"t":"2026-09-27T12:11:16.382Z","ev":"task_resequenced","id":"the-panel-keeps-its-promise-on-a-video-document","from":200,"to":220}
+{"t":"2026-09-27T12:11:16.432Z","ev":"task_resequenced","id":"walks-that-drag-a-clip-on-the-timeline-by-window","from":210,"to":230}
+{"t":"2026-09-27T12:11:16.483Z","ev":"task_resequenced","id":"the-icon-preview-timing-test-goes-red-again-when","from":220,"to":240}
+{"t":"2026-09-27T12:11:16.532Z","ev":"task_resequenced","id":"a-size-read-off-a-screenshot-is-the-size-the-typ","from":230,"to":250}
+{"t":"2026-09-27T12:11:16.583Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":240,"to":260}
+{"t":"2026-09-27T12:11:16.634Z","ev":"task_resequenced","id":"a-shadow-comes-out-of-the-app-a-different-shade","from":250,"to":270}
+{"t":"2026-09-27T12:11:16.686Z","ev":"task_resequenced","id":"a-lane-on-the-timing-strip-says-which-layer-it-b","from":260,"to":280}
+{"t":"2026-09-27T12:11:16.738Z","ev":"task_resequenced","id":"a-menu-that-says-custom-lets-you-get-back-to-cus","from":270,"to":290}
+{"t":"2026-09-27T12:11:16.789Z","ev":"task_resequenced","id":"the-keylines-step-of-the-icon-guide-asks-for-som","from":280,"to":300}
+{"t":"2026-09-27T12:11:16.841Z","ev":"task_resequenced","id":"the-looks-of-one-component-stay-together-as-a-se","from":290,"to":310}
+{"t":"2026-09-27T12:11:16.890Z","ev":"task_resequenced","id":"a-recording-remembers-where-the-pointer-went-and","from":300,"to":320}
+{"t":"2026-09-27T12:11:16.940Z","ev":"task_resequenced","id":"a-keyed-value-s-curve-opens-where-you-want-it","from":310,"to":330}
+{"t":"2026-09-27T12:11:16.989Z","ev":"task_resequenced","id":"experiments-switches-say-what-they-do-in-a-sente","from":320,"to":340}
+{"t":"2026-09-27T12:11:17.040Z","ev":"task_resequenced","id":"the-trim-bar-a-recording-opens-with-stays-clear","from":330,"to":350}
+{"t":"2026-09-27T12:11:17.091Z","ev":"task_resequenced","id":"the-pen-s-points-say-what-kind-of-point-they-are","from":10,"to":10}
+{"t":"2026-09-27T12:11:17.140Z","ev":"task_resequenced","id":"a-button-that-cannot-be-pressed-stops-lighting-u","from":20,"to":20}
+{"t":"2026-09-27T12:11:17.190Z","ev":"task_resequenced","id":"a-colour-swatch-at-the-very-top-of-the-panel-ope","from":30,"to":30}
+{"t":"2026-09-27T12:11:17.241Z","ev":"task_note","id":"walks-that-drag-a-clip-on-the-timeline-by-window"}
+{"t":"2026-09-27T12:11:36.200Z","ev":"triage","summary":"open 47 -> 45 (p1 6->7, p2 37->35, p3 4->3). merged 2 (Delete Layer/fill keys into the menu keys task; mistyped status command into the addjson guard task). moved 1 (full sweep walk task to p1 first, cause of 3 of its 8 reproduced: panelMargins counts the new video title line). reset 0, leftovers 0. groomed 4 (two keeper retitles, acceptance added to the design rules scrub and the library card task). resequenced every priority to steps of 10; the playhead jump stall and fast backward scrub moved up beside the caption pick stall."}
+{"t":"2026-09-27T12:11:51.344Z","ev":"task_note","id":"the-picked-sound-opens-on-the-channel-strip-the"}
+{"t":"2026-09-27T12:12:40.152Z","ev":"digest","file":"2026-09-27.md"}

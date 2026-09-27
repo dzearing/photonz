@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 0.035,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-26T13:53:57.377Z",
-  "updated": "2026-09-26T13:53:57.462Z",
+  "updated": "2026-09-26T22:12:23.375Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window. Stopgap landed the same day in probe-app.sh, playtest.sh, playtest-all.sh, sweep.sh.",
@@ -28,6 +28,46 @@
     {
       "t": "2026-09-26T13:53:57.461Z",
       "note": "seq 370 -> 0.035"
+    },
+    {
+      "t": "2026-09-26T20:45:13.248Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T22:11:57.970Z",
+      "note": "owns these walks: a-clip-s-sound-is-linked-under-it-walk, effects-remembered-walk, locked-layer-key-press-walk, tutorial-a-title-that-moves-walk"
+    },
+    {
+      "t": "2026-09-26T22:11:58.020Z",
+      "note": "Measured first: built queue/bin/focus-canary.swift + focus-drill.sh. The canary is a full-screen stand-in window holding the front; every 100ms it logs front app, key window, probe windows above it and probe menus. A synthesized key cannot measure routing (a key posted to own queue or by pid landed 39/39 with Finder in front), so 'landed' reads the routing itself: canary active + key + no probe menu. Deviation from acceptance item 1, explained in the canary's header."
+    },
+    {
+      "t": "2026-09-26T22:11:58.070Z",
+      "note": "Causes found, each tied to a walk and step: (1) opening a recording ran AppCoordinator.openWindow -> NSApp.activate, making the probe the active app. (2) the guide check orderFrontRegardless'd the window at every step. (3) rightClick and panelMenu popped a real menu (tracking loop takes every key) even with no picture asked; SwiftUI Menu (Add Effect) only fills rows in popUpButtonCell:willShowMenu:. (4) a press's release lifts the walk window to the front inside AppKit (a hook on NSWindow.order(_:relativeTo:) caught nothing; preventWindowOrdering on down+up did nothing). (5) screenCapture showed hidden windows over the person for each shot."
+    },
+    {
+      "t": "2026-09-26T22:11:58.121Z",
+      "note": "Fixes: AppFront gate (every NSApp.activate / app.activate in the app, no-op while a walk drives; shipping build unchanged). Guide check no longer orders front; finish card uses TutorialCardPresence. Menus read and picked without opening unless the walk wants a picture or a real click (66 walks photograph an open menu; walk-needs-the-mac.mjs names them). Walk windows go to level normal-1 and orderBack at adopt; after each step and 30ms after a press, plus an off-main 20ms watcher, any probe window over another app goes back. Result: standing set and a 30-walk spread clean; pictures still real (4-key-where-it-starts-sc.png taken fully buried shows window, card, video)."
+    },
+    {
+      "t": "2026-09-26T22:11:58.173Z",
+      "note": "Not done here, filed as walks-run-while-the-person-works-once-the-whole (p1): the whole-set measurement (about 105 min, too long for a task) and relaxing the idle gate, which the acceptance orders only after the whole set is clean. Drill runs after every rotating check (sweep.sh slice). Pre-existing failures, not mine: a-shape-s-bar-keeps-its-track-walk step 24 (failed identically before any change), an-editing-session-walk (already in the sweep's failing list). Left rough: effects-remembered-walk failed once under the canary at step 59 (switch press) and passed on 3 reruns."
+    },
+    {
+      "t": "2026-09-26T22:11:58.223Z",
+      "note": "Slip, no harm: ran Scripts/build-app.sh --help to read options and it began a DEV build; the closed pipe killed it at once. dist/Photonz Dev.app binary still 13:31, nothing left running. Left rough: build-app.sh has no --help and treats an unknown flag as a build."
+    },
+    {
+      "t": "2026-09-26T22:12:23.373Z",
+      "note": "Walks no longer activate the probe, raise its windows over other apps, or open menus they only read (37854689). Measured by queue/bin/focus-drill.sh (full-screen stand-in holds the front): standing set of 4 and a 30-walk spread clean, pictures still real. Menu photos (66 walks) still take the keys about 1s per picture. Drill runs after every rotating check. Whole-set measurement and relaxing the idle gate moved to walks-run-while-the-person-works-once-the-whole (p1). Tests 9985 passed."
     }
-  ]
+  ],
+  "started": "2026-09-26T20:45:13.247Z",
+  "walks": [
+    "a-clip-s-sound-is-linked-under-it-walk",
+    "effects-remembered-walk",
+    "locked-layer-key-press-walk",
+    "tutorial-a-title-that-moves-walk"
+  ],
+  "completed": "2026-09-26T22:12:23.374Z"
 }

@@ -5,14 +5,14 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 0.0025,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-26T14:00:22.060Z",
-  "updated": "2026-09-26T14:00:22.141Z",
+  "updated": "2026-09-26T18:31:39.419Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Filed from the intake window.",
+  "notes": "Filed from the intake window.\n\nDone 2026-09-26. Files: PhotonzRender/ImageStore.swift (snapshot), RenderScheduler.swift (submit store/stamp, Frame delivery with draw times), PhotonzCore/MovieFramesInHand.swift (travel, nearest), MovieFrameQueue.swift, CompositeScale.swift, MovieClip.swift (frameIndex(ofFrameID:)); app: EditorState (shownMomentMS, shownDrawnDocument, snapshot submit, composite scale, zoom recomposite), EditorState+Time (hand pacing, directional read-ahead, landings coalesced), EditorState+PropertyKeys (canvas pose at shown moment), MovieFrames.swift (queue, farthest eviction), DisplayFrames.swift. Harness: expectScrubSmooth; walk scrub-never-blacks-out-walk. Acceptance 3 honestly: graphics and outline are locked in the same display frame (0.0pt at every look), and the picture is at most ONE display frame behind the playhead, not exactly at it; separate graphics compositing was measured and dropped: a graphics-only composite cost as much as the full one (15ms vs 13ms at full size; the graphics rasterization dominates), so it would not have removed the frame.",
   "acceptance": [
     "Reproduced first: a walk at Next defaults scrubs a full-screen Retina recording with a rectangle on it forward and backward in 60+ small steps (and a fast fling), photographing every step and logging for each: playhead time, the frame shown, the rectangle's drawn position vs its position in the model, and whether the clip area was empty; the report states which theory is true",
     "The clip area is never empty during any scrub (0 empty frames across the walk), backward included",
@@ -29,6 +29,31 @@
     {
       "t": "2026-09-26T14:00:22.140Z",
       "note": "seq 370 -> 0.0025"
+    },
+    {
+      "t": "2026-09-26T17:18:15.713Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T17:29:14.073Z",
+      "note": "owns these walks: scrub-never-blacks-out-walk"
+    },
+    {
+      "t": "2026-09-26T17:34:30.266Z",
+      "note": "reproduced (walk scrub-never-blacks-out-walk, unfixed code, 3456x2234 fixture, rectangle keyed across it): 1 of 165 display frames EMPTY (fling, playhead 2614ms): frame 70 was dropped from the store by the frame budget AFTER the drawn document chose it as the stand-in, so theory 1 (eviction race between submit on main and the render off main) is TRUE; nothing cancels decodes (theory 2 false); the renderer diff was not involved (theory 3 not seen). Lag: the rectangle drawn off its own outline at 125 of 165 display frames, median 22pt / worst 177pt forward, 520pt in the fling; the picture trailed the playhead by 1-2 display frames (median 45ms, fling 262ms); the video frame shown trailed the wanted one by up to 13 frames (decode backlog: every move queued a decode, nothing coalesced)."
+    },
+    {
+      "t": "2026-09-26T18:31:10.263Z",
+      "note": "adversarial pass: a Premiere/FCP editor expects graphics glued to their outline and the picture never blanking; both met. Kept the clock rule for playback (never shows a frame from ahead), hand scrubs take the nearest frame. Neighbour walks ok: playing-a-recording-never-blinks, hear-the-scrub, a-turned-shape-keeps-its-turn-on-a-video, opacity-on-a-video-shape, keyframe-anything, an-editing-session, caption-words-pop, cut-on-the-timeline, fix-a-caption-word, key-lanes, motion-path, ripple-trim-to-playhead, transitions-at-a-cut, the three sharp walks. hold-on-a-frame, keys-copy-between-layers and punch-in-and-hold fail, and fail identically with my source changes stashed (and in the 02:19 sweep), so not this change. Full suite 9952 tests green."
+    },
+    {
+      "t": "2026-09-26T18:31:39.417Z",
+      "note": "Scrubbing no longer blanks and a moving shape stays on its outline (commit 33932f22). Reproduced first with new walk scrub-never-blacks-out-walk (Next defaults, 3456x2234, keyed rectangle, every display frame measured): before, 1 of 165 frames EMPTY (frame budget dropped the stand-in between choosing and drawing it: theory 1 true) and the rectangle off its outline at 125 of 165 frames. After, 4 runs: 0 empty, 0 off the outline, picture at most 1 display frame behind the playhead (not exactly at it; graphics-only compositing measured as costly as the full composite, so it was not the fix). Fixes: store snapshot per render, outline posed at the picture's moment, one picture per display refresh, reads queued latest-wins with directional read-ahead and farthest-first eviction, nearest stand-in for a hand, composite at shown size (17ms -> 7.5ms). Full suite green; 17 neighbour walks ok, 3 others fail identically without this change. Audit queue/audits/2026-09-26-scrub-smooth.json. Follow-up p2: scrubbing-back-fast-keeps-the-video-picture-movi."
     }
-  ]
+  ],
+  "started": "2026-09-26T17:18:15.712Z",
+  "walks": [
+    "scrub-never-blacks-out-walk"
+  ],
+  "completed": "2026-09-26T18:31:39.418Z"
 }

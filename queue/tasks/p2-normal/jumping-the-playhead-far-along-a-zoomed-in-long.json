@@ -4,12 +4,12 @@
   "goal": "On a five minute recording with captions, zoomed in close, the first time the playhead jumps a long way (to the middle, say) the whole app stops for half a second to a second before it moves on. Every jump after that is smooth, so it is a one-time stall a person hits exactly when they go looking for a moment.",
   "epic": "video-cutting",
   "priority": "p2-normal",
-  "seq": 3450,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-27T07:34:15.170Z",
-  "updated": "2026-09-27T07:34:27.918Z",
+  "updated": "2026-09-27T12:11:15.495Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found 2026-09-27 building clip pictures. Reproduced with a walk: openLongTalk, captionsWaitForThemselves, videoPause, videoSeekQuarter, timelineZoomIn x4 (16x), then videoSeekMiddle and a wait with longestUnderMS 50. Longest single pass after the seek: 599.5ms and 597.8ms (clip pictures on), 1066.4ms (on, another run), 493.2ms with clip pictures switched off by a temporary switch. So it is there before pictures. Only the FIRST long jump stalls: six more jumps between the middle and three quarters stayed under 35ms, and a first jump to three quarters (instead of the middle) did not stall in one run. At 2x the same jump to the middle stayed under 35ms. A sample of the main thread (sample <pid> 8) put the time inside NSHostingView.layout (1.5s of 8s, deduplicated SwiftUI frames) and 717ms in the Captions panel's CaptionStylePreview TimelineView (TextRasterizer), which animates continuously and may be background load rather than the spike. The walk clip-pictures-when-zoomed-in-walk has the seek in it untimed; add the limit back there once fixed.",
@@ -26,6 +26,14 @@
     {
       "t": "2026-09-27T07:34:27.917Z",
       "note": "walks clip-pictures-when-zoomed-in-walk -> none"
+    },
+    {
+      "t": "2026-09-27T12:10:52.962Z",
+      "note": "triage 2026-09-27: this breaks a focus success line (no press on the timeline keeps the main thread busy over 50 ms on a five minute recording), so moved up beside picking-or-retyping-a-caption-answers-at-once."
+    },
+    {
+      "t": "2026-09-27T12:11:15.494Z",
+      "note": "seq 3450 -> 50"
     }
   ],
   "walks": []

@@ -4,12 +4,12 @@
   "goal": "The transitions mock offers Apply to every cut on a transition, so a person who wants a dissolve on each of the twenty cuts in a screen recording does it once instead of twenty times. Premiere has the same thing: select the clips and press its default-transition key.",
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
-  "seq": 150,
+  "seq": 160,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T22:58:17.649Z",
-  "updated": "2026-09-26T12:28:02.650Z",
+  "updated": "2026-09-27T12:11:16.054Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-transitions.html #efxMenu (Apply to every cut / Set as the default transition). Building blocks from one-key-puts-the-usual-transition-on-the-cut-at: PhotonzDocument.transitionCuts(), ClipCut.fitted(_:), DefaultTransitionStore, EditorState.applyDefaultTransition. Several cuts as one step: see addTransition(_:layerID:atCuts:) which already batches joins of one clip.",
@@ -35,6 +35,10 @@
     {
       "t": "2026-09-26T12:28:02.649Z",
       "note": "seq 150 -> 150"
+    },
+    {
+      "t": "2026-09-27T12:11:16.053Z",
+      "note": "seq 150 -> 160"
     }
   ]
 }

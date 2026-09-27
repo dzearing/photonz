@@ -1,21 +1,24 @@
 {
   "id": "find-out-whether-the-layer-menu-promises-a-dupli",
-  "title": "Find out whether the layer menu promises a Duplicate key that deselects instead",
-  "goal": "The right-click menu on a layer prints Command D beside Duplicate, but Command D is Deselect in the menu bar, so a person who learns the key from the menu may get the wrong thing. Check what pressing it really does and make the printed key and the real key agree.",
+  "title": "Every key a menu prints beside a row does what the row says",
+  "goal": "A few menu rows print a key that does not do what the row says: the layer right-click menu prints Command D beside Duplicate although Command D deselects, and Delete Layer (Command Delete) and Fill with Foreground (Option Delete) print keys that macOS never matches to those rows. Press each one, write down what really happens, and make the printed key and the real key agree.",
   "epic": "video-cutting",
   "priority": "p2-normal",
-  "seq": 190,
+  "seq": 200,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T00:14:57.434Z",
-  "updated": "2026-09-26T12:28:02.850Z",
+  "updated": "2026-09-27T12:11:16.273Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Not reproduced, only read: LayerCommandMenu.swift appends .command(\"Duplicate\", .command(\"d\")); EditorCommands.swift binds Deselect to keyboardShortcut(\"d\", modifiers: .command) with a comment that Duplicate Layer has no key and Cmd-J duplicates when nothing is marqueed. The timeline clip menu (EditorState+TimelineMenus.swift) prints Cmd-J for Duplicate for this reason. Found 2026-09-23 by the right-click task.",
+  "notes": "Not reproduced, only read: LayerCommandMenu.swift appends .command(\"Duplicate\", .command(\"d\")); EditorCommands.swift binds Deselect to keyboardShortcut(\"d\", modifiers: .command) with a comment that Duplicate Layer has no key and Cmd-J duplicates when nothing is marqueed. The timeline clip menu (EditorState+TimelineMenus.swift) prints Cmd-J for Duplicate for this reason. Found 2026-09-23 by the right-click task.\n\n--- folded in from find-out-whether-delete-layer-and-the-fill-keys (triage 2026-09-27) ---\nMeasured 2026-09-22 in a throwaway binary (/tmp/menukeytest2.swift): a menu whose item carries U+007F never matches a real backspace press built by CoreGraphics, bare or with command or with option; one carrying U+0008 matches every time. Output:\n  plain eventChars: [127] | U+007F: false | U+0008: true\n  cmd   eventChars: [127] | U+007F: false | U+0008: true\n  opt   eventChars: [127] | U+007F: false | U+0008: true\nAlso measured, with a window and a focused NSTextField: a live U+0008 row does NOT steal the key from a field (the field deleted a character, menuFired=false), and with nothing focused the row ran. So making these rows live is safe beside typing.\n\nEditorCommands.swift line 148 (Fill with Foreground) and line 993 (Delete Layer) both still pass DeleteKeyCharacters.backwards (U+007F). Video, Delete This Piece was fixed to DeleteKeyCharacters.menuKeyEquivalent on 2026-09-22 under delete-stops-dropping-a-piece-once-you-have-undo; those two were left alone because they are SHARED code and so would change Current-release behaviour, which a task has to say before a runner touches it.\n\nThe canvas answers keyCode 51 itself in CanvasKeys.swift (onDeleteLayer / onFillSelected), which is why both presses work today wherever the canvas is first responder. The comments at EditorCommands.swift lines 120-133 and 145-148 and 990-993 state the AppKit rule backwards and should be corrected whichever way this lands.",
   "acceptance": [
     "Pressing the key printed beside Duplicate in the layer right-click menu duplicates the layer",
-    "A walk reads the row and presses its key"
+    "A walk reads the row and presses its key",
+    "It is written down, with the press and what happened, whether Command Delete removes a layer and whether Option Delete fills with the foreground colour",
+    "If either press does nothing, the two rows carry the character macOS matches and a walk presses each one",
+    "The comments in EditorCommands that state the Delete key rule backwards are corrected either way"
   ],
   "log": [
     {
@@ -49,6 +52,14 @@
     {
       "t": "2026-09-26T12:28:02.849Z",
       "note": "seq 180 -> 190"
+    },
+    {
+      "t": "2026-09-27T12:10:32.419Z",
+      "note": "triage 2026-09-27: folded in find-out-whether-delete-layer-and-the-fill-keys (p3): same kind of defect, a menu row printing a key that does not do its job. Its acceptance and its measured notes are now here."
+    },
+    {
+      "t": "2026-09-27T12:11:16.272Z",
+      "note": "seq 190 -> 200"
     }
   ]
 }

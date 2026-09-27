@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-26T06:34:43.105Z",
-  "updated": "2026-09-26T12:28:02.047Z",
+  "updated": "2026-09-27T12:11:15.393Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-09-26 06:22Z running Scripts/playtest.sh Scripts/playtest/command-s-saves-a-video-project-walk.json --no-build: 'Verdict: CRASHED EXC_GUARD in static PhotonzApp.$main() < Photonz_main', log.json stopped after the setup step (forgot settings, copied the scratch b-roll). Report ~/Library/Logs/DiagnosticReports/Photonz Probe-2026-09-25-232258.ips: EXC_GUARD GUARD_TYPE_MACH_PORT INVALID_OPTIONS on mach port 0; crashing thread main: mach_msg2_trap < mach_msg < HIServices _XMIGPostNotification < _AXUIElementPostNotificationWithInfo < AppKit _NSAccessibilityNotify < __CFRunLoopDoBlocks < NSApplication run. Same signature at 2026-09-25 22:32 (Photonz Probe-2026-09-25-223224.ips) and in sweeps: out-of-view-mark-walk (2026-09-21 06:00Z), multi-geometry-walk (11:16Z), each-corner-on-its-own-walk (grep EXC_GUARD queue/loop.log). The re-run of the same walk right after passed, so it is intermittent. Ghoztty Accessibility was denied on the Grants line each time; worth checking whether an AX notification posted while nothing is listening, or while the probe is not yet frontmost, is what trips the guard.",
@@ -25,6 +25,14 @@
     {
       "t": "2026-09-26T12:28:02.046Z",
       "note": "seq 3430 -> 30"
+    },
+    {
+      "t": "2026-09-26T13:10:18.061Z",
+      "note": "2026-09-26: the probe died 2s after launch at 2026-09-25 23:22:53 (EXC_GUARD GUARD_TYPE_MACH_PORT INVALID_OPTIONS in mach_msg < _AXUIElementPostNotificationWithInfo < _NSAccessibilityNotify, run loop block; report ~/Library/Logs/DiagnosticReports/Photonz Probe-2026-09-25-232258.ips; same signature 22:32:24). Its 'Photonz (Probe) quit unexpectedly' dialog then sat in front for 13 hours, so the probe could never become active and every walk's click on a timeline gesture did nothing (clicking-a-cut-opens-the-transition-picker-again). That makes these crashes costlier than one walk each: probe-app.sh now flags 'a system alert is in front' and failed walks say so."
+    },
+    {
+      "t": "2026-09-27T12:11:15.392Z",
+      "note": "seq 30 -> 30"
     }
   ],
   "walks": []

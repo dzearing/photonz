@@ -1,0 +1,40 @@
+{
+  "id": "walks-that-fail-in-the-full-sweep-6",
+  "title": "Walks that fail in the full sweep",
+  "goal": "The scripted walks are the app driving itself, and some of them no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on. This serves the focus because the sweep is the only thing that tells a focus runner whether the change it just made broke anything: a sweep with failures nobody has named cannot say that, so every focus feature ships on a weaker claim than it should.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-09-27T12:07:21.867Z",
+  "updated": "2026-09-27T12:11:14.944Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-27T12:07:21Z: 625 of 633 walks passed in 151 minutes.\n\nFailing walks (8): bar-end-follows-the-pointer-walk, captions-panel-keeps-its-margins-walk, opacity-on-a-video-shape-walk, panel-rows-read-as-one-column-walk, pick-leaves-settings-alone-walk, transition-picker-at-a-cut-walk, tutorial-component-versions-walk, video-panel-order-walk\n\nAlready named by another open task, so read that one before re-diagnosing (2):\n  captions-panel-keeps-its-margins-walk -> the-captions-section-says-every-button-and-colou (that task says it owns this walk)\n  tutorial-component-versions-walk -> the-looks-of-one-component-stay-together-as-a-se (that task says it owns this walk)\n\nThis task owns the other 6: bar-end-follows-the-pointer-walk, opacity-on-a-video-shape-walk, panel-rows-read-as-one-column-walk, pick-leaves-settings-alone-walk, transition-picker-at-a-cut-walk, video-panel-order-walk\n\nFull output: queue/sweep/2026-09-27-023556.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: clicking-a-cut-opens-the-transition-picker-again: The 2026-09-26 02:19 sweep (27 failed) ran with a 'Photonz (Probe) quit unexpectedly' dialog in front, so the probe never had focus and every click on a timeline gesture was dropped; the dialog is closed now, so the set needs measuring again; walks-that-fail-in-the-full-sweep-5: walks-that-fail-in-the-full-sweep-5: harness now takes the front for real drags and for 28 walks marked setup front, panelMenu always rebuilds SwiftUI rows; 38 walks the focus change broke should read green in the whole set\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
+  "acceptance": [
+    "Every walk the sweep block names as this task's own either passes or is rewritten to match what the app does now",
+    "Each one is run on its own and passes twice in a row",
+    "Any walk that was wrong rather than broken says so in this task log"
+  ],
+  "log": [
+    {
+      "t": "2026-09-27T12:07:21.869Z",
+      "note": "created (sweep)"
+    },
+    {
+      "t": "2026-09-27T12:10:52.758Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-09-27T12:10:52.808Z",
+      "note": "triage 2026-09-27: moved to p1 because transition-picker-at-a-cut-walk, a focus walk, is among the 8. Grouped by cause from queue/sweep/2026-09-27-023556.log: (1) panel-rows-read-as-one-column-walk, transition-picker-at-a-cut-walk and video-panel-order-walk all fail the panelMargins check on 'Window title (<name> · 1280 x 800 · 0:08 · saved)', the title bar line 943c406d added, which the check now counts as a panel item (runs 936 to 1464pt past the panel's left edge). Reproduced by triage: Scripts/playtest.sh Scripts/playtest/video-panel-order-walk.json --no-build exits 1, /tmp/photonz-playtest/video-panel-order-walk/panel-margins-1-a-clip.json has exactly those two breaches. Likely fix is in the margins check (skip items outside the dock), not the app. (2) opacity-on-a-video-shape-walk (Opacity reads 24, not 28) and pick-leaves-settings-alone-walk (Thickness reads 26, not 25): a panel value one or a few steps off, maybe the new real drags landing a pixel differently. (3) bar-end-follows-the-pointer-walk: trackRow built 65 times, the walk allows 60; its audit already says the panel rebuilds about 35 times in 40 drag moves."
+    },
+    {
+      "t": "2026-09-27T12:11:14.943Z",
+      "note": "seq 3460 -> 10"
+    }
+  ],
+  "standing": "walk-sweep"
+}

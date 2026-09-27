@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T03:42:46.056Z",
-  "updated": "2026-09-26T12:28:01.590Z",
+  "updated": "2026-09-27T08:09:07.104Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the side-by-side for a-video-edit-can-be-saved-as-a-project-and-opene (2026-09-24). Mock spec: docs/design/mocks/shared/AGENTS.md ~line 452 (data-shell: text before the first dot is bolded) and data-shell on video.html, video-captions.html (capDirty) and video-audio.html (aDirty). App today: the title bar shows the traffic lights and the Everything mode picker, no document name (see /tmp/photonz-playtest/a-video-edit-saves-as-a-project-walk/9-reopened-sc.png). Readable state: EditorState.windowTitle, hasUnsavedChanges, documentLengthMS, document.canvasSize.",
@@ -31,6 +31,39 @@
     {
       "t": "2026-09-26T12:28:01.589Z",
       "note": "seq 130 -> 70"
+    },
+    {
+      "t": "2026-09-27T07:50:21.048Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T08:08:51.280Z",
+      "note": "owns these walks: a-video-window-says-its-name-walk"
+    },
+    {
+      "t": "2026-09-27T08:08:51.333Z",
+      "note": "Review before building: a Premiere or Final Cut editor reads the project name from the window title, so the line belongs centred in the title bar like a Mac title; the mock draws it that way (video.html data-shell, .wtitle: name ink bold, rest dim, saved faint, edited warn per video-captions.html). No gap between mock and app state: name, canvas size, length and SaveAffordance already existed. The line takes no clicks and adds no control."
+    },
+    {
+      "t": "2026-09-27T08:08:51.384Z",
+      "note": "Built: PhotonzCore/WindowTitleLine.swift (tested, WindowTitleLineTests) makes the words; EditorState.titleLine feeds it only for documents with time; Photonz/TitlebarDocumentLine.swift draws it over the top of EditorView, centred, 33pt strip measured level with the mode chip, dropping size and length before the name on a narrow window, hidden in full screen. Saved means SaveAffordance.upToDate, so the line says edited exactly when closing would ask. Length rounds down like the transport's end."
+    },
+    {
+      "t": "2026-09-27T08:08:51.436Z",
+      "note": "Verified: a-video-window-says-its-name-walk at Next defaults (no flags) reads 'Tutorial Sample · 1280 x 800 · 0:08 · saved', then '· edited' after Command K, then 'project · 1280 x 800 · 0:08 · saved' after Command S, and no line on a still picture; 3 real window captures. command-s-saves-a-video-project-walk still passes. Scripts/test.sh: 10025 tests pass (one pre-existing speech skip)."
+    },
+    {
+      "t": "2026-09-27T08:08:51.487Z",
+      "note": "Left rough, not filed: mock's Ask button in the title bar (agent work, not this task); pictures get no line though image mocks draw name and size (a scope question, asked in the audit's evaluate list); full-screen hiding built but not watched live. Shared EditorView: the line only shows for documents with time, the same gate the timeline dock uses, so Current's pictures are unchanged."
+    },
+    {
+      "t": "2026-09-27T08:09:07.102Z",
+      "note": "Video windows show name · W x H · length · saved/edited centred in the title bar as video.html draws it (WindowTitleLine in PhotonzCore, TitlebarDocumentLine in the app). Verified by a-video-window-says-its-name-walk at Next defaults (saved, edited after Command K, project name + saved after Command S, no line on a picture, 3 real captures), full test suite green, audit queue/audits/2026-09-27-video-title-line.json with the mock side by side. Commit 943c406d."
     }
-  ]
+  ],
+  "started": "2026-09-27T07:50:21.047Z",
+  "walks": [
+    "a-video-window-says-its-name-walk"
+  ],
+  "completed": "2026-09-27T08:09:07.103Z"
 }

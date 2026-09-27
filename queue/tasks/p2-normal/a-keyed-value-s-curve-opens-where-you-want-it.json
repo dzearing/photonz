@@ -4,12 +4,12 @@
   "goal": "The curve a keyed value runs on now opens inside its lane on the timeline. The video mock instead draws it as a collapsed Graph panel on the right. The user picks which one ships, and the loser goes.",
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
-  "seq": 310,
-  "status": "blocked",
+  "seq": 330,
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T03:53:09.267Z",
-  "updated": "2026-09-26T12:28:03.458Z",
+  "updated": "2026-09-27T12:11:16.939Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From a-layer-s-track-opens-into-one-lane-per-keyed-va (2026-09-23). Built in the lane (KeyLanesView.swift, KeyLaneView.curve/handles) because that task's acceptance said a curve view on a lane. The mock (docs/design/mocks/pages/video.html, #gGraph, .kfgraph) puts it in a collapsed dgrp in the right dock, x axis = clip duration. Core is shared either way: PhotonzDocument.keyGraph(layerID:motionID:) and setKeyHandle(...toGraphPoint:).",
@@ -44,6 +44,14 @@
     {
       "t": "2026-09-26T12:28:03.457Z",
       "note": "seq 290 -> 310"
+    },
+    {
+      "t": "2026-09-26T19:07:50.382Z",
+      "note": "decision \"Where should a keyed value's curve open: inside its lane on the timeline, or in a Graph panel on the right as the video mock draws it?\" resolved: In the lane"
+    },
+    {
+      "t": "2026-09-27T12:11:16.938Z",
+      "note": "seq 310 -> 330"
     }
   ],
   "walks": [

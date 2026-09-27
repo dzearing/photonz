@@ -5,14 +5,14 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 90,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T04:57:21.836Z",
-  "updated": "2026-09-26T12:28:01.691Z",
+  "updated": "2026-09-27T09:34:30.039Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Mock: docs/design/mocks/pages/video.html onboarding step 1 (New, empty, line ~325) and its stage (line ~686: A 1920 x 1080 timeline with no clips. Import media, or open a capture from history, to begin). PhotonzDocument.hasTime is durationMS != nil || a layer occupies time (Sources/PhotonzCore/DocumentTime.swift), so a blank document with durationMS set would already have a timeline; File > New Blank Canvas... is the nearest existing path (Experiments.blankCanvasEnabled). The Library half landed in recordings-and-sounds-can-go-into-the-library-wi (File > Import Media, Shift Command I; shelf drop; header plus).",
+  "notes": "Mock: docs/design/mocks/pages/video.html onboarding step 1 (New, empty, line ~325) and its stage (line ~686: A 1920 x 1080 timeline with no clips. Import media, or open a capture from history, to begin). PhotonzDocument.hasTime is durationMS != nil || a layer occupies time (Sources/PhotonzCore/DocumentTime.swift), so a blank document with durationMS set would already have a timeline; File > New Blank Canvas... is the nearest existing path (Experiments.blankCanvasEnabled). The Library half landed in recordings-and-sounds-can-go-into-the-library-wi (File > Import Media, Shift Command I; shelf drop; header plus). | Shipped 2026-09-27: PhotonzCore/BlankVideo.swift (presets, length rules, PhotonzDocument.emptyVideo: canvas, durationMS, written V1+Audio tracks with fresh ids so dropTracksEmptied never takes them); flag next-blank-video (Next only, on); File > New Video… (EditorCommands), card row Blank video (EditorView), NewVideoDialog.swift, EditorWindowID.blankVideo, EditorState.newBlankVideo/createBlankVideo (opens Library on Media). CanvasDisplay: contentLayer black backing when document.hasTime. LibraryPanel: Import Media… button on an empty Media shelf of a time document. WindowTitleLine hasFile. Walk harness: blankVideo step, actions newVideoDialog/createVideo/importMedia, expectTimeline tracks claim. Walk: new-empty-video-walk.",
   "acceptance": [
     "A person running Next can make a new, empty video (size and length chosen, nothing on it) from the File menu",
     "It opens with an empty V1 and an empty Audio track under a ruler, and the Library ready for Import",
@@ -31,6 +31,31 @@
     {
       "t": "2026-09-26T12:28:01.690Z",
       "note": "seq 150 -> 90"
+    },
+    {
+      "t": "2026-09-27T09:00:46.505Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T09:34:10.369Z",
+      "note": "owns these walks: new-empty-video-walk"
+    },
+    {
+      "t": "2026-09-27T09:34:10.395Z",
+      "note": "Adversarial review before building: Premiere and Final Cut people look for File > New > Sequence/Project; here Cmd N is New Layer, so New Video sits under File beside New Blank Canvas with no key. A layerless document drew as nothing on the canvas (grid showing through), so a time document now reads black inside its frame, which is what the movie writer already writes. The Library empty Media shelf said a paragraph about pictures; on a video it now offers Import Media. The title line called a never-saved document saved; it now says neither until there is a file."
+    },
+    {
+      "t": "2026-09-27T09:34:10.395Z",
+      "note": "left rough: mock hint line under the empty tracks not built (chrome copy budget, 30 chars); listed in the audit rough for the user to react to rather than filed, since it is a copy judgement the user makes."
+    },
+    {
+      "t": "2026-09-27T09:34:30.037Z",
+      "note": "File > New Video… and the empty window's Blank video row (Next, next-blank-video on by default) open a size+length sheet and an empty timeline: empty V1 over empty Audio, black 1920x1080 frame, Library on Media with Import Media… on its empty shelf; a tile dragged onto V1 lands the first clip and the length grows (10s -> 12s in the walk). Verified: BlankVideoTests (12) + full suite 10,058 green; new-empty-video-walk passes at Next defaults with 6 real window captures, and the blank-canvas/library walks (11) pass. Audit queue/audits/2026-09-27-new-empty-video.json. Commit 5e32467e."
     }
-  ]
+  ],
+  "started": "2026-09-27T09:00:46.504Z",
+  "walks": [
+    "new-empty-video-walk"
+  ],
+  "completed": "2026-09-27T09:34:30.038Z"
 }

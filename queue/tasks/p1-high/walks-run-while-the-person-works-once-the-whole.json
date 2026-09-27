@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 0.036,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-26T22:11:25.150Z",
-  "updated": "2026-09-26T22:11:25.153Z",
+  "updated": "2026-09-27T02:03:18.689Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows a-walk-never-takes-the-keyboard-the-pointer-or-f (2026-09-26), which fixed: probe activation (AppFront gate), guide orderFrontRegardless, menus opened just to read/pick (rightClick, panelMenu incl. SwiftUI Menu via popUpButtonCell:willShowMenu:), windows raised by a press release (walk windows at level normal-1 + orderBack + 20ms off-main watcher). Measured clean on about 35 walks. Cannot run the whole set inside one task (about 105 min). Unverified: whether a person clicking an area where an alpha-0 walk window sits hits the probe (windows are now under other apps, so only bare desktop is exposed). The drill needs the person away (the canary takes the front) and an unlocked screen.",
@@ -23,6 +23,45 @@
     {
       "t": "2026-09-26T22:11:25.152Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-26T22:26:19.934Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T23:02:00.382Z",
+      "note": "Drill over every walk under way (604 walks, in chunks of 25). First 81 walks: 4 took focus, all fixed: close-a-trimmed-recording (answered sheet faded out over the person), history-menu-title + history-thumbnail-shapes (history strip made itself key and floated over everything), never-granting (Welcome window floats). Menu-picture walks now key the strip only for the one picture."
+    },
+    {
+      "t": "2026-09-27T02:03:18.483Z",
+      "note": "owns these walks: close-a-trimmed-recording-walk, history-menu-title-walk, history-thumbnail-shapes-walk, never-granting-walk, opening-a-recording-walk, menu-checkmarks-walk, panel-name-walk"
+    },
+    {
+      "t": "2026-09-27T02:03:18.535Z",
+      "note": "Drill over all 630 scripts done (focus-drill --all covered only *-walk.json, 604; fixed to cover every script the sweep runs). Found 5 walks taking focus, all fixed in 50988546 and re-drilled clean: answered sheet faded over the person (answerOutOfSight), history strip made itself key + floated (AppFront.showFloating; appKey now hands presses to the strip; menuShot keys the strip only for its picture), corner toasts floated (showFloating takingKeys:false), Welcome floated (AppFront.present). Final: 563 clean, 67 menu shown (all named by walk-needs-the-mac), 0 took focus. Standing --check set grew to 8 walks."
+    },
+    {
+      "t": "2026-09-27T02:03:18.586Z",
+      "note": "Gate relaxed in 42644735: probe-app.sh waits only for a menu-photographing walk or a bare launch; playtest.sh interrupts only menu walks; playtest-all.sh carries on past a deferred walk (exit 6 only when nothing worse); sweep.sh slice-due no longer needs 5 min idle and the slice no longer stops for the person (menu walks skip at once via PHOTONZ_WALK_IDLE_WAIT=0). Full sweep keeps its 15 min gate. Verified by simulating presence with PHOTONZ_WALK_IDLE=999999: ordinary walks ran, the menu walk deferred, batch continued. CLAUDE.md + runner-prompt.md updated. Tests: 9985 passed."
+    },
+    {
+      "t": "2026-09-27T02:03:18.637Z",
+      "note": "left rough: inside a rotating check with somebody at the Mac, a menu-photographing walk is skipped and the rotation still advances past it, so it is only covered by the daily whole set; not filed, the whole set covers it. Also: 10 walks fail on HEAD that the last sweep did not list; not caused by this work (identical with it reversed), folded onto walks-that-fail-in-the-full-sweep-5. No audit: loop infrastructure, not a user-facing feature."
+    },
+    {
+      "t": "2026-09-27T02:03:18.687Z",
+      "note": "Every walk (630) measured with the focus drill; 5 that took focus fixed (sheets, history strip, toasts, Welcome window stay under the person's work). Walks and the rotating check now run while the person works; menu-photographing walks, bare probe launches and the whole set still wait. CLAUDE.md and runner prompt updated. Commits 50988546, 42644735; 9985 tests pass."
     }
-  ]
+  ],
+  "started": "2026-09-26T22:26:19.933Z",
+  "walks": [
+    "close-a-trimmed-recording-walk",
+    "history-menu-title-walk",
+    "history-thumbnail-shapes-walk",
+    "never-granting-walk",
+    "opening-a-recording-walk",
+    "menu-checkmarks-walk",
+    "panel-name-walk"
+  ],
+  "completed": "2026-09-27T02:03:18.688Z"
 }

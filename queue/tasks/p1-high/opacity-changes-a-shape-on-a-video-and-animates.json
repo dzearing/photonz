@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 0.0022,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-26T14:01:17.390Z",
-  "updated": "2026-09-26T14:01:17.471Z",
+  "updated": "2026-09-26T16:14:49.766Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -29,6 +29,35 @@
     {
       "t": "2026-09-26T14:01:17.470Z",
       "note": "seq 370 -> 0.0022"
+    },
+    {
+      "t": "2026-09-26T15:54:37.208Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-26T16:14:22.839Z",
+      "note": "Reproduced 2026-09-26 at Next defaults. A plain pull on an UNKEYED rectangle on a recording worked (28% dimmed it). The report's case: once the rectangle is keyed (its timeline row's diamond keys position, scale, rotation AND opacity), Appearance > Opacity wrote the layer's own style.opacity, which drawn(atTimeMS:) never reads for a keyed value. The slider sat on 28 over a solid rectangle while Animating said 100. Walk /tmp/opwalk/repro2.json (the same steps are now the second half of opacity-on-a-video-shape-walk)."
+    },
+    {
+      "t": "2026-09-26T16:14:22.889Z",
+      "note": "Fix: PhotonzCore/LooksAtThePlayhead.swift adds PhotonzDocument.lookPosed(layerIDs:atDocumentTimeMS:) (the panel reads keyed look values at the playhead) and editLooks(layerIDs:atDocumentTimeMS:ease:_:) (any panel look edit: a keyed value becomes a key at the playhead, unkeyed stays the layer's own, and the posing never leaks). The app routes previewLayerStyle, commitLayerStyle, setLayerStyle, the corner radius rows and the Thickness row through it (EditorState+LooksAtThePlayhead.swift); previewedStyle, cornerReadingDocument and outlineThicknessSelection read the posed look. That covers Opacity, blur Amount, shadow and glow Size (all LayerStyleSlider), Corner Radius and Thickness. foldEditIntoKeys now shares MotionProperty.looks. Tests: LooksAtThePlayheadTests (11); the full suite, 9914 tests, passes."
+    },
+    {
+      "t": "2026-09-26T16:14:22.941Z",
+      "note": "Left rough (in the audit, not filed): keys ease in and out by default, so 2s reads 22% rather than about 50% (acceptance item 6 says about 50; the curve is the existing default and was left alone). The Appearance Opacity row has no diamond of its own; the diamond lives in Properties > Animating, as the mock draws it. Export and save/reopen were not walked; they read the same keys through drawn(atTimeMS:)."
+    },
+    {
+      "t": "2026-09-26T16:14:22.994Z",
+      "note": "owns these walks: opacity-on-a-video-shape-walk"
+    },
+    {
+      "t": "2026-09-26T16:14:49.764Z",
+      "note": "Reproduced: an unkeyed shape dimmed fine; a keyed one (the timeline row's diamond keys opacity) ignored Appearance > Opacity, because the slider wrote the layer's own value and a keyed value is read from its keys. Fixed in PhotonzCore/LooksAtThePlayhead.swift (lookPosed, editLooks) and EditorState+LooksAtThePlayhead.swift: Opacity, blur Amount, shadow and glow Size, Corner Radius and Thickness now key at the playhead when keyed, change the whole layer when not, and read the value at the playhead. Verified: LooksAtThePlayheadTests (11), full suite 9914 green, walk opacity-on-a-video-shape-walk at Next defaults (1s/2s/3s read 100/22/0; half way is 22 rather than 50 because keys ease in and out by default, raised in the audit), plus five neighbouring walks ok. Commit 0c69197d. Audit queue/audits/2026-09-26-opacity-on-a-video.json."
     }
-  ]
+  ],
+  "started": "2026-09-26T15:54:37.207Z",
+  "walks": [
+    "opacity-on-a-video-shape-walk"
+  ],
+  "completed": "2026-09-26T16:14:49.765Z"
 }

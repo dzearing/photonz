@@ -4,12 +4,12 @@
   "goal": "Several walks drag clips, sound levels and fade handles on the timeline by posting a mouse drag to the window, and pass without checking the result. On 2026-09-26 one of them was shown to move nothing at all, so those walks report green on gestures they never performed.",
   "epic": "video-cutting",
   "priority": "p2-normal",
-  "seq": 210,
+  "seq": 230,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-26T09:17:44.209Z",
-  "updated": "2026-09-26T12:28:02.950Z",
+  "updated": "2026-09-27T12:11:17.240Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-26. Scripts/playtest.sh Scripts/playtest/a-clip-s-sound-is-linked-under-it-walk.json --no-build -> 'walk complete', but 2-sound-dragged-sc.png shows Tutorial Sample still starting at 0s after step 'windowDrag from [691,943] to [864,943]' (should have slid about 1.5s). Separately, a probe walk with Select in hand did windowDrag from [907,854] to [1042,854] on a b-roll clip at 8s (clip's lane measured off the -sc.png of a 1728x990pt window) and expectClip startsAt 10 failed: b-roll still 8.00s to 16.00s. The window is kept invisible during walks (capture log: 'the window was still invisible, so it was shown for the one shot'); a theory, not confirmed, is that NSApp.postEvent to an ordered-out window never reaches SwiftUI hit testing. PlaytestHarness.swift case .windowDrag posts mouseMoved/Down/Dragged/Up via NSApp.postEvent. Other users of windowDrag: keys-copy-between-layers-walk, timeline-right-click-walk. The track-select-forward walk sidestepped it with a new dragClip step that drives EditorState like dragTiming does.",
@@ -34,6 +34,18 @@
     {
       "t": "2026-09-26T12:28:02.949Z",
       "note": "seq 3440 -> 210"
+    },
+    {
+      "t": "2026-09-26T13:10:28.240Z",
+      "note": "2026-09-26: re-check before working this. It was found while a 'Photonz (Probe) quit unexpectedly' dialog held the front (2026-09-25 23:22 to 09-26 ~12:50Z), which kept the probe from ever being active; a window that is not key takes no synthesized event on a SwiftUI gesture, which is exactly 'posted windowDrags never reach timeline clips'. Taps on the timeline recovered the moment the dialog closed (clicking-a-cut-opens-the-transition-picker-again). Run the drag walk again with the Grants line clean before building anything."
+    },
+    {
+      "t": "2026-09-27T12:11:16.430Z",
+      "note": "seq 210 -> 230"
+    },
+    {
+      "t": "2026-09-27T12:11:17.239Z",
+      "note": "triage 2026-09-27: e459d903 (walks-that-fail-in-the-full-sweep-5) now takes the front for every real drag, so a posted windowDrag should move the clip again. What is left is the other half: every timeline windowDrag walk claims where the thing landed, so a drag that moves nothing can never pass."
     }
   ],
   "walks": [
