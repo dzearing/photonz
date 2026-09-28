@@ -650,7 +650,7 @@ struct PlaytestScriptTests {
         guard case .open(let file, let size) = script.steps[0] else { Issue.record("open"); return }
         #expect(file == "/tmp/shot.png")
         #expect(size == CGSize(width: 1280, height: 840))
-        guard case .wait(let seconds, _, _) = script.steps[1] else { Issue.record("wait"); return }
+        guard case .wait(let seconds, _, _, _) = script.steps[1] else { Issue.record("wait"); return }
         #expect(seconds == 0.5)
         guard case .key(let key, let mods) = script.steps[2] else { Issue.record("key"); return }
         #expect(key.name == "i" && mods.isEmpty)
@@ -776,9 +776,9 @@ struct PlaytestScriptTests {
         { "steps": [ { "do": "wait", "seconds": 7, "onTheClock": true },
                      { "do": "wait", "seconds": 1 } ] }
         """)
-        guard case .wait(let long, let onTheClock, _) = script.steps[0] else { Issue.record("wait"); return }
+        guard case .wait(let long, let onTheClock, _, _) = script.steps[0] else { Issue.record("wait"); return }
         #expect(long == 7 && onTheClock)
-        guard case .wait(_, let ordinary, _) = script.steps[1] else { Issue.record("wait"); return }
+        guard case .wait(_, let ordinary, _, _) = script.steps[1] else { Issue.record("wait"); return }
         #expect(ordinary == false)
     }
 
@@ -790,12 +790,33 @@ struct PlaytestScriptTests {
         { "steps": [ { "do": "wait", "seconds": 1, "longestUnderMS": 50 },
                      { "do": "wait", "seconds": 1 } ] }
         """)
-        guard case .wait(_, _, let bound) = script.steps[0] else { Issue.record("wait"); return }
+        guard case .wait(_, _, let bound, _) = script.steps[0] else { Issue.record("wait"); return }
         #expect(bound == 50)
-        guard case .wait(_, _, let none) = script.steps[1] else { Issue.record("wait"); return }
+        guard case .wait(_, _, let none, _) = script.steps[1] else { Issue.record("wait"); return }
         #expect(none == nil)
         #expect(throws: (any Error).self) {
             try decode(#"{ "steps": [ { "do": "wait", "seconds": 1, "longestUnderMS": 0 } ] }"#)
+        }
+    }
+
+    /// A wait spent on the clock can bound how much of it the main thread
+    /// spent busy: an editor with nothing playing should sit quiet, and a
+    /// view redrawing itself for ever reads as busy the whole time. Only on
+    /// the clock, since a wait for quiet ends the moment it is quiet.
+    @Test func aWaitOnTheClockCanBoundTheBusyTime() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "wait", "seconds": 2, "onTheClock": true, "busyUnderMS": 300 },
+                     { "do": "wait", "seconds": 1 } ] }
+        """)
+        guard case .wait(_, true, _, let bound) = script.steps[0] else { Issue.record("wait"); return }
+        #expect(bound == 300)
+        guard case .wait(_, _, _, let none) = script.steps[1] else { Issue.record("wait"); return }
+        #expect(none == nil)
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "wait", "seconds": 1, "busyUnderMS": 300 } ] }"#)
+        }
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "wait", "seconds": 1, "onTheClock": true, "busyUnderMS": -1 } ] }"#)
         }
     }
 

@@ -217,6 +217,10 @@ struct CaptionStyleTiles: View {
 /// their words again in the click's own pass: five tile bodies a pick before,
 /// none after (2026-09-27, `caption-pick-answers-at-once-walk`). A style does
 /// not change when the pick does, so the tile keeps its frame.
+///
+/// The words play as a reel Core Animation runs (`VideoKit.LoopingFrames`):
+/// the lap's frames are drawn once, off the main thread, and nothing runs on
+/// it while they play. The tile holds its still moment until they are ready.
 struct CaptionStylePreview: View, Equatable {
     let look: CaptionLook
 
@@ -225,31 +229,92 @@ struct CaptionStylePreview: View, Equatable {
     }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.displayScale) private var displayScale
+    @State private var played: VideoKit.PlayedReel?
+
+    /// What a reel was drawn for: the style, the tile's size and the screen's.
+    private struct ReelKey: Hashable {
+        let look: CaptionLook
+        let size: CGSize
+        let scale: CGFloat
+    }
+
+    private static let fontSize: CGFloat = 10
 
     var body: some View {
+        // Read here, not inside the reader: a state read only inside its
+        // closure does not bring the closure back when the reel lands, and
+        // the tile stayed on its still moment for good.
+        let played = reduceMotion ? nil : played
         GeometryReader { proxy in
             ZStack {
                 LinearGradient(colors: [Color(white: 0.2), Color(white: 0.08)],
                                startPoint: .topLeading, endPoint: .bottomTrailing)
-                if reduceMotion {
-                    frame(atMS: 1_400, size: proxy.size)
+                if let played {
+                    VideoKit.LoopingFrames(reel: played, scale: displayScale, shadows: shadows)
+                        .frame(width: proxy.size.width, height: proxy.size.height)
                 } else {
-                    TimelineView(.animation(minimumInterval: 1.0 / 30)) { context in
-                        let ms = Int(context.date.timeIntervalSinceReferenceDate * 1000)
-                            % CaptionLook.previewCycleMS
-                        frame(atMS: ms, size: proxy.size)
-                    }
+                    frame(atMS: 1_400, size: proxy.size)
                 }
+            }
+            .task(id: ReelKey(look: look, size: proxy.size, scale: displayScale)) {
+                guard !reduceMotion else { return }
+                await play(ReelKey(look: look, size: proxy.size, scale: displayScale))
             }
         }
     }
 
+    private func play(_ key: ReelKey) async {
+        if let ready = VideoKit.PlayedReels[key] {
+            played = ready
+            return
+        }
+        // A tile already playing is being resized: wait for the size to
+        // settle rather than drawing a lap for every width it passes through.
+        if played != nil {
+            try? await Task.sleep(for: .milliseconds(150))
+            if Task.isCancelled { return }
+        }
+        guard key.size.width > 0, key.size.height > 0 else { return }
+        let reel = await Task.detached(priority: .userInitiated) {
+            Self.draw(key.look, size: key.size, scale: key.scale)
+        }.value
+        guard !Task.isCancelled, let reel else { return }
+        VideoKit.PlayedReels.keep(reel, for: key)
+        played = reel
+    }
+
+    /// Every frame of `look`'s lap that differs, as pictures.
+    nonisolated private static func draw(_ look: CaptionLook, size: CGSize, scale: CGFloat) -> VideoKit.PlayedReel? {
+        let box = textBox(size)
+        let reel = look.previewReel(fontSize: fontSize, width: box.width)
+        let outlines = look.strokeHex.map { [TextRasterizer.TextOutline(width: 1, colorHex: $0)] } ?? []
+        var frames: [CGImage] = []
+        for shot in reel.shots {
+            // A moment with nothing to say is an empty frame, not a skipped
+            // one, or the words before it would linger.
+            guard let image = shot.frame.flatMap({
+                TextRasterizer.rasterize($0, size: box, outlines: outlines, scale: scale)
+            }) ?? blank else { return nil }
+            frames.append(image)
+        }
+        return VideoKit.PlayedReel(frames: frames, keyTimes: reel.keyTimes,
+                                   lapSeconds: Double(reel.lapMS) / 1000)
+    }
+
+    nonisolated private static func textBox(_ size: CGSize) -> CGSize {
+        CGSize(width: max(20, size.width - 8), height: max(fontSize * 2.6, size.height - 4))
+    }
+
+    nonisolated private static let blank: CGImage? = CGContext(
+        data: nil, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4,
+        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    )?.makeImage()
+
     @ViewBuilder private func frame(atMS ms: Int, size: CGSize) -> some View {
-        let width = max(20, size.width - 8)
-        let font: CGFloat = 10
-        if let text = look.previewText(atMS: ms, fontSize: font, width: width),
+        let box = Self.textBox(size)
+        if let text = look.previewText(atMS: ms, fontSize: Self.fontSize, width: box.width),
            let image = TextRasterizer.rasterize(
-               text, size: CGSize(width: width, height: max(font * 2.6, size.height - 4)),
+               text, size: box,
                outlines: look.strokeHex.map { [TextRasterizer.TextOutline(width: 1, colorHex: $0)] } ?? [],
                scale: displayScale) {
             Image(decorative: image, scale: displayScale)
@@ -259,9 +324,22 @@ struct CaptionStylePreview: View, Equatable {
         }
     }
 
+    /// The same two shadows the still frame wears, for the playing one.
+    private var shadows: [VideoKit.FrameShadow] {
+        var shadows: [VideoKit.FrameShadow] = []
+        if let glow = glowColor { shadows.append(.init(color: glow, radius: 3)) }
+        if look.shadow != .none {
+            shadows.append(.init(color: CGColor(gray: 0, alpha: 0.6), radius: 1.5, offset: CGSize(width: 0, height: 1)))
+        }
+        return shadows
+    }
+
+    private var glowColor: CGColor? {
+        guard let hex = look.glowHex, let rgba = RGBA(hex: hex) else { return nil }
+        return CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: 0.9)
+    }
+
     private var glow: Color {
-        guard let hex = look.glowHex, let rgba = RGBA(hex: hex) else { return .clear }
-        return Color(.sRGB, red: rgba.r, green: rgba.g, blue: rgba.b, opacity: 0.9)
+        glowColor.map { Color(cgColor: $0) } ?? .clear
     }
 }
-

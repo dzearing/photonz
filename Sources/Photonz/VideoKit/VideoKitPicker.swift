@@ -225,33 +225,92 @@ extension VideoKit {
     /// over and over, so the tile shows the behaviour rather than naming it.
     /// Holds still on its middle frame for anyone who has asked the system to
     /// reduce motion.
+    ///
+    /// The lap (`loop`) is drawn once per size, a frame a pass so opening the
+    /// panel never stalls, and played by Core Animation (`LoopingFrames`):
+    /// nothing runs on the main thread while it plays.
     struct AnimatedTransitionThumbnail: View {
         let style: TransitionThumbnail.Style
-        /// One loop: a beat on the first shot, the transition, a beat on the
-        /// second.
-        var cycle: Double = 2.2
+        /// How far across the tile is at each moment of its lap. The app
+        /// hands in its one timing for every transition tile.
+        let loop: ProgressLoop
 
         @Environment(\.accessibilityReduceMotion) private var reduceMotion
+        @Environment(\.displayScale) private var displayScale
+        @State private var played: PlayedReel?
+
+        private struct ReelKey: Hashable {
+            let style: TransitionThumbnail.Style
+            let loop: ProgressLoop
+            let size: CGSize
+            let scale: CGFloat
+        }
 
         var body: some View {
             if reduceMotion {
                 TransitionMovie(style: style, progress: 0.5)
             } else {
-                TimelineView(.animation(minimumInterval: 1.0 / 30)) { context in
-                    TransitionMovie(style: style, progress: progress(at: context.date))
+                // Read here, not inside the reader, so the reel landing
+                // brings the reader's closure back (see CaptionStylePreview).
+                let played = played
+                GeometryReader { proxy in
+                    Group {
+                        if let played {
+                            LoopingFrames(reel: played, scale: displayScale)
+                        } else {
+                            TransitionMovie(style: style, progress: 0)
+                        }
+                    }
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .task(id: ReelKey(style: style, loop: loop, size: proxy.size, scale: displayScale)) {
+                        await play(ReelKey(style: style, loop: loop, size: proxy.size, scale: displayScale))
+                    }
                 }
             }
         }
 
-        private func progress(at date: Date) -> Double {
-            let t = date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: cycle) / cycle
-            // There and back: a beat on the first shot, across, a beat on the
-            // second, and back again, eased so it reads as a move. Most of the
-            // loop is spent part way through, where the kinds differ.
-            let there = t < 0.5 ? t * 2 : 2 - t * 2
-            let raw = min(max((there - 0.1) / 0.8, 0), 1)
-            return raw * raw * (3 - 2 * raw)
+        private func play(_ key: ReelKey) async {
+            if let ready = PlayedReels[key] {
+                played = ready
+                return
+            }
+            // Being resized: wait for the size to settle.
+            if played != nil {
+                try? await Task.sleep(for: .milliseconds(150))
+                if Task.isCancelled { return }
+            }
+            guard key.size.width > 0, key.size.height > 0 else { return }
+            // The way back is the way there backwards, so each moment is drawn once.
+            var drawn: [Double: CGImage] = [:]
+            var frames: [CGImage] = []
+            for progress in key.loop.progress {
+                if let image = drawn[progress] {
+                    frames.append(image)
+                    continue
+                }
+                await Task.yield()
+                if Task.isCancelled { return }
+                let renderer = ImageRenderer(content: TransitionMovie(style: key.style, progress: progress)
+                    .frame(width: key.size.width, height: key.size.height))
+                renderer.scale = key.scale
+                guard let image = renderer.cgImage else { return }
+                drawn[progress] = image
+                frames.append(image)
+            }
+            let ready = PlayedReel(frames: frames, keyTimes: key.loop.keyTimes,
+                                   lapSeconds: key.loop.lapSeconds)
+            PlayedReels.keep(ready, for: key)
+            played = ready
         }
+    }
+
+    /// A loop of how far across a transition tile is: each moment that
+    /// differs, where in the lap it starts (with a last `1` closing the lap),
+    /// and how long the lap lasts.
+    struct ProgressLoop: Hashable, Sendable {
+        let progress: [Double]
+        let keyTimes: [Double]
+        let lapSeconds: Double
     }
 
     /// One frame of a transition between the kit's two stand-in shots.

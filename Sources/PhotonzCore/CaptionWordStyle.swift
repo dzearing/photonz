@@ -465,6 +465,17 @@ extension CaptionLook {
     ]
     /// One lap of a tile's words, with a beat of rest at the end.
     public static let previewCycleMS = 2_900
+    /// A tile's words are read thirty times a second.
+    public static let previewStepMS = 33
+
+    /// A style tile's whole lap, as the captions that differ: the words hold
+    /// still between moves, so this is a handful of frames, not a tick's
+    /// worth each.
+    public func previewReel(fontSize: CGFloat, width: CGFloat) -> LoopReel<TextContent?> {
+        LoopReel(lapMS: Self.previewCycleMS, stepMS: Self.previewStepMS) { ms in
+            previewText(atMS: ms, fontSize: fontSize, width: width)
+        }
+    }
 
     /// A style tile's caption `ms` into its lap, at `fontSize` in a box
     /// `width` wide: the caption exactly as a frame of the film would draw it

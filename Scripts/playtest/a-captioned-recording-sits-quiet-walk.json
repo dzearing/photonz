@@ -1,0 +1,24 @@
+{
+  "out": "/tmp/photonz-playtest/a-captioned-recording-sits-quiet-walk",
+  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "describe", "stage": "why", "note": "A recording open with nothing playing should leave the Mac alone. The six transition tiles and the five caption style tiles each redrew thirty times a second, and every redraw laid the whole window out again: a 1.5s wait read 881ms of main thread busy and never went quiet (2026-09-27). Their loops now play on Core Animation, drawn once, so the same two seconds read tens of milliseconds. The walk fails at 400ms busy in two seconds, a fifth of the time, well under the 1200ms the old tiles cost and well over what the quiet app reads." },
+    { "do": "action", "action": "openSampleTalk" },
+    { "do": "action", "action": "captionsWaitForThemselves" },
+    { "do": "wait", "seconds": 1.5 },
+
+    { "do": "describe", "stage": "nothing-picked", "note": "Nothing picked: the Transitions tiles play in the panel." },
+    { "do": "wait", "seconds": 2, "onTheClock": true, "busyUnderMS": 400 },
+    { "do": "snapshot", "name": "1-transition-tiles-playing" },
+
+    { "do": "describe", "stage": "caption-picked", "note": "A caption picked: the five caption style tiles play their words too." },
+    { "do": "action", "action": "captionsPickFirst" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "wait", "seconds": 2, "onTheClock": true, "busyUnderMS": 400 },
+
+    { "do": "describe", "stage": "still-moving", "note": "Two pictures a moment apart: the tiles' words have moved on between them." },
+    { "do": "snapshot", "name": "2-style-tiles-a" },
+    { "do": "wait", "seconds": 0.4, "onTheClock": true },
+    { "do": "snapshot", "name": "3-style-tiles-b" }
+  ]
+}

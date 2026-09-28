@@ -131,3 +131,20 @@ extension View {
         }
     }
 }
+
+// MARK: - Every transition tile plays on the one loop
+
+extension VideoKit.ProgressLoop {
+    /// `TransitionTileLoop`, the way the kit takes it.
+    static let transitionTile: VideoKit.ProgressLoop = {
+        let reel = TransitionTileLoop.reel
+        return VideoKit.ProgressLoop(progress: reel.shots.map(\.frame), keyTimes: reel.keyTimes,
+                                     lapSeconds: Double(reel.lapMS) / 1000)
+    }()
+}
+
+extension VideoKit.AnimatedTransitionThumbnail {
+    init(style: VideoKit.TransitionThumbnail.Style) {
+        self.init(style: style, loop: .transitionTile)
+    }
+}

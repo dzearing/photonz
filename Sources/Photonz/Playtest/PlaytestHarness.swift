@@ -701,15 +701,23 @@ private final class Run {
             let url = try fileURL(file)
             try await open(url, size: size, number: number)
 
-        case .wait(let seconds, let onTheClock, let longestUnderMS):
+        case .wait(let seconds, let onTheClock, let longestUnderMS, let busyUnderMS):
             // On the clock, the whole time is spent: a walk waiting out
             // something that leaves BY ITSELF is not waiting for the app to
             // finish anything, and an app with nothing to do goes quiet in a
             // tenth of a second.
             let said: String
             if onTheClock {
+                _ = MainThreadMeter.shared.takeBusy()
                 await sleep(seconds)
-                said = "\(seconds)s on the clock, spent in full"
+                let busyMS = MainThreadMeter.shared.takeBusy() * 1000
+                said = String(format: "%gs on the clock, spent in full, %.0fms of it busy", seconds, busyMS)
+                if let busyUnderMS, busyMS >= busyUnderMS {
+                    throw Failure(description: String(
+                        format: "the main thread was busy for %.0fms of a %gs wait with nothing asked of it, "
+                            + "and this walk allows under %.0fms: something is redrawing itself for ever",
+                        busyMS, seconds, busyUnderMS))
+                }
             } else {
                 said = await settle(for: seconds)
             }

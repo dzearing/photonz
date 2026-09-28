@@ -2172,7 +2172,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// fails when the longest single pass of the main thread since the press,
     /// key or action before it ran past that many milliseconds. That pass is
     /// the frame the app did not draw while somebody waited on it.
-    case wait(seconds: Double, onTheClock: Bool, longestUnderMS: Double?)
+    ///
+    /// `busyUnderMS`, on the clock only, fails the walk when the main thread
+    /// was busy for that many milliseconds or more over the wait itself: an
+    /// editor with nothing playing should sit quiet, and a view redrawing
+    /// itself for ever reads busy the whole time (the caption and transition
+    /// tiles did, 2026-09-27).
+    case wait(seconds: Double, onTheClock: Bool, longestUnderMS: Double?, busyUnderMS: Double?)
     /// Press and release a key, through the window (or the app, for chords so
     /// menu shortcuts are found).
     case key(PlaytestKey, [PlaytestModifier])
@@ -3504,9 +3510,18 @@ public enum PlaytestStep: Sendable, Equatable {
             if let bound, !(bound > 0 && bound.isFinite) {
                 throw f.invalid("longestUnderMS", "must be a positive number of milliseconds")
             }
-            self = .wait(seconds: try f.number("seconds"),
-                         onTheClock: try f.optionalFlag("onTheClock") ?? false,
-                         longestUnderMS: bound)
+            let onTheClock = try f.optionalFlag("onTheClock") ?? false
+            let busy = try f.optionalNumber("busyUnderMS")
+            if let busy {
+                guard busy > 0 && busy.isFinite else {
+                    throw f.invalid("busyUnderMS", "must be a positive number of milliseconds")
+                }
+                guard onTheClock else {
+                    throw f.invalid("busyUnderMS", "needs \"onTheClock\": true, since a wait for quiet ends once it is quiet")
+                }
+            }
+            self = .wait(seconds: try f.number("seconds"), onTheClock: onTheClock,
+                         longestUnderMS: bound, busyUnderMS: busy)
         case "key":
             let keyName = try f.string("key")
             guard let key = PlaytestKey(keyName) else {
