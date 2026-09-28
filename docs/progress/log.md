@@ -19962,3 +19962,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - The clip menu showed three rows and a scroll arrow only in walk pictures. A real right click (`NSMenu.popUpContextMenu`) slides the whole menu up to fit. The harness had used `NSMenu.popUp(positioning:at:in:)`, which ran it off the screen foot in the probe.
 - `PlaytestHarness.openRowMenu` now opens menus with `popUpContextMenu` and a right mouse down at the walk's point. A photographed menu drawn shorter than its rows fails the walk.
 - All 18 walks that photograph a right-click menu pass; focus-drill reads `menu shown`. Next: nothing owed.
+
+## 2026-09-28 — A transition sits before, across or after its cut, and a dip holds on black
+
+- `ClipTransition` gained `alignment` (Before the cut / Across it / After it) and `holdMS`; both are left out of the file at their defaults, so old documents read and write exactly as before.
+- Each placement spends spare only from the side it borrows (`ClipCut.longestMS(of:aligned:)`), and `fitted` picks a side that can pay, so a clip dropped from its first frame takes a dissolve after the cut.
+- A hold is the gap between the two clips: `editPoints` accepts a gap equal to the arrival hold (and `atMS` is now where the outgoing clip ends), `setTransition` ripples every track by the change, and the hold draws black and plays silence.
+- Panel: The overlap sits (segmented) and Hold on black (dropdown, between clips only). Timeline: band spans fade + hold + fade over a Black block; dashed spare strips while an edit point is picked.
+- Walk: `transition-placement-and-hold-walk`. Next: `a-dip-on-a-blade-cut-inside-one-clip-can-hold-on`.
