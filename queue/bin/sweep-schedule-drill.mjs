@@ -44,6 +44,30 @@ check('the last full sweep already covered this exact commit, so nothing runs',
 check('...and it says so rather than going quiet',
   /already covered/.test(decide({ now, requests: asked, latest: swept(26, { head: 'same' }), head: 'same' }).why));
 
+console.log('a whole-set run that went blind');
+// 2026-09-28: two whole-set runs on the same commit went blind at the same walk
+// (the probe would not relaunch after the 1080p export walk), fifty minutes
+// each, and the gate would have started a third, because a blind run is kept
+// out of latest.json and so the floor still read as a day and more.
+const wentBlind = (h, head, extra = {}) => ({ began: ago(h), head, complete: false, blind: { from: 'x', count: 5 }, ...extra });
+check('a blind run on this commit is not followed by another whole-set run on it',
+  decide({ now, requests: asked, latest: swept(26), blind: wentBlind(1, 'same'), head: 'same' }).run !== 'full',
+  decide({ now, requests: asked, latest: swept(26), blind: wentBlind(1, 'same'), head: 'same' }));
+check('...it gets the rotating check instead, once',
+  decide({ now, requests: asked, latest: swept(26), blind: wentBlind(1, 'same'), head: 'same' }).run === 'slice');
+check('...and says the whole set went blind on this commit',
+  /blind/.test(decide({ now, requests: asked, latest: swept(26), blind: wentBlind(1, 'same'), head: 'same' }).why));
+check('once that rotating check has run too, nothing runs until code lands',
+  decide({ now, requests: asked, latest: swept(26), blind: wentBlind(1, 'same'), head: 'same', rotation: { cursor: 0, lastHead: 'same' } }).run === 'nothing');
+check('new code since the blind run, so the whole set runs again',
+  decide({ now, requests: asked, latest: swept(26), blind: wentBlind(1, 'old'), head: 'new' }).run === 'full');
+check('only the queue\'s own files changed since the blind run, so it still counts as this code',
+  decide({ now, requests: asked, latest: swept(26), blind: wentBlind(1, 'before-digest'), head: 'digest', blindCodeUnchanged: true }).run === 'slice');
+check('a blind run older than the last whole-set run is history and changes nothing',
+  decide({ now, requests: asked, latest: swept(26, { head: 'old' }), blind: wentBlind(30, 'same'), head: 'same' }).run === 'full');
+check('a runner asking for the whole set straight away still gets it',
+  decide({ now, requests: [{ t: ago(0.1), by: 'a-task', why: 'launcher fixed', now: true }], latest: swept(26), blind: wentBlind(1, 'same'), head: 'same' }).run === 'full');
+
 console.log('the rotating check in between');
 check('nothing new has landed since the last rotating check, so it does not repeat',
   decide({ now, requests: asked, latest: swept(2), head: 'new', rotation: { cursor: 0, lastHead: 'new' } }).run === 'nothing');

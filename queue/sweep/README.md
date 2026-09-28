@@ -75,6 +75,16 @@ and it is now treated like one:
   that really covered the set stays the record and the twelve-hour floor is
   still counted from a run that could see. The request that asked for the sweep
   is handed back.
+* a blind run is **not run again on the same code**. Since `latest.json` still
+  reads as a day old, the floor alone would start the whole set straight back up
+  and go blind at the same walk: on 2026-09-28 that cost two fifty minute runs
+  back to back. While `blind.json` is newer than `latest.json` and nothing
+  outside `queue/` has changed since its commit, the schedule runs the rotating
+  check once instead, then nothing until code lands (`request --now` still gets
+  the whole set). Drill: `node queue/bin/sweep-schedule-drill.mjs`;
+* a `COULD NOT START` line in `playtest-all.sh` is followed by the launcher's own
+  reason (for 2026-09-28 it was `open`'s error -600: the last probe was still
+  exiting, which `Scripts/probe-app.sh` now waits out).
 
 Drill: `node queue/bin/sweep-blind-drill.mjs`.
 

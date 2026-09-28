@@ -36,14 +36,40 @@ GRANTS="dist/probe-grants.json"
 # Dev.app", "Photonz.app", or a bare `swift build` run.
 MATCH="Photonz Probe.app/Contents/MacOS"
 
+BUNDLE_ID="com.dzearing.photonz.probe"
+
+# Whether LaunchServices still counts the probe as running. `open` asks it, not
+# the process table, and answers -600 while it does.
+probe_listed() {
+  [[ -n "$(lsappinfo find "bundleid=$BUNDLE_ID" 2>/dev/null)" ]]
+}
+
+# Gone means gone to the kernel AND to LaunchServices. A process that is
+# exiting drops its command line (ps shows "(Photonz Probe)"), so `pgrep -f`
+# stops matching the moment the kill lands while the process is still there
+# and LaunchServices still lists it. Waiting on pgrep alone let the next launch
+# run into that window, and after the five minute 1080p export walk (Metal and
+# the video encoder to tear down) it was wide enough every time: `open` failed
+# with error -600 and five walks in a row read COULD NOT START, which is how
+# both whole-set runs of 2026-09-28 went blind. So remember the pids, wait on
+# them with kill -0 (which still sees an exiting process), and on
+# LaunchServices letting go; SIGKILL if a quit ever takes longer than 15s.
 quit_probe() {
-  if pgrep -f "$MATCH" >/dev/null 2>&1; then
-    pkill -f "$MATCH" || true
-    for _ in 1 2 3 4 5 6 7 8 9 10; do
-      pgrep -f "$MATCH" >/dev/null 2>&1 || break
-      sleep 0.3
-    done
-  fi
+  local pids p alive i
+  pids="$(pgrep -f "$MATCH" 2>/dev/null || true)"
+  # shellcheck disable=SC2086
+  [[ -n "$pids" ]] && kill $pids 2>/dev/null || true
+  for ((i = 0; i < 200; i++)); do
+    alive=0
+    for p in $pids; do kill -0 "$p" 2>/dev/null && alive=1; done
+    (( alive )) || probe_listed || return 0
+    if (( i == 150 && alive )); then
+      # shellcheck disable=SC2086
+      kill -9 $pids 2>/dev/null || true
+    fi
+    sleep 0.1
+  done
+  echo "!! The last probe was still going away 20s after it was told to quit." >&2
 }
 
 BUILD=1
@@ -126,11 +152,25 @@ done
 ENVS=()
 [[ -n "${PHOTONZ_PLAYTEST_PACE:-}" ]] && ENVS=(--env "PHOTONZ_PLAYTEST_PACE=$PHOTONZ_PLAYTEST_PACE")
 [[ "${PHOTONZ_ALLOW_LOCKED_WALK:-}" == "1" ]] && ENVS+=(--env "PHOTONZ_ALLOW_LOCKED_WALK=1")
-if [[ $# -gt 0 ]]; then
-  open -g -a "$PWD/$APP" ${ENVS[@]+"${ENVS[@]}"} "$@" ${ARGS[@]+"${ARGS[@]}"}
-else
-  open -g -a "$PWD/$APP" ${ENVS[@]+"${ENVS[@]}"} ${ARGS[@]+"${ARGS[@]}"}
-fi
+# quit_probe waits for LaunchServices to let the last probe go, so -600 here
+# should not happen; if it still does (a quit slower than the wait), wait again
+# and try twice more rather than handing the walk no app.
+OPEN_ERR=""
+for attempt in 1 2 3; do
+  set +e
+  if [[ $# -gt 0 ]]; then
+    OPEN_ERR="$(open -g -a "$PWD/$APP" ${ENVS[@]+"${ENVS[@]}"} "$@" ${ARGS[@]+"${ARGS[@]}"} 2>&1)"
+  else
+    OPEN_ERR="$(open -g -a "$PWD/$APP" ${ENVS[@]+"${ENVS[@]}"} ${ARGS[@]+"${ARGS[@]}"} 2>&1)"
+  fi
+  OPEN_CODE=$?
+  set -e
+  (( OPEN_CODE == 0 )) && break
+  echo "!! open failed (try $attempt of 3): $OPEN_ERR" >&2
+  (( attempt < 3 )) || exit 1
+  quit_probe
+  sleep 1
+done
 
 # The app is a menu-bar agent: no window and no Dock icon is the normal state,
 # so confirm the process rather than looking for something on screen.

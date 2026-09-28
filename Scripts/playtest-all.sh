@@ -231,6 +231,11 @@ for walk in Scripts/playtest/*.json; do
     BLIND_RUN=$((BLIND_RUN + 1))
     (( BLIND_RUN == 1 )) && BLIND_FROM="$name"
     printf '%4ds  COULD NOT START  the probe would not launch, so nothing ran this walk\n' $((SECONDS - WALK_BEGAN))
+    # Why, in probe-app.sh's own words. On 2026-09-28 two whole-set runs went
+    # blind with this line swallowed, and the reason (open's error -600 while
+    # the last probe was still exiting) took a person running it by hand to see.
+    launch_why="$(printf '%s\n' "$out" | grep -E '^!! (open failed|Probe did not come up|The last probe)|_LSOpen|^!! .*does not exist' | tail -1)"
+    [[ -n "$launch_why" ]] && printf '%-40s       %s\n' "" "$launch_why"
     if (( BLIND_RUN >= BLIND_AFTER )); then
       echo
       echo "==> STOPPING: the app has failed to launch $BLIND_RUN times in a row, starting at $BLIND_FROM."

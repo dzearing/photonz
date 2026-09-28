@@ -60,6 +60,8 @@ export function decide({
   now = Date.now(),
   requests = [],
   latest = null,          // queue/sweep/latest.json, the last whole-set run
+  blind = null,           // queue/sweep/blind.json, the last whole-set run that went blind
+  blindCodeUnchanged = false, // nothing outside queue/ has changed since blind.head
   rotation = null,        // queue/sweep/rotation.json, where the rotation is up to
   head = null,            // the commit the loop is on right now
   screenLocked = false,
@@ -89,6 +91,29 @@ export function decide({
   }
 
   const sameCode = !!(head && latest.head && latest.head === head);
+  const lastChecked = rotation && rotation.lastHead ? rotation.lastHead : null;
+
+  // A whole-set run that went blind is kept out of latest.json (it is not the
+  // state of the set), so on its own the floor still reads as a day gone and
+  // the gate starts the whole set again, on the same code, to go blind at the
+  // same walk. On 2026-09-28 that cost two fifty minute runs back to back
+  // (the probe would not relaunch after the 1080p export walk). So a blind run
+  // newer than the last real one stands in for it on its own commit: the
+  // rotating check runs once instead, and the whole set waits for new code or
+  // for somebody to ask for it straight away.
+  const blindBegan = blind && blind.began ? Date.parse(blind.began) : NaN;
+  // The loop commits its own queue files (the digest, task logs) all day, and
+  // those move HEAD without touching anything a walk runs, so they do not make
+  // it new code.
+  const blindHere = !!(head && blind && (blind.head === head || blindCodeUnchanged)
+    && Number.isFinite(blindBegan) && blindBegan > began);
+
+  if (hoursSince >= floorHours && blindHere) {
+    if (lastChecked === head) {
+      return out('nothing', 'the whole set went blind on this commit and its rotating check has run; the next whole-set run waits for new code');
+    }
+    return out('slice', 'the whole set went blind on this commit, so the rotating check runs instead of a second whole-set run');
+  }
 
   if (hoursSince >= floorHours) {
     // The last whole-set run already answered for this exact commit. Running it
@@ -108,7 +133,6 @@ export function decide({
   // Inside the floor: the rotating check, once per commit. A whole-set run
   // counts as having checked its commit too, so a full sweep is never followed
   // straight away by a rotating check over the same code.
-  const lastChecked = rotation && rotation.lastHead ? rotation.lastHead : null;
   if (head && (lastChecked === head || latest.head === head)) {
     return out('nothing', 'nothing new has landed since the last walk check');
   }
@@ -194,6 +218,15 @@ function git(args, repo = REPO) {
   try { return execFileSync('git', args, { cwd: repo, encoding: 'utf8' }).trim(); } catch { return ''; }
 }
 
+// Whether anything a walk could run differs between two commits: everything
+// but the queue's own files. A commit git cannot read counts as different.
+export function sameCodeOutsideQueue(a, b, repo = REPO) {
+  try {
+    execFileSync('git', ['diff', '--quiet', a, b, '--', '.', ':(exclude)queue'], { cwd: repo, stdio: 'ignore' });
+    return true;
+  } catch { return false; }
+}
+
 // Walk scripts that changed since `base`. A walk rewritten an hour ago is the
 // likeliest thing in the set to be wrong and the cheapest thing to be sure
 // about, so it never waits for the rotation to come round to it.
@@ -216,9 +249,13 @@ if (isMain) {
 
   if (argv.includes('--decide')) {
     const requested = readJSON(join(dir, 'requested.json'));
+    const blind = readJSON(join(dir, 'blind.json'));
     const d = decide({
       requests: (requested && requested.requests) || [],
       latest: readJSON(join(dir, 'latest.json')),
+      blind,
+      blindCodeUnchanged: !!(blind && blind.head && head && blind.head !== head
+        && sameCodeOutsideQueue(blind.head, head)),
       rotation: readJSON(join(dir, 'rotation.json')),
       head,
       screenLocked: argv.includes('--locked'),
