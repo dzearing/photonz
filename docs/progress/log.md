@@ -20028,3 +20028,8 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 
 - At 1200x720 with the timeline open the right panel has 302pt under a title and 336pt under a clip; the sections above Appearance take 412 and 547. No ordering keeps Appearance and Effects whole, so the task is blocked on a decision card (full height panel, shorter timeline, or leave it scrolling). Numbers pinned in `DockFoldOnAVideoDocumentTests`.
 - Next: build whichever layout the user picks, with the pair moved straight under Properties on a video in either yes-option.
+
+## 2026-09-28: timeline drag walks claim where their drags land
+
+- A posted `windowDrag` moves a timeline clip again (since e459d903). The three walks that drag on the timeline now claim every result: `a-clip-s-sound-is-linked-under-it-walk` (expectClip, Volume reading, Fade in), `timeline-right-click-walk` (expectTimeline playhead and marks), `keys-copy-between-layers-walk` (new `expectLevel` step: points, dip, flat).
+- The claims found two drags that had silently gone nowhere, both because `key` ⌘Z runs no menu in a background probe. Those walks now use the Undo `shortcut` step. Filed `a-walk-s-command-z-undoes-what-it-says-or-the-wa` for the other walks that press ⌘Z.
