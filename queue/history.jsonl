@@ -8009,3 +8009,30 @@
 {"t":"2026-09-28T12:21:29.593Z","ev":"task_note","id":"a-whole-walk-run-gets-past-the-1080p-export-walk"}
 {"t":"2026-09-28T12:21:29.646Z","ev":"task_walks","id":"a-whole-walk-run-gets-past-the-1080p-export-walk","walks":["export-a-video-at-1080p-walk","export-card-while-writing-walk"]}
 {"t":"2026-09-28T12:22:25.704Z","ev":"digest","file":"2026-09-28.md"}
+{"t":"2026-09-28T12:22:41.104Z","ev":"task_started","id":"a-whole-walk-run-gets-past-the-1080p-export-walk","title":"A whole walk run gets past the 1080p export walk","priority":"p1-high"}
+{"t":"2026-09-28T12:34:32.245Z","ev":"task_note","id":"a-whole-walk-run-gets-past-the-1080p-export-walk"}
+{"t":"2026-09-28T12:34:32.298Z","ev":"task_note","id":"a-whole-walk-run-gets-past-the-1080p-export-walk"}
+{"t":"2026-09-28T12:40:57.246Z","ev":"task_note","id":"a-whole-walk-run-gets-past-the-1080p-export-walk"}
+{"t":"2026-09-28T12:40:57.299Z","ev":"task_note","id":"a-whole-walk-run-gets-past-the-1080p-export-walk"}
+{"t":"2026-09-28T12:40:57.354Z","ev":"task_done","id":"a-whole-walk-run-gets-past-the-1080p-export-walk","from":"in_progress","note":"Probe launcher (Scripts/probe-app.sh) now waits for the last probe to be gone from the process table and from LaunchServices before opening the next one; the cause was open's error -600 while the probe was still exiting after the 1080p export walk. The three export walks now run back to back: 98s ok, 82s ok, 21s ok. A blind whole-set run is no longer rerun on the same code (sweep-schedule decide + drill), and COULD NOT START lines carry the launcher's reason. Scripts/test.sh 10265 passed. Commit 7046403c. The whole-set check is requested and due next; not yet observed."}
+{"t":"2026-09-28T13:45:29.608Z","ev":"sweep_pass","walks":234,"passed":234,"failed":0,"seconds":3844,"complete":false,"total":653,"interrupted":true}
+{"t":"2026-09-28T13:45:29.763Z","ev":"task_started","id":"a-recording-with-captions-sits-quiet-while-nothi","title":"A recording with captions sits quiet while nothing is happening","priority":"p2-normal"}
+{"t":"2026-09-28T13:48:59.735Z","ev":"task_created","id":"a-recording-shows-in-history-the-moment-you-stop","priority":"p1-high","title":"A recording shows in history the moment you stop it"}
+{"t":"2026-09-28T13:48:59.817Z","ev":"task_created","id":"captions-only-when-you-ask-for-them","priority":"p1-high","title":"Captions only when you ask for them"}
+{"t":"2026-09-28T13:48:59.898Z","ev":"task_created","id":"select-a-range-of-time-across-clips-and-tracks-a","priority":"p1-high","title":"Select a range of time, across clips and tracks, and act on it"}
+{"t":"2026-09-28T13:48:59.981Z","ev":"task_created","id":"zoom-the-timeline-with-the-trackpad-both-ways-an","priority":"p1-high","title":"Zoom the timeline with the trackpad, both ways, and lose the zoom buttons"}
+{"t":"2026-09-28T13:49:07.460Z","ev":"task_resequenced","id":"a-recording-shows-in-history-the-moment-you-stop","from":390,"to":0.001}
+{"t":"2026-09-28T13:49:07.516Z","ev":"task_resequenced","id":"captions-only-when-you-ask-for-them","from":400,"to":0.0012}
+{"t":"2026-09-28T13:49:07.567Z","ev":"task_resequenced","id":"select-a-range-of-time-across-clips-and-tracks-a","from":410,"to":0.0026}
+{"t":"2026-09-28T13:49:07.620Z","ev":"task_resequenced","id":"zoom-the-timeline-with-the-trackpad-both-ways-an","from":420,"to":0.0027}
+{"t":"2026-09-28T13:52:53.706Z","ev":"task_note","id":"a-recording-with-captions-sits-quiet-while-nothi"}
+{"t":"2026-09-28T14:49:32.883Z","ev":"task_note","id":"zoom-the-timeline-with-the-trackpad-both-ways-an"}
+{"t":"2026-09-28T14:50:59.835Z","ev":"task_note","id":"zoom-the-timeline-with-the-trackpad-both-ways-an"}
+{"t":"2026-09-28T14:56:09.353Z","ev":"task_created","id":"view-mode-and-edit-mode-a-recording-opens-to-wat","priority":"p1-high","title":"View mode and Edit mode: a recording opens to watch, one switch brings the editor"}
+{"t":"2026-09-28T14:56:09.431Z","ev":"task_created","id":"the-volume-slider-on-the-transport-works","priority":"p1-high","title":"The volume slider on the transport works"}
+{"t":"2026-09-28T14:56:14.618Z","ev":"task_resequenced","id":"view-mode-and-edit-mode-a-recording-opens-to-wat","from":390,"to":0.0005}
+{"t":"2026-09-28T14:56:14.671Z","ev":"task_resequenced","id":"the-volume-slider-on-the-transport-works","from":400,"to":0.0006}
+{"t":"2026-09-28T14:56:30.877Z","ev":"task_walks","id":"a-recording-with-captions-sits-quiet-while-nothi","walks":["a-captioned-recording-sits-quiet-walk","caption-pick-answers-at-once-walk","transitions-group-walk"]}
+{"t":"2026-09-28T14:56:30.931Z","ev":"task_note","id":"a-recording-with-captions-sits-quiet-while-nothi"}
+{"t":"2026-09-28T14:56:30.984Z","ev":"task_note","id":"a-recording-with-captions-sits-quiet-while-nothi"}
+{"t":"2026-09-28T14:56:31.039Z","ev":"task_done","id":"a-recording-with-captions-sits-quiet-while-nothi","from":"in_progress","note":"Caption style and transition tiles now play on Core Animation from frames drawn once, so an idle captioned recording reads 3ms main-thread busy over 2s (was ~1200ms). Guard walk a-captioned-recording-sits-quiet-walk (new wait busyUnderMS) fails on the old tiles; caption and transition walks green; full suite green. Commit f8fe5834."}
