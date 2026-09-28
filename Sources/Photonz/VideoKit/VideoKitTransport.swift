@@ -13,12 +13,14 @@ extension VideoKit {
     /// The buttons and the scrubber come in as views so the caller can hang its
     /// own names and help on each one; `TransportButton` and `Scrubber` are the
     /// pieces to put there.
-    struct TransportBar<Volume: View, Controls: View, Scrub: View>: View {
+    struct TransportBar<Volume: View, Controls: View, Scrub: View, Trailing: View>: View {
         let current: String
         let duration: String
         @ViewBuilder let volume: Volume
         @ViewBuilder let controls: Controls
         @ViewBuilder let scrubber: Scrub
+        /// After the length: what a player adds at its far end (full screen).
+        @ViewBuilder var trailing: Trailing
 
         var body: some View {
             HStack(spacing: 12) {
@@ -28,6 +30,7 @@ extension VideoKit {
                 scrubber
                     .frame(minWidth: 180, maxWidth: .infinity)
                 Timecode(text: duration)
+                trailing
             }
             .padding(.vertical, 8)
             .padding(.horizontal, 16)
@@ -190,5 +193,16 @@ extension VideoKit {
         }
 
         private func clamped(_ value: Double) -> Double { min(max(0, value), 1) }
+    }
+}
+
+extension VideoKit.TransportBar where Trailing == EmptyView {
+    /// The editor's transport, which ends at the length.
+    init(current: String, duration: String,
+         @ViewBuilder volume: () -> Volume,
+         @ViewBuilder controls: () -> Controls,
+         @ViewBuilder scrubber: () -> Scrub) {
+        self.init(current: current, duration: duration, volume: volume, controls: controls,
+                  scrubber: scrubber, trailing: { EmptyView() })
     }
 }

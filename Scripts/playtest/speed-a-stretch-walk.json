@@ -10,6 +10,8 @@
     { "do": "action", "action": "openSampleRecording" },
     { "do": "wait", "seconds": 2.0 },
     { "do": "action", "action": "videoPause" },
+    { "do": "key", "key": "2", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "1-one-take", "note": "an eight second screen recording open as one clip, playing at the speed it was recorded. The panel has a Time section for it even though nothing has been cut, because an uncut recording is one piece and one piece can be sped up" },

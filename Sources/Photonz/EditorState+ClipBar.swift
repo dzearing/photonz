@@ -121,9 +121,9 @@ extension EditorState {
         endTrimBeforeCutting()
         guard canSplitClipAtPlayhead, let id = clipInHandID else { return }
         pauseDocument()
-        // From a right click on the picture or the scrubber too, with the
-        // timeline tucked away: the cut is on the tracks, so they come up.
-        openTimelineForAnEdit()
+        // From a right click on the picture or the scrubber too, in View
+        // mode: the cut is on the tracks, so the window becomes the editor.
+        switchToEditForAnEdit()
         perform { $0.splitClip(id, atMS: documentTimeMS) }
         // **The piece you are left holding is the one BEFORE the cut**, and
         // the model does not decide that — the surface does.

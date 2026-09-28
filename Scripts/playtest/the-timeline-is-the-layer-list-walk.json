@@ -180,18 +180,14 @@
       "seconds": 0.8
     },
     {
-      "do": "expectSections",
-      "layers": true
-    },
-    {
-      "do": "expect",
-      "row": "b-roll",
-      "reads": "layer"
+      "do": "expectTimeline",
+      "mode": "view",
+      "open": false
     },
     {
       "do": "describe",
       "stage": "3-folded",
-      "note": "the timeline folded away to its one row, and the Layers list is straight back at the top of the panel: a document is never left with no list of what is in it"
+      "note": "the timeline's x puts the window into View mode: a player, with no tracks, no panel and no tool bar, so there is no list to miss"
     },
     {
       "do": "snapshot",
@@ -206,13 +202,18 @@
       "seconds": 0.8
     },
     {
+      "do": "expectTimeline",
+      "mode": "edit",
+      "open": true
+    },
+    {
       "do": "expectSections",
       "layers": false
     },
     {
       "do": "describe",
       "stage": "4-open-again",
-      "note": "and open again, the list gives way to the timeline once more"
+      "note": "and back to Edit, the timeline is the layer list once more"
     }
   ]
 }

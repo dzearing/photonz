@@ -104,6 +104,10 @@ public enum TimelineKeyCommand: Hashable, Sendable {
     case toggleSnapping
     case selectTool, bladeTool, trackSelectForwardTool
     case zoomIn, zoomOut, zoomToFit
+    /// ⌘1 and ⌘2: View mode or Edit mode (`ViewEditMode`).
+    case showMode(ViewEditMode)
+    /// E: whichever of the two this window is not in.
+    case toggleViewEdit
 }
 
 public enum TimelineKeys {
@@ -145,6 +149,12 @@ public enum TimelineKeys {
         case (.letter("t"), [.command]): return .applyDefaultTransition
         case (.letter("i"), [.option]): return .clearIn
         case (.letter("o"), [.option]): return .clearOut
+        // View and Edit (`ViewEditMode`). ⌘1 is Actual Size on a picture;
+        // a document with time has no use for 100% that beats one key for
+        // the player.
+        case (.letter(ViewEditMode.view.commandKey), [.command]): return .showMode(.view)
+        case (.letter(ViewEditMode.edit.commandKey), [.command]): return .showMode(.edit)
+        case (.letter(ViewEditMode.toggleKey), []) where !press.isRepeat: return .toggleViewEdit
         default: break
         }
         guard timelineFocused else { return nil }

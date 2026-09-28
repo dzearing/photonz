@@ -10,7 +10,10 @@
     { "do": "describe", "stage": "0-opened", "note": "the recording as it opens, nothing pressed and not playing: five minutes and nineteen seconds on one track, the captions already written underneath, the timeline holding the keyboard" },
     { "do": "snapshot", "name": "0-five-minutes-opened" },
 
-    { "do": "describe", "stage": "head", "note": "actions 1 and 2: the talk really starts twelve seconds in. A click on the ruler at 0:12, then Q" },
+    { "do": "describe", "stage": "head", "note": "actions 1 to 3: the recording opened in View, so Cmd-2 for the editor; the talk really starts twelve seconds in. A click on the ruler at 0:12, then Q" },
+    { "do": "key", "key": "2", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectTimeline", "mode": "edit", "open": true },
     { "do": "clickRuler", "seconds": 12 },
     { "do": "key", "key": "q" },
     { "do": "wait", "seconds": 0.6, "longestUnderMS": 150 },

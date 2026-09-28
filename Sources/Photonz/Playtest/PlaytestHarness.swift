@@ -6103,7 +6103,7 @@ private final class Run {
                           number: Int) async throws {
         let editor = try requireEditor()
         guard editor.isMotionStripOpen else {
-            throw Failure(description: "the timeline's tracks are tucked away, so no clip is on "
+            throw Failure(description: "the window is in View mode, so no clip is on "
                 + "screen to be pressed")
         }
         let clips = editor.document?.timelineClipLayers ?? []
@@ -11072,11 +11072,24 @@ private final class Run {
             + "in \(mark(document?.markInMS)), out \(mark(document?.markOutMS)), "
             + "\(document?.markers.count ?? 0) marker(s), runs \(editor.documentLengthMS)ms, "
             + (editor.isTimelineSnapping ? "snapping" : "snapping off")
-            + ", " + (editor.isMotionStripOpen ? "tracks open" : "tucked away")
+            + ", " + (editor.isMotionStripOpen ? "tracks open" : "no tracks")
+            + ", \(editor.viewEditMode.title) mode"
+            + (editor.isInspectorShown ? ", panel showing" : ", no panel")
+            + (editor.isWatching ? ", no tool bar" : ", tool bar")
             + ", \(editor.activeTool.rawValue) in hand"
         var wrong: [String] = []
         if let want = claim.open, want != editor.isMotionStripOpen {
-            wrong.append(editor.isMotionStripOpen ? "the timeline's tracks are open" : "the timeline is tucked away")
+            wrong.append(editor.isMotionStripOpen ? "the timeline's tracks are open" : "the timeline's tracks are not showing")
+        }
+        if let want = claim.mode {
+            if want != editor.viewEditMode {
+                wrong.append("the window is in \(editor.viewEditMode.title) mode, not \(want.title)")
+            } else if want == .view {
+                // View is a player: say so if any of the editing is still up.
+                if editor.isInspectorShown { wrong.append("the panel is showing in View mode") }
+                if editor.isMotionStripOpen { wrong.append("the tracks are showing in View mode") }
+                if editor.selectedLayerID != nil { wrong.append("something is picked in View mode") }
+            }
         }
         if let want = claim.tool, want != editor.activeTool.rawValue {
             wrong.append("\(editor.activeTool.rawValue) is in hand, not \(want)")

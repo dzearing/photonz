@@ -1328,12 +1328,18 @@ struct EditorCommands: Commands {
             // because there is no strip for a still picture and a row that
             // would open an empty one is a row that lies.
             //
-            // A recording's timeline is the same switch under its own name, and
-            // it is there whether or not the Motion list is: a recording opens
-            // with its timeline tucked away, so ⌥⌘T has to reach it.
-            if Experiments.shared.motionStripEnabled || Experiments.shared.cutRecordingEnabled {
-                Toggle((editor?.documentHasTime ?? false) ? MenuToggleNames.timeline : MenuToggleNames.timingStrip,
-                       isOn: Binding(
+            // A recording has no strip to show or hide: its tracks are Edit
+            // mode's, and the window is a player or the editor
+            // (`ViewEditMode`), on ⌘1 and ⌘2 like the title bar's switch.
+            if editor?.documentHasTime ?? false {
+                ForEach(ViewEditMode.allCases, id: \.self) { mode in
+                    Toggle(mode.menuTitle, isOn: Binding(
+                        get: { editor?.viewEditMode == mode },
+                        set: { _ in editor?.setViewEditMode(mode) }))
+                    .keyboardShortcut(KeyEquivalent(mode.commandKey), modifiers: .command)
+                }
+            } else if Experiments.shared.motionStripEnabled {
+                Toggle(MenuToggleNames.timingStrip, isOn: Binding(
                     get: { editor?.isMotionStripShown ?? false },
                     set: { _ in editor?.toggleMotionStrip() }))
                 .keyboardShortcut("t", modifiers: [.command, .option])
@@ -1372,8 +1378,11 @@ struct EditorCommands: Commands {
             Button("Zoom to Fit") { editor?.zoomToFit() }
                 .keyboardShortcut("0", modifiers: .command)
                 .disabled(!hasDocument)
+            // ⌘1 is View mode on a document with time (`ViewEditMode`), so
+            // there Actual Size takes Photoshop's older ⌥⌘0.
             Button("Actual Size") { editor?.zoomToActualSize() }
-                .keyboardShortcut("1", modifiers: .command)
+                .keyboardShortcut((editor?.documentHasTime ?? false) ? "0" : "1",
+                                  modifiers: (editor?.documentHasTime ?? false) ? [.command, .option] : .command)
                 .disabled(!hasDocument)
             // The grid you build against (Next, `next-canvas-grid`), on the key
             // Photoshop uses for its own. It is a view preference, not part of

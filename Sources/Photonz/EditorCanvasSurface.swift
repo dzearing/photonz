@@ -45,6 +45,7 @@ struct EditorCanvasSurface: View {
                    multiSelectedLayerIDs: editorState.multiSelectedLayerIDs,
                    dragPreview: editorState.dragPreview,
                    tool: editorState.activeTool,
+                   isWatching: editorState.isWatching,
                    captionCloseRequest: editorState.captionCloseRequest,
                    typeInLayer: editorState.typeInLayer,
                    annotationContent: editorState.activeAnnotationContent,

@@ -150,9 +150,9 @@ struct TrackSelectForwardTests {
         #expect(TimelineTool.allCases == [.select, .trackSelectForward, .blade])
     }
 
-    @Test("A opens a tucked-away timeline, because the tool works on it")
+    @Test("A switches View to Edit, because the tool works on the tracks")
     func aOpensTheTimeline() {
-        #expect(TimelineKeyCommand.trackSelectForwardTool.opensTheTimeline)
+        #expect(TimelineKeyCommand.trackSelectForwardTool.startsAnEdit)
     }
 
     // MARK: - The walk step

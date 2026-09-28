@@ -25,7 +25,11 @@ import SwiftUI
 /// re-measures the accessory, which lays the window out, which runs the
 /// editor's body again.
 struct TitlebarModeChipInstaller: NSViewRepresentable {
-    func makeNSView(context: Context) -> InstallerView { InstallerView() }
+    /// Handed over so the chip can step aside in View mode; the title bar is
+    /// outside the editor's view tree.
+    let editorState: EditorState
+
+    func makeNSView(context: Context) -> InstallerView { InstallerView(editorState: editorState) }
 
     func updateNSView(_ view: InstallerView, context: Context) { view.install() }
 
@@ -35,8 +39,8 @@ struct TitlebarModeChipInstaller: NSViewRepresentable {
         private let accessoryView: NSView
         private var accessory: NSTitlebarAccessoryViewController?
 
-        init() {
-            let chip = NSHostingView(rootView: TitlebarModeChip())
+        init(editorState: EditorState) {
+            let chip = NSHostingView(rootView: TitlebarModeChip().environment(editorState))
             // A fixed box, not a self-sizing one, for the reason the panel
             // toggle's is fixed: a leading accessory takes the size of the view
             // it is given, so a view that re-measures itself would shove the
@@ -95,6 +99,7 @@ struct TitlebarModeChip: View {
     /// the mode by hand and that is a fact about the panel's choices.
     @State private var sections = PanelSectionVisibilityStore.shared
     @State private var isOpen = false
+    @Environment(EditorState.self) private var editorState: EditorState?
 
     /// The title bar's own height, so the chip is centred in it the way the
     /// traffic lights are.
@@ -109,6 +114,16 @@ struct TitlebarModeChip: View {
     }
 
     var body: some View {
+        // A mode arranges the panel, and View mode has none, so the chip
+        // steps aside there (`ViewEditMode`), faded so nothing moves.
+        let watching = editorState?.isWatching ?? false
+        chip
+            .opacity(watching ? 0 : 1)
+            .allowsHitTesting(!watching)
+            .animation(.viewEditMode, value: watching)
+    }
+
+    private var chip: some View {
         Button { isOpen.toggle() } label: {
             HStack(spacing: 5) {
                 Image(systemName: modes.mode.symbol)

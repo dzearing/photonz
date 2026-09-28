@@ -20052,3 +20052,18 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Now each tile's lap is read once as the frames that differ (`LoopReel`, PhotonzCore, tested) and played by Core Animation (`VideoKit.LoopingFrames`, a discrete keyframe animation on layer contents, repeating for ever, on the one clock so tiles stay in step). Caption frames rasterize off the main thread; transition frames render one per pass through `ImageRenderer`. Reels are cached by style, size and screen scale. Reduce Motion keeps the old still frame. The kit still compiles alone: the transition timing comes in as a `ProgressLoop` value the app builds from `TransitionTileLoop`.
 - Gotcha: a `@State` read only inside a `GeometryReader` closure does not bring that closure back when it changes. The three caption tiles without shadows stayed on their still frame until `played` was read in `body`.
 - Walk step `wait` takes `busyUnderMS` (on the clock only): fails when the main thread was busy that long during the wait. Guard walk `a-captioned-recording-sits-quiet-walk`: 3ms busy over 2s idle with a caption picked (the old tiles failed it at 983ms).
+
+## 2026-09-28 — View mode and Edit mode for recordings
+
+- A recording opens in View mode every time: a player, picture fitted to the whole
+  window over the transport (plus Full Screen), no tool bar, tracks, panel, handles,
+  surround grid or mode chip. View | Edit (a system segmented control) sits at the
+  right of the title bar beside the panel toggle; Cmd-1 / Cmd-2 / E switch (Actual
+  Size moves to Opt-Cmd-0 on a recording). Any edit, tool letter, right-click edit,
+  drop or asking for the panel switches to Edit. Nothing is remembered.
+- Core `ViewEditMode` replaces `TimelineOpening`; the `video.timelineOpen`
+  preference and the tucked TIMELINE rail are gone. Walk setup `timelineOpen: true`
+  now means recordings open in Edit; `expectTimeline` takes `mode`.
+- New walk `view-mode-and-edit-mode-walk`; nine recording walks updated, one retired.
+- Next: `switching-a-long-recording-to-edit-mode-draws-it` (180 ms first frame on a
+  long captioned recording).

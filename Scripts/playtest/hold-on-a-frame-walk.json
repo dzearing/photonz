@@ -10,6 +10,8 @@
     { "do": "action", "action": "openSampleRecording" },
     { "do": "wait", "seconds": 2.0 },
     { "do": "action", "action": "videoPause" },
+    { "do": "key", "key": "2", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
     { "do": "tool", "tool": "select" },
     { "do": "action", "action": "videoSeekMiddle" },
     { "do": "wait", "seconds": 0.8 },

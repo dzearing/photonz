@@ -51,6 +51,9 @@ struct CanvasView: NSViewRepresentable {
     let multiSelectedLayerIDs: Set<UUID>
     let dragPreview: DragPreview?
     let tool: Tool
+    /// View mode (`ViewEditMode`): the canvas is a player's picture, so a
+    /// press picks nothing and a double click goes full screen.
+    var isWatching: Bool = false
     /// See `EditorState.captionCloseRequest`: each bump closes an open caption
     /// field with the tool kept.
     let captionCloseRequest: Int
@@ -380,6 +383,7 @@ struct CanvasView: NSViewRepresentable {
     }
 
     private func update(_ view: CanvasNSView) {
+        view.isWatching = isWatching
         view.penPaint = penPaint
         view.penStrokeWidth = penStrokeWidth
         view.armedStrokeWidthIsChosen = armedStrokeWidthIsChosen
@@ -1046,6 +1050,8 @@ final class CanvasNSView: NSView {
     /// The active tool, echoed from EditorState. Annotation tools reroute the
     /// pointer from hit-test/marquee into drag-to-create.
     var tool: Tool = .select
+    /// View mode: presses pick nothing (`CanvasView.isWatching`).
+    var isWatching = false
     var captionCloseRequest = 0
     var typeInLayerToken = 0
     /// In-progress drag-to-create (document coordinates).

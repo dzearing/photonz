@@ -1,0 +1,31 @@
+{
+  "feature": "View mode and Edit mode",
+  "epic": "video-editing",
+  "summary": "A recording now opens as a player: the picture fills the window over a slim transport, with no tool bar, tracks or panel. View | Edit at the right of the title bar, Cmd-1, Cmd-2 or E brings the whole editor back, and starting any edit switches to Edit by itself.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/view-mode-and-edit-mode-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording from the Finder.", "shot": "2026-09-28-view-mode-and-edit-mode-1-view-sc.png" },
+    { "do": "Press space to play, then space to stop; click the picture (nothing gets picked)." },
+    { "do": "Click Edit in the title bar, or press Cmd-2.", "shot": "2026-09-28-view-mode-and-edit-mode-2-edit-sc.png" },
+    { "do": "Press E twice to go to View and back, then Cmd-1 for View." },
+    { "do": "In View, press I to mark an In: the editor comes up by itself.", "shot": "2026-09-28-view-mode-and-edit-mode-3-an-edit-brings-the-editor-sc.png" },
+    { "do": "Leave it in Edit, close the window, and open the recording again.", "shot": "2026-09-28-view-mode-and-edit-mode-4-reopened-in-view-sc.png" },
+    { "do": "In View, double click the picture, or press the arrows button at the far right of the transport, for full screen." }
+  ],
+  "evaluate": [
+    "Does a recording you just opened feel like QuickTime rather than an editor?",
+    "Is the View | Edit switch where your hand goes, and is it the right size next to the panel toggle?",
+    "Does going to Edit and back feel smooth, with nothing jumping, on the recordings you actually open?",
+    "Should T, R and the other tool letters in View switch to Edit and pick the tool (as now), or do nothing?",
+    "Is losing the Layers list for a recording (the timeline is the list in Edit, and View has no panel) fine?"
+  ],
+  "rough": [
+    "There is no mock page for View mode; it was built from the task's words. Edit mode is the existing video.html layout unchanged.",
+    "On a five minute recording with captions the first frame of the switch to Edit takes about 180 ms, so the slide-in stutters. Filed as its own task.",
+    "The transport in View is the editor's transport plus a full screen button, so it still has Go to Start and Go to End; the volume is still the mute button and meter (the working volume slider is a separate task).",
+    "The timeline's x and Option-Command-T now switch to View rather than tucking the tracks to one row; the one-row TIMELINE rail is gone.",
+    "On a recording, Actual Size moved from Cmd-1 to Option-Command-0 so Cmd-1 can be View.",
+    "The Layers list used to come back when the tracks were tucked; with no tucked state it no longer shows for a recording, and the walk about its piece count was retired."
+  ]
+}

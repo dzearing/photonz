@@ -81,10 +81,10 @@ struct BlankVideoTests {
         for track in tracks { #expect(doc.clipIDs(onTrack: track.id).isEmpty) }
     }
 
-    @Test("It opens on its tracks, whatever the last recording's timeline was left as")
+    @Test("It opens in Edit, on its tracks: there is nothing in it to watch yet")
     func opensOnItsTracks() {
         let doc = PhotonzDocument.emptyVideo(size: CGSize(width: 1920, height: 1080), lengthMS: 10_000)
-        #expect(TimelineOpening.opensOpen(doc, remembered: false))
+        #expect(ViewEditMode.opening(doc) == .edit)
     }
 
     @Test("The two tracks are the person's, not left behind: nothing tidies them away")

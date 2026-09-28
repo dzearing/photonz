@@ -87,9 +87,7 @@ extension PlaytestMemory {
             // walk before it stopped watching (`RecordingPlaces`).
             // And which transition ⌘T puts on a cut: a walk that picked Push
             // as the default would otherwise hand every later walk a push.
-            // And whether a recording's timeline was last left open, which is
-            // what the next untouched recording opens with.
-            [EditorState.motionStripOpenKey, EditorState.videoTimelineOpenKey, RecordingPlaceStore.defaultsKey,
+            [EditorState.motionStripOpenKey, RecordingPlaceStore.defaultsKey,
              DefaultTransitionStore.defaultsKey]
         case .shelf:
             // Not a setting at all: the shared shelf is a file, emptied in
@@ -172,12 +170,11 @@ struct PlaytestSetupRunner {
             said.append("forgot \(setup.forget.map(\.rawValue).joined(separator: ", "))"
                         + " (\(keys.count) settings)")
         }
-        // After the forgetting, so "forget all, and the tracks were last left
-        // open" is one walk's word for a person who opens them every time.
-        if let open = setup.timelineOpen {
-            UserDefaults.standard.set(open, forKey: EditorState.videoTimelineOpenKey)
-            said.append(open ? "a recording's timeline was last left open"
-                             : "a recording's timeline was last put away")
+        // Every walk says afresh, so one walk's Edit never leaks into the
+        // next walk's View.
+        EditorState.walkOpensRecordingsInEdit = setup.timelineOpen == true
+        if setup.timelineOpen == true {
+            said.append("a recording opens in Edit mode")
         }
         if !setup.captures.isEmpty {
             let placed = try lend(setup.captures, besides: scriptURL)

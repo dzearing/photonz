@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import PhotonzCore
+import SwiftUI
 
 // Premiere's keys on the timeline (`TimelineKeys.swift` decides what a press
 // means; this does it).
@@ -22,9 +23,11 @@ extension EditorState {
         timelineHasKeyboard = true
     }
 
-    /// A press anywhere else in the window: the canvas has it back.
+    /// A press anywhere else in the window: the canvas has it back. Not in
+    /// View mode, where the picture has no tools to hand the letters to, and
+    /// J, K and L have to keep working after a click on it.
     func releaseTimelineKeyboard() {
-        guard timelineHasKeyboard else { return }
+        guard timelineHasKeyboard, !isWatching else { return }
         timelineHasKeyboard = false
         isShuttleKHeld = false
     }
@@ -39,6 +42,15 @@ extension EditorState {
         }
         guard let command = TimelineKeys.command(for: press, timelineFocused: focused,
                                                  kHeld: isShuttleKHeld && press.key != .letter("k")) else {
+            // View mode has no tool bar, so nothing else holds the tools'
+            // letters: T for a title or R for a box picks the tool here, and
+            // picking it brings the editor (`ViewEditMode`).
+            if isWatching, press.modifiers.isEmpty, !press.isRepeat, case .letter(let letter) = press.key,
+               let tool = Tool.allCases.first(where: { $0.shortcutKey == letter }),
+               ViewEditMode.pickingStartsAnEdit(tool) {
+                setTool(tool)
+                return true
+            }
             // A held K repeats: that is K still being down, not a new Stop.
             return focused && press.key == .letter("k") && press.modifiers.isEmpty && press.isRepeat
         }
@@ -53,12 +65,12 @@ extension EditorState {
     /// Do what a key asks. False where there was nothing for it to do, so the
     /// press carries on to whatever would have had it.
     ///
-    /// A command that starts an edit brings a tucked-away timeline up to show
-    /// it; one that found nothing to do leaves it where it was.
+    /// A command that starts an edit switches View to Edit to show it; one
+    /// that found nothing to do leaves the window as it was.
     @discardableResult
     func perform(timelineCommand command: TimelineKeyCommand) -> Bool {
         let took = carryOut(timelineCommand: command)
-        if took, command.opensTheTimeline { openTimelineForAnEdit() }
+        if took, command.startsAnEdit { switchToEditForAnEdit() }
         return took
     }
 
@@ -121,6 +133,10 @@ extension EditorState {
         case .zoomOut:
             guard canOpenOutTheTimeline else { return false }
             zoomTimelineOut()
+        case .showMode(let mode):
+            setViewEditMode(mode)
+        case .toggleViewEdit:
+            toggleViewEditMode()
         case .zoomToFit:
             guard canOpenOutTheTimeline else { return false }
             fitTimeline()

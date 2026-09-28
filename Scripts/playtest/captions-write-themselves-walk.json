@@ -4,7 +4,10 @@
   "steps": [
     { "do": "action", "action": "openSampleTalk" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "1-a-recording-with-somebody-talking-opens", "note": "A screen recording with a voice over it, opened as a person would open one, at Next's defaults with no flag touched. Nothing is pressed: the Captions section says it is listening, on this Mac" },
+    { "do": "expectTimeline", "mode": "view" },
+    { "do": "key", "key": "2", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-a-recording-with-somebody-talking-opens", "note": "A screen recording with a voice over it, opened as a person would open one, at Next's defaults with no flag touched, and switched to Edit mode (Cmd-2), since it opens in View. The Captions section says it is listening, on this Mac" },
     { "do": "snapshot", "name": "1-a-recording-with-somebody-talking-opens" },
 
     { "do": "action", "action": "captionsWaitForThemselves" },

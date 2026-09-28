@@ -46,7 +46,7 @@ extension EditorState {
         perform { landed = $0.putOnTimeline(id, atMS: moment, onTrack: trackID) }
         guard landed else { return }
         selectLayer(id)
-        openTimelineForAnEdit()
+        switchToEditForAnEdit()
     }
 
     func deleteEmptyTracks() {

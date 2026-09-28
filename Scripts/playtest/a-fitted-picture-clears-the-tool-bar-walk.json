@@ -35,14 +35,14 @@
 
     { "do": "open", "file": "fixtures/Full screen Retina recording 3456x2234.mp4", "width": 1440, "height": 900 },
     { "do": "wait", "seconds": 1.0 },
-    { "do": "toolBar", "stage": "5-recording-opened", "clearOfPicture": true },
-    { "do": "describe", "stage": "5-recording-opened", "note": "THE TEST: a recording opens to watch, fitted above the bar, which floats over the canvas just above the transport" },
+    { "do": "expectTimeline", "mode": "view" },
+    { "do": "describe", "stage": "5-recording-opened", "note": "a recording opens in View mode, a player with no tool bar, fitted to the whole canvas over the transport" },
     { "do": "snapshot", "name": "5-recording-opened" },
 
-    { "do": "press", "control": "Show Timing" },
+    { "do": "key", "key": "2", "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.8 },
     { "do": "toolBar", "stage": "6-recording-tracks-open", "clearOfPicture": true },
-    { "do": "describe", "stage": "6-recording-tracks-open", "note": "the tracks came up under the canvas and the recording refitted into the shorter canvas, still clear of the bar" },
+    { "do": "describe", "stage": "6-recording-tracks-open", "note": "Edit mode (Cmd-2): the tool bar and the tracks came up and the recording refitted into the shorter canvas, clear of the bar" },
     { "do": "snapshot", "name": "6-recording-tracks-open" },
 
     { "do": "action", "action": "windowLaptop" },

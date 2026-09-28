@@ -99,6 +99,9 @@ struct EditorView: View {
                         // INSIDE the bar and grew it by 150 to 200pt the moment
                         // you picked up Measure, which is exactly what this
                         // stack exists to avoid.
+                        // Not in View mode, which is a player: the bar goes
+                        // with the rest of the editing (`ViewEditMode`).
+                        if !editorState.isWatching {
                         VStack(spacing: EditorChromeLayout.toolBarStackGap) {
                             // The `if` is the "takes no room" rule: an empty
                             // capsule still counts as a stack child, and the
@@ -152,6 +155,8 @@ struct EditorView: View {
                         .padding(.bottom, EditorChromeLayout.toolBarInset)
                         .animation(.spring(duration: 0.22),
                                    value: editorState.activeTool)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        }
                     }
                     .clipped()  // keep a transient over-wide toolbar off the panel
                     // What the capsule takes, so every other bottom overlay
@@ -247,7 +252,7 @@ struct EditorView: View {
             // mode would change nothing anybody could see.
             .background {
                 if editorState.hasDocument, Experiments.shared.windowModesEnabled {
-                    TitlebarModeChipInstaller()
+                    TitlebarModeChipInstaller(editorState: editorState)
                 }
             }
             // Animate show/hide only AFTER the first appearance: on open the pane

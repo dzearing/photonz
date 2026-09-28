@@ -42,6 +42,7 @@ struct TitlebarPanelToggleInstaller: NSViewRepresentable {
 
     func updateNSView(_ view: InstallerView, context: Context) {
         view.install()
+        view.fitWidth(offersViewEdit: editorState.documentHasTime)
     }
 
     static func dismantleNSView(_ view: InstallerView, coordinator: ()) {
@@ -53,6 +54,8 @@ struct TitlebarPanelToggleInstaller: NSViewRepresentable {
     final class InstallerView: NSView {
         private let accessoryView: NSView
         private var accessory: NSTitlebarAccessoryViewController?
+        /// Whether the box has room for View | Edit beside the toggle.
+        private var fittedForViewEdit = false
 
         init(editorState: EditorState) {
             let toggle = NSHostingView(
@@ -100,6 +103,18 @@ struct TitlebarPanelToggleInstaller: NSViewRepresentable {
             accessory = controller
         }
 
+        /// Makes room for View | Edit to the toggle's left, or gives it back.
+        /// Only when a document with time comes or goes, never per pass: the
+        /// box is fixed between those for the reason given in `init`.
+        func fitWidth(offersViewEdit: Bool) {
+            guard offersViewEdit != fittedForViewEdit else { return }
+            fittedForViewEdit = offersViewEdit
+            var frame = accessoryView.frame
+            frame.size.width = TitlebarPanelToggle.boxWidth
+                + (offersViewEdit ? TitlebarViewEditSwitch.width + TitlebarViewEditSwitch.gap : 0)
+            accessoryView.frame = frame
+        }
+
         /// Takes the accessory off the window when the editor goes away, so a
         /// window reused for another document never wears two of them.
         func remove() {
@@ -130,8 +145,24 @@ struct TitlebarPanelToggle: View {
     static let boxWidth: CGFloat = diameter + trailingInset
 
     var body: some View {
+        HStack(spacing: TitlebarViewEditSwitch.gap) {
+            if editorState.documentHasTime {
+                TitlebarViewEditSwitch()
+            }
+            toggle
+                // View mode has no panel to show, so no toggle for it
+                // (`ViewEditMode`). Faded rather than taken out, so the
+                // switch beside it never slides.
+                .opacity(editorState.isWatching ? 0 : 1)
+                .allowsHitTesting(!editorState.isWatching)
+                .animation(.viewEditMode, value: editorState.isWatching)
+        }
+        .frame(maxWidth: .infinity, alignment: .trailing)
+    }
+
+    private var toggle: some View {
         let shown = editorState.isInspectorShown
-        Button {
+        return Button {
             editorState.setInspectorVisible(!shown)
         } label: {
             Image(systemName: "sidebar.trailing")

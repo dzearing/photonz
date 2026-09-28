@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/premiere-keys-on-the-timeline-walk",
-  "setup": { "front": true, "forget": ["all"] },
+  "setup": { "front": true, "forget": ["all"], "timelineOpen": true },
   "steps": [
     { "do": "action", "action": "openSampleRecording" },
     { "do": "wait", "seconds": 2.0 },

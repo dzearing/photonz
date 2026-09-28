@@ -458,21 +458,38 @@ opens with the clip picked and Trim in hand. The user turned that down on
 prefer to be in playback mode where the edit tools are collapsed but can be
 expanded." (queue task `a-recording-opens-to-watch-with-the-editing-tuck`.)
 
-The rule now, in `PhotonzCore/TimelineOpening.swift`:
+On 2026-09-28 the user asked for more: "when I open a video, again, I don't
+want to see the full edit experience by default. I want a minimized look to
+focus on the video playback. Right pane can be minimized as well... a segmented
+control View mode / Edit mode on the right which can toggle all the business of
+editing." The tucked timeline of 2026-09-25 only folded the tracks, and it
+remembered the last choice, so after one expand every recording opened
+expanded. (queue task `view-mode-and-edit-mode-a-recording-opens-to-wat`.)
 
-- **An untouched recording opens to watch.** Nothing picked, the arrow in hand,
-  the picture over the transport, and the timeline tucked down to the mock's one
-  row under it (`dock.css` `.timeline[data-tl="closed"]`: chevron, TIMELINE, the
-  pick and the time, *click to expand*). Space, J/K/L and the arrows work there.
-- **The row, ⌥⌘T (View ▸ Show Timeline) or the × on the timeline's bar** open
-  and close it, and that choice is remembered: the next untouched recording
-  opens the way you last left it.
-- **Starting an edit opens it by itself**, and is not remembered: an edit key (I,
-  O, M, B, Q, W, ;, ', ⌘K, ⌘T, S, the zoom keys), a Split from a right click,
-  picking up Trim, or any change to the document. Captions the app writes by
-  itself are not an edit.
-- **A document already worked on** (a second layer, a cut, a trim) and a guide's
-  sample open with the tracks showing.
+The rule now, in `PhotonzCore/ViewEditMode.swift`:
+
+- **A window holding a document with time is in View mode or Edit mode.** View
+  is a player, QuickTime's way: the picture fitted to the whole window, the
+  transport under it with a full screen button at its far end, and nothing else.
+  No tool bar, no tracks, no panel, no handles, no working grid in the surround,
+  and the title bar's mode chip steps aside. A click on the picture picks
+  nothing; a double click goes full screen. Edit is the whole editor, and brings
+  back the tool bar, the tracks and the panel exactly as the window had them
+  (what was picked comes back too).
+- **The switch** is a system segmented control, View | Edit, at the right of
+  the title bar beside the panel toggle (the toggle fades out in View, which has
+  no panel). ⌘1 is View and ⌘2 is Edit (View ▸ View Mode, Edit Mode); on a
+  document with time Actual Size moves to ⌥⌘0. E switches while nothing is being
+  typed. ⌥⌘T and the × on the timeline's bar switch too.
+- **An untouched recording opens in View, every time.** Nothing is remembered.
+- **Starting an edit switches to Edit by itself**: an edit key (I, O, M, B, Q, W,
+  ;, ', ⌘K, ⌘T, S, the zoom keys), a tool's letter (T, R, C...), a Split from a
+  right click, asking for the panel, or any change to the document, media
+  dropped in included. Space, J/K/L, the arrows, Home and End stay in View.
+  Captions the app writes by itself are not an edit.
+- **A document already worked on** (a second layer, a cut, a trim), a new empty
+  video and a guide's sample open in Edit.
+- **Pictures have no modes** and no switch.
 
 Trim-and-send is now open, C for Trim (it sits in Crop's slot), drag a handle, ⏎, export:
 Trim with nothing picked still finds the clip under the playhead (§10.5).

@@ -23,6 +23,8 @@ extension CanvasNSView {
     }
 
     override func mouseMoved(with event: NSEvent) {
+        // View mode offers nothing to grab, so nothing lights up.
+        if isWatching { return }
         // While the grid is being adjusted nothing on the canvas is hoverable:
         // no name label lights up, no handle offers itself. What the pointer
         // does instead is light the grid line a click would pin a guide onto.

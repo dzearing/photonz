@@ -16,7 +16,7 @@
     { "do": "wait", "seconds": 1.0 },
     { "do": "action", "action": "videoPause" },
     { "do": "snapshot", "name": "0-opened-to-watch" },
-    { "do": "press", "control": "Show Timing" },
+    { "do": "key", "key": "2", "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.6 },
     { "do": "tool", "tool": "select" },
     { "do": "action", "action": "captionsSeekIntoNextWord" },

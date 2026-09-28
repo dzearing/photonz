@@ -361,6 +361,8 @@ final class EditorState {
     func libraryTileRevealHandled() { pendingLibraryTileID = nil }
 
     func setInspectorVisible(_ visible: Bool) {
+        // Asking for the panel in View mode is asking for the editor.
+        if visible { switchToEditForAnEdit() }
         isLayersPanelVisible = visible
         inspectorPreferredVisible = visible
         if visible { TutorialController.shared.note(.panelShown, from: self) }
@@ -374,7 +376,7 @@ final class EditorState {
     /// shell, the title bar's toggle and the canvas chrome all read, so they
     /// can never disagree about which state the button is showing.
     var isInspectorShown: Bool {
-        document != nil && isLayersPanelVisible && !isInspectorAutoHidden
+        document != nil && isLayersPanelVisible && !isInspectorAutoHidden && !isWatching
     }
 
     /// Canvas camera. Nil until a document is open. All zoom/pan flows through
@@ -489,7 +491,9 @@ final class EditorState {
     /// canvas reads `isVisible` for that, so it needs the settings even when
     /// the answer is no.
     var drawnCanvasGrid: CanvasGridSettings? {
-        guard Experiments.shared.canvasGridEnabled else { return nil }
+        // View mode is a player, not a surface being worked on: no grid in
+        // the surround either (`ViewEditMode`).
+        guard Experiments.shared.canvasGridEnabled, !isWatching else { return nil }
         // While the grid is being adjusted the canvas draws it as it would be
         // if you kept it, so the lines move under the two markers rather than
         // after them.
@@ -991,33 +995,93 @@ final class EditorState {
     /// the next document that has something moving in it.
     ///
     /// Two strips, two states. An icon's timing strip is one remembered switch.
-    /// A recording's timeline is decided per window when the document lands
-    /// (`TimelineOpening`), opens by itself when an edit starts, and remembers
-    /// only what you chose by hand. Every reader and writer goes through this
-    /// one name, so a trim or a reframe that brings "the strip" up brings up
-    /// whichever one this window has.
+    /// A recording's timeline shows its tracks exactly while the window is in
+    /// Edit mode (`ViewEditMode`), so a trim or a reframe that brings "the
+    /// strip" up switches a recording to Edit, and every reader and writer
+    /// goes through this one name.
     var isMotionStripOpen: Bool {
-        get { documentHasTime ? isVideoTimelineOpen : isTimingStripOpen }
+        get { documentHasTime ? viewEditMode == .edit : isTimingStripOpen }
         set {
-            if documentHasTime { isVideoTimelineOpen = newValue } else { isTimingStripOpen = newValue }
+            if documentHasTime {
+                setViewEditMode(newValue ? .edit : .view)
+            } else {
+                isTimingStripOpen = newValue
+            }
         }
     }
     /// An icon's timing strip, open or put away.
     var isTimingStripOpen = EditorState.motionStripOpenDefault {
         didSet { UserDefaults.standard.set(isTimingStripOpen, forKey: Self.motionStripOpenKey) }
     }
-    /// A recording's timeline, open or tucked down to the transport and one
-    /// row (`EditorState+MotionStrip`, `TimelineOpening`). Not stored as it
-    /// changes: an edit that brings it up is not a choice about the next
-    /// recording. `toggleMotionStrip` is, and writes it down.
-    var isVideoTimelineOpen = false
     static let motionStripOpenKey = "motion.stripOpen"
-    /// The last open or closed chosen by hand for a recording's timeline, which
-    /// is what the next untouched recording opens with.
-    static let videoTimelineOpenKey = "video.timelineOpen"
-    static var rememberedVideoTimelineOpen: Bool? {
-        UserDefaults.standard.object(forKey: videoTimelineOpenKey) as? Bool
+
+    // MARK: View mode and Edit mode (`ViewEditMode`)
+
+    /// What this window is set up for while it holds a document with time:
+    /// a player, or the whole editor. Per window and never remembered: a
+    /// recording opens in View every time, whatever the last one was left in.
+    /// A picture ignores it (`isWatching`).
+    private(set) var viewEditMode: ViewEditMode = .edit
+    /// The layer picked when View put the handles away, handed back on Edit.
+    @ObservationIgnored var pickedBeforeView: UUID?
+    /// A walk that says the tracks are open (`setup.timelineOpen`) opens
+    /// every recording in Edit, as a person who goes straight to editing does.
+    static var walkOpensRecordingsInEdit = false
+
+    /// The window is a player right now: no tool bar, no tracks, no panel, no
+    /// handles. Everything that folds away in View reads this one answer.
+    var isWatching: Bool { documentHasTime && viewEditMode == .view }
+
+    /// Switch between View and Edit. The picture refits to the room it now
+    /// has, because in View it has the whole window and in Edit it shares it.
+    func setViewEditMode(_ mode: ViewEditMode) {
+        guard mode != viewEditMode else { return }
+        if mode == .view {
+            // The handles go with everything else. What was picked is kept
+            // for Edit, which hands it back.
+            pickedBeforeView = selectedLayerID
+            if selectedLayerID != nil { selectedLayerID = nil }
+            if timelineTool != .select { timelineTool = .select }
+            if isTimelineBlade { isTimelineBlade = false }
+            if activeTool != .select { setTool(.select) }
+            takeTimelineKeyboard()
+        }
+        withAnimation(.viewEditMode) {
+            viewEditMode = mode
+            refitForViewEditMode()
+        }
+        if mode == .edit, let picked = pickedBeforeView {
+            pickedBeforeView = nil
+            if selectedLayerID == nil, document?.layer(id: picked) != nil { selectedLayerID = picked }
+        }
     }
+
+    /// Lands a document that has just opened in its mode, at once rather
+    /// than animated: the window should open already being what it is.
+    func openInItsMode(_ document: PhotonzDocument, forAGuide: Bool = false) {
+        pickedBeforeView = nil
+        viewEditMode = Self.walkOpensRecordingsInEdit
+            ? .edit : ViewEditMode.opening(document, forAGuide: forAGuide)
+    }
+
+    /// The picture fitted to the room it has in this mode: the whole canvas
+    /// in View, clear of the floating tool bar in Edit.
+    private func refitForViewEditMode() {
+        guard let current = viewport, canvasViewSize.width > 0, canvasViewSize.height > 0 else { return }
+        viewport = fittedViewport(documentSize: current.documentSize, in: canvasViewSize)
+        appPlaced(viewport, fitted: true)
+    }
+
+    /// E: whichever of the two this window is not in.
+    func toggleViewEditMode() { setViewEditMode(viewEditMode.toggled) }
+
+    /// Something started an edit while the window was a player: it becomes
+    /// the editor, so the edit has somewhere to show.
+    func switchToEditForAnEdit() {
+        guard isWatching else { return }
+        setViewEditMode(.edit)
+    }
+
     /// Open the first time, because a strip that had to be found before it
     /// could be seen would be a surface nobody knows is there. Putting it away
     /// is remembered.
@@ -1367,7 +1431,13 @@ final class EditorState {
     /// The camera that shows the whole document in the canvas above the
     /// floating tool bar (`EditorChromeLayout.toolBarCovers`).
     private func fittedViewport(documentSize: CGSize, in size: CGSize) -> Viewport {
-        .fit(documentSize: documentSize, in: size, obscuredBottom: EditorChromeLayout.toolBarCovers)
+        .fit(documentSize: documentSize, in: size, obscuredBottom: fitObscuredBottom)
+    }
+
+    /// What the floating tool bar covers at the foot of the canvas, which a
+    /// fitted picture keeps clear of. Nothing in View mode, which has no bar.
+    private var fitObscuredBottom: CGFloat {
+        isWatching ? 0 : EditorChromeLayout.toolBarCovers
     }
 
     /// Records a camera the app placed on its own, so a resize can tell
@@ -1569,13 +1639,10 @@ final class EditorState {
             // somebody talking in it opens with its captions coming
             // (`EditorState+Captions.swift`).
             writeCaptionsByThemselves()
-            // Open to watch: nothing picked, no editing tool in hand, and the
-            // timeline tucked down to the transport and one row unless you
-            // left it open last time (`TimelineOpening`). A guide's sample
-            // opens with the tracks showing, because its cards point at them.
+            // Open to watch: View mode, every time (`ViewEditMode`). A guide's
+            // sample opens in Edit, because its cards point at the tracks.
             if let document {
-                isVideoTimelineOpen = TimelineOpening.opensOpen(
-                    document, remembered: Self.rememberedVideoTimelineOpen, forAGuide: shape != nil)
+                openInItsMode(document, forAGuide: shape != nil)
             }
             #if PHOTONZ_PLAYTEST
             PlaytestHarness.register(self)
@@ -2507,11 +2574,12 @@ final class EditorState {
         // opened out the last recording says nothing about this one
         // (`EditorState+TimelineZoom`).
         timelineZoom = .fit
-        // ...and whether its timeline is up is this document's question too:
-        // an untouched recording opens to watch, anything already worked on
-        // opens on its tracks (`TimelineOpening`). A picture answers open, so
-        // a clip dropped into one lands on a timeline already showing it.
-        isVideoTimelineOpen = TimelineOpening.opensOpen(document, remembered: Self.rememberedVideoTimelineOpen)
+        // ...and whether it is a player or the editor is this document's
+        // question too: an untouched recording opens in View, anything
+        // already worked on opens in Edit (`ViewEditMode`). A picture answers
+        // Edit, so a clip dropped into one lands on a timeline already showing
+        // it.
+        openInItsMode(document)
         recordingURL = nil
         // Size the window to the image (100% when it fits, reduced only when a
         // maxed window can't). The `.fit` above is the fallback for when there
@@ -2964,7 +3032,7 @@ final class EditorState {
             let zoom = scale / max(1, document.pixelScale)
             viewport = Viewport(documentSize: document.canvasSize, viewSize: size,
                                 zoom: zoom, origin: .zero,
-                                obscuredBottom: EditorChromeLayout.toolBarCovers).clamped()
+                                obscuredBottom: fitObscuredBottom).clamped()
             // 100% is a choice worth keeping through a resize; a zoom brought
             // down only so the picture fits the screen is a fit, and keeps
             // fitting until somebody moves the camera.
@@ -3159,6 +3227,9 @@ final class EditorState {
         }
         activeTool = tool
         remember(tool)
+        // A tool picked in View mode (T for a title, R for a box) is an edit
+        // starting, and the editor comes up for it (`ViewEditMode`).
+        if ViewEditMode.pickingStartsAnEdit(tool) { switchToEditForAnEdit() }
         if tool == .trim { beginTrim() }
         // A guide step that says "pick the Measure tool" is waiting for exactly
         // this, whichever way the tool was picked: the button, the key, or the
@@ -3737,12 +3808,12 @@ final class EditorState {
         // really changed: `History.perform` records nothing for an edit that
         // changed nothing, and a guide must not move on for one either.
         if document != before {
-            // Any edit to a recording brings its tucked-away timeline up: a
-            // shape drawn on it gets a row there, a cut shows there, and a
-            // person who started editing is no longer only watching
-            // (`TimelineOpening`). Captions the app wrote by itself are not
-            // somebody editing, so they pass `openingTheTimeline: false`.
-            if openingTheTimeline { openTimelineForAnEdit() }
+            // Any edit to a recording switches View to Edit: a shape drawn on
+            // it gets a row there, a cut shows there, and a person who started
+            // editing is no longer only watching (`ViewEditMode`). Captions the
+            // app wrote by itself are not somebody editing, so they pass
+            // `openingTheTimeline: false`.
+            if openingTheTimeline { switchToEditForAnEdit() }
             TutorialController.shared.note(.editMade, from: self)
             if let before, let after = document {
                 TutorialController.shared.noteDocumentChange(from: before, to: after, in: self)

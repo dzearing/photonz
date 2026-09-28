@@ -194,12 +194,12 @@ public struct PlaytestSetup: Sendable, Equatable {
     /// turns around: the step has to point at nothing, or the declaration is
     /// out of date and the walk fails for that instead.
     public var expectNoControl: [String]
-    /// How a recording's timeline was last left by hand, applied after
-    /// `forget`: true as if somebody last opened its tracks, false as if they
-    /// last put them away, nil to leave it to the app. A walk about the tracks
-    /// says true, because an untouched recording opens with them tucked away
-    /// (`TimelineOpening`) and a walk that then looks for a clip on V1 is a
-    /// walk about something else.
+    /// True: every recording this walk opens lands in Edit mode, tool bar,
+    /// tracks and panel showing, as for a person who goes straight to
+    /// editing. A walk about the tracks says true, because an untouched
+    /// recording opens in View (`ViewEditMode`) and a walk that then looks
+    /// for a clip on V1 is a walk about something else. False or nil leaves
+    /// it to the app.
     public var timelineOpen: Bool?
     /// The probe is the ACTIVE app for the whole walk.
     ///
@@ -4339,12 +4339,13 @@ public enum PlaytestStep: Sendable, Equatable {
                 open: fields["open"] as? Bool,
                 tool: try f.optionalString("tool"),
                 timelineTool: f.has("timelineTool") ? try f.enumValue("timelineTool", TimelineTool.self) : nil,
-                tracks: f.has("tracks") ? try f.optionalStrings("tracks") : nil)
+                tracks: f.has("tracks") ? try f.optionalStrings("tracks") : nil,
+                mode: f.has("mode") ? try f.enumValue("mode", ViewEditMode.self) : nil)
             guard claim.claimsSomething else {
                 throw f.invalid("playheadMS", "expectTimeline has to claim something: \"playheadMS\", "
                     + "\"keyboard\", \"rate\", \"blade\", \"markInMS\", \"markOutMS\", \"hasIn\", "
                     + "\"hasOut\", \"markers\", \"rulerMatches\", \"rulerAtPlayhead\", \"lengthMS\", "
-                    + "\"open\", \"tool\", \"timelineTool\" or \"tracks\"")
+                    + "\"open\", \"mode\", \"tool\", \"timelineTool\" or \"tracks\"")
             }
             self = .expectTimeline(claim)
         case "expectPlaybackNeverBlank":
@@ -4639,9 +4640,12 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
     /// Clips catch on the playhead, cuts and each other while dragged (true),
     /// or go where the hand leaves them (false): S and the magnet.
     public var snapping: Bool?
-    /// The timeline's tracks are showing (true) or tucked down to the
-    /// transport and one row (false). A recording opens tucked away.
+    /// The timeline's tracks are showing (true) or not (false). A recording
+    /// shows them in Edit mode only, and opens in View.
     public var open: Bool?
+    /// The window is a player (`view`: no tool bar, no tracks, no panel) or
+    /// the editor (`edit`) (`ViewEditMode`).
+    public var mode: ViewEditMode?
     /// The tool in hand on the canvas, by its raw name ("select", "trim").
     public var tool: String?
     /// The timeline's own tool: Select, Track Select Forward or the Blade.
@@ -4654,7 +4658,9 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
                 hasIn: Bool? = nil, hasOut: Bool? = nil, markers: Int? = nil,
                 rulerMatches: Bool? = nil, rulerAtPlayhead: String? = nil, lengthMS: Int? = nil,
                 snapping: Bool? = nil, open: Bool? = nil, tool: String? = nil,
-                timelineTool: TimelineTool? = nil, tracks: [String]? = nil) {
+                timelineTool: TimelineTool? = nil, tracks: [String]? = nil,
+                mode: ViewEditMode? = nil) {
+        self.mode = mode
         self.tracks = tracks
         self.open = open
         self.tool = tool
@@ -4676,7 +4682,7 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
     }
 
     public var claimsSomething: Bool {
-        open != nil || tool != nil || timelineTool != nil || snapping != nil || playheadMS != nil || keyboard != nil || rate != nil || blade != nil || markInMS != nil
+        open != nil || mode != nil || tool != nil || timelineTool != nil || snapping != nil || playheadMS != nil || keyboard != nil || rate != nil || blade != nil || markInMS != nil
             || markOutMS != nil || hasIn != nil || hasOut != nil || markers != nil
             || rulerMatches != nil || rulerAtPlayhead != nil || lengthMS != nil || tracks != nil
     }

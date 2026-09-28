@@ -14,6 +14,13 @@ extension CanvasNSView {
 
     override func mouseDown(with event: NSEvent) {
         guard let viewport else { return }
+        // View mode is a player: nothing on the picture is picked or moved,
+        // and a double click goes full screen, as it does in QuickTime.
+        if isWatching {
+            window?.makeFirstResponder(self)
+            if event.clickCount == 2 { window?.toggleFullScreen(nil) }
+            return
+        }
         // A number typed into a panel box and not yet sent lands now, and the
         // press that landed it is swallowed, the same as the inline text
         // editor's: committing never doubles as starting a drag, which would
@@ -724,7 +731,7 @@ extension CanvasNSView {
     }
 
     override func mouseDragged(with event: NSEvent) {
-        guard let viewport else { return }
+        guard let viewport, !isWatching else { return }
         if gridOriginDragging {
             moveGridOrigin(toViewPoint: convert(event.locationInWindow, from: nil),
                            freeing: event.modifierFlags.contains(.command))
@@ -1121,7 +1128,7 @@ extension CanvasNSView {
     }
 
     override func mouseUp(with event: NSEvent) {
-        guard let viewport else { return }
+        guard let viewport, !isWatching else { return }
         if gridOriginDragging {
             gridOriginDragging = false
             snapHold = .none
