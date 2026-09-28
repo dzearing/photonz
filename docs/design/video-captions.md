@@ -15,8 +15,12 @@ is §7.
 
 ## 0. The whole thing in four sentences
 
-Write Captions listens to the recording on this Mac and puts the words on the
-timeline at the moments they were said. Each line is an ordinary text layer with
+Add Captions listens to the recording on this Mac and puts the words on the
+timeline at the moments they were said. It runs only when somebody asks (the
+user, 2026-09-28): a right click on a clip or a sound, the timeline's + menu
+(Captions), Video > Add Captions, or the Captions section's one button. Nothing
+listens as a recording opens, and there is no Auto switch; while it listens a
+Captions row at the top of the tracks fills with its progress and an x cancels. Each line is an ordinary text layer with
 an in and an out, so correcting one is typing, restyling one is the Text
 section, moving one is dragging its bar, and all of it undoes. A long recording
 is heard in overlapping pieces so the panel can say how far along it is and Stop

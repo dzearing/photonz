@@ -122,9 +122,6 @@ extension EditorState {
         SoundLibrary.shared.loadWaveform(for: sound)
         documentMomentChanged()
         raiseCanvasNotice(.soundAdded(name: name))
-        // A voiceover laid over a recording is somebody talking: its captions
-        // write themselves the way a recording's own do.
-        writeCaptionsByThemselves()
         return landed
     }
 

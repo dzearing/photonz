@@ -18,7 +18,7 @@
     },
     {
       "do": "action",
-      "action": "captionsWaitForThemselves"
+      "action": "captionsWriteQuietly"
     },
     {
       "do": "action",
@@ -43,7 +43,7 @@
     },
     {
       "do": "reveal",
-      "control": "Auto captions"
+      "control": "Safe areas"
     },
     {
       "do": "wait",
@@ -88,7 +88,7 @@
     },
     {
       "do": "reveal",
-      "control": "Auto captions"
+      "control": "Safe areas"
     },
     {
       "do": "wait",
@@ -202,7 +202,7 @@
     },
     {
       "do": "reveal",
-      "control": "Auto captions"
+      "control": "Safe areas"
     },
     {
       "do": "wait",

@@ -702,11 +702,14 @@ struct EditorCommands: Commands {
             // from rather than in a caption menu
             // (`docs/design/mocks/pages/video-captions.html`).
             if Experiments.shared.captionsFromTheSoundEnabled {
+                // Premiere's Transcribe: captions are made only when asked.
                 if editor?.isWritingCaptions == true {
-                    Button("Stop Writing Captions") { editor?.stopWritingCaptions() }
+                    Button("Cancel Captions") { editor?.stopWritingCaptions() }
                 } else {
-                    Button("Write Captions") { editor?.writeCaptions() }
-                        .disabled(!(editor?.canWriteCaptions ?? false))
+                    Button(editor?.hasCaptions == true ? "Rewrite Captions" : "Add Captions") {
+                        editor?.writeCaptions()
+                    }
+                    .disabled(!(editor?.canWriteCaptions ?? false))
                 }
                 Button("Captions Later") {
                     editor?.nudgeCaptions(byMS: EditorState.captionNudgeMS)

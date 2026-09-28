@@ -442,14 +442,16 @@ public enum TutorialTrigger: Hashable, Codable, Sendable {
     case clipCut
     /// Another clip landed on the timeline, from the Library or the Finder.
     case clipAdded
-    /// A title with words in it arrived. Captions never count: they arrive by
-    /// themselves.
+    /// A title with words in it arrived. Captions never count: they have a
+    /// trigger of their own.
     case titleAdded
     /// A value got another key, by its diamond or by changing it at a new
     /// moment once it is keyed.
     case keyAdded
     /// A transition went onto a cut.
     case transitionAdded
+    /// Captions landed in a document that had none: somebody asked for them.
+    case captionsAdded
     /// Somebody corrected the words of a caption the machine wrote.
     case captionRetyped
 }
@@ -485,7 +487,7 @@ extension TutorialTrigger {
     public var isDocumentChange: Bool {
         switch self {
         case .timeTakenOut, .clipCut, .clipAdded, .titleAdded, .keyAdded,
-             .transitionAdded, .captionRetyped: true
+             .transitionAdded, .captionsAdded, .captionRetyped: true
         default: false
         }
     }

@@ -7,18 +7,19 @@
     { "do": "expectTimeline", "mode": "view" },
     { "do": "key", "key": "2", "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "1-a-recording-with-somebody-talking-opens", "note": "A screen recording with a voice over it, opened as a person would open one, at Next's defaults with no flag touched, and switched to Edit mode (Cmd-2), since it opens in View. The Captions section says it is listening, on this Mac" },
+    { "do": "describe", "stage": "1-a-recording-with-somebody-talking-opens", "note": "A screen recording with a voice over it, opened as a person would open one, at Next's defaults with no flag touched, and switched to Edit mode (Cmd-2), since it opens in View. Nothing listens until somebody asks" },
     { "do": "snapshot", "name": "1-a-recording-with-somebody-talking-opens" },
 
-    { "do": "action", "action": "captionsWaitForThemselves" },
+    { "do": "action", "action": "captionsExpectNone" },
+    { "do": "press", "control": "Add Captions" },
+    { "do": "action", "action": "captionsWaitToLand" },
     { "do": "action", "action": "captionsExpectOneTrack" },
     { "do": "action", "action": "captionsExpectSound" },
     { "do": "action", "action": "videoPause" },
     { "do": "action", "action": "videoSeekQuarter" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "action", "action": "captionsExpectLitWord" },
-    { "do": "reveal", "control": "Auto captions" },
-    { "do": "describe", "stage": "2-the-captions-wrote-themselves", "note": "THE POINT. Without a click, the words landed on ONE Captions track, every cue side by side, with a Words lane under it: one chip per word at the moment it was said, the word being said lit. On the picture the cue sits on a dark plate in the title-safe area with the same word lit in yellow" },
+    { "do": "describe", "stage": "2-the-captions-wrote-themselves", "note": "THE POINT. After one press of Add Captions, the words landed on ONE Captions track, every cue side by side, with a Words lane under it: one chip per word at the moment it was said, the word being said lit. On the picture the cue sits on a dark plate in the title-safe area with the same word lit in yellow" },
     { "do": "snapshot", "name": "2-the-captions-wrote-themselves" },
 
     { "do": "action", "action": "captionsEditFirstInPlace" },
@@ -59,12 +60,6 @@
     { "do": "action", "action": "captionsExportFiles" },
     { "do": "action", "action": "captionsWriteFilmWithFileBeside" },
     { "do": "writeVideo", "name": "7-burned-into-the-picture", "format": "mp4", "seconds": 17.3, "within": 1.5, "sound": true, "copied": false },
-    { "do": "describe", "stage": "7-out-as-a-film-and-as-subtitles", "note": "The same captions written out three ways: burned into an MP4, and as SubRip and WebVTT files for a player that would rather switch them off" },
-
-    { "do": "action", "action": "captionsAutoOff" },
-    { "do": "wait", "seconds": 0.4 },
-    { "do": "describe", "stage": "8-auto-off", "note": "The one switch: with Auto off, a recording opens without listening. Put back on at the end, so the walk leaves the app as it found it" },
-    { "do": "snapshot", "name": "8-auto-off" },
-    { "do": "action", "action": "captionsAutoOn" }
+    { "do": "describe", "stage": "7-out-as-a-film-and-as-subtitles", "note": "The same captions written out three ways: burned into an MP4, and as SubRip and WebVTT files for a player that would rather switch them off" }
   ]
 }

@@ -1,0 +1,183 @@
+{
+  "out": "/tmp/photonz-playtest/captions-on-demand-walk",
+  "seed": "The user, 2026-09-28: no captions made proactively, a way to add them on demand. At Next defaults with no flag set: a recording with somebody talking opens, ten seconds pass, and nothing has listened and there is no Captions track. Then a right click on the clip offers Add Captions, and choosing it lands the Captions layer on one Captions track.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleTalk"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "2",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "wait",
+      "seconds": 10,
+      "onTheClock": true
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectNone"
+    },
+    {
+      "do": "panel",
+      "stage": "1-opened"
+    },
+    {
+      "do": "describe",
+      "stage": "1-opened-and-nothing-listened",
+      "note": "A talking recording, open ten seconds in Edit mode at Next defaults: no captions, no Captions track, nothing listening. The Captions section holds one Add Captions button and nothing else"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-opened-and-nothing-listened"
+    },
+    {
+      "do": "rightClick",
+      "on": "Sample Talk clip",
+      "choose": "Add Captions"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.15
+    },
+    {
+      "do": "snapshot",
+      "name": "2-listening"
+    },
+    {
+      "do": "action",
+      "action": "captionsWaitToLand"
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectOneTrack"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-added-from-the-right-click",
+      "note": "Add Captions from the clip's right click: the words landed as the Captions layer on one Captions track, and the Captions section now holds the language, Rewrite, the cue and the look"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-added-from-the-right-click"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectNone"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Track",
+      "choose": "Captions"
+    },
+    {
+      "do": "action",
+      "action": "captionsWaitToLand"
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectOneTrack"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3b-added-from-the-plus",
+      "note": "Undo took them off in one step; then the timeline's + menu, Captions, made them again from the speech on one Captions track"
+    },
+    {
+      "do": "snapshot",
+      "name": "3b-added-from-the-plus"
+    },
+    {
+      "do": "action",
+      "action": "openLongTalk"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "key",
+      "key": "2",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectNone"
+    },
+    {
+      "do": "press",
+      "control": "Add Captions"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6,
+      "onTheClock": true
+    },
+    {
+      "do": "describe",
+      "stage": "4-listening-on-its-track",
+      "note": "A five minute talk, Add Captions pressed in the Captions section: a Captions row at the top of the tracks fills as it listens, with an x to cancel, and the rest of the window stays usable"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-listening-on-its-track"
+    },
+    {
+      "do": "press",
+      "control": "Cancel Captions"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-cancelled",
+      "note": "The x on the listening row stopped it, keeping the words heard so far"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-cancelled"
+    }
+  ]
+}

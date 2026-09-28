@@ -20091,3 +20091,19 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
   grant and an unlocked screen.
 - No transcription runs on the Stop-to-history path; auto-captions start only in
   an editor window, which `captions-only-when-you-ask-for-them` owns.
+
+## 2026-09-28 — Captions only when you ask for them
+
+- Opening a recording no longer listens: `writeCaptionsByThemselves`, the Auto
+  switch (`captions.writeThemselves`) and `CaptionAutoRun` are gone. Adding a
+  voiceover no longer listens either.
+- Add Captions (Rewrite Captions once there are some, Cancel Captions while it
+  listens) on a clip's or sound's right click (`addCaptionsMenuRow`), the + menu
+  (Captions), Video menu; the Captions section is one button before any exist.
+- While listening, `TimelineCaptionsListeningRow` sits at the top of the tracks
+  with the share heard and an x. Captions still land as one undo step at the end.
+- Tutorial "Captions from the speech" opens on Add Captions and waits for the
+  new `captionsAdded` trigger. Walks that waited for auto captions now run
+  `captionsWriteQuietly`; new steps `captionsExpectNone`, `captionsWaitToLand`.
+- New walk `captions-on-demand-walk`. `captions-are-one-layer-walk` was already
+  failing at its Size menu before this change.

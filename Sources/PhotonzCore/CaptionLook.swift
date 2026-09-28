@@ -619,21 +619,6 @@ extension CaptionLayers {
     }
 }
 
-// MARK: - Listening by itself
-
-/// When the app writes captions without being asked.
-public enum CaptionAutoRun {
-
-    /// Listen when the toggle is on, the document has time, there is a sound
-    /// worth captioning that has never been listened to, and nobody already
-    /// has captions they might have corrected.
-    public static func shouldListen(isOn: Bool, hasTime: Bool, soundID: UUID?,
-                                    listenedTo: [UUID], hasCaptions: Bool) -> Bool {
-        guard isOn, hasTime, !hasCaptions, let soundID else { return false }
-        return !listenedTo.contains(soundID)
-    }
-}
-
 // MARK: - Subtitle files
 
 /// WebVTT: the subtitle file browsers and video sites read.

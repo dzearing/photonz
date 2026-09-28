@@ -125,10 +125,13 @@ struct TutorialVideoEditorTrackTests {
     }
 
     @Test func noGuideOpensOnAWaitingStepItCannotExplain() {
-        // The first card of every guide but two says what is in front of you
-        // before asking for anything. The title guide opens straight on its
-        // tool and the export guide on its key, both of which are the lesson.
-        for guide in editor where !["a-title-that-moves", "export-the-video"].contains(guide.id) {
+        // The first card of every guide but three says what is in front of
+        // you before asking for anything. The title guide opens straight on
+        // its tool, the export guide on its key and the captions guide on Add
+        // Captions (captions are made only when asked), each of which is the
+        // lesson.
+        for guide in editor where !["a-title-that-moves", "export-the-video",
+                                     "captions-from-the-speech"].contains(guide.id) {
             #expect(guide.steps.first?.waits == false, "\(guide.id)")
         }
     }
@@ -172,8 +175,13 @@ struct TutorialVideoEditorTrackTests {
         #expect(guide.steps.map(\.body).joined().contains("Command T"))
     }
 
-    @Test func theCaptionsGuideHasYouCorrectAWord() throws {
-        #expect(try waits("captions-from-the-speech") == [.captionRetyped])
+    /// Captions are made when somebody asks for them, never as a recording
+    /// opens, so the guide starts by having you ask.
+    @Test func theCaptionsGuideHasYouAddThemThenCorrectAWord() throws {
+        #expect(try waits("captions-from-the-speech") == [.captionsAdded, .captionRetyped])
+        let guide = try #require(TutorialCatalog.guide(id: "captions-from-the-speech"))
+        #expect(guide.steps.first?.body.contains("Add Captions") == true)
+        #expect(!guide.steps.map(\.body).joined().contains("themselves"))
     }
 
     @Test func theExportGuideOpensTheSheetAndNeverTheSavePanel() throws {

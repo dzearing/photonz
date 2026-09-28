@@ -4,7 +4,7 @@
   "steps": [
     { "do": "describe", "stage": "why", "note": "On a five minute captioned recording, zoomed in close, the first long jump of the playhead held the whole app for half a second to a second. Next defaults, no switch turned on. Each jump is judged on the longest single pass of the main thread after it, at 50ms." },
     { "do": "action", "action": "openLongTalk" },
-    { "do": "action", "action": "captionsWaitForThemselves" },
+    { "do": "action", "action": "captionsWriteQuietly" },
     { "do": "wait", "seconds": 1.5 },
     { "do": "action", "action": "videoPause" },
     { "do": "action", "action": "videoSeekQuarter" },

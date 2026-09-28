@@ -932,19 +932,21 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Fail unless every caption's words still carry the timings they were
     /// heard with, which is what a correction must not cost.
     case captionsExpectTimingsKept
-    /// Wait, without pressing anything, for the captions to write themselves,
-    /// and fail unless they land. What opening a recording with speech in it
-    /// has to do at Next's defaults.
-    case captionsWaitForThemselves
+    /// Wait a moment and fail if anything listened or any captions landed:
+    /// captions are made only when somebody asks, so a recording that has
+    /// just opened has none, no Captions track, and nothing listening.
+    case captionsExpectNone
+    /// Wait for captions asked for some other way (a right click, a menu, the
+    /// panel's button) to finish listening, and fail unless they land.
+    case captionsWaitToLand
     /// Fail unless every caption is on ONE Captions track, side by side.
     case captionsExpectOneTrack
     /// Fail unless exactly one caption is picked: what a real click on a cue
     /// of the Captions track must do (`CaptionCuesLayer`).
     case captionsExpectOnePicked
-    /// Write the captions the way they write themselves when a talking
-    /// recording opens: quietly, the selection left where it was. For timing
-    /// the words landing apart from the recording opening
-    /// (`a-long-captioned-recording-walk`).
+    /// Write the captions quietly: the selection and a tucked-away timeline
+    /// left where they were, for a walk that needs captions in place before
+    /// the thing it is really about (`a-long-captioned-recording-walk`).
     case captionsWriteQuietly
     /// Fail unless no caption runs on past the end of the recording it was
     /// heard in: after a stretch is cut out, the lines for the words that went
@@ -986,8 +988,6 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Write the captions out as SubRip and WebVTT into the walk's own
     /// folder, and fail unless both files read back as what they claim.
     case captionsExportFiles
-    /// Turn Auto off, and back on.
-    case captionsAutoOff, captionsAutoOn
     /// Fail unless the words being typed on the canvas are a caption's: what a
     /// double click on a caption on the picture has to open.
     case captionsExpectEditingOnCanvas
@@ -1215,14 +1215,14 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .captionsAddVoiceover, .captionsWrite, .captionsWriteHearingNothing,
              .captionsNudgeLater, .captionsNudgeEarlier,
              .captionsCorrectFirstWord, .captionsClear, .captionsExpectSound,
-             .captionsExpectTimingsKept, .captionsWaitForThemselves, .captionsExpectOneTrack,
+             .captionsExpectTimingsKept, .captionsExpectNone, .captionsWaitToLand, .captionsExpectOneTrack,
              .captionsExpectOnePicked, .captionsWriteQuietly, .captionsExpectEndWithRecording, .captionsPickFirst, .captionsPickNext, .captionsEditFirstInPlace, .captionsCommitFirstWords, .captionsTrimFirstEnd,
              .captionsStyleCaption, .captionsStyleLowerThird, .captionsStyleKaraoke,
              .captionsPositionTop, .captionsPositionBottom, .captionsExpectLitWord,
              .captionsExpectGuides, .captionsExpectNoGuides, .captionsExpectReset,
              .captionsSeekIntoNextWord, .captionsStepIntoWord, .captionsExpectOneWordPopping,
              .captionsExpectOneLayerPicked, .captionsExpectMovedTogether,
-             .captionsExportFiles, .captionsAutoOff, .captionsAutoOn, .captionsExpectEditingOnCanvas,
+             .captionsExportFiles, .captionsExpectEditingOnCanvas,
              .captionsWriteFilmWithFileBeside,
              .captionsWordOpenOnCanvas, .captionsWordOpenInLane, .captionsExpectWordOpen,
              .captionsExpectWordFixed, .captionsExpectTabbedOn, .captionsWordDragEarlier,

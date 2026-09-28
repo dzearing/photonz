@@ -1,0 +1,27 @@
+{
+  "feature": "Captions only when you ask for them",
+  "epic": "video-audio",
+  "summary": "Opening a recording no longer listens to it. Captions are made when you ask: right click a clip or its sound, the timeline's + menu, Video > Add Captions, or the one button in the Captions section.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/captions-on-demand-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording with somebody talking in it, press Command 2, and wait ten seconds.", "shot": "2026-09-28-captions-on-demand-1.png" },
+    { "do": "Look at the Captions section: one Add Captions button and nothing else. No Captions track on the timeline." },
+    { "do": "Right click the clip on V1 and choose Add Captions.", "shot": "2026-09-28-captions-on-demand-2.png" },
+    { "do": "Press Command Z, then click the + under the tracks and choose Captions.", "shot": "2026-09-28-captions-on-demand-5.png" },
+    { "do": "Open a five minute recording and press Add Captions: a Captions row at the top of the tracks fills as it listens.", "shot": "2026-09-28-captions-on-demand-3.png" },
+    { "do": "While it listens, scrub or play: the editor keeps working. Then press the x at the end of that row.", "shot": "2026-09-28-captions-on-demand-4.png" }
+  ],
+  "evaluate": [
+    "Is Add Captions on the clip's right click where you would look for it first, the way Premiere has Transcribe?",
+    "Is the Listening row at the top of the tracks enough to tell you it is working, or should it also say so on the canvas?",
+    "The x keeps the words heard so far. Is that what you expect Cancel to do, or should it throw them away?",
+    "With captions already made, the same rows read Rewrite Captions. Is that the right word?"
+  ],
+  "rough": [
+    "The mock's empty state says 'No captions on this clip yet. Auto-generate a word-level track...' with an 'Auto-generate captions' button. The panel shows only the Add Captions button (the task asked for nothing else), so that sentence is left out and the button uses the task's words.",
+    "The language picker only appears once there are captions. A recording in another language is heard in English first, then you pick the language and press Rewrite.",
+    "Add Captions on a clip listens to the loudest sound in the document, not necessarily the clip you right clicked. With one recording that is always the same thing.",
+    "The x on the Listening row keeps what it heard so far (the Captions section's button reads Cancel and does the same)."
+  ]
+}

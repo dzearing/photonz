@@ -4,7 +4,7 @@
   "steps": [
     { "do": "describe", "stage": "why", "note": "The count docs/design/video-vs-premiere.md keeps: a five minute 2880 by 1800 talking recording (5:19 as it is written) cut to ninety seconds at Next defaults, by keys and ruler clicks only, the way a Premiere editor makes the same cut. Every step below that a person does is one action: a clickRuler is one click on the ruler, a key is one press. Nothing else here is a person's action; waits, checks and pictures are the walk watching. The count is 19: Q to lose the head (2), three marked stretches at I, O and the apostrophe (15), W to lose the tail (2)." },
     { "do": "action", "action": "openLongRetinaTalk" },
-    { "do": "action", "action": "captionsWaitForThemselves" },
+    { "do": "action", "action": "captionsWriteQuietly" },
     { "do": "wait", "seconds": 1.0 },
     { "do": "expectTimeline", "lengthMS": 319240, "rate": 0, "keyboard": "timeline" },
     { "do": "describe", "stage": "0-opened", "note": "the recording as it opens, nothing pressed and not playing: five minutes and nineteen seconds on one track, the captions already written underneath, the timeline holding the keyboard" },

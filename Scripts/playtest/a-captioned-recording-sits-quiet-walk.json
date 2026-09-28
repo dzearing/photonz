@@ -4,7 +4,7 @@
   "steps": [
     { "do": "describe", "stage": "why", "note": "A recording open with nothing playing should leave the Mac alone. The six transition tiles and the five caption style tiles each redrew thirty times a second, and every redraw laid the whole window out again: a 1.5s wait read 881ms of main thread busy and never went quiet (2026-09-27). Their loops now play on Core Animation, drawn once, so the same two seconds read tens of milliseconds. The walk fails at 400ms busy in two seconds, a fifth of the time, well under the 1200ms the old tiles cost and well over what the quiet app reads." },
     { "do": "action", "action": "openSampleTalk" },
-    { "do": "action", "action": "captionsWaitForThemselves" },
+    { "do": "action", "action": "captionsWriteQuietly" },
     { "do": "wait", "seconds": 1.5 },
 
     { "do": "describe", "stage": "nothing-picked", "note": "Nothing picked: the Transitions tiles play in the panel." },

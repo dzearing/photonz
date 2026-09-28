@@ -234,27 +234,6 @@ final class CaptionTrackTests: XCTestCase {
         XCTAssertNil(content.highlight)
     }
 
-    // MARK: - Listening by itself
-
-    func testItListensToASoundItHasNotHeardBefore() {
-        let sound = UUID()
-        XCTAssertTrue(CaptionAutoRun.shouldListen(isOn: true, hasTime: true, soundID: sound,
-                                                  listenedTo: [], hasCaptions: false))
-        XCTAssertFalse(CaptionAutoRun.shouldListen(isOn: false, hasTime: true, soundID: sound,
-                                                   listenedTo: [], hasCaptions: false),
-                       "the one toggle turns it off")
-        XCTAssertFalse(CaptionAutoRun.shouldListen(isOn: true, hasTime: true, soundID: sound,
-                                                   listenedTo: [sound], hasCaptions: false),
-                       "a sound already listened to is not heard again, even when its captions were cleared")
-        XCTAssertFalse(CaptionAutoRun.shouldListen(isOn: true, hasTime: true, soundID: sound,
-                                                   listenedTo: [], hasCaptions: true),
-                       "captions somebody has are never replaced behind their back")
-        XCTAssertFalse(CaptionAutoRun.shouldListen(isOn: true, hasTime: true, soundID: nil,
-                                                   listenedTo: [], hasCaptions: false))
-        XCTAssertFalse(CaptionAutoRun.shouldListen(isOn: true, hasTime: false, soundID: sound,
-                                                   listenedTo: [], hasCaptions: false))
-    }
-
     func testWhatItListenedToAndTheLookAreSaved() throws {
         var document = documentWithCaptionTrack(look: CaptionLook.preset(.karaoke))
         let sound = UUID()

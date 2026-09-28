@@ -452,6 +452,9 @@ struct TimelineDock: View {
                     ScrollView(.vertical) {
                         let order = editorState.timelineTrackRows.map(\.id)
                         VStack(alignment: .leading, spacing: Self.rowSpacing) {
+                            if editorState.isWritingCaptions {
+                                TimelineCaptionsListeningRow(laneWidth: laneWidth)
+                            }
                             ForEach(editorState.timelineRows) { row in
                                 switch row {
                                 case .group(let group, let isCollapsed, let tracks):

@@ -19,7 +19,7 @@
     },
     {
       "do": "action",
-      "action": "captionsWaitForThemselves"
+      "action": "captionsWriteQuietly"
     },
     {
       "do": "wait",

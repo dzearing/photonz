@@ -4,7 +4,7 @@
   "steps": [
     { "do": "describe", "stage": "why", "note": "On a five minute recording the clip was one long coloured bar, so the only way to find a moment was to play or scrub. The user chose (2026-09-25): at Fit the clip stays the mock's coloured bar, and opened out far enough for a frame to be recognisable, small pictures of what is in it fade in along it. Next defaults, no switch turned on. Every zoom and move is judged on the longest single pass of the main thread after it, at 50ms." },
     { "do": "action", "action": "openLongTalk" },
-    { "do": "action", "action": "captionsWaitForThemselves" },
+    { "do": "action", "action": "captionsWriteQuietly" },
     { "do": "wait", "seconds": 1.5 },
     { "do": "action", "action": "videoPause" },
     { "do": "action", "action": "videoSeekQuarter" },

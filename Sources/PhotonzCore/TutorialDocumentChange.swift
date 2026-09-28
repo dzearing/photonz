@@ -34,6 +34,8 @@ public enum TutorialDocumentChange {
             return keyCount(after) > keyCount(before)
         case .transitionAdded:
             return transitionCount(after) > transitionCount(before)
+        case .captionsAdded:
+            return !before.hasCaptions && after.hasCaptions
         case .captionRetyped:
             return captionWasRetyped(from: before, to: after)
         default:

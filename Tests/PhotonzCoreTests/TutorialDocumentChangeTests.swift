@@ -202,6 +202,27 @@ struct TutorialDocumentChangeTests {
 
     // MARK: Captions
 
+    @Test("Captions landing where there were none is captions added; retyping one is not")
+    func captionsAdded() throws {
+        let (bare, _) = Self.recording()
+        var captioned = bare
+        captioned.landCaptions([Self.cue("hello there", 500, 2000)])
+        #expect(happened(.captionsAdded, bare, captioned))
+        #expect(!happened(.captionsAdded, bare, bare))
+
+        // Correcting a word is not adding captions.
+        let caption = try #require(captioned.captionLayers.last)
+        var fixed = captioned
+        let didSetCaptionText = fixed.setCaptionText(id: caption.id, to: "hello Photonz")
+        #expect(didSetCaptionText)
+        #expect(!happened(.captionsAdded, captioned, fixed))
+
+        // Nor is taking them all off again.
+        var cleared = captioned
+        cleared.clearCaptions()
+        #expect(!happened(.captionsAdded, captioned, cleared))
+    }
+
     @Test("Retyping a caption is a caption retyped; more captions arriving is not")
     func captionRetyped() throws {
         var (start, _) = Self.recording()

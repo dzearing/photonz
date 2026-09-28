@@ -30,7 +30,7 @@ struct FlagDescriptionBudgetTests {
         "next-callout-shape": 83,
         "next-canvas-grid": 340,
         "next-canvas-menu": 106,
-        "next-captions-from-the-sound": 264,
+        "next-captions-from-the-sound": 257,
         "next-capture-toast-edit": 42,
         "next-color-drag": 384,
         "next-color-picker": 257,

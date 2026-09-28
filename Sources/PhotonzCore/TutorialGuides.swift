@@ -2311,23 +2311,24 @@ public enum TutorialGuides {
                 body: "Park the playhead on any cut and press Command T. Right click a tile to make it the one Command T puts on."),
         ])
 
-    /// Captions are text that the machine wrote. The guide lets them arrive,
-    /// has you correct a word the way you would correct any text, and ends
-    /// on where they go when the video leaves.
+    /// Captions are text that the machine wrote, when asked. The guide has you
+    /// ask, has you correct a word the way you would correct any text, and
+    /// ends on where they go when the video leaves.
     public static let captionsFromTheSpeech = TutorialGuide(
         id: "captions-from-the-speech",
         track: .video,
         title: "Captions from the speech",
-        summary: "Let the captions write themselves, fix a word, and choose how they leave.",
+        summary: "Add captions from the speech, fix a word, and choose how they leave.",
         minutes: 1,
         sample: .videoTalk,
         requires: [FeatureCatalog.captionsFromTheSoundFlag],
         steps: [
             TutorialStep(
-                id: "they-write-themselves",
+                id: "add-captions",
                 anchor: .panelSection("captions"),
-                title: "Captions write themselves",
-                body: "A recording with somebody talking is listened to as it opens. The words land as captions while you watch.",
+                title: "Add captions",
+                body: "Press Add Captions, or right click the clip. The speech is heard on this Mac and the words land as captions.",
+                advance: .waitsFor(.captionsAdded),
                 prepare: [.showPanel, .revealTarget]),
             TutorialStep(
                 id: "a-track-of-their-own",

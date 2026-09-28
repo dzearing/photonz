@@ -121,6 +121,11 @@ extension EditorState {
         if Experiments.shared.soundOnTheTimelineEnabled, layer.sound != nil {
             rows.append(contentsOf: soundGainMenuRows(layerID: layerID))
         }
+        // Captions from what is said in it: Premiere's Transcribe, on the
+        // thing that talks. Only ever when asked.
+        if layer.movie != nil || layer.sound != nil, let row = addCaptionsMenuRow() {
+            rows.append(row)
+        }
         // A title, a piece of clip art: when it comes on and goes off, and how.
         rows.append(contentsOf: placedLayerMenuRows(layerID: layerID))
         rows.append(contentsOf: titleAnimationMenuRows(layerID: layerID))
@@ -321,12 +326,22 @@ extension EditorState {
         return rows
     }
 
+    /// **Add Captions**, or Rewrite Captions once there are some, or Cancel
+    /// Captions while it listens. Nil where captions are switched off.
+    func addCaptionsMenuRow() -> MenuRow? {
+        guard Experiments.shared.captionsFromTheSoundEnabled, documentHasTime else { return nil }
+        if isWritingCaptions {
+            return .command("Cancel Captions") { self.stopWritingCaptions() }
+        }
+        return .command(hasCaptions ? "Rewrite Captions" : "Add Captions",
+                        enabled: canWriteCaptions) { self.writeCaptions() }
+    }
+
     /// What every place that is about captions as a whole offers: write them
     /// again, move the lot, write them out, take them off.
     func captionTrackMenuRows() -> [MenuRow] {
         [
-            .command(hasCaptions ? "Write Captions Again" : "Write Captions",
-                     enabled: canWriteCaptions) { self.writeCaptions() },
+            addCaptionsMenuRow() ?? .separator,
             .submenu("Timing", [
                 .command("Earlier", enabled: canNudgeCaptions) { self.nudgeCaptions(byMS: -Self.captionNudgeMS) },
                 .command("Later", enabled: canNudgeCaptions) { self.nudgeCaptions(byMS: Self.captionNudgeMS) },

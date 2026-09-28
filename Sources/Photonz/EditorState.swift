@@ -1642,10 +1642,6 @@ final class EditorState {
             // The first frame, fetched before anybody presses anything, so the
             // window opens on the picture rather than on nothing.
             documentMomentChanged()
-            // ...and the words, heard in the background, so a recording with
-            // somebody talking in it opens with its captions coming
-            // (`EditorState+Captions.swift`).
-            writeCaptionsByThemselves()
             // Open to watch: View mode, every time (`ViewEditMode`). A guide's
             // sample opens in Edit, because its cards point at the tracks.
             if let document {

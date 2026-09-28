@@ -149,7 +149,7 @@ extension EditorState: TutorialHost {
         // Kinds of edit, read off the document as each one lands. None of them
         // is ever already so: the step is asking for the next one.
         case .timeTakenOut, .clipCut, .clipAdded, .titleAdded, .keyAdded,
-             .transitionAdded, .captionRetyped: false
+             .transitionAdded, .captionsAdded, .captionRetyped: false
         }
     }
 }
@@ -188,7 +188,7 @@ extension VideoEditorState: TutorialHost {
         case .gridShown, .keylinesShown, .dialogOpened, .settingReached: false
         // And it has no timeline to cut, bring clips onto or caption.
         case .timeTakenOut, .clipCut, .clipAdded, .titleAdded, .keyAdded,
-             .transitionAdded, .captionRetyped: false
+             .transitionAdded, .captionsAdded, .captionRetyped: false
         }
     }
 

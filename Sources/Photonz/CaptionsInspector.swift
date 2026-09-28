@@ -5,25 +5,32 @@ import SwiftUI
 /// **Captions**: the words the app writes off the sound, as label and value
 /// rows (`Captions.swift`, `CaptionLook.swift`, `pages/video-captions.html`).
 ///
-/// Three parts, in the mock's order: how they are written (the language, and
-/// Auto, which writes them by itself when a recording with speech opens), the
-/// cue in focus (its in, out, length and words), and the one look every
-/// caption wears (a named style, then font, size, colour, background, lit word
-/// and position). Timing and the subtitle file are the last two rows. Anything
-/// longer than a label is the row's tooltip.
+/// Before there are any captions, one thing: the Add Captions button. Captions
+/// are made only when somebody asks (the user, 2026-09-28), so there is no
+/// Auto switch and nothing listens as a recording opens.
+///
+/// Once there are some, three parts in the mock's order: how they are written
+/// (the language, and Rewrite), the cue in focus (its in, out, length and
+/// words), and the one look every caption wears (a named style, then font,
+/// size, colour, background, lit word and position). Timing and the subtitle
+/// file are the last two rows. Anything longer than a label is the row's
+/// tooltip.
 struct CaptionsInspector: View {
     @Environment(EditorState.self) private var editorState
     @State private var languages: [Locale] = []
 
     var body: some View {
-        // Read so a change to Auto or the language draws the rows again.
+        // Read so a change to the language draws the rows again.
         let _ = editorState.captionSettingsTick
         VStack(alignment: .leading, spacing: 6) {
-            language
-            if editorState.hasCaptions { guides }
-            auto
-            if editorState.isWritingCaptions { listening } else { generate }
-            if editorState.hasCaptions && !editorState.isWritingCaptions {
+            if editorState.isWritingCaptions {
+                listening
+            } else if !editorState.hasCaptions {
+                addCaptionsButton
+            } else {
+                language
+                guides
+                generate
                 CaptionCueInFocusRows()
                 Divider().padding(.vertical, 2)
                 CaptionWordsInspector()
@@ -85,17 +92,22 @@ struct CaptionsInspector: View {
         }
     }
 
-    private var auto: some View {
-        VideoKit.FieldRow(label: "Auto") {
-            Toggle("Write captions by themselves", isOn: Binding(
-                get: { EditorState.captionsWriteThemselves },
-                set: { EditorState.captionsWriteThemselves = $0; editorState.captionsSettingsChanged() }))
-                .toggleStyle(.switch)
-                .controlSize(.mini)
-                .labelsHidden()
-                .playtestControl("Auto captions", detail: "the Captions section")
-                .panelHelp("Write captions when a talking recording opens.")
+    /// The section before there are any captions: this, and nothing else.
+    private var addCaptionsButton: some View {
+        Button {
+            editorState.writeCaptions()
+        } label: {
+            Label("Add Captions", systemImage: "captions.bubble")
+                .lineLimit(1)
         }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.small)
+        .fixedSize()
+        .disabled(!editorState.canWriteCaptions)
+        .playtestControl("Add Captions", detail: "the Captions section")
+        .panelHelp(editorState.canWriteCaptions
+            ? "Listen on this Mac, never uploaded, and write the words."
+            : Captions.nothingToHear)
     }
 
     /// The button that writes them (again), and how many there are.
@@ -121,7 +133,7 @@ struct CaptionsInspector: View {
         Button {
             editorState.writeCaptions()
         } label: {
-            Label(editorState.hasCaptions ? "Rewrite" : "Auto captions", systemImage: "sparkles")
+            Label("Rewrite", systemImage: "sparkles")
                 .lineLimit(1)
         }
         .buttonStyle(.borderedProminent)
@@ -158,7 +170,7 @@ struct CaptionsInspector: View {
                     .controlSize(.small)
                     .playtestField("Captions progress")
                     .panelHelp(editorState.captionsReading)
-                Button("Stop") { editorState.stopWritingCaptions() }
+                Button("Cancel") { editorState.stopWritingCaptions() }
                     .controlSize(.small)
                     .playtestField("Stop Writing Captions")
                     .panelHelp("Stop, and keep every word heard so far.")

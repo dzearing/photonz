@@ -2967,8 +2967,8 @@ private final class Run {
             try await adopt(landed, window: nil, step: step.name,
                             subject: "a recording with somebody talking in it", number: number)
 
-        // Five minutes of it, for timing the timeline once 170 captions have
-        // written themselves. Written once per Mac, which takes a minute or so
+        // Five minutes of it, for timing the timeline once 170 captions are
+        // on it. Written once per Mac, which takes a minute or so
         // the first time; every walk after that opens a fresh copy.
         case .action(.openLongTalk):
             guard let url = await PlaytestLongTalk.fresh() else {
@@ -3499,13 +3499,23 @@ private final class Run {
                 note(number, step.name,
                      "captions: every line's words still carry the moments they were heard at",
                      state: describe())
-            case .captionsWaitForThemselves:
-                // Nothing pressed: the captions have to arrive on their own.
-                try await poll("the captions to write themselves", within: 180) {
+            case .captionsWaitToLand:
+                try await poll("the captions asked for to land", within: 180) {
                     editor.hasCaptions && !editor.isWritingCaptions
                 }
-                note(number, step.name,
-                     "captions wrote themselves: \(editor.captionsReading)", state: describe())
+                note(number, step.name, "captions: \(editor.captionsReading)", state: describe())
+            case .captionsExpectNone:
+                // Captions are made only when asked: nothing listens as a
+                // recording opens. A moment's grace first, so something that
+                // started late is caught too.
+                try await Task.sleep(for: .seconds(1))
+                let captionTracks = editor.document?.timelineTracks.filter { $0.kind == .captions } ?? []
+                guard !editor.isWritingCaptions, !editor.hasCaptions, captionTracks.isEmpty else {
+                    throw Failure(description: "nobody asked for captions and yet "
+                        + (editor.isWritingCaptions ? "it is listening"
+                           : "\(editor.captionCount) caption(s) on \(captionTracks.count) Captions track(s)"))
+                }
+                note(number, step.name, "captions: none, and nothing listening", state: describe())
             case .captionsExpectOnePicked:
                 let captions = Set(editor.document?.captionLayers.map(\.id) ?? [])
                 let picked = editor.actionableLayerIDs
@@ -3755,9 +3765,6 @@ private final class Run {
                     note(number, step.name, "captions: wrote \(url.lastPathComponent), "
                          + "\(text.count) characters", state: describe())
                 }
-            case .captionsAutoOff, .captionsAutoOn:
-                EditorState.captionsWriteThemselves = action == .captionsAutoOn
-                editor.captionsSettingsChanged()
             case .captionsWriteFilmWithFileBeside:
                 let film = out.appendingPathComponent("film-with-subtitles-beside.mp4")
                 try await editor.writeVideo(format: .mp4, quality: .standard, to: film,
@@ -4907,17 +4914,17 @@ private final class Run {
             case .captionsAddVoiceover, .captionsWrite, .captionsWriteHearingNothing,
                  .captionsNudgeLater,
                  .captionsNudgeEarlier, .captionsCorrectFirstWord, .captionsClear,
-                 .captionsExpectSound, .captionsExpectTimingsKept, .captionsWaitForThemselves,
+                 .captionsExpectSound, .captionsExpectTimingsKept, .captionsExpectNone, .captionsWaitToLand,
                  .captionsExpectOneTrack, .captionsExpectOnePicked, .captionsWriteQuietly,
                  .captionsExpectEndWithRecording,
                  .captionsPickFirst, .captionsPickNext, .captionsEditFirstInPlace, .captionsCommitFirstWords,
                  .captionsTrimFirstEnd, .captionsStyleCaption, .captionsStyleLowerThird,
                  .captionsStyleKaraoke, .captionsPositionTop, .captionsPositionBottom,
                  .captionsExpectOneLayerPicked, .captionsExpectMovedTogether,
-                 .captionsExpectLitWord, .captionsExportFiles, .captionsAutoOff,
+                 .captionsExpectLitWord, .captionsExportFiles,
                  .captionsExpectGuides, .captionsExpectNoGuides, .captionsExpectReset,
                  .captionsSeekIntoNextWord, .captionsStepIntoWord, .captionsExpectOneWordPopping,
-                 .captionsAutoOn, .captionsExpectEditingOnCanvas,
+                 .captionsExpectEditingOnCanvas,
                  .captionsWriteFilmWithFileBeside,
                  .captionsWordOpenOnCanvas, .captionsWordOpenInLane, .captionsExpectWordOpen,
                  .captionsExpectWordFixed, .captionsExpectTabbedOn, .captionsWordDragEarlier,

@@ -973,6 +973,64 @@ struct TimelineGroupRow: View {
     }
 }
 
+// MARK: - Captions on their way
+
+/// While Add Captions listens: a Captions row at the top of the tracks, where
+/// the captions will land, with how far along it is and an x to cancel.
+///
+/// The captions arrive as one undo step when the listening is done, so until
+/// then there is no track in the document to hang this on; this row stands in
+/// for it. Nothing else on the timeline waits for it.
+struct TimelineCaptionsListeningRow: View {
+    @Environment(EditorState.self) private var editorState
+    let laneWidth: CGFloat
+
+    var body: some View {
+        let share = CGFloat(min(1, max(0, editorState.captionsBeingWritten?.share ?? 0)))
+        HStack(spacing: TimelineDock.gap) {
+            VideoKit.TrackHeader(title: DocumentTrack.Kind.captions.title, width: TimelineDock.gutter,
+                                 uppercase: false, isAutomatic: true)
+                .frame(width: TimelineDock.gutter, height: TimelineDock.laneHeight, alignment: .leading)
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(VideoKit.Palette.comp.opacity(0.08))
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(VideoKit.Palette.comp.opacity(0.28))
+                    .frame(width: max(6, laneWidth * share))
+                    .animation(.linear(duration: 0.2), value: share)
+                HStack(spacing: 6) {
+                    Text("Listening \(Int((share * 100).rounded()))%")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(VideoKit.Palette.comp)
+                        .monospacedDigit()
+                        .lineLimit(1)
+                        .fixedSize()
+                    Spacer(minLength: 0)
+                    Button { editorState.stopWritingCaptions() } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 8, weight: .bold))
+                            .frame(width: 16, height: 16)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(VideoKit.Palette.dim)
+                    .accessibilityLabel("Cancel Captions")
+                    .help("Cancel, keeping the words heard so far")
+                    .playtestControl("Cancel Captions", detail: "Timeline")
+                }
+                .padding(.horizontal, 6)
+            }
+            .frame(width: laneWidth, height: TimelineDock.laneHeight)
+            .overlay(RoundedRectangle(cornerRadius: 4)
+                .strokeBorder(VideoKit.Palette.comp.opacity(0.35), lineWidth: 1))
+        }
+        .frame(height: TimelineDock.laneHeight)
+        .playtestField("Captions listening")
+        .panelReadout("captions listening \(Int((share * 100).rounded()))%")
+        .transition(.opacity)
+    }
+}
+
 // MARK: - Adding a track
 
 /// The foot of the gutter: a + that adds a video, audio or captions track, and
@@ -1012,7 +1070,15 @@ struct TimelineAddTrackRow: View {
     @ViewBuilder private var items: some View {
         Button("Video Track") { editorState.addTrack(.video) }
         Button("Audio Track") { editorState.addTrack(.audio) }
-        Button("Captions Track") { editorState.addTrack(.captions) }
+        // Captions from the speech, the way Premiere's Transcribe makes its
+        // captions track; an empty one where there is nothing to hear.
+        Button("Captions") {
+            if editorState.canWriteCaptions && !editorState.hasCaptions {
+                editorState.writeCaptions()
+            } else {
+                editorState.addTrack(.captions)
+            }
+        }
     }
 }
 

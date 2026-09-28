@@ -9,7 +9,7 @@ import UniformTypeIdentifiers
 //
 // **Captions are not a mode that replaces the app. They are what the Title /
 // Text tool does when the document has time.** Which means there is almost
-// nothing here: Write Captions listens, the words land as ordinary text layers
+// nothing here: Add Captions listens, the words land as ordinary text layers
 // with an in and an out, and from that moment every single thing you would want
 // to do to one is something the app already does to text. Correcting a word is
 // typing. Restyling a line is the font and colour controls. Moving one is
@@ -18,8 +18,9 @@ import UniformTypeIdentifiers
 //
 // The things that ARE here, and nothing else:
 //
-// - Listening by itself when a recording with speech opens, once per sound,
-//   unless the Auto toggle is off.
+// - Listening when somebody asks, and never before: opening a recording starts
+//   no speech work at all (the user, 2026-09-28: captions on demand, the way
+//   Premiere's Transcribe and CapCut's Auto captions are a button you press).
 // - Which sound gets listened to, and where its words land on the timeline.
 // - The one look every caption wears, and retyping a cue in place.
 // - Saying how far along it is, and stopping it without losing what it heard.
@@ -30,7 +31,7 @@ extension EditorState {
 
     // MARK: - Whether there is anything to caption
 
-    /// Whether Write Captions would do anything: the feature is on, this
+    /// Whether Add Captions would do anything: the feature is on, this
     /// document has time and something in it makes a sound.
     var canWriteCaptions: Bool {
         guard Experiments.shared.captionsFromTheSoundEnabled, documentHasTime,
@@ -87,16 +88,7 @@ extension EditorState {
 
     // MARK: - Listening
 
-    // MARK: - Listening by itself
-
-    /// **Auto.** Whether captions write themselves when a recording with
-    /// speech opens. One switch for the whole app, on until somebody turns it
-    /// off.
-    static var captionsWriteThemselves: Bool {
-        get { UserDefaults.standard.object(forKey: captionsAutoKey) as? Bool ?? true }
-        set { UserDefaults.standard.set(newValue, forKey: captionsAutoKey) }
-    }
-    private static let captionsAutoKey = "captions.writeThemselves"
+    // MARK: - What it listens in
 
     /// The language captions are heard in, as a locale identifier.
     static var captionsLanguage: String {
@@ -105,32 +97,23 @@ extension EditorState {
     }
     private static let captionsLanguageKey = "captions.language"
 
-    /// Auto or the language changed: draw again, and where Auto just came on,
-    /// listen now rather than on the next open.
+    /// The language changed: draw again.
     func captionsSettingsChanged() {
         captionSettingsTick += 1
-        writeCaptionsByThemselves()
     }
 
-    /// Listen, without being asked, when this document has a sound it has
-    /// never listened to and no captions yet. Quiet: it does not stop
-    /// playback, does not take the selection, and says nothing when it hears
-    /// nothing, because nobody asked it a question.
-    func writeCaptionsByThemselves() {
-        guard Experiments.shared.captionsFromTheSoundEnabled, SpeechTranscription.isAvailable,
-              !isWritingCaptions, let document else { return }
-        let sound = captionableSound
-        guard CaptionAutoRun.shouldListen(isOn: Self.captionsWriteThemselves,
-                                          hasTime: documentHasTime,
-                                          soundID: sound.url == nil ? nil : sound.sound?.id,
-                                          listenedTo: document.captionsListenedTo,
-                                          hasCaptions: document.hasCaptions)
-        else { return }
-        writeCaptions(quietly: true)
-    }
-
-    /// **Write Captions.** Listen to the recording and put the words on the
-    /// timeline at the moments they were said.
+    /// **Add Captions.** Listen to the recording and put the words on the
+    /// timeline at the moments they were said. Only ever because somebody
+    /// asked: a right click on a clip or a sound, the timeline's + menu, the
+    /// Video menu, or the Captions section's one button.
+    ///
+    /// While it listens a Captions row sits at the top of the tracks with how
+    /// far along it is and a way to cancel (`TimelineCaptionsListeningRow`),
+    /// and everything else in the window keeps working.
+    ///
+    /// `quietly` is for a walk that needs captions in place before the thing
+    /// it is really about: it leaves the selection and the mode alone and
+    /// says nothing when it hears nothing.
     ///
     /// Nothing leaves this Mac. The words land in one undo step at the end
     /// rather than dribbling in: a document that changes under you four hundred
@@ -143,7 +126,11 @@ extension EditorState {
             if !quietly { raiseCanvasNotice(.captionsCameTo(Captions.nothingToHear)) }
             return
         }
-        if !quietly { pauseDocument() }
+        if !quietly {
+            pauseDocument()
+            // The listening row is on the timeline, so the timeline is up.
+            switchToEditForAnEdit()
+        }
         captionsBeingWritten = TranscriptionProgress(listenedToMS: 0, ofMS: sound.durationMS,
                                                      words: [])
         let landing = CaptionLanding()
@@ -200,8 +187,8 @@ extension EditorState {
         captionsWatcher?.cancel()
         captionsWatcher = nil
         guard let document else { return }
-        // Listened to, whatever came of it: opening this again does not listen
-        // again. Not an undo step and not an edit, because nobody did it.
+        // Which sounds have been heard, kept with the document. Not an undo
+        // step and not an edit, because nobody did it.
         if !heard.wasStopped {
             applyWithoutMarkingEdited { $0.noteCaptionsListened(to: sound.id) }
         }
@@ -219,8 +206,7 @@ extension EditorState {
             return
         }
 
-        // Captions that wrote themselves are not somebody editing, so they
-        // leave a tucked-away timeline where it is.
+        // Captions written quietly leave a tucked-away timeline where it is.
         perform(openingTheTimeline: !quietly) { doc in
             // Writing captions again replaces the last lot rather than laying a
             // second track over the first, which is what a second press
@@ -233,7 +219,7 @@ extension EditorState {
         // Read back off the document the edit LANDED in, not the one captured
         // before it: the captured one has no captions in it, so this quietly
         // selected nothing and left whatever was picked before still picked.
-        // Captions that wrote themselves leave the selection where it was.
+        // Captions written quietly leave the selection where it was.
         if !quietly { selectLayer(self.document?.captionsLayers.first?.id) }
         documentMomentChanged()
 
