@@ -1,0 +1,24 @@
+{
+  "out": "/tmp/photonz-playtest/export-card-while-writing-walk",
+  "clock": 480,
+  "seed": "Writing a five minute Retina recording out at 1080p, at Next defaults with no flag touched, the way the Export sheet's button does: the card comes up and moves while the window stays free to draw, and the file lands in well under half the time the five minutes run.",
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "describe", "stage": "why", "note": "Five minutes of a Retina recording took nearly six minutes to write at 1080p, longer than it plays. Premiere writes a screen recording several times faster than it plays. This walk starts that export the way the sheet does and watches the card and the window while it writes" },
+    { "do": "action", "action": "openLongRetinaTalk" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "action", "action": "startExportAt1080p" },
+    { "do": "wait", "seconds": 3 },
+    { "do": "describe", "stage": "1-writing", "note": "The card is up, saying what it writes and how far along it is" },
+    { "do": "snapshot", "name": "1-writing" },
+    { "do": "wait", "seconds": 5 },
+    { "do": "snapshot", "name": "2-further-along" },
+
+    { "do": "action", "action": "awaitExport" }
+  ]
+}

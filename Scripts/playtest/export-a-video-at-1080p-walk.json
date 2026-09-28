@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/export-a-video-at-1080p-walk",
   "clock": 480,
-  "seed": "The Export sheet's Size row, at Next defaults with no flag touched: a five minute talk recorded at Retina size, 2880 by 1800, opens; Export shows Full, 1080p and 720p with the full size named in pixels; 1080p changes the pixel line and the size line; and the five minutes written at 1080p land as a 1728 by 1080 file whose weight is within a factor of two of what the sheet said.",
+  "seed": "The Export sheet's Size row, at Next defaults with no flag touched: a five minute talk recorded at Retina size, 2880 by 1800, opens; Export shows Full, 1080p and 720p with the full size named in pixels; 1080p changes the pixel line and the size line; and the five minutes written at 1080p land as a 1728 by 1080 file whose weight is within a factor of two of what the sheet said, written in under half the time the five minutes run.",
   "setup": {
     "forget": ["all"]
   },
@@ -28,6 +28,6 @@
     { "do": "key", "key": "escape" },
     { "do": "wait", "seconds": 0.6 },
 
-    { "do": "writeVideo", "name": "five-minutes-at-1080p", "format": "mp4", "size": "p1080", "width": 1728, "height": 1080, "sound": true, "copied": false, "estimateFactor": 2 }
+    { "do": "writeVideo", "name": "five-minutes-at-1080p", "format": "mp4", "size": "p1080", "width": 1728, "height": 1080, "sound": true, "copied": false, "estimateFactor": 2, "paceShare": 0.5 }
   ]
 }

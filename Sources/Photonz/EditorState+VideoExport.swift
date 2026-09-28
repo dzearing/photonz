@@ -141,11 +141,17 @@ extension EditorState {
         pauseDocument()
         let run = VideoExportRun(fileName: url.lastPathComponent, title: format.writingTitle)
         videoExport = run
+        // A write now runs several frames a millisecond apart, and the bar
+        // cannot show a step finer than a pixel or two: only a step the card
+        // can show is sent to the main actor, so the window is not asked to
+        // redraw its card hundreds of times a second.
+        let steps = ProgressSteps(count: 500)
         videoExportTask = Task { [weak self] in
             guard let self else { return }
             do {
                 try await writeVideo(format: format, quality: quality, size: size, to: url,
                                      captions: captions, range: range) { done in
+                    guard steps.isNewStep(done) else { return }
                     Task { @MainActor in run.fraction = done }
                 }
                 videoExport = nil
@@ -280,8 +286,14 @@ extension EditorState {
                                             format: format, quality: quality, size: size)
         let mix = AudioMixSegment.windowed(document.audioMix(), to: span)
         let soundURLs = SoundLibrary.shared.urls(for: mix)
+        // Drawn at the file's size rather than the canvas's: a 1080p file
+        // off a Retina recording has no use for the other 60% of the pixels,
+        // and drawing them only to throw them away was a third of the write.
+        // Clips are read front to back, since that is the order a file asks
+        // for them in (`MovieFrameStream`).
         let pictures = DocumentFrames(document: document, store: store,
-                                      movieURLs: MovieLibrary.shared.urls(in: document))
+                                      movieURLs: MovieLibrary.shared.urls(in: document),
+                                      size: plan.size, streaming: true)
         let frames: DocumentMovieWriter.FrameSource = { ms in await pictures.frame(atMS: ms) }
         defer { pictures.putTheStoreBack() }
 
@@ -315,6 +327,24 @@ final class VideoExportRun: Identifiable {
     var percent: Int { Int((min(1, max(0, fraction)) * 100).rounded()) }
 }
 
+/// Whether a fraction done has reached the next of `count` even steps.
+///
+/// Called from the one loop writing the file, one frame after another, so
+/// there is never a second caller; the `@unchecked` is that promise.
+final class ProgressSteps: @unchecked Sendable {
+    private let count: Double
+    private var last = -1
+
+    init(count: Int) { self.count = Double(max(1, count)) }
+
+    func isNewStep(_ fraction: Double) -> Bool {
+        let step = Int((min(1, max(0, fraction)) * count).rounded(.down))
+        guard step != last else { return false }
+        last = step
+        return true
+    }
+}
+
 /// The picture of a document at any moment, made the way the canvas makes it.
 ///
 /// Off the main actor on purpose: a minute of recording is a couple of thousand
@@ -333,6 +363,16 @@ final class DocumentFrames: @unchecked Sendable {
     private let store: ImageStore
     private let movieURLs: [UUID: URL]
     private let renderer = DocumentRenderer()
+    /// How many output pixels per document point, 1 for the canvas's own size.
+    private let scale: CGFloat
+    /// Whether clips are read front to back (`MovieFrameStream`) rather than
+    /// sought frame by frame: what a file written from start to end wants.
+    private let streaming: Bool
+    /// One pass over each recording, made the first time it is asked for.
+    private var streams: [UUID: MovieFrameStream] = [:]
+    /// Recordings a single pass cannot read the right way up, left to the
+    /// image generator.
+    private var unstreamable = Set<UUID>()
     /// Frames this export put in the store, which are this export's to remove.
     ///
     /// Held without a lock because the writer asks for one frame at a time and
@@ -342,10 +382,38 @@ final class DocumentFrames: @unchecked Sendable {
     /// gives the store back in a `defer`.
     private var borrowed: [ImageRef] = []
 
-    init(document: PhotonzDocument, store: ImageStore, movieURLs: [UUID: URL]) {
+    /// - size: what each picture comes out at, the canvas's own size when left
+    ///   out. The document is drawn AT that size, never drawn big and shrunk.
+    init(document: PhotonzDocument, store: ImageStore, movieURLs: [UUID: URL],
+         size: CGSize? = nil, streaming: Bool = false) {
         self.document = document
         self.store = store
         self.movieURLs = movieURLs
+        self.streaming = streaming
+        let canvas = document.canvasSize
+        if let size, canvas.width > 0, size.width > 0, abs(size.width - canvas.width) >= 1 {
+            scale = size.width / canvas.width
+        } else {
+            scale = 1
+        }
+    }
+
+    /// The recording's frame at a moment of it, off one pass through the file
+    /// where that can be had, and sought on its own otherwise.
+    private func decode(_ request: MovieFrameRequest, at url: URL) async -> CGImage? {
+        let id = request.movie.id
+        if streaming, !unstreamable.contains(id) {
+            if streams[id] == nil {
+                if let stream = await MovieFrameStream(url: url) {
+                    streams[id] = stream
+                } else {
+                    unstreamable.insert(id)
+                }
+            }
+            if let picture = streams[id]?.frame(atMS: request.sourceMS) { return picture }
+        }
+        return await MovieDecoder.shared.frame(of: request.movie, at: url,
+                                               sourceMS: request.sourceMS)
     }
 
     /// What the document looks like at a moment, with every frame it needs
@@ -358,8 +426,7 @@ final class DocumentFrames: @unchecked Sendable {
             let filed = store.image(for: request.ref)
             if let filed, CGFloat(filed.width) >= request.movie.pixelSize.width - 1 { continue }
             guard let url = movieURLs[request.movie.id],
-                  let picture = await MovieDecoder.shared.frame(of: request.movie, at: url,
-                                                                sourceMS: request.sourceMS)
+                  let picture = await decode(request, at: url)
             else { continue }
             store.register(picture, as: request.ref)
             // One the window already held stays the window's, now sharper;
@@ -371,7 +438,8 @@ final class DocumentFrames: @unchecked Sendable {
         // frame that could not be made. A document whose music runs past its
         // last clip ends in darkness, which is what the window shows, rather
         // than in the last frame held for six seconds nobody asked for.
-        let picture = renderer.render(shown, store: store) ?? blank()
+        let picture = (scale == 1 ? renderer.render(shown, store: store)
+                                  : renderer.render(shown, store: store, scale: scale)) ?? blank()
         dropOldFrames()
         return picture
     }
@@ -384,10 +452,10 @@ final class DocumentFrames: @unchecked Sendable {
         return ImageCodec.encode(picture, format: .png)
     }
 
-    /// An empty frame the size of the canvas.
+    /// An empty frame the size the pictures come out at.
     private func blank() -> CGImage? {
-        let width = Int(document.canvasSize.width.rounded())
-        let height = Int(document.canvasSize.height.rounded())
+        let width = Int((document.canvasSize.width * scale).rounded())
+        let height = Int((document.canvasSize.height * scale).rounded())
         guard width > 0, height > 0,
               let context = CGContext(data: nil, width: width, height: height,
                                       bitsPerComponent: 8, bytesPerRow: 0,

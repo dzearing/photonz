@@ -1,0 +1,26 @@
+{
+  "feature": "Video export runs faster than the video plays",
+  "epic": "video-share",
+  "summary": "A five minute Retina screen recording with captions burned in now writes at 1080p in about 75 seconds, a quarter of its running time. It used to take about 5 minutes 40 seconds.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: export-a-video-at-1080p-walk and export-card-while-writing-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open a long screen recording, ideally five minutes at full Retina size, and add a few captions." },
+    { "do": "Press Command E, set Size to 1080p and press Export.", "shot": "2026-09-27-fast-video-export-2.png" },
+    { "do": "Watch the Writing the video card while it fills.", "shot": "2026-09-27-fast-video-export-1.png" },
+    { "do": "While it writes, scrub the timeline and move the playhead." },
+    { "do": "Once it lands, open the file and play a stretch with captions in it." }
+  ],
+  "evaluate": [
+    "Did the file land well before the recording would have finished playing?",
+    "Did the card fill smoothly, without jumps or stalls?",
+    "Could you keep working in the window while it wrote?",
+    "Do the picture and the captions in the file look as sharp as they do on the canvas?"
+  ],
+  "rough": [
+    "Measured on this Mac at a load average of about 4: 337.8 seconds before, then 71.8 to 83.4 seconds over three runs.",
+    "The window still stalls once, for about 300 ms, the moment an export starts. The old export did the same (measured) and the cause is not found yet.",
+    "Captions and titles are now drawn at the file's size, not drawn at Retina size and then shrunk. They should be as sharp or sharper, but compare them by eye.",
+    "Recordings that were shot turned sideways still read frame by frame the old, slow way."
+  ]
+}

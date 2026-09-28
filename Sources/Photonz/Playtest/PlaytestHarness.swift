@@ -187,6 +187,8 @@ private final class Run {
     private var hovered: HintAnchorView?
     /// The document the last `saveProjectAs` wrote, for `expectReopenedAsSaved`.
     private var savedProjectDocument: PhotonzDocument?
+    /// The export `startExportAt1080p` began and when, for `awaitExport`.
+    private var startedExport: (url: URL, began: Date)?
     /// The caption word a walk opened last, and when it was said then
     /// (`captionsExpectWordFixed`).
     private var openedCaptionWord: (ref: CaptionWordRef, word: TranscribedWord)?
@@ -1802,14 +1804,15 @@ private final class Run {
 
         case .writeVideo(let name, let format, let quality, let seconds, let within,
                          let width, let height, let sound, let copied, let size,
-                         let estimateFactor, let range, let startsAtMS):
+                         let estimateFactor, let range, let startsAtMS, let paceShare):
             note(number, step.name,
                  try await writeVideoFile(name: name, format: format, quality: quality,
                                           seconds: seconds, within: within,
                                           width: width, height: height,
                                           sound: sound, copied: copied, size: size,
                                           estimateFactor: estimateFactor,
-                                          range: range, startsAtMS: startsAtMS),
+                                          range: range, startsAtMS: startsAtMS,
+                                          paceShare: paceShare),
                  state: describe())
 
         case .writeFrame(let name, let atMS, let width, let height):
@@ -2518,6 +2521,40 @@ private final class Run {
             guard landed else { throw Failure(description: "the export finished without writing a file") }
             note(number, step.name,
                  "exported as MP4; the window is \(editor.hasUnsavedChanges ? "STILL edited" : "no longer edited")",
+                 state: describe())
+
+        case .action(.startExportAt1080p):
+            let editor = try requireEditor()
+            let url = out.appendingPathComponent("started-at-1080p.mp4")
+            try? FileManager.default.removeItem(at: url)
+            startedExport = (url, Date())
+            editor.startVideoExport(format: .mp4, quality: .standard, size: .p1080, to: url)
+            guard editor.videoExport != nil else {
+                throw Failure(description: "the export did not start: no card came up")
+            }
+            MainThreadMeter.shared.install()
+            MainThreadMeter.shared.reset()
+            note(number, step.name, "an MP4 at 1080p is being written to \(url.lastPathComponent), "
+                 + "with the card up", state: describe())
+
+        case .action(.awaitExport):
+            let editor = try requireEditor()
+            guard let (url, began) = startedExport else {
+                throw Failure(description: "no export was started to wait for")
+            }
+            try await poll("the export to land", within: 600) { editor.videoExport == nil }
+            let took = Int(Date().timeIntervalSince(began) * 1000)
+            let window = MainThreadMeter.shared.report
+            startedExport = nil
+            guard FileManager.default.fileExists(atPath: url.path) else {
+                throw Failure(description: "the export finished without writing a file")
+            }
+            let ran = (try? await AVURLAsset(url: url).load(.duration).seconds) ?? 0
+            let share = VideoWritePace.share(writtenMS: took, runsSeconds: ran)
+            note(number, step.name,
+                 "\(url.lastPathComponent) landed in \(took) ms and runs \(Self.round2(ran))s"
+                    + (share.map { ", so the write took \(Self.round2($0)) of its running time" } ?? "")
+                    + "; while it wrote, \(window)",
                  state: describe())
 
         case .action(let action) where action == .closeDocument:
@@ -5486,6 +5523,7 @@ private final class Run {
                     editor.setContentPlacement(id: id, horizontal: .stretch)
                 }
             case .closeDocument, .askToClose, .answerCloseFirst, .exportVideoAsTheSheetDoes,
+                 .startExportAt1080p, .awaitExport,
                  .saveProjectAs, .answerCloseExport, .expectReopenedAsSaved, .expectMissingMedia:
                 break  // handled above, where there is still a window to close
             case .closeSheets:
@@ -11558,7 +11596,7 @@ private final class Run {
                                 width: Double?, height: Double?,
                                 sound: Bool?, copied: Bool?, size: String? = nil,
                                 estimateFactor: Double? = nil, range: String? = nil,
-                                startsAtMS: Int? = nil) async throws -> String {
+                                startsAtMS: Int? = nil, paceShare: Double? = nil) async throws -> String {
         let editor = try requireEditor()
         guard let document = editor.document, document.hasTime else {
             throw Failure(description: "this window holds no document with time in it, "
@@ -11615,6 +11653,10 @@ private final class Run {
         let claimed = promisedBytes(RecordingExport.weight(format: recordingFormat, quality: preset,
                                                            source: source, weighing: weighed,
                                                            size: chosenSize))
+        // What the write cost the window while it ran: the export is off the
+        // main thread, so the editor should stay free to draw and answer.
+        MainThreadMeter.shared.install()
+        MainThreadMeter.shared.reset()
         let started = Date()
         do {
             try await editor.writeVideo(format: recordingFormat, quality: preset, size: chosenSize,
@@ -11623,6 +11665,7 @@ private final class Run {
             throw Failure(description: "writing the document as \(format) failed: \(error)")
         }
         let took = Int(Date().timeIntervalSince(started) * 1000)
+        let windowWhileWriting = MainThreadMeter.shared.report
         guard let landed = try? destination.resourceValues(forKeys: [.fileSizeKey]).fileSize,
               landed > 0 else {
             throw Failure(description: "nothing usable landed at \(destination.lastPathComponent)")
@@ -11640,6 +11683,14 @@ private final class Run {
             facts.append("it runs \(Self.round2(ran))s at "
                          + "\(Int(size.width.rounded())) × \(Int(size.height.rounded())) px"
                          + (hasSound ? ", with sound on it" : ", silent"))
+            if let share = VideoWritePace.share(writtenMS: took, runsSeconds: ran) {
+                facts.append("the write took \(Self.round2(share)) of its running time; "
+                             + "while it wrote, \(windowWhileWriting)")
+                if let paceShare, !VideoWritePace.isWithin(paceShare, writtenMS: took, runsSeconds: ran) {
+                    wrong.append("writing it took \(Self.round2(share)) of its running time, "
+                        + "more than the \(Self.round2(paceShare)) this walk allows")
+                }
+            }
             if let seconds, abs(seconds - ran) > within {
                 wrong.append("the file that landed runs \(Self.round2(ran))s, not "
                     + "\(Self.round2(seconds))s, so what the timeline says is not what was written")

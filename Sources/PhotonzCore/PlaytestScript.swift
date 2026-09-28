@@ -671,6 +671,14 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// for it to land. What an export changes about the window (a recording
     /// that cannot be saved counts as kept once exported) is then checkable.
     case exportVideoAsTheSheetDoes
+    /// Start an MP4 export at 1080p through the path the Export sheet's button
+    /// runs, into the walk's scratch folder, and DO NOT wait for it: the steps
+    /// after it run while the card is up, so a walk can photograph the card
+    /// and time the window while the file is written.
+    case startExportAt1080p
+    /// Wait for the export `startExportAt1080p` began to land, and say how long
+    /// it took against how long the file runs.
+    case awaitExport
     /// Save the document as a project, exactly as File > Save As and a place
     /// picked in the save box would, into `project.photonz` in the walk's own
     /// output folder. The walk opens it again with an `open` step naming that
@@ -2454,11 +2462,14 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Range row (`marked`, the default, or `whole`), and `startsAtMS` claims
     /// the file's first picture is the document's at that moment, which is
     /// what proves a marked export starts at the In rather than at nought.
+    /// `paceShare` fails the step when the write took longer than that share
+    /// of the file's running time (`VideoWritePace`).
     case writeVideo(name: String, format: String, quality: String?,
                     seconds: Double?, within: Double,
                     width: Double?, height: Double?, sound: Bool?, copied: Bool?,
                     size: String? = nil, estimateFactor: Double? = nil,
-                    range: String? = nil, startsAtMS: Int? = nil)
+                    range: String? = nil, startsAtMS: Int? = nil,
+                    paceShare: Double? = nil)
     /// Write ONE FRAME of the document out as a picture, exactly as choosing
     /// PNG on that same sheet and picking a place would, then read the file
     /// back and check it (`EditorState.exportStillFrame`).
@@ -3711,7 +3722,8 @@ public enum PlaytestStep: Sendable, Equatable {
                                size: try f.optionalString("size"),
                                estimateFactor: try f.optionalNumber("estimateFactor"),
                                range: try f.optionalString("range"),
-                               startsAtMS: try f.optionalNumber("startsAtMS").map { Int($0) })
+                               startsAtMS: try f.optionalNumber("startsAtMS").map { Int($0) },
+                               paceShare: try f.optionalNumber("paceShare"))
         case "writeFrame":
             self = .writeFrame(name: try f.string("name"),
                                atMS: try f.optionalNumber("atMS").map { Int($0) },

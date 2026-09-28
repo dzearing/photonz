@@ -19992,3 +19992,12 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - The inline draft draws the same shadows (`TextDraftShadowView` in `CanvasTextEditing.swift`), Next title look only.
 - Recolouring a title keeps its shadows' shape (`TextBuilder.restyled(keepsShadowShapes:)`).
 - Next: nothing open from this; audit at `queue/audits/2026-09-27-title-readable-over-light-footage.json`.
+
+## 2026-09-27 — A five minute recording exports faster than it plays
+
+- A five minute 2880x1800 talk with captions burned in, written at 1080p: 337.8s before, 71.8 to 83.4s after (0.23 to 0.26 of its running time).
+- Clips are read front to back with one `AVAssetReader` pass per recording (`MovieFrameStream`, PhotonzMedia, `MovieFrameStreamTests`), not one image generator seek per frame. The pass starts over when a moment goes back or jumps more than 1.5s ahead. Recordings with a turned track still use the generator.
+- The export draws the document at the file's size (`DocumentFrames(size:streaming:)` → `DocumentRenderer.render(_:store:scale:)`), not at canvas size and then shrunk.
+- The card's progress goes to the main actor only in 1/500 steps (`ProgressSteps`).
+- Walks: `writeVideo` takes `paceShare` (`VideoWritePace`) and logs the write time as a share of the running time plus a main-thread reading. The 1080p walk holds it to 0.5. New `export-card-while-writing-walk` (`startExportAt1080p` / `awaitExport` actions) photographs the card while the file writes.
+- Open: a 300ms main-thread stall when an export starts. It is there on the old path too; cause not found.
