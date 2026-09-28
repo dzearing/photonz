@@ -1,0 +1,33 @@
+{
+  "id": "the-volume-slider-on-the-transport-works",
+  "title": "The volume slider on the transport works",
+  "goal": "User 2026-09-28: 'clicking volume slider doesn't function.' Reproduce first: clicking on the track, dragging the knob, clicking the speaker icon to mute, in View and Edit, while playing and paused; say what fails (the control not receiving the click, the value not reaching playback audio, or the mix meter sitting where the slider should be; an earlier audit found the 'tiny grey slider' was the MixMeter, not a control).",
+  "epic": "video-audio",
+  "priority": "p1-high",
+  "seq": 0.0006,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-28T14:56:09.427Z",
+  "updated": "2026-09-28T14:56:14.670Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Reproduced first with a walk at Next defaults, naming exactly what fails",
+    "Clicking anywhere on the volume track jumps to that level, dragging the knob changes it live while playing, the speaker icon toggles mute and shows the muted state, and scrolling over it adjusts it",
+    "The level is heard in playback immediately and is remembered per user across recordings (not saved into the document; the document's own clip volumes are separate)",
+    "The mix meter, if kept, is visually distinct from the volume slider and never sits where a person would reach for volume",
+    "Walk plays a recording, sets volume to 20% by clicking, mutes, unmutes, and checks the player's output level each time"
+  ],
+  "log": [
+    {
+      "t": "2026-09-28T14:56:09.429Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-28T14:56:14.669Z",
+      "note": "seq 400 -> 0.0006"
+    }
+  ]
+}

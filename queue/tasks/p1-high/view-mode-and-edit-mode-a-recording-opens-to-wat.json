@@ -1,0 +1,36 @@
+{
+  "id": "view-mode-and-edit-mode-a-recording-opens-to-wat",
+  "title": "View mode and Edit mode: a recording opens to watch, one switch brings the editor",
+  "goal": "User 2026-09-28: 'when I open a video, again, I don't want to see the full edit experience by default. I want a minimized look to focus on the video playback. Right pane can be minimized as well... Thinking we should have a segmented control View mode / Edit mode on the right which can toggle all the business of editing.' The earlier task (bb6c6370, a-recording-opens-to-watch...) only tucked the timeline, and it REMEMBERS the last choice, so after one expand every recording opens expanded; the right pane and tool bar were never touched. Replace that with a whole-window mode. Compare QuickTime Player (view) vs Final Cut (edit): would a person opening a video to watch it feel they are in a player?",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 0.0005,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-28T14:56:09.349Z",
+  "updated": "2026-09-28T14:56:14.617Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window. Supersedes the remembered-collapse part of a-recording-opens-to-watch-with-the-editing-tuck (done).",
+  "acceptance": [
+    "A segmented control View | Edit sits at the right of the title bar on any document with time (a native NSSegmentedControl look, Liquid Glass, same height as the other title bar controls); keys: V for View is taken, so use Cmd-1 View and Cmd-2 Edit, and E toggles when nothing is being typed",
+    "Opening a recording ALWAYS lands in View, whatever mode the last one was in; a document you have edited and saved as a Photonz project reopens in Edit",
+    "View: the picture fitted and centred in the whole window, a slim transport (play/pause, scrubber, time, volume, full screen), no tool bar, no timeline tracks, no right pane, no selection handles; everything else animates away smoothly (no jump) in about 250 ms",
+    "Edit: the tool bar, the timeline with its tracks and the right pane return exactly as they were in this window",
+    "Starting an edit from View switches to Edit by itself: B, I/O, Cmd-K, T, a right-click edit action, dragging media in",
+    "The earlier remembered expand state and its preference are removed; the right pane can still be hidden on its own in Edit with its existing toggle",
+    "Pictures (no time) are unaffected: no View/Edit control",
+    "Walk at Next defaults: open a recording (View: photograph, check no pane/tool bar/tracks), press Cmd-2 (Edit: photograph), close, open another recording (View again)"
+  ],
+  "log": [
+    {
+      "t": "2026-09-28T14:56:09.351Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-28T14:56:14.616Z",
+      "note": "seq 390 -> 0.0005"
+    }
+  ]
+}
