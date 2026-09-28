@@ -1,0 +1,51 @@
+{
+  "out": "/tmp/photonz-playtest/transport-volume-walk",
+  "seed": "The user on 2026-09-28: 'clicking volume slider doesn't function.' There was no slider: the grey bar beside the speaker was the mix meter, drawn like a slider track. Now the speaker sits beside a real volume slider at Next defaults with no flag set: a click on the track jumps there, heard at once while it plays; the speaker mutes and unmutes back to that level; the wheel over it turns it up; the level is the person's and follows them to the next recording; and the mix meter lives on the timeline's own bar with its name in front of it.",
+  "setup": { "forget": ["motion"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "expectTimeline", "mode": "view", "volumePercent": 100, "muted": false, "outputGain": 1 },
+    { "do": "expect", "control": "Volume Level", "present": true },
+
+    { "do": "action", "action": "videoPlay" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "soundExpectPlaying" },
+    { "do": "press", "control": "Volume Level", "across": 0.2 },
+    { "do": "expectTimeline", "rate": 1, "volumePercent": 20, "muted": false, "outputGain": 0.04 },
+    { "do": "describe", "stage": "1-playing-at-twenty", "note": "THE FIRST TEST: playing in View mode, one click a fifth of the way along the volume slider. The knob jumped there, the fill stops under it, and the engine is putting out 0.04 (the level squared) while the picture keeps playing" },
+    { "do": "snapshot", "name": "1-playing-at-twenty" },
+
+    { "do": "press", "control": "Volume" },
+    { "do": "expectTimeline", "rate": 1, "volumePercent": 0, "muted": true, "outputGain": 0 },
+    { "do": "describe", "stage": "2-muted", "note": "THE SECOND TEST: the speaker pressed while it plays. Struck through, the slider empty, the engine silent, the picture still playing" },
+    { "do": "snapshot", "name": "2-muted" },
+
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "videoPlay" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "press", "control": "Volume" },
+    { "do": "expectTimeline", "rate": 1, "volumePercent": 20, "muted": false, "outputGain": 0.04 },
+
+    { "do": "wheel", "control": "Volume Level", "by": 40 },
+    { "do": "expectTimeline", "volumePercent": 40, "muted": false, "outputGain": 0.16 },
+    { "do": "action", "action": "videoPause" },
+
+    { "do": "key", "key": "2", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTimeline", "mode": "edit", "rate": 0 },
+    { "do": "press", "control": "Volume Level", "across": 0.6 },
+    { "do": "expectTimeline", "volumePercent": 60, "outputGain": 0.36 },
+    { "do": "describe", "stage": "3-edit-paused", "note": "THE THIRD TEST: Edit mode, paused, a click at 60%. The same slider on the same transport; the mix meter is on the timeline's own bar at the right, with MIX in front of it and no knob" },
+    { "do": "snapshot", "name": "3-edit-paused" },
+
+    { "do": "action", "action": "reopenSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "expectTimeline", "volumePercent": 60, "muted": false, "outputGain": 0.36 },
+    { "do": "describe", "stage": "4-remembered", "note": "THE FOURTH TEST: closed and opened again. The slider is where the person left it, because the level is theirs, not the document's" },
+    { "do": "snapshot", "name": "4-remembered" }
+  ]
+}

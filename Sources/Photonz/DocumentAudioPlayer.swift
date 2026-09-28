@@ -59,12 +59,17 @@ final class DocumentAudioPlayer {
     /// How many pieces of sound are on the engine right now.
     var scheduledCount: Int { playing.count }
 
-    /// Whether the engine's output is turned right down: the transport's
-    /// volume button. The pieces keep playing silently, so turning it back up
-    /// is in step with the picture rather than restarting anything.
-    func setMuted(_ muted: Bool) {
-        engine.mainMixerNode.outputVolume = muted ? 0 : 1
+    /// How loud the engine's output is: the transport's speaker and slider
+    /// (`PlayerVolume.outputGain`). Muted, the pieces keep playing silently,
+    /// so turning it back up is in step with the picture rather than
+    /// restarting anything.
+    func setOutputGain(_ gain: Double) {
+        engine.mainMixerNode.outputVolume = Float(min(max(0, gain), 1))
     }
+
+    /// What the engine's output is set to right now, read back off the engine
+    /// itself so a walk checks what is heard rather than what was asked for.
+    var outputGain: Double { Double(engine.mainMixerNode.outputVolume) }
 
     /// Start the sound from a moment of the document's clock.
     ///

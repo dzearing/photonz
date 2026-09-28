@@ -128,6 +128,13 @@ final class ScrubAudioPlayer {
         return true
     }
 
+    /// How loud it is heard: the transport's speaker and slider, the same
+    /// level a playthrough is heard at.
+    func setOutputGain(_ gain: Double) {
+        let held = Float(min(max(0, gain), 1))
+        Task { [engine] in await engine.setOutputGain(held) }
+    }
+
     /// The hand let go. Everything stops at once and every node goes back:
     /// what is under the playhead when nobody is dragging is a picture, not a
     /// sound.
@@ -180,6 +187,10 @@ actor ScrubAudioEngine {
         guard !nodes.isEmpty, !running else { return }
         engine.prepare()
         running = (try? engine.start()) != nil
+    }
+
+    func setOutputGain(_ gain: Float) {
+        engine.mainMixerNode.outputVolume = gain
     }
 
     /// Play one tick's worth: a grain per piece of sound under the playhead.

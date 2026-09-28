@@ -1012,6 +1012,10 @@ struct DocumentTransportBar: View {
 ///   taken off every layer before anything is written.
 struct MixMeter: View {
     @Environment(EditorState.self) private var editorState
+    /// With its name in front, the way the timeline's bar names Easing: on a
+    /// bar of controls a bare capsule reads as a slider to reach for, which
+    /// is what the user took it for on 2026-09-28.
+    var labelled = false
 
     /// How wide the bar is. Enough to read a rise and a fall in, short enough
     /// that it never crowds the buttons it sits beside.
@@ -1020,6 +1024,13 @@ struct MixMeter: View {
     var body: some View {
         if Experiments.shared.mixLoudnessEnabled, editorState.documentHasAudio {
             HStack(spacing: 5) {
+                if labelled {
+                    Text("MIX")
+                        .font(.system(size: 10, weight: .semibold))
+                        .tracking(0.9)
+                        .foregroundStyle(VideoKit.Palette.faint)
+                        .fixedSize()
+                }
                 bar
                 if editorState.isMixHeldDown { overMark }
             }

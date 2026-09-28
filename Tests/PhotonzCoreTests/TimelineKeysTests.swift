@@ -341,6 +341,32 @@ struct ExpectTimelineStepTests {
         #expect(PlaytestStep.names.contains("expectTimeline"))
     }
 
+    @Test("It claims the transport's volume: the slider, the mute, and what the engine is putting out")
+    func volume() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "steps": [ { "do": "expectTimeline", "volumePercent": 20, "muted": false, "outputGain": 0.04 } ] }
+        """.utf8))
+        guard case .expectTimeline(let claim) = script.steps[0] else {
+            Issue.record("expectTimeline"); return
+        }
+        #expect(claim.volumePercent == 20)
+        #expect(claim.muted == false)
+        #expect(claim.outputGain == 0.04)
+        #expect(claim.claimsSomething)
+        let alone = try PlaytestScript.decode(Data("""
+        { "steps": [ { "do": "expectTimeline", "muted": true } ] }
+        """.utf8))
+        guard case .expectTimeline(let mutedOnly) = alone.steps[0] else {
+            Issue.record("expectTimeline"); return
+        }
+        #expect(mutedOnly.claimsSomething)
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try PlaytestScript.decode(Data("""
+            { "steps": [ { "do": "expectTimeline", "volumePercent": 140 } ] }
+            """.utf8))
+        }
+    }
+
     @Test("It claims which of the timeline's own tools is in hand")
     func timelineTool() throws {
         let script = try PlaytestScript.decode(Data("""

@@ -81,15 +81,22 @@ struct TimelineDock: View {
         VideoKit.TransportBar(current: editorState.documentTimecode
                                   + (editorState.shuttleReading.map { "  \($0)" } ?? ""),
                               duration: editorState.documentLengthTimecode) {
+            // QuickTime's speaker and slider. How loud YOU are listening,
+            // not the document's own levels, which are the clips' Volume in
+            // the panel. The mix meter used to sit here, drawn like a slider
+            // track that did nothing when clicked (2026-09-28): it lives on
+            // the timeline's own bar now, where the mix is edited.
             VideoKit.TransportButton(
-                symbol: editorState.isDocumentMuted ? "speaker.slash.fill" : "speaker.wave.2.fill",
-                label: editorState.isDocumentMuted ? "Unmute" : "Mute") {
+                symbol: Self.speakerSymbol(editorState.playerVolume.tier),
+                label: editorState.playerVolume.isSilent ? "Unmute" : "Mute") {
                     editorState.toggleDocumentMute()
                 }
-                .panelHelp(editorState.isDocumentMuted ? "Turn the sound back on" : "Turn the sound off")
+                .panelHelp(editorState.playerVolume.isSilent ? "Turn the sound back on" : "Turn the sound off")
                 .playtestControl("Volume", detail: "Transport")
-                .panelReadout(editorState.isDocumentMuted ? "sound off" : "sound on")
-            MixMeter()
+                .panelReadout(editorState.playerVolume.isSilent ? "sound off" : "sound on")
+            TransportVolumeSlider(volume: editorState.playerVolume,
+                                  onSet: { editorState.setPlayerVolumeLevel($0) },
+                                  onNudge: { editorState.nudgePlayerVolume(by: $0) })
         } controls: {
             VideoKit.TransportButton(symbol: "backward.end.fill", label: "Go to Start") {
                 editorState.goToDocumentStart()
@@ -127,6 +134,15 @@ struct TimelineDock: View {
             }
         }
         .tutorialAnchor(.video(.transport))
+    }
+
+    static func speakerSymbol(_ tier: PlayerVolume.Tier) -> String {
+        switch tier {
+        case .off: "speaker.slash.fill"
+        case .low: "speaker.fill"
+        case .medium: "speaker.wave.1.fill"
+        case .high: "speaker.wave.2.fill"
+        }
     }
 
     /// Where the playhead is in the WHOLE document. The scrubber always
@@ -222,6 +238,10 @@ struct TimelineDock: View {
                     .fixedSize()
             }
             if editorState.timelineFileHover == nil, editorState.timelineTransitionHover == nil { keyBar }
+            // How loud the mix is, beside the tracks that make it, as
+            // Premiere keeps its meters beside the timeline. Labelled and
+            // knobless, so it never reads as the volume slider.
+            MixMeter(labelled: true)
             closeButton
         }
         .padding(.vertical, 6)
@@ -898,5 +918,132 @@ private struct MagnetArc: Shape {
         path.addLine(to: CGPoint(x: rect.minX + armWidth, y: rect.minY + top))
         path.closeSubpath()
         return path
+    }
+}
+
+
+// MARK: - The volume slider
+
+/// The transport's volume slider, beside the speaker: a short track with a
+/// knob, styled as a smaller sibling of the scrubber. A click anywhere on it
+/// jumps there, a drag is heard as it moves, and the wheel over it turns it
+/// up and down (`PlayerVolume`).
+///
+/// Neutral rather than accent, so it stays quieter than the scrubber it sits
+/// in front of; the fill greys out while muted, and the knob sits at the foot.
+struct TransportVolumeSlider: View {
+    let volume: PlayerVolume
+    let onSet: (Double) -> Void
+    let onNudge: (Double) -> Void
+
+    @State private var isHovering = false
+    @State private var isDragging = false
+
+    static let width: CGFloat = 64
+    static let hitHeight: CGFloat = 24
+    static let knobWidth: CGFloat = 14
+    static let knobHeight: CGFloat = 10
+
+    var body: some View {
+        let lifted = isHovering || isDragging
+        let x = PlayerVolume.knobCentre(forFraction: volume.sliderFraction,
+                                        width: Self.width, knob: Self.knobWidth)
+        ZStack(alignment: .leading) {
+            Capsule()
+                .fill(VideoKit.Palette.lineStrong)
+                .frame(height: lifted ? 5 : 4)
+            Capsule()
+                .fill(VideoKit.Palette.dim)
+                .frame(width: max(0, x), height: lifted ? 5 : 4)
+            Capsule()
+                .fill(LinearGradient(colors: [.white, Color(white: 0.9)],
+                                     startPoint: .top, endPoint: .bottom))
+                .overlay(Capsule().strokeBorder(VideoKit.Palette.edgeLo))
+                .shadow(color: .black.opacity(0.28), radius: 1.5, y: 1)
+                .frame(width: Self.knobWidth, height: Self.knobHeight)
+                .scaleEffect(lifted ? 1.12 : 1)
+                .offset(x: x - Self.knobWidth / 2)
+        }
+        .frame(width: Self.width, height: Self.hitHeight)
+        // The press, the drag and the wheel are taken in AppKit rather than
+        // by a SwiftUI drag, which only starts in the app in front: this way
+        // the first click on a window you were not in already sets the level,
+        // the way the zoom readout answers one (`ZoomReadoutClickLid`).
+        .overlay {
+            VolumeTrackSurface(
+                onPress: { x in
+                    isDragging = true
+                    onSet(PlayerVolume.fraction(atX: x, width: Self.width, knob: Self.knobWidth))
+                },
+                onRelease: { isDragging = false },
+                onWheel: { event in
+                    // Up and right are louder whichever way the Mac scrolls.
+                    let sign: Double = event.isDirectionInvertedFromDevice ? -1 : 1
+                    let step = PlayerVolume.wheelStep(dx: -sign * Double(event.scrollingDeltaX),
+                                                      dy: sign * Double(event.scrollingDeltaY),
+                                                      precise: event.hasPreciseScrollingDeltas)
+                    if step != 0 { onNudge(step) }
+                })
+        }
+        // What a walk presses is the knob's travel, so "20% across" lands the
+        // knob at 20%, which is where a person aiming for it would click.
+        .overlay {
+            Color.clear
+                .playtestControl("Volume Level", detail: "Transport")
+                .padding(.horizontal, Self.knobWidth / 2)
+                .allowsHitTesting(false)
+        }
+        .kitHover("Volume Level") { isHovering = $0 }
+        .animation(.easeOut(duration: 0.12), value: lifted)
+        .panelHelp("Volume")
+        .panelReadout("volume \(volume.percent)%")
+        .accessibilityElement()
+        .accessibilityLabel("Volume")
+        .accessibilityValue("\(volume.percent) percent")
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment: onNudge(0.1)
+            case .decrement: onNudge(-0.1)
+            @unknown default: break
+            }
+        }
+    }
+}
+
+/// The slider's hand: presses, drags and the wheel, straight from AppKit.
+private struct VolumeTrackSurface: NSViewRepresentable {
+    let onPress: (CGFloat) -> Void
+    let onRelease: () -> Void
+    let onWheel: (NSEvent) -> Void
+
+    func makeNSView(context: Context) -> SurfaceView {
+        let view = SurfaceView()
+        view.setAccessibilityElement(false)
+        update(view)
+        return view
+    }
+
+    func updateNSView(_ view: SurfaceView, context: Context) { update(view) }
+
+    private func update(_ view: SurfaceView) {
+        view.onPress = onPress
+        view.onRelease = onRelease
+        view.onWheel = onWheel
+    }
+
+    final class SurfaceView: NSView {
+        var onPress: ((CGFloat) -> Void)?
+        var onRelease: (() -> Void)?
+        var onWheel: ((NSEvent) -> Void)?
+
+        override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+        override func mouseDown(with event: NSEvent) { press(event) }
+        override func mouseDragged(with event: NSEvent) { press(event) }
+        override func mouseUp(with event: NSEvent) { onRelease?() }
+        override func scrollWheel(with event: NSEvent) { onWheel?(event) }
+
+        private func press(_ event: NSEvent) {
+            onPress?(convert(event.locationInWindow, from: nil).x)
+        }
     }
 }

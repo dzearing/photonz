@@ -397,6 +397,7 @@ extension EditorState {
     var audioPlayer: DocumentAudioPlayer {
         if let already = audioPlayerStorage { return already }
         let player = DocumentAudioPlayer()
+        player.setOutputGain(playerVolume.outputGain)
         audioPlayerStorage = player
         return player
     }
@@ -406,17 +407,43 @@ extension EditorState {
     func startAudio() {
         guard documentHasAudio else { return }
         loadSoundShapes()
-        audioPlayer.setMuted(isDocumentMuted)
+        audioPlayer.setOutputGain(playerVolume.outputGain)
         audioPlayer.play(audioMix, fromMS: documentTimeMS)
     }
 
-    /// The volume button on the transport: the sound off at the speaker, or
-    /// back on. A playthrough in progress goes quiet at once and keeps its
-    /// place, so turning the sound back on picks up where the picture is.
+    /// The speaker on the transport: the sound off, or back on at the level it
+    /// had. A playthrough in progress goes quiet at once and keeps its place,
+    /// so turning the sound back on picks up where the picture is.
     func toggleDocumentMute() {
-        isDocumentMuted.toggle()
-        audioPlayerStorage?.setMuted(isDocumentMuted)
-        if isDocumentMuted { scrubAudioStorage?.end() }
+        var volume = playerVolume
+        volume.toggleMute()
+        applyPlayerVolume(volume)
+    }
+
+    /// The slider on the transport: a click, a drag or the wheel. Heard at
+    /// once, playing or not, and remembered for the next recording.
+    func setPlayerVolumeLevel(_ level: Double) {
+        var volume = playerVolume
+        volume.setLevel(level)
+        applyPlayerVolume(volume)
+    }
+
+    /// The wheel over the slider, by a share of its length.
+    func nudgePlayerVolume(by delta: Double) {
+        var volume = playerVolume
+        volume.nudge(by: delta)
+        applyPlayerVolume(volume)
+    }
+
+    private func applyPlayerVolume(_ volume: PlayerVolume) {
+        guard volume != playerVolume else { return }
+        if volume.level != playerVolume.level {
+            UserDefaults.standard.set(volume.level, forKey: Self.playerVolumeLevelKey)
+        }
+        playerVolume = volume
+        audioPlayerStorage?.setOutputGain(volume.outputGain)
+        scrubAudioStorage?.setOutputGain(volume.outputGain)
+        if volume.isSilent { scrubAudioStorage?.end() }
     }
 
     func stopAudio() {
@@ -447,7 +474,8 @@ extension EditorState {
     /// sound twice.
     func beginScrubAudition() {
         guard Experiments.shared.scrubAuditionEnabled, documentHasAudio,
-              !isDocumentPlaying, !isDocumentMuted else { return }
+              !isDocumentPlaying, !playerVolume.isSilent else { return }
+        scrubAudio.setOutputGain(playerVolume.outputGain)
         scrubAudio.begin(audioMix, atMS: documentTimeMS)
     }
 

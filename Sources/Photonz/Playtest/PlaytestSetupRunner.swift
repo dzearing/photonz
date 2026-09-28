@@ -87,8 +87,10 @@ extension PlaytestMemory {
             // walk before it stopped watching (`RecordingPlaces`).
             // And which transition ⌘T puts on a cut: a walk that picked Push
             // as the default would otherwise hand every later walk a push.
+            // And how loud the transport is listening, which is the person's
+            // and lasts across recordings.
             [EditorState.motionStripOpenKey, RecordingPlaceStore.defaultsKey,
-             DefaultTransitionStore.defaultsKey]
+             DefaultTransitionStore.defaultsKey, EditorState.playerVolumeLevelKey]
         case .shelf:
             // Not a setting at all: the shared shelf is a file, emptied in
             // `perform` beside the settings it names.

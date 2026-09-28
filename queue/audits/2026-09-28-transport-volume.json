@@ -1,0 +1,27 @@
+{
+  "feature": "A volume slider on the transport",
+  "epic": "video-audio",
+  "summary": "The speaker on the transport now has a real volume slider beside it: click anywhere on it, drag it, or scroll over it, and you hear the change at once. The level follows you to the next recording. The grey bar that looked like a slider was the mix meter; it now sits on the timeline's own bar with MIX in front of it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any recording with sound. Walk: Scripts/playtest/transport-volume-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Press space to play, then click a fifth of the way along the slider beside the speaker.", "shot": "2026-09-28-transport-volume-1-playing-at-twenty-sc.png" },
+    { "do": "Drag the knob left and right while it plays." },
+    { "do": "Click the speaker to mute, then click it again.", "shot": "2026-09-28-transport-volume-2-muted-sc.png" },
+    { "do": "Scroll up and down with the pointer over the slider." },
+    { "do": "Press Cmd-2 for Edit and find the MIX meter at the right of the timeline's bar.", "shot": "2026-09-28-transport-volume-3-edit-paused-sc.png" },
+    { "do": "Close the recording and open it again: the slider is where you left it.", "shot": "2026-09-28-transport-volume-4-remembered-sc.png" }
+  ],
+  "evaluate": [
+    "Does a click on the slider land the knob where you clicked?",
+    "Is half way on the slider about half as loud as you expect, not almost full?",
+    "Does the MIX meter on the timeline bar still read as a meter, not a control?",
+    "Should mute also be remembered for the next recording, as the level is?"
+  ],
+  "rough": [
+    "Beyond the mock: video.html draws only a speaker button at .transport .vol. The slider is added at the user's ask, in the scrubber's style, smaller and neutral rather than accent.",
+    "The mix meter moved off the transport onto the timeline's bar, so in View mode there is no meter at all.",
+    "Mute belongs to the window and is not remembered; the level is remembered per person.",
+    "Dragging the knob was checked by clicks only. A walk cannot make a real drag without the Mac to itself; the drag uses the same handler as the click."
+  ]
+}

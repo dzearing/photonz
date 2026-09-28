@@ -2156,6 +2156,9 @@ private final class Run {
         case .expectOneNumberPerName:
             note(number, step.name, try checkOneNumberPerName(), state: describe())
 
+        case .wheel(let control, let by):
+            note(number, step.name, try await turnWheel(over: control, by: by), state: describe())
+
         case .scrollPanel(let row, let by):
             let rows = try panelTargets().filter { $0.kind == .row }
             let target: PanelTargetView
@@ -11077,7 +11080,24 @@ private final class Run {
             + (editor.isInspectorShown ? ", panel showing" : ", no panel")
             + (editor.isWatching ? ", no tool bar" : ", tool bar")
             + ", \(editor.activeTool.rawValue) in hand"
+            + ", volume \(editor.playerVolume.percent)%"
+            + (editor.playerVolume.isMuted ? " muted" : "")
+            + ", engine out " + String(format: "%.3f", editor.audioPlayer.outputGain)
         var wrong: [String] = []
+        if let want = claim.volumePercent, want != editor.playerVolume.percent {
+            wrong.append("the volume slider reads \(editor.playerVolume.percent)%, not \(want)%")
+        }
+        if let want = claim.muted, want != editor.playerVolume.isMuted {
+            wrong.append(editor.playerVolume.isMuted ? "the speaker is muted" : "the speaker is not muted")
+        }
+        if let want = claim.outputGain {
+            // Off the ENGINE, not off the state: what a person hears.
+            let out = editor.audioPlayer.outputGain
+            if abs(out - want) > 0.01 {
+                wrong.append("the sound engine is putting out " + String(format: "%.3f", out)
+                    + ", not " + String(format: "%.3f", want))
+            }
+        }
         if let want = claim.open, want != editor.isMotionStripOpen {
             wrong.append(editor.isMotionStripOpen ? "the timeline's tracks are open" : "the timeline's tracks are not showing")
         }
@@ -13335,6 +13355,36 @@ private final class Run {
             with: type, location: view.convert(viewPoint, to: nil), modifierFlags: flags,
             timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: window.windowNumber,
             context: nil, eventNumber: 0, clickCount: clicks, pressure: 1)
+    }
+
+    /// Turns the wheel over a named control that takes the wheel itself, the
+    /// transport's volume slider being the first. A real wheel event, handed to
+    /// whatever view the window finds under the control's middle, the way
+    /// `scrollPanel` hands one to its scroll view: a wheel event made up in
+    /// Quartz names no window, so AppKit would route it nowhere.
+    private func turnWheel(over control: String, by points: Double) async throws -> String {
+        let (target, _) = try await reachableTarget(control, in: nil)
+        guard let window = target.window, let content = window.contentView,
+              let frame = content.superview ?? Optional(content) else {
+            throw Failure(description: "the control \"\(control)\" is in no window to turn the wheel over")
+        }
+        guard let hit = frame.hitTest(frame.convert(target.point, from: nil)) else {
+            throw Failure(description: "nothing in the window is under \"\(control)\" to take the wheel")
+        }
+        guard points.isFinite,
+              let wheel = CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 1,
+                                  wheel1: Int32(min(max(points.rounded(), -10_000), 10_000)),
+                                  wheel2: 0, wheel3: 0) else {
+            throw Failure(description: "could not make a wheel event for \"\(control)\"")
+        }
+        wheel.setIntegerValueField(.scrollWheelEventIsContinuous, value: 1)
+        guard let event = NSEvent(cgEvent: wheel) else {
+            throw Failure(description: "could not make a wheel event for \"\(control)\"")
+        }
+        hit.scrollWheel(with: event)
+        await sleep(0.3)
+        return "turned the wheel \(Int(points.rounded()))pt over \"\(target.name)\" at window "
+            + short(target.point) + ", taken by \(type(of: hit))"
     }
 
     /// Turns the wheel over whatever scrolls behind `target`.

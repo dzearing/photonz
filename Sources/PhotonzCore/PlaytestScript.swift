@@ -3225,6 +3225,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// a walk started from has scrolled away and is no longer built, so naming
     /// one every time is a step that stops working halfway down the list.
     case scrollPanel(row: String?, by: Double)
+    /// Turn the wheel over a named control that takes it itself, by `by`
+    /// points: positive is up, the way a person turns a volume up. The
+    /// transport's volume slider is the first (2026-09-28); a list that
+    /// scrolls is `scrollPanel`.
+    case wheel(control: String, by: Double)
     /// Scroll the dock until a named control is where a person could press it,
     /// however far that turns out to be.
     ///
@@ -3357,7 +3362,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dropComponent",
         "clickRuler", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
-        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag",
+        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag",
     ].sorted()
 
     /// The `do` name this step answers to.
@@ -3461,6 +3466,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectListStill: "expectListStill"
         case .expectEdited: "expectEdited"
         case .scrollPanel: "scrollPanel"
+        case .wheel: "wheel"
         case .reveal: "reveal"
         case .describe: "describe"
         case .clearClipboard: "clearClipboard"
@@ -4340,12 +4346,22 @@ public enum PlaytestStep: Sendable, Equatable {
                 tool: try f.optionalString("tool"),
                 timelineTool: f.has("timelineTool") ? try f.enumValue("timelineTool", TimelineTool.self) : nil,
                 tracks: f.has("tracks") ? try f.optionalStrings("tracks") : nil,
-                mode: f.has("mode") ? try f.enumValue("mode", ViewEditMode.self) : nil)
+                mode: f.has("mode") ? try f.enumValue("mode", ViewEditMode.self) : nil,
+                volumePercent: try f.optionalNumber("volumePercent").map { Int($0) },
+                muted: fields["muted"] as? Bool,
+                outputGain: try f.optionalNumber("outputGain"))
+            if let percent = claim.volumePercent, !(0...100).contains(percent) {
+                throw f.invalid("volumePercent", "the volume slider reads 0 to 100, not \(percent)")
+            }
+            if let gain = claim.outputGain, !(0...1).contains(gain) {
+                throw f.invalid("outputGain", "the engine puts out 0 to 1, not \(gain)")
+            }
             guard claim.claimsSomething else {
                 throw f.invalid("playheadMS", "expectTimeline has to claim something: \"playheadMS\", "
                     + "\"keyboard\", \"rate\", \"blade\", \"markInMS\", \"markOutMS\", \"hasIn\", "
                     + "\"hasOut\", \"markers\", \"rulerMatches\", \"rulerAtPlayhead\", \"lengthMS\", "
-                    + "\"open\", \"mode\", \"tool\", \"timelineTool\" or \"tracks\"")
+                    + "\"open\", \"mode\", \"tool\", \"timelineTool\", \"tracks\", "
+                    + "\"volumePercent\", \"muted\" or \"outputGain\"")
             }
             self = .expectTimeline(claim)
         case "expectPlaybackNeverBlank":
@@ -4437,6 +4453,8 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .expectIconPreviews(sides: try f.optionalNumbers("sides").map { Int($0) },
                                        absent: absent)
+        case "wheel":
+            self = .wheel(control: try f.string("control"), by: try f.number("by"))
         case "scrollPanel":
             self = .scrollPanel(row: fields["row"] as? String, by: try f.number("by"))
         case "reveal":
@@ -4652,6 +4670,13 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
     public var timelineTool: TimelineTool?
     /// The tracks by name, top to bottom, empty ones included.
     public var tracks: [String]?
+    /// The transport's volume slider reads this, as a whole percentage.
+    public var volumePercent: Int?
+    /// The transport's speaker is muted (true) or sounding (false).
+    public var muted: Bool?
+    /// What the sound engine is putting out, read off the engine itself,
+    /// nought to one, to a hundredth.
+    public var outputGain: Double?
 
     public init(playheadMS: Int? = nil, withinMS: Int = 0, keyboard: Keyboard? = nil, rate: Double? = nil,
                 blade: Bool? = nil, markInMS: Int? = nil, markOutMS: Int? = nil,
@@ -4659,7 +4684,11 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
                 rulerMatches: Bool? = nil, rulerAtPlayhead: String? = nil, lengthMS: Int? = nil,
                 snapping: Bool? = nil, open: Bool? = nil, tool: String? = nil,
                 timelineTool: TimelineTool? = nil, tracks: [String]? = nil,
-                mode: ViewEditMode? = nil) {
+                mode: ViewEditMode? = nil, volumePercent: Int? = nil, muted: Bool? = nil,
+                outputGain: Double? = nil) {
+        self.volumePercent = volumePercent
+        self.muted = muted
+        self.outputGain = outputGain
         self.mode = mode
         self.tracks = tracks
         self.open = open
@@ -4685,6 +4714,7 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
         open != nil || mode != nil || tool != nil || timelineTool != nil || snapping != nil || playheadMS != nil || keyboard != nil || rate != nil || blade != nil || markInMS != nil
             || markOutMS != nil || hasIn != nil || hasOut != nil || markers != nil
             || rulerMatches != nil || rulerAtPlayhead != nil || lengthMS != nil || tracks != nil
+            || volumePercent != nil || muted != nil || outputGain != nil
     }
 }
 

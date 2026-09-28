@@ -1714,6 +1714,25 @@ struct PlaytestScriptTests {
         #expect(PlaytestStep.names.contains("press"))
     }
 
+    /// The wheel turned over a named control rather than a list: the
+    /// transport's volume slider takes it (2026-09-28).
+    @Test func aWheelStepNamesAControlAndHowFar() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "wheel", "control": "Volume Level", "by": 40 } ] }
+        """)
+        guard case .wheel(let control, let by) = script.steps[0] else { Issue.record("wheel"); return }
+        #expect(control == "Volume Level")
+        #expect(by == 40)
+        #expect(script.steps[0].name == "wheel")
+        #expect(PlaytestStep.names.contains("wheel"))
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("wheel"))
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "wheel", "by": 40 } ] }
+            """)
+        }
+    }
+
     @Test func aScrollPanelStepNamesARowAndHowFarToGo() throws {
         let script = try decode("""
         { "steps": [ { "do": "scrollPanel", "row": "Background", "by": -400 } ] }

@@ -174,6 +174,11 @@ public enum PlaytestLockSafety {
         "expectWindows", "hover", "key", "measureMode", "move",
         "open", "panel", "pinch",
         "press", "readClipboard", "render", "reveal", "scrollPanel", "selectRow", "shortcut",
+        // Added 2026-09-28 by reading, NOT yet watched under a lock: it finds
+        // its control in the app's own register, exactly as `press` does, and
+        // hands the window a wheel event. The first locked run of
+        // transport-volume-walk is its watch; if it refuses there, take it out.
+        "wheel",
         "snapshot",
         "tool", "toolBar", "type", "wait", "waitFor", "writePicture", "writeRecording", "writeSVG",
         // A video export asks the editor to write a file and then opens the
