@@ -1648,6 +1648,15 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// only drawn while the two clips actually meet.
     public internal(set) var arrivalTransition: ClipTransition?
 
+    /// The clips this layer holds, for clips merged into one
+    /// (`MergedClip.swift`). Nil is every other layer, which is every layer
+    /// in every document written before this existed.
+    ///
+    /// Not the layers list's children on purpose: they are on a clock of
+    /// their own, and nothing that walks the document may meet them and move
+    /// them on the document's.
+    public internal(set) var merged: MergedClip?
+
     /// The recording this layer plays, for a layer that plays one
     /// (`MovieClip.swift`). Nil is every layer in every document written
     /// before this existed, and every layer in every screenshot ever.
@@ -1776,6 +1785,9 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         // along with the stretch they are pieces of.
         copy.cuts = cuts
         copy.movie = movie
+        // A copy of clips merged into one holds copies of them, so no clip
+        // is in two places under one id.
+        copy.merged = merged?.reidentified()
         // A copy of a clip whose sound was taken off is still a clip with no
         // sound on it, and a copy of a sound plays at the level the original
         // was set to.

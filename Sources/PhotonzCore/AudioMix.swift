@@ -458,6 +458,13 @@ extension PhotonzDocument {
         var heard: [TransitionSoundPiece: HeardPiece] = [:]
         var crossings: [TransitionSoundCrossing] = []
         forEachLayer { layer in
+            // Clips merged into one are heard as what they hold
+            // (`MergedClip.swift`).
+            if layer.merged != nil {
+                guard layer.isVisible, !silenced.contains(layer.id) else { return }
+                mix += layer.mergedSound(canvasSize: canvasSize, pixelScale: pixelScale)
+                return
+            }
             guard let sound = layer.sound, layer.isVisible, !silenced.contains(layer.id),
                   let time = layer.time,
                   let pieces = layer.clipPieces

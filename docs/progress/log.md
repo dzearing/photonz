@@ -20107,3 +20107,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
   `captionsWriteQuietly`; new steps `captionsExpectNone`, `captionsWaitToLand`.
 - New walk `captions-on-demand-walk`. `captions-are-one-layer-walk` was already
   failing at its Size menu before this change.
+
+## 2026-09-28 — Merge a range into one clip, and break it apart
+
+- New `Sources/PhotonzCore/MergedClip.swift`: a merged clip is a layer (`Layer.merged`) holding the whole clips it covers on its own clock; its `time` is a window on that clock like a clip on its file, so move/trim/split/transitions reuse clip code. Drawing, frame fetches, the audio mix, edit-point transitions, project media and package images all read through it; nothing walks inside it.
+- Right click a ruler range: Merge into One Clip (one per track). Right click the merged clip: Break Apart (also ⇧⌘G), which heals the cuts at the range edges.
+- Walk: `Scripts/playtest/merge-a-range-into-one-clip-walk.json`. Audit: `queue/audits/2026-09-28-merge-range-into-one-clip.json`.
+- Open: no waveform on a merged clip's sound bar; no canvas transform for a merged clip.

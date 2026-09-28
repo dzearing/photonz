@@ -249,5 +249,5 @@ extension Layer {
     /// Whether this layer has a file behind it, which is what decides whether
     /// time inserted into it is a pause in what it is playing or simply more
     /// of it being on screen.
-    var holdsMedia: Bool { movie != nil || sound != nil }
+    var holdsMedia: Bool { movie != nil || sound != nil || merged != nil }
 }

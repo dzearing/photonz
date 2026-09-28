@@ -62,6 +62,11 @@ public enum ProjectMedia {
             if let movie = layer.movie { meet(.recording(movie)) }
             if case .sound(let sound) = layer.content { meet(.sound(sound)) }
         }
+        // ...and what clips merged into one hold (`MergedClip.swift`).
+        for layer in document.layersInsideMergedClips {
+            if let movie = layer.movie { meet(.recording(movie)) }
+            if case .sound(let sound) = layer.content { meet(.sound(sound)) }
+        }
         return order.compactMap { found[$0] }
     }
 

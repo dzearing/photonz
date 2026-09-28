@@ -367,7 +367,9 @@ extension PhotonzDocument {
                                   readWords: [ImageRef: String] = [:]) -> ContentsSelection {
         let picked = layerIDs.compactMap { layer(id: $0) }
         guard !picked.isEmpty else { return .none }
-        let containers = picked.filter(\.isGroup)
+        // Clips merged into one hold clips on a clock, not pieces on a
+        // page: there is nothing in one to arrange (`MergedClip.swift`).
+        let containers = picked.filter { $0.isGroup && $0.merged == nil }
         guard !containers.isEmpty else { return .none }
         let own = containers.filter { ownsContentRules(id: $0.id) }
         let isFollowed = own.isEmpty

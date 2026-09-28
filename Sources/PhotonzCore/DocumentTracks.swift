@@ -119,7 +119,14 @@ extension Layer {
 
     /// A clip still carrying its own recording's sound, which the timeline
     /// draws as a linked segment on an audio track under it.
-    public var hasLinkedSound: Bool { isClip && !isSoundOnly && sound != nil }
+    ///
+    /// Clips merged into one speak for the clips they hold: a merged clip of
+    /// picture whose clips have sound draws that sound under it too
+    /// (`MergedClip.swift`).
+    public var hasLinkedSound: Bool {
+        if let merged { return !merged.isSoundOnly && merged.speaks }
+        return isClip && !isSoundOnly && sound != nil
+    }
 
     /// Whether this layer puts anything on the timeline: a stretch of time or
     /// something moving, on itself or anywhere inside it.

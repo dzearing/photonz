@@ -1,0 +1,28 @@
+{
+  "feature": "Merge a range into one clip, and break it apart",
+  "epic": "video-cutting",
+  "summary": "Draw a range across a cut, right click, Merge into One Clip: the covered parts of the clips on each track become one clip that plays and sounds the same. Right click it, Break Apart, and the original clips come back whole.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The walk is merge-a-range-into-one-clip-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording, trim it to 0:07 and drop a second clip right after it on V1.", "shot": "2026-09-28-merge-range-1-range-across-the-cut.png" },
+    { "do": "Drag along the ruler from 0:05 to 0:09, right click the range, choose Merge into One Clip.", "shot": "2026-09-28-merge-range-2-merged.png" },
+    { "do": "Put the playhead at 0:08 and press space: the second clip plays inside the merged one.", "shot": "2026-09-28-merge-range-2-merged-at-8s.png" },
+    { "do": "Press Cmd-Z: the two clips are back, meeting at 0:07.", "shot": "2026-09-28-merge-range-3-undone.png" },
+    { "do": "Merge again, then drag the merged clip's left edge outward: it reveals more of the recording, like a clip trims into its file." },
+    { "do": "Right click the merged clip, choose Break Apart (or press Shift-Cmd-G).", "shot": "2026-09-28-merge-range-5-broken-apart.png" }
+  ],
+  "evaluate": [
+    "Does Merge into One Clip sit where you'd look for it in the range's right click menu?",
+    "Is one merged clip per track right, or would you rather have everything under the range become one clip on one track, the way Premiere nests?",
+    "Does the merged clip need to look different from an ordinary clip on the timeline, the way Final Cut marks a compound clip?",
+    "Is Break Apart the right name, or would you look for Ungroup or Unnest?"
+  ],
+  "rough": [
+    "No mock covers merging, so the bar looks like any clip, called Merged Clip, with nothing marking it as holding clips.",
+    "The sound under a merged clip is drawn as a plain bar with no waveform, though it plays.",
+    "A merged clip can't be moved or scaled on the canvas; it only has a place on the timeline.",
+    "A transition on a cut inside a merged clip after it is split is not drawn, and a merged clip slowed down or sped up plays no sound.",
+    "A transition on a cut exactly at the range's end is paid for from the merged clip's spare; if there is none the transition shrinks."
+  ]
+}

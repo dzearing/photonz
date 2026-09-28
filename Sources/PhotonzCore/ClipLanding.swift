@@ -252,7 +252,7 @@ extension PhotonzDocument {
     /// Put `parts` where one clip was: the first keeps the clip's identity, so
     /// whatever was picked or pointed at it still is, and each after it is a
     /// new layer just above, on the same track, called the same.
-    private mutating func replace(_ id: UUID, with parts: [Layer]) {
+    mutating func replace(_ id: UUID, with parts: [Layer]) {
         guard let first = parts.first else {
             removeLayers(ids: [id])
             return

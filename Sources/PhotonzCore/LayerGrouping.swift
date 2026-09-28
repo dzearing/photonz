@@ -56,6 +56,9 @@ extension PhotonzDocument {
     private func ungroupableMembers(ids: Set<UUID>) -> [UUID] {
         ids.filter { id in
             guard let layer = layer(id: id) else { return false }
+            // Clips merged into one come apart with Break Apart, which is what
+            // ⇧⌘G means on one, the way it is Final Cut's Break Apart key.
+            if layer.merged != nil { return canBreakApart(id) }
             return layer.isGroup && !layer.isLocked
         }
     }
@@ -77,12 +80,16 @@ extension PhotonzDocument {
     public mutating func ungroupLayers(ids: Set<UUID>) -> [UUID] {
         // Deepest first, so dissolving an outer group can't invalidate the
         // path of an inner one still to come.
-        let targets = ungroupableMembers(ids: ids)
+        var freed: [UUID] = []
+        let members = ungroupableMembers(ids: ids)
+        for id in members where layer(id: id)?.merged != nil {
+            freed.append(contentsOf: breakApart(id))
+        }
+        let targets = members.filter { layer(id: $0) != nil && layer(id: $0)?.merged == nil }
             .compactMap { id -> (id: UUID, depth: Int)? in
                 path(of: id).map { (id, $0.count) }
             }
             .sorted { $0.depth > $1.depth }
-        var freed: [UUID] = []
         for target in targets {
             freed.append(contentsOf: ungroupLayer(id: target.id))
         }

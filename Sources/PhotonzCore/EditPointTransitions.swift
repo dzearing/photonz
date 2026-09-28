@@ -185,7 +185,8 @@ extension PhotonzDocument {
     /// either side of its own stretch: its first piece reading early, or its
     /// last running on. Never outside the recording.
     private func readingOn(_ clip: Layer, atMS ms: Int) -> Int? {
-        guard clip.movie != nil, let time = clip.time, let pieces = clip.clipPieces else { return nil }
+        guard clip.movie != nil || clip.merged != nil, let time = clip.time,
+              let pieces = clip.clipPieces else { return nil }
         let index = ms < time.inMS ? 0 : pieces.count - 1
         guard let piece = pieces.piece(at: index) else { return nil }
         let raw = piece.sourceMS(atOffsetMS: ms - time.inMS - pieces.startMS(ofPiece: index),
@@ -196,13 +197,19 @@ extension PhotonzDocument {
 
     /// The frames the borrowed clips need fetched at a moment.
     func editPointFrameRequests(atMS ms: Int) -> [MovieFrameRequest] {
-        editPointMoments(atMS: ms).compactMap { moment in
+        editPointMoments(atMS: ms).flatMap { moment -> [MovieFrameRequest] in
             guard let source = moment.borrowedSourceMS,
-                  let movie = layer(id: moment.borrowed)?.movie else { return nil }
+                  let borrowed = layer(id: moment.borrowed) else { return [] }
+            // A merged clip borrowed reads early or late into what it holds.
+            if let merged = borrowed.merged {
+                return merged.document(canvasSize: canvasSize, pixelScale: pixelScale)
+                    .movieFrames(atTimeMS: source)
+            }
+            guard let movie = borrowed.movie else { return [] }
             let frame = movie.frameSourceMS(atSourceMS: source)
-            return MovieFrameRequest(layerID: Layer.transitionPartnerID(of: moment.onScreen),
-                                     movie: movie, sourceMS: frame,
-                                     ref: movie.frameRef(atSourceMS: frame))
+            return [MovieFrameRequest(layerID: Layer.transitionPartnerID(of: moment.onScreen),
+                                      movie: movie, sourceMS: frame,
+                                      ref: movie.frameRef(atSourceMS: frame))]
         }
     }
 
@@ -238,6 +245,9 @@ extension PhotonzDocument {
             var content = other.content
             if let source = moment.borrowedSourceMS, let movie = other.movie {
                 content = .image(movie.frameRef(atSourceMS: source, holding: framesInHand))
+            } else if let source = moment.borrowedSourceMS, other.merged != nil {
+                content = other.mergedContent(atInnerMS: source, canvasSize: canvasSize,
+                                              pixelScale: pixelScale, framesInHand: framesInHand)
             }
             let borrowed = other.transitionPartner(standingFor: moment.onScreen, showing: content)
             let drawn = moment.onScreenIsOutgoing

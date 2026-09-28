@@ -150,6 +150,41 @@ extension EditorState {
         documentMomentChanged()
     }
 
+    /// Merge into One Clip: whether any track has a clip under the marked
+    /// stretch to merge (`MergedClip.swift`).
+    var canMergeRange: Bool {
+        guard Experiments.shared.cutRecordingEnabled, documentHasTime,
+              let document, let range = document.markedRangeMS else { return false }
+        return document.canMergeRange(range)
+    }
+
+    /// On every track, the parts of the clips inside the marked stretch become
+    /// one clip, as one step to undo, and the clips it made are picked, the
+    /// way Final Cut picks the compound clip it just made.
+    func mergeRangeIntoOneClip() {
+        guard canMergeRange, let range = document?.markedRangeMS else { return }
+        endTrimBeforeCutting()
+        pauseDocument()
+        var made: [UUID] = []
+        perform { made = $0.mergeRange(range) }
+        selectedClipPieceIndex = nil
+        rulerRangeInHand = nil
+        if !made.isEmpty { selectLayers(Set(made)) }
+        documentMomentChanged()
+    }
+
+    /// Break Apart: the clips a merged clip holds, back on its track, picked.
+    func breakApartClip(_ id: UUID) {
+        guard let document, document.canBreakApart(id) else { return }
+        endTrimBeforeCutting()
+        pauseDocument()
+        var freed: [UUID] = []
+        perform { freed = $0.breakApart(id) }
+        selectedClipPieceIndex = nil
+        if !freed.isEmpty { selectLayers(Set(freed)) }
+        documentMomentChanged()
+    }
+
     /// Add Transition: whether the marked stretch has a cut inside it.
     var canAddTransitionInRange: Bool {
         guard Experiments.shared.transitionsAtACutEnabled, documentHasTime,
@@ -202,6 +237,7 @@ extension EditorState {
                                  enabled: canAddTransitionInRange) { self.addTransitionInRange() })
         }
         rows.append(.command("Split at Range Edges", enabled: canSplitAtRangeEdges) { self.splitAtRangeEdges() })
+        rows.append(.command("Merge into One Clip", enabled: canMergeRange) { self.mergeRangeIntoOneClip() })
         rows.append(.separator)
         let takesOut = canTakeOutMarkedStretch
         rows.append(.command("Delete", held ? TimelineMenuKeys.delete : nil, enabled: takesOut) {

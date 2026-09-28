@@ -19,6 +19,7 @@ extension Layer {
     public var timelineTrackKind: TimelineTrackKind {
         if instanceOf != nil { return .component }
         if movie != nil { return .video }
+        if let merged { return merged.isSoundOnly ? .audio : .video }
         switch content {
         case .sound: return .audio
         case .text: return .text

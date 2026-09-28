@@ -45,6 +45,9 @@ extension EditorState {
         /// Final Cut's Add Cross Dissolve. Premiere's ⌘D is Photoshop's
         /// Deselect here, which the canvas keeps.
         static let applyDefaultTransition = MenuShortcut.command("t")
+        /// Final Cut's Break Apart Clip Items, which is Photoshop's Ungroup
+        /// too: the one key that takes a thing made of things apart.
+        static let breakApart = MenuShortcut.commandShift("g")
     }
 
     // MARK: A clip
@@ -76,6 +79,14 @@ extension EditorState {
             self.selectLayer(layerID)
             self.splitClipAtPlayhead()
         })
+        // Clips merged into one open back into their parts.
+        if layer.isMergedClip {
+            rows.append(.command("Break Apart",
+                                 Experiments.shared.layerGroupsEnabled ? TimelineMenuKeys.breakApart : nil,
+                                 enabled: document.canBreakApart(layerID)) {
+                self.breakApartClip(layerID)
+            })
+        }
         // Q and W reach the piece the playhead is standing in, so the rows
         // are offered live only on that piece.
         let playheadPiece = pieces.pieceIndex(atMS: documentTimeMS - time.inMS)

@@ -255,10 +255,21 @@ extension PhotonzDocument {
         let moment = min(max(0, ms), lastDrawableTimeMS)
         var own: [MovieFrameRequest] = []
         forEachLayer { own += $0.movieFrameRequests(atTimeMS: moment) }
+        // Clips merged into one fetch what the clips they hold need
+        // (`MergedClip.swift`).
+        if hasMergedClips {
+            for layer in layers where layer.merged != nil {
+                own += layer.mergedFrameRequests(atTimeMS: moment, canvasSize: canvasSize,
+                                                 pixelScale: pixelScale)
+            }
+        }
         guard hasEditPointTransitions else { return own }
         return own + editPointFrameRequests(atMS: moment)
     }
 
     /// Whether anything in this document plays a recording.
-    public var hasMovies: Bool { layers.contains { $0.containsSelfOrDescendant(where: \.isClip) } }
+    public var hasMovies: Bool {
+        layers.contains { $0.containsSelfOrDescendant(where: \.isClip) }
+            || layersInsideMergedClips.contains(where: \.isClip)
+    }
 }

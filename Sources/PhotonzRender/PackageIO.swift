@@ -97,7 +97,8 @@ public enum PackageIO {
         }
         // Flattened, so a photo that lives inside a group is written to the
         // package too instead of the picture opening blank.
-        for layer in document.flattenedLayers {
+        // ...and what clips merged into one hold (`MergedClip.swift`).
+        for layer in document.flattenedLayers + document.layersInsideMergedClips {
             // A clip's picture is whichever frame of its recording is under
             // the playhead, fetched from the file; it is never kept.
             if layer.movie != nil { continue }

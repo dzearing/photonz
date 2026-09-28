@@ -243,8 +243,22 @@ extension PhotonzDocument {
             $0.withTransitionDrawn(atTimeMS: moment, framesInHand: framesInHand)
         }
         // ...and so does a cut between two clips (`EditPointTransitions.swift`).
-        guard hasEditPointTransitions else { return shown }
-        return withEditPointTransitionsDrawn(shown, atMS: moment, framesInHand: framesInHand)
+        if hasEditPointTransitions {
+            shown = withEditPointTransitionsDrawn(shown, atMS: moment, framesInHand: framesInHand)
+        }
+        // ...and clips merged into one show the clips they hold, drawn at the
+        // moment of their own clock this one lands on (`MergedClip.swift`).
+        // Last, so nothing above samples what they hold on the wrong clock.
+        guard hasMergedClips else { return shown }
+        shown.layers = shown.layers.map { layer in
+            guard layer.merged != nil, layer.isVisible,
+                  let inner = layer.clipMoment(atTimeMS: moment)?.sourceMS else { return layer }
+            var drawn = layer
+            drawn.content = layer.mergedContent(atInnerMS: inner, canvasSize: canvasSize,
+                                                pixelScale: pixelScale, framesInHand: framesInHand)
+            return drawn
+        }
+        return shown
     }
 }
 
