@@ -19956,3 +19956,9 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - `AudioMixSegment.voice` added so two pieces of one clip can sound at once; the player keeps one fader per voice.
 - Tests: `TransitionSoundTests`, `TransitionSoundExportTests` (reads the exported file back). Walk: `transition-carries-the-sound-walk` (new actions `clipPickEditPoint`, `soundExpectCutCarried`).
 - Next: the Audio lane does not draw the cross-fade (audit rough line).
+
+## 2026-09-27: a right-click menu in a walk picture shows every row (go loop)
+
+- The clip menu showed three rows and a scroll arrow only in walk pictures. A real right click (`NSMenu.popUpContextMenu`) slides the whole menu up to fit. The harness had used `NSMenu.popUp(positioning:at:in:)`, which ran it off the screen foot in the probe.
+- `PlaytestHarness.openRowMenu` now opens menus with `popUpContextMenu` and a right mouse down at the walk's point. A photographed menu drawn shorter than its rows fails the walk.
+- All 18 walks that photograph a right-click menu pass; focus-drill reads `menu shown`. Next: nothing owed.
