@@ -307,6 +307,34 @@ extension EditorState {
     }
 }
 
+extension EditorState {
+
+    /// What an MP4 of the document will weigh at this choice, found by writing
+    /// a few stretches of it with the same pictures `writeVideo` draws
+    /// (`DocumentMovieWriter.weigh`). For the Export sheet, which quotes the
+    /// budget until this answers.
+    func weighVideo(quality: VideoExportQuality, size: VideoExportSize? = nil,
+                    captions: CaptionExport = .burnedIn,
+                    range: VideoExportRange = .marked,
+                    onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> Int {
+        guard let document = document?.forExport(captions: captions), document.hasTime
+        else { throw CocoaError(.fileNoSuchFile) }
+        let span = document.exportRangeMS(range)
+        let plan = DocumentVideoExport.plan(range: span, canvasSize: document.canvasSize,
+                                            format: .mp4, quality: quality, size: size)
+        let mix = AudioMixSegment.windowed(document.audioMix(), to: span)
+        let pictures = DocumentFrames(document: document, store: store,
+                                      movieURLs: MovieLibrary.shared.urls(in: document),
+                                      size: plan.size, streaming: true)
+        defer { pictures.putTheStoreBack() }
+        return try await DocumentMovieWriter.weigh(
+            span: span, canvasSize: document.canvasSize, quality: quality, size: size,
+            mix: mix, soundURLs: SoundLibrary.shared.urls(for: mix),
+            frames: { ms in await pictures.frame(atMS: ms) },
+            onProgress: onProgress)
+    }
+}
+
 /// An export that is running: what it is called and how far along it is.
 @MainActor
 @Observable

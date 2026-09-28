@@ -262,6 +262,8 @@ struct VideoExportDialog: View {
             weighTheAnimation()
         }
         .onChange(of: size) { _, _ in weighTheAnimation() }
+        // Words burned into the picture are picture the encoder pays for.
+        .onChange(of: captions) { _, _ in weighTheAnimation() }
         .onDisappear {
             weighing?.cancel()
             weighing = nil
@@ -295,13 +297,27 @@ struct VideoExportDialog: View {
     /// under the row can say what it weighs, and so pressing Export after
     /// reading that number saves the very file that was weighed.
     ///
-    /// A video is never weighed this way: it has a real budget and answers
-    /// instantly (`VideoExportRecipe`).
+    /// A video is weighed from a few stretches of it instead: its budget is on
+    /// the line at once, and the stretches correct it where the picture is
+    /// too busy for the encoder to keep to it (`ExportWeigh.measure`). One
+    /// that is copied as it is weighs what the file on disk weighs, so nothing
+    /// is written for it.
     private func weighTheAnimation() {
-        guard let format = choice.format, format.isAnimatedImage else { weigh.stop(); return }
+        guard let format = choice.format else { weigh.stop(); return }
         let quality = quality
         let size = chosenSize
         let range = range
+        guard format.isAnimatedImage else {
+            guard !RecordingExport.copiesVerbatim(format: format, quality: quality,
+                                                  source: described, size: size)
+            else { weigh.stop(); return }
+            let captions = captions
+            weigh.measure(format: format, quality: quality, size: size) { [editor] onProgress in
+                try await editor.weighVideo(quality: quality, size: size, captions: captions,
+                                            range: range, onProgress: onProgress)
+            }
+            return
+        }
         weigh.weigh(format: format, quality: quality, size: size) { [editor] url, onProgress in
             try await editor.writeVideo(format: format, quality: quality, size: size, to: url,
                                         range: range, onProgress: onProgress)

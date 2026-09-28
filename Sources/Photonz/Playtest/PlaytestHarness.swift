@@ -2959,6 +2959,22 @@ private final class Run {
             try await adopt(landed, window: nil, step: step.name,
                             subject: "a five minute recording with somebody talking in it", number: number)
 
+        case .action(.openScrollingPage):
+            guard let url = await PlaytestScrollingPage.fresh() else {
+                throw Failure(description: "couldn't write the scrolling page")
+            }
+            coordinator.openWindow(.video(standardizing: url))
+            var landed: EditorState?
+            try await poll("the scrolling page to open as a document", within: 30) {
+                landed = PlaytestHarness.readyEditors.last {
+                    $0.recordingURL?.lastPathComponent == PlaytestScrollingPage.fileName
+                }
+                return landed != nil
+            }
+            guard let landed else { throw Failure(description: "no editor opened the scrolling page") }
+            try await adopt(landed, window: nil, step: step.name,
+                            subject: "six seconds of text scrolling past fast", number: number)
+
         // The same five minutes at Retina size, for the Export sheet's Size row.
         case .action(.openLongRetinaTalk):
             guard let url = await PlaytestLongTalk.freshRetina() else {
@@ -5384,6 +5400,10 @@ private final class Run {
                 editor.playtestOpensExportOnRecordingFormat = .mp4
                 editor.playtestOpensExportAtSize = .p1080
                 editor.isExportDialogPresented = true
+            case .exportDialogAsSmallVideo:
+                editor.playtestOpensExportOnRecordingFormat = .mp4
+                editor.playtestOpensExportAtQuality = .small
+                editor.isExportDialogPresented = true
             case .exportDialogAsWholeVideo:
                 editor.playtestOpensExportOnRecordingFormat = .mp4
                 editor.playtestOpensExportOnWholeVideo = true
@@ -5548,7 +5568,7 @@ private final class Run {
                  .videoExportStop,
                  .videoCropMiddle,
                  .openSampleRecording, .openSampleTalk, .openLongTalk, .openLongRetinaTalk,
-                 .openRecordingFromDisk,
+                 .openScrollingPage, .openRecordingFromDisk,
                  .openMissingRecording,
                  .openLandingRecording, .reopenSampleRecording, .editLastCapture:
                 break  // handled above, in the branch that asks for a recording
@@ -11386,6 +11406,32 @@ private final class Run {
         return answer
     }
 
+    /// What the sheet says an MP4 will weigh once it has written its
+    /// stretches, the way the sheet does it (`ExportWeigh.measure`), so a walk
+    /// checks the number a person reads. Nil for anything else, and for a
+    /// video copied as it is, which is never weighed.
+    private func weighMovie(_ format: RecordingFormat, quality: VideoExportQuality,
+                            size: VideoExportSize? = nil, copied: Bool,
+                            measure: @escaping ExportWeigh.Measure) async throws
+        -> RecordingExport.Weighing? {
+        guard format == .mp4, !copied else { return nil }
+        let weigher = ExportWeigh()
+        weigher.measure(format: format, quality: quality, size: size, measure: measure)
+        defer { weigher.stop() }
+        let deadline = Date().addingTimeInterval(180)
+        while weigher.result?.bytes == nil {
+            // A weigh that failed takes its answer away, and the sheet goes on
+            // quoting the budget; so does the walk.
+            guard weigher.result != nil else { return nil }
+            guard Date() < deadline else {
+                throw Failure(description: "the sheet was still working out what the "
+                    + "video would weigh after 180s")
+            }
+            await sleep(0.1)
+        }
+        return weigher.result
+    }
+
     /// Write the open recording out and then READ BACK what landed.
     ///
     /// The save box cannot be driven by a walk, so this hands the exporter the
@@ -11423,11 +11469,18 @@ private final class Run {
         // one (`ExportWeigh`). Do exactly what the sheet does, here, so the
         // number this walk checks against the file is the number a person
         // reads on the sheet rather than a second opinion.
-        let weighed = try await weighAnimated(recordingFormat, quality: preset) {
+        let animation = try await weighAnimated(recordingFormat, quality: preset) {
             [coordinator] url, onProgress in
             try await coordinator.writeRecording(video, as: recordingFormat, quality: preset,
                                                  to: url, onProgress: onProgress)
         }
+        let movie = try await weighMovie(recordingFormat, quality: preset,
+                        copied: RecordingExport.copiesVerbatim(format: recordingFormat,
+                                                               quality: preset, source: source)) {
+            [coordinator] onProgress in
+            try await coordinator.weighRecording(video, quality: preset, onProgress: onProgress)
+        }
+        let weighed = animation ?? movie
         let said = RecordingExport.sizeLine(format: recordingFormat, quality: preset,
                                             source: source, weighing: weighed)
         let destination = out.appendingPathComponent("\(name).\(recordingFormat.fileExtension)")
@@ -11643,11 +11696,20 @@ private final class Run {
         }
         let chosenSize = pickedSize.offeredOrFull(for: source.sourceSize, format: recordingFormat)
         let destination = out.appendingPathComponent("\(name).\(recordingFormat.fileExtension)")
-        let weighed = try await weighAnimated(recordingFormat, quality: preset, size: chosenSize) {
+        let animation = try await weighAnimated(recordingFormat, quality: preset, size: chosenSize) {
             [editor] url, onProgress in
             try await editor.writeVideo(format: recordingFormat, quality: preset, size: chosenSize,
                                         to: url, range: stretch, onProgress: onProgress)
         }
+        let movie = try await weighMovie(recordingFormat, quality: preset, size: chosenSize,
+                        copied: RecordingExport.copiesVerbatim(format: recordingFormat,
+                                                               quality: preset, source: source,
+                                                               size: chosenSize)) {
+            [editor] onProgress in
+            try await editor.weighVideo(quality: preset, size: chosenSize, range: stretch,
+                                        onProgress: onProgress)
+        }
+        let weighed = animation ?? movie
         let said = RecordingExport.sizeLine(format: recordingFormat, quality: preset,
                                             source: source, weighing: weighed, size: chosenSize)
         let claimed = promisedBytes(RecordingExport.weight(format: recordingFormat, quality: preset,

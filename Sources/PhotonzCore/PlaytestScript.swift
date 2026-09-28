@@ -761,6 +761,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// 1800 (`PlaytestLongTalk.retina`): what the Export sheet's Size row is
     /// for, since the sample itself is already smaller than 1080p.
     case openLongRetinaTalk
+    /// Six seconds of fine text scrolling past at 900 pixels a second
+    /// (`PlaytestScrollingPage`): the busiest thing an ordinary screen
+    /// recording asks of the encoder, where the budget alone cannot say what
+    /// the MP4 will weigh (`a-busy-recording-says-what-it-weighs-walk`).
+    case openScrollingPage
     /// The other doors a recording is asked for through, so a walk can check
     /// that one which cannot be opened SAYS so rather than leaving a window
     /// with nothing in it (`RecordingDoor`).
@@ -1419,6 +1424,9 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case exportDialogAsVideo, exportDialogAsSmallGIF
     /// ...and on MP4 at 1080p, the Size row's middle answer.
     case exportDialogAsVideo1080p
+    /// ...and on MP4 at the Small preset, the choice somebody under a chat
+    /// limit makes.
+    case exportDialogAsSmallVideo
     /// ...and on the Whole video where In and Out are set, the Range row's
     /// second answer.
     case exportDialogAsWholeVideo

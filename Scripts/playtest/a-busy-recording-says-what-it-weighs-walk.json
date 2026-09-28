@@ -1,0 +1,27 @@
+{
+  "out": "/tmp/photonz-playtest/a-busy-recording-says-what-it-weighs-walk",
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "describe", "stage": "why", "note": "A page of text scrolling past fast is the busiest thing a screen recording asks of the encoder. Its MP4 used to land at up to two and a half times the size the Export sheet quoted, so somebody who picked Small to get under a chat limit found the file did not fit. Now the encoder is held to the budget where the picture would overshoot it, and the sheet writes a few stretches to find out what the file really comes to, where even that cannot hold it" },
+    { "do": "action", "action": "openScrollingPage" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-a-busy-recording", "note": "Six seconds of fine text scrolling up at 900 pixels a second, opened as a document" },
+    { "do": "snapshot", "name": "1-a-busy-recording" },
+
+    { "do": "action", "action": "exportDialogAsSmallVideo" },
+    { "do": "waitFor", "condition": "exportSizeWeighed", "timeout": 60 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-small-says-what-it-weighs", "note": "Export on MP4 at Small. The line under the rows says about how big the file will be, from stretches of it written at Small, rather than the budget Small asks for" },
+    { "do": "snapshot", "name": "2-small-says-what-it-weighs" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "writeVideo", "name": "1-small", "format": "mp4", "quality": "small", "seconds": 6.0, "within": 0.3, "copied": false, "estimateFactor": 1.25 },
+    { "do": "writeVideo", "name": "2-standard", "format": "mp4", "quality": "standard", "seconds": 6.0, "within": 0.3, "copied": false, "estimateFactor": 1.25 },
+    { "do": "writeVideo", "name": "3-high", "format": "mp4", "quality": "high", "seconds": 6.0, "within": 0.3, "copied": true, "estimateFactor": 1.25 }
+  ]
+}

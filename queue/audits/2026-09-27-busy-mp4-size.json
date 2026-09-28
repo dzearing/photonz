@@ -1,0 +1,26 @@
+{
+  "feature": "A busy MP4 lands at the size the Export sheet said",
+  "epic": "video-share",
+  "summary": "On a recording full of fast-moving detail, like text scrolling past, the MP4 now lands within a quarter of the size the Export sheet shows at every choice. Where the encoder can keep to the budget it now does; where it cannot, the sheet measures a few seconds of the video and shows what the file really comes to.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/a-busy-recording-says-what-it-weighs-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Record a few seconds of yourself scrolling a long web page or document fast, then open the recording." },
+    { "do": "Choose File > Export, keep MP4, and pick Small.", "shot": "2026-09-27-busy-mp4-size-1-sc.png" },
+    { "do": "Watch the size line under the rows for a second or two; on a busy recording the number moves up once it has measured." },
+    { "do": "Press Export and compare the file's size in Finder with the number the sheet showed." },
+    { "do": "Do the same at Standard, and again at Standard on a calm recording with little movement." }
+  ],
+  "evaluate": [
+    "Does the file land close to the number the sheet showed, at each of High, Standard and Small?",
+    "Is it all right that the number moves up a moment after the sheet opens on a busy recording, or does that feel unsteady?",
+    "On a busy recording at Small, does the picture still read well enough for the kind of place you would send it?",
+    "Does a calm recording still look as sharp as it did before at each choice?"
+  ],
+  "rough": [
+    "On a very busy picture (text scrolling at about a screen a second) the encoder cannot get Standard or Small down to their budget: they land at about 1.3 and 1.7 times it. The sheet says so honestly, so the number is right, but Small of such a recording is bigger than Small promises. The Size row (720p) is the way to make it smaller.",
+    "The number on a busy recording starts at the budget and moves up once a few seconds of it have been written, usually within a second or two; on a long edited document it can take a few seconds.",
+    "Exporting a document now spends a few seconds measuring before it writes; the progress card counts that as its first 5 per cent.",
+    "Measured on a long document the sheet runs up to about 20 per cent over what lands (it errs on the high side), and when other exports share the machine the file can come out heavier than the sheet said, which nothing in the app can control."
+  ]
+}

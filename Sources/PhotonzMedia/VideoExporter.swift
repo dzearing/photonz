@@ -205,6 +205,122 @@ public enum VideoExporter {
                           cuts: VideoCutList, crop: VideoCrop?,
                           recipe: VideoExportRecipe? = nil,
                           onProgress: (@Sendable (Double) -> Void)? = nil) async throws {
+        // Held to its budget only where its stretches say it would overshoot
+        // (`MovieCompression`); with no recipe there is no budget to weigh.
+        var holds = false
+        if let recipe {
+            holds = try await holdsToBudget(url, cuts: cuts, crop: crop, recipe: recipe)
+        }
+        try await writeMP4(from: url, to: destination, pieces: cuts.pieces, crop: crop,
+                           recipe: recipe, withSound: true, holdsToBudget: holds,
+                           onProgress: onProgress)
+    }
+
+    /// What an MP4 of this recording will weigh, found by writing stretches of
+    /// it at the recipe and counting them up (`VideoExportSample`), for the
+    /// Export sheet to say before anybody commits to the whole write.
+    ///
+    /// The budget alone is not the answer: on a page of text scrolling past the
+    /// encoder cannot be held to it (`MovieCompression`), and nothing about the
+    /// file on disk says in advance which recordings are like that. The
+    /// stretches are written without sound, and the recording's sound, cut the
+    /// same way, is written whole beside them exactly as the export writes it
+    /// and counted as it lands. Nothing is left on the disk.
+    public static func weighMP4(from url: URL, cuts: VideoCutList, crop: VideoCrop?,
+                                recipe: VideoExportRecipe,
+                                onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> Int {
+        var picture = try await pictureEstimate(url, cuts: cuts, crop: crop, recipe: recipe,
+                                                holdsToBudget: false, onProgress: onProgress)
+        // The export holds a picture that would overshoot, so the weigh says
+        // what the held one comes to.
+        if VideoExportSample.holdsToBudget(pictureBytes: picture,
+                                           budgetBytes: pictureBudget(recipe, cuts: cuts)) {
+            picture = try await pictureEstimate(url, cuts: cuts, crop: crop, recipe: recipe,
+                                                holdsToBudget: true, onProgress: nil)
+        }
+        guard picture > 0 else { return 0 }
+        return picture + (try await soundBytes(of: url, cuts: cuts))
+    }
+
+    /// What the picture of the whole kept recording would come to, from its
+    /// stretches written one after another behind a warm-up
+    /// (`VideoExportSample.writingOrder`).
+    private static func pictureEstimate(_ url: URL, cuts: VideoCutList, crop: VideoCrop?,
+                                        recipe: VideoExportRecipe, holdsToBudget: Bool,
+                                        onProgress: (@Sendable (Double) -> Void)?) async throws
+        -> Int {
+        let keptMS = Int((cuts.timelineDuration * 1000).rounded())
+        let order = VideoExportSample.writingOrder(of: 0..<keptMS)
+        guard !order.stretches.isEmpty else { return 0 }
+        let scratch = FileManager.default.temporaryDirectory
+            .appendingPathComponent("photonz-weigh-mp4-\(UUID().uuidString).mp4")
+        defer { try? FileManager.default.removeItem(at: scratch) }
+        let pieces = order.stretches.flatMap { stretch in
+            cuts.sourcePieces(fromTimeline: Double(stretch.lowerBound) / 1000,
+                              to: Double(stretch.upperBound) / 1000)
+        }
+        guard !pieces.isEmpty else { return 0 }
+        try await writeMP4(from: url, to: scratch, pieces: pieces, crop: crop, recipe: recipe,
+                           withSound: false, holdsToBudget: holdsToBudget,
+                           onProgress: onProgress)
+        let sampledMS = order.stretches.reduce(0) { $0 + $1.count } - order.countedFromMS
+        let pictureBytes = await MovieCompression.pictureBytes(of: scratch,
+                                                               fromMS: order.countedFromMS)
+        return VideoExportSample.estimate(pictureBytes: pictureBytes, sampledMS: sampledMS,
+                                          spanMS: keptMS)
+    }
+
+    /// What the picture is allowed for the whole kept recording.
+    private static func pictureBudget(_ recipe: VideoExportRecipe, cuts: VideoCutList) -> Int {
+        recipe.expectedBytes(seconds: cuts.timelineDuration, hasAudio: false)
+    }
+
+    /// Whether this export should be held to its budget: only where its
+    /// stretches, written unheld, say the picture would overshoot it
+    /// (`VideoExportSample.holdsToBudget`).
+    private static func holdsToBudget(_ url: URL, cuts: VideoCutList, crop: VideoCrop?,
+                                      recipe: VideoExportRecipe) async throws -> Bool {
+        guard recipe.videoBitsPerSecond > 0 else { return false }
+        let picture = try await pictureEstimate(url, cuts: cuts, crop: crop, recipe: recipe,
+                                                holdsToBudget: false, onProgress: nil)
+        return VideoExportSample.holdsToBudget(pictureBytes: picture,
+                                               budgetBytes: pictureBudget(recipe, cuts: cuts))
+    }
+
+    /// What the recording's sound, cut at the export's points, weighs once it
+    /// is written the way the export writes it. Zero with no sound.
+    private static func soundBytes(of url: URL, cuts: VideoCutList) async throws -> Int {
+        let asset = AVURLAsset(url: url)
+        guard let heard = try? await asset.loadTracks(withMediaType: .audio).first else { return 0 }
+        let composition = AVMutableComposition()
+        guard let lane = composition.addMutableTrack(withMediaType: .audio,
+                                                     preferredTrackID: kCMPersistentTrackID_Invalid)
+        else { return 0 }
+        var cursor = CMTime.zero
+        for piece in cuts.pieces {
+            let range = CMTimeRange(start: CMTime(seconds: piece.start, preferredTimescale: 600),
+                                    duration: CMTime(seconds: piece.duration, preferredTimescale: 600))
+            guard range.duration.seconds > 0 else { continue }
+            try? lane.insertTimeRange(range, of: heard, at: cursor)
+            cursor = CMTimeAdd(cursor, range.duration)
+        }
+        guard cursor.seconds > 0 else { return 0 }
+        let file = FileManager.default.temporaryDirectory
+            .appendingPathComponent("photonz-weigh-sound-\(UUID().uuidString).m4a")
+        defer { try? FileManager.default.removeItem(at: file) }
+        try Task.checkCancellation()
+        try await writeSound(composition: composition, to: file)
+        return (try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+    }
+
+    /// The write behind both: the pieces of the source in order, cropped and
+    /// encoded at the recipe, with the sound cut at the same points unless it
+    /// is left out for a weigh.
+    private static func writeMP4(from url: URL, to destination: URL,
+                                 pieces: [VideoPiece], crop: VideoCrop?,
+                                 recipe: VideoExportRecipe?, withSound: Bool,
+                                 holdsToBudget: Bool,
+                                 onProgress: (@Sendable (Double) -> Void)?) async throws {
         let asset = AVURLAsset(url: url)
         guard let videoTrack = try? await asset.loadTracks(withMediaType: .video).first else {
             throw ExportError.noVideoTrack
@@ -219,14 +335,15 @@ public enum VideoExporter {
         }
         // Audio for A/V sync, when present — cut at the same points as the
         // picture, so sound never drifts off what is on screen.
-        let audioTrack = try? await asset.loadTracks(withMediaType: .audio).first
+        let audioTrack = withSound
+            ? try? await asset.loadTracks(withMediaType: .audio).first : nil
         let compAudio = audioTrack == nil ? nil : composition.addMutableTrack(
             withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)
 
         var cursor = CMTime.zero
-        for piece in cuts.sourceRanges {
+        for piece in pieces {
             let range = CMTimeRange(start: CMTime(seconds: piece.start, preferredTimescale: 600),
-                                    duration: CMTime(seconds: piece.length, preferredTimescale: 600))
+                                    duration: CMTime(seconds: piece.duration, preferredTimescale: 600))
             guard range.duration.seconds > 0 else { continue }
             try compVideo.insertTimeRange(range, of: videoTrack, at: cursor)
             if let audioTrack, let compAudio {
@@ -277,7 +394,8 @@ public enum VideoExporter {
         await ExportQueue.shared.enter()
         do {
             try await encode(composition: composition, videoComposition: videoComposition,
-                             hasAudio: compAudio != nil, plan: plan, to: destination,
+                             hasAudio: compAudio != nil, plan: plan,
+                             holdsToBudget: holdsToBudget, to: destination,
                              onProgress: onProgress)
         } catch {
             await ExportQueue.shared.leave()
@@ -303,6 +421,7 @@ public enum VideoExporter {
                                videoComposition: AVVideoComposition,
                                hasAudio: Bool,
                                plan: VideoExportRecipe,
+                               holdsToBudget: Bool,
                                to destination: URL,
                                onProgress: (@Sendable (Double) -> Void)?) async throws {
         let scratch = FileManager.default.temporaryDirectory
@@ -316,7 +435,7 @@ public enum VideoExporter {
         let pictureShare = hasAudio ? 0.9 : 1.0
         let silent = scratch.appendingPathComponent("picture.mp4")
         try await writePictures(composition: composition, videoComposition: videoComposition,
-                                plan: plan, to: silent) { done in
+                                plan: plan, holdsToBudget: holdsToBudget, to: silent) { done in
             onProgress?(done * pictureShare)
         }
         try Task.checkCancellation()
@@ -335,7 +454,8 @@ public enum VideoExporter {
     /// the budget the choice allows.
     private static func writePictures(composition: AVComposition,
                                       videoComposition: AVVideoComposition,
-                                      plan: VideoExportRecipe, to destination: URL,
+                                      plan: VideoExportRecipe, holdsToBudget: Bool,
+                                      to destination: URL,
                                       onProgress: (@Sendable (Double) -> Void)?) async throws {
         let reader = try AVAssetReader(asset: composition)
         let videoOut = AVAssetReaderVideoCompositionOutput(
@@ -351,7 +471,7 @@ public enum VideoExporter {
         reader.add(videoOut)
 
         let writer = try AVAssetWriter(outputURL: destination, fileType: .mp4)
-        let input = AVAssetWriterInput(mediaType: .video, outputSettings: movieSettings(plan))
+        let input = AVAssetWriterInput(mediaType: .video, outputSettings: movieSettings(plan, holdsToBudget: holdsToBudget))
         input.expectsMediaDataInRealTime = false
         let adaptor = AVAssetWriterInputPixelBufferAdaptor(
             assetWriterInput: input,
@@ -490,31 +610,15 @@ public enum VideoExporter {
     private static let stallLimit: TimeInterval = 90
 
     /// What the encoder is asked for: the size, the frame rate and the budget.
-    private static func movieSettings(_ plan: VideoExportRecipe) -> [String: Any] {
+    private static func movieSettings(_ plan: VideoExportRecipe,
+                                      holdsToBudget: Bool) -> [String: Any] {
         [
             AVVideoCodecKey: AVVideoCodecType.h264,
             AVVideoWidthKey: Int(plan.size.width.rounded()),
             AVVideoHeightKey: Int(plan.size.height.rounded()),
-            AVVideoCompressionPropertiesKey: [
-                AVVideoAverageBitRateKey: plan.videoBitsPerSecond,
-                AVVideoExpectedSourceFrameRateKey: Int(plan.fps.rounded()),
-                // A key frame every two seconds, so scrubbing and the preview a
-                // chat app builds both land quickly.
-                AVVideoMaxKeyFrameIntervalDurationKey: 2,
-                AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel,
-                // Frame reordering stays ON, and it was worth measuring
-                // rather than assuming. Turning it off makes a short export
-                // reproducible to the byte, which the Export sheet would like
-                // to be able to promise; it also more than DOUBLED the file on
-                // a three second clip with real movement in it, 130,349 bytes
-                // to 278,280. Doubling the file to buy reproducibility is
-                // exactly the wrong trade for a feature whose whole point is a
-                // file small enough to send, and it did not even buy it on a
-                // longer clip, where the system encoder still wandered by ten
-                // bytes and rewrote nearly every one of them. So: smallest
-                // file, and the sheet says "about".
-                AVVideoAllowFrameReorderingKey: true,
-            ] as [String: Any],
+            AVVideoCompressionPropertiesKey: MovieCompression.properties(
+                bitsPerSecond: plan.videoBitsPerSecond, fps: plan.fps,
+                holdsToBudget: holdsToBudget),
         ]
     }
 

@@ -239,11 +239,21 @@ struct RecordingExportDialog: View {
     }
 
     /// Write this GIF or HEIC into a scratch file so the line under the row can
-    /// say what it weighs. A video is never weighed this way: it has a real
-    /// budget and answers instantly, and a minute of screen would be a minute
-    /// of work for a number that is already on the sheet.
+    /// say what it weighs. A video is weighed from a few stretches of it
+    /// instead, which corrects its budget where the picture is too busy for
+    /// the encoder to keep to it (`ExportWeigh.measure`); one copied as it is
+    /// weighs what the file on disk weighs, so nothing is written for it.
     private func startWeighing() {
-        guard format.isAnimatedImage else { weigh.stop(); return }
+        guard format.isAnimatedImage else {
+            let quality = quality
+            guard !RecordingExport.copiesVerbatim(format: format, quality: quality, source: source)
+            else { weigh.stop(); return }
+            weigh.measure(format: format, quality: quality) { [coordinator, state] onProgress in
+                try await coordinator.weighRecording(state, quality: quality,
+                                                     onProgress: onProgress)
+            }
+            return
+        }
         let format = format, quality = quality
         weigh.weigh(format: format, quality: quality) { [coordinator, state] url, onProgress in
             try await coordinator.writeRecording(state, as: format, quality: quality, to: url,

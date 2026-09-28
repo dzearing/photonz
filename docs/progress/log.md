@@ -20001,3 +20001,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - The card's progress goes to the main actor only in 1/500 steps (`ProgressSteps`).
 - Walks: `writeVideo` takes `paceShare` (`VideoWritePace`) and logs the write time as a share of the running time plus a main-thread reading. The 1080p walk holds it to 0.5. New `export-card-while-writing-walk` (`startExportAt1080p` / `awaitExport` actions) photographs the card while the file writes.
 - Open: a 300ms main-thread stall when an export starts. It is there on the old path too; cause not found.
+
+## 2026-09-27 — A busy MP4 lands at the size the Export sheet said
+
+- Reproduced: text scrolling at 900 px/s, 3s at 1280x800, landed at 1.25/1.68/2.56 times the High/Standard/Small budget (300 px/s: 1.13/1.20/1.70).
+- Every MP4 write first writes a few 2s stretches unheld; if the picture would go over its budget, the encoder is held with a 1s data rate cap at 1.3x (`MovieCompression`, `VideoExportSample.holdsToBudget`). Easy recordings are written exactly as before: any cap took 43% off a 1080p talk that was nowhere near its budget, so the cap is never on by default.
+- The hardware encoder has a floor it cannot get under (Small at 900 px/s: 1.3x at best), so the Export sheet (document and recording) now writes the same stretches in the background and shows what they come to (`ExportWeigh.measure`, `DocumentMovieWriter.weigh`, `VideoExporter.weighMP4`). Stretches follow a warm-up copy, because a file's first 2s cost the encoder about 1.6x any later 2s. Sound is written whole and counted as it lands (a flat 128 kbps allowance said 117 KB for a 63 KB file).
+- Tests: `BusyVideoSizeTests` (lightest of three, since parallel encodes write heavier), `VideoExportSampleTests`, `VideoCutStretchTests`. Walk: `a-busy-recording-says-what-it-weighs-walk` (new actions `openScrollingPage`, `exportDialogAsSmallVideo`); the harness's `writeVideo` now weighs an MP4 the way the sheet does, and `an-edited-recording-comes-out-as-a-video-walk` holds the sheet to 1.25x.
+- Open: Small of a very busy recording is still bigger than Small's budget (the sheet says so). Audit at `queue/audits/2026-09-27-busy-mp4-size.json`.

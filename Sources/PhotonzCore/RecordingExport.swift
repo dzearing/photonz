@@ -290,6 +290,9 @@ public enum RecordingExport {
     ///   share of its seconds that survive and the share of its pixels. A still
     ///   screen costs a fraction of any budget, and asking for more never pads
     ///   the file, so this is what an easy recording really comes out at.
+    /// - **What stretches of it weighed**, once the sheet has written some at
+    ///   this choice, which beats both: a page of text scrolling past costs the
+    ///   encoder more than any budget, and only writing some of it shows that.
     /// - weighing: a scratch copy of an animated picture being written, or
     ///   finished, which is the only thing that can answer for a GIF or a HEIC.
     public static func weight(format: RecordingFormat, quality: VideoExportQuality,
@@ -311,6 +314,14 @@ public enum RecordingExport {
         }
         if copiesVerbatim(format: format, quality: quality, source: source, size: size) {
             return source.fileBytes > 0 ? .exact(source.fileBytes) : .unknown
+        }
+        // Stretches of it written at this very choice, where the sheet has
+        // written them: what the encoder really spends on this picture, which
+        // on a busy one is well over what it was asked for
+        // (`VideoExportSample`).
+        if let weighing, weighing.answers(format: format, quality: quality, size: size),
+           let bytes = weighing.bytes, bytes > 0 {
+            return .about(bytes)
         }
         let budget = recipe(format: format, quality: quality, source: source, size: size)
             .expectedBytes(seconds: source.keptDuration, hasAudio: source.hasAudio)

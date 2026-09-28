@@ -152,6 +152,25 @@ public struct VideoCutList: Codable, Sendable, Hashable {
         return min(piece.start + (t - timelineStart(ofPiece: index)), piece.end)
     }
 
+    /// The pieces of the source a stretch of the timeline is read from, in play
+    /// order: part of one piece, or the end of one and the start of the next
+    /// across a cut. Empty for a stretch with nothing in it. What the Export
+    /// sheet writes to weigh a cut recording (`VideoExportSample`).
+    public func sourcePieces(fromTimeline from: TimeInterval,
+                             to until: TimeInterval) -> [VideoPiece] {
+        var result: [VideoPiece] = []
+        var elapsed: TimeInterval = 0
+        for piece in pieces {
+            let lo = max(from, elapsed), hi = min(until, elapsed + piece.duration)
+            if hi - lo > Self.epsilon {
+                result.append(VideoPiece(start: piece.start + (lo - elapsed),
+                                         end: piece.start + (hi - elapsed)))
+            }
+            elapsed += piece.duration
+        }
+        return result
+    }
+
     /// The kept stretches as `(start, length)` pairs, in play order — what a
     /// composition inserts and what an export reads.
     public var sourceRanges: [(start: TimeInterval, length: TimeInterval)] {

@@ -62,11 +62,22 @@ public enum DocumentMovieWriter {
     /// in one container without touching either. The last step is a passthrough
     /// copy, so the pictures are never compressed twice and the mix in the file
     /// is byte for byte the mix Export Sound would have written.
+    ///
+    /// A picture whose stretches say it would land over its budget is held to
+    /// it (`MovieCompression`), which costs a few seconds of
+    /// writing stretches before the write itself; an easy one is written
+    /// unheld, exactly as it always was.
     public static func write(plan: VideoFramePlan, mix: [AudioMixSegment],
                              soundURLs: [UUID: URL], to destination: URL,
-                             frames: FrameSource,
+                             frames: @escaping FrameSource,
                              onProgress: (@Sendable (Double) -> Void)? = nil) async throws {
         guard !plan.isEmpty else { throw WriteError.nothingToWrite }
+        // Weighing the stretches is the first twentieth of the bar, so a long
+        // document's card is seen moving from the start.
+        let weighShare = 0.05
+        let holds = try await holdsToBudget(plan: plan, frames: frames) { done in
+            onProgress?(done * weighShare)
+        }
         let scratch = FileManager.default.temporaryDirectory
             .appendingPathComponent("photonz-export-\(UUID().uuidString)", isDirectory: true)
         try? FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
@@ -78,8 +89,9 @@ public enum DocumentMovieWriter {
         // the bar. What is left covers the sound and the join.
         let pictureShare = mix.isEmpty ? 1.0 : 0.9
         do {
-            try await writeSilentMovie(plan: plan, to: silent, frames: frames) { done in
-                onProgress?(done * pictureShare)
+            try await writeSilentMovie(plan: plan, to: silent, frames: frames,
+                                       holdsToBudget: holds) { done in
+                onProgress?(weighShare + done * (pictureShare - weighShare))
             }
             try Task.checkCancellation()
             guard !mix.isEmpty else {
@@ -98,14 +110,122 @@ public enum DocumentMovieWriter {
         }
     }
 
+    /// What an MP4 of `span` of the document will weigh at this choice, found
+    /// by writing stretches of it and counting them up (`VideoExportSample`),
+    /// for the Export sheet to say before anybody commits to the whole write.
+    ///
+    /// The budget alone is not the answer: on a page of text scrolling past
+    /// the encoder cannot be held to it (`MovieCompression`). The stretches are
+    /// written without sound, and the mix is written whole beside them exactly
+    /// as the export writes it and counted as it lands. Nothing is left on the
+    /// disk.
+    public static func weigh(span: Range<Int>, canvasSize: CGSize,
+                             quality: VideoExportQuality, size: VideoExportSize? = nil,
+                             mix: [AudioMixSegment] = [], soundURLs: [UUID: URL] = [:],
+                             frames: @escaping FrameSource,
+                             onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> Int {
+        let plan = DocumentVideoExport.plan(range: span, canvasSize: canvasSize, format: .mp4,
+                                            quality: quality, size: size)
+        guard !plan.isEmpty else { return 0 }
+        var picture = try await pictureEstimate(plan: plan, frames: frames,
+                                                holdsToBudget: false, onProgress: onProgress)
+        // The export holds a picture that would overshoot, so the weigh says
+        // what the held one comes to.
+        if VideoExportSample.holdsToBudget(pictureBytes: picture,
+                                           budgetBytes: pictureBudget(plan)) {
+            picture = try await pictureEstimate(plan: plan, frames: frames,
+                                                holdsToBudget: true, onProgress: nil)
+        }
+        guard picture > 0 else { return 0 }
+        var soundBytes = 0
+        if !mix.isEmpty {
+            let sound = FileManager.default.temporaryDirectory
+                .appendingPathComponent("photonz-weigh-sound-\(UUID().uuidString).m4a")
+            defer { try? FileManager.default.removeItem(at: sound) }
+            try Task.checkCancellation()
+            try await AudioMixdown.write(mix, urls: soundURLs, to: sound)
+            soundBytes = (try? sound.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+        }
+        return picture + soundBytes
+    }
+
+    /// What the picture is allowed for the whole plan.
+    private static func pictureBudget(_ plan: VideoFramePlan) -> Int {
+        guard plan.videoBitsPerSecond > 0 else { return 0 }
+        return Int((Double(plan.videoBitsPerSecond) * Double(plan.durationMS) / 8000).rounded())
+    }
+
+    /// Whether this write should be held to its budget: only where its
+    /// stretches, written unheld, say the picture would overshoot it
+    /// (`VideoExportSample.holdsToBudget`).
+    private static func holdsToBudget(plan: VideoFramePlan, frames: @escaping FrameSource,
+                                      onProgress: (@Sendable (Double) -> Void)?) async throws
+        -> Bool {
+        guard plan.videoBitsPerSecond > 0 else { return false }
+        let picture = try await pictureEstimate(plan: plan, frames: frames,
+                                                holdsToBudget: false, onProgress: onProgress)
+        return VideoExportSample.holdsToBudget(pictureBytes: picture,
+                                               budgetBytes: pictureBudget(plan))
+    }
+
+    /// What the picture of the whole plan would come to, from its stretches
+    /// written one after another behind a warm-up
+    /// (`VideoExportSample.writingOrder`).
+    private static func pictureEstimate(plan: VideoFramePlan, frames: @escaping FrameSource,
+                                        holdsToBudget: Bool,
+                                        onProgress: (@Sendable (Double) -> Void)?) async throws
+        -> Int {
+        let span = plan.startMS..<(plan.startMS + plan.durationMS)
+        let order = VideoExportSample.writingOrder(of: span)
+        guard !order.stretches.isEmpty else { return 0 }
+        let scratch = FileManager.default.temporaryDirectory
+            .appendingPathComponent("photonz-weigh-\(UUID().uuidString).mp4")
+        defer { try? FileManager.default.removeItem(at: scratch) }
+        let written = order.stretches.reduce(0) { $0 + $1.count }
+        if order.stretches == [span] {
+            // Short enough to write whole: the scratch file is the export's
+            // own picture, warm-up and all.
+            try await writeSilentMovie(plan: plan, to: scratch, frames: frames,
+                                       holdsToBudget: holdsToBudget, onProgress: onProgress)
+        } else {
+            // Every stretch one after another in one file, behind the warm-up:
+            // the file's own clock runs on from nought, and each moment of it
+            // is read from the stretch it falls in.
+            let stretches = order.stretches
+            let joined: FrameSource = { ms in
+                var start = 0
+                for stretch in stretches {
+                    if ms < start + stretch.count {
+                        return await frames(stretch.lowerBound + ms - start)
+                    }
+                    start += stretch.count
+                }
+                return await frames((stretches.last?.upperBound ?? 1) - 1)
+            }
+            let run = VideoFramePlan(
+                frameCount: max(1, Int((Double(written) / 1000 * plan.fps).rounded())),
+                fps: plan.fps, size: plan.size, durationMS: written,
+                videoBitsPerSecond: plan.videoBitsPerSecond,
+                audioBitsPerSecond: plan.audioBitsPerSecond, startMS: 0)
+            try await writeSilentMovie(plan: run, to: scratch, frames: joined,
+                                       holdsToBudget: holdsToBudget, onProgress: onProgress)
+        }
+        let pictureBytes = await MovieCompression.pictureBytes(of: scratch,
+                                                               fromMS: order.countedFromMS)
+        return VideoExportSample.estimate(pictureBytes: pictureBytes,
+                                          sampledMS: written - order.countedFromMS,
+                                          spanMS: span.count)
+    }
+
     /// The document photographed at every moment of the plan, with no sound on
     /// it yet.
     private static func writeSilentMovie(plan: VideoFramePlan, to destination: URL,
-                                         frames: FrameSource,
+                                         frames: FrameSource, holdsToBudget: Bool,
                                          onProgress: (@Sendable (Double) -> Void)?) async throws {
         let writer = try AVAssetWriter(outputURL: destination, fileType: .mp4)
         let input = AVAssetWriterInput(mediaType: .video,
-                                       outputSettings: videoSettings(plan: plan))
+                                       outputSettings: videoSettings(
+                                           plan: plan, holdsToBudget: holdsToBudget))
         input.expectsMediaDataInRealTime = false
         let adaptor = AVAssetWriterInputPixelBufferAdaptor(
             assetWriterInput: input,
@@ -259,22 +379,16 @@ public enum DocumentMovieWriter {
     /// What the encoder is asked for. The budget comes from the plan rather
     /// than being left to AVFoundation, so the Export sheet can say what the
     /// file will weigh before anybody commits to it (`VideoExportRecipe`).
-    private static func videoSettings(plan: VideoFramePlan) -> [String: Any] {
+    private static func videoSettings(plan: VideoFramePlan,
+                                      holdsToBudget: Bool) -> [String: Any] {
         var settings: [String: Any] = [
             AVVideoCodecKey: AVVideoCodecType.h264,
             AVVideoWidthKey: Int(plan.size.width),
             AVVideoHeightKey: Int(plan.size.height),
         ]
         guard plan.videoBitsPerSecond > 0 else { return settings }
-        settings[AVVideoCompressionPropertiesKey] = [
-            AVVideoAverageBitRateKey: plan.videoBitsPerSecond,
-            AVVideoExpectedSourceFrameRateKey: Int(plan.fps.rounded()),
-            // A key frame every two seconds, so scrubbing and the preview a
-            // chat app builds both land quickly.
-            AVVideoMaxKeyFrameIntervalDurationKey: 2,
-            AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel,
-            AVVideoAllowFrameReorderingKey: true,
-        ] as [String: Any]
+        settings[AVVideoCompressionPropertiesKey] = MovieCompression.properties(
+            bitsPerSecond: plan.videoBitsPerSecond, fps: plan.fps, holdsToBudget: holdsToBudget)
         return settings
     }
 

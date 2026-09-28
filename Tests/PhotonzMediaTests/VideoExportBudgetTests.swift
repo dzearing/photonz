@@ -53,17 +53,28 @@ struct VideoExportBudgetTests {
     /// A page of small text scrolling up at `pixelsPerSecond`, which is the
     /// hardest thing an ordinary screen recording asks of the encoder: every
     /// frame is new fine detail. Unlike `busySource`, this spends every budget
-    /// on the row: at 1280 x 800 Standard lands around 1.1 MB against a
-    /// 0.92 MB budget and Small around 0.55 MB against 0.32 MB, where the
-    /// busy source lands near 0.13 MB whatever it is given.
+    /// on the row, and at 900 pixels a second more than Standard and Small
+    /// are allowed (`BusyVideoSizeTests`), where the busy source lands near
+    /// 0.13 MB whatever it is given.
     static func scrollingText(seconds: Int, size: CGSize,
                               pixelsPerSecond: Double = 300) async throws -> URL {
         let plan = DocumentVideoExport.plan(durationMS: seconds * 1000, canvasSize: size,
                                             format: .mp4, quality: .high)
-        let url = folder.appendingPathComponent("scrolling-\(seconds)s-\(Int(size.width)).mp4")
-        let width = Int(plan.size.width), height = Int(plan.size.height)
+        let url = folder.appendingPathComponent(
+            "scrolling-\(seconds)s-\(Int(size.width))-\(Int(pixelsPerSecond))-\(UUID().uuidString).mp4")
+        try await DocumentMovieWriter.write(plan: plan, mix: [], soundURLs: [:], to: url,
+                                            frames: scrollingFrames(
+                                                size: plan.size, pixelsPerSecond: pixelsPerSecond))
+        return url
+    }
+
+    /// The pictures of `scrollingText`, for writing as a document. Still until
+    /// `stillUntilMS`, so one recording can be a quiet page and then a busy one.
+    static func scrollingFrames(size: CGSize, pixelsPerSecond: Double,
+                                stillUntilMS: Int = 0) -> DocumentMovieWriter.FrameSource {
+        let width = Int(size.width), height = Int(size.height)
         let lineHeight = 14.0
-        let frames: DocumentMovieWriter.FrameSource = { ms in
+        return { ms in
             guard let context = CGContext(data: nil, width: width, height: height,
                                           bitsPerComponent: 8, bytesPerRow: 0,
                                           space: CGColorSpace(name: CGColorSpace.sRGB)
@@ -72,7 +83,7 @@ struct VideoExportBudgetTests {
             else { return nil }
             context.setFillColor(red: 1, green: 1, blue: 1, alpha: 1)
             context.fill(CGRect(x: 0, y: 0, width: width, height: height))
-            let scrolled = Double(ms) / 1000 * pixelsPerSecond
+            let scrolled = Double(max(0, ms - stillUntilMS)) / 1000 * pixelsPerSecond
             var line = Int(scrolled / lineHeight)
             while Double(line) * lineHeight - scrolled < Double(height) {
                 let y = Double(line) * lineHeight - scrolled
@@ -97,9 +108,6 @@ struct VideoExportBudgetTests {
             }
             return context.makeImage()
         }
-        try await DocumentMovieWriter.write(plan: plan, mix: [], soundURLs: [:], to: url,
-                                            frames: frames)
-        return url
     }
 
     /// The same busy picture with a sound track on it, which is what a real

@@ -96,13 +96,41 @@ struct RecordingExportWeighingTests {
                 == "Animated GIF · size not known until it is written")
     }
 
-    /// A video is never weighed by writing it: it has a real budget and answers
-    /// instantly, and an hour of screen would be an hour of work for a number
-    /// that is already on the sheet.
-    @Test func avideoKeepsItsBudgetEstimate() {
-        let stray = weighing(.mp4, .standard, fraction: 1, bytes: 99)
+    /// A video's number comes from its budget until the sheet has written a
+    /// few stretches of it at the chosen setting, and then from those: the
+    /// budget is what the encoder is asked for, and on a busy recording it
+    /// writes well over it (`VideoExportSample`). Still "about", because the
+    /// stretches are pieces of the file rather than the file.
+    @Test func aVideoSaysWhatItsStretchesWeighedOnceTheyAreWritten() {
+        let measured = weighing(.mp4, .standard, fraction: 1, bytes: 3_500_000)
         #expect(RecordingExport.weight(format: .mp4, quality: .standard, source: whole,
-                                       weighing: stray) == .about(2_457_600))
+                                       weighing: measured) == .about(3_500_000))
+        #expect(RecordingExport.sizeLine(format: .mp4, quality: .standard, source: whole,
+                                         weighing: measured) == "MP4 Video · about 3.3 MB")
+    }
+
+    /// While the stretches are being written the line keeps the budget's
+    /// number rather than saying it is working: a video always has a number,
+    /// and a moment later it is corrected if it was wrong.
+    @Test func aVideoBeingWeighedKeepsItsBudgetEstimate() {
+        let running = weighing(.mp4, .standard, fraction: 0.5)
+        #expect(RecordingExport.weight(format: .mp4, quality: .standard, source: whole,
+                                       weighing: running) == .about(2_457_600))
+    }
+
+    /// An answer for another choice is not this choice's answer.
+    @Test func aVideoIgnoresTheWeightOfAnotherChoice() {
+        let other = weighing(.mp4, .small, fraction: 1, bytes: 99)
+        #expect(RecordingExport.weight(format: .mp4, quality: .standard, source: whole,
+                                       weighing: other) == .about(2_457_600))
+    }
+
+    /// A recording copied as it is weighs what it weighs: nothing is written
+    /// to find out, and a stray answer does not change that.
+    @Test func aCopiedVideoIsExactWhateverWasWeighed() {
+        let stray = weighing(.mp4, .high, fraction: 1, bytes: 99)
+        #expect(RecordingExport.weight(format: .mp4, quality: .high, source: whole,
+                                       weighing: stray) == .exact(4_194_304))
     }
 
     // MARK: - The same sheet, on a document

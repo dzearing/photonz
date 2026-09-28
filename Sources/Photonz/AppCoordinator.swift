@@ -607,6 +607,19 @@ final class AppCoordinator {
         }
     }
 
+    /// What an MP4 of this recording will weigh at this choice, found by
+    /// writing a few stretches of it (`VideoExporter.weighMP4`). For the Export
+    /// sheet, which quotes the budget until this answers.
+    func weighRecording(_ state: VideoEditorState, quality: VideoExportQuality,
+                        onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> Int {
+        guard let sourceURL = state.editSourceURL else { throw CocoaError(.fileNoSuchFile) }
+        let source = state.exportSource
+        return try await VideoExporter.weighMP4(
+            from: sourceURL, cuts: state.exportCuts, crop: state.crop,
+            recipe: RecordingExport.recipe(format: .mp4, quality: quality, source: source),
+            onProgress: onProgress)
+    }
+
     /// Move the file the Export sheet already wrote to where the save box said,
     /// and say whether that worked.
     ///

@@ -2,7 +2,8 @@ import Foundation
 import PhotonzCore
 import SwiftUI
 
-/// Weighing a GIF or a HEIC, which means writing one.
+/// Weighing a GIF or a HEIC, which means writing one, and an MP4, which means
+/// writing a few stretches of one (`measure`).
 ///
 /// **Why there is no cheaper way.** A video's size is arithmetic: the export
 /// asks the encoder for a number of bits per second, so the file is that number
@@ -92,6 +93,53 @@ final class ExportWeigh {
             let landed = (try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
             result = RecordingExport.Weighing(format: format, quality: quality, size: size,
                                               fraction: 1, bytes: landed)
+            job = nil
+        }
+    }
+
+    /// What a video's weigh does: write stretches of the file the sheet is
+    /// describing and say what the whole will come to, in bytes. Leaves no
+    /// file behind, so there is nothing for Export to take.
+    typealias Measure = @MainActor (@escaping @Sendable (Double) -> Void) async throws -> Int
+
+    /// Start weighing an MP4 at this preset, stopping whatever was being
+    /// weighed before.
+    ///
+    /// **A video has a number from the start; this corrects it.** Its budget
+    /// is on the sheet the moment it opens, and on ordinary screen material
+    /// the file lands at or under it. On a page of text scrolling past the
+    /// encoder cannot be held to it, and nothing about the recording says so
+    /// in advance, so a few stretches of it are written at the chosen setting
+    /// (`VideoExportSample`) and their answer replaces the budget's when it
+    /// is in. The line never says it is working: it says "about" and a number
+    /// the whole time, and on a busy recording the number moves up a moment
+    /// after the sheet opens. A few seconds of work on a document, well under
+    /// one on a recording.
+    func measure(format: RecordingFormat, quality: VideoExportQuality,
+                 size: VideoExportSize? = nil, measure: @escaping Measure) {
+        stop()
+        Self.onScreen = self
+        result = RecordingExport.Weighing(format: format, quality: quality, size: size,
+                                          fraction: 0)
+        job = Task { @MainActor [weak self] in
+            guard let self else { return }
+            let bytes: Int
+            do {
+                bytes = try await measure { done in
+                    Task { @MainActor [weak self] in
+                        self?.reached(done, format: format, quality: quality, size: size)
+                    }
+                }
+            } catch {
+                // Stopped on purpose, or the stretches could not be written:
+                // the budget's number stands, which is what the line said
+                // before any of this existed.
+                if !Task.isCancelled { forget() }
+                return
+            }
+            guard !Task.isCancelled else { return }
+            result = RecordingExport.Weighing(format: format, quality: quality, size: size,
+                                              fraction: 1, bytes: bytes)
             job = nil
         }
     }
