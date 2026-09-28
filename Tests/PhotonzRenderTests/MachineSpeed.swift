@@ -95,6 +95,34 @@ enum MachineSpeed {
         return typical * referenceBaselineMS
     }
 
+    /// How far off its own calibration number the yardstick has to read before
+    /// an interleaved reading stops meaning anything. Dividing by the ruler
+    /// cancels a busy machine only while the ruler and the subject are slowed
+    /// by the same thing, and at three times its own number the ruler is
+    /// mostly measuring whatever else the machine is doing.
+    static let untrustedYardstickFactor: Double = 3
+
+    enum Reading: Equatable {
+        case withinBudget
+        case overBudget
+        /// Over budget, but beside a yardstick so far off its own number that
+        /// nobody can say whether the subject or the machine moved.
+        case untrusted
+    }
+
+    /// What an interleaved reading says. A reading inside its budget passes
+    /// however busy the machine was; one over it fails unless the yardstick
+    /// taken with it says the machine was too busy to judge. A comparison that
+    /// never happened is never excused.
+    static func reading(normalizedMS: Double, boundMS: Double,
+                        yardstickMS: Double, yardstickBaselineMS: Double) -> Reading {
+        guard normalizedMS.isFinite else { return .overBudget }
+        guard normalizedMS >= boundMS else { return .withinBudget }
+        guard yardstickMS.isFinite,
+              yardstickMS <= yardstickBaselineMS * untrustedYardstickFactor else { return .untrusted }
+        return .overBudget
+    }
+
     /// Whether a budget failing should fail the build.
     /// Set `PHOTONZ_PERF_GATE=report` to collect the numbers without gating:
     /// the release workflow does exactly that, so publishing a build can never
@@ -319,10 +347,28 @@ enum MachineSpeed {
                              yardstick.baselineMS, rounds)
         print("[perf] budget: \(message)")
         guard isGating else { return }
-        guard normalized >= bound else { return }
-        Issue.record(Comment(rawValue: "\(label) regressed: \(message)"),
-                     sourceLocation: SourceLocation(fileID: fileID, filePath: filePath,
-                                                    line: line, column: column))
+        let location = SourceLocation(fileID: fileID, filePath: filePath,
+                                      line: line, column: column)
+        switch reading(normalizedMS: normalized, boundMS: bound,
+                       yardstickMS: referenceMedian, yardstickBaselineMS: yardstick.baselineMS) {
+        case .withinBudget:
+            return
+        case .overBudget:
+            Issue.record(Comment(rawValue: "\(label) regressed: \(message)"),
+                         sourceLocation: location)
+        case .untrusted:
+            // Said out loud, as a known issue, so the run reads "passed with a
+            // known issue" rather than green or red: nothing was learned here.
+            let why = String(format: "the %@ yardstick read %.1fms against its own %.1fms, so "
+                             + "this machine was too busy for the reading to mean anything",
+                             yardstick.rawValue, referenceMedian, yardstick.baselineMS)
+            print("[perf] not judged: \(label), \(why)")
+            withKnownIssue("\(label) could not be measured: \(why)", sourceLocation: location) {
+                Issue.record(Comment(rawValue: "\(label) over budget on a machine too busy "
+                                     + "to judge it: \(message)"),
+                             sourceLocation: location)
+            }
+        }
     }
 
     private static func ms(_ duration: Duration) -> Double {

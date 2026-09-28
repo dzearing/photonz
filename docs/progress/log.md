@@ -20033,3 +20033,9 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 
 - A posted `windowDrag` moves a timeline clip again (since e459d903). The three walks that drag on the timeline now claim every result: `a-clip-s-sound-is-linked-under-it-walk` (expectClip, Volume reading, Fade in), `timeline-right-click-walk` (expectTimeline playhead and marks), `keys-copy-between-layers-walk` (new `expectLevel` step: points, dip, flat).
 - The claims found two drags that had silently gone nowhere, both because `key` ⌘Z runs no menu in a background probe. Those walks now use the Undo `shortcut` step. Filed `a-walk-s-command-z-undoes-what-it-says-or-the-wa` for the other walks that press ⌘Z.
+
+## 2026-09-28: the icon preview timing test reads its own cost
+
+- Why it went red in full runs: the strip rendered through the renderer's one shared Core Image context and queued behind the other render suites drawing through it, while its yardstick used a private context and never waited. Reproduced directly: eight threads rendering through the shared context made the strip read 360ms beside a yardstick at 8ms. On a private context the same load read 6ms.
+- `DocumentRenderer(privateContext:)` (internal) and the test uses it. `MachineSpeed.reading` adds a third answer to an interleaved check: over budget beside a yardstick more than 3x its own number is recorded as a known issue ("not judged"), never a pass or a fail. Tests in MachineSpeedTests.
+- Verified: full suite green twice idle (7.6, 7.9ms) and twice under 12 spinners at load average 13 to 18 (10.9, 10.7ms); a deliberate 5x slowdown reads 27.2ms and goes red.

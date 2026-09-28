@@ -135,6 +135,15 @@ public final class DocumentRenderer: @unchecked Sendable {
         self.context = DocumentRenderer.sharedContext
     }
 
+    /// A renderer on a context of its own, for a timing test that has to read
+    /// its subject's cost and not the queue in front of it. Inside the full
+    /// suite every other render suite is drawing through `sharedContext` at
+    /// the same moment, and a 48 point icon strip that costs 6ms read 360ms
+    /// waiting behind them while its yardstick, on its own context, read 8ms.
+    init(privateContext context: CIContext) {
+        self.context = context
+    }
+
     /// The cached CIImage wrap of a stored bitmap (keyed by object identity).
     private func wrapped(_ cg: CGImage) -> CIImage {
         let key = ObjectIdentifier(cg)

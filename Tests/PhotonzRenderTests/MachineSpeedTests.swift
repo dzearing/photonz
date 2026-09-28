@@ -139,6 +139,41 @@ struct MachineSpeedTests {
                                           referenceBaselineMS: 8) == .infinity)
     }
 
+    @Test func aReadingOverBudgetBesideAnOrdinaryYardstickIsARegression() {
+        // The yardstick read what it reads on a quiet machine, so the machine
+        // was not what moved. That is the subject, and it fails.
+        #expect(MachineSpeed.reading(normalizedMS: 30, boundMS: 20,
+                                     yardstickMS: 8, yardstickBaselineMS: 8) == .overBudget)
+        #expect(MachineSpeed.reading(normalizedMS: 30, boundMS: 20,
+                                     yardstickMS: 20, yardstickBaselineMS: 8) == .overBudget,
+                "a yardstick two and a half times slow is a busy machine, not an untrustworthy one")
+    }
+
+    @Test func aReadingOverBudgetBesideAYardstickFarOffItsOwnNumberCannotBeTrusted() {
+        // Load average 16 and a 24-thread text reader beside the suite: the
+        // yardstick itself read many times its own number, and dividing by it
+        // extrapolates from a machine nothing like the calibration one. That
+        // reading says so instead of failing.
+        let yardstick = 8 * MachineSpeed.untrustedYardstickFactor + 0.1
+        #expect(MachineSpeed.reading(normalizedMS: 30, boundMS: 20,
+                                     yardstickMS: yardstick, yardstickBaselineMS: 8) == .untrusted)
+    }
+
+    @Test func aReadingInsideItsBudgetPassesHoweverBusyTheMachineWas() {
+        #expect(MachineSpeed.reading(normalizedMS: 6, boundMS: 20,
+                                     yardstickMS: 8, yardstickBaselineMS: 8) == .withinBudget)
+        #expect(MachineSpeed.reading(normalizedMS: 6, boundMS: 20,
+                                     yardstickMS: 80, yardstickBaselineMS: 8) == .withinBudget)
+    }
+
+    @Test func aComparisonThatNeverHappenedStillFailsOnABusyMachine() {
+        // Being unable to trust a reading is not the same as having none.
+        #expect(MachineSpeed.reading(normalizedMS: .infinity, boundMS: 20,
+                                     yardstickMS: .infinity, yardstickBaselineMS: 8) == .overBudget)
+        #expect(MachineSpeed.reading(normalizedMS: .infinity, boundMS: 20,
+                                     yardstickMS: 80, yardstickBaselineMS: 8) == .overBudget)
+    }
+
     @Test func theMedianOfTheRoundsIsWhatCounts() {
         #expect(MachineSpeed.median(of: [3, 1, 2]) == 2)
         #expect(MachineSpeed.median(of: [4, 1, 3, 2]) == 3)   // upper of the two middles

@@ -1,4 +1,5 @@
 import CoreGraphics
+import CoreImage
 import Foundation
 import Testing
 import PhotonzCore
@@ -221,7 +222,12 @@ struct IconPreviewMotionPerfTests {
 
     @Test("A whole strip of moving previews fits inside one frame of the loop")
     func aFrameOfTheStripMeetsBudget() {
-        let renderer = DocumentRenderer()
+        // On a context of its own, like the yardstick it is read against.
+        // Through the shared one it queued behind whatever the other render
+        // suites were drawing at that moment, and read 30ms, 39ms and 97ms in
+        // full runs beside a yardstick reading its ordinary 8ms: the ratio
+        // cannot cancel a wait only one side of it pays.
+        let renderer = DocumentRenderer(privateContext: CIContext(options: [.cacheIntermediates: true]))
         let store = ImageStore()
         let document = movingIcon()
         let id = document.frames.first!.id
