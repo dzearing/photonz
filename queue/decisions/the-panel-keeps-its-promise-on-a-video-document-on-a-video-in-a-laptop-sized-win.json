@@ -1,0 +1,52 @@
+{
+  "id": "the-panel-keeps-its-promise-on-a-video-document-on-a-video-in-a-laptop-sized-win",
+  "taskId": "the-panel-keeps-its-promise-on-a-video-document",
+  "question": "On a video in a laptop sized window, how should Appearance and Effects stay on screen without scrolling?",
+  "context": "Measured 2026-09-28 at a 1200 by 720 window with the timeline open: the panel has 302 points with a title picked and 336 with a clip picked, and the sections above Appearance take 412 and 547. No reordering alone fits both at that height.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Panel runs the full height",
+      "summary": "The right hand panel goes from the top of the window to the bottom, and the timeline sits under the picture only. On a video, Appearance and Effects come straight under Properties, with Time, Text and the sound rows below them.",
+      "pros": [
+        "Appearance and Effects are both whole on a laptop window, for a clip and for a title",
+        "The timeline keeps its full height, so every track still shows"
+      ],
+      "cons": [
+        "Differs from the video mock, which runs the timeline under the panel as well",
+        "The timeline is about a third narrower on a laptop window"
+      ],
+      "mitigation": "The panel can still be dragged narrower or hidden to give the timeline its width back."
+    },
+    {
+      "id": "b",
+      "label": "Timeline opens shorter",
+      "summary": "The layout stays as the mock draws it, but on a small window the timeline opens only as tall as leaves the panel room for Appearance and Effects, which also move straight under Properties. Drag the timeline taller and the panel scrolls again.",
+      "pros": [
+        "Keeps the mock layout exactly",
+        "Appearance and Effects are whole at the height the timeline opens at"
+      ],
+      "cons": [
+        "On a laptop the timeline shows only two or three tracks before it scrolls",
+        "Appearance and Effects are drawn at their shortest, about two rows each, scrolling inside themselves"
+      ],
+      "mitigation": "A larger window gives both back automatically; only laptop sized windows pay."
+    },
+    {
+      "id": "c",
+      "label": "Leave it scrolling",
+      "summary": "Nothing changes. On a picture the two sections never scroll; on a video in a laptop window with the timeline open, you scroll the panel to reach them.",
+      "pros": [
+        "No layout change and no departure from the mock"
+      ],
+      "cons": [
+        "The promise that Appearance and Effects never scroll does not hold while editing video on a laptop"
+      ],
+      "mitigation": "Collapsing the timeline to its bar gives the panel its height back when you need it.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-28T09:10:50.820Z"
+}

@@ -285,7 +285,9 @@ import Testing
     /// its ceiling under it, which takes 235 points off the dock
     /// (`docs/design/video-surface.md` §4), so the pair cannot be kept whatever
     /// is squeezed — and the heights come back the same as they would with no
-    /// promise at all rather than starved into slivers.
+    /// promise at all rather than starved into slivers. (The 235 point strip is
+    /// the timeline now; its real heights, re-measured, are
+    /// `DockFoldOnAVideoDocumentTests` below.)
     @Test func aDockTooShortForThePairIsLeftToScrollRatherThanStarved() {
         let groups = textPickedWithAppearanceAsAList
         let shortRoom = 426 - 2 * topPadding
@@ -303,5 +305,117 @@ import Testing
         let groups = [layers, appearanceAsList(465), motion, measurements]
         #expect(isWhollyInView("color", in: groups, promised: promised))
         #expect(isWhollyInView("motion", in: groups, promised: promised))
+    }
+}
+
+/// The fold on a DOCUMENT WITH TIME, at the laptop window, re-measured on
+/// 2026-09-28 after the timeline replaced the strip and took the Layers list
+/// out of a video's panel.
+///
+/// Every height here was read off the running probe at 1200 by 720 with the
+/// timeline open under the sample recording (the `dockSections`, `dockViewport`
+/// and `dockListRoom` readings a walk's `describe` prints). The timeline runs
+/// the full width of the window, under the panel as well as the picture, as
+/// `docs/design/mocks/pages/video.html` draws it, so it takes its height off
+/// both: the panel's scrolling area is 583 points with the timeline railed,
+/// 336 with a clip picked and the timeline open, and 302 once a title adds a
+/// track of its own.
+///
+/// What these pin is that the budget cannot keep the promise at this size in
+/// ANY order: the answer is a change to what the window shows, which is a
+/// question for the user (`queue/decisions/`, task
+/// the-panel-keeps-its-promise-on-a-video-document).
+@Suite struct DockFoldOnAVideoDocumentTests {
+    let topPadding: CGFloat = 6
+    let promised: Set<String> = ["color", "effects"]
+
+    /// The panel's scrolling area at 1200 by 720, measured.
+    let railed: CGFloat = 583
+    let clipWithTimeline: CGFloat = 336
+    let titleWithTimeline: CGFloat = 302
+
+    func form(_ key: String, _ height: CGFloat) -> DockHeightBudget.Group {
+        .init(key: key, fixed: height, flexible: 0, floor: 0)
+    }
+
+    /// Appearance over a title: 33 of chrome, 164 of parts, 112 floor.
+    var appearanceOverTitle: DockHeightBudget.Group {
+        .init(key: "color", fixed: 33, flexible: 164, floor: 112)
+    }
+    /// Effects over a title, whose drop shadow comes open: 512 of panes, and
+    /// the 131 that draws the open one whole.
+    var effectsOverTitle: DockHeightBudget.Group {
+        .init(key: "effects", fixed: 33, flexible: 512, floor: 131)
+    }
+    /// Appearance over a clip: 33 of chrome over 134 of parts.
+    var appearanceOverClip: DockHeightBudget.Group {
+        .init(key: "color", fixed: 33, flexible: 134, floor: 112)
+    }
+    /// Effects over a clip, empty: one line saying how to add one.
+    var effectsOverClip: DockHeightBudget.Group {
+        .init(key: "effects", fixed: 33, flexible: 35, floor: 35)
+    }
+
+    /// Title picked, in the order the panel draws today: Properties 128, Time
+    /// 75, Text 209, then the pair.
+    var titleToday: [DockHeightBudget.Group] {
+        [form("properties", 128), form("time", 75), form("text", 209),
+         appearanceOverTitle, effectsOverTitle]
+    }
+    /// Clip picked, today: Properties 143, Time 105, Channel 95, Fades 108,
+    /// Gain 96, then the pair.
+    var clipToday: [DockHeightBudget.Group] {
+        [form("properties", 143), form("time", 105), form("channel", 95),
+         form("fades", 108), form("gain", 96), appearanceOverClip, effectsOverClip]
+    }
+
+    func bottom(of key: String, in groups: [DockHeightBudget.Group],
+                viewport: CGFloat) -> CGFloat {
+        let heights = DockHeightBudget.flexibleHeights(groups, viewport: viewport - 2 * topPadding,
+                                                       promised: promised)
+        var top = topPadding
+        for group in groups {
+            top += group.fixed + (heights[group.key] ?? group.flexible)
+            if group.key == key { return top }
+        }
+        return .infinity
+    }
+
+    /// BEFORE, title picked: the forms above the pair are 412 points against
+    /// a 302 point panel, so Appearance starts below the bottom edge.
+    @Test func aTitlePutsBothOfThePairBelowTheFold() {
+        let above: CGFloat = 128 + 75 + 209
+        #expect(above > titleWithTimeline)
+        #expect(bottom(of: "color", in: titleToday, viewport: titleWithTimeline)
+                > titleWithTimeline)
+    }
+
+    /// BEFORE, clip picked: 547 points of forms above the pair, against 336.
+    @Test func aClipPutsBothOfThePairBelowTheFold() {
+        let above: CGFloat = 143 + 105 + 95 + 108 + 96
+        #expect(above == 547)
+        #expect(bottom(of: "effects", in: clipToday, viewport: clipWithTimeline)
+                > clipWithTimeline)
+    }
+
+    /// Why no ordering fixes it: even with the pair straight under Properties
+    /// and squeezed to `foldFloor`, a title's panel needs 348 points and has
+    /// 302. The timeline has to give the panel height back.
+    @Test func noOrderKeepsThePairWithTheTimelineOpenUnderATitle() {
+        let least = topPadding + 128 + 2 * (33 + DockHeightBudget.foldFloor)
+        #expect(least == 348)
+        #expect(least > titleWithTimeline)
+    }
+
+    /// What a panel the full height of the window WOULD do: with the pair
+    /// straight under Properties, both are whole in the 583 points the panel
+    /// has with nothing under it, for a title and for a clip.
+    @Test func thePairFitsInAFullHeightPanelWhenItComesFirst() {
+        let title = [form("properties", 128), appearanceOverTitle, effectsOverTitle,
+                     form("time", 75), form("text", 209)]
+        #expect(bottom(of: "effects", in: title, viewport: railed) <= railed)
+        let clip = [form("properties", 143), appearanceOverClip, effectsOverClip,
+                    form("time", 105), form("channel", 95)]
+        #expect(bottom(of: "effects", in: clip, viewport: railed) <= railed)
     }
 }
