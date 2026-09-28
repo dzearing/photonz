@@ -272,6 +272,9 @@ struct CanvasView: NSViewRepresentable {
     let onCandidateLevelChange: (Int) -> Void
     let onToolChange: (Tool) -> Void
     let onTextEditBegin: (UUID?) -> Void
+    /// The shadows the words being typed will wear once placed (none unless
+    /// they are a title), so the draft looks like what lands.
+    let textDraftShadows: (UUID?, TextContent) -> [PhotonzCore.ShadowStyle]
     /// Typing over a piece of a copy went nowhere, and why. Nothing on screen
     /// would say so otherwise: the field simply would not open.
     let onWordingRefused: (ComponentPieceRefusal) -> Void
@@ -454,6 +457,7 @@ struct CanvasView: NSViewRepresentable {
         view.onCaptionPlaceCancel = onCaptionPlaceCancel
         view.onToolChange = onToolChange
         view.onTextEditBegin = onTextEditBegin
+        view.textDraftShadows = textDraftShadows
         view.onWordingRefused = onWordingRefused
         view.onTextCommit = onTextCommit
         view.onTextCancel = onTextCancel
@@ -597,6 +601,7 @@ final class CanvasNSView: NSView {
     var onCaptionPlaceCancel: (() -> Void) = {}
     var onToolChange: ((Tool) -> Void) = { _ in }
     var onTextEditBegin: ((UUID?) -> Void) = { _ in }
+    var textDraftShadows: ((UUID?, TextContent) -> [PhotonzCore.ShadowStyle]) = { _, _ in [] }
     var onWordingRefused: ((ComponentPieceRefusal) -> Void) = { _ in }
     var onTextCommit: ((UUID?, CGPoint, String, CGFloat) -> Void) = { _, _, _, _ in }
     var onTextCancel: (() -> Void) = {}
@@ -1442,6 +1447,9 @@ final class CanvasNSView: NSView {
     /// The bubble drawn behind an arrow caption's editor, so the draft sits in
     /// the same pill the committed caption renders in. Nil for text sessions.
     var captionPill: CaptionPillView?
+    /// What a title's words throw while they are typed, drawn behind the field.
+    /// Nil whenever the words being typed wear no shadow.
+    var textDraftShadow: TextDraftShadowView?
     /// The bubble an open caption field is drawing RIGHT NOW, in document
     /// points, or nil when no caption is being typed. `layoutCaptionEditor`
     /// works this box out every keystroke to place the field; publishing it is

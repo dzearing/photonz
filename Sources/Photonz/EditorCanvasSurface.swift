@@ -155,6 +155,7 @@ struct EditorCanvasSurface: View {
                    onCandidateLevelChange: { editorState.measureCandidateLevel = $0 },
                    onToolChange: { editorState.setTool($0) },
                    onTextEditBegin: { editorState.beginTextEdit(layerID: $0) },
+                   textDraftShadows: { editorState.draftTextShadows(layerID: $0, content: $1) },
                    onWordingRefused: { editorState.refuseWordingEdit($0) },
                    onTextCommit: { editorState.commitTextEdit(layerID: $0, origin: $1, string: $2, maxWidth: $3) },
                    onTextCancel: { editorState.cancelTextEdit() },

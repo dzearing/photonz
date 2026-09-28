@@ -160,11 +160,14 @@ extension EditorState {
                                                    hugsShortWords: true)
         }
         discardDragPreview()
+        // Over a video (Next) a recoloured title keeps its soft shadow and edge.
+        let keepsShadowShapes = usesTitleLook
         perform { document in
             for id in targets {
                 document.updateLayer(id: id) { l in
                     l = TextBuilder.restyled(layer: l, fontName: fontName, fontSize: fontSize,
-                                             weight: weight, colorHex: colorHex)
+                                             weight: weight, colorHex: colorHex,
+                                             keepsShadowShapes: keepsShadowShapes)
                     if let size = sizes[id] {
                         l.frame = CGRect(origin: l.frame.origin, size: size)
                     }
@@ -228,6 +231,19 @@ extension EditorState {
     /// An inline edit began. Re-editing an existing layer adopts its style (so
     /// the font picker edits what's on screen) and hides the layer until
     /// commit/cancel — the editor overlay visually replaces it.
+    /// The shadows words being typed will wear once they land, so a title's
+    /// draft over a video already throws the title's shadows and nothing
+    /// changes on Return. Only a title's draft wears any: text typed on a still
+    /// keeps the plain draft it always had.
+    func draftTextShadows(layerID: UUID?, content: TextContent) -> [PhotonzCore.ShadowStyle] {
+        guard usesTitleLook else { return [] }
+        if let layerID {
+            return document?.layer(id: layerID)?.style.shadows
+                .filter { $0.paints && $0.kind == .drop } ?? []
+        }
+        return TitleLook.shadows(forColorHex: content.colorHex, fontSize: content.fontSize)
+    }
+
     func beginTextEdit(layerID: UUID?) {
         guard let layerID, let layer = document?.layer(id: layerID),
               case .text(let content) = layer.content else { return }
@@ -319,10 +335,11 @@ extension EditorState {
             var layer = wearingArmedTextStyle(
                 TextBuilder.layer(content: content, at: origin, naturalSize: size))
             // A title throws the mock's big soft shadow rather than the tight
-            // halo a callout wears, so it lifts off whatever frame is under it.
+            // halo a callout wears, so it lifts off whatever frame is under it,
+            // and a tight edge that keeps it readable over a light part of it.
             if isTitle {
-                layer.style.shadow = TitleLook.shadow(forColorHex: content.colorHex,
-                                                      fontSize: content.fontSize)
+                layer.style.shadows = TitleLook.shadows(forColorHex: content.colorHex,
+                                                        fontSize: content.fontSize)
             }
             let moment = documentTimeMS
             // **A title is text that knows when it is on screen**

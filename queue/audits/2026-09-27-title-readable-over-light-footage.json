@@ -1,0 +1,40 @@
+{
+  "feature": "A title stays readable over a light part of the picture",
+  "epic": "video-titles-graphics",
+  "summary": "A new title over a video now has a thin dark edge round its letters as well as the soft shadow, so white words still read where they cross a white window or card. The words you are typing already wear both shadows, so nothing changes when you press Return.",
+  "setup": "Photonz Probe, release Next, no switch changed from its default. Walk: Scripts/playtest/a-title-reads-over-a-video-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the Sample Talk recording and step one second in."
+    },
+    {
+      "do": "Pick the Text tool (T) and click just left of the white Ready card near the top."
+    },
+    {
+      "do": "Type Ship it faster. and look at Ship over the card before pressing anything.",
+      "shot": "2026-09-27-title-readable-1-typing-sc.png"
+    },
+    {
+      "do": "Press Command Return to place it, and compare the placed words with the draft.",
+      "shot": "2026-09-27-title-readable-2-placed-sc.png"
+    },
+    {
+      "do": "Look at it faster. over the dark part of the recording."
+    },
+    {
+      "do": "Change the title's colour to black in the Text section and check both shadows turn light and keep their size."
+    }
+  ],
+  "evaluate": [
+    "Does Ship read at a glance where it crosses the white card?",
+    "Does the title over the dark footage look the same as it did before?",
+    "Does anything jump or change weight when you press Return?",
+    "Is the thin edge subtle enough that it still looks like the mock's soft shadowed title, not an outlined one?"
+  ],
+  "rough": [
+    "This goes further than the mock, which draws only the soft shadow (0 2px 12px at 40 to 45 per cent). The edge is dark on dark footage, so the mock's frame looks the same; it only shows where the words cross something light.",
+    "The draft's edge is drawn by AppKit and the placed one by the renderer, so on very close inspection the draft's edge is a touch crisper. At normal zoom they read the same.",
+    "A title re-edited on a turned (rotated) card is typed without the draft shadows; it gets them back on Return."
+  ]
+}

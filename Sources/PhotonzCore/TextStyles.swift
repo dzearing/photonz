@@ -207,19 +207,38 @@ public enum TextBuilder {
     /// untouched — re-measuring needs CoreText, so the app re-derives it via
     /// `TextRasterizer.naturalSize`. When the color changes, the auto-contrast
     /// shadow is refreshed so the new color stays legible; an unchanged color
-    /// leaves the existing (possibly custom) shadow alone. Non-text layers pass
-    /// through unchanged.
+    /// leaves the existing (possibly custom) shadow alone. A title passes
+    /// `keepsShadowShapes`, so its soft shadow and tight edge keep their shape
+    /// and only turn colour. Non-text layers pass through unchanged.
     public static func restyled(layer: Layer, fontName: String? = nil,
                                 fontSize: CGFloat? = nil, weight: TextWeight? = nil,
-                                colorHex: String? = nil) -> Layer {
+                                colorHex: String? = nil,
+                                keepsShadowShapes: Bool = false) -> Layer {
         guard case .text(var content) = layer.content else { return layer }
         if let fontName { content.fontName = fontName }
         if let fontSize { content.fontSize = fontSize }
         if let weight { content.weight = weight }
         var updated = layer
         if let colorHex, colorHex != content.colorHex {
+            let oldHalo = autoContrastShadow(forColorHex: content.colorHex)
+            let newHalo = autoContrastShadow(forColorHex: colorHex)
             content.colorHex = colorHex
-            updated.style.shadow = autoContrastShadow(forColorHex: colorHex)
+            if keepsShadowShapes, !updated.style.shadows.isEmpty {
+                // A shadow that opposed the old words turns to oppose the new
+                // ones and keeps its shape, so a title's soft shadow and tight
+                // edge stay what they were. A first shadow that was the old
+                // halo, or opposed nothing, becomes the new halo as before.
+                updated.style.shadows = updated.style.shadows.enumerated().map { index, shadow in
+                    if shadow.colorHex == oldHalo.colorHex, !(index == 0 && shadow == oldHalo) {
+                        var turned = shadow
+                        turned.colorHex = newHalo.colorHex
+                        return turned
+                    }
+                    return index == 0 ? newHalo : shadow
+                }
+            } else {
+                updated.style.shadow = newHalo
+            }
         }
         updated.content = .text(content)
         return updated

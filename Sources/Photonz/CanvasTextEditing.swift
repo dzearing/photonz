@@ -235,7 +235,42 @@ extension CanvasNSView {
             case .right: editor.alignment = .right
             }
         }
+        styleDraftShadow(for: stored, zoom: viewport.zoom)
         layoutTextEditor()
+    }
+
+    /// A title's words throw their shadows while they are typed, the soft one
+    /// and the tight edge, so white words crossing a light card read before
+    /// Return and nothing changes on it. Words that will wear none get no view.
+    private func styleDraftShadow(for content: TextContent, zoom: CGFloat) {
+        guard let editor = textEditor, let session = textSession, session.captionStyle == nil else {
+            return
+        }
+        let shadows = textDraftShadows(session.layerID, content)
+        guard !shadows.isEmpty else {
+            textDraftShadow?.removeFromSuperview()
+            textDraftShadow = nil
+            return
+        }
+        let view = textDraftShadow ?? TextDraftShadowView()
+        if textDraftShadow == nil {
+            addSubview(view, positioned: .below, relativeTo: editor)
+            textDraftShadow = view
+        }
+        view.editor = editor
+        view.zoom = zoom
+        view.shadows = shadows
+    }
+
+    /// Keeps the shadow view round the field: as big as the field plus as far
+    /// as the softest shadow reaches, so nothing it throws is sliced off.
+    private func layoutDraftShadow(around editor: NSTextView) {
+        guard let view = textDraftShadow else { return }
+        // A field swung round with a turned card has no upright box to draw
+        // round; its words go without the draft shadow rather than a wrong one.
+        view.isHidden = editor.frameRotation != 0
+        view.frame = editor.frame.insetBy(dx: -view.reach, dy: -view.reach)
+        view.needsDisplay = true
     }
 
     /// The wrap cap (document points) for a text block placed at `origin`.
@@ -308,6 +343,7 @@ extension CanvasNSView {
         // frame was just put at.
         let degrees = overlay.radians * 180 / .pi
         if editor.frameRotation != degrees { editor.frameRotation = degrees }
+        layoutDraftShadow(around: editor)
     }
 
     /// The room the box being re-edited has beyond its words; both nil for a
@@ -507,6 +543,8 @@ extension CanvasNSView {
         textEditorZoom = 0
         captionPill?.removeFromSuperview()
         captionPill = nil
+        textDraftShadow?.removeFromSuperview()
+        textDraftShadow = nil
         guard let editor = textEditor else { return }
         textEditor = nil
         if let responder = window?.firstResponder as? NSView, responder.isDescendant(of: editor) {
@@ -568,6 +606,73 @@ extension CanvasNSView: NSTextViewDelegate {
 /// a text view fills a plain rectangle and clips its layer to it: the capsule
 /// and its shadow need to live outside the field's bounds. Clicks pass
 /// straight through to the field on top of it.
+/// The shadows a title's words throw, drawn behind the field they are typed
+/// in. The field draws the words; this draws only what they cast, from the
+/// field's own laid-out glyphs, so the two line up letter for letter. It is a
+/// view of its own because the soft shadow reaches well past the field, which
+/// would slice it off at its edge.
+final class TextDraftShadowView: NSView {
+    override var isFlipped: Bool { true }
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+    weak var editor: NSTextView?
+    var zoom: CGFloat = 1
+    /// Nearest the eye first, the order a layer keeps them in.
+    var shadows: [PhotonzCore.ShadowStyle] = [] { didSet { needsDisplay = true } }
+
+    /// How far past the field the widest shadow reaches, in view points: three
+    /// times its softness plus its drop, the reach the renderer allows.
+    var reach: CGFloat {
+        shadows.map { shadow in
+            (shadow.radius * 3 + max(abs(shadow.offset.width), abs(shadow.offset.height))
+             + max(shadow.spread, 0)) * zoom
+        }.max() ?? 0
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        guard let editor, let layout = editor.layoutManager, let container = editor.textContainer,
+              let context = NSGraphicsContext.current?.cgContext else { return }
+        let glyphs = layout.glyphRange(for: container)
+        guard glyphs.length > 0 else { return }
+        let origin = convert(editor.textContainerOrigin, from: editor)
+        // Each shadow is cast in a layer of its own, the first outermost, the
+        // way the renderer lays them behind the words.
+        func cast(from index: Int) {
+            guard index < shadows.count else {
+                layout.drawGlyphs(forGlyphRange: glyphs, at: origin)
+                return
+            }
+            NSGraphicsContext.saveGraphicsState()
+            nsShadow(shadows[index]).set()
+            context.beginTransparencyLayer(auxiliaryInfo: nil)
+            cast(from: index + 1)
+            context.endTransparencyLayer()
+            NSGraphicsContext.restoreGraphicsState()
+        }
+        context.beginTransparencyLayer(auxiliaryInfo: nil)
+        cast(from: 0)
+        // The words themselves are the field's to draw; drawing them twice
+        // would thicken their edges, so only what they throw stays here.
+        context.setBlendMode(.destinationOut)
+        layout.drawGlyphs(forGlyphRange: glyphs, at: origin)
+        context.endTransparencyLayer()
+    }
+
+    /// A layer shadow as AppKit draws one: the renderer's blur is a gaussian
+    /// sigma, AppKit's a blur radius about twice that, and a drop measured
+    /// downward in the document is a negative height here, whichever way the
+    /// view is flipped.
+    private func nsShadow(_ shadow: PhotonzCore.ShadowStyle) -> NSShadow {
+        let ns = NSShadow()
+        ns.shadowBlurRadius = shadow.radius * 2 * zoom
+        ns.shadowOffset = NSSize(width: shadow.offset.width * zoom, height: -shadow.offset.height * zoom)
+        let rgba = RGBA(hex: shadow.colorHex) ?? RGBA(r: 0, g: 0, b: 0)
+        ns.shadowColor = NSColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b,
+                                 alpha: rgba.a * shadow.opacity)
+        return ns
+    }
+}
+
 final class CaptionPillView: NSView {
     override var isFlipped: Bool { true }
     override func hitTest(_ point: NSPoint) -> NSView? { nil }

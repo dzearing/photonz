@@ -47,4 +47,22 @@ public enum TitleLook {
                            colorHex: contrast.colorHex,
                            opacity: 0.45)
     }
+
+    /// How wide the tight edge is, as a share of the type: two pixels of
+    /// softness on 80px words.
+    public static let edgeShareOfSize: CGFloat = 1.0 / 40
+
+    /// Everything a new title throws: the mock's soft shadow, then a tight edge
+    /// hugging the letters. The soft shadow alone leaves white words the same
+    /// colour as a white card they cross in a screen recording; the edge draws
+    /// the letters' outline there, and on dark footage it is dark on dark, so
+    /// the title looks as it always did.
+    public static func shadows(forColorHex hex: String, fontSize: CGFloat) -> [ShadowStyle] {
+        let soft = shadow(forColorHex: hex, fontSize: fontSize)
+        let edge = ShadowStyle(radius: fontSize * edgeShareOfSize,
+                               offset: .zero,
+                               colorHex: soft.colorHex,
+                               opacity: 0.85)
+        return [soft, edge]
+    }
 }

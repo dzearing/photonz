@@ -89,7 +89,7 @@ extension EditorState {
         let origin = CGPoint(x: (size.width - natural.width) / 2, y: (size.height - natural.height) / 2)
         var layer = wearingArmedTextStyle(TextBuilder.layer(content: content, at: origin, naturalSize: natural))
         if isTitle {
-            layer.style.shadow = TitleLook.shadow(forColorHex: content.colorHex, fontSize: content.fontSize)
+            layer.style.shadows = TitleLook.shadows(forColorHex: content.colorHex, fontSize: content.fontSize)
         }
         landing(on: trackID) { addDrawnLayer(layer) }
         finishCreating(layer.id)

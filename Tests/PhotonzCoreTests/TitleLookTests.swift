@@ -51,4 +51,57 @@ struct TitleLookTests {
     @Test func darkWordsGetALightShadowInstead() {
         #expect(TitleLook.shadow(forColorHex: "#101010", fontSize: 72).colorHex == "#FFFFFF")
     }
+
+    @Test func aTitleWearsTheMocksSoftShadowFirst() {
+        let shadows = TitleLook.shadows(forColorHex: "#FFFFFF", fontSize: 72)
+        #expect(shadows.first == TitleLook.shadow(forColorHex: "#FFFFFF", fontSize: 72))
+    }
+
+    /// White words over a white card in a screen recording: the soft shadow
+    /// alone leaves the letters' edges the same colour as the card. A tight dark
+    /// edge right against the letters keeps them readable, and on dark footage
+    /// it is dark on dark, so the title looks as it always did there.
+    @Test func aTitleAlsoWearsATightEdgeThatHoldsItOnALightFrame() {
+        let shadows = TitleLook.shadows(forColorHex: "#FFFFFF", fontSize: 80)
+        #expect(shadows.count == 2)
+        let edge = shadows[1]
+        #expect(edge.colorHex == "#000000")
+        #expect(edge.offset == .zero)
+        // Tight: far narrower than the soft shadow, and scaled to the type.
+        #expect(edge.radius < shadows[0].radius / 4)
+        #expect(edge.radius > 0)
+        #expect(abs(TitleLook.shadows(forColorHex: "#FFFFFF", fontSize: 160)[1].radius
+                    - edge.radius * 2) < 0.01)
+        // Strong enough to draw a line, not a haze.
+        #expect(edge.opacity >= 0.7)
+        #expect(edge.kind == .drop)
+        #expect(edge.isOn)
+    }
+
+    @Test func darkWordsGetALightEdgeInstead() {
+        let shadows = TitleLook.shadows(forColorHex: "#101010", fontSize: 72)
+        #expect(shadows.allSatisfy { $0.colorHex == "#FFFFFF" })
+    }
+
+    @Test func recolouringATitleTurnsItsEdgeToOpposeTheNewWords() {
+        var layer = TextBuilder.layer(content: TextContent(string: "Ship", fontSize: 80, colorHex: "#FFFFFF"),
+                                      at: .zero, naturalSize: CGSize(width: 200, height: 90))
+        layer.style.shadows = TitleLook.shadows(forColorHex: "#FFFFFF", fontSize: 80)
+        let dark = TextBuilder.restyled(layer: layer, colorHex: "#101010", keepsShadowShapes: true)
+        #expect(dark.style.shadows.count == 2)
+        #expect(dark.style.shadows.allSatisfy { $0.colorHex == "#FFFFFF" })
+        // Only the colour turns: the soft shadow stays soft and the edge
+        // stays the edge, rather than either becoming a callout's small halo.
+        #expect(dark.style.shadows[0].radius == layer.style.shadows[0].radius)
+        #expect(dark.style.shadows[1].radius == layer.style.shadows[1].radius)
+    }
+
+    @Test func recolouringACalloutStillRefreshesItsHalo() {
+        let layer = TextBuilder.layer(content: TextContent(string: "Save", colorHex: "#FFFFFF"),
+                                      at: .zero, naturalSize: CGSize(width: 60, height: 30))
+        for keeps in [false, true] {
+            let dark = TextBuilder.restyled(layer: layer, colorHex: "#101010", keepsShadowShapes: keeps)
+            #expect(dark.style.shadows == [TextBuilder.autoContrastShadow(forColorHex: "#101010")])
+        }
+    }
 }

@@ -146,7 +146,7 @@
     {
       "do": "describe",
       "stage": "3-title",
-      "note": "THE TEST: the first title typed over a dark screen recording reads at a glance with nothing restyled. White, bold, a tenth of the 800 tall picture, with a soft shadow under it"
+      "note": "THE TEST: the first title typed over a dark screen recording reads at a glance with nothing restyled. White, bold, a tenth of the 800 tall picture, with a soft shadow under it and a tight dark edge round the letters, so Ship still reads where it crosses the white Ready card"
     },
     {
       "do": "expect",
