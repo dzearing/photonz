@@ -3840,6 +3840,59 @@ struct PlaytestScriptTests {
         }
     }
 
+    // MARK: - Where a clip's level line went
+
+    // A drag on a point of the level line is posted to the window, and a
+    // posted drag that reaches nothing leaves a picture that looks much like
+    // one that did (`walks-that-drag-a-clip-on-the-timeline-by-window`).
+    @Test("An expectLevel step claims how many points a clip's level line has and whether one dips")
+    func expectLevelClaimsThePoints() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectLevel", "clip": "b-roll", "points": 3, "dipsBelowDB": -20 } ] }
+        """)
+        guard case .expectLevel(let clip, let points, let dipsBelowDB, let flat) = script.steps[0] else {
+            Issue.record("expectLevel"); return
+        }
+        #expect(clip == "b-roll")
+        #expect(points == 3)
+        #expect(dipsBelowDB == -20)
+        #expect(flat == nil)
+        #expect(script.steps[0].name == "expectLevel")
+    }
+
+    @Test("An expectLevel step can claim the line is flat")
+    func expectLevelClaimsFlat() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectLevel", "clip": "b-roll", "flat": true } ] }
+        """)
+        guard case .expectLevel(_, let points, _, let flat) = script.steps[0] else {
+            Issue.record("expectLevel"); return
+        }
+        #expect(points == nil)
+        #expect(flat == true)
+    }
+
+    @Test("An expectLevel step has to name its clip and claim something that could be true")
+    func expectLevelRefusesNonsense() throws {
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "expectLevel", "points": 3 } ] }"#)
+        }
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "expectLevel", "clip": "b-roll" } ] }"#)
+        }
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "expectLevel", "clip": "b-roll", "points": -1 } ] }"#)
+        }
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "expectLevel", "clip": "b-roll", "flat": true, "dipsBelowDB": -20 } ] }"#)
+        }
+    }
+
+    @Test("An expectLevel step survives a locked screen: it reads the document, not a name")
+    func expectLevelIsLockSafe() {
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectLevel"))
+    }
+
     // MARK: - What the recording on disk says
 
     // A walk that trims and saves has to be able to ask the FILE, not the app.

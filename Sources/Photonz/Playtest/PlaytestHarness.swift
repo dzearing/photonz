@@ -2064,6 +2064,11 @@ private final class Run {
             note(number, step.name, try await checkWaveform(clip: clip, within: within),
                  state: describe())
 
+        case .expectLevel(let clip, let points, let dipsBelowDB, let flat):
+            note(number, step.name, try checkLevel(clip: clip, points: points,
+                                                   dipsBelowDB: dipsBelowDB, flat: flat),
+                 state: describe())
+
         case .expectClipPictures(let clip, let absent, let within):
             note(number, step.name, try await checkClipPictures(clip: clip, absent: absent, within: within),
                  state: describe())
@@ -7142,6 +7147,45 @@ private final class Run {
             ? "\(clip)'s bar shows no pictures at all after \(Self.round1(CGFloat(within)))s"
             : "\(clip)'s bar has \(now.read) of \(now.tiles) pictures read, at \(Int(now.opacity * 100))%, "
                 + "after \(Self.round1(CGFloat(within)))s")
+    }
+
+    /// Where a clip's level line has been left, read out of the document: the
+    /// points it carries and how loud each is, in decibels of its own shape
+    /// (the fader is the Volume row's business, not the line's).
+    private func checkLevel(clip: String, points: Int?, dipsBelowDB: Double?, flat: Bool?) throws -> String {
+        let editor = try requireEditor()
+        guard let layer = editor.document?.flattenedLayers.first(where: { $0.name == clip }) else {
+            throw Failure(description: "there is no clip called \(clip) in the document")
+        }
+        guard layer.sound != nil else {
+            throw Failure(description: "\(clip) has no sound, so it has no level line")
+        }
+        let line = layer.soundLevel?.points ?? []
+        func db(_ gain: Double) -> Double { gain > 0 ? 20 * log10(gain) : -.infinity }
+        func said(_ gain: Double) -> String {
+            gain > 0 ? String(format: "%.1f dB", db(gain)) : "silence"
+        }
+        let reading = line.isEmpty
+            ? "no points"
+            : line.map { String(format: "%.2fs ", Double($0.atMS) / 1000) + said($0.gain) }
+                .joined(separator: ", ")
+        var wrong: [String] = []
+        if let points, line.count != points {
+            wrong.append("it has \(line.count) point\(line.count == 1 ? "" : "s"), not \(points)")
+        }
+        let quietest = line.map(\.gain).min()
+        if let dipsBelowDB, !(quietest.map { db($0) < dipsBelowDB } ?? false) {
+            wrong.append(String(format: "nothing on it is quieter than %.1f dB", dipsBelowDB))
+        }
+        if let flat {
+            let isFlat = Set(line.map(\.gain)).count <= 1
+            if isFlat != flat { wrong.append(flat ? "it is not flat" : "it is flat") }
+        }
+        guard wrong.isEmpty else {
+            throw Failure(description: "\(clip)'s level line is not where the walk said: "
+                + wrong.joined(separator: "; ") + " (\(reading))")
+        }
+        return "\(clip)'s level line is where the walk said: \(reading)"
     }
 
     private func checkWaveform(clip: String, within: Double) async throws -> String {

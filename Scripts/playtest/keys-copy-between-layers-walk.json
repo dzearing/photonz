@@ -475,6 +475,12 @@
    "seconds": 0.5
   },
   {
+   "do": "expectLevel",
+   "clip": "Tutorial Sample",
+   "points": 3,
+   "flat": true
+  },
+  {
    "do": "describe",
    "stage": "5-points",
    "note": "With both titles' lanes closed by their arrows, the recording's sound shows under it. A click picks it, then three clicks on its level line put three points on it under the second title"
@@ -512,6 +518,12 @@
    "seconds": 0.4
   },
   {
+   "do": "expectLevel",
+   "clip": "Tutorial Sample",
+   "points": 3,
+   "dipsBelowDB": -20
+  },
+  {
    "do": "describe",
    "stage": "6-dipped",
    "note": "THE FOURTH TEST: the middle point dragged down: the sound dips under the second title and comes back. Option K from four seconds steps back onto that point, so volume points are keys too, and the panel's Volume row reads the dip"
@@ -531,15 +543,22 @@
    "name": "4-volume-dipped"
   },
   {
-   "do": "key",
+   "do": "shortcut",
    "key": "z",
    "modifiers": [
     "command"
-   ]
+   ],
+   "menuItem": "Undo"
   },
   {
    "do": "wait",
    "seconds": 0.6
+  },
+  {
+   "do": "expectLevel",
+   "clip": "Tutorial Sample",
+   "points": 3,
+   "flat": true
   },
   {
    "do": "describe",

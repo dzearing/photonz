@@ -44,6 +44,11 @@
       "steps": 3
     },
     {
+      "do": "expectTimeline",
+      "playheadMS": 2000,
+      "withinMS": 100
+    },
+    {
       "do": "wait",
       "seconds": 0.5
     },
@@ -124,6 +129,11 @@
       "steps": 3
     },
     {
+      "do": "expectTimeline",
+      "playheadMS": 3000,
+      "withinMS": 100
+    },
+    {
       "do": "wait",
       "seconds": 0.4
     },
@@ -162,6 +172,11 @@
       "steps": 3
     },
     {
+      "do": "expectTimeline",
+      "playheadMS": 1000,
+      "withinMS": 100
+    },
+    {
       "do": "rightClick",
       "at": [
         315,
@@ -182,6 +197,11 @@
         860
       ],
       "steps": 3
+    },
+    {
+      "do": "expectTimeline",
+      "playheadMS": 5000,
+      "withinMS": 100
     },
     {
       "do": "rightClick",
@@ -205,6 +225,11 @@
       "steps": 3
     },
     {
+      "do": "expectTimeline",
+      "playheadMS": 4000,
+      "withinMS": 100
+    },
+    {
       "do": "rightClick",
       "at": [
         918,
@@ -218,9 +243,15 @@
       "seconds": 0.6
     },
     {
+      "do": "expectTimeline",
+      "hasIn": true,
+      "hasOut": true,
+      "markers": 1
+    },
+    {
       "do": "describe",
       "stage": "8-marks",
-      "note": "In at one second, Out at six, a marker at four: a green wash on the ruler between them, green marks on the scrub bar, an amber tab at four"
+      "note": "In at one second, Out at five, a marker at four: a green wash on the ruler between them, green marks on the scrub bar, an amber tab at four"
     },
     {
       "do": "snapshot",

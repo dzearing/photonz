@@ -3006,6 +3006,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// that until 2026-09-26, and a picture of a flat line looks like a quiet
     /// clip. This reads what the bar last drew, not what the app has read.
     case expectWaveform(clip: String, within: Double)
+    /// CLAIMS where the level line of the clip named `clip` has been left:
+    /// how many `points` it carries, that one of them is quieter than
+    /// `dipsBelowDB` (a dip landed), or that they are all at one level
+    /// (`flat`, which is what an undone dip must be). It reads the document,
+    /// not the bar, because a drag posted to the window that reached nothing
+    /// leaves a picture much like one that did.
+    case expectLevel(clip: String, points: Int?, dipsBelowDB: Double?, flat: Bool?)
     /// CLAIMS that the clip named `clip` shows pictures of what is in it along
     /// its bar on the timeline, every picture on screen read and the strip in
     /// full, waiting up to `within` seconds (three unless said otherwise) for
@@ -3342,7 +3349,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "clickRuler", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "clickRuler", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag",
     ].sorted()
@@ -3421,6 +3428,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectSharp: "expectSharp"
         case .expectFrameSharp: "expectFrameSharp"
         case .expectWaveform: "expectWaveform"
+        case .expectLevel: "expectLevel"
         case .expectClipPictures: "expectClipPictures"
         case .expectReadout: "expectReadout"
         case .expectLanding: "expectLanding"
@@ -4016,6 +4024,22 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("within", "a number of seconds to wait is zero or more, not \(within)")
             }
             self = .expectWaveform(clip: try f.string("clip"), within: within)
+        case "expectLevel":
+            let points = try f.optionalNumber("points")
+            let dipsBelowDB = try f.optionalNumber("dipsBelowDB")
+            let flat = try f.optionalFlag("flat")
+            guard points != nil || dipsBelowDB != nil || flat != nil else {
+                throw f.invalid("points", "expectLevel has to claim something: "
+                    + "a number of \"points\", a \"dipsBelowDB\" or \"flat\"")
+            }
+            if let points, points < 0 || points != points.rounded() {
+                throw f.invalid("points", "a number of points is a whole number, zero or more, not \(points)")
+            }
+            if flat == true, dipsBelowDB != nil {
+                throw f.invalid("flat", "a flat line cannot also dip, so no level could ever pass")
+            }
+            self = .expectLevel(clip: try f.string("clip"), points: points.map { Int($0) },
+                                dipsBelowDB: dipsBelowDB, flat: flat)
         case "expectClipPictures":
             let within = try f.optionalNumber("within") ?? 3
             guard within >= 0 else {
