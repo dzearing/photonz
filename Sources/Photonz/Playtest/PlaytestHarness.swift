@@ -4405,6 +4405,19 @@ private final class Run {
                         + "edit point to pick")
                 }
                 editor.pickEditPoint(point)
+            case .clipPickEveryClip:
+                guard let document = editor.document else { break }
+                let clips = document.timelineClipLayers.filter { $0.movie != nil }.map(\.id)
+                guard clips.count > 1 else {
+                    throw Failure(description: "there are \(clips.count) clips on the timeline; "
+                        + "picking every clip means two or more")
+                }
+                editor.selectLayer(clips[0])
+                for id in clips.dropFirst() { editor.extendSelection(toLayer: id) }
+                guard editor.actionableLayerIDs == Set(clips) else {
+                    throw Failure(description: "⇧-picking every clip picked "
+                        + "\(editor.actionableLayerIDs.count) of \(clips.count)")
+                }
             case .clipTransitionDissolve, .clipTransitionDipToBlack:
                 let kind: ClipTransitionKind =
                     action == .clipTransitionDissolve ? .dissolve : .dipToBlack
@@ -5508,7 +5521,7 @@ private final class Run {
                  .clipSlideOntoPlayheadHeld, .clipCarryLastToFrontHeld, .clipDragRelease,
                  .clipSlideShortOfPlayhead,
                  .clipCarryUpATrackHeld, .clipCarryToNewTrackOnTopHeld, .tracksGroupPicked,
-                 .clipPickCut, .clipPickFirstCut, .clipPickEditPoint, .clipTransitionDissolve, .clipTransitionDipToBlack,
+                 .clipPickCut, .clipPickFirstCut, .clipPickEditPoint, .clipPickEveryClip, .clipTransitionDissolve, .clipTransitionDipToBlack,
                  .clipTransitionHardCut, .clipTransitionDragLonger, .clipBlurComesOn,
                  .titleDragStartEarlier, .titleDragEndLater, .clipKeyAtPlayheadLater,
                  .keyLanesToggle, .keyLanesPickAtPlayhead, .keyLanesPickAll,

@@ -77,6 +77,9 @@ struct TransitionPicker: View {
         // Premiere's right click on a transition in the Effects panel. On the
         // tile, not in a panel row, because it is a verb you do once.
         .contextMenu {
+            // The mock's Apply to every cut (`#efxMenu`): twenty cuts in a
+            // screen recording take a dissolve in one go, not twenty.
+            Button("Apply to Every Cut") { editorState.putTransitionOnEveryCut(kind) }
             Button("Set as Default Transition") { editorState.setDefaultTransition(kind) }
                 .disabled(isDefault)
         }

@@ -19970,3 +19970,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - A hold is the gap between the two clips: `editPoints` accepts a gap equal to the arrival hold (and `atMS` is now where the outgoing clip ends), `setTransition` ripples every track by the change, and the hold draws black and plays silence.
 - Panel: The overlap sits (segmented) and Hold on black (dropdown, between clips only). Timeline: band spans fade + hold + fade over a Black block; dashed spare strips while an edit point is picked.
 - Walk: `transition-placement-and-hold-walk`. Next: `a-dip-on-a-blade-cut-inside-one-clip-can-hold-on`.
+
+## 2026-09-28 — One step puts a transition on every cut
+
+- Right click a tile in the transition picker: Apply to Every Cut puts that kind on every cut not on a locked track, each fitted to its spare, as one undo. Cuts that cannot pay are left alone and counted.
+- ⌘T with two or more clips picked (and a cut among them) spreads the default transition over the joins inside them and the edits between two picked clips; otherwise ⌘T is the one cut as before.
+- Core: `transitionCuts(among:)`, `putTransitionOnEveryCut(_:among:)`, `EveryCutOutcome` in `DefaultTransition.swift`; notice `.transitionOnEveryCut` ("Push · On 3 cuts, 1 skipped").
+- Walks: `transition-on-every-cut-walk`, `default-transition-on-picked-clips-walk` (new action `clipPickEveryClip`). Next: the mock's panel Transitions group, filed as `the-panel-has-a-transitions-group-of-tiles-as-th`.

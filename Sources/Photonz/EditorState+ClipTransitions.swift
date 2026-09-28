@@ -269,6 +269,7 @@ extension EditorState {
     }
 
     func canApplyDefaultTransition(at place: TimelineCutPlace? = nil) -> Bool {
+        if place == nil, clipsPickedForEveryCut != nil { return true }
         guard case .put = defaultTransitionPlan(at: place) else { return false }
         return true
     }
@@ -280,6 +281,12 @@ extension EditorState {
     /// so the press carries on.
     @discardableResult
     func applyDefaultTransition(at place: TimelineCutPlace? = nil) -> Bool {
+        // Several clips picked and no one cut: Premiere's Apply Default
+        // Transitions to Selection, every cut inside and between them.
+        if place == nil, let clips = clipsPickedForEveryCut {
+            putTransitionOnEveryCut(defaultTransitionKind, among: clips)
+            return true
+        }
         guard let plan = defaultTransitionPlan(at: place) else { return false }
         switch plan {
         case .refused(let why):
@@ -289,6 +296,35 @@ extension EditorState {
             setTransition(transition.kind, at: place)
         }
         return true
+    }
+
+    // MARK: Every cut at once
+
+    /// The clips ⌘T spreads over: two or more picked, with at least one cut
+    /// inside or between them. One clip, or picks with no cut among them, and
+    /// the key means the one cut, as it always has. A cut picked wins.
+    private var clipsPickedForEveryCut: Set<UUID>? {
+        guard selectedEditPoint == nil, selectedClipCutIndex == nil else { return nil }
+        let picked = actionableLayerIDs
+        guard picked.count > 1, Experiments.shared.transitionsAtACutEnabled, documentHasTime,
+              document?.transitionCuts(among: picked).isEmpty == false else { return nil }
+        return picked
+    }
+
+    /// The transitions mock's Apply to every cut: `kind` on every cut on the
+    /// timeline, or every cut among `clips`, as ONE step to undo. A cut that
+    /// cannot pay for it is left as it was, and the canvas says how many.
+    func putTransitionOnEveryCut(_ kind: ClipTransitionKind, among clips: Set<UUID>? = nil) {
+        guard Experiments.shared.transitionsAtACutEnabled, documentHasTime, var trial = document else { return }
+        let outcome = trial.putTransitionOnEveryCut(kind, among: clips)
+        closeTransitionPicker()
+        if !outcome.put.isEmpty {
+            endTrimBeforeCutting()
+            pauseDocument()
+            perform { $0.putTransitionOnEveryCut(kind, among: clips) }
+            documentMomentChanged()
+        }
+        raiseCanvasNotice(.transitionOnEveryCut(kind, outcome))
     }
 
     // MARK: The picker at the cut

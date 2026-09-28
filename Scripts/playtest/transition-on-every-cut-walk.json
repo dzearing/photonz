@@ -1,0 +1,189 @@
+{
+  "out": "/tmp/photonz-playtest/transition-on-every-cut-walk",
+  "seed": "The transitions mock's Apply to every cut: a right click on a tile in the picker puts that transition on every cut on the timeline that can pay for it, as one undo step, and the canvas says how many went on and how many were skipped. At Next defaults, no flag set.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "scratch": [
+      "sample:recording as b-roll.mp4"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "clipDragEndIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 7.0,
+      "count": 1
+    },
+    {
+      "do": "action",
+      "action": "videoSeekQuarter"
+    },
+    {
+      "do": "action",
+      "action": "clipSplit"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekMiddle"
+    },
+    {
+      "do": "action",
+      "action": "clipSplit"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "dropOnTimeline",
+      "file": "scratch/b-roll.mp4",
+      "track": "V1",
+      "seconds": 6.95
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "clipDragStartIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "track": "V1",
+      "startsAt": 7.0,
+      "count": 1
+    },
+    {
+      "do": "describe",
+      "stage": "0-three-cuts",
+      "note": "the recording cut twice, and b-roll butted onto its end: two joins inside the recording and one edit point between the two clips, all hard"
+    },
+    {
+      "do": "action",
+      "action": "clipPickEditPoint"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Add transition"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Push",
+      "present": true
+    },
+    {
+      "do": "rightClick",
+      "on": "Push",
+      "shot": "1-apply-to-every-cut-menu",
+      "choose": "Apply to Every Cut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "snapshot",
+      "name": "2-push-on-every-cut"
+    },
+    {
+      "do": "expectNotice",
+      "says": "On 3 cuts"
+    },
+    {
+      "do": "describe",
+      "stage": "1-push-on-every-cut",
+      "note": "THE TEST: right click on the Push tile, Apply to Every Cut. A push on each of the three cuts, the picker put away, and the canvas says Push, On 3 cuts"
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Push"
+    },
+    {
+      "do": "action",
+      "action": "clipPickFirstCut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Push"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Transition header",
+      "reads": "None"
+    },
+    {
+      "do": "action",
+      "action": "clipPickEditPoint"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Transition header",
+      "reads": "None"
+    },
+    {
+      "do": "describe",
+      "stage": "3-one-undo",
+      "note": "one Command Z and every cut is hard again: Apply to Every Cut was one step to undo"
+    }
+  ]
+}

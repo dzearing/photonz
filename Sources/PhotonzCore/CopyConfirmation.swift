@@ -188,6 +188,10 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// changes when it is, so without a word it reads as a menu row that
         /// did nothing.
         case defaultTransitionSet(ClipTransitionKind)
+        /// One transition went on every cut, or every cut among the clips
+        /// picked (`EveryCutOutcome`). Most of those cuts are off screen, so
+        /// the count says what happened, and how many had no spare to pay.
+        case transitionOnEveryCut(ClipTransitionKind, EveryCutOutcome)
         /// A transition was asked to sit on a side of its cut with no spare
         /// frames to pay for it (`#rowAlign`). The segment stays where it
         /// was, so it says why.
@@ -315,6 +319,9 @@ public struct CopyConfirmation: Hashable, Sendable {
             return outcome.unreadable.isEmpty ? Self.lifetime : Self.breakLifetime
         // Still working: it waits for its own answer (see `workingLifetime`).
         case .readingTheWords: return Self.workingLifetime
+        // Cuts left hard are worth a second look before the pill goes.
+        case .transitionOnEveryCut(_, let outcome):
+            return outcome.skipped == 0 ? Self.lifetime : Self.breakLifetime
         default: return Self.lifetime
         }
     }
@@ -344,6 +351,8 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .toolUnderMore(let tool): return tool
         case .defaultTransitionRefused: return "No transition added"
         case .defaultTransitionSet: return "Default transition"
+        case .transitionOnEveryCut(let kind, let outcome):
+            return outcome.put.isEmpty ? "No transition added" : kind.title
         case .transitionSideRefused: return "Not moved"
         case .landedOnTrack(_, _, _, let isSound): return isSound ? "Sound added" : "Clip added"
         case .mediaWouldNotOpen: return "Not added"
@@ -399,6 +408,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return refusal.detail
         case .defaultTransitionSet(let kind):
             return "\u{2318}T now puts \(kind.title) on a cut"
+        case .transitionOnEveryCut(_, let outcome):
+            return outcome.countLine
         case .transitionSideRefused:
             return "No spare frames on that side"
         case .clipAdded(let name):

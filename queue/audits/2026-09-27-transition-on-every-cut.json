@@ -1,0 +1,27 @@
+{
+  "feature": "One step puts a transition on every cut",
+  "epic": "video-transitions-motion",
+  "summary": "Right click a tile in the transition picker and choose Apply to Every Cut, and every cut on the timeline gets that transition at once. Pick several clips and press Command T, and the default transition goes on every cut inside and between them. Either is one undo.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording, cut it two or three times with B, and drop a second clip after it.",
+  "switched": {},
+  "try": [
+    { "do": "Click a cut on the timeline, then Add transition in the panel to open the tiles." },
+    { "do": "Right click the Push tile and choose Apply to Every Cut.", "shot": "2026-09-27-every-cut-1-menu-sc.png" },
+    { "do": "Look at the timeline: every cut has a band, and the canvas says Push, On 3 cuts.", "shot": "2026-09-27-every-cut-2-push-sc.png" },
+    { "do": "Press Command Z once: every cut is hard again." },
+    { "do": "Click one clip, then Shift click the other, and press Command T.", "shot": "2026-09-27-every-cut-3-command-t-sc.png" },
+    { "do": "Press Command T with only one clip picked: it still acts on the one cut at the playhead." }
+  ],
+  "evaluate": [
+    "Is the right click on a tile where you would look for Apply to Every Cut?",
+    "Does the pill (Push, On 3 cuts) tell you enough, given most of those cuts may be off screen?",
+    "With several clips picked, should Command T also reach the edit between a picked clip and one that is not picked, the way Premiere does at a selection's outer ends?",
+    "Should Apply to Every Cut replace transitions you already set by hand, as it does now, or leave them alone?"
+  ],
+  "rough": [
+    "The mock puts Apply to every cut in a plus menu on a Transitions group in the right panel. The app has no such group yet, so the row lives on the picker tile's right click only; filed as the-panel-has-a-transitions-group-of-tiles-as-th.",
+    "Menu rows are in macOS title case (Apply to Every Cut) to match Set as Default Transition beside it; the mock writes sentence case.",
+    "A cut with no spare frames is skipped and counted in the pill (On 12 cuts, 3 skipped), but nothing on the timeline marks which ones were skipped.",
+    "In these pictures the two joins inside the recording are plain splits, so the panel says Shows nothing here for them: the sample, not the feature."
+  ]
+}

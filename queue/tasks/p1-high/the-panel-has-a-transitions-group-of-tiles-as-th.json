@@ -1,0 +1,28 @@
+{
+  "id": "the-panel-has-a-transitions-group-of-tiles-as-th",
+  "title": "The panel has a Transitions group of tiles, as the transitions mock draws it",
+  "goal": "The transitions mock shows a Transitions group in the right panel: a searchable grid of transition tiles you can drag onto a cut, with a plus menu holding Apply to every cut and Set as the default transition. Today the tiles only appear in the small picker that opens at a cut, so there is nowhere to browse transitions without first clicking a cut.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 380,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-28T02:39:17.053Z",
+  "updated": "2026-09-28T02:39:17.056Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-transitions.html, the dgrp with the libgrid #lib (lines ~240-260) and #efxMenu (line ~299). The verbs already exist: EditorState.putTransitionOnEveryCut(_:among:) and setDefaultTransition(_:) (EditorState+ClipTransitions.swift); tiles are VideoKit.Tile + AnimatedTransitionThumbnail as in TransitionPicker.swift. Found while building one-step-puts-a-transition-on-every-cut, which put Apply to Every Cut on the picker tile right click only.",
+  "acceptance": [
+    "The right panel of a video document shows a Transitions group with the six tiles and a search field, as the mock lays it out",
+    "Dragging a tile onto a cut on the timeline puts that transition on the cut, as one undo step",
+    "The group header plus menu offers Apply to Every Cut and Set as Default Transition, doing what the picker tile right click already does",
+    "A walk at Next defaults proves it and an audit carries a real picture beside the mock"
+  ],
+  "log": [
+    {
+      "t": "2026-09-28T02:39:17.055Z",
+      "note": "created (manual)"
+    }
+  ]
+}

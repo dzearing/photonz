@@ -124,3 +124,74 @@ extension PhotonzDocument {
         return .put(transition, at: target.place)
     }
 }
+
+// MARK: - Every cut at once
+
+/// What one transition put on every cut did: the cuts it went on, in time
+/// order, and how many it could not go on because they have no spare frames
+/// to pay for it. The mock's Apply to every cut, and Premiere's Apply Default
+/// Transitions to Selection.
+public struct EveryCutOutcome: Hashable, Sendable {
+    public var put: [TimelineCutPlace]
+    public var skipped: Int
+
+    public init(put: [TimelineCutPlace], skipped: Int) {
+        self.put = put
+        self.skipped = skipped
+    }
+
+    /// The line the canvas says it with: how many took it, and how many were
+    /// left as they were.
+    public var countLine: String {
+        guard !put.isEmpty else {
+            switch skipped {
+            case 0: return "There are no cuts"
+            case 1: return "1 cut has no spare frames"
+            default: return "\(skipped) cuts have no spare frames"
+            }
+        }
+        let on = put.count == 1 ? "On 1 cut" : "On \(put.count) cuts"
+        return skipped == 0 ? on : "\(on), \(skipped) skipped"
+    }
+}
+
+extension PhotonzDocument {
+
+    /// The cuts a transition can go on, leaving out any on a locked track.
+    /// With `clips`, only the joins inside those clips and the edit points
+    /// where BOTH sides are among them: Premiere's selection, never the edit
+    /// to a clip nobody picked.
+    public func transitionCuts(among clips: Set<UUID>? = nil) -> [DocumentCut] {
+        let locked = layerIDsOnLockedTracks()
+        return transitionCuts().filter { cut in
+            switch cut.place {
+            case let .join(clip, _):
+                !locked.contains(clip) && (clips?.contains(clip) ?? true)
+            case let .edit(outgoing, incoming):
+                !locked.contains(outgoing) && !locked.contains(incoming)
+                    && (clips.map { $0.contains(outgoing) && $0.contains(incoming) } ?? true)
+            }
+        }
+    }
+
+    /// Put `kind` on every cut, or every cut among `clips`, each fitted to
+    /// what that cut can pay for (`ClipCut.fitted`). A cut that cannot pay is
+    /// left exactly as it was and counted as skipped.
+    ///
+    /// Each cut is read again just before it is written, because a dip that
+    /// holds on black puts real time in and moves everything after it.
+    @discardableResult
+    public mutating func putTransitionOnEveryCut(_ kind: ClipTransitionKind,
+                                                 among clips: Set<UUID>? = nil) -> EveryCutOutcome {
+        var outcome = EveryCutOutcome(put: [], skipped: 0)
+        for place in transitionCuts(among: clips).map(\.place) {
+            guard let transition = documentCut(at: place)?.cut.fitted(kind),
+                  setTransition(transition, at: place) else {
+                outcome.skipped += 1
+                continue
+            }
+            outcome.put.append(place)
+        }
+        return outcome
+    }
+}

@@ -1134,6 +1134,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// does, for a walk that is about what the cut then does rather than about
     /// the click (`transition-picker-at-a-cut-walk` clicks it for real).
     case clipPickEditPoint
+    /// Pick every clip on the timeline, the way a ⇧-click on each one does,
+    /// for a walk about what several clips picked then do (⌘T over all of
+    /// them) rather than about the clicks.
+    case clipPickEveryClip
     /// Put a cross dissolve on the cut in hand. Fails the walk when the cut
     /// cannot pay for one, which is the whole point of the refusal: a dissolve
     /// with no spare media either side is not quietly made shorter.
@@ -1217,7 +1221,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .clipSlideOntoPlayheadHeld, .clipCarryLastToFrontHeld, .clipDragRelease,
              .clipSlideShortOfPlayhead,
              .clipCarryUpATrackHeld, .clipCarryToNewTrackOnTopHeld, .tracksGroupPicked,
-             .clipPickCut, .clipPickFirstCut, .clipPickEditPoint, .clipTransitionDissolve, .clipTransitionDipToBlack,
+             .clipPickCut, .clipPickFirstCut, .clipPickEditPoint, .clipPickEveryClip, .clipTransitionDissolve, .clipTransitionDipToBlack,
              .clipTransitionHardCut, .clipTransitionDragLonger, .clipBlurComesOn,
              .titleDragStartEarlier, .titleDragEndLater, .clipKeyAtPlayheadLater,
              .keyLanesToggle, .keyLanesPickAtPlayhead, .keyLanesPickAll,
