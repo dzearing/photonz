@@ -14,6 +14,14 @@ extension CanvasNSView {
 
     override func mouseDown(with event: NSEvent) {
         guard let viewport else { return }
+        // A number typed into a panel box and not yet sent lands now, and the
+        // press that landed it is swallowed, the same as the inline text
+        // editor's: committing never doubles as starting a drag, which would
+        // grab the layer where it was a moment ago and write over the number.
+        if NumberFieldDraft.landNow() {
+            window?.makeFirstResponder(self)
+            return
+        }
         onCanvasPressed()
         // A fresh press, so whatever Escape called off belongs to the last
         // gesture. Cleared here rather than where the pivot is grabbed, so a

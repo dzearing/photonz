@@ -1,0 +1,67 @@
+{
+  "out": "/tmp/photonz-playtest/undo-after-a-drag-with-position-and-size-open",
+  "setup": { "forget": ["tools", "shapes", "panel", "grid"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [120, 120], "to": [320, 220], "steps": 8 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "action", "action": "positionAndSize" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "field": "X", "reads": "120" },
+    { "do": "expect", "field": "Y", "reads": "120" },
+    { "do": "snapshot", "name": "1-numbers-open" },
+
+    { "do": "drag", "from": [220, 170], "to": [320, 250], "steps": 10 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "positionAndSize" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expect", "field": "X", "reads": "220" },
+    { "do": "expect", "field": "Y", "reads": "200" },
+    { "do": "describe", "stage": "1-dragged", "note": "the drag started with X holding the keyboard and moved the shape 100 right and 80 down" },
+    { "do": "snapshot", "name": "2-dragged" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "positionAndSize" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expect", "field": "X", "reads": "120" },
+    { "do": "expect", "field": "Y", "reads": "120" },
+    { "do": "describe", "stage": "2-one-undo", "note": "ONE undo puts it back exactly where it started, not at a spot it passed through" },
+    { "do": "snapshot", "name": "3-one-undo" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "row": "Rectangle", "present": false },
+    { "do": "describe", "stage": "3-next-undo", "note": "the next undo takes the rectangle away, so the drag left exactly one step" },
+
+    { "do": "action", "action": "redo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "positionAndSize" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "focus", "field": "X" },
+    { "do": "type", "text": "300" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "drag", "from": [220, 170], "to": [320, 250], "steps": 10 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "positionAndSize" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expect", "field": "X", "reads": "300" },
+    { "do": "expect", "field": "Y", "reads": "120" },
+    { "do": "describe", "stage": "4-typed-then-pressed", "note": "300 typed into X and not sent: the press on the canvas lands it and does nothing else, rather than dragging the shape from where it was and writing over the number" },
+    { "do": "snapshot", "name": "4-typed-lands" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "positionAndSize" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expect", "field": "X", "reads": "120" },
+    { "do": "expect", "field": "Y", "reads": "120" },
+    { "do": "describe", "stage": "5-typed-undone", "note": "one undo takes the typed number back" }
+  ]
+}

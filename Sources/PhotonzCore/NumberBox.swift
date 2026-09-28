@@ -107,9 +107,16 @@ public enum NumberBox {
     ///   - ceiling: the largest, for the numbers that have a top — a strength
     ///     that means nothing past 100.
     ///   - wholeNumbers: whether this box counts in whole numbers.
+    ///   - offered: the text the box itself last put in the draft, or nil
+    ///     where that is not known. A draft still reading exactly that was
+    ///     never typed in, so finishing with it lands nothing: the thing may
+    ///     have moved on under the box since (a drag in flight when the canvas
+    ///     takes the keyboard), and landing the old number would drag it back
+    ///     part way, as an undo step of its own.
     public static func landing(draft: String, showing: Showing, canClear: Bool,
                                floor: CGFloat?, ceiling: CGFloat? = nil,
-                               wholeNumbers: Bool) -> Landing {
+                               wholeNumbers: Bool, offered: String? = nil) -> Landing {
+        if let offered, draft == offered { return .putBack }
         if draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             // Clearing takes a value away, so there has to be one. A box only
             // standing in for several values that disagree has none, and a box

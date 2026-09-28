@@ -119,6 +119,12 @@ struct PanelNumberField: View {
     }
 
     @State private var draft = ""
+    /// The text the box itself last put in the draft. A draft still reading
+    /// exactly that was never typed in, and letting go of it lands nothing
+    /// (`NumberBox.landing`): a drag that takes the keyboard from X part way
+    /// in used to land X's old number over the moving shape, and the drag
+    /// then cost two undos instead of one.
+    @State private var offered: String?
     /// Set while Return or Escape is handing the keyboard over, so the focus
     /// loss that follows does not land the draft a second time. Escape needs
     /// it: without it, letting go would commit the rounded number on screen
@@ -126,6 +132,9 @@ struct PanelNumberField: View {
     /// an undo step that changes nothing you can see.
     @State private var isFinishing = false
     @FocusState private var isFocused: Bool
+    /// Which box this is to `NumberFieldDraft`, so letting go of the keyboard
+    /// only ever takes down this box's own draft.
+    @State private var token = UUID()
 
     var body: some View {
         HStack(spacing: 4) {
@@ -164,20 +173,27 @@ struct PanelNumberField: View {
             // it can hand the keyboard back as well.
             .onSubmit { landDraft() }
             .numberFieldKeys(commit: { finish { landDraft() } },
-                             revert: { finish { draft = showing.text } },
+                             revert: { finish { offer(showing.text) } },
                              step: { direction, coarse in step(direction, coarse) })
-            .onAppear { draft = showing.text }
+            .onAppear { offer(showing.text) }
             // Only while nobody is typing. A number that changes underneath a
             // half-typed draft must not wipe it.
-            .onChange(of: showing) { if !isFocused { draft = showing.text } }
+            .onChange(of: showing) { if !isFocused { offer(showing.text) } }
             // A different thing being spoken for IS a different number, so the
             // draft starts fresh whether or not the box has the keyboard.
-            .onChange(of: identity) { draft = showing.text }
+            .onChange(of: identity) { offer(showing.text) }
+            // Handed over afresh on every keystroke, so the box that lands it
+            // is the one on screen, reading what it reads now.
+            .onChange(of: draft) { if isFocused { holdDraft() } }
             .onChange(of: isFocused) { _, focused in
                 if focused {
                     isFinishing = false
                     selectEverything()
-                } else if isFinishing {
+                    holdDraft()
+                    return
+                }
+                NumberFieldDraft.let(go: token)
+                if isFinishing {
                     isFinishing = false
                 } else {
                     landDraft()
@@ -192,16 +208,23 @@ struct PanelNumberField: View {
         isFinishing = true
     }
 
-    /// The draft becoming the number the thing really holds.
-    private func landDraft() {
+    /// The draft becoming the number the thing really holds. True when
+    /// something actually changed.
+    @discardableResult
+    private func landDraft() -> Bool {
         switch NumberBox.landing(draft: draft, showing: showing, canClear: clear != nil,
-                                 floor: floor, ceiling: ceiling, wholeNumbers: wholeNumbers) {
+                                 floor: floor, ceiling: ceiling, wholeNumbers: wholeNumbers,
+                                 offered: offered) {
         case .putBack:
-            draft = showing.text
+            offer(showing.text)
+            return false
         case .clear:
             clear?()
+            // Landed: the focus loss still on its way must not clear it twice.
+            offered = draft
+            return true
         case .land(let value):
-            reach(value)
+            return reach(value)
         }
     }
 
@@ -222,12 +245,26 @@ struct PanelNumberField: View {
     /// A number, reaching the thing the box speaks for — unless it is already
     /// there, in which case the box only puts itself straight and no undo step
     /// is spent on a change nobody can see.
-    private func reach(_ value: CGFloat) {
+    @discardableResult
+    private func reach(_ value: CGFloat) -> Bool {
         guard !NumberBox.alreadyShowing(value, showing: showing) else {
-            draft = showing.text
-            return
+            offer(showing.text)
+            return false
         }
-        draft = land(value)?.text ?? spell(value)
+        offer(land(value)?.text ?? spell(value))
+        return true
+    }
+
+    /// Leaves this box's draft where a press on the canvas can land it first
+    /// (`NumberFieldDraft`).
+    private func holdDraft() {
+        NumberFieldDraft.hold(token) { landDraft() }
+    }
+
+    /// The box writing its own draft, as opposed to somebody typing it.
+    private func offer(_ text: String) {
+        draft = text
+        offered = text
     }
 
     /// Taking the keyboard selects the whole number, the way it does in every
@@ -245,6 +282,36 @@ struct PanelNumberField: View {
                 }
             }
         }
+    }
+}
+
+/// The draft in whichever number box has the keyboard, for a press on the
+/// canvas to land BEFORE it starts a drag.
+///
+/// A box lets go of the keyboard a moment after the canvas takes it, and by
+/// then a drag is already moving the shape: a number typed into X and never
+/// sent with Return landed over the moving shape and the drag then wrote over
+/// it, costing two undos and losing the number. So the canvas lands the box
+/// first, on the press, and the press that landed it does nothing else.
+@MainActor
+enum NumberFieldDraft {
+    private static var held: (token: UUID, land: () -> Bool)?
+
+    static func hold(_ token: UUID, land: @escaping () -> Bool) {
+        held = (token, land)
+    }
+
+    static func `let`(go token: UUID) {
+        if held?.token == token { held = nil }
+    }
+
+    /// Lands whatever is being typed, once, and says whether anything
+    /// changed. A draft nobody typed in lands nothing (`NumberBox.landing`),
+    /// so a press with a box merely open goes on to do what it always did.
+    static func landNow() -> Bool {
+        guard let draft = held else { return false }
+        held = nil
+        return draft.land()
     }
 }
 

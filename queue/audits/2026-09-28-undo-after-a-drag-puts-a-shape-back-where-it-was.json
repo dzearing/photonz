@@ -1,0 +1,25 @@
+{
+  "feature": "One drag, one undo, with Position and Size open",
+  "epic": "video-editing",
+  "summary": "With the Position and Size numbers open, dragging a shape and pressing Undo once puts it back exactly where it started. A number typed into a box and not sent now lands when you click the canvas, instead of being lost under a drag.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/undo-after-a-drag-with-position-and-size-open-walk.json",
+  "switched": {},
+  "try": [
+    { "do": "Draw a rectangle, switch to Select (V), and choose Position and Size from the layer's right-click menu." },
+    { "do": "Without clicking anything else, drag the rectangle somewhere new.", "shot": "2026-09-28-undo-after-drag-2-dragged-sc.png" },
+    { "do": "Press Cmd+Z once.", "shot": "2026-09-28-undo-after-drag-3-one-undo-sc.png" },
+    { "do": "Press Cmd+Z again: the rectangle itself goes away, so the drag was one step." },
+    { "do": "Redo, open Position and Size, type 300 into X and do not press Return." },
+    { "do": "Press on the rectangle as if to drag it.", "shot": "2026-09-28-undo-after-drag-4-typed-lands-sc.png" },
+    { "do": "Press Cmd+Z once: X goes back to where it was." }
+  ],
+  "evaluate": [
+    "After one Cmd+Z, is the rectangle exactly where it was before the drag?",
+    "When you type 300 into X and then press on the canvas, is it right that the press only lands the 300 and does not start a drag?",
+    "Does anything about the number boxes feel different when you tab through them without typing?"
+  ],
+  "rough": [
+    "A press on the canvas that lands a typed number does nothing else, the same as a press that finishes typing on the canvas. So with 300 typed into X, your first press lands 300 and the drag needs a second press. Figma lands the number and starts the drag in one press.",
+    "There is no mock for this: it is an undo fix, so there is nothing to put side by side."
+  ]
+}

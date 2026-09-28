@@ -53,6 +53,28 @@ struct NumberBoxTests {
         #expect(landing == .land(296))
     }
 
+    @Test("A draft nobody typed in lands nothing, even when the thing moved under it")
+    func anUntouchedDraftLandsNothing() {
+        // X showed 120 when it took the keyboard, then a drag moved the shape
+        // to 130 before the box let go. Landing the 120 would put the shape
+        // back part way into the drag, as an undo step of its own.
+        let landing = NumberBox.landing(draft: "120", showing: .number("130"),
+                                        canClear: false, floor: nil, wholeNumbers: false,
+                                        offered: "120")
+        #expect(landing == .putBack)
+        // An emptied box was typed in: clearing it still clears.
+        #expect(NumberBox.landing(draft: "", showing: .number("130"),
+                                  canClear: true, floor: nil, wholeNumbers: false,
+                                  offered: "120") == .clear)
+    }
+
+    @Test("A draft typed back to what the box offered is still typed")
+    func aTypedDraftLands() {
+        #expect(NumberBox.landing(draft: "300", showing: .number("130"),
+                                  canClear: false, floor: nil, wholeNumbers: false,
+                                  offered: "120") == .land(300))
+    }
+
     @Test("Text that is not a number changes nothing and puts the box back")
     func nonsensePutsItBack() {
         for draft in ["wide", "1e9", "296,5", "-", "12 34"] {

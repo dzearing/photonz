@@ -20017,3 +20017,9 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Walk harness: `rightClick` takes `keys` and logs every printed key; the chord namer calls U+007F ⌫ (not ⌦); a `key` press the menu claims is no longer reported as "the MENU did not run".
 - New walk `menu-keys-do-what-they-say-walk` (front, no flags) is green, and fails with the switch off.
 - Open: a walk's menu reading can be stale for SwiftUI rows until something asks (see the task log).
+
+## 2026-09-28: one drag is one undo with Position and Size open
+
+- A number box that had the keyboard landed its untouched draft over a shape mid-drag, so the drag cost two undos. `NumberBox.landing(offered:)` now puts back a draft nobody typed in (tests in NumberBoxTests), and `PanelNumberField` records what it offered.
+- A number typed and not sent now lands on the next canvas press (`NumberFieldDraft.landNow()` in `CanvasPointerDrags.mouseDown`). That press is swallowed, the same as the inline text editor's.
+- Walk: `undo-after-a-drag-with-position-and-size-open-walk`. Next: nothing open from this.
