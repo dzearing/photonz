@@ -1,0 +1,30 @@
+{
+  "feature": "Transitions group in the panel",
+  "epic": "video-transitions-motion",
+  "summary": "The right panel of a video now has a Transitions group: six transition tiles with a search box, which you drag onto a cut, click to put on the picked cut, or send to every cut from the header plus.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a screen recording and cut it twice with B.",
+  "switched": {},
+  "try": [
+    { "do": "Click a cut on the timeline and find the Transitions group under Transition in the right panel.", "shot": "2026-09-27-transitions-group-1-transitions-group-sc.png" },
+    { "do": "Drag the Push tile onto the other cut and hold it there before letting go.", "shot": "2026-09-27-transitions-group-2-push-held-over-the-cut-sc.png" },
+    { "do": "Let go, then press Command Z once." },
+    { "do": "With a cut picked, click the Dip to black tile." },
+    { "do": "Click the plus on the Transitions header and pick Apply to Every Cut.", "shot": "2026-09-27-transitions-group-6-on-every-cut-sc.png" },
+    { "do": "Click the plus again and pick Set as Default Transition, then look for the Command T badge." },
+    { "do": "Type dip in Search transitions.", "shot": "2026-09-27-transitions-group-8-search-dip-sc.png" }
+  ],
+  "evaluate": [
+    "Does the dashed band on the cut make it clear where the tile will land before you let go?",
+    "Is a click on a tile putting it straight on the picked cut what you expected, or should a click only pick the tile?",
+    "Is it clear which tile the header plus acts on?",
+    "Would you rather this group sat in one Effects group with the layer effects, the way Premiere's Effects panel holds both?"
+  ],
+  "rough": [
+    "The mock heads this group Effects with a Transitions chip. It is headed Transitions here, because a picked clip already brings the layer's own Effects section and two Effects headers would sit in one panel.",
+    "The tiles are the six the picker mock draws (Cross dissolve, Dip to black, Dip to white, Push, Wipe, Blur through), not the older transitions mock's Slide, Morph and Cut, which the app has no transition for.",
+    "The mock's line under the grid is longer than the panel's budget, so it moved, in the mock's words, behind the question mark beside Transitions.",
+    "The mock's group grows to fill the dock under Properties; here it takes its natural height under Edit point and Transition.",
+    "With no cut picked, clicking a tile only rings it, for the plus menu to act on: nothing else happens, which may feel inert.",
+    "The walk carries the tile's own drag onto the timeline's real drop target, but a real pointer lifting a tile off the panel was not driven by the walk."
+  ]
+}

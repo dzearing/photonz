@@ -32,10 +32,25 @@ struct TimelineFileDropDelegate: DropDelegate {
     /// the way the canvas judges one: a drag from the Finder says it carries
     /// a file and not always what kind.
     func validateDrop(info: DropInfo) -> Bool {
-        info.hasItemsConforming(to: [.fileURL]) || FileDrop.carriesUsableFile(info, into: editorState)
+        carriesTransition(info) || info.hasItemsConforming(to: [.fileURL])
+            || FileDrop.carriesUsableFile(info, into: editorState)
+    }
+
+    /// The types the timeline listens for: every file the window takes, and a
+    /// transition tile out of the panel's Transitions group.
+    static let types: [UTType] = FileDrop.types + [TransitionDrag.type]
+
+    /// A transition tile rather than a file (`TransitionDrag.swift`).
+    private func carriesTransition(_ info: DropInfo) -> Bool {
+        info.hasItemsConforming(to: [TransitionDrag.type])
     }
 
     func dropEntered(info: DropInfo) {
+        if carriesTransition(info) {
+            let point = info.location
+            TransitionDrag.load(info) { [editorState] kind in editorState.moveTransitionHover(kind, to: point) }
+            return
+        }
         editorState.moveTimelineFileHover(to: info.location, insert: Self.insertHeld)
         guard let provider = info.itemProviders(for: [.fileURL]).first else { return }
         let editorState = editorState
@@ -46,6 +61,11 @@ struct TimelineFileDropDelegate: DropDelegate {
     }
 
     func dropUpdated(info: DropInfo) -> DropProposal? {
+        if carriesTransition(info) {
+            guard let kind = editorState.timelineTransitionInAir else { return DropProposal(operation: .copy) }
+            editorState.moveTransitionHover(kind, to: info.location)
+            return DropProposal(operation: editorState.timelineTransitionHover?.lands == true ? .copy : .forbidden)
+        }
         editorState.moveTimelineFileHover(to: info.location, insert: Self.insertHeld)
         if let hover = editorState.timelineFileHover, !hover.landing.allowed {
             return DropProposal(operation: .forbidden)
@@ -55,9 +75,20 @@ struct TimelineFileDropDelegate: DropDelegate {
 
     func dropExited(info: DropInfo) {
         editorState.endTimelineFileHover()
+        editorState.endTransitionHover()
     }
 
     func performDrop(info: DropInfo) -> Bool {
+        if carriesTransition(info) {
+            let point = info.location
+            // Read already, while it was in the air: land it now, so the
+            // drop answers on the frame it is let go.
+            if let kind = editorState.timelineTransitionInAir {
+                return editorState.dropTransition(kind, at: point)
+            }
+            TransitionDrag.load(info) { [editorState] kind in editorState.dropTransition(kind, at: point) }
+            return true
+        }
         if let hover = editorState.timelineFileHover, !hover.landing.allowed {
             editorState.endTimelineFileHover()
             return false

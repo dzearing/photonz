@@ -19977,3 +19977,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - ⌘T with two or more clips picked (and a cut among them) spreads the default transition over the joins inside them and the edits between two picked clips; otherwise ⌘T is the one cut as before.
 - Core: `transitionCuts(among:)`, `putTransitionOnEveryCut(_:among:)`, `EveryCutOutcome` in `DefaultTransition.swift`; notice `.transitionOnEveryCut` ("Push · On 3 cuts, 1 skipped").
 - Walks: `transition-on-every-cut-walk`, `default-transition-on-picked-clips-walk` (new action `clipPickEveryClip`). Next: the mock's panel Transitions group, filed as `the-panel-has-a-transitions-group-of-tiles-as-th`.
+
+## 2026-09-27 — The panel has a Transitions group of tiles
+
+- New panel section `transitions` ("Transitions", `TransitionsGroup.swift`): search box, the six transition tiles, ⌘T badge on the default, header plus (`#efxMenu`) with Apply to Every Cut and Set as Default Transition acting on the picked tile, same two verbs on each tile's right click. Present for any document with a recording on its timeline; kept when a cut is picked.
+- Drag a tile onto a cut: `TransitionDrag.swift` (declared type `com.photonz.transition`, added to `Scripts/build-app.sh` with a check), timeline drop target now also takes it, dashed ghost band on the target cut, label in the timeline bar. Which cut: `PhotonzDocument.transitionDropPlan` (core, `TransitionDropTests`).
+- Fixed: Apply to Every Cut counted a cut already wearing that exact transition as skipped ("On 1 cut, 1 skipped").
+- Walk: `transitions-group-walk` (drop tile, undo, click tile, plus menu, search), `dropOnTimeline` takes a transition tile. Audit: `queue/audits/2026-09-27-transitions-group.json`.
+- Open: the mock heads the group Effects; it is Transitions here to avoid two Effects headers (in the audit for the user to weigh).

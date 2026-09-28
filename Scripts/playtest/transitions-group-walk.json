@@ -1,0 +1,232 @@
+{
+  "out": "/tmp/photonz-playtest/transitions-group-walk",
+  "seed": "The transitions mock's right panel group: a searchable grid of transition tiles, dragged onto a cut on the timeline to put that transition there as one undo step, clicked to put it on the picked cut, and a header plus menu with Apply to Every Cut and Set as Default Transition. At Next defaults, no flag set.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "clipDragEndIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "videoSeekQuarter"
+    },
+    {
+      "do": "action",
+      "action": "clipSplit"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekMiddle"
+    },
+    {
+      "do": "action",
+      "action": "clipSplit"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "clipPickFirstCut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "0-two-joins",
+      "note": "the recording cut at 1.75s and 3.5s, both hard, nothing picked on the timeline but the clip"
+    },
+    {
+      "do": "reveal",
+      "control": "Push",
+      "in": "Transitions"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-transitions-group"
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "Push",
+      "track": "V1",
+      "seconds": 1.8,
+      "hold": "2-push-held-over-the-cut",
+      "says": "Push"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "3-push-on-the-cut"
+    },
+    {
+      "do": "describe",
+      "stage": "3-push-dropped",
+      "note": "THE TEST: the Push tile let go just past the first join puts a push on that join"
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Push"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "clipPickFirstCut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Transition header",
+      "reads": "None"
+    },
+    {
+      "do": "describe",
+      "stage": "4-one-undo",
+      "note": "one Command Z and the join is hard again: the drop was one step to undo"
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "Wipe",
+      "track": "V1",
+      "seconds": 2.6,
+      "release": false
+    },
+    {
+      "do": "expect",
+      "field": "Transition header",
+      "reads": "None"
+    },
+    {
+      "do": "reveal",
+      "control": "Dip to black",
+      "in": "Transitions"
+    },
+    {
+      "do": "press",
+      "control": "Dip to black",
+      "in": "Transitions"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Dip to black"
+    },
+    {
+      "do": "describe",
+      "stage": "5-clicked-onto-picked-cut",
+      "note": "a click on the Dip to black tile with the join picked puts it on that join"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Transitions menu",
+      "choose": "Apply to Every Cut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectNotice",
+      "says": "On 2 cuts"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-on-every-cut"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Transitions menu",
+      "choose": "Set as Default Transition"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "control": "Default transition Dip to black",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "7-default",
+      "note": "Set as Default Transition moved the Command T badge onto Dip to black"
+    },
+    {
+      "do": "press",
+      "control": "Search transitions"
+    },
+    {
+      "do": "type",
+      "text": "dip"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "snapshot",
+      "name": "8-search-dip"
+    },
+    {
+      "do": "expect",
+      "control": "Push",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Dip to white",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "8-search",
+      "note": "typing dip leaves the two dips"
+    }
+  ]
+}

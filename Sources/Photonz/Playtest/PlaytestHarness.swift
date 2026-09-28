@@ -14310,6 +14310,12 @@ extension Run {
                 throw Failure(description: "the tile \"\(tile)\" cannot be picked up")
             }
             board = try await PlaytestPanelDrag.pasteboard(from: payload(), named: "timelineTile")
+            // A transition tile out of the panel's Transitions group carries
+            // no file: it lands on the cut under it instead.
+            if board.data(forType: NSPasteboard.PasteboardType(TransitionDrag.typeIdentifier)) != nil {
+                return try await dropTransitionOnTimeline(tile, board: board, track: track, seconds: seconds,
+                                                          hold: hold, release: release, says: says)
+            }
             guard let carriedURL = DragCargo.fileURL(on: board) else {
                 throw Failure(description: "the tile \"\(tile)\" carries no file to land: it carries "
                     + (board.types ?? []).map(\.rawValue).joined(separator: ", "))
@@ -14422,6 +14428,99 @@ extension Run {
         return "\(url.lastPathComponent) let go over \(track) at \(seconds)s (\(insert ? "⌘ held" : "no keys")), "
             + "saying \"\(sentence)\"\(held); the document now holds "
             + "\(editor.document?.allLayers.count ?? 0) layers, was \(before)"
+    }
+
+    /// Carries a transition tile from the panel's Transitions group onto a
+    /// track at a moment, through the timeline's own drop target, and lets go
+    /// unless told not to. The log line says which cut the ghost was on and
+    /// what the cut carries after.
+    private func dropTransitionOnTimeline(_ tile: String, board: NSPasteboard, track: String, seconds: Double,
+                                          hold: String?, release: Bool, says: String?) async throws -> String {
+        let editor = try requireEditor()
+        let window = try requireWindow()
+        guard let document = editor.document,
+              let trackID = document.timelineTracks.first(where: { $0.name == track })?.id else {
+            throw Failure(description: "no track is called \"\(track)\"")
+        }
+        guard let row = editor.trackDropRows[trackID], editor.timelineLaneWidth > 0 else {
+            throw Failure(description: "the track \"\(track)\" is not on screen: is the timeline open?")
+        }
+        let frame = editor.timelineTracksFrame
+        let fraction = editor.motionStripRuler.fraction(ofMS: seconds * 1000)
+        let global = CGPoint(x: frame.minX + TimelineDock.lanesLeading + editor.timelineLaneWidth * fraction,
+                             y: frame.minY + (row.minY + row.maxY) / 2)
+        let windowPoint = try self.windowPoint(PlaytestPoint(global, space: .window))
+        let info = PlaytestDraggingInfo(pasteboard: board, location: windowPoint, window: window)
+        guard let content = window.contentView else {
+            throw Failure(description: "the window has no content view")
+        }
+        let chain = Self.visibleDestinations(at: windowPoint, in: content)
+        var taker: NSView?
+        // SwiftUI's drop views listen for public.data and public.item and sort
+        // by conformance, so the gate here is conformance, not the literal
+        // type: a type the bundle never declared conforms to nothing.
+        func hears(_ view: NSView) -> Bool {
+            let listening = view.registeredDraggedTypes.compactMap { UTType($0.rawValue) }
+            return (board.types ?? []).contains { carried in
+                guard let type = UTType(carried.rawValue) else { return false }
+                return listening.contains { type.conforms(to: $0) }
+            }
+        }
+        for view in chain where hears(view) && view.draggingEntered(info) != [] {
+            taker = view
+            break
+        }
+        guard let taker else {
+            throw Failure(description: "nothing on the timeline at \(track) \(seconds)s takes the tile "
+                + "\"\(tile)\", carrying \((board.types ?? []).map(\.rawValue).joined(separator: " ")); offered to "
+                + chain.map { view in
+                    "\(type(of: view)) (listening for "
+                        + view.registeredDraggedTypes.map(\.rawValue).joined(separator: " ") + ")"
+                }.joined(separator: " then "))
+        }
+        // The kind is read off the drag in the background, the way it is
+        // under a real pointer, so the ghost arrives a moment after the tile.
+        var waited = 0.0
+        while editor.timelineTransitionInAir == nil, waited < 3 {
+            _ = taker.draggingUpdated(info)
+            await sleep(0.05)
+            waited += 0.05
+        }
+        let operation = taker.draggingUpdated(info)
+        await sleep(0.2)
+        let hover = editor.timelineTransitionHover
+        let sentence = hover?.note ?? ""
+        if let says, !sentence.localizedCaseInsensitiveContains(says) {
+            taker.draggingExited(info)
+            throw Failure(description: "the timeline said \"\(sentence)\" about the tile \"\(tile)\", "
+                + "and the walk expected \"\(says)\"")
+        }
+        var held = ""
+        if let hold {
+            try snapshot(content, name: hold)
+            await screenCapture(window, name: hold)
+            held = ", held \(hold).png"
+        }
+        let aimed = hover.map { "\($0.lands ? "lands on" : "refused at") the cut at \(CaptionProgress.clock($0.atMS))" }
+            ?? "near no cut"
+        guard release else {
+            taker.draggingExited(info)
+            await sleep(0.1)
+            return "\(tile) held over \(track) at \(seconds)s: \(aimed), saying \"\(sentence)\"\(held)"
+        }
+        guard operation != [] else {
+            taker.draggingExited(info)
+            throw Failure(description: "the timeline refused the tile \"\(tile)\" at \(track) \(seconds)s: \(aimed)")
+        }
+        let took = taker.performDragOperation(info)
+        guard took else {
+            throw Failure(description: "the timeline would not take the tile \"\(tile)\": \(aimed)")
+        }
+        await sleep(0.4)
+        let cuts = (editor.document?.transitionCuts() ?? [])
+            .map { "\(CaptionProgress.clock($0.atMS)) \($0.cut.transition?.kind.title ?? "hard")" }
+        return "\(tile) let go over \(track) at \(seconds)s: \(aimed)\(held); the cuts now: "
+            + cuts.joined(separator: ", ")
     }
 
     /// Carries a file from the Finder onto the Library shelf and lets go

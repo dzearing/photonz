@@ -156,6 +156,16 @@ DRAG_TYPE=$(cat <<'TYPES'
             <key>UTTypeTagSpecification</key>
             <dict/>
         </dict>
+        <dict>
+            <key>UTTypeIdentifier</key><string>com.photonz.transition</string>
+            <key>UTTypeDescription</key><string>Photonz Transition</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.item</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict/>
+        </dict>
 TYPES
 )
 
@@ -331,6 +341,13 @@ if ! /usr/libexec/PlistBuddy -c "Print :UTExportedTypeDeclarations" "$APP/Conten
      | grep -q "com.photonz.text-style"; then
   echo "==> FAILED: Info.plist does not declare com.photonz.text-style;" >&2
   echo "    a text style dragged off the Library shelf would land on nothing." >&2
+  exit 1
+fi
+
+if ! /usr/libexec/PlistBuddy -c "Print :UTExportedTypeDeclarations" "$APP/Contents/Info.plist" 2>/dev/null \
+     | grep -q "com.photonz.transition"; then
+  echo "==> FAILED: Info.plist does not declare com.photonz.transition;" >&2
+  echo "    a transition tile dragged onto a cut would land on nothing." >&2
   exit 1
 fi
 

@@ -167,6 +167,15 @@ enum InspectorSectionID: String, CaseIterable {
     // pull, and it is the tallest section in the panel: putting it above the
     // picked thing's own settings would push THOSE off the bottom instead.
     case shadow
+    // The transitions to browse and drag onto a cut (Next,
+    // `video-transitions.html`, `#gEffects`): Premiere's Effects panel with
+    // Video Transitions open. Under the property sections and above the
+    // shelf, as the mock stacks Properties, Effects and Library: like the
+    // shelf it is somewhere you fetch from, not what you have picked, so it is
+    // present for any document with a recording on its timeline, cut or not.
+    // Headed Transitions rather than the mock's Effects, because a picked clip
+    // already brings the layer's own Effects section.
+    case transitions
     // The shelf sits under the property sections, where the mock puts it: it is
     // where you go to fetch something, not what the thing you have selected is.
     case library
@@ -209,6 +218,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .gain: "Gain"
         case .captions: "Captions"
         case .shadow: "Shadow"
+        case .transitions: "Transitions"
         case .library: "Library"
         // Replaced at draw time by the scope's own noun; this is the fallback.
         case .libraryItem: "Library Item"

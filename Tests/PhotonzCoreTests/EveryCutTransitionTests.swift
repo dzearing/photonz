@@ -57,6 +57,19 @@ struct EveryCutTransitionTests {
         #expect(now.lengthMS == 300)
     }
 
+    @Test("A cut already wearing exactly that transition counts as on, never as skipped")
+    func alreadyOnIsNotSkipped() throws {
+        var (doc, _, _) = try Self.threeCuts()
+        let first = try #require(doc.transitionCuts().first)
+        let fitted = try #require(first.cut.fitted(.dipToBlack))
+        let did = doc.setTransition(fitted, at: first.place)
+        #expect(did)
+        let outcome = doc.putTransitionOnEveryCut(.dipToBlack)
+        #expect(outcome.skipped == 0)
+        #expect(outcome.put.count == 3)
+        #expect(outcome.countLine == "On 3 cuts")
+    }
+
     @Test("A cut that cannot pay for it is left as it was and counted as skipped")
     func skipsWhatCannotPay() throws {
         var (doc, take, broll) = try Self.threeCuts()

@@ -706,6 +706,11 @@ struct InspectorPanel: View {
             set.insert(.editPoint)
             set.insert(.transition)
         }
+        // The transitions to drag onto a cut (`video-transitions.html`,
+        // `#gEffects`): wherever the timeline holds a recording, picked or not,
+        // because it is where you go to FIND a transition, before any cut is
+        // in hand.
+        if editorState.showsTransitionsGroup { set.insert(.transitions) }
         // How fast the piece in hand plays (Next, `next-speed-a-stretch`).
         // Present wherever there is a piece to retime at all, which is a clip
         // with time under it: unlike Transition it does NOT need the clip to
@@ -883,7 +888,7 @@ struct InspectorPanel: View {
         // everything the clip either side has (`video-transition-wt.html`).
         if editorState.selectedEditPoint != nil || editorState.selectedClipCutIndex != nil,
            set.contains(.editPoint) {
-            set.formIntersection([.layers, .editPoint, .transition, .library])
+            set.formIntersection([.layers, .editPoint, .transition, .transitions, .library])
         }
         if selectedLayer?.isCaptionsLayer == true { set.remove(.placement) }
         return set
@@ -1001,6 +1006,7 @@ struct InspectorPanel: View {
         case .keys: PropertyKeysInspector.sectionHelp
         case .editPoint: EditPointInspector.sectionHelp
         case .transition: TransitionInspector.sectionHelp
+        case .transitions: TransitionsGroup.sectionHelp
         default: nil
         }
     }
@@ -1055,6 +1061,10 @@ struct InspectorPanel: View {
         case .measurements:
             return AnyView(MeasurementsSectionAccessory(
                 showsCount: !Experiments.shared.dockHeadersEnabled))
+        case .transitions:
+            // The mock's `.dgrp-h` plus (`#efxMenu`): the two verbs that act
+            // on the picked tile across the whole timeline.
+            return AnyView(TransitionsGroupMenu())
         case .editPoint, .transition, .sound:
             // The mock's `.sec-h .mut`: where the cut is, what is on it, and
             // which file the picked sound came from.
@@ -1277,6 +1287,8 @@ struct InspectorPanel: View {
             EditPointInspector()
         case .transition:
             TransitionInspector()
+        case .transitions:
+            TransitionsGroup()
         case .speed:
             SpeedInspector()
         case .sound:

@@ -197,6 +197,14 @@ struct TimelineDock: View {
                         .foregroundStyle(VideoKit.Palette.faint)
                         .fixedSize()
                 }
+            } else if let hover = editorState.timelineTransitionHover {
+                // What letting go of a transition tile does: which one, at
+                // which cut.
+                Text(hover.note)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(VideoKit.Palette.ink)
+                    .lineLimit(1)
+                    .playtestField("Transition drop")
             } else if editorState.isTimelineOpenedOut {
                 Text(editorState.timelineWindowReading)
                     .font(.system(size: 10, design: .monospaced))
@@ -205,7 +213,7 @@ struct TimelineDock: View {
                     .lineLimit(1)
                     .fixedSize()
             }
-            if editorState.timelineFileHover == nil { keyBar }
+            if editorState.timelineFileHover == nil, editorState.timelineTransitionHover == nil { keyBar }
             closeButton
         }
         .padding(.vertical, 6)
@@ -481,7 +489,7 @@ struct TimelineDock: View {
                         .padding(.vertical, Self.rowSpacing)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .coordinateSpace(.named(Self.tracksSpace))
-                        .onDrop(of: FileDrop.types, delegate: TimelineFileDropDelegate(editorState: editorState))
+                        .onDrop(of: TimelineFileDropDelegate.types, delegate: TimelineFileDropDelegate(editorState: editorState))
                         .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
                             editorState.timelineTracksFrame = frame
                             editorState.timelineLaneWidth = laneWidth

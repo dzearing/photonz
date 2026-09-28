@@ -69,7 +69,7 @@ struct TransitionPicker: View {
                 VideoKit.AnimatedTransitionThumbnail(style: Self.style(kind))
             }
             .overlay(alignment: .topTrailing) {
-                if isDefault { Self.defaultKeycap(kind) }
+                if isDefault { Self.defaultKeycap(kind, in: "At this cut") }
             }
         }
         .buttonStyle(.plain)
@@ -90,7 +90,7 @@ struct TransitionPicker: View {
 
     /// ⌘T on the corner of the tile the key puts on a cut: the key and which
     /// one is the default, said at once where the tiles already are.
-    private static func defaultKeycap(_ kind: ClipTransitionKind) -> some View {
+    static func defaultKeycap(_ kind: ClipTransitionKind, in place: String) -> some View {
         Text("\u{2318}T")
             .font(.system(size: 9, weight: .semibold, design: .rounded))
             .foregroundStyle(VideoKit.Palette.ink)
@@ -102,7 +102,7 @@ struct TransitionPicker: View {
             .allowsHitTesting(false)
             // Named as a control rather than a field because the walk reads a
             // popover's controls and not its fields; nothing presses it.
-            .playtestControl("Default transition \(kind.title)", detail: "At this cut")
+            .playtestControl("Default transition \(kind.title)", detail: place)
     }
 
     static func style(_ kind: ClipTransitionKind) -> VideoKit.TransitionThumbnail.Style {

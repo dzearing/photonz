@@ -1292,6 +1292,16 @@ final class EditorState {
     /// than off the cut on the timeline. One picker, two places it can grow
     /// out of, and only the one that was clicked opens.
     var transitionPickerFromPanel = false
+    /// A transition tile from the panel's Transitions group held over the
+    /// timeline: the cut it would land on, drawn there as a ghost
+    /// (`TransitionDrag.swift`).
+    var timelineTransitionHover: TimelineTransitionHover?
+    /// The kind on that drag, read off it once it arrives.
+    @ObservationIgnored var timelineTransitionInAir: ClipTransitionKind?
+    /// The tile picked in the Transitions group, which its plus menu acts on.
+    /// Nil until one is clicked; the group then shows the cut's own kind, else
+    /// the default.
+    var transitionsGroupPick: ClipTransitionKind?
     /// The Escape watch armed for exactly as long as a clip's bar is in hand.
     @ObservationIgnored var clipBarEscapeWatch: Any?
     /// ...and the one armed while a transition's band is.

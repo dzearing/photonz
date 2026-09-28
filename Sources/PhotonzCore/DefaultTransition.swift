@@ -115,10 +115,30 @@ extension PhotonzDocument {
         if let picked, let cut = documentCut(at: picked) {
             target = isFree(picked) ? cut : nil
         } else {
-            target = transitionCuts()
-                .filter { isFree($0.place) && abs($0.atMS - ms) <= reachMS }
+            target = transitionCuts(among: nil)
+                .filter { abs($0.atMS - ms) <= reachMS }
                 .min { abs($0.atMS - ms) < abs($1.atMS - ms) }
         }
+        return Self.plan(kind, on: target)
+    }
+
+    /// A transition tile let go over the timeline: `kind` on the cut nearest
+    /// `ms` on `track`, no further than `reachMS` away, the way Premiere takes
+    /// a transition dragged out of its Effects panel onto an edit point. With
+    /// no track, which is the pointer between two, any picture track's cut in
+    /// reach will do. A cut on a locked track is never touched.
+    public func transitionDropPlan(_ kind: ClipTransitionKind, atMS ms: Int, onTrack track: UUID?,
+                                   reachMS: Int) -> DefaultTransitionPlan {
+        let target = transitionCuts(among: nil)
+            .filter { cut in
+                abs(cut.atMS - ms) <= reachMS
+                    && (track.map { trackID(ofClip: cut.place.arrivingClip) == $0 } ?? true)
+            }
+            .min { abs($0.atMS - ms) < abs($1.atMS - ms) }
+        return Self.plan(kind, on: target)
+    }
+
+    private static func plan(_ kind: ClipTransitionKind, on target: DocumentCut?) -> DefaultTransitionPlan {
         guard let target else { return .refused(.noCutNearby) }
         guard let transition = target.cut.fitted(kind) else { return .refused(.noSpare(kind)) }
         return .put(transition, at: target.place)
@@ -185,8 +205,18 @@ extension PhotonzDocument {
                                                  among clips: Set<UUID>? = nil) -> EveryCutOutcome {
         var outcome = EveryCutOutcome(put: [], skipped: 0)
         for place in transitionCuts(among: clips).map(\.place) {
-            guard let transition = documentCut(at: place)?.cut.fitted(kind),
-                  setTransition(transition, at: place) else {
+            let cut = documentCut(at: place)?.cut
+            guard let transition = cut?.fitted(kind) else {
+                outcome.skipped += 1
+                continue
+            }
+            // Already wearing exactly this: it is on, whatever writing it
+            // again would say, and it has spare to pay for it.
+            guard cut?.transition != transition else {
+                outcome.put.append(place)
+                continue
+            }
+            guard setTransition(transition, at: place) else {
                 outcome.skipped += 1
                 continue
             }

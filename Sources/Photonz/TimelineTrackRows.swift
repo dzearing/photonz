@@ -382,6 +382,9 @@ struct TimelineTrackRow: View {
             if let hover = editorState.timelineFileHover, hover.landing.target == .onto(track.id) {
                 TimelineFileGhost(hover: hover, laneWidth: laneWidth, height: laneHeight)
             }
+            if let hover = editorState.timelineTransitionHover, hover.trackID == track.id {
+                TimelineTransitionGhost(hover: hover, laneWidth: laneWidth, height: laneHeight)
+            }
         }
         .frame(width: laneWidth, height: laneHeight, alignment: .topLeading)
         .opacity(row.isOff ? 0.4 : 1)
