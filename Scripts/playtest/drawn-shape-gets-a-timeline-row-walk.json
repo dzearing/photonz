@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/drawn-shape-gets-a-timeline-row-walk",
-  "seed": "Anything drawn on a video is on the timeline. At Next defaults with no flag changed, this walk draws a rectangle on a recording at one second and finds its own row, named Rectangle, running to the end of the shot; ends it at three and a half seconds with End Here; keys it at one second with the diamond on its row; moves the playhead to three seconds and drags it across and bigger on the canvas, which makes the second key by itself; then photographs half a second (not there yet), one, two and three seconds (tweening across and growing) and three and a half (gone).",
+  "seed": "Anything drawn on a video is on the timeline. At Next defaults with no flag changed, this walk draws a rectangle on a recording at one second and finds its own row, named Rectangle, running to the end of the shot; ends it at three and a half seconds with End at Playhead on its bar's right-click menu; keys it at one second with the diamond on its row; moves the playhead to three seconds and drags it across and bigger on the canvas, which makes the second key by itself; then photographs half a second (not there yet), one, two and three seconds (tweening across and growing) and three and a half (gone).",
   "setup": { "timelineOpen": true, "forget": ["all"] },
   "steps": [
     { "do": "action", "action": "openSampleRecording" },
@@ -28,10 +28,9 @@
     { "do": "action", "action": "videoStepQuarterSecond" },
     { "do": "action", "action": "videoStepQuarterSecond" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "reveal", "control": "End Here" },
-    { "do": "press", "control": "End Here" },
+    { "do": "rightClick", "on": "Rectangle clip", "choose": "End at Playhead" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "2-ended", "note": "THE SECOND TEST: its bar is a bar like a title's: End Here at three and a half seconds says when it goes" },
+    { "do": "describe", "stage": "2-ended", "note": "THE SECOND TEST: its bar is a bar like a title's: End at Playhead on its bar's right-click menu, at three and a half seconds, says when it goes" },
     { "do": "reveal", "control": "Properties section" },
     { "do": "expect", "field": "Clip line", "reads": "Rectangle 1.0s → 3.5s · 2.5s · 1.0x" },
 

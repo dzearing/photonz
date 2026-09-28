@@ -1,0 +1,194 @@
+{
+  "out": "/tmp/photonz-playtest/title-bar-right-click-menu-walk",
+  "seed": "A title's bar on the timeline answers a right click the way a clip does, with the verbs that belong to words placed in time: Start at Playhead, End at Playhead and a Fade menu. This walk types a title at Next defaults, puts the playhead at six seconds, right clicks the title's bar, chooses End at Playhead and reads the new out point back off the Properties pane's clip line, then does the same for the start at three seconds.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekMiddle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        620,
+        330
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Shipping today"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "expect",
+      "field": "Clip line",
+      "reads": "Shipping today 4.0s → 7.0s · 3.0s · 1.0x"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-playhead-at-six",
+      "note": "A title typed at four seconds runs to seven. The playhead is at six, where the words should go"
+    },
+    {
+      "do": "rightClick",
+      "on": "Shipping today clip",
+      "shot": "1-title-menu"
+    },
+    {
+      "do": "rightClick",
+      "on": "Shipping today clip",
+      "choose": "End at Playhead"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-ended-at-six",
+      "note": "THE TEST: End at Playhead on the bar's own menu ends the words at six seconds and leaves where they arrive alone"
+    },
+    {
+      "do": "expect",
+      "field": "Clip line",
+      "reads": "Shipping today 4.0s → 6.0s · 2.0s · 1.0x"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "on": "Shipping today clip",
+      "choose": "Start at Playhead"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-started-at-three",
+      "note": "Start at Playhead at three seconds brings the words on a second earlier and leaves where they go alone"
+    },
+    {
+      "do": "expect",
+      "field": "Clip line",
+      "reads": "Shipping today 3.0s → 6.0s · 3.0s · 1.0x"
+    },
+    {
+      "do": "rightClick",
+      "on": "Shipping today clip",
+      "choose": "Fade > 0.50s"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-faded",
+      "note": "Fade on the same menu writes the half second fade the Time section's Fade row shows"
+    },
+    {
+      "do": "reveal",
+      "control": "Time section"
+    },
+    {
+      "do": "expect",
+      "menu": "Fade",
+      "reads": "0.50s"
+    },
+    {
+      "do": "expect",
+      "control": "End Here",
+      "present": false
+    },
+    {
+      "do": "panel",
+      "stage": "3-started-at-three"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-started-and-ended"
+    }
+  ]
+}

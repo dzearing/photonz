@@ -9497,6 +9497,18 @@ private final class Run {
                 readAndChoose()
             }
         }
+        // A window still at alpha 0 photographs as a blank rectangle with the
+        // menu over it (a recording opened by a walk stays hidden until a
+        // picture asks for it), so it is shown for the menu's picture the way
+        // `capture` shows it for its own, and put straight back.
+        let hidden = shot != nil && window.alphaValue == 0
+        if hidden {
+            Self.keepBehindThePerson(window)
+            window.alphaValue = 1
+            window.display()
+            await sleep(0.25)
+        }
+        defer { if hidden { window.alphaValue = 0 } }
         if opened {
             let hop = PlaytestTrackingHop {
                 readAndChoose()

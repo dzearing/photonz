@@ -196,6 +196,67 @@ struct TitleTimeTests {
         #expect(doc.documentDurationMS == 12_000)
     }
 
+    // MARK: - Asked at the playhead (the bar's right-click menu)
+
+    static func titleThreeToSix() -> Layer {
+        var title = Self.words("Hello")
+        title.time = LayerTime(inMS: 3000, outMS: 6000)
+        return title
+    }
+
+    @Test func aTitleCanStartAnywhereBeforeItsEndLeavesRoom() {
+        let title = Self.titleThreeToSix()
+        #expect(title.canStartPlaced(atMS: 0))
+        #expect(title.canStartPlaced(atMS: 4500))
+        #expect(title.canStartPlaced(atMS: 6000 - LayerTime.shortestMS))
+    }
+
+    @Test func aTitleCannotStartWhereItAlreadyStartsOrPastItsEnd() {
+        let title = Self.titleThreeToSix()
+        #expect(!title.canStartPlaced(atMS: 3000))
+        #expect(!title.canStartPlaced(atMS: 6000 - LayerTime.shortestMS + 1))
+        #expect(!title.canStartPlaced(atMS: 7000))
+    }
+
+    @Test func aTitleCanEndAnywhereAfterItsStartLeavesRoom() {
+        let title = Self.titleThreeToSix()
+        #expect(title.canEndPlaced(atMS: 3000 + LayerTime.shortestMS))
+        #expect(title.canEndPlaced(atMS: 4500))
+        // Past the last frame too: the document grows, as a drag does.
+        #expect(title.canEndPlaced(atMS: 12_000))
+    }
+
+    @Test func aTitleCannotEndWhereItAlreadyEndsOrBeforeItsStart() {
+        let title = Self.titleThreeToSix()
+        #expect(!title.canEndPlaced(atMS: 6000))
+        #expect(!title.canEndPlaced(atMS: 3000 + LayerTime.shortestMS - 1))
+        #expect(!title.canEndPlaced(atMS: 1000))
+    }
+
+    @Test func aClipIsNeverStartedOrEndedAtThePlayheadThisWay() {
+        // A clip's ends are trims into the frames behind them, so the title's
+        // verbs are not offered on it at all.
+        let clip = Self.eightSeconds().layers[0]
+        #expect(!clip.canStartPlaced(atMS: 1000))
+        #expect(!clip.canEndPlaced(atMS: 4000))
+        #expect(!clip.canSetTitleFade(toMS: 500))
+    }
+
+    @Test func aTitleCanTakeAnyFadeItHasRoomForButTheOneItHas() {
+        var doc = Self.eightSeconds()
+        let title = Self.titleThreeToSix()
+        let id = title.id
+        doc.layers.append(title)
+        #expect(!title.canSetTitleFade(toMS: 0))
+        #expect(title.canSetTitleFade(toMS: 500))
+        let faded = doc.setTitleFade(id, toMS: 500)
+        #expect(faded)
+        let layer = doc.layer(id: id)
+        #expect(layer?.canSetTitleFade(toMS: 500) == false)
+        #expect(layer?.canSetTitleFade(toMS: 0) == true)
+        #expect(layer?.canSetTitleFade(toMS: 1000) == true)
+    }
+
     // MARK: - A bar with nothing behind it
 
     @Test func theLeftEndOfAPlacedBarIsUnstoppedGoingOut() {

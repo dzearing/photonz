@@ -121,7 +121,8 @@ extension EditorState {
         if Experiments.shared.soundOnTheTimelineEnabled, layer.sound != nil {
             rows.append(contentsOf: soundGainMenuRows(layerID: layerID))
         }
-        // A title, a piece of clip art: how it comes on and goes off.
+        // A title, a piece of clip art: when it comes on and goes off, and how.
+        rows.append(contentsOf: placedLayerMenuRows(layerID: layerID))
         rows.append(contentsOf: titleAnimationMenuRows(layerID: layerID))
         // Where it is, its size, its angle and its opacity, keyed at the
         // playhead: the header diamond's verb, where the hand already is.

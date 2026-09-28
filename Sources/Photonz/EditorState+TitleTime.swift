@@ -11,9 +11,9 @@ import PhotonzCore
 //
 // The direct way to say when a title comes on and goes off is the bar in the
 // timeline, and that needs nothing here: both its ends are draggable already
-// (`EditorState+ClipBar`). These two buttons are the other way round, for the
-// moment you are already looking at — put the playhead on the frame the words
-// should arrive on and say Start Here.
+// (`EditorState+ClipBar`). The bar's right-click menu is the other way round,
+// for the moment you are already looking at: put the playhead on the frame the
+// words should arrive on and choose Start at Playhead.
 extension EditorState {
 
     /// The layer whose in and out the Time section speaks for: the picked one,
@@ -45,21 +45,30 @@ extension EditorState {
         placedLayerInHand?.time.map { TitleTime.reading($0) }
     }
 
-    /// Whether the playhead is somewhere the in point could go: inside the
-    /// document and not on top of the out.
-    var canStartPlacedLayerHere: Bool {
-        guard let time = placedLayerInHand?.time else { return false }
-        return documentTimeMS != time.inMS && documentTimeMS <= time.outMS - LayerTime.shortestMS
+    /// A layer placed in time that the timeline's verbs may act on, whichever
+    /// layer happens to be picked: the one a right click was opened on.
+    private func placedLayer(_ id: UUID) -> Layer? {
+        guard Experiments.shared.titleOnTheTimelineEnabled
+                || Experiments.shared.componentOnTheTimelineEnabled
+                || Experiments.shared.drawnOnTheTimelineEnabled,
+              documentHasTime, !isClipLocked(id),
+              let layer = document?.layer(id: id), layer.isPlacedInTime else { return nil }
+        return layer
     }
 
-    var canEndPlacedLayerHere: Bool {
-        guard let time = placedLayerInHand?.time else { return false }
-        return documentTimeMS != time.outMS && documentTimeMS >= time.inMS + LayerTime.shortestMS
+    /// Whether the playhead is somewhere this layer's in point could go.
+    func canStartPlacedLayerHere(_ id: UUID) -> Bool {
+        placedLayer(id)?.canStartPlaced(atMS: documentTimeMS) == true
+    }
+
+    func canEndPlacedLayerHere(_ id: UUID) -> Bool {
+        placedLayer(id)?.canEndPlaced(atMS: documentTimeMS) == true
     }
 
     /// Arrive at the playhead, leaving where it goes alone.
-    func startPlacedLayerHere() {
-        guard canStartPlacedLayerHere, let id = placedLayerInHand?.id else { return }
+    func startPlacedLayerHere(_ id: UUID) {
+        guard canStartPlacedLayerHere(id) else { return }
+        selectLayer(id)
         pauseDocument()
         let moment = documentTimeMS
         perform { $0.moveLayerStart(id, toMS: moment) }
@@ -67,8 +76,9 @@ extension EditorState {
     }
 
     /// Go at the playhead, leaving where it arrives alone.
-    func endPlacedLayerHere() {
-        guard canEndPlacedLayerHere, let id = placedLayerInHand?.id else { return }
+    func endPlacedLayerHere(_ id: UUID) {
+        guard canEndPlacedLayerHere(id) else { return }
+        selectLayer(id)
         pauseDocument()
         let moment = documentTimeMS
         perform { $0.moveLayerEnd(id, toMS: moment) }
@@ -80,18 +90,47 @@ extension EditorState {
     var placedLayerFadeMS: Int { placedLayerInHand?.titleFadeMS ?? 0 }
 
     func canSetPlacedLayerFade(_ ms: Int) -> Bool {
-        guard let layer = placedLayerInHand, let time = layer.time else { return false }
-        guard ms != placedLayerFadeMS else { return false }
-        // Nought is always available as the way back; any other length needs
-        // room for the words to be fully up somewhere in the middle.
-        return ms == 0 || TitleTime.fade(overMS: ms, lengthMS: time.lengthMS) != nil
+        guard let id = placedLayerInHand?.id else { return false }
+        return canSetPlacedLayerFade(ms, layerID: id)
+    }
+
+    func canSetPlacedLayerFade(_ ms: Int, layerID id: UUID) -> Bool {
+        placedLayer(id)?.canSetTitleFade(toMS: ms) == true
+    }
+
+    func setPlacedLayerFade(_ ms: Int) {
+        guard let id = placedLayerInHand?.id else { return }
+        setPlacedLayerFade(ms, layerID: id)
     }
 
     /// Write the fade, which is an ordinary Opacity motion and nothing else
     /// (`TitleTime.fade`).
-    func setPlacedLayerFade(_ ms: Int) {
-        guard canSetPlacedLayerFade(ms), let id = placedLayerInHand?.id else { return }
+    func setPlacedLayerFade(_ ms: Int, layerID id: UUID) {
+        guard canSetPlacedLayerFade(ms, layerID: id) else { return }
+        selectLayer(id)
         perform { $0.setTitleFade(id, toMS: ms) }
         documentMomentChanged()
+    }
+
+    /// **Start at Playhead**, **End at Playhead** and **Fade ▸**: what the
+    /// bar of something placed in time offers on a right click. A row the
+    /// playhead gives nowhere to go is dimmed, as Split at Playhead is, since
+    /// the reason is the playhead you can see.
+    func placedLayerMenuRows(layerID id: UUID) -> [MenuRow] {
+        guard let layer = placedLayer(id) else { return [] }
+        let fade = layer.titleFadeMS ?? 0
+        return [
+            .command("Start at Playhead", enabled: canStartPlacedLayerHere(id)) {
+                self.startPlacedLayerHere(id)
+            },
+            .command("End at Playhead", enabled: canEndPlacedLayerHere(id)) {
+                self.endPlacedLayerHere(id)
+            },
+            .submenu("Fade", TitleTime.fadeStopsMS.map { ms in
+                .toggle(TitleTime.fadeTitle(ms), isOn: ms == fade) {
+                    self.setPlacedLayerFade(ms, layerID: id)
+                }
+            }),
+        ]
     }
 }

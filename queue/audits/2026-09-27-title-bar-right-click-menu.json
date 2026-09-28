@@ -1,0 +1,26 @@
+{
+  "feature": "A title bar's right-click menu",
+  "epic": "video-editing",
+  "summary": "Right-click a title's bar on the timeline to start it or end it at the playhead, or pick how long it fades. The Start Here and End Here buttons are gone from the Time section.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/title-bar-right-click-menu-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording, press T, click on the picture, type a few words and press ⌘Return." },
+    { "do": "Put the playhead where the words should go, then right-click the title's bar on the timeline.", "shot": "2026-09-27-title-bar-menu-1-menu-sc.png" },
+    { "do": "Choose End at Playhead, and read the new out point on the Properties clip line." },
+    { "do": "Move the playhead earlier, right-click the bar again and choose Start at Playhead." },
+    { "do": "Right-click the bar and choose Fade ▸ 0.50s; the Time section's Fade row now reads 0.50s.", "shot": "2026-09-27-title-bar-menu-2-after-sc.png" },
+    { "do": "Pick the title and look at the Time section: only Fade is left there." }
+  ],
+  "evaluate": [
+    "Are Start at Playhead and End at Playhead where you reach for them, just under Split at Playhead?",
+    "Is the menu now too long for a title, at 14 rows?",
+    "With the buttons gone, is the Time section with only Fade in it still worth a section of its own?",
+    "Is a dimmed Start at Playhead clear enough when the playhead is already on the title's start?"
+  ],
+  "rough": [
+    "The rows print no key. Premiere's Trim to Playhead keys (⌥Q, ⌥W) are not honoured on a title yet, and a menu never prints a key the app ignores.",
+    "The mock draws no right-click menu for a title, so there is nothing to compare row for row. The mock's Time section has no Start Here or End Here either, so removing them matches it.",
+    "Split at Playhead is still offered on a title, which cuts the words in two. That was already the case and is left as it is."
+  ]
+}

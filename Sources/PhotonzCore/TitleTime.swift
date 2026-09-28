@@ -87,23 +87,6 @@ public enum TitleTime {
         return placedSentence
     }
 
-    /// What the two buttons promise, named after the thing they are about:
-    /// words for words, and "it" for everything else, because "bring the
-    /// words on" over a badge is a sentence about somebody else's layer.
-    public static func startHelp(for layer: Layer) -> String {
-        if case .text = layer.content {
-            return "Bring the words on at the playhead. Where they go is untouched."
-        }
-        return "Bring it on at the playhead. Where it goes is untouched."
-    }
-
-    public static func endHelp(for layer: Layer) -> String {
-        if case .text = layer.content {
-            return "Take the words off at the playhead. Where they arrive is untouched."
-        }
-        return "Take it off at the playhead. Where it arrives is untouched."
-    }
-
     /// One ordinary Opacity motion that brings a layer on and takes it off
     /// again, or nil where there is no room for one.
     ///
@@ -193,6 +176,28 @@ extension Layer {
         let over = sorted[0].atMS
         guard over > 0, sorted[1].atMS == motion.timing.durationMS - over else { return nil }
         return over
+    }
+
+    /// Whether Start at Playhead has somewhere to go with the playhead here:
+    /// not where it already starts, and leaving it at least its shortest.
+    public func canStartPlaced(atMS ms: Int) -> Bool {
+        guard startIsFree, let time else { return false }
+        return ms >= 0 && ms != time.inMS && ms <= time.outMS - LayerTime.shortestMS
+    }
+
+    /// Whether End at Playhead has somewhere to go with the playhead here.
+    /// Past the last frame is fine: the document grows, as a drag makes it.
+    public func canEndPlaced(atMS ms: Int) -> Bool {
+        guard startIsFree, let time else { return false }
+        return ms != time.outMS && ms >= time.inMS + LayerTime.shortestMS
+    }
+
+    /// Whether a fade of this length is one to offer: not the one it has, and
+    /// with room for the layer to be fully up somewhere in the middle. Nought
+    /// is always the way back from a fade.
+    public func canSetTitleFade(toMS ms: Int) -> Bool {
+        guard isPlacedInTime, let time, ms != (titleFadeMS ?? 0) else { return false }
+        return ms == 0 || TitleTime.fade(overMS: ms, lengthMS: time.lengthMS) != nil
     }
 }
 

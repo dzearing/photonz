@@ -5,9 +5,9 @@ import SwiftUI
 /// rows (`docs/design/mocks/pages/video.html`, PROPERTIES).
 ///
 /// A clip piece is its Speed, one dropdown, and what you hear at it. A held
-/// frame is how long it holds. A title is where the playhead puts its ends and
-/// how it fades. Where each one starts, ends and how long it runs is the
-/// Properties pane's clip line, which leads the panel.
+/// frame is how long it holds. A title is how it fades. Where each one starts,
+/// ends and how long it runs is the Properties pane's clip line, which leads
+/// the panel.
 ///
 /// Freezing a frame and what a freeze pushes are verbs, so they are on the
 /// clip's right-click menu (Freeze Frame ▸), not here. Every longer answer
@@ -39,22 +39,10 @@ struct SpeedInspector: View {
     // MARK: A title
 
     // When it is on screen is the Properties pane's clip line, one section up
-    // (`PropertiesPane.swift`), so this says only what you can do about it.
+    // (`PropertiesPane.swift`). Start at Playhead and End at Playhead are
+    // verbs, so they are on the bar's right-click menu, not here.
     @ViewBuilder
     private var placedInTime: some View {
-        VideoKit.FieldRow(label: "Playhead") {
-            HStack(spacing: 6) {
-                Button("Start Here") { editorState.startPlacedLayerHere() }
-                    .disabled(!editorState.canStartPlacedLayerHere)
-                    .playtestControl("Start Here", detail: "the Time section")
-                    .panelHelp("Start it at the playhead.")
-                Button("End Here") { editorState.endPlacedLayerHere() }
-                    .disabled(!editorState.canEndPlacedLayerHere)
-                    .playtestControl("End Here", detail: "the Time section")
-                    .panelHelp("End it at the playhead.")
-            }
-            .controlSize(.small)
-        }
         fade
     }
 
