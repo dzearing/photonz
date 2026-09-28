@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 370,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-27T13:01:01.527Z",
-  "updated": "2026-09-27T13:01:01.530Z",
+  "updated": "2026-09-27T15:49:22.702Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found building the-dock-headers-match-the-mock-small-caps-title (2026-09-27). The menu exists now (PropertiesPanelMenu in Sources/Photonz/PropertyKeysInspector.swift) with Copy Look and Paste Look, the app names for what the mock calls Copy properties. Reset to defaults has no action behind it yet: needs a pure PhotonzCore rule for what a layer kind resets to (keys cleared via PropertyKeys, transform and opacity defaults) under History.perform, TDD. Walk to extend: Scripts/playtest/dock-headers-walk.json (panelMenu \"Properties Menu\").",
@@ -22,6 +22,31 @@
     {
       "t": "2026-09-27T13:01:01.529Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-27T15:30:47.469Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T15:58:00.000Z",
+      "note": "Adversarial pass before building: the mock's #propMenu has no behaviour behind it, and the app does not store where a layer was first put down (a clip lands at the drop point, a title at the click). So 'original place and size' means the place and size the layer has without keys, which for a keyed layer is exactly where it was before it was animated (keys never write the stored frame). This is also what Premiere users get for a graphic: Reset on Motion/Opacity clears keys, rotation 0, opacity 100. Rule: every motion goes (a title's fade and a punch-in included, they are keys), rotation 0 (flips stay: that is look), opacity 100, volume points cleared and gain back to unity; blur/shadow/colour stay (Effects and Copy Look own them). Left rough, in the audit: a layer dragged while unkeyed stays where it was dragged."
+    },
+    {
+      "t": "2026-09-27T16:10:00.000Z",
+      "note": "Built: PhotonzCore/PropertiesReset.swift (Layer.hasPropertiesToReset, resetToDefaults, PhotonzDocument.resetPropertiesToDefaults) with Tests/PhotonzCoreTests/PropertiesResetTests.swift written first (7 tests). App: EditorState+PropertyKeys (canResetProperties, resetPropertiesToDefaults through perform, one undo). PropertiesPanelMenu lists Reset to Defaults under Copy/Paste Look when the document has time, dimmed with nothing to reset, and every item now carries the mock's icon. New walk Scripts/playtest/properties-reset-walk.json (no flags) keys Scale and Opacity on a typed title, chooses Reset from the menu, reads nothing animating, undo brings 2 of 8 back, redo clears again: ok, 4 real captures. dock-headers-walk still ok. Scripts/test.sh: 10116 tests pass. Side by side with video.html #propMenu: mock has Copy properties + Reset to defaults with icons; app has Copy Look, Paste Look, Reset to Defaults with icons (names and Title Case kept from the earlier headings task, listed in the audit's rough)."
+    },
+    {
+      "t": "2026-09-27T15:49:04.693Z",
+      "note": "owns these walks: properties-reset-walk"
+    },
+    {
+      "t": "2026-09-27T15:49:22.700Z",
+      "note": "Reset to Defaults is on the Properties menu under Copy Look and Paste Look, with the mock's icons. It clears every key, rotation, opacity and volume in one undo, and keeps the look and the unkeyed place and size. Core rule is PhotonzCore/PropertiesReset.swift (7 tests written first). Verified by the new properties-reset-walk at Next defaults (ok, 4 real captures), dock-headers-walk still ok, and Scripts/test.sh green (10116 tests). Audit: queue/audits/2026-09-27-properties-reset-to-defaults.json. Commit 64a9e97c."
     }
-  ]
+  ],
+  "started": "2026-09-27T15:30:47.468Z",
+  "walks": [
+    "properties-reset-walk"
+  ],
+  "completed": "2026-09-27T15:49:22.701Z"
 }

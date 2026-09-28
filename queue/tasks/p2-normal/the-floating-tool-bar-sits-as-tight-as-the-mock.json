@@ -1,0 +1,32 @@
+{
+  "id": "the-floating-tool-bar-sits-as-tight-as-the-mock",
+  "title": "The floating tool bar sits as tight as the mock draws it",
+  "goal": "The tool bar floating over the canvas is now one glass bar like the video mock, but it is much looser: the mock packs its tools 4 points apart where the app leaves 14, so the bar is noticeably wider than the one the user drew and crowds the picture. The mock is the floor, so the bar should be at least as compact.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 60,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-28T12:18:54.396Z",
+  "updated": "2026-09-28T12:19:18.852Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the rough list of queue/audits/2026-09-27-one-glass-tool-bar.json (task the-floating-tool-bar-is-one-glass-bar-as-the-mo, done 2026-09-27): 'The mock's bar is tighter: 4pt between tools where the app has 14pt, and 18pt hairlines where the app's are 20pt. The spacing inside the tools is unchanged by this task.' Pictures and recordings share the bar, so the change reaches both.",
+  "acceptance": [
+    "At Next defaults the gap between tools on the floating bar matches the video mock's (4pt), and the hairlines are the mock's height (18pt)",
+    "Each tool keeps a hit target a person can land on without aiming, and hover still reads per tool",
+    "A walk photographs the bar beside the mock frame from docs/design/mocks/pages/video.html",
+    "Works at Next defaults with no switch turned on, and an audit under queue/audits/ carries the side by side picture"
+  ],
+  "log": [
+    {
+      "t": "2026-09-28T12:18:54.398Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-28T12:19:18.851Z",
+      "note": "seq 3480 -> 60"
+    }
+  ]
+}

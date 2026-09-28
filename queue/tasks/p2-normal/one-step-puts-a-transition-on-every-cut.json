@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 160,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T22:58:17.649Z",
-  "updated": "2026-09-27T12:11:16.054Z",
+  "updated": "2026-09-28T02:39:57.860Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-transitions.html #efxMenu (Apply to every cut / Set as the default transition). Building blocks from one-key-puts-the-usual-transition-on-the-cut-at: PhotonzDocument.transitionCuts(), ClipCut.fitted(_:), DefaultTransitionStore, EditorState.applyDefaultTransition. Several cuts as one step: see addTransition(_:layerID:atCuts:) which already batches joins of one clip.",
@@ -39,6 +39,36 @@
     {
       "t": "2026-09-27T12:11:16.053Z",
       "note": "seq 150 -> 160"
+    },
+    {
+      "t": "2026-09-28T02:22:23.297Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-28T02:39:28.541Z",
+      "note": "owns these walks: transition-on-every-cut-walk, default-transition-on-picked-clips-walk"
+    },
+    {
+      "t": "2026-09-28T02:39:36.669Z",
+      "note": "Adversarial review before building: a Premiere editor expects Apply Default Transitions to Selection on Command D with clips picked; here Command D is Photoshop Deselect, so Command T with several clips picked does it. Risk: Command T with a text layer and a clip picked used to mean the cut at the playhead; now it spreads only when two or more are picked AND there is a cut among them, otherwise it falls back to the old one-cut behaviour. A cut picked always wins. Mock puts the verb on a panel group plus menu the app lacks; built on the picker tile right click per acceptance and filed the panel group as the-panel-has-a-transitions-group-of-tiles-as-th (p1)."
+    },
+    {
+      "t": "2026-09-28T02:39:36.722Z",
+      "note": "Built: PhotonzDocument.transitionCuts(among:) and putTransitionOnEveryCut(_:among:) + EveryCutOutcome (DefaultTransition.swift, 9 tests in EveryCutTransitionTests), canvas notice .transitionOnEveryCut (title = kind, detail On N cuts, M skipped; stays up longer when skipped), EditorState.putTransitionOnEveryCut, Command T spreads over several picked clips, tile right click Apply to Every Cut, playtest action clipPickEveryClip. Walks transition-on-every-cut-walk and default-transition-on-picked-clips-walk green at Next defaults with real captures; default-transition-key-walk still green; Scripts/test.sh 10202 tests pass."
+    },
+    {
+      "t": "2026-09-28T02:39:36.775Z",
+      "note": "Review after building: works, one undo, pill reads clearly. Left rough (not filed, noted in audit): skipped cuts are counted but not marked on the timeline; menu rows in title case vs mock sentence case."
+    },
+    {
+      "t": "2026-09-28T02:39:57.858Z",
+      "note": "Apply to Every Cut on the picker tile right click, and Command T over several picked clips, each one undo step with skipped cuts counted in the canvas pill (DefaultTransition.swift core + EveryCutTransitionTests, EditorState+ClipTransitions, TransitionPicker). Verified: transition-on-every-cut-walk and default-transition-on-picked-clips-walk green at Next defaults with real captures, default-transition-key-walk still green, Scripts/test.sh 10202 passing. Audit queue/audits/2026-09-27-transition-on-every-cut.json. Commit df44c10b."
     }
-  ]
+  ],
+  "started": "2026-09-28T02:22:23.296Z",
+  "walks": [
+    "transition-on-every-cut-walk",
+    "default-transition-on-picked-clips-walk"
+  ],
+  "completed": "2026-09-28T02:39:57.859Z"
 }

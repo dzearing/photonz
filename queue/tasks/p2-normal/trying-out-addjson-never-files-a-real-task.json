@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 100,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "infra",
   "created": "2026-09-24T06:03:10.650Z",
-  "updated": "2026-09-27T12:11:15.745Z",
+  "updated": "2026-09-27T22:26:45.560Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-23 23:02: node queue/bin/queue.mjs addjson {\"title\":\"x\"} --dry-run wrote queue/tasks/p2-normal/x-5.json (status pending), dropped by hand. Earlier ones: x.json 2026-09-23T21:34, x-2 00:14, x-3 01:31, x-4 03:00 (all created stamps, all dropped).\n\n--- folded in from a-mistyped-status-command-stops-wiping-a-tasks-s (triage 2026-09-27) ---\nReproduced on 2026-09-23 while finishing a-walk-can-reach-a-control-that-is-plainly-on-sc.\n\nRan:\n  node queue/bin/queue.mjs status a-walk-can-reach-a-control-that-is-plainly-on-sc\n(meaning: show me this task). It printed only the id and exited 0.\n\nqueue/history.jsonl then carried:\n  {\"t\":\"2026-09-23T04:12:29.782Z\",\"ev\":\"task_undefined\",\"id\":\"a-walk-can-reach-a-control-that-is-plainly-on-sc\",\"from\":\"done\"}\n\nand the task file had lost its status key entirely:\n  python3 -c \"import json;t=json.load(open(...));print(list(t.keys()))\"\n  -> no status in the list\n\nPut back by running the full status done command again. The fix is in queue/bin/queue.mjs: the status verb should require its second argument, and with only an id it should print the task rather than write undefined into it. An unknown status word should be refused the same way, with the list of the ones that are allowed.",
@@ -69,6 +69,25 @@
     {
       "t": "2026-09-27T12:11:15.744Z",
       "note": "seq 90 -> 100"
+    },
+    {
+      "t": "2026-09-27T22:18:55.187Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T22:26:45.451Z",
+      "note": "reproduced all three slips in a sandbox queue before fixing: addjson '{\"title\":\"x\"}' --dry-run wrote tasks/p2-normal/x.json; status <id> alone wrote task_undefined and removed the status key; status <id> finshed wrote finshed verbatim. After the fix queue/bin/queue-cli-drill.mjs passes 23 checks; churn, decision, objectives, sweep-notes, audit-index, screen-gate, state-poll, reach and leftovers drills all pass; Scripts/test.sh green (10141 tests). On the real queue: status <this id> printed the task, addjson x --dry-run refused, a 5-word dry run printed the draft and its near-twin; history 7877 -> 7877 lines and 1053 -> 1053 task files. x through x-7 all still dropped. Not app work, so no walk or audit."
+    },
+    {
+      "t": "2026-09-27T22:26:45.505Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-09-27T22:26:45.558Z",
+      "note": "queue.mjs add/addjson honour --dry-run and refuse titles under three words or unknown flags; status <id> alone prints the task; setStatus refuses unknown words and writes nothing for a no-op repeat. Proven by queue/bin/queue-cli-drill.mjs (new), existing queue drills and Scripts/test.sh. Commit a66cb6e1."
     }
-  ]
+  ],
+  "started": "2026-09-27T22:18:55.186Z",
+  "walks": [],
+  "completed": "2026-09-27T22:26:45.559Z"
 }

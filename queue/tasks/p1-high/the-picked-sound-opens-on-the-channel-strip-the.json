@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T11:07:07.430Z",
-  "updated": "2026-09-27T12:11:51.343Z",
+  "updated": "2026-09-27T13:25:00.637Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the Fades section (a-sound-shows-its-fade-in-and-fade-out-as-the-mo, 2026-09-25). Mock: docs/design/mocks/pages/video-audio.html lines ~214-221 (.section Channel: .btnrow chMute/chSolo, .slrow chVol -24..+6 dB). App: Sources/Photonz/SoundInspector.swift (SoundInspector: Level slider + Points/Flatten), section title in InspectorSections.swift (.sound \"Sound\"). Track mute/solo already exist on track headers (DocumentTracks.swift, layersSilencedByTrack); the panel buttons should drive those, not a second mute. Keep the Points/Flatten row or fold it in; decide against the mock.",
@@ -39,7 +39,31 @@
     {
       "t": "2026-09-27T12:11:51.342Z",
       "note": "triage 2026-09-27: normalize-an-audio-segment-and-quiet-system-audi (26ab36db) added a Gain row with a Normalize button ABOVE the Level row, and its audit says no mock draws Gain. The mock's Channel section has one Volume row. When this lands, settle how Gain and Normalize sit beside the mock's one Volume row (right-click Normalize on the segment already exists) and say it in the audit, rather than ending with three level controls in one section."
+    },
+    {
+      "t": "2026-09-27T13:02:13.340Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T13:07:48.713689Z",
+      "note": "Adversarial pass before building: (1) the mock's Channel is a per-TRACK strip; the app's level is per layer, so Volume stays the picked sound's fader (the mock draws one sound per track, so they read the same) while Mute/Solo drive the sound's own track (linked audio track for a clip's own sound, the track a piece of sound sits on) exactly as the track header does. (2) Premiere keeps Audio Gain apart from clip Volume; three level controls in one Channel section is what triage warned against, so Gain + Normalize move to a Gain section under Fades, the mock's #chExtra per-selection slot; Normalize also stays on the segment's right-click. (3) The mock dims and disables Volume while muted; built the same. (4) Mock slider is -24..+6 dB in 0.5 steps, so Volume becomes a dB slider (silence is Mute's job). (5) File name: the header note beside the title, like Edit point's; falls back to the layer name when the file was never remembered."
+    },
+    {
+      "t": "2026-09-27T13:07:48.766Z",
+      "note": "walks none -> sound-channel-walk"
+    },
+    {
+      "t": "2026-09-27T13:25:00.586Z",
+      "note": "Rough items from the audit: Gain placement, the Points row, per-layer Volume and the system slider are all open questions for the user to react to on the audit. None is broken, so none was filed as a task. Solo in the panel uses the accent, as the mock draws it; the track header's S uses amber. Left for the user's evaluate answer."
+    },
+    {
+      "t": "2026-09-27T13:25:00.635Z",
+      "note": "Channel section for a picked sound, as in pages/video-audio.html: file name in the header, Mute/Solo driving the sound's own track (same switches as the track header, one undo each), Volume as a -24..+6 dB slider that dims while muted. Gain and Normalize moved to their own Gain section under Fades. Core test-first (SoundChannelTests, TimePanelOrderTests); full suite 10077 passed; new sound-channel-walk (no flags) green with 3 real captures, and the 8 walks it touched pass. Audit queue/audits/2026-09-27-sound-channel.json. Commit 78d79a5e."
     }
   ],
-  "walks": []
+  "walks": [
+    "sound-channel-walk"
+  ],
+  "started": "2026-09-27T13:02:13.339Z",
+  "completed": "2026-09-27T13:25:00.636Z"
 }

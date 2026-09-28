@@ -5,11 +5,11 @@
   "epic": "video-share",
   "priority": "p2-normal",
   "seq": 180,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T23:56:58.863Z",
-  "updated": "2026-09-27T12:11:16.161Z",
+  "updated": "2026-09-28T05:19:15.454Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-09-24 during the-export-sheet-lets-you-pick-the-size-of-the-v: Scripts/playtest.sh Scripts/playtest/export-a-video-at-1080p-walk.json --no-build -> [20 writeVideo] five-minutes-at-1080p.mp4 is 17 MB, written in 342447 ms; it runs 319.24s at 1728 x 1080 px ... made frame by frame from the document. Load average about 3-4 at the time. Path: EditorState.writeVideo -> DocumentFrames (composites every frame at canvas size 2880x1800, then DocumentMovieWriter fits to plan.size). Likely wins: composite at the output size rather than the canvas size, decode with hardware, pipeline frame fetch and encode. An untouched recording at Full is still a verbatim copy and is not affected.",
@@ -38,9 +38,36 @@
     {
       "t": "2026-09-27T12:11:16.160Z",
       "note": "seq 170 -> 180"
+    },
+    {
+      "t": "2026-09-28T04:28:07.600Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-28T04:38:54.584Z",
+      "note": "baseline 2026-09-27 21:36: export-a-video-at-1080p-walk wrote five minutes (319.24s) at 1728x1080 in 337799 ms, load ~4. Path: one AVAssetImageGenerator seek per frame at 2880x1800, composite at canvas size, CPU scale into the pixel buffer, all serial."
+    },
+    {
+      "t": "2026-09-28T05:19:11.007Z",
+      "note": "walks export-a-video-at-1080p-walk -> export-a-video-at-1080p-walk, export-card-while-writing-walk"
+    },
+    {
+      "t": "2026-09-28T05:19:11.059Z",
+      "note": "adversarial pass: a Premiere user expects export faster than realtime; the write was serial per-frame seeks at 2880x1800, then a CPU shrink. Fix: front-to-back reader, composite at output size. Colour check: stream and generator frames match pixel for pixel ([48,55,68] both, Rec.709 space). 12 export walks + captions-from-the-sound + an-editing-session all ok. Full suite green (10223 tests)."
+    },
+    {
+      "t": "2026-09-28T05:19:11.111Z",
+      "note": "left rough: a ~300ms main-thread stall right when an export starts. It is there on the old path too (measured by swapping back), and the setup work on the main actor is <0.1ms, so the stall is elsewhere (SwiftUI layout when the card appears?). Not filed: one stall at the click that starts the export, hard to see behind the save panel closing. Also left rough: rotated-track recordings still take the slow generator path."
+    },
+    {
+      "t": "2026-09-28T05:19:15.452Z",
+      "note": "Five minute Retina talk with captions writes at 1080p in 72-83s (0.23-0.26 of its 319s), down from 338s. Front-to-back clip reader (MovieFrameStream) and compositing at output size. export-a-video-at-1080p-walk logs the pace and holds it to 0.5, and still lands 1728x1080. New export-card-while-writing-walk photographs the card mid-write; the main thread's busiest slice while writing is 15-18ms. Full suite green. Audit: queue/audits/2026-09-27-fast-video-export.json. Commit 44fde13f."
     }
   ],
   "walks": [
-    "export-a-video-at-1080p-walk"
-  ]
+    "export-a-video-at-1080p-walk",
+    "export-card-while-writing-walk"
+  ],
+  "started": "2026-09-28T04:28:07.598Z",
+  "completed": "2026-09-28T05:19:15.453Z"
 }

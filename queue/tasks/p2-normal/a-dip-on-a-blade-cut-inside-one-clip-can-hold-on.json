@@ -1,0 +1,31 @@
+{
+  "id": "a-dip-on-a-blade-cut-inside-one-clip-can-hold-on",
+  "title": "A dip on a blade cut inside one clip can hold on black too",
+  "goal": "Holding on black between the fade down and the fade up only works where two separate clips meet. A cut made with the blade inside one recording shows no Hold on black row, so the common case of cutting a screen recording and dipping to black cannot sit on black for a beat.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-28T02:00:22.538Z",
+  "updated": "2026-09-28T12:19:18.740Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building a-transition-can-sit-before-across-or-after-the (2026-09-28). The hold is ClipTransition.holdMS; between clips it is the gap between the two clips (editPoints accepts gap == arrival hold, editPointCut reads the gap as the hold, PhotonzDocument.setTransition ripples). Inside one clip the pieces butt, so ClipPieces.setTransition refuses holdMS > 0 and EditorState.canHoldClipTransition is false for .join. Doing it there means pieces carrying a hold gap in startMS/totalLengthMS, or splitting the clip at the join into two clips when a hold is asked for.",
+  "acceptance": [
+    "A dip on a join inside one clip shows the Hold on black row",
+    "Choosing a hold inserts that much black inside the clip, moves everything after it along, and one undo takes it back out",
+    "A walk at Next defaults sets a hold on a blade cut and claims what moved"
+  ],
+  "log": [
+    {
+      "t": "2026-09-28T02:00:22.540Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-28T12:19:18.739Z",
+      "note": "seq 3450 -> 40"
+    }
+  ]
+}

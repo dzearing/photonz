@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 240,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T03:21:57.696Z",
-  "updated": "2026-09-27T12:11:16.482Z",
+  "updated": "2026-09-28T11:21:32.022Z",
   "deps": [],
   "blockedBy": [],
   "notes": "SEEN 2026-09-22, once, in a full run under deliberate load (12 spin processes plus a 24-thread on-device text recognition load, load average 16):\n\n  Scripts/test.sh, 9112 tests, 728 suites, 215.0s, 2 issues\n  X Test \"A whole strip of moving previews fits inside one frame of the loop\" recorded an issue at IconPreviewRenderTests.swift:249:38: Issue recorded\n\nNOT reproduced on demand. The same test run on its own under the same load passes with room to spare:\n\n  [perf] budget: moving icon previews, whole strip of 4 - 6.4ms on the calibration machine clock against a budget of 20ms (baseline 5.0ms x 2.5 tolerance). Read 8.2ms here beside a filter graph yardstick reading 10.1ms against its own 8.0ms, over 15 interleaved rounds\n\nAnd the same full suite run idle, twice, reports only the separately filed export size flake. So it needs the whole suite AND a loaded machine together.\n\nHISTORY: this exact test was fixed for this exact reason by the done task two-timing-tests-only-fail-when-the-whole-suite (shipped 8279e9b9, MachineSpeed.normalizedMS + checkInterleaved, Tests/PhotonzRenderTests/IconPreviewRenderTests.swift). Read that task log first: it records that a 5ms baseline plus the flat 8ms jitterSlackMS means this test only trips on a regression of about 4x, so whatever is moving here is moving a long way. That note is the obvious place to start.\n\nRELATED, and a worked example of the shape of answer wanted: the-test-suite-stops-reporting-failures-that-are gave the text reading a way to say \"this machine would not read\" and made its suite skip with a reason instead of going red (Sources/PhotonzRender/TextReader.swift, recogniserHealth).",
@@ -66,7 +66,29 @@
     {
       "t": "2026-09-27T12:11:16.481Z",
       "note": "seq 220 -> 240"
+    },
+    {
+      "t": "2026-09-28T07:51:14.734Z",
+      "note": "went red again 2026-09-28 inside a full Scripts/test.sh run (97.5ms vs 20ms budget, yardstick 8.0ms); passed alone in 0.25s and in the next full run"
+    },
+    {
+      "t": "2026-09-28T10:54:42.400Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-28T11:21:24.799Z",
+      "note": "Reproduced the mechanism, not the intermittent red itself: in a probe test, 8 threads rendering through DocumentRenderer's shared CIContext made the strip read 352-362ms (normalized) beside a filter-graph yardstick at 8.0ms, because the yardstick uses its own private context and never waits. Same probe with the strip on a private context: 5.9-6.4ms. CPU spin x16/x48 and yardstick load never pushed it over. Matches every recorded failure (29.2, 39.3, 97.5ms with yardstick 8-9ms). Fix: DocumentRenderer(privateContext:) for the test, plus MachineSpeed.reading: over budget beside a yardstick >3x its own number is a known issue, not red. Full suite idle 7.6/7.9ms, loaded (12 perl spinners, load 13-18) 10.9/10.7ms, all green; deliberate 5x slowdown in iconPreview read 27.2ms and failed; slowed subject under 8x yardstick load recorded 'not judged' as a known issue."
+    },
+    {
+      "t": "2026-09-28T11:21:24.852Z",
+      "note": "left rough: in the app the icon strip also renders through the shared context, so it can wait behind the canvas composite. Not filed: no one has seen the strip stutter, and the test was never meant to time that queue."
+    },
+    {
+      "t": "2026-09-28T11:21:32.020Z",
+      "note": "The strip now times on its own render context (DocumentRenderer(privateContext:)), so it no longer queues behind other suites' renders on the shared one; a reading over budget beside a yardstick more than 3x off its own number is recorded as a known issue ('not judged'), not red. Verified: full suite green twice idle (7.6, 7.9ms) and twice at load average 13-18 (10.9, 10.7ms); a deliberate 5x slowdown fails at 27.2ms. Commit 5ee0e42c."
     }
   ],
-  "walks": []
+  "walks": [],
+  "started": "2026-09-28T10:54:42.399Z",
+  "completed": "2026-09-28T11:21:32.021Z"
 }

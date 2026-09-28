@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T12:03:33.572Z",
-  "updated": "2026-09-27T12:11:15.343Z",
+  "updated": "2026-09-27T17:16:33.387Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-25 on main at 3f6a7c04 with the working tree stashed: `Scripts/test.sh --filter MotionRenderTests` -> `✘ Test aSwitchedOffMotionDrawsTheLayerAsItWasDrawn() recorded an issue at MotionRenderTests.swift:102:9: Expectation failed: (difference(still, drawn) → 0.007775) == (0 → 0.0)`, 3 of 3 runs. Run alone (`--filter aSwitchedOffMotionDrawsTheLayerAsItWasDrawn`) it passes 3 of 3, and a debug print showed the moved and stored documents are equal (frame and transform identical), so two renders of equal documents differ: likely shared renderer or cache state between tests of the 4 suites that filter matches. It also failed once in a full run the same day and passed in the next.",
@@ -31,6 +31,29 @@
       "note": "seq 20 -> 20",
       "since": "2026-09-25T12:23:32.454Z",
       "count": 3
+    },
+    {
+      "t": "2026-09-27T16:55:43.544Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T17:16:24.659Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-09-27T17:16:24.711Z",
+      "note": "Could not reproduce on 2026-09-27: 0 failures in 43 runs (MotionRenderTests filter 9x at main, 4x under 16 bounded CPU burners, 12x beside the whole render target in a second worktree, 6x at 3f6a7c04 itself, 3 whole-render-target runs, full suite). Same commit that failed 3/3 on 09-25 now passes, so the trigger was machine state that day (runner noted 80s single tests), not code. Recorded diff 0.0078 ~= a 12 degree turn of the 80pt box (2*80^2*tan 6deg / 160000 = 0.0084 alpha bytes), i.e. a turned box was drawn for an unturned document. Rotation is a CI transform in the graph, so a stale shared-CIContext raster alone would not explain it; mechanism unconfirmed. Added: the test checks moved.layers == document.layers separately, and on a picture mismatch writes still.png/drawn.png to $TMPDIR/photonz-switched-off-motion-*/ named in the failure (verified by forcing the check to fail)."
+    },
+    {
+      "t": "2026-09-27T17:16:24.764Z",
+      "note": "Not reproducible any more, on main or on 3f6a7c04 where it failed 3/3 on 09-25 (0 of 43 runs, incl. under CPU and concurrent render load), so it was machine state that day. MotionRenderTests passes 3 in a row; full suite 10125 green with it inside. Commit 8728bce1 makes the next failure diagnosable: the model half is checked on its own and both pictures are saved to a temp folder named in the failure."
+    },
+    {
+      "t": "2026-09-27T17:16:33.386Z",
+      "note": "finished, but left 1 file(s) changed and uncommitted: docs/design/mocks/pages/dashboard.html. Put aside so the next task started clean; restore with `git stash apply e0d8b1ef539d1379d30869cd1e1a00b522d13f14` before carrying on."
     }
-  ]
+  ],
+  "started": "2026-09-27T16:55:43.543Z",
+  "walks": [],
+  "completed": "2026-09-27T17:16:24.765Z"
 }

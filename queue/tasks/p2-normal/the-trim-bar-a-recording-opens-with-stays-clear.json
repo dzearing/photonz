@@ -4,12 +4,12 @@
   "goal": "A recording no longer opens with Trim in hand (that changed on 2026-09-25), so the bar no longer covers a caption on open. It can still come up over a captioned recording when someone picks Trim, and a caption or a notice under it would be half hidden. Check whether that still happens and fix it if it does.",
   "epic": "video-audio",
   "priority": "p2-normal",
-  "seq": 350,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T06:02:48.695Z",
-  "updated": "2026-09-27T12:11:17.039Z",
+  "updated": "2026-09-28T12:19:18.904Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-23: Scripts/playtest.sh Scripts/playtest/captions-write-themselves-walk.json, picture 2-the-captions-wrote-themselves-sc.png (queue/audits/2026-09-23-captions-write-themselves-2-the-captions-wrote-themselves.png): the In 0:00 · Out 0:17 · Cancel · Trim capsule covers the middle of the caption line The transport bar and the timeline appear. The capsule comes from document.opensWithTrimInHand (EditorState.openRecordingAsDocument sets .trim). Options: lift the capsule above the caption band, or drop the fast-lane trim once the document has captions.",
@@ -63,6 +63,10 @@
     {
       "t": "2026-09-27T12:11:17.038Z",
       "note": "seq 330 -> 350"
+    },
+    {
+      "t": "2026-09-28T12:19:18.903Z",
+      "note": "seq 350 -> 70"
     }
   ]
 }

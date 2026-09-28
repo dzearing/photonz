@@ -1,0 +1,39 @@
+{
+  "id": "a-walk-s-command-z-undoes-what-it-says-or-the-wa",
+  "title": "A walk's Command Z undoes what it says, or the walk fails",
+  "goal": "Many walks press Command Z to prove an edit can be taken back, and in a background probe that press often reaches no menu at all, so the walk goes on green over an undo that never happened. Walks that test undo should really undo, and a press that runs nothing should fail the walk rather than leave a note.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 50,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-28T10:03:10.017Z",
+  "updated": "2026-09-28T12:19:18.797Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-28 while working walks-that-drag-a-clip-on-the-timeline-by-window. keys-copy-between-layers-walk pressed {do:key,key:z,modifiers:[command]} after dipping a volume point; a new expectLevel claim after it failed: 'Tutorial Sample's level line is not where the walk said: it is not flat (2.49s 0.3 dB, 3.48s -60.5 dB, 4.48s 0.3 dB)'. The key step's own note said 'Edit > Undo carries this chord, but that item is dimmed and empty, so the MENU did not run'. Replacing it with {do:shortcut,key:z,modifiers:[command],menuItem:Undo} (which falls back to action undo) made the dip come back flat. Same in a-clip-s-sound-is-linked-under-it-walk: the clip stayed at 0.86s after key cmd+z. Survey of /tmp/photonz-playtest/*/log.json on 2026-09-28: 20 of 31 logged command+z presses say 'MENU did not run' (a-recording-opens-to-watch, captions-are-one-layer, captions-from-the-sound, extract-a-marked-stretch, lens, magnify-lens, normalize-quiet-system-audio, opacity-on-a-video-shape, panel-change-can-be-taken-back, path-demo, pen-draws-a-path, premiere-keys-on-the-timeline, undo-shortcut, tutorial-layers-and-undo...). Some of those went to the responder chain, which may still have undone a text edit, so each needs checking, not blanket rewriting. PlaytestHarness.swift case .key logs frozenMenuBar but does not throw. 18 walks use key cmd+z.",
+  "acceptance": [
+    "Every walk that presses Command Z to undo uses the Undo shortcut step (which runs the undo when the menu bar is frozen) or claims the undo's result",
+    "A key step whose chord names a menu item that is dimmed and empty fails the walk instead of only noting it, or the walks that rely on it are moved off it",
+    "keys-copy-between-layers-walk and a-clip-s-sound-is-linked-under-it-walk keep passing with their undo claimed"
+  ],
+  "log": [
+    {
+      "t": "2026-09-28T10:03:10.019Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-28T10:03:21.202Z",
+      "note": "owns these walks: keys-copy-between-layers-walk, a-clip-s-sound-is-linked-under-it-walk"
+    },
+    {
+      "t": "2026-09-28T12:19:18.796Z",
+      "note": "seq 3460 -> 50"
+    }
+  ],
+  "walks": [
+    "keys-copy-between-layers-walk",
+    "a-clip-s-sound-is-linked-under-it-walk"
+  ]
+}

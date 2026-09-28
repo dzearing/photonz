@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 380,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-28T02:39:17.053Z",
-  "updated": "2026-09-28T02:39:17.056Z",
+  "updated": "2026-09-28T03:29:45.575Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-transitions.html, the dgrp with the libgrid #lib (lines ~240-260) and #efxMenu (line ~299). The verbs already exist: EditorState.putTransitionOnEveryCut(_:among:) and setDefaultTransition(_:) (EditorState+ClipTransitions.swift); tiles are VideoKit.Tile + AnimatedTransitionThumbnail as in TransitionPicker.swift. Found while building one-step-puts-a-transition-on-every-cut, which put Apply to Every Cut on the picker tile right click only.",
@@ -23,6 +23,31 @@
     {
       "t": "2026-09-28T02:39:17.055Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-28T02:54:13.560Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-28T02:56:42.383Z",
+      "note": "Before building: (1) the mock heads the group Effects with a Transitions chip, but a picked clip already brings the layer Effects section (fade, blur, corners), so two Effects headers would sit in one panel; the task title names it Transitions and so will the header. (2) The mock's six tiles (Cross dissolve, Dip to color, Slide, Push, Morph, Cut) are not the six the app has (Cross dissolve, Dip to black, Dip to white, Push, Wipe, Blur through); the group shows the app's six, the same the picker at a cut shows. (3) The mock's line under the grid is over the 40-character panel budget, so it goes behind the section's question mark in the mock's words. (4) Premiere users expect Effects > Video Transitions, drag onto an edit point, right click a transition for Set as Default; all three are met. (5) A first-time user with no cut picked: clicking a tile just picks it (so the plus menu has a subject); with a cut picked, it puts it on that cut as the mock says."
+    },
+    {
+      "t": "2026-09-28T02:56:42.436Z",
+      "note": "owns these walks: transitions-group-walk"
+    },
+    {
+      "t": "2026-09-28T03:29:45.519Z",
+      "note": "Rough items: header named Transitions not Effects, tile set follows the picker mock (video-transition-wt draws these six), mock note behind the question mark, group height, inert click with no cut picked, real-pointer lift not walked. All are in the audit for the user to react to; none filed, since each is a question of taste rather than a defect and no open task is closer than this audit. Found and fixed in passing: Apply to Every Cut counted an already-matching cut as skipped."
+    },
+    {
+      "t": "2026-09-28T03:29:45.573Z",
+      "note": "Transitions group shipped in the Next panel (TransitionsGroup.swift, TransitionDrag.swift, core transitionDropPlan with TransitionDropTests): search, six tiles, drag onto a cut as one undo step with a ghost on the cut, click onto the picked cut, header plus and tile right click with Apply to Every Cut and Set as Default Transition. Verified by transitions-group-walk at Next defaults (5 real captures), all 9 transition walks, library and panel-order walks, and Scripts/test.sh (10,210 tests green). Audit: queue/audits/2026-09-27-transitions-group.json. Commit 7b9b72e9."
     }
-  ]
+  ],
+  "started": "2026-09-28T02:54:13.559Z",
+  "walks": [
+    "transitions-group-walk"
+  ],
+  "completed": "2026-09-28T03:29:45.574Z"
 }

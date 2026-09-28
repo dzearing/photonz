@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-27T07:34:15.170Z",
-  "updated": "2026-09-27T12:11:15.495Z",
+  "updated": "2026-09-27T19:34:23.875Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found 2026-09-27 building clip pictures. Reproduced with a walk: openLongTalk, captionsWaitForThemselves, videoPause, videoSeekQuarter, timelineZoomIn x4 (16x), then videoSeekMiddle and a wait with longestUnderMS 50. Longest single pass after the seek: 599.5ms and 597.8ms (clip pictures on), 1066.4ms (on, another run), 493.2ms with clip pictures switched off by a temporary switch. So it is there before pictures. Only the FIRST long jump stalls: six more jumps between the middle and three quarters stayed under 35ms, and a first jump to three quarters (instead of the middle) did not stall in one run. At 2x the same jump to the middle stayed under 35ms. A sample of the main thread (sample <pid> 8) put the time inside NSHostingView.layout (1.5s of 8s, deduplicated SwiftUI frames) and 717ms in the Captions panel's CaptionStylePreview TimelineView (TextRasterizer), which animates continuously and may be background load rather than the spike. The walk clip-pictures-when-zoomed-in-walk has the seek in it untimed; add the limit back there once fixed.",
@@ -34,7 +34,28 @@
     {
       "t": "2026-09-27T12:11:15.494Z",
       "note": "seq 3450 -> 50"
+    },
+    {
+      "t": "2026-09-27T19:12:38.061Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T19:34:14.656Z",
+      "note": "walks none -> first-long-jump-when-zoomed-in-walk, clip-pictures-when-zoomed-in-walk"
+    },
+    {
+      "t": "2026-09-27T19:34:14.709Z",
+      "note": "Reproduced 3/3 with a walk (584, 578, 593ms) but only when a snapshot step sat between the zoom and the jump; the same walk without the snapshot read 32-38ms 3/3. A snapshot then a wait with no action at all read 586ms, so it was never the jump. Two harness defects: (1) snapshot draws the whole window offscreen (cacheDisplay, ~580ms at 16x, 11.6s at Fit, all CoreGraphics rasterising an existing RenderBox list, no app code) inside a run loop pass and never took itself off MainThreadMeter; (2) play/pause/seek/trim actions (drivesTheTrimTool branch) never zeroed the meter, so the wait after a seek reported the slowest pass since the last zoom. Fixed both in PlaytestHarness (harnessWork{} excludes the offscreen draw and the capture's PNG encode; pending layout is laid out first on the app's account; trim-tool actions reset the meter). No real stall found in the app: Time Profiler over the stalled run showed no long app pass. Only first-long-jump-when-zoomed-in-walk had a timed wait after a trim-tool action, so no other walk's reading moves except to drop harness time."
+    },
+    {
+      "t": "2026-09-27T19:34:23.873Z",
+      "note": "Not an app stall: the walk's own snapshot (offscreen draw of the window, ~580ms at 16x) was counted on the main thread meter, and seek actions never zeroed it, so the wait after a jump reported the picture. Fixed in PlaytestHarness (commit b13f03da). New first-long-jump-when-zoomed-in-walk (Next defaults, no flags) times the first jump to the middle at 16x plus jumps at Fit and 2x at 50ms; clip-pictures-when-zoomed-in-walk times its seek again. Both passed 3 of 3, every timed jump 17-44ms. Scripts/test.sh green (10,128 tests). Asked for a whole-set sweep since every walk with a picture before a timed wait reads differently."
     }
   ],
-  "walks": []
+  "walks": [
+    "first-long-jump-when-zoomed-in-walk",
+    "clip-pictures-when-zoomed-in-walk"
+  ],
+  "started": "2026-09-27T19:12:38.059Z",
+  "completed": "2026-09-27T19:34:23.874Z"
 }

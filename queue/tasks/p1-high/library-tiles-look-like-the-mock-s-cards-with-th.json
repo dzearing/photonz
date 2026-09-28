@@ -5,14 +5,14 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-27T08:41:49.655Z",
-  "updated": "2026-09-27T12:11:15.243Z",
+  "updated": "2026-09-27T15:30:23.526Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Found side by side in queue/audits/2026-09-27-library-tiles-mock.png vs 2026-09-27-library-tiles-media-sc.png. Mock CSS (docs/design/mocks/shared/dist/photonz-ds.css ~3619): .libtile border 1px edge-lo, radius r3, background glass-thin, overflow hidden; .th edge to edge aspect 16/10; .cap padding 5px 7px 6px, gap 1; .nm 10.5px weight 560 ink, left, ellipsis; .mt 9px mono faint. Measured in the mock at a 256 dock: tile 112x105, picture 110x69. App today (after library-tiles-are-as-wide-as-the-mock-draws-them): tile 114x90, picture 106x66 inset 4pt, name centred 10pt secondary, length as a corner badge in the picture. Tile views: LibraryPanel.swift LibraryTile, LibraryClipTile.swift, ComponentPanel.swift LibraryComponentTile, ColorStylePanel/TextStylePanel/EffectStylePanel tiles; they read LibraryTileMetrics from the environment. A second caption line changes tileHeight(width:sizing:) in LibraryShelfLayout.Sizing.card: add it there (measure the line) so the grid arithmetic stays exact. Keep Current on .compact.",
+  "notes": "Found side by side in queue/audits/2026-09-27-library-tiles-mock.png vs 2026-09-27-library-tiles-media-sc.png. Mock CSS (docs/design/mocks/shared/dist/photonz-ds.css ~3619): .libtile border 1px edge-lo, radius r3, background glass-thin, overflow hidden; .th edge to edge aspect 16/10; .cap padding 5px 7px 6px, gap 1; .nm 10.5px weight 560 ink, left, ellipsis; .mt 9px mono faint. Measured in the mock at a 256 dock: tile 112x105, picture 110x69. App today (after library-tiles-are-as-wide-as-the-mock-draws-them): tile 114x90, picture 106x66 inset 4pt, name centred 10pt secondary, length as a corner badge in the picture. Tile views: LibraryPanel.swift LibraryTile, LibraryClipTile.swift, ComponentPanel.swift LibraryComponentTile, ColorStylePanel/TextStylePanel/EffectStylePanel tiles; they read LibraryTileMetrics from the environment. A second caption line changes tileHeight(width:sizing:) in LibraryShelfLayout.Sizing.card: add it there (measure the line) so the grid arithmetic stays exact. Keep Current on .compact. | DONE 2026-09-27: LibraryShelfTile (Sources/Photonz/LibraryShelfTile.swift) is the one view; its card mode is VideoKit.Tile. Meta per kind: clip length, picture pixel size (LibraryTileCaption.pictureSize), component entry.detail, styles paint/type/effect. Corner words: component version stays; origin tag and clip length only on compact. LibraryTileMetrics gained wellWidth + isCard. LibraryShelfLayout.defaultCap(sizing:) gives Next a 256pt first ceiling (Current 220) via LibraryPanel.init.",
   "acceptance": [
     "Every Library tile at Next defaults is a bordered, rounded card with its picture edge to edge across the top, like video.html's Library",
     "The name sits left aligned under the picture in the mock's brighter, slightly heavier type, and a recording's or sound's length sits on a quiet mono line under the name instead of on the picture",
@@ -33,6 +33,30 @@
     {
       "t": "2026-09-27T12:11:15.242Z",
       "note": "seq 370 -> 70"
+    },
+    {
+      "t": "2026-09-27T15:02:29.931Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T15:30:06.152Z",
+      "note": "Adversarial pass before building: VideoKit.Tile already IS the mock's .libtile (transition picker, caption styles), so the Library draws through it rather than a sixth tile. Risk found: a card row is 108pt, so the 220pt default shelf ceiling cut the second row through its meta line; fixed with a Next-only first ceiling of two rows + peek (256). Premiere/FCP icon view puts name + duration under the thumbnail, so the meta line is where an editor looks."
+    },
+    {
+      "t": "2026-09-27T15:30:06.205Z",
+      "note": "Built: LibraryShelfTile (Sources/Photonz/LibraryShelfTile.swift) is the one tile every shelf draws; card mode = VideoKit.Tile, compact mode = Current's old tile. Six tile views (picture, clip, component, colour/text/effect style) hand it a picture, name and meta. Card arithmetic in LibraryShelfLayout (cardBorder, cardCaption*, pictureWidth, defaultCap), meta wording in LibraryTileCaption, both tested. library-shelf-height-walk now drags the grab bar with dragHandle (the old fixed-coordinate drags hit nothing once the ceiling moved) and checks 256->189->306."
+    },
+    {
+      "t": "2026-09-27T15:30:06.262Z",
+      "note": "Verified: Scripts/test.sh 10109 tests green; 18 walks ok at Next defaults (starter-shelf, library-shelf-height, shelf-tile-reveal, library-import, library, library-clip-onto-a-track, shelf-scope-switch, shelf-origin, library-reveal, library-drag, tutorial-the-library, effect-style, colour-off-the-shelf, tile-comes-away, colour-onto-the-library, document-media, text-style-drag, style-users), real captures under an unlocked screen. Audit queue/audits/2026-09-27-library-cards.json with side by side vs video.html Library. Hover lift is VideoKit.Tile's own and was not driven by a walk."
+    },
+    {
+      "t": "2026-09-27T15:30:06.319Z",
+      "note": "left rough (audit rough list, none clears the bar for a new task): tail ellipsis on long names follows the mock's CSS (asked in audit evaluate instead of filed); card 108 vs mock 105 from SwiftUI line heights; sound card keeps its waveform glyph; dock panel colour is the panel's, not the tile's; compact fallback (only with the cards flag off) now fills the effect tile's well with paper edge to edge."
+    },
+    {
+      "t": "2026-09-27T15:30:23.524Z",
+      "note": "Every Library tile in Next is the mock's bordered card (one LibraryShelfTile view on VideoKit.Tile, drawn by Media, Comps and Styles), name left in bright type and a mono meta line (length, pixel size, starter/copies, paint/type/effect). Card arithmetic + 256pt first ceiling in LibraryShelfLayout, tested; 10109 tests green; 18 shelf walks ok at Next defaults; audit 2026-09-27-library-cards.json with side by side vs video.html. Commit 497f3084."
     }
   ],
   "walks": [
@@ -40,5 +64,7 @@
     "starter-shelf-walk",
     "library-shelf-height-walk",
     "shelf-tile-reveal-walk"
-  ]
+  ],
+  "started": "2026-09-27T15:02:29.930Z",
+  "completed": "2026-09-27T15:30:23.525Z"
 }

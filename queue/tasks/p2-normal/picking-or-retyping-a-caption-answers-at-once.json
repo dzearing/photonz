@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T17:56:08.774Z",
-  "updated": "2026-09-27T19:11:11.837Z",
+  "updated": "2026-09-27T19:12:12.941Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by a-long-captioned-recording-edits-without-freezin (2026-09-24). Reproduced with a walk: openSampleTalk, captionsWaitForThemselves, wait, captionsEditFirstInPlace (select + beginRenamingClip), key escape, action selectCanvas, captionsEditFirstInPlace again, each followed by wait with longestUnderMS 5000. Output on the 17 s Sample Talk (10 captions): 'captionsEditFirstInPlace | longest 122.1ms; clipBar bodies 3, editorBody bodies 2, inspectorPanel bodies 6, layerThumbnail bodies 10, layersList bodies 9, layersRow bodies 16' and on the second pick 'longest 186.3ms'; escape 57.9ms; selectCanvas 54.8ms. On the five minute Long Talk (openLongTalk): 127.5ms and 188.9ms, so it does not grow with the number of captions. sample(1) of the Write Again path (which also picks the first caption) put most of it in NSHostingView.layout / CA commit: the panel switching to the text layer's sections and the layers list opening the Captions group to show the row. Worth checking whether the Arrange/Text sections and the layers list can avoid rebuilding when the picked layer is a caption.",
@@ -80,10 +80,15 @@
     {
       "t": "2026-09-27T19:11:44.000Z",
       "note": "walk guard is 80ms, not 50: the same presses read 30-40% slower on a busy Mac (a-long-captioned-recording-walk's reasoning) and caption-to-caption touches 51-58ms on a quiet one; 80 still fails the old 110-190ms freeze."
+    },
+    {
+      "t": "2026-09-27T19:12:12.939Z",
+      "note": "Picking a caption after the canvas went from 110-121ms to 38-47ms: the dock now brings a caption's six new sections in one per pass, top down (PanelSectionArrival.next, tested), instead of all in one pass. Style tiles and the Text section's Font/Size/Weight menus no longer rebuild on picks that change nothing they show. Caption to caption mostly 34-46ms (occasionally 51-58 on a quiet Mac); opening the words 30-48ms. New walk caption-pick-answers-at-once-walk (no flags, guard 80ms like the long-captions walk, catches the old 110-190ms freeze), 21 neighbouring walks green, Scripts/test.sh 10128 passed. Audit queue/audits/2026-09-27-caption-pick-answers-at-once.json. Not met every time: the 50ms line on caption-to-caption picks, because ~30ms of any click in a video window is floor (logged). Filed the idle style-tile load as a-recording-with-captions-sits-quiet-while-nothi. Commit dd3be544."
     }
   ],
   "walks": [
     "caption-pick-answers-at-once-walk"
   ],
-  "started": "2026-09-27T17:52:53.398Z"
+  "started": "2026-09-27T17:52:53.398Z",
+  "completed": "2026-09-27T19:12:12.940Z"
 }

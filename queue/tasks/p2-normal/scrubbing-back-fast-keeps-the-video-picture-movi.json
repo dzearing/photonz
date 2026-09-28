@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-26T18:30:41.234Z",
-  "updated": "2026-09-27T12:11:15.545Z",
+  "updated": "2026-09-27T20:47:24.596Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-09-26 by scrub-never-blacks-out-walk after the scrub fixes landed (commit of scrubbing-is-smooth-never-goes-black-and-the-pic). Command: Scripts/playtest.sh Scripts/playtest/scrub-never-blacks-out-walk.json; /tmp/photonz-playtest/scrub-never-blacks-out-walk/scrub.json, phase back: wanted/shown frame pairs ran (61,61) (60,61) (58,61) ... (27,61) (25,60) (24,58) ... (10,55): the shown frame sat on 61 for about 30 display frames while the wanted frame went from 60 to 25. Forward and back above frame 61 track within 1-3 frames. Theory, NOT confirmed: the fixture (synthetic, 60fps) has a key frame near source 2.0s, and each read below it decodes from the previous key frame, so all four decoder lanes are stuck on reads the hand has already passed (MovieFrameQueue drops reads not yet started, but cannot stop ones running). Check the GOP with AVAssetReader or ffprobe first. Likely fix: while the hand moves fast, read with a wide requestedTimeTolerance (a nearby key frame comes back cheap), file it as a rough stand-in that never counts as the exact frame (MovieFrameReads), and read the exact frame once the hand slows or stops.",
@@ -26,9 +26,35 @@
     {
       "t": "2026-09-27T12:11:15.544Z",
       "note": "seq 3440 -> 60"
+    },
+    {
+      "t": "2026-09-27T19:51:11.299Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T20:00:23.505Z",
+      "note": "Reproduced 2026-09-27: scrub-never-blacks-out-walk back phase held frame 54 for 19 display frames while wanted went 53->27 (forward phase 12). ffprobe: fixture keyframes only at 0.0s and 2.0s (60fps). Measured: an exact generator read costs ~1.5ms per source frame from the keyframe (1.9s = 177ms alone), and generator reads do NOT run in parallel: 5 at once took ~720ms each. So the four lanes all reading adjacent frames land together every ~300ms. Cancelling a generator read works (returns nil in ~23ms). AVAssetReader decoding the whole 2s GOP natively (420v) and keeping every grid frame scaled to 864 costs ~220ms total: one pass gives every frame of the stretch for the price of one exact frame."
+    },
+    {
+      "t": "2026-09-27T20:00:23.558Z",
+      "note": "Plan + adversarial pass: while a hand moves the playhead, decode the stretch it is heading into in one pass (AVAssetReader, 1.5s ahead in the direction of travel) and file each grid frame small (<=960 wide) under its exact ref; no per-frame generator reads while moving (they contend with each other and the sweep). When the hand holds still 40ms or lets go, cancel the sweep and read the exact frame at full size (the existing upgrade path). Premiere/FCP drop resolution while scrubbing, so a softer picture while moving and sharp on stop is what an editor expects. Risks: memory (separate budget of 48 small frames, ~90MB worst), slow inch-by-inch drags (settle cancels only the sweep, never an exact read), rotated recordings (sweep only for the four right-angle orientations, else old path)."
+    },
+    {
+      "t": "2026-09-27T20:47:24.489Z",
+      "note": "Built: MovieSweep (core, 11 tests) + MovieSweeper/fetcher changes + settle on hold-still/let-go. Found and fixed on the way: settling with the three scrub-ahead reads started four exact reads at once (530ms each), so a settled hand now reads only the frame under it; clip thumbnails were invalidated on every small frame landing, which made the walk's picture trail the playhead by 2 frames in 2 of 3 runs, now skipped while a hand moves (4/4 clean after). cancelReading from another thread while copyNextSampleBuffer runs crashed (segfault, /tmp/scrubprobe/k.swift), so a pass stops between samples."
+    },
+    {
+      "t": "2026-09-27T20:47:24.542Z",
+      "note": "left rough: while moving, frames are at most 800 wide, visibly soft when zoomed in; a stop at the worst spot of a 2s key-frame interval turns sharp in ~230ms, just inside 250. Neither earns a task: both are how Premiere/FCP behave and the audit asks the user."
+    },
+    {
+      "t": "2026-09-27T20:47:24.594Z",
+      "note": "Commit 22cd106e. Going back fast over the 3456x2234 fixture, the picture now sits on one frame for at most 1 display frame (was 18-27); forward at most 4 (was 12). A stop turns sharp in 47-185ms, 230ms at the worst spot. scrub-never-blacks-out-walk now reports both and fails at 10 frames / 250ms; it passed 5 runs in a row. playing-a-recording-never-blinks, export-a-video-at-1080p and 12 other video walks pass; Scripts/test.sh 10139 tests pass. Audit: queue/audits/2026-09-27-scrub-back-fast.json."
     }
   ],
   "walks": [
     "scrub-never-blacks-out-walk"
-  ]
+  ],
+  "started": "2026-09-27T19:51:11.297Z",
+  "completed": "2026-09-27T20:47:24.595Z"
 }

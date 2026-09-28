@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 130,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T21:34:56.817Z",
-  "updated": "2026-09-27T12:11:15.899Z",
+  "updated": "2026-09-28T00:36:46.058Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-09-24 in Scripts/playtest.sh Scripts/playtest/ripple-trim-from-the-clip-menu-walk.json --no-build (screen unlocked, probe Screen Recording granted): /tmp/photonz-playtest/ripple-trim-from-the-clip-menu-walk/0-clip-menu-with-ripple-trim-sc.png shows Split at Playhead, Ripple Trim Start to Playhead, Ripple Trim End to Playhead and then a scroll chevron at the bottom of the screen. The Extract/Lift commit (c21c0fc1) already worked around the same thing on the ruler by moving rows to the top. Copy in queue/audits/2026-09-24-ripple-trim-menu-sc.png.",
@@ -42,7 +42,28 @@
     {
       "t": "2026-09-27T12:11:15.898Z",
       "note": "seq 120 -> 130"
+    },
+    {
+      "t": "2026-09-28T00:10:28.278Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-28T00:36:32.724Z",
+      "note": "walks none -> ripple-trim-from-the-clip-menu-walk, extract-from-the-ruler-menu-walk"
+    },
+    {
+      "t": "2026-09-28T00:36:32.780Z",
+      "note": "Reproduced 2026-09-27 in the walk (3 rows + scroll arrow). Traced it: the app was never at fault. The walk harness opened a right-click menu with NSMenu.popUp(positioning:nil,at:in:), which in the probe hung the 17-row clip menu from the click and let it run off the screen foot (menu window 96pt tall of 392pt, logged from inside the open menu). A real right click goes through NSMenu.popUpContextMenu(_:with:for:), and the same menu, same point, opened 392pt tall and whole, slid up to fit. Standalone AppKit test (/tmp/menutest) showed both calls fit the menu in a plain window, so the difference is specific to the probe's editor window; did not chase further since the harness now uses the real call. Fix: PlaytestHarness openRowMenu uses popUpContextMenu with a synthesized right mouse down, and a picture of a menu drawn shorter than its rows now fails the walk (proved by reverting the call once: 'only part of it showed: 96pt of its 392pt'). All 18 walks that photograph a right-click menu pass; ripple-trim and ruler pictures show every row. focus-drill: menu shown only (expected). Ruler-menu Extract/Lift ordering from c21c0fc1 left as is: it is also Premiere's order, not only a workaround. No audit: no app behaviour changed, only what the walks photograph."
+    },
+    {
+      "t": "2026-09-28T00:36:46.056Z",
+      "note": "Every row of the clip menu and the ruler menu now shows in walk pictures (commit 337129ed). The app itself was never clipped: a real right-click (popUpContextMenu) slides the whole menu up to fit. The walk harness used NSMenu.popUp, which ran the menu off the screen foot in the probe. The harness now opens menus the real way, and a walk fails if a photographed menu is scrolled. Verified: ripple-trim-from-the-clip-menu-walk and extract-from-the-ruler-menu-walk pictures show every row; all 18 right-click-picture walks pass; focus-drill clean (menu shown); Scripts/test.sh 10172 tests green."
     }
   ],
-  "walks": []
+  "walks": [
+    "ripple-trim-from-the-clip-menu-walk",
+    "extract-from-the-ruler-menu-walk"
+  ],
+  "started": "2026-09-28T00:10:28.276Z",
+  "completed": "2026-09-28T00:36:46.057Z"
 }

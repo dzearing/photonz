@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-09T12:53:53.858Z",
-  "updated": "2026-09-12T12:02:01.254Z",
+  "updated": "2026-09-28T12:21:10.709Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen once on 2026-09-09 while splitting LayersPanel.swift, in:\n\n  Scripts/playtest-all.sh --no-build layers\n\nOutput:\n  layers-lazy-rows-walk  45s  FAILED  step 270 (scrollPanel): nothing called \"Background\" is in the panel to scroll from; the ones that are: Grid Settings / Tool bar, grid off, Zoom level / Tool bar, Layers section / a dock section header, Rectangle 24 / layer, ... Library section / a dock section header ...\n\nNot reproduced: the same walk passed alone against HEAD before the split (Scripts/playtest.sh Scripts/playtest/layers-lazy-rows-walk.json, status ok), alone after the split (status ok), and in the same group run again straight afterwards (6 passed, 0 failed). The panel split it was seen during changed no code, only which file each type sits in, so this looks like a pre-existing flake rather than a regression. The listing in the failure has 24 Rectangle rows and no Background row, so the likely story is that the list had not finished mounting rows when step 270 asked.",
@@ -25,6 +25,10 @@
     {
       "t": "2026-09-12T12:02:01.253Z",
       "note": "duplicate of two-effect-walks-fail-now-and-then-because-a-pre (retitled: A walk waits for the panel instead of racing it); evidence folded in"
+    },
+    {
+      "t": "2026-09-28T12:21:10.708Z",
+      "note": "2026-09-28 digest: failed once more in the rotating check of 02:20Z (step 270 scrollPanel: nothing called Background in the panel), passed when rerun by hand the same morning. Second sighting after 2026-09-09; not filed again, a third one earns a task."
     }
   ]
 }

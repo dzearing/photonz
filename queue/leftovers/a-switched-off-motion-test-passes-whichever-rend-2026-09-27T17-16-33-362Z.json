@@ -1,0 +1,19 @@
+{
+  "id": "a-switched-off-motion-test-passes-whichever-rend-2026-09-27T17-16-33-362Z",
+  "task": "a-switched-off-motion-test-passes-whichever-rend",
+  "kind": "task",
+  "label": "A switched-off motion test passes whichever render tests run beside it",
+  "title": "A switched-off motion test passes whichever render tests run beside it",
+  "outcome": "ok",
+  "at": "2026-09-27T17:16:33.362Z",
+  "files": [
+    "docs/design/mocks/pages/dashboard.html"
+  ],
+  "count": 1,
+  "state": "stashed",
+  "stash": "e0d8b1ef539d1379d30869cd1e1a00b522d13f14",
+  "restore": "git stash apply e0d8b1ef539d1379d30869cd1e1a00b522d13f14",
+  "why": "",
+  "handed": "2026-09-27T17:17:36.333Z",
+  "clearedWhy": "It was the intake window's dashboard viewer edit, restored and committed in caa9bd42; not this task's work"
+}

@@ -1,0 +1,32 @@
+{
+  "id": "starting-an-export-does-not-freeze-the-window",
+  "title": "Starting an export does not freeze the window",
+  "goal": "The moment a video export starts, the whole window stops answering for about three tenths of a second, and it stalls like that again while the file writes. The export itself is fast now, but a click or a key that lands in that moment waits, which is exactly the kind of hitch the video editor promised never to have.",
+  "epic": "video-beats-premiere",
+  "priority": "p2-normal",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-28T12:18:54.317Z",
+  "updated": "2026-09-28T12:19:18.631Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Named in the rough list of queue/audits/2026-09-27-fast-video-export.json ('The window still stalls once, for about 300 ms, the moment an export starts. The old export did the same (measured) and the cause is not found yet'). Measured again by the digest 2026-09-28: Scripts/playtest.sh Scripts/playtest/export-card-while-writing-walk.json --no-build -> '[10 wait] 5.0s, never went quiet (150 of 151 slices busy, 0 restless, busiest 18.3ms); mainBusy 1972.9ms over 4027 passes, longest 292.3ms' and '[12 action] started-at-1080p.mp4 landed in 76132 ms ... while it wrote, mainBusy 16289.5ms over 38078 passes, longest 292.3ms'. The objective video-beats-premiere asks that no press keeps the main thread busy over 50 ms. Also worth a look: 16s of main thread over a 76s write means the window is about a fifth busy the whole time it exports.",
+  "acceptance": [
+    "Starting a 1080p export of the five minute sample keeps the main thread's longest single stretch under 50 ms, measured by export-card-while-writing-walk's own reading (today: longest 292.3ms)",
+    "The cause of the stall is named in this task's log, with the measurement that shows it",
+    "Export time does not grow back: the five minute sample still writes in under a third of its running time",
+    "Works at Next defaults with no switch turned on, and an audit under queue/audits/ gives the before and after numbers"
+  ],
+  "log": [
+    {
+      "t": "2026-09-28T12:18:54.319Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-28T12:19:18.630Z",
+      "note": "seq 3470 -> 20"
+    }
+  ]
+}

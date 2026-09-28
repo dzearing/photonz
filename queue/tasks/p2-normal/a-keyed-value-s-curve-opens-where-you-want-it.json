@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 330,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T03:53:09.267Z",
-  "updated": "2026-09-27T12:11:16.939Z",
+  "updated": "2026-09-28T12:19:07.232Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From a-layer-s-track-opens-into-one-lane-per-keyed-va (2026-09-23). Built in the lane (KeyLanesView.swift, KeyLaneView.curve/handles) because that task's acceptance said a curve view on a lane. The mock (docs/design/mocks/pages/video.html, #gGraph, .kfgraph) puts it in a collapsed dgrp in the right dock, x axis = clip duration. Core is shared either way: PhotonzDocument.keyGraph(layerID:motionID:) and setKeyHandle(...toGraphPoint:).",
@@ -52,9 +52,14 @@
     {
       "t": "2026-09-27T12:11:16.938Z",
       "note": "seq 310 -> 330"
+    },
+    {
+      "t": "2026-09-28T12:19:07.230Z",
+      "note": "Closed by triage 2026-09-28: already true. The user answered the card 'In the lane' (2026-09-26), the lane is where the app already opens the curve (the Animating header's Graph link opens the lane, no Graph panel exists in the dock), and key-lanes-walk at Next defaults with no flag opens the Scale lane into its curve and drags a Bezier handle (tests seven and eight, pictures 8-curve-open and 9-handle-dragged); it passed in the full run of 2026-09-27. Nothing left to build."
     }
   ],
   "walks": [
     "key-lanes-walk"
-  ]
+  ],
+  "completed": "2026-09-28T12:19:07.231Z"
 }

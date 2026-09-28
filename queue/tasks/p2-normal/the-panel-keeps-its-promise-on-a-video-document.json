@@ -4,12 +4,12 @@
   "goal": "On a document with time, the strip along the bottom takes its height off the right hand panel as well as off the picture, so on a laptop window there is not enough room left for Appearance and Effects to both be on screen, and the panel goes back to scrolling. Make the two sections nobody should have to scroll to fit on a video document as well as on a still one.",
   "epic": "video-editing",
   "priority": "p2-normal",
-  "seq": 220,
-  "status": "pending",
+  "seq": 170,
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T02:12:33.004Z",
-  "updated": "2026-09-27T12:11:16.381Z",
+  "updated": "2026-09-28T12:19:19.447Z",
   "deps": [
     "the-timeline-is-the-one-in-the-mock",
     "on-a-video-the-timeline-is-the-layer-list-and-th"
@@ -80,7 +80,28 @@
     {
       "t": "2026-09-27T12:11:16.380Z",
       "note": "seq 200 -> 220"
+    },
+    {
+      "t": "2026-09-28T09:06:51.365Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-28T09:16:18.708Z",
+      "note": "Re-measured 2026-09-28 at 1200x720 on the sample recording (walk /tmp/pk/measure.json + measure2.json, describe readings). Timeline railed: dock viewport 583. Clip picked, timeline open: viewport 336; Properties 6-149, Time 149-254, Channel 254-349, Fades 349-457, Gain 457-553, Appearance 553-698, Effects 698-766 (547 of forms above the pair). Title picked, timeline open (a Title track added): viewport 302; Properties 6-134, Time 134-209, Text 209-418, Appearance 418-563, Effects 563-727 (412 above the pair). Even pair-first at foldFloor a title needs 348 > 302, so no ordering fixes it: the layout has to give height back. Pinned in DockFoldOnAVideoDocumentTests (4 tests). Adversarial note: the mock's video panel (video.html renderProps) is only a clip head + Animating list, sized for a 213px panel; the app adds Time/Text/Channel/Fades/Gain/Appearance/Effects. Mock draws the timeline full width under the dock, so giving the panel full height is a mock departure -> decision card with brief."
+    },
+    {
+      "t": "2026-09-28T09:16:18.762Z",
+      "note": "walks none -> none"
+    },
+    {
+      "t": "2026-09-28T09:16:27.306Z",
+      "note": "Measured: at 1200x720 with the timeline open the panel has 302pt (title) / 336pt (clip) against 412 / 547 of sections above Appearance; no ordering fits the pair. Whether the panel takes the full window height, the timeline opens shorter, or video keeps scrolling is a layout choice against the mock, on the decision card. Arithmetic pinned in DockFoldOnAVideoDocumentTests (10cc3233)."
+    },
+    {
+      "t": "2026-09-28T12:19:19.446Z",
+      "note": "seq 220 -> 170"
     }
   ],
-  "walks": []
+  "walks": [],
+  "started": "2026-09-28T09:06:51.364Z"
 }

@@ -1,0 +1,45 @@
+{
+  "id": "a-whole-walk-run-gets-past-the-1080p-export-walk",
+  "title": "A whole walk run gets past the 1080p export walk",
+  "goal": "Every full walk run since the export speed-up stops dead right after the walk that exports a five minute recording at 1080p: the next walks cannot start the app, the run gives up as blind, and about 460 of 653 walks never run. A blind run does not count as a sweep, so the loop starts the whole thing again after the next task and loses another fifty minutes the same way.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "loop",
+  "created": "2026-09-28T12:18:37.120Z",
+  "updated": "2026-09-28T12:21:29.645Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced by the daily digest 2026-09-28. Both full runs that day (queue/sweep/2026-09-28-030406.log and 2026-09-28-042334.log) went blind at the same place: export-a-video-at-1080p-walk ok in about 100s, then export-card-while-writing-walk, export-keeps-to-the-in-and-out-walk, export-quality-walk, export-webp-walk, extract-a-marked-stretch-walk all 'COULD NOT START the probe would not launch'. Ran by hand, nothing else using the probe:\n\n$ Scripts/playtest-all.sh --no-build export-a-video-at-1080p-walk export-card-while-writing-walk export-keeps-to-the-in\nexport-a-video-at-1080p-walk               99s  ok\nexport-card-while-writing-walk              0s  COULD NOT START  the probe would not launch, so nothing ran this walk\nexport-keeps-to-the-in-and-out-walk         0s  COULD NOT START  the probe would not launch, so nothing ran this walk\n==> 1 passed, 0 failed, 2 could not start\n\nThen on its own: Scripts/playtest.sh Scripts/playtest/export-card-while-writing-walk.json --no-build -> status ok in 78s. So the walks are fine and it is what the 1080p walk leaves behind. playtest-all.sh swallows probe-app.sh's own message (out=$(...) and only the verdict is printed), so the first step is to see it: likely candidates are the '!! Probe did not come up' branch (5s of pgrep after open -g) while the last probe is still quitting or still writing its export. No crash report was written at either time (~/Library/Logs/DiagnosticReports). Likely started with 44fde13f (five minute export in a quarter of its length) or 799ef6a2 (busy MP4 size), both 2026-09-28, which changed how export writes.",
+  "acceptance": [
+    "Scripts/playtest-all.sh --no-build export-a-video-at-1080p-walk export-card-while-writing-walk export-keeps-to-the-in runs all three walks and none reads COULD NOT START",
+    "The reason the app would not start after the export walk is named in this task's log, from what probe-app.sh printed, not guessed",
+    "A walk that leaves the app busy (an export still writing, a slow quit) cannot stop the next walk from launching: either the walk waits for its own work to finish or the launcher waits for the last app to be gone",
+    "A whole-set run that went blind is not started again on the same commit: queue/bin/sweep-schedule.mjs decide() has no memory of a blind run today, so after one the loop starts another full run before the next task (2026-09-28 lost two 50 minute runs this way), and its drill covers the new rule",
+    "The next full walk run covers the whole set without going blind"
+  ],
+  "log": [
+    {
+      "t": "2026-09-28T12:18:37.122Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-28T12:19:18.467Z",
+      "note": "seq 390 -> 10"
+    },
+    {
+      "t": "2026-09-28T12:21:29.591Z",
+      "note": "digest 2026-09-28: sweep.sh status says a full sweep is still owed (26.8h since the last whole-set run), so the loop will most likely start a third run before claiming this task and go blind at the same walk again. Acceptance widened: a blind run must not be started again on the same commit."
+    },
+    {
+      "t": "2026-09-28T12:21:29.644Z",
+      "note": "owns these walks: export-a-video-at-1080p-walk, export-card-while-writing-walk"
+    }
+  ],
+  "walks": [
+    "export-a-video-at-1080p-walk",
+    "export-card-while-writing-walk"
+  ]
+}

@@ -5,18 +5,18 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T12:03:27.116Z",
-  "updated": "2026-09-27T12:11:15.143Z",
+  "updated": "2026-09-27T14:16:14.041Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From a-moving-layer-draws-its-path-on-the-canvas-and (2026-09-25). That task shipped the Path control as a row under Position in the Animating list (PropertyKeysInspector.MotionPathRow), because the app follows video.html's Animating panel; video-move-wt.html instead draws Transform / Animate / Between the keys (Curve select + Path seg + pPathNote). The two mocks disagree on panel structure: if building both is not possible, open a decision card rather than picking. Core already has MotionPathShape and PhotonzDocument.shapeMotionPath; easing per key is KeyEase via LayerMotion.easing(key:).",
   "acceptance": [
     "With a layer keyed at two moments picked, Properties shows a Between the keys section with Curve and Path, as docs/design/mocks/pages/video-move-wt.html step 6 draws it",
     "Choosing a curve there eases the stretch the playhead is in, and the timeline bar's Easing and the key right-click stay in step with it",
-    "The mock's note line under Path ships as drawn",
+    "The mock's note line under Path reaches the person: behind the section header's question mark, per the user's 2026-09-25 answer (no sentences in the panel), switching to the handle line once the path bends",
     "The window's command menu offers Key at playhead, Curve the path and Easing, and each works at Next defaults",
     "A walk at Next defaults photographs the section beside the mock frame"
   ],
@@ -40,6 +40,36 @@
     {
       "t": "2026-09-27T12:11:15.142Z",
       "note": "seq 120 -> 50"
+    },
+    {
+      "t": "2026-09-27T13:25:24.631Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T13:27:59.222Z",
+      "note": "Review before building: the two mocks disagree on panel shape, but both can ship: video.html's Animating list stays, and video-move-wt's Between the keys section is added under it (Curve dropdown, Path seg, the mock's note line). The Path row moves out of the Animating list into that section so it lives in one place. Gaps: keys ease per key (Premiere's model), so the mock's eight curve names cannot all be said by keys; Linear / Ease in / Ease out / Ease in out write the two keys' eases (so the timeline Easing and the key right-click read the change), and the shaped four (sine, back, elastic, steps) ride a new per-stretch curve that any per-key ease on either end clears. The app has no mock-style window popover; the window's command menu is the menu bar, so Key at Playhead, Curve the Path and Easing go in the Video menu under an Animate heading. K is already Stop and Lens, so Key at Playhead gets no key."
+    },
+    {
+      "t": "2026-09-27T14:15:43.698Z",
+      "note": "owns these walks: between-the-keys-walk, motion-path-walk"
+    },
+    {
+      "t": "2026-09-27T14:15:53.147Z",
+      "note": "Acceptance 3 reworded: the mock prints its note under Path, but the user's later card answer (2026-09-25, no sentences in the panel, explain behind a header question mark) and PanelCopyBudgetTests (no allowance) rule that out; the same call the-panel-s-long-lines task made for video.html's own lines. The note is the section's question mark, and it switches to the mock's handle line once curved."
+    },
+    {
+      "t": "2026-09-27T14:15:53.196Z",
+      "note": "Left rough (not filed, all in the audit's rough list for the user to react to): shaped curves are not reflected in the timeline Easing / key right-click until a key ease replaces them; Key at Playhead has no key (K taken); Animate rows live in the Video menu since the app has no mock-style command popover; the menu's curve thumbnails are monochrome template images. Also: a mid-run failure of MotionRenderTests was a half-rebuilt test binary after MotionStop gained a field, green after a clean recompile."
+    },
+    {
+      "t": "2026-09-27T14:16:14.039Z",
+      "note": "Between the keys section (Curve dropdown with the eight named curves + Draw a curve, Path control, mock's note behind the header question mark) under Animating in Properties, and Video > Animate: Key at Playhead, Curve the Path, Easing. Core StretchCurve (per-key eases for the standard four so timeline Easing and key right-click follow; per-stretch curve for shaped ones). Verified: 17 new core tests, full suite 10095 green, between-the-keys-walk green at Next defaults with 4 real captures, motion-path and 10 related walks green. Audit: queue/audits/2026-09-27-between-the-keys.json. Commit 062ea862."
     }
-  ]
+  ],
+  "started": "2026-09-27T13:25:24.630Z",
+  "walks": [
+    "between-the-keys-walk",
+    "motion-path-walk"
+  ],
+  "completed": "2026-09-27T14:16:14.040Z"
 }

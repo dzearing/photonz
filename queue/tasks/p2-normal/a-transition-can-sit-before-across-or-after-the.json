@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 150,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T01:31:01.041Z",
-  "updated": "2026-09-27T12:11:16.002Z",
+  "updated": "2026-09-28T02:01:05.849Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-transition-wt.html #rowAlign, #rowHold, steps 7-8. Model today: ClipTransition has lengthMS only; beforeMS/afterMS are fixed at half each (ClipTransitions.swift). Alignment means storing an alignment on ClipTransition and changing beforeMS/afterMS and ClipCut.longestMS (spend from one side). Hold on black moves time, so it is an insert (rippleTime) plus a black piece or gap, not a property of the cut alone. Left out of click-a-cut-and-pick-a-transition-from-tiles because neither is in its acceptance. Also note: today a freshly dropped clip reads its file from the first frame, so it has no spare before its in point and cannot take any overlapping transition until its head is trimmed; Before/After placement is what lets that common case work, as it does in Premiere.",
@@ -62,6 +62,36 @@
     {
       "t": "2026-09-27T12:11:16.001Z",
       "note": "seq 140 -> 150"
+    },
+    {
+      "t": "2026-09-28T01:31:01.581Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-28T01:44:30.423Z",
+      "note": "owns these walks: transition-placement-and-hold-walk, transition-picker-at-a-cut-walk"
+    },
+    {
+      "t": "2026-09-28T02:00:51.672Z",
+      "note": "adversarial review before build: a Premiere editor expects Alignment (End at Cut / Center / Start at Cut) and expects a dissolve on a head with no handles to still go on; the mock's step 10 greys it instead, while this task's acceptance asks for placement on the side with spare. Followed the acceptance; raised as an evaluate question in the audit. Hold on black is an insert: modelled as ClipTransition.holdMS = the gap between the two clips, rippled with rippleTime so every track stays in sync."
+    },
+    {
+      "t": "2026-09-28T02:00:51.724Z",
+      "note": "built: ClipTransitionAlignment + holdMS on ClipTransition (Codable back-compat, old files unchanged), ClipCut.longestMS(of:aligned:) spends only the side it borrows, fitted() picks a side that can pay, editPoints accept a gap equal to the arrival hold (atMS is now the outgoing end), hold renders black and silence, panel rows The overlap sits (segmented) and Hold on black (dropdown, edit points only), timeline band spans fade+hold+fade over a Black block, dashed spare strips while an edit point is picked, mock lines behind the Edit point / Transition question marks and the picker heading tip. Tests: TransitionPlacementTests (16). Walk: transition-placement-and-hold-walk, ok at Next defaults with 9 real captures; all 6 transition walks pass; Scripts/test.sh 10193 passed."
+    },
+    {
+      "t": "2026-09-28T02:00:51.777Z",
+      "note": "left rough (no task): the walk harness cannot find the lower spare strip by its field name (the upper one it finds), so the walk claims spare through the panel's Spare before field and the pictures; only agents see this. The strip labels sit under the band on a short lane. Filed: a-dip-on-a-blade-cut-inside-one-clip-can-hold-on (hold inside one clip). The earlier 'Spare before reads ...' log note was already fixed on 2026-09-27 (CutField keepsValueWhole) and reads 1.9s whole in the captures."
+    },
+    {
+      "t": "2026-09-28T02:01:05.847Z",
+      "note": "Shipped in 704fc52e (Next, no switch): The overlap sits row (Before the cut / Across it / After it) spending spare only from the borrowed side, so a one-sided cut takes a dissolve placed after the cut; Hold on black on a dip between clips inserts real time, slides later clips, undo takes it out; dashed spare strips on a picked edit point; mock overlap/spare lines behind the section question marks and picker tip. Verified: TransitionPlacementTests + full Scripts/test.sh (10193 passed), transition-placement-and-hold-walk ok at Next defaults with 9 real captures, all 6 transition walks pass. Audit: queue/audits/2026-09-28-transition-placement-and-hold.json. Follow-up filed: a-dip-on-a-blade-cut-inside-one-clip-can-hold-on."
     }
-  ]
+  ],
+  "started": "2026-09-28T01:31:01.579Z",
+  "walks": [
+    "transition-placement-and-hold-walk",
+    "transition-picker-at-a-cut-walk"
+  ],
+  "completed": "2026-09-28T02:01:05.848Z"
 }

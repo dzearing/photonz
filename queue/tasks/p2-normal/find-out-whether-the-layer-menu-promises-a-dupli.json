@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 200,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T00:14:57.434Z",
-  "updated": "2026-09-27T12:11:16.273Z",
+  "updated": "2026-09-28T07:52:03.102Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Not reproduced, only read: LayerCommandMenu.swift appends .command(\"Duplicate\", .command(\"d\")); EditorCommands.swift binds Deselect to keyboardShortcut(\"d\", modifiers: .command) with a comment that Duplicate Layer has no key and Cmd-J duplicates when nothing is marqueed. The timeline clip menu (EditorState+TimelineMenus.swift) prints Cmd-J for Duplicate for this reason. Found 2026-09-23 by the right-click task.\n\n--- folded in from find-out-whether-delete-layer-and-the-fill-keys (triage 2026-09-27) ---\nMeasured 2026-09-22 in a throwaway binary (/tmp/menukeytest2.swift): a menu whose item carries U+007F never matches a real backspace press built by CoreGraphics, bare or with command or with option; one carrying U+0008 matches every time. Output:\n  plain eventChars: [127] | U+007F: false | U+0008: true\n  cmd   eventChars: [127] | U+007F: false | U+0008: true\n  opt   eventChars: [127] | U+007F: false | U+0008: true\nAlso measured, with a window and a focused NSTextField: a live U+0008 row does NOT steal the key from a field (the field deleted a character, menuFired=false), and with nothing focused the row ran. So making these rows live is safe beside typing.\n\nEditorCommands.swift line 148 (Fill with Foreground) and line 993 (Delete Layer) both still pass DeleteKeyCharacters.backwards (U+007F). Video, Delete This Piece was fixed to DeleteKeyCharacters.menuKeyEquivalent on 2026-09-22 under delete-stops-dropping-a-piece-once-you-have-undo; those two were left alone because they are SHARED code and so would change Current-release behaviour, which a task has to say before a runner touches it.\n\nThe canvas answers keyCode 51 itself in CanvasKeys.swift (onDeleteLayer / onFillSelected), which is why both presses work today wherever the canvas is first responder. The comments at EditorCommands.swift lines 120-133 and 145-148 and 990-993 state the AppKit rule backwards and should be corrected whichever way this lands.",
@@ -60,6 +60,40 @@
     {
       "t": "2026-09-27T12:11:16.272Z",
       "note": "seq 190 -> 200"
+    },
+    {
+      "t": "2026-09-28T07:09:22.287Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-28T07:31:52.738Z",
+      "note": "owns these walks: menu-keys-do-what-they-say-walk, delete-layer-key-walk"
+    },
+    {
+      "t": "2026-09-28T07:31:52.791Z",
+      "note": "Reproduced 2026-09-28 in the probe with the menu bar live (front walk, screen unlocked): Cmd-Delete 'Layer > Delete Layer carries this chord and is live, but responder chain took the press first' (the canvas deleted the layer on its own, 2 -> 1); Opt-Delete the same for Fill with Foreground; Cmd-D went to Deselect and duplicated nothing (layers stayed 2); Cmd-J ran New Layer via Copy (2 -> 3). delete-layer-key-walk was green only because its presses fell back to stand-in actions (its own log says THE PRESS DID NOT RUN IT)."
+    },
+    {
+      "t": "2026-09-28T07:31:52.844Z",
+      "note": "Measured in throwaway SwiftUI apps (/tmp/menukey): SwiftUI rows holding U+007F never match a CoreGraphics-built Delete press, bare/Cmd/Opt; U+0008 rows always do. A HAND-BUILT NSEvent matches U+007F instead, which is why the 2026-09-17 note said the opposite. With a text field holding the keyboard, a live Opt-Delete or plain Delete row leaves the press to the field, but a live Cmd-Delete row wins over the field. A dimmed row answers performKeyEquivalent false. SwiftUI runs a command's action later on an appKitDefined event, so NSApp.currentEvent cannot tell a key press from a mouse pick."
+    },
+    {
+      "t": "2026-09-28T07:51:41.899Z",
+      "note": "left rough: the harness's menuItem lookup (shortcut/menus steps) reads SwiftUI rows stale: Edit > Deselect and Fill with Foreground read dimmed with a marquee up, even in a front walk, until the menu is opened or a key press asks. A person never sees it (a press brings the row up to date, and opening the menu does too), so no task was filed. The key step's log line now says so instead of claiming the menu did not run. The walk presses Opt-Delete with a key step for this reason. Refreshing via menuNeedsUpdate in menuItem(carrying:) would fix it, but it would change which presses are real in every walk, so it needs a sweep."
+    },
+    {
+      "t": "2026-09-28T07:51:41.952Z",
+      "note": "left rough: TimelineMenuKeys.delete/rippleDelete and other context-menu rows still hold U+007F. They only print (a context menu's key matters only while it is open), and the timeline answers Delete itself through TimelineKeyRouter, so the printed keys do work."
+    },
+    {
+      "t": "2026-09-28T07:52:03.100Z",
+      "note": "Reproduced in the probe with the menu bar live: Cmd-Delete and Opt-Delete never reached Delete Layer or Fill with Foreground (rows held U+007F, AppKit matches U+0008), and Cmd-D beside Duplicate was Deselect. Fixed behind next-menu-keys-do-what-they-say (Next default on): both rows carry U+0008, Delete Layer acts on a focused text field instead of deleting, and Duplicate prints Cmd-J. EditorCommands comments corrected. rightClick walk step now reads and checks printed keys. menu-keys-do-what-they-say-walk (front, no flags) green; it fails with the switch off. Scripts/test.sh green (10251). Audit queue/audits/2026-09-28-menu-keys-do-what-they-say.json. Commit 6b82ad01."
     }
-  ]
+  ],
+  "started": "2026-09-28T07:09:22.286Z",
+  "walks": [
+    "menu-keys-do-what-they-say-walk",
+    "delete-layer-key-walk"
+  ],
+  "completed": "2026-09-28T07:52:03.101Z"
 }

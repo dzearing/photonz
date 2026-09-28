@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-26T12:20:11.772Z",
-  "updated": "2026-09-27T12:11:15.194Z",
+  "updated": "2026-09-27T15:01:03.688Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the side-by-side for on-a-video-the-tool-bar-holds-the-video-tools-an (2026-09-26): queue/audits/2026-09-26-video-tool-bar-2-a-folded-tool-by-its-key-sc.png against docs/design/mocks/pages/video.html .tbar (lines ~384-416). Today EditorView.toolbar is an HStack of toolsBar/videoToolsBar + sideCapsules (colour capsule, grid chip, zoomBar), each its own .glassEffect capsule, inside one GlassEffectContainer so they morph. The grid chip has no place in the mock's bar; decide where it lives (a decision card if it would leave the bar). Many walks read group heights via the toolBar step (Tools/Grid/Zoom groups), so those claims change with this.",
@@ -30,6 +30,46 @@
     {
       "t": "2026-09-27T12:11:15.193Z",
       "note": "seq 130 -> 60"
+    },
+    {
+      "t": "2026-09-27T14:16:37.459Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T14:18:02.935Z",
+      "note": "adversarial review before building: (1) a first-time user reads one bar as one surface, nothing new to learn; (2) the mock has no grid chip; keeping it as a hairlined section of the same bar goes further than the mock without dropping anything, so no decision card; (3) Photoshop's options strip is one surface too; (4) risk: the colour section coming and going now resizes the one capsule instead of morphing a second one, so the resize has to animate on tool change only (never on selection, per the 10.7 jank note). Plan: Next-only flag next-one-glass-tool-bar, on by default in Next, Current keeps its capsules."
+    },
+    {
+      "t": "2026-09-27T15:00:50.163Z",
+      "note": "owns these walks: one-glass-tool-bar-walk, toolbar-row-lines-up-walk, toolbar-row-narrow-walk, video-tool-bar-walk"
+    },
+    {
+      "t": "2026-09-27T15:00:50.214Z",
+      "note": "built: Next-only flag next-one-glass-tool-bar (on by default in Next) draws the tools, colour pair, grid and zoom as sections of ONE glass capsule with 20pt hairlines (EditorView.oneGlassBar; EditorChromeLayout.toolBarSections/toolBarHasHairline, tested). Current keeps separate capsules via ToolBarGroupChrome. Grid stays in the bar as its own section beside the zoom (no decision card: nothing dropped)."
+    },
+    {
+      "t": "2026-09-27T15:00:50.265Z",
+      "note": "walk harness: toolBar step takes a capsules claim (PlaytestToolBarClaim.capsules, parse-tested) and reports bar + capsules. Fixed a probe bug found on the way: ToolBarLayoutProbe kept ONE frame per group name app-wide, so a recording opened from an empty window lost its bar from the register (the closing window overwrote then forgot it; reproduced with a file trace: 0 groups at step 5, groups appeared only after a layout change). Now kept per view, newest live word wins."
+    },
+    {
+      "t": "2026-09-27T15:00:50.317Z",
+      "note": "verified: one-glass-tool-bar-walk (video, video+colour, picture, narrow picture) ok with 4 real captures; 24 bar/grid/colour/zoom/tool-settings walks ok incl. video-tool-bar-walk and a-fitted-picture-clears-the-tool-bar-walk; Scripts/test.sh 10102 tests green. Audit queue/audits/2026-09-27-one-glass-tool-bar.json."
+    },
+    {
+      "t": "2026-09-27T15:00:50.368Z",
+      "note": "left rough (not filed): mock spacing is tighter (4pt between tools vs 14pt, 18pt hairlines vs 20pt); pre-existing tool spacing, a person comparing side by side might notice, record here and file if it shows up again. Hand/Zoom tools absent on the video bar: deliberate per on-a-video-the-tool-bar-holds-the-video-tools-an. Zoom readout is a menu with chevron vs the mock's plain 100%: pre-existing. toolBar readings across two open windows can mix groups from both (register is app-wide), seen in stage 4 of the new walk as 'DO NOT line up' noise, not a failure."
+    },
+    {
+      "t": "2026-09-27T15:01:03.686Z",
+      "note": "Next draws the tools, More, colour pair, grid and zoom as one glass bar with hairlines (flag next-one-glass-tool-bar, on by default in Next; Current unchanged). Verified at Next defaults by one-glass-tool-bar-walk (recording, recording with the bucket, picture, narrow picture; capsules: 1 each, 4 real captures) plus 24 bar walks incl. a-fitted-picture-clears-the-tool-bar-walk and video-tool-bar-walk; Scripts/test.sh green (10102). Also fixed the tool bar probe losing a recording window's bar when the empty window closed. Audit: queue/audits/2026-09-27-one-glass-tool-bar.json. Commit 111e156b."
     }
-  ]
+  ],
+  "started": "2026-09-27T14:16:37.458Z",
+  "walks": [
+    "one-glass-tool-bar-walk",
+    "toolbar-row-lines-up-walk",
+    "toolbar-row-narrow-walk",
+    "video-tool-bar-walk"
+  ],
+  "completed": "2026-09-27T15:01:03.687Z"
 }

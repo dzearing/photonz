@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-25T12:23:19.492Z",
-  "updated": "2026-09-27T21:36:28.716Z",
+  "updated": "2026-09-27T21:36:36.095Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the 2026-09-25 digest design review. docs/design/mocks/shared/UX-PATTERNS.md line ~2134 (D10 heading 'A property list shows what CAN be animated, not what is') and its last paragraph: '`pages/video.html` remains canonical for the printed catalogue. It is the CLIP spelling'. Against it: docs/design/mocks/pages/video.html line ~844 ('The pane lists what this clip IS animating; everything else is one click') and ~875 (Animate a property button), restored by 823fc26d; shipped by b009ac43 (the-properties-pane-opens-on-the-clip-line-and-l, audit queue/audits/2026-09-25-properties-pane.json). The mock is the floor: change the rule, never the mock.",
@@ -61,8 +61,13 @@
     {
       "t": "2026-09-27T21:36:28.715Z",
       "note": "left rough: docs/design/video-surface.md item 3 still says 'Fixed: rows are layers', which D18's 2026-09-23 rewrite withdrew; the doc's own read-first banner already says the tracks came back, so it misleads nobody who reads the top. Not filed."
+    },
+    {
+      "t": "2026-09-27T21:36:36.093Z",
+      "note": "UX-PATTERNS v2.4 (commit 4225c023): D10 now says a clip's Animating list shows only what it animates, with an always-present searchable Animate a property picker, names video.html as the reason, keeps both obligations (door on screen before anything moves; last key goes back to the picker), and says Curve and Path live in Between the keys. D16 bans a guide's closed rectangle, citing the 2026-09-20 keylines audit. New §4 rule: the budget wins over a long mock line, which moves behind the section question mark or the control tip, and the audit names it. AGENTS.md, video-surface.md and the runner prompt follow. Docs only; Scripts/test.sh green."
     }
   ],
   "started": "2026-09-27T21:30:29.957Z",
-  "walks": []
+  "walks": [],
+  "completed": "2026-09-27T21:36:36.094Z"
 }

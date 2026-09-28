@@ -4,12 +4,12 @@
   "goal": "With an In and an Out set on the timeline, a person can play just the marked stretch and stop at the Out, the way Premiere's Play In to Out does, so they can check a stretch before exporting or extracting it. Plain play keeps running to the end as it does today.",
   "epic": "video-cutting",
   "priority": "p2-normal",
-  "seq": 3440,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-27T23:53:20.520Z",
-  "updated": "2026-09-27T23:53:20.523Z",
+  "updated": "2026-09-28T12:19:18.684Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of export-and-playback-keep-to-the-in-and-out-marks, whose title named playback but whose acceptance covered export only; export shipped there. Premiere binds Play In to Out to Cmd+Shift+Space on Mac (check before binding: TimelineMenuKeys). Marks: PhotonzDocument.markedRangeMS / exportRangeMS(.marked) in Sources/PhotonzCore/VideoExportRange.swift. Ruler menu rows: EditorState+TimelineMenus.swift timelineRulerMenuRows.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-09-27T23:53:20.522Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-28T12:19:18.683Z",
+      "note": "seq 3440 -> 30"
     }
   ]
 }

@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-26T06:34:43.105Z",
-  "updated": "2026-09-27T12:11:15.393Z",
+  "updated": "2026-09-27T17:52:35.042Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-09-26 06:22Z running Scripts/playtest.sh Scripts/playtest/command-s-saves-a-video-project-walk.json --no-build: 'Verdict: CRASHED EXC_GUARD in static PhotonzApp.$main() < Photonz_main', log.json stopped after the setup step (forgot settings, copied the scratch b-roll). Report ~/Library/Logs/DiagnosticReports/Photonz Probe-2026-09-25-232258.ips: EXC_GUARD GUARD_TYPE_MACH_PORT INVALID_OPTIONS on mach port 0; crashing thread main: mach_msg2_trap < mach_msg < HIServices _XMIGPostNotification < _AXUIElementPostNotificationWithInfo < AppKit _NSAccessibilityNotify < __CFRunLoopDoBlocks < NSApplication run. Same signature at 2026-09-25 22:32 (Photonz Probe-2026-09-25-223224.ips) and in sweeps: out-of-view-mark-walk (2026-09-21 06:00Z), multi-geometry-walk (11:16Z), each-corner-on-its-own-walk (grep EXC_GUARD queue/loop.log). The re-run of the same walk right after passed, so it is intermittent. Ghoztty Accessibility was denied on the Grants line each time; worth checking whether an AX notification posted while nothing is listening, or while the probe is not yet frontmost, is what trips the guard.",
@@ -33,7 +33,37 @@
     {
       "t": "2026-09-27T12:11:15.392Z",
       "note": "seq 30 -> 30"
+    },
+    {
+      "t": "2026-09-27T17:16:39.531Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T17:52:17.724Z",
+      "note": "Cause, with evidence: macOS kills the app while AppKit sends an accessibility notification to ANOTHER app that watches this one. The only observer on a test app here subscribes AXWindowCreated app-wide plus per-window TitleChanged/Moved/Destroyed, which is Ztabby's (AltTab-style) pattern (lldb on _XMIGPostNotification in a throwaway AppKit app, /tmp/axstress). _XMIGPostNotification does mach_msg(COPY_SEND, MACH_SEND_MSG|MACH_SEND_TIMEOUT) to the observer's port NAME. A 10-line C program sending that message to mach_task_self() / mach_thread_self() / a thread special reply port dies with EXC_GUARD GUARD_TYPE_MACH_PORT 'INVALID_OPTIONS on mach port 0 (guarded with 0x8001030400000011)', codes 0x9c00000/0x8001030400000011, byte-identical to all four probe reports (09-20 22:27, 09-21 03:39, 09-25 22:32, 09-25 23:22). Sends to port 0, a dead name, a plain receive right or a send-once right just return MACH_SEND_INVALID_DEST. So HIServices sent to an observer name that had died and been reused for one of the app's own kernel objects: a macOS bug, which mpv #12632 and zed #9261 also hit. Nothing in Photonz sends that message."
+    },
+    {
+      "t": "2026-09-27T17:52:17.776Z",
+      "note": "Could a person hit it: yes, in principle, any Photonz build while a window-watching app (the user's own Ztabby) runs, mostly in the first seconds after launch. The rate is about 4 in several thousand probe launches over a week, and the Dev app has no such report in the retained week (09-20 to 09-27). 130 launches of the throwaway app with Ztabby watching (windows plus thread-port churn) did not reproduce it, so there is no faster trigger. There is nothing to fix in Photonz; if the user wants it gone at the source, it is on Ztabby's side (per-window observers created and dropped at launch) or Apple's."
+    },
+    {
+      "t": "2026-09-27T17:52:17.827Z",
+      "note": "Harness now stops being hurt by it: Scripts/crash-report.mjs recognises the shape (macos-ax-notify: EXC_GUARD + GUARD_TYPE_MACH_PORT + INVALID_OPTIONS + _XMIGPostNotification/_AXUIElementPostNotification on the faulting thread) and says 'a macOS fault, not the app' instead of blaming PhotonzApp.$main; playtest.sh reruns such a walk once ('==> First try: CRASHED ...', not a Verdict), and playtest-all prints 'ok  on a rerun: the first try hit a macOS fault'. A second fault in a row is CRASHED as before. Drill: node Scripts/crash-report-drill.mjs (6 new checks, incl. same guard from our own code NOT excused). End-to-end: SIGKILLed the probe mid-walk with a restamped copy of the real report in PHOTONZ_CRASH_REPORTS_DIR: one kill -> ok on a rerun, two kills -> CRASHED. The four walks it hit (command-s-saves-a-video-project, out-of-view-mark, multi-geometry, each-corner-on-its-own) passed 10 runs in a row each, 40/40. Scripts/test.sh green (10,125 tests)."
+    },
+    {
+      "t": "2026-09-27T17:52:17.880Z",
+      "note": "left rough: Photonz Probe-2026-09-26-060353.ips is a different crash: EXC_CRASH (SIGSEGV), zero codes, 1.4s after launch, main thread idle in the run loop and no thread in app code. Seen once, not reproduced, no queue task mentions it; it did not earn a task. If it shows up again it can be filed then. Also the 'quit unexpectedly' dialog a real fault leaves is still up during the rerun; probe-app.sh already flags it on the Grants line, and a walk that needs clicks on the timeline may fail behind it."
+    },
+    {
+      "t": "2026-09-27T17:52:17.932Z",
+      "note": "walks none -> none"
+    },
+    {
+      "t": "2026-09-27T17:52:35.040Z",
+      "note": "Cause named and proven: macOS kills the app while AppKit posts an accessibility notification to a window-watching app (Ztabby) by a port name reused for one of the app's own kernel objects; a C program sending HIServices' message to mach_task_self() dies with the byte-identical guard. Not Photonz code; a person could hit it too with such an app running, about once in thousands of launches. Harness (3f1274cc): crash-report.mjs names it a macOS fault, playtest.sh reruns the walk once, playtest-all says ok on a rerun; drill + two end-to-end kill drills; the four walks it hit passed 10/10 each; Scripts/test.sh green."
     }
   ],
-  "walks": []
+  "walks": [],
+  "started": "2026-09-27T17:16:39.530Z",
+  "completed": "2026-09-27T17:52:35.041Z"
 }

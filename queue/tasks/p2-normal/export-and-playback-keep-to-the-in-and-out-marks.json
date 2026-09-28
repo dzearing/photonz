@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 120,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T00:14:35.425Z",
-  "updated": "2026-09-27T12:11:15.847Z",
+  "updated": "2026-09-27T23:54:02.623Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Marks live on PhotonzDocument (markInMS, markOutMS, markedRangeMS in Sources/PhotonzCore/TimelineMarks.swift), set from the ruler/scrub-bar right-click menu and the Video menu (EditorState+TimelineMenus.swift). Export plans frames from 0..documentDurationMS in DocumentVideoExport.plan and writeVideo (EditorState+VideoExport.swift); the audio mix would need the same offset. untouchedRecording fast path must be skipped when a range is marked.",
@@ -49,6 +49,31 @@
     {
       "t": "2026-09-27T12:11:15.846Z",
       "note": "seq 110 -> 120"
+    },
+    {
+      "t": "2026-09-27T23:30:01.231Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-27T23:31:57.715Z",
+      "note": "Adversarial pass before building: Premiere's Export has a Range dropdown (Entire Source / Source In/Out) defaulting to In/Out when marks are set; no Photonz mock covers a range on the export sheet (export-share.html has none), so the sheet gets a Range row only when marks are set, segmented In to Out / Whole video, In to Out picked by default, and the shape line already says '0:04 of 0:10'. Frames must be exactly the window's frames at In+t, so export offsets the frame clock rather than trimming a copy of the document (trimming would re-base fades on titles cut at the In). Sound is the same mix windowed and shifted; a subtitle file beside the film is shifted too. Playback keeping to the marks (Premiere's Play In to Out) is not in the acceptance; export only here."
+    },
+    {
+      "t": "2026-09-27T23:48:53.174Z",
+      "note": "owns these walks: export-keeps-to-the-in-and-out-walk"
+    },
+    {
+      "t": "2026-09-27T23:54:02.567Z",
+      "note": "Shipped in 4c56dc6c. Walk export-keeps-to-the-in-and-out-walk (Next defaults, no flags) green: Set In/Out from the ruler menu at 4.0s/6.0s, sheet Range reads In to Out, in-to-out.mp4 runs 2.0s and its first picture has 0 of 16000 pixels unlike the document at 4000ms vs 204 unlike 0ms; Whole video writes 8.0s; with marks cleared no Range row and 8.0s. Scripts/test.sh: 10172 tests passed. Rough items: playback to the marks filed as play-in-to-out-plays-only-the-marked-stretch (title of this task promised it, acceptance did not). Left rough, not filed: the sheet always reopens on In to Out rather than remembering Whole video; the size estimate for the 2s stretch was 1.25x under (within 'about'). No mock draws a Range row, so it follows Premiere's Export."
+    },
+    {
+      "t": "2026-09-27T23:54:02.621Z",
+      "note": "Export writes only the In to Out stretch when marks are set (Range row on the sheet: In to Out / Whole video; sound and subtitle file shifted too); unchanged with no marks. Verified by export-keeps-to-the-in-and-out-walk at Next defaults (file lengths 2.0s/8.0s/8.0s, first picture matches the In) and the full test suite. Audit: queue/audits/2026-09-27-export-in-to-out.json. Commit 4c56dc6c."
     }
-  ]
+  ],
+  "started": "2026-09-27T23:30:01.230Z",
+  "walks": [
+    "export-keeps-to-the-in-and-out-walk"
+  ],
+  "completed": "2026-09-27T23:54:02.622Z"
 }

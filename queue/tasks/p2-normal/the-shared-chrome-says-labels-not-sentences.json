@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-26T00:05:54.858Z",
-  "updated": "2026-09-27T21:15:28.391Z",
+  "updated": "2026-09-27T21:15:55.447Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by no-sentences-or-debug-readouts-anywhere-in-the-c (2026-09-25). The list lives in Tests/PhotonzCoreTests/ChromeCopyBudgetTests.swift `allowed`: EditorView emptyState, LayersListView search empty, TitlebarModeChip details and listBlurb, HistoryOverlay empty states and Screen Recording line, DesignedColorPicker emptyNote, VideoCropOverlay hint. These are shared with Current, which is why this task did not change them (it was scoped to Next). Toast messages are passed in by callers across EditorState and are not read by the test at all; a follow-up could read ToastController call sites. Rule: UX-PATTERNS §4 What the chrome may say.",
@@ -54,10 +54,15 @@
     {
       "t": "2026-09-27T21:15:28.390Z",
       "note": "left rough: Mode list vs modes mock still lacks Pixel art and 'Edit modes…', and draws per-mode summaries the mock does not. Modes epic is outside the video focus; not filed."
+    },
+    {
+      "t": "2026-09-27T21:15:55.445Z",
+      "note": "ChromeCopyBudgetTests.allowed emptied: empty window, layers search (0 of N), Mode list (blurb gone, per the mock), capture history (key hints, counts, 'Screen Recording is off'), colour picker empty row, Current crop hint, all in shared files so Current and Next both. TDD red then green; full suite 10139 passed; new chrome-says-labels-walk plus 4 affected walks ok. Audit 2026-09-27-chrome-labels-shared.json with before/after for 3 surfaces; history, picker empty row and crop hint have no picture (said in rough). Commit e951b809."
     }
   ],
   "started": "2026-09-27T21:02:23.380Z",
   "walks": [
     "chrome-says-labels-walk"
-  ]
+  ],
+  "completed": "2026-09-27T21:15:55.446Z"
 }

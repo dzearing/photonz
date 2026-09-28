@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 140,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T02:23:06.770Z",
-  "updated": "2026-09-27T12:11:15.951Z",
+  "updated": "2026-09-28T01:15:13.866Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the-video-properties-look-like-the-rest-of-the-d: SpeedInspector.placedInTime still has a Playhead row with Start Here and End Here because a placed layer bar has no .contextMenu (clip bars get TimelineClipMenu in ClipPiecesBar). EditorState startPlacedLayerHere/endPlacedLayerHere/setPlacedLayerFade already exist.",
@@ -52,6 +52,28 @@
     {
       "t": "2026-09-27T12:11:15.950Z",
       "note": "seq 130 -> 140"
+    },
+    {
+      "t": "2026-09-28T00:55:54.762Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-28T01:14:46.647Z",
+      "note": "owns these walks: title-bar-right-click-menu-walk, drawn-shape-gets-a-timeline-row-walk"
+    },
+    {
+      "t": "2026-09-28T01:14:55.539Z",
+      "note": "Reproduced first: a title bar already had the shared clip menu (11 rows) but no Start at Playhead, End at Playhead or Fade. Added those three rows (EditorState+TitleTime placedLayerMenuRows, checks pushed into PhotonzCore Layer.canStartPlaced/canEndPlaced/canSetTitleFade with tests), removed the Playhead row from the Time section, moved drawn-shape-gets-a-timeline-row-walk off End Here onto the menu. Harness: a rightClick picture on a still-hidden window came out as the menu over blank white; openRowMenu now shows the window for the shot the way capture does. Detach Audio (digest note) had already left the panel. Left rough, not filed (nits, nobody stopped by them): no ⌥Q/⌥W Trim to Playhead keys on a title so the rows print none; Split at Playhead still offered on a title (pre-existing)."
+    },
+    {
+      "t": "2026-09-28T01:15:13.864Z",
+      "note": "Title bars on the timeline now right-click to Start at Playhead, End at Playhead and Fade (plus the clip menu's Duplicate/Delete); Start Here/End Here left the Time section. Checks in PhotonzCore with tests; title-bar-right-click-menu-walk passes at Next defaults and reads the clip line back; menu pictures on a hidden window now show the window. Full suite green (10,178). Audit: queue/audits/2026-09-27-title-bar-right-click-menu.json. Commit 3c4b1be5."
     }
-  ]
+  ],
+  "started": "2026-09-28T00:55:54.761Z",
+  "walks": [
+    "title-bar-right-click-menu-walk",
+    "drawn-shape-gets-a-timeline-row-walk"
+  ],
+  "completed": "2026-09-28T01:15:13.865Z"
 }

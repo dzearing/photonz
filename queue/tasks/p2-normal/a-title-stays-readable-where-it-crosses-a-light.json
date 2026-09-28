@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 170,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T22:19:18.336Z",
-  "updated": "2026-09-27T12:11:16.107Z",
+  "updated": "2026-09-28T04:12:28.936Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen in a-title-reads-over-a-video-walk 2-a-title-over-the-recording-sc.png (click at 120,110 on Sample Talk puts Ship over the Ready card). TitleLook.shadow is the mock soft shadow (sigma fontSize*6/26, 45% black). Options: stronger or tighter second shadow, a colour picked from the frame under the words, or a plate like captions. The inline draft (CanvasTextEditing.styleTextEditor) sets no shadow on the NSTextView. Mock video.html .vframe .title uses text-shadow 0 2px 12px rgba(0,0,0,.4), so anything beyond that is going further than the mock, not away from it.",
@@ -38,9 +38,27 @@
     {
       "t": "2026-09-27T12:11:16.106Z",
       "note": "seq 160 -> 170"
+    },
+    {
+      "t": "2026-09-28T03:45:36.837Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-28T03:47:50.888Z",
+      "note": "Reproduced with a-title-reads-over-a-video-walk: in 2-a-title-over-the-recording-sc.png 'Ship' all but vanishes over the white Ready card, and 1-typing-a-title-sc.png shows the draft with no shadow. Pre-build review: a Premiere/FCP title editor expects a default title to stay legible via a stroke or tight shadow; picking colour from the frame would flip the look mid-clip as footage changes, and a plate is the caption look, not a title. Plan: title keeps the mock's soft shadow and gains a tight dark edge shadow (dark on dark footage, so unchanged there); the inline draft draws the same shadows, only when a title is being typed (Next flag, document with time), so Current and still-picture text are untouched."
+    },
+    {
+      "t": "2026-09-28T04:12:28.881Z",
+      "note": "Shipped a0970339. TitleLook.shadows = [mock soft shadow, tight edge sigma fontSize/40 at 85%]; both title commit paths use it. Draft: TextDraftShadowView behind the inline field draws the same shadows from the field's glyphs (Next title look only, via EditorState.draftTextShadows). Recolour of a title (usesTitleLook) keeps shadow shapes via TextBuilder.restyled(keepsShadowShapes:). Verified in real captures: Ship reads over the white Ready card both typing and placed; dark footage unchanged. Test suite 10215 green; 10 title walks green. Left rough, below the bar: draft edge a touch crisper than the renderer's (AppKit blur vs CI gaussian); a re-edit on a turned card types without draft shadows. Audit: queue/audits/2026-09-27-title-readable-over-light-footage.json"
+    },
+    {
+      "t": "2026-09-28T04:12:28.934Z",
+      "note": "Titles over video gain a tight dark edge beside the mock's soft shadow, so they read over light footage; the typing draft wears the same shadows; recolouring a title keeps them. Verified with real captures from a-title-reads-over-a-video-walk at Next defaults, full test suite and all title walks green. Commit a0970339."
     }
   ],
   "walks": [
     "a-title-reads-over-a-video-walk"
-  ]
+  ],
+  "started": "2026-09-28T03:45:36.836Z",
+  "completed": "2026-09-28T04:12:28.935Z"
 }
