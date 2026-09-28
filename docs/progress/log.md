@@ -20023,3 +20023,8 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - A number box that had the keyboard landed its untouched draft over a shape mid-drag, so the drag cost two undos. `NumberBox.landing(offered:)` now puts back a draft nobody typed in (tests in NumberBoxTests), and `PanelNumberField` records what it offered.
 - A number typed and not sent now lands on the next canvas press (`NumberFieldDraft.landNow()` in `CanvasPointerDrags.mouseDown`). That press is swallowed, the same as the inline text editor's.
 - Walk: `undo-after-a-drag-with-position-and-size-open-walk`. Next: nothing open from this.
+
+## 2026-09-28 — The panel on a video document, re-measured
+
+- At 1200x720 with the timeline open the right panel has 302pt under a title and 336pt under a clip; the sections above Appearance take 412 and 547. No ordering keeps Appearance and Effects whole, so the task is blocked on a decision card (full height panel, shorter timeline, or leave it scrolling). Numbers pinned in `DockFoldOnAVideoDocumentTests`.
+- Next: build whichever layout the user picks, with the pair moved straight under Properties on a video in either yes-option.
