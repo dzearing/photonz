@@ -19985,3 +19985,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Fixed: Apply to Every Cut counted a cut already wearing that exact transition as skipped ("On 1 cut, 1 skipped").
 - Walk: `transitions-group-walk` (drop tile, undo, click tile, plus menu, search), `dropOnTimeline` takes a transition tile. Audit: `queue/audits/2026-09-27-transitions-group.json`.
 - Open: the mock heads the group Effects; it is Transitions here to avoid two Effects headers (in the audit for the user to weigh).
+
+## 2026-09-27 — A title stays readable over light footage
+
+- Titles over a video now carry a tight dark edge shadow (`TitleLook.shadows`) after the mock's soft one, so white words read where they cross a white card; dark footage looks as before.
+- The inline draft draws the same shadows (`TextDraftShadowView` in `CanvasTextEditing.swift`), Next title look only.
+- Recolouring a title keeps its shadows' shape (`TextBuilder.restyled(keepsShadowShapes:)`).
+- Next: nothing open from this; audit at `queue/audits/2026-09-27-title-readable-over-light-footage.json`.
