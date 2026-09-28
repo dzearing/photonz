@@ -502,11 +502,19 @@ struct EditorCommands: Commands {
                 // A range drawn on the ruler is in hand when nothing else is
                 // picked, and ⌫ lifts it (`EditorState+RulerRange`).
                 let rangeHeld = onTimeline && editor?.rulerRangeHeld != nil
-                Button(keysPicked ? "Delete Keys" : rangeHeld ? "Delete Range" : "Delete This Piece") {
+                // ...and so is a range on some tracks, or pieces a box picked
+                // (`EditorState+TrackRange`).
+                let trackHeld = onTimeline && !rangeHeld
+                    && (editor?.trackRangeHeld != nil || editor?.timelinePicksHeld != nil)
+                let trackRange = trackHeld && editor?.trackRangeHeld != nil
+                Button(keysPicked ? "Delete Keys" : rangeHeld || trackRange ? "Delete Range"
+                       : trackHeld ? "Delete Pieces" : "Delete This Piece") {
                     if keysPicked {
                         editor?.deletePickedKeys()
                     } else if rangeHeld {
                         editor?.liftMarkedStretch()
+                    } else if trackHeld {
+                        editor?.liftTrackThing()
                     } else {
                         onTimeline ? editor?.deleteClipPieceInHand() : video?.deleteSelectedPiece()
                     }
@@ -521,6 +529,7 @@ struct EditorCommands: Commands {
                 // field with the keyboard still keeps the key.
                 .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuKeyEquivalent), modifiers: [])
                 .disabled(!(keysPicked || (rangeHeld && (editor?.canTakeOutMarkedStretch ?? false))
+                            || (trackHeld && (editor?.canTakeOutTrackThing ?? false))
                             || (onTimeline ? (editor?.canDeleteClipPieceInHand ?? false)
                                                       : (video?.canDeleteSelectedPiece ?? false))))
                 // Premiere's Ripple Delete, on its Mac key: what is picked goes

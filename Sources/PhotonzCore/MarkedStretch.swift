@@ -73,15 +73,20 @@ extension PhotonzDocument {
 
     /// Take the stretch from `start` to `end` out of every unlocked track and
     /// close the gap: Premiere's Extract. Answers whether anything changed.
+    ///
+    /// `onTracks` limits it to those tracks (`TrackRange.swift`): the gap
+    /// closes on them alone, and every other track is left exactly as it was.
     @discardableResult
-    public mutating func extractStretch(fromMS start: Int, toMS end: Int) -> Bool {
+    public mutating func extractStretch(fromMS start: Int, toMS end: Int, onTracks: Set<UUID>? = nil) -> Bool {
         let from = max(0, start)
         guard end > from else { return false }
+        let only = onTracks.map { layerIDs(onTracks: $0) }
         // Clips and sounds lose the stretch out of their own pieces first.
         // One wholly inside is left for `removeTime`, which drops it.
         var cut: Set<UUID> = []
         let locked = layerIDsOnLockedTracks()
-        for layer in allLayers where layer.holdsMedia && takesPart(layer, fromMS: from, toMS: end, locked: locked) {
+        for layer in allLayers where layer.holdsMedia
+            && takesPart(layer, fromMS: from, toMS: end, locked: locked, only: only) {
             guard let time = layer.time, time.inMS < from || time.outMS > end,
                   let pieces = layer.clipPieces,
                   let left = pieces.removingStretch(fromMS: from - time.inMS, toMS: end - time.inMS)
@@ -93,7 +98,7 @@ extension PhotonzDocument {
             }
             cut.insert(layer.id)
         }
-        let rest = removeTime(fromMS: from, toMS: end, exceptLayers: cut)
+        let rest = removeTime(fromMS: from, toMS: end, exceptLayers: cut, onlyLayers: only)
         if !cut.isEmpty { refreshDuration() }
         return rest || !cut.isEmpty
     }
@@ -130,12 +135,18 @@ extension PhotonzDocument {
     /// leave the gap: Premiere's Lift. Nothing after it moves. A clip or a
     /// title across the whole stretch becomes two, on the same track, with
     /// the gap between them. Answers whether anything changed.
+    ///
+    /// `onTracks` limits it to those tracks; `onlyLayers` to those layers,
+    /// which is how one picked piece of a clip is lifted and nothing beside it.
     @discardableResult
-    public mutating func liftStretch(fromMS start: Int, toMS end: Int) -> Bool {
+    public mutating func liftStretch(fromMS start: Int, toMS end: Int, onTracks: Set<UUID>? = nil,
+                                     onlyLayers: Set<UUID>? = nil) -> Bool {
         let from = max(0, start)
         guard end > from else { return false }
         let locked = layerIDsOnLockedTracks()
-        let hit = allLayers.filter { takesPart($0, fromMS: from, toMS: end, locked: locked) }
+        var only = onTracks.map { layerIDs(onTracks: $0) }
+        if let onlyLayers { only = only.map { $0.intersection(onlyLayers) } ?? onlyLayers }
+        let hit = allLayers.filter { takesPart($0, fromMS: from, toMS: end, locked: locked, only: only) }
         guard !hit.isEmpty else { return false }
         // A clip cut in two stays on its own track only once the tracks are
         // written down: a clip on no track is given one of its own.
@@ -176,12 +187,14 @@ extension PhotonzDocument {
     /// unlocked layer on an unlocked track runs into it. The same answer a
     /// trial Lift gives, from one pass over the layers and without copying
     /// the document, because the menu bar asks it on every redraw.
-    public func canTakeOutStretch(fromMS start: Int, toMS end: Int) -> Bool {
+    /// `onTracks` asks it of those tracks alone.
+    public func canTakeOutStretch(fromMS start: Int, toMS end: Int, onTracks: Set<UUID>? = nil) -> Bool {
         let from = max(0, start)
         guard end > from else { return false }
         let locked = layerIDsOnLockedTracks()
+        let only = onTracks.map { layerIDs(onTracks: $0) }
         return layers.contains { top in
-            top.containsSelfOrDescendant { takesPart($0, fromMS: from, toMS: end, locked: locked) }
+            top.containsSelfOrDescendant { takesPart($0, fromMS: from, toMS: end, locked: locked, only: only) }
         }
     }
 
@@ -195,9 +208,12 @@ extension PhotonzDocument {
 
     /// Whether a layer is touched by a stretch: it runs into it, and nothing
     /// has locked it. `locked` is `layerIDsOnLockedTracks()`, asked once by
-    /// the caller rather than once per layer.
-    private func takesPart(_ layer: Layer, fromMS from: Int, toMS end: Int, locked: Set<UUID>) -> Bool {
+    /// the caller rather than once per layer. `only`, where given, is every
+    /// layer allowed to take part: the ones on the tracks a range covers.
+    private func takesPart(_ layer: Layer, fromMS from: Int, toMS end: Int, locked: Set<UUID>,
+                           only: Set<UUID>? = nil) -> Bool {
         guard !layer.isLocked, let time = layer.time, time.inMS < end, time.outMS > from else { return false }
+        if let only, !only.contains(layer.id) { return false }
         return !locked.contains(layer.id)
     }
 

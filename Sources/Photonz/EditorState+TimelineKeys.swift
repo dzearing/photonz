@@ -104,6 +104,9 @@ extension EditorState {
             // A range just drawn on the ruler is what is in hand when it is
             // (`EditorState+RulerRange`): ⌫ lifts it.
             if rulerRangeHeld != nil { return liftMarkedStretch() }
+            // ...and a range on some tracks, or pieces a box picked
+            // (`EditorState+TrackRange`).
+            if trackRangeHeld != nil || timelinePicksHeld != nil { return liftTrackThing() }
             return liftInHand()
         case .rippleDelete:
             guard canRippleDeleteInHand else { return false }
@@ -130,6 +133,10 @@ extension EditorState {
             // Premiere's A: a press on a clip picks it and everything after
             // it, and the drag carries the lot (`TrackSelectForward.swift`).
             timelineTool = .trackSelectForward
+        case .rangeTool:
+            // Final Cut's R: a drag on the tracks picks a stretch of time on
+            // the tracks it crosses (`EditorState+TrackRange`).
+            timelineTool = .range
         case .zoomIn:
             guard canOpenOutTheTimeline else { return false }
             zoomTimelineIn()

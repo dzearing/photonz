@@ -2378,6 +2378,18 @@ public enum PlaytestStep: Sendable, Equatable {
     /// the playhead it scrubs. `hold` names a picture taken before letting
     /// go, the only moment the band being drawn is on screen.
     case dragRuler(from: Double, to: Double, hold: String?)
+    /// A drag on empty track space through the tracks' own gesture
+    /// (`TrackRange.swift`): pressed on `fromTrack` at `from` seconds, carried
+    /// to `toTrack` at `to`, let go there. Without `option` it draws a box that
+    /// picks the clips it touches; with it, or with the Range tool in hand, a
+    /// stretch of time on the tracks it crosses. The same moment on the same
+    /// track is a click. `hold` names a picture taken before letting go.
+    case dragTracks(fromTrack: String, from: Double, toTrack: String, to: Double, option: Bool, hold: String?)
+    /// What is picked on the timeline, and FAIL when it is not so: `clips` by
+    /// name, a piece of a cut clip as "<name> piece <n>" counting from one, an
+    /// empty list for nothing; `rangeOn` the tracks a range on some tracks
+    /// covers, empty for none, with `from` and `to` its ends in seconds.
+    case expectTimelinePick(clips: [String]?, rangeOn: [String]?, from: Double?, to: Double?)
     /// Where a clip on the timeline is, by its name, and FAIL when it is not
     /// so: which track it is on, when it starts and when it ends, in seconds,
     /// give or take `within`. `count` is how many clips are called that,
@@ -3369,7 +3381,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "clickRuler", "dragRuler", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag",
     ].sorted()
@@ -3410,6 +3422,8 @@ public enum PlaytestStep: Sendable, Equatable {
         case .importPicks: "importPicks"
         case .clickRuler: "clickRuler"
         case .dragRuler: "dragRuler"
+        case .dragTracks: "dragTracks"
+        case .expectTimelinePick: "expectTimelinePick"
         case .expectClip: "expectClip"
         case .dragOver: "dragOver"
         case .snapshot: "snapshot"
@@ -3716,6 +3730,24 @@ public enum PlaytestStep: Sendable, Equatable {
             guard from >= 0 else { throw f.invalid("from", "a drag on the ruler starts at the start or after it") }
             guard to >= 0 else { throw f.invalid("to", "a drag on the ruler ends at the start or after it") }
             self = .dragRuler(from: from, to: to, hold: try f.optionalString("hold"))
+        case "dragTracks":
+            let fromTrack = try f.string("fromTrack")
+            let from = try f.number("from")
+            let to = try f.number("to")
+            guard from >= 0 else { throw f.invalid("from", "a drag on the tracks starts at the start or after it") }
+            guard to >= 0 else { throw f.invalid("to", "a drag on the tracks ends at the start or after it") }
+            self = .dragTracks(fromTrack: fromTrack, from: from, toTrack: try f.optionalString("toTrack") ?? fromTrack,
+                               to: to, option: try f.optionalFlag("option") ?? false,
+                               hold: try f.optionalString("hold"))
+        case "expectTimelinePick":
+            let clips = f.has("clips") ? try f.optionalStrings("clips") : nil
+            let rangeOn = f.has("rangeOn") ? try f.optionalStrings("rangeOn") : nil
+            guard clips != nil || rangeOn != nil else {
+                throw f.invalid("clips", "expectTimelinePick says which clips are picked, or which tracks a range "
+                                + "is on, or both; an empty list means none")
+            }
+            self = .expectTimelinePick(clips: clips, rangeOn: rangeOn, from: try f.optionalNumber("from"),
+                                       to: try f.optionalNumber("to"))
         case "expectClip":
             let count = try f.optionalNumber("count").map { Int($0) }
             let track = try f.optionalString("track")

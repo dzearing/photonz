@@ -2528,6 +2528,61 @@ struct PlaytestScriptTests {
         }
     }
 
+    // A box or a range over the tracks (`TrackRange.swift`) is a drag on
+    // SwiftUI too, so a walk names the track and the moment the hand went
+    // down on and the ones it came up on.
+    @Test("A dragTracks step names the tracks and moments of both ends, and whether Option is held")
+    func dragTracksParses() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragTracks", "fromTrack": "V1", "from": 2, "toTrack": "Audio", "to": 5.5,
+                       "option": true, "hold": "mid" } ] }
+        """)
+        guard case .dragTracks(let fromTrack, let from, let toTrack, let to, let option, let hold) = script.steps[0]
+        else { Issue.record("dragTracks"); return }
+        #expect(fromTrack == "V1")
+        #expect(from == 2)
+        #expect(toTrack == "Audio")
+        #expect(to == 5.5)
+        #expect(option)
+        #expect(hold == "mid")
+        #expect(script.steps[0].name == "dragTracks")
+        #expect(PlaytestStep.names.contains("dragTracks"))
+    }
+
+    @Test("A dragTracks step ends on the track it starts on unless it says otherwise")
+    func dragTracksDefaults() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragTracks", "fromTrack": "V2", "from": 1, "to": 3 } ] }
+        """)
+        guard case .dragTracks(_, _, let toTrack, _, let option, let hold) = script.steps[0]
+        else { Issue.record("dragTracks"); return }
+        #expect(toTrack == "V2")
+        #expect(!option)
+        #expect(hold == nil)
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "dragTracks", "from": 1, "to": 3 } ] }
+            """)
+        }
+    }
+
+    @Test("An expectTimelinePick step names the clips and pieces picked and the tracks a range is on")
+    func expectTimelinePickParses() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectTimelinePick", "clips": ["b-roll", "Talk piece 2"],
+                       "rangeOn": ["V1"], "from": 5, "to": 9 } ] }
+        """)
+        guard case .expectTimelinePick(let clips, let rangeOn, let from, let to) = script.steps[0]
+        else { Issue.record("expectTimelinePick"); return }
+        #expect(clips == ["b-roll", "Talk piece 2"])
+        #expect(rangeOn == ["V1"])
+        #expect(from == 5)
+        #expect(to == 9)
+        #expect(PlaytestStep.names.contains("expectTimelinePick"))
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("dragTracks"))
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectTimelinePick"))
+    }
+
     @Test("A sample can be copied in under a name of the walk's own")
     func sampleCopiesTakeAName() {
         #expect(PlaytestSampleFile.copy("sample:recording")?.fileName == "Tutorial Sample.mp4")

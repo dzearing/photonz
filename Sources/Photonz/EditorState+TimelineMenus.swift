@@ -72,6 +72,11 @@ extension EditorState {
         }
         // A caption's verbs are the words and the track they are on.
         if layer.isCaption { return captionCueMenuRows(layerID: layerID) }
+        // One of the pieces a box picked: what the picked pieces do leads
+        // (`EditorState+TrackRange`).
+        if pieces.count > 1, isPiecePickedByBox(layerID: layerID, index: index) {
+            rows += trackThingMenuRows() + [.separator]
+        }
         let piece = pieces.piece(at: index)
         let underPlayhead = time.contains(ms: documentTimeMS)
 
@@ -300,6 +305,7 @@ extension EditorState {
     /// clip, else the picked clip itself.
     var canRippleDeleteInHand: Bool {
         if rulerRangeHeld != nil { return canTakeOutMarkedStretch }
+        if trackRangeHeld != nil || timelinePicksHeld != nil { return canTakeOutTrackThing }
         guard documentHasTime, let id = selectedLayerID, document?.layer(id: id)?.time != nil else { return false }
         return !isClipLocked(id)
     }
@@ -311,6 +317,9 @@ extension EditorState {
             extractMarkedStretch()
             return
         }
+        // A range on some tracks, or pieces a box picked: the gap closes on
+        // their own tracks (`EditorState+TrackRange`).
+        if extractTrackThing() { return }
         guard canRippleDeleteInHand, let id = selectedLayerID else { return }
         let count = document?.layer(id: id)?.clipPieces?.count ?? 1
         rippleDelete(layerID: id, piece: count > 1 ? selectedClipPieceIndex : nil)

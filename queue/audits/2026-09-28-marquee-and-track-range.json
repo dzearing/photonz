@@ -1,0 +1,33 @@
+{
+  "feature": "Box select on the tracks, and a range on just the tracks you cross",
+  "epic": "video-cutting",
+  "summary": "Drag in empty timeline space to box select the clips, or just the pieces of a cut clip, on the tracks the box crosses. Option-drag, or press R for the Range tool, to pick a stretch of time on only those tracks. Delete, Shift-Delete, Cmd-T and right-click then act on that stretch and leave every other track alone.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording, cut it with Cmd-K at 0:03 and 0:06, and add music on its own track.",
+  "switched": {},
+  "try": [
+    { "do": "Drag in empty space on V1 across the middle piece of the recording.", "shot": "2026-09-28-marquee-1-drawing-a-box-sc.png" },
+    { "do": "Drag a box from V1 at 0:02 down to the music track at 0:04.", "shot": "2026-09-28-marquee-2-box-across-three-tracks-sc.png" },
+    { "do": "Click empty space on V1 to let go of what was picked." },
+    { "do": "Hold Option and drag on V1 from 0:01 to 0:05.", "shot": "2026-09-28-marquee-4-range-on-v1-sc.png" },
+    { "do": "Press Delete. Then undo, Option-drag again, and press Shift-Delete.", "shot": "2026-09-28-marquee-5-delete-lifts-v1-alone-sc.png" },
+    { "do": "Option-drag over the cut at 0:03 on V1 and press Cmd-T." },
+    { "do": "Press R, then drag on the music track from 0:09 to 0:12.", "shot": "2026-09-28-marquee-8-range-tool-sc.png" }
+  ],
+  "evaluate": [
+    "Does a box over part of a cut recording picking only the pieces it touches match what you expected?",
+    "Is the green band on just the crossed tracks easy enough to see over a clip?",
+    "Should a box that crosses only a clip's sound row pick the clip, as Premiere's linked selection does?",
+    "Is losing drag-to-scrub on empty track space fine, now that the ruler and the scrub bar are where you scrub?",
+    "Should R stay the Range tool while the timeline has the keyboard, even though R is Rectangle on the canvas?"
+  ],
+  "rough": [
+    "No mock draws the box or a range on some tracks. The band copies the ruler range's green, and the box uses the accent outline.",
+    "A drag on empty track space used to scrub the playhead. It draws a box now, the way Premiere and Final Cut behave. A click still moves the playhead.",
+    "A click in empty track space now lets go of every picked clip, not only the box and the range.",
+    "Shift is not held to add to what is picked yet. A new box replaces the pick.",
+    "Picked pieces can't be dragged as a group yet. Whole clips can, because they join the usual clip selection.",
+    "Ripple Delete on picked pieces closes the gap on each piece's own track only. A single piece picked by clicking still closes the gap on every track.",
+    "When Delete splits a clip in two, the second part is named '<name> copy'. That comes from the existing Lift, which the ruler range uses too.",
+    "Cmd-T and Split at Range Edges only act on a range on some tracks, not on pieces a box picked."
+  ]
+}

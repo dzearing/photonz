@@ -14,6 +14,9 @@ public enum TimelineTool: String, CaseIterable, Hashable, Sendable {
     case select
     /// A: a press picks a clip and everything after it.
     case trackSelectForward
+    /// R, Final Cut's Range tool: a drag anywhere on the tracks picks a
+    /// stretch of time on the tracks it crosses (`TrackRange.swift`).
+    case range
     /// B: a click cuts.
     case blade
 }

@@ -40,9 +40,12 @@ extension PhotonzDocument {
     }
 
     /// The same, leaving alone every layer in `keep`: the ones the caller has
-    /// already cut for itself (`MarkedStretch.swift`).
+    /// already cut for itself (`MarkedStretch.swift`). `onlyLayers`, where
+    /// given, is every layer that takes part: the ones on the tracks a range
+    /// on some tracks covers (`TrackRange.swift`).
     @discardableResult
-    public mutating func removeTime(fromMS start: Int, toMS end: Int, exceptLayers keep: Set<UUID>) -> Bool {
+    public mutating func removeTime(fromMS start: Int, toMS end: Int, exceptLayers keep: Set<UUID>,
+                                    onlyLayers only: Set<UUID>? = nil) -> Bool {
         let length = end - start
         guard start >= 0, length > 0 else { return false }
         let squeeze = { (ms: Int) -> Int in ms < start ? ms : (ms >= end ? ms - length : start) }
@@ -51,7 +54,8 @@ extension PhotonzDocument {
         let locked = layerIDsOnLockedTracks()
         for layer in allLayers {
             guard !keep.contains(layer.id), !layer.isLocked, let time = layer.time,
-                  time.outMS > start, !locked.contains(layer.id) else { continue }
+                  time.outMS > start, !locked.contains(layer.id),
+                  only?.contains(layer.id) ?? true else { continue }
             if time.inMS >= end {
                 updateLayer(id: layer.id) { moved in
                     moved.time = time.moved(toInMS: time.inMS - length)

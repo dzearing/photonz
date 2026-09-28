@@ -118,7 +118,7 @@ extension TimelineKeyCommand {
             return false
         case .markIn, .markOut, .clearIn, .clearOut, .addMarker, .splitAtPlayhead, .lift,
              .rippleDelete, .extractMarked, .liftMarked, .rippleTrimToPlayhead,
-             .applyDefaultTransition, .toggleSnapping, .bladeTool, .trackSelectForwardTool,
+             .applyDefaultTransition, .toggleSnapping, .bladeTool, .trackSelectForwardTool, .rangeTool,
              .zoomIn, .zoomOut, .zoomToFit:
             return true
         }

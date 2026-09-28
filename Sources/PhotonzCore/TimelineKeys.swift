@@ -103,6 +103,9 @@ public enum TimelineKeyCommand: Hashable, Sendable {
     /// the playhead, the cuts and each other while they are dragged.
     case toggleSnapping
     case selectTool, bladeTool, trackSelectForwardTool
+    /// Final Cut's R: a drag on the tracks picks a stretch of time on the
+    /// tracks it crosses (`TrackRange.swift`).
+    case rangeTool
     case zoomIn, zoomOut, zoomToFit
     /// ⌘1 and ⌘2: View mode or Edit mode (`ViewEditMode`).
     case showMode(ViewEditMode)
@@ -193,6 +196,7 @@ public enum TimelineKeys {
         case "v": return .selectTool
         case "b": return .bladeTool
         case "a": return .trackSelectForwardTool
+        case "r": return .rangeTool
         case "=", "+": return .zoomIn
         case "-": return .zoomOut
         case "\\": return .zoomToFit

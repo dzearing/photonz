@@ -167,6 +167,12 @@ public enum PlaytestLockSafety {
         // draw-a-range-on-the-ruler-walk is its watch; if it refuses there,
         // take it out.
         "dragRuler",
+        // Added 2026-09-28 by reading, NOT yet watched under a lock: it drives
+        // the tracks' own press, drag and release through the editor, as
+        // dragRuler does the ruler's, and reads what the editor has picked,
+        // never a name. The first locked run of marquee-and-track-range-walk
+        // is its watch; if it refuses there, take it out.
+        "dragTracks", "expectTimelinePick",
         // Added 2026-09-26 by reading, NOT yet watched under a lock: it holds
         // the playhead through the editor's own calls and reads the pictures
         // and moments the editor is holding, never a name. The first locked

@@ -185,6 +185,13 @@ struct TimelineDock: View {
                 editorState.timelineTool = editorState.timelineTool == .trackSelectForward
                     ? .select : .trackSelectForward
             }
+            // Final Cut's Range tool (R): a drag on the tracks picks a
+            // stretch of time on the tracks it crosses. ⌥-drag on empty track
+            // space does the same without it.
+            toolButton("arrow.left.and.right.square", name: "Range", help: "Range (R)",
+                       isOn: editorState.timelineTool == .range) {
+                editorState.timelineTool = editorState.timelineTool == .range ? .select : .range
+            }
             toolButton("scissors", name: "Blade", help: "Blade (B), split at playhead (⌘K)",
                        isOn: isBlade) {
                 editorState.isTimelineBlade.toggle()
@@ -258,6 +265,7 @@ struct TimelineDock: View {
         switch tool {
         case .select: return "select"
         case .trackSelectForward: return "track select forward"
+        case .range: return "range"
         case .blade: return "blade"
         }
     }
@@ -473,6 +481,12 @@ struct TimelineDock: View {
                         .padding(.vertical, Self.rowSpacing)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .coordinateSpace(.named(Self.tracksSpace))
+                        // A box being drawn over the tracks, and a range on
+                        // some of them (`EditorState+TrackRange`), in the
+                        // tracks' own space so they scroll with them.
+                        .overlay(alignment: .topLeading) {
+                            TimelineLaneBoxView(laneWidth: laneWidth, leading: Self.lanesLeading)
+                        }
                         .onDrop(of: TimelineFileDropDelegate.types, delegate: TimelineFileDropDelegate(editorState: editorState))
                         .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
                             editorState.timelineTracksFrame = frame
@@ -1136,6 +1150,66 @@ private struct VolumeTrackSurface: NSViewRepresentable {
 
         private func press(_ event: NSEvent) {
             onPress?(convert(event.locationInWindow, from: nil).x)
+        }
+    }
+}
+
+/// What a drag on empty track space draws while the hand is down, and the
+/// range on some tracks it leaves in hand (`EditorState+TrackRange`): a box
+/// with a thin outline for the clips it will pick, or a green band over only
+/// the tracks a range crosses, the way the ruler's range is drawn.
+struct TimelineLaneBoxView: View {
+    @Environment(EditorState.self) private var editorState
+    let laneWidth: CGFloat
+    let leading: CGFloat
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            if let box = editorState.laneBoxDraft {
+                if box.drawsRange {
+                    band(box.range, tracks: box.tracks)
+                } else {
+                    marquee(box)
+                }
+            } else if let held = editorState.trackRangeHeld {
+                band(held.range, tracks: Array(held.trackIDs))
+                    .panelReadout("track range \(held.range.lowerBound)ms to \(held.range.upperBound)ms on "
+                                  + "\(held.trackIDs.count) tracks")
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .allowsHitTesting(false)
+    }
+
+    private func x(_ ms: Int) -> CGFloat {
+        let fraction = editorState.motionStripRuler.fraction(ofMS: Double(ms))
+        return leading + max(0, min(laneWidth, laneWidth * fraction))
+    }
+
+    /// The box, from where the hand went down to where it is.
+    private func marquee(_ box: EditorState.LaneBox) -> some View {
+        let x0 = x(box.range.lowerBound), x1 = x(box.range.upperBound)
+        return Rectangle()
+            .fill(VideoKit.Palette.accent.opacity(0.10))
+            .overlay(Rectangle().strokeBorder(VideoKit.Palette.accent.opacity(0.9), lineWidth: 1))
+            .frame(width: max(1, x1 - x0), height: max(1, box.maxY - box.minY))
+            .offset(x: x0, y: box.minY)
+    }
+
+    /// The range, one green band per track it covers, with its ends marked.
+    @ViewBuilder private func band(_ range: Range<Int>, tracks: [UUID]) -> some View {
+        let x0 = x(range.lowerBound), x1 = x(range.upperBound)
+        ForEach(tracks, id: \.self) { id in
+            if let row = editorState.trackDropRows[id], x1 > x0 {
+                Rectangle()
+                    .fill(Color.white.opacity(0.10))
+                    .overlay { Rectangle().fill(VideoKit.Palette.good.opacity(0.16)) }
+                    .overlay(alignment: .leading) { Rectangle().fill(VideoKit.Palette.good).frame(width: 1.5) }
+                    .overlay(alignment: .trailing) { Rectangle().fill(VideoKit.Palette.good).frame(width: 1.5) }
+                    .overlay { RoundedRectangle(cornerRadius: 2).strokeBorder(VideoKit.Palette.good.opacity(0.6), lineWidth: 1) }
+                    .frame(width: x1 - x0, height: row.maxY - row.minY)
+                    .offset(x: x0, y: row.minY)
+            }
         }
     }
 }

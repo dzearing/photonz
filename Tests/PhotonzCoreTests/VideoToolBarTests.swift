@@ -86,12 +86,12 @@ struct VideoToolBarTests {
 
     @Test("The letters the timeline takes, and the ones it leaves the canvas")
     func timelineLetters() {
-        for letter: Character in ["k", "l", "i", "o", "m", "a", "w", "b"] {
+        for letter: Character in ["k", "l", "i", "o", "m", "a", "w", "b", "r"] {
             #expect(!TimelineKeys.leavesToTheCanvas(letter), "\(letter) is the timeline's")
         }
         // V is both: the timeline puts its tool down and the press carries on
         // to the canvas's Select.
-        for letter: Character in ["t", "r", "g", "p", "f", "c", "h", "z", "v"] {
+        for letter: Character in ["t", "g", "p", "f", "c", "h", "z", "v"] {
             #expect(TimelineKeys.leavesToTheCanvas(letter), "\(letter) reaches its tool")
         }
     }

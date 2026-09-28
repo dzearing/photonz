@@ -114,6 +114,7 @@ extension EditorState {
         }
         if selectedLayerID != nil || !multiSelectedLayerIDs.isEmpty { selectLayer(nil) }
         if selectedEditPoint != nil { selectedEditPoint = nil }
+        letGoOfTimelinePicks()
         rulerRangeInHand = self.document?.markedRangeMS
     }
 

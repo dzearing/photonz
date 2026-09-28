@@ -790,6 +790,9 @@ final class EditorState {
                 if selectedClipCutIndex != nil { selectedClipCutIndex = nil }
                 // ...and so does a cut between two clips.
                 if selectedLayerID != nil, selectedEditPoint != nil { selectedEditPoint = nil }
+                // ...and so do pieces a box picked and a range on some tracks
+                // (`EditorState+TrackRange`): one thing is in hand at a time.
+                if selectedLayerID != nil { letGoOfTimelinePicks() }
                 // ...and so do keys picked on another layer's lanes, so ⌫ can
                 // never throw away keys nobody is looking at.
                 if let keys = keySelection, keys.layerID != selectedLayerID { keySelection = nil }
@@ -861,6 +864,7 @@ final class EditorState {
             // at all because one of them is already under your eyes.
             let gained = multiSelectedLayerIDs.subtracting(oldValue)
             if !gained.isEmpty { revealInLayersList(gained) }
+            if !multiSelectedLayerIDs.isEmpty { letGoOfTimelinePicks() }
             if !multiSelectedLayerIDs.isEmpty, selectedLibraryItemID != nil { selectedLibraryItemID = nil }
             // A half-typed style name belongs to the layers that were picked
             // when the field opened, and those are not the layers any more
@@ -1382,6 +1386,16 @@ final class EditorState {
     /// The range last drawn on the ruler, which is the thing in hand for as
     /// long as the marks stay on it and nothing else is picked.
     var rulerRangeInHand: Range<Int>?
+    /// A press on empty track space, from the hand going down to it coming up
+    /// (`EditorState+TrackRange`).
+    @ObservationIgnored var lanePress: LanePress?
+    /// The box, or the range on some tracks, being drawn while the hand is down.
+    var laneBoxDraft: LaneBox?
+    /// A stretch of time on some tracks, picked with ⌥ held or the Range tool.
+    var trackRangeInHand: TrackRange?
+    /// The pieces of cut clips a box picked, where it picked more than one
+    /// piece and not every piece of a clip.
+    var timelinePicks: [TimelinePick] = []
     /// The Escape watch armed for exactly as long as a clip's bar is in hand.
     @ObservationIgnored var clipBarEscapeWatch: Any?
     /// ...and the one armed while a transition's band is.

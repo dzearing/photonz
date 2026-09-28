@@ -94,6 +94,7 @@ struct TimelineTrackRow: View {
     /// Track Select Forward in hand (A): a press on a clip picks it and
     /// everything after it, and the edit points are no longer in the way.
     private var isTrackSelect: Bool { editorState.timelineTool == .trackSelectForward }
+    private var isRangeTool: Bool { editorState.timelineTool == .range }
 
     private var laneHeight: CGFloat {
         row.carriesSound ? TimelineDock.soundLaneHeight : TimelineDock.laneHeight
@@ -321,11 +322,14 @@ struct TimelineTrackRow: View {
         let ruler = editorState.motionStripRuler
         return ZStack(alignment: .topLeading) {
             TimelineGridlines(ruler: ruler, laneWidth: laneWidth, height: laneHeight)
-            // A press on the bare lane puts the playhead there, the way the
-            // strip always has; a clip on top takes its own presses first.
+            // A click on the bare lane puts the playhead there; a drag draws a
+            // box that picks the clips it touches, or with ⌥ a range on the
+            // tracks it crosses (`EditorState+TrackRange`). A clip on top
+            // takes its own presses first.
             Color.clear
                 .contentShape(Rectangle())
-                .gesture(TimelineLaneScrub.gesture(editorState, ruler: ruler, laneWidth: laneWidth))
+                .gesture(TimelineLaneMarquee.gesture(editorState, ruler: ruler, laneWidth: laneWidth,
+                                                     trackID: track.id))
                 .contextMenu { TimelineTrackMenu(track: track, index: index) }
             let alternates = alternateClips
             // A Captions track paints the cues nobody is working on as one
@@ -376,6 +380,15 @@ struct TimelineTrackRow: View {
                     TimelineEditPointView(point: point, laneWidth: laneWidth, height: laneHeight)
                         .allowsHitTesting(!track.isLocked)
                 }
+            }
+            // The Range tool: a drag anywhere on the lane, over clips too,
+            // picks a stretch of time, as Final Cut's R does.
+            if isRangeTool {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .gesture(TimelineLaneMarquee.gesture(editorState, ruler: ruler, laneWidth: laneWidth,
+                                                         trackID: track.id))
+                    .contextMenu { TimelineTrackMenu(track: track, index: index) }
             }
             if track.isLocked { lockedHatch }
             dropMark
@@ -601,6 +614,13 @@ struct TimelineTrackMenu: View {
     var body: some View {
         let acted = editorState.tracksActedOn(from: track.id)
         let isEmpty = editorState.isTrackEmpty(track.id)
+        // A range on this track, or pieces a box picked: what they act on
+        // leads (`EditorState+TrackRange`).
+        if editorState.trackRangeHeld?.trackIDs.contains(track.id) == true
+            || editorState.timelinePicksHeld != nil {
+            MenuRowsView(rows: editorState.trackThingMenuRows())
+            Divider()
+        }
         if track.kind == .captions {
             MenuRowsView(rows: editorState.captionTrackMenuRows())
             Divider()
@@ -814,6 +834,46 @@ enum TimelineLaneScrub {
                                          snappingWithinMS: editorState.keySnapReachMS(laneWidth: laneWidth))
             }
             .onEnded { _ in editorState.endPlayheadDrag() }
+    }
+}
+
+/// A press or a drag on empty track space (`EditorState+TrackRange`): a click
+/// moves the playhead, a drag draws a box over the tracks, and a drag with ⌥
+/// held or the Range tool in hand picks a stretch of time on the tracks it
+/// crosses. The press is read along the lane for time and down the tracks'
+/// own space for which tracks it crosses.
+enum TimelineLaneMarquee {
+    @MainActor
+    static func gesture(_ editorState: EditorState, ruler: MotionStripRuler, laneWidth: CGFloat,
+                        trackID: UUID) -> some Gesture {
+        DragGesture(minimumDistance: 0)
+            .onChanged { value in
+                let top = editorState.trackDropRows[trackID]?.minY ?? 0
+                let startMS = ms(value.startLocation.x, laneWidth, ruler)
+                // A new press, or one left behind by a gesture the system
+                // cancelled without an end.
+                if editorState.lanePress?.atMS != startMS {
+                    editorState.beginLanePress(
+                        atMS: startMS, y: top + value.startLocation.y,
+                        drawsRange: NSEvent.modifierFlags.contains(.option) || editorState.timelineTool == .range)
+                }
+                let moved = hypot(value.translation.width, value.translation.height) >= EditorState.laneClickSlop
+                let snap = editorState.lanePress?.drawsRange == true
+                    ? editorState.keySnapReachMS(laneWidth: laneWidth) : 0
+                editorState.dragLanePress(toMS: ms(value.location.x, laneWidth, ruler), y: top + value.location.y,
+                                          moved: moved, snapMS: snap)
+            }
+            .onEnded { value in
+                let moved = hypot(value.translation.width, value.translation.height) >= EditorState.laneClickSlop
+                editorState.endLanePress(atMS: ms(value.location.x, laneWidth, ruler), moved: moved)
+            }
+    }
+
+    /// The moment under a point along the lane, which may be past either end
+    /// of it while a box is being drawn.
+    static func ms(_ x: CGFloat, _ laneWidth: CGFloat, _ ruler: MotionStripRuler) -> Int {
+        let fraction = min(max(0, x / max(1, laneWidth)), 1)
+        return Int(ruler.ms(atFraction: Double(fraction)).rounded())
     }
 }
 

@@ -270,6 +270,7 @@ extension EditorState {
 
     func canApplyDefaultTransition(at place: TimelineCutPlace? = nil) -> Bool {
         if place == nil, rulerRangeHeld != nil { return canAddTransitionInRange }
+        if place == nil, trackRangeHeld != nil { return canAddTransitionInTrackRange }
         if place == nil, clipsPickedForEveryCut != nil { return true }
         guard case .put = defaultTransitionPlan(at: place) else { return false }
         return true
@@ -286,6 +287,12 @@ extension EditorState {
         // (`EditorState+RulerRange`).
         if place == nil, rulerRangeHeld != nil, Experiments.shared.transitionsAtACutEnabled {
             addTransitionInRange()
+            return true
+        }
+        // ...and a range on some tracks: every cut inside it on those tracks
+        // (`EditorState+TrackRange`).
+        if place == nil, trackRangeHeld != nil, Experiments.shared.transitionsAtACutEnabled {
+            addTransitionInTrackRange()
             return true
         }
         // Several clips picked and no one cut: Premiere's Apply Default

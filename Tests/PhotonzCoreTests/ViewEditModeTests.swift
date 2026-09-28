@@ -118,7 +118,7 @@ struct TimelineKeysStartAnEditTests {
         let editing: [TimelineKeyCommand] = [
             .markIn, .markOut, .clearIn, .clearOut, .addMarker, .splitAtPlayhead, .lift, .rippleDelete,
             .extractMarked, .liftMarked, .rippleTrimToPlayhead(.start), .rippleTrimToPlayhead(.end),
-            .applyDefaultTransition, .toggleSnapping, .bladeTool, .trackSelectForwardTool,
+            .applyDefaultTransition, .toggleSnapping, .bladeTool, .trackSelectForwardTool, .rangeTool,
             .zoomIn, .zoomOut, .zoomToFit,
         ]
         for command in editing { #expect(command.startsAnEdit, "\(command)") }

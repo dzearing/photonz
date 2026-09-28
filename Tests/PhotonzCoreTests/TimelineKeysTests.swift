@@ -182,7 +182,9 @@ struct TimelineKeysTests {
     @Test("A letter Premiere gives the timeline nothing is left alone")
     func otherLettersPass() {
         #expect(command(.letter("t")) == nil)
-        #expect(command(.letter("r")) == nil)
+        // R is Final Cut's Range tool, which the user asked for by name
+        // (`TrackRangeTests`); G has nothing on the timeline.
+        #expect(command(.letter("g")) == nil)
         #expect(command(.letter("z"), .command) == nil)
         #expect(command(.letter("j"), .command) == nil)
     }

@@ -261,6 +261,8 @@ struct ClipPiecesBar: View {
     private func isPiecePicked(_ index: Int, of count: Int) -> Bool {
         // One of several clips picked with Shift: the whole clip is in hand.
         if !isPicked, editorState.multiSelectedLayerIDs.contains(layerID) { return true }
+        // A piece a box over the tracks picked (`EditorState+TrackRange`).
+        if !isPicked, editorState.isPiecePickedByBox(layerID: layerID, index: index) { return true }
         guard isPicked else { return false }
         guard count > 1 else { return true }
         // Mid-carry the bar is already drawn in the order it would land in, so

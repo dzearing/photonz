@@ -145,9 +145,9 @@ struct TrackSelectForwardTests {
 
     // MARK: - The tool
 
-    @Test("The timeline has three tools, Select first")
+    @Test("The timeline has four tools, Select first, in the order the bar draws them")
     func tools() {
-        #expect(TimelineTool.allCases == [.select, .trackSelectForward, .blade])
+        #expect(TimelineTool.allCases == [.select, .trackSelectForward, .range, .blade])
     }
 
     @Test("A switches View to Edit, because the tool works on the tracks")

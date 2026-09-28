@@ -1730,6 +1730,77 @@ private final class Run {
                  + (editor.rulerRangeHeld != nil ? ", the range in hand" : "")
                  + ", playhead \(editor.documentTimeMS) ms", state: describe())
 
+        // The tracks' own gesture (`TimelineLaneMarquee`), pressed on one
+        // track at one moment and carried to another: a box, or with Option
+        // (or the Range tool) a range on the tracks it crosses.
+        case .dragTracks(let fromTrack, let fromSeconds, let toTrack, let toSeconds, let option, let hold):
+            let editor = try requireEditor()
+            let from = try rulerMoment(fromSeconds, on: editor, doing: "press")
+            let to = try rulerMoment(toSeconds, on: editor, doing: "let go")
+            // A hand presses a little above the middle of one row and lets go a
+            // little below the middle of the other, so a box on one track has
+            // some height to it, as it does under a real pointer.
+            let fromY = try trackRowMiddle(fromTrack, on: editor, lean: -0.2)
+            let toY = try trackRowMiddle(toTrack, on: editor, lean: 0.2)
+            let drawsRange = option || editor.timelineTool == .range
+            let snap = drawsRange ? editor.keySnapReachMS(laneWidth: editor.timelineLaneWidth) : 0
+            editor.beginLanePress(atMS: from, y: fromY, drawsRange: drawsRange)
+            let moved = from != to || fromTrack != toTrack
+            if moved {
+                let steps = 8
+                for step in 1...steps {
+                    let ms = from + (to - from) * step / steps
+                    let y = fromY + (toY - fromY) * CGFloat(step) / CGFloat(steps)
+                    editor.dragLanePress(toMS: ms, y: y, moved: true, snapMS: snap)
+                    await sleep(0.03)
+                }
+            }
+            if let hold {
+                await sleep(0.2)
+                let window = try requireWindow()
+                if let content = window.contentView {
+                    try snapshot(content, name: hold)
+                    await screenCapture(window, name: hold)
+                }
+            }
+            editor.endLanePress(atMS: to, moved: moved)
+            await sleep(0.2)
+            let reading = timelinePickReading(editor)
+            note(number, step.name, "pressed \(fromTrack) at \(EditorState.timecode(ms: from)) and let go on "
+                 + "\(toTrack) at \(EditorState.timecode(ms: to))"
+                 + (drawsRange ? " drawing a range" : moved ? " drawing a box" : " (a click)")
+                 + ": picked " + (reading.clips.isEmpty ? "nothing" : reading.clips.sorted().joined(separator: ", "))
+                 + (reading.rangeOn.isEmpty ? "" : "; a range on \(reading.rangeOn.joined(separator: ", ")) from "
+                    + "\(reading.range.map { "\($0.lowerBound) to \($0.upperBound) ms" } ?? "?")")
+                 + ", playhead \(editor.documentTimeMS) ms", state: describe())
+
+        case .expectTimelinePick(let clips, let rangeOn, let fromSeconds, let toSeconds):
+            let editor = try requireEditor()
+            let reading = timelinePickReading(editor)
+            var wrong: [String] = []
+            if let clips, Set(clips.map { $0.lowercased() }) != Set(reading.clips.map { $0.lowercased() }) {
+                wrong.append("picked " + (reading.clips.isEmpty ? "nothing" : reading.clips.sorted().joined(separator: ", "))
+                             + ", and the walk expected " + (clips.isEmpty ? "nothing" : clips.sorted().joined(separator: ", ")))
+            }
+            if let rangeOn, Set(rangeOn) != Set(reading.rangeOn) {
+                wrong.append("a range on " + (reading.rangeOn.isEmpty ? "no track" : reading.rangeOn.joined(separator: ", "))
+                             + ", and the walk expected one on " + (rangeOn.isEmpty ? "none" : rangeOn.joined(separator: ", ")))
+            }
+            for (label, seconds, value) in [("starts", fromSeconds, reading.range?.lowerBound),
+                                            ("ends", toSeconds, reading.range?.upperBound)] {
+                guard let seconds else { continue }
+                let want = Int((seconds * 1000).rounded())
+                guard let value, abs(value - want) <= 40 else {
+                    wrong.append("the range \(label) at \(value.map { "\($0) ms" } ?? "nothing"), and the walk "
+                                 + "expected \(want) ms")
+                    continue
+                }
+            }
+            guard wrong.isEmpty else { throw Failure(description: wrong.joined(separator: "; ")) }
+            note(number, step.name, "picked " + (reading.clips.isEmpty ? "nothing" : reading.clips.sorted().joined(separator: ", "))
+                 + (reading.rangeOn.isEmpty ? "" : "; a range on \(reading.rangeOn.joined(separator: ", "))"),
+                 state: describe())
+
         case .expectClip(let named, let track, let startsAt, let endsAt, let count, let pieces, let within):
             note(number, step.name, try checkClip(named: named, track: track, startsAt: startsAt,
                                                   endsAt: endsAt, count: count, pieces: pieces,
@@ -6172,6 +6243,9 @@ private final class Run {
         case .blade:
             throw Failure(description: "the Blade is in hand, and a press with it cuts; dragClip "
                 + "presses with Select or Track Select Forward")
+        case .range:
+            throw Failure(description: "the Range tool is in hand, and a drag with it picks a stretch of "
+                + "time; dragClip presses with Select or Track Select Forward")
         case .trackSelectForward:
             editor.beginTrackSelectForwardDrag(layerID: layer.id, onItsTrackOnly: shift)
         case .select:
@@ -13550,6 +13624,45 @@ private final class Run {
 
     /// A moment on the ruler a walk named in seconds, refused where there is
     /// no ruler or the moment is past its end.
+    /// The middle of a track's row, down the tracks' own space, by the
+    /// track's name.
+    private func trackRowMiddle(_ name: String, on editor: EditorState, lean: CGFloat = 0) throws -> CGFloat {
+        let tracks = editor.document?.timelineTracks ?? []
+        guard let id = tracks.first(where: { $0.name.compare(name, options: .caseInsensitive) == .orderedSame })?.id
+        else {
+            throw Failure(description: "no track is called \"\(name)\"; the tracks: "
+                + tracks.map(\.name).joined(separator: ", "))
+        }
+        guard let row = editor.trackDropRows[id] else {
+            throw Failure(description: "the track \"\(name)\" is not on screen: is the timeline open, "
+                + "or its group folded?")
+        }
+        return (row.minY + row.maxY) / 2 + (row.maxY - row.minY) * lean
+    }
+
+    /// What is picked on the timeline, by name, a piece of a cut clip as
+    /// "<name> piece <n>" from one, and the tracks a range on some tracks
+    /// covers, by name.
+    private func timelinePickReading(_ editor: EditorState) -> (clips: [String], rangeOn: [String], range: Range<Int>?) {
+        guard let document = editor.document else { return ([], [], nil) }
+        func name(_ id: UUID, _ piece: Int?) -> String {
+            let layerName = document.layer(id: id)?.name ?? "?"
+            return piece.map { "\(layerName) piece \($0 + 1)" } ?? layerName
+        }
+        var clips: [String] = []
+        if let picks = editor.timelinePicksHeld {
+            clips = picks.map { name($0.layerID, $0.piece) }
+        } else if let id = editor.selectedLayerID {
+            let count = document.layer(id: id)?.clipPieces?.count ?? 1
+            clips = [name(id, count > 1 ? editor.selectedClipPieceIndex : nil)]
+        } else {
+            clips = editor.multiSelectedLayerIDs.map { name($0, nil) }
+        }
+        guard let held = editor.trackRangeHeld else { return (clips, [], nil) }
+        let rangeOn = document.timelineTracks.filter { held.trackIDs.contains($0.id) }.map(\.name)
+        return (clips, rangeOn, held.range)
+    }
+
     private func rulerMoment(_ seconds: Double, on editor: EditorState, doing what: String) throws -> Int {
         guard editor.documentHasTime else {
             throw Failure(description: "the ruler needs a document that runs for a length of time")
