@@ -20039,3 +20039,9 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Why it went red in full runs: the strip rendered through the renderer's one shared Core Image context and queued behind the other render suites drawing through it, while its yardstick used a private context and never waited. Reproduced directly: eight threads rendering through the shared context made the strip read 360ms beside a yardstick at 8ms. On a private context the same load read 6ms.
 - `DocumentRenderer(privateContext:)` (internal) and the test uses it. `MachineSpeed.reading` adds a third answer to an interleaved check: over budget beside a yardstick more than 3x its own number is recorded as a known issue ("not judged"), never a pass or a fail. Tests in MachineSpeedTests.
 - Verified: full suite green twice idle (7.6, 7.9ms) and twice under 12 spinners at load average 13 to 18 (10.9, 10.7ms); a deliberate 5x slowdown reads 27.2ms and goes red.
+
+## 2026-09-28: whole walk runs get past the 1080p export walk
+
+- Why both full runs went blind: after `export-a-video-at-1080p-walk` the killed probe was still exiting (`?E (Photonz Probe)`). An exiting process drops its command line, so `probe-app.sh`'s `pgrep -f` wait ended at once while LaunchServices still listed the app, and the next `open` failed with error -600. `quit_probe` now waits on the pids (`kill -0`) and on `lsappinfo`, and `open` retries twice. The three export walks run back to back again (98s, 82s, 21s, all ok).
+- The schedule no longer reruns a blind whole-set run on the same code (only `queue/` changed counts as same); `COULD NOT START` lines carry the launcher's reason.
+- Next: the requested full run is due; `queue/bin/sweep.sh status` says whether it got through the whole set.
