@@ -30,11 +30,26 @@ extension ClipCut {
     /// The transition putting `kind` on this cut would write: the length that
     /// is there now, else the usual length, never longer than this cut can pay
     /// for. Nil where it cannot take `kind` at all.
+    ///
+    /// It sits where the one there now sits when that side can pay, else
+    /// across the cut, else on whichever side has the spare: a clip dropped
+    /// from its first frame has nothing before its in point, and Premiere puts
+    /// a dissolve there after the cut rather than refusing it. A dip keeps the
+    /// hold the cut has; anything else holds nothing.
     public func fitted(_ kind: ClipTransitionKind) -> ClipTransition? {
-        let longest = longestMS(of: kind)
-        guard longest >= ClipTransition.shortestMS else { return nil }
         let asked = transition?.lengthMS ?? ClipTransition.defaultLengthMS
-        return ClipTransition(kind: kind, lengthMS: min(max(ClipTransition.shortestMS, asked), longest))
+        let hold = kind.needsOverlap ? 0 : (transition?.holdMS ?? 0)
+        var order: [ClipTransitionAlignment] = [transition?.alignment ?? .across, .across]
+        order += ClipTransitionAlignment.allCases
+            .filter { !order.contains($0) }
+            .sorted { longestMS(of: kind, aligned: $0) > longestMS(of: kind, aligned: $1) }
+        for alignment in order {
+            let longest = longestMS(of: kind, aligned: alignment)
+            guard longest >= ClipTransition.shortestMS else { continue }
+            return ClipTransition(kind: kind, lengthMS: min(max(ClipTransition.shortestMS, asked), longest),
+                                  alignment: alignment, holdMS: hold)
+        }
+        return nil
     }
 }
 

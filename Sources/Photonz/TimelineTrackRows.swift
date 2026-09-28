@@ -372,6 +372,7 @@ struct TimelineTrackRow: View {
             }
             if !isBlade, !isTrackSelect {
                 ForEach(editorState.document?.editPoints(onTrack: track.id) ?? []) { point in
+                    TimelineSpareStrips(point: point, laneWidth: laneWidth, height: laneHeight)
                     TimelineEditPointView(point: point, laneWidth: laneWidth, height: laneHeight)
                         .allowsHitTesting(!track.isLocked)
                 }

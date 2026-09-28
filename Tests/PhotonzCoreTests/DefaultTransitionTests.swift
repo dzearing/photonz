@@ -145,8 +145,16 @@ struct DefaultTransitionTests {
             $0.time = LayerTime(inMS: 0, outMS: 8000, sourceInMS: 2000, sourceLengthMS: 10_000)
         }
         let place = TimelineCutPlace.edit(outgoing: take, incoming: broll)
+        // With b-roll's spare still there, the dissolve goes before the cut,
+        // where only b-roll pays (`TransitionPlacementTests`).
+        let oneSided = try #require(doc.documentCut(at: place)).cut
+        #expect(oneSided.fitted(.dissolve)?.alignment == .before)
+        doc.updateLayer(id: broll) {
+            $0.time = LayerTime(inMS: 8000, outMS: 12_000, sourceInMS: 0, sourceLengthMS: 6000)
+        }
         let cut = try #require(doc.documentCut(at: place)).cut
         #expect(cut.spareAfterOutMS == 0)
+        #expect(cut.spareBeforeInMS == 0)
         #expect(cut.fitted(.dissolve) == nil)
         #expect(doc.defaultTransitionPlan(.dissolve, picked: nil, atMS: 8000, reachMS: 500)
                 == .refused(.noSpare(.dissolve)))

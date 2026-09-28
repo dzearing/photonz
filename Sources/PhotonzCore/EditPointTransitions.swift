@@ -79,8 +79,14 @@ extension PhotonzDocument {
               let out = layer(id: outgoing), let into = layer(id: incoming),
               let outPieces = out.clipPieces, let inPieces = into.clipPieces,
               let last = outPieces.pieces.last, var first = inPieces.piece(at: 0),
-              let at = into.time?.inMS else { return nil }
-        first.transitionIn = into.arrivalTransition
+              let at = out.time?.outMS, let start = into.time?.inMS else { return nil }
+        // The hold is the gap, read off the timeline rather than trusted from
+        // what was written: a held clip dragged back against the other still
+        // meets it, and holds nothing.
+        first.transitionIn = into.arrivalTransition.map {
+            ClipTransition(kind: $0.kind, lengthMS: $0.lengthMS, alignment: $0.alignment,
+                           holdMS: start - at)
+        }
         let sameFile = out.movie != nil && out.movie?.id == into.movie?.id
         return ClipCut(index: 0, atMS: at, outgoing: last, incoming: first,
                        spareAfterOutMS: outPieces.trimEndRange(ofPiece: outPieces.count - 1)?.out,
@@ -104,9 +110,16 @@ extension PhotonzDocument {
             guard let cut = editPointCut(outgoing: outgoing, incoming: incoming) else { return false }
             if let transition {
                 guard transition.lengthMS >= ClipTransition.shortestMS,
-                      transition.lengthMS <= cut.longestMS(of: transition.kind) else { return false }
+                      transition.lengthMS <= cut.longestMS(for: transition) else { return false }
             }
             guard transition != cut.transition else { return false }
+            // **A hold is an insert.** The black is real time, so everything
+            // from the cut on moves along by the difference, on every track,
+            // the way a freeze does (`rippleTime`); and a hold taken away, by
+            // a shorter hold, a dissolve or a hard cut, takes its time back.
+            let was = cut.transition?.holdMS ?? 0
+            let now = transition?.holdMS ?? 0
+            if now != was { rippleTime(atMS: cut.atMS, byMS: now - was, exceptLayer: nil) }
             updateLayer(id: incoming) { $0.arrivalTransition = transition }
             return true
         }
@@ -133,6 +146,9 @@ extension PhotonzDocument {
         /// spare. Nil for a dip, which borrows nothing, and for a clip with no
         /// recording, which has no frame to read.
         let borrowedSourceMS: Int?
+        /// Inside a dip's hold, where neither clip is playing and all there is
+        /// on screen is its colour.
+        var isHolding = false
     }
 
     /// Every transition between two clips running at `ms`. At most one per
@@ -140,14 +156,13 @@ extension PhotonzDocument {
     func editPointMoments(atMS ms: Int) -> [EditPointMoment] {
         var moments: [EditPointMoment] = []
         for incoming in layers where incoming.arrivalTransition != nil {
-            guard let start = incoming.time?.inMS,
-                  let trackID = trackID(ofClip: incoming.id),
+            guard let trackID = trackID(ofClip: incoming.id),
                   let point = editPoints(onTrack: trackID).first(where: { $0.incoming == incoming.id }),
                   let cut = editPointCut(outgoing: point.outgoing, incoming: incoming.id),
                   let drawn = cut.drawnTransition,
-                  ms >= start - drawn.beforeMS, ms < start + drawn.afterMS,
+                  ms >= cut.atMS - drawn.beforeMS, ms < cut.atMS + drawn.holdMS + drawn.afterMS,
                   let outgoing = layer(id: point.outgoing) else { continue }
-            let outgoingOnScreen = ms < start
+            let outgoingOnScreen = ms < cut.atMS + drawn.holdMS
             var source: Int?
             if drawn.kind.needsOverlap {
                 source = outgoingOnScreen
@@ -158,9 +173,10 @@ extension PhotonzDocument {
                 onScreen: outgoingOnScreen ? outgoing.id : incoming.id,
                 borrowed: outgoingOnScreen ? incoming.id : outgoing.id,
                 onScreenIsOutgoing: outgoingOnScreen, transition: drawn,
-                progress: ClipTransition.progress(atMS: ms, cutAtMS: start, drawn),
-                dipAmount: ClipTransition.dipAmount(atMS: ms, cutAtMS: start, drawn),
-                borrowedSourceMS: source))
+                progress: ClipTransition.progress(atMS: ms, cutAtMS: cut.atMS, drawn),
+                dipAmount: ClipTransition.dipAmount(atMS: ms, cutAtMS: cut.atMS, drawn),
+                borrowedSourceMS: source,
+                isHolding: ms >= cut.atMS && ms < cut.atMS + drawn.holdMS))
         }
         return moments
     }
@@ -200,8 +216,17 @@ extension PhotonzDocument {
         guard !moments.isEmpty else { return shown }
         var shown = shown
         for moment in moments {
-            guard let index = shown.layers.firstIndex(where: { $0.id == moment.onScreen }),
-                  shown.layers[index].isVisible else { continue }
+            guard let index = shown.layers.firstIndex(where: { $0.id == moment.onScreen }) else { continue }
+            // In the hold neither clip is on screen: the colour stands where
+            // the outgoing one did, as big as it was, unless it was switched
+            // off by hand or its track was.
+            if moment.isHolding, let hex = moment.transition.kind.dipColorHex {
+                guard layer(id: moment.onScreen)?.isVisible == true,
+                      !layersOffScreenByTrack().contains(moment.onScreen) else { continue }
+                shown.layers.insert(shown.layers[index].dipPanel(hex: hex, amount: 1), at: index + 1)
+                continue
+            }
+            guard shown.layers[index].isVisible else { continue }
             let onScreen = shown.layers[index]
             if let hex = moment.transition.kind.dipColorHex {
                 shown.layers.insert(onScreen.dipPanel(hex: hex, amount: moment.dipAmount), at: index + 1)

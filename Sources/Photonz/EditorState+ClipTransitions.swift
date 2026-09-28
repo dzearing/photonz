@@ -150,22 +150,75 @@ extension EditorState {
     func setClipTransitionLength(_ ms: Int) {
         guard canWorkWithClipTransitions, let inHand = cutInHand,
               let existing = inHand.cut.transition else { return }
-        let longest = inHand.cut.longestMS(of: existing.kind)
+        let longest = inHand.cut.longestMS(for: existing)
         let length = min(max(ClipTransition.shortestMS, ms), longest)
         guard length != existing.lengthMS else { return }
         pauseDocument()
+        perform { $0.setTransition(existing.withLength(length), at: inHand.place) }
+        documentMomentChanged()
+    }
+
+    /// Where the overlap on the cut in hand sits (`#rowAlign`). The length
+    /// stays where the new side can pay for it, else it comes down to the
+    /// most that side has; a side with nothing to spend is refused, and its
+    /// segment says so.
+    func setClipTransitionAlignment(_ alignment: ClipTransitionAlignment) {
+        guard canWorkWithClipTransitions, let inHand = cutInHand,
+              let existing = inHand.cut.transition, existing.kind.needsOverlap,
+              existing.alignment != alignment else { return }
+        let longest = inHand.cut.longestMS(of: existing.kind, aligned: alignment)
+        guard longest >= ClipTransition.shortestMS else {
+            raiseCanvasNotice(.transitionSideRefused(alignment))
+            return
+        }
+        let placed = ClipTransition(kind: existing.kind, lengthMS: min(existing.lengthMS, longest),
+                                    alignment: alignment)
+        pauseDocument()
+        perform { $0.setTransition(placed, at: inHand.place) }
+        documentMomentChanged()
+    }
+
+    /// Whether the overlap on the cut in hand could sit `alignment`.
+    func canAlignClipTransition(_ alignment: ClipTransitionAlignment) -> Bool {
+        guard let cut = cutInHand?.cut, let kind = cut.transition?.kind else { return false }
+        return cut.longestMS(of: kind, aligned: alignment) >= ClipTransition.shortestMS
+    }
+
+    /// How long the dip on the cut in hand holds on its colour (`#rowHold`).
+    /// **Real time goes in**: everything after the cut moves along by the
+    /// difference, and one undo takes it back out.
+    func setClipTransitionHold(_ ms: Int) {
+        guard canWorkWithClipTransitions, let inHand = cutInHand, case .edit = inHand.place,
+              let existing = inHand.cut.transition, !existing.kind.needsOverlap else { return }
+        let hold = max(0, ms)
+        guard hold != existing.holdMS else { return }
+        pauseDocument()
         perform {
-            $0.setTransition(ClipTransition(kind: existing.kind, lengthMS: length), at: inHand.place)
+            $0.setTransition(ClipTransition(kind: existing.kind, lengthMS: existing.lengthMS,
+                                            alignment: existing.alignment, holdMS: hold),
+                             at: inHand.place)
+        }
+        // Stand on the black, so the canvas shows what was just put in.
+        if hold > 0, let at = document?.documentCut(at: inHand.place)?.atMS {
+            documentTimeMS = min(max(0, at + hold / 2), lastDocumentTimeMS)
         }
         documentMomentChanged()
+    }
+
+    /// Whether the cut in hand can hold on a colour: a dip, between two
+    /// clips. Inside one clip the pieces butt and there is no gap to hold in.
+    var canHoldClipTransition: Bool {
+        guard let inHand = cutInHand, case .edit = inHand.place,
+              let transition = inHand.cut.transition else { return false }
+        return !transition.kind.needsOverlap
     }
 
     /// The lengths the Length dropdown offers at the cut in hand: the usual
     /// stops this cut can pay for, the one it has now, and the longest it can
     /// take, in order.
     var clipTransitionLengthOffers: [Int] {
-        guard let inHand = cutInHand, let kind = inHand.cut.transition?.kind else { return [] }
-        let longest = inHand.cut.longestMS(of: kind)
+        guard let inHand = cutInHand, let transition = inHand.cut.transition else { return [] }
+        let longest = inHand.cut.longestMS(for: transition)
         var stops = Set(ClipTransition.lengthStopsMS.filter { $0 <= longest })
         if let now = inHand.cut.drawnTransition?.lengthMS { stops.insert(now) }
         if longest >= ClipTransition.shortestMS, longest < 10_000 { stops.insert(longest) }
@@ -281,16 +334,18 @@ extension EditorState {
     /// still one step to undo.
     ///
     /// Dragging the LEFT end left makes it longer, and the right end right does
-    /// the same, because both ends move away from the cut. The band grows by
-    /// twice what the hand travelled: the other end moves with it, since a
-    /// transition is measured across the join.
+    /// the same, because both ends move away from the cut. Across the cut the
+    /// band grows by twice what the hand travelled, since the other end moves
+    /// with it; before or after the cut one end stays on the cut, so the band
+    /// grows by what the hand travelled.
     func updateClipTransitionDrag(byMS delta: Int) {
         guard var session = clipTransitionDrag,
               let cut = document?.documentCut(at: session.place)?.cut,
-              let kind = cut.transition?.kind else { return }
+              let transition = cut.transition else { return }
         let travelled = session.grabbedLeadingEdge ? -delta : delta
-        let longest = cut.longestMS(of: kind)
-        session.landingMS = min(max(ClipTransition.shortestMS, session.startedAtMS + travelled * 2),
+        let longest = cut.longestMS(for: transition)
+        let growth = transition.drawnAlignment == .across ? travelled * 2 : travelled
+        session.landingMS = min(max(ClipTransition.shortestMS, session.startedAtMS + growth),
                                 longest)
         clipTransitionDrag = session
         rerender()
@@ -302,10 +357,8 @@ extension EditorState {
         guard let session = clipTransitionDrag else { return }
         clipTransitionDrag = nil
         guard session.landingMS != session.startedAtMS,
-              let kind = document?.documentCut(at: session.place)?.cut.transition?.kind else { return }
-        perform {
-            $0.setTransition(ClipTransition(kind: kind, lengthMS: session.landingMS), at: session.place)
-        }
+              let existing = document?.documentCut(at: session.place)?.cut.transition else { return }
+        perform { $0.setTransition(existing.withLength(session.landingMS), at: session.place) }
         documentMomentChanged()
     }
 
@@ -322,10 +375,10 @@ extension EditorState {
     func withDraggedClipTransition(_ document: PhotonzDocument) -> PhotonzDocument {
         guard let session = clipTransitionDrag else { return document }
         var document = document
-        guard let kind = document.documentCut(at: session.place)?.cut.transition?.kind else {
+        guard let existing = document.documentCut(at: session.place)?.cut.transition else {
             return document
         }
-        document.setTransition(ClipTransition(kind: kind, lengthMS: session.landingMS), at: session.place)
+        document.setTransition(existing.withLength(session.landingMS), at: session.place)
         return document
     }
 

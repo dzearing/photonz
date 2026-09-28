@@ -76,9 +76,34 @@ public enum ClipTransitionKind: String, CaseIterable, Hashable, Codable, Sendabl
     }
 }
 
-/// A transition, as it is written down: what it does and how long it takes.
+/// Where an overlap sits against its cut (`video-transition-wt.html`,
+/// `#rowAlign`): Premiere's Alignment, End at Cut, Center at Cut and Start at
+/// Cut, in the words the panel uses.
 ///
-/// Nothing about WHERE, because where is the cut it is on.
+/// **It decides which side pays.** Before the cut, the incoming shot comes up
+/// early, so it spends only the spare before its in point; after the cut, the
+/// outgoing one runs on, so it spends only the spare after its out point. That
+/// is what lets a clip dropped from its very first frame take a dissolve at
+/// all: there is nothing before it to borrow, and after the cut asks for none.
+public enum ClipTransitionAlignment: String, CaseIterable, Hashable, Codable, Sendable {
+    case before
+    case across
+    case after
+
+    public var title: String {
+        switch self {
+        case .before: "Before the cut"
+        case .across: "Across it"
+        case .after: "After it"
+        }
+    }
+}
+
+/// A transition, as it is written down: what it does, how long it takes,
+/// where it sits against its cut and, for a dip, how long it holds on its
+/// colour.
+///
+/// Nothing about WHICH cut, because that is the cut it is on.
 public struct ClipTransition: Hashable, Codable, Sendable {
 
     /// How long one is when nobody has said: four tenths of a second, which is
@@ -91,39 +116,105 @@ public struct ClipTransition: Hashable, Codable, Sendable {
     public static let shortestMS = 100
 
     public var kind: ClipTransitionKind
-    /// How long it takes, in milliseconds, measured across the cut.
+    /// How long it takes, in milliseconds: the overlap for the kinds that have
+    /// one, the fade down plus the fade up for a dip. A hold is not in it.
     public var lengthMS: Int
+    /// Where the overlap sits. Kept on a dip too, so a dissolve that became a
+    /// dip and back again sits where it did, but a dip is always drawn across
+    /// its cut: it borrows nothing, so there is no side to choose.
+    public var alignment: ClipTransitionAlignment
+    /// How long a dip stays on its colour between the fade down and the fade
+    /// up. **The one thing about a transition that moves time**: the clip
+    /// after the cut starts this much later (`PhotonzDocument.setTransition`).
+    /// Always nought for a kind that overlaps, and at a join inside one clip,
+    /// where there is no gap to hold in.
+    public var holdMS: Int
 
-    public init(kind: ClipTransitionKind, lengthMS: Int = ClipTransition.defaultLengthMS) {
+    public init(kind: ClipTransitionKind, lengthMS: Int = ClipTransition.defaultLengthMS,
+                alignment: ClipTransitionAlignment = .across, holdMS: Int = 0) {
         self.kind = kind
         self.lengthMS = max(Self.shortestMS, lengthMS)
+        self.alignment = alignment
+        self.holdMS = kind.needsOverlap ? 0 : max(0, holdMS)
     }
 
-    /// How much of it falls before the cut, and how much after. An odd number
-    /// of milliseconds puts the spare one on the far side, so the two halves
-    /// always add back up to the length somebody asked for.
-    public var beforeMS: Int { lengthMS / 2 }
+    private enum CodingKeys: String, CodingKey { case kind, lengthMS, alignment, holdMS }
+
+    /// Every transition written before placement and holds existed sat across
+    /// its cut and held nothing, so that is what a missing one reads as.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(kind: try c.decode(ClipTransitionKind.self, forKey: .kind),
+                  lengthMS: try c.decode(Int.self, forKey: .lengthMS),
+                  alignment: try c.decodeIfPresent(ClipTransitionAlignment.self, forKey: .alignment) ?? .across,
+                  holdMS: try c.decodeIfPresent(Int.self, forKey: .holdMS) ?? 0)
+    }
+
+    /// ...and one that still does writes exactly what it always wrote.
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(kind, forKey: .kind)
+        try c.encode(lengthMS, forKey: .lengthMS)
+        if alignment != .across { try c.encode(alignment, forKey: .alignment) }
+        if holdMS != 0 { try c.encode(holdMS, forKey: .holdMS) }
+    }
+
+    /// Where it is drawn: where it was put for a kind that overlaps, across
+    /// the cut for a dip.
+    public var drawnAlignment: ClipTransitionAlignment { kind.needsOverlap ? alignment : .across }
+
+    /// How much of it falls before the cut, and how much after. Across it, an
+    /// odd number of milliseconds puts the spare one on the far side, so the
+    /// two halves always add back up to the length somebody asked for.
+    public var beforeMS: Int {
+        switch drawnAlignment {
+        case .before: lengthMS
+        case .across: lengthMS / 2
+        case .after: 0
+        }
+    }
     public var afterMS: Int { lengthMS - beforeMS }
 
+    /// The whole stretch it is on screen for: the length, and the hold in the
+    /// middle of it.
+    public var spanMS: Int { lengthMS + holdMS }
+
+    /// The same transition, a different length.
+    public func withLength(_ ms: Int) -> ClipTransition {
+        ClipTransition(kind: kind, lengthMS: ms, alignment: alignment, holdMS: holdMS)
+    }
+
     /// How far through a transition on a cut at `cutAtMS` a moment is, nought
-    /// at its first frame and one at the frame after its last.
+    /// at its first frame and one at the frame after its last. `cutAtMS` is
+    /// where the outgoing side stops; a hold puts the incoming side's start
+    /// `holdMS` after it.
     public static func progress(atMS ms: Int, cutAtMS: Int, _ transition: ClipTransition) -> Double {
-        let raw = Double(ms - (cutAtMS - transition.beforeMS)) / Double(max(1, transition.lengthMS))
+        let raw = Double(ms - (cutAtMS - transition.beforeMS)) / Double(max(1, transition.spanMS))
         return min(max(raw, 0), 1)
     }
 
     /// How much of a dip's colour is up at a moment: rising to all of it on
-    /// the cut and falling away again after.
+    /// the cut, all of it for the hold, and falling away again after.
     public static func dipAmount(atMS ms: Int, cutAtMS: Int, _ transition: ClipTransition) -> Double {
-        let amount = ms < cutAtMS
-            ? Double(ms - (cutAtMS - transition.beforeMS)) / Double(max(1, transition.beforeMS))
-            : 1 - Double(ms - cutAtMS) / Double(max(1, transition.afterMS))
+        let back = cutAtMS + transition.holdMS
+        let amount: Double
+        if ms < cutAtMS {
+            amount = Double(ms - (cutAtMS - transition.beforeMS)) / Double(max(1, transition.beforeMS))
+        } else if ms < back {
+            amount = 1
+        } else {
+            amount = 1 - Double(ms - back) / Double(max(1, transition.afterMS))
+        }
         return min(max(amount, 0), 1)
     }
 
     /// The lengths the Length dropdown offers, before a cut says how long it
     /// can afford.
     public static let lengthStopsMS = [200, 400, 600, 800, 1000, 1500, 2000, 3000]
+
+    /// The holds the Hold on black dropdown offers (`#selHold`, "0.0s" to
+    /// "3.0s" and on).
+    public static let holdStopsMS = [0, 500, 1000, 2000, 3000, 5000]
 }
 
 /// One cut of a clip, and everything it can afford.
@@ -178,17 +269,37 @@ public struct ClipCut: Hashable, Sendable {
             && outgoing.sourceOutMS == incoming.sourceInMS
     }
 
-    /// The longest a transition of this kind may be here.
+    /// The longest a transition of this kind may be here, placed where it
+    /// can pay for the most.
+    public func longestMS(of kind: ClipTransitionKind) -> Int {
+        ClipTransitionAlignment.allCases.map { longestMS(of: kind, aligned: $0) }.max() ?? 0
+    }
+
+    /// The longest a transition of this kind may be here, placed `aligned`.
     ///
     /// Two limits, and the smaller one wins. **It may not reach past the middle
     /// of either piece it joins**, so two cuts on one piece can never fight
     /// over the same frames; and one that needs an overlap may not spend spare
-    /// media that is not there.
-    public func longestMS(of kind: ClipTransitionKind) -> Int {
+    /// media that is not there, and spends it only from the side it borrows:
+    /// before the cut the incoming piece reads early, after it the outgoing one
+    /// runs on, and across it each does half.
+    public func longestMS(of kind: ClipTransitionKind, aligned: ClipTransitionAlignment) -> Int {
         let middles = min(outgoing.lengthMS, incoming.lengthMS)
         guard kind.needsOverlap else { return middles }
-        guard let spare = smallestSpareMS else { return middles }
-        return min(middles, 2 * spare)
+        switch aligned {
+        case .across:
+            guard let spare = smallestSpareMS else { return middles }
+            return min(middles, 2 * spare)
+        case .before:
+            return min(outgoing.lengthMS / 2, spareBeforeInMS ?? .max)
+        case .after:
+            return min(incoming.lengthMS / 2, spareAfterOutMS ?? .max)
+        }
+    }
+
+    /// The longest this very transition may be here, where it sits.
+    public func longestMS(for transition: ClipTransition) -> Int {
+        longestMS(of: transition.kind, aligned: transition.alignment)
     }
 
     /// The smaller of the two sides' spare, or nil when neither side has
@@ -214,15 +325,22 @@ public struct ClipCut: Hashable, Sendable {
     /// loud rather than leaving somebody to notice.
     public var drawnTransition: ClipTransition? {
         guard var asked = transition else { return nil }
-        let longest = longestMS(of: asked.kind)
+        let longest = longestMS(for: asked)
         guard longest >= ClipTransition.shortestMS else { return nil }
         asked.lengthMS = Swift.min(asked.lengthMS, longest)
         return asked
     }
 
-    /// How much of the spare each side is spending, for the bill on the panel.
-    /// Nought for anything that needs no overlap.
-    public var spentEachSideMS: Int {
+    /// How much spare the outgoing side is spending, running on past its out
+    /// point. Nought for anything that needs no overlap.
+    public var spentFromOutgoingMS: Int {
+        guard let drawn = drawnTransition, drawn.kind.needsOverlap else { return 0 }
+        return drawn.afterMS
+    }
+
+    /// How much spare the incoming side is spending, coming up before its in
+    /// point.
+    public var spentFromIncomingMS: Int {
         guard let drawn = drawnTransition, drawn.kind.needsOverlap else { return 0 }
         return drawn.beforeMS
     }
@@ -308,7 +426,10 @@ extension ClipPieces {
         guard let cut = cut(at: index) else { return false }
         if let transition {
             guard transition.lengthMS >= ClipTransition.shortestMS,
-                  transition.lengthMS <= cut.longestMS(of: transition.kind) else { return false }
+                  transition.lengthMS <= cut.longestMS(for: transition),
+                  // Inside one clip the pieces butt: there is no gap to hold
+                  // on black in.
+                  transition.holdMS == 0 else { return false }
         }
         guard transition != cut.transition else { return false }
         setTransitionIn(transition, ofPiece: index)
@@ -325,7 +446,7 @@ extension ClipPieces {
     public func transitionCut(atMS ms: Int) -> (cut: ClipCut, transition: ClipTransition)? {
         for cut in cuts {
             guard let drawn = cut.drawnTransition else { continue }
-            if ms >= cut.atMS - drawn.beforeMS && ms < cut.atMS + drawn.afterMS {
+            if ms >= cut.atMS - drawn.beforeMS && ms < cut.atMS + drawn.holdMS + drawn.afterMS {
                 return (cut, drawn)
             }
         }
@@ -561,10 +682,31 @@ public enum ClipTransitionCopy {
         "spare \(cut.spareAfterOutMS.map(seconds) ?? "any") / \(cut.spareBeforeInMS.map(seconds) ?? "any")"
     }
 
-    /// What the transition on a cut is spending, for the Paid with row.
+    /// What the transition on a cut is spending, for the Paid with row: both
+    /// sides across the cut, and only the side it borrows from otherwise, in
+    /// the words of the Spare after and Spare before fields.
     public static func paidWith(_ cut: ClipCut) -> String {
-        let each = seconds(cut.spentEachSideMS)
-        return "\(each) + \(each) of spare"
+        switch cut.drawnTransition?.drawnAlignment ?? .across {
+        case .across: "\(seconds(cut.spentFromOutgoingMS)) + \(seconds(cut.spentFromIncomingMS)) of spare"
+        case .before: "\(seconds(cut.spentFromIncomingMS)) of spare before"
+        case .after: "\(seconds(cut.spentFromOutgoingMS)) of spare after"
+        }
+    }
+
+    /// The mock's line about what spare media is (`#pSpareNote`), behind the
+    /// Edit point section's question mark: longer than a panel row may be.
+    public static let spareHelp = "Spare media is the frames either side is not using yet. "
+        + "That spare is what an overlap gets paid for with."
+
+    /// The mock's closing line about overlap (`#pickNote`), behind the
+    /// Transition section's question mark and in the tip of the picker's
+    /// heading.
+    public static let overlapHelp = "The ones that need an overlap put both clips on screen together, "
+        + "so they spend spare media. The dips do not: each clip fades inside the time it already has."
+
+    /// What the Hold row is called: the colour the dip goes through.
+    public static func holdLabel(_ kind: ClipTransitionKind) -> String {
+        kind == .dipToWhite ? "Hold on white" : "Hold on black"
     }
 
     /// A length, said the way somebody would say it.
@@ -588,9 +730,9 @@ public enum ClipTransitionCopy {
             return "A hard cut. Nothing is drawn here and it takes no time."
         }
         if drawn.kind.needsOverlap {
-            let each = length(cut.spentEachSideMS)
+            let spent = length(cut.spentFromOutgoingMS + cut.spentFromIncomingMS)
             return "Both pieces are on screen together for \(length(drawn.lengthMS)), "
-                + "paid for with \(each) of spare either side. Nothing on the timeline moved."
+                + "paid for with \(spent) of spare. Nothing on the timeline moved."
         }
         return "Each piece fades inside the time it already has, so no spare media is spent "
             + "and nothing on the timeline moved."

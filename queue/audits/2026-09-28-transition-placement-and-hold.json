@@ -1,0 +1,31 @@
+{
+  "feature": "Where a transition sits, and a hold on black",
+  "epic": "video-transitions-motion",
+  "summary": "A dissolve, push, wipe or blur can now sit before the cut, across it or after it, and each spends spare frames only from the side it borrows, so a clip dropped from its first frame can take a dissolve. A dip can hold on black, which inserts real time and slides everything after it along.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. A recording on V1 trimmed to 0:07 with a second clip dropped against it (the walk transition-placement-and-hold-walk does exactly this).",
+  "switched": {},
+  "try": [
+    { "do": "Drop a second clip against the first on V1 and click the cut between them. The picked cut shows its spare as dashed strips.", "shot": "2026-09-28-transition-placement-2b-trimmed-cut-sc.png" },
+    { "do": "On a cut where the new clip starts at its first frame, pick Cross dissolve. It lands after the cut.", "shot": "2026-09-28-transition-placement-2-dissolve-after-the-cut-sc.png" },
+    { "do": "On a cut with spare both sides, pick Cross dissolve, then click Before the cut under The overlap sits.", "shot": "2026-09-28-transition-placement-4-before-the-cut-sc.png" },
+    { "do": "Click After it, then Across it, and watch the band move and Paid with change." , "shot": "2026-09-28-transition-placement-3-across-the-cut-sc.png" },
+    { "do": "Change Type to Dip to black. Paid with and The overlap sits go, and Hold on black appears.", "shot": "2026-09-28-transition-placement-6-a-dip-sc.png" },
+    { "do": "Set Hold on black to 3.0s. Three seconds of black go in and the second clip slides from 0:07 to 0:10.", "shot": "2026-09-28-transition-placement-7-hold-on-black-sc.png" },
+    { "do": "Press Command Z. The black comes out and the clip is back at 0:07.", "shot": "2026-09-28-transition-placement-8-hold-undone-sc.png" }
+  ],
+  "evaluate": [
+    "At a cut where only one side has spare, should Cross dissolve be offered and placed on the side that can pay, as it is now and as Premiere does, rather than greyed with a Shorten the cut offer as the mock's last step draws?",
+    "Does Before the cut, Across it, After it read as where the band sits without having to look at the timeline?",
+    "Is 0.4s of spare after clear enough on a one-sided transition, or would you rather it always read like 0.0s + 0.4s of spare?",
+    "Does the Black block under the dip read as real time you added, the way the mock's black clip does?",
+    "Are the Hold on black stops (0, 0.5, 1, 2, 3 and 5 seconds) the right ones?"
+  ],
+  "rough": [
+    "The mock's last step greys the overlapping tiles at a cut with spare on one side and offers Shorten the cut. This task's own checklist asks for the dissolve to be placed on the side with spare instead, so the app does that and has no Shorten the cut row.",
+    "Hold on black is only offered where two clips meet. A blade cut inside one clip shows no Hold row yet: filed as its own task.",
+    "The spare strips' labels ride inside the clip, and once a band is on the cut the band covers the label nearest it on a short lane.",
+    "The mock's expanded A and B rows and the fades drawn inside each clip for a dip are not built; the band and the Black block carry it on one row.",
+    "The mock's longer lines about spare and overlap are behind the question marks on the Edit point and Transition headers and in the tip of the picker's AT THIS CUT heading, not printed in the panel.",
+    "Pictures are real window captures on an unlocked screen."
+  ]
+}

@@ -29,6 +29,10 @@ struct EditPointInspector: View {
         }
     }
 
+    /// What the section's question mark says: the mock's line about what
+    /// spare media is (`#pSpareNote`), longer than a panel row may be.
+    static let sectionHelp = ClipTransitionCopy.spareHelp
+
     private func spare(_ ms: Int?) -> String {
         ms.map(ClipTransitionCopy.seconds) ?? "any"
     }
@@ -99,6 +103,12 @@ struct TransitionInspector: View {
                                 .panelReadout(ClipTransitionCopy.paidWith(inHand.cut))
                         }
                         .playtestField("Paid with")
+                    }
+                    if transition.kind.needsOverlap {
+                        alignment(current: transition.alignment)
+                    }
+                    if editorState.canHoldClipTransition {
+                        hold(transition)
                     }
                 } else {
                     VideoKit.FieldRow(label: "At the cut") {
@@ -172,6 +182,41 @@ struct TransitionInspector: View {
         }
         .playtestField("Length")
     }
+
+    /// **The overlap sits** (`#rowAlign`): its name over a bar that fills the
+    /// row, as the mock lays it out, because three places side by side need
+    /// the whole width to read whole.
+    private func alignment(current: ClipTransitionAlignment) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            PanelRowLabel(text: "The overlap sits")
+            VideoKit.Segmented(options: ClipTransitionAlignment.allCases.map { ($0, $0.title) },
+                               selection: current) { editorState.setClipTransitionAlignment($0) }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .panelReadout(current.title)
+        .playtestField("The overlap sits")
+    }
+
+    /// **Hold on black** (`#rowHold`): how long a dip stays on its colour.
+    /// The one row in this section that moves anything on the timeline.
+    private func hold(_ transition: ClipTransition) -> some View {
+        let label = ClipTransitionCopy.holdLabel(transition.kind)
+        var stops = Set(ClipTransition.holdStopsMS)
+        stops.insert(transition.holdMS)
+        return VideoKit.DropdownRow(label: label, value: ClipTransitionCopy.seconds(transition.holdMS)) {
+            ForEach(stops.sorted(), id: \.self) { ms in
+                Toggle(ClipTransitionCopy.seconds(ms), isOn: Binding(
+                    get: { ms == transition.holdMS },
+                    set: { _ in editorState.setClipTransitionHold(ms) }))
+            }
+        }
+        .playtestField(label)
+    }
+
+    /// What the section's question mark says: the mock's own line about why
+    /// some kinds cost spare and the dips do not (`#pickNote`), longer than a
+    /// panel row may be.
+    static let sectionHelp = ClipTransitionCopy.overlapHelp
 
     /// What the section's header says on its right: the kind on the cut, or
     /// None.

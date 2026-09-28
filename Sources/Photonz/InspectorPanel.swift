@@ -999,6 +999,8 @@ struct InspectorPanel: View {
         switch id {
         case .fades: SoundFadesInspector.headerHelp
         case .keys: PropertyKeysInspector.sectionHelp
+        case .editPoint: EditPointInspector.sectionHelp
+        case .transition: TransitionInspector.sectionHelp
         default: nil
         }
     }

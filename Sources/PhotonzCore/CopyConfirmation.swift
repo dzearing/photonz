@@ -188,6 +188,10 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// changes when it is, so without a word it reads as a menu row that
         /// did nothing.
         case defaultTransitionSet(ClipTransitionKind)
+        /// A transition was asked to sit on a side of its cut with no spare
+        /// frames to pay for it (`#rowAlign`). The segment stays where it
+        /// was, so it says why.
+        case transitionSideRefused(ClipTransitionAlignment)
         /// A sound or a recording let go on the TIMELINE landed on a track at
         /// the moment it was let go at (`ClipLanding`), which is not the
         /// playhead, so the words say where.
@@ -340,6 +344,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .toolUnderMore(let tool): return tool
         case .defaultTransitionRefused: return "No transition added"
         case .defaultTransitionSet: return "Default transition"
+        case .transitionSideRefused: return "Not moved"
         case .landedOnTrack(_, _, _, let isSound): return isSound ? "Sound added" : "Clip added"
         case .mediaWouldNotOpen: return "Not added"
         case .broughtIntoLibrary(let outcome): return outcome.title
@@ -394,6 +399,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return refusal.detail
         case .defaultTransitionSet(let kind):
             return "\u{2318}T now puts \(kind.title) on a cut"
+        case .transitionSideRefused:
+            return "No spare frames on that side"
         case .clipAdded(let name):
             return "\(name) is on the timeline at the playhead"
         case .toolUnderMore:

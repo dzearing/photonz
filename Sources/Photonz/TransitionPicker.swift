@@ -24,6 +24,9 @@ struct TransitionPicker: View {
                     .kerning(0.8)
                     .textCase(.uppercase)
                     .foregroundStyle(VideoKit.Palette.faint)
+                    // The mock's closing line (`#pickNote`), in the tip of
+                    // the heading it is about: longer than chrome may say.
+                    .panelHelp(TransitionInspector.sectionHelp)
                 Spacer(minLength: 4)
                 if let cut {
                     Text(ClipTransitionCopy.spareShort(cut))

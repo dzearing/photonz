@@ -110,7 +110,7 @@ extension PhotonzDocument {
               pieces.trimStart(ofPiece: index, byMS: delta) else { return false }
         if let transition = cut.transition,
            let rolled = pieces.cut(at: index),
-           rolled.longestMS(of: transition.kind) < transition.lengthMS { return false }
+           rolled.longestMS(for: transition) < transition.lengthMS { return false }
         updateLayer(id: id) { $0.setClipPieces(pieces) }
         return true
     }

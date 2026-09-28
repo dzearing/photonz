@@ -46,7 +46,7 @@ extension ClipTransition {
         let dipped = 1 - Self.dipAmount(atMS: ms, cutAtMS: cutAtMS, self)
         switch side {
         case .outgoing: return ms < cutAtMS ? dipped : 0
-        case .incoming: return ms < cutAtMS ? 0 : dipped
+        case .incoming: return ms < cutAtMS + holdMS ? 0 : dipped
         }
     }
 
@@ -55,8 +55,10 @@ extension ClipTransition {
     /// them follow the curve, by the same measure a curved fade is followed
     /// (`AudioLevel.moments`), and the three corners of a dip.
     func soundMoments(cutAtMS: Int) -> [Int] {
-        let from = cutAtMS - beforeMS, to = cutAtMS + afterMS
-        guard kind.needsOverlap else { return [from, cutAtMS, to] }
+        let from = cutAtMS - beforeMS, to = cutAtMS + holdMS + afterMS
+        guard kind.needsOverlap else {
+            return holdMS > 0 ? [from, cutAtMS, cutAtMS + holdMS, to] : [from, cutAtMS, to]
+        }
         let steps = min(AudioLevel.curveSteps, max(1, lengthMS / AudioLevel.shortestCurveStepMS))
         return (0...steps).map { from + lengthMS * $0 / steps } + [to]
     }

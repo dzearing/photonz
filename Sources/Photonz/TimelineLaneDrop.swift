@@ -166,10 +166,37 @@ struct TimelineEditPointView: View {
 
     var body: some View {
         if let drawn = transitionDrawn {
-            band(drawn)
+            ZStack(alignment: .topLeading) {
+                if drawn.holdMS > 0 { held(drawn) }
+                band(drawn)
+            }
         } else {
             seam
         }
+    }
+
+    /// The black a dip holds on (`video-transition-wt.html`, `#clipBlack`):
+    /// real time between the two clips, drawn like a clip of its own under
+    /// the band, because it is time the timeline now has.
+    private func held(_ drawn: ClipTransition) -> some View {
+        let ruler = editorState.motionStripRuler
+        let x = laneWidth * ruler.fraction(ofMS: Double(point.atMS))
+        let width = max(2, laneWidth * ruler.fraction(spanningMS: Double(drawn.holdMS)))
+        let isWhite = drawn.kind == .dipToWhite
+        return RoundedRectangle(cornerRadius: 6)
+            .fill(isWhite ? Color.white : VideoKit.rgb(0x05060A))
+            .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(VideoKit.rgb(0x2A2F45)))
+            .overlay {
+                Text(isWhite ? "White" : "Black")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(isWhite ? VideoKit.rgb(0x3A3F55) : VideoKit.rgb(0x8B93B5))
+                    .lineLimit(1)
+            }
+            .frame(width: width, height: height)
+            .offset(x: x)
+            .allowsHitTesting(false)
+            .panelReadout("\(isWhite ? "white" : "black") held \(ClipTransitionCopy.seconds(drawn.holdMS))")
+            .playtestField("Hold \(name)")
     }
 
     /// The transition on this cut as it is being drawn: the hand's length
@@ -222,12 +249,13 @@ struct TimelineEditPointView: View {
         .offset(x: x - Self.width / 2)
     }
 
-    /// The band (`.xband`): drawn ON both clips, centred on the cut, never
-    /// between them, so putting it on moved nothing.
+    /// The band (`.xband`): drawn ON both clips, before, across or after the
+    /// cut as it was placed, never between them, so putting it on moved
+    /// nothing. A dip that holds spans its fade down, the hold and its fade up.
     private func band(_ drawn: ClipTransition) -> some View {
         let ruler = editorState.motionStripRuler
         let x0 = laneWidth * ruler.fraction(ofMS: Double(point.atMS - drawn.beforeMS))
-        let width = max(6, laneWidth * ruler.fraction(spanningMS: Double(drawn.lengthMS)))
+        let width = max(6, laneWidth * ruler.fraction(spanningMS: Double(drawn.spanMS)))
         let picked = editorState.isEditPointPicked(point)
         return VideoKit.TransitionBand(isDip: !drawn.kind.needsOverlap, isSelected: picked,
                                        height: height)
@@ -274,4 +302,71 @@ struct TimelineEditPointView: View {
     }
 
     private var name: String { "\(names.out) to \(names.in)" }
+}
+
+// MARK: - The spare either side of a picked cut
+
+/// The spare media either side of the edit point in hand (`comp-video.html`
+/// §03, `.xspare`): a dashed strip along the top from the cut rightwards, as
+/// far as the outgoing clip's recording runs on past its out point, and one
+/// along the bottom leftwards, as far back as the incoming clip's recording
+/// goes before its in point. It is the budget Before, Across and After spend,
+/// so it is drawn only while the cut is picked, and only while the clips meet:
+/// in a hold the time between them is black, not spare.
+struct TimelineSpareStrips: View {
+    @Environment(EditorState.self) private var editorState
+    let point: TimelineEditPoint
+    let laneWidth: CGFloat
+    let height: CGFloat
+
+    var body: some View {
+        if Experiments.shared.transitionsAtACutEnabled, editorState.isEditPointPicked(point),
+           let cut = editorState.document?.documentCut(
+               at: .edit(outgoing: point.outgoing, incoming: point.incoming))?.cut,
+           (cut.transition?.holdMS ?? 0) == 0 {
+            ZStack(alignment: .topLeading) {
+                if let after = cut.spareAfterOutMS, after > 0 {
+                    strip(fromMS: point.atMS, lengthMS: after, alongTop: true)
+                }
+                if let before = cut.spareBeforeInMS, before > 0 {
+                    strip(fromMS: point.atMS - before, lengthMS: before, alongTop: false)
+                }
+            }
+            .allowsHitTesting(false)
+        }
+    }
+
+    /// `.xspare{height:5px}`, 3pt dashes: purple for the outgoing side, orange
+    /// for the incoming one, with its length riding inside the clip body.
+    private func strip(fromMS start: Int, lengthMS: Int, alongTop: Bool) -> some View {
+        let ruler = editorState.motionStripRuler
+        let x0 = max(0, laneWidth * ruler.fraction(ofMS: Double(start)))
+        let x1 = min(laneWidth, laneWidth * ruler.fraction(ofMS: Double(start + lengthMS)))
+        let width = max(2, x1 - x0)
+        let ink = alongTop ? VideoKit.rgb(0x9A7DFF) : VideoKit.rgb(0xFFB98A)
+        let label = "\(ClipTransitionCopy.seconds(lengthMS)) spare"
+        return ZStack(alignment: alongTop ? .topLeading : .bottomTrailing) {
+            Path { path in
+                path.move(to: CGPoint(x: 0, y: 2.5))
+                path.addLine(to: CGPoint(x: width, y: 2.5))
+            }
+            .stroke(ink, style: StrokeStyle(lineWidth: 5, dash: [3, 3]))
+            .frame(width: width, height: 5)
+            .frame(maxHeight: .infinity, alignment: alongTop ? .top : .bottom)
+            Text(label)
+                .font(.system(size: 8.5, design: .monospaced))
+                .foregroundStyle(VideoKit.rgb(0xDBE4FF))
+                .lineLimit(1)
+                .fixedSize()
+                .padding(.horizontal, 4)
+                .padding(.vertical, 1)
+                .background(RoundedRectangle(cornerRadius: 3).fill(VideoKit.rgb(0x080A12, 0.72)))
+                .padding(alongTop ? .top : .bottom, 7)
+                .padding(alongTop ? .leading : .trailing, 2)
+        }
+        .frame(width: width, height: height, alignment: alongTop ? .topLeading : .bottomTrailing)
+        .offset(x: x0)
+        .panelReadout(label)
+        .playtestField(alongTop ? "Spare after strip" : "Spare before strip")
+    }
 }

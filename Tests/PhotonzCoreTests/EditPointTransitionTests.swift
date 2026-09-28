@@ -96,7 +96,7 @@ struct EditPointTransitionTests {
         #expect(doc.layers.map(\.time) == before)
         #expect(doc.layer(id: broll)?.arrivalTransition == ClipTransition(kind: .dissolve, lengthMS: 600))
         #expect(doc.documentCut(at: place)?.cut.transition?.kind == .dissolve)
-        #expect(doc.documentCut(at: place)?.cut.spentEachSideMS == 300)
+        #expect(doc.documentCut(at: place)?.cut.spentFromOutgoingMS == 300)
         #expect(ClipTransitionCopy.paidWith(try #require(doc.documentCut(at: place)).cut)
                 == "0.3s + 0.3s of spare")
     }

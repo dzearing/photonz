@@ -269,16 +269,22 @@ extension PhotonzDocument {
     // MARK: - Edit points
 
     /// Every place on a track where one clip ends and the next starts on the
-    /// same millisecond, left to right.
+    /// same millisecond, left to right, at the moment the first one ends.
+    ///
+    /// Or where the next starts exactly as long after as the dip it arrives
+    /// with holds on its colour (`ClipTransition.holdMS`): that gap is the
+    /// hold, put there by the cut, and the cut is still one cut.
     public func editPoints(onTrack id: UUID) -> [TimelineEditPoint] {
         let clips = clipIDs(onTrack: id)
-            .compactMap { clip -> (id: UUID, time: LayerTime)? in
-                layer(id: clip)?.time.map { (clip, $0) }
+            .compactMap { clip -> (id: UUID, time: LayerTime, hold: Int)? in
+                guard let layer = layer(id: clip), let time = layer.time else { return nil }
+                return (clip, time, layer.arrivalTransition?.holdMS ?? 0)
             }
             .sorted { $0.time.inMS < $1.time.inMS }
         return zip(clips, clips.dropFirst()).compactMap { a, b in
-            a.time.outMS == b.time.inMS
-                ? TimelineEditPoint(trackID: id, outgoing: a.id, incoming: b.id, atMS: b.time.inMS)
+            let gap = b.time.inMS - a.time.outMS
+            return gap == 0 || (b.hold > 0 && gap == b.hold)
+                ? TimelineEditPoint(trackID: id, outgoing: a.id, incoming: b.id, atMS: a.time.outMS)
                 : nil
         }
     }
