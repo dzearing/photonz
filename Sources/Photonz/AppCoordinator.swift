@@ -281,6 +281,14 @@ final class AppCoordinator {
     /// opens itself when it finishes. Without the check, all three of those
     /// opened a window that never became anything.
     func openRecording(_ url: URL) {
+        // Stopped a moment ago and macOS is still closing the file: open it
+        // the moment it lands rather than finding nothing there.
+        if capture.store.isSaving(url) {
+            capture.store.whenLanded(url) { [weak self] landed in
+                if let landed { self?.openRecording(landed.url) }
+            }
+            return
+        }
         guard openWindowAction != nil else {
             NSWorkspace.shared.activateFileViewerSelecting([url])
             return
@@ -375,7 +383,9 @@ final class AppCoordinator {
     /// Show a capture in the Finder. History is a live listing of a real folder,
     /// so "where is this file" is a question it should be able to answer.
     func revealInFinder(_ url: URL) {
-        NSWorkspace.shared.activateFileViewerSelecting([url])
+        capture.store.whenLanded(url) { landed in
+            NSWorkspace.shared.activateFileViewerSelecting([landed?.url ?? url])
+        }
     }
 
     // MARK: - Copy recording to clipboard (video / GIF)
@@ -384,7 +394,10 @@ final class AppCoordinator {
     /// animated GIF. The stored file is the truth (phase 19) — a saved trim is
     /// already in it — so nothing is re-applied on the way out.
     func copyRecording(_ entry: CaptureEntry, as format: RecordingFormat) {
-        copyRecording(sourceURL: entry.url, as: format, trim: nil, crop: nil)
+        capture.store.whenLanded(entry.url) { [weak self] landed in
+            guard let landed else { return }
+            self?.copyRecording(sourceURL: landed.url, as: format, trim: nil, crop: nil)
+        }
     }
 
     /// Video editor: copies what the window is showing, including edits the user

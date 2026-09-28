@@ -54,4 +54,16 @@ public enum CaptureLibrary {
             return $0.fileName > $1.fileName
         }
     }
+
+    /// History as it should read: the folder's listing plus any recording that
+    /// has been stopped but whose file macOS is still closing. The tile is up
+    /// the moment Stop is pressed and the file fills it in when it lands; once
+    /// the file is in the listing it is the one shown (its own date wins).
+    public static func merging(listed: [CaptureEntry], saving: [CaptureEntry]) -> [CaptureEntry] {
+        guard !saving.isEmpty else { return listed }
+        let present = Set(listed.map(\.url))
+        let stillSaving = saving.filter { !present.contains($0.url) }
+        guard !stillSaving.isEmpty else { return listed }
+        return sortedNewestFirst(listed + stillSaving)
+    }
 }

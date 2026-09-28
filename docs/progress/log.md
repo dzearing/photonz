@@ -20067,3 +20067,27 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - New walk `view-mode-and-edit-mode-walk`; nine recording walks updated, one retired.
 - Next: `switching-a-long-recording-to-edit-mode-draws-it` (180 ms first frame on a
   long captioned recording).
+
+## 2026-09-28 — A recording shows in history the moment you stop it
+
+- Measured first (probe drill, `--recording-latency-diag`): Stop to history tile
+  was 61 ms for 5 s with system audio and mic, 311 ms for 60 s, 820 ms for 180 s.
+  Nearly all of it is ScreenCaptureKit's `SCRecordingOutput` closing the file,
+  about 4.5 ms per recorded second with sound (0.6 ms without). No commit caused
+  it: `ScreenRecorder` is unchanged since June; longer recordings with sound did.
+- Now `RecordingCoordinator.stop` hides the stop control, lists the recording
+  (`CaptureStore.beginSaving`, a placeholder tile placed by its start time) and
+  puts the corner card up at once, then files the MP4 when macOS hands it back
+  (`finishSaving` / `failSaving`). Open, Copy, Copy GIF, Show in Finder and the
+  clipboard copy wait for the file via `whenLanded`; deleting a saving tile
+  trashes the file when it lands. `CaptureLibrary.merging` (PhotonzCore, tested)
+  folds saving recordings into the listing.
+- Gotcha: the folder listing can spell the landed file differently from the
+  reserved URL (`/private/var` for `/var`). The store keeps the reserved URL for
+  that file name (`reservedURLs`) so a tile, card or waiting action keeps it.
+- After: Stop to tile 1-2 ms at 5, 60 and 180 s with sound. Drill:
+  `Scripts/recording-latency-drill.sh <seconds> [--system-audio] [--with-microphone]`,
+  exit 1 over `RecordingStopBudget` (300 ms). Needs the probe's Screen Recording
+  grant and an unlocked screen.
+- No transcription runs on the Stop-to-history path; auto-captions start only in
+  an editor window, which `captions-only-when-you-ask-for-them` owns.

@@ -24,6 +24,16 @@ final class ScreenRecorder: NSObject {
     /// Recorded pixel size (after backing scale) — used to plan GIF/HEIC exports.
     private(set) var recordedSize: CGSize = .zero
 
+    /// When each part of the last stop happened, for the probe's latency drill.
+    struct StopTrace {
+        var requested = Date()
+        var stopCaptureReturned: Date?
+        var outputFinished: Date?
+        var fallbackFired: Date?
+        var resumed: Date?
+    }
+    private(set) var lastStop: StopTrace?
+
     /// Microphones available for the audio picker (phase 12.2): unique id + name.
     static func availableMicrophones() -> [(id: String, name: String)] {
         let session = AVCaptureDevice.DiscoverySession(
@@ -87,6 +97,7 @@ final class ScreenRecorder: NSObject {
     func stop() async throws -> URL {
         guard isRecording, let stream, let url = outputURL else { throw RecorderError.notRecording }
         isRecording = false
+        lastStop = StopTrace()
 
         // Wait for the recording output to flush before handing back the URL, so
         // callers can immediately read a complete file.
@@ -94,20 +105,27 @@ final class ScreenRecorder: NSObject {
             finishContinuation = continuation
             Task {
                 try? await stream.stopCapture()
+                self.lastStop?.stopCaptureReturned = Date()
                 // stopCapture may return before didFinishRecording fires; if the
                 // delegate never calls back, don't hang the caller forever.
                 try? await Task.sleep(for: .milliseconds(400))
+                if self.finishContinuation != nil { self.lastStop?.fallbackFired = Date() }
                 self.resumeFinishIfNeeded()
             }
         }
 
-        self.stream = nil
-        self.recordingOutput = nil
-        self.outputURL = nil
+        // A new recording may have started while this one was closing (the
+        // stop control goes away at Stop); leave its stream alone.
+        if self.stream === stream {
+            self.stream = nil
+            self.recordingOutput = nil
+            self.outputURL = nil
+        }
         return url
     }
 
     private func resumeFinishIfNeeded() {
+        if finishContinuation != nil { lastStop?.resumed = Date() }
         finishContinuation?.resume()
         finishContinuation = nil
     }
@@ -136,6 +154,9 @@ extension ScreenRecorder: SCRecordingOutputDelegate {
     }
 
     nonisolated func recordingOutputDidFinishRecording(_ recordingOutput: SCRecordingOutput) {
-        Task { @MainActor in self.resumeFinishIfNeeded() }
+        Task { @MainActor in
+            self.lastStop?.outputFinished = Date()
+            self.resumeFinishIfNeeded()
+        }
     }
 }

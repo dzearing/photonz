@@ -40,7 +40,9 @@ final class RecordingCoordinator {
 
     /// Begin recording per `config` on `screen`. The stop HUD is shown first (so
     /// the window server knows about it) and excluded from the captured video.
-    func start(config: RecordingConfig, screen: NSScreen) async {
+    /// `showsControls: false` is the probe's latency drill, which records
+    /// without putting the stop control on the person's screen.
+    func start(config: RecordingConfig, screen: NSScreen, showsControls: Bool = true) async {
         guard !isRecording, !isStarting else { return }
         isStarting = true
         defer { isStarting = false }
@@ -49,14 +51,17 @@ final class RecordingCoordinator {
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("photonz-recording-\(UUID().uuidString).mp4")
 
-        let hud = controls.show(on: screen) { [weak self] in
-            Task { await self?.stop() }
+        var excluded: [NSWindow] = []
+        if showsControls {
+            excluded.append(controls.show(on: screen) { [weak self] in
+                Task { await self?.stop() }
+            })
+            // Give the HUD a window-server presence so SCContentFilter can exclude it.
+            try? await Task.sleep(for: .milliseconds(150))
         }
-        // Give the HUD a window-server presence so SCContentFilter can exclude it.
-        try? await Task.sleep(for: .milliseconds(150))
 
         do {
-            try await recorder.start(config: config, screen: screen, to: url, excluding: [hud])
+            try await recorder.start(config: config, screen: screen, to: url, excluding: excluded)
             isRecording = true
             startTimer()
         } catch {
@@ -78,21 +83,32 @@ final class RecordingCoordinator {
         alert.runModal()
     }
 
-    /// Stop, finalize, and file the recording into history.
+    /// Stop, and put the recording in history at once. macOS takes a while to
+    /// close the file (about 4 ms for every second recorded with sound: most of
+    /// a second for three minutes), so the tile and the corner card go up the
+    /// moment Stop is pressed and the file fills them in when it lands. The
+    /// copy to the clipboard waits for the file, since there is nothing to
+    /// paste before it exists.
     func stop() async {
         guard isRecording else { return }
         isRecording = false
+        let started = startDate ?? .now
         stopTimer()
+        controls.hide()
+        let pending = store.beginSaving(recordingStartedAt: started)
+        onRecordingComplete?(pending)
         do {
             let url = try await recorder.stop()
-            controls.hide()
             // The store files the MP4 and derives the poster/duration lazily.
-            if let entry = store.addRecording(tempURL: url) { onRecordingComplete?(entry) }
+            store.finishSaving(pending, tempURL: url)
         } catch {
             NSLog("Recording failed to stop: \(error)")
-            controls.hide()
+            store.failSaving(pending)
         }
     }
+
+    /// When each part of the last stop happened (the probe's latency drill).
+    var lastStopTrace: ScreenRecorder.StopTrace? { recorder.lastStop }
 
     func toggle(screen: NSScreen) async {
         if isRecording { await stop() } else { await start(config: config, screen: screen) }

@@ -41,6 +41,25 @@ final class CaptureStore {
     /// thumbnail and duration pill.
     @ObservationIgnored private var mediaStamps: [URL: String?] = [:]
 
+    /// Recordings that have been stopped but whose file macOS is still closing,
+    /// by the name each is reserved to land under. They are in history from the
+    /// moment Stop is pressed (a placeholder tile) and the file fills them in:
+    /// closing a three minute recording with sound takes macOS most of a second,
+    /// and nothing the person does should wait on it.
+    private var saving: [URL: CaptureEntry] = [:]
+    /// What is waiting on a saving recording to land: its copy to the
+    /// clipboard, a request to open it.
+    @ObservationIgnored private var landingWaiters: [URL: [(CaptureEntry?) -> Void]] = [:]
+    /// Saving recordings deleted from history before they landed; their file
+    /// goes straight to the Trash when it does.
+    @ObservationIgnored private var discardedWhileSaving: Set<URL> = []
+    /// The exact URL each saved recording was listed under while it was saving,
+    /// by file name. The folder listing can spell the same file differently
+    /// (`/private/var` for `/var`, percent-encoding), and a tile, a corner card
+    /// or a waiting action holding the saving URL must keep finding it after it
+    /// lands.
+    @ObservationIgnored private var reservedURLs: [String: URL] = [:]
+
     @ObservationIgnored private var watcher: DispatchSourceFileSystemObject?
     @ObservationIgnored private var watchedFD: Int32 = -1
     @ObservationIgnored private var reloadDebounce: DispatchWorkItem?
@@ -71,13 +90,16 @@ final class CaptureStore {
             options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants])) ?? []
 
         var found: [CaptureEntry] = []
-        for url in urls {
+        for listed in urls {
+            let url = reservedURLs[listed.lastPathComponent] ?? listed
             guard let kind = CaptureLibrary.kind(forPathExtension: url.pathExtension) else { continue }
             let values = try? url.resourceValues(forKeys: [.creationDateKey, .contentModificationDateKey])
             let date = values?.creationDate ?? values?.contentModificationDate ?? .distantPast
             found.append(CaptureEntry(url: url, createdAt: date, kind: kind))
         }
         let sorted = CaptureLibrary.sortedNewestFirst(found)
+        let listedNames = Set(urls.map(\.lastPathComponent))
+        reservedURLs = reservedURLs.filter { listedNames.contains($0.key) || saving[$0.value] != nil }
 
         // Drop caches for files that disappeared.
         let live = Set(sorted.map(\.url))
@@ -100,7 +122,7 @@ final class CaptureStore {
         }
         mediaStamps = mediaStamps.filter { live.contains($0.key) }
 
-        entries = sorted
+        entries = CaptureLibrary.merging(listed: sorted, saving: Array(saving.values))
     }
 
     /// Fingerprint of a recording's media file (mtime + size); `nil` when it
@@ -134,19 +156,76 @@ final class CaptureStore {
         return entry
     }
 
-    /// Move a finalized recording into the folder (phase 12.4).
-    @discardableResult
-    func addRecording(tempURL: URL, takenAt date: Date = .now) -> CaptureEntry? {
+    // MARK: - Recordings (phase 12.4), listed before their file is saved
+
+    /// Put a just-stopped recording in history before its file exists: reserve
+    /// the name it will land under and list it now, placed by when it started.
+    /// Finish with `finishSaving` once the recorder hands the file back, or
+    /// `failSaving` if it never does.
+    func beginSaving(recordingStartedAt started: Date, takenAt date: Date = .now) -> CaptureEntry {
         ensureDirectory()
         let url = uniqueURL(prefix: "Recording", date: date, ext: "mp4")
-        do {
-            try FileManager.default.moveItem(at: tempURL, to: url)
-        } catch {
-            NSLog("Couldn't file recording: \(error)")
+        let entry = CaptureEntry(url: url, createdAt: started, kind: .video)
+        saving[url] = entry
+        reservedURLs[url.lastPathComponent] = url
+        reload()
+        return entry
+    }
+
+    /// The saving recording's file has closed: move it under its reserved name
+    /// and let its tile become the real thing.
+    @discardableResult
+    func finishSaving(_ entry: CaptureEntry, tempURL: URL) -> CaptureEntry? {
+        saving[entry.url] = nil
+        guard discardedWhileSaving.remove(entry.url) == nil else {
+            try? FileManager.default.trashItem(at: tempURL, resultingItemURL: nil)
+            reload()
+            land(entry.url, as: nil)
             return nil
         }
+        var destination = entry.url
+        if FileManager.default.fileExists(atPath: destination.path) {
+            // Somebody put a file under the reserved name while it was saving.
+            destination = uniqueURL(prefix: "Recording", date: .now, ext: "mp4")
+        }
+        var landed: CaptureEntry?
+        do {
+            try FileManager.default.moveItem(at: tempURL, to: destination)
+            reload()
+            landed = entries.first { $0.fileName == destination.lastPathComponent }
+        } catch {
+            NSLog("Couldn't file recording: \(error)")
+            reload()
+        }
+        land(entry.url, as: landed)
+        return landed
+    }
+
+    /// The recording never produced a file: take its tile down.
+    func failSaving(_ entry: CaptureEntry) {
+        saving[entry.url] = nil
+        discardedWhileSaving.remove(entry.url)
         reload()
-        return entries.first { $0.fileName == url.lastPathComponent }
+        land(entry.url, as: nil)
+    }
+
+    /// Whether this capture is a recording whose file is still being closed.
+    func isSaving(_ url: URL) -> Bool { saving[url] != nil }
+
+    /// Run `action` once the capture at `url` is a real file: right away when
+    /// it already is, or when its recording lands. It gets nil when the
+    /// recording never landed (it failed, or was deleted while saving).
+    func whenLanded(_ url: URL, _ action: @escaping (CaptureEntry?) -> Void) {
+        guard saving[url] != nil else {
+            action(entries.first { $0.url == url })
+            return
+        }
+        landingWaiters[url, default: []].append(action)
+    }
+
+    private func land(_ url: URL, as entry: CaptureEntry?) {
+        let waiters = landingWaiters.removeValue(forKey: url) ?? []
+        for waiter in waiters { waiter(entry) }
     }
 
     /// Override-in-place (phase 11.5): rewrite an existing capture's pixels.
@@ -165,6 +244,12 @@ final class CaptureStore {
     /// removes it from history. An edited capture's layered `.photonz` sidecar
     /// goes with it.
     func remove(_ entry: CaptureEntry) {
+        if saving[entry.url] != nil {
+            saving[entry.url] = nil
+            discardedWhileSaving.insert(entry.url)
+            reload()
+            return
+        }
         try? FileManager.default.trashItem(at: entry.url, resultingItemURL: nil)
         trashSidecar(for: entry.url)
         imageCache[entry.url] = nil
@@ -177,6 +262,11 @@ final class CaptureStore {
     /// "Clear All": move every shown capture (and its sidecar) to the Trash.
     func clearAll() {
         for entry in entries {
+            if saving[entry.url] != nil {
+                saving[entry.url] = nil
+                discardedWhileSaving.insert(entry.url)
+                continue
+            }
             try? FileManager.default.trashItem(at: entry.url, resultingItemURL: nil)
             trashSidecar(for: entry.url)
         }
@@ -205,6 +295,9 @@ final class CaptureStore {
     /// (generated + cached lazily; the UI refreshes when it lands).
     func image(for entry: CaptureEntry) -> CGImage? {
         if let cached = imageCache[entry.url] { return cached }
+        // A recording still being saved has no file to read yet; its tile is a
+        // placeholder until it lands, and reading it now would only fail.
+        if saving[entry.url] != nil { return nil }
         if entry.kind == .video {
             loadVideoMetadata(entry)
             return nil
@@ -254,11 +347,19 @@ final class CaptureStore {
     /// Recording length, loaded lazily alongside the poster.
     func duration(for entry: CaptureEntry) -> TimeInterval? {
         if let d = durations[entry.url] { return d }
-        if entry.kind == .video { loadVideoMetadata(entry) }
+        if entry.kind == .video, saving[entry.url] == nil { loadVideoMetadata(entry) }
         return nil
     }
 
     func copyToPasteboard(_ entry: CaptureEntry) {
+        // A file that is still being closed cannot be pasted yet: copy it the
+        // moment it lands.
+        if saving[entry.url] != nil {
+            whenLanded(entry.url) { [weak self] landed in
+                if let landed { self?.copyToPasteboard(landed) }
+            }
+            return
+        }
         if entry.kind == .video {
             // File flavors only — including the legacy one Electron apps
             // (Teams/Slack) need. Edits-aware copy (trim/crop, GIF) is the
@@ -365,7 +466,7 @@ final class CaptureStore {
         let base = "\(prefix) \(Self.timestampFormatter.string(from: date))"
         var candidate = directory.appendingPathComponent("\(base).\(ext)")
         var n = 2
-        while FileManager.default.fileExists(atPath: candidate.path) {
+        while FileManager.default.fileExists(atPath: candidate.path) || saving[candidate] != nil {
             candidate = directory.appendingPathComponent("\(base) (\(n)).\(ext)")
             n += 1
         }

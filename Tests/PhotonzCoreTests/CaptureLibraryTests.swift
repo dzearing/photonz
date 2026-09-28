@@ -45,4 +45,34 @@ struct CaptureLibraryTests {
         #expect(e.id == URL(fileURLWithPath: "/tmp/shot.png"))
         #expect(e.fileName == "shot.png")
     }
+
+    // MARK: - Recordings still being saved
+
+    @Test func aRecordingStillBeingSavedIsListedWithTheRest() {
+        let shot = entry("Screenshot.png", 100, .image)
+        let saving = entry("Recording.mp4", 200, .video)
+        let merged = CaptureLibrary.merging(listed: [shot], saving: [saving])
+        #expect(merged == [saving, shot])
+    }
+
+    @Test func aRecordingThatHasLandedIsListedOnce() {
+        let saving = entry("Recording.mp4", 200, .video)
+        // The file on disk carries its own date, which wins.
+        let landed = entry("Recording.mp4", 150, .video)
+        let merged = CaptureLibrary.merging(listed: [landed], saving: [saving])
+        #expect(merged == [landed])
+    }
+
+    @Test func savingRecordingsTakeTheirPlaceByDate() {
+        let newer = entry("b.png", 300, .image)
+        let older = entry("a.png", 100, .image)
+        let saving = entry("Recording.mp4", 200, .video)
+        let merged = CaptureLibrary.merging(listed: [newer, older], saving: [saving])
+        #expect(merged.map(\.fileName) == ["b.png", "Recording.mp4", "a.png"])
+    }
+
+    @Test func nothingSavingLeavesTheListingAlone() {
+        let listed = [entry("b.png", 300, .image), entry("a.png", 100, .image)]
+        #expect(CaptureLibrary.merging(listed: listed, saving: []) == listed)
+    }
 }

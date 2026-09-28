@@ -1,0 +1,26 @@
+{
+  "feature": "A recording shows in history the moment you stop it",
+  "epic": "video-editing",
+  "summary": "Stopping a recording now puts its tile in history and its corner card up at once, and the stop control goes away straight away. The picture fills in when macOS finishes the file, which on a three minute recording with sound used to hold everything back for most of a second.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The timing drill is Scripts/recording-latency-drill.sh <seconds> --system-audio --with-microphone (probe only, records to a scratch folder).",
+  "switched": {},
+  "try": [
+    { "do": "Press Shift-Command-5, turn on system audio and the microphone, and record about three minutes." },
+    { "do": "Press the stop control." },
+    { "do": "Watch the corner card: it comes up at once with a grey tile, and the picture follows a moment later." },
+    { "do": "Press Shift-Command-H: the new recording is first in the strip." },
+    { "do": "Record a short clip, stop it, and click Edit on the corner card straight away: it opens as soon as the file is saved." },
+    { "do": "Paste into Finder or a chat: the recording file is on the clipboard." }
+  ],
+  "evaluate": [
+    "Does stopping a recording now feel instant, with nothing that looks like processing?",
+    "Is the grey tile, before the picture arrives, fine on a long recording, or should it say it is saving?",
+    "Does the stop control leaving at once (before the file is saved) feel right?"
+  ],
+  "rough": [
+    "There is no picture of the saving tile: no walk can make a real recording, and the grey tile is up for well under a second. The drill's timings are the evidence: Stop to tile 1 to 2 ms at 5, 60 and 180 seconds with sound, where it used to be 61, 311 and 820 ms.",
+    "The delay was never new code: the recorder had not changed since June. macOS takes about 4.5 ms per recorded second to close a file with sound (about 0.6 ms without), so it grew as recordings got longer and gained sound.",
+    "The corner card says Copied to clipboard as soon as it appears, but the copy happens when the file lands, up to a second later on a long recording.",
+    "The poster frame comes about 80 ms after the file lands; the duration pill arrives with it."
+  ]
+}
