@@ -1,0 +1,28 @@
+{
+  "id": "copy-cut-and-paste-a-range-of-time",
+  "title": "Copy, cut and paste a range of time",
+  "goal": "From the user on 2026-09-28: with a range drawn on the ruler, Cmd-C and Cmd-X copy or cut that stretch of every track, and Cmd-V lays it back in at the playhead, the way Premiere and Final Cut copy a marked stretch. Split from the range selection task, which built the range and its other actions.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 0.00263,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-28T19:55:09.642Z",
+  "updated": "2026-09-28T19:55:09.645Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split out of select-a-range-of-time-across-clips-and-tracks-a (2026-09-28). No timeline clipboard exists: Clipboard.swift carries canvas layers, KeyClipboard.swift keyframes. A range copy is the layers under document.markedRangeMS trimmed to it (PhotonzDocument.keep(_:fromMS:toMS:) is what Lift uses) and rebased to 0; paste lands them with ClipLanding overwrite on their tracks. Rows go in EditorState.rulerRangeMenuRows().",
+  "acceptance": [
+    "With a range in hand, Cmd-C copies the covered parts of every clip, title and sound, and Copy is on the range's right-click",
+    "Cmd-X does the same and takes the stretch out, closing the gap, as one undo step",
+    "Cmd-V puts the copied stretch in at the playhead on the same tracks, overwriting what is there",
+    "Walk at Next defaults: draw a range, Cmd-C, move the playhead, Cmd-V, check both copies play; undo restores"
+  ],
+  "log": [
+    {
+      "t": "2026-09-28T19:55:09.644Z",
+      "note": "created (user)"
+    }
+  ]
+}

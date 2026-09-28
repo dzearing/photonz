@@ -1685,20 +1685,50 @@ private final class Run {
         // onto a key, since a walk counting presses names the moment it wants.
         case .clickRuler(let seconds):
             let editor = try requireEditor()
-            guard editor.documentHasTime else {
-                throw Failure(description: "clickRuler needs a document that runs for a length of time")
-            }
-            let ms = Int((seconds * 1000).rounded())
-            guard ms <= editor.documentLengthMS else {
-                throw Failure(description: "the ruler ends at \(editor.documentLengthTimecode), "
-                    + "so there is nothing at \(EditorState.timecode(ms: ms)) to click")
-            }
-            editor.beginPlayheadDrag()
-            editor.dragPlayhead(toMS: ms)
-            editor.endPlayheadDrag()
+            let ms = try rulerMoment(seconds, on: editor, doing: "click")
+            editor.beginRulerPress(atMS: ms, reachMS: 0)
+            editor.dragRulerPress(toMS: ms, moved: false, snapMS: 0)
+            editor.endRulerPress(atMS: ms, moved: false)
             await sleep(0.1)
             note(number, step.name, "clicked the ruler at \(EditorState.timecode(ms: ms)): playhead "
                  + "\(editor.documentTimeMS) ms of \(editor.documentLengthTimecode)", state: describe())
+
+        // The same gesture carried along the ruler: pressed at one moment,
+        // moved in steps to another, let go there, with the snap a person's
+        // hand gets at the timeline's own zoom.
+        case .dragRuler(let fromSeconds, let toSeconds, let hold):
+            let editor = try requireEditor()
+            let from = try rulerMoment(fromSeconds, on: editor, doing: "press")
+            let to = try rulerMoment(toSeconds, on: editor, doing: "let go")
+            let lane = editor.timelineLaneWidth
+            let ruler = editor.motionStripRuler
+            let reach = lane > 0 ? TimelineDock.rulerGrabMS(lane, ruler) : 0
+            let snap = editor.keySnapReachMS(laneWidth: lane)
+            editor.beginRulerPress(atMS: from, reachMS: reach)
+            let grip = editor.rulerPress.map { "\($0.grip)" } ?? "nothing"
+            let steps = 8
+            for step in 1...steps {
+                let ms = from + (to - from) * step / steps
+                editor.dragRulerPress(toMS: ms, moved: true, snapMS: snap)
+                await sleep(0.03)
+            }
+            if let hold {
+                await sleep(0.2)
+                let window = try requireWindow()
+                if let content = window.contentView {
+                    try snapshot(content, name: hold)
+                    await screenCapture(window, name: hold)
+                }
+            }
+            editor.endRulerPress(atMS: to, moved: from != to)
+            await sleep(0.2)
+            let marks = [editor.document?.markInMS.map { "In \($0) ms" },
+                         editor.document?.markOutMS.map { "Out \($0) ms" }].compactMap { $0 }
+            note(number, step.name, "pressed the ruler at \(EditorState.timecode(ms: from)) (took hold of "
+                 + "\(grip)) and let go at \(EditorState.timecode(ms: to)): "
+                 + (marks.isEmpty ? "no marks" : marks.joined(separator: ", "))
+                 + (editor.rulerRangeHeld != nil ? ", the range in hand" : "")
+                 + ", playhead \(editor.documentTimeMS) ms", state: describe())
 
         case .expectClip(let named, let track, let startsAt, let endsAt, let count, let pieces, let within):
             note(number, step.name, try checkClip(named: named, track: track, startsAt: startsAt,
@@ -3545,6 +3575,20 @@ private final class Run {
                 }
                 note(number, step.name, "captions: \(onIt.count) cues on the one \(track.name) track",
                      state: describe())
+            case .captionsExpectInsideMarks:
+                guard let document = editor.document else { throw Failure(description: "no document") }
+                guard let range = document.markedRangeMS else {
+                    throw Failure(description: "nothing is marked, so there is no range to hold the captions to")
+                }
+                let cues = document.captionCues
+                guard !cues.isEmpty else { throw Failure(description: "no captions landed") }
+                let outside = cues.filter { !range.contains($0.inMS) }
+                guard outside.isEmpty else {
+                    throw Failure(description: "\(outside.count) of \(cues.count) captions start outside "
+                        + "\(range.lowerBound) to \(range.upperBound) ms, the first at \(outside[0].inMS) ms")
+                }
+                note(number, step.name, "captions: \(cues.count) cues, every one starting between "
+                     + "\(range.lowerBound) and \(range.upperBound) ms", state: describe())
             case .captionsExpectEndWithRecording:
                 guard let document = editor.document else { throw Failure(description: "no document") }
                 let recording = document.allLayers.first {
@@ -4916,7 +4960,7 @@ private final class Run {
                  .captionsNudgeEarlier, .captionsCorrectFirstWord, .captionsClear,
                  .captionsExpectSound, .captionsExpectTimingsKept, .captionsExpectNone, .captionsWaitToLand,
                  .captionsExpectOneTrack, .captionsExpectOnePicked, .captionsWriteQuietly,
-                 .captionsExpectEndWithRecording,
+                 .captionsExpectEndWithRecording, .captionsExpectInsideMarks,
                  .captionsPickFirst, .captionsPickNext, .captionsEditFirstInPlace, .captionsCommitFirstWords,
                  .captionsTrimFirstEnd, .captionsStyleCaption, .captionsStyleLowerThird,
                  .captionsStyleKaraoke, .captionsPositionTop, .captionsPositionBottom,
@@ -13502,6 +13546,20 @@ private final class Run {
 
     private static func rectJSON(_ rect: CGRect) -> [Int] {
         [Int(rect.minX), Int(rect.minY), Int(rect.width), Int(rect.height)]
+    }
+
+    /// A moment on the ruler a walk named in seconds, refused where there is
+    /// no ruler or the moment is past its end.
+    private func rulerMoment(_ seconds: Double, on editor: EditorState, doing what: String) throws -> Int {
+        guard editor.documentHasTime else {
+            throw Failure(description: "the ruler needs a document that runs for a length of time")
+        }
+        let ms = Int((seconds * 1000).rounded())
+        guard ms <= editor.documentLengthMS else {
+            throw Failure(description: "the ruler ends at \(editor.documentLengthTimecode), "
+                + "so there is nothing at \(EditorState.timecode(ms: ms)) to \(what)")
+        }
+        return ms
     }
 
     private func snapshot(_ view: NSView, name: String) throws {

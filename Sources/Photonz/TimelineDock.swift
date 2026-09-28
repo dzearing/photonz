@@ -482,6 +482,10 @@ struct TimelineDock: View {
                     .scrollBounceBehavior(.basedOnSize)
                 }
                 .overlay(alignment: .topLeading) {
+                    rangeWash(laneWidth: laneWidth)
+                        .padding(.leading, Self.lanesLeading)
+                }
+                .overlay(alignment: .topLeading) {
                     playhead(laneWidth: laneWidth)
                         .padding(.leading, Self.lanesLeading)
                 }
@@ -514,16 +518,70 @@ struct TimelineDock: View {
         .frame(height: Self.rulerHeight)
     }
 
+    /// A press on the ruler (`EditorState+RulerRange`): on the playhead it
+    /// scrubs, on an end of the marked stretch it moves that end, anywhere
+    /// else a drag draws a range and a click moves the playhead.
     private func rulerScrub(laneWidth: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
-                if !editorState.isAuditioningScrub { editorState.beginPlayheadDrag() }
-                let fraction = min(max(0, value.location.x / laneWidth), 1)
-                let ms = editorState.motionStripRuler.ms(atFraction: Double(fraction))
-                editorState.dragPlayhead(toMS: Int(ms.rounded()),
-                                         snappingWithinMS: editorState.keySnapReachMS(laneWidth: laneWidth))
+                let ruler = editorState.motionStripRuler
+                let start = Self.rulerMS(value.startLocation.x, laneWidth, ruler)
+                // A new press, or one left behind by a gesture the system
+                // cancelled without an end.
+                if editorState.rulerPress?.atMS != start {
+                    editorState.beginRulerPress(atMS: start, reachMS: Self.rulerGrabMS(laneWidth, ruler))
+                }
+                editorState.dragRulerPress(toMS: Self.rulerMS(value.location.x, laneWidth, ruler),
+                                           moved: abs(value.translation.width) >= EditorState.rulerClickSlop,
+                                           snapMS: editorState.keySnapReachMS(laneWidth: laneWidth))
             }
-            .onEnded { _ in editorState.endPlayheadDrag() }
+            .onEnded { value in
+                editorState.endRulerPress(atMS: Self.rulerMS(value.location.x, laneWidth,
+                                                             editorState.motionStripRuler),
+                                          moved: abs(value.translation.width) >= EditorState.rulerClickSlop)
+            }
+    }
+
+    /// The moment under a point on the ruler.
+    static func rulerMS(_ x: CGFloat, _ laneWidth: CGFloat, _ ruler: MotionStripRuler) -> Int {
+        let fraction = min(max(0, x / max(1, laneWidth)), 1)
+        return Int(ruler.ms(atFraction: Double(fraction)).rounded())
+    }
+
+    /// How near the playhead or an end of the band a press has to land to
+    /// take hold of it: six points of ruler, in time.
+    static func rulerGrabMS(_ laneWidth: CGFloat, _ ruler: MotionStripRuler) -> Int {
+        Int((ruler.ms(atFraction: Double(6 / max(1, laneWidth))) - ruler.ms(atFraction: 0)).rounded())
+    }
+
+    /// A range drawn on the ruler washed down through the tracks while it is
+    /// the thing in hand, so it reads as a stretch of every track. Marks set
+    /// with I and O stay on the ruler alone, as in Premiere.
+    @ViewBuilder private func rangeWash(laneWidth: CGFloat) -> some View {
+        if let range = editorState.rulerRangeDraft ?? editorState.rulerRangeHeld {
+            let ruler = editorState.motionStripRuler
+            let x0 = laneWidth * ruler.fraction(ofMS: Double(range.lowerBound))
+            let x1 = laneWidth * ruler.fraction(ofMS: Double(range.upperBound))
+            let lo = max(0, min(laneWidth, x0))
+            let hi = max(0, min(laneWidth, x1))
+            if hi > lo {
+                Rectangle()
+                    .fill(Color.white.opacity(0.10))
+                    .overlay { Rectangle().fill(VideoKit.Palette.good.opacity(0.12)) }
+                    .overlay(alignment: .leading) {
+                        if x0 >= 0 { Rectangle().fill(VideoKit.Palette.good).frame(width: 1.5) }
+                    }
+                    .overlay(alignment: .trailing) {
+                        if x1 <= laneWidth { Rectangle().fill(VideoKit.Palette.good).frame(width: 1.5) }
+                    }
+                    .frame(width: hi - lo)
+                    .padding(.top, Self.rulerHeight)
+                    .offset(x: lo)
+                    .frame(width: laneWidth, alignment: .leading)
+                    .allowsHitTesting(false)
+                    .panelReadout("range \(range.lowerBound)ms to \(range.upperBound)ms")
+            }
+        }
     }
 
     /// The red line across every track, and only while its moment is on
@@ -671,6 +729,14 @@ private struct TimelineRulerRow<Scrub: Gesture>: View {
     /// Where the pointer last was over the ruler, which is where a right click
     /// acts. The playhead, where nothing has hovered yet.
     @State private var pointerMS: Int?
+    /// The left-right arrows are up because the pointer is on an end of the band.
+    @State private var edgeCursorUp = false
+
+    private func showEdgeCursor(_ show: Bool) {
+        guard show != edgeCursorUp else { return }
+        edgeCursorUp = show
+        if show { NSCursor.resizeLeftRight.push() } else { NSCursor.pop() }
+    }
 
     var body: some View {
         let ruler = editorState.motionStripRuler
@@ -681,10 +747,11 @@ private struct TimelineRulerRow<Scrub: Gesture>: View {
         .frame(width: laneWidth)
         .overlay(alignment: .topLeading) {
             ZStack(alignment: .topLeading) {
-                if let range = editorState.document?.markedRangeMS {
+                if let range = editorState.rulerRangeShown {
+                    let drawing = editorState.rulerRangeDraft != nil
                     TimelineInOutSpan(x0: x(range.lowerBound), x1: x(range.upperBound), height: height,
-                                      hasIn: editorState.document?.markInMS != nil,
-                                      hasOut: editorState.document?.markOutMS != nil)
+                                      hasIn: drawing || editorState.document?.markInMS != nil,
+                                      hasOut: drawing || editorState.document?.markOutMS != nil)
                 }
                 ForEach(editorState.document?.markers ?? []) { marker in
                     TimelineMarkerFlag()
@@ -698,11 +765,21 @@ private struct TimelineRulerRow<Scrub: Gesture>: View {
         .contentShape(Rectangle())
         .gesture(scrub)
         .onContinuousHover { phase in
-            if case .active(let point) = phase {
-                let fraction = min(max(0, point.x / max(1, laneWidth)), 1)
-                pointerMS = Int(ruler.ms(atFraction: Double(fraction)).rounded())
+            switch phase {
+            case .active(let point):
+                let ms = TimelineDock.rulerMS(point.x, laneWidth, ruler)
+                pointerMS = ms
+                // Over an end of the band the pointer says it can be dragged.
+                let grip = RulerRange.grip(atMS: ms, playheadMS: editorState.documentTimeMS,
+                                           markInMS: editorState.document?.markInMS,
+                                           markOutMS: editorState.document?.markOutMS,
+                                           reachMS: TimelineDock.rulerGrabMS(laneWidth, ruler))
+                showEdgeCursor(grip == .inEdge || grip == .outEdge)
+            case .ended:
+                showEdgeCursor(false)
             }
         }
+        .onDisappear { showEdgeCursor(false) }
         .contextMenu {
             TimelineRulerMenu(atMS: pointerMS, reachMS: Int(ruler.ms(atFraction: Double(6 / max(1, laneWidth)))
                                                              - ruler.ms(atFraction: 0)))
@@ -794,7 +871,8 @@ private struct TimelineMarkerFlag: View {
 }
 
 /// The stretch between In and Out, washed on the ruler with a bracket at each
-/// mark that is set, in the colour the scrub bar's marks wear.
+/// mark that is set, in the colour the scrub bar's marks wear. Each bracket
+/// carries a grip at its foot: the handle that end is dragged by.
 private struct TimelineInOutSpan: View {
     let x0: CGFloat
     let x1: CGFloat
@@ -802,19 +880,30 @@ private struct TimelineInOutSpan: View {
     let hasIn: Bool
     let hasOut: Bool
 
+    static let gripWidth: CGFloat = 6
+    static let gripHeight: CGFloat = 11
+
     var body: some View {
         ZStack(alignment: .leading) {
             Rectangle().fill(VideoKit.Palette.good.opacity(0.18))
             if hasIn {
-                Rectangle().fill(VideoKit.Palette.good).frame(width: 2)
+                bracket.frame(maxWidth: .infinity, alignment: .leading)
             }
             if hasOut {
-                Rectangle().fill(VideoKit.Palette.good).frame(width: 2)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                bracket.frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
         .frame(width: max(2, x1 - x0), height: height)
         .offset(x: x0)
+    }
+
+    private var bracket: some View {
+        Rectangle().fill(VideoKit.Palette.good).frame(width: 2)
+            .overlay(alignment: .bottom) {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(VideoKit.Palette.good)
+                    .frame(width: Self.gripWidth, height: Self.gripHeight)
+            }
     }
 }
 

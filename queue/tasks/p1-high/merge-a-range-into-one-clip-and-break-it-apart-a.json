@@ -1,0 +1,29 @@
+{
+  "id": "merge-a-range-into-one-clip-and-break-it-apart-a",
+  "title": "Merge a range into one clip, and break it apart again",
+  "goal": "From the user on 2026-09-28: select parts of two clips on a track and collapse that stretch into one clip that plays exactly the same, the way Premiere nests a sequence and Final Cut makes a compound clip; the merged clip opens back into its parts. Split from the range selection task, which built the range itself.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 0.00261,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-28T19:54:57.558Z",
+  "updated": "2026-09-28T19:54:57.561Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split out of select-a-range-of-time-across-clips-and-tracks-a (2026-09-28). The document has no notion of a clip that holds clips: ClipPieces is one file sliced (a split adds a piece, never a clip), and a track holds separate clip layers. A merge needs a nested clip content kind (children clips on their own inner timeline, rendered and mixed as one layer), which is a PhotonzCore model change plus DocumentRenderer and audio mix work. The range is document.markedRangeMS; its menu is EditorState.rulerRangeMenuRows() in EditorState+RulerRange.swift, where the row goes. Walk base: Scripts/playtest/draw-a-range-on-the-ruler-walk.json.",
+  "acceptance": [
+    "Right-click a range on the ruler: Merge into One Clip turns the covered parts of the clips on each track into one clip that plays and sounds the same",
+    "Merge is one undo step and nothing is baked: the merged clip keeps the original clips inside it",
+    "Right-click the merged clip: Break Apart puts the original clips back where they were",
+    "A merged clip takes a transition, a trim and a move like any clip",
+    "Walk at Next defaults: two clips with a cut between, draw a range across the cut, Merge into One Clip, undo, Merge again, Break Apart; photograph each step"
+  ],
+  "log": [
+    {
+      "t": "2026-09-28T19:54:57.560Z",
+      "note": "created (user)"
+    }
+  ]
+}

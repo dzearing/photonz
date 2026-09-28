@@ -288,12 +288,18 @@ extension EditorState {
     /// Whether ⌥⌫ has something to ripple delete: a picked piece of a cut
     /// clip, else the picked clip itself.
     var canRippleDeleteInHand: Bool {
+        if rulerRangeHeld != nil { return canTakeOutMarkedStretch }
         guard documentHasTime, let id = selectedLayerID, document?.layer(id: id)?.time != nil else { return false }
         return !isClipLocked(id)
     }
 
     /// ⌥⌫: ripple delete what is picked.
     func rippleDeleteInHand() {
+        // A range drawn on the ruler comes out and the gap closes.
+        if rulerRangeHeld != nil {
+            extractMarkedStretch()
+            return
+        }
         guard canRippleDeleteInHand, let id = selectedLayerID else { return }
         let count = document?.layer(id: id)?.clipPieces?.count ?? 1
         rippleDelete(layerID: id, piece: count > 1 ? selectedClipPieceIndex : nil)
@@ -452,12 +458,15 @@ extension EditorState {
         // lead; the ruler sits at the foot of the screen, where a long menu
         // scrolls and its last rows are out of sight.
         let takesOut = canTakeOutMarkedStretch
-        let onTheStretch = takesOut && document.markedRangeMS.map { ($0.lowerBound...$0.upperBound).contains(ms) } == true
+        let onTheStretch = document.markedRangeMS.map { ($0.lowerBound...$0.upperBound).contains(ms) } == true
         let extractAndLift: [MenuRow] = [
             .command("Extract", TimelineMenuKeys.extract) { self.extractMarkedStretch() },
             .command("Lift", TimelineMenuKeys.lift) { self.liftMarkedStretch() },
         ]
-        if onTheStretch { rows += extractAndLift + [.separator] }
+        // A click on the stretch is about the stretch: what a range acts on
+        // leads (`EditorState+RulerRange`), Delete and Ripple Delete being
+        // Lift and Extract by the names a range is deleted by.
+        if onTheStretch { rows += rulerRangeMenuRows() + [.separator] }
         if let markerHere {
             rows.append(.command("Remove Marker") { self.removeMarker(markerHere) })
         } else {

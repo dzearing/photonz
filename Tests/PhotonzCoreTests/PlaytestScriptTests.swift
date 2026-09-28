@@ -2496,6 +2496,38 @@ struct PlaytestScriptTests {
         }
     }
 
+    // A range drawn on the ruler (`RulerRange.swift`) is a drag on SwiftUI,
+    // which a walk's own drag never reaches, so a walk names the two moments
+    // the hand went down and came up at.
+    @Test("A dragRuler step names where the press lands and where it lets go")
+    func dragRulerParses() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragRuler", "from": 2.5, "to": 6, "hold": "mid" } ] }
+        """)
+        guard case .dragRuler(let from, let to, let hold) = script.steps[0] else {
+            Issue.record("dragRuler"); return
+        }
+        #expect(from == 2.5)
+        #expect(to == 6)
+        #expect(hold == "mid")
+        #expect(script.steps[0].name == "dragRuler")
+        #expect(PlaytestStep.names.contains("dragRuler"))
+    }
+
+    @Test("A dragRuler step needs both moments, and neither before the start")
+    func dragRulerNeedsMoments() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "dragRuler", "from": 2 } ] }
+            """)
+        }
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "dragRuler", "from": -1, "to": 3 } ] }
+            """)
+        }
+    }
+
     @Test("A sample can be copied in under a name of the walk's own")
     func sampleCopiesTakeAName() {
         #expect(PlaytestSampleFile.copy("sample:recording")?.fileName == "Tutorial Sample.mp4")

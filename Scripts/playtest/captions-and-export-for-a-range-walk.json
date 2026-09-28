@@ -1,0 +1,31 @@
+{
+  "out": "/tmp/photonz-playtest/captions-and-export-for-a-range-walk",
+  "seed": "A range drawn on the ruler, at Next defaults with no flag set, captioned on its own and exported on its own: right-click the range, Add Captions for Range, and the captions that land all start inside it; right-click again, Export Range, and the Export sheet opens on In to Out.",
+  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleTalk" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "key", "key": "2", "modifiers": ["command"] },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "dragRuler", "from": 2.0, "to": 6.0 },
+    { "do": "expectTimeline", "markInMS": 2000, "markOutMS": 6000 },
+    { "do": "clickRuler", "seconds": 3.0 },
+    { "do": "expectTimeline", "markInMS": 2000, "markOutMS": 6000, "playheadMS": 3000, "withinMS": 40 },
+    { "do": "rightClick", "at": [750, 860], "space": "window", "choose": "Add Captions for Range" },
+    { "do": "action", "action": "captionsWaitToLand" },
+    { "do": "action", "action": "captionsExpectInsideMarks" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-captions-for-the-range", "note": "Add Captions for Range from the range's right click: the captions that landed all start between 0:02 and 0:06, and nothing was written outside it" },
+    { "do": "snapshot", "name": "1-captions-for-the-range" },
+    { "do": "clickRuler", "seconds": 3.0 },
+    { "do": "describe", "stage": "1b-ruler-moved", "note": "the Caption track's bar now sits over the ruler, so the ruler is lower in the window than it was" },
+    { "do": "rightClick", "at": [750, 797], "space": "window", "choose": "Export Range…" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Export range", "reads": "In to Out" },
+    { "do": "describe", "stage": "2-export-range", "note": "Export Range from the same menu: the Export sheet opens on In to Out, so the file is the range" },
+    { "do": "snapshot", "name": "2-export-range" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 }
+  ]
+}

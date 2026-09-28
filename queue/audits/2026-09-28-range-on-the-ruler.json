@@ -1,0 +1,53 @@
+{
+  "feature": "Select a range of time on the ruler",
+  "epic": "video-cutting",
+  "summary": "Drag along the ruler to select a stretch of time across every track, then put a transition on the cuts inside it, cut at its ends, delete it with or without closing the gap, caption it or export it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording and press Edit so the timeline is up.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Drag along the ruler from one moment to another, away from the red playhead.",
+      "shot": "2026-09-28-range-on-the-ruler-2-range-drawn.png"
+    },
+    {
+      "do": "Drag the green grip at either end of the band to move that end."
+    },
+    {
+      "do": "Press Cmd-T to put the default transition on every cut inside the range.",
+      "shot": "2026-09-28-range-on-the-ruler-3-transition-in-the-range.png"
+    },
+    {
+      "do": "Put the playhead inside the range, right-click the ruler and choose Split at Range Edges.",
+      "shot": "2026-09-28-range-on-the-ruler-4-range-menu.png"
+    },
+    {
+      "do": "Press Delete: the stretch comes out and the gap stays.",
+      "shot": "2026-09-28-range-on-the-ruler-5-delete-leaves-the-gap.png"
+    },
+    {
+      "do": "Undo, then press Shift-Delete: the stretch comes out and the gap closes.",
+      "shot": "2026-09-28-range-on-the-ruler-6-shift-delete-closes-it.png"
+    },
+    {
+      "do": "Right-click the range and choose Add Captions for Range.",
+      "shot": "2026-09-28-range-on-the-ruler-captions.png"
+    },
+    {
+      "do": "Click the ruler outside the range to let it go."
+    }
+  ],
+  "evaluate": [
+    "Does dragging the ruler to draw a range feel right, now that scrubbing means grabbing the playhead itself?",
+    "Is the band on the ruler plus the wash down the tracks enough to tell a range is selected?",
+    "Should Delete and Ripple Delete keep those names, or do you want Premiere's Lift and Extract in the range menu?",
+    "Is it right that a click outside a drawn range drops it, while In and Out set with I and O stay?"
+  ],
+  "rough": [
+    "A drag on the ruler no longer scrubs unless it starts on the playhead; the scrub bar above the tracks and J, K, L still scrub from anywhere.",
+    "Merge into One Clip, the marquee over the tracks, Option-drag and R for a track-only range, and Cmd-C/X/V of a range are not here yet. Each is its own task.",
+    "The range's actions are on the ruler's right-click only. Right-clicking a clip inside the range still gives the clip's menu.",
+    "Add Captions for Range listens to the whole recording and keeps only the lines inside the range, so it takes as long as Add Captions on a long take.",
+    "No mock draws a range, so the band follows the existing green In and Out wash on the ruler.",
+    "Pictures are from the loop's probe app with Screen Recording granted and the screen unlocked; the hand-drag picture is from the separate walk that uses a real pointer."
+  ]
+}

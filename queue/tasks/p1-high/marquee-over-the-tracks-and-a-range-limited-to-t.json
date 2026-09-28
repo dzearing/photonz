@@ -1,0 +1,28 @@
+{
+  "id": "marquee-over-the-tracks-and-a-range-limited-to-t",
+  "title": "Marquee over the tracks, and a range limited to the tracks you cross",
+  "goal": "From the user on 2026-09-28: drag a box in empty timeline space to pick clips and parts of clips on the tracks it crosses, and Option-drag (or R, Final Cut's Range tool) to pick a stretch of time on just those tracks, then act on it the way a range on the ruler is acted on. Split from the range selection task, which built the whole-timeline range on the ruler.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 0.00262,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-28T19:55:09.566Z",
+  "updated": "2026-09-28T19:55:09.569Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split out of select-a-range-of-time-across-clips-and-tracks-a (2026-09-28). The ruler range is document.markedRangeMS (every unlocked track). A track-limited range needs its own state (range plus track ids) and track-scoped versions of liftStretch/extractStretch/putTransitionOnEveryCut(within:) in PhotonzCore (MarkedStretch.swift, RulerRange.swift). Piece-level multi-selection does not exist yet: selection is layers (multiSelectedLayerIDs) plus one selectedClipPieceIndex. Empty lane space: TimelineTrackRows.swift lanes.",
+  "acceptance": [
+    "A drag that starts in empty timeline space draws a box and picks every clip it touches, on the tracks it crosses",
+    "Option-drag, or the R tool, picks a stretch of time on the crossed tracks only, drawn over those tracks alone",
+    "Delete, Shift-Delete, Cmd-T and the right-click actions act on that track-limited stretch and leave other tracks alone",
+    "Walk at Next defaults: two tracks, a marquee over one, then an Option-drag range on one track, Delete, check the other track is untouched"
+  ],
+  "log": [
+    {
+      "t": "2026-09-28T19:55:09.568Z",
+      "note": "created (user)"
+    }
+  ]
+}

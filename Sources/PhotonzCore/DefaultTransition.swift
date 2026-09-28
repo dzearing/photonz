@@ -203,8 +203,15 @@ extension PhotonzDocument {
     @discardableResult
     public mutating func putTransitionOnEveryCut(_ kind: ClipTransitionKind,
                                                  among clips: Set<UUID>? = nil) -> EveryCutOutcome {
+        putTransition(kind, onEvery: transitionCuts(among: clips).map(\.place))
+    }
+
+    /// `kind` on each of `places`, in the order given, each fitted to what
+    /// its cut can pay for.
+    mutating func putTransition(_ kind: ClipTransitionKind,
+                                onEvery places: [TimelineCutPlace]) -> EveryCutOutcome {
         var outcome = EveryCutOutcome(put: [], skipped: 0)
-        for place in transitionCuts(among: clips).map(\.place) {
+        for place in places {
             let cut = documentCut(at: place)?.cut
             guard let transition = cut?.fitted(kind) else {
                 outcome.skipped += 1

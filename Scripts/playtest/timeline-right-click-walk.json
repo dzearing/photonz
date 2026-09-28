@@ -38,7 +38,7 @@
         860
       ],
       "to": [
-        516,
+        511,
         860
       ],
       "steps": 3
@@ -55,7 +55,7 @@
     {
       "do": "describe",
       "stage": "1-playhead-at-2s",
-      "note": "At defaults, a fresh recording, the playhead dragged to two seconds on the ruler"
+      "note": "At defaults, a fresh recording, a click on the ruler at two seconds puts the playhead there (a drag there would draw a range)"
     },
     {
       "do": "snapshot",
@@ -123,7 +123,7 @@
         860
       ],
       "to": [
-        717,
+        711,
         860
       ],
       "steps": 3
@@ -166,7 +166,7 @@
         860
       ],
       "to": [
-        315,
+        311,
         860
       ],
       "steps": 3
@@ -193,7 +193,7 @@
         860
       ],
       "to": [
-        1119,
+        1113,
         860
       ],
       "steps": 3
@@ -219,7 +219,7 @@
         860
       ],
       "to": [
-        918,
+        913,
         860
       ],
       "steps": 3
@@ -347,7 +347,7 @@
         893
       ],
       "space": "window",
-      "choose": "Rename\u2026"
+      "choose": "Rename…"
     },
     {
       "do": "wait",

@@ -1,0 +1,28 @@
+{
+  "out": "/tmp/photonz-playtest/draw-a-range-by-hand-walk",
+  "seed": "The ruler's own gesture under a real pointer, at Next defaults with no flag set: a drag along the ruler away from the playhead draws a range (In and Out set, the playhead stays), a drag that starts on an end of the range moves that end, and a drag that starts on the playhead still scrubs.",
+  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "tool", "tool": "select" },
+    { "do": "clickRuler", "seconds": 1.0 },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "windowDrag", "from": [700, 860], "to": [1100, 860], "steps": 12 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "playheadMS": 1000, "withinMS": 40, "hasIn": true, "hasOut": true },
+    { "do": "describe", "stage": "1-drawn-by-hand", "note": "a real drag on the ruler from about 0:03 to 0:05, away from the playhead at 0:01: a green band with a grip at each end, washed down the tracks, and the playhead did not move" },
+    { "do": "snapshot", "name": "1-drawn-by-hand" },
+    { "do": "windowDrag", "from": [1100, 860], "to": [1300, 860], "steps": 8 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-out-moved", "note": "a drag that starts on the Out grip carries the Out alone to about 0:06, the In stays" },
+    { "do": "snapshot", "name": "2-out-moved" },
+    { "do": "windowDrag", "from": [305, 860], "to": [345, 860], "steps": 6 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "playheadMS": 1200, "withinMS": 80, "hasIn": true, "hasOut": true },
+    { "do": "describe", "stage": "3-playhead-scrubbed", "note": "a drag that starts on the playhead scrubs it, as the ruler always has, and the range is left as it was" },
+    { "do": "snapshot", "name": "3-playhead-scrubbed" }
+  ]
+}

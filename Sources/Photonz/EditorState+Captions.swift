@@ -115,11 +115,15 @@ extension EditorState {
     /// it is really about: it leaves the selection and the mode alone and
     /// says nothing when it hears nothing.
     ///
+    /// `range` is a stretch marked on the ruler (Add Captions for Range): the
+    /// lines that start inside it are written again, every other line stays
+    /// exactly as it was (`CaptionCues.replacing`).
+    ///
     /// Nothing leaves this Mac. The words land in one undo step at the end
     /// rather than dribbling in: a document that changes under you four hundred
     /// times while you watch is a document you cannot undo out of, and the
     /// progress line is already saying it is getting somewhere.
-    func writeCaptions(quietly: Bool = false) {
+    func writeCaptions(quietly: Bool = false, within range: Range<Int>? = nil) {
         guard canWriteCaptions else { return }
         let subject = captionableSound
         guard let sound = subject.sound, let url = subject.url else {
@@ -140,7 +144,7 @@ extension EditorState {
                 let heard = try await SpeechTranscription.words(of: url, locale: locale) {
                     landing.note($0)
                 }
-                await MainActor.run { self?.captionsLanded(heard, of: sound, quietly: quietly) }
+                await MainActor.run { self?.captionsLanded(heard, of: sound, quietly: quietly, within: range) }
             } catch {
                 await MainActor.run {
                     self?.captionsBeingWritten = nil
@@ -181,7 +185,8 @@ extension EditorState {
 
     /// What happens when the listening finishes, whether it ran out of
     /// recording or somebody stopped it.
-    private func captionsLanded(_ heard: HeardWords, of sound: SoundRef, quietly: Bool) {
+    private func captionsLanded(_ heard: HeardWords, of sound: SoundRef, quietly: Bool,
+                                within range: Range<Int>? = nil) {
         captionsBeingWritten = nil
         captionsTask = nil
         captionsWatcher?.cancel()
@@ -196,8 +201,14 @@ extension EditorState {
         // The recogniser heard a FILE. The timeline is not the file: a trim, a
         // cut or a change of speed moves every word after it, and a piece
         // thrown away takes its words with it (`CaptionTiming`).
-        let placed = CaptionTiming.onTheTimeline(heard.words, of: sound, in: document.audioMix())
-        let cues = CaptionCues.cues(from: placed)
+        var placed = CaptionTiming.onTheTimeline(heard.words, of: sound, in: document.audioMix())
+        var cues = CaptionCues.cues(from: placed)
+        if let range {
+            // For one stretch: only what was said inside it is news.
+            placed = placed.filter { range.contains($0.startMS) }
+            let inside = cues.filter { range.contains($0.inMS) }
+            cues = inside.isEmpty ? [] : CaptionCues.replacing(document.captionCues, with: inside, within: range)
+        }
         guard !cues.isEmpty else {
             guard !quietly else { return }
             raiseCanvasNotice(.captionsCameTo(heard.wasStopped

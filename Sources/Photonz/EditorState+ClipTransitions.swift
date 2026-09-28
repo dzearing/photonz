@@ -269,6 +269,7 @@ extension EditorState {
     }
 
     func canApplyDefaultTransition(at place: TimelineCutPlace? = nil) -> Bool {
+        if place == nil, rulerRangeHeld != nil { return canAddTransitionInRange }
         if place == nil, clipsPickedForEveryCut != nil { return true }
         guard case .put = defaultTransitionPlan(at: place) else { return false }
         return true
@@ -281,6 +282,12 @@ extension EditorState {
     /// so the press carries on.
     @discardableResult
     func applyDefaultTransition(at place: TimelineCutPlace? = nil) -> Bool {
+        // A range drawn on the ruler: every cut inside it
+        // (`EditorState+RulerRange`).
+        if place == nil, rulerRangeHeld != nil, Experiments.shared.transitionsAtACutEnabled {
+            addTransitionInRange()
+            return true
+        }
         // Several clips picked and no one cut: Premiere's Apply Default
         // Transitions to Selection, every cut inside and between them.
         if place == nil, let clips = clipsPickedForEveryCut {

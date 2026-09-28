@@ -5,21 +5,19 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 0.0026,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-28T13:48:59.894Z",
-  "updated": "2026-09-28T13:49:07.566Z",
+  "updated": "2026-09-28T20:05:41.861Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Filed from the intake window.",
+  "notes": "Filed from the intake window. 2026-09-28: split. Merge into One Clip + Break Apart -> merge-a-range-into-one-clip-and-break-it-apart-a; marquee and Option-drag/R track range -> marquee-over-the-tracks-and-a-range-limited-to-t; Cmd-C/X/V of a range -> copy-cut-and-paste-a-range-of-time. Built: PhotonzCore/RulerRange.swift (grip, drawn, moving, markRange, splitEveryClip(atEdgesOf:), putTransitionOnEveryCut(within:), CaptionCues.replacing), Photonz/EditorState+RulerRange.swift, TimelineDock ruler gesture/band/wash, dragRuler walk step.",
   "acceptance": [
     "Drag on the ruler (the time header) to select a time range across all tracks, shown as a tinted band with handles you can drag to adjust; click elsewhere on the ruler clears it; it sets In and Out too",
-    "Drag a marquee in empty timeline space to select clips and parts of clips on the tracks it crosses; Option-drag (or R, Final Cut's Range tool) selects a time range limited to the tracks crossed",
-    "Right-click a range: Merge into One Clip (the covered parts of clips on a track become one nested clip that plays the same), Add Transition (at the cut inside the range), Delete, Ripple Delete, Lift, Copy, Cut, Split at Range Edges, Add Captions for Range, Export Range",
-    "Keys: Delete and Shift-Delete act on the range; Cmd-C/X/V copy, cut and paste it at the playhead",
-    "Merge is non-destructive and undoable, and the merged clip can be opened back into its parts (right-click > Break Apart)",
-    "Walk at Next defaults: two clips on a track with a cut between; drag a range across the cut on the ruler, Merge into One Clip, undo, then Add Transition; photograph each step"
+    "Right-click a range: Add Transition (at the cuts inside the range), Split at Range Edges, Delete, Ripple Delete (Delete is Premiere's Lift, Ripple Delete its Extract), Add Captions for Range, Export Range",
+    "Keys: Delete and Shift-Delete act on the range; Cmd-T puts the default transition on every cut inside it",
+    "Walk at Next defaults: two clips on a track with a cut between; drag a range across the cut on the ruler, Add Transition, undo, Split at Range Edges, Delete, Shift-Delete; photograph each step"
   ],
   "log": [
     {
@@ -29,6 +27,32 @@
     {
       "t": "2026-09-28T13:49:07.565Z",
       "note": "seq 410 -> 0.0026"
+    },
+    {
+      "t": "2026-09-28T19:18:49.688Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-28T19:21:51.076Z",
+      "note": "Pre-build review. What exists: In/Out marks on the ruler (markedRangeMS), Extract/Lift over every unlocked track, a ruler right-click menu, ⌘T default transition and putTransitionOnEveryCut(among clips). What the ask collides with: a press or drag anywhere on the ruler scrubs today (Premiere habit). Resolution: a drag that starts ON the playhead still scrubs; a drag anywhere else draws the range (sets In and Out in one undo step); a plain click moves the playhead and, outside the marked stretch, clears it; a drag on either edge of the band moves that edge. The transport scrub bar, J/K/L and arrows still scrub. Delete/Shift-Delete: Premiere meaning (Delete leaves the gap = Lift, Shift-Delete closes it = Extract), only while the range is the thing in hand (drawn, and no clip picked since). What the app cannot deliver: 'Merge into One Clip' needs a clip that holds other clips (Premiere Nest / Final Cut compound clip) which the model has no notion of; a marquee over the tracks needs piece-level multi-selection; copy/paste of a stretch of time needs a timeline clipboard. Those three go to their own p1 tasks sequenced right after this one; this run builds the ruler range, its band across the tracks, its right-click actions and keys."
+    },
+    {
+      "t": "2026-09-28T19:55:19.817Z",
+      "note": "owns these walks: draw-a-range-on-the-ruler-walk, draw-a-range-by-hand-walk"
+    },
+    {
+      "t": "2026-09-28T20:05:41.807Z",
+      "note": "walks draw-a-range-on-the-ruler-walk, draw-a-range-by-hand-walk -> draw-a-range-on-the-ruler-walk, draw-a-range-by-hand-walk, captions-and-export-for-a-range-walk"
+    },
+    {
+      "t": "2026-09-28T20:05:41.860Z",
+      "note": "Built and verified. Walks at Next defaults, all green: draw-a-range-on-the-ruler-walk (dragRuler 0:05 to 0:09 across the cut, Cmd-T puts Cross dissolve on the 1 cut inside, right-click Split at Range Edges gives 2 pieces each, Delete leaves the gap, Shift-Delete closes it, a drag on the Out grip moves only the Out, a click outside drops the range), draw-a-range-by-hand-walk (real pointer via windowDrag: drag drew In 2958/Out 4943 with playhead untouched, Out grip to 5935, a drag from the playhead scrubbed), captions-and-export-for-a-range-walk (Add Captions for Range lands captions only inside 0:02 to 0:06; Export Range opens the sheet on In to Out). Touched walks re-run green: extract-from-the-ruler-menu (now chooses Ripple Delete), extract-a-marked-stretch, export-keeps-to-the-in-and-out, the-ninety-second-cut, premiere-keys-on-the-timeline, default-transition-*, transition-on-every-cut, timeline-right-click (its 6pt drags that used to scrub now click, since a drag away from the playhead draws a range). Scripts/test.sh: 10329 tests pass. Left rough (in the audit, not filed): range actions are on the ruler right-click only, not on a clip inside the range; Add Captions for Range listens to the whole file. No mock draws a range; band follows the existing In/Out wash."
     }
+  ],
+  "started": "2026-09-28T19:18:49.687Z",
+  "walks": [
+    "draw-a-range-on-the-ruler-walk",
+    "draw-a-range-by-hand-walk",
+    "captions-and-export-for-a-range-walk"
   ]
 }

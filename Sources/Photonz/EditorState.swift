@@ -1373,6 +1373,15 @@ final class EditorState {
     /// Nil until one is clicked; the group then shows the cut's own kind, else
     /// the default.
     var transitionsGroupPick: ClipTransitionKind?
+    /// A press on the ruler in progress: what it took hold of and where
+    /// (`EditorState+RulerRange`).
+    @ObservationIgnored var rulerPress: RulerPress?
+    /// The range being drawn or reshaped on the ruler while the hand is down,
+    /// which the band shows; written to the In and the Out on letting go.
+    var rulerRangeDraft: Range<Int>?
+    /// The range last drawn on the ruler, which is the thing in hand for as
+    /// long as the marks stay on it and nothing else is picked.
+    var rulerRangeInHand: Range<Int>?
     /// The Escape watch armed for exactly as long as a clip's bar is in hand.
     @ObservationIgnored var clipBarEscapeWatch: Any?
     /// ...and the one armed while a transition's band is.

@@ -101,6 +101,9 @@ extension EditorState {
         case .splitAtPlayhead:
             splitClipAtPlayhead()
         case .lift:
+            // A range just drawn on the ruler is what is in hand when it is
+            // (`EditorState+RulerRange`): ⌫ lifts it.
+            if rulerRangeHeld != nil { return liftMarkedStretch() }
             return liftInHand()
         case .rippleDelete:
             guard canRippleDeleteInHand else { return false }
