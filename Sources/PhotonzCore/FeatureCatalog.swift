@@ -128,6 +128,8 @@ public enum FeatureCatalog {
 
     public static let copyPicksYourLayerFlag = "next-copy-picks-your-layer"
 
+    public static let menuKeysDoWhatTheySayFlag = "next-menu-keys-do-what-they-say"
+
     public static let pasteHandsYouThePointerFlag = "next-paste-hands-you-the-pointer"
 
     public static let cutSaysWhatItCannotDoFlag = "next-cut-says-what-it-cannot-do"
@@ -1209,6 +1211,16 @@ public enum FeatureCatalog {
                     title: "Start a video from an empty timeline",
                     description: "File \u{25B8} New Video starts a video from nothing: pick a size and a length, and you get an empty V1 over an empty Audio track, the Library open for Import. Off means a video only starts from a recording.",
                     area: .canvas,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: menuKeysDoWhatTheySayFlag,
+                    title: "Every key a menu shows does what it says",
+                    description: "Command Delete deletes the layer and Option Delete fills it from anywhere, not only the picture, and the layer menu shows Command J for Duplicate. Off, only the picture answers those keys and Duplicate shows Command D, which is Deselect.",
+                    area: .layers,
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

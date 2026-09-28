@@ -201,7 +201,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "rightClick", "on": "Label" } ] }
         """)
-        guard case .rightClick(let on, let at, let shot, let choose, let ticked, let unticked) = script.steps[0] else {
+        guard case .rightClick(let on, let at, let shot, let choose, let ticked, let unticked, let keys) = script.steps[0] else {
             Issue.record("rightClick"); return
         }
         #expect(on == "Label")
@@ -210,6 +210,7 @@ struct PlaytestScriptTests {
         #expect(choose == nil)
         #expect(ticked.isEmpty)
         #expect(unticked.isEmpty)
+        #expect(keys.isEmpty)
         #expect(script.steps[0].name == "rightClick")
     }
 
@@ -221,7 +222,7 @@ struct PlaytestScriptTests {
         { "steps": [ { "do": "rightClick", "on": "Label", "shot": "layer-row-menu",
                        "choose": "Duplicate", "ticked": ["Visible"], "unticked": ["Locked"] } ] }
         """)
-        guard case .rightClick(let on, _, let shot, let choose, let ticked, let unticked) = script.steps[0] else {
+        guard case .rightClick(let on, _, let shot, let choose, let ticked, let unticked, _) = script.steps[0] else {
             Issue.record("rightClick"); return
         }
         #expect(on == "Label")
@@ -229,6 +230,28 @@ struct PlaytestScriptTests {
         #expect(choose == "Duplicate")
         #expect(ticked == ["Visible"])
         #expect(unticked == ["Locked"])
+    }
+
+    /// A context menu prints a key beside a row, and the print is a promise:
+    /// the walk that reads the row can hold it to the key it shows.
+    @Test("A rightClick step can require the key each row prints")
+    func rightClickStepCanRequireTheKeysRowsPrint() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "rightClick", "on": "Label", "keys": { "Duplicate": "⌘J", "Delete": "⌘⌫" } } ] }
+        """)
+        guard case .rightClick(_, _, _, _, _, _, let keys) = script.steps[0] else {
+            Issue.record("rightClick"); return
+        }
+        #expect(keys == ["Duplicate": "⌘J", "Delete": "⌘⌫"])
+    }
+
+    @Test("A rightClick step's keys must be words")
+    func rightClickKeysMustBeWords() {
+        #expect(throws: PlaytestScriptError.self) {
+            try decode("""
+            { "steps": [ { "do": "rightClick", "on": "Label", "keys": { "Duplicate": 4 } } ] }
+            """)
+        }
     }
 
     /// The picture has no rows to name: the thing you right click on it is a
@@ -239,7 +262,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "rightClick", "at": [140, 120], "choose": "Group" } ] }
         """)
-        guard case .rightClick(let on, let at, _, let choose, _, _) = script.steps[0] else {
+        guard case .rightClick(let on, let at, _, let choose, _, _, _) = script.steps[0] else {
             Issue.record("rightClick"); return
         }
         #expect(on == nil)
@@ -252,7 +275,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "rightClick", "at": [40, 40], "space": "window" } ] }
         """)
-        guard case .rightClick(_, let at, _, _, _, _) = script.steps[0] else {
+        guard case .rightClick(_, let at, _, _, _, _, _) = script.steps[0] else {
             Issue.record("rightClick"); return
         }
         #expect(at == PlaytestPoint(CGPoint(x: 40, y: 40), space: .window))

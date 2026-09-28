@@ -835,6 +835,12 @@ extension Experiments {
     /// every layer flattened together (`CopyRoute`).
     var copyPicksYourLayerEnabled: Bool { isEnabled(FeatureCatalog.copyPicksYourLayerFlag) }
 
+    /// `next-menu-keys-do-what-they-say`: whether ⌘⌫ and ⌥⌫ reach Layer ▸
+    /// Delete Layer and Edit ▸ Fill with Foreground from anywhere, and whether
+    /// the layer menu's Duplicate prints ⌘J. Off, those rows print keys only
+    /// the canvas answers and Duplicate prints ⌘D, which is Deselect.
+    var menuKeysDoWhatTheySayEnabled: Bool { isEnabled(FeatureCatalog.menuKeysDoWhatTheySayFlag) }
+
     /// `next-cut-says-what-it-cannot-do`: whether ⌘X, ⌫, ⌥⌫ and the bucket
     /// refuse, out loud, when the marquee is over a layer no piece can be
     /// taken out of or filled in (`RegionSliceRefusal`). Off, cut silently

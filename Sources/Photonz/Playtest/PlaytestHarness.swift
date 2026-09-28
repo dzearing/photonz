@@ -768,7 +768,18 @@ private final class Run {
             // bug that was never there (2026-09-12, 2026-09-16). So the item
             // is named however the press was routed.
             if let destination {
-                if destination.item.action == nil {
+                if destination.item.action == nil, takenBy == "menu" {
+                    // The bar read the row dimmed and the menu took the press
+                    // anyway. SwiftUI brings a row's state up to date when it is
+                    // asked for, and a key press asks: measured 2026-09-28, ⌥⌫
+                    // over a marquee read Edit ▸ Fill with Foreground dimmed a
+                    // moment before the press, the menu took it, and the marquee
+                    // came out filled. A dead row never takes a press, so this
+                    // is the menu running, not the window.
+                    detail += " (\(destination.path) read dimmed before the press, which is the menu bar"
+                        + " not yet brought up to date, and the menu took the press, so a row of that"
+                        + " chord ran)"
+                } else if destination.item.action == nil {
                     detail += " (\(destination.path) carries this chord, but that item is dimmed and"
                         + " empty, so the MENU did not run: \(Self.frozenMenuBar)"
                         + " Whatever this press did came from the window itself, and for the command"
@@ -1836,9 +1847,9 @@ private final class Run {
             try await photographMenuBarMenu(menu, name: name, ticked: ticked,
                                             unticked: unticked, number: number)
 
-        case .rightClick(let on, let at, let shot, let choose, let ticked, let unticked):
+        case .rightClick(let on, let at, let shot, let choose, let ticked, let unticked, let keys):
             try await openRowMenu(on, at: at, shot: shot, choose: choose, ticked: ticked,
-                                  unticked: unticked, number: number)
+                                  unticked: unticked, keys: keys, number: number)
 
         case .dragOver(let carry, let at, let hold, let leave):
             try await dragOver(carry, at: at, hold: hold, leave: leave, number: number)
@@ -9470,7 +9481,8 @@ private final class Run {
     /// worked out is identical, because a menu is a menu wherever it hangs
     /// from.
     private func openRowMenu(_ name: String?, at: PlaytestPoint?, shot: String?, choose: String?,
-                             ticked: [String], unticked: [String], number: Int) async throws {
+                             ticked: [String], unticked: [String], keys: [String: String] = [:],
+                             number: Int) async throws {
         let aimed: (name: String, detail: String, point: CGPoint, window: NSWindow)
         if let name {
             let target = try rightClickTarget(name)
@@ -9512,6 +9524,9 @@ private final class Run {
             reading.rows = menu.items.map { $0.isSeparatorItem ? "" : $0.title }
             reading.dimmed = menu.items.filter { !$0.isSeparatorItem && !$0.isEnabled }.map(\.title)
             reading.ticked = menu.items.filter { $0.state == .on }.map(\.title)
+            for item in menu.items where !item.isSeparatorItem {
+                if let key = Self.shortcut(for: item) { reading.keys[item.title] = key }
+            }
             if let shotURL, let menuWindow = PlaytestPanelMenu.openMenuWindow() {
                 // A menu drawn shorter than its rows opened with a scroll arrow
                 // and rows out of sight, and a person would have to scroll it
@@ -9647,18 +9662,35 @@ private final class Run {
         if let extra = unticked.first(where: { reading.ticked.contains($0) }) {
             throw Failure(description: "\(target.name) ▸ \(extra) should NOT be ticked and it is")
         }
+        // A printed key is a promise; the walk holds the row to the one it
+        // expects, so it can go on and press that key.
+        for (row, wanted) in keys.sorted(by: { $0.key < $1.key }) {
+            guard reading.rows.contains(row) else {
+                throw Failure(description: "no row called \"\(row)\" in the menu on \"\(target.name)\"; "
+                    + "the rows are: " + reading.rows.map { $0.isEmpty ? "—" : $0 }.joined(separator: ", "))
+            }
+            let printed = reading.keys[row]
+            guard printed == wanted else {
+                throw Failure(description: "\(target.name) ▸ \(row) prints "
+                    + (printed.map { "\($0)" } ?? "no key") + " and it should print \(wanted)")
+            }
+        }
         let rows = reading.rows.map { $0.isEmpty ? "—" : $0 }.joined(separator: " | ")
         var detail = "right clicked \"\(target.name)\""
         if !target.detail.isEmpty { detail += " (\(target.detail))" }
         detail += " at window \(short(target.point)): \(reading.rows.count) rows: \(rows)"
         detail += "; ticked: \(reading.ticked.isEmpty ? "none" : reading.ticked.joined(separator: ", "))"
         if !reading.dimmed.isEmpty { detail += "; dimmed: \(reading.dimmed.joined(separator: ", "))" }
+        if !reading.keys.isEmpty {
+            detail += "; keys: " + reading.rows.compactMap { row in reading.keys[row].map { "\(row) \($0)" } }
+                .joined(separator: ", ")
+        }
         if let chose = reading.chose { detail += "; picked \"\(chose)\"" }
         if shot == nil { detail += opened ? "; opened on screen to read it" : "; read without opening it" }
         detail += "; picture: \(outcome)"
         note(number, "rightClick", detail,
              state: ["on": target.name, "rows": reading.rows, "ticked": reading.ticked,
-                     "dimmed": reading.dimmed, "chose": reading.chose ?? NSNull(),
+                     "dimmed": reading.dimmed, "keys": reading.keys, "chose": reading.chose ?? NSNull(),
                      "shot": reading.shot ?? NSNull()])
     }
 
@@ -12270,7 +12302,9 @@ private final class Run {
         if flags.contains(.shift) { chord += "⇧" }
         if flags.contains(.command) { chord += "⌘" }
         let names: [String: String] = [
-            "\u{8}": "⌫", "\u{7F}": "⌦", "\r": "↩", "\t": "⇥", " ": "Space", "\u{1B}": "⎋",
+            // Both of ⌫'s characters draw as ⌫ on a menu; forward delete is
+            // the function key (`DeleteKeyCharacters`).
+            "\u{8}": "⌫", "\u{7F}": "⌫", "\u{F728}": "⌦", "\r": "↩", "\t": "⇥", " ": "Space", "\u{1B}": "⎋",
             "\u{F700}": "↑", "\u{F701}": "↓", "\u{F702}": "←", "\u{F703}": "→",
         ]
         return chord + (names[item.keyEquivalent] ?? item.keyEquivalent.uppercased())

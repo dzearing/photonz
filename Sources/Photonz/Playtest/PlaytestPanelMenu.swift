@@ -57,6 +57,8 @@ struct PlaytestMenuReading: Sendable {
     var dimmed: [String] = []
     /// The rows wearing a checkmark, which is how a setting says it is on.
     var ticked: [String] = []
+    /// The key each row prints beside its name, as a person reads it ("⌘J").
+    var keys: [String: String] = [:]
     /// The row that was picked, if the step asked for one.
     var chose: String?
     /// Why no row was picked when one was asked for.

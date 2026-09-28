@@ -123,14 +123,20 @@ struct EditorCommands: Commands {
     /// before the main menu, and the field editor claims both a plain letter
     /// and ⌥⌫ for itself, so a focused field keeps them either way (measured
     /// both ways on 2026-09-08 against a control case that fired the menu).
-    /// The ⌥⌫ half of that was re-measured on 2026-09-17, since until then the
-    /// row carried a chord no keyboard could type and so could not have won
-    /// anything: a window with a text field in it, the field holding the
-    /// keyboard, and a real ⌫ press with ⌥ handed to `NSApplication.sendEvent`
-    /// deleted a word and left the menu item alone, while the same press with
-    /// nothing focused ran the item. ⌘⌫ goes the other way — the menu takes it
-    /// even mid-rename — which is the ordinary Mac split and why Delete Layer
-    /// keeps it.
+    ///
+    /// What the ⌫ rows carry. A real ⌫ press carries U+007F, but AppKit only
+    /// matches it against a row holding U+0008, so a row holding U+007F prints
+    /// ⌫ and no press ever reaches it (`DeleteKeyCharacters.menuKeyEquivalent`).
+    /// Measured on 2026-09-28 with events built by CoreGraphics the way a
+    /// keyboard builds them, against SwiftUI rows: U+007F matched never, bare
+    /// or with ⌘ or ⌥, and U+0008 matched every time; and in the probe with
+    /// its menu bar live, ⌘⌫ and ⌥⌫ went past both rows to the canvas. An
+    /// earlier note here (2026-09-17) said the opposite because it measured
+    /// with a hand-built `NSEvent`, which matches U+007F and no real press
+    /// ever looks like. With a field holding the keyboard a live ⌥⌫ row
+    /// still leaves the press to the field; a live ⌘⌫ row does not, it wins
+    /// even mid-rename, so Delete Layer hands the press back to the field
+    /// itself (`deleteLayerRow`).
     /// The reason is plainer: an unmodified letter in the menu bar is not a
     /// Mac idiom, and X is already taught on the bucket's swap button, which
     /// wears it as a tooltip. X itself lives on an invisible stand-in in the
@@ -142,10 +148,11 @@ struct EditorCommands: Commands {
         } label: {
             Label { Text("Fill with Foreground") } icon: { Self.swatch(editor?.foregroundFillHex) }
         }
-        // Not `.delete`: SwiftUI's is U+0008 and AppKit only matches a ⌫ press
-        // against U+007F, so `.delete` puts a chord on the row that no
-        // keyboard can type. See `DeleteKeyCharacters`.
-        .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.backwards), modifiers: .option)
+        // U+0008, the character AppKit matches a real ⌫ against, once
+        // `next-menu-keys-do-what-they-say` is on; U+007F off, which prints ⌫
+        // and leaves the press to the canvas. See `DeleteKeyCharacters`.
+        .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuRow(
+            answersThePress: Experiments.shared.menuKeysDoWhatTheySayEnabled)), modifiers: .option)
         .disabled(!(editor?.canFillWithFillColors ?? false))
         Button {
             editor?.fillSelectedLayer(useBackground: true)
@@ -155,6 +162,36 @@ struct EditorCommands: Commands {
         .disabled(!(editor?.canFillWithFillColors ?? false))
         Button("Swap Fill Colors") { editor?.swapFillColors() }
             .disabled(editor == nil)
+    }
+
+    /// Layer ▸ Delete Layer, on ⌘⌫.
+    ///
+    /// Off (`next-menu-keys-do-what-they-say`), the row holds U+007F, which
+    /// prints ⌫ and which no press reaches, so only the canvas answers ⌘⌫. On,
+    /// it holds U+0008 and the press reaches it from anywhere, the layers list
+    /// included. A live ⌘⌫ row wins over a text field too (measured
+    /// 2026-09-28), so while a field is being typed in the row does to the
+    /// field what ⌘⌫ means there, delete to the start of the line, the same
+    /// way Cut, Copy and Paste act on a field that has the keyboard. It cannot
+    /// tell a press from a pick with the mouse: SwiftUI runs the action later,
+    /// when `NSApp.currentEvent` is no longer the key press.
+    @ViewBuilder private var deleteLayerRow: some View {
+        let live = Experiments.shared.menuKeysDoWhatTheySayEnabled
+        Button("Delete Layer") {
+            if live, let fieldEditor {
+                fieldEditor.doCommand(by: #selector(NSStandardKeyBindingResponding.deleteToBeginningOfLine(_:)))
+            } else {
+                editor?.deleteSelectedLayers()
+            }
+        }
+        .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuRow(answersThePress: live)),
+                          modifiers: .command)
+        // Off while everything picked is locked: the lock is a promise the
+        // menu keeps out loud, so the row says no before the press rather
+        // than the layer disappearing under one. A dimmed row declines the
+        // press (`performKeyEquivalent` answers false for it, measured
+        // 2026-09-28), so it goes on to whatever has the keyboard.
+        .disabled(!(editor?.canDeleteSelectedLayers ?? false))
     }
 
     /// A menu row's colour chip. Drawn rather than tinted from a symbol because
@@ -1183,15 +1220,7 @@ struct EditorCommands: Commands {
                 .keyboardShortcut("[", modifiers: [.command, .shift])
                 .disabled(!hasLayerSelection)
             Divider()
-            // Off while everything picked is locked: the lock is a promise the
-            // menu keeps out loud, so the row says no before the press rather
-            // than the layer disappearing under one.
-            Button("Delete Layer") { editor?.deleteSelectedLayers() }
-                // U+007F rather than SwiftUI's `.delete`, which is the
-                // backspace control character no keyboard sends. See
-                // `DeleteKeyCharacters`.
-                .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.backwards), modifiers: .command)
-                .disabled(!(editor?.canDeleteSelectedLayers ?? false))
+            deleteLayerRow
         }
 
         // The mock's Measure command group (§6, `next-measure-panel`): the tool,

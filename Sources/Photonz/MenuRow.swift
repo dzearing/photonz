@@ -14,6 +14,7 @@
 // surface only turns it into rows.
 
 import AppKit
+import PhotonzCore
 import SwiftUI
 
 /// The key printed against a row, in both alphabets at once: SwiftUI wants a
@@ -36,8 +37,13 @@ struct MenuShortcut {
         MenuShortcut(key: key, modifiers: [.command, .option])
     }
 
-    /// ⌘⌫. The character is the one both frameworks draw as ⌫.
-    static var commandDelete: MenuShortcut { MenuShortcut(key: "\u{7F}", modifiers: .command) }
+    /// ⌘⌫. Both characters draw as ⌫; only U+0008 is what AppKit matches a
+    /// real press against, so that is what a row carries once
+    /// `next-menu-keys-do-what-they-say` is on (`DeleteKeyCharacters`).
+    @MainActor static var commandDelete: MenuShortcut {
+        MenuShortcut(key: DeleteKeyCharacters.menuRow(
+            answersThePress: Experiments.shared.menuKeysDoWhatTheySayEnabled), modifiers: .command)
+    }
 
     var keyEquivalent: KeyEquivalent { KeyEquivalent(key) }
 

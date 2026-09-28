@@ -2538,8 +2538,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// thing you right click on it is a SPOT — so `at` is a point in the same
     /// coordinates every other canvas step is written in, document pixels
     /// unless `space` says otherwise.
+    ///
+    /// `keys` holds rows to the key each one prints, as a person reads it
+    /// (`{"Duplicate": "⌘J"}`), and fails the walk when a row prints another
+    /// one or none. A printed key is a promise, so the walk that reads it can
+    /// go on to press it.
     case rightClick(on: String?, at: PlaytestPoint?, shot: String?, choose: String?,
-                    ticked: [String], unticked: [String])
+                    ticked: [String], unticked: [String], keys: [String: String] = [:])
     /// Pick a tile up off the Library shelf by its name and let go of it
     /// somewhere: `to` a point on the picture, or `onto` a row in the layers
     /// list, which is the other place a saved style can be put down. Exactly
@@ -3758,7 +3763,8 @@ public enum PlaytestStep: Sendable, Equatable {
                                shot: try f.optionalString("shot"),
                                choose: try f.optionalString("choose"),
                                ticked: try f.optionalStrings("ticked"),
-                               unticked: try f.optionalStrings("unticked"))
+                               unticked: try f.optionalStrings("unticked"),
+                               keys: try f.optionalWordsByName("keys"))
         case "dragTile":
             let landing: PlaytestColorDropExpectation = if fields["expect"] == nil {
                 .takes
@@ -4473,6 +4479,23 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw invalid(field, "must be a list of non-empty strings")
             }
             return values
+        }
+
+        /// A JSON object of names to words (`{"Duplicate": "⌘J"}`); empty when
+        /// the field is absent.
+        func optionalWordsByName(_ field: String) throws -> [String: String] {
+            guard let raw = fields[field] else { return [:] }
+            guard let values = raw as? [String: Any] else {
+                throw invalid(field, "must be an object of names to non-empty strings")
+            }
+            var words: [String: String] = [:]
+            for (name, value) in values {
+                guard let word = value as? String, !word.isEmpty, !name.isEmpty else {
+                    throw invalid(field, "must be an object of names to non-empty strings")
+                }
+                words[name] = word
+            }
+            return words
         }
 
         func optionalNumbers(_ field: String) throws -> [Double] {

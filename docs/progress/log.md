@@ -20009,3 +20009,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - The hardware encoder has a floor it cannot get under (Small at 900 px/s: 1.3x at best), so the Export sheet (document and recording) now writes the same stretches in the background and shows what they come to (`ExportWeigh.measure`, `DocumentMovieWriter.weigh`, `VideoExporter.weighMP4`). Stretches follow a warm-up copy, because a file's first 2s cost the encoder about 1.6x any later 2s. Sound is written whole and counted as it lands (a flat 128 kbps allowance said 117 KB for a 63 KB file).
 - Tests: `BusyVideoSizeTests` (lightest of three, since parallel encodes write heavier), `VideoExportSampleTests`, `VideoCutStretchTests`. Walk: `a-busy-recording-says-what-it-weighs-walk` (new actions `openScrollingPage`, `exportDialogAsSmallVideo`); the harness's `writeVideo` now weighs an MP4 the way the sheet does, and `an-edited-recording-comes-out-as-a-video-walk` holds the sheet to 1.25x.
 - Open: Small of a very busy recording is still bigger than Small's budget (the sheet says so). Audit at `queue/audits/2026-09-27-busy-mp4-size.json`.
+
+## 2026-09-28: Menu keys do what they say
+
+- Reproduced in the probe with the menu bar live: Cmd-Delete and Opt-Delete never reached Layer > Delete Layer or Edit > Fill with Foreground (rows held U+007F; AppKit matches a real Delete press against U+0008 only), and the layer menu printed Cmd-D (Deselect) beside Duplicate.
+- Behind `next-menu-keys-do-what-they-say` (Next default on): both rows carry U+0008, Delete Layer acts on a focused text field as delete-to-line-start, and the layer menu's Duplicate prints Cmd-J. The comments in EditorCommands stated the Delete rule backwards, and are fixed.
+- Walk harness: `rightClick` takes `keys` and logs every printed key; the chord namer calls U+007F ⌫ (not ⌦); a `key` press the menu claims is no longer reported as "the MENU did not run".
+- New walk `menu-keys-do-what-they-say-walk` (front, no flags) is green, and fails with the switch off.
+- Open: a walk's menu reading can be stale for SwiftUI rows until something asks (see the task log).

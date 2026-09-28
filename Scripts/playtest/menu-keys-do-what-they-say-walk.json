@@ -1,0 +1,229 @@
+{
+  "out": "/tmp/photonz-playtest/menu-keys-do-what-they-say",
+  "seed": "Every key a menu prints beside a row does what the row says. The layer row menu used to print Command D beside Duplicate, and Command D is Deselect; Layer > Delete Layer and Edit > Fill with Foreground printed Command Delete and Option Delete on rows no press could reach, because AppKit matches a real Delete key against a different character from the one those rows held. This reads each printed key and presses it with the menu bar live, as it is for a person. Option Delete is pressed with a key step, since the menu bar reads Fill with Foreground dimmed over a fresh marquee until the press itself brings it up to date; its log line says the menu took it, and the render shows the fill.",
+  "setup": {
+    "forget": [
+      "shapes",
+      "color",
+      "tools"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1200,
+      "canvasHeight": 800,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        220,
+        180
+      ],
+      "to": [
+        560,
+        420
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "rightClick",
+      "on": "Rectangle",
+      "shot": "1-layer-row-menu",
+      "keys": {
+        "Duplicate": "⌘J",
+        "Delete": "⌘⌫",
+        "Merge Down": "⌘E"
+      }
+    },
+    {
+      "do": "describe",
+      "stage": "1-layer-row-menu",
+      "note": "the rectangle's row menu: Duplicate prints Command J, the key that duplicates, and Delete prints Command Delete"
+    },
+    {
+      "do": "shortcut",
+      "key": "j",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "New Layer via Copy"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectLayers",
+      "count": 3
+    },
+    {
+      "do": "describe",
+      "stage": "2-command-j-duplicates",
+      "note": "THE FIRST TEST: the key Duplicate prints duplicates the picked layer. Three layers now"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-command-j-duplicates"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "shortcut",
+      "key": "delete",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Delete Layer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "expect",
+      "row": "Rectangle",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "3-command-delete-reaches-delete-layer",
+      "note": "THE SECOND TEST: Command Delete reached Layer > Delete Layer itself, not only the canvas, and the rectangle is gone"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-command-delete-reaches-delete-layer"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "newLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "rectSelect"
+    },
+    {
+      "do": "drag",
+      "from": [
+        700,
+        250
+      ],
+      "to": [
+        980,
+        520
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "key",
+      "key": "delete",
+      "modifiers": [
+        "option"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "4-option-delete-reaches-fill",
+      "note": "THE THIRD TEST: Option Delete is taken by the menu, Edit > Fill with Foreground, and the marquee on the empty layer comes out flooded with the foreground colour. A key step rather than a shortcut step: the menu bar reads that row dimmed until something asks SwiftUI for it, and the press is what asks"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-option-delete-reaches-fill"
+    },
+    {
+      "do": "render",
+      "name": "4-option-delete-filled-doc"
+    }
+  ]
+}

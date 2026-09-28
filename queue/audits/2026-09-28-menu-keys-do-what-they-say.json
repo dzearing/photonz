@@ -1,0 +1,26 @@
+{
+  "feature": "Every key a menu shows does what it says",
+  "epic": "video-cutting",
+  "summary": "Command Delete now deletes the picked layers and Option Delete fills with the foreground colour from anywhere in the editor, not only while the picture has the keyboard. The layer right-click menu shows Command J beside Duplicate, the key that really duplicates, instead of Command D, which is Deselect.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. The walk is Scripts/playtest/menu-keys-do-what-they-say-walk.json (it brings the probe to the front, so the menu bar is live).",
+  "switched": {},
+  "try": [
+    { "do": "Draw a rectangle, then right-click its row in the layers list.", "shot": "2026-09-28-menu-keys-1.png" },
+    { "do": "Read the key beside Duplicate (Command J), close the menu and press Command J." },
+    { "do": "Undo, click the rectangle's row in the layers list, and press Command Delete.", "shot": "2026-09-28-menu-keys-2.png" },
+    { "do": "Undo, add a new empty layer, drag a marquee with the rectangle select tool, and press Option Delete.", "shot": "2026-09-28-menu-keys-3.png" },
+    { "do": "Double-click a layer's name to rename it, type a few letters, and press Command Delete." }
+  ],
+  "evaluate": [
+    "Does Command J beside Duplicate read right to you, given that Photoshop's own Duplicate Layer shows no key at all?",
+    "With the layers list clicked last, does Command Delete deleting the layer feel expected?",
+    "While renaming a layer, does Command Delete clear the text to the start of the line and leave the layer alone?",
+    "With a marquee up, would you rather Command Delete deleted the whole layer (what the menu says, and what it does now) or erased the marquee as Delete does?"
+  ],
+  "rough": [
+    "Command Delete over a marquee, or with points of a path picked, now deletes the whole layer, because that is what the menu row promises. Before, the press fell through to the canvas and did what plain Delete does (erased the marquee, or removed the points). Plain Delete still does those things.",
+    "While a text field has the keyboard, choosing Layer > Delete Layer with the mouse clears the field's text to the start of the line instead of deleting the layer. It works the same way Cut, Copy and Paste already work on a field. The app cannot tell a key press from a mouse pick at that point.",
+    "Current keeps the old behaviour: the fix sits behind a Next-only switch because these menu rows are shared with Current.",
+    "Nothing in the mocks covers menu keys, so there is no mock frame to compare against."
+  ]
+}

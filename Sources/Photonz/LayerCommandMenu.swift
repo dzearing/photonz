@@ -72,7 +72,12 @@ enum LayerCommandList {
             rows.append(.separator)
         }
 
-        rows.append(.command("Duplicate", .command("d")) { editorState.duplicateLayer(id: id) })
+        // ⌘D is Photoshop's Deselect and the app's, so it never duplicated
+        // anything. ⌘J (New Layer via Copy) duplicates the picked layer when
+        // no marquee is up, which is the key the timeline's Duplicate prints.
+        let duplicateKey: MenuShortcut = Experiments.shared.menuKeysDoWhatTheySayEnabled
+            ? .command("j") : .command("d")
+        rows.append(.command("Duplicate", duplicateKey) { editorState.duplicateLayer(id: id) })
         // Where Photoshop keeps them, under the names it uses for the same
         // pair, so the two moves that make one shape match another are one
         // right click away (`EditorState+Look.swift`).

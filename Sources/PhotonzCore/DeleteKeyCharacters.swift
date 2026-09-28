@@ -49,6 +49,13 @@ public enum DeleteKeyCharacters {
     /// for the same key, which is the whole reason this constant has a name.
     public static let menuKeyEquivalent: Character = backspaceControl
 
+    /// What a menu row that prints ⌫ carries: the character a press really
+    /// reaches when it has to answer the key, else the one Current's rows have
+    /// always carried (`next-menu-keys-do-what-they-say`). Both draw as ⌫.
+    public static func menuRow(answersThePress: Bool) -> Character {
+        answersThePress ? menuKeyEquivalent : backwards
+    }
+
     /// Whether a pressed character is one of the delete keys.
     public static func means(deleteKey character: Character) -> Bool {
         character == backwards || character == forwards || character == backspaceControl
