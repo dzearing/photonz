@@ -9,13 +9,13 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-28T13:48:59.977Z",
-  "updated": "2026-09-28T13:49:07.619Z",
+  "updated": "2026-09-28T14:49:32.882Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
   "acceptance": [
-    "Pinch on the timeline zooms time smoothly and continuously around the pointer (no steps), 60 fps, from the whole document to single frames",
-    "Option-pinch, or pinch while the pointer is over the track headers, changes track height smoothly (vertical zoom); Option-scroll does the same",
+    "Pinch on the timeline zooms BOTH ways at once, anchored on the pointer: time grows horizontally and rows grow taller vertically, so the moment AND the row under the pointer stay under the pointer through the whole pinch (user 2026-09-28: 'I want vertical zoom to make the rows larger, but centered where my mouse is'); smooth and continuous, 60 fps, from the whole document to single frames",
+    "Option-pinch zooms time only, and Shift-pinch zooms row height only, both still anchored on the pointer; row height has sensible limits (compact to about 4x) and the track headers grow with their rows",
     "Two-finger scroll pans in both directions with momentum; Shift-scroll pans time",
     "The zoom buttons are removed; Fit remains only as a key (Shift-Z, as Premiere) and in the timeline's right-click menu; = and - still zoom around the playhead",
     "Zoom is kept per document and restored when it reopens",
@@ -29,6 +29,10 @@
     {
       "t": "2026-09-28T13:49:07.618Z",
       "note": "seq 420 -> 0.0027"
+    },
+    {
+      "t": "2026-09-28T14:49:32.881Z",
+      "note": "User 2026-09-28: a plain pinch zooms both ways, rows taller as well as time wider, anchored on the pointer in x and y. Acceptance updated."
     }
   ]
 }
