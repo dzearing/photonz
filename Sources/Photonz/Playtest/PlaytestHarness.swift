@@ -9442,6 +9442,15 @@ private final class Run {
             reading.dimmed = menu.items.filter { !$0.isSeparatorItem && !$0.isEnabled }.map(\.title)
             reading.ticked = menu.items.filter { $0.state == .on }.map(\.title)
             if let shotURL, let menuWindow = PlaytestPanelMenu.openMenuWindow() {
+                // A menu drawn shorter than its rows opened with a scroll arrow
+                // and rows out of sight, and a person would have to scroll it
+                // to read it. The picture would show exactly that, so the walk
+                // says so rather than handing an audit a clipped menu.
+                let wanted = menu.size.height
+                if menuWindow.frame.height + 4 < wanted {
+                    reading.problem = "only part of it showed: \(Int(menuWindow.frame.height))pt of its "
+                        + "\(Int(wanted))pt were on screen and the rest sat behind a scroll arrow"
+                }
                 let finished = DispatchSemaphore(value: 0)
                 PlaytestPanelMenu.capture(menuWindow: menuWindow.windowNumber,
                                           over: window.windowNumber,
@@ -9497,10 +9506,24 @@ private final class Run {
             // is not sitting over whatever the person at this machine is
             // looking at.
             hop.schedule(after: 0.55)
-            // At the point the click landed on, which is where a real right
-            // click puts it: the picture then shows the menu joined to the row
-            // it came from, rather than floating at a corner.
-            menu.popUp(positioning: nil, at: view.convert(target.point, from: nil), in: view)
+            // Opened the way a real right click opens it: AppKit's context menu
+            // call, handed the click itself. `popUp(positioning:at:in:)` hangs
+            // the menu from the point and lets it run off the foot of the
+            // screen, so a clip on the timeline showed three rows and a scroll
+            // arrow in every picture while a person right clicking the same
+            // clip got the whole menu, slid up to fit (measured 2026-09-27:
+            // 96pt tall and scrolled against 392pt and whole, same menu, same
+            // point). The picture is only worth taking of the menu a person
+            // would see.
+            if let click = NSEvent.mouseEvent(
+                with: .rightMouseDown, location: target.point, modifierFlags: [],
+                timestamp: ProcessInfo.processInfo.systemUptime,
+                windowNumber: window.windowNumber, context: nil,
+                eventNumber: 0, clickCount: 1, pressure: 1) {
+                NSMenu.popUpContextMenu(menu, with: click, for: view)
+            } else {
+                menu.popUp(positioning: nil, at: view.convert(target.point, from: nil), in: view)
+            }
             await sleep(0.25)
         }
 
