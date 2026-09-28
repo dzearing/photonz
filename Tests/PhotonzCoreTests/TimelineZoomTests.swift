@@ -55,12 +55,21 @@ struct TimelineZoomTests {
         // A document already shorter than the closest window has nothing to
         // open out INTO: zooming it in past its own length would draw a
         // timeline mostly made of nothing.
-        let half = TimelineZoom.widestScale(documentMS: 500)
-        #expect(half == 1)
+        let short = TimelineZoom.widestScale(documentMS: 200)
+        #expect(short == 1)
     }
 
-    @Test func eightSecondsStillZoomsEightTimes() {
-        #expect(TimelineZoom.widestScale(documentMS: Self.eightSeconds) == 8)
+    @Test func eightSecondsZoomsDownToAQuarterOfASecond() {
+        #expect(TimelineZoom.widestScale(documentMS: Self.eightSeconds) == 32)
+    }
+
+    @Test func closestInShowsSingleFramesWideEnoughToAimAt() {
+        // User 2026-09-28: a pinch goes "from the whole document to single
+        // frames". At the closest window a thirtieth of a second, one frame of
+        // a screen recording, is a target a pointer can land on: more than
+        // fifty points of a six hundred point lane.
+        let pointsPerFrame = 600.0 * (1000.0 / 30) / TimelineZoom.closestVisibleMS
+        #expect(pointsPerFrame > 50)
     }
 
     // MARK: - Zooming keeps you where you were looking
@@ -248,6 +257,18 @@ struct TimelineZoomTests {
         let labels = ruler.ticks.map(\.label)
         #expect(Set(labels).count == labels.count)
         #expect(labels.contains { $0.contains(".") })
+    }
+
+    @Test func aRulerOnSingleFramesCountsInHundredths() {
+        // A quarter of a second across: the numbers are fifty milliseconds
+        // apart, and tenths would say "0:12.1" twice.
+        let zoom = TimelineZoom(scale: 1200, startMS: 12_000).clamped(documentMS: Self.fiveMinutes)
+        let ruler = MotionStripRuler(documentMS: Int(Self.fiveMinutes), zoom: zoom)
+        let labels = ruler.ticks.map(\.label)
+        #expect(labels.count >= 3)
+        #expect(Set(labels).count == labels.count)
+        #expect(labels.first == "0:12.00")
+        #expect(labels.contains("0:12.05"))
     }
 
     // MARK: - What is drawn when a bar runs off the side

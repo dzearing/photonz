@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/the-timeline-is-the-one-in-the-mock-walk",
-  "seed": "The dock under a recording is the timeline video.html draws: a transport with volume, start, a big round play, end, the time, a full width scrubber and the length; the timeline's own bar with Select, Blade and the zoom; a ruler in seconds; a named track per clip with the clip drawn in its kind's colour and its name inside; a red playhead with a head across every track. At Next defaults, no flag set.",
+  "seed": "The dock under a recording is the timeline video.html draws: a transport with volume, start, a big round play, end, the time, a full width scrubber and the length; the timeline's own bar with Select and Blade (the zoom is a pinch, = and -, and Shift-Z, since the user turned down zoom buttons on 2026-09-28); a ruler in seconds; a named track per clip with the clip drawn in its kind's colour and its name inside; a red playhead with a head across every track. At Next defaults, no flag set.",
   "setup": {
     "front": true,
     "timelineOpen": true,
@@ -127,8 +127,12 @@
       "name": "2-two-tracks"
     },
     {
-      "do": "press",
-      "control": "Timeline 4x"
+      "do": "action",
+      "action": "timelineZoomIn"
+    },
+    {
+      "do": "action",
+      "action": "timelineZoomIn"
     },
     {
       "do": "wait",
@@ -137,7 +141,7 @@
     {
       "do": "describe",
       "stage": "3-zoomed",
-      "note": "4x lit: two seconds of the recording across the width, the ruler in half seconds, the overview above it saying where the window is, the playhead still on the cut"
+      "note": "opened out four times (two presses of =): two seconds of the recording across the width, the ruler in half seconds, the time scroller under the lanes saying where the window is, the playhead still on the cut"
     },
     {
       "do": "panel",
@@ -148,8 +152,8 @@
       "name": "3-zoomed-4x"
     },
     {
-      "do": "press",
-      "control": "Timeline Fit"
+      "do": "action",
+      "action": "timelineFit"
     },
     {
       "do": "wait",

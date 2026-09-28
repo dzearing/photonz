@@ -1,0 +1,28 @@
+{
+  "feature": "Pinch the timeline both ways, no zoom buttons",
+  "epic": "video-cutting",
+  "summary": "A trackpad pinch on the tracks now zooms time wider and rows taller at once, anchored on the pointer. Option-pinch zooms time only, Shift-pinch rows only. The zoom buttons are gone, and the scrollers sit in the dock's margins, so zooming never moves anything above.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any recording and switch to Edit (Cmd-2).",
+  "switched": {},
+  "try": [
+    { "do": "Put the pointer over a clip on the tracks and pinch out with two fingers.", "shot": "2026-09-28-timeline-pinch-0-zoomed-out-sc.png" },
+    { "do": "Keep pinching: time opens out and the rows grow, with the spot under your fingers staying put.", "shot": "2026-09-28-timeline-pinch-2-pinched-in-both-ways-sc.png" },
+    { "do": "Hold Shift and pinch to change only the row height; hold Option and pinch to change only time.", "shot": "2026-09-28-timeline-pinch-3-tall-tracks-sc.png" },
+    { "do": "Two-finger scroll sideways and up and down to move around; drag the thin bars at the bottom and right edges." },
+    { "do": "Press Shift-Z (or right-click the ruler > Zoom to Fit) to see the whole recording again." },
+    { "do": "Close the recording and open it again: it comes back zoomed the way you left it.", "shot": "2026-09-28-timeline-pinch-5-reopened-as-left-sc.png" }
+  ],
+  "evaluate": [
+    "Does a plain pinch growing the rows along with time feel right, or should a plain pinch be time only?",
+    "Is four times the compact height the right ceiling for a row?",
+    "Are the thin scrollers at the bottom and right edges easy enough to find and grab?",
+    "Does anything on the page still jump while you pinch?"
+  ],
+  "rough": [
+    "The walk drives the same call a pinch makes, but a real trackpad gesture can't be synthesized on this machine, so the finger feel itself (smoothness, 60 fps) still needs your hands.",
+    "The dock keeps its height while rows grow, so at 4x only about one track fits and its name can scroll out of view with it. The name sits in the middle of the row rather than pinned to the top.",
+    "The video mock draws Fit, 2x, 4x and 8x zoom buttons on the timeline's bar. They're removed because you asked; the mock page is left as drawn.",
+    "Shift-Z is also Punch In. When the timeline has the keyboard it fits, unless a punch-in region is drawn on the picture, in which case it punches in.",
+    "The closest zoom went from one second across to a quarter second, so single frames are about 80 points wide. The ruler reads in hundredths there."
+  ]
+}

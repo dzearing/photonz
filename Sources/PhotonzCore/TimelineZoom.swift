@@ -18,7 +18,7 @@ import Foundation
 ///
 /// Two numbers say all of it: how much smaller the window is than the
 /// document, and where its left hand edge is.
-public struct TimelineZoom: Hashable, Sendable {
+public struct TimelineZoom: Hashable, Sendable, Codable {
 
     /// How many times smaller the window is than the document. One is the
     /// whole document across the width, which is what the strip has always
@@ -30,13 +30,12 @@ public struct TimelineZoom: Hashable, Sendable {
     /// The whole document, across the width.
     public static let fit = TimelineZoom()
 
-    /// As far in as it goes: one second of the recording across the whole
-    /// width. On a lane six hundred points wide that is six hundred points a
-    /// second, so a spoken word of about a third of a second is two hundred
-    /// points of timeline and a cut can be put in the middle of it rather than
-    /// near it. Further in than this buys nothing: the frames themselves are
-    /// forty milliseconds apart.
-    public static let closestVisibleMS: Double = 1000
+    /// As far in as it goes: a quarter of a second of the recording across
+    /// the whole width. On a lane six hundred points wide one frame of a
+    /// thirty frame recording is eighty points, so a pinch runs from the whole
+    /// document down to single frames you can put a cut between (user
+    /// 2026-09-28). It was a whole second, thirty frames across, until then.
+    public static let closestVisibleMS: Double = 250
 
     /// One press of the plus or the minus. Doubling is the step every timeline
     /// in the world uses, and it means five minutes reaches its closest window

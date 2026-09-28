@@ -982,6 +982,9 @@ private final class Run {
                  + "\(String(format: "%.4f", Double(landed))) in \(steps) nudges; \(verdict)",
                  state: describe(extra: ["gridDuringPinch": reports]))
 
+        case .timelinePinch(let pinch):
+            try await timelinePinch(pinch, number: number, name: step.name)
+
         case .hover(let target, let wanted):
             // `window` reaches a panel of the app's own that is not the editor
             // — the capture history is one — so its controls can be rested on
@@ -11222,6 +11225,13 @@ private final class Run {
                     + ", not " + String(format: "%.3f", want))
             }
         }
+        if let want = claim.zoomScale, abs(editor.timelineWindow.scale - want) > want * 0.01 {
+            wrong.append(String(format: "time is opened out %.2f times, not %.2f", editor.timelineWindow.scale, want))
+        }
+        if let want = claim.rowScale, abs(editor.timelineRowZoom.scale - want) > want * 0.01 {
+            wrong.append(String(format: "the rows are %.2f times their compact height, not %.2f",
+                                editor.timelineRowZoom.scale, want))
+        }
         if let want = claim.open, want != editor.isMotionStripOpen {
             wrong.append(editor.isMotionStripOpen ? "the timeline's tracks are open" : "the timeline's tracks are not showing")
         }
@@ -15125,6 +15135,139 @@ extension Run {
         }
         return "\(named) is where the walk said"
             + (pieces.map { ", in \($0) piece\($0 == 1 ? "" : "s")" } ?? "") + "; the timeline: \(said)"
+    }
+}
+
+// A pinch on the timeline's tracks, nudge by nudge, through the very call the
+// trackpad gesture makes (`EditorState.pinchTimeline`). A real pinch cannot be
+// synthesized on this machine, so this is the closest a walk gets, and it
+// checks after EVERY nudge, once the window has laid out, what the user asked
+// for on 2026-09-28:
+//
+// - the moment under the pointer is still under it (time zoom),
+// - the row under the pointer, and the share of it, is still under it (row
+//   zoom), measured off the tracks as they are really laid out,
+// - the ruler and the dock have not moved a point, and with ⌥ held (time
+//   alone) neither have the rows.
+//
+// A nudge that ran into an end (the start or the end of the recording, the top
+// or the bottom of the tracks, the closest or the widest zoom) cannot hold its
+// anchor and is excused, and the note says how many were.
+extension Run {
+
+    func timelinePinch(_ pinch: PlaytestTimelinePinch, number: Int, name: String) async throws {
+        let editor = try requireEditor()
+        let laneWidth = editor.timelineLaneWidth
+        guard laneWidth > 0, editor.timelineRulerFrame.height > 0, editor.timelineTracksFrame.height > 0 else {
+            throw Failure(description: "the timeline's tracks are not on screen, so there is nothing to pinch")
+        }
+        let axes = TimelinePinchAxes(option: pinch.modifiers.contains(.option),
+                                     shift: pinch.modifiers.contains(.shift))
+        let laneX = laneWidth * pinch.x
+        let viewportY = editor.timelineTracksScrollGeometry.viewportHeight * pinch.y
+        let rulerY = editor.timelineRulerFrame.minY
+        let dock = editor.timelineDockFrame
+        let length = editor.timelineLengthForZoomMS
+
+        // How far down the tracks really are scrolled: the ruler's foot is the
+        // top of their view, and the tracks' frame is where their top is now.
+        func realOffset() -> CGFloat { editor.timelineRulerFrame.maxY - editor.timelineTracksFrame.minY }
+        func momentUnder() -> Double {
+            editor.motionStripRuler.ms(atFraction: Double(laneX / laneWidth))
+        }
+        func rowUnder() -> (index: Int, share: CGFloat)? {
+            let y = realOffset() + viewportY
+            let rows = TimelineDock.rowExtents(of: editor, rows: editor.timelineRowZoom)
+            guard let index = rows.firstIndex(where: { y >= $0.top && y <= $0.bottom }) else { return nil }
+            return (index, (y - rows[index].top) / max(1, rows[index].height))
+        }
+        func atAnEndOfTime() -> Bool {
+            let window = editor.timelineWindow
+            let span = window.visibleMS(documentMS: length)
+            return window.startMS < 1 || window.startMS + span > length - 1
+                || !editor.canOpenOutTheTimeline
+        }
+        func atAnEndOfRows() -> Bool {
+            let geometry = editor.timelineTracksScrollGeometry
+            let deepest = max(0, geometry.contentHeight - geometry.viewportHeight)
+            let offset = realOffset()
+            return offset < 0.5 || offset > deepest - 0.5
+        }
+
+        let legs: [CGFloat] = pinch.roundTrips == 0
+            ? [pinch.by]
+            : Array(repeating: [pinch.by, 1 / pinch.by], count: pinch.roundTrips).flatMap { $0 }
+        var moved: [String] = []
+        var drifted: [String] = []
+        var excused = 0
+        var nudges = 0
+        let startScale = editor.timelineWindow.scale
+        let startRows = editor.timelineRowZoom.scale
+        for leg in legs {
+            let ratio = pow(Double(leg), 1.0 / Double(pinch.steps))
+            for _ in 0..<pinch.steps {
+                nudges += 1
+                let msBefore = momentUnder()
+                let rowBefore = rowUnder()
+                let tracksY = editor.timelineTracksFrame.minY
+                editor.pinchTimeline(by: ratio, laneX: laneX, laneWidth: laneWidth, viewportY: viewportY,
+                                     axes: axes)
+                await sleep(0.03)
+                if abs(editor.timelineRulerFrame.minY - rulerY) > 0.5 {
+                    moved.append(String(format: "ruler %.1f→%.1f", rulerY, editor.timelineRulerFrame.minY))
+                }
+                if abs(editor.timelineDockFrame.minY - dock.minY) > 0.5
+                    || abs(editor.timelineDockFrame.height - dock.height) > 0.5 {
+                    moved.append(String(format: "dock y %.1f h %.1f → y %.1f h %.1f", dock.minY, dock.height,
+                                        editor.timelineDockFrame.minY, editor.timelineDockFrame.height))
+                }
+                if axes == .time, abs(editor.timelineTracksFrame.minY - tracksY) > 0.5 {
+                    moved.append(String(format: "rows %.1f→%.1f", tracksY, editor.timelineTracksFrame.minY))
+                }
+                if axes.zoomsTime {
+                    if atAnEndOfTime() {
+                        excused += 1
+                    } else {
+                        let points = abs(momentUnder() - msBefore) / editor.motionStripRuler.spanMS
+                            * Double(laneWidth)
+                        if points > 1 {
+                            drifted.append(String(format: "time %.0fms→%.0fms (%.1fpt)", msBefore,
+                                                  momentUnder(), points))
+                        }
+                    }
+                }
+                if axes.zoomsRows, let rowBefore {
+                    if atAnEndOfRows() {
+                        excused += 1
+                    } else if let rowAfter = rowUnder() {
+                        let height = TimelineDock.rowExtents(of: editor, rows: editor.timelineRowZoom)[rowAfter.index].height
+                        if rowAfter.index != rowBefore.index
+                            || abs(rowAfter.share - rowBefore.share) * height > 1 {
+                            drifted.append(String(format: "row %d at %.2f → row %d at %.2f", rowBefore.index,
+                                                  rowBefore.share, rowAfter.index, rowAfter.share))
+                        }
+                    } else {
+                        drifted.append("row \(rowBefore.index) → no row")
+                    }
+                }
+            }
+        }
+        let summary = String(format: "%d nudges (%@), time %.2fx→%.2fx, rows %.2fx→%.2fx; ",
+                             nudges, "\(axes)", startScale, editor.timelineWindow.scale,
+                             startRows, editor.timelineRowZoom.scale)
+            + "\(moved.count) moves, \(drifted.count) drifts, \(excused) excused at an end"
+        note(number, name, summary, state: describe(extra: [
+            "timelinePinchMoved": Array(moved.prefix(12)),
+            "timelinePinchDrifted": Array(drifted.prefix(12)),
+        ]))
+        if !moved.isEmpty {
+            throw Failure(description: "the timeline MOVED while it was pinched: "
+                + moved.prefix(4).joined(separator: " | "))
+        }
+        if !drifted.isEmpty {
+            throw Failure(description: "what was under the pointer did not stay under it: "
+                + drifted.prefix(4).joined(separator: " | "))
+        }
     }
 }
 #endif

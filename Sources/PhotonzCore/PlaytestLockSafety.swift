@@ -185,6 +185,10 @@ public enum PlaytestLockSafety {
         "expectToast",
         "expectWindows", "hover", "key", "measureMode", "move",
         "open", "panel", "pinch",
+        // Added 2026-09-28 by reading, NOT yet watched under a lock: it calls
+        // the editor's own pinch and reads the frames and numbers the editor
+        // keeps, never a name. timeline-pinch-both-ways-walk is its watch.
+        "timelinePinch",
         "press", "readClipboard", "render", "reveal", "scrollPanel", "selectRow", "shortcut",
         // Added 2026-09-28 by reading, NOT yet watched under a lock: it finds
         // its control in the app's own register, exactly as `press` does, and

@@ -20121,3 +20121,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - App: `EditorState+RangeClipboard.swift`. Edit ▸ Cut/Copy/Paste and the walk's `copy`/`cut`/`paste` actions share one order: picked keys, then a range in hand, then the layer. Cut and Copy on the range's right click, Paste on the ruler's. After a paste the playhead waits at its end and what landed is picked.
 - Walks: `copy-and-paste-a-range-walk`, `copy-a-range-from-its-menu-walk`. Audit: `queue/audits/2026-09-28-copy-paste-a-range.json`.
 - Open: no insert paste (⇧⌘V); a range on some tracks is not copied; ranges paste only in the window they were copied in.
+
+## 2026-09-28 — Timeline: pinch both ways, no zoom buttons
+
+- Pinch on the tracks zooms time and row height together about the pointer; Option = time only, Shift = rows only; Cmd-scroll rows, Option-scroll time. Core: `TimelineRowZoom`, `TimelinePinchAxes`, `TimelineViewMemory` (per-file zoom memory), closest zoom now 250ms with hundredths on the ruler.
+- Zoom buttons removed; Shift-Z and right-click Zoom to Fit. Scrollers moved into the dock's existing margins so nothing jumps.
+- New walk step `timelinePinch` + `timeline-pinch-both-ways-walk`; `expectTimeline` gained `zoomScale`/`rowScale`.
+- Next: user judges the pinch feel on a real trackpad (audit 2026-09-28-timeline-trackpad-zoom).

@@ -1111,6 +1111,24 @@ final class EditorState {
     /// nobody's undo step and two windows on one document may be looking at
     /// different seconds of it.
     var timelineZoom: TimelineZoom = .fit
+    /// How tall the timeline's rows are: a pinch grows them with time, ⇧
+    /// alone, ⌘-scroll too (`EditorState+TimelineZoom`). Beside the document
+    /// like the zoom, never in it.
+    var timelineRowZoom: TimelineRowZoom = .compact
+    /// Where the tracks are scrolled to, which a row zoom moves so the row
+    /// under the pointer stays under it, and the tracks' scroller drags.
+    var timelineTracksScroll = ScrollPosition(edge: .top)
+    /// How far down the tracks are scrolled, how tall they are and how tall
+    /// their view is: what the tracks' scroller draws, and what a row zoom
+    /// measures the pointer against.
+    var timelineTracksScrollGeometry = TimelineTracksScrollGeometry()
+    /// Where the ruler and the whole dock are in the window. Written as they
+    /// lay out; read by a walk that proves a zoom moved neither.
+    @ObservationIgnored var timelineRulerFrame: CGRect = .zero
+    @ObservationIgnored var timelineDockFrame: CGRect = .zero
+    /// The write of how this file's timeline was left, held back until a
+    /// pinch has settled (`rememberTimelineView`).
+    @ObservationIgnored var timelineViewMemoryWrite: Task<Void, Never>?
 
     // MARK: Time in the document (`docs/design/video.md`)
 
@@ -1669,6 +1687,10 @@ final class EditorState {
             // The first frame, fetched before anybody presses anything, so the
             // window opens on the picture rather than on nothing.
             documentMomentChanged()
+            // ...and the timeline as it was left: how far opened out, how tall
+            // its rows (`TimelineViewMemory`). Not a guide's sample, whose
+            // cards point at the tracks as the guide drew them.
+            if shape == nil { restoreTimelineView() }
             // Open to watch: View mode, every time (`ViewEditMode`). A guide's
             // sample opens in Edit, because its cards point at the tracks.
             if let document {
@@ -1767,6 +1789,7 @@ final class EditorState {
             // document has no url of its own; the file it was opened from is
             // what its open groups are filed under, and it is known only now.
             restoreExpandedGroups()
+            restoreTimelineView()
             // A file opened from the capture folder can round-trip back to history.
             if url.deletingLastPathComponent().standardizedFileURL == capture.store.directory.standardizedFileURL {
                 sourceCaptureURL = url
@@ -2604,6 +2627,8 @@ final class EditorState {
         // opened out the last recording says nothing about this one
         // (`EditorState+TimelineZoom`).
         timelineZoom = .fit
+        timelineRowZoom = .compact
+        timelineTracksScroll = ScrollPosition(edge: .top)
         // ...and whether it is a player or the editor is this document's
         // question too: an untouched recording opens in View, anything
         // already worked on opens in Edit (`ViewEditMode`). A picture answers
@@ -2617,6 +2642,7 @@ final class EditorState {
         needsOpenSizing = true
         sizeWindowToImageIfReady()
         restoreExpandedGroups()
+        restoreTimelineView()
         // ...and last, because it is the one thing here a person has to read:
         // a component whose shared original has been taken off the shelf.
         announceSharedComponents(sharedReport)

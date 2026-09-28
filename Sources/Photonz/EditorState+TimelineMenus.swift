@@ -48,6 +48,8 @@ extension EditorState {
         /// Final Cut's Break Apart Clip Items, which is Photoshop's Ungroup
         /// too: the one key that takes a thing made of things apart.
         static let breakApart = MenuShortcut.commandShift("g")
+        /// Final Cut's Zoom to Fit, which the user asked for by name.
+        static let zoomToFit = MenuShortcut(key: "z", modifiers: .shift)
     }
 
     // MARK: A clip
@@ -509,6 +511,23 @@ extension EditorState {
         if !document.markers.isEmpty {
             rows.append(.separator)
             rows.append(.command("Clear All Markers") { self.removeAllMarkers() })
+        }
+        rows.append(.separator)
+        rows += timelineViewMenuRows()
+        return rows
+    }
+
+    /// How the timeline is being looked at, at the foot of its right-click
+    /// menus: the whole recording back across the width, and the rows back
+    /// to compact. The zoom itself is a pinch (user 2026-09-28).
+    func timelineViewMenuRows() -> [MenuRow] {
+        var rows: [MenuRow] = [
+            .command("Zoom to Fit", TimelineMenuKeys.zoomToFit, enabled: isTimelineOpenedOut) {
+                self.fitTimeline()
+            },
+        ]
+        if !timelineRowZoom.isCompact {
+            rows.append(.command("Compact Tracks") { self.resetTimelineRows() })
         }
         return rows
     }

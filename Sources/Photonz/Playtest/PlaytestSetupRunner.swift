@@ -89,8 +89,12 @@ extension PlaytestMemory {
             // as the default would otherwise hand every later walk a push.
             // And how loud the transport is listening, which is the person's
             // and lasts across recordings.
+            // And how far each recording's timeline was opened out and how
+            // tall its rows were (`TimelineViewMemory`), for the same reason
+            // as the playhead.
             [EditorState.motionStripOpenKey, RecordingPlaceStore.defaultsKey,
-             DefaultTransitionStore.defaultsKey, EditorState.playerVolumeLevelKey]
+             DefaultTransitionStore.defaultsKey, EditorState.playerVolumeLevelKey,
+             EditorState.timelineViewMemoryKey]
         case .shelf:
             // Not a setting at all: the shared shelf is a file, emptied in
             // `perform` beside the settings it names.

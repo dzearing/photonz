@@ -619,6 +619,47 @@ struct PlaytestScriptTests {
         }
     }
 
+    @Test("A timeline pinch names how far, which way, where, and how many times back and forth")
+    func timelinePinchStep() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "timelinePinch", "by": 4, "steps": 12, "modifiers": ["option"],
+                       "x": 0.3, "y": 0.2, "roundTrips": 20 } ] }
+        """)
+        guard case .timelinePinch(let pinch) = script.steps[0] else { Issue.record("timelinePinch"); return }
+        #expect(pinch.by == 4)
+        #expect(pinch.steps == 12)
+        #expect(pinch.modifiers == [.option])
+        #expect(pinch.x == 0.3)
+        #expect(pinch.y == 0.2)
+        #expect(pinch.roundTrips == 20)
+        #expect(script.steps[0].name == "timelinePinch")
+        // It drives the editor's own calls and reads its own numbers: no name
+        // to look up, so a lock cannot stop it.
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("timelinePinch"))
+    }
+
+    @Test("A timeline pinch left to itself is one plain pinch in the middle of the tracks")
+    func timelinePinchDefaults() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "timelinePinch", "by": 0.5 } ] }
+        """)
+        guard case .timelinePinch(let pinch) = script.steps[0] else { Issue.record("timelinePinch"); return }
+        #expect(pinch.steps == PlaytestStep.defaultPinchSteps)
+        #expect(pinch.modifiers.isEmpty)
+        #expect(pinch.x == 0.5 && pinch.y == 0.5)
+        #expect(pinch.roundTrips == 0)
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "timelinePinch", "by": 0 } ] }
+            """)
+        }
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "timelinePinch", "by": 2, "x": 1.5 } ] }
+            """)
+        }
+    }
+
     @Test func aScriptIsAnOutputFolderAndAListOfSteps() throws {
         let script = try decode("""
         {

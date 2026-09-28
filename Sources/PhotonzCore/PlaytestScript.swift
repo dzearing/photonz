@@ -488,6 +488,31 @@ public enum PlaytestModifier: String, CaseIterable, Hashable, Codable, Sendable 
     case command, shift, option, control
 }
 
+/// A pinch on the timeline's tracks (`PlaytestStep.timelinePinch`).
+public struct PlaytestTimelinePinch: Hashable, Sendable {
+    /// The zoom to arrive at, as a factor of where it starts.
+    public var by: CGFloat
+    public var steps: Int
+    public var modifiers: [PlaytestModifier]
+    /// Where the fingers are: a share of the lanes' width, and of the tracks'
+    /// view's height.
+    public var x: CGFloat
+    public var y: CGFloat
+    /// Zero: pinch once, by `by`. More: in by `by` and back out, that many
+    /// times.
+    public var roundTrips: Int
+
+    public init(by: CGFloat, steps: Int, modifiers: [PlaytestModifier], x: CGFloat, y: CGFloat,
+                roundTrips: Int) {
+        self.by = by
+        self.steps = steps
+        self.modifiers = modifiers
+        self.x = x
+        self.y = y
+        self.roundTrips = roundTrips
+    }
+}
+
 /// Which coordinates a point is in: the document's pixels (top-left origin,
 /// what a person reads off the image), the canvas view's points, or the whole
 /// window's points, measured from its top-left corner — the only way to name a
@@ -2222,6 +2247,14 @@ public enum PlaytestStep: Sendable, Equatable {
     /// the zoom is moving has nowhere to hide from this, and a single
     /// `zoomIn` would step straight over it.
     case pinch(to: CGFloat, steps: Int)
+    /// Pinch the timeline's tracks, the way two fingers on a trackpad do, at a
+    /// spot given as shares of the lanes' width and the tracks' view's height:
+    /// a run of small nudges, each through the very call the gesture makes
+    /// (`EditorState.pinchTimeline`). ⌥ held pinches time alone, ⇧ the rows
+    /// alone. After every nudge it checks that the moment and the row under
+    /// the pointer are still under it, and that neither the ruler nor the dock
+    /// moved; `roundTrips` goes in and back out that many times.
+    case timelinePinch(PlaytestTimelinePinch)
     /// Rest the pointer on a control (named by the label its tooltip shows,
     /// or by a point) long enough for its tooltip to appear. A point over no
     /// control rests in the open and hides whatever was showing.
@@ -3383,6 +3416,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dropComponent",
         "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
+        "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag",
     ].sorted()
 
@@ -3402,6 +3436,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .appKey: "appKey"
         case .move: "move"
         case .pinch: "pinch"
+        case .timelinePinch: "timelinePinch"
         case .hover: "hover"
         case .click: "click"
         case .drag: "drag"
@@ -3586,6 +3621,21 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             let steps = try f.optionalNumber("steps").map { Int($0) } ?? Self.defaultPinchSteps
             self = .pinch(to: to, steps: max(1, steps))
+        case "timelinePinch":
+            let by = CGFloat(try f.number("by"))
+            guard by.isFinite, by > 0 else {
+                throw f.invalid("by", "a pinch has to be by a positive factor, like 4 to open out four times")
+            }
+            let steps = try f.optionalNumber("steps").map { Int($0) } ?? Self.defaultPinchSteps
+            let x = try f.optionalNumber("x") ?? 0.5
+            let y = try f.optionalNumber("y") ?? 0.5
+            guard (0...1).contains(x) else { throw f.invalid("x", "is a share of the lanes' width, 0 to 1") }
+            guard (0...1).contains(y) else { throw f.invalid("y", "is a share of the tracks' height, 0 to 1") }
+            let trips = try f.optionalNumber("roundTrips").map { Int($0) } ?? 0
+            self = .timelinePinch(PlaytestTimelinePinch(by: by, steps: max(1, steps),
+                                                        modifiers: try f.optionalModifiers("modifiers") ?? [],
+                                                        x: CGFloat(x), y: CGFloat(y),
+                                                        roundTrips: max(0, trips)))
         case "hover":
             let hoverWindow = try f.optionalString("window")
             if fields["label"] != nil {
@@ -4397,7 +4447,9 @@ public enum PlaytestStep: Sendable, Equatable {
                 mode: f.has("mode") ? try f.enumValue("mode", ViewEditMode.self) : nil,
                 volumePercent: try f.optionalNumber("volumePercent").map { Int($0) },
                 muted: fields["muted"] as? Bool,
-                outputGain: try f.optionalNumber("outputGain"))
+                outputGain: try f.optionalNumber("outputGain"),
+                zoomScale: try f.optionalNumber("zoomScale"),
+                rowScale: try f.optionalNumber("rowScale"))
             if let percent = claim.volumePercent, !(0...100).contains(percent) {
                 throw f.invalid("volumePercent", "the volume slider reads 0 to 100, not \(percent)")
             }
@@ -4409,7 +4461,7 @@ public enum PlaytestStep: Sendable, Equatable {
                     + "\"keyboard\", \"rate\", \"blade\", \"markInMS\", \"markOutMS\", \"hasIn\", "
                     + "\"hasOut\", \"markers\", \"rulerMatches\", \"rulerAtPlayhead\", \"lengthMS\", "
                     + "\"open\", \"mode\", \"tool\", \"timelineTool\", \"tracks\", "
-                    + "\"volumePercent\", \"muted\" or \"outputGain\"")
+                    + "\"volumePercent\", \"muted\", \"outputGain\", \"zoomScale\" or \"rowScale\"")
             }
             self = .expectTimeline(claim)
         case "expectPlaybackNeverBlank":
@@ -4725,6 +4777,11 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
     /// What the sound engine is putting out, read off the engine itself,
     /// nought to one, to a hundredth.
     public var outputGain: Double?
+    /// How many times time is opened out: 1 is the whole recording across
+    /// the width (Fit). To within a hundredth of itself.
+    public var zoomScale: Double?
+    /// How many times their compact height the rows are.
+    public var rowScale: Double?
 
     public init(playheadMS: Int? = nil, withinMS: Int = 0, keyboard: Keyboard? = nil, rate: Double? = nil,
                 blade: Bool? = nil, markInMS: Int? = nil, markOutMS: Int? = nil,
@@ -4733,7 +4790,9 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
                 snapping: Bool? = nil, open: Bool? = nil, tool: String? = nil,
                 timelineTool: TimelineTool? = nil, tracks: [String]? = nil,
                 mode: ViewEditMode? = nil, volumePercent: Int? = nil, muted: Bool? = nil,
-                outputGain: Double? = nil) {
+                outputGain: Double? = nil, zoomScale: Double? = nil, rowScale: Double? = nil) {
+        self.zoomScale = zoomScale
+        self.rowScale = rowScale
         self.volumePercent = volumePercent
         self.muted = muted
         self.outputGain = outputGain
@@ -4763,6 +4822,7 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
             || markOutMS != nil || hasIn != nil || hasOut != nil || markers != nil
             || rulerMatches != nil || rulerAtPlayhead != nil || lengthMS != nil || tracks != nil
             || volumePercent != nil || muted != nil || outputGain != nil
+            || zoomScale != nil || rowScale != nil
     }
 }
 

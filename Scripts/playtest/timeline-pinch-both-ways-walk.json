@@ -1,0 +1,51 @@
+{
+  "out": "/tmp/photonz-playtest/timeline-pinch-both-ways-walk",
+  "seed": "User 2026-09-28: the zoom buttons were weird; a trackpad pinch on the timeline should zoom both ways, time wider and rows taller, centred where the pointer is, with Option for time alone and Shift for rows alone, and nothing on the page may jump while it does. At Next defaults, no flag set.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "selectRow", "row": "Tutorial Sample" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "soundDetach" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "zoomScale": 1, "rowScale": 1 },
+    { "do": "describe", "stage": "0-zoomed-out", "note": "the eight second sample with its sound on a track of its own: the whole recording across the width and compact rows. There are no zoom buttons on the timeline's bar any more, and the strip under the lanes, where time's scroller lives, is already there and empty" },
+    { "do": "snapshot", "name": "0-zoomed-out" },
+
+    { "do": "timelinePinch", "by": 4, "steps": 6, "modifiers": ["option"], "x": 0.3, "y": 0.4, "roundTrips": 20 },
+    { "do": "expectTimeline", "zoomScale": 1, "rowScale": 1 },
+    { "do": "describe", "stage": "1-twenty-option-pinches", "note": "twenty Option-pinches in to four times and back out, time only. After every nudge the moment under the pointer was still under it, and the ruler, the rows and the whole dock did not move a point, which is the jump the user saw when the old overview bar came and went above the ruler" },
+
+    { "do": "timelinePinch", "by": 6, "steps": 24, "x": 0.4, "y": 0.35 },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "2-pinched-in-both-ways", "note": "one plain pinch in, six times: time is opened out six times about the moment under the pointer, and the rows are at their tallest, four times, grown about the row under the pointer, which stayed under it the whole way. The time scroller under the lanes now carries a thumb, and the rows scroller down the right hand side does too, in the space kept for them" },
+    { "do": "snapshot", "name": "2-pinched-in-both-ways" },
+
+    { "do": "timelinePinch", "by": 0.5, "steps": 12, "modifiers": ["shift"], "x": 0.5, "y": 0.6 },
+    { "do": "expectTimeline", "rowScale": 2 },
+    { "do": "timelinePinch", "by": 1.25, "steps": 8, "modifiers": ["shift"], "x": 0.5, "y": 0.6 },
+    { "do": "expectTimeline", "rowScale": 2.5 },
+    { "do": "describe", "stage": "3-tall-tracks", "note": "Shift-pinches change the rows alone: out to two and a half times their compact height, time left where it was. The track headers grew with their rows" },
+    { "do": "snapshot", "name": "3-tall-tracks" },
+
+    { "do": "key", "key": "z", "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "zoomScale": 1, "rowScale": 2.5 },
+    { "do": "describe", "stage": "4-shift-z-fits", "note": "Shift-Z, Final Cut's Zoom to Fit: the whole recording is back across the width in one press. It leaves the rows as tall as they were, as Final Cut's does" },
+
+    { "do": "timelinePinch", "by": 3, "steps": 12, "modifiers": ["option"], "x": 0.6, "y": 0.5 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "reopenSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "expectTimeline", "zoomScale": 3, "rowScale": 2.5 },
+    { "do": "describe", "stage": "5-reopened-as-left", "note": "the recording shut and opened again: it comes back opened out three times with its rows two and a half times as tall, the way it was left" },
+    { "do": "snapshot", "name": "5-reopened-as-left" }
+  ]
+}

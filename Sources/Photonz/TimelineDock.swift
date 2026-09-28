@@ -71,6 +71,9 @@ struct TimelineDock: View {
             }
         }
         .panelReadout(editorState.timelineHasKeyboard ? "keyboard on the timeline" : "keyboard on the canvas")
+        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: {
+            editorState.timelineDockFrame = $0
+        }
         .tutorialAnchor(.timingStrip)
         .transition(.move(edge: .bottom).combined(with: .opacity))
     }
@@ -206,14 +209,9 @@ struct TimelineDock: View {
             } icon: {
                 MagnetGlyph().frame(width: 13, height: 13)
             }
-            if !editorState.timelineZoomSteps.isEmpty {
-                Rectangle().fill(VideoKit.Palette.line).frame(width: 1, height: 18)
-                    .padding(.horizontal, 5)
-                zoomSegments
-                zoomStepButton("plus.magnifyingglass", name: "Timeline Zoom In",
-                               help: "Open out around the playhead",
-                               enabled: editorState.canZoomTimelineIn) { editorState.zoomTimelineIn() }
-            }
+            // No zoom buttons (user 2026-09-28: "super weird as buttons"). A
+            // pinch on the tracks zooms, = and - step, ⇧Z fits, and the
+            // ruler's right-click has Zoom to Fit.
             Spacer(minLength: 8)
             if let hover = editorState.timelineFileHover {
                 // What letting go does, as a label, and the one key that
@@ -366,57 +364,6 @@ struct TimelineDock: View {
         .playtestControl("Timeline \(name)", detail: "Timeline")
     }
 
-    /// `#zoomSeg`: Fit and the doubling steps, the one on screen lifted.
-    private var zoomSegments: some View {
-        let current = editorState.timelineWindow.scale
-        return HStack(spacing: 2) {
-            ForEach(editorState.timelineZoomSteps, id: \.self) { step in
-                let isOn = abs(current - step) < 0.01
-                Button { editorState.setTimelineScale(step) } label: {
-                    Text(step <= 1 ? "Fit" : "\(Int(step))x")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(isOn ? AnyShapeStyle(VideoKit.Palette.ink)
-                                              : AnyShapeStyle(VideoKit.Palette.dim))
-                        .padding(.horizontal, 8)
-                        .frame(height: 20)
-                        .background {
-                            if isOn {
-                                Capsule().fill(VideoKit.Palette.panel)
-                                    .overlay(Capsule().strokeBorder(VideoKit.Palette.edgeLo))
-                                    .shadow(color: .black.opacity(0.12), radius: 1, y: 1)
-                            }
-                        }
-                        .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(step <= 1 ? "Fit The Timeline" : "Zoom \(Int(step)) times")
-                .panelHelp(step <= 1 ? "The whole recording across the width"
-                                     : "Open the timeline out \(Int(step)) times")
-                .playtestControl(step <= 1 ? "Timeline Fit" : "Timeline \(Int(step))x", detail: "Timeline")
-            }
-        }
-        .padding(2)
-        .frame(height: 24)
-        .background(Capsule().fill(VideoKit.Palette.glassThin))
-        .overlay(Capsule().strokeBorder(VideoKit.Palette.edgeLo))
-    }
-
-    private func zoomStepButton(_ symbol: String, name: String, help: String, enabled: Bool,
-                                action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: symbol)
-                .font(.system(size: 11, weight: .semibold))
-                .frame(width: 24, height: 24)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .foregroundStyle(enabled ? AnyShapeStyle(VideoKit.Palette.dim) : AnyShapeStyle(VideoKit.Palette.lineStrong))
-        .disabled(!enabled)
-        .accessibilityLabel(name)
-        .panelHelp(help)
-        .playtestControl(name, detail: "Timeline")
-    }
-
     /// `.tlbar .tl-close`: the × that puts the timeline down to one row.
     private var closeButton: some View {
         Button { editorState.toggleMotionStrip() } label: {
@@ -441,13 +388,10 @@ struct TimelineDock: View {
 
     private var grid: some View {
         GeometryReader { geo in
+            // The rows' scroller lives in the dock's right hand margin, always,
+            // so it coming and going never narrows the lanes.
             let laneWidth = max(1, geo.size.width - Self.lanesLeading)
             VStack(alignment: .leading, spacing: 0) {
-                if editorState.isTimelineOpenedOut {
-                    TimelineOverviewBar(laneWidth: laneWidth)
-                        .padding(.leading, Self.lanesLeading)
-                        .padding(.bottom, 4)
-                }
                 // The Caption track's bar, over the ruler as the captions
                 // mock draws its dock's bar, so the playhead never runs
                 // through its words.
@@ -457,12 +401,16 @@ struct TimelineDock: View {
                 }
                 VStack(alignment: .leading, spacing: 0) {
                     rulerRow(laneWidth: laneWidth)
+                        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: {
+                            editorState.timelineRulerFrame = $0
+                        }
                     ScrollView(.vertical) {
                         let order = editorState.timelineTrackRows.map(\.id)
                         VStack(alignment: .leading, spacing: Self.rowSpacing) {
                             if editorState.isWritingCaptions {
                                 TimelineCaptionsListeningRow(laneWidth: laneWidth)
                             }
+                            let rows = editorState.timelineRowZoom
                             ForEach(editorState.timelineRows) { row in
                                 switch row {
                                 case .group(let group, let isCollapsed, let tracks):
@@ -472,7 +420,8 @@ struct TimelineDock: View {
                                     TimelineTrackRow(row: track, inGroup: inGroup,
                                                      index: order.firstIndex(of: track.id) ?? 0,
                                                      trackCount: order.count,
-                                                     laneWidth: laneWidth, isBlade: isBlade)
+                                                     laneWidth: laneWidth, isBlade: isBlade,
+                                                     rows: rows)
                                     .equatable()
                                 }
                             }
@@ -494,6 +443,23 @@ struct TimelineDock: View {
                         }
                     }
                     .scrollBounceBehavior(.basedOnSize)
+                    // Its own scroller, in the column kept for it, rather than
+                    // the system's: an overlay scroller that comes and goes in
+                    // space nothing else is using can never move a row.
+                    .scrollIndicators(.never)
+                    .scrollPosition(tracksScroll)
+                    .onScrollGeometryChange(for: TimelineTracksScrollGeometry.self) { geometry in
+                        TimelineTracksScrollGeometry(offsetY: geometry.contentOffset.y + geometry.contentInsets.top,
+                                                     contentHeight: geometry.contentSize.height,
+                                                     viewportHeight: geometry.containerSize.height)
+                    } action: { _, now in
+                        editorState.timelineTracksScrollGeometry = now
+                    }
+                    .overlay(alignment: .trailing) {
+                        TimelineRowsScroller()
+                            .frame(width: Self.scrollerWidth)
+                            .offset(x: Self.scrollerWidth + 1)
+                    }
                 }
                 .overlay(alignment: .topLeading) {
                     rangeWash(laneWidth: laneWidth)
@@ -509,14 +475,19 @@ struct TimelineDock: View {
                 .tutorialAnchor(.timelineTracks)
                 .simultaneousGesture(pinch(laneWidth: laneWidth))
                 .background {
-                    TimelineWheel { event in wheel(event, laneWidth: laneWidth) }
+                    TimelineWheel { event, point in wheel(event, at: point, laneWidth: laneWidth) }
                 }
+                // Time's scroller, under the lanes, in a strip that is always
+                // there: at Fit it is empty, opened out it carries the window.
+                TimelineTimeScroller(laneWidth: laneWidth)
+                    .padding(.leading, Self.lanesLeading)
+                    .frame(height: Self.scrollerStrip, alignment: .bottom)
             }
+            .panelReadout(editorState.timelineRowsReading)
         }
         .frame(height: bodyHeight)
         .padding(.horizontal, 12)
         .padding(.top, 6)
-        .padding(.bottom, 10)
     }
 
     /// `.rlane`: "Time" in the gutter and the seconds over the lanes. A press
@@ -610,31 +581,40 @@ struct TimelineDock: View {
         }
     }
 
-    /// A pinch zooms about the moment under the fingers.
+    /// A pinch zooms both ways about the spot under the fingers: time opens
+    /// out about the moment under them and the rows grow about the row under
+    /// them. ⌥ keeps it to time, ⇧ to the rows (user 2026-09-28).
     private func pinch(laneWidth: CGFloat) -> some Gesture {
-        MagnifyGesture(minimumScaleDelta: 0.01)
+        MagnifyGesture(minimumScaleDelta: 0)
             .onChanged { value in
-                guard editorState.canOpenOutTheTimeline else { return }
-                let x = value.startLocation.x - Self.lanesLeading
-                let fraction = min(max(0, x / laneWidth), 1)
-                let anchorMS = editorState.motionStripRuler.ms(atFraction: Double(fraction))
                 let previous = pinchedTo ?? 1
-                editorState.zoomTimeline(by: value.magnification / previous, anchorMS: anchorMS)
                 pinchedTo = value.magnification
+                guard previous > 0 else { return }
+                let flags = NSEvent.modifierFlags
+                editorState.pinchTimeline(by: Double(value.magnification / previous),
+                                          laneX: value.startLocation.x - Self.lanesLeading,
+                                          laneWidth: laneWidth,
+                                          viewportY: value.startLocation.y - Self.rulerHeight,
+                                          axes: TimelinePinchAxes(option: flags.contains(.option),
+                                                                  shift: flags.contains(.shift)))
             }
             .onEnded { _ in pinchedTo = nil }
     }
 
     /// Two fingers sideways (or a mouse wheel with ⇧) slide an opened out
-    /// timeline along; ⌥ and the wheel zoom it, as in Premiere. Anything else
-    /// is left to the tracks, which scroll up and down.
-    private func wheel(_ event: NSEvent, laneWidth: CGFloat) -> Bool {
+    /// timeline along; ⌥ and the wheel zoom time about the pointer, as in
+    /// Premiere, and ⌘ and the wheel grow the rows about it. Anything else is
+    /// left to the tracks, which scroll up and down.
+    private func wheel(_ event: NSEvent, at point: CGPoint, laneWidth: CGFloat) -> Bool {
         let scale: CGFloat = event.hasPreciseScrollingDeltas ? 1 : 10
         let dx = event.scrollingDeltaX * scale
         let dy = event.scrollingDeltaY * scale
-        if event.modifierFlags.contains(.option), editorState.canOpenOutTheTimeline {
+        let flags = event.modifierFlags
+        if flags.contains(.option) || flags.contains(.command) {
             let factor = exp(Double(dy) / 200)
-            editorState.zoomTimeline(by: factor, anchorMS: editorState.timelineZoomAnchorMS)
+            editorState.pinchTimeline(by: factor, laneX: point.x - Self.lanesLeading, laneWidth: laneWidth,
+                                      viewportY: point.y - Self.rulerHeight,
+                                      axes: flags.contains(.command) ? .rows : .time)
             return true
         }
         let sideways = abs(dx) > abs(dy) ? dx : (event.modifierFlags.contains(.shift) ? dy : 0)
@@ -653,24 +633,27 @@ struct TimelineDock: View {
                 rows += (isCollapsed ? TimelineGroupRow.foldedHeight : TimelineGroupRow.openHeight)
                     + Self.rowSpacing
             case .track(let track, _):
+                // Compact whatever the rows are zoomed to: the dock keeps its
+                // height through a pinch and the taller rows scroll inside
+                // it, so nothing above it ever moves.
                 rows += Self.height(of: track, wordsOpen: editorState.isKeyTrackOpen(track.id))
                     + Self.rowSpacing
             }
         }
         rows += TimelineAddTrackRow.height + Self.rowSpacing
         let content = Self.rulerHeight + rows + Self.rowSpacing
-        let overview = editorState.isTimelineOpenedOut ? TimelineOverviewBar.height + 4 : 0
         let captionBar = showsCaptionTrackBar ? CaptionTrackBarView.height + 4 : 0
-        return overview + captionBar + min(Self.bodyCeiling, content)
+        return captionBar + min(Self.bodyCeiling, content) + Self.scrollerStrip
     }
 
     /// One track's full height: its lane, the lanes of anything moving on
     /// its clips, and the rows of the parts inside them.
-    static func height(of track: TimelineTrackRowModel, wordsOpen: Bool = true) -> CGFloat {
-        let lane = track.carriesSound ? soundLaneHeight : laneHeight
+    static func height(of track: TimelineTrackRowModel, wordsOpen: Bool = true,
+                       rows: TimelineRowZoom = .compact) -> CGFloat {
+        let lane = rows.height(track.carriesSound ? soundLaneHeight : laneHeight)
         let motionLanes = track.clips.reduce(0) { $0 + $1.lanes.count }
         let inner = track.inner.reduce(CGFloat(0)) { total, group in
-            total + 3 + (group.isSound ? soundLaneHeight : laneHeight)
+            total + 3 + rows.height(group.isSound ? soundLaneHeight : laneHeight)
                 + CGFloat(group.lanes.count) * (MotionStripView.laneHeight + 3)
         }
         let words = track.isCaptions && !track.clips.isEmpty && wordsOpen ? CaptionWordsLane.height + 3 : 0
@@ -680,6 +663,45 @@ struct TimelineDock: View {
     /// The space the tracks are laid out in, which is what a clip carried up
     /// or down measures its pointer against.
     nonisolated static let tracksSpace = "timelineTracks"
+
+    // MARK: - The scrollers
+
+    /// The column at the right the rows' scroller lives in, and the strip
+    /// under the lanes time's lives in: the dock's own right and bottom
+    /// margins, which were always there. So a scroller coming, going or
+    /// changing size moves nothing, and the dock is the height it always was
+    /// (user 2026-09-28).
+    static let scrollerWidth: CGFloat = 10
+    static let scrollerGap: CGFloat = 1
+    static var scrollerStrip: CGFloat { TimelineTimeScroller.height + scrollerGap }
+
+    /// Each row of the tracks' scroll, top and height, at a row zoom: the
+    /// same stack the grid lays out, worked out rather than measured, so a
+    /// zoom can say where the rows WILL be before they are drawn there.
+    static func rowExtents(of editor: EditorState, rows: TimelineRowZoom) -> [TimelineRowExtent] {
+        var extents: [TimelineRowExtent] = []
+        var top = rowSpacing
+        func add(_ height: CGFloat) {
+            extents.append(TimelineRowExtent(top: top, height: height))
+            top += height + rowSpacing
+        }
+        if editor.isWritingCaptions { add(laneHeight) }
+        for row in editor.timelineRows {
+            switch row {
+            case .group(_, let isCollapsed, _):
+                add(isCollapsed ? TimelineGroupRow.foldedHeight : TimelineGroupRow.openHeight)
+            case .track(let track, _):
+                add(height(of: track, wordsOpen: editor.isKeyTrackOpen(track.id), rows: rows))
+            }
+        }
+        add(TimelineAddTrackRow.height)
+        return extents
+    }
+
+    private var tracksScroll: Binding<ScrollPosition> {
+        Binding(get: { editorState.timelineTracksScroll },
+                set: { editorState.timelineTracksScroll = $0 })
+    }
 }
 
 // MARK: - The wheel
@@ -690,7 +712,8 @@ struct TimelineDock: View {
 /// events and offers each one that lands inside its own frame. Returning true
 /// keeps it; false lets it carry on to the tracks' own vertical scroll.
 private struct TimelineWheel: NSViewRepresentable {
-    let handle: (NSEvent) -> Bool
+    /// The event, and where it landed measured from the top left of the view.
+    let handle: (NSEvent, CGPoint) -> Bool
 
     func makeNSView(context: Context) -> WheelView {
         let view = WheelView()
@@ -703,7 +726,7 @@ private struct TimelineWheel: NSViewRepresentable {
     static func dismantleNSView(_ view: WheelView, coordinator: ()) { view.stop() }
 
     final class WheelView: NSView {
-        var handle: ((NSEvent) -> Bool)?
+        var handle: ((NSEvent, CGPoint) -> Bool)?
         private var monitor: Any?
 
         override func viewDidMoveToWindow() {
@@ -714,7 +737,8 @@ private struct TimelineWheel: NSViewRepresentable {
                 guard let self, let window = self.window, event.window === window else { return event }
                 let point = self.convert(event.locationInWindow, from: nil)
                 guard self.bounds.contains(point) else { return event }
-                return self.handle?(event) == true ? nil : event
+                let fromTop = CGPoint(x: point.x, y: self.isFlipped ? point.y : self.bounds.height - point.y)
+                return self.handle?(event, fromTop) == true ? nil : event
             }
         }
 

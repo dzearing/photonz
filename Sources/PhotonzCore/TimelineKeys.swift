@@ -170,6 +170,10 @@ public enum TimelineKeys {
         case (.down, []): return .editPoint(forward: true)
         case (.delete, []), (.forwardDelete, []): return .lift
         case (.delete, [.shift]), (.forwardDelete, [.shift]): return .rippleDelete
+        // Final Cut's key for the whole timeline, which the user asked for by
+        // name. On the canvas ⇧Z is Punch In, so only while the timeline has
+        // the keyboard.
+        case (.letter("z"), [.shift]): return .zoomToFit
         default: break
         }
         guard mods.isEmpty, case .letter(let character) = press.key else { return nil }

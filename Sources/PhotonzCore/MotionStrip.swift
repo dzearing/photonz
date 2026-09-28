@@ -478,10 +478,17 @@ public struct MotionStripRuler: Hashable, Sendable {
     }
 
     /// The same, in tenths where the numbers are closer together than a
-    /// second. A timeline opened right out puts a second across the whole
+    /// second, and hundredths closer than a tenth. A timeline opened right out puts a second across the whole
     /// width, and a row reading "0:12 0:12 0:12 0:12" is not a ruler.
     static func timecode(_ ms: Double, step: Double) -> String {
         guard step < 1000 else { return timecode(ms) }
+        // Closer than a tenth: single frames across the width, where tenths
+        // would say the same number twice.
+        if step < 100 {
+            let hundredths = (max(0, ms) / 10).rounded()
+            let whole = (hundredths / 100).rounded(.down) * 1000
+            return timecode(whole) + "." + String(format: "%02d", Int(hundredths) % 100)
+        }
         let tenths = (max(0, ms) / 100).rounded()
         let whole = (tenths / 10).rounded(.down) * 1000
         return timecode(whole) + "." + String(Int(tenths) % 10)

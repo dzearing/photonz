@@ -148,7 +148,9 @@ extension EditorState {
         case .toggleViewEdit:
             toggleViewEditMode()
         case .zoomToFit:
-            guard canOpenOutTheTimeline else { return false }
+            // ⇧Z is Punch In too: with a region drawn on the picture it is
+            // that, and the press carries on to the menu.
+            guard canOpenOutTheTimeline, !(Experiments.shared.punchInEnabled && canPunchIn) else { return false }
             fitTimeline()
         }
         return true

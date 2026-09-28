@@ -173,6 +173,10 @@ struct TimelineKeysTests {
         #expect(command(.letter("+")) == .zoomIn)
         #expect(command(.letter("-")) == .zoomOut)
         #expect(command(.letter("\\")) == .zoomToFit)
+        // Final Cut's and the user's ⇧Z fits too, on the timeline only: on the
+        // canvas it is Punch In.
+        #expect(command(.letter("z"), .shift) == .zoomToFit)
+        #expect(command(.letter("z"), .shift, focused: false) == nil)
         // ⌘= and ⌘- zoom the canvas, as they always have.
         #expect(command(.letter("="), .command) == nil)
         #expect(command(.letter("-"), .command) == nil)
@@ -341,6 +345,19 @@ struct ExpectTimelineStepTests {
         #expect(claim.markers == 1)
         #expect(script.steps[0].name == "expectTimeline")
         #expect(PlaytestStep.names.contains("expectTimeline"))
+    }
+
+    @Test("It claims how far time is opened out and how tall the rows are")
+    func zoom() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "steps": [ { "do": "expectTimeline", "zoomScale": 1, "rowScale": 2.5 } ] }
+        """.utf8))
+        guard case .expectTimeline(let claim) = script.steps[0] else {
+            Issue.record("expectTimeline"); return
+        }
+        #expect(claim.zoomScale == 1)
+        #expect(claim.rowScale == 2.5)
+        #expect(claim.claimsSomething)
     }
 
     @Test("It claims the transport's volume: the slider, the mute, and what the engine is putting out")

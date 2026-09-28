@@ -25,6 +25,8 @@ struct TimelineTrackRow: View {
     let trackCount: Int
     let laneWidth: CGFloat
     let isBlade: Bool
+    /// How tall the rows are zoomed to: the lane and its header grow together.
+    var rows: TimelineRowZoom = .compact
 
     @State private var isHovered = false
     @State private var draftName = ""
@@ -69,7 +71,7 @@ struct TimelineTrackRow: View {
             }
             ForEach(row.inner) { group in
                 TimelineInnerRow(group: group, laneWidth: laneWidth, isBlade: isBlade,
-                                 isLocked: track.isLocked)
+                                 isLocked: track.isLocked, rows: rows)
             }
         }
         .playtestHover("Track \(track.name)") { isHovered = $0 }
@@ -97,7 +99,7 @@ struct TimelineTrackRow: View {
     private var isRangeTool: Bool { editorState.timelineTool == .range }
 
     private var laneHeight: CGFloat {
-        row.carriesSound ? TimelineDock.soundLaneHeight : TimelineDock.laneHeight
+        rows.height(row.carriesSound ? TimelineDock.soundLaneHeight : TimelineDock.laneHeight)
     }
 
     private var isPicked: Bool {
@@ -665,6 +667,8 @@ struct TimelineTrackMenu: View {
         Button("Add Track Above") { editorState.addTrack(track.kind, at: index) }
         Button("Add Track Below") { editorState.addTrack(track.kind, at: index + 1) }
         Divider()
+        MenuRowsView(rows: editorState.timelineViewMenuRows())
+        Divider()
         Button("Delete Track", role: .destructive) { editorState.deleteTrack(track.id) }
         if editorState.hasEmptyTracks {
             Button("Delete Empty Tracks", role: .destructive) { editorState.deleteEmptyTracks() }
@@ -888,9 +892,10 @@ struct TimelineInnerRow: View {
     let laneWidth: CGFloat
     let isBlade: Bool
     let isLocked: Bool
+    var rows: TimelineRowZoom = .compact
 
     var body: some View {
-        let height = group.isSound ? TimelineDock.soundLaneHeight : TimelineDock.laneHeight
+        let height = rows.height(group.isSound ? TimelineDock.soundLaneHeight : TimelineDock.laneHeight)
         let ruler = editorState.motionStripRuler
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: TimelineDock.gap) {
@@ -1165,5 +1170,6 @@ extension TimelineTrackRow: Equatable {
     nonisolated static func == (a: TimelineTrackRow, b: TimelineTrackRow) -> Bool {
         a.row == b.row && a.inGroup == b.inGroup && a.index == b.index
             && a.trackCount == b.trackCount && a.laneWidth == b.laneWidth && a.isBlade == b.isBlade
+            && a.rows == b.rows
     }
 }
