@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 0.0005,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-28T14:56:09.349Z",
-  "updated": "2026-09-28T14:56:14.617Z",
+  "updated": "2026-09-28T16:20:25.139Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window. Supersedes the remembered-collapse part of a-recording-opens-to-watch-with-the-editing-tuck (done).",
@@ -31,6 +31,35 @@
     {
       "t": "2026-09-28T14:56:14.616Z",
       "note": "seq 390 -> 0.0005"
+    },
+    {
+      "t": "2026-09-28T15:12:55.058Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-28T16:20:10.778Z",
+      "note": "owns these walks: view-mode-and-edit-mode-walk"
+    },
+    {
+      "t": "2026-09-28T16:20:10.834Z",
+      "note": "Adversarial pass before building: no mock page draws View mode, so built from the task's words; QuickTime is the bar for View, Final Cut/Premiere for Edit. Conflicts found: Cmd-1 is Actual Size (moved to Opt-Cmd-0 on a recording only); the tool bar carries the tool letters, so in View they had no home (router now picks the tool and switches to Edit); a click on the picture released the timeline keyboard so L would pick the Line tool (View keeps the keyboard on the timeline); the Layers list only showed with the tracks tucked, which no longer exists."
+    },
+    {
+      "t": "2026-09-28T16:20:10.888Z",
+      "note": "Built: PhotonzCore/ViewEditMode.swift (replaces TimelineOpening; tested), TimelineKeys Cmd-1/Cmd-2/E, EditorState.viewEditMode/isWatching/setViewEditMode (per window, never remembered; isMotionStripOpen for a time doc = Edit), View hides tool bar, panel, tracks, canvas grid, the mode chip, panel toggle (faded); canvas presses pick nothing, double click = full screen; transport gets Full Screen in View; title bar NSSegmentedControl in the panel toggle's accessory (TitlebarViewEditSwitch.swift); View menu View Mode/Edit Mode rows; edits, tool picks, asking for the panel switch to Edit. Walk setup timelineOpen now means 'recordings open in Edit'; expectTimeline gained mode. video.timelineOpen preference and the TIMELINE rail row removed."
+    },
+    {
+      "t": "2026-09-28T16:20:10.942Z",
+      "note": "Verified: Scripts/test.sh 10277 tests green; view-mode-and-edit-mode-walk green at Next defaults (5 real captures); 88 recording walks run in batches: fixed a-fitted-picture-clears-the-tool-bar, captions-write-themselves, captions-guides-and-track-bar, hold-on-a-frame, speed-a-stretch, the-ninety-second-cut, the-timeline-is-the-layer-list, video-tool-bar, premiere-keys-on-the-timeline (Cmd-2 or setup timelineOpen); retired the-layers-row-says-how-many-pieces-walk (its premise, tucked tracks with the panel up, no longer exists). panel-rows-read-as-one-column-walk fails on an ambiguous 'Kind' (two title shadows), not this change: logged on walks-that-fail-in-the-full-sweep-6. Filed switching-a-long-recording-to-edit-mode-draws-it (180 ms first frame on a 5 min captioned recording). Left rough, not filed: the rough list in the audit (View transport still has Go to Start/End; volume slider is its own open task)."
+    },
+    {
+      "t": "2026-09-28T16:20:25.137Z",
+      "note": "Recordings open in View mode (a player: picture fitted over a slim transport with Full Screen, no tool bar/tracks/panel/handles); View | Edit system segmented control at the right of the title bar, Cmd-1/Cmd-2/E, and any edit, tool letter, right-click edit, drop or panel request switches to Edit. Nothing remembered (old preference removed). Pictures unchanged. Verified: Scripts/test.sh 10277 green; view-mode-and-edit-mode-walk green at Next defaults with 5 real captures; 88 recording walks run and fixed. Commit 136d05b1. Audit queue/audits/2026-09-28-view-mode-and-edit-mode.json. Follow-up: switching-a-long-recording-to-edit-mode-draws-it (p2)."
     }
-  ]
+  ],
+  "started": "2026-09-28T15:12:55.057Z",
+  "walks": [
+    "view-mode-and-edit-mode-walk"
+  ],
+  "completed": "2026-09-28T16:20:25.138Z"
 }

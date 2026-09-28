@@ -1,0 +1,30 @@
+{
+  "id": "switching-a-long-recording-to-edit-mode-draws-it",
+  "title": "Switching a long recording to Edit mode draws its first frame without a hitch",
+  "goal": "On a five minute recording with captions, pressing Cmd-2 (or any edit key) to go from View to Edit spends about 180 ms building the panel, the tool bar and the timeline in one frame, so the slide-in visibly stutters before it starts. Short recordings are fine. Make the switch smooth on long ones too.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 3430,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-28T16:19:41.372Z",
+  "updated": "2026-09-28T16:19:41.375Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by view-mode-and-edit-mode-a-recording-opens-to-wat, 2026-09-28. Repro: a walk with openLongRetinaTalk, captionsWaitForThemselves, then key cmd+2 / wait 0.8 / cmd+1 / wait 0.8 repeated. Log: 'command+2 ... wait 0.8s, never went quiet ... busiest 215.4ms; mainBusy 814.6ms over 239 passes, longest 184.9ms' and the second switch 'longest 173.3ms'; Cmd-1 back to View is fine (longest 36 ms). sample(1) during six switches: main thread time is almost all SwiftUI NSHostingView.layout -> ViewGraph render / DisplayList update / AccessibilityNode.updateFocus, with InspectorPanel.body, PanelFieldRowLayout.sizeThatFits, TimelineTrackRow.body, CaptionStylePreview, VideoKit.TileGrid (transition tiles) on top. Ideas: keep the panel in the tree but off screen in View (check playback cost), defer the transitions tile grid a frame, stagger panel vs tracks. The ninety-second-cut walk now presses Cmd-2 before Q with no longestUnderMS on that wait.",
+  "acceptance": [
+    "On the long captioned sample (openLongRetinaTalk), every wait after Cmd-2 reports its longest pass under 100 ms",
+    "View mode playback is no slower than it is today (the fix must not keep the panel updating while hidden if that costs playback frames)",
+    "the-ninety-second-cut-walk can put longestUnderMS 150 on the wait right after its Cmd-2"
+  ],
+  "log": [
+    {
+      "t": "2026-09-28T16:19:41.374Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "the-ninety-second-cut-walk"
+  ]
+}

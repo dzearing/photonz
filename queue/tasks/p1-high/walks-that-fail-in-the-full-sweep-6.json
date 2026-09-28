@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-09-27T12:07:21.867Z",
-  "updated": "2026-09-27T12:31:03.374Z",
+  "updated": "2026-09-28T15:59:58.588Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-09-27T12:07:21Z: 625 of 633 walks passed in 151 minutes.\n\nFailing walks (8): bar-end-follows-the-pointer-walk, captions-panel-keeps-its-margins-walk, opacity-on-a-video-shape-walk, panel-rows-read-as-one-column-walk, pick-leaves-settings-alone-walk, transition-picker-at-a-cut-walk, tutorial-component-versions-walk, video-panel-order-walk\n\nAlready named by another open task, so read that one before re-diagnosing (2):\n  captions-panel-keeps-its-margins-walk -> the-captions-section-says-every-button-and-colou (that task says it owns this walk)\n  tutorial-component-versions-walk -> the-looks-of-one-component-stay-together-as-a-se (that task says it owns this walk)\n\nThis task owns the other 6: bar-end-follows-the-pointer-walk, opacity-on-a-video-shape-walk, panel-rows-read-as-one-column-walk, pick-leaves-settings-alone-walk, transition-picker-at-a-cut-walk, video-panel-order-walk\n\nFull output: queue/sweep/2026-09-27-023556.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: clicking-a-cut-opens-the-transition-picker-again: The 2026-09-26 02:19 sweep (27 failed) ran with a 'Photonz (Probe) quit unexpectedly' dialog in front, so the probe never had focus and every click on a timeline gesture was dropped; the dialog is closed now, so the set needs measuring again; walks-that-fail-in-the-full-sweep-5: walks-that-fail-in-the-full-sweep-5: harness now takes the front for real drags and for 28 walks marked setup front, panelMenu always rebuilds SwiftUI rows; 38 walks the focus change broke should read green in the whole set\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -58,6 +58,10 @@
     {
       "t": "2026-09-27T12:31:03.372Z",
       "note": "All 6 walks pass, each run on its own twice in a row (commit ead83882). Margin check skipped window chrome that grazes the panel (PanelMarginRule.belongs, tested), which also fixes captions-panel-keeps-its-margins; two walks had slider values that moved with the narrower one-column rows; bar-end now keeps the probe in front, as a person's app is. Tests 10060 green."
+    },
+    {
+      "t": "2026-09-28T15:59:58.587Z",
+      "note": "panel-rows-read-as-one-column-walk also fails (2026-09-28, run by the View/Edit mode task, which opens this walk in Edit as before so it is not the cause): step 27 (reveal): 2 controls in the panel are called \"Kind\": Kind (Shadow 1, Drop), Kind (Shadow 2, Drop). A title now wears two drop shadows, so the walk's reveal of Kind needs an \"in\" naming the row. Command: Scripts/playtest-all.sh --no-build --only <list with panel-rows-read-as-one-column-walk>"
     }
   ],
   "standing": "walk-sweep",
