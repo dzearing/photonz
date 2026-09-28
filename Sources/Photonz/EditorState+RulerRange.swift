@@ -241,6 +241,12 @@ extension EditorState {
         rows.append(.command("Merge into One Clip", enabled: canMergeRange) { self.mergeRangeIntoOneClip() })
         rows.append(.separator)
         let takesOut = canTakeOutMarkedStretch
+        rows.append(.command("Cut", held ? RangeClipboardKeys.cut : nil, enabled: takesOut) {
+            self.cutMarkedRange()
+        })
+        rows.append(.command("Copy", held ? RangeClipboardKeys.copy : nil, enabled: takesOut) {
+            self.copyMarkedRange()
+        })
         rows.append(.command("Delete", held ? TimelineMenuKeys.delete : nil, enabled: takesOut) {
             self.liftMarkedStretch()
         })

@@ -1,0 +1,23 @@
+{
+  "out": "/tmp/photonz-playtest/copy-a-range-from-its-menu-walk",
+  "seed": "Copy on the range's own right click. At Next defaults: a range drawn from 0:02 to 0:04 on the sample recording, Copy chosen from its right-click menu, then Paste from the ruler's right-click at the playhead lays it in at 0:08.",
+  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "dragRuler", "from": 2.0, "to": 4.0 },
+    { "do": "clickRuler", "seconds": 3.0 },
+    { "do": "expectTimeline", "markInMS": 2000, "markOutMS": 4000, "playheadMS": 3000, "withinMS": 40 },
+    { "do": "describe", "stage": "0-range-menu", "note": "a walk's right click cannot put the pointer over the ruler, so the menu acts at the playhead, the ruler's own fallback: the playhead inside the range is the click on the band. Cut and Copy sit with Delete and Ripple Delete" },
+    { "do": "rightClick", "at": [750, 860], "space": "window", "shot": "0-range-menu", "choose": "Copy" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "clickRuler", "seconds": 8.0 },
+    { "do": "rightClick", "at": [750, 860], "space": "window", "shot": "1-ruler-menu-paste", "choose": "Paste" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "startsAt": 8.0, "endsAt": 10.0 },
+    { "do": "describe", "stage": "2-pasted-from-the-menu", "note": "Paste from the ruler's right click lays the two copied seconds in at 0:08" },
+    { "do": "snapshot", "name": "2-pasted-from-the-menu" }
+  ]
+}

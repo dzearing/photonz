@@ -20114,3 +20114,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Right click a ruler range: Merge into One Clip (one per track). Right click the merged clip: Break Apart (also ⇧⌘G), which heals the cuts at the range edges.
 - Walk: `Scripts/playtest/merge-a-range-into-one-clip-walk.json`. Audit: `queue/audits/2026-09-28-merge-range-into-one-clip.json`.
 - Open: no waveform on a merged clip's sound bar; no canvas transform for a merged clip.
+
+## 2026-09-28 — Copy, cut and paste a range of time
+
+- New `Sources/PhotonzCore/RangeClipboard.swift`: `copyRange` takes every unlocked track's part of a range, rebased to nought (a trial document lifts what is after the range and extracts what is before it, so pieces, captions and titles come out exactly as Lift and Extract leave them); `cutMarkedStretch` copies then extracts with the tracks written down; `pasteRange` overwrite-lands each clip on its own track, pasted caption lines joining the Captions layer on theirs. Tests: `RangeClipboardTests`.
+- App: `EditorState+RangeClipboard.swift`. Edit ▸ Cut/Copy/Paste and the walk's `copy`/`cut`/`paste` actions share one order: picked keys, then a range in hand, then the layer. Cut and Copy on the range's right click, Paste on the ruler's. After a paste the playhead waits at its end and what landed is picked.
+- Walks: `copy-and-paste-a-range-walk`, `copy-a-range-from-its-menu-walk`. Audit: `queue/audits/2026-09-28-copy-paste-a-range.json`.
+- Open: no insert paste (⇧⌘V); a range on some tracks is not copied; ranges paste only in the window they were copied in.

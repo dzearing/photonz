@@ -1,0 +1,30 @@
+{
+  "feature": "Copy, cut and paste a range of time",
+  "epic": "video-cutting",
+  "summary": "With a range drawn on the ruler, Cmd-C copies that stretch of every track, Cmd-X copies it and closes the gap, and Cmd-V lays it in at the playhead on the same tracks, covering what was there.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording, drop a second clip on V1 so there is a cut to copy across.",
+  "switched": {},
+  "try": [
+    { "do": "Drag along the ruler from 0:05 to 0:09 to draw a range, then press Cmd-C.", "shot": "2026-09-28-copy-paste-a-range-1-copied.png" },
+    { "do": "Click the ruler at 0:12 and press Cmd-V.", "shot": "2026-09-28-copy-paste-a-range-2-pasted.png" },
+    { "do": "Press Space from the start and watch both copies play." },
+    { "do": "Press Cmd-Z once: the whole paste goes." },
+    { "do": "Draw the same range again and press Cmd-X.", "shot": "2026-09-28-copy-paste-a-range-3-cut.png" },
+    { "do": "Right-click inside a range on the ruler: Cut and Copy sit above Delete.", "shot": "2026-09-28-copy-paste-a-range-4-menu.png" },
+    { "do": "Right-click the ruler anywhere and choose Paste to lay the copy in there." }
+  ],
+  "evaluate": [
+    "Is it right that the playhead jumps to the end of what you pasted, so a second Cmd-V follows straight on?",
+    "Is it right that what you pasted is picked afterwards?",
+    "Should Cmd-V cover what is under it (as now), or push it along the way Premiere's Shift-Cmd-V does?",
+    "Would you expect Cmd-C to copy a range you set with I and O, not only one you dragged on the ruler?"
+  ],
+  "rough": [
+    "Cmd-C and Cmd-X only take the range while it is in hand (just drawn, nothing else picked). Marks set with I and O copy from the right-click only.",
+    "There is no insert paste (Shift-Cmd-V) yet: every paste covers what is under it.",
+    "A range copied in one window will not paste into another; Cmd-V there pastes what it always did.",
+    "A range on just some tracks (Option-drag on the tracks) is not copied yet; Cmd-C with one in hand copies the picked layer as before.",
+    "Clips on a locked track are left out of the copy, the same way Delete leaves them.",
+    "Nothing on screen says a copy was made: the timeline does not change, as in Final Cut."
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 0.00263,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-28T19:55:09.642Z",
-  "updated": "2026-09-28T19:55:09.645Z",
+  "updated": "2026-09-28T22:33:21.869Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of select-a-range-of-time-across-clips-and-tracks-a (2026-09-28). No timeline clipboard exists: Clipboard.swift carries canvas layers, KeyClipboard.swift keyframes. A range copy is the layers under document.markedRangeMS trimmed to it (PhotonzDocument.keep(_:fromMS:toMS:) is what Lift uses) and rebased to 0; paste lands them with ClipLanding overwrite on their tracks. Rows go in EditorState.rulerRangeMenuRows().",
@@ -23,6 +23,36 @@
     {
       "t": "2026-09-28T19:55:09.644Z",
       "note": "created (user)"
+    },
+    {
+      "t": "2026-09-28T22:12:34.328Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-28T22:21:19.729Z",
+      "note": "owns these walks: copy-and-paste-a-range-walk, copy-a-range-from-its-menu-walk"
+    },
+    {
+      "t": "2026-09-28T22:33:07.755Z",
+      "note": "adversarial review before building: Premiere has no range copy on Cmd-C (Lift/Extract fill its clipboard); Final Cut copies a range with Cmd-C and pastes overwrite at the playhead, playhead to the end. Built that. Collisions: Cmd-C with no layer picked copied the whole flattened canvas, so the range goes ahead of the layer and behind picked keys. Captions are one Captions layer per track, so pasted lines join it instead of stacking a second one. Clips read pictures and recordings only their own window holds, so a range pastes only in the window it was copied in."
+    },
+    {
+      "t": "2026-09-28T22:33:07.807Z",
+      "note": "built: PhotonzCore/RangeClipboard.swift (CopiedRange, copyRange via lift-after + extract-before on a trial doc, cutMarkedStretch, pasteRange with ClipLanding overwrite on each clip's own track), 14 tests in RangeClipboardTests. App: EditorState+RangeClipboard.swift (copyWhatIsInHand/cutWhatIsInHand/pasteWhatIsOnTheClipboard, shared by Edit menu and walk harness), Cut/Copy on the range right-click, Paste on the ruler right-click. Walks: copy-and-paste-a-range-walk (Next defaults, 60 steps, expectPlaybackNeverBlank over the 16s edit), copy-a-range-from-its-menu-walk. Scripts/test.sh: 10388 tests passed."
+    },
+    {
+      "t": "2026-09-28T22:33:07.859Z",
+      "note": "left rough (in the audit, no task filed: none are broken, and the user reacts to audit lines): no insert paste (Shift-Cmd-V); Cmd-C with I/O marks that were not drawn copies the layer, not the range; a track range (Option-drag) is not copied; locked tracks are left out of the copy. keys-copy-between-layers-walk fails at step 63, pre-existing and owned by the-keys-copy-walk-moves-the-playhead-the-way-th."
+    },
+    {
+      "t": "2026-09-28T22:33:21.867Z",
+      "note": "With a range drawn on the ruler, Cmd-C copies every unlocked track's stretch, Cmd-X copies and extracts it (one undo), Cmd-V overwrite-lands it at the playhead on the same tracks with the playhead left at its end. Copy/Cut on the range right-click, Paste on the ruler right-click. Core: PhotonzCore/RangeClipboard.swift + 14 RangeClipboardTests; app: EditorState+RangeClipboard.swift. Verified: Scripts/test.sh 10388 passed; copy-and-paste-a-range-walk (Next defaults, playback never blank over 16s, undo restores) and copy-a-range-from-its-menu-walk green with real captures. Audit queue/audits/2026-09-28-copy-paste-a-range.json."
     }
-  ]
+  ],
+  "started": "2026-09-28T22:12:34.327Z",
+  "walks": [
+    "copy-and-paste-a-range-walk",
+    "copy-a-range-from-its-menu-walk"
+  ],
+  "completed": "2026-09-28T22:33:21.868Z"
 }

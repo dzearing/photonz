@@ -5047,12 +5047,11 @@ private final class Run {
                  .captionsWordSplitAndMerge: break
             case .copySpecList: editor.copyMeasureSpecList()
             case .copyImage: editor.copyCompositeToClipboard()
-            // Keys picked on a lane go first, as Edit ▸ Copy and Cut do.
-            case .copy: if !editor.copyPickedKeys() { editor.copySelectedLayer() }
+            // The same order Edit ▸ Copy, Cut and Paste take things in.
+            case .copy: editor.copyWhatIsInHand()
             case .copyMerged: editor.copyMerged()
-            case .cut: if !editor.cutPickedKeys() { editor.cutSelectedLayer() }
-            // The same split Edit ▸ Paste makes (`EditorCommands`).
-            case .paste: if !editor.pasteKeysAtPlayhead() { editor.paste() }
+            case .cut: editor.cutWhatIsInHand()
+            case .paste: editor.pasteWhatIsOnTheClipboard()
             case .hideAllMeasurements: editor.setAllMeasurementsVisible(false)
             case .showAllMeasurements: editor.setAllMeasurementsVisible(true)
             case .forgetThumbnails: editor.forgetLayerThumbnails()

@@ -505,6 +505,7 @@ extension EditorState {
                              enabled: trial.splitEveryClip(atMS: ms) > 0) {
             self.splitEverything(atMS: ms)
         })
+        if let paste = pasteRangeRow(atMS: ms) { rows.append(paste) }
         if !document.markers.isEmpty {
             rows.append(.separator)
             rows.append(.command("Clear All Markers") { self.removeAllMarkers() })

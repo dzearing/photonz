@@ -1386,6 +1386,10 @@ final class EditorState {
     /// The range last drawn on the ruler, which is the thing in hand for as
     /// long as the marks stay on it and nothing else is picked.
     var rulerRangeInHand: Range<Int>?
+    /// Which window a range of time was copied in, so ⌘V lays it back in
+    /// only where the pictures and recordings it reads are
+    /// (`EditorState+RangeClipboard`).
+    @ObservationIgnored let rangeClipboardOrigin = UUID()
     /// A press on empty track space, from the hand going down to it coming up
     /// (`EditorState+TrackRange`).
     @ObservationIgnored var lanePress: LanePress?

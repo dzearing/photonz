@@ -824,11 +824,13 @@ struct EditorCommands: Commands {
             Button("Cut") {
                 // Keys picked on a lane are the smaller, more recent thing in
                 // hand, so ⌘X, ⌘C and ⌘V take those before the layer
-                // (`EditorState+KeyLanes`, Premiere's keyframe clipboard).
+                // (`EditorState+KeyLanes`, Premiere's keyframe clipboard),
+                // and a range drawn on the ruler next
+                // (`EditorState+RangeClipboard`).
                 if let fieldEditor {
                     fieldEditor.cut(nil)
-                } else if editor?.cutPickedKeys() != true {
-                    editor?.cutSelectedLayer()
+                } else {
+                    editor?.cutWhatIsInHand()
                 }
             }
             .keyboardShortcut("x", modifiers: .command)
@@ -836,8 +838,8 @@ struct EditorCommands: Commands {
             Button("Copy") {
                 if let fieldEditor {
                     fieldEditor.copy(nil)
-                } else if editor?.copyPickedKeys() != true {
-                    editor?.copySelectedLayer()
+                } else {
+                    editor?.copyWhatIsInHand()
                 }
             }
             .keyboardShortcut("c", modifiers: .command)
@@ -853,8 +855,8 @@ struct EditorCommands: Commands {
             Button("Paste") {
                 if let fieldEditor {
                     fieldEditor.paste(nil)
-                } else if editor?.pasteKeysAtPlayhead() != true {
-                    editor?.paste()
+                } else {
+                    editor?.pasteWhatIsOnTheClipboard()
                 }
             }
             .keyboardShortcut("v", modifiers: .command)
