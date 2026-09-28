@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "loop",
   "created": "2026-09-28T12:18:37.120Z",
-  "updated": "2026-09-28T12:21:29.645Z",
+  "updated": "2026-09-28T12:40:57.353Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced by the daily digest 2026-09-28. Both full runs that day (queue/sweep/2026-09-28-030406.log and 2026-09-28-042334.log) went blind at the same place: export-a-video-at-1080p-walk ok in about 100s, then export-card-while-writing-walk, export-keeps-to-the-in-and-out-walk, export-quality-walk, export-webp-walk, extract-a-marked-stretch-walk all 'COULD NOT START the probe would not launch'. Ran by hand, nothing else using the probe:\n\n$ Scripts/playtest-all.sh --no-build export-a-video-at-1080p-walk export-card-while-writing-walk export-keeps-to-the-in\nexport-a-video-at-1080p-walk               99s  ok\nexport-card-while-writing-walk              0s  COULD NOT START  the probe would not launch, so nothing ran this walk\nexport-keeps-to-the-in-and-out-walk         0s  COULD NOT START  the probe would not launch, so nothing ran this walk\n==> 1 passed, 0 failed, 2 could not start\n\nThen on its own: Scripts/playtest.sh Scripts/playtest/export-card-while-writing-walk.json --no-build -> status ok in 78s. So the walks are fine and it is what the 1080p walk leaves behind. playtest-all.sh swallows probe-app.sh's own message (out=$(...) and only the verdict is printed), so the first step is to see it: likely candidates are the '!! Probe did not come up' branch (5s of pgrep after open -g) while the last probe is still quitting or still writing its export. No crash report was written at either time (~/Library/Logs/DiagnosticReports). Likely started with 44fde13f (five minute export in a quarter of its length) or 799ef6a2 (busy MP4 size), both 2026-09-28, which changed how export writes.",
@@ -36,10 +36,36 @@
     {
       "t": "2026-09-28T12:21:29.644Z",
       "note": "owns these walks: export-a-video-at-1080p-walk, export-card-while-writing-walk"
+    },
+    {
+      "t": "2026-09-28T12:22:41.098Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-28T12:34:32.243Z",
+      "note": "Reason, from what probe-app.sh printed (Scripts/playtest.sh on export-card-while-writing-walk straight after the 1080p walk): '_LSOpenURLsWithCompletionHandler() failed for the application .../Photonz Probe.app with error -600.' The last probe was still EXITING: ps showed it as '82692 ?E (Photonz Probe)'. An exiting process drops its command line, so quit_probe's 'pgrep -f Photonz Probe.app/Contents/MacOS' stopped matching at 0.06s while lsappinfo still listed the bundle (timed: pgrep false at 0.06s, lsappinfo true until 0.61s on one run; the first run lingered for several seconds). open then asks LaunchServices, which still has the app, and answers -600 (procNotFound). Only the export walks tear down enough (Metal, VideoToolbox: 74 of 75 samples had an iokit_user_client_trap thread) for the window to be hit. No crash, the app is fine."
+    },
+    {
+      "t": "2026-09-28T12:34:32.296Z",
+      "note": "Fix: Scripts/probe-app.sh quit_probe now remembers the pids, waits with kill -0 (sees an exiting process) AND for lsappinfo to drop com.dzearing.photonz.probe, SIGKILL after 15s; the open is retried twice after another quit_probe if it still fails. Verified: Scripts/playtest-all.sh --no-build export-a-video-at-1080p-walk export-card-while-writing-walk export-keeps-to-the-in -> 98s ok, 82s ok, 21s ok, 3 passed."
+    },
+    {
+      "t": "2026-09-28T12:40:57.244Z",
+      "note": "Blind rerun rule: queue/bin/sweep-schedule.mjs decide() takes blind.json; a blind run newer than latest.json on the same code (same head, or only queue/ changed since, which the digest commit did today) gets one rotating check and then nothing until code lands; request --now still wins. 8 new checks in queue/bin/sweep-schedule-drill.mjs, all pass. Before the commit, sweep.sh why-not read 'slice: the whole set went blind on this commit...' where it had read 'full: 27.0h'. playtest-all.sh now prints the launcher's reason under a COULD NOT START line; sweep-parse reads such a log identically (checked)."
+    },
+    {
+      "t": "2026-09-28T12:40:57.297Z",
+      "note": "Last acceptance item (next full run covers the whole set without going blind) cannot be run inside a task: requested a sweep; sweep.sh why-not now says 'full: 27.1h since the last whole-set run', so the loop's next full run is the check. If it goes blind again, sweep.sh status and the COULD NOT START line will now name the launcher's reason."
+    },
+    {
+      "t": "2026-09-28T12:40:57.351Z",
+      "note": "Probe launcher (Scripts/probe-app.sh) now waits for the last probe to be gone from the process table and from LaunchServices before opening the next one; the cause was open's error -600 while the probe was still exiting after the 1080p export walk. The three export walks now run back to back: 98s ok, 82s ok, 21s ok. A blind whole-set run is no longer rerun on the same code (sweep-schedule decide + drill), and COULD NOT START lines carry the launcher's reason. Scripts/test.sh 10265 passed. Commit 7046403c. The whole-set check is requested and due next; not yet observed."
     }
   ],
   "walks": [
     "export-a-video-at-1080p-walk",
     "export-card-while-writing-walk"
-  ]
+  ],
+  "started": "2026-09-28T12:22:41.097Z",
+  "completed": "2026-09-28T12:40:57.352Z"
 }

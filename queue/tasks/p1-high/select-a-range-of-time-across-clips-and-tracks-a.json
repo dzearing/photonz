@@ -1,0 +1,34 @@
+{
+  "id": "select-a-range-of-time-across-clips-and-tracks-a",
+  "title": "Select a range of time, across clips and tracks, and act on it",
+  "goal": "User 2026-09-28: 'I keep expecting to be able to select a range either as a marquee selection or range selection from dragging a range on the header line. This could let me for example select parts from 2 clips on a track and then collapsing that range into one clip. Or adding a transition.' Premiere has In/Out ranges and marquee selection; Final Cut has the Range tool (R). Photonz has In/Out marks (c21c0fc1) but no drag-to-select range and no marquee on the timeline.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 0.0026,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-28T13:48:59.894Z",
+  "updated": "2026-09-28T13:49:07.566Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Drag on the ruler (the time header) to select a time range across all tracks, shown as a tinted band with handles you can drag to adjust; click elsewhere on the ruler clears it; it sets In and Out too",
+    "Drag a marquee in empty timeline space to select clips and parts of clips on the tracks it crosses; Option-drag (or R, Final Cut's Range tool) selects a time range limited to the tracks crossed",
+    "Right-click a range: Merge into One Clip (the covered parts of clips on a track become one nested clip that plays the same), Add Transition (at the cut inside the range), Delete, Ripple Delete, Lift, Copy, Cut, Split at Range Edges, Add Captions for Range, Export Range",
+    "Keys: Delete and Shift-Delete act on the range; Cmd-C/X/V copy, cut and paste it at the playhead",
+    "Merge is non-destructive and undoable, and the merged clip can be opened back into its parts (right-click > Break Apart)",
+    "Walk at Next defaults: two clips on a track with a cut between; drag a range across the cut on the ruler, Merge into One Clip, undo, then Add Transition; photograph each step"
+  ],
+  "log": [
+    {
+      "t": "2026-09-28T13:48:59.896Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-28T13:49:07.565Z",
+      "note": "seq 410 -> 0.0026"
+    }
+  ]
+}

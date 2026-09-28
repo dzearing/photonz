@@ -1,0 +1,35 @@
+{
+  "id": "captions-only-when-you-ask-for-them",
+  "title": "Captions only when you ask for them",
+  "goal": "User 2026-09-28: 'I do not want closed captions generated proactively, I'd prefer to have a way to add closed captions for a video on demand.' This reverses the earlier ask for captions to extract themselves on open (EditorState.swift calls writeCaptionsByThemselves() when a recording opens; the Captions panel has an Auto switch). The user's latest word wins. Ask: how does Premiere, CapCut or Descript offer this: one clear Generate Captions action.",
+  "epic": "video-audio",
+  "priority": "p1-high",
+  "seq": 0.0012,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-28T13:48:59.813Z",
+  "updated": "2026-09-28T13:49:07.515Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window. Supersedes the auto-on-open part of captions-write-themselves-from-the-speech (done).",
+  "acceptance": [
+    "Opening a recording never starts transcription: writeCaptionsByThemselves and the Auto switch are removed (and any setting that turned it on), with no background speech work at all until asked",
+    "Captions are added on demand from: right-click a clip or audio segment > Add Captions; the timeline's + (add track) menu > Captions; and the Edit or Video menu > Add Captions (Premiere's Transcribe); the result lands as the Captions layer and track",
+    "While transcribing, a small progress indicator sits on the new captions track and the editor stays fully usable; Cancel stops it",
+    "The Captions panel section, with no captions yet, shows one Add Captions button and nothing else",
+    "Existing documents that already have captions keep them",
+    "The captions tasks still open (captions-are-one-layer..., how-the-words-show..., fix-a-caption-one-word...) are updated to say captions are made on demand",
+    "Walk at Next defaults: open a recording with speech, wait 10 s, confirm no transcription ran and no captions track exists; add captions from the clip's right-click; photograph both states"
+  ],
+  "log": [
+    {
+      "t": "2026-09-28T13:48:59.815Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-28T13:49:07.514Z",
+      "note": "seq 400 -> 0.0012"
+    }
+  ]
+}

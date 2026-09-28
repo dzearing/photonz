@@ -1,0 +1,33 @@
+{
+  "id": "a-recording-shows-in-history-the-moment-you-stop",
+  "title": "A recording shows in history the moment you stop it",
+  "goal": "User 2026-09-28: 'When I record video, now there seems to be a delay before it shows in history as if we're processing it more. I do not want processing to interfere with the speed of the experience.' Something now runs between stopping a recording and its history entry appearing. Measure before changing anything: time from Stop to the file closed, to the history tile, and list every piece of work that runs in that gap (thumbnail, frame reads, waveform, captions/transcription, loudness, metadata, a re-encode) and whether the tile waits on it.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 0.001,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-28T13:48:59.731Z",
+  "updated": "2026-09-28T13:49:07.459Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Reproduced first: record 5 s and 60 s clips with system audio and mic; log timestamps for Stop, file finalised, history tile shown, thumbnail shown; compare with the commit from before the delay (git bisect if needed) and name the commit that introduced it",
+    "The history tile appears within 300 ms of the file being finalised, with a placeholder thumbnail if its real one is not ready",
+    "Nothing optional runs before the tile appears: waveforms, thumbnails, frame reads and any analysis run afterwards at background priority and never block the history, the editor opening, or playback",
+    "No transcription runs unless the person asks for captions (see the on-demand captions task)",
+    "A drill or test measures Stop-to-tile and fails above 300 ms; a perf note in the commit"
+  ],
+  "log": [
+    {
+      "t": "2026-09-28T13:48:59.733Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-28T13:49:07.457Z",
+      "note": "seq 390 -> 0.001"
+    }
+  ]
+}
