@@ -1,0 +1,33 @@
+{
+  "feature": "Segmented thumb: lighter glass that morphs",
+  "epic": "design-system",
+  "task": "the-segmented-control-s-thumb-is-lighter-than-it",
+  "summary": "Every segmented control's thumb is now a lighter pane of Liquid Glass on a darker, recessed rail, easy to see in light and dark. Picking another option stretches the glass over both options, then it settles a few points past and back. You can also grab the thumb and drag it.",
+  "setup": "Photonz Probe, release Next, no switch changed from its default. Walk: Scripts/playtest/segmented-thumb-glass-walk.json (its drag needs the Mac to itself).",
+  "switched": {},
+  "try": [
+    { "do": "Put down a text label, pick it, and look at Across and Down in the Text section (dark).", "shot": "2026-09-29-segmented-thumb-panel-dark-sc.png" },
+    { "do": "Switch the Mac to light and look at the same rows.", "shot": "2026-09-29-segmented-thumb-panel-light-sc.png" },
+    { "do": "Click Center, then Right, then Left, quickly, and watch the glass travel.", "shot": "2026-09-29-segmented-thumb-morph-frames.png" },
+    { "do": "Press on the picked segment and drag the thumb sideways, then let go over another one.", "shot": "2026-09-29-segmented-thumb-dragged-light-sc.png" },
+    { "do": "Open a recording and look at View | Edit in the title bar.", "shot": "2026-09-29-segmented-thumb-titlebar-light-sc.png" },
+    { "do": "Press Cmd-2 and watch the thumb go over to Edit (dark).", "shot": "2026-09-29-segmented-thumb-titlebar-dark-sc.png" },
+    { "do": "Compare with the component page's Sizes section in light and dark.", "shot": "2026-09-29-segmented-thumb-page-light.png" }
+  ],
+  "evaluate": [
+    "Can you find the picked option at a glance now, in both light and dark?",
+    "Is the light rail too heavy a grey on the light panel, or is the extra depth right?",
+    "Does the stretch-then-settle read as liquid glass, or would a plain glide feel better?",
+    "Is 420ms right for the move, or does it feel slow on a quick run of clicks?",
+    "Does dragging the thumb feel like it belongs, or is clicking enough?"
+  ],
+  "rough": [
+    "Measured thumb to rail contrast on real captures: title bar light 1.60:1, title bar dark 2.16:1, panel light 1.88:1, panel dark 2.21:1. The component page measures 1.62:1 light and 1.99:1 dark.",
+    "The page's first light rail measured 1.19:1, under the 1.5:1 you asked for, so its rail token was darkened (0.075 to 0.22) on the page and in the app. That is a change to your component page, commented where it sits.",
+    "The morph frames are drawn offscreen from the shipped control, without the glass itself: a screen capture takes longer than the 420ms move, so no real picture catches it mid-flight.",
+    "The motion is the page's own stretch and settle, applied to one system glass pane in a glass container. It is not the system's own glass-matching spring, because that spring cannot promise to stay inside the rail or overshoot by only 3 points.",
+    "Reduce Motion (a quick cross-fade) and Increase Contrast or Reduce Transparency (an opaque lighter thumb) are built but were not seen live: turning them on would change settings on your Mac.",
+    "The history bar's accent filter keeps a solid accent thumb with the same motion, not glass: white words on tinted glass would lose contrast.",
+    "The picked option's words turn bold as the move starts, not when the glass arrives. The page does the same."
+  ]
+}

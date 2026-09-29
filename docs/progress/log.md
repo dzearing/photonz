@@ -20205,3 +20205,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Touches come from `TimelineWheel` in `TimelineDock.swift`: the view accepts indirect touches (so the window gets them) and a local `.gesture` monitor passes every two-finger set, in the trackpad's points, to `EditorState.timelinePinchTouched`. The SwiftUI MagnifyGesture now goes through `beginTimelinePinch` / `steerTimelinePinch` / `endTimelinePinch`.
 - Walk step `timelinePinch` takes `"spread": "horizontal|vertical|diagonal"` and drives the same steered calls with made-up fingers; its note says which axis each pinch zoomed. New `timeline-pinch-direction-walk` green at Next defaults; `timeline-pinch-both-ways-walk` still green.
 - Open: that real trackpad touches arrive through the `.gesture` monitor is unverified from a script; a card asks the user to try it.
+
+## 2026-09-29: segmented thumb is lighter glass and morphs
+
+- User 2026-09-29: the thumb should be lighter than the rail ("I can barely see the thumb") and move as Liquid Glass. Every segmented control (panel pickers, the title bar's View | Edit, dialogs) now has a recessed rail and a lighter glass thumb (`SegmentedControl.swift`), measured on real captures at 1.60 to 2.21:1 thumb to rail.
+- `SegmentThumbMorph` / `SegmentThumbDrag` (PhotonzCore, `SegmentThumbMotionTests`): the page's stretch, squash and 3pt settle as one rect per frame, never out of the rail; the thumb can be grabbed and dragged. `CubicBezier.swift` split out of `LayerMotion` so `Scripts/segmented-gallery.swift` still compiles alone (it now draws a morph filmstrip).
+- The page's light rail went from 0.075 to 0.22 (`segmented.css`): 0.075 measured 1.19:1, under the user's 1.5:1.
+- New walk `segmented-thumb-glass-walk` (no flags, real pointer drag). Audit `queue/audits/2026-09-29-segmented-thumb-glass.json`.
+- Open: a card asks the user to judge the feel of the move; Reduce Motion and Increase Contrast paths were not seen live.

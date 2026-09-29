@@ -1,0 +1,54 @@
+{
+  "out": "/tmp/photonz-playtest/segmented-thumb-glass",
+  "seed": "The user, 2026-09-29: the segmented control's thumb should be lighter than its rail ('I can barely see the thumb atm') and should move as Liquid Glass when it snaps between options. At Next defaults with no flag set, this walk picks a label so the Text section's Across and Down rows show, photographs the thumb in dark and light, presses Center by its face so the glass morphs across, photographs straight after the press (to catch the thumb mid-stretch) and again once it has settled, then takes hold of the thumb and drags it from Center to Right with a real pointer drag and checks the pick followed the hand. Last it opens a recording and switches the title bar's View | Edit both ways, in light and in dark, because every segmented control in the app is the same one.",
+  "setup": {
+    "forget": ["text", "shapes", "tools"]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1360, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [140, 130] },
+    { "do": "type", "text": "Sign in" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [180, 145] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Left", "in": "Across", "reads": "Across, already on Left, tooltip \"Left\"" },
+
+    { "do": "appearance", "value": "dark" },
+    { "do": "describe", "stage": "1-dark-rest", "note": "THE TEST: Across and Down in the Text section, dark. The picked segment's thumb is a lighter pane of glass on a darker, recessed rail, visible at a glance" },
+    { "do": "snapshot", "name": "1-dark-rest" },
+
+    { "do": "press", "control": "Center", "in": "Across" },
+    { "do": "snapshot", "name": "2-dark-just-pressed" },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "expect", "control": "Center", "in": "Across", "reads": "Across, already on Center, tooltip \"Center\"" },
+    { "do": "describe", "stage": "3-dark-settled", "note": "the glass has travelled from Left to Center and settled, inside the rail" },
+    { "do": "snapshot", "name": "3-dark-settled" },
+
+    { "do": "appearance", "value": "light" },
+    { "do": "describe", "stage": "4-light-rest", "note": "the same rows in light: a white thumb on a clearly greyer rail" },
+    { "do": "snapshot", "name": "4-light-rest" },
+
+    { "do": "windowDrag", "from": [1238, 369], "to": [1268, 369], "steps": 14 },
+    { "do": "wait", "seconds": 0.7 },
+    { "do": "expect", "control": "Right", "in": "Across", "reads": "Across, already on Right, tooltip \"Right\"" },
+    { "do": "describe", "stage": "5-light-dragged", "note": "took hold of the thumb on Center and dragged it right: it followed the hand and landed on Right" },
+    { "do": "snapshot", "name": "5-light-dragged" },
+
+    { "do": "open", "file": "fixtures/Full screen Retina recording 3456x2234.mp4", "width": 1360, "height": 900 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectTimeline", "mode": "view" },
+    { "do": "describe", "stage": "6-light-title-bar-view", "note": "the title bar's View | Edit in light, View picked" },
+    { "do": "snapshot", "name": "6-light-title-bar-view" },
+    { "do": "key", "key": "2", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectTimeline", "mode": "edit" },
+    { "do": "appearance", "value": "dark" },
+    { "do": "describe", "stage": "7-dark-title-bar-edit", "note": "Cmd-2: the thumb went over to Edit; dark" },
+    { "do": "snapshot", "name": "7-dark-title-bar-edit" },
+    { "do": "appearance", "value": "system" }
+  ]
+}

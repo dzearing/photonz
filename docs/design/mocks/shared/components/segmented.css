@@ -51,9 +51,14 @@
    than the rail" and, of the old one, "I can barely see the thumb". The rail is
    now a RECESSED track, darker than what it sits on, and the thumb a lighter
    pane of glass on it: a brighter fill, a bright specular line along its top, a
-   soft drop shadow and a hairline. Both themes, both ways of choosing one. */
+   soft drop shadow and a hairline. Both themes, both ways of choosing one.
+   The user's floor is 1.5:1 between thumb and rail. Measured on the app's
+   render the light rail at .075 gave 1.19:1 on a panel (the thumb nearly
+   vanished again). The lightest thing it sits on is the white title bar, and
+   .22 clears 1.5:1 there (about 1.55:1; 1.75:1 on the grey panel). Dark
+   measures about 2.2:1 as it was. */
 :root{
-  --seg-rail:rgba(18,24,40,.075);
+  --seg-rail:rgba(18,24,40,.22);
   --seg-rail-inset:inset 0 1px 2px rgba(18,24,40,.10);
   --seg-thumb:rgba(255,255,255,.96);
   --seg-thumb-hi:rgba(255,255,255,1);

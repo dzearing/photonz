@@ -5,6 +5,7 @@
 //
 // Run:
 //   swiftc -parse-as-library -swift-version 6 Sources/Photonz/VideoKit/*.swift \
+//     Sources/PhotonzCore/CubicBezier.swift Sources/PhotonzCore/SegmentThumbMotion.swift \
 //     Sources/Photonz/DesignSystem/SegmentedControl.swift Scripts/segmented-gallery.swift \
 //     -o /tmp/segmented-gallery && /tmp/segmented-gallery <output folder>
 //
@@ -52,14 +53,15 @@ typealias Seg = DesignedSegments<Int>
 @MainActor func seg(_ words: [String], on: Int? = 0, size: SegmentedControl<Int>.Size = .regular,
          form: SegmentedControl<Int>.Form = .natural, hovered: Int? = nil, focused: Bool = false,
          unavailable: Int? = nil, images: [String]? = nil, showsTitles: Bool = true,
-         plate: SegmentedControl<Int>.PlateStyle = .raised) -> Seg {
+         plate: SegmentedControl<Int>.PlateStyle = .raised,
+         morph: (from: Int, at: TimeInterval)? = nil) -> Seg {
     Seg(label: "specimen",
         options: words.indices.map { index in
             .init(index, words[index], image: images.map { Image(systemName: $0[index]) },
                   disabledReason: index == unavailable ? "Not now" : nil)
         },
         selection: on, size: size, form: form, showsTitles: showsTitles, plateStyle: plate,
-        tipsBelow: false, shownHovered: hovered, shownFocused: focused) { _ in }
+        tipsBelow: false, shownHovered: hovered, shownFocused: focused, shownMorph: morph) { _ in }
 }
 
 struct Specimen<Content: View>: View {
@@ -114,6 +116,22 @@ struct Sheet: View {
                 }
                 Specimen(name: "HISTORY FILTER (ACCENT)") {
                     seg(["All", "Screenshots", "Recordings"], plate: .accent)
+                }
+            }
+            // The morph from Fill to Crop, a frame every 60ms of its 420ms:
+            // the stretch over both slots, the squash, the few points past
+            // Crop, and home.
+            Specimen(name: "THE MORPH, FILL TO CROP, EVERY 60MS") {
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(0..<2) { row in
+                        HStack(spacing: 14) {
+                            ForEach(0..<4) { column in
+                                seg(["Fill", "Fit", "Crop"], on: 2, size: .small,
+                                    morph: (from: 0, at: Double(row * 4 + column) * 0.06))
+                                    .fixedSize()
+                            }
+                        }
+                    }
                 }
             }
         }
