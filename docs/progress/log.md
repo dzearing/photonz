@@ -20141,3 +20141,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - A dip on a join inside one clip now shows Hold on black. Choosing a hold cuts the clip in two at the join (`PhotonzDocument.breakClip`) and sets the hold on the new edit point, which ripples everything after it along; one undo puts the one clip back (`holdOnColour`, `canHoldOnColour` in `EditPointTransitions.swift`).
 - Tests: `JoinHoldTests`. Walk: `hold-on-black-at-a-blade-cut-walk` (Next defaults, lock-safe, no front).
 - Open: whether the user wants the clip to stay one clip with black inside it instead (asked in the audit).
+
+## 2026-09-28 — The floating tool bar sits as tight as the mock
+
+- Next's one glass bar spaces its tools as `video.html` does: a tool every 32pt (4pt gaps), 18pt hairlines 6pt from tools and 8pt from sections, 10pt ends. Numbers in `EditorChromeLayout.ToolBarSpacing`; Current's capsules keep theirs. `fittedToolCount` takes the bar's spacing.
+- Walks: `toolBar` steps can claim `toolGap` and `hairline`. `one-glass-tool-bar-walk` now presses Command 2 before reading a recording's bar (it was failing on main without it).
+- Gotcha: wrapping a `Divider` in `onGeometryChange` makes it lie flat in an HStack; probe it from a background.
+- Next: the bar is 48pt tall against the mock's 38pt (filed p1, `the-floating-tool-bar-is-as-short-as-the-mock-dr`).
