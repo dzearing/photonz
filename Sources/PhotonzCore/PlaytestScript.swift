@@ -532,6 +532,33 @@ public struct PlaytestPoint: Hashable, Sendable {
     }
 }
 
+/// How a walk opens a control the way a person would: a pointer click on its
+/// face, in its middle or a hand's width in from its leading or trailing end,
+/// or a key pressed while the control has keyboard focus.
+public enum PlaytestFaceSpot: String, Hashable, Sendable, CaseIterable {
+    case centre, start, end
+    /// Space, with the control focused.
+    case space
+    /// Return, with the control focused.
+    case `return`
+
+    /// Whether this is a key press rather than a click.
+    public var isKey: Bool { self == .space || self == .return }
+
+    /// How far in from an end `start` and `end` land.
+    public static let inset: CGFloat = 8
+
+    /// The point on `face` this spot names, in the face's own space.
+    public func point(on face: CGRect) -> CGPoint {
+        let inset = min(Self.inset, face.width / 2)
+        switch self {
+        case .centre, .space, .return: return CGPoint(x: face.midX, y: face.midY)
+        case .start: return CGPoint(x: face.minX + inset, y: face.midY)
+        case .end: return CGPoint(x: face.maxX - inset, y: face.midY)
+        }
+    }
+}
+
 /// Who a click at a point ends up with, for `expectClickReaches`.
 public enum PlaytestClickTaker: String, Hashable, Sendable {
     /// The picture. Anything the app floats over the canvas is letting the
@@ -2574,7 +2601,14 @@ public enum PlaytestStep: Sendable, Equatable {
     /// same row arriving twice apart: an effect carries a Color menu AND a
     /// Position menu, and a shape can carry two borders, so neither the row's
     /// name nor the menu's own is enough on its own.
-    case panelMenu(menu: String, in: String?, shot: String?, choose: String?, clicking: String?)
+    /// `at` opens the menu with a pointer click on the dropdown's own FACE,
+    /// once at each spot named (`centre`, `start`, `end`), and fails any spot
+    /// whose click does not open it. A press by name proves a menu exists; this
+    /// proves a hand can open it (the user found every panel dropdown dead to
+    /// the pointer on 2026-09-28 while every walk that pressed them was green).
+    /// A `choose` is made on the last spot's opening.
+    case panelMenu(menu: String, in: String?, shot: String?, choose: String?, clicking: String?,
+                   at: [PlaytestFaceSpot] = [])
     /// Open one of the app's OWN menu-bar menus inside the probe window and
     /// photograph it.
     ///
@@ -3902,7 +3936,8 @@ public enum PlaytestStep: Sendable, Equatable {
                               in: try f.optionalString("in"),
                               shot: try f.optionalString("shot"),
                               choose: try f.optionalString("choose"),
-                              clicking: try f.optionalString("clicking"))
+                              clicking: try f.optionalString("clicking"),
+                              at: try f.faceSpots("at", besides: "clicking"))
         case "rightClick":
             let onRow = try f.optionalString("on")
             let onCanvas = fields["at"] == nil ? nil : try f.point("at")
@@ -4661,6 +4696,31 @@ public enum PlaytestStep: Sendable, Equatable {
             guard let raw = fields[field] else { return nil }
             guard let value = raw as? String, !value.isEmpty else { throw invalid(field, "must be a non-empty string") }
             return value
+        }
+
+        /// Spots on a control's face to click, written as one word or a list
+        /// of them; empty when absent. `besides` names another way of opening
+        /// the same thing, which cannot be asked for as well.
+        func faceSpots(_ field: String, besides other: String) throws -> [PlaytestFaceSpot] {
+            guard let raw = fields[field] else { return [] }
+            let words: [String]
+            if let one = raw as? String {
+                words = [one]
+            } else if let many = raw as? [String], !many.isEmpty {
+                words = many
+            } else {
+                throw invalid(field, "must be centre, start, end, space or return, or a list of them")
+            }
+            if fields[other] != nil {
+                throw invalid(field, "clicks the menu's own face, so it cannot also open it by "
+                              + "\"\(other)\"; use one or the other")
+            }
+            return try words.map { word in
+                guard let spot = PlaytestFaceSpot(rawValue: word) else {
+                    throw invalid(field, "\"\(word)\" is not a spot on a face or a key; use centre, start, end, space or return")
+                }
+                return spot
+            }
         }
 
         func number(_ field: String) throws -> Double {

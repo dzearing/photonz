@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 // MARK: - The key diamond
@@ -97,12 +98,10 @@ extension VideoKit {
             ViewThatFits(in: .horizontal) {
                 bar
                 Dropdown(label: options.first { $0.value == selection }?.title ?? "",
-                         value: options.first { $0.value == selection }?.title ?? "") {
-                    ForEach(options, id: \.value) { option in
-                        Toggle(option.title, isOn: Binding(get: { option.value == selection },
-                                                           set: { _ in pick(option.value) }))
-                    }
-                }
+                         value: options.first { $0.value == selection }?.title ?? "",
+                         choices: options.map { option in
+                             .item(option.title, isOn: option.value == selection) { pick(option.value) }
+                         })
             }
         }
 
@@ -225,6 +224,9 @@ extension VideoKit {
         var size: Size = .regular
         /// A component's dropdown wears the component colour on its edge.
         var isComponent = false
+        /// Its menu is up: the accent edge the mock's Open state wears
+        /// (`comp-fields.html`, 05 Select).
+        var isOpen = false
 
         @State private var isHovering = false
 
@@ -256,6 +258,7 @@ extension VideoKit {
         }
 
         private var borderStyle: AnyShapeStyle {
+            if isOpen { return AnyShapeStyle(Palette.accent) }
             if isHovering { return AnyShapeStyle(Palette.accent.opacity(0.45)) }
             return isComponent ? AnyShapeStyle(Palette.compLine) : AnyShapeStyle(Palette.line)
         }
@@ -264,54 +267,269 @@ extension VideoKit {
     /// A labelled dropdown: `FieldRow` with a `SelectFace` that opens a menu.
     /// A list of more than three exclusive choices is one of these, never a
     /// column of radio buttons.
-    struct DropdownRow<Items: View>: View {
+    struct DropdownRow: View {
         let label: String
         let value: String
         var swatch: AnyShapeStyle?
         var size: SelectFace.Size = .small
-        @ViewBuilder let items: Items
+        let choices: [Choice]
+
+        init(label: String, value: String, swatch: AnyShapeStyle? = nil, size: SelectFace.Size = .small,
+             choices: [Choice]) {
+            self.label = label
+            self.value = value
+            self.swatch = swatch
+            self.size = size
+            self.choices = choices
+        }
 
         var body: some View {
             FieldRow(label: label) {
-                Dropdown(label: label, value: value, swatch: swatch, size: size) { items }
+                Dropdown(label: label, value: value, swatch: swatch, size: size, choices: choices)
             }
         }
     }
 
+    /// One row of a dropdown's menu: a choice, a line between groups, or a
+    /// group's heading.
+    ///
+    /// Rows are values rather than SwiftUI menu content because the dropdown
+    /// builds its own AppKit menu (see `Dropdown`), and because a list of
+    /// values is a list a test can read.
+    struct Choice {
+        enum Kind { case item, divider, heading }
+
+        var kind: Kind
+        var title: String
+        /// Wears a checkmark: the value the dropdown is showing.
+        var isOn = false
+        /// Dimmed and unpickable when false.
+        var isEnabled = true
+        /// A small picture beside the words, for a row a word alone does not
+        /// describe (a curve's shape). A menu row draws pictures, not views.
+        var image: NSImage?
+        var action: @MainActor () -> Void = {}
+
+        static func item(_ title: String, isOn: Bool = false, isEnabled: Bool = true,
+                         image: NSImage? = nil, action: @escaping @MainActor () -> Void) -> Choice {
+            Choice(kind: .item, title: title, isOn: isOn, isEnabled: isEnabled, image: image, action: action)
+        }
+
+        static var divider: Choice { Choice(kind: .divider, title: "") }
+
+        static func heading(_ title: String) -> Choice { Choice(kind: .heading, title: title) }
+    }
+
     /// The dropdown on its own (`.select`), for a row that already has its
     /// word, or none.
-    struct Dropdown<Items: View>: View {
+    ///
+    /// The face IS the button. It is a real AppKit pull-down button exactly the
+    /// size of the face, with the drawn `SelectFace` inside it as its content,
+    /// so a click anywhere a person can see the dropdown lands on it and opens
+    /// its menu. Until 2026-09-28 the face was drawn by itself with a SwiftUI
+    /// menu laid over it at 1% opacity to take the click; that menu was as
+    /// wide as its own invisible title (37 of the Show row's 148 points), and
+    /// AppKit handed clicks even inside it to the panel behind, so every
+    /// dropdown in the panel was dead to the pointer while every walk that
+    /// pressed it by name was green.
+    ///
+    /// It stays a pop-up button, with a blank first row the way a pull-down
+    /// keeps its title, so a walk reads its value and its rows, and picks one,
+    /// without putting the menu on screen.
+    struct Dropdown: NSViewRepresentable {
         /// What accessibility calls it, and so what a walk reads it back by.
         let label: String
         let value: String
         var swatch: AnyShapeStyle?
         var size: SelectFace.Size = .small
-        @ViewBuilder let items: Items
+        let choices: [Choice]
 
-        var body: some View {
-            // The mock's face, with a real pop-up button laid over it to
-            // take the click. A borderless menu is the one AppKit builds as
-            // a real pop-up button, which a walk can open and choose from
-            // like any other menu in the panel, and it cannot wear a
-            // face of its own, so it wears this one.
-            SelectFace(value: value, swatch: swatch, size: size)
-                .overlay {
-                    Menu {
-                        items
-                    } label: {
-                        // Clear, not just faint: the pop-up draws its own
-                        // title, and at 1% opacity it still showed as a
-                        // ghost of the value beside the face's own
-                        // (2026-09-24). A walk reads the title, so it stays.
-                        Text(value).foregroundStyle(Color.clear)
-                    }
-                    .menuStyle(.borderlessButton)
-                    .menuIndicator(.hidden)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .opacity(0.011)
-                    .accessibilityLabel(label)
-                    .accessibilityValue(value)
+        init(label: String, value: String, swatch: AnyShapeStyle? = nil, size: SelectFace.Size = .small,
+             choices: [Choice]) {
+            self.label = label
+            self.value = value
+            self.swatch = swatch
+            self.size = size
+            self.choices = choices
+        }
+
+        private var face: SelectFace { SelectFace(value: value, swatch: swatch, size: size) }
+
+        func makeNSView(context: Context) -> DropdownButton {
+            let button = DropdownButton(face: face)
+            button.update(label: label, value: value, radius: size == .small ? 6 : 8, choices: choices)
+            return button
+        }
+
+        func updateNSView(_ button: DropdownButton, context: Context) {
+            button.face = face
+            button.update(label: label, value: value, radius: size == .small ? 6 : 8, choices: choices)
+        }
+
+        func sizeThatFits(_ proposal: ProposedViewSize, nsView button: DropdownButton,
+                          context: Context) -> CGSize? {
+            let fitting = button.host.intrinsicContentSize
+            let width = proposal.width.flatMap { $0.isFinite ? $0 : nil } ?? fitting.width
+            return CGSize(width: width, height: fitting.height)
+        }
+    }
+
+    /// The AppKit half of `Dropdown`: a borderless pull-down that draws
+    /// nothing of its own and carries the face inside it.
+    final class DropdownButton: NSPopUpButton, NSMenuDelegate {
+        let host: NSHostingView<SelectFace>
+        /// The face as the row draws it; `isOpen` is laid on here.
+        var face: SelectFace {
+            didSet { showFace() }
+        }
+        private var isOpen = false {
+            didSet { showFace() }
+        }
+        private var value = ""
+        private var radius: CGFloat = 6
+        private var actions: [@MainActor () -> Void] = []
+        /// What the menu was last built from, so an update that changes
+        /// nothing in it leaves the open menu alone.
+        private var built: [String] = []
+
+        init(face: SelectFace) {
+            self.face = face
+            host = NSHostingView(rootView: face)
+            super.init(frame: .zero, pullsDown: true)
+            cell = DropdownCell(textCell: "", pullsDown: true)
+            isBordered = false
+            focusRingType = .default
+            // Its natural size is what the dropdown asks SwiftUI for; the
+            // frame it gets is the button's, whatever the row gives it.
+            host.sizingOptions = [.intrinsicContentSize]
+            host.translatesAutoresizingMaskIntoConstraints = true
+            host.autoresizingMask = [.width, .height]
+            addSubview(host)
+            menu = NSMenu()
+            menu?.autoenablesItems = false
+            menu?.delegate = self
+        }
+
+        private func showFace() {
+            var shown = face
+            shown.isOpen = isOpen
+            host.rootView = shown
+        }
+
+        func menuWillOpen(_ menu: NSMenu) { isOpen = true }
+
+        func menuDidClose(_ menu: NSMenu) { isOpen = false }
+
+        @available(*, unavailable)
+        required init?(coder: NSCoder) { nil }
+
+        func update(label: String, value: String, radius: CGFloat, choices: [Choice]) {
+            self.value = value
+            self.radius = radius
+            setAccessibilityLabel(label)
+            setAccessibilityValue(value)
+            (cell as? NSPopUpButtonCell)?.usesItemFromMenu = false
+            (cell as? NSPopUpButtonCell)?.menuItem = NSMenuItem(title: value, action: nil, keyEquivalent: "")
+            actions = choices.map(\.action)
+            let shape = choices.map { "\($0.kind)|\($0.title)|\($0.isOn)|\($0.isEnabled)|\($0.image.map { ObjectIdentifier($0).hashValue } ?? 0)" }
+            guard shape != built, let menu else { return }
+            built = shape
+            menu.removeAllItems()
+            // A pull-down's first row is its title and is never shown.
+            let title = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+            title.isHidden = true
+            menu.addItem(title)
+            for (index, choice) in choices.enumerated() {
+                switch choice.kind {
+                case .divider:
+                    menu.addItem(.separator())
+                case .heading:
+                    menu.addItem(.sectionHeader(title: choice.title))
+                case .item:
+                    let item = NSMenuItem(title: choice.title, action: #selector(pick(_:)), keyEquivalent: "")
+                    item.target = self
+                    item.tag = index
+                    item.state = choice.isOn ? .on : .off
+                    item.isEnabled = choice.isEnabled
+                    item.image = choice.image
+                    menu.addItem(item)
                 }
+            }
+        }
+
+        @objc private func pick(_ item: NSMenuItem) {
+            guard actions.indices.contains(item.tag) else { return }
+            actions[item.tag]()
+        }
+
+        override var title: String {
+            get { value }
+            set { super.title = newValue }
+        }
+
+        override func layout() {
+            super.layout()
+            host.frame = bounds
+        }
+
+        /// Every point of the face is the button's, including the parts the
+        /// face draws: the words, the swatch and the chevron.
+        override func hitTest(_ point: NSPoint) -> NSView? {
+            guard !isHidden, let superview else { return nil }
+            return bounds.contains(convert(point, from: superview)) ? self : nil
+        }
+
+        override func draw(_ dirtyRect: NSRect) {}
+
+        override var focusRingMaskBounds: NSRect { bounds }
+
+        override func drawFocusRingMask() {
+            NSBezierPath(roundedRect: bounds, xRadius: radius, yRadius: radius).fill()
+        }
+
+        /// Opens the menu the way the mock draws it (`comp-fields.html`, 05
+        /// Select): hanging from the face's left edge, at least the face's
+        /// width, just under it. AppKit's own pull-down lines its rows up with
+        /// a title this button never draws, a dozen points in and narrower.
+        private func openMenu() {
+            guard let menu, isEnabled else { return }
+            menu.minimumWidth = bounds.width
+            let below = isFlipped ? bounds.maxY + 3 : bounds.minY - 3
+            menu.popUp(positioning: nil, at: NSPoint(x: bounds.minX, y: below), in: self)
+        }
+
+        override func mouseDown(with event: NSEvent) { openMenu() }
+
+        override func performClick(_ sender: Any?) { openMenu() }
+
+        /// Return opens it as well as space, the way a person expects of a
+        /// focused dropdown.
+        override func keyDown(with event: NSEvent) {
+            if event.keyCode == 36 || event.keyCode == 76 || event.charactersIgnoringModifiers == " " {
+                performClick(nil)
+            } else {
+                super.keyDown(with: event)
+            }
+        }
+    }
+
+    /// Draws nothing: the face inside the button is the whole look.
+    final class DropdownCell: NSPopUpButtonCell {
+
+        override func draw(withFrame cellFrame: NSRect, in controlView: NSView) {}
+        override func drawInterior(withFrame cellFrame: NSRect, in controlView: NSView) {}
+        override func drawBorderAndBackground(withFrame cellFrame: NSRect, in controlView: NSView) {}
+    }
+}
+
+extension [VideoKit.Choice] {
+    /// Every value in a list as a choice, the one that is `current` ticked.
+    @MainActor static func picking<Value: Equatable>(_ values: [Value], current: Value?,
+                                          title: (Value) -> String,
+                                          isEnabled: (Value) -> Bool = { _ in true },
+                                          pick: @escaping @MainActor (Value) -> Void) -> [VideoKit.Choice] {
+        values.map { value in
+            .item(title(value), isOn: value == current, isEnabled: isEnabled(value)) { pick(value) }
         }
     }
 }

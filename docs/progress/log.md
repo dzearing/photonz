@@ -20174,3 +20174,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Also: trimming a title's bar left an Animate Out's keys at the old end. `refitFade(_:was:)` keeps Out keys at their distance from the end (squeezed when the bar gets too short). Tests: `TitleFadePlaybackTests`, every In x Out pair.
 - Walks: new step `expectPlaybackShows` (re-renders each moment without the layer to prove it is in the picture); `a-faded-title-shows-while-playing-walk` fails 15/15 on the old canvas, passes 16/16 now, and exports at full size and 1080p. Audit: `queue/audits/2026-09-28-faded-title-shows-while-playing.json`.
 - Open: captions on a big recording went through the same path; noted on `every-caption-style-control-changes-the-captions`.
+
+## 2026-09-29 — Every panel dropdown opens when you click it
+
+- Reproduced the user's report with a pointer click at Next defaults: the Show dropdown's drawn face was 148x24 but the real menu button laid over it (a SwiftUI borderless menu at 1% opacity) was 37x16, and AppKit sent even a click inside that button to the panel behind. Nothing opened at the centre or near either end.
+- `VideoKit.Dropdown` is now a real AppKit pull-down (`DropdownButton`) exactly the face's size, with `SelectFace` hosted inside it, so the face IS the hit target. Rows are `VideoKit.Choice` values (`[Choice].picking(...)` for the usual tick-one list). The first row is still a blank title row, so walks read and pick the same as before. Accent edge while open (the mock's Open state). Space and Return open a focused one; the timeline's key watcher leaves Space to a focused dropdown.
+- The timeline's Easing menu had the same overlay trick and is the same component now. `NoInvisibleHitTargetTests` fails any view faded below 5%.
+- Harness: `panelMenu` gains `at` (centre/start/end clicks on the face, space/return keys). New proof walks: `every-dropdown-opens-on-a-click-walk` (15 caption dropdowns), `every-title-dropdown-opens-on-a-click-walk` (Curve, Fade, Easing), `every-clip-dropdown-opens-on-a-click-walk` (Hold, Type, Length, Hold on black, sound Curve). `EveryDropdownIsClickedByAWalkTests` keeps every panel dropdown in one.
+- Open: `caption-words-pop-walk` fails before and after this change because the talk opens in View mode with the panel shut (filed).

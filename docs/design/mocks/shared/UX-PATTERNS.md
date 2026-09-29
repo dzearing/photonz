@@ -3001,7 +3001,7 @@ changes.
 | `.libtile`, `.libtile.tt`, `.th-diss/-dip/-slide/-push/-morph/-cut` | `VideoKit.Tile`, `TransitionThumbnail` | accent, component or amber (a cut) when picked |
 | `.kfkey`, `.armed`, `.on` | `VideoKit.KeyDiamond`, `KeyState` | drawn 11pt in a 16pt box; the Animating section's diamonds use it |
 | `.irow` | `VideoKit.FieldRow` | 76pt label column |
-| `.select`, `.select.sm`, `.select.comp` | `VideoKit.SelectFace`, `Dropdown`, `DropdownRow` | the face on a real menu |
+| `.select`, `.select.sm`, `.select.comp` | `VideoKit.SelectFace`, `Dropdown`, `DropdownRow` | the face inside a real pop-up button exactly its size, so a click anywhere on it opens the menu; rows are `VideoKit.Choice` values; accent edge while open |
 | `.field .v` | `VideoKit.ValueFace` | a value you read, not set: the filled box, as tall as a small dropdown |
 | `.seg.fill.sm` | `VideoKit.Segmented` | 24pt; each segment its own width plus an equal share of what is left, every label whole or it becomes a `VideoKit.Dropdown` (the `.seg` rule: words that do not fit mean the wrong control); 6pt label padding where the mock says 8 |
 

@@ -1,0 +1,220 @@
+{
+  "out": "/tmp/photonz-playtest/every-clip-dropdown-opens-on-a-click-walk",
+  "seed": "Every dropdown a cut recording shows opens when a person clicks it, at Next defaults with no flag changed: a transition's Type, Length and Hold on black, a held frame's Hold, and a sound's fade Curve. Each is clicked with the pointer on its face, in its middle and near each end; every click must open the menu, and the last picks a value the dropdown then shows.",
+  "setup": {
+    "front": true,
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "press",
+      "control": "Edit Mode"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "videoSeekThreeQuarters"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "clipHoldFrame"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Hold",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "5s"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "menu": "Hold",
+      "reads": "5s"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-a-held-frame"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekQuarter"
+    },
+    {
+      "do": "action",
+      "action": "clipSplit"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekMiddle"
+    },
+    {
+      "do": "action",
+      "action": "clipSplit"
+    },
+    {
+      "do": "action",
+      "action": "clipDeletePiece"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "clipPickFirstCut"
+    },
+    {
+      "do": "action",
+      "action": "clipTransitionDissolve"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panel",
+      "stage": "1-a-dissolve-at-the-cut"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Type",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Dip to black"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Dip to black"
+    },
+    {
+      "do": "panel",
+      "stage": "2-a-dip"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Length",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "0.8s"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Length",
+      "reads": "0.8s"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Hold on black",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "1.0s"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Hold on black",
+      "reads": "1.0s"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-a-dip-at-the-cut"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "soundAddSample"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Curve",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Ease in out"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "menu": "Curve",
+      "reads": "Ease in out"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-after-every-click"
+    }
+  ]
+}

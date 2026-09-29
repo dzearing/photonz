@@ -1,0 +1,352 @@
+{
+  "out": "/tmp/photonz-playtest/every-dropdown-opens-on-a-click-walk",
+  "seed": "Every dropdown in the Captions section opens when a person clicks it, at Next defaults with no flag changed. Each one is clicked with the pointer on the face a person sees, in its middle and near each end, and every click must open its menu; the last click picks a value and the dropdown then shows it. Until 2026-09-28 every one of them was dead to the pointer while walks that pressed them by name were green.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleTalk"
+    },
+    {
+      "do": "action",
+      "action": "captionsWriteQuietly"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "press",
+      "control": "Edit Mode"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "selectRow",
+      "row": "Captions"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "reveal",
+      "control": "Caption style Caption"
+    },
+    {
+      "do": "panel",
+      "stage": "1-captions-picked"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-captions-picked"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Captions language",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "English (en-GB)"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Captions language",
+      "reads": "English (en-GB)"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Show",
+      "at": [
+        "centre",
+        "start",
+        "end",
+        "space",
+        "return"
+      ],
+      "choose": "1 word",
+      "shot": "2-show-open"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Show",
+      "reads": "1 word"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Caption said",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Dim"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Caption said",
+      "reads": "Dim"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Caption coming",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Hidden"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Caption coming",
+      "reads": "Hidden"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Current word colour",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Cyan"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Current word colour",
+      "reads": "Cyan"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Current word pill",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Pink"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Current word pill",
+      "reads": "Pink"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Current word glow",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Green"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Current word glow",
+      "reads": "Green"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Current word stroke",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Black"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Current word stroke",
+      "reads": "Black"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Animation",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Pop"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Animation",
+      "reads": "Pop"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Caption colour",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Ice"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Caption colour",
+      "reads": "Ice"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Caption background",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Darker"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Caption background",
+      "reads": "Darker"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Caption glow",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Cyan"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Caption glow",
+      "reads": "Cyan"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Caption stroke",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Black"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Caption stroke",
+      "reads": "Black"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Caption shadow",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Deep"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Caption shadow",
+      "reads": "Deep"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Speed",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "2x Speed"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Speed",
+      "reads": "2x Speed"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-after-every-click"
+    }
+  ]
+}

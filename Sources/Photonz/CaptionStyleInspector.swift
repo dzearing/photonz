@@ -16,12 +16,11 @@ struct CaptionWordsInspector: View {
         VStack(alignment: .leading, spacing: 6) {
             heading("Caption style")
             CaptionStyleTiles(look: look)
-            VideoKit.DropdownRow(label: "Show", value: look.show.title) {
-                ForEach(CaptionGrouping.allCases, id: \.self) { show in
-                    Toggle(show.title, isOn: Binding(get: { look.show == show },
-                                                     set: { _ in change { $0.show = show } }))
-                }
-            }
+            VideoKit.DropdownRow(
+                label: "Show", value: look.show.title,
+                choices: .picking(CaptionGrouping.allCases, current: look.show, title: \.title) { show in
+                    change { $0.show = show }
+                })
             .playtestField("Show")
             .panelHelp("How many words are on screen at a time.")
             if look.show.usesLines {
@@ -51,12 +50,11 @@ struct CaptionWordsInspector: View {
 
     private func shadeRow(_ label: String, value: CaptionWordShade, choices: [CaptionWordShade],
                           set: @escaping (inout CaptionLook, CaptionWordShade) -> Void) -> some View {
-        VideoKit.DropdownRow(label: label, value: value.title) {
-            ForEach(choices, id: \.self) { shade in
-                Toggle(shade.title, isOn: Binding(get: { value == shade },
-                                                  set: { _ in change { set(&$0, shade) } }))
-            }
-        }
+        VideoKit.DropdownRow(
+            label: label, value: value.title,
+            choices: .picking(choices, current: value, title: \.title) { shade in
+                change { set(&$0, shade) }
+            })
         .playtestField("Caption \(label.lowercased())")
     }
 
@@ -90,12 +88,11 @@ struct CaptionWordsInspector: View {
                 readout("\(Int((word.scale * 100).rounded()))%")
             }
         }
-        VideoKit.DropdownRow(label: "Animation", value: word.motion.title) {
-            ForEach(CaptionWordMotion.allCases, id: \.self) { motion in
-                Toggle(motion.title, isOn: Binding(get: { word.motion == motion },
-                                                   set: { _ in change { $0.word.pick(motion) } }))
-            }
-        }
+        VideoKit.DropdownRow(
+            label: "Animation", value: word.motion.title,
+            choices: .picking(CaptionWordMotion.allCases, current: word.motion, title: \.title) { motion in
+                change { $0.word.pick(motion) }
+            })
         .playtestField("Animation")
         if word.motion != .none {
             VideoKit.FieldRow(label: "Speed") {
@@ -138,13 +135,12 @@ struct CaptionColourRow: View {
 
     var body: some View {
         let name = CaptionColourNames.name(of: value, among: choices, none: noneTitle)
-        VideoKit.DropdownRow(label: label, value: name, swatch: value.map(CaptionsInspector.swatch)) {
-            Toggle(noneTitle, isOn: Binding(get: { value == nil }, set: { _ in pick(nil) }))
-            ForEach(choices, id: \.name) { choice in
-                Toggle(choice.name, isOn: Binding(get: { choice.hex?.uppercased() == value?.uppercased() },
-                                                  set: { _ in pick(choice.hex) }))
-            }
-        }
+        VideoKit.DropdownRow(
+            label: label, value: name, swatch: value.map(CaptionsInspector.swatch),
+            choices: [.item(noneTitle, isOn: value == nil) { pick(nil) }]
+                + choices.map { choice in
+                    .item(choice.name, isOn: choice.hex?.uppercased() == value?.uppercased()) { pick(choice.hex) }
+                })
         .playtestField(field ?? "Current word \(label.lowercased())")
     }
 }

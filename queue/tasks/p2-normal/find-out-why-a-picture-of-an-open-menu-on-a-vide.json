@@ -1,0 +1,31 @@
+{
+  "id": "find-out-why-a-picture-of-an-open-menu-on-a-vide",
+  "title": "Find out why a picture of an open menu on a video comes back black behind the menu",
+  "goal": "When a walk photographs a panel menu open over a video document, the picture shows the menu floating on black instead of over the app, so an audit cannot show what a person sees. Pictures of menus over an image document, and every other picture in the same walks, come out whole. Find out why and make the picture show the window.",
+  "epic": "design-system",
+  "priority": "p2-normal",
+  "seq": 3480,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-29T08:21:42.283Z",
+  "updated": "2026-09-29T08:21:42.286Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-29 around 01:00, screen unlocked, probe Screen Recording granted, person away. `Scripts/playtest.sh Scripts/playtest/video-panel-order-walk.json` then sampling 25 points of /tmp/photonz-playtest/video-panel-order-walk/2-the-speed-dropdown-sc.png: 24 of 25 pure black. Same on main with the dropdown change stashed (baseline check: 24 of 25 black), and on between-the-keys-walk 2-curve-menu-sc.png (25 of 25). zoom-readout-double-click-walk 3-zoom-menu-sc.png on an image document: 0 of 25 black. At about 23:50 on 2026-09-28 the same captions walk photographed its open Show menu over the whole window, so it comes and goes. SCShareableContent listed both windows (menu layer 101, editor layer -1, both isOnScreen true) and a filter by the whole app was still black; a whole-display capture showed another app's browser window over the probe's spot (walk windows sit one level under other apps). Suspect: the covered editor window of a video document is not drawn while the menu tracks. PlaytestPanelMenu.capture.",
+  "acceptance": [
+    "A panelMenu step with a shot on a video document photographs the editor window behind the open menu",
+    "zoom-readout-double-click-walk still photographs its zoom menu over the window"
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T08:21:42.285Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "video-panel-order-walk",
+    "between-the-keys-walk",
+    "every-dropdown-opens-on-a-click-walk"
+  ]
+}

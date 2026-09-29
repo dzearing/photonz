@@ -1464,7 +1464,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "panelMenu", "menu": "Add", "shot": "add-menu" } ] }
         """)
-        guard case .panelMenu(let menu, _, let shot, let choose, _) = script.steps[0] else {
+        guard case .panelMenu(let menu, _, let shot, let choose, _, _) = script.steps[0] else {
             Issue.record("panelMenu"); return
         }
         #expect(menu == "Add")
@@ -1477,7 +1477,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "panelMenu", "menu": "Add", "choose": "Label" } ] }
         """)
-        guard case .panelMenu(_, _, let shot, let choose, _) = script.steps[0] else {
+        guard case .panelMenu(_, _, let shot, let choose, _, _) = script.steps[0] else {
             Issue.record("panelMenu"); return
         }
         #expect(shot == nil)
@@ -1491,7 +1491,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "panelMenu", "menu": "Color", "in": "Border 2" } ] }
         """)
-        guard case .panelMenu(let menu, let row, _, _, _) = script.steps[0] else {
+        guard case .panelMenu(let menu, let row, _, _, _, _) = script.steps[0] else {
             Issue.record("panelMenu"); return
         }
         #expect(menu == "Color")
@@ -1502,7 +1502,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "panelMenu", "menu": "Add" } ] }
         """)
-        guard case .panelMenu(_, let row, _, _, _) = script.steps[0] else {
+        guard case .panelMenu(_, let row, _, _, _, _) = script.steps[0] else {
             Issue.record("panelMenu"); return
         }
         #expect(row == nil)
@@ -1515,7 +1515,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "panelMenu", "menu": "100%", "clicking": "Zoom level" } ] }
         """)
-        guard case .panelMenu(_, _, _, _, let clicking) = script.steps[0] else {
+        guard case .panelMenu(_, _, _, _, let clicking, _) = script.steps[0] else {
             Issue.record("panelMenu"); return
         }
         #expect(clicking == "Zoom level")
@@ -1525,10 +1525,87 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "panelMenu", "menu": "Add" } ] }
         """)
-        guard case .panelMenu(_, _, _, _, let clicking) = script.steps[0] else {
+        guard case .panelMenu(_, _, _, _, let clicking, _) = script.steps[0] else {
             Issue.record("panelMenu"); return
         }
         #expect(clicking == nil)
+    }
+
+    @Test func aPanelMenuStepCanBeOpenedByAPointerClickOnItsFace() throws {
+        // What a person does: click the drawn dropdown, in its middle and near
+        // either end. A walk that proves a dropdown works for a hand says
+        // where on the face it clicks, and every spot has to open the menu.
+        let script = try decode("""
+        { "steps": [ { "do": "panelMenu", "menu": "Style", "at": ["centre", "start", "end"],
+                       "choose": "Boxed" } ] }
+        """)
+        guard case .panelMenu(let menu, _, _, let choose, _, let at) = script.steps[0] else {
+            Issue.record("panelMenu"); return
+        }
+        #expect(menu == "Style")
+        #expect(choose == "Boxed")
+        #expect(at == [.centre, .start, .end])
+    }
+
+    @Test func aPanelMenuStepTakesOneSpotAsAWord() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "panelMenu", "menu": "Style", "at": "start" } ] }
+        """)
+        guard case .panelMenu(_, _, _, _, _, let at) = script.steps[0] else {
+            Issue.record("panelMenu"); return
+        }
+        #expect(at == [.start])
+    }
+
+    @Test func aPanelMenuStepIsPressedInCodeWhenItNamesNoSpot() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "panelMenu", "menu": "Style" } ] }
+        """)
+        guard case .panelMenu(_, _, _, _, _, let at) = script.steps[0] else {
+            Issue.record("panelMenu"); return
+        }
+        #expect(at.isEmpty)
+    }
+
+    @Test func aPanelMenuStepCanBeOpenedFromTheKeyboard() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "panelMenu", "menu": "Style", "at": ["space", "return"] } ] }
+        """)
+        guard case .panelMenu(_, _, _, _, _, let at) = script.steps[0] else {
+            Issue.record("panelMenu"); return
+        }
+        #expect(at == [.space, .return])
+        #expect(at.allSatisfy { $0.isKey })
+        #expect(!PlaytestFaceSpot.centre.isKey)
+    }
+
+    @Test func aPanelMenuStepRefusesASpotThatIsNotOnAFace() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "panelMenu", "menu": "Style", "at": ["middle"] } ] }
+            """)
+        }
+    }
+
+    @Test func aPanelMenuStepCannotBothClickAnotherControlAndItsOwnFace() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "panelMenu", "menu": "100%", "clicking": "Zoom level", "at": ["centre"] } ] }
+            """)
+        }
+    }
+
+    /// Where on the face each spot lands: the middle, and a hand's width in
+    /// from either end, so "near the end" is on the face and not its border.
+    @Test func aFaceSpotLandsInsideTheFace() {
+        let face = CGRect(x: 100, y: 40, width: 120, height: 22)
+        #expect(PlaytestFaceSpot.centre.point(on: face) == CGPoint(x: 160, y: 51))
+        #expect(PlaytestFaceSpot.start.point(on: face) == CGPoint(x: 108, y: 51))
+        #expect(PlaytestFaceSpot.end.point(on: face) == CGPoint(x: 212, y: 51))
+        // A face too narrow for the inset still gets a point on it.
+        let tiny = CGRect(x: 0, y: 0, width: 10, height: 10)
+        #expect(tiny.contains(PlaytestFaceSpot.start.point(on: tiny)))
+        #expect(tiny.contains(PlaytestFaceSpot.end.point(on: tiny)))
     }
 
     @Test func aPanelMenuStepMustNameTheMenu() {

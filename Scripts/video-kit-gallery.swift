@@ -209,10 +209,8 @@ struct ControlsSheet: View {
 /// survives being a menu's label.
 struct LiveDropdownSheet: View {
     var body: some View {
-        K.DropdownRow(label: "Easing", value: "Ease in out") {
-            Button("Linear") {}
-            Button("Ease in out") {}
-        }
+        K.DropdownRow(label: "Easing", value: "Ease in out",
+                      choices: [.item("Linear") {}, .item("Ease in out", isOn: true) {}])
         .padding(12)
         .frame(width: 260, alignment: .leading)
         .background(K.Palette.panel)

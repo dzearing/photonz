@@ -273,6 +273,10 @@ enum TimelineKeyRouter {
         // A field being typed in keeps every key: that is typing, never a
         // shortcut. So does a sheet up over the window.
         if window.firstResponder is NSText || window.attachedSheet != nil { return false }
+        // A dropdown a person has tabbed to opens on Space, as every macOS
+        // pop-up button does; Space plays only when nothing like that has
+        // the keyboard.
+        if window.firstResponder is VideoKit.DropdownButton, event.keyCode == 49 { return false }
         guard let press = TimelineKeyPress(event) else { return false }
         switch event.type {
         case .keyDown: return editor.timelineKeyDown(press)

@@ -109,9 +109,7 @@ private struct BetweenKeysSection: View {
                 SectionHelpMark(section: "Between the keys", text: help)
             }
             .padding(.bottom, 2)
-            VideoKit.DropdownRow(label: "Curve", value: name) {
-                curveItems(current: curve)
-            }
+            VideoKit.DropdownRow(label: "Curve", value: name, choices: curveChoices(current: curve))
             .frame(minHeight: 24)
             .playtestField("Curve")
             .panelHelp("How fast it travels between these two keys")
@@ -142,30 +140,15 @@ private struct BetweenKeysSection: View {
 
     /// The mock's curve menu (`curve.js`): the four standard curves, the four
     /// shaped ones, each with its shape beside its name, then Draw a curve.
-    @ViewBuilder
-    private func curveItems(current: EasingCurve?) -> some View {
-        Section("Standard") {
-            ForEach(Array(EasingCurve.named.prefix(4).enumerated()), id: \.offset) { _, curve in
-                item(curve, current: current)
-            }
-        }
-        Section("Shaped") {
-            ForEach(Array(EasingCurve.named.dropFirst(4).enumerated()), id: \.offset) { _, curve in
-                item(curve, current: current)
-            }
-        }
-        Divider()
-        Button("Draw a curve\u{2026}") { isDrawing = true }
+    private func curveChoices(current: EasingCurve?) -> [VideoKit.Choice] {
+        [.heading("Standard")] + EasingCurve.named.prefix(4).map { item($0, current: current) }
+            + [.heading("Shaped")] + EasingCurve.named.dropFirst(4).map { item($0, current: current) }
+            + [.divider, .item("Draw a curve\u{2026}") { isDrawing = true }]
     }
 
-    private func item(_ curve: EasingCurve, current: EasingCurve?) -> some View {
-        Toggle(isOn: Binding(get: { current == curve },
-                             set: { if $0 { editorState.curveBetweenKeys(curve) } })) {
-            Label {
-                Text(curve.title)
-            } icon: {
-                Image(nsImage: CurveMenuImage.image(for: curve))
-            }
+    private func item(_ curve: EasingCurve, current: EasingCurve?) -> VideoKit.Choice {
+        .item(curve.title, isOn: current == curve, image: CurveMenuImage.image(for: curve)) {
+            editorState.curveBetweenKeys(curve)
         }
     }
 }

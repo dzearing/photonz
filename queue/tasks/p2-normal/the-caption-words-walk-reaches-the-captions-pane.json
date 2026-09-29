@@ -1,0 +1,29 @@
+{
+  "id": "the-caption-words-walk-reaches-the-captions-pane",
+  "title": "The caption words walk reaches the Captions panel again",
+  "goal": "A walk that checks how caption words pop has stopped working: the talking recording now opens to watch, with the editing panel shut, so the walk never reaches the caption controls it is meant to check. It should switch to editing first, like the other caption walks.",
+  "epic": "design-system",
+  "priority": "p2-normal",
+  "seq": 3470,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-29T08:21:33.788Z",
+  "updated": "2026-09-29T08:21:33.791Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-29 on main before and after the dropdown change: `Scripts/playtest.sh Scripts/playtest/caption-words-pop-walk.json --no-build` -> `[10 reveal] FAILED: no control called \"Caption style Caption\" is in the panel; the ones that are: Volume (Transport) ... View Mode (the title bar's switch, on), Edit Mode (the title bar's switch), Panel (the title bar's panel toggle, panel closed)`. Cause: view-mode-and-edit-mode-a-recording-opens-to-wat (done) makes a recording open in View mode. Fix: add {\"do\":\"press\",\"control\":\"Edit Mode\"} after the tool step, as every-dropdown-opens-on-a-click-walk does. Other walks that open a talk and expect the panel may need the same; `queue/bin/sweep.sh status` will list them.",
+  "acceptance": [
+    "caption-words-pop-walk switches to Edit and reaches the Caption style tiles at Next defaults",
+    "The walk passes end to end, or any step that still fails is filed as its own app bug"
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T08:21:33.790Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "caption-words-pop-walk"
+  ]
+}

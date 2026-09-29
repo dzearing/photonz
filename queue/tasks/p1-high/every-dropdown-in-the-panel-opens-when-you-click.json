@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p1-high",
   "seq": 0.0001,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T05:19:48.286Z",
-  "updated": "2026-09-29T05:19:48.367Z",
+  "updated": "2026-09-29T08:22:07.057Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window. The caption style task (every-caption-style-control-changes-the-captions) depends on this.",
@@ -29,6 +29,48 @@
     {
       "t": "2026-09-29T05:19:48.366Z",
       "note": "seq 400 -> 0.0001"
+    },
+    {
+      "t": "2026-09-29T06:09:06.215Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T08:21:25.870Z",
+      "note": "owns these walks: every-dropdown-opens-on-a-click-walk, every-title-dropdown-opens-on-a-click-walk, every-clip-dropdown-opens-on-a-click-walk"
+    },
+    {
+      "t": "2026-09-29T08:22:06.630Z",
+      "note": "Reproduced with a pointer click (new panelMenu \"at\" step, posted mouse down/up at the point on the drawn face, the probe in front) at Next defaults: Show dropdown face 148x24, the menu button laid over it 37x16 at 1% opacity; clicks at centre, start and end all landed on PlatformGroupContainer and opened nothing. Positive control: the same posted click opens the zoom menu (zoom-readout-double-click-walk picture). By hand in the probe was not possible: this runner has no Accessibility grant to move the real pointer, and the person was away."
+    },
+    {
+      "t": "2026-09-29T08:22:06.683Z",
+      "note": "Adversarial review before building: a Premiere or Photoshop user clicks anywhere on a dropdown and expects its menu under it, a tick on the current value, Space or Return when tabbed to it. SwiftUI's button-style Menu makes the face clickable but builds no pop-up button, so every walk that reads or picks from a dropdown without opening it on screen (the focus-safe, lock-safe path) would have lost it. Chose a real AppKit pull-down exactly the face's size with SelectFace hosted inside it, rows as VideoKit.Choice values."
+    },
+    {
+      "t": "2026-09-29T08:22:06.736Z",
+      "note": "Shipped: VideoKit.Dropdown/DropdownRow/DropdownButton/Choice (VideoKitControls.swift), all 16 call sites converted, timeline Easing uses it too (it had the same 1% overlay: the only other one, found by grepping .opacity(0.0 and Color.clear labels). Open state (accent edge) per comp-fields 05 Select; menu hangs flush from the face at least its width (measured: menu window x=1561 w=153, face x=1561 w=153). Space on a focused dropdown opens it (TimelineKeys monitor leaves Space to a focused DropdownButton)."
+    },
+    {
+      "t": "2026-09-29T08:22:06.789Z",
+      "note": "Proof: every-dropdown-opens-on-a-click-walk (15 caption dropdowns + Speed, Show also by Space and Return), every-title-dropdown-opens-on-a-click-walk (Curve, Fade, Easing), every-clip-dropdown-opens-on-a-click-walk (Hold, Type, Length, Hold on black, sound Curve): each clicked at centre, start, end, a pick made and read back; all ok, no flags. EveryDropdownIsClickedByAWalkTests + NoInvisibleHitTargetTests added. Twelve existing dropdown walks re-run green. Scripts/test.sh 10465/10465."
+    },
+    {
+      "t": "2026-09-29T08:22:06.842Z",
+      "note": "left rough: hover edge now lives inside the button's hosted face; not watched with a real pointer (walks cannot move it). The system menu's own look (13pt rows, dark) is not the mock's drawn menu; asked in the audit's evaluate rather than filed, since it is a judgement."
+    },
+    {
+      "t": "2026-09-29T08:22:06.895Z",
+      "note": "Filed: the-caption-words-walk-reaches-the-captions-pane (caption-words-pop-walk fails before and after this change: talk opens in View mode) and find-out-why-a-picture-of-an-open-menu-on-a-vide (open-menu pictures over a video document come back black, also on the pre-change code)."
+    },
+    {
+      "t": "2026-09-29T08:22:07.056Z",
+      "note": "Asked for a sweep (not --now): the dropdown component every video walk touches changed; 15 walks run by hand."
     }
+  ],
+  "started": "2026-09-29T06:09:06.214Z",
+  "walks": [
+    "every-dropdown-opens-on-a-click-walk",
+    "every-title-dropdown-opens-on-a-click-walk",
+    "every-clip-dropdown-opens-on-a-click-walk"
   ]
 }

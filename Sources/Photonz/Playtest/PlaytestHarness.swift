@@ -1966,9 +1966,9 @@ private final class Run {
             note(number, step.name,
                  "\(format) is remembered at \(ExportQualityMemory.remembered(format: format))%")
 
-        case .panelMenu(let menu, let row, let shot, let choose, let clicking):
+        case .panelMenu(let menu, let row, let shot, let choose, let clicking, let at):
             try await openPanelMenu(menu, in: row, shot: shot, choose: choose, clicking: clicking,
-                                    number: number)
+                                    at: at, number: number)
 
         case .menuShot(let menu, let name, let ticked, let unticked):
             try await photographMenuBarMenu(menu, name: name, ticked: ticked,
@@ -10223,7 +10223,8 @@ private final class Run {
     }
 
     private func openPanelMenu(_ name: String, in row: String?, shot: String?, choose: String?,
-                               clicking: String?, number: Int) async throws {
+                               clicking: String?, at spots: [PlaytestFaceSpot] = [],
+                               number: Int) async throws {
         let host = try requireWindow()
         guard let content = host.contentView else {
             throw Failure(description: "the window has no content view")
@@ -10323,9 +10324,13 @@ private final class Run {
         // opening it does.
         let opener = try clicking.map { try pressTarget($0, in: nil) }
         var opened = "read without opening it"
-        var mustOpen = shot != nil || opener != nil
+        var mustOpen = (shot != nil || opener != nil) && spots.isEmpty
+        if !spots.isEmpty {
+            opened = try await openByClickingFace(button, named: name, at: spots, in: host,
+                                                  content: content, then: readAndChoose)
+        }
         var whyOpened = ""
-        if !mustOpen {
+        if !mustOpen && spots.isEmpty {
             // A menu can fill in its rows as it opens. It is told it is
             // opening, without being put on screen, and told it closed once it
             // has been read.
@@ -10423,6 +10428,135 @@ private final class Run {
         note(number, "panelMenu", detail,
              state: ["rows": reading.rows, "dimmed": reading.dimmed,
                      "chose": reading.chose ?? NSNull(), "shot": reading.shot ?? NSNull()])
+    }
+
+    /// Opens a dropdown the way a hand does: a pointer click on the FACE a
+    /// person sees, once at each spot, and every one of them has to open the
+    /// menu. The last opening reads the rows and makes the step's choice.
+    ///
+    /// The face is found from what is drawn, not from the menu button: the
+    /// smallest hover region around the button's middle, which is the drawn
+    /// `SelectFace`. Until 2026-09-28 the two were not the same size, the
+    /// button was an invisible overlay that took only part of the face, and
+    /// every dropdown in the panel was dead to the pointer while every walk
+    /// that pressed the button by name stayed green.
+    private func openByClickingFace(_ button: NSPopUpButton, named name: String,
+                                    at spots: [PlaytestFaceSpot], in host: NSWindow, content: NSView,
+                                    then readAndChoose: @escaping @MainActor () -> Void) async throws -> String {
+        // A person scrolls a dropdown into view before clicking it, with the
+        // same scrolling a press does for itself.
+        let look: () throws -> PlaytestPressTarget = {
+            let box = button.convert(button.bounds, to: nil)
+            return PlaytestPressTarget(name: name, detail: "", point: CGPoint(x: box.midX, y: box.midY),
+                                       box: box, visible: button.convert(button.visibleRect, to: nil),
+                                       isEnabled: button.isEnabled, window: button.window,
+                                       clips: PlaytestPanelPress.scrollClips(of: button))
+        }
+        if try await bringIntoReach(name, look: look) != 0 { await sleep(0.3) }
+        let buttonBox = button.convert(button.bounds, to: nil)
+        let middle = CGPoint(x: buttonBox.midX, y: buttonBox.midY)
+        var face = buttonBox
+        var smallest = CGFloat.infinity
+        for region in Self.findAll(HoverTargetView.self, in: content)
+        where region.window === host && !region.isHiddenOrHasHiddenAncestor {
+            let box: CGRect = region.convert(region.bounds, to: nil)
+            let area = box.width * box.height
+            if box.contains(middle) && area < smallest {
+                face = box
+                smallest = area
+            }
+        }
+        let geometry = "face \(short(face.origin)) \(Int(face.width))x\(Int(face.height)), "
+            + "menu button \(short(buttonBox.origin)) \(Int(buttonBox.width))x\(Int(buttonBox.height))"
+        @MainActor final class Watch {
+            var began = false
+            var opened = false
+            var done = false
+        }
+        var missed: [String] = []
+        var landed: [String] = []
+        for (index, spot) in spots.enumerated() {
+            let point = spot.point(on: face)
+            let base = content.superview ?? content
+            let hit = base.hitTest(base.convert(point, from: nil))
+            var hitName = "nothing"
+            if let hit {
+                hitName = hit === button || hit.isDescendant(of: button)
+                    ? "the menu button" : String(describing: type(of: hit))
+            }
+            let watch = Watch()
+            let token = NotificationCenter.default.addObserver(
+                forName: NSMenu.didBeginTrackingNotification, object: nil, queue: nil) { _ in
+                    MainActor.assumeIsolated { watch.began = true }
+                }
+            let isLast = index == spots.count - 1
+            let hop = PlaytestTrackingHop {
+                watch.opened = watch.began || PlaytestPanelMenu.openMenuWindow() != nil
+                if watch.opened && isLast { readAndChoose() }
+                button.menu?.cancelTracking()
+                watch.done = true
+            }
+            hop.schedule(after: 0.6)
+            let stamp = ProcessInfo.processInfo.systemUptime
+            if spot.isKey {
+                // A person reaches it with Tab (keyboard navigation on) and
+                // presses the key; the walk gives it focus the same way the
+                // window would, and presses the key into the window.
+                let focused = host.makeFirstResponder(button) && host.firstResponder === button
+                let text = spot == .space ? " " : "\r"
+                let code: UInt16 = spot == .space ? 49 : 36
+                guard focused,
+                      let press = NSEvent.keyEvent(
+                        with: .keyDown, location: .zero, modifierFlags: [], timestamp: stamp,
+                        windowNumber: host.windowNumber, context: nil, characters: text,
+                        charactersIgnoringModifiers: text, isARepeat: false, keyCode: code),
+                      let lift = NSEvent.keyEvent(
+                        with: .keyUp, location: .zero, modifierFlags: [], timestamp: stamp + 0.05,
+                        windowNumber: host.windowNumber, context: nil, characters: text,
+                        charactersIgnoringModifiers: text, isARepeat: false, keyCode: code) else {
+                    for _ in 0..<60 where !watch.done { await sleep(0.05) }
+                    NotificationCenter.default.removeObserver(token)
+                    missed.append("\(spot.rawValue) (the dropdown would not take keyboard focus)")
+                    continue
+                }
+                NSApp.postEvent(press, atStart: false)
+                NSApp.postEvent(lift, atStart: false)
+                for _ in 0..<60 where !watch.done { await sleep(0.05) }
+                NotificationCenter.default.removeObserver(token)
+                await sleep(0.6)
+                if watch.opened { landed.append(spot.rawValue) } else {
+                    missed.append("\(spot.rawValue) (pressed with the dropdown focused)")
+                }
+                continue
+            }
+            guard let down = NSEvent.mouseEvent(
+                    with: .leftMouseDown, location: point, modifierFlags: [], timestamp: stamp,
+                    windowNumber: host.windowNumber, context: nil, eventNumber: 0,
+                    clickCount: 1, pressure: 1),
+                  let up = NSEvent.mouseEvent(
+                    with: .leftMouseUp, location: point, modifierFlags: [], timestamp: stamp + 0.05,
+                    windowNumber: host.windowNumber, context: nil, eventNumber: 1,
+                    clickCount: 1, pressure: 0) else {
+                NotificationCenter.default.removeObserver(token)
+                throw Failure(description: "could not make a mouse event for the \"\(name)\" menu")
+            }
+            NSApp.postEvent(down, atStart: false)
+            NSApp.postEvent(up, atStart: false)
+            for _ in 0..<60 where !watch.done { await sleep(0.05) }
+            NotificationCenter.default.removeObserver(token)
+            await sleep(0.6)
+            if watch.opened {
+                landed.append(spot.rawValue)
+            } else {
+                missed.append("\(spot.rawValue) (\(short(point)), the click landed on \(hitName))")
+            }
+        }
+        guard missed.isEmpty else {
+            throw Failure(description: "the \"\(name)\" dropdown did not open for a person's hand at "
+                + missed.joined(separator: ", ") + "; " + geometry
+                + (landed.isEmpty ? "" : "; it did open at " + landed.joined(separator: ", ")))
+        }
+        return "opened the way a person opens it, at " + landed.joined(separator: ", ") + " (\(geometry))"
     }
 
     /// One plain click on a control, posted and left to land: the caller is

@@ -13,6 +13,7 @@
 //   menuShot                          always a picture of an open menu
 //   rightClick / panelMenu + "shot"   a picture of the menu it opened
 //   panelMenu + "clicking"            opened by a real click, to prove the click opens it
+//   panelMenu + "at"                  opened by a pointer click on its own face
 //
 // And one more that is not a menu: a REAL DRAG. SwiftUI starts a drag only in
 // the active app, so `windowDrag` and `dragGrip` bring the probe to the front
@@ -35,6 +36,7 @@ export function stepsThatNeedTheMac(walk) {
     else if (step.do === 'windowDrag' || step.do === 'dragGrip') found.push(`step ${n} (${step.do}, a real drag)`);
     else if ((step.do === 'rightClick' || step.do === 'panelMenu') && step.shot) found.push(`step ${n} (${step.do} with a picture)`);
     else if (step.do === 'panelMenu' && step.clicking) found.push(`step ${n} (panelMenu opened by a click)`);
+    else if (step.do === 'panelMenu' && step.at) found.push(`step ${n} (panelMenu opened by a click on its face)`);
   });
   return found;
 }

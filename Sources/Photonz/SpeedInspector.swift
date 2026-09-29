@@ -50,14 +50,12 @@ struct SpeedInspector: View {
     /// Opacity animation, so its curve is Animating's, not a second control.
     private var fade: some View {
         let now = editorState.placedLayerFadeMS
-        return VideoKit.DropdownRow(label: "Fade", value: TitleTime.fadeTitle(now)) {
-            ForEach(TitleTime.fadeStopsMS, id: \.self) { ms in
-                Toggle(TitleTime.fadeTitle(ms), isOn: Binding(
-                    get: { ms == now },
-                    set: { _ in editorState.setPlacedLayerFade(ms) }))
-                    .disabled(ms != now && !editorState.canSetPlacedLayerFade(ms))
-            }
-        }
+        return VideoKit.DropdownRow(
+            label: "Fade", value: TitleTime.fadeTitle(now),
+            choices: .picking(TitleTime.fadeStopsMS, current: now, title: TitleTime.fadeTitle,
+                              isEnabled: { $0 == now || editorState.canSetPlacedLayerFade($0) }) { ms in
+                editorState.setPlacedLayerFade(ms)
+            })
         .playtestField("Fade")
         .panelHelp("How long it takes to fade in and out.")
     }
@@ -82,14 +80,12 @@ struct SpeedInspector: View {
     @ViewBuilder
     private func plays(_ piece: ClipPiece) -> some View {
         let reading = ClipSpeedReading(piece)
-        VideoKit.DropdownRow(label: "Speed", value: ClipSpeed.title(piece.speedPercent)) {
-            ForEach(ClipSpeed.stops, id: \.self) { percent in
-                Toggle(ClipSpeed.menuTitle(percent), isOn: Binding(
-                    get: { piece.speedPercent == percent },
-                    set: { _ in editorState.setClipSpeedInHand(percent) }))
-                    .disabled(piece.speedPercent != percent && !editorState.canSetClipSpeed(percent))
-            }
-        }
+        VideoKit.DropdownRow(
+            label: "Speed", value: ClipSpeed.title(piece.speedPercent),
+            choices: .picking(ClipSpeed.stops, current: piece.speedPercent, title: ClipSpeed.menuTitle,
+                              isEnabled: { $0 == piece.speedPercent || editorState.canSetClipSpeed($0) }) {
+                editorState.setClipSpeedInHand($0)
+            })
         .playtestField("Speed")
         .panelHelp(reading.framesSentence)
         // How long it runs is the Properties pane's clip line, one section up.
@@ -113,14 +109,12 @@ struct SpeedInspector: View {
 
     @ViewBuilder
     private func held(_ piece: ClipPiece) -> some View {
-        VideoKit.DropdownRow(label: "Hold", value: ClipPieces.holdTitle(piece.lengthMS)) {
-            ForEach(ClipPieces.holdStopsMS, id: \.self) { ms in
-                Toggle(ClipPieces.holdTitle(ms), isOn: Binding(
-                    get: { piece.lengthMS == ms },
-                    set: { _ in editorState.setHoldLengthInHand(ms) }))
-                    .disabled(piece.lengthMS != ms && !editorState.canSetHoldLength(ms))
-            }
-        }
+        VideoKit.DropdownRow(
+            label: "Hold", value: ClipPieces.holdTitle(piece.lengthMS),
+            choices: .picking(ClipPieces.holdStopsMS, current: piece.lengthMS, title: ClipPieces.holdTitle,
+                              isEnabled: { $0 == piece.lengthMS || editorState.canSetHoldLength($0) }) {
+                editorState.setHoldLengthInHand($0)
+            })
         .playtestField("Hold")
         .panelHelp("How long the frame stays on screen.")
         let push = piece.holdPush ?? .pictureOnly

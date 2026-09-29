@@ -299,31 +299,21 @@ struct TimelineDock: View {
                 < ($1 as NSString).size(withAttributes: [.font: font]).width } ?? "Mixed"
     }()
 
+    /// The Easing face's width: the face showing its widest ease, whole.
+    private static let easingWidth: CGFloat = MainActor.assumeIsolated {
+        NSHostingView(rootView: VideoKit.SelectFace(value: widestEase, size: .small)).fittingSize.width
+    }
+
     private var easingMenu: some View {
         let shown = editorState.pickedKeysEase?.title ?? "Mixed"
-        return VideoKit.SelectFace(value: Self.widestEase, size: .small)
-            .hidden()
-            .fixedSize()
-            .overlay { VideoKit.SelectFace(value: shown, size: .small) }
-            .overlay {
-                Menu {
-                    ForEach(KeyEase.allCases, id: \.self) { ease in
-                        Toggle(ease.title, isOn: Binding(
-                            get: { editorState.pickedKeysEase == ease },
-                            set: { if $0 { editorState.easePickedKeys(ease) } }))
-                    }
-                } label: {
-                    Text(shown).foregroundStyle(Color.clear)
-                }
-                .menuStyle(.borderlessButton)
-                .menuIndicator(.hidden)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .opacity(0.011)
-                .accessibilityLabel("Easing")
-                .accessibilityValue(shown)
-                .panelHelp("The curve the picked keys move through")
-                .playtestControl("Easing", detail: "Timeline")
-            }
+        return VideoKit.Dropdown(
+            label: "Easing", value: shown,
+            choices: .picking(KeyEase.allCases, current: editorState.pickedKeysEase, title: \.title) {
+                editorState.easePickedKeys($0)
+            })
+            .frame(width: Self.easingWidth)
+            .panelHelp("The curve the picked keys move through")
+            .playtestControl("Easing", detail: "Timeline")
     }
 
     /// A tool in the timeline's bar (`.tool`, `.tool.on`): 28 high, the accent

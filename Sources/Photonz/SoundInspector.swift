@@ -216,17 +216,13 @@ struct SoundFadesInspector: View {
     private var curve: some View {
         let current = editorState.soundLevelInHand.fadeCurve
         let title = current.isDrawn ? "Drawn" : current.title
-        return VideoKit.DropdownRow(label: "Curve", value: title) {
-            ForEach(Array(EasingCurve.named.enumerated()), id: \.offset) { _, curve in
-                Toggle(isOn: Binding(
-                    get: { curve == current },
-                    set: { _ in editorState.setSoundFadeCurve(curve) })) {
-                    Label { Text(curve.title) } icon: { CurveThumbnail(curve: curve, side: 14) }
+        return VideoKit.DropdownRow(
+            label: "Curve", value: title,
+            choices: EasingCurve.named.map { curve in
+                .item(curve.title, isOn: curve == current, image: CurveMenuImage.image(for: curve)) {
+                    editorState.setSoundFadeCurve(curve)
                 }
-            }
-            Divider()
-            Button("Draw a curve...") { isDrawing = true }
-        }
+            } + [.divider, .item("Draw a curve...") { isDrawing = true }])
         .panelReadout(title)
         .panelHelp("How the fades rise and fall.")
         .playtestField("Curve")

@@ -100,6 +100,15 @@ struct PlaytestLockSafetyTests {
         #expect(PlaytestLockSafety.lockTrouble(with: step) != nil)
     }
 
+    /// A dropdown opened by a pointer click on its own face puts the menu on
+    /// screen, the same as clicking another control to open it.
+    @Test("A panel menu opened by clicking its face is refused under a lock")
+    func panelMenuByFaceClickCannot() {
+        let step = PlaytestStep.panelMenu(menu: "Style", in: nil, shot: nil, choose: nil,
+                                          clicking: nil, at: [.centre])
+        #expect(PlaytestLockSafety.lockTrouble(with: step) != nil)
+    }
+
     @Test("The refusal names the first step that needs a name and what is still there to photograph")
     func refusalSaysWhatIsLost() {
         let steps: [PlaytestStep] = [

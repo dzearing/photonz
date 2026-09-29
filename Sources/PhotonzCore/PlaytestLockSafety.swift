@@ -361,12 +361,16 @@ public enum PlaytestLockSafety {
         // PICTURE of the open menu, which is the one part that needs the menu
         // really on screen, or opens it by clicking some other control, which
         // nobody has watched under a lock.
-        if case .panelMenu(_, _, let shot, _, let clicking) = step {
+        if case .panelMenu(_, _, let shot, _, let clicking, let at) = step {
             if shot != nil {
                 return "asks for a picture of the open menu, and a menu draws outside this "
                     + "process: the only picture of one there is comes from the screen recorder "
                     + "photographing its own window, which is not there while the login window "
                     + "is up. The same step without a picture runs"
+            }
+            if !at.isEmpty {
+                return "opens its menu with a pointer click on the menu's face, which puts the "
+                    + "menu on screen; the same step opened by pressing the menu itself runs"
             }
             if clicking != nil {
                 return "opens its menu by clicking another control, which has never been watched "

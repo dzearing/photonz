@@ -1,0 +1,29 @@
+{
+  "feature": "Every dropdown in the panel opens when you click it",
+  "epic": "design-system",
+  "summary": "Every dropdown in the video panel, and Easing in the timeline's bar, now opens when you click anywhere on it, and the value you pick shows on it. Before, a click on most of a dropdown did nothing at all.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any screen recording or the sample talk and switch to Edit.",
+  "switched": {},
+  "try": [
+    { "do": "Write captions for a talking recording, pick the Captions row, and click the Show dropdown near its left end.", "shot": "2026-09-29-dropdowns-1-show-open.png" },
+    { "do": "Pick 1 word. Then click Said, Coming, Colour, Pill, Glow, Stroke, Animation, Background and Shadow in turn and pick something from each.", "shot": "2026-09-29-dropdowns-2-captions-picked.png" },
+    { "do": "Pick a clip and choose 2x Speed from Speed, clicking the dropdown on its chevron." },
+    { "do": "Put a cross dissolve on a cut, then pick Dip to black from Type, 0.8s from Length and 1.0s from Hold on black.", "shot": "2026-09-29-dropdowns-3-dip-at-a-cut.png" },
+    { "do": "Type a title, animate its Position with two keys, and pick Linear from Curve under Between the keys." },
+    { "do": "Click a key on the title's Position lane, then pick Ease Out from Easing in the timeline's bar.", "shot": "2026-09-29-dropdowns-4-easing.png" },
+    { "do": "With keyboard navigation on in System Settings, Tab to a dropdown and press Space, then Return: each opens it." }
+  ],
+  "evaluate": [
+    "Does a click anywhere on a dropdown, its words, its empty middle or its chevron, open it every time?",
+    "Does the menu hang from the dropdown's left edge, as wide as it, the way the mock's Open select does (first picture beside 2026-09-29-dropdowns-0-mock-select.png)?",
+    "While a menu is open, does the dropdown's blue edge read as the one you opened?",
+    "Is the menu itself, the system's dark menu with a tick on the current value, close enough to the mock's menu, or should it be drawn like the mock's own?"
+  ],
+  "rough": [
+    "The cause: each dropdown was a drawn face with the real menu button laid over it at 1% opacity. That button was only as wide as its own invisible title (37 of Show's 148 points), and clicks even inside it went to the panel behind. Walks passed because they opened menus by name, never by clicking.",
+    "The first picture is from an earlier build in this task, when the menu still sat a dozen points in from the face's left edge. The menu now hangs flush from the face and is at least its width; the walk measured it at the face's exact left edge and width. Every later picture of an open menu on a video document came back black behind the menu. The same happens to the Speed menu picture on the code from before this change, so it is a capture fault, filed on its own.",
+    "The pictures were taken by a walk while the app sat behind another window, so hover could not be seen. The hover edge is unchanged code, but it now lives inside the button; nobody has watched it with a real pointer yet.",
+    "Proof is three walks that click every dropdown at its middle and 8pt in from each end, and pick from each: 23 dropdowns in all, none needing a switch. A test fails if a new panel dropdown is not in one of them, and another fails if any view is faded below 5% to take a click.",
+    "Space on a focused dropdown now opens it rather than playing the video. It only applies once you have tabbed to a dropdown; Space everywhere else still plays."
+  ]
+}

@@ -158,28 +158,21 @@ struct TransitionInspector: View {
     }
 
     private func type(_ inHand: DocumentCut, current: ClipTransitionKind) -> some View {
-        VideoKit.DropdownRow(label: "Type", value: current.title) {
-            ForEach(ClipTransitionKind.allCases, id: \.self) { kind in
-                Toggle(kind.title, isOn: Binding(
-                    get: { kind == current },
-                    set: { _ in editorState.setTransition(kind, at: inHand.place) }))
-                    .disabled(!inHand.cut.canAfford(kind))
-            }
-            Divider()
-            Button("Hard cut") { editorState.setTransition(nil, at: inHand.place) }
-        }
+        VideoKit.DropdownRow(
+            label: "Type", value: current.title,
+            choices: .picking(ClipTransitionKind.allCases, current: current, title: \.title,
+                              isEnabled: { inHand.cut.canAfford($0) }) { kind in
+                editorState.setTransition(kind, at: inHand.place)
+            } + [.divider, .item("Hard cut") { editorState.setTransition(nil, at: inHand.place) }])
         .playtestField("Type")
     }
 
     private func length(_ inHand: DocumentCut) -> some View {
         let now = inHand.cut.drawnTransition?.lengthMS ?? 0
-        return VideoKit.DropdownRow(label: "Length", value: ClipTransitionCopy.seconds(now)) {
-            ForEach(editorState.clipTransitionLengthOffers, id: \.self) { ms in
-                Toggle(ClipTransitionCopy.seconds(ms), isOn: Binding(
-                    get: { ms == now },
-                    set: { _ in editorState.setClipTransitionLength(ms) }))
-            }
-        }
+        return VideoKit.DropdownRow(
+            label: "Length", value: ClipTransitionCopy.seconds(now),
+            choices: .picking(editorState.clipTransitionLengthOffers, current: now,
+                              title: ClipTransitionCopy.seconds) { editorState.setClipTransitionLength($0) })
         .playtestField("Length")
     }
 
@@ -203,13 +196,10 @@ struct TransitionInspector: View {
         let label = ClipTransitionCopy.holdLabel(transition.kind)
         var stops = Set(ClipTransition.holdStopsMS)
         stops.insert(transition.holdMS)
-        return VideoKit.DropdownRow(label: label, value: ClipTransitionCopy.seconds(transition.holdMS)) {
-            ForEach(stops.sorted(), id: \.self) { ms in
-                Toggle(ClipTransitionCopy.seconds(ms), isOn: Binding(
-                    get: { ms == transition.holdMS },
-                    set: { _ in editorState.setClipTransitionHold(ms) }))
-            }
-        }
+        return VideoKit.DropdownRow(
+            label: label, value: ClipTransitionCopy.seconds(transition.holdMS),
+            choices: .picking(stops.sorted(), current: transition.holdMS,
+                              title: ClipTransitionCopy.seconds) { editorState.setClipTransitionHold($0) })
         .playtestField(label)
     }
 

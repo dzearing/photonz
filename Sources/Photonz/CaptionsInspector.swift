@@ -49,13 +49,12 @@ struct CaptionsInspector: View {
 
     private var language: some View {
         let current = EditorState.captionsLanguage
-        return VideoKit.DropdownRow(label: "Language", value: Self.title(of: current)) {
-            ForEach(languageChoices, id: \.self) { id in
-                Toggle(Self.title(of: id), isOn: Binding(
-                    get: { id == current },
-                    set: { _ in EditorState.captionsLanguage = id; editorState.captionsSettingsChanged() }))
-            }
-        }
+        return VideoKit.DropdownRow(
+            label: "Language", value: Self.title(of: current),
+            choices: .picking(languageChoices, current: current, title: { Self.title(of: $0) }) { id in
+                EditorState.captionsLanguage = id
+                editorState.captionsSettingsChanged()
+            })
         .playtestField("Captions language")
         .panelHelp("The language the words are heard in.")
     }
@@ -347,13 +346,11 @@ struct CaptionsTextInspector: View {
                              choices: CaptionColourNames.edges) { hex in
                 editorState.changeCaptionLook { $0.strokeHex = hex }
             }
-            VideoKit.DropdownRow(label: "Shadow", value: look.shadow.title) {
-                ForEach(CaptionShadow.allCases, id: \.self) { shadow in
-                    Toggle(shadow.title, isOn: Binding(get: { look.shadow == shadow }, set: { _ in
-                        editorState.changeCaptionLook { $0.shadow = shadow }
-                    }))
-                }
-            }
+            VideoKit.DropdownRow(
+                label: "Shadow", value: look.shadow.title,
+                choices: .picking(CaptionShadow.allCases, current: look.shadow, title: \.title) { shadow in
+                    editorState.changeCaptionLook { $0.shadow = shadow }
+                })
             .playtestField("Caption shadow")
             VStack(alignment: .leading, spacing: 2) {
                 Text("Align").font(.caption).foregroundStyle(.secondary)
@@ -382,12 +379,11 @@ struct CaptionsTextInspector: View {
     private func colourRow(_ label: String, value: String?, choices: [CaptionColourNames.Choice],
                            pick: @escaping (String?) -> Void) -> some View {
         let name = CaptionColourNames.name(of: value, among: choices)
-        return VideoKit.DropdownRow(label: label, value: name, swatch: value.map(CaptionsInspector.swatch)) {
-            ForEach(choices, id: \.name) { choice in
-                Toggle(choice.name, isOn: Binding(get: { choice.hex?.uppercased() == value?.uppercased() },
-                                                  set: { _ in pick(choice.hex) }))
-            }
-        }
+        return VideoKit.DropdownRow(
+            label: label, value: name, swatch: value.map(CaptionsInspector.swatch),
+            choices: choices.map { choice in
+                .item(choice.name, isOn: choice.hex?.uppercased() == value?.uppercased()) { pick(choice.hex) }
+            })
         .playtestField("Caption \(label.lowercased())")
     }
 }
