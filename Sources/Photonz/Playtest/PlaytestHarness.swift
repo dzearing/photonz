@@ -14080,6 +14080,9 @@ private final class Run {
     private func mouseEvent(_ type: NSEvent.EventType, at viewPoint: CGPoint, on view: NSView,
                             flags: NSEvent.ModifierFlags = [], clicks: Int = 1) -> NSEvent? {
         guard let window = view.window else { return nil }
+        // Every press, drag and move a walk hands a view goes through here, so
+        // this is where the walk's pointer is (`PlaytestPointer.placed`).
+        PlaytestPointer.placed(at: view.convert(viewPoint, to: nil), in: window)
         return NSEvent.mouseEvent(
             with: type, location: view.convert(viewPoint, to: nil), modifierFlags: flags,
             timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: window.windowNumber,

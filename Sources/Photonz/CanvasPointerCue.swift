@@ -218,6 +218,22 @@ extension CanvasNSView {
         return false
     }
 
+    /// Where the pointer is resting, in this view's coordinates, for a cue
+    /// read with no event in hand: after a redraw, a zoom or a key.
+    ///
+    /// That is the real pointer, except during a walk, whose pointer is
+    /// synthesized while the real one sits wherever the person left it. The
+    /// canvas re-reads its cue on every redraw, every frame while a motion
+    /// plays, so reading the real pointer there undid the walk's own move
+    /// (`PlaytestPointer.placed`).
+    func restingPointer() -> CGPoint? {
+        guard let window else { return nil }
+        #if PHOTONZ_PLAYTEST
+        if let walked = PlaytestPointer.location(in: window) { return convert(walked, from: nil) }
+        #endif
+        return convert(window.mouseLocationOutsideOfEventStream, from: nil)
+    }
+
     /// Every handle on the canvas says what it does before you press it: an
     /// open hand over the parts that drag on their own (a pill, one of a
     /// caliper's dots, either end of a line), the platform's resize arrows over
@@ -233,8 +249,7 @@ extension CanvasNSView {
         // point's own markers, and a crosshair everywhere else, where a click
         // pins or picks up a guide.
         if gridAdjust != nil {
-            let where_ = viewPoint
-                ?? window.map { convert($0.mouseLocationOutsideOfEventStream, from: nil) }
+            let where_ = viewPoint ?? restingPointer()
             let doc = where_.flatMap { point in viewport?.documentPoint(fromView: point) }
             return applyGrabCursor(doc.flatMap { gridAdjustCursor(at: $0) } ?? .crosshair,
                                    force: true)
@@ -249,7 +264,7 @@ extension CanvasNSView {
         // this the cue and the drag would take turns writing the pointer while
         // the button was down.
         guard moveDrag == nil, multiMove == nil, marquee == nil else { return }
-        let point = viewPoint ?? window.map { convert($0.mouseLocationOutsideOfEventStream, from: nil) }
+        let point = viewPoint ?? restingPointer()
         guard let viewport, let point, bounds.contains(point) else { return applyGrabCursor(nil) }
         let doc = viewport.documentPoint(fromView: point)
         // A name above a box is that box's drag handle, and `mouseDown` reads

@@ -111,11 +111,37 @@ enum PlaytestPointer {
     /// The regions that currently think the pointer is on them.
     private static var inside: [HoverTargetView] = []
 
+    /// Where the walk last put the pointer, in `lastWindow`'s coordinates.
+    ///
+    /// A walk's pointer is synthesized and the real one is wherever the person
+    /// left it, so anything that asks "where is the pointer" without an event
+    /// in hand (`CanvasNSView.restingPointer`) has to ask here during a walk.
+    /// The canvas re-reads its cue on every redraw, and while a motion plays
+    /// that is every frame: reading the real pointer there overwrote the cue
+    /// the walk's own move had just set, and `motion-pivot-in-a-corner-walk`
+    /// passed or failed on where the person's hand happened to be.
+    private static var lastLocation: CGPoint?
+    private static weak var lastWindow: NSWindow?
+
+    /// The walk's pointer arrived at `location`, in `window`'s coordinates.
+    static func placed(at location: CGPoint, in window: NSWindow) {
+        lastLocation = location
+        lastWindow = window
+    }
+
+    /// Where the walk last put the pointer in `window`, or nil when no walk
+    /// has put it there, in which case the real pointer is the answer.
+    static func location(in window: NSWindow) -> CGPoint? {
+        lastWindow === window ? lastLocation : nil
+    }
+
     /// Forget where the pointer was without telling anything it left. For the
     /// start of a walk, where the views from the last one are already gone.
     static func forget() {
         for region in inside { region.isInside = false }
         inside = []
+        lastLocation = nil
+        lastWindow = nil
     }
 
     /// The pointer comes to rest at `location`, in `window`'s own coordinates.
@@ -125,6 +151,7 @@ enum PlaytestPointer {
     /// whether there was anything under the pointer to hover at all.
     @discardableResult
     static func rest(at location: CGPoint, in window: NSWindow) -> String {
+        placed(at: location, in: window)
         guard let content = window.contentView else { return "pointer: the window has no content view" }
         var over: [HoverTargetView] = []
         collect(in: content, at: location, into: &over)
