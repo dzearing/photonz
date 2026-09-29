@@ -286,7 +286,7 @@
   {
    "do": "windowDrag",
    "from": [
-    600,
+    709,
     750
    ],
    "to": [
@@ -308,7 +308,7 @@
   {
    "do": "windowDrag",
    "from": [
-    600,
+    690,
     750
    ],
    "to": [
@@ -324,7 +324,7 @@
   {
    "do": "describe",
    "stage": "3-snapped",
-   "note": "THE SECOND TEST: the playhead dragged along the ruler to seven points short of the second title's first key is pulled onto it (the Scale diamond reads on a key); dragged to nineteen points short, out of reach, it is not"
+   "note": "THE SECOND TEST: the playhead, taken by its head on the ruler and dragged to nineteen points short of the second title's first key, stays there (the Scale diamond reads between keys); taken again and dragged to seven points short, it is pulled onto the key"
   },
   {
    "do": "expect",
