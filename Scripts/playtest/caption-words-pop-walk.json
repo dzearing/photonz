@@ -32,6 +32,14 @@
       "tool": "select"
     },
     {
+      "do": "press",
+      "control": "Edit Mode"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
       "do": "selectRow",
       "row": "Captions"
     },
