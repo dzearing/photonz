@@ -61,7 +61,12 @@ The schedule now:
   a day the rotation covers the whole set anyway, in ten minute pieces.
 * **A rotating check is not a sweep.** It never closes the standing walk task,
   and fifty walks passing is never the state of five hundred. A walk it finds
-  broken is written onto the standing walk task the same day.
+  broken lands on a task the same day: onto the open task that owns it (it said
+  so with `queue.mjs walks`, or its words name the walk), otherwise onto the
+  standing walk task, which the check opens if none is open. At most one new
+  task per check, naming only the walks it saw fail
+  (`queue/bin/sweep-slice-record.mjs`, drilled by
+  `queue/bin/slice-owner-drill.mjs`).
 * **A change every walk touches can jump the floor**:
   `queue/bin/sweep.sh request --now "<why the whole set, right now>"`.
 
