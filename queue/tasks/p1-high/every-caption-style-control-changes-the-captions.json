@@ -1,0 +1,34 @@
+{
+  "id": "every-caption-style-control-changes-the-captions",
+  "title": "Every caption style control changes the captions, and colours use the real colour picker",
+  "goal": "User 2026-09-28, with a screenshot of the Captions style section: 'the caption properties have a bunch of dropdowns that do not function, and the color pickers are not the standard color pickers. They are just a bunch of placeholder dropdowns. I can't change the caption styling properties at all.' The rows are wired in code (CaptionStyleInspector.swift shadeRow via VideoKit.DropdownRow with Toggles; CaptionColourRow with named colour choices), so find out which of these is true before fixing: the menu does not open on click, choosing an item does not reach the selected Captions layer's look (change() writing to another layer or a copy), or the look changes but the render ignores it. Colours must use the app's standard picker, DesignedColorPicker.swift, per docs/design/mocks/pages/comp-color.html, as Appearance does, never a menu of colour names.",
+  "epic": "video-audio",
+  "priority": "p1-high",
+  "seq": 0.00035,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-29T05:18:04.932Z",
+  "updated": "2026-09-29T05:18:05.009Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Reproduced first with a walk at Next defaults: add captions to a recording, select the Captions layer, and try every control in the Captions section (Style tiles, Save style, Show, Said, Coming, Colour, Pill, Glow, Stroke, Shadow, Scale, Animation, Speed, Timing); the log records for each whether the menu opened, whether the look value changed, and whether the canvas changed; the report names the cause",
+    "Every control changes the captions on the canvas at once, while stopped and while playing, with undo",
+    "Colour, Pill, Glow and Stroke are colour wells that open the standard DesignedColorPicker (comp-color.html) with opacity, eyedropper and recents, exactly as Appearance's fill does; None is a choice in the picker; the named-colour menus are removed",
+    "Dropdowns use the design system's dropdown row with the full value visible (no 'Ear...' truncation on Timing's buttons: use icon buttons with tooltips or wider labels)",
+    "A test drives each control's binding and asserts the Captions layer's look changed, so a dead control fails the build",
+    "Walk photographs the captions before and after changing each of Show, Colour, Glow and Animation"
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T05:18:04.934Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-29T05:18:05.008Z",
+      "note": "seq 400 -> 0.00035"
+    }
+  ]
+}
