@@ -86,6 +86,57 @@ import SwiftUI
 
     private var newestBar: CGRect? { bars.values.max { $0.stamp < $1.stamp }?.frame }
 
+    /// Every tool button and hairline on the bar, by view: what the gaps and
+    /// hairline heights are read off. A tool is named for its slot, a hairline
+    /// is `nil`.
+    private struct Mark { var tool: String?; var frame: CGRect; var stamp: Int }
+    private var markEntries: [ObjectIdentifier: Mark] = [:]
+
+    func recordMark(tool: String?, frame: CGRect, by writer: ObjectIdentifier) {
+        stamp += 1
+        markEntries[writer] = Mark(tool: tool, frame: frame, stamp: stamp)
+    }
+
+    func forgetMark(by writer: ObjectIdentifier) {
+        markEntries.removeValue(forKey: writer)
+    }
+
+    /// The tools and hairlines inside the bar on screen now, left to right:
+    /// the one glass bar when there is one, else the tools' own capsule. A
+    /// second window's bar is somewhere else, so it never reads in.
+    var marks: [(tool: String?, frame: CGRect)] {
+        guard let around = bar ?? groups["Tools"] else { return [] }
+        return markEntries.values
+            .filter { around.contains(CGPoint(x: $0.frame.midX, y: $0.frame.midY)) }
+            .sorted { $0.frame.minX < $1.frame.minX }
+            .map { ($0.tool, $0.frame) }
+    }
+
+    /// The room between each pair of neighbouring tools with no hairline
+    /// between them, left to right.
+    var toolGaps: [CGFloat] {
+        zip(marks, marks.dropFirst()).compactMap { left, right in
+            left.tool != nil && right.tool != nil ? right.frame.minX - left.frame.maxX : nil
+        }
+    }
+
+    /// Every hairline's height, left to right.
+    var hairlineHeights: [CGFloat] { marks.filter { $0.tool == nil }.map(\.frame.height) }
+
+    /// The room between each hairline and the tool or section edge either
+    /// side of it, as [left, right] pairs, only where a tool is that neighbour.
+    var hairlineRoom: [[CGFloat]] {
+        let list = marks
+        return list.indices.compactMap { index in
+            guard list[index].tool == nil else { return nil }
+            let line = list[index].frame
+            let left = index > 0 && list[index - 1].tool != nil ? line.minX - list[index - 1].frame.maxX : nil
+            let right = index + 1 < list.count && list[index + 1].tool != nil
+                ? list[index + 1].frame.minX - line.maxX : nil
+            return [left, right].compactMap { $0 }
+        }
+    }
+
     /// The groups on screen, left to right.
     var measured: [(name: String, frame: CGRect)] {
         order.compactMap { name in groups[name].map { (name, $0) } }
@@ -126,6 +177,33 @@ private struct ToolBarGlassProbe: ViewModifier {
                 }
             }
             .onDisappear { ToolBarLayoutProbe.shared.forgetBar(by: ObjectIdentifier(recorded)) }
+    }
+}
+
+extension View {
+    /// Registers a tool button (`tool` its slot's name) or a hairline (`nil`)
+    /// on the floating bar, so a walk can read the gaps between them as numbers.
+    func toolBarMarkProbe(tool: String?) -> some View {
+        modifier(ToolBarMarkProbe(tool: tool))
+    }
+}
+
+private struct ToolBarMarkProbe: ViewModifier {
+    let tool: String?
+    @State private var recorded = ToolBarGroupProbe.Recorded()
+
+    func body(content: Content) -> some View {
+        content
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
+                recorded.frame = frame
+                ToolBarLayoutProbe.shared.recordMark(tool: tool, frame: frame, by: ObjectIdentifier(recorded))
+            }
+            .onAppear {
+                if let frame = recorded.frame {
+                    ToolBarLayoutProbe.shared.recordMark(tool: tool, frame: frame, by: ObjectIdentifier(recorded))
+                }
+            }
+            .onDisappear { ToolBarLayoutProbe.shared.forgetMark(by: ObjectIdentifier(recorded)) }
     }
 }
 
@@ -187,6 +265,7 @@ private struct ToolBarGroupProbe: ViewModifier {
 extension View {
     func toolBarGroupProbe(_ name: String) -> some View { self }
     func toolBarGlassProbe() -> some View { self }
+    func toolBarMarkProbe(tool: String?) -> some View { self }
     func toolBarSlotsProbe(shown: [String], more: [String], lit: String?) -> some View { self }
     func toolBarMoreProbe(_ rows: [String], pick: @escaping @MainActor (String) -> Void) -> some View { self }
 }

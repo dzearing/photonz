@@ -3326,6 +3326,8 @@ public enum PlaytestStep: Sendable, Equatable {
     /// one slot lit (a slot under More lights as "More"). Each left out is not
     /// claimed. `choose` picks a row under More first. `capsules` claims how
     /// many glass capsules the row draws (1 for the one bar the mocks draw).
+    /// `toolGap` claims the points between neighbouring tools and `hairline`
+    /// every hairline's height, each within half a point.
     case toolBar(stage: String, clearOfPicture: Bool?, claim: PlaytestToolBarClaim?)
     /// Write the measured frame of every icon parked on the inspector panel's
     /// trailing edge to the log and to `panel-edge-<stage>.json`: each one's
@@ -4573,9 +4575,12 @@ public enum PlaytestStep: Sendable, Equatable {
             let lit = try f.optionalString("lit")
             let choose = try f.optionalString("choose")
             let capsules = try f.optionalNumber("capsules").map { Int($0) }
+            let toolGap = try f.optionalNumber("toolGap").map { CGFloat($0) }
+            let hairline = try f.optionalNumber("hairline").map { CGFloat($0) }
             let claim = slots == nil && more == nil && lit == nil && choose == nil && capsules == nil
+                && toolGap == nil && hairline == nil
                 ? nil : PlaytestToolBarClaim(slots: slots, more: more, lit: lit, choose: choose,
-                                             capsules: capsules)
+                                             capsules: capsules, toolGap: toolGap, hairline: hairline)
             self = .toolBar(stage: try f.string("stage"),
                             clearOfPicture: try f.optionalFlag("clearOfPicture"), claim: claim)
         case "panelEdge":
@@ -4842,13 +4847,21 @@ public struct PlaytestToolBarClaim: Hashable, Sendable {
     /// colours and the zoom are the one bar the mocks draw
     /// (`next-one-glass-tool-bar`), one per group when they are not.
     public var capsules: Int?
+    /// The room, in points, between every pair of neighbouring tools with no
+    /// hairline between them, within half a point.
+    public var toolGap: CGFloat?
+    /// Every hairline's height on the bar, in points, within half a point.
+    public var hairline: CGFloat?
 
     public init(slots: [String]? = nil, more: [String]? = nil, lit: String? = nil,
-                choose: String? = nil, capsules: Int? = nil) {
+                choose: String? = nil, capsules: Int? = nil,
+                toolGap: CGFloat? = nil, hairline: CGFloat? = nil) {
         self.slots = slots
         self.more = more
         self.lit = lit
         self.choose = choose
         self.capsules = capsules
+        self.toolGap = toolGap
+        self.hairline = hairline
     }
 }

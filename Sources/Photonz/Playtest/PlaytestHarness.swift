@@ -7960,6 +7960,24 @@ private final class Run {
         if let want = claim.capsules, want != capsules {
             wrong.append("it draws \(capsules) glass capsule\(capsules == 1 ? "" : "s"), not \(want)")
         }
+        // Half a point either way: frames come back on the pixel grid.
+        if let want = claim.toolGap {
+            let gaps = ToolBarLayoutProbe.shared.toolGaps
+            if gaps.isEmpty {
+                wrong.append("it has no two tools side by side to measure a gap between")
+            } else if let off = gaps.first(where: { abs($0 - want) > 0.5 }) {
+                wrong.append("a gap between two tools is \(Self.round2(off))pt, not \(Self.round2(want))pt"
+                    + " (every gap: " + gaps.map { "\(Self.round2($0))" }.joined(separator: ", ") + ")")
+            }
+        }
+        if let want = claim.hairline {
+            let heights = ToolBarLayoutProbe.shared.hairlineHeights
+            if heights.isEmpty {
+                wrong.append("it draws no hairline to measure")
+            } else if let off = heights.first(where: { abs($0 - want) > 0.5 }) {
+                wrong.append("a hairline is \(Self.round2(off))pt tall, not \(Self.round2(want))pt")
+            }
+        }
         guard wrong.isEmpty else { throw Failure(description: "the tool bar: " + wrong.joined(separator: "; ")) }
     }
 
@@ -9125,6 +9143,12 @@ private final class Run {
                                   "top": Int($0.minY.rounded()), "bottom": Int($0.maxY.rounded())] as Any }
                     ?? NSNull(),
                 "capsules": ToolBarLayoutProbe.shared.capsules,
+                // Between neighbouring tools, each hairline's height, and the
+                // room either side of each hairline: the numbers a ruler laid
+                // on the bar beside the mock reads.
+                "toolGaps": ToolBarLayoutProbe.shared.toolGaps.map(round2),
+                "hairlineHeights": ToolBarLayoutProbe.shared.hairlineHeights.map(round2),
+                "hairlineRoom": ToolBarLayoutProbe.shared.hairlineRoom.map { $0.map(round2) },
                 "heights": heights.sorted(), "centerLines": centers.sorted(),
                 "linedUp": heights.count <= 1 && centers.count <= 1,
                 // What the zoom percentage has been asked to do, since it is

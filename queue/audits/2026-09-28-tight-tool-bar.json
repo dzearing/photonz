@@ -1,0 +1,26 @@
+{
+  "feature": "The floating tool bar sits as tight as the mock",
+  "epic": "video-editing",
+  "summary": "The one glass tool bar now packs its tools a tool every 32 points, as the video mock does, with the mock's 18 point hairlines. On a recording it went from about 550 points wide to 452, so it covers less of the picture.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/one-glass-tool-bar-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording, press Command 2 and look at the bar under the picture.", "shot": "2026-09-28-tight-tool-bar-1-video-sc.png" },
+    { "do": "Compare it with the mock's bar, drawn above it here.", "shot": "2026-09-28-tight-tool-bar-side-by-side.png" },
+    { "do": "Open a screenshot and run the pointer along the tools: each lights on its own.", "shot": "2026-09-28-tight-tool-bar-3-picture-sc.png" },
+    { "do": "Click each tool quickly without aiming carefully." },
+    { "do": "Make the window narrow until tools fold into More.", "shot": "2026-09-28-tight-tool-bar-4-narrow-sc.png" }
+  ],
+  "evaluate": [
+    "Does the bar now read as compact as the one you drew?",
+    "Can you still hit every tool without aiming, now that they sit 4 points apart?",
+    "Do the hairlines between tool families still read as breaks, at 18 points and 6 points from the tools?",
+    "Is the room at each rounded end right, or should it be tighter still?"
+  ],
+  "rough": [
+    "The app's bar is still 48 points tall where the mock's is 38, and its zoom slider is longer (110 against 92). Filed as its own task: The floating tool bar is as short as the mock draws it.",
+    "The ends leave 10 points where the mock leaves 9, so each rounded end stays concentric with its end tool on the taller bar.",
+    "The app's tools are 28 point circles 4 points apart; the mock's are 30 point rounded squares 2 points apart. The step from tool to tool is the same 32 points.",
+    "Current keeps its separate capsules and their old spacing."
+  ]
+}

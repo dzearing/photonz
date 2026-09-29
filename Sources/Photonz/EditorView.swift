@@ -895,7 +895,8 @@ struct EditorView: View {
             current: toolbarVisibleCount,
             maximum: toolbarSlots.count,
             contentWidth: toolbarContentWidth,
-            budget: toolbarBudget)
+            budget: toolbarBudget,
+            spacing: barSpacing)
         if fitted != toolbarVisibleCount { toolbarVisibleCount = fitted }
     }
 
@@ -1004,6 +1005,20 @@ struct EditorView: View {
     /// separate capsules.
     private var isOneGlassBar: Bool { Experiments.shared.oneGlassToolBarEnabled }
 
+    /// How the bar spaces its tools and hairlines: the one bar as tight as
+    /// `video.html` draws it, the separate capsules as they always were.
+    private var barSpacing: EditorChromeLayout.ToolBarSpacing { .bar(oneGlass: isOneGlassBar) }
+
+    /// The hairline between two tool families, with the room the bar gives it.
+    private var familyHairline: some View {
+        Divider()
+            .frame(height: barSpacing.hairlineHeight)
+            // In a background: wrapped in the probe itself, the Divider no
+            // longer sees the HStack and lies flat, stretching the bar.
+            .background { Color.clear.toolBarMarkProbe(tool: nil) }
+            .padding(.horizontal, barSpacing.hairlineMargin)
+    }
+
     /// The tools, the colours, the grid and the zoom as sections of one glass
     /// bar, a hairline between each: `video.html`'s floating tool bar, on a
     /// picture and a video alike. Which sections are on it is
@@ -1016,15 +1031,16 @@ struct EditorView: View {
         let sections = EditorChromeLayout.toolBarSections(
             showsColor: editorState.activeTool.colorControl != .hidden,
             showsGrid: !gridChipParts.isEmpty)
-        return HStack(spacing: EditorChromeLayout.toolBarSectionSpacing) {
+        return HStack(spacing: barSpacing.sectionGap) {
             ForEach(Array(sections.enumerated()), id: \.element) { index, section in
                 if EditorChromeLayout.toolBarHasHairline(before: index) {
-                    Divider().frame(height: 20)
+                    Divider().frame(height: barSpacing.hairlineHeight)
+                        .background { Color.clear.toolBarMarkProbe(tool: nil) }
                 }
                 toolBarSection(section)
             }
         }
-        .padding(.horizontal, EditorChromeLayout.toolBarEndPadding)
+        .padding(.horizontal, barSpacing.endPadding)
         .frame(height: EditorChromeLayout.toolBarGroupHeight)
         .glassEffect(.regular, in: .capsule)
         .contentShape(.capsule)
@@ -1073,7 +1089,7 @@ struct EditorView: View {
     }
 
     private var toolsBar: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: barSpacing.toolGap) {
             if Experiments.shared.toolGroupsEnabled {
                 groupedToolRow
             } else {
@@ -1114,7 +1130,7 @@ struct EditorView: View {
                                         withPen: Experiments.shared.penEnabled)
             .families.enumerated()), id: \.offset) { index, family in
             if index > 0 {
-                Divider().frame(height: 20)
+                familyHairline
             }
             ForEach(family, id: \.self) { entry in
                 slotButton(ToolbarSlot(entry))
@@ -1143,7 +1159,7 @@ struct EditorView: View {
             toolButton(.ellipse, "circle", "Ellipse")
             toolButton(.highlight, "highlighter", "Highlight")
             toolButton(.text, "character.cursor.ibeam", "Text")
-            Divider().frame(height: 20)
+            familyHairline
             cropToolButton
             if editorState.activeTool == .crop, !Experiments.shared.toolOptionsEnabled {
                 cropOptions
@@ -1176,7 +1192,7 @@ struct EditorView: View {
             index < visibleCount || slot == active
         }.map(\.element)
         let overflow = all.filter { !visible.contains($0) }
-        return HStack(spacing: 14) {
+        return HStack(spacing: barSpacing.toolGap) {
             ForEach(visible, id: \.self) { slotButton($0) }
             if !overflow.isEmpty {
                 overflowMenu(overflow)
@@ -1205,9 +1221,9 @@ struct EditorView: View {
                            bladeInHand: editorState.isTimelineBlade).map(ToolbarSlot.init)
         let families = fold.shown.map { $0.map(ToolbarSlot.init).filter(visible.contains) }
             .filter { !$0.isEmpty }
-        return HStack(spacing: 14) {
+        return HStack(spacing: barSpacing.toolGap) {
             ForEach(Array(families.enumerated()), id: \.offset) { index, family in
-                if index > 0 { Divider().frame(height: 20) }
+                if index > 0 { familyHairline }
                 ForEach(family, id: \.self) { slotButton($0) }
             }
             if !more.isEmpty {
@@ -1301,6 +1317,7 @@ struct EditorView: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .toolTip("More tools")
+        .toolBarMarkProbe(tool: "More")
         .toolBarMoreProbe(slots.map(\.title)) { title in
             if let slot = slots.first(where: { $0.title == title }) { activateSlot(slot) }
         }
@@ -1539,7 +1556,11 @@ struct EditorView: View {
 
     /// Inline button for a slot in the compact bar — same widgets the full bar
     /// uses, so the two stay visually identical for the tools that show.
-    @ViewBuilder private func slotButton(_ slot: ToolbarSlot) -> some View {
+    private func slotButton(_ slot: ToolbarSlot) -> some View {
+        slotButtonBody(slot).toolBarMarkProbe(tool: slot.title)
+    }
+
+    @ViewBuilder private func slotButtonBody(_ slot: ToolbarSlot) -> some View {
         switch slot {
         case .select: toolButton(.select, "cursorarrow", "Select")
         case .marquee:

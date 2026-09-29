@@ -62,6 +62,22 @@ struct PlaytestScriptTests {
         #expect(other.capsules == nil)
     }
 
+    @Test("A toolBar step can claim the gap between tools and the hairlines' height")
+    func toolBarCanClaimItsSpacing() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "toolBar", "stage": "a", "toolGap": 4, "hairline": 18 },
+                     { "do": "toolBar", "stage": "b", "capsules": 1 } ] }
+        """)
+        guard case .toolBar(_, _, let claim?) = script.steps[0],
+              case .toolBar(_, _, let other?) = script.steps[1] else {
+            Issue.record("toolBar"); return
+        }
+        #expect(claim.toolGap == 4)
+        #expect(claim.hairline == 18)
+        #expect(other.toolGap == nil)
+        #expect(other.hairline == nil)
+    }
+
     @Test("A writePicture step leaves the canvas out unless the walk asks for it")
     func writePictureLeavesTheCanvasOutByDefault() throws {
         let script = try decode("""

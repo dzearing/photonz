@@ -1,0 +1,33 @@
+{
+  "id": "the-floating-tool-bar-is-as-short-as-the-mock-dr",
+  "title": "The floating tool bar is as short as the mock draws it",
+  "goal": "The glass tool bar under the canvas is now as tight side to side as the video mock, but it is still 48 points tall where the mock draws 38, so it covers more of the picture than the user drew. Its zoom slider also runs longer than the mock's. Bring both to the mock on Next.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 390,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-29T03:09:40.311Z",
+  "updated": "2026-09-29T03:09:40.314Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while tightening the bar (task the-floating-tool-bar-sits-as-tight-as-the-mock, 2026-09-28). Side by side: queue/audits/2026-09-28-tight-tool-bar-side-by-side.png. Mock: docs/design/mocks/shared/components/toolbar.css .cnv .tbar padding var(--s1) var(--s2) round 28pt .tool, so 38pt with the 1px border; .zslider width 92px. App: EditorChromeLayout.toolBarGroupHeight = 48 is shared by Current's capsules and feeds toolBarCovers / aboveToolBar / the tool settings stack, so the one bar needs its own height (ToolBarSpacing is where the one bar's numbers now live) and those derived bands must read the bar in use. ToolBarSpacing.oneGlass.endPadding is 10 = the rim at 48pt; at 38pt the rim is 5 and the mock's end is 8 + 1. Zoom slider width lives in EditorView.zoomBar (110).",
+  "acceptance": [
+    "At Next defaults the one glass bar is 38pt tall, as video.html's .tbar is (28pt row, 4pt rim, 1pt edge), and the tools stay 28pt",
+    "A fitted picture still clears the bar, and the tool settings capsule still stacks above it without overlapping",
+    "The zoom slider on the one bar is the mock's 92pt",
+    "Current's separate capsules keep their 48pt height",
+    "one-glass-tool-bar-walk and a-fitted-picture-clears-the-tool-bar-walk pass at Next defaults"
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T03:09:40.313Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "one-glass-tool-bar-walk",
+    "a-fitted-picture-clears-the-tool-bar-walk"
+  ]
+}

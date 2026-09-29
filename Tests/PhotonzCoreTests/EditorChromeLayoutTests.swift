@@ -738,12 +738,75 @@ struct GridToolBarCapsuleTests {
         #expect(!EditorChromeLayout.toolBarHasHairline(before: 0))
     }
 
-    @Test func theOneBarKeepsTheRowHeightAndSpacesItsHairlinesLikeTheFamilies() {
+    @Test func theOneBarKeepsTheRowHeightAndSpacesItsHairlinesLikeTheMock() {
         // One bar is still the 48pt row everything clears. The hairline
         // between sections sits as far from its neighbours as the one between
         // tool families does, so the whole bar reads with one rhythm.
         #expect(EditorChromeLayout.toolBarHeight == 48)
-        #expect(EditorChromeLayout.toolBarSectionSpacing == 14)
-        #expect(EditorChromeLayout.toolBarEndPadding == 18)
+        let one = EditorChromeLayout.ToolBarSpacing.oneGlass
+        // Tool edge to hairline is the tools' gap plus the hairline's own
+        // margin, and the hairline between sections sits exactly that far
+        // from its neighbours plus the section step, the way the mock's
+        // `.tsep` sits in its strip and in its bar.
+        #expect(one.toolGap + one.hairlineMargin == 6)
+        #expect(one.sectionGap == 8)
+    }
+
+    // MARK: The one bar is as tight as the mock
+
+    @Test func theOneBarPacksItsToolsAsTightlyAsTheMock() {
+        // video.html's `.tool` is 30pt wide with 2pt between, so a glyph every
+        // 32pt. The app's tools are 28pt circles, so 4pt between keeps the same
+        // step. Before this the one bar kept the separate capsules' 14pt.
+        let one = EditorChromeLayout.ToolBarSpacing.oneGlass
+        #expect(one.toolGap == 4)
+        #expect(one.slotWidth == 32)
+    }
+
+    @Test func theOneBarDrawsTheMocksHairlines() {
+        // The mock's `.tsep` is 18pt tall; the separate capsules keep 20.
+        #expect(EditorChromeLayout.ToolBarSpacing.oneGlass.hairlineHeight == 18)
+        #expect(EditorChromeLayout.ToolBarSpacing.capsules.hairlineHeight == 20)
+    }
+
+    @Test func theOneBarsEndsRunRoundItsEndToolsAtTheRimsWidth() {
+        // The glass is 48pt tall round a 28pt row, a 10pt rim above and below.
+        // The same 10pt at each end keeps the rounded end concentric with the
+        // end tool's circle, where the separate tools capsule kept 18pt.
+        let one = EditorChromeLayout.ToolBarSpacing.oneGlass
+        #expect(one.endPadding == (EditorChromeLayout.toolBarGroupHeight - 28) / 2)
+    }
+
+    @Test func separateCapsulesKeepTheirSpacing() {
+        // Current's row of capsules is not this task's: its numbers stay.
+        let capsules = EditorChromeLayout.ToolBarSpacing.capsules
+        #expect(capsules.toolGap == 14)
+        #expect(capsules.endPadding == 18)
+        #expect(capsules.slotWidth == EditorChromeLayout.toolBarSlotWidth)
+        #expect(capsules.widestSlotWidth == EditorChromeLayout.toolBarWidestSlotWidth)
+        #expect(EditorChromeLayout.ToolBarSpacing.bar(oneGlass: false) == capsules)
+        #expect(EditorChromeLayout.ToolBarSpacing.bar(oneGlass: true) == .oneGlass)
+    }
+
+    @Test func theTightBarShedsEnoughToolsInOneStep() {
+        // With 32pt slots, counting the old 42pt ones sheds too few: 100pt
+        // over is three old slots but only 96pt of the new ones, and the bar
+        // would sit 4pt past the edge until another layout pass that SwiftUI
+        // may never send.
+        let one = EditorChromeLayout.ToolBarSpacing.oneGlass
+        let fitted = EditorChromeLayout.fittedToolCount(current: 13, maximum: 13,
+                                                        contentWidth: 503, budget: 403,
+                                                        spacing: one)
+        #expect(CGFloat(503) - CGFloat(13 - fitted) * one.slotWidth <= 403)
+    }
+
+    @Test func theTightBarGrowsBackOnItsOwnWidestSlot() {
+        // 60pt of slack holds the widest tight slot (58pt) but not an old one
+        // (68pt), so the tight bar puts a tool back where the old sums would not.
+        let one = EditorChromeLayout.ToolBarSpacing.oneGlass
+        #expect(one.widestSlotWidth == 58)
+        #expect(EditorChromeLayout.fittedToolCount(current: 6, maximum: 13,
+                                                   contentWidth: 343, budget: 403,
+                                                   spacing: one) == 7)
     }
 }

@@ -280,19 +280,68 @@ public enum EditorChromeLayout {
     /// Growing back stays deliberately conservative: it only happens when there
     /// is at least a full slot of slack, so the count cannot flip between two
     /// values every frame.
+    ///
+    /// `spacing` is the bar being fitted: a slot is a control plus that bar's
+    /// gap, so the one tight bar sheds and grows by its own slot, not by the
+    /// separate capsules' wider one.
     public static func fittedToolCount(current: Int, maximum: Int,
                                        contentWidth: CGFloat,
-                                       budget: CGFloat) -> Int {
+                                       budget: CGFloat,
+                                       spacing: ToolBarSpacing = .capsules) -> Int {
         guard budget > 0, contentWidth > 0 else { return current }
         if contentWidth > budget {
             let over = contentWidth - budget
-            let drop = max(1, Int((over / toolBarSlotWidth).rounded(.up)))
+            let drop = max(1, Int((over / spacing.slotWidth).rounded(.up)))
             return max(0, current - drop)
         }
         let slack = budget - contentWidth
-        guard current < maximum, slack >= toolBarWidestSlotWidth else { return current }
-        return min(maximum, current + Int(slack / toolBarWidestSlotWidth))
+        guard current < maximum, slack >= spacing.widestSlotWidth else { return current }
+        return min(maximum, current + Int(slack / spacing.widestSlotWidth))
     }
+
+    /// How the floating bar spaces what is on it: the tools, the hairlines
+    /// between tool families and between sections, and the room at its ends.
+    public struct ToolBarSpacing: Sendable, Equatable {
+        /// Between two neighbouring tools.
+        public var toolGap: CGFloat
+        /// How tall a hairline is drawn.
+        public var hairlineHeight: CGFloat
+        /// Room either side of a hairline among the tools, on top of `toolGap`.
+        public var hairlineMargin: CGFloat
+        /// Between a section of the one bar and the hairline next to it.
+        public var sectionGap: CGFloat
+        /// Between the glass's rounded ends and the first and last control.
+        public var endPadding: CGFloat
+
+        /// One tool's share of the bar: its 28pt control and the gap after it.
+        public var slotWidth: CGFloat { toolBarControlSize + toolGap }
+        /// The widest slot: the selection group's button runs 54pt with its
+        /// mode glyph and chooser.
+        public var widestSlotWidth: CGFloat { 54 + toolGap }
+
+        /// Current's row of separate capsules, as measured off the running app.
+        public static let capsules = ToolBarSpacing(toolGap: 14, hairlineHeight: 20, hairlineMargin: 0,
+                                                    sectionGap: 14, endPadding: 18)
+
+        /// The one glass bar (`next-one-glass-tool-bar`), as tight as
+        /// `video.html` draws it. The mock's `.tool` is 30pt wide with 2pt
+        /// between (a glyph every 32pt); the app's tools are 28pt circles, so
+        /// a 4pt gap keeps that step. Its `.tsep` is 18pt tall, sits 2pt gap
+        /// plus 4pt margin from the tools in its strip (4 + 2 here), and 4pt
+        /// gap plus 4pt margin from the sections either side of it (8 here).
+        /// The mock's glass is 38pt tall and ends 9pt past its last tool;
+        /// this one is 48pt tall, so its ends take the 10pt rim it has above
+        /// and below, which keeps each rounded end concentric with its tool.
+        public static let oneGlass = ToolBarSpacing(toolGap: 4, hairlineHeight: 18, hairlineMargin: 2,
+                                                    sectionGap: 8, endPadding: 10)
+
+        public static func bar(oneGlass isOneGlass: Bool) -> ToolBarSpacing {
+            isOneGlass ? .oneGlass : .capsules
+        }
+    }
+
+    /// The side of every control on the floating bar.
+    public static let toolBarControlSize: CGFloat = 28
 
     // MARK: One glass bar
 
@@ -324,15 +373,6 @@ public enum EditorChromeLayout {
     public static func toolBarHasHairline(before index: Int) -> Bool {
         index > 0
     }
-
-    /// How far a hairline between sections sits from what is either side of
-    /// it: the same as the tools' own spacing, so a hairline between the tools
-    /// and the colours reads exactly like one between two tool families.
-    public static let toolBarSectionSpacing: CGFloat = 14
-
-    /// The room between the glass's rounded ends and the first and last
-    /// control on the bar, which is what the tools' own capsule always had.
-    public static let toolBarEndPadding: CGFloat = 18
 
     /// The narrowest canvas that still gets the zoom slider in the tool bar.
     ///
