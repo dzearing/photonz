@@ -20191,3 +20191,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Timing falls back to arrow-only buttons (words in the tip) in a dock too narrow for "Earlier"/"Later".
 - Walk: `every-caption-control-changes-the-captions-walk` (no flags) clicks every dropdown face and every well, reads back, and fails if the drawn caption did not change (new actions `captionsNoteDrawn`/`captionsExpectDrawnChanged`); also None, undo and playback. Audit: `queue/audits/2026-09-29-caption-style-controls.json`.
 - Open: a picked colour lands on release, not live while dragging (captions have no preview path).
+
+## 2026-09-29: timeline dock outline and resize edge
+
+- Removed the accent ring TimelineDock drew while the timeline held the keyboard (the "blue outline" the user saw).
+- The dock's top edge drags to resize it (TimelineDockHeight in PhotonzCore, TimelineResizeEdge in the app); double-click resets; remembered in `timeline.height`.
+- New walk step `windowClick` (a real click or double-click posted to the window).
+- Next: filed `a-walk-that-closes-a-recording-and-opens-one-aga`, a probe crash when a walk reopens a recording after closing one.
