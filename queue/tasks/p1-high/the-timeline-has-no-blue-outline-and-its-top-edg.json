@@ -1,0 +1,34 @@
+{
+  "id": "the-timeline-has-no-blue-outline-and-its-top-edg",
+  "title": "The timeline has no blue outline, and its top edge drags to make it taller or shorter",
+  "goal": "User 2026-09-28: 'the editor tracks have this weird blue outline, should remove that, and make the pane vertically resizable similar to the right panel being resizable.' A blue rectangle around the transport and timeline dock is visible in audit screenshots (e.g. a Ready to try picture of the Tutorial Sample recording). Find what draws it before removing it: the AppKit keyboard focus ring on a focusable view hosting the timeline (the timeline takes keys: B, I/O, J/K/L), an accent strokeBorder (TimelineZoomBar.swift and TrimTimeline.swift stroke with accentColor), or a selection state of the dock itself.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 0.0028,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-29T05:20:33.092Z",
+  "updated": "2026-09-29T05:20:33.183Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Reproduced first: a walk at Next defaults opens a recording in Edit, clicks the timeline, and photographs the dock; the report names what draws the outline",
+    "No outline or focus ring is drawn around the timeline dock in any state; keyboard focus on the timeline is still real (its keys work) and is shown, if at all, the way the mock shows it, never as a system ring",
+    "The boundary between the canvas and the timeline dock is a drag handle: hover shows the resize cursor, dragging makes the dock taller or shorter live, the canvas refits above it without jumping, with the same feel and the same handle look as the right panel's resize edge",
+    "Height is clamped (at least the transport plus one track, at most about 70% of the window), double-clicking the edge returns it to its default, and the height is remembered per user",
+    "The dock's scrollers stay in their reserved space as it resizes (see the zoom task), so nothing inside jumps",
+    "Walk drags the edge up and down and photographs short, default and tall docks, with no blue outline in any"
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T05:20:33.094Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-29T05:20:33.182Z",
+      "note": "seq 400 -> 0.0028"
+    }
+  ]
+}
