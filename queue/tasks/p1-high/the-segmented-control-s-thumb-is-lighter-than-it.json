@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p1-high",
   "seq": 0.00005,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T13:02:36.363Z",
-  "updated": "2026-09-29T13:20:22.845Z",
+  "updated": "2026-09-29T13:57:09.755Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -54,7 +54,33 @@
     {
       "t": "2026-09-29T13:20:22.840Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T13:56:21.667Z",
+      "note": "Review before building: the page's first light rail (0.075) measured 1.19:1 thumb to rail on a render, under the user's 1.5:1, so the light rail went to 0.22 on the page and in the app (white title bar is the lightest backdrop: 1.60:1 live). The system glassEffectID morph cannot promise the page's bounded settle (3pt, inside the rail), so the thumb is ONE glass pane in a GlassEffectContainer moved by SegmentThumbMorph (PhotonzCore, the page's keyframes, one rect per frame so frame and size never desync). Premiere/Photoshop users expect the macOS control: grab-and-drag the thumb added, arrows unchanged."
+    },
+    {
+      "t": "2026-09-29T13:56:21.719Z",
+      "note": "Built: Sources/PhotonzCore/SegmentThumbMotion.swift (+ CubicBezier.swift split out of LayerMotion so the gallery compiles alone), SegmentThumbMotionTests (11). SegmentedControl.swift: recessed rail with inner shadow, glass thumb with the page's fill/hairline/spec line, lift drawn outside only (a shadow under a see-through pane would darken it), TimelineView morph paused at rest, drag gesture, Reduce Motion cross-fade, solid thumb under Increase Contrast/Reduce Transparency. Gallery has a morph filmstrip (shownMorph). New walk segmented-thumb-glass-walk (no flags; windowDrag proves the drag lands on Right). Existing segmented walks green: segment-tooltips, view-mode-and-edit-mode, picker-controls, panel-press, mixed-one-look, each-corner-on-its-own, captions-panel-keeps-its-margins. Scripts/test.sh 10510 passed."
+    },
+    {
+      "t": "2026-09-29T13:56:21.774Z",
+      "note": "left rough (no task, audit rough lists them): accessibility variants not seen live (would change the user's Mac settings); accent history filter stays solid accent; picked words go bold at the start of the move (page does the same); mid-morph frames only offscreen since a capture is slower than 420ms."
+    },
+    {
+      "t": "2026-09-29T13:56:21.827Z",
+      "note": "owns these walks: segmented-thumb-glass-walk, view-mode-and-edit-mode-walk, segment-tooltips-walk"
+    },
+    {
+      "t": "2026-09-29T13:57:09.753Z",
+      "note": "Every segmented control in Next has a darker recessed rail and a lighter Liquid Glass thumb (glassEffect in a GlassEffectContainer) that stretches, squashes and settles (at most 3pt, never out of the rail) on the page's 420ms curve, interruptible, draggable; Reduce Motion cross-fades, Increase Contrast/Reduce Transparency get an opaque thumb. Measured thumb:rail on real captures 1.60-2.21:1 (title bar and panel, light and dark); page 1.62/1.99 after its light rail went 0.075 -> 0.22. SegmentThumbMorph/Drag in PhotonzCore with tests; test.sh 10510 green; segmented-thumb-glass-walk (no flags, real drag) and 7 existing segmented walks green. Audit 2026-09-29-segmented-thumb-glass.json; feel card on the-segmented-thumb-moves-the-way-the-user-likes. Commit dbf9de22."
     }
   ],
-  "started": "2026-09-29T13:20:22.839Z"
+  "started": "2026-09-29T13:20:22.839Z",
+  "walks": [
+    "segmented-thumb-glass-walk",
+    "view-mode-and-edit-mode-walk",
+    "segment-tooltips-walk"
+  ],
+  "completed": "2026-09-29T13:57:09.754Z"
 }

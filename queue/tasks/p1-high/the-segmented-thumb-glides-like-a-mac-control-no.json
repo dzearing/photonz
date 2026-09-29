@@ -1,0 +1,35 @@
+{
+  "id": "the-segmented-thumb-glides-like-a-mac-control-no",
+  "title": "The segmented thumb glides like a Mac control: no overshoot, never out of its rail",
+  "goal": "User 2026-09-29, with two screenshots of View | Edit in the title bar: 'the segmented control overshoots like CRAZY. I'm on Edit, click View, look at the crazy weird overshoot. When I click the opposite direction it does the same thing, but gets clipped. Gross and terrible. This doesn't feel mac native.' The first click threw the glass thumb far right, past the rail and into the panel toggle; the other direction clipped it at the rail's left. SegmentThumbMorph (PhotonzCore/SegmentThumbMotion.swift) is bounded to the row, so the leading theory, UNPROVEN, is a double animation: the thumb is placed per frame by a TimelineView (SegmentedControl.swift ~380) AND carries .glassEffect with .glassEffectID('thumb') in a GlassEffectContainer (~478-486), so the system also animates the glass shape with its own spring, lagging and flinging it; the rail's clip then cuts it off. Reproduce by recording real frames before fixing.",
+  "epic": "design-system",
+  "priority": "p1-high",
+  "seq": 0.00001,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-29T14:47:27.540Z",
+  "updated": "2026-09-29T14:47:27.622Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Reproduced first: the probe (with the Screen Recording grant, while the person is away) captures 30+ real window frames across Edit to View and View to Edit in the title bar, and logs the drawn thumb's bounds against the rail's in each; the report names the cause",
+    "The thumb has exactly one animator. It glides from its slot to the new one in about 0.3 s on a smooth, critically damped curve (SwiftUI .smooth with no extra bounce, or the same curve the component page now uses: efa1d36f), with at most a slight stretch across both slots in the middle; zero overshoot, zero bounce",
+    "In every frame the whole thumb, glass and shadow included, is inside the rail; the rail never has to clip it",
+    "It still uses real Liquid Glass for the thumb, rendered so the system does not animate the glass shape separately (no glassEffectID morph on a view that is already being moved, or use only the system morph and no hand keyframes, whichever proves smooth)",
+    "The same fix covers every use (title bar View | Edit and the panel pickers), and drag-to-slide still follows the pointer",
+    "SegmentThumbMorph and its tests are updated to the no-overshoot curve",
+    "Measured: the frame capture after the fix shows no thumb pixel outside the rail in either direction, and a card asks the user to judge the feel with the captured frames"
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T14:47:27.542Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-29T14:47:27.621Z",
+      "note": "seq 400 -> 0.00001"
+    }
+  ]
+}

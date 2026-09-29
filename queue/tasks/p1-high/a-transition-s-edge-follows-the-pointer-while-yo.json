@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 0.0001,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T13:22:26.746Z",
-  "updated": "2026-09-29T13:22:43.388Z",
+  "updated": "2026-09-29T14:37:33.569Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -34,6 +34,35 @@
     {
       "t": "2026-09-29T13:22:43.387Z",
       "note": "User 2026-09-29: show the live length in a readout by the pointer while dragging. Acceptance updated."
+    },
+    {
+      "t": "2026-09-29T13:57:49.984Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T14:37:09.076Z",
+      "note": "owns these walks: transition-edge-follows-the-pointer-walk"
+    },
+    {
+      "t": "2026-09-29T14:37:09.128Z",
+      "note": "Reproduced 2026-09-29 with a pointer walk (dragGrip, 20 real mouse moves): on a cut BETWEEN two clips the band already followed (worst 0.5pt); on a join INSIDE one clip (blade cut) the band's end stayed put for the whole pull (grip-trace: pointer 695->719, grip 693.5 every step, worst 30pt off). Cause as the goal guessed: ClipPiecesBar.band drew cut.drawnTransition, not the drag session. Also found: on a band placed Before/After the cut, the grip ON the cut moved the far end the opposite way from the hand."
+    },
+    {
+      "t": "2026-09-29T14:37:09.182Z",
+      "note": "Fix: ClipTransitionEdgeDrag (PhotonzCore, 13 tests) is the rule for how far a drag takes the length and what stops it; EditorState.drawnClipTransition feeds both band views; shownCutInHand makes the panel's Length and Paid with rows keep up; TransitionLengthBubble rides beside the pointer in the canvas drag readout's plate (dark, 11pt semibold), amber with max/min at a stop, fades on release; a one-sided band has only its far end as a grip; Escape stays called off until the button comes up; dragGrip gained cancel and counts a transition stop as caught."
+    },
+    {
+      "t": "2026-09-29T14:37:09.233Z",
+      "note": "Other timeline drags checked by reading, not by pointer walk: clip bar ends/body (already bar-end-follows-the-pointer-walk), sound fade handles (fadeDrag @State), key diamonds (keyDrag), key lanes (shownMS + keyLaneDrag), caption word chips (captionWordDrag), caption cues (clipBarDrag). All draw from their live drag state; none update only on release, so nothing filed. Left rough (not filed, pre-existing): spare strip labels at the cut draw over the band and can crowd the bubble on a short transition."
+    },
+    {
+      "t": "2026-09-29T14:37:33.567Z",
+      "note": "A transition's band end now follows the pointer live on both kinds of cut, with a length bubble beside the pointer (amber max/min at the stop), live panel Length/Paid with, Escape and one-step undo. Reproduced first (join band stuck 30pt behind a 30pt pull), verified by transition-edge-follows-the-pointer-walk at Next defaults (7 pointer drags, worst 0.5pt off), all 10 transition walks green, Scripts/test.sh 10523 passing. Commit 3763775c. Audit queue/audits/2026-09-29-transition-edge-follows-the-pointer.json."
     }
-  ]
+  ],
+  "started": "2026-09-29T13:57:49.983Z",
+  "walks": [
+    "transition-edge-follows-the-pointer-walk"
+  ],
+  "completed": "2026-09-29T14:37:33.568Z"
 }
