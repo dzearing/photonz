@@ -65,7 +65,7 @@
       </div>
       <div class="docmeta">
         <div class="docnum">01</div><h3 class="docname">Anatomy</h3>
-        <p class="docrule">A capsule track holding capsule segments, and one of them raised. <b>The selected plate carries fill, hairline and lift together</b> — dropping any one of the three is how it ends up invisible on a glass panel, which is exactly what happened to the color picker's scope switch before this component existed.</p>
+        <p class="docrule">A <b>recessed rail</b>, darker than what it sits on, holding capsule segments, and one of them lifted on a <b>lighter pane of glass</b>. <b>The thumb is always lighter than the rail</b> (2026-09-29: the old plate matched the rail and could barely be seen). <b>It carries fill, hairline and lift together</b> — dropping any one of the three is how it ends up invisible on a glass panel, which is exactly what happened to the color picker's scope switch before this component existed.</p>
         <div class="docdd">
           <span class="do">Give the selected segment all three: fill, edge and lift.</span>
           <span class="no">Mark selection with colour alone. On glass it disappears.</span>
@@ -194,12 +194,12 @@
       </div>
       <div class="docmeta">
         <div class="docnum">05</div><h3 class="docname">Changing the value</h3>
-        <p class="docrule">The plate <b>moves, it does not blink</b>. A segmented control changing value is the Move case in <a class="backchip" data-target="lang-motion" style="display:inline-flex;vertical-align:baseline">motion</a> — reposition · spring · 240ms — because the selection is one object going somewhere, not two objects swapping opacity. It is also what the native macOS control does.</p>
+        <p class="docrule">The thumb <b>moves as liquid glass, it does not blink or slide</b>: it stretches to span the slot it left and the slot it is going to, squashed a little like a drop pulled along, then springs into place with a small overshoot and settles (about 420ms, interruptible from wherever it is). In the app this is the system Liquid Glass morph (a glass effect inside a glass container, matched between segments). It is still, at heart, the Move case in <a class="backchip" data-target="lang-motion" style="display:inline-flex;vertical-align:baseline">motion</a> — reposition · spring · 240ms — because the selection is one object going somewhere, not two objects swapping opacity. It is also what the native macOS control does.</p>
         <div class="docdd">
           <span class="do">Animate position, so one plate is visible in every frame.</span>
           <span class="no">Cross-fade two plates. Mid-transition nothing looks selected.</span>
         </div>
-        <p class="docapi"><b>API</b> <code>segmented.js</code> owns this. The plate follows the <code>.on</code> class with a <code>MutationObserver</code>, so it stays correct even when a page moves the selection itself. Listen with <code>seg.addEventListener('change', e =&gt; e.detail.value)</code>. Under <code>prefers-reduced-motion</code> the plate still moves, it just arrives instantly.</p>
+        <p class="docapi"><b>API</b> <code>segmented.js</code> owns this. The plate follows the <code>.on</code> class with a <code>MutationObserver</code>, so it stays correct even when a page moves the selection itself. Listen with <code>seg.addEventListener('change', e =&gt; e.detail.value)</code>. Under <code>prefers-reduced-motion</code> the thumb still moves, it just arrives instantly, with no stretch.</p>
       </div>
     </div>
 
