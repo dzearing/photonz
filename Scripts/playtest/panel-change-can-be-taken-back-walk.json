@@ -15,14 +15,9 @@
     { "do": "expect", "control": "Switch", "in": "Fill", "reads": "Fill, off" },
     { "do": "describe", "stage": "1-fill-off", "note": "the switch is off and canUndo is still true, so the panel change went on the undo stack like a canvas one" },
 
-    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "expect", "control": "Switch", "in": "Fill", "reads": "Fill, off" },
-    { "do": "describe", "stage": "2-after-cmd-z", "note": "the chord changed NOTHING, and the key line above says why: a walk's menu bar is frozen, so no walk can press Command Z. This is not the app. The same press does the same nothing with no panel press anywhere in the walk" },
-
-    { "do": "action", "action": "undo" },
-    { "do": "wait", "seconds": 0.6 },
     { "do": "expect", "control": "Switch", "in": "Fill", "reads": "Fill, on" },
-    { "do": "describe", "stage": "3-taken-back", "note": "Undo put the switch back on: the command Command Z is wired to reverses a panel change" }
+    { "do": "describe", "stage": "2-taken-back", "note": "Command Z put the switch back on: a panel change is taken back like a canvas one" }
   ]
 }

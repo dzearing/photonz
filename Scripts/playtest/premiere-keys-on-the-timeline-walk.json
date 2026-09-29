@@ -22,7 +22,7 @@
     { "do": "describe", "stage": "1-canvas-arrow", "note": "a click on the picture gave the canvas the keyboard, the clip is still picked, so the right arrow is Photoshop's nudge: the picture moved one point right and the playhead did not move" },
     { "do": "expectBox", "layer": "Tutorial Sample", "at": [1, 0], "within": 0.5 },
     { "do": "expectTimeline", "playheadMS": 2000, "withinMS": 40 },
-    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
     { "do": "wait", "seconds": 0.3 },
     { "do": "expectBox", "layer": "Tutorial Sample", "at": [0, 0], "within": 0.5 },
 

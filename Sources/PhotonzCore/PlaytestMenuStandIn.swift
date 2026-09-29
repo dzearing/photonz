@@ -30,6 +30,20 @@ public enum PlaytestMenuStandIn {
         table[Chord(key: key.name.lowercased(), modifiers: Set(modifiers))]
     }
 
+    /// Whether a `key` step's press ran nothing at all, which fails the walk.
+    ///
+    /// The row carrying the chord is dead (`rowIsLive` false: the frozen menu
+    /// bar of a walk), nothing in the window or on the timeline answered the
+    /// press first, and a stand-in is written down, so the walk has an honest
+    /// step to use instead: `shortcut`, which runs what the chord means. A
+    /// chord with no stand-in is left to the walk's own claims, because a
+    /// view's key handling may still have answered it. Plain keys never count:
+    /// they are typing or a tool, not a menu press.
+    public static func pressRanNothing(_ key: PlaytestKey, modifiers: [PlaytestModifier],
+                                       rowIsLive: Bool, somethingTookIt: Bool) -> Bool {
+        !modifiers.isEmpty && !rowIsLive && !somethingTookIt && action(for: key, modifiers: modifiers) != nil
+    }
+
     private struct Chord: Hashable {
         let key: String
         let modifiers: Set<PlaytestModifier>

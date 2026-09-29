@@ -38,9 +38,9 @@
     { "do": "action", "action": "captionsWordStretchLastLater" },
     { "do": "wait", "seconds": 0.3 },
     { "do": "snapshot", "name": "6-the-last-word-stretched-later" },
-    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
     { "do": "wait", "seconds": 0.3 },
-    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
     { "do": "wait", "seconds": 0.3 },
     { "do": "action", "action": "captionsExpectWordDragsUndone" },
 

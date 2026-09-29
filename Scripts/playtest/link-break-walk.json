@@ -267,11 +267,12 @@
       "seconds": 0.5
     },
     {
-      "do": "key",
+      "do": "shortcut",
       "key": "delete",
       "modifiers": [
         "command"
-      ]
+      ],
+      "menuItem": "Delete Layer"
     },
     {
       "do": "wait",

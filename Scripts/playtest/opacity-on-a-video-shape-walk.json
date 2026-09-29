@@ -117,11 +117,12 @@
    "name": "2-plain-a-second-later-canvas"
   },
   {
-   "do": "key",
+   "do": "shortcut",
    "key": "z",
    "modifiers": [
     "command"
-   ]
+   ],
+   "menuItem": "Undo"
   },
   {
    "do": "wait",

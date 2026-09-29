@@ -20,7 +20,7 @@
     { "do": "panel", "stage": "2-normalized" },
     { "do": "snapshot", "name": "2-normalized" },
 
-    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expect", "field": "Gain in dB", "reads": "0.0" },
     { "do": "press", "control": "Normalize" },

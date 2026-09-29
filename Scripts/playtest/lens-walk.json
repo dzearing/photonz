@@ -72,8 +72,8 @@
     { "do": "describe", "stage": "10-rounded", "note": "rounding the layer rounds the region it covers, because a lens is an ordinary layer in every other way" },
     { "do": "snapshot", "name": "10-rounded" },
 
-    { "do": "key", "key": "z", "modifiers": ["command"] },
-    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "11-undone", "note": "two undos step back over the rounding and the move; the lens is back where it was drawn" },
     { "do": "snapshot", "name": "11-undone" }

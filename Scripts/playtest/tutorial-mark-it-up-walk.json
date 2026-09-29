@@ -39,7 +39,7 @@
     { "do": "describe", "stage": "5-copy-it", "note": "the words landed and the guide moved on to the handoff" },
     { "do": "snapshot", "name": "5-copy-it" },
 
-    { "do": "key", "key": "c", "modifiers": ["command", "shift"] },
+    { "do": "shortcut", "key": "c", "modifiers": ["command", "shift"], "menuItem": "Copy Merged" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "back-to-pointer", "timeout": 6 },
     { "do": "wait", "seconds": 0.5 },
     { "do": "describe", "stage": "6-back-to-pointer", "note": "a real copy moved it on; the last step reads Done" },

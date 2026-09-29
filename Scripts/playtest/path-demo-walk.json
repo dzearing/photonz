@@ -169,11 +169,12 @@
       "name": "5-bowed-square-wider"
     },
     {
-      "do": "key",
+      "do": "shortcut",
       "key": "z",
       "modifiers": [
         "command"
-      ]
+      ],
+      "menuItem": "Undo"
     },
     {
       "do": "wait",

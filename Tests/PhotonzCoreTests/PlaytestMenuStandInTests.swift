@@ -96,6 +96,35 @@ struct PlaytestMenuStandInTests {
         #expect(PlaytestMenuStandIn.action(for: key("z"), modifiers: [.command, .option]) == nil)
     }
 
+    // A `key` step presses the chord the way a hand would, and in a walk the
+    // row behind it is often dead. When nothing else claimed the press either,
+    // it ran nothing at all, and a walk that carried on reported green over an
+    // undo that never happened (2026-09-28: a dip stayed dipped after ⌘Z). So
+    // that press is a failure, and a chord with a stand-in is the case where
+    // the walk has an honest step to use instead: `shortcut`.
+    @Test("A dead row the press never reached fails the walk when the chord has a stand-in")
+    func deadPressFails() {
+        #expect(PlaytestMenuStandIn.pressRanNothing(key("z"), modifiers: [.command],
+                                                    rowIsLive: false, somethingTookIt: false))
+        #expect(PlaytestMenuStandIn.pressRanNothing(key("delete"), modifiers: [.option],
+                                                    rowIsLive: false, somethingTookIt: false))
+    }
+
+    @Test("A press something answered, or a live row, is not a dead press")
+    func answeredPressPasses() {
+        // The pen steps back one anchor on ⌘Z before the menu is asked.
+        #expect(!PlaytestMenuStandIn.pressRanNothing(key("z"), modifiers: [.command],
+                                                     rowIsLive: false, somethingTookIt: true))
+        #expect(!PlaytestMenuStandIn.pressRanNothing(key("z"), modifiers: [.command],
+                                                     rowIsLive: true, somethingTookIt: false))
+        // No stand-in written down: the walk's own claims have to speak for it.
+        #expect(!PlaytestMenuStandIn.pressRanNothing(key("a"), modifiers: [.command],
+                                                     rowIsLive: false, somethingTookIt: false))
+        // A plain key is typing or a tool, never a menu press.
+        #expect(!PlaytestMenuStandIn.pressRanNothing(key("delete"), modifiers: [],
+                                                     rowIsLive: false, somethingTookIt: false))
+    }
+
     private func key(_ name: String) -> PlaytestKey {
         guard let key = PlaytestKey(name) else {
             Issue.record("\(name) is not a key")

@@ -28,13 +28,13 @@
     { "do": "describe", "stage": "4-take-it-off", "note": "a waiting step: the heading has to really go before this moves on" },
     { "do": "snapshot", "name": "4-take-it-off" },
 
-    { "do": "key", "key": "backspace", "modifiers": ["command"] },
+    { "do": "shortcut", "key": "backspace", "modifiers": ["command"], "menuItem": "Delete Layer" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "put-it-back", "timeout": 6 },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "5-put-it-back", "note": "the heading is gone from the picture and from the list, and the guide now waits on undo" },
     { "do": "snapshot", "name": "5-put-it-back" },
 
-    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "nothing-is-stuck", "timeout": 6 },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "6-nothing-is-stuck", "note": "undo really brought it back, and the last step reads Done" },

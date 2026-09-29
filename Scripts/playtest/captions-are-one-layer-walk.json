@@ -153,18 +153,20 @@
       "name": "5-narrowed-by-its-handle"
     },
     {
-      "do": "key",
+      "do": "shortcut",
       "key": "z",
       "modifiers": [
         "command"
-      ]
+      ],
+      "menuItem": "Undo"
     },
     {
-      "do": "key",
+      "do": "shortcut",
       "key": "z",
       "modifiers": [
         "command"
-      ]
+      ],
+      "menuItem": "Undo"
     },
     {
       "do": "wait",

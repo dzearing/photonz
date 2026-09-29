@@ -83,7 +83,7 @@
     { "do": "rightClick", "at": [640, 400], "choose": "Freeze Frame > Freeze for 2s" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "expectTimeline", "mode": "edit", "open": true },
-    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
     { "do": "wait", "seconds": 0.3 },
     { "do": "key", "key": "1", "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.6 },

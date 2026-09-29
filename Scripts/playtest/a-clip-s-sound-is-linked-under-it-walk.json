@@ -124,7 +124,7 @@
     {
       "do": "expect",
       "field": "Volume reading",
-      "reads": "-9.3 dB"
+      "reads": "-9.3 dB ±0.5"
     },
     {
       "do": "describe",

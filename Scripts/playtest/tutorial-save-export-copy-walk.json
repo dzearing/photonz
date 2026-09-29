@@ -17,7 +17,7 @@
     { "do": "describe", "stage": "2-copy-it", "note": "a waiting step: the picture has to really reach the clipboard" },
     { "do": "snapshot", "name": "2-copy-it" },
 
-    { "do": "key", "key": "c", "modifiers": ["command", "shift"] },
+    { "do": "shortcut", "key": "c", "modifiers": ["command", "shift"], "menuItem": "Copy Merged" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "export-it", "timeout": 6 },
     { "do": "readClipboard", "stage": "copied" },
     { "do": "wait", "seconds": 0.5 },

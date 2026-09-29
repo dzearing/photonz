@@ -787,6 +787,21 @@ private final class Run {
                     detail += " (\(destination.path) read dimmed before the press, which is the menu bar"
                         + " not yet brought up to date, and the menu took the press, so a row of that"
                         + " chord ran)"
+                } else if destination.item.action == nil,
+                          PlaytestMenuStandIn.pressRanNothing(
+                            key, modifiers: modifiers, rowIsLive: false,
+                            somethingTookIt: takenBy != "responder chain" && takenBy != "nobody") {
+                    // Nothing answered it, so it ran nothing. This used to be
+                    // a note, and walks went on green over an undo that never
+                    // happened: a dipped level stayed dipped and a moved clip
+                    // stayed moved after ⌘Z (2026-09-28). A `shortcut` step
+                    // runs what the chord means when its row is dead.
+                    let standIn = PlaytestMenuStandIn.action(for: key, modifiers: modifiers)
+                    throw Failure(description: "\(chord) is \(destination.path), which is dimmed and empty in a walk, "
+                        + "and nothing else took the press, so it ran nothing. \(Self.frozenMenuBar) "
+                        + "Use {\"do\": \"shortcut\", \"key\": \"\(key.name)\", \"modifiers\": [...], "
+                        + "\"menuItem\": \"\(destination.item.title)\"}, which runs "
+                        + "`action \(standIn?.rawValue ?? "?")` when the row is dead, and claim what it did.")
                 } else if destination.item.action == nil {
                     detail += " (\(destination.path) carries this chord, but that item is dimmed and"
                         + " empty, so the MENU did not run: \(Self.frozenMenuBar)"
@@ -9025,8 +9040,10 @@ private final class Run {
             // which switch is being read, and "off" alone would happily answer
             // for whichever the panel built first.
             let own = reading.says.trimmingCharacters(in: .whitespaces)
-            let asClaimed = showing.caseInsensitiveCompare(wanted) == .orderedSame
-                || (inRow != nil && !own.isEmpty && own.caseInsensitiveCompare(wanted) == .orderedSame)
+            // `PlaytestReading` also takes "-9.3 dB ±0.5", for a reading a
+            // short drag sets and lands a sub-pixel apart run to run.
+            let asClaimed = PlaytestReading.matches(showing: showing, claimed: wanted)
+                || (inRow != nil && !own.isEmpty && PlaytestReading.matches(showing: own, claimed: wanted))
             guard asClaimed else {
                 throw Failure(description: "the \(thing.rawValue) called \"\(named)\"\(onRow) reads "
                     + "\"\(showing)\", not \"\(reads)\"")

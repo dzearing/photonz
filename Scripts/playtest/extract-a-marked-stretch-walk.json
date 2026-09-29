@@ -25,7 +25,7 @@
     { "do": "describe", "stage": "1-extracted", "note": "one press of the apostrophe, Premiere's Extract: the minute and a quarter between the marks is gone from the recording, the gap closed, and the timeline reads 3:45. The playhead sits on the join and the marks are spent" },
     { "do": "snapshot", "name": "1-extracted-reads-3-45" },
 
-    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectTimeline", "lengthMS": 300000, "markInMS": 75000, "markOutMS": 150000 },
     { "do": "describe", "stage": "2-undone", "note": "one Command Z puts the whole stretch and both marks back: the extract was one step" },

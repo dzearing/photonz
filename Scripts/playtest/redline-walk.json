@@ -72,7 +72,7 @@
 
     { "do": "wait", "seconds": 2 },
     { "do": "clearClipboard" },
-    { "do": "key", "key": "c", "modifiers": ["command", "shift"] },
+    { "do": "shortcut", "key": "c", "modifiers": ["command", "shift"], "menuItem": "Copy Merged" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "readClipboard", "stage": "9-image-by-shortcut" },
     { "do": "action", "action": "copyImage" },

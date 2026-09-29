@@ -26,7 +26,7 @@
     { "do": "action", "action": "tutorialNext" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "both-at-once", "timeout": 5 },
     { "do": "wait", "seconds": 0.4 },
-    { "do": "key", "key": "c", "modifiers": ["command", "shift"] },
+    { "do": "shortcut", "key": "c", "modifiers": ["command", "shift"], "menuItem": "Copy Merged" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "just-one", "timeout": 6 },
     { "do": "readClipboard", "stage": "3-picture-and-list" },
     { "do": "wait", "seconds": 0.5 },

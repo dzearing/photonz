@@ -33,8 +33,8 @@
     { "do": "describe", "stage": "6-back-to-magnify", "note": "and back: switching to Magnify takes the region that lens was covering as the thing to magnify, and places the box clear of it the way a freshly drawn one is placed" },
     { "do": "snapshot", "name": "6-back-to-magnify" },
 
-    { "do": "key", "key": "z", "modifiers": ["command"] },
-    { "do": "key", "key": "z", "modifiers": ["command"] },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "7-undone", "note": "each switch is one undo step, so two undos put the magnifier back as it was drawn" },
     { "do": "snapshot", "name": "7-undone" },
