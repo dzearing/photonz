@@ -127,7 +127,8 @@ public struct ClipTransition: Hashable, Codable, Sendable {
     /// up. **The one thing about a transition that moves time**: the clip
     /// after the cut starts this much later (`PhotonzDocument.setTransition`).
     /// Always nought for a kind that overlaps, and at a join inside one clip,
-    /// where there is no gap to hold in.
+    /// where there is no gap to hold in: a hold asked for there cuts the clip
+    /// in two first (`PhotonzDocument.holdOnColour`).
     public var holdMS: Int
 
     public init(kind: ClipTransitionKind, lengthMS: Int = ClipTransition.defaultLengthMS,

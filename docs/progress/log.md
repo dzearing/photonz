@@ -20135,3 +20135,9 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Core: `TimelineKeyCommand.playInToOut`, `PhotonzDocument.playInToOutMS(lastFrameMS:)` (TimelineMarks.swift). App: `EditorState.documentPlaybackStopMS`, which the play clock stops at; cleared on pause and when J/K/L change speed.
 - Walks: `play-in-to-out-walk` (lock-safe), `play-in-to-out-from-the-ruler-walk`. Audit: `queue/audits/2026-09-28-play-in-to-out.json`.
 - Open: no transport button for it; no looping.
+
+## 2026-09-28 — Hold on black at a blade cut inside one clip
+
+- A dip on a join inside one clip now shows Hold on black. Choosing a hold cuts the clip in two at the join (`PhotonzDocument.breakClip`) and sets the hold on the new edit point, which ripples everything after it along; one undo puts the one clip back (`holdOnColour`, `canHoldOnColour` in `EditPointTransitions.swift`).
+- Tests: `JoinHoldTests`. Walk: `hold-on-black-at-a-blade-cut-walk` (Next defaults, lock-safe, no front).
+- Open: whether the user wants the clip to stay one clip with black inside it instead (asked in the audit).

@@ -125,6 +125,74 @@ extension PhotonzDocument {
         }
     }
 
+    // MARK: - Holding on a dip's colour
+
+    /// Whether the dip on a cut can hold on its colour. Between two clips
+    /// always; at a join inside one clip too, when the clip is one a cut can
+    /// be made between: on a picture track, and not inside a group.
+    public func canHoldOnColour(at place: TimelineCutPlace) -> Bool {
+        guard let transition = documentCut(at: place)?.cut.transition,
+              !transition.kind.needsOverlap else { return false }
+        guard case let .join(clip, _) = place else { return true }
+        guard layers.contains(where: { $0.id == clip }), layer(id: clip)?.holdsMedia == true,
+              let trackID = trackID(ofClip: clip) else { return false }
+        return track(id: trackID)?.kind == .video
+    }
+
+    /// Hold the dip on a cut on its colour for `holdMS`, answering where the
+    /// cut is afterwards, or nil where nothing changed.
+    ///
+    /// **Inside one clip the pieces butt, so there is no gap to hold in.** A
+    /// hold asked for there cuts the clip in two at the join, the way
+    /// Premiere's blade leaves two clips, and the hold is the gap that opens
+    /// between them (`setTransition(_:at:)` for an edit point). All of it is
+    /// one edit, so one undo puts the one clip back.
+    @discardableResult
+    public mutating func holdOnColour(_ holdMS: Int, at place: TimelineCutPlace) -> TimelineCutPlace? {
+        guard canHoldOnColour(at: place),
+              let existing = documentCut(at: place)?.cut.transition else { return nil }
+        let hold = max(0, holdMS)
+        guard hold != existing.holdMS else { return nil }
+        let held = ClipTransition(kind: existing.kind, lengthMS: existing.lengthMS,
+                                  alignment: existing.alignment, holdMS: hold)
+        guard case let .join(clip, index) = place else {
+            return setTransition(held, at: place) ? place : nil
+        }
+        var trial = self
+        guard let tail = trial.breakClip(clip, atCut: index) else { return nil }
+        let edit = TimelineCutPlace.edit(outgoing: clip, incoming: tail)
+        guard trial.setTransition(held, at: edit) else { return nil }
+        self = trial
+        return edit
+    }
+
+    /// Cut a clip into two clips at one of its joins: the pieces before it
+    /// stay on this clip, the rest go to a new clip of the same name that
+    /// starts where the join was, on the same track, arriving with whatever
+    /// was on the join. Answers the new clip.
+    mutating func breakClip(_ id: UUID, atCut index: Int) -> UUID? {
+        guard let layer = layer(id: id), let time = layer.time,
+              let pieces = layer.clipPieces, pieces.cutIndices.contains(index) else { return nil }
+        let atMS = time.inMS + pieces.startMS(ofPiece: index)
+        let arriving = pieces.pieces[index].transitionIn
+        let head = ClipPieces(pieces: Array(pieces.pieces[..<index]), sourceLengthMS: pieces.sourceLengthMS)
+        var rest = Array(pieces.pieces[index...])
+        rest[0].transitionIn = nil
+        let tail = ClipPieces(pieces: rest, sourceLengthMS: pieces.sourceLengthMS)
+        // The copy has to land on the clip's own track, which it only does
+        // once the tracks are written down.
+        materializeTracks()
+        guard let copy = duplicateLayer(id: id) else { return nil }
+        updateLayer(id: id) { $0.setClipPieces(head) }
+        updateLayer(id: copy.id) { clip in
+            clip.name = layer.name
+            clip.time = clip.time?.moved(toInMS: atMS)
+            clip.setClipPieces(tail)
+            clip.arrivalTransition = arriving
+        }
+        return copy.id
+    }
+
     // MARK: - What is on screen
 
     /// Whether any clip carries a transition on the cut it arrives at, which

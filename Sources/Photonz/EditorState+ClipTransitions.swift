@@ -186,31 +186,28 @@ extension EditorState {
 
     /// How long the dip on the cut in hand holds on its colour (`#rowHold`).
     /// **Real time goes in**: everything after the cut moves along by the
-    /// difference, and one undo takes it back out.
+    /// difference, and one undo takes it back out. On a blade cut inside one
+    /// clip the clip becomes two clips there first (`holdOnColour`), and the
+    /// panel follows the cut to where it now is.
     func setClipTransitionHold(_ ms: Int) {
-        guard canWorkWithClipTransitions, let inHand = cutInHand, case .edit = inHand.place,
-              let existing = inHand.cut.transition, !existing.kind.needsOverlap else { return }
-        let hold = max(0, ms)
-        guard hold != existing.holdMS else { return }
+        guard canWorkWithClipTransitions, canHoldClipTransition, let inHand = cutInHand else { return }
         pauseDocument()
-        perform {
-            $0.setTransition(ClipTransition(kind: existing.kind, lengthMS: existing.lengthMS,
-                                            alignment: existing.alignment, holdMS: hold),
-                             at: inHand.place)
-        }
+        var landed: TimelineCutPlace?
+        perform { landed = $0.holdOnColour(ms, at: inHand.place) }
+        guard let landed else { return }
+        if landed != inHand.place { pickCut(landed) }
         // Stand on the black, so the canvas shows what was just put in.
-        if hold > 0, let at = document?.documentCut(at: inHand.place)?.atMS {
-            documentTimeMS = min(max(0, at + hold / 2), lastDocumentTimeMS)
+        if ms > 0, let at = document?.documentCut(at: landed)?.atMS {
+            documentTimeMS = min(max(0, at + ms / 2), lastDocumentTimeMS)
         }
         documentMomentChanged()
     }
 
-    /// Whether the cut in hand can hold on a colour: a dip, between two
-    /// clips. Inside one clip the pieces butt and there is no gap to hold in.
+    /// Whether the cut in hand can hold on a colour: a dip, between two clips
+    /// or on a blade cut inside a clip on a picture track.
     var canHoldClipTransition: Bool {
-        guard let inHand = cutInHand, case .edit = inHand.place,
-              let transition = inHand.cut.transition else { return false }
-        return !transition.kind.needsOverlap
+        guard let inHand = cutInHand else { return false }
+        return document?.canHoldOnColour(at: inHand.place) == true
     }
 
     /// The lengths the Length dropdown offers at the cut in hand: the usual

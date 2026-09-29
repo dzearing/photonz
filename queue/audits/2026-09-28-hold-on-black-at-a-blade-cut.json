@@ -1,0 +1,23 @@
+{
+  "feature": "Hold on black at a blade cut",
+  "epic": "video-transitions-motion",
+  "summary": "A dip to black on a cut you made with the blade inside one recording can now sit on black for a beat, just like a dip between two separate clips.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/hold-on-black-at-a-blade-cut-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording, put the playhead in the middle and press B to cut it." },
+    { "do": "Click the cut, then pick Dip to black.", "shot": "2026-09-28-hold-on-black-at-a-blade-cut-1.png" },
+    { "do": "In Properties, open Hold on black and choose 2.0s.", "shot": "2026-09-28-hold-on-black-at-a-blade-cut-2.png" },
+    { "do": "Press space from just before the cut and watch it fade down, sit on black, and come back up." },
+    { "do": "Press Cmd+Z once.", "shot": "2026-09-28-hold-on-black-at-a-blade-cut-3.png" }
+  ],
+  "evaluate": [
+    "Once the hold goes in, the recording shows on the timeline as two clips with a Black block between them, the way Premiere shows a gap after a blade cut. Is that what you expect, or should it stay one clip with black inside it?",
+    "Does the sound going silent through the black feel right?",
+    "After Cmd+Z the cut is no longer picked and the panel shows the clip. Would you rather it stayed on the cut?"
+  ],
+  "rough": [
+    "The hold works by cutting the recording into two clips at the cut. Setting the hold back to 0.0s leaves those two clips touching; it does not join them back into one. One Cmd+Z does put the single clip back.",
+    "Both halves keep the recording's name, so the Edit point section reads the same name for Out and In."
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "out": "/tmp/photonz-playtest/hold-on-black-at-a-blade-cut-walk",
+  "seed": "Cut a screen recording with the blade, put a dip to black on that cut, and hold on black for two seconds. The recording becomes two clips at the cut with two seconds of black between them, everything after moves along, and one undo puts the one clip back. At Next defaults, no flag set.",
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "count": 1, "pieces": 2 },
+
+    { "do": "action", "action": "clipPickFirstCut" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "clipTransitionDipToBlack" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "menu": "Hold on black", "reads": "0.0s" },
+    { "do": "describe", "stage": "1-dip-on-a-blade-cut", "note": "THE FIRST TEST: a dip to black on a cut made with the blade inside one recording now shows the Hold on black row, which used to appear only where two separate clips met" },
+    { "do": "snapshot", "name": "1-dip-on-a-blade-cut" },
+
+    { "do": "panelMenu", "menu": "Hold on black", "choose": "2.0s" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 4.0, "count": 2 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 6.0, "endsAt": 10.0, "count": 2 },
+    { "do": "expect", "menu": "Hold on black", "reads": "2.0s" },
+    { "do": "describe", "stage": "2-held", "note": "THE SECOND TEST: two seconds of real black go in at the cut. The recording is now two clips on V1 with the black between them, the second half starts two seconds later reading on from the same frame, and the panel stayed on the cut. The playhead stands on the black" },
+    { "do": "snapshot", "name": "2-two-seconds-of-black" },
+    { "do": "render", "name": "2-the-frame-on-the-black", "scale": 0.25 },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 8.0, "count": 1, "pieces": 2 },
+    { "do": "describe", "stage": "3-undone", "note": "THE THIRD TEST: one undo takes the black back out and the recording is one clip in two pieces again, with the dip still on its cut" },
+    { "do": "snapshot", "name": "3-undone" }
+  ]
+}
