@@ -112,15 +112,15 @@
         var h = h1 * sq;
         return { transform: 'none', left: x + 'px', top: (y1 + (h1 - h) / 2) + 'px', width: w + 'px', height: h + 'px' };
       };
-      var dir = x1 > from.x ? 1 : -1;
-      var minX = 2, maxX = seg.clientWidth - 2 - w1;
-      var over = Math.max(minX, Math.min(maxX, x1 + dir * Math.min(3, Math.abs(x1 - from.x) * 0.06)));
-      var f0 = k(from.x, from.w, 1), f1 = k(lo, hi - lo, .88), f2 = k(over, w1, 1), f3 = k(x1, w1, 1);
-      f0.offset = 0;  f0.easing = 'cubic-bezier(.3,0,.5,1)';
-      f1.offset = .4; f1.easing = 'cubic-bezier(.22,1,.36,1)';
-      f2.offset = .82; f2.easing = 'ease-in-out';
+      /* No overshoot at all (the user, 2026-09-29, of the app's version: "over
+         shoots like CRAZY... This doesn't feel mac native"). A Mac segmented
+         control glides to the new segment and stops; the only liquid in it is
+         a slight stretch across both slots on the way. */
+      var f0 = k(from.x, from.w, 1), f1 = k(lo, hi - lo, .94), f3 = k(x1, w1, 1);
+      f0.offset = 0;  f0.easing = 'cubic-bezier(.33,0,.4,1)';
+      f1.offset = .45; f1.easing = 'cubic-bezier(.2,0,0,1)';
       f3.offset = 1;
-      plate.__morph = plate.animate([f0, f1, f2, f3], { duration: 420 });
+      plate.__morph = plate.animate([f0, f1, f3], { duration: 300 });
     } else if (!snap) {
       plate.style.transition = '';
     }
