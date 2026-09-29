@@ -87,15 +87,9 @@ struct MagnifierSettingsRows: View {
             HStack(spacing: 8) {
                 Text("Shape").font(.caption).foregroundStyle(.secondary)
                 Spacer(minLength: 8)
-                Picker("Shape", selection: Binding(
-                    get: { shape },
-                    set: { editorState.setCalloutShape($0) })) {
-                    ForEach(ZoomCalloutShape.allCases, id: \.self) { shape in
-                        Text(shape.title).tag(shape)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
+                SegmentedControl("Shape", selection: shape,
+                                 options: ZoomCalloutShape.allCases.map { .init($0, $0.title) },
+                                 form: .natural) { editorState.setCalloutShape($0) }
                 .controlSize(.small)
                 .fixedSize()
                 .panelHelp("Whether the magnified region is drawn in a box or in a circle.")
@@ -121,13 +115,8 @@ struct MagnifierToolSettingsRows: View {
             if Experiments.shared.calloutShapeEnabled {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Shape").font(.caption).foregroundStyle(.secondary)
-                    Picker("Shape", selection: $state.calloutToolShape) {
-                        ForEach(ZoomCalloutShape.allCases, id: \.self) { shape in
-                            Text(shape.title).tag(shape)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
+                    SegmentedControl("Shape", selection: $state.calloutToolShape,
+                                     options: ZoomCalloutShape.allCases.map { .init($0, $0.title) })
                     .controlSize(.small)
                     .panelHelp("What the next one is drawn in. The box you drag out previews "
                           + "in the same shape, and one already on the canvas is "

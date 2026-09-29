@@ -182,8 +182,11 @@ struct TransitionInspector: View {
     private func alignment(current: ClipTransitionAlignment) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             PanelRowLabel(text: "The overlap sits")
-            VideoKit.Segmented(options: ClipTransitionAlignment.allCases.map { ($0, $0.title) },
-                               selection: current) { editorState.setClipTransitionAlignment($0) }
+            SegmentedControl("The overlap sits", selection: current,
+                             options: ClipTransitionAlignment.allCases.map { .init($0, $0.title) },
+                             fallsBackToSystem: false) {
+                editorState.setClipTransitionAlignment($0)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .panelReadout(current.title)

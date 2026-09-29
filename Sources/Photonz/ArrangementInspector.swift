@@ -96,19 +96,13 @@ struct ArrangementInspector: View {
     @ViewBuilder
     private func ownRows() -> some View {
         row("Arrangement", mixed: contents.arrangement.isMixed) {
-            Picker("", selection: Binding<GroupLayoutKind??>(get: { agreed }, set: { picked in
-                // The outer nil is Mixed, which is a report about the picked
-                // groups rather than something anybody can choose.
-                guard let picked else { return }
-                editorState.setArrangement(ids: ids, kind: picked)
-            })) {
-                Text("Free").tag(GroupLayoutKind??.some(.none))
-                ForEach(GroupLayoutKind.allCases, id: \.self) { kind in
-                    Text(kind.title).tag(GroupLayoutKind??.some(.some(kind)))
-                }
+            // The outer nil of `agreed` is Mixed, which is a report about the
+            // picked groups rather than something anybody can choose.
+            SegmentedControl("Arrangement", selection: agreed,
+                             options: [.init(GroupLayoutKind?.none, "Free")]
+                                + GroupLayoutKind.allCases.map { .init(GroupLayoutKind?.some($0), $0.title) }) {
+                editorState.setArrangement(ids: ids, kind: $0)
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
             .controlSize(.small)
             .frame(maxWidth: 152)
             // A row of words with no segment lit reads as a control nobody has
@@ -244,18 +238,10 @@ struct ArrangementInspector: View {
         // under the section says so instead.
         if allAre(.stack) {
             row("Direction", mixed: contents.direction.isMixed) {
-                Picker("", selection: Binding<StackDirection?>(
-                    get: { contents.direction.value },
-                    set: { direction in
-                        guard let direction else { return }
-                        editorState.updateArrangement(ids: ids) { $0.direction = direction }
-                    })) {
-                    ForEach(StackDirection.allCases, id: \.self) {
-                        Text($0.title).tag(StackDirection?.some($0))
-                    }
+                SegmentedControl("Direction", selection: contents.direction.value,
+                                 options: StackDirection.allCases.map { .init($0, $0.title) }) { direction in
+                    editorState.updateArrangement(ids: ids) { $0.direction = direction }
                 }
-                .pickerStyle(.segmented)
-                .labelsHidden()
                 .controlSize(.small)
                 .frame(maxWidth: 152)
                 .opacity(contents.direction.isMixed ? MixedLook.controlOpacity : 1)
@@ -583,8 +569,8 @@ struct ArrangementInspector: View {
                 ? "Hide the smallest and largest \(axis.noun), and keep the numbers they were given."
                 : "Give this \(noun) a smallest and a largest \(axis.noun).",
             mixed: reading.isMixed) {
-            Picker("", selection: Binding<Bool?>(get: { reading.value }, set: { hugging in
-                guard let hugging else { return }
+            SegmentedControl(axis.field, selection: reading.value,
+                             options: [.init(true, "Hug"), .init(false, "Fixed")]) { hugging in
                 // Each group holds the size IT is at, never the first one's
                 // borrowed by the rest, which is why the change is handed the
                 // layer as well as the layout.
@@ -593,12 +579,7 @@ struct ArrangementInspector: View {
                                                                : layer.localBounds.height).rounded()
                     if axis == .width { layout.width = size } else { layout.height = size }
                 }
-            })) {
-                Text("Hug").tag(Bool?.some(true))
-                Text("Fixed").tag(Bool?.some(false))
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
             .controlSize(.small)
             .frame(maxWidth: 152)
             .opacity(reading.isMixed ? MixedLook.controlOpacity : 1)

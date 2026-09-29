@@ -175,13 +175,16 @@ struct LibraryPanel: View {
     // MARK: Scope and search
 
     private var scopePicker: some View {
-        // The kit's bar rather than the system's: a system segmented control
+        // The drawn control in both releases: a system segmented control
         // cannot shrink below its own words, and in the narrowest dock this one
         // made the panel 30pt wider than the dock, sliding every section over
-        // the canvas (`panelMargins`, 2026-09-24). The kit's bar becomes a
+        // the canvas (`panelMargins`, 2026-09-24). The drawn one becomes a
         // dropdown when its words will not fit.
-        VideoKit.Segmented(options: LibraryScope.allCases.map { ($0, $0.segmentTitle) },
-                           selection: scope) { scopeRaw = $0.rawValue }
+        SegmentedControl("Shelf", selection: scope,
+                         options: LibraryScope.allCases.map { .init($0, $0.segmentTitle) },
+                         fallsBackToSystem: false) {
+            scopeRaw = $0.rawValue
+        }
             .panelHelp("What the shelf is showing")
     }
 

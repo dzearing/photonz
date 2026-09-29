@@ -124,57 +124,36 @@ struct VideoExportDialog: View {
             Text("Export")
                 .font(.headline)
             ExportSheetRow("Format") {
-                Picker("Format", selection: $choice) {
-                    ForEach(RecordingExport.choices, id: \.self) { choice in
-                        Text(RecordingExport.shortName(choice)).tag(choice)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
+                SegmentedControl("Format", selection: $choice,
+                                 options: RecordingExport.choices.map { .init($0, RecordingExport.shortName($0)) })
             }
             if choice.format != nil, offersRange {
                 ExportSheetRow("Range") {
-                    Picker("Range", selection: $range) {
-                        ForEach(VideoExportRange.allCases, id: \.self) { Text($0.title).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
+                    SegmentedControl("Range", selection: $range,
+                                     options: VideoExportRange.allCases.map { .init($0, $0.title) })
                     .playtestControl(Self.rangeLabel, detail: range.title)
                 }
             }
             if choice.format != nil, sizes.count > 1 {
                 ExportSheetRow("Size") {
-                    Picker("Size", selection: $size) {
-                        ForEach(sizes, id: \.self) { size in
-                            Text(size.label(for: source.sourceSize)).tag(size)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
+                    SegmentedControl("Size", selection: $size,
+                                     options: sizes.map { .init($0, $0.label(for: source.sourceSize)) })
                     .playtestControl("Export size", detail: size.label(for: source.sourceSize))
                 }
             }
             if offersQuality {
                 ExportSheetRow("Quality") {
                     VStack(alignment: .leading, spacing: 4) {
-                        Picker("Quality", selection: $quality) {
-                            ForEach(VideoExportQuality.allCases, id: \.self) { quality in
-                                Text(quality.shortLabel).tag(quality)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .labelsHidden()
+                        SegmentedControl("Quality", selection: $quality,
+                                         options: VideoExportQuality.allCases.map { .init($0, $0.shortLabel) })
                         purpose
                     }
                 }
             }
             if editor.hasCaptions, choice == .video(.mp4) {
                 ExportSheetRow("Captions") {
-                    Picker("Captions", selection: $captions) {
-                        ForEach(CaptionExport.choices, id: \.self) { Text($0.title).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
+                    SegmentedControl("Captions", selection: $captions,
+                                     options: CaptionExport.choices.map { .init($0, $0.title) })
                     .playtestControl("Export captions", detail: captions.title)
                 }
             }

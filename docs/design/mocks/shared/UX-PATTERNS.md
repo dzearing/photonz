@@ -3003,10 +3003,27 @@ changes.
 | `.irow` | `VideoKit.FieldRow` | 76pt label column |
 | `.select`, `.select.sm`, `.select.comp` | `VideoKit.SelectFace`, `Dropdown`, `DropdownRow` | the face inside a real pop-up button exactly its size, so a click anywhere on it opens the menu; rows are `VideoKit.Choice` values; accent edge while open |
 | `.field .v` | `VideoKit.ValueFace` | a value you read, not set: the filled box, as tall as a small dropdown |
-| `.seg.fill.sm` | `VideoKit.Segmented` | 24pt; each segment its own width plus an equal share of what is left, every label whole or it becomes a `VideoKit.Dropdown` (the `.seg` rule: words that do not fit mean the wrong control); 6pt label padding where the mock says 8 |
+| `.seg`, `.seg.sm`, `.seg.lg`, `.seg.fill`, `.seg.icons` | `SegmentedControl` (app, `Sources/Photonz/DesignSystem`) | not a kit piece: the one segmented control the whole app uses, see "The one segmented control" below |
 
 One deliberate difference: the kit's accent is the app's system accent, not
 `--accent`, so a window never shows two blues.
+
+### The one segmented control
+
+`SegmentedControl` (`Sources/Photonz/DesignSystem/SegmentedControl.swift`) is
+the ONLY segmented control in the app: panel rows, popovers, dialogs, the
+history bar and the title bar's View | Edit all use it. It is
+`comp-segmented.html` built once: a capsule track, one raised plate that moves
+on the mock's spring rather than fading, 24 / 28 / 32 heights (28 is the
+panel's), `.fill` equal columns in a panel or popover and `.natural` widths in a
+row of other controls, picture segments that are square and named by their
+tooltips, and a dropdown in its place when the words would be cut short. Never
+`Picker` with `.segmented`, never `NSSegmentedControl`:
+`SegmentedControlUsageTests` fails the build on either. In Current (the
+`next-designed-segmented` switch off) it hands back the system control, so
+Current keeps its look. Each segment is pressed by a walk by its word (a picture
+segment by its tooltip word) and reads `already on …, tooltip …` like the
+system control did.
 
 **What was withdrawn with the old D18**: numbered rows being "wrong", a row per
 layer, a row named after its layer, a 92px lowercase label column, a clip's

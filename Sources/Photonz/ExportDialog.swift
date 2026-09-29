@@ -441,19 +441,12 @@ struct ExportDialog: View {
             // the label cannot break, and a format added later makes the
             // segments narrower instead of breaking the word beside them.
             labelledRow("Format") {
-                Picker("Format", selection: $choice) {
-                    Text("PNG").tag(ExportChoice.picture(.png))
-                    Text("JPEG").tag(ExportChoice.picture(.jpeg))
-                    Text("HEIC").tag(ExportChoice.picture(.heic))
-                    if offersWebP {
-                        Text("WebP").tag(ExportChoice.picture(.webp))
-                    }
-                    if offersSVG {
-                        Text("SVG").tag(ExportChoice.svg)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
+                SegmentedControl("Format", selection: $choice,
+                                 options: [.init(ExportChoice.picture(.png), "PNG"),
+                                           .init(ExportChoice.picture(.jpeg), "JPEG"),
+                                           .init(ExportChoice.picture(.heic), "HEIC")]
+                                    + (offersWebP ? [.init(ExportChoice.picture(.webp), "WebP")] : [])
+                                    + (offersSVG ? [.init(ExportChoice.svg, "SVG")] : []))
             }
             if asksWhereItIsGoing {
                 handoffNote
@@ -462,12 +455,8 @@ struct ExportDialog: View {
                 vectorNote
             } else {
                 labelledRow("Scale") {
-                    Picker("Scale", selection: $scale) {
-                        Text("1×").tag(CGFloat(1))
-                        Text("2×").tag(CGFloat(2))
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
+                    SegmentedControl("Scale", selection: $scale,
+                                     options: [.init(CGFloat(1), "1×"), .init(CGFloat(2), "2×")])
                 }
                 if let size = exportedSize {
                     Text("\(Int(size.width * scale)) × \(Int(size.height * scale)) px")

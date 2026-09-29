@@ -472,6 +472,17 @@ struct FeatureCatalogTests {
         #expect(!FeatureCatalog.defaultSettings(for: .current).isEnabled(FeatureCatalog.oneGlassToolBarFlag))
     }
 
+    @Test func theDesignedSegmentedFlagIsNextOnlyAndOnByDefault() {
+        // Every row of side-by-side choices is the design system's segmented
+        // control, a capsule with one plate that slides. Next only; Current
+        // keeps the system's segmented control.
+        #expect(FeatureCatalog.designedSegmentedFlag == "next-designed-segmented")
+        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.designedSegmentedFlag))
+        #expect(FeatureCatalog.flags(for: .next).contains { $0.name == FeatureCatalog.designedSegmentedFlag })
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.designedSegmentedFlag })
+        #expect(!FeatureCatalog.defaultSettings(for: .current).isEnabled(FeatureCatalog.designedSegmentedFlag))
+    }
+
     @Test func theToolBarFeedbackFlagIsNextOnlyAndOnByDefault() {
         // Tool bar buttons show the shared hover fill and pressed shrink that
         // every other icon button in the app has. Next only; Current keeps

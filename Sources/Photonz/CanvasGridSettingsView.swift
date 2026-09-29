@@ -92,12 +92,11 @@ struct CanvasGridControls: View {
                 // floating between two checkboxes, and a first timer had no
                 // way to tell what they were choosing between.
                 stackedRow(CanvasGridCopy.lines, caption: CanvasGridCopy.linesCaption) {
-                    Picker(CanvasGridCopy.lines, selection: Binding(
-                        get: { grid.axes },
-                        set: { editorState.setCanvasGridAxes($0) })) {
-                        ForEach(CanvasGridAxes.allCases, id: \.self) { Text($0.label).tag($0) }
+                    SegmentedControl(CanvasGridCopy.lines, selection: grid.axes,
+                                     options: CanvasGridAxes.allCases.map { .init($0, $0.label) }) {
+                        editorState.setCanvasGridAxes($0)
                     }
-                    .labelsHidden().pickerStyle(.segmented).controlSize(.small)
+                    .controlSize(.small)
                     .help(CanvasGridCopy.linesCaption)
                 }
                 numberRow(CanvasGridCopy.spacing, caption: CanvasGridCopy.spacingCaption,

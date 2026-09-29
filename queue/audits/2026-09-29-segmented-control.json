@@ -1,0 +1,32 @@
+{
+  "feature": "The View | Edit switch, and every segmented choice, is the design system's segmented control",
+  "epic": "design-system",
+  "summary": "The View | Edit switch at the top right of a recording is now the component from the design system page: a soft capsule with one raised plate that slides to your pick. Every other row of side-by-side choices in the app (panel rows, the colour picker, the export sheets, the history bar) is the same control.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open any screen recording.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording. It opens in View: look at the View | Edit switch at the top right of the title bar.", "shot": "2026-09-29-segmented-control-titlebar-view-sc.png" },
+    { "do": "Click Edit on the switch and watch the plate slide across to it.", "shot": "2026-09-29-segmented-control-titlebar-edit-sc.png" },
+    { "do": "Press Cmd-1, then Cmd-2, then E, and watch the plate follow each time." },
+    { "do": "Rest the pointer on View: its tooltip names it and its key." },
+    { "do": "Draw a rectangle, group it (Cmd-G) and pick Stack in the panel's Arrangement row: the same control, filling the row." },
+    { "do": "Compare every size and state side by side with the component page: the app first, then the page.", "shot": "2026-09-29-segmented-control-app-dark.png" },
+    { "do": "The page's Sizes and States sections, for the comparison.", "shot": "2026-09-29-segmented-control-mock-sizes.png" },
+    { "do": "The same app sheet in light mode.", "shot": "2026-09-29-segmented-control-app-light.png" }
+  ],
+  "evaluate": [
+    "Does the View | Edit switch now read as the same control as the rows in the panel?",
+    "Is the title bar switch the right height beside the panel button (24pt, the small size), or should it be taller?",
+    "Is the picked plate easy enough to find on the dark title bar?",
+    "Does the plate's slide feel quick and settled, or does its small overshoot feel bouncy?"
+  ],
+  "rough": [
+    "The title bar switch uses the small 24pt size so it matches the panel button beside it; the page says a tool bar switch is 32pt, but a Mac title bar is only 28pt tall.",
+    "Focus: the ring sits round the picked plate, because arrow keys move the pick. The page's picture rings one segment that is not picked.",
+    "In a panel the segments take equal columns when their words fit an equal share, and otherwise each keeps its own width and shares out the rest, so a long word is never cut while the row has room for it. The page draws strict equal columns.",
+    "When the words would be cut short the control becomes a dropdown, and that dropdown's face is 24pt tall where the page's menu trigger stays 28pt.",
+    "Panel rows are now 28pt tall, the page's panel size, where the system control was about 20pt. Sections with several of them are a little taller than before.",
+    "In walks, the Across alignment segments are now pressed as Left, Center and Right (their tooltip words) rather than the system's 'align left' names; five walks were updated.",
+    "The pictures of every state come from Scripts/segmented-gallery.swift (an offscreen render of the shipped control), not from the running app; the title bar pictures are real captures."
+  ]
+}

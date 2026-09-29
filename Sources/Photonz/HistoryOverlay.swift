@@ -106,13 +106,11 @@ struct HistoryOverlay: View {
         // trailing edge (a ZStack, so the button's width never shifts the picker
         // off-center the way an HStack + Spacer would).
         ZStack {
-            Picker("Filter captures", selection: $filter) {
-                ForEach(CaptureFilter.allCases, id: \.self) { option in
-                    Text(option.title).tag(option)
-                }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
+            // The history bar is the one place the mocks light the picked
+            // filter in the accent (`history.css`).
+            SegmentedControl("Filter captures", selection: $filter,
+                             options: CaptureFilter.allCases.map { .init($0, $0.title) },
+                             form: .natural, plateStyle: .accent)
             .fixedSize()
             .toolTip("Filter the history by capture type", below: true)
 

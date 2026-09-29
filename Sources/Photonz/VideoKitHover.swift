@@ -14,9 +14,7 @@ extension View {
 }
 
 /// How a kit piece names something a walk can press, for the same reason:
-/// the kit cannot name `playtestControl`, so it asks for this. A segment of
-/// `VideoKit.Segmented` is pressed by its words, the way a segment of a
-/// system segmented control already is.
+/// the kit cannot name `playtestControl`, so it asks for this.
 extension View {
     func kitControl(_ name: String, detail: String = "") -> some View {
         playtestControl(name, detail: detail)

@@ -59,7 +59,7 @@
     { "do": "tool", "tool": "select" },
     { "do": "click", "at": [180, 145] },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "press", "control": "align center", "in": "Across" },
+    { "do": "press", "control": "Center", "in": "Across" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "click", "at": [180, 145] },
     { "do": "click", "at": [200, 312], "modifiers": ["shift"] },

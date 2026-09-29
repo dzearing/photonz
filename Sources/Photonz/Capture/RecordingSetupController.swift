@@ -108,11 +108,12 @@ private struct RecordingSetupView: View {
             Text("Record Screen")
                 .font(.title3.weight(.semibold))
 
-            Picker("Capture", selection: $source) {
-                Text("Full Screen").tag(SourceChoice.full)
-                Text("Region…").tag(SourceChoice.region)
+            HStack(spacing: 8) {
+                Text("Capture")
+                SegmentedControl("Capture", selection: $source,
+                                 options: [.init(SourceChoice.full, "Full Screen"),
+                                           .init(SourceChoice.region, "Region…")])
             }
-            .pickerStyle(.segmented)
 
             VStack(alignment: .leading, spacing: 10) {
                 Toggle("System Audio", isOn: $systemAudio)

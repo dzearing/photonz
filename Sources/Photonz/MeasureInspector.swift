@@ -86,13 +86,12 @@ struct MeasureInspector: View {
                 // guides are their own kind, so they don't offer it.
                 if showsLookControls, Experiments.shared.measureRolesEnabled, c.alignment == nil {
                     row("Role") {
-                        Picker("Role", selection: Binding(
-                            get: { c.role },
-                            set: { editorState.setMeasureRole($0) })) {
-                            Text("Size").tag(MeasureRole.size)
-                            Text("Spacing").tag(MeasureRole.spacing)
+                        SegmentedControl("Role", selection: c.role,
+                                         options: [.init(MeasureRole.size, "Size"),
+                                                   .init(MeasureRole.spacing, "Spacing")]) {
+                            editorState.setMeasureRole($0)
                         }
-                        .labelsHidden().pickerStyle(.segmented).controlSize(.small)
+                        .controlSize(.small)
                         .panelHelp("What this measurement calls out. Switching applies that "
                               + "role's remembered colors, and new measurements start "
                               + "with the last-used role.")
@@ -100,27 +99,24 @@ struct MeasureInspector: View {
                 }
                 if showsLookControls {
                 row("Unit") {
-                    Picker("Unit", selection: Binding(
-                        get: { c.unit },
-                        set: { editorState.setMeasureUnit($0) })) {
-                        // "Logical" = on-screen/design size (points); "Actual" =
-                        // raw bitmap pixels (2× on a Retina screenshot).
-                        Text("Logical").tag(MeasureUnit.points)
-                        Text("Actual").tag(MeasureUnit.pixels)
+                    // "Logical" = on-screen/design size (points); "Actual" =
+                    // raw bitmap pixels (2× on a Retina screenshot).
+                    SegmentedControl("Unit", selection: c.unit,
+                                     options: [.init(MeasureUnit.points, "Logical"),
+                                               .init(MeasureUnit.pixels, "Actual")]) {
+                        editorState.setMeasureUnit($0)
                     }
-                    .labelsHidden().pickerStyle(.segmented).controlSize(.small)
+                    .controlSize(.small)
                     .panelHelp("Both read out in px. Logical is the on-screen size (like CSS px, the "
                           + "default); Actual is raw device pixels, 2× larger on a Retina screenshot.")
                 }
                 row("Thickness") {
-                    Picker("Thickness", selection: Binding(
-                        get: { c.strokeWidth },
-                        set: { editorState.setMeasureThickness($0) })) {
-                        Text("1 px").tag(CGFloat(1))
-                        Text("2 px").tag(CGFloat(2))
-                        Text("3 px").tag(CGFloat(3))
+                    SegmentedControl("Thickness", selection: c.strokeWidth,
+                                     options: [.init(CGFloat(1), "1 px"), .init(CGFloat(2), "2 px"),
+                                               .init(CGFloat(3), "3 px")]) {
+                        editorState.setMeasureThickness($0)
                     }
-                    .labelsHidden().pickerStyle(.segmented).controlSize(.small)
+                    .controlSize(.small)
                 }
                 row("Label size") {
                     // During a drag the committed doc hasn't changed, so read the

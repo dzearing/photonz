@@ -100,7 +100,7 @@
     },
     {
       "do": "press",
-      "control": "align center",
+      "control": "Center",
       "in": "Across"
     },
     {
@@ -223,7 +223,7 @@
     },
     {
       "do": "reveal",
-      "control": "align center",
+      "control": "Center",
       "in": "Across"
     },
     {
@@ -232,7 +232,7 @@
     },
     {
       "do": "press",
-      "control": "align center",
+      "control": "Center",
       "in": "Across"
     },
     {

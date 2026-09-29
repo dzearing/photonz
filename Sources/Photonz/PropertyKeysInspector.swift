@@ -199,8 +199,11 @@ private struct MotionPathRow: View {
         // this row one column (`grid-template-columns:1fr`), unlike Curve.
         VStack(alignment: .leading, spacing: 4) {
             PanelRowLabel(text: "Path")
-            VideoKit.Segmented(options: MotionPathShape.allCases.map { ($0, $0.title) },
-                               selection: shape) { editorState.setMotionPathShape($0) }
+            SegmentedControl("Path", selection: shape,
+                             options: MotionPathShape.allCases.map { .init($0, $0.title) },
+                             fallsBackToSystem: false) {
+                editorState.setMotionPathShape($0)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, 2)

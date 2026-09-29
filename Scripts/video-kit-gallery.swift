@@ -191,12 +191,6 @@ struct ControlsSheet: View {
                                                                   endPoint: .bottomTrailing)))
             }
             K.FieldRow(label: "Variant") { K.SelectFace(value: "Name + role", isComponent: true) }
-            K.Segmented(options: [(0, "Caption"), (1, "Lower third"), (2, "Karaoke")],
-                        selection: 0) { _ in }
-            K.FieldRow(label: "Position") {
-                K.Segmented(options: [(0, "Bottom"), (1, "Middle"), (2, "Top")],
-                            selection: 0) { _ in }
-            }
         }
         .padding(12)
         .frame(width: 260, alignment: .leading)

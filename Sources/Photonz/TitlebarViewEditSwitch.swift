@@ -7,9 +7,11 @@ import SwiftUI
 // panel toggle (`TitlebarPanelToggle`), to that button's left, so the two can
 // never swap places whichever was installed first.
 //
-// A real NSSegmentedControl rather than a drawn one: a switch in a Mac title
-// bar is the system's own control, with the system's glass and the system's
-// press, the way Finder's view switcher and Xcode's editor switcher are.
+// The design system's segmented control (`SegmentedControl`), at the small
+// size so it stands exactly as tall as the panel toggle beside it. Until
+// 2026-09-29 this was a bare NSSegmentedControl, and the user turned it down:
+// the switch is the component on `comp-segmented.html`, like every other row
+// of side-by-side choices in the app.
 
 extension Animation {
     /// View and Edit coming and going: everything that folds away does it on
@@ -18,18 +20,22 @@ extension Animation {
 }
 
 /// The switch as it sits in the title bar: the control, plus a marker over
-/// each half so a walk can press View or Edit by name.
+/// each half so a walk can press View Mode or Edit Mode by name.
 struct TitlebarViewEditSwitch: View {
     @Environment(EditorState.self) private var editorState
 
-    /// Wide enough for both words at the system's size, and no wider.
-    static let width: CGFloat = 108
+    /// Wide enough for both words at the small size, in equal halves.
+    static let width: CGFloat = 96
     /// Between the switch and the panel toggle.
     static let gap: CGFloat = 6
 
     var body: some View {
         let mode = editorState.viewEditMode
-        ViewEditSegmentedControl(mode: mode) { editorState.setViewEditMode($0) }
+        SegmentedControl("View or Edit", selection: mode,
+                         options: ViewEditMode.allCases.map { each in
+                             .init(each, each.title, key: "⌘\(each.commandKey)")
+                         },
+                         size: .small, tipsBelow: true) { editorState.setViewEditMode($0) }
             .frame(width: Self.width)
             .overlay {
                 HStack(spacing: 0) {
@@ -43,46 +49,5 @@ struct TitlebarViewEditSwitch: View {
                 .allowsHitTesting(false)
             }
             .panelReadout("\(mode.title) mode")
-    }
-}
-
-/// The system's segmented control, two segments, one picked.
-struct ViewEditSegmentedControl: NSViewRepresentable {
-    let mode: ViewEditMode
-    let pick: (ViewEditMode) -> Void
-
-    func makeNSView(context: Context) -> NSSegmentedControl {
-        let control = NSSegmentedControl(labels: ViewEditMode.allCases.map(\.title),
-                                         trackingMode: .selectOne,
-                                         target: context.coordinator,
-                                         action: #selector(Coordinator.changed(_:)))
-        control.segmentStyle = .automatic
-        control.controlSize = .small
-        control.segmentDistribution = .fillEqually
-        control.setAccessibilityLabel("View or Edit")
-        for (index, each) in ViewEditMode.allCases.enumerated() {
-            control.setToolTip("\(each.title) (⌘\(each.commandKey))", forSegment: index)
-        }
-        return control
-    }
-
-    func updateNSView(_ control: NSSegmentedControl, context: Context) {
-        context.coordinator.pick = pick
-        let index = ViewEditMode.allCases.firstIndex(of: mode) ?? 0
-        if control.selectedSegment != index { control.selectedSegment = index }
-    }
-
-    func makeCoordinator() -> Coordinator { Coordinator(pick: pick) }
-
-    @MainActor
-    final class Coordinator: NSObject {
-        var pick: (ViewEditMode) -> Void
-        init(pick: @escaping (ViewEditMode) -> Void) { self.pick = pick }
-
-        @objc func changed(_ control: NSSegmentedControl) {
-            let all = ViewEditMode.allCases
-            guard all.indices.contains(control.selectedSegment) else { return }
-            pick(all[control.selectedSegment])
-        }
     }
 }

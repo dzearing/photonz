@@ -107,4 +107,15 @@ if (( status == 0 )); then
   fi
 fi
 
+# The segmented control's gallery (Scripts/segmented-gallery.swift) draws the
+# shipped control beside comp-segmented.html from its own file and the kit.
+if (( status == 0 )); then
+  if ! swiftc -typecheck -parse-as-library -swift-version 6 \
+      Sources/Photonz/VideoKit/*.swift Sources/Photonz/DesignSystem/SegmentedControl.swift \
+      Scripts/segmented-gallery.swift; then
+    echo "==> The segmented control no longer draws on its own: Scripts/segmented-gallery.swift is out of step."
+    status=1
+  fi
+fi
+
 exit "$status"

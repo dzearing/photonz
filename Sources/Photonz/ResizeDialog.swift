@@ -32,15 +32,10 @@ struct ResizeDialog: View {
                 .fixedSize()
             }
 
-            Picker("Unit", selection: Binding(
-                get: { model.unit },
-                set: { model.setUnit($0) })) {
-                ForEach(ResizeModel.Unit.allCases, id: \.self) { unit in
-                    Text(unit.label).tag(unit)
-                }
+            SegmentedControl("Unit", selection: model.unit,
+                             options: ResizeModel.Unit.allCases.map { .init($0, $0.label) }) {
+                model.setUnit($0)
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
 
             HStack(spacing: 10) {
                 field("Width", value: model.width) { model.setWidth($0) }

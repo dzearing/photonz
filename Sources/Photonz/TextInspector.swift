@@ -141,34 +141,30 @@ struct TextInspector: View {
         let down = selection.reading { $0.usedVerticalAlignment }
         return PanelPair {
             captioned("Across", isMixed: across.isMixed) {
-                Picker("Words across the box", selection: Binding<TextAlign?>(
-                    get: { across.isMixed ? nil : across.value },
-                    set: { if let v = $0 { editorState.setTextAlignment(ids: ids, v) } })) {
-                    ForEach(TextAlign.allCases, id: \.self) { align in
-                        Image(systemName: align.symbolName).tag(TextAlign?.some(align))
-                    }
-                }
-                .pickerStyle(.segmented).labelsHidden().controlSize(.small)
                 // Left, Center, Right, one on each picture, from the same
                 // `allCases` that built them.
-                .segmentToolTips(TextAlign.allCases.map(\.title),
-                                 fallback: across.isMixed
+                SegmentedControl("Words across the box", selection: across.isMixed ? nil : across.value,
+                                 options: TextAlign.allCases.map {
+                                     .init($0, $0.title, image: Image(systemName: $0.symbolName))
+                                 },
+                                 form: .natural, showsTitles: false,
+                                 systemHelp: across.isMixed
                                  ? "The picked layers sit their words differently across the box. Choosing one sets all of them."
-                                 : "Where the words sit across the box")
+                                 : "Where the words sit across the box") {
+                    editorState.setTextAlignment(ids: ids, $0)
+                }
+                .controlSize(.small)
             }
             captioned("Down", isMixed: down.isMixed) {
-                Picker("Words down the box", selection: Binding<TextVerticalAlign?>(
-                    get: { down.isMixed ? nil : down.value },
-                    set: { if let v = $0 { editorState.setTextAlignment(ids: ids, v) } })) {
-                    ForEach(TextVerticalAlign.allCases, id: \.self) { align in
-                        align.glyph.tag(TextVerticalAlign?.some(align))
-                    }
-                }
-                .pickerStyle(.segmented).labelsHidden().controlSize(.small)
-                .segmentToolTips(TextVerticalAlign.allCases.map(\.title),
-                                 fallback: down.isMixed
+                SegmentedControl("Words down the box", selection: down.isMixed ? nil : down.value,
+                                 options: TextVerticalAlign.allCases.map { .init($0, $0.title, image: $0.glyph) },
+                                 form: .natural, showsTitles: false,
+                                 systemHelp: down.isMixed
                                  ? "The picked layers sit their words differently down the box. Choosing one sets all of them."
-                                 : "Where the words sit down the box")
+                                 : "Where the words sit down the box") {
+                    editorState.setTextAlignment(ids: ids, $0)
+                }
+                .controlSize(.small)
             }
         }
     }

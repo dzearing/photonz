@@ -81,13 +81,9 @@ struct ToolSettingsCapsule: View {
         case .calloutShape:
             // Two choices, so both stay on screen: picking a circle is one
             // click, not a menu and then a click.
-            Picker("Shape", selection: $state.calloutToolShape) {
-                ForEach(ZoomCalloutShape.allCases, id: \.self) { shape in
-                    Text(shape.title).tag(shape)
-                }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
+            SegmentedControl("Shape", selection: $state.calloutToolShape,
+                             options: ZoomCalloutShape.allCases.map { .init($0, $0.title) },
+                             form: .natural)
             .controlSize(.small)
             .fixedSize()
             .help("What the next one is drawn in. One already on the canvas is "

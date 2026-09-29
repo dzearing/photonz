@@ -208,15 +208,12 @@ struct DesignedColorPicker: View {
     // MARK: - 4 · Which numbers you are sliding
 
     private var formatSwitch: some View {
-        Picker("Color format", selection: $format) {
-            ForEach(ColorFormat.allCases, id: \.self) { Text($0.title).tag($0) }
-        }
-        .pickerStyle(.segmented)
-        .labelsHidden()
+        SegmentedControl("Color format", selection: $format,
+                         options: ColorFormat.allCases.map { .init($0, $0.title) })
         .controlSize(.small)
         .panelHelp("Which numbers you are sliding. HEX is also where a pasted color goes.")
-        // A real segmented control, so HSL, RGB and HEX read straight off it;
-        // the marker only lends them the row they are on.
+        // Each segment names itself for a walk; the marker only lends them
+        // the row they are on.
         .playtestField("Color format")
     }
 
@@ -299,11 +296,8 @@ struct DesignedColorPicker: View {
 
     private var swatchRow: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Picker("Swatches", selection: $scopeName) {
-                ForEach(Scope.allCases) { Text($0.title).tag($0.rawValue) }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
+            SegmentedControl("Swatches", selection: $scopeName,
+                             options: Scope.allCases.map { .init($0.rawValue, $0.title) })
             .controlSize(.small)
             .playtestField("Swatches")
 

@@ -82,14 +82,13 @@ struct MeasurePartSettings: View {
         let reading = editorState.measureReading(ids) { $0.strokeWidth }
         return HStack(spacing: 8) {
             Text("Thickness").font(.caption).foregroundStyle(.secondary)
-            Picker("Thickness", selection: Binding(
-                get: { reading ?? 1 },
-                set: { editorState.setMeasureThickness(ids: ids, $0) })) {
-                Text("1 px").tag(CGFloat(1))
-                Text("2 px").tag(CGFloat(2))
-                Text("3 px").tag(CGFloat(3))
+            SegmentedControl("Thickness", selection: reading ?? 1,
+                             options: [.init(CGFloat(1), "1 px"), .init(CGFloat(2), "2 px"),
+                                       .init(CGFloat(3), "3 px")],
+                             form: .natural) {
+                editorState.setMeasureThickness(ids: ids, $0)
             }
-            .labelsHidden().pickerStyle(.segmented).controlSize(.small)
+            .controlSize(.small)
             .panelHelp("How thick the caliper is drawn. Its colour is the row above.")
             Spacer(minLength: 0)
         }
@@ -196,13 +195,13 @@ struct MeasureChipSettings: View {
     private func unit(_ c: MeasureContent) -> some View {
         HStack(spacing: 8) {
             Text("Unit").font(.caption).foregroundStyle(.secondary)
-            Picker("Unit", selection: Binding(
-                get: { c.unit },
-                set: { editorState.setMeasureUnit($0) })) {
-                Text("Logical").tag(MeasureUnit.points)
-                Text("Actual").tag(MeasureUnit.pixels)
+            SegmentedControl("Unit", selection: c.unit,
+                             options: [.init(MeasureUnit.points, "Logical"),
+                                       .init(MeasureUnit.pixels, "Actual")],
+                             form: .natural) {
+                editorState.setMeasureUnit($0)
             }
-            .labelsHidden().pickerStyle(.segmented).controlSize(.small)
+            .controlSize(.small)
             .panelHelp("Both read out in px. Logical is the on-screen size (like CSS px, the "
                   + "default); Actual is raw device pixels, 2× larger on a Retina screenshot.")
             Spacer(minLength: 0)
@@ -224,13 +223,13 @@ struct MeasureRoleRow: View {
            let c = editorState.selectedMeasureLayer?.measure, c.alignment == nil {
             HStack(spacing: 8) {
                 Text("Role").font(.caption).foregroundStyle(.secondary)
-                Picker("Role", selection: Binding(
-                    get: { c.role },
-                    set: { editorState.setMeasureRole($0) })) {
-                    Text("Size").tag(MeasureRole.size)
-                    Text("Spacing").tag(MeasureRole.spacing)
+                SegmentedControl("Role", selection: c.role,
+                                 options: [.init(MeasureRole.size, "Size"),
+                                           .init(MeasureRole.spacing, "Spacing")],
+                                 form: .natural) {
+                    editorState.setMeasureRole($0)
                 }
-                .labelsHidden().pickerStyle(.segmented).controlSize(.small)
+                .controlSize(.small)
                 .panelHelp("What this measurement calls out. Switching applies that role's "
                       + "remembered colors, and new measurements start with the last-used role.")
                 Spacer(minLength: 0)

@@ -398,7 +398,7 @@
     },
     {
       "do": "reveal",
-      "control": "align center"
+      "control": "Center"
     },
     {
       "do": "press",

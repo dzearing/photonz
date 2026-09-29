@@ -77,6 +77,8 @@ public enum FeatureCatalog {
 
     public static let toolTipsFlag = "next-tool-tips"
 
+    public static let designedSegmentedFlag = "next-designed-segmented"
+
     public static let blankCanvasFlag = "next-blank-canvas"
 
     public static let blankVideoFlag = "next-blank-video"
@@ -541,6 +543,16 @@ public enum FeatureCatalog {
                     title: "The tool bar is one glass bar",
                     description: "The tools, More, the colour pair and the zoom sit in one glass bar with a hairline between each, on pictures and videos alike. Off means each is its own glass capsule.",
                     area: .tools,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: designedSegmentedFlag,
+                    title: "Side-by-side choices slide",
+                    description: "Every row of side-by-side choices is a soft capsule with one raised plate that slides to what you pick, the View and Edit switch included. Off means the system's segmented control.",
+                    area: .appearance,
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

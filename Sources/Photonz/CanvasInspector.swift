@@ -135,12 +135,11 @@ struct CollageInspector: View {
         if let c = content {
             VStack(alignment: .leading, spacing: 8) {
                 field("Layout") {
-                    Picker("Layout", selection: Binding(
-                        get: { c.template },
-                        set: { value in editorState.updateCollage(layerID: layer.id) { $0.template = value } })) {
-                        ForEach(CollageTemplate.allCases, id: \.self) { Text($0.label).tag($0) }
+                    SegmentedControl("Layout", selection: c.template,
+                                     options: CollageTemplate.allCases.map { .init($0, $0.label) }) { value in
+                        editorState.updateCollage(layerID: layer.id) { $0.template = value }
                     }
-                    .labelsHidden().pickerStyle(.segmented).controlSize(.small)
+                    .controlSize(.small)
                 }
                 field("Photos") {
                     Stepper("\(c.slots.count) slots", value: Binding(

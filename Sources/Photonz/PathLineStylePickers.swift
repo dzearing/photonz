@@ -127,20 +127,14 @@ where Value.AllCases: RandomAccessCollection {
                 }
                 Spacer(minLength: 0)
             }
-            Picker(label, selection: Binding<Value?>(
-                get: { reading.isMixed ? nil : reading.value },
-                set: { if let value = $0 { pick(value) } })) {
-                ForEach(Array(Value.allCases), id: \.self) { value in
-                    glyph(value).tag(Value?.some(value))
-                }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .controlSize(.small)
-            .segmentToolTips(Array(Value.allCases).map(title),
-                             fallback: reading.isMixed
+            SegmentedControl(label, selection: reading.isMixed ? nil : reading.value,
+                             options: Array(Value.allCases).map { .init($0, title($0), image: glyph($0)) },
+                             form: .natural, showsTitles: false,
+                             systemHelp: reading.isMixed
                              ? "The picked shapes differ. Choosing one sets all of them."
-                             : (reading.value.map(help) ?? ""))
+                             : (reading.value.map(help) ?? ""),
+                             pick: pick)
+            .controlSize(.small)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .playtestField(label)

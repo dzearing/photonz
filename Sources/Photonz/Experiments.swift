@@ -299,6 +299,11 @@ extension Experiments {
     /// its separate capsules.
     var oneGlassToolBarEnabled: Bool { isEnabled(FeatureCatalog.oneGlassToolBarFlag) }
 
+    /// `next-designed-segmented`: whether every segmented choice is the design
+    /// system's drawn control (`SegmentedControl`) rather than the system's.
+    /// Next only, so Current keeps the system control.
+    var designedSegmentedEnabled: Bool { isEnabled(FeatureCatalog.designedSegmentedFlag) }
+
     /// The floating bar in use: the one glass bar as `video.html` sizes it,
     /// or Current's separate capsules. Everything that has to clear the bar
     /// (a fit, the notice pill, the capsules stacked above it) reads its

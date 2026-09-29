@@ -76,15 +76,13 @@ struct ArrowheadStylePicker: View, Equatable {
     }
 
     var body: some View {
-        Picker("Ending", selection: Binding<ArrowheadStyle?>(
-            get: { isMixed ? nil : selection },
-            set: { if let style = $0 { pick(style) } })) {
-            ForEach(ArrowheadStyle.allCases, id: \.self) { style in
-                style.glyph.tag(ArrowheadStyle?.some(style))
-            }
-        }
-        .pickerStyle(.segmented)
-        .labelsHidden()
+        SegmentedControl("Ending", selection: isMixed ? nil : selection,
+                         options: ArrowheadStyle.allCases.map { .init($0, $0.title, image: $0.glyph) },
+                         form: .natural, showsTitles: false,
+                         systemHelp: isMixed
+                         ? "The picked arrows end differently. Choosing one ending sets all of them."
+                         : (selection ?? .standard).help,
+                         pick: pick)
         .controlSize(.small)
         // Each ending names itself. Before this the whole row shared one
         // tooltip, so resting on the hollow dot described whichever ending

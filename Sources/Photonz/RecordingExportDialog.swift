@@ -139,24 +139,14 @@ struct RecordingExportDialog: View {
             Text("Export")
                 .font(.headline)
             ExportSheetRow("Format") {
-                Picker("Format", selection: $format) {
-                    ForEach(RecordingExport.formats, id: \.self) { format in
-                        Text(RecordingExport.shortName(format)).tag(format)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
+                SegmentedControl("Format", selection: $format,
+                                 options: RecordingExport.formats.map { .init($0, RecordingExport.shortName($0)) })
             }
             if offersQuality {
                 ExportSheetRow("Quality") {
                     VStack(alignment: .leading, spacing: 4) {
-                        Picker("Quality", selection: $quality) {
-                            ForEach(VideoExportQuality.allCases, id: \.self) { quality in
-                                Text(quality.shortLabel).tag(quality)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .labelsHidden()
+                        SegmentedControl("Quality", selection: $quality,
+                                         options: VideoExportQuality.allCases.map { .init($0, $0.shortLabel) })
                         // Three words on a row say which is bigger. This is the
                         // line that says which one you want, and it is beside
                         // the choice rather than under the whole sheet, because

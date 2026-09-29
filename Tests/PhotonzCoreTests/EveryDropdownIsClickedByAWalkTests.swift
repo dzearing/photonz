@@ -42,9 +42,11 @@ struct EveryDropdownIsClickedByAWalkTests {
         var built = 0
         var sites: [String] = []
         for case let file as URL in walk where file.pathExtension == "swift" {
-            // The kit's own fallback (a segmented bar too narrow for its
-            // words) is named by the row it stands in.
-            guard !file.path.contains("/VideoKit/") else { continue }
+            // The segmented control's own fallback (a bar too narrow for its
+            // words) is named by the row it stands in, as is anything the kit
+            // builds inside itself.
+            guard !file.path.contains("/VideoKit/"),
+                  !file.path.hasSuffix("/DesignSystem/SegmentedControl.swift") else { continue }
             let lines = try String(contentsOf: file, encoding: .utf8)
                 .split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
             for (index, line) in lines.enumerated()

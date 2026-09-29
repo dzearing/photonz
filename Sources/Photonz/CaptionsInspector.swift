@@ -359,15 +359,15 @@ struct CaptionsTextInspector: View {
             .playtestField("Caption shadow")
             VStack(alignment: .leading, spacing: 2) {
                 Text("Align").font(.caption).foregroundStyle(.secondary)
-                Picker("Align", selection: Binding<TextAlign>(
-                    get: { look.alignment },
-                    set: { align in editorState.setCaption(.align, to: .align(align)) })) {
-                    ForEach(TextAlign.allCases, id: \.self) { align in
-                        Image(systemName: align.symbolName).tag(align)
-                    }
+                SegmentedControl("Align", selection: look.alignment,
+                                 options: TextAlign.allCases.map {
+                                     .init($0, $0.title, image: Image(systemName: $0.symbolName))
+                                 },
+                                 form: .natural, showsTitles: false,
+                                 systemHelp: "Where the words sit across the box") { align in
+                    editorState.setCaption(.align, to: .align(align))
                 }
-                .pickerStyle(.segmented).labelsHidden().controlSize(.small)
-                .segmentToolTips(TextAlign.allCases.map(\.title), fallback: "Where the words sit across the box")
+                .controlSize(.small)
             }
             .playtestField("Caption align")
         }

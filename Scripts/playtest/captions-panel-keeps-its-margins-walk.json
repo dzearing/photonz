@@ -112,7 +112,7 @@
     },
     {
       "do": "reveal",
-      "control": "align left"
+      "control": "Left"
     },
     {
       "do": "wait",
@@ -234,7 +234,7 @@
     },
     {
       "do": "reveal",
-      "control": "align left"
+      "control": "Left"
     },
     {
       "do": "wait",

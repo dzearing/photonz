@@ -25,7 +25,8 @@ struct CaptionWordsInspector: View {
             .panelHelp("How many words are on screen at a time.")
             if look.show.usesLines {
                 VideoKit.FieldRow(label: "Lines") {
-                    VideoKit.Segmented(options: [(1, "1"), (2, "2")], selection: look.lines) { lines in
+                    SegmentedControl("Lines", selection: look.lines, options: [.init(1, "1"), .init(2, "2")],
+                                     fallsBackToSystem: false) { lines in
                         set(.lines, .count(lines))
                     }
                     .playtestControl("Caption lines", detail: "the Captions section")
