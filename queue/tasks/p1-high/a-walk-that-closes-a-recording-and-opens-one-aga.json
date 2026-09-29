@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T11:24:19.461Z",
-  "updated": "2026-09-29T12:28:00.558Z",
+  "updated": "2026-09-29T12:55:49.027Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-29 on main at 8e594bb1 (source edits stashed, probe rebuilt) and again with them: /tmp/ptl/close-reopen-walk.json = setup {timelineOpen:true, forget:[all]}; steps openSampleRecording, wait 2, videoPause, wait 0.5, closeDocument, openSampleRecording, wait 2, snapshot. `Scripts/playtest.sh /tmp/ptl/close-reopen-walk.json` -> 'Verdict: CRASHED EXC_BAD_ACCESS (SIGSEGV) in closure #1 in MainThreadMeter.install() < static PhotonzApp.$main()'. Top frames: swift_getObjectType < swift_task_isMainExecutorImpl < SerialExecutorRef::isMainExecutor < swift_task_isCurrentExecutorWithFlagsImpl < closure #1 in MainThreadMeter.install() < CFRunLoopObserver callout < -[NSApplication run]. So it is the executor-isolation check Swift inserts at the top of the run loop observer's closure (PlaytestHarness.swift, MainThreadMeter.install, [unowned self] on a never-freed singleton), reading a bad executor pointer after closeDocument. Reports: ~/Library/Logs/DiagnosticReports/Photonz Probe-2026-09-29-0418*.ips. Likely fix: make the observer body nonisolated (MainActor.assumeIsolated or plain nonisolated state) so no executor check runs from a CF callout, then find what closeDocument leaves dangling. Found by the timeline-dock-resize task, whose walk dropped its close/reopen step because of this. Checked: a-video-window-says-its-name-walk (closes a recording, then opens a PNG) passes, so closing alone is not enough; it is reopening a recording after the close.",
@@ -34,7 +34,27 @@
     {
       "t": "2026-09-29T12:28:00.557Z",
       "note": "seq 400 -> 10"
+    },
+    {
+      "t": "2026-09-29T12:30:34.994Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T12:55:36.406Z",
+      "note": "walks none -> timeline-dock-resizes-walk"
+    },
+    {
+      "t": "2026-09-29T12:55:48.970Z",
+      "note": "Root cause was not the meter: the walk registry kept the closed editor, adoptRecordingDocument took it for the reopened one, and ordering its dead window made AppKit send windowWillOrderOnScreen: to CloseGuardDelegate after SwiftUI's weak original delegate had died -> NSInvalidArgumentException (seen in the unified log 1s before the crash) unwound through the walk task, leaving a stale executor record that the meter's MainActor check then read. Fixed both halves: the registry forgets editors on willClose, and the close guard sinks notifications it can no longer forward (hardening for the shipping app; reproduced the throw in a standalone proxy copy, no known shipping route)."
+    },
+    {
+      "t": "2026-09-29T12:55:49.025Z",
+      "note": "d94bc9e2: the probe no longer crashes when a walk closes a recording and opens it again. Harness registry drops closed editors; the shipping close guard swallows orphaned delegate notifications instead of throwing; expectTimeline gains dockHeight. timeline-dock-resizes-walk reopens and checks 378pt is remembered (ok, 7 real captures, no flags). Close/reopen repro walk ok; 10 walks that close windows ok; Scripts/test.sh 10499 passed."
     }
   ],
-  "walks": []
+  "walks": [
+    "timeline-dock-resizes-walk"
+  ],
+  "started": "2026-09-29T12:30:34.993Z",
+  "completed": "2026-09-29T12:55:49.026Z"
 }
