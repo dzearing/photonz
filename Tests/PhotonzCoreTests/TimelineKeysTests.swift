@@ -87,6 +87,18 @@ struct TimelineKeysTests {
         #expect(command(.letter("x"), .option) == nil)
     }
 
+    @Test("Escape on a focused timeline clears the In and the Out; elsewhere it stays the canvas's")
+    func escapeClearsMarks() {
+        #expect(TimelineKeyPress(characters: "\u{1B}", keyCode: 53, modifiers: [], isRepeat: false)?.key
+                == .escape)
+        #expect(command(.escape) == .clearMarks)
+        // On the canvas Escape lets go of a pick and puts a tool down.
+        #expect(command(.escape, focused: false) == nil)
+        #expect(command(.escape, .option) == nil)
+        #expect(command(.escape, .command) == nil)
+        #expect(command(.escape, repeating: true) == nil)
+    }
+
     @Test("M drops a marker on a focused timeline")
     func markerKey() {
         #expect(command(.letter("m")) == .addMarker)

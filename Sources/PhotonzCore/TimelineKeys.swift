@@ -18,7 +18,7 @@ import Foundation
 public enum TimelineKey: Hashable, Sendable {
     /// A printable key, lowercased: "j", "=", "\\".
     case letter(Character)
-    case space, left, right, up, down, home, end, delete, forwardDelete
+    case space, left, right, up, down, home, end, delete, forwardDelete, escape
 }
 
 /// The modifiers a timeline key cares about.
@@ -60,6 +60,7 @@ public struct TimelineKeyPress: Hashable, Sendable {
         case 119: .end
         case 51: .delete
         case 117: .forwardDelete
+        case 53: .escape
         default: nil
         }
         if let named {
@@ -86,6 +87,8 @@ public enum TimelineKeyCommand: Hashable, Sendable {
     case editPoint(forward: Bool)
     case goToStart, goToEnd
     case markIn, markOut, clearIn, clearOut
+    /// Escape on the timeline: the In and the Out both go, the range with them.
+    case clearMarks
     case addMarker
     case splitAtPlayhead
     /// Premiere's Delete: what is picked goes and nothing else moves.
@@ -175,6 +178,9 @@ public enum TimelineKeys {
         case (.down, []): return .editPoint(forward: true)
         case (.delete, []), (.forwardDelete, []): return .lift
         case (.delete, [.shift]), (.forwardDelete, [.shift]): return .rippleDelete
+        // The range goes, the way a click beside it drops it. On the canvas
+        // Escape keeps letting go of a pick and putting a tool down.
+        case (.escape, []) where !press.isRepeat: return .clearMarks
         // Final Cut's key for the whole timeline, which the user asked for by
         // name. On the canvas ⇧Z is Punch In, so only while the timeline has
         // the keyboard.

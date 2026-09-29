@@ -1,0 +1,27 @@
+{
+  "feature": "Double-click beside a range clears it",
+  "epic": "video-cutting",
+  "summary": "A double-click on the ruler or the scrub bar anywhere outside the marked range clears it, whether you drew it or set it with I and O, and the playhead lands where you clicked. Escape on the timeline and a Clear Range row on the range's right-click clear it too.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any recording in Edit mode with the timeline showing.",
+  "switched": {},
+  "try": [
+    { "do": "Press I at 0:03 and O at 0:05 on the timeline, then click the ruler once at 0:06.", "shot": "2026-09-29-double-click-clears-range-3-marks-kept-by-a-click.png" },
+    { "do": "Double-click the ruler at 0:06.", "shot": "2026-09-29-double-click-clears-range-4-marks-cleared-by-a-double-click.png" },
+    { "do": "Drag along the ruler from 0:03 to 0:05, then double-click inside the green band.", "shot": "2026-09-29-double-click-clears-range-5-double-clicked-inside.png" },
+    { "do": "Press Escape." },
+    { "do": "Drag a range again, right-click on it and choose Clear Range." },
+    { "do": "Drag a range again and double-click the transport's scrub bar near its end.", "shot": "2026-09-29-double-click-clears-range-7-scrub-bar-double-click.png" }
+  ],
+  "evaluate": [
+    "Does a double-click beside the range clear it every time you expect it to?",
+    "Is it right that a single click beside marks set with I and O still leaves them, as Premiere does?",
+    "Is Escape clearing the range when the timeline has the keyboard what you want, or should Escape keep only letting go of a pick?",
+    "Should the right-click row on a range read Clear Range, or keep Premiere's name Clear In and Out?"
+  ],
+  "rough": [
+    "Escape clears the range when the timeline has the keyboard (after any click in the timeline), not by where the pointer rests. Every other timeline key follows that same rule.",
+    "Right-clicking inside the range shows Clear Range in place of Clear In and Out. Outside it the row still says Clear In and Out. Both use Option-X.",
+    "A single click beside a range you just drew still clears it straight away, as before, so on a drawn range the second click of a double-click has nothing left to do.",
+    "Nothing new is drawn, so there is no mock frame to compare against: only a menu row name changed."
+  ]
+}

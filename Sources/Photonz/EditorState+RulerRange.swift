@@ -6,7 +6,9 @@ import PhotonzCore
 // Drag along the ruler and the stretch dragged over is marked across every
 // track, the In and the Out set together as one undo step. A press on the
 // playhead still scrubs, a press on either end of the band moves that end,
-// and a click moves the playhead and, outside the band, lets it go.
+// and a click moves the playhead and, outside the band, lets it go. A
+// double-click beside the marks lets them go whoever set them (user
+// 2026-09-29), and so does Escape while the timeline has the keyboard.
 //
 // A range just drawn is the thing in hand: nothing else is picked, it is
 // washed down through every track, ⌫ lifts it, ⇧⌫ (and ⌥⌫) takes it out and
@@ -71,8 +73,9 @@ extension EditorState {
     }
 
     /// The hand came up at `ms`. A drag writes the band it drew to the In and
-    /// the Out; a click moves the playhead there.
-    func endRulerPress(atMS ms: Int, moved: Bool) {
+    /// the Out; a click moves the playhead there. `clicks` is the click's
+    /// place in a run, two for the second press of a double-click.
+    func endRulerPress(atMS ms: Int, moved: Bool, clicks: Int = 1) {
         guard let press = rulerPress else { return }
         let moved = moved || press.hasMoved
         rulerPress = nil
@@ -81,11 +84,14 @@ extension EditorState {
         switch press.grip {
         case .playhead:
             endPlayheadDrag()
+            // The first click of a double-click put the playhead under the
+            // pointer, so the second lands on it: still a double-click.
+            if !moved, clicks >= 2 { clearMarksForADoubleClick(atMS: ms) }
         case .inEdge, .outEdge, .newRange:
             if moved {
                 if let draft { markRulerRange(draft) }
             } else {
-                clickRuler(atMS: ms)
+                clickRuler(atMS: ms, clicks: clicks)
             }
         }
     }
@@ -93,15 +99,31 @@ extension EditorState {
     /// A press that never moved: the playhead goes where it landed, and a
     /// range drawn on the ruler goes too when the click was outside it, the
     /// way a click beside a Final Cut range drops it. Marks set with I and O
-    /// are marks, and stay where they were put, as in Premiere.
-    private func clickRuler(atMS ms: Int) {
+    /// are marks, and stay where they were put, as in Premiere, until a
+    /// double-click beside them.
+    private func clickRuler(atMS ms: Int, clicks: Int) {
         guard documentHasTime, let document else { return }
-        if rulerRangeHeld != nil, document.clickOnRulerClearsMarks(atMS: ms) {
-            perform { $0.clearMarkInOut() }
-            rulerRangeInHand = nil
+        if document.rulerClickClearsMarks(atMS: ms, clicks: clicks, rangeInHand: rulerRangeHeld != nil) {
+            clearMarkInOut()
         }
         pauseDocument()
         scrubDocument(toMS: min(max(0, ms), lastDocumentTimeMS))
+    }
+
+    /// A press on the ruler or the transport's scrub bar came up at `ms` as
+    /// the second click of a double-click: beside the marks, they go. A
+    /// single click on the scrub bar only ever scrubs.
+    func clearMarksForADoubleClick(atMS ms: Int) {
+        guard documentHasTime, let document,
+              document.rulerClickClearsMarks(atMS: ms, clicks: 2, rangeInHand: false) else { return }
+        clearMarkInOut()
+    }
+
+    /// Something on the timeline is in the hand's grip: Escape is calling
+    /// that off, never clearing the marks behind it.
+    var isHoldingATimelineDrag: Bool {
+        rulerPress != nil || clipBarDrag != nil || clipTransitionDrag != nil || captionWordDrag != nil
+            || motionTimingDrag != nil || motionStopDrag != nil
     }
 
     /// Set the In and the Out to `range` in one undo step and make it the
@@ -254,6 +276,8 @@ extension EditorState {
                              enabled: takesOut) {
             self.extractMarkedStretch()
         })
+        // Premiere's Clear In and Out, by the name a range is let go by.
+        rows.append(.command("Clear Range", TimelineMenuKeys.clearInOut) { self.clearMarkInOut() })
         if Experiments.shared.captionsFromTheSoundEnabled, !isWritingCaptions {
             rows.append(.separator)
             rows.append(.command("Add Captions for Range", enabled: canAddCaptionsInRange) {

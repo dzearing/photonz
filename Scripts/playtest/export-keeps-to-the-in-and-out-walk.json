@@ -45,7 +45,7 @@
 
     { "do": "writeVideo", "name": "whole-video", "format": "mp4", "quality": "standard", "range": "whole", "seconds": 8.0, "within": 0.15, "startsAtMS": 0 },
 
-    { "do": "rightClick", "at": [750, 860], "space": "window", "choose": "Clear In and Out" },
+    { "do": "rightClick", "at": [750, 860], "space": "window", "choose": "Clear Range" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "expectTimeline", "hasIn": false, "hasOut": false },
     { "do": "action", "action": "exportDialogAsVideo" },

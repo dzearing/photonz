@@ -98,6 +98,11 @@ extension EditorState {
             clearMarkIn()
         case .clearOut:
             clearMarkOut()
+        case .clearMarks:
+            // Nothing marked, or the tracks out of sight in View: Escape
+            // carries on to the canvas, which lets go of a pick.
+            guard canClearMarkInOut, !isWatching, !isHoldingATimelineDrag else { return false }
+            clearMarkInOut()
         case .addMarker:
             addMarker(atMS: documentTimeMS)
         case .splitAtPlayhead:

@@ -155,6 +155,37 @@ struct RulerRangeTests {
         #expect(!doc.clickOnRulerClearsMarks(atMS: 7000))
     }
 
+    @Test("A double-click on the ruler outside the marks clears them, whoever set them; inside, they stay")
+    func doubleClickClears() {
+        var (doc, _) = Self.twelveSeconds()
+        #expect(!doc.rulerClickClearsMarks(atMS: 5000, clicks: 2, rangeInHand: false))
+        doc.markRange(3000..<7000)
+        // One click beside a range drawn on the ruler lets it go; beside marks
+        // set with I and O it only moves the playhead, as in Premiere.
+        #expect(doc.rulerClickClearsMarks(atMS: 9000, clicks: 1, rangeInHand: true))
+        #expect(!doc.rulerClickClearsMarks(atMS: 9000, clicks: 1, rangeInHand: false))
+        // Two clicks beside them let either go.
+        #expect(doc.rulerClickClearsMarks(atMS: 9000, clicks: 2, rangeInHand: false))
+        #expect(doc.rulerClickClearsMarks(atMS: 1000, clicks: 2, rangeInHand: true))
+        #expect(doc.rulerClickClearsMarks(atMS: 1000, clicks: 3, rangeInHand: false))
+        // Inside, ends included, nothing goes however many clicks.
+        #expect(!doc.rulerClickClearsMarks(atMS: 5000, clicks: 2, rangeInHand: false))
+        #expect(!doc.rulerClickClearsMarks(atMS: 3000, clicks: 2, rangeInHand: true))
+        #expect(!doc.rulerClickClearsMarks(atMS: 7000, clicks: 2, rangeInHand: false))
+    }
+
+    @Test("A double-click beside an In alone clears it, and one beside an Out alone")
+    func doubleClickClearsOneMark() {
+        var (doc, _) = Self.twelveSeconds()
+        doc.setMarkIn(atMS: 4000)
+        #expect(doc.rulerClickClearsMarks(atMS: 2000, clicks: 2, rangeInHand: false))
+        #expect(!doc.rulerClickClearsMarks(atMS: 9000, clicks: 2, rangeInHand: false))
+        doc.clearMarkInOut()
+        doc.setMarkOut(atMS: 6000)
+        #expect(doc.rulerClickClearsMarks(atMS: 9000, clicks: 2, rangeInHand: false))
+        #expect(!doc.rulerClickClearsMarks(atMS: 2000, clicks: 2, rangeInHand: false))
+    }
+
     @Test("The ends of a range snap to cuts, clip ends and markers")
     func snapMoments() {
         var (doc, clip) = Self.twelveSeconds()

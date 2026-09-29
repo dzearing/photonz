@@ -501,7 +501,10 @@ extension EditorState {
         rows.append(.command("Set In", TimelineMenuKeys.markIn) { self.setMarkIn(atMS: ms) })
         rows.append(.command("Set Out", TimelineMenuKeys.markOut) { self.setMarkOut(atMS: ms) })
         if document.markInMS != nil || document.markOutMS != nil {
-            rows.append(.command("Clear In and Out", TimelineMenuKeys.clearInOut) { self.clearMarkInOut() })
+            // On the stretch its own rows above carry Clear Range.
+            if !onTheStretch {
+                rows.append(.command("Clear In and Out", TimelineMenuKeys.clearInOut) { self.clearMarkInOut() })
+            }
             rows.append(.command("Play In to Out", TimelineMenuKeys.playInToOut, enabled: canPlayInToOut) {
                 self.playInToOut()
             })
@@ -579,6 +582,7 @@ extension EditorState {
     func clearMarkInOut() {
         guard canClearMarkInOut else { return }
         perform { $0.clearMarkInOut() }
+        rulerRangeInHand = nil
     }
 
     /// Whether Extract and Lift have anything to take: an In or an Out is

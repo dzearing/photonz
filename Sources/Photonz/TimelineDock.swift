@@ -144,6 +144,11 @@ struct TimelineDock: View {
         } scrubber: {
             TransportScrubber { fraction, phase in
                 scrub(toDocumentFraction: fraction, phase: phase)
+                // A double-click beside the marks lets them go, as on the ruler.
+                if phase == .ended, (NSApp.currentEvent?.clickCount ?? 1) >= 2 {
+                    editorState.clearMarksForADoubleClick(atMS: Int((fraction * Double(editorState.documentLengthMS))
+                        .rounded()))
+                }
             }
             .playtestControl("Scrub", detail: "Transport")
         } trailing: {
@@ -537,7 +542,8 @@ struct TimelineDock: View {
             .onEnded { value in
                 editorState.endRulerPress(atMS: Self.rulerMS(value.location.x, laneWidth,
                                                              editorState.motionStripRuler),
-                                          moved: abs(value.translation.width) >= EditorState.rulerClickSlop)
+                                          moved: abs(value.translation.width) >= EditorState.rulerClickSlop,
+                                          clicks: NSApp.currentEvent?.clickCount ?? 1)
             }
     }
 

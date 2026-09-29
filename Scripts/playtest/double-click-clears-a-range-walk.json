@@ -1,0 +1,305 @@
+{
+  "out": "/tmp/photonz-playtest/double-click-clears-a-range-walk",
+  "seed": "User 2026-09-29: with a range selected on the ruler, a double-click anywhere else on it clears the range. At Next defaults, no flag set, with a real pointer: a range drawn by hand and double-clicked beside goes and the playhead lands there; marks set with I and O go the same way though a single click leaves them; a double-click inside a range keeps it; Escape on the timeline, the range's right-click Clear Range and a double-click beside it on the transport's scrub bar clear one too.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 1.0
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "windowDrag",
+      "from": [
+        700,
+        860
+      ],
+      "to": [
+        1100,
+        860
+      ],
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectTimeline",
+      "playheadMS": 1000,
+      "withinMS": 40,
+      "hasIn": true,
+      "hasOut": true
+    },
+    {
+      "do": "describe",
+      "stage": "1-range-drawn",
+      "note": "a range drawn by hand on the ruler from about 0:03 to 0:05, the playhead at 0:01"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-range-drawn"
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        1300,
+        860
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectTimeline",
+      "playheadMS": 6000,
+      "withinMS": 120,
+      "hasIn": false,
+      "hasOut": false
+    },
+    {
+      "do": "describe",
+      "stage": "2-double-clicked-beside",
+      "note": "a double-click on the ruler at about 0:06, beside the range: the range is gone and the playhead is where the pointer was"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-double-clicked-beside"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 3.0
+    },
+    {
+      "do": "key",
+      "key": "i"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 5.0
+    },
+    {
+      "do": "key",
+      "key": "o"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectTimeline",
+      "markInMS": 3000,
+      "markOutMS": 5000,
+      "withinMS": 40
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        1300,
+        860
+      ],
+      "count": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectTimeline",
+      "playheadMS": 6000,
+      "withinMS": 120,
+      "markInMS": 3000,
+      "markOutMS": 5000
+    },
+    {
+      "do": "describe",
+      "stage": "3-marks-kept-by-a-click",
+      "note": "In and Out set with I and O at 0:03 and 0:05; one click beside them moves the playhead and leaves the marks, as in Premiere"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-marks-kept-by-a-click"
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        1300,
+        860
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectTimeline",
+      "playheadMS": 6000,
+      "withinMS": 120,
+      "hasIn": false,
+      "hasOut": false
+    },
+    {
+      "do": "describe",
+      "stage": "4-marks-cleared-by-a-double-click",
+      "note": "a double-click beside the marks clears them too"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-marks-cleared-by-a-double-click"
+    },
+    {
+      "do": "dragRuler",
+      "from": 3.0,
+      "to": 5.0
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        905,
+        860
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectTimeline",
+      "playheadMS": 4000,
+      "withinMS": 120,
+      "markInMS": 3000,
+      "markOutMS": 5000
+    },
+    {
+      "do": "describe",
+      "stage": "5-double-clicked-inside",
+      "note": "a double-click inside a range moves the playhead there and keeps the range"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-double-clicked-inside"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectTimeline",
+      "hasIn": false,
+      "hasOut": false
+    },
+    {
+      "do": "describe",
+      "stage": "6-escape-clears",
+      "note": "Escape with the timeline in hand clears the range"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-escape-clears"
+    },
+    {
+      "do": "dragRuler",
+      "from": 3.0,
+      "to": 5.0
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        905,
+        860
+      ],
+      "space": "window",
+      "choose": "Clear Range"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectTimeline",
+      "hasIn": false,
+      "hasOut": false
+    },
+    {
+      "do": "dragRuler",
+      "from": 3.0,
+      "to": 5.0
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        1532,
+        786
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectTimeline",
+      "playheadMS": 7200,
+      "withinMS": 200,
+      "hasIn": false,
+      "hasOut": false
+    },
+    {
+      "do": "describe",
+      "stage": "7-scrub-bar-double-click",
+      "note": "a range drawn again, then a double-click on the transport's scrub bar near its end, beside the range: the range is gone there too"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-scrub-bar-double-click"
+    }
+  ]
+}

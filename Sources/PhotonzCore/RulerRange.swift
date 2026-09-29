@@ -13,7 +13,8 @@ import Foundation
 // - on the playhead: it scrubs, the way the ruler always has;
 // - anywhere else: a new range, from where the press landed to where the hand
 //   lets go. A press that never moves is a click, which puts the playhead
-//   there and, outside the marked stretch, clears it.
+//   there and, outside the marked stretch, clears it; a double-click there
+//   clears marks set with I and O too.
 //
 // Then the stretch is something to act on, and those actions live here too: a
 // cut at both of its ends, a transition on every cut inside it, and captions
@@ -100,6 +101,16 @@ extension PhotonzDocument {
     public func clickOnRulerClearsMarks(atMS ms: Int) -> Bool {
         guard let range = markedRangeMS else { return false }
         return !(range.lowerBound...range.upperBound).contains(ms)
+    }
+
+    /// Whether a click of `clicks` presses on the ruler at `ms` lets the marks
+    /// go. One click does beside a range drawn on the ruler that is still in
+    /// hand, and only moves the playhead beside marks set with I and O, as in
+    /// Premiere. A double-click beside them lets either go (user 2026-09-29).
+    /// Inside the marked stretch nothing goes, however many clicks.
+    public func rulerClickClearsMarks(atMS ms: Int, clicks: Int, rangeInHand: Bool) -> Bool {
+        guard clickOnRulerClearsMarks(atMS: ms) else { return false }
+        return clicks >= 2 || rangeInHand
     }
 
     /// What the ends of a range pull onto: every edit point, every marker, and
