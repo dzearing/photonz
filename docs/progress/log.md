@@ -20161,3 +20161,9 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Core: `EditorChromeLayout.canvasFoot` (capsule at the base, notice stacked above it, either lifted just clear of the caption boxes, never off the top) and `PhotonzDocument.captionBoxesOnCanvas` (every visible Captions layer's box, so nothing hops as words change). Tests: `CanvasFootTests`, `CaptionsLayerTests`.
 - App: `CanvasFootStack` replaces the two bottom overlays in `EditorView`; it reads the viewport in its own body so a zoom does not rebuild the editor. Current is unchanged (crop capsule, Trim and captions are all Next switches).
 - Walks: new `captionsExpectFootApart` action; `trim-bar-clears-captions-and-notices-walk` (fixture `Not really a recording.mp4` raises a 3s refusal the capture can catch). Audit: `queue/audits/2026-09-28-trim-bar-clears-captions.json`.
+
+## 2026-09-28 — Experiments switches say what they do in a sentence or two
+
+- All 91 switch descriptions over the user's budget rewritten in `FeatureCatalog.swift`: two sentences and 40 words at most, mostly what it changes and then what Off means. Three short ones that ran to three sentences trimmed too.
+- Tests: `FlagDescriptionBudgetTests` has no allowance any more and checks sentences as well (`CopyBudget.sentences(in:)`, `flagDescriptionSentences = 2`). Audit: `queue/audits/2026-09-28-experiments-switch-descriptions.json`.
+- Open: the cut detail was not carried into `docs/design`; git history of the catalogue holds it.
