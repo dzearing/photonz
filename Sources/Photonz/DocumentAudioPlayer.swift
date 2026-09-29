@@ -15,6 +15,14 @@ import PhotonzCore
 // recorded at gets a varispeed in front of it, which raises its pitch as it
 // goes faster — the sound going with the picture, exactly as
 // `ClipPiece.soundRatePercent` says it should.
+//
+// **Nothing here runs on the main thread except the arithmetic.** Making an
+// audio engine costs about 45 ms the first time, starting it about 30 ms more,
+// and opening the files and wiring the nodes a few more on every press. All of
+// that used to happen inside the press of play, so the first L on a five
+// minute recording held the window for a tenth of a second before the picture
+// moved (2026-09-29). The engine now lives in `DocumentAudioEngine` below, on
+// its own queue, and the press only hands it the plan.
 @MainActor
 final class DocumentAudioPlayer {
 
@@ -26,24 +34,7 @@ final class DocumentAudioPlayer {
     /// and `droppedSegments` says how many so the app can tell somebody.
     static let segmentBudget = 48
 
-    private let engine = AVAudioEngine()
-    /// One mixer per voice of a layer: the level is this node's volume, and
-    /// following a level over time is setting it as the playhead moves. A
-    /// layer has one voice, except while a transition on a join inside it has
-    /// two of its pieces sounding at once, each on its own fader
-    /// (`AudioMixSegment.voice`).
-    private var mixers: [Voice: AVAudioMixerNode] = [:]
-
-    private struct Voice: Hashable {
-        let layerID: UUID
-        let voice: Int
-        init(_ segment: AudioMixSegment) {
-            layerID = segment.layerID
-            voice = segment.voice
-        }
-    }
-    private var playing: [(node: AVAudioPlayerNode, extra: [AVAudioNode])] = []
-    private var running = false
+    private let engine = DocumentAudioEngine()
 
     /// How many pieces of sound were left out of the last playthrough because
     /// there were more than the budget. Nought nearly always.
@@ -53,23 +44,25 @@ final class DocumentAudioPlayer {
     ///
     /// The one thing about playing that can be checked without ears, so a
     /// scripted walk can say the sound really started rather than photographing
-    /// a playhead moving in silence.
-    var isPlaying: Bool { running && !playing.isEmpty }
+    /// a playhead moving in silence. Asked of the engine itself, after anything
+    /// already handed to it has been done.
+    var isPlaying: Bool { engine.read { $0.isPlaying } }
 
     /// How many pieces of sound are on the engine right now.
-    var scheduledCount: Int { playing.count }
+    var scheduledCount: Int { engine.read { $0.scheduledCount } }
 
     /// How loud the engine's output is: the transport's speaker and slider
     /// (`PlayerVolume.outputGain`). Muted, the pieces keep playing silently,
     /// so turning it back up is in step with the picture rather than
     /// restarting anything.
     func setOutputGain(_ gain: Double) {
-        engine.mainMixerNode.outputVolume = Float(min(max(0, gain), 1))
+        let held = Float(min(max(0, gain), 1))
+        engine.run { $0.setOutputGain(held) }
     }
 
     /// What the engine's output is set to right now, read back off the engine
     /// itself so a walk checks what is heard rather than what was asked for.
-    var outputGain: Double { Double(engine.mainMixerNode.outputVolume) }
+    var outputGain: Double { engine.read { Double($0.outputGain) } }
 
     /// Start the sound from a moment of the document's clock.
     ///
@@ -77,25 +70,128 @@ final class DocumentAudioPlayer {
     /// of it stays in step with everything else however long a decode takes:
     /// the engine's own clock is what the pieces are hung on, not a timer.
     func play(_ mix: [AudioMixSegment], fromMS: Int) {
-        stop()
         let live = mix.filter { $0.endMS > fromMS && $0.isAudible }
             .sorted { $0.startMS < $1.startMS }
         droppedSegments = max(0, live.count - Self.segmentBudget)
-        let scheduled = Array(live.prefix(Self.segmentBudget))
-        guard !scheduled.isEmpty else { return }
+        let pieces: [DocumentAudioEngine.Piece] = live.prefix(Self.segmentBudget).compactMap { segment in
+            guard let url = SoundLibrary.shared.url(for: segment.sound) else { return nil }
+            return DocumentAudioEngine.Piece(segment: segment, url: url)
+        }
+        engine.run { $0.play(pieces, fromMS: fromMS) }
+        follow(mix, atMS: fromMS)
+    }
 
-        var files: [UUID: AVAudioFile] = [:]
+    /// Keep each layer's level where the plan says it is at this moment.
+    ///
+    /// Called on the document's own clock as the playhead moves, which is what
+    /// makes a duck a slide rather than a step: the tick is thirty times a
+    /// second and a duck is a third of a second long.
+    func follow(_ mix: [AudioMixSegment], atMS ms: Int) {
+        var wanted: [DocumentAudioEngine.Voice: Float] = [:]
+        for segment in mix where segment.contains(ms: ms) {
+            wanted[DocumentAudioEngine.Voice(segment)] = Float(segment.gain(atMS: ms))
+        }
+        engine.run { [wanted] in $0.setLevels(wanted) }
+    }
+
+    /// Stop, and give every node back.
+    func stop() {
+        engine.run { $0.stop() }
+    }
+}
+
+/// The engine, the open files and the nodes, all on one queue of their own.
+///
+/// A queue rather than an actor, like `ScrubAudioEngine`, for two reasons: a
+/// press of play followed at once by a press of stop has to reach the engine
+/// in that order, which a queue promises and a pair of tasks does not; and a
+/// walk asks what is on the engine and needs the answer there and then
+/// (`read`). Everything crossing into it is a value (a piece of the plan, a
+/// file's location, a level), and nothing outside touches the engine.
+///
+/// `@unchecked Sendable` because every stored property below is only ever
+/// touched inside `queue`: `run` and `read` are the only ways in.
+final class DocumentAudioEngine: @unchecked Sendable {
+
+    /// One piece of the plan and the file it plays.
+    struct Piece: Sendable {
+        let segment: AudioMixSegment
+        let url: URL
+    }
+
+    /// One mixer per voice of a layer: the level is this node's volume, and
+    /// following a level over time is setting it as the playhead moves. A
+    /// layer has one voice, except while a transition on a join inside it has
+    /// two of its pieces sounding at once, each on its own fader
+    /// (`AudioMixSegment.voice`).
+    struct Voice: Hashable, Sendable {
+        let layerID: UUID
+        let voice: Int
+        init(_ segment: AudioMixSegment) {
+            layerID = segment.layerID
+            voice = segment.voice
+        }
+    }
+
+    private let queue = DispatchQueue(label: "photonz.document-audio", qos: .userInitiated)
+
+    /// Made on the queue, the first time anything is handed over, so even
+    /// building it is off the main thread.
+    private var engineStorage: AVAudioEngine?
+    private var mixers: [Voice: AVAudioMixerNode] = [:]
+    private var playing: [(node: AVAudioPlayerNode, extra: [AVAudioNode])] = []
+    private var running = false
+
+    init() {
+        // Build the engine and its output now rather than at the first press:
+        // a player is made when a document with sound opens its timeline.
+        run { _ = $0.engine.mainMixerNode }
+    }
+
+    /// Hand work to the engine and carry on.
+    func run(_ work: @escaping @Sendable (DocumentAudioEngine) -> Void) {
+        queue.async { work(self) }
+    }
+
+    /// Ask the engine something, once everything already handed to it is done.
+    /// Waits for the queue, so only a walk asks this.
+    func read<T>(_ question: (DocumentAudioEngine) -> T) -> T {
+        queue.sync { question(self) }
+    }
+
+    // MARK: - On the queue
+
+    private var engine: AVAudioEngine {
+        if let engineStorage { return engineStorage }
+        let made = AVAudioEngine()
+        engineStorage = made
+        return made
+    }
+
+    var isPlaying: Bool { running && !playing.isEmpty }
+    var scheduledCount: Int { playing.count }
+    var outputGain: Float { engine.mainMixerNode.outputVolume }
+
+    func setOutputGain(_ gain: Float) {
+        engine.mainMixerNode.outputVolume = gain
+    }
+
+    func play(_ pieces: [Piece], fromMS: Int) {
+        stop()
+        guard !pieces.isEmpty else { return }
+
+        var files: [URL: AVAudioFile] = [:]
         var attached: [(node: AVAudioPlayerNode, extra: [AVAudioNode], segment: AudioMixSegment,
                         file: AVAudioFile)] = []
 
-        for segment in scheduled {
-            guard let url = SoundLibrary.shared.url(for: segment.sound) else { continue }
+        for piece in pieces {
+            let segment = piece.segment
             let file: AVAudioFile
-            if let known = files[segment.sound.id] {
+            if let known = files[piece.url] {
                 file = known
             } else {
-                guard let opened = try? AVAudioFile(forReading: url) else { continue }
-                files[segment.sound.id] = opened
+                guard let opened = try? AVAudioFile(forReading: piece.url) else { continue }
+                files[piece.url] = opened
                 file = opened
             }
             let mixer = voiceMixer(for: Voice(segment))
@@ -139,26 +235,17 @@ final class DocumentAudioPlayer {
             playing.append((item.node, item.extra))
             item.node.play()
         }
-        follow(scheduled, atMS: fromMS)
     }
 
-    /// Keep each layer's level where the plan says it is at this moment.
-    ///
-    /// Called on the document's own clock as the playhead moves, which is what
-    /// makes a duck a slide rather than a step: the tick is thirty times a
-    /// second and a duck is a third of a second long.
-    func follow(_ mix: [AudioMixSegment], atMS ms: Int) {
+    /// Every voice at the level asked for; a voice with nothing sounding at
+    /// this moment is silent.
+    func setLevels(_ wanted: [Voice: Float]) {
         guard running else { return }
-        var wanted: [Voice: Float] = [:]
-        for segment in mix where segment.contains(ms: ms) {
-            wanted[Voice(segment)] = Float(segment.gain(atMS: ms))
-        }
         for (voice, mixer) in mixers {
             mixer.volume = wanted[voice] ?? 0
         }
     }
 
-    /// Stop, and give every node back.
     func stop() {
         guard running || !playing.isEmpty else { return }
         for item in playing {

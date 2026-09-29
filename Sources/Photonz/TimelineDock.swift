@@ -101,9 +101,14 @@ struct TimelineDock: View {
         .transition(.move(edge: .bottom).combined(with: .opacity))
         // Read the shape of every sound, so an export holds the mix down by
         // what the files really peak at rather than by the safe guess of full
-        // scale (`AudioHeadroom`). The mix meter used to ask for this.
+        // scale (`AudioHeadroom`). The mix meter used to ask for this. And
+        // have the sound engine made, so the first press of play is not the
+        // moment it gets built.
         .task(id: editorState.audioPlan.count) {
-            if editorState.documentHasAudio { editorState.loadSoundShapes() }
+            if editorState.documentHasAudio {
+                editorState.loadSoundShapes()
+                editorState.readyAudio()
+            }
         }
     }
 

@@ -474,13 +474,22 @@ extension EditorState {
     }
 
     /// Where a layer's sound is, as the app has it. Made the first time
-    /// something asks to be heard.
+    /// something asks to be heard, or when the timeline of a document with
+    /// sound opens (`readyAudio`).
     var audioPlayer: DocumentAudioPlayer {
         if let already = audioPlayerStorage { return already }
         let player = DocumentAudioPlayer()
         player.setOutputGain(playerVolume.outputGain)
         audioPlayerStorage = player
         return player
+    }
+
+    /// Have the sound engine made before anybody presses play. Making one is
+    /// the slowest part of starting the sound, and it happens on the player's
+    /// own queue, so the window never waits for it.
+    func readyAudio() {
+        guard documentHasAudio else { return }
+        _ = audioPlayer
     }
 
     /// Start the sound with the picture. Called where playing starts, so the

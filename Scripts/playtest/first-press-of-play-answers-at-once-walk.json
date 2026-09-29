@@ -1,0 +1,25 @@
+{
+  "out": "/tmp/photonz-playtest/first-press-of-play-answers-at-once-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "describe", "stage": "why", "note": "The first press of play on a five minute recording held the window for 105 to 157ms before the picture moved, and every later press was fine (2026-09-29). The press itself was building the sound engine (about 45ms the first time), starting it (about 30ms) and opening the file and wiring its nodes, all on the main thread. The engine now lives on a queue of its own and is made when the timeline of a document with sound opens, so the press only hands it the plan. On a quiet Mac the first press now peaks at about 20ms, the same as every later one; the walk fails at 50ms." },
+    { "do": "action", "action": "openLongRetinaTalk" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "describe", "stage": "first-press", "note": "The first L since the recording opened: it plays, and the window never stops answering." },
+    { "do": "key", "key": "l" },
+    { "do": "wait", "seconds": 0.5, "longestUnderMS": 50 },
+    { "do": "action", "action": "soundExpectPlaying" },
+    { "do": "key", "key": "k" },
+    { "do": "wait", "seconds": 0.3, "longestUnderMS": 50 },
+
+    { "do": "describe", "stage": "second-press", "note": "And again, which was always fine: it still is." },
+    { "do": "key", "key": "l" },
+    { "do": "wait", "seconds": 0.5, "longestUnderMS": 50 },
+    { "do": "action", "action": "soundExpectPlaying" },
+    { "do": "key", "key": "k" },
+    { "do": "wait", "seconds": 0.3 }
+  ]
+}
