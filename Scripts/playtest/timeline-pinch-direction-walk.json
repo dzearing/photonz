@@ -1,0 +1,46 @@
+{
+  "out": "/tmp/photonz-playtest/timeline-pinch-direction-walk",
+  "seed": "User 2026-09-28: 'if I'm pinch zooming vertically, it just makes the rows bigger. If I'm pinch zooming horizontally it changes the scale.' The way two fingers spread on the trackpad picks what a pinch on the timeline zooms: side to side time, up and down the rows, on the slant both, Option and Shift still insisting, and a pinch with no fingers to read (a mouse) zooming both as before. At Next defaults, no flag set.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "selectRow", "row": "Tutorial Sample" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "soundDetach" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "zoomScale": 1, "rowScale": 1 },
+    { "do": "snapshot", "name": "0-before" },
+
+    { "do": "timelinePinch", "by": 3, "steps": 12, "spread": "horizontal", "x": 0.4, "y": 0.4 },
+    { "do": "expectTimeline", "zoomScale": 3, "rowScale": 1 },
+    { "do": "describe", "stage": "1-spread-sideways", "note": "fingers spread side to side: time opened out three times about the moment under the pointer, and the rows did not grow at all" },
+    { "do": "snapshot", "name": "1-spread-sideways" },
+
+    { "do": "timelinePinch", "by": 2, "steps": 12, "spread": "vertical", "x": 0.4, "y": 0.4 },
+    { "do": "expectTimeline", "zoomScale": 3, "rowScale": 2 },
+    { "do": "describe", "stage": "2-spread-up-and-down", "note": "fingers spread up and down: the rows grew to twice their height about the row under the pointer, and time stayed opened out three times, not a millisecond more" },
+    { "do": "snapshot", "name": "2-spread-up-and-down" },
+
+    { "do": "timelinePinch", "by": 0.5, "steps": 12, "spread": "diagonal", "x": 0.4, "y": 0.4 },
+    { "do": "expectTimeline", "zoomScale": 1.5, "rowScale": 1 },
+    { "do": "describe", "stage": "3-squeezed-on-the-slant", "note": "fingers squeezed on the slant: both halved together, time to one and a half times and the rows back to compact" },
+
+    { "do": "timelinePinch", "by": 2, "steps": 12, "spread": "vertical", "modifiers": ["option"], "x": 0.5, "y": 0.5 },
+    { "do": "expectTimeline", "zoomScale": 3, "rowScale": 1 },
+    { "do": "timelinePinch", "by": 2, "steps": 12, "spread": "horizontal", "modifiers": ["shift"], "x": 0.5, "y": 0.5 },
+    { "do": "expectTimeline", "zoomScale": 3, "rowScale": 2 },
+    { "do": "describe", "stage": "4-keys-still-win", "note": "Option held over an up and down spread zoomed time only, and Shift over a sideways spread grew the rows only: the keys still decide when they are down" },
+
+    { "do": "timelinePinch", "by": 1.5, "steps": 12, "x": 0.5, "y": 0.5 },
+    { "do": "expectTimeline", "zoomScale": 4.5, "rowScale": 3 },
+    { "do": "describe", "stage": "5-no-fingers-both", "note": "a pinch with no fingers to read, as a mouse would send, zooms both together the way every pinch did before" },
+    { "do": "snapshot", "name": "5-no-fingers-both" }
+  ]
+}

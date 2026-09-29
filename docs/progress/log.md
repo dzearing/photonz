@@ -20198,3 +20198,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - The dock's top edge drags to resize it (TimelineDockHeight in PhotonzCore, TimelineResizeEdge in the app); double-click resets; remembered in `timeline.height`.
 - New walk step `windowClick` (a real click or double-click posted to the window).
 - Next: filed `a-walk-that-closes-a-recording-and-opens-one-aga`, a probe crash when a walk reopens a recording after closing one.
+
+## 2026-09-29 — Pinch direction picks what the timeline zooms
+
+- User 2026-09-28: spreading fingers up and down should grow the rows, side to side the time scale. `TimelinePinchSteer` (PhotonzCore, `TimelinePinchSteerTests`) reads the change in the two fingers' spread across and down since they landed: within 35° of flat is time, of upright rows, else both. It decides once (about 5 trackpad points, 2 mm, of spread change), holds the first nudges until then and hands them over together, and never flips until the fingers lift. No touches (a mouse) falls back to both after 5% of magnification. Option and Shift still force time or rows.
+- Touches come from `TimelineWheel` in `TimelineDock.swift`: the view accepts indirect touches (so the window gets them) and a local `.gesture` monitor passes every two-finger set, in the trackpad's points, to `EditorState.timelinePinchTouched`. The SwiftUI MagnifyGesture now goes through `beginTimelinePinch` / `steerTimelinePinch` / `endTimelinePinch`.
+- Walk step `timelinePinch` takes `"spread": "horizontal|vertical|diagonal"` and drives the same steered calls with made-up fingers; its note says which axis each pinch zoomed. New `timeline-pinch-direction-walk` green at Next defaults; `timeline-pinch-both-ways-walk` still green.
+- Open: that real trackpad touches arrive through the `.gesture` monitor is unverified from a script; a card asks the user to try it.

@@ -1,0 +1,24 @@
+{
+  "feature": "Pinch direction picks what the timeline zooms",
+  "epic": "video-cutting",
+  "summary": "A pinch on the timeline now zooms the way your fingers spread: side to side opens out time, up and down makes the rows taller, on the slant does both.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any recording so the timeline shows, on a Mac with a trackpad.",
+  "switched": {},
+  "try": [
+    { "do": "Put the pointer over the tracks and spread two fingers side to side.", "shot": "2026-09-29-pinch-direction-1-spread-sideways-sc.png" },
+    { "do": "Spread two fingers straight up and down over the tracks.", "shot": "2026-09-29-pinch-direction-2-spread-up-and-down-sc.png" },
+    { "do": "Squeeze two fingers together on a slant, thumb low left and finger high right." },
+    { "do": "Start a sideways pinch, then let your fingers drift up and down before lifting them." },
+    { "do": "Hold Option and pinch up and down, then hold Shift and pinch side to side." }
+  ],
+  "evaluate": [
+    "Does a sideways pinch change only the time scale, and an up and down pinch only the row height?",
+    "Does the pinch pick its direction quickly enough that you never notice the first moment of waiting?",
+    "Is 35 degrees either side the right width for 'straight', or do your natural pinches land on the slant and zoom both?",
+    "Does a pinch stay on the way it started even when your fingers drift?"
+  ],
+  "rough": [
+    "The walks drive made-up fingers through the same steering the trackpad feeds, so the axis choice is proven; that the trackpad's own touches reach the timeline on a real Mac could not be tried here, because nobody can pinch a trackpad from a script. If a pinch still zooms both ways whichever way you spread, the touches are not arriving.",
+    "The first few percent of a pinch are held back until the direction is known (about 2 mm of finger travel), then applied at once. You may feel that as a tiny delay at the start."
+  ]
+}

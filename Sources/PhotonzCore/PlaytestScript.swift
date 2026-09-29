@@ -501,15 +501,20 @@ public struct PlaytestTimelinePinch: Hashable, Sendable {
     /// Zero: pinch once, by `by`. More: in by `by` and back out, that many
     /// times.
     public var roundTrips: Int
+    /// Which way two made-up fingers spread on the trackpad while it pinches
+    /// (`TimelinePinchSteer`), or nil for a pinch with no touches to read, as
+    /// from a mouse.
+    public var spread: TimelinePinchDirection?
 
     public init(by: CGFloat, steps: Int, modifiers: [PlaytestModifier], x: CGFloat, y: CGFloat,
-                roundTrips: Int) {
+                roundTrips: Int, spread: TimelinePinchDirection? = nil) {
         self.by = by
         self.steps = steps
         self.modifiers = modifiers
         self.x = x
         self.y = y
         self.roundTrips = roundTrips
+        self.spread = spread
     }
 }
 
@@ -3702,10 +3707,18 @@ public enum PlaytestStep: Sendable, Equatable {
             guard (0...1).contains(x) else { throw f.invalid("x", "is a share of the lanes' width, 0 to 1") }
             guard (0...1).contains(y) else { throw f.invalid("y", "is a share of the tracks' height, 0 to 1") }
             let trips = try f.optionalNumber("roundTrips").map { Int($0) } ?? 0
+            let spread: TimelinePinchDirection?
+            switch try f.optionalString("spread") {
+            case nil: spread = nil
+            case "horizontal": spread = .horizontal
+            case "vertical": spread = .vertical
+            case "diagonal": spread = .diagonal
+            default: throw f.invalid("spread", "is which way the fingers spread: horizontal, vertical or diagonal")
+            }
             self = .timelinePinch(PlaytestTimelinePinch(by: by, steps: max(1, steps),
                                                         modifiers: try f.optionalModifiers("modifiers") ?? [],
                                                         x: CGFloat(x), y: CGFloat(y),
-                                                        roundTrips: max(0, trips)))
+                                                        roundTrips: max(0, trips), spread: spread))
         case "hover":
             let hoverWindow = try f.optionalString("window")
             if fields["label"] != nil {

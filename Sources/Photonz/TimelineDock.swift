@@ -488,7 +488,8 @@ struct TimelineDock: View {
                 .tutorialAnchor(.timelineTracks)
                 .simultaneousGesture(pinch(laneWidth: laneWidth))
                 .background {
-                    TimelineWheel { event, point in wheel(event, at: point, laneWidth: laneWidth) }
+                    TimelineWheel(handle: { event, point in wheel(event, at: point, laneWidth: laneWidth) },
+                                  touched: { editorState.timelinePinchTouched($0) })
                 }
                 // Time's scroller, under the lanes, in a strip that is always
                 // there: at Fit it is empty, opened out it carries the window.
@@ -594,24 +595,32 @@ struct TimelineDock: View {
         }
     }
 
-    /// A pinch zooms both ways about the spot under the fingers: time opens
-    /// out about the moment under them and the rows grow about the row under
-    /// them. ⌥ keeps it to time, ⇧ to the rows (user 2026-09-28).
+    /// A pinch zooms about the spot under the fingers, the way they spread:
+    /// side to side opens out time about the moment under them, up and down
+    /// grows the rows about the row under them, on the slant both. ⌥ keeps it
+    /// to time, ⇧ to the rows (user 2026-09-28). The fingers themselves come
+    /// in through `TimelineWheel`.
     private func pinch(laneWidth: CGFloat) -> some Gesture {
         MagnifyGesture(minimumScaleDelta: 0)
             .onChanged { value in
+                if pinchedTo == nil { editorState.beginTimelinePinch() }
                 let previous = pinchedTo ?? 1
                 pinchedTo = value.magnification
                 guard previous > 0 else { return }
                 let flags = NSEvent.modifierFlags
-                editorState.pinchTimeline(by: Double(value.magnification / previous),
-                                          laneX: value.startLocation.x - Self.lanesLeading,
-                                          laneWidth: laneWidth,
-                                          viewportY: value.startLocation.y - Self.rulerHeight,
-                                          axes: TimelinePinchAxes(option: flags.contains(.option),
-                                                                  shift: flags.contains(.shift)))
+                editorState.steerTimelinePinch(by: Double(value.magnification / previous),
+                                               laneX: value.startLocation.x - Self.lanesLeading,
+                                               laneWidth: laneWidth,
+                                               viewportY: value.startLocation.y - Self.rulerHeight,
+                                               forced: .forced(option: flags.contains(.option),
+                                                               shift: flags.contains(.shift)))
             }
-            .onEnded { _ in pinchedTo = nil }
+            .onEnded { value in
+                pinchedTo = nil
+                editorState.endTimelinePinch(laneX: value.startLocation.x - Self.lanesLeading,
+                                             laneWidth: laneWidth,
+                                             viewportY: value.startLocation.y - Self.rulerHeight)
+            }
     }
 
     /// Two fingers sideways (or a mouse wheel with ⇧) slide an opened out
@@ -758,33 +767,64 @@ struct TimelineDock: View {
 
 // MARK: - The wheel
 
-/// Hands the timeline the scroll wheel while the pointer is over it.
+/// Hands the timeline the scroll wheel while the pointer is over it, and the
+/// fingers on the trackpad.
 ///
 /// SwiftUI has no wheel event of its own, so this watches the window's wheel
 /// events and offers each one that lands inside its own frame. Returning true
 /// keeps it; false lets it carry on to the tracks' own vertical scroll.
+///
+/// Nor does a pinch say which way the fingers spread: SwiftUI and the magnify
+/// event both carry one number. The trackpad's touches do, so this view asks
+/// the window for them (accepting indirect touches is what makes AppKit send
+/// them at all) and hands over every set, in the trackpad's points, for the
+/// pinch to steer by (`TimelinePinchSteer`). It never keeps a touch: they go
+/// on to wherever they were going.
 private struct TimelineWheel: NSViewRepresentable {
     /// The event, and where it landed measured from the top left of the view.
     let handle: (NSEvent, CGPoint) -> Bool
+    /// The fingers resting on the trackpad now, in its points.
+    let touched: ([CGPoint]) -> Void
 
     func makeNSView(context: Context) -> WheelView {
         let view = WheelView()
         view.handle = handle
+        view.touched = touched
         return view
     }
 
-    func updateNSView(_ view: WheelView, context: Context) { view.handle = handle }
+    func updateNSView(_ view: WheelView, context: Context) {
+        view.handle = handle
+        view.touched = touched
+    }
 
     static func dismantleNSView(_ view: WheelView, coordinator: ()) { view.stop() }
 
     final class WheelView: NSView {
         var handle: ((NSEvent, CGPoint) -> Bool)?
+        var touched: (([CGPoint]) -> Void)?
         private var monitor: Any?
+        private var touchMonitor: Any?
+
+        override init(frame: NSRect) {
+            super.init(frame: frame)
+            allowedTouchTypes = [.indirect]
+        }
+
+        required init?(coder: NSCoder) {
+            super.init(coder: coder)
+            allowedTouchTypes = [.indirect]
+        }
 
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
             stop()
             guard window != nil else { return }
+            touchMonitor = NSEvent.addLocalMonitorForEvents(matching: .gesture) { [weak self] event in
+                guard let self, let window = self.window, event.window === window else { return event }
+                self.touched?(Self.fingers(of: event))
+                return event
+            }
             monitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
                 guard let self, let window = self.window, event.window === window else { return event }
                 let point = self.convert(event.locationInWindow, from: nil)
@@ -796,7 +836,23 @@ private struct TimelineWheel: NSViewRepresentable {
 
         func stop() {
             if let monitor { NSEvent.removeMonitor(monitor) }
+            if let touchMonitor { NSEvent.removeMonitor(touchMonitor) }
             monitor = nil
+            touchMonitor = nil
+        }
+
+        /// The fingers down on the trackpad, a thumb resting on it left out,
+        /// placed on the trackpad's own face in its points so a spread across
+        /// and a spread down are measured alike on a pad wider than it is tall.
+        static func fingers(of event: NSEvent) -> [CGPoint] {
+            event.touches(matching: .touching, in: nil)
+                .filter { !$0.isResting }
+                .map { touch in
+                    let size = touch.deviceSize
+                    let scale = size.width > 0 && size.height > 0 ? size : CGSize(width: 100, height: 100)
+                    return CGPoint(x: touch.normalizedPosition.x * scale.width,
+                                   y: touch.normalizedPosition.y * scale.height)
+                }
         }
 
         override func hitTest(_ point: NSPoint) -> NSView? { nil }

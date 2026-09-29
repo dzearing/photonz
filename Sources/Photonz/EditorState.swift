@@ -1118,6 +1118,10 @@ final class EditorState {
     /// alone, ⌘-scroll too (`EditorState+TimelineZoom`). Beside the document
     /// like the zoom, never in it.
     var timelineRowZoom: TimelineRowZoom = .compact
+    /// Which way the pinch in hand zooms, read off the two fingers
+    /// (`TimelinePinchSteer`). Sixty touches a second go through it, and
+    /// nothing is drawn from it, so it is not watched.
+    @ObservationIgnored var timelinePinchSteer = TimelinePinchSteer()
     /// Where the tracks are scrolled to, which a row zoom moves so the row
     /// under the pointer stays under it, and the tracks' scroller drags.
     var timelineTracksScroll = ScrollPosition(edge: .top)

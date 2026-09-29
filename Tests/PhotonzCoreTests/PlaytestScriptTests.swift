@@ -689,6 +689,23 @@ struct PlaytestScriptTests {
         #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("timelinePinch"))
     }
 
+    @Test("A timeline pinch can say which way its two fingers spread")
+    func timelinePinchSpread() throws {
+        for (word, way) in [("horizontal", TimelinePinchDirection.horizontal),
+                            ("vertical", .vertical), ("diagonal", .diagonal)] {
+            let script = try decode("""
+            { "steps": [ { "do": "timelinePinch", "by": 3, "spread": "\(word)" } ] }
+            """)
+            guard case .timelinePinch(let pinch) = script.steps[0] else { Issue.record("timelinePinch"); return }
+            #expect(pinch.spread == way)
+        }
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "timelinePinch", "by": 2, "spread": "sideways" } ] }
+            """)
+        }
+    }
+
     @Test("A timeline pinch left to itself is one plain pinch in the middle of the tracks")
     func timelinePinchDefaults() throws {
         let script = try decode("""
@@ -699,6 +716,7 @@ struct PlaytestScriptTests {
         #expect(pinch.modifiers.isEmpty)
         #expect(pinch.x == 0.5 && pinch.y == 0.5)
         #expect(pinch.roundTrips == 0)
+        #expect(pinch.spread == nil)
         #expect(throws: (any Error).self) {
             try decode("""
             { "steps": [ { "do": "timelinePinch", "by": 0 } ] }

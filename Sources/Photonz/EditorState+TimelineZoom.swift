@@ -162,6 +162,42 @@ extension EditorState {
         }
     }
 
+    // MARK: Steered by the fingers (user 2026-09-28)
+
+    /// The fingers on the trackpad, in its points: two of them, spreading one
+    /// way or another, pick what a pinch zooms (`TimelinePinchSteer`).
+    func timelinePinchTouched(_ points: [CGPoint]) {
+        timelinePinchSteer.touched(points)
+    }
+
+    /// A pinch on the tracks begins.
+    func beginTimelinePinch() {
+        timelinePinchSteer.begin()
+    }
+
+    /// One nudge of a pinch on the tracks: side to side zooms time, up and
+    /// down the rows, on the slant both, and ⌥ or ⇧ (`forced`) still insist.
+    /// Its first nudges wait until the fingers have said which way, and go
+    /// through together then. Returns what it zoomed, or nil while it waits.
+    @discardableResult
+    func steerTimelinePinch(by factor: Double, laneX: CGFloat, laneWidth: CGFloat,
+                            viewportY: CGFloat, forced: TimelinePinchAxes?) -> TimelinePinchAxes? {
+        guard let step = timelinePinchSteer.magnified(by: factor, forced: forced) else { return nil }
+        pinchTimeline(by: step.factor, laneX: laneX, laneWidth: laneWidth, viewportY: viewportY,
+                      axes: step.axes)
+        return step.axes
+    }
+
+    /// The fingers lift: a pinch too small to have picked a way still zooms
+    /// by what it moved.
+    @discardableResult
+    func endTimelinePinch(laneX: CGFloat, laneWidth: CGFloat, viewportY: CGFloat) -> TimelinePinchAxes? {
+        guard let step = timelinePinchSteer.end() else { return nil }
+        pinchTimeline(by: step.factor, laneX: laneX, laneWidth: laneWidth, viewportY: viewportY,
+                      axes: step.axes)
+        return step.axes
+    }
+
     /// The rows grown (or shrunk) by a factor, keeping the spot under the
     /// pointer where it is: the same row, the same share of it.
     func zoomTimelineRows(by factor: Double, viewportY: CGFloat) {

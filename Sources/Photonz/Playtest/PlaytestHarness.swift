@@ -15587,8 +15587,9 @@ extension Run {
         guard laneWidth > 0, editor.timelineRulerFrame.height > 0, editor.timelineTracksFrame.height > 0 else {
             throw Failure(description: "the timeline's tracks are not on screen, so there is nothing to pinch")
         }
-        let axes = TimelinePinchAxes(option: pinch.modifiers.contains(.option),
-                                     shift: pinch.modifiers.contains(.shift))
+        let forced = TimelinePinchAxes.forced(option: pinch.modifiers.contains(.option),
+                                              shift: pinch.modifiers.contains(.shift))
+        var steered: [TimelinePinchAxes] = []
         let laneX = laneWidth * pinch.x
         let viewportY = editor.timelineTracksScrollGeometry.viewportHeight * pinch.y
         let rulerY = editor.timelineRulerFrame.minY
@@ -15629,15 +15630,33 @@ extension Run {
         var nudges = 0
         let startScale = editor.timelineWindow.scale
         let startRows = editor.timelineRowZoom.scale
+        // Each leg is one pinch: fingers down, spread (or squeezed) the way
+        // the step says, lifted. Without a `spread` there are no fingers at
+        // all, as from a mouse.
+        func fingers(_ way: TimelinePinchDirection, _ grown: Double) -> [CGPoint] {
+            let g = CGFloat(grown)
+            switch way {
+            case .horizontal: return [CGPoint(x: 50, y: 40), CGPoint(x: 50 + 30 * g, y: 48)]
+            case .vertical: return [CGPoint(x: 70, y: 20), CGPoint(x: 78, y: 20 + 30 * g)]
+            case .diagonal: return [CGPoint(x: 40, y: 20), CGPoint(x: 40 + 24 * g, y: 20 + 24 * g)]
+            }
+        }
         for leg in legs {
             let ratio = pow(Double(leg), 1.0 / Double(pinch.steps))
+            var grown = 1.0
+            if let way = pinch.spread { editor.timelinePinchTouched(fingers(way, grown)) }
+            editor.beginTimelinePinch()
             for _ in 0..<pinch.steps {
                 nudges += 1
                 let msBefore = momentUnder()
                 let rowBefore = rowUnder()
                 let tracksY = editor.timelineTracksFrame.minY
-                editor.pinchTimeline(by: ratio, laneX: laneX, laneWidth: laneWidth, viewportY: viewportY,
-                                     axes: axes)
+                grown *= ratio
+                if let way = pinch.spread { editor.timelinePinchTouched(fingers(way, grown)) }
+                guard let axes = editor.steerTimelinePinch(by: ratio, laneX: laneX, laneWidth: laneWidth,
+                                                           viewportY: viewportY, forced: forced)
+                else { continue }
+                if steered.last != axes { steered.append(axes) }
                 await sleep(0.03)
                 if abs(editor.timelineRulerFrame.minY - rulerY) > 0.5 {
                     moved.append(String(format: "ruler %.1f→%.1f", rulerY, editor.timelineRulerFrame.minY))
@@ -15677,14 +15696,21 @@ extension Run {
                     }
                 }
             }
+            if let axes = editor.endTimelinePinch(laneX: laneX, laneWidth: laneWidth, viewportY: viewportY),
+               steered.last != axes {
+                steered.append(axes)
+            }
+            if pinch.spread != nil { editor.timelinePinchTouched([]) }
         }
-        let summary = String(format: "%d nudges (%@), time %.2fx→%.2fx, rows %.2fx→%.2fx; ",
-                             nudges, "\(axes)", startScale, editor.timelineWindow.scale,
+        let spread = pinch.spread.map { "fingers \($0)" } ?? "no fingers"
+        let summary = String(format: "%d nudges (%@, zoomed %@), time %.2fx→%.2fx, rows %.2fx→%.2fx; ",
+                             nudges, spread, steered.map { "\($0)" }.joined(separator: " then "), startScale, editor.timelineWindow.scale,
                              startRows, editor.timelineRowZoom.scale)
             + "\(moved.count) moves, \(drifted.count) drifts, \(excused) excused at an end"
         note(number, name, summary, state: describe(extra: [
             "timelinePinchMoved": Array(moved.prefix(12)),
             "timelinePinchDrifted": Array(drifted.prefix(12)),
+            "timelinePinchZoomed": steered.map { "\($0)" },
         ]))
         if !moved.isEmpty {
             throw Failure(description: "the timeline MOVED while it was pinched: "
