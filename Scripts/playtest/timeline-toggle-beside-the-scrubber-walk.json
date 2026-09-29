@@ -1,0 +1,43 @@
+{
+  "out": "/tmp/photonz-playtest/timeline-toggle-beside-the-scrubber-walk",
+  "seed": "The user, 2026-09-29, pointing at the MIX meter and the x on the timeline's bar: 'this mix thing seems to not function or provide any value. maybe remove it. Also the x next to it should really be a toggle button that sits to the right of the playback slider and looks similar to the right panel's toggle button except vertical.' At Next defaults with no flag set: a fresh recording opens in View with no meter anywhere, the timeline toggle at the right end of the transport; a click on it brings Edit with the tracks up and lights it; a second click puts the tracks down and stays in Edit (tool bar and panel stay, the panel's Layers list comes back); a third brings them back; Option Command T does the same as the button.",
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "open", "file": "fixtures/Full screen Retina recording 3456x2234.mp4", "width": 1440, "height": 900 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectTimeline", "mode": "view", "open": false },
+    { "do": "expect", "control": "Timeline Toggle", "present": true },
+    { "do": "describe", "stage": "1-view", "note": "just opened, in View: the transport has no MIX meter, and the timeline toggle sits at its right end, off (quiet), under the title bar's panel toggle" },
+    { "do": "snapshot", "name": "1-view-toggle-off" },
+
+    { "do": "press", "control": "Timeline Toggle" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectTimeline", "mode": "edit", "open": true },
+    { "do": "expectSections", "layers": false },
+    { "do": "describe", "stage": "2-edit-open", "note": "a click on the toggle from View: Edit, with the tracks grown out from under the transport and the toggle lit. The timeline's bar has no x and no MIX meter any more" },
+    { "do": "snapshot", "name": "2-edit-tracks-open" },
+
+    { "do": "press", "control": "Timeline Toggle" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectTimeline", "mode": "edit", "open": false },
+    { "do": "expectSections", "layers": true },
+    { "do": "describe", "stage": "3-edit-closed", "note": "THE TEST: the second click puts the tracks down and the window stays in Edit. The tool bar and the panel stay; the panel's Layers list comes back because the tracks are not on screen to be it; the toggle drops back to quiet" },
+    { "do": "snapshot", "name": "3-edit-tracks-closed" },
+
+    { "do": "press", "control": "Timeline Toggle" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectTimeline", "mode": "edit", "open": true },
+    { "do": "describe", "stage": "4-edit-open-again", "note": "and a third click brings the tracks back" },
+
+    { "do": "action", "action": "toggleTimingStrip" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectTimeline", "mode": "edit", "open": false },
+    { "do": "action", "action": "toggleTimingStrip" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectTimeline", "mode": "edit", "open": true },
+    { "do": "describe", "stage": "5-the-key", "note": "the View menu's Show Timeline (Option Command T) runs the same switch as the button; a walk cannot press a window's menu key, so it runs the command that row runs" },
+    { "do": "snapshot", "name": "5-after-the-key" }
+  ]
+}

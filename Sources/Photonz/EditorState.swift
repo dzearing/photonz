@@ -1003,16 +1003,30 @@ final class EditorState {
     /// Edit mode (`ViewEditMode`), so a trim or a reframe that brings "the
     /// strip" up switches a recording to Edit, and every reader and writer
     /// goes through this one name.
+    ///
+    /// In Edit the tracks can also be closed from the transport's timeline
+    /// toggle (`TimelineToggle`), which keeps the window in Edit.
     var isMotionStripOpen: Bool {
-        get { documentHasTime ? viewEditMode == .edit : isTimingStripOpen }
+        get {
+            documentHasTime ? TimelineToggle.isOn(mode: viewEditMode, tracksShown: timelineTracksShown)
+                : isTimingStripOpen
+        }
         set {
             if documentHasTime {
-                setViewEditMode(newValue ? .edit : .view)
+                if newValue {
+                    setViewEditMode(.edit)
+                    setTimelineTracksShown(true)
+                } else {
+                    setViewEditMode(.view)
+                }
             } else {
                 isTimingStripOpen = newValue
             }
         }
     }
+    /// Whether a recording's tracks are up while the window is in Edit. Per
+    /// window and never remembered, like the mode (`TimelineToggle`).
+    private(set) var timelineTracksShown = true
     /// An icon's timing strip, open or put away.
     var isTimingStripOpen = EditorState.motionStripOpenDefault {
         didSet { UserDefaults.standard.set(isTimingStripOpen, forKey: Self.motionStripOpenKey) }
@@ -1067,6 +1081,7 @@ final class EditorState {
     /// than animated: the window should open already being what it is.
     func openInItsMode(_ document: PhotonzDocument, forAGuide: Bool = false) {
         pickedBeforeView = nil
+        timelineTracksShown = true
         viewEditMode = Self.walkOpensRecordingsInEdit
             ? .edit : ViewEditMode.opening(document, forAGuide: forAGuide)
     }
@@ -1081,6 +1096,24 @@ final class EditorState {
 
     /// E: whichever of the two this window is not in.
     func toggleViewEditMode() { setViewEditMode(viewEditMode.toggled) }
+
+    /// The timeline toggle on the transport, and ⌥⌘T: the tracks closed or
+    /// open in Edit, and from View, Edit with the tracks up (`TimelineToggle`).
+    func pressTimelineToggle() {
+        let after = TimelineToggle.pressed(mode: viewEditMode, tracksShown: timelineTracksShown)
+        setViewEditMode(after.mode)
+        setTimelineTracksShown(after.tracksShown)
+    }
+
+    /// The tracks up or down, with the same animation View and Edit use, and
+    /// the picture refitted to the room it now has.
+    private func setTimelineTracksShown(_ shown: Bool) {
+        guard shown != timelineTracksShown else { return }
+        withAnimation(.viewEditMode) {
+            timelineTracksShown = shown
+            refitForViewEditMode()
+        }
+    }
 
     /// Something started an edit while the window was a player: it becomes
     /// the editor, so the edit has somewhere to show.

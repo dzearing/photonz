@@ -362,10 +362,15 @@ Export Sound's notice says when the mix had to be held down and by how much
 (`CopyConfirmation.mixHeldDown`), so it is marked before the file is written
 rather than discovered afterwards.
 
-Behind `next-the-mix-says-how-loud-it-is`, which leans on
-`next-sound-on-the-timeline`. The FLAG is the meter and the mark; holding the
-mix inside what a file can hold happens either way, because writing a
-distorted file is a fault rather than an experiment.
+**The meter is gone (2026-09-29).** The user: "this mix thing seems to not
+function or provide any value. maybe remove it." The meter, its amber mark and
+its switch (`next-the-mix-says-how-loud-it-is`) were taken out. Holding the mix
+inside what a file can hold never depended on them and still happens, and
+Export Sound still says when it had to and by how much. The timeline dock reads
+every sound's shape when the plan changes, which the meter used to ask for, so
+the export works off the real files. The × on the timeline's bar went at the
+same time: the transport's timeline toggle (`TimelineToggle`) opens and closes
+the tracks and stays in Edit.
 
 The walk is `mix-says-how-loud-walk`, and it checks rather than photographs:
 `soundExpectMeterReads` fails unless the meter follows the mix (high where the

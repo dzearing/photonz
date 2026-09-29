@@ -352,7 +352,7 @@ extension EditorState {
 
     /// How loud this document's mix gets, and by how much it is over.
     ///
-    /// Kept between asks: the meter wants this thirty times a second and the
+    /// Kept between asks: the player and an export ask for it often and the
     /// answer is a walk over every twenty milliseconds of sound there is, while
     /// noticing that nothing changed costs one pass over the segments.
     var audioHeadroom: AudioHeadroom {
@@ -366,8 +366,7 @@ extension EditorState {
         return reading
     }
 
-    /// Whether the mix has to be held down to fit in a file. What the mark on
-    /// the meter and the line on the export notice are drawn from.
+    /// Whether the mix has to be held down to fit in a file.
     var isMixHeldDown: Bool { audioHeadroom.isOver }
 
     /// How loud the mix is coming out at the moment the playhead is on, nought
@@ -380,10 +379,7 @@ extension EditorState {
         AudioHeadroom.level(of: audioMix, peaks: soundShapes, atMS: documentTimeMS)
     }
 
-    /// Where that level sits on the meter, nought at the bottom, one at the top.
-    var audioMeterFraction: Double { AudioHeadroom.meterFraction(ofLevel: audioLevelNow) }
-
-    /// Read the shape of every sound in the document, so the meter and any
+    /// Read the shape of every sound in the document, so the player and any
     /// export are working off the real files rather than off the safe guess.
     func loadSoundShapes() {
         SoundLibrary.shared.loadWaveforms(for: audioPlan)

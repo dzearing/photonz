@@ -125,3 +125,37 @@ extension TimelineKeyCommand {
         }
     }
 }
+
+/// **The timeline toggle** at the right of a recording's transport: the tracks
+/// open and closed, the way the title bar's panel toggle does the panel.
+///
+/// Closing the tracks keeps the window in Edit, with its tool bar and panel,
+/// because the person asked for the room under the picture and nothing else.
+/// From View a press is a way into editing, so it lands in Edit with the tracks
+/// up. Whether the tracks are closed is the window's, never remembered: the
+/// timeline that folded by hand and stayed folded for every later recording is
+/// what View and Edit replaced on 2026-09-28.
+public enum TimelineToggle {
+
+    /// Where a press on the toggle leaves the window.
+    public static func pressed(mode: ViewEditMode,
+                               tracksShown: Bool) -> (mode: ViewEditMode, tracksShown: Bool) {
+        switch mode {
+        case .view: return (.edit, true)
+        case .edit: return (.edit, !tracksShown)
+        }
+    }
+
+    /// Whether it is lit: the tracks are on screen.
+    public static func isOn(mode: ViewEditMode, tracksShown: Bool) -> Bool {
+        mode == .edit && tracksShown
+    }
+
+    /// What its tooltip says: what a press will do.
+    public static func tooltip(isOn: Bool) -> String {
+        isOn ? "Hide Timeline" : "Show Timeline"
+    }
+
+    /// The key that does the same, as the View menu shows it.
+    public static let shortcut = "⌥⌘T"
+}

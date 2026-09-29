@@ -196,8 +196,6 @@ public enum FeatureCatalog {
 
     public static let scrubAuditionFlag = "next-hear-the-scrub"
 
-    public static let mixLoudnessFlag = "next-the-mix-says-how-loud-it-is"
-
     public static let transitionsAtACutFlag = "next-transitions-at-a-cut"
 
     public static let punchInFlag = "next-punch-in-and-hold"
@@ -852,16 +850,6 @@ public enum FeatureCatalog {
                     name: scrubAuditionFlag,
                     title: "Hear the sound under the playhead while you drag it",
                     description: "Dragging the playhead plays the sound under it, backwards too, so you can find a word or a beat by ear. Off means scrubbing is silent.",
-                    area: .motion,
-                    isEnabled: false,
-                    parameters: []),
-                releases: [.next],
-                enabledByDefaultIn: [.next]),
-            Definition(
-                flag: FeatureFlag(
-                    name: mixLoudnessFlag,
-                    title: "See how loud the mix is, and be told when it has to come down",
-                    description: "A meter beside the play button shows how loud the mix is and turns amber when it is too loud for a file. Off means no meter; an export still holds the mix down to fit.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

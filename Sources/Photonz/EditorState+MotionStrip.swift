@@ -142,11 +142,12 @@ extension EditorState {
     /// safely be now that away means a row rather than nothing: the strip can
     /// no longer come back to a document that gives no sign it exists.
     ///
-    /// On a recording the tracks are Edit mode's, so the switch is View and
-    /// Edit (`ViewEditMode`), and nothing about it is remembered.
+    /// On a recording it is the transport's timeline toggle: the tracks open
+    /// and closed in Edit, and from View into Edit (`TimelineToggle`), with
+    /// nothing about it remembered.
     func toggleMotionStrip() {
         if documentHasTime {
-            toggleViewEditMode()
+            pressTimelineToggle()
         } else {
             isMotionStripOpen.toggle()
         }

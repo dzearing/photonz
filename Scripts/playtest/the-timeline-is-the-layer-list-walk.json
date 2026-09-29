@@ -173,7 +173,7 @@
     },
     {
       "do": "press",
-      "control": "Hide Timing"
+      "control": "Timeline Toggle"
     },
     {
       "do": "wait",
@@ -181,13 +181,17 @@
     },
     {
       "do": "expectTimeline",
-      "mode": "view",
+      "mode": "edit",
       "open": false
+    },
+    {
+      "do": "expectSections",
+      "layers": true
     },
     {
       "do": "describe",
       "stage": "3-folded",
-      "note": "the timeline's x puts the window into View mode: a player, with no tracks, no panel and no tool bar, so there is no list to miss"
+      "note": "the transport's timeline toggle puts the tracks down and the window stays in Edit, so the panel's own Layers list comes straight back: there is always one list of layers on screen"
     },
     {
       "do": "snapshot",

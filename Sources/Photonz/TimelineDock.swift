@@ -99,6 +99,12 @@ struct TimelineDock: View {
         }
         .tutorialAnchor(.timingStrip)
         .transition(.move(edge: .bottom).combined(with: .opacity))
+        // Read the shape of every sound, so an export holds the mix down by
+        // what the files really peak at rather than by the safe guess of full
+        // scale (`AudioHeadroom`). The mix meter used to ask for this.
+        .task(id: editorState.audioPlan.count) {
+            if editorState.documentHasAudio { editorState.loadSoundShapes() }
+        }
     }
 
     // MARK: - The transport
@@ -109,9 +115,9 @@ struct TimelineDock: View {
                               duration: editorState.documentLengthTimecode) {
             // QuickTime's speaker and slider. How loud YOU are listening,
             // not the document's own levels, which are the clips' Volume in
-            // the panel. The mix meter used to sit here, drawn like a slider
-            // track that did nothing when clicked (2026-09-28): it lives on
-            // the timeline's own bar now, where the mix is edited.
+            // the panel. There is no mix meter: the user found it did
+            // nothing for them (2026-09-29), and a mix too loud for a file is
+            // still held down and said so at export.
             VideoKit.TransportButton(
                 symbol: Self.speakerSymbol(editorState.playerVolume.tier),
                 label: editorState.playerVolume.isSilent ? "Unmute" : "Mute") {
@@ -163,6 +169,7 @@ struct TimelineDock: View {
                 .playtestControl("Full Screen", detail: "Transport")
                 .transition(.opacity)
             }
+            TimelineToggleButton()
         }
         .tutorialAnchor(.video(.transport))
     }
@@ -271,11 +278,6 @@ struct TimelineDock: View {
                     .fixedSize()
             }
             if editorState.timelineFileHover == nil, editorState.timelineTransitionHover == nil { keyBar }
-            // How loud the mix is, beside the tracks that make it, as
-            // Premiere keeps its meters beside the timeline. Labelled and
-            // knobless, so it never reads as the volume slider.
-            MixMeter(labelled: true)
-            closeButton
         }
         .padding(.vertical, 6)
         .padding(.horizontal, 12)
@@ -380,21 +382,6 @@ struct TimelineDock: View {
         .accessibilityAddTraits(isOn ? .isSelected : [])
         .panelHelp(help)
         .playtestControl("Timeline \(name)", detail: "Timeline")
-    }
-
-    /// `.tlbar .tl-close`: the × that puts the timeline down to one row.
-    private var closeButton: some View {
-        Button { editorState.toggleMotionStrip() } label: {
-            Image(systemName: "xmark")
-                .font(.system(size: 9, weight: .semibold))
-                .frame(width: 24, height: 24)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .foregroundStyle(VideoKit.Palette.faint)
-        .accessibilityLabel("View mode")
-        .panelHelp("View mode (⌘1)")
-        .playtestControl("Hide Timing", detail: "Timeline")
     }
 
     // MARK: - The grid
@@ -1349,5 +1336,38 @@ struct TimelineLaneBoxView: View {
                     .offset(x: x0, y: row.minY)
             }
         }
+    }
+}
+
+/// **The timeline toggle** at the far right of the transport: the tracks open
+/// and closed (`TimelineToggle`), the vertical twin of the title bar's panel
+/// toggle, which it matches in size, weight, hover and on/off look. It sits
+/// where the panel toggle does, at the trailing edge, so the two read as one
+/// family: one puts away the column at the side, this one the tracks below.
+/// It replaced the × on the timeline's bar (user 2026-09-29), which went to
+/// View mode rather than just putting the tracks down.
+private struct TimelineToggleButton: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        let isOn = editorState.isMotionStripOpen
+        Button {
+            editorState.pressTimelineToggle()
+        } label: {
+            Image(systemName: "rectangle.bottomthird.inset.filled")
+                .font(.system(size: 14, weight: .medium))
+        }
+        .buttonStyle(IconActionButtonStyle(diameter: TitlebarPanelToggle.diameter,
+                                           restingTint: isOn ? .primary : .secondary,
+                                           keepsLabelFont: true,
+                                           squareHitTarget: true))
+        .frame(width: TitlebarPanelToggle.diameter, height: TitlebarPanelToggle.diameter)
+        .accessibilityLabel(TimelineToggle.tooltip(isOn: isOn))
+        .accessibilityAddTraits(isOn ? .isSelected : [])
+        .toolTip(TimelineToggle.tooltip(isOn: isOn), key: TimelineToggle.shortcut)
+        .playtestControl("Timeline Toggle",
+                         detail: isOn ? "the transport's timeline toggle, tracks open"
+                                      : "the transport's timeline toggle, tracks closed")
+        .panelReadout(isOn ? "timeline toggle on" : "timeline toggle off")
     }
 }

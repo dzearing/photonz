@@ -1364,6 +1364,12 @@ struct EditorCommands: Commands {
                         set: { _ in editor?.setViewEditMode(mode) }))
                     .keyboardShortcut(KeyEquivalent(mode.commandKey), modifiers: .command)
                 }
+                // The transport's timeline toggle, on the key an icon's
+                // timing strip has.
+                Toggle(MenuToggleNames.timeline, isOn: Binding(
+                    get: { editor?.isMotionStripOpen ?? false },
+                    set: { _ in editor?.pressTimelineToggle() }))
+                .keyboardShortcut("t", modifiers: [.command, .option])
             } else if Experiments.shared.motionStripEnabled {
                 Toggle(MenuToggleNames.timingStrip, isOn: Binding(
                     get: { editor?.isMotionStripShown ?? false },

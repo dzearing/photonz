@@ -6,8 +6,7 @@
     ],
     "flags": {
       "next-cut-a-recording": true,
-      "next-sound-on-the-timeline": true,
-      "next-the-mix-says-how-loud-it-is": true
+      "next-sound-on-the-timeline": true
     }
   },
   "steps": [
@@ -34,7 +33,7 @@
     {
       "do": "describe",
       "stage": "1-one-sound-and-a-meter",
-      "note": "An eight second screen recording with its own sound. The meter sits in the transport beside the play button, not over the canvas where the mock drew it: the canvas is the picture you are judging, and a meter parked on it is the one thing you cannot move out of the way"
+      "note": "An eight second screen recording with its own sound. There is no meter on screen (the user took it out on 2026-09-29 as doing nothing for them): the mix is measured all the same, and held down when it is too loud"
     },
     {
       "do": "snapshot",
@@ -59,7 +58,7 @@
     {
       "do": "describe",
       "stage": "2-the-meter-follows-the-mix",
-      "note": "Playing, and the meter is reading. The step fails unless it really is following the mix: high where the plan says there is sound, and nothing at all past the end of every sound there is. A meter that never moves photographs exactly like one that does, so it is checked rather than looked at"
+      "note": "Playing, and the level the app measures is following the mix: high where the plan says there is sound, and nothing at all past the end of every sound there is. That is the arithmetic the loudness guard is built on"
     },
     {
       "do": "snapshot",
@@ -120,7 +119,7 @@
     {
       "do": "describe",
       "stage": "3-three-sounds-add-up-past-the-top",
-      "note": "THE WHOLE OF IT. Three pieces of music laid over each other at the level they were recorded at, on top of the recording's own sound. Sound adds up, so this is well past what a sound file can hold, and until now the app said nothing about it: no meter, no mark on the export, and a written file that came out as the flat top of a clipped waveform. The meter is amber and carries the number of decibels it is over, which is the number that comes off every layer before anything is played or written"
+      "note": "THE WHOLE OF IT. Three pieces of music laid over each other at the level they were recorded at, on top of the recording's own sound. Sound adds up, so this is well past what a sound file can hold, and until now the app said nothing about it: no meter, no mark on the export, and a written file that came out as the flat top of a clipped waveform. The app knows how many decibels it is over, which is the number that comes off every layer before anything is played or written, and the export says so"
     },
     {
       "do": "snapshot",

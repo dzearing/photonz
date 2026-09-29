@@ -1,0 +1,28 @@
+{
+  "feature": "Timeline toggle beside the scrubber, and no MIX meter",
+  "epic": "video-editing",
+  "summary": "The MIX meter is gone from the timeline, and the timeline's x is now a toggle at the right end of the transport that opens and closes the tracks without leaving Edit.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any screen recording. Walk: timeline-toggle-beside-the-scrubber-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording. It opens in View; look at the right end of the transport.", "shot": "2026-09-29-timeline-toggle-1-view.png" },
+    { "do": "Click the toggle at the right end of the transport: Edit, with the tracks open and the toggle lit.", "shot": "2026-09-29-timeline-toggle-2-open.png" },
+    { "do": "Click it again: the tracks go down, the tool bar and panel stay, and Layers comes back in the panel.", "shot": "2026-09-29-timeline-toggle-3-closed.png" },
+    { "do": "Compare it with the panel toggle at the top right, on and off.", "shot": "2026-09-29-timeline-toggle-4-beside-panel-toggle.png" },
+    { "do": "Press Option Command T, or View > Show Timeline: the tracks toggle the same way." },
+    { "do": "Hover the toggle: the tip reads Show Timeline or Hide Timeline with its key." }
+  ],
+  "evaluate": [
+    "Does the toggle read as the vertical twin of the panel toggle above it?",
+    "Is the right end of the transport where you want it, rather than between the slider and its length?",
+    "With the tracks down in Edit, does keeping the tool bar and panel feel right, or should it drop you to View?",
+    "Do you miss anything from the MIX meter now it is gone?"
+  ],
+  "rough": [
+    "The toggle sits at the far right of the transport, after the length (0:03), rather than between the slider and the length, so the length stays next to the slider it measures and the toggle lines up under the panel toggle.",
+    "SF Symbols has no outline version of the bottom-panel glyph, so on and off use one glyph and differ only in brightness, as the panel toggle does.",
+    "The video mock draws an x on the timeline's bar (.tl-close). It was replaced because you asked for the toggle. The mock page is unchanged.",
+    "The MIX meter's switch is gone from the Experiments window. A mix that is too loud is still held down, and Export Sound still says by how much.",
+    "The key step in the walk runs the View menu's command directly, because a walk cannot press a window's menu keys. The button itself is clicked with real pointer events."
+  ]
+}

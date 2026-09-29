@@ -147,3 +147,50 @@ struct TimelineKeysStartAnEditTests {
                                      timelineFocused: true) == nil)
     }
 }
+
+// The timeline toggle at the right of the transport (user 2026-09-29: "the x
+// next to it should really be a toggle button"). It opens and closes the
+// tracks, and closing them never leaves Edit: the tool bar and the panel stay.
+@Suite("The timeline toggle")
+struct TimelineToggleTests {
+
+    @Test("in Edit with the tracks open, it closes them and stays in Edit")
+    func closesInEdit() {
+        let after = TimelineToggle.pressed(mode: .edit, tracksShown: true)
+        #expect(after.mode == .edit)
+        #expect(after.tracksShown == false)
+    }
+
+    @Test("in Edit with the tracks closed, it opens them")
+    func opensInEdit() {
+        let after = TimelineToggle.pressed(mode: .edit, tracksShown: false)
+        #expect(after.mode == .edit)
+        #expect(after.tracksShown == true)
+    }
+
+    @Test("in View it switches to Edit and opens the tracks, whatever they were")
+    func viewGoesToEdit() {
+        for shown in [true, false] {
+            let after = TimelineToggle.pressed(mode: .view, tracksShown: shown)
+            #expect(after.mode == .edit)
+            #expect(after.tracksShown == true)
+        }
+    }
+
+    @Test("it is lit only while the tracks are on screen")
+    func litOnlyWhileOpen() {
+        #expect(TimelineToggle.isOn(mode: .edit, tracksShown: true))
+        #expect(!TimelineToggle.isOn(mode: .edit, tracksShown: false))
+        #expect(!TimelineToggle.isOn(mode: .view, tracksShown: true))
+        #expect(!TimelineToggle.isOn(mode: .view, tracksShown: false))
+    }
+
+    @Test("its tooltip says what a press does, as chrome")
+    func tooltip() {
+        #expect(TimelineToggle.tooltip(isOn: true) == "Hide Timeline")
+        #expect(TimelineToggle.tooltip(isOn: false) == "Show Timeline")
+        for on in [true, false] {
+            #expect(CopyBudget.chromeFaults(TimelineToggle.tooltip(isOn: on)).isEmpty)
+        }
+    }
+}

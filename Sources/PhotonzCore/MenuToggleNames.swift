@@ -42,6 +42,9 @@ public enum MenuToggleNames {
     /// there is no strip to show, and a row that would put up an empty one is
     /// a row that lies.
     public static let timingStrip = "Show Timing"
+    /// A recording's tracks, on the same key as an icon's timing strip: the
+    /// View menu's row for the transport's timeline toggle (`TimelineToggle`).
+    public static let timeline = "Show Timeline"
     /// The Video menu's Animate rows (`video-move-wt.html`, `#cmdMenu`): the
     /// picked move's path arced or on its line. A verb, because the mock names
     /// it one, wearing a tick while the path is curved, so unticking it
