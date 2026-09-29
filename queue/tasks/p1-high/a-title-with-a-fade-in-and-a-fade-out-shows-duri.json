@@ -1,0 +1,34 @@
+{
+  "id": "a-title-with-a-fade-in-and-a-fade-out-shows-duri",
+  "title": "A title with a fade in and a fade out shows during playback",
+  "goal": "User 2026-09-28: 'I tried to make some text on a video for an intro title. I added the title, then tried to do fade in and fade out. Seemed correct but during playback the text is not visible ever.' Reproduce exactly that path first. Theories to test, none proven: the Fade In and Fade Out presets (Animate In/Out, 4760f7d7) each write opacity keys and the second overwrites or brackets the first so opacity is 0 across the title's whole span; the keys are written relative to the wrong time (document vs the layer's own in point) so they fall outside the title's bar; the canvas shows the static opacity while stopped but playback evaluates the keys; the title's layer time and its keys disagree after the title was moved or trimmed.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 0.0003,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-29T05:06:39.236Z",
+  "updated": "2026-09-29T05:06:39.321Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Reproduced first with a walk at Next defaults: press T over a recording, type a title, right-click Animate In > Fade, Animate Out > Fade, play; photograph the canvas at in+0.1 s, the middle, out-0.1 s, and log the evaluated opacity at 20 moments; the report names the cause",
+    "Core tests (PhotonzCore, written first): a layer with Fade In and Fade Out has opacity 0 at its in point, 1 in the middle, 0 at its out point, whatever order the two were applied in and after moving or trimming its bar; presets write keys at the layer's own in and out",
+    "The title is visible during playback and while scrubbing, fading in and out exactly as the keys show on its row",
+    "The same holds for the other presets (Slide, Pop, Scale) in any combination of In and Out",
+    "Export shows the same as playback (checked on the exported file's frames)",
+    "Walk photographs the three moments after the fix, with the title visible in the middle"
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T05:06:39.238Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-29T05:06:39.320Z",
+      "note": "seq 400 -> 0.0003"
+    }
+  ]
+}
