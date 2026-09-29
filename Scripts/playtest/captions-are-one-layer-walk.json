@@ -16,6 +16,17 @@
       "action": "openSampleTalk"
     },
     {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "2",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
       "do": "action",
       "action": "captionsWriteQuietly"
     },
