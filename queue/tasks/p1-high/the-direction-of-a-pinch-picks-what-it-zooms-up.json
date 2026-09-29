@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 20,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T05:21:39.259Z",
-  "updated": "2026-09-29T12:28:00.611Z",
+  "updated": "2026-09-29T13:20:02.640Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.\n\nEarlier goal, moved here by the 2026-09-29 digest: User 2026-09-28: 'when I use the trackpad to zoom in, if I'm pinch zooming vertically, it just makes the rows bigger. If I'm pinch zooming horizontally it changes the scale.' Shipped in f10a9c49: a pinch zooms time and rows together about the pointer (Option time only, Shift rows only). The user wants the axis chosen by the direction the fingers spread. NSEvent magnify carries only a scalar, so read the two touches (NSView allowedTouchTypes .indirect, touchesBegan/Moved, NSTouch normalizedPosition) during the gesture and use the spread vector's angle.",
@@ -52,6 +52,10 @@
     {
       "t": "2026-09-29T12:28:00.610Z",
       "note": "seq 0.0029 -> 20"
+    },
+    {
+      "t": "2026-09-29T13:20:02.639Z",
+      "note": "decision \"On your trackpad, does the way you pinch on the timeline pick what it zooms?\" resolved: Feels right"
     }
   ],
   "started": "2026-09-29T11:50:44.698Z",

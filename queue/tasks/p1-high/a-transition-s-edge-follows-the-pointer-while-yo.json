@@ -1,0 +1,34 @@
+{
+  "id": "a-transition-s-edge-follows-the-pointer-while-yo",
+  "title": "A transition's edge follows the pointer while you drag it",
+  "goal": "User 2026-09-29: 'when I have a transition and try to resize it, the transition size doesn't follow my cursor as I drag the edge. It updates when I release the mouse only.' Likely cause from reading the code (verify first): updateClipTransitionDrag (EditorState+ClipTransitions.swift:388) writes the live length into clipTransitionDrag.landingMS, but ClipPiecesBar.band (ClipPiecesBar.swift:772) draws the band from cut.drawnTransition.lengthMS, the committed document value, which only changes in commitClipTransitionDrag. So the band, its spare-media marks and possibly the canvas preview stay put until release.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 0.0001,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-29T13:22:26.746Z",
+  "updated": "2026-09-29T13:22:26.826Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Reproduced first: a walk at Next defaults drags a transition's edge in 20 steps with the pointer (not an accessibility press) and logs the band's drawn width and the pointer x at each step; today they disagree until release",
+    "While dragging, the band's width and position, its length label, the spare-media marks and the canvas preview at the playhead all show the live length every frame, from the drag session, and the edge stays under the pointer (within one frame of time)",
+    "Both edges, and a transition whose alignment is at one side rather than across the cut",
+    "The clamp to the longest length the spare media allows shows as the edge stopping, with the pointer moving on, never as a jump on release",
+    "Release commits one undo step exactly as now; Escape during the drag restores the old length",
+    "The same live-follow rule is checked for every other timeline drag that has a session (clip bars, trims, keys, word chips) and any that only update on release are fixed or filed"
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T13:22:26.748Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-29T13:22:26.825Z",
+      "note": "seq 400 -> 0.0001"
+    }
+  ]
+}

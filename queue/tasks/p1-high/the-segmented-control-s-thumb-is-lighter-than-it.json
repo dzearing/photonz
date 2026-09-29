@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p1-high",
   "seq": 0.00005,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T13:02:36.363Z",
-  "updated": "2026-09-29T13:12:32.623Z",
+  "updated": "2026-09-29T13:20:22.845Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -50,6 +50,11 @@
     {
       "t": "2026-09-29T13:12:32.621Z",
       "note": "Also from the mock: never animate a thumb's position and size on different paths (transform vs frame). In WebKit they desynced and the thumb left the rail. The SwiftUI morph must move frame and size as one animation."
+    },
+    {
+      "t": "2026-09-29T13:20:22.840Z",
+      "note": "claimed by go loop"
     }
-  ]
+  ],
+  "started": "2026-09-29T13:20:22.839Z"
 }
