@@ -1,0 +1,33 @@
+{
+  "id": "the-direction-of-a-pinch-picks-what-it-zooms-up",
+  "title": "The direction of a pinch picks what it zooms: up-down for rows, side to side for time",
+  "goal": "User 2026-09-28: 'when I use the trackpad to zoom in, if I'm pinch zooming vertically, it just makes the rows bigger. If I'm pinch zooming horizontally it changes the scale.' Shipped in f10a9c49: a pinch zooms time and rows together about the pointer (Option time only, Shift rows only). The user wants the axis chosen by the direction the fingers spread. NSEvent magnify carries only a scalar, so read the two touches (NSView allowedTouchTypes .indirect, touchesBegan/Moved, NSTouch normalizedPosition) during the gesture and use the spread vector's angle.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 0.0029,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-29T05:21:39.259Z",
+  "updated": "2026-09-29T05:21:39.338Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Core logic (PhotonzCore, tests first): given the two touch positions at the start and now, classify the pinch as horizontal (angle within about 35 degrees of horizontal), vertical (within about 35 degrees of vertical), or diagonal, deciding once near the start of the gesture and holding it until the fingers lift so it never flips mid-pinch",
+    "Horizontal spread or squeeze zooms time only, vertical zooms row height only, both anchored on the pointer exactly as now; diagonal zooms both together (today's behaviour)",
+    "Option and Shift still force time only and rows only",
+    "If touches are unavailable (a mouse, Magic Mouse, or touch events blocked), the pinch falls back to today's both-together behaviour",
+    "Walk: synthesise horizontal, vertical and diagonal two-touch pinches and assert which axis changed; the existing pinch walk still passes; a person-verification card asks the user to confirm the feel"
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T05:21:39.261Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-29T05:21:39.337Z",
+      "note": "seq 400 -> 0.0029"
+    }
+  ]
+}
