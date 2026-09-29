@@ -4,16 +4,17 @@
   "goal": "User 2026-09-29: 'I think the segmented control's thumb should be lighter than the rail, and ideally, should use liquid glass animation effect when snapping between options.' The shared control is Sources/Photonz/DesignSystem/SegmentedControl.swift (built to comp-segmented.html). This is the user's own change to their component, so update the component page docs/design/mocks/pages/comp-segmented.html first (with a comment citing this request) and the app to match. Use the platform's Liquid Glass (macOS 26: glassEffect on the thumb inside a GlassEffectContainer, glassEffectID with a namespace so the thumb morphs between segments), not a hand-drawn imitation.",
   "epic": "design-system",
   "priority": "p1-high",
-  "seq": 0.003,
+  "seq": 0.00005,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T13:02:36.363Z",
-  "updated": "2026-09-29T13:02:36.450Z",
+  "updated": "2026-09-29T13:02:44.985Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
   "acceptance": [
+    "The thumb is clearly visible at a glance (user 2026-09-29: 'I can barely see the thumb atm'): measured on the rendered control in light and dark, over the title bar and over the panel, the thumb-to-rail contrast is at least 1.5:1 and the thumb has a hairline edge or soft shadow that separates it from the rail; photographs of each placement in the audit",
     "comp-segmented.html shows the thumb lighter than the rail in light and dark (a contrast the eye reads at once, measured in the audit: thumb vs rail luminance), and the snap animation described and demonstrated as best HTML can",
     "In the app the thumb is a Liquid Glass shape inside a GlassEffectContainer on a darker rail; choosing another segment morphs the glass across with the system's glass spring (stretching toward the target and settling), interruptible mid-flight, with no cross-fade or jump",
     "Dragging the thumb across segments tracks the pointer and snaps with the same glass motion on release",
@@ -29,6 +30,14 @@
     {
       "t": "2026-09-29T13:02:36.449Z",
       "note": "seq 400 -> 0.003"
+    },
+    {
+      "t": "2026-09-29T13:02:44.927Z",
+      "note": "seq 0.003 -> 0.00005"
+    },
+    {
+      "t": "2026-09-29T13:02:44.984Z",
+      "note": "User 2026-09-29: can barely see the thumb today. Contrast is now a hard acceptance item; moved to the front."
     }
   ]
 }
