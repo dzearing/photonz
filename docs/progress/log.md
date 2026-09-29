@@ -20182,3 +20182,12 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - The timeline's Easing menu had the same overlay trick and is the same component now. `NoInvisibleHitTargetTests` fails any view faded below 5%.
 - Harness: `panelMenu` gains `at` (centre/start/end clicks on the face, space/return keys). New proof walks: `every-dropdown-opens-on-a-click-walk` (15 caption dropdowns), `every-title-dropdown-opens-on-a-click-walk` (Curve, Fade, Easing), `every-clip-dropdown-opens-on-a-click-walk` (Hold, Type, Length, Hold on black, sound Curve). `EveryDropdownIsClickedByAWalkTests` keeps every panel dropdown in one.
 - Open: `caption-words-pop-walk` fails before and after this change because the talk opens in View mode with the panel shut (filed).
+
+## 2026-09-29 — Every caption style control changes the captions
+
+- Reproduced against HEAD first: with the dropdown hit-target fix in (`e121747f`), every caption dropdown already reached the look and the canvas. The user's dead controls were that fix. Nothing in the look model or the render was broken.
+- `CaptionLookControl` (PhotonzCore) is now the one list every Captions and Text section row writes through (`EditorState.setCaption`). `CaptionLookControlTests` drives every value of every control on every preset, checks the drawn caption layers change, and checks both panel sources set every control through it.
+- Caption colours (Current word Colour, Pill, Glow, Stroke; Text Colour, Background, Glow, Stroke) are `ColorWellButton`s opening the designed picker with opacity, eyedropper and recents. The picker has a None swatch beside the eyedropper for slots that can hold none. `CaptionColourNames` is gone.
+- Timing falls back to arrow-only buttons (words in the tip) in a dock too narrow for "Earlier"/"Later".
+- Walk: `every-caption-control-changes-the-captions-walk` (no flags) clicks every dropdown face and every well, reads back, and fails if the drawn caption did not change (new actions `captionsNoteDrawn`/`captionsExpectDrawnChanged`); also None, undo and playback. Audit: `queue/audits/2026-09-29-caption-style-controls.json`.
+- Open: a picked colour lands on release, not live while dragging (captions have no preview path).

@@ -120,13 +120,14 @@
     },
     {
       "do": "expect",
-      "menu": "Caption background",
-      "reads": "Darker"
+      "control": "Color",
+      "in": "Caption background",
+      "present": true
     },
     {
       "do": "describe",
       "stage": "2b-lower-third-background",
-      "note": "The Captions layer picked after Lower third: Background names the style's plate, Darker, never a code like #000000B3."
+      "note": "The Captions layer picked after Lower third: Background is a colour swatch wearing the style's plate, never a code."
     },
     {
       "do": "labelsWhole",
@@ -241,25 +242,42 @@
     },
     {
       "do": "expect",
-      "menu": "Caption background",
-      "reads": "Darker"
+      "control": "Color",
+      "in": "Caption background",
+      "present": true
     },
     {
       "do": "describe",
       "stage": "3b-the-narrowest-dock-background",
-      "note": "The Captions layer picked after Lower third: Background names the style's plate, Darker, never a code like #000000B3."
+      "note": "The Captions layer picked after Lower third: Background is a colour swatch wearing the style's plate, never a code."
     },
     {
       "do": "labelsWhole",
       "stage": "3b-the-narrowest-dock-background",
       "words": [
-        "Background",
-        "Darker"
+        "Background"
       ]
     },
     {
       "do": "snapshot",
       "name": "3b-the-narrowest-dock-background"
+    },
+    {
+      "do": "reveal",
+      "control": "Captions Earlier"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "describe",
+      "stage": "3c-the-narrowest-dock-timing",
+      "note": "Timing's two buttons in the narrowest dock: their whole words, or their arrows alone with the words in the tip, never cut to Ear..."
+    },
+    {
+      "do": "snapshot",
+      "name": "3c-the-narrowest-dock-timing"
     },
     {
       "do": "selectRow",

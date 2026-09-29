@@ -194,6 +194,9 @@ private final class Run {
     private var openedCaptionWord: (ref: CaptionWordRef, word: TranscribedWord)?
     /// The second caption's words before a walk dragged any of them.
     private var captionWordsBeforeDrags: [TranscribedWord]?
+    /// The caption drawn at the playhead when a walk last noted it
+    /// (`captionsNoteDrawn`).
+    private var notedCaption: [Layer]?
     /// A colour drag left down by `holdColorDrag`, waiting for the release that
     /// turns its live frames into one recorded step.
     private var heldColorDrag: (slot: ColorSlot, paint: Paint)?
@@ -3903,6 +3906,24 @@ private final class Run {
                 }
                 note(number, step.name, "captions: \"\(content.string)\" alone on screen, glowing, "
                      + "drawn at \(String(format: "%.2f", paint.scale))x", state: describe())
+            case .captionsNoteDrawn, .captionsExpectDrawnChanged:
+                let at = editor.documentTimeMS
+                let drawn = (editor.document?.drawn(atTimeMS: at).allLayers ?? [])
+                    .filter { $0.isCaption && $0.isVisible }
+                guard !drawn.isEmpty else {
+                    throw Failure(description: "no caption is on screen at \(at) ms")
+                }
+                if action == .captionsExpectDrawnChanged, drawn == notedCaption {
+                    throw Failure(description: "the caption drawn at \(at) ms is the same as before the "
+                        + "last change: the control did not reach the picture")
+                }
+                notedCaption = drawn
+                let words = drawn.compactMap { layer -> String? in
+                    if case .text(let content) = layer.content { return content.string }
+                    return nil
+                }.joined(separator: " / ")
+                note(number, step.name, "captions: \"\(words)\" drawn at \(at) ms"
+                     + (action == .captionsExpectDrawnChanged ? ", changed" : ", noted"), state: describe())
             case .captionsExportFiles:
                 for format in CaptionFileFormat.allCases {
                     let url = out.appendingPathComponent("captions.\(format.fileExtension)")
@@ -5078,6 +5099,7 @@ private final class Run {
                  .captionsExpectGuides, .captionsExpectNoGuides, .captionsExpectReset,
                  .captionsExpectFootApart,
                  .captionsSeekIntoNextWord, .captionsStepIntoWord, .captionsExpectOneWordPopping,
+                 .captionsNoteDrawn, .captionsExpectDrawnChanged,
                  .captionsExpectEditingOnCanvas,
                  .captionsWriteFilmWithFileBeside,
                  .captionsWordOpenOnCanvas, .captionsWordOpenInLane, .captionsExpectWordOpen,

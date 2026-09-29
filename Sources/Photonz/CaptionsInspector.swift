@@ -204,26 +204,41 @@ struct CaptionsInspector: View {
     /// end, dragged on the timeline.
     private var timing: some View {
         VideoKit.FieldRow(label: "Timing") {
-            HStack(spacing: 6) {
-                Button {
-                    editorState.nudgeCaptions(byMS: -EditorState.captionNudgeMS)
-                } label: {
-                    Label("Earlier", systemImage: "arrow.left")
-                }
-                .disabled(!editorState.canNudgeCaptions)
-                .playtestField("Captions Earlier")
-                .panelHelp("Every caption a tenth of a second earlier.")
-                Button {
-                    editorState.nudgeCaptions(byMS: EditorState.captionNudgeMS)
-                } label: {
-                    Label("Later", systemImage: "arrow.right")
-                }
-                .disabled(!editorState.canNudgeCaptions)
-                .playtestField("Captions Later")
-                .panelHelp("Every caption a tenth of a second later.")
+            // Never cut short: the words while they fit, the arrows alone
+            // (their words in the tip) in a dock too narrow for them. Until
+            // 2026-09-29 a narrow dock read "Ear..." and "La...".
+            ViewThatFits(in: .horizontal) {
+                timingButtons(words: true)
+                timingButtons(words: false)
             }
-            .controlSize(.small)
         }
+    }
+
+    private func timingButtons(words: Bool) -> some View {
+        HStack(spacing: 6) {
+            nudgeButton("Earlier", systemImage: "arrow.left", byMS: -EditorState.captionNudgeMS,
+                        words: words, help: "Every caption a tenth of a second earlier.")
+            nudgeButton("Later", systemImage: "arrow.right", byMS: EditorState.captionNudgeMS,
+                        words: words, help: "Every caption a tenth of a second later.")
+        }
+        .controlSize(.small)
+    }
+
+    private func nudgeButton(_ title: String, systemImage: String, byMS: Int, words: Bool,
+                             help: String) -> some View {
+        Button {
+            editorState.nudgeCaptions(byMS: byMS)
+        } label: {
+            if words {
+                Label(title, systemImage: systemImage).lineLimit(1)
+            } else {
+                Image(systemName: systemImage).accessibilityLabel(title)
+            }
+        }
+        .fixedSize()
+        .disabled(!editorState.canNudgeCaptions)
+        .playtestControl("Captions \(title)", detail: "the Captions section")
+        .panelHelp(help)
     }
 
     private var file: some View {
@@ -310,7 +325,7 @@ struct CaptionsTextInspector: View {
                           options: TextStyles.fontOptions(picked: [look.fontName]),
                           title: { $0 },
                           help: "The font of every caption") { font in
-                editorState.changeCaptionLook { $0.fontName = font }
+                editorState.setCaption(.font, to: .font(font))
             }
             PanelPair {
                 let shown = look.resolvedFontSize(in: size)
@@ -320,43 +335,33 @@ struct CaptionsTextInspector: View {
                               title: { TextStyles.sizeTitle($0) },
                               spoken: { TextStyles.sizeWords($0) },
                               help: "The size of every caption") { picked in
-                    editorState.changeCaptionLook { $0.fontSize = picked }
+                    editorState.setCaption(.size, to: .size(picked))
                 }
                 SelectionMenu(label: "Weight",
                               reading: StyleReading(value: look.weight, isMixed: false),
                               options: TextWeight.allCases,
                               title: { $0.rawValue.capitalized },
                               help: "The weight of every caption") { weight in
-                    editorState.changeCaptionLook { $0.weight = weight }
+                    editorState.setCaption(.weight, to: .weight(weight))
                 }
             }
-            colourRow("Colour", value: look.colorHex, choices: CaptionColourNames.inks) { hex in
-                editorState.changeCaptionLook { $0.colorHex = hex ?? "#FFFFFF" }
-            }
-            colourRow("Background", value: look.backgroundHex, choices: CaptionColourNames.plates) { hex in
-                editorState.changeCaptionLook { $0.backgroundHex = hex }
-            }
+            CaptionColourWellRow(control: .textColour, name: "Caption colour", look: look)
+            CaptionColourWellRow(control: .background, name: "Caption background", look: look)
             // The whole text's own glow, outline and shadow; the word being
             // said has its own in the Captions section.
-            CaptionColourRow(label: "Glow", field: "Caption glow", value: look.glowHex,
-                             choices: CaptionColourNames.bright) { hex in
-                editorState.changeCaptionLook { $0.glowHex = hex }
-            }
-            CaptionColourRow(label: "Stroke", field: "Caption stroke", value: look.strokeHex,
-                             choices: CaptionColourNames.edges) { hex in
-                editorState.changeCaptionLook { $0.strokeHex = hex }
-            }
+            CaptionColourWellRow(control: .glow, name: "Caption glow", look: look)
+            CaptionColourWellRow(control: .stroke, name: "Caption stroke", look: look)
             VideoKit.DropdownRow(
                 label: "Shadow", value: look.shadow.title,
                 choices: .picking(CaptionShadow.allCases, current: look.shadow, title: \.title) { shadow in
-                    editorState.changeCaptionLook { $0.shadow = shadow }
+                    editorState.setCaption(.shadow, to: .shadow(shadow))
                 })
             .playtestField("Caption shadow")
             VStack(alignment: .leading, spacing: 2) {
                 Text("Align").font(.caption).foregroundStyle(.secondary)
                 Picker("Align", selection: Binding<TextAlign>(
                     get: { look.alignment },
-                    set: { align in editorState.changeCaptionLook { $0.alignment = align } })) {
+                    set: { align in editorState.setCaption(.align, to: .align(align)) })) {
                     ForEach(TextAlign.allCases, id: \.self) { align in
                         Image(systemName: align.symbolName).tag(align)
                     }
@@ -374,16 +379,5 @@ struct CaptionsTextInspector: View {
     static func sizes(with shown: CGFloat) -> [CGFloat] {
         let base = TextStyles.fontSizes
         return base.contains(shown) ? base : (base + [shown]).sorted()
-    }
-
-    private func colourRow(_ label: String, value: String?, choices: [CaptionColourNames.Choice],
-                           pick: @escaping (String?) -> Void) -> some View {
-        let name = CaptionColourNames.name(of: value, among: choices)
-        return VideoKit.DropdownRow(
-            label: label, value: name, swatch: value.map(CaptionsInspector.swatch),
-            choices: choices.map { choice in
-                .item(choice.name, isOn: choice.hex?.uppercased() == value?.uppercased()) { pick(choice.hex) }
-            })
-        .playtestField("Caption \(label.lowercased())")
     }
 }

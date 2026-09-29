@@ -19,22 +19,22 @@ struct CaptionWordsInspector: View {
             VideoKit.DropdownRow(
                 label: "Show", value: look.show.title,
                 choices: .picking(CaptionGrouping.allCases, current: look.show, title: \.title) { show in
-                    change { $0.show = show }
+                    set(.show, .grouping(show))
                 })
             .playtestField("Show")
             .panelHelp("How many words are on screen at a time.")
             if look.show.usesLines {
                 VideoKit.FieldRow(label: "Lines") {
                     VideoKit.Segmented(options: [(1, "1"), (2, "2")], selection: look.lines) { lines in
-                        change { $0.lines = lines }
+                        set(.lines, .count(lines))
                     }
                     .playtestControl("Caption lines", detail: "the Captions section")
                     .panelHelp("The most lines a caption fills.")
                 }
             }
-            shadeRow("Said", value: look.said, choices: CaptionWordShade.saidChoices) { $0.said = $1 }
-            shadeRow("Coming", value: look.coming, choices: CaptionWordShade.comingChoices) { $0.coming = $1 }
-            currentWord(look.word)
+            shadeRow(.said, value: look.said, choices: CaptionWordShade.saidChoices)
+            shadeRow(.coming, value: look.coming, choices: CaptionWordShade.comingChoices)
+            currentWord(look)
         }
     }
 
@@ -44,44 +44,41 @@ struct CaptionWordsInspector: View {
             .foregroundStyle(VideoKit.Palette.dim)
     }
 
-    private func change(_ edit: (inout CaptionLook) -> Void) {
-        editorState.changeCaptionLook(edit)
+    private func set(_ control: CaptionLookControl, _ value: CaptionLookValue) {
+        editorState.setCaption(control, to: value)
     }
 
-    private func shadeRow(_ label: String, value: CaptionWordShade, choices: [CaptionWordShade],
-                          set: @escaping (inout CaptionLook, CaptionWordShade) -> Void) -> some View {
+    private func shadeRow(_ control: CaptionLookControl, value: CaptionWordShade,
+                          choices: [CaptionWordShade]) -> some View {
         VideoKit.DropdownRow(
-            label: label, value: value.title,
+            label: control.title, value: value.title,
             choices: .picking(choices, current: value, title: \.title) { shade in
-                change { set(&$0, shade) }
+                set(control, .shade(shade))
             })
-        .playtestField("Caption \(label.lowercased())")
+        .playtestField("Caption \(control.title.lowercased())")
     }
 
     // MARK: - The word being said
 
-    @ViewBuilder private func currentWord(_ word: CaptionWordLook) -> some View {
+    @ViewBuilder private func currentWord(_ look: CaptionLook) -> some View {
+        let word = look.word
         heading("Current word").padding(.top, 6)
-        CaptionColourRow(label: "Colour", value: word.colorHex, noneTitle: "Text colour",
-                         choices: CaptionColourNames.bright) { hex in change { $0.word.colorHex = hex } }
-        CaptionColourRow(label: "Pill", value: word.pillHex,
-                         choices: CaptionColourNames.bright) { hex in change { $0.word.pillHex = hex } }
-        CaptionColourRow(label: "Glow", value: word.glowHex,
-                         choices: CaptionColourNames.bright) { hex in change { $0.word.glowHex = hex } }
-        CaptionColourRow(label: "Stroke", value: word.strokeHex,
-                         choices: CaptionColourNames.edges) { hex in change { $0.word.strokeHex = hex } }
-        VideoKit.FieldRow(label: "Shadow") {
+        CaptionColourWellRow(control: .wordColour, name: "Word colour", look: look)
+        CaptionColourWellRow(control: .wordPill, name: "Word pill", look: look)
+        CaptionColourWellRow(control: .wordGlow, name: "Word glow", look: look)
+        CaptionColourWellRow(control: .wordStroke, name: "Word stroke", look: look)
+        VideoKit.FieldRow(label: CaptionLookControl.wordShadow.title) {
             Toggle("Shadow", isOn: Binding(get: { word.shadow },
-                                           set: { on in change { $0.word.shadow = on } }))
+                                           set: { on in set(.wordShadow, .on(on)) }))
                 .toggleStyle(.switch)
                 .controlSize(.mini)
                 .labelsHidden()
                 .playtestControl("Current word shadow", detail: "the Captions section")
         }
-        VideoKit.FieldRow(label: "Scale") {
+        VideoKit.FieldRow(label: CaptionLookControl.wordScale.title) {
             HStack(spacing: 8) {
                 Slider(value: Binding(get: { Double(word.scale) },
-                                      set: { value in change { $0.word.scale = CGFloat(value) } }),
+                                      set: { value in set(.wordScale, .amount(CGFloat(value))) }),
                        in: Double(CaptionWordLook.scaleRange.lowerBound)...Double(CaptionWordLook.scaleRange.upperBound))
                     .controlSize(.small)
                     .playtestField("Current word scale")
@@ -89,21 +86,21 @@ struct CaptionWordsInspector: View {
             }
         }
         VideoKit.DropdownRow(
-            label: "Animation", value: word.motion.title,
+            label: CaptionLookControl.animation.title, value: word.motion.title,
             choices: .picking(CaptionWordMotion.allCases, current: word.motion, title: \.title) { motion in
-                change { $0.word.pick(motion) }
+                set(.animation, .motion(motion))
             })
         .playtestField("Animation")
         if word.motion != .none {
-            VideoKit.FieldRow(label: "Speed") {
+            VideoKit.FieldRow(label: CaptionLookControl.speed.title) {
                 HStack(spacing: 8) {
                     // Right is quicker: the slider reads as speed, the value
                     // as how long the motion takes.
                     let range = CaptionWordLook.speedRange
                     Slider(value: Binding(get: { Double(range.upperBound + range.lowerBound - word.speedMS) },
-                                          set: { value in change {
-                                              $0.word.speedMS = range.upperBound + range.lowerBound - Int(value.rounded())
-                                          } }),
+                                          set: { value in
+                                              set(.speed, .ms(range.upperBound + range.lowerBound - Int(value.rounded())))
+                                          }),
                            in: Double(range.lowerBound)...Double(range.upperBound))
                         .controlSize(.small)
                         .playtestField("Current word speed")
@@ -123,25 +120,57 @@ struct CaptionWordsInspector: View {
     }
 }
 
-/// One colour, from a short list, or none.
-struct CaptionColourRow: View {
-    let label: String
-    /// What a walk calls it.
-    var field: String? = nil
-    let value: String?
-    var noneTitle = "None"
-    let choices: [CaptionColourNames.Choice]
-    let pick: (String?) -> Void
+/// One caption colour: a swatch that opens the app's colour picker, the same
+/// well Appearance's fill wears. A walk reads the colour it holds off the
+/// row (`#FF4FD8`, `#000000 70%`, `None`). A slot
+/// that can hold none (a pill, a glow, an outline, a plate) offers None in
+/// the picker, and its swatch is struck through while it holds none.
+struct CaptionColourWellRow: View {
+    @Environment(EditorState.self) private var editorState
+    let control: CaptionLookControl
+    /// The picker's title, and what a walk calls the well: `press "Color" in
+    /// "Word glow"`. Distinct across the two sections, which both have a Glow.
+    let name: String
+    let look: CaptionLook
 
     var body: some View {
-        let name = CaptionColourNames.name(of: value, among: choices, none: noneTitle)
-        VideoKit.DropdownRow(
-            label: label, value: name, swatch: value.map(CaptionsInspector.swatch),
-            choices: [.item(noneTitle, isOn: value == nil) { pick(nil) }]
-                + choices.map { choice in
-                    .item(choice.name, isOn: choice.hex?.uppercased() == value?.uppercased()) { pick(choice.hex) }
-                })
-        .playtestField(field ?? "Current word \(label.lowercased())")
+        let hex: String? = {
+            if case .colour(let hex) = control.value(in: look) { return hex }
+            return nil
+        }()
+        let reading = hex.map { CaptionColourWellRow.reading($0) } ?? "None"
+        VideoKit.FieldRow(label: control.title) {
+            HStack(spacing: 8) {
+                ColorWellButton(hex: hex ?? control.openingHex(in: look),
+                                name: name,
+                                supportsOpacity: true,
+                                wellKey: "caption-\(control.rawValue)",
+                                isNone: hex == nil,
+                                onNone: control.allowsNone ? { editorState.setCaption(control, to: .colour(nil)) } : nil,
+                                onCommit: { picked in
+                                    editorState.setCaption(control, to: .colour(picked))
+                                    editorState.recordRecentColor(hex: picked)
+                                })
+                // The swatch says the colour, as Appearance's does; a code is
+                // never printed in the panel. Only none is said in words.
+                if hex == nil {
+                    Text("None")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(VideoKit.Palette.faint)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 0)
+            }
+            .panelReadout(reading)
+            .playtestField(name)
+        }
+    }
+
+    /// `#FF4FD8`, or `#000000 70%` for a colour you can see through.
+    static func reading(_ hex: String) -> String {
+        guard let rgba = RGBA(hex: hex) else { return hex.uppercased() }
+        let percent = Int((rgba.a * 100).rounded())
+        return percent >= 100 ? rgba.hexString.uppercased() : "\(rgba.hexString.uppercased()) \(percent)%"
     }
 }
 

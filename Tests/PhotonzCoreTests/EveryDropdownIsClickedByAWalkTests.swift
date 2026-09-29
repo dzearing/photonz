@@ -25,12 +25,10 @@ struct EveryDropdownIsClickedByAWalkTests {
     /// is what notices one was added.
     static let builtNames = [
         "Caption said", "Caption coming",
-        "Current word colour", "Current word pill", "Current word glow", "Current word stroke",
-        "Caption colour", "Caption background", "Caption glow", "Caption stroke",
         "Hold on black",
     ]
     /// How many dropdown call sites build their row name from a variable.
-    static let builtSites = 4
+    static let builtSites = 2
 
     /// The name a walk finds each dropdown by: the first `playtestField` or
     /// `playtestControl` after the call, nil when that name is built at run

@@ -1,0 +1,602 @@
+{
+  "out": "/tmp/photonz-playtest/every-caption-control-changes-the-captions-walk",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "describe",
+      "stage": "why",
+      "note": "The user, 2026-09-28: the caption style dropdowns did nothing and the colours were menus of names, not the colour picker. At Next defaults with no flag set: every control in the Captions section is used the way a hand uses it (a pointer click on the dropdown's face, a click on the colour swatch), what it shows is read back, and the caption drawn at the playhead must change after every one."
+    },
+    {
+      "do": "action",
+      "action": "openSampleTalk"
+    },
+    {
+      "do": "action",
+      "action": "captionsWriteQuietly"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "press",
+      "control": "Edit Mode"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "selectRow",
+      "row": "Captions"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectOneLayerPicked"
+    },
+    {
+      "do": "action",
+      "action": "captionsSeekIntoNextWord"
+    },
+    {
+      "do": "action",
+      "action": "captionsNoteDrawn"
+    },
+    {
+      "do": "reveal",
+      "control": "Caption style Caption"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-before"
+    },
+    {
+      "do": "render",
+      "name": "1-canvas-before"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Show",
+      "at": [
+        "centre"
+      ],
+      "choose": "3 words"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Show",
+      "reads": "3 words"
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectDrawnChanged"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-show-three-words"
+    },
+    {
+      "do": "render",
+      "name": "2-canvas-show-three-words"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Caption said",
+      "at": [
+        "centre"
+      ],
+      "choose": "Dim"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Caption said",
+      "reads": "Dim"
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectDrawnChanged"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Caption coming",
+      "at": [
+        "centre"
+      ],
+      "choose": "Hidden"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Caption coming",
+      "reads": "Hidden"
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectDrawnChanged"
+    },
+    {
+      "do": "reveal",
+      "control": "Current word shadow"
+    },
+    {
+      "do": "press",
+      "control": "Color",
+      "in": "Word colour"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "None",
+      "present": true
+    },
+    {
+      "do": "press",
+      "control": "Shades 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "snapshot",
+      "name": "3-word-colour-picker"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectDrawnChanged"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-word-colour"
+    },
+    {
+      "do": "render",
+      "name": "3-canvas-word-colour"
+    },
+    {
+      "do": "press",
+      "control": "Color",
+      "in": "Word pill"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "None",
+      "present": true
+    },
+    {
+      "do": "press",
+      "control": "Shades 4"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectDrawnChanged"
+    },
+    {
+      "do": "press",
+      "control": "Color",
+      "in": "Word glow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "None",
+      "present": true
+    },
+    {
+      "do": "press",
+      "control": "Shades 3"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "snapshot",
+      "name": "4-word-glow-picker"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectDrawnChanged"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-word-glow"
+    },
+    {
+      "do": "render",
+      "name": "4-canvas-word-glow"
+    },
+    {
+      "do": "press",
+      "control": "Color",
+      "in": "Word stroke"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "None",
+      "present": true
+    },
+    {
+      "do": "press",
+      "control": "Shades 1"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectDrawnChanged"
+    },
+    {
+      "do": "press",
+      "control": "Current word shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectDrawnChanged"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Animation",
+      "at": [
+        "centre"
+      ],
+      "choose": "Grow with bounce"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Animation",
+      "reads": "Grow with bounce"
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectDrawnChanged"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-animation-grow"
+    },
+    {
+      "do": "render",
+      "name": "5-canvas-animation-grow"
+    },
+    {
+      "do": "press",
+      "control": "Color",
+      "in": "Word pill"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "None"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectDrawnChanged"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-pill-none"
+    },
+    {
+      "do": "key",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectDrawnChanged"
+    },
+    {
+      "do": "reveal",
+      "control": "align center"
+    },
+    {
+      "do": "press",
+      "control": "Color",
+      "in": "Caption colour"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "None",
+      "present": false
+    },
+    {
+      "do": "press",
+      "control": "Shades 3"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectDrawnChanged"
+    },
+    {
+      "do": "press",
+      "control": "Color",
+      "in": "Caption background"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "None",
+      "present": true
+    },
+    {
+      "do": "press",
+      "control": "Shades 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectDrawnChanged"
+    },
+    {
+      "do": "press",
+      "control": "Color",
+      "in": "Caption glow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "None",
+      "present": true
+    },
+    {
+      "do": "press",
+      "control": "Shades 3"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectDrawnChanged"
+    },
+    {
+      "do": "press",
+      "control": "Color",
+      "in": "Caption stroke"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "None",
+      "present": true
+    },
+    {
+      "do": "press",
+      "control": "Shades 1"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "snapshot",
+      "name": "7-text-colours-picker"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectDrawnChanged"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-text-colours"
+    },
+    {
+      "do": "render",
+      "name": "7-canvas-text-colours"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Caption shadow",
+      "at": [
+        "centre"
+      ],
+      "choose": "Deep"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Caption shadow",
+      "reads": "Deep"
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectDrawnChanged"
+    },
+    {
+      "do": "panel",
+      "stage": "8-after-every-control"
+    },
+    {
+      "do": "snapshot",
+      "name": "8-after-every-control"
+    },
+    {
+      "do": "action",
+      "action": "videoPlay"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "9-playing"
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectDrawnChanged"
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    }
+  ]
+}

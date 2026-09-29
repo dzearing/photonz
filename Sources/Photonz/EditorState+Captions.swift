@@ -379,6 +379,12 @@ extension EditorState {
         setCaptionLook(look)
     }
 
+    /// Set one control of the caption panels (`CaptionLookControl`): every
+    /// row in the Captions and Text sections writes through here.
+    func setCaption(_ control: CaptionLookControl, to value: CaptionLookValue) {
+        changeCaptionLook { control.set(value, in: &$0) }
+    }
+
     /// Pick one of the named styles. It keeps the font and size the person
     /// chose, and takes everything else from the style.
     func pickCaptionPreset(_ preset: CaptionLook.Preset) {

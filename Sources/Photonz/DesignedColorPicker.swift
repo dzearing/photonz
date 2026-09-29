@@ -51,6 +51,12 @@ struct DesignedColorPicker: View {
     /// `onCommit` when the drag is let go of. Nil where the caller has nothing
     /// it can paint live, and then the colour simply lands on release.
     var onPreview: ((Paint) -> Void)?
+    /// Takes the colour off altogether, for a slot that can hold none (a
+    /// caption's pill, glow or outline). Nil where the slot must hold a
+    /// colour, and then there is no None to press.
+    var onNone: (() -> Void)?
+    /// Whether the slot holds no colour right now, so None reads as picked.
+    var isNone: Bool = false
     /// Called with the paint it landed on. A flat one still carries the hex it
     /// always did, in `hex`.
     let onCommit: (Paint) -> Void
@@ -149,6 +155,25 @@ struct DesignedColorPicker: View {
                 .font(.callout.weight(.medium))
                 .lineLimit(1)
             Spacer(minLength: 0)
+
+            if let onNone {
+                // Photoshop's none swatch: white, struck through in red.
+                Button(action: onNone) {
+                    NoColorSwatch()
+                        .frame(width: 16, height: 16)
+                        .overlay {
+                            if isNone {
+                                RoundedRectangle(cornerRadius: 5)
+                                    .strokeBorder(Color.accentColor, lineWidth: 2)
+                                    .padding(-3)
+                            }
+                        }
+                        .frame(width: 22, height: 20)
+                }
+                .buttonStyle(.plain)
+                .panelHelp("None")
+                .playtestControl("None", detail: isNone ? "the picker, already picked" : "the picker")
+            }
 
             Button(action: sampleFromScreen) {
                 Image(systemName: "eyedropper")

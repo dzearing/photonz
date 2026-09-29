@@ -30,18 +30,24 @@ struct ColorPickerContent: View {
     /// gesture is one undo step, written by `onCommit` on release. A row with
     /// no live path leaves this out and the colour lands on release, as before.
     var onPreview: ((Paint) -> Void)?
+    /// Takes the colour off, for a slot that can hold none.
+    var onNone: (() -> Void)?
+    var isNone: Bool = false
     let onCommit: (Paint) -> Void
 
     /// The flat-color way in, which is every row that only ever holds one.
     init(editorState: EditorState, hex: String, name: String, slot: ColorSlot? = nil,
          supportsOpacity: Bool = false, embedded: Bool = false,
          onClose: (() -> Void)? = nil, onPreview: ((String) -> Void)? = nil,
+         onNone: (() -> Void)? = nil, isNone: Bool = false,
          onCommit: @escaping (String) -> Void) {
         self.init(editorState: editorState, paint: Paint(hex: hex), name: name, slot: slot,
                   supportsOpacity: supportsOpacity, supportsGradient: false,
                   embedded: embedded, onClose: onClose,
                   onPreview: onPreview.map { live in { live($0.hex) } },
                   onCommit: { onCommit($0.hex) })
+        self.onNone = onNone
+        self.isNone = isNone
     }
 
     /// The way in for a slot that can hold a gradient.
@@ -73,6 +79,8 @@ struct ColorPickerContent: View {
                                 embedded: embedded,
                                 onClose: embedded ? nil : onClose,
                                 onPreview: onPreview,
+                                onNone: onNone,
+                                isNone: isNone,
                                 onCommit: onCommit)
         } else {
             // The picker that shipped before the designed one knows nothing
@@ -106,6 +114,12 @@ struct ColorWellButton: View {
     /// What to paint on every frame of a drag inside the picker this opens.
     /// Left out where there is nothing to paint live.
     var onPreview: ((String) -> Void)?
+    /// Whether the slot holds no colour: the swatch is struck through and
+    /// `hex` is only what the picker opens on.
+    var isNone: Bool = false
+    /// Takes the colour off, for a slot that can hold none. The picker offers
+    /// None beside its eyedropper.
+    var onNone: (() -> Void)?
     let onCommit: (String) -> Void
 
     @State private var isHovering = false
@@ -143,6 +157,8 @@ struct ColorWellButton: View {
                                        supportsOpacity: supportsOpacity,
                                        onClose: { editorState.openColorWell = nil },
                                        onPreview: onPreview,
+                                       onNone: onNone,
+                                       isNone: isNone,
                                        onCommit: onCommit)
                 }
         } else {
@@ -155,7 +171,18 @@ struct ColorWellButton: View {
         }
     }
 
-    private var swatch: some View {
+    @ViewBuilder private var swatch: some View {
+        if isNone {
+            NoColorSwatch()
+                .frame(width: size, height: size)
+                .overlay(RoundedRectangle(cornerRadius: 4)
+                    .strokeBorder(.primary.opacity(isHovering ? 0.55 : 0.25), lineWidth: 1))
+        } else {
+            filled
+        }
+    }
+
+    private var filled: some View {
         RoundedRectangle(cornerRadius: 4)
             .fill(Color(hex: hex))
             // Under anything that can be see-through, so a color made
@@ -168,5 +195,24 @@ struct ColorWellButton: View {
             .frame(width: size, height: size)
             .overlay(RoundedRectangle(cornerRadius: 4)
                 .strokeBorder(.primary.opacity(isHovering ? 0.55 : 0.25), lineWidth: 1))
+    }
+}
+
+/// No colour at all, the way Photoshop draws it: a white square struck
+/// through in red, corner to corner.
+struct NoColorSwatch: View {
+    var body: some View {
+        GeometryReader { proxy in
+            let side = proxy.size
+            ZStack {
+                RoundedRectangle(cornerRadius: 4).fill(.white)
+                Path { path in
+                    path.move(to: CGPoint(x: side.width - 2, y: 2))
+                    path.addLine(to: CGPoint(x: 2, y: side.height - 2))
+                }
+                .stroke(Color(red: 0.92, green: 0.2, blue: 0.2), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 4))
+        }
     }
 }

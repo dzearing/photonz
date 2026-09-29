@@ -1046,6 +1046,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// the word being said growing with a bounce and glowing on its own while
     /// the text itself does not.
     case captionsExpectOneWordPopping
+    /// Remember the caption drawn at the playhead, words, look and all;
+    /// `captionsExpectDrawnChanged` fails unless the one drawn now differs
+    /// from it, then remembers the new one. How a walk proves a panel control
+    /// reached the picture rather than only its own row.
+    case captionsNoteDrawn, captionsExpectDrawnChanged
     /// Write the captions out as SubRip and WebVTT into the walk's own
     /// folder, and fail unless both files read back as what they claim.
     case captionsExportFiles
@@ -1283,6 +1288,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .captionsExpectGuides, .captionsExpectNoGuides, .captionsExpectReset,
              .captionsExpectFootApart,
              .captionsSeekIntoNextWord, .captionsStepIntoWord, .captionsExpectOneWordPopping,
+             .captionsNoteDrawn, .captionsExpectDrawnChanged,
              .captionsExpectOneLayerPicked, .captionsExpectMovedTogether,
              .captionsExportFiles, .captionsExpectEditingOnCanvas,
              .captionsWriteFilmWithFileBeside,

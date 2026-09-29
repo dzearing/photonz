@@ -74,9 +74,25 @@
       "seconds": 0.3
     },
     {
-      "do": "panelMenu",
-      "menu": "Current word glow",
-      "choose": "Yellow"
+      "do": "press",
+      "control": "Color",
+      "in": "Word glow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Shades 3"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "escape"
     },
     {
       "do": "wait",

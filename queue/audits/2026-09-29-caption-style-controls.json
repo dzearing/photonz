@@ -1,0 +1,28 @@
+{
+  "feature": "Caption style controls",
+  "epic": "video-audio",
+  "summary": "Every control in the Captions and Text sections now changes the captions on the canvas. Every caption colour is a swatch that opens the app's own colour picker, with None beside the eyedropper for a pill, glow, outline or plate.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording with speech, Add Captions, then pick the Captions layer in Edit mode.",
+  "switched": {},
+  "try": [
+    { "do": "Set Show to 3 words, Said to Dim and Coming to Hidden, and watch the caption on the canvas.", "shot": "2026-09-29-caption-style-controls-1.png" },
+    { "do": "Click the swatch beside Glow under Current word and pick a colour in the picker.", "shot": "2026-09-29-caption-style-controls-2.png" },
+    { "do": "Set Animation to Grow with bounce and turn on Shadow.", "shot": "2026-09-29-caption-style-controls-3.png" },
+    { "do": "Open Pill's swatch and click the struck-through None square beside the eyedropper." },
+    { "do": "Press Command-Z: the pill comes back." },
+    { "do": "Press Space and watch the styled word play.", "shot": "2026-09-29-caption-style-controls-4.png" },
+    { "do": "Make the panel as narrow as it goes and look at Timing.", "shot": "2026-09-29-caption-style-controls-5.png" }
+  ],
+  "evaluate": [
+    "Is a bare swatch (no colour name beside it) enough to tell what each caption colour is?",
+    "Is None beside the eyedropper where you would look for switching a glow or pill off?",
+    "Does every change show on the canvas the moment you make it?",
+    "At the narrowest panel, do the Timing arrows without words still read as Earlier and Later?"
+  ],
+  "rough": [
+    "What the user reported (dead dropdowns) was the invisible click target fixed just before this task. Once that was in, every look value already reached the canvas.",
+    "A colour lands when you let go of the picker's square or slider, not while you drag, because captions have no live preview path yet.",
+    "The picker covers the rows below the well it opened from, as it does for Appearance.",
+    "The caption words walk (caption-words-pop-walk) still stops before the panel because a recording now opens in View mode. Another open task owns that."
+  ]
+}
