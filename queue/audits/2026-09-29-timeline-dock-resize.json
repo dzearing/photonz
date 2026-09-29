@@ -1,0 +1,29 @@
+{
+  "feature": "Timeline dock: no blue outline, and a top edge you drag",
+  "epic": "video-editing",
+  "summary": "The blue rectangle round the timeline is gone. Its top edge now drags like the right panel's edge: up for more tracks, down for more picture, double-click for the height it opened at, remembered between launches.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the Tutorial Sample recording (or any recording) in Edit.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording in Edit and look at the timeline: no blue outline round it.", "shot": "2026-09-29-timeline-dock-resize-1-default-sc.png" },
+    { "do": "Click the picture, then click the timeline: the dock looks the same either way, and B, I, O, J, K, L still work on the timeline." },
+    { "do": "Rest the pointer on the line between the picture and the transport: it turns into the up-down resize arrow." },
+    { "do": "Drag that line up: the timeline grows under the pointer and the picture refits above it.", "shot": "2026-09-29-timeline-dock-resize-2-tall-sc.png" },
+    { "do": "Drag it all the way down: it stops at the transport, the bar and one track.", "shot": "2026-09-29-timeline-dock-resize-3-short-sc.png" },
+    { "do": "Double-click the line: the timeline springs back to its opening height.", "shot": "2026-09-29-timeline-dock-resize-4-reset-sc.png" },
+    { "do": "Drag it to a height you like, quit and reopen a recording: it opens at that height." }
+  ],
+  "evaluate": [
+    "Does the edge feel the same as the right panel's edge when you grab it?",
+    "Is about 70% of the window the right limit for how tall the timeline can get?",
+    "With the outline gone, can you still tell when the keys are going to the timeline rather than the picture?",
+    "When you pull the timeline taller than its tracks, is the empty space under them fine, or should it stop at the last track?"
+  ],
+  "rough": [
+    "The mock draws no resize edge on the timeline; this follows your ask and copies the right panel's edge (a hairline with a 14 point grab strip), so the line itself is as faint as the panel's.",
+    "Nothing shows which of the picture or the timeline has the keyboard now. The mock shows nothing either.",
+    "Grabbing the edge on its upper half (the part over the picture) hands the keyboard back to the picture, as any click there does.",
+    "The walk proves the drags, the floor and the double-click with real pointer events, but it cannot photograph the pointer, so the resize arrow on hover was not seen in a picture.",
+    "Reopening a recording in the same test run crashes the test harness (filed separately), so being remembered after a reopen was not walked; it is stored the same way as the panel's width."
+  ]
+}

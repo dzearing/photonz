@@ -2407,6 +2407,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// hand does: a clip on the timeline, the level line on a sound, a fade
     /// handle. Points are window points, top left, unless `space` says other.
     case windowDrag(from: PlaytestPoint, to: PlaytestPoint, steps: Int)
+    /// A click posted to the WINDOW, `count` presses in a row (2 is a
+    /// double-click), so it reaches whatever SwiftUI view is under the pointer
+    /// the way a hand's does: the timeline's top edge, a clip. Window points,
+    /// top left, unless `space` says other.
+    case windowClick(at: PlaytestPoint, count: Int)
     /// A grip on the timeline, found by its name in the app's own register,
     /// pulled `by` points sideways in `steps` real mouse moves posted to the
     /// window, with the grip's drawn position read back after every move
@@ -3480,7 +3485,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "timelinePinch",
-        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag",
+        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
     ].sorted()
 
     /// The `do` name this step answers to.
@@ -3514,6 +3519,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .dropImage: "dropImage"
         case .dragFile: "dragFile"
         case .windowDrag: "windowDrag"
+        case .windowClick: "windowClick"
         case .dragGrip: "dragGrip"
         case .dropOnTimeline: "dropOnTimeline"
         case .dropOnLibrary: "dropOnLibrary"
@@ -3794,6 +3800,10 @@ public enum PlaytestStep: Sendable, Equatable {
                 to.space = .window
             }
             self = .windowDrag(from: from, to: to, steps: max(1, steps))
+        case "windowClick":
+            var at = try f.point("at")
+            if fields["space"] == nil { at.space = .window }
+            self = .windowClick(at: at, count: max(1, try f.optionalNumber("count").map { Int($0) } ?? 1))
         case "dragGrip":
             self = .dragGrip(control: try f.string("control"),
                              by: CGFloat(try f.number("by")),

@@ -94,7 +94,9 @@ extension PlaytestMemory {
             // as the playhead.
             [EditorState.motionStripOpenKey, RecordingPlaceStore.defaultsKey,
              DefaultTransitionStore.defaultsKey, EditorState.playerVolumeLevelKey,
-             EditorState.timelineViewMemoryKey]
+             EditorState.timelineViewMemoryKey,
+             // And how tall the timeline's top edge was dragged.
+             EditorState.timelineHeightKey]
         case .shelf:
             // Not a setting at all: the shared shelf is a file, emptied in
             // `perform` beside the settings it names.

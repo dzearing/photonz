@@ -202,7 +202,7 @@ struct EditorView: View {
             // rather than swapping one dock for another. An icon keeps the
             // one-lap timing strip and the row it leaves behind.
             if editorState.motionStripMeasuresADocument, editorState.motionStripPhase != .none {
-                TimelineDock()
+                TimelineDock(windowHeight: geo.size.height)
             } else {
                 switch editorState.motionStripPhase {
                 case .open: MotionStripView()

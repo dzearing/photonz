@@ -1,0 +1,181 @@
+{
+  "out": "/tmp/photonz-playtest/timeline-dock-resizes-walk",
+  "seed": "The timeline dock under a recording, at Next defaults with no flag set: no blue outline round it whether the keyboard is on the timeline or the canvas, and its top edge is a drag handle like the right panel's edge. A real drag up makes it taller, down makes it shorter, and a double-click on the edge puts it back.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 2.0
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "1-timeline-has-keys",
+      "note": "the recording open in Edit with the keyboard on the timeline: no blue outline round the dock, one grey hairline along its top"
+    },
+    {
+      "do": "panel",
+      "stage": "1-timeline-has-keys"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-default"
+    },
+    {
+      "do": "click",
+      "at": [
+        640,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "1b-canvas-has-keys",
+      "note": "a click on the picture takes the keyboard to the canvas: the dock looks exactly the same"
+    },
+    {
+      "do": "panel",
+      "stage": "1b-canvas-has-keys"
+    },
+    {
+      "do": "snapshot",
+      "name": "1b-canvas-keys"
+    },
+    {
+      "do": "windowDrag",
+      "from": [
+        864,
+        763
+      ],
+      "to": [
+        864,
+        463
+      ],
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-tall",
+      "note": "the top edge pulled up 300 points: the dock is that much taller, the tracks area has room under the add row, and the picture refit above it"
+    },
+    {
+      "do": "panel",
+      "stage": "2-tall"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-tall"
+    },
+    {
+      "do": "windowDrag",
+      "from": [
+        864,
+        463
+      ],
+      "to": [
+        864,
+        960
+      ],
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-short",
+      "note": "the edge pushed right down: the dock stops at the transport, the bar and one track, and the rest scrolls"
+    },
+    {
+      "do": "panel",
+      "stage": "3-short"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-short"
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        864,
+        823
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-reset",
+      "note": "a double-click on the edge: the dock springs back to the height it opened at, as tall as its two tracks and the add row"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-reset"
+    },
+    {
+      "do": "windowDrag",
+      "from": [
+        864,
+        763
+      ],
+      "to": [
+        864,
+        613
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "5-mid",
+      "note": "pulled up 150 points from the default: a middle height, the tracks with room under them"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-mid"
+    }
+  ]
+}

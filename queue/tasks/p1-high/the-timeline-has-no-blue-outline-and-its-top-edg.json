@@ -5,14 +5,14 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 0.0028,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T05:20:33.092Z",
-  "updated": "2026-09-29T05:20:33.183Z",
+  "updated": "2026-09-29T11:35:08.035Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Filed from the intake window.",
+  "notes": "Filed from the intake window. Outline: TimelineDock's own accent strokeBorder overlay, drawn while timelineHasKeyboard && !isWatching (the timeline takes the keyboard on open), removed; keyboard routing unchanged. Resize: Sources/PhotonzCore/TimelineDockHeight.swift (floor = ruler + one sound lane + scroller strip [+ caption bar]; ceiling = 70% of window minus transport+bar; drag one for one; 0 stored = default), tested in TimelineDockHeightTests. View: Sources/Photonz/TimelineResizeEdge.swift (Divider + 14pt grab strip, resizeUpDown cursor, double-click resets), overlaid on TimelineDock's top in Edit only; height in @AppStorage timeline.height (EditorState.timelineHeightKey, forgotten by walk setup 'motion'); TimelineDock now takes windowHeight from EditorView. Harness: new windowClick step (window-posted click with click count) for the double-click; listed in walk-needs-the-mac.mjs, refused under a lock. Walk: Scripts/playtest/timeline-dock-resizes-walk.json.",
   "acceptance": [
     "Reproduced first: a walk at Next defaults opens a recording in Edit, clicks the timeline, and photographs the dock; the report names what draws the outline",
     "No outline or focus ring is drawn around the timeline dock in any state; keyboard focus on the timeline is still real (its keys work) and is shown, if at all, the way the mock shows it, never as a system ring",
@@ -29,6 +29,26 @@
     {
       "t": "2026-09-29T05:20:33.182Z",
       "note": "seq 400 -> 0.0028"
+    },
+    {
+      "t": "2026-09-29T11:05:39.708Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T11:07:42.489Z",
+      "note": "Reproduced (timeline-dock-resizes-walk, 1-default-sc.png, Next defaults): a 1.5pt accent rectangle round the whole dock. It is TimelineDock's own overlay, strokeBorder(VideoKit.Palette.accent.opacity(0.75)) drawn while editorState.timelineHasKeyboard && !isWatching, and the timeline takes the keyboard on open, so it is on in every Edit picture. Not the AppKit focus ring (CatcherView returns nil from hitTest, never first responder), not the zoom/trim strokes. The mock (video.html) draws no focus treatment on #tlDock at all."
+    },
+    {
+      "t": "2026-09-29T11:28:56.255Z",
+      "note": "owns these walks: timeline-dock-resizes-walk"
+    },
+    {
+      "t": "2026-09-29T11:35:08.034Z",
+      "note": "Adversarial pass before building: a Premiere/FCP user expects the panel boundary to drag with a resize cursor and to stay put across sessions; the risks were a live drag feeding back through a moving handle (global coordinate space fixes it), a tiny window where 70% is less than one track (the floor wins), and a chosen height taller than the tracks (kept, empty space under the add row, like Premiere). After: timeline-dock-resizes-walk at Next defaults, 25 steps ok, 6 real window captures: no outline with the keyboard on the timeline or the canvas; a real drag up 300pt grew the dock under the pointer (picture refit 99%->41%); a drag down stopped at one track (86%); a real double-click (new windowClick step) sprang it back; a drag up 150 left it mid height. Scripts/test.sh: 10477 tests passed. Left rough, not filed (below the bar): grabbing the edge's upper half hands the keyboard to the canvas; hover cursor not photographable. Filed a-walk-that-closes-a-recording-and-opens-one-aga (p1, reproduced on unchanged main: probe SIGSEGV in MainThreadMeter after closeDocument + reopen of a recording), which is why the walk does not reopen to prove the height is remembered."
     }
+  ],
+  "started": "2026-09-29T11:05:39.706Z",
+  "walks": [
+    "timeline-dock-resizes-walk"
   ]
 }

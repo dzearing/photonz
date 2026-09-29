@@ -25,6 +25,22 @@ struct TimelineDock: View {
     /// How far a pinch in flight has got, so each move zooms by the CHANGE.
     @State private var pinchedTo: CGFloat?
 
+    /// The editor window's height, which caps how tall the top edge can pull
+    /// the dock (`TimelineDockHeight`).
+    let windowHeight: CGFloat
+    /// The tracks area's height as the top edge last left it, or 0 for the
+    /// height the dock always had. The person's, across every recording.
+    @AppStorage(EditorState.timelineHeightKey) private var storedHeight = TimelineDockHeight.defaultStored
+    /// The tracks area's height while the edge is in hand: live, and only
+    /// written to the settings when the drag ends.
+    @State private var draggedBody: CGFloat?
+    /// Where it was when the drag began.
+    @State private var dragStartBody: CGFloat?
+    /// The transport and the timeline's bar, measured: the part of the dock a
+    /// drag on its edge never changes.
+    @State private var transportHeight: CGFloat = 0
+    @State private var localBarHeight: CGFloat = 0
+
     /// The track name column (`#tlDock{--gutter:84px}`) and the gap after it.
     static let gutter: CGFloat = 84
     static let gap: CGFloat = VideoKit.Metrics.trackGap
@@ -44,12 +60,14 @@ struct TimelineDock: View {
     var body: some View {
         VStack(spacing: 0) {
             transport
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { transportHeight = $0 }
             // In View mode the transport is all there is: a player's bar, and
             // the tracks go with the rest of the editing (`ViewEditMode`). One
             // view either way, so Edit grows the tracks out from under it.
             if editorState.isMotionStripOpen {
                 VStack(spacing: 0) {
                     localBar
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { localBarHeight = $0 }
                     grid
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -58,18 +76,23 @@ struct TimelineDock: View {
         .clipped()
         .background(VideoKit.Palette.panel)
         // A press anywhere in here hands the timeline the keyboard, and the
-        // keys reach it through here (`EditorState+TimelineKeys`).
+        // keys reach it through here (`EditorState+TimelineKeys`). Which of
+        // the two has it is not drawn: the mock draws no ring round the dock,
+        // and the one that stood here read as a stray blue outline round the
+        // whole timeline (user 2026-09-28).
         .background { TimelineKeyboard(editorState: editorState) }
-        // Premiere's focused panel: a thin ring says which of the two, the
-        // picture or the timeline, the keys are talking to.
-        .overlay {
-            // Not in View, where there is only the one thing to talk to.
-            if editorState.timelineHasKeyboard, !editorState.isWatching {
-                Rectangle()
-                    .strokeBorder(VideoKit.Palette.accent.opacity(0.75), lineWidth: 1.5)
-                    .allowsHitTesting(false)
+        // The top edge, a drag handle like the right panel's leading edge.
+        // Only with tracks: in View the dock is a player's bar, one height.
+        .overlay(alignment: .top) {
+            if editorState.isMotionStripOpen {
+                TimelineResizeEdge(onDrag: dragEdge(pointerMovedDown:),
+                                   onEnd: endEdgeDrag,
+                                   onReset: resetHeight)
+                    .panelReadout("timeline \(Int(bodyHeight.rounded())) tall, "
+                                  + (TimelineDockHeight.chosen(stored: storedHeight) == nil ? "default" : "chosen"))
             }
         }
+        .zIndex(1)
         .panelReadout(editorState.timelineHasKeyboard ? "keyboard on the timeline" : "keyboard on the canvas")
         .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: {
             editorState.timelineDockFrame = $0
@@ -614,8 +637,47 @@ struct TimelineDock: View {
         return true
     }
 
-    /// As tall as the tracks it holds, and no taller.
+    /// The tracks area's height: where the top edge left it, or with nothing
+    /// chosen, as tall as the tracks it holds and no taller. Inside one track
+    /// and about 70% of the window either way (`TimelineDockHeight`).
     private var bodyHeight: CGFloat {
+        guard windowHeight > 0 else { return naturalBodyHeight }
+        return sizing.body(chosen: draggedBody ?? TimelineDockHeight.chosen(stored: storedHeight),
+                           natural: naturalBodyHeight)
+    }
+
+    private var sizing: TimelineDockHeight {
+        // The grid sits 6 under the bar (`grid`'s top padding).
+        TimelineDockHeight(chrome: transportHeight + localBarHeight + 6,
+                           floor: bodyFloor, windowHeight: windowHeight)
+    }
+
+    /// One track and no less: the ruler, one lane, and the scroller strip.
+    private var bodyFloor: CGFloat {
+        let captionBar = showsCaptionTrackBar ? CaptionTrackBarView.height + 4 : 0
+        return captionBar + Self.rulerHeight + Self.soundLaneHeight + 2 * Self.rowSpacing + Self.scrollerStrip
+    }
+
+    private func dragEdge(pointerMovedDown dy: CGFloat) {
+        let base = dragStartBody ?? bodyHeight
+        if dragStartBody == nil { dragStartBody = base }
+        draggedBody = sizing.dragged(fromBody: base, pointerMovedDown: dy)
+    }
+
+    private func endEdgeDrag() {
+        if let draggedBody { storedHeight = Double(draggedBody) }
+        draggedBody = nil
+        dragStartBody = nil
+    }
+
+    private func resetHeight() {
+        draggedBody = nil
+        dragStartBody = nil
+        withAnimation(.spring(duration: 0.28)) { storedHeight = TimelineDockHeight.defaultStored }
+    }
+
+    /// As tall as the tracks it holds, and no taller.
+    private var naturalBodyHeight: CGFloat {
         var rows: CGFloat = 0
         for row in editorState.timelineRows {
             switch row {

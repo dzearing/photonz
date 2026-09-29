@@ -476,6 +476,25 @@ struct PlaytestScriptTests {
         #expect(PlaytestStep.names.contains("windowDrag"))
     }
 
+    @Test("A windowClick step is a real click, or a double-click, anywhere in the window, in window points")
+    func windowClickStep() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "windowClick", "at": [864, 763], "count": 2 },
+                     { "do": "windowClick", "at": [10, 20] } ] }
+        """)
+        guard case .windowClick(let at, let count) = script.steps[0],
+              case .windowClick(let at2, let count2) = script.steps[1] else {
+            Issue.record("windowClick"); return
+        }
+        #expect(at.point == CGPoint(x: 864, y: 763))
+        #expect(at.space == .window)
+        #expect(count == 2)
+        #expect(at2.space == .window)
+        #expect(count2 == 1)
+        #expect(script.steps[0].name == "windowClick")
+        #expect(PlaytestStep.names.contains("windowClick"))
+    }
+
     @Test("A dragGrip step pulls a named timeline grip by real mouse moves and can claim it followed")
     func dragGripStep() throws {
         let script = try decode("""

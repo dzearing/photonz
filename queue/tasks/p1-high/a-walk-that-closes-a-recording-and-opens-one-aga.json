@@ -1,0 +1,36 @@
+{
+  "id": "a-walk-that-closes-a-recording-and-opens-one-aga",
+  "title": "A walk that closes a recording and opens one again runs to the end",
+  "goal": "The probe app the loop tests with dies the moment a walk closes a recording and opens one again, so no walk can check anything that happens after a recording is reopened. The crash is in the test harness's own timing meter, which the shipping app does not include.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 400,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-29T11:24:19.461Z",
+  "updated": "2026-09-29T11:28:56.204Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-29 on main at 8e594bb1 (source edits stashed, probe rebuilt) and again with them: /tmp/ptl/close-reopen-walk.json = setup {timelineOpen:true, forget:[all]}; steps openSampleRecording, wait 2, videoPause, wait 0.5, closeDocument, openSampleRecording, wait 2, snapshot. `Scripts/playtest.sh /tmp/ptl/close-reopen-walk.json` -> 'Verdict: CRASHED EXC_BAD_ACCESS (SIGSEGV) in closure #1 in MainThreadMeter.install() < static PhotonzApp.$main()'. Top frames: swift_getObjectType < swift_task_isMainExecutorImpl < SerialExecutorRef::isMainExecutor < swift_task_isCurrentExecutorWithFlagsImpl < closure #1 in MainThreadMeter.install() < CFRunLoopObserver callout < -[NSApplication run]. So it is the executor-isolation check Swift inserts at the top of the run loop observer's closure (PlaytestHarness.swift, MainThreadMeter.install, [unowned self] on a never-freed singleton), reading a bad executor pointer after closeDocument. Reports: ~/Library/Logs/DiagnosticReports/Photonz Probe-2026-09-29-0418*.ips. Likely fix: make the observer body nonisolated (MainActor.assumeIsolated or plain nonisolated state) so no executor check runs from a CF callout, then find what closeDocument leaves dangling. Found by the timeline-dock-resize task, whose walk dropped its close/reopen step because of this. Checked: a-video-window-says-its-name-walk (closes a recording, then opens a PNG) passes, so closing alone is not enough; it is reopening a recording after the close.",
+  "acceptance": [
+    "A walk that opens the sample recording, closes it and opens it again finishes with status ok",
+    "timeline-dock-resizes-walk gets its close-and-reopen step back (it checks the dragged timeline height is remembered) and passes",
+    "The fix says whether the shipping app can hit the same crash, and if so fixes it there too"
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T11:24:19.463Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-29T11:28:47.914Z",
+      "note": "walks timeline-dock-resizes-walk -> timeline-dock-resizes-walk"
+    },
+    {
+      "t": "2026-09-29T11:28:56.203Z",
+      "note": "walks timeline-dock-resizes-walk -> none"
+    }
+  ],
+  "walks": []
+}

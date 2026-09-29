@@ -1519,6 +1519,35 @@ private final class Run {
             await giveTheFrontBack(front)
             note(number, "windowDrag", "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue), "
                  + "posted to the window in \(steps) moves\(front.note)")
+        case .windowClick(let at, let count):
+            // A click, or two in a row, posted to the window the way
+            // `windowDrag` posts its press, so it lands on whatever SwiftUI
+            // view is under the point. Each press carries its place in the
+            // run, which is how AppKit tells a double-click from two clicks.
+            let window = try requireWindow()
+            let point = try windowPoint(at)
+            var stamp = ProcessInfo.processInfo.systemUptime
+            func post(_ type: NSEvent.EventType, clicks: Int, pressure: Float) {
+                stamp += 0.016
+                guard let event = NSEvent.mouseEvent(
+                        with: type, location: point, modifierFlags: [], timestamp: stamp,
+                        windowNumber: window.windowNumber, context: nil, eventNumber: 0,
+                        clickCount: clicks, pressure: pressure) else { return }
+                NSApp.postEvent(event, atStart: false)
+            }
+            let front = await takeTheFrontForADrag()
+            post(.mouseMoved, clicks: 0, pressure: 0)
+            await sleep(0.15)
+            for click in 1...count {
+                post(.leftMouseDown, clicks: click, pressure: 1)
+                await sleep(0.05)
+                post(.leftMouseUp, clicks: click, pressure: 0)
+                await sleep(0.08)
+            }
+            await sleep(0.3)
+            await giveTheFrontBack(front)
+            note(number, "windowClick", "\(count == 2 ? "double-click" : "\(count) click(s)") at "
+                 + "\(short(at.point)) \(at.space.rawValue), posted to the window\(front.note)")
         case .dragGrip(let control, let by, let steps, let within, let hold, let modifiers):
             // A grip on the timeline pulled by real mouse moves, and where it
             // was DRAWN read back after every one (`GripTrace`). The fault it

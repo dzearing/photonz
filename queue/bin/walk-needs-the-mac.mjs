@@ -21,7 +21,7 @@
 // takeTheFrontForADrag). Measured 2026-09-26: with the probe in the back the
 // ruler's scrub and a bar's end did nothing at all.
 //
-//   windowDrag / dragGrip             the probe holds the front while the button is down
+//   windowDrag / dragGrip / windowClick  the probe holds the front while the button is down
 //   setup "front": true               the probe is the active app for the whole walk
 //
 //   queue/bin/walk-needs-the-mac.mjs <walk.json>
@@ -34,6 +34,7 @@ export function stepsThatNeedTheMac(walk) {
     const n = i + 1;
     if (step.do === 'menuShot') found.push(`step ${n} (menuShot)`);
     else if (step.do === 'windowDrag' || step.do === 'dragGrip') found.push(`step ${n} (${step.do}, a real drag)`);
+    else if (step.do === 'windowClick') found.push(`step ${n} (windowClick, a real click)`);
     else if ((step.do === 'rightClick' || step.do === 'panelMenu') && step.shot) found.push(`step ${n} (${step.do} with a picture)`);
     else if (step.do === 'panelMenu' && step.clicking) found.push(`step ${n} (panelMenu opened by a click)`);
     else if (step.do === 'panelMenu' && step.at) found.push(`step ${n} (panelMenu opened by a click on its face)`);

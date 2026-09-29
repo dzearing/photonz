@@ -1018,6 +1018,9 @@ final class EditorState {
         didSet { UserDefaults.standard.set(isTimingStripOpen, forKey: Self.motionStripOpenKey) }
     }
     static let motionStripOpenKey = "motion.stripOpen"
+    /// How tall the timeline dock's tracks area was dragged, or 0 for its
+    /// own height (`TimelineDockHeight`).
+    static let timelineHeightKey = "timeline.height"
 
     // MARK: View mode and Edit mode (`ViewEditMode`)
 
