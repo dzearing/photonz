@@ -3327,7 +3327,9 @@ public enum PlaytestStep: Sendable, Equatable {
     /// claimed. `choose` picks a row under More first. `capsules` claims how
     /// many glass capsules the row draws (1 for the one bar the mocks draw).
     /// `toolGap` claims the points between neighbouring tools and `hairline`
-    /// every hairline's height, each within half a point.
+    /// every hairline's height, `height` the glass's own height (the one bar,
+    /// or every capsule) and `zoomSlider` the zoom slider's length, each
+    /// within half a point.
     case toolBar(stage: String, clearOfPicture: Bool?, claim: PlaytestToolBarClaim?)
     /// Write the measured frame of every icon parked on the inspector panel's
     /// trailing edge to the log and to `panel-edge-<stage>.json`: each one's
@@ -4577,10 +4579,13 @@ public enum PlaytestStep: Sendable, Equatable {
             let capsules = try f.optionalNumber("capsules").map { Int($0) }
             let toolGap = try f.optionalNumber("toolGap").map { CGFloat($0) }
             let hairline = try f.optionalNumber("hairline").map { CGFloat($0) }
+            let height = try f.optionalNumber("height").map { CGFloat($0) }
+            let zoomSlider = try f.optionalNumber("zoomSlider").map { CGFloat($0) }
             let claim = slots == nil && more == nil && lit == nil && choose == nil && capsules == nil
-                && toolGap == nil && hairline == nil
+                && toolGap == nil && hairline == nil && height == nil && zoomSlider == nil
                 ? nil : PlaytestToolBarClaim(slots: slots, more: more, lit: lit, choose: choose,
-                                             capsules: capsules, toolGap: toolGap, hairline: hairline)
+                                             capsules: capsules, toolGap: toolGap, hairline: hairline,
+                                             height: height, zoomSlider: zoomSlider)
             self = .toolBar(stage: try f.string("stage"),
                             clearOfPicture: try f.optionalFlag("clearOfPicture"), claim: claim)
         case "panelEdge":
@@ -4852,10 +4857,16 @@ public struct PlaytestToolBarClaim: Hashable, Sendable {
     public var toolGap: CGFloat?
     /// Every hairline's height on the bar, in points, within half a point.
     public var hairline: CGFloat?
+    /// How tall the glass is drawn, in points, within half a point: the one
+    /// bar when there is one, else every capsule in the row.
+    public var height: CGFloat?
+    /// How long the zoom slider runs, in points, within half a point.
+    public var zoomSlider: CGFloat?
 
     public init(slots: [String]? = nil, more: [String]? = nil, lit: String? = nil,
                 choose: String? = nil, capsules: Int? = nil,
-                toolGap: CGFloat? = nil, hairline: CGFloat? = nil) {
+                toolGap: CGFloat? = nil, hairline: CGFloat? = nil,
+                height: CGFloat? = nil, zoomSlider: CGFloat? = nil) {
         self.slots = slots
         self.more = more
         self.lit = lit
@@ -4863,5 +4874,7 @@ public struct PlaytestToolBarClaim: Hashable, Sendable {
         self.capsules = capsules
         self.toolGap = toolGap
         self.hairline = hairline
+        self.height = height
+        self.zoomSlider = zoomSlider
     }
 }

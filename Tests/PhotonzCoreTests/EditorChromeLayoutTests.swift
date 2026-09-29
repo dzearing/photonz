@@ -738,11 +738,10 @@ struct GridToolBarCapsuleTests {
         #expect(!EditorChromeLayout.toolBarHasHairline(before: 0))
     }
 
-    @Test func theOneBarKeepsTheRowHeightAndSpacesItsHairlinesLikeTheMock() {
-        // One bar is still the 48pt row everything clears. The hairline
-        // between sections sits as far from its neighbours as the one between
-        // tool families does, so the whole bar reads with one rhythm.
-        #expect(EditorChromeLayout.toolBarHeight == 48)
+    @Test func theOneBarSpacesItsHairlinesLikeTheMock() {
+        // The hairline between sections sits as far from its neighbours as
+        // the one between tool families does, so the whole bar reads with one
+        // rhythm.
         let one = EditorChromeLayout.ToolBarSpacing.oneGlass
         // Tool edge to hairline is the tools' gap plus the hairline's own
         // margin, and the hairline between sections sits exactly that far
@@ -769,12 +768,75 @@ struct GridToolBarCapsuleTests {
         #expect(EditorChromeLayout.ToolBarSpacing.capsules.hairlineHeight == 20)
     }
 
-    @Test func theOneBarsEndsRunRoundItsEndToolsAtTheRimsWidth() {
-        // The glass is 48pt tall round a 28pt row, a 10pt rim above and below.
-        // The same 10pt at each end keeps the rounded end concentric with the
-        // end tool's circle, where the separate tools capsule kept 18pt.
+    // MARK: The one bar is as short as the mock
+
+    @Test func theOneBarIsAsTallAsTheMocksBar() {
+        // video.html's `.tbar` is a 28pt row with 4pt of padding above and
+        // below inside a 1pt edge: 38pt. The one bar was 48pt, the separate
+        // capsules' height, and covered 10pt more of the picture than drawn.
         let one = EditorChromeLayout.ToolBarSpacing.oneGlass
-        #expect(one.endPadding == (EditorChromeLayout.toolBarGroupHeight - 28) / 2)
+        #expect(one.height == 38)
+        #expect(one.height == EditorChromeLayout.toolBarControlSize + 2 * (4 + 1))
+    }
+
+    @Test func separateCapsulesKeepTheirHeight() {
+        // Current's capsules are not this task's: 48pt, as measured.
+        let capsules = EditorChromeLayout.ToolBarSpacing.capsules
+        #expect(capsules.height == 48)
+        #expect(capsules.height == EditorChromeLayout.toolBarGroupHeight)
+        #expect(capsules.height == EditorChromeLayout.toolBarHeight)
+    }
+
+    @Test func theOneBarsEndsSitWhereTheMocksDo() {
+        // The mock's bar runs 8pt of padding plus its 1pt edge past its end
+        // tools. The separate tools capsule keeps 18pt.
+        #expect(EditorChromeLayout.ToolBarSpacing.oneGlass.endPadding == 9)
+    }
+
+    @Test func theOneBarsZoomSliderIsTheMocksLength() {
+        // `.zslider` is 92pt; the separate zoom capsule keeps 110pt.
+        #expect(EditorChromeLayout.ToolBarSpacing.oneGlass.zoomSliderWidth == 92)
+        #expect(EditorChromeLayout.ToolBarSpacing.capsules.zoomSliderWidth == 110)
+    }
+
+    @Test func aFitClearsTheShorterBarsBandAndNoMore() {
+        // A fitted picture keeps clear of the bar in use: 16pt off the floor
+        // plus 38pt of bar, so a picture gains back the 10pt the bar gave up.
+        let one = EditorChromeLayout.ToolBarSpacing.oneGlass
+        #expect(EditorChromeLayout.toolBarCovers(bar: one) == 54)
+        #expect(EditorChromeLayout.toolBarCovers(bar: .capsules) == EditorChromeLayout.toolBarCovers)
+        let canvas = CGSize(width: 900, height: 600)
+        let bar = EditorChromeLayout.toolBarFrame(canvasSize: canvas, toolBarWidth: 500, bar: one)
+        #expect(bar.height == 38)
+        #expect(bar.maxY == canvas.height - EditorChromeLayout.toolBarInset)
+        #expect(bar.minY == canvas.height - EditorChromeLayout.toolBarCovers(bar: one))
+    }
+
+    @Test func whatStacksAboveTheShorterBarStaysClearOfIt() {
+        // The notice pill, the crop and trim capsules and the tool settings
+        // capsule all stack one gap above the bar in use, never inside it and
+        // never floating 10pt higher than they need to.
+        let one = EditorChromeLayout.ToolBarSpacing.oneGlass
+        #expect(EditorChromeLayout.aboveToolBar(toolSettingsHeight: 0, bar: one) == 66)   // 16 + 38 + 12
+        #expect(EditorChromeLayout.aboveToolBar(toolSettingsHeight: 44, bar: one) == 122) // + 44 + 12
+        #expect(EditorChromeLayout.aboveToolBar(toolSettingsHeight: 44, bar: .capsules)
+                == EditorChromeLayout.aboveToolBar(toolSettingsHeight: 44))
+
+        let canvas = CGSize(width: 800, height: 600)
+        let bar = EditorChromeLayout.toolBarFrame(canvasSize: canvas, toolBarWidth: 400, bar: one)
+        let settings = EditorChromeLayout.toolSettingsFrame(canvasSize: canvas, width: 300,
+                                                            height: 44, bar: one)
+        #expect(settings?.maxY == bar.minY - EditorChromeLayout.toolBarStackGap)
+        let chrome = EditorChromeLayout.bottomChrome(canvasSize: canvas, toolBarWidth: 400,
+                                                     noticeSize: CGSize(width: 200, height: 30),
+                                                     toolSettingsSize: CGSize(width: 300, height: 44),
+                                                     bar: one)
+        #expect(chrome.count == 3)
+        #expect(chrome.last == bar)
+        for (index, rect) in chrome.enumerated() {
+            for other in chrome[(index + 1)...] { #expect(!rect.intersects(other)) }
+        }
+        #expect(chrome[0].maxY == 600 - EditorChromeLayout.aboveToolBar(toolSettingsHeight: 44, bar: one))
     }
 
     @Test func separateCapsulesKeepTheirSpacing() {

@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 390,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T03:09:40.311Z",
-  "updated": "2026-09-29T03:09:40.314Z",
+  "updated": "2026-09-29T03:24:09.599Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while tightening the bar (task the-floating-tool-bar-sits-as-tight-as-the-mock, 2026-09-28). Side by side: queue/audits/2026-09-28-tight-tool-bar-side-by-side.png. Mock: docs/design/mocks/shared/components/toolbar.css .cnv .tbar padding var(--s1) var(--s2) round 28pt .tool, so 38pt with the 1px border; .zslider width 92px. App: EditorChromeLayout.toolBarGroupHeight = 48 is shared by Current's capsules and feeds toolBarCovers / aboveToolBar / the tool settings stack, so the one bar needs its own height (ToolBarSpacing is where the one bar's numbers now live) and those derived bands must read the bar in use. ToolBarSpacing.oneGlass.endPadding is 10 = the rim at 48pt; at 38pt the rim is 5 and the mock's end is 8 + 1. Zoom slider width lives in EditorView.zoomBar (110).",
@@ -24,10 +24,31 @@
     {
       "t": "2026-09-29T03:09:40.313Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-29T03:24:09.594Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T03:43:39.000Z",
+      "note": "Adversarial pass before building: a 38pt bar leaves a 5pt rim round the 28pt tools, the same as the mock's 4pt padding + 1pt edge. What could break: every band that clears the bar (fit, notice pill, crop/trim capsules, tool settings capsule, measure legend) read the one 48pt constant, so each had to read the bar in use or it would float 10pt too high or the fit would leave a dead band. The grid-adjust bar replaces the one bar, so it takes the same height or everything above it would jump. A Premiere/FCP user sees a slimmer floating bar; nothing about hit targets changes (tools stay 28pt)."
+    },
+    {
+      "t": "2026-09-29T03:43:39.000Z",
+      "note": "Built: EditorChromeLayout.ToolBarSpacing gained height (capsules 48, oneGlass 38) and zoomSliderWidth (110 / 92); oneGlass endPadding 10 -> 9 (mock's 8pt + 1pt edge). toolBarCovers(bar:), aboveToolBar(toolSettingsHeight:bar:), toolSettingsFrame/toolBarFrame/bottomNoticeFrame/bottomChrome take bar: (default .capsules). App reads Experiments.shared.toolBar for the fit, measure legend, overlays, group heights, grid-adjust bar and slider. Walk toolBar step can claim height and zoomSlider (probe-only ZoomSliderProbe)."
+    },
+    {
+      "t": "2026-09-29T03:43:39.000Z",
+      "note": "Verified: Scripts/test.sh 10436 tests green. one-glass-tool-bar-walk ok (glass 38pt, slider 92pt at every stage, 4 real captures); a-fitted-picture-clears-the-tool-bar-walk ok (computed bar top 846 = measured glass top 846, picture ends 24pt above). Also ok: tool-settings-capsule, tool-settings-narrow, tool-settings-twice, toolbar-row-lines-up, toolbar-row-narrow, a-notice-lets-a-click-through, grid-guides, video-tool-bar, trim-is-a-tool, zoom-readout-double-click. Side by side at 2x: mock bar ~75px/slider ~185px, app ~74px/184px."
+    },
+    {
+      "t": "2026-09-29T03:43:39.000Z",
+      "note": "Rough items: the non-concentric end, the tight grid-adjust buttons, and the circle-vs-rounded-square tools and chevron readout are known, visible only on close comparison, and left in the audit for the user to react to rather than filed. left rough: toolBar step's 'they DO NOT line up' line counts groups from an earlier window still open in the walk (Color at another centre); cosmetic in the log only, the claims read the newest bar."
     }
   ],
   "walks": [
     "one-glass-tool-bar-walk",
     "a-fitted-picture-clears-the-tool-bar-walk"
-  ]
+  ],
+  "started": "2026-09-29T03:24:09.592Z"
 }

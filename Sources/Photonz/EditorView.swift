@@ -433,7 +433,7 @@ struct EditorView: View {
                     // when one is up, which for Measure — the tool that owns
                     // its hint — it always is.
                     .padding(.bottom, EditorChromeLayout.aboveToolBar(
-                        toolSettingsHeight: editorState.toolSettingsSize.height))
+                        toolSettingsHeight: editorState.toolSettingsSize.height, bar: barSpacing))
                 }
                 .overlay(alignment: .bottom) {
                     if Experiments.shared.toolOptionsEnabled,
@@ -878,7 +878,9 @@ struct EditorView: View {
                 .playtestControl("Done", detail: "Adjust Grid bar")
         }
         .padding(.horizontal, 18)
-        .frame(height: EditorChromeLayout.toolBarGroupHeight)
+        // The height of the bar it stands in for, so nothing stacked above
+        // moves when the grid is being adjusted.
+        .frame(height: barSpacing.height)
         .glassEffect(.regular, in: .capsule)
         .contentShape(.capsule)
         .toolBarGroupProbe("Adjust Grid")
@@ -1007,7 +1009,7 @@ struct EditorView: View {
 
     /// How the bar spaces its tools and hairlines: the one bar as tight as
     /// `video.html` draws it, the separate capsules as they always were.
-    private var barSpacing: EditorChromeLayout.ToolBarSpacing { .bar(oneGlass: isOneGlassBar) }
+    private var barSpacing: EditorChromeLayout.ToolBarSpacing { Experiments.shared.toolBar }
 
     /// The hairline between two tool families, with the room the bar gives it.
     private var familyHairline: some View {
@@ -1041,7 +1043,7 @@ struct EditorView: View {
             }
         }
         .padding(.horizontal, barSpacing.endPadding)
-        .frame(height: EditorChromeLayout.toolBarGroupHeight)
+        .frame(height: barSpacing.height)
         .glassEffect(.regular, in: .capsule)
         .contentShape(.capsule)
         .toolBarGlassProbe()
@@ -2085,8 +2087,9 @@ struct EditorView: View {
                     set: { editorState.setDisplayZoom(CGFloat(pow(2, $0))) }),
                     in: -5...5)
                     .controlSize(.small)
-                    .frame(width: 110)
+                    .frame(width: barSpacing.zoomSliderWidth)
                     .help("Zoom")
+                    .zoomSliderProbe()
             }
             Menu {
                 ForEach(Self.zoomStops, id: \.self) { stop in
@@ -2370,7 +2373,7 @@ struct EditorView: View {
         // when one is up, so they read as a stack rather than one covering
         // the other.
         .padding(.bottom, EditorChromeLayout.aboveToolBar(
-            toolSettingsHeight: editorState.toolSettingsSize.height))
+            toolSettingsHeight: editorState.toolSettingsSize.height, bar: barSpacing))
         .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
 
@@ -2411,7 +2414,7 @@ struct EditorView: View {
         .padding(.vertical, 10)
         .glassEffect(.regular, in: .capsule)
         .padding(.bottom, EditorChromeLayout.aboveToolBar(
-            toolSettingsHeight: editorState.toolSettingsSize.height))
+            toolSettingsHeight: editorState.toolSettingsSize.height, bar: barSpacing))
         .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
 
@@ -3208,14 +3211,15 @@ private struct ToolBarGroupChrome: ViewModifier {
     let isSection: Bool
 
     func body(content: Content) -> some View {
+        let height = Experiments.shared.toolBar.height
         if isSection {
             content
-                .frame(height: EditorChromeLayout.toolBarGroupHeight)
+                .frame(height: height)
                 .toolBarGroupProbe(name)
         } else {
             content
                 .padding(.horizontal, padding)
-                .frame(height: EditorChromeLayout.toolBarGroupHeight)
+                .frame(height: height)
                 .glassEffect(.regular, in: .capsule)
                 .contentShape(.capsule)
                 .toolBarGroupProbe(name)

@@ -86,6 +86,21 @@ import SwiftUI
 
     private var newestBar: CGRect? { bars.values.max { $0.stamp < $1.stamp }?.frame }
 
+    /// The zoom slider on screen, by view, newest word winning like the bar.
+    private var sliders: [ObjectIdentifier: Entry] = [:]
+
+    func recordZoomSlider(_ frame: CGRect, by writer: ObjectIdentifier) {
+        stamp += 1
+        sliders[writer] = Entry(name: "Zoom slider", frame: frame, stamp: stamp)
+    }
+
+    func forgetZoomSlider(by writer: ObjectIdentifier) {
+        sliders.removeValue(forKey: writer)
+    }
+
+    /// The zoom slider's frame; nil when the canvas is too cramped for one.
+    var zoomSlider: CGRect? { sliders.values.max { $0.stamp < $1.stamp }?.frame }
+
     /// Every tool button and hairline on the bar, by view: what the gaps and
     /// hairline heights are read off. A tool is named for its slot, a hairline
     /// is `nil`.
@@ -181,6 +196,31 @@ private struct ToolBarGlassProbe: ViewModifier {
 }
 
 extension View {
+    /// Registers the zoom slider, so a walk can read its length as a number.
+    func zoomSliderProbe() -> some View {
+        modifier(ZoomSliderProbe())
+    }
+}
+
+private struct ZoomSliderProbe: ViewModifier {
+    @State private var recorded = ToolBarGroupProbe.Recorded()
+
+    func body(content: Content) -> some View {
+        content
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
+                recorded.frame = frame
+                ToolBarLayoutProbe.shared.recordZoomSlider(frame, by: ObjectIdentifier(recorded))
+            }
+            .onAppear {
+                if let frame = recorded.frame {
+                    ToolBarLayoutProbe.shared.recordZoomSlider(frame, by: ObjectIdentifier(recorded))
+                }
+            }
+            .onDisappear { ToolBarLayoutProbe.shared.forgetZoomSlider(by: ObjectIdentifier(recorded)) }
+    }
+}
+
+extension View {
     /// Registers a tool button (`tool` its slot's name) or a hairline (`nil`)
     /// on the floating bar, so a walk can read the gaps between them as numbers.
     func toolBarMarkProbe(tool: String?) -> some View {
@@ -266,6 +306,7 @@ extension View {
     func toolBarGroupProbe(_ name: String) -> some View { self }
     func toolBarGlassProbe() -> some View { self }
     func toolBarMarkProbe(tool: String?) -> some View { self }
+    func zoomSliderProbe() -> some View { self }
     func toolBarSlotsProbe(shown: [String], more: [String], lit: String?) -> some View { self }
     func toolBarMoreProbe(_ rows: [String], pick: @escaping @MainActor (String) -> Void) -> some View { self }
 }

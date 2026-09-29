@@ -78,6 +78,22 @@ struct PlaytestScriptTests {
         #expect(other.hairline == nil)
     }
 
+    @Test("A toolBar step can claim the bar's height and the zoom slider's length")
+    func toolBarCanClaimItsHeightAndZoomSlider() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "toolBar", "stage": "a", "height": 38, "zoomSlider": 92 },
+                     { "do": "toolBar", "stage": "b", "capsules": 1 } ] }
+        """)
+        guard case .toolBar(_, _, let claim?) = script.steps[0],
+              case .toolBar(_, _, let other?) = script.steps[1] else {
+            Issue.record("toolBar"); return
+        }
+        #expect(claim.height == 38)
+        #expect(claim.zoomSlider == 92)
+        #expect(other.height == nil)
+        #expect(other.zoomSlider == nil)
+    }
+
     @Test("A writePicture step leaves the canvas out unless the walk asks for it")
     func writePictureLeavesTheCanvasOutByDefault() throws {
         let script = try decode("""

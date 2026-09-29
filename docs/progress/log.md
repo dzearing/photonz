@@ -20148,3 +20148,9 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Walks: `toolBar` steps can claim `toolGap` and `hairline`. `one-glass-tool-bar-walk` now presses Command 2 before reading a recording's bar (it was failing on main without it).
 - Gotcha: wrapping a `Divider` in `onGeometryChange` makes it lie flat in an HStack; probe it from a background.
 - Next: the bar is 48pt tall against the mock's 38pt (filed p1, `the-floating-tool-bar-is-as-short-as-the-mock-dr`).
+
+## 2026-09-28 — The floating tool bar is as short as the mock
+
+- Next's one glass bar is 38pt tall (28pt row, 5pt rim, as `video.html`'s `.tbar`), its ends 9pt past the end tools, its zoom slider 92pt. Current's capsules keep 48pt and 110pt.
+- Core: `ToolBarSpacing.height` / `.zoomSliderWidth`; `toolBarCovers(bar:)` and a `bar:` parameter on `aboveToolBar`, `toolSettingsFrame`, `toolBarFrame`, `bottomNoticeFrame`, `bottomChrome`. App: `Experiments.shared.toolBar` is the bar in use; the fit, overlays, measure legend and grid-adjust bar read it.
+- Walks: `toolBar` steps can claim `height` and `zoomSlider`. Audit: `queue/audits/2026-09-28-short-tool-bar.json`.

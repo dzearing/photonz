@@ -512,7 +512,8 @@ extension EditorState {
         let chrome = EditorChromeLayout.bottomChrome(canvasSize: viewport.viewSize,
                                                      toolBarWidth: toolBarWidth,
                                                      noticeSize: MeasureModeHint.reservedSize,
-                                                     toolSettingsSize: toolSettingsSize)
+                                                     toolSettingsSize: toolSettingsSize,
+                                                     bar: Experiments.shared.toolBar)
         // Nothing stands in a canvas corner any more: the panel toggle moved
         // into the window's title bar on 2026-09-06, so there is no corner
         // chrome to tuck under and the legend takes whichever corner it wins

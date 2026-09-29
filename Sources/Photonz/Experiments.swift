@@ -299,6 +299,12 @@ extension Experiments {
     /// its separate capsules.
     var oneGlassToolBarEnabled: Bool { isEnabled(FeatureCatalog.oneGlassToolBarFlag) }
 
+    /// The floating bar in use: the one glass bar as `video.html` sizes it,
+    /// or Current's separate capsules. Everything that has to clear the bar
+    /// (a fit, the notice pill, the capsules stacked above it) reads its
+    /// height from here.
+    var toolBar: EditorChromeLayout.ToolBarSpacing { .bar(oneGlass: oneGlassToolBarEnabled) }
+
     /// `next-tool-bar-feedback`: whether the floating tool bar's buttons (and
     /// the inspector toggle) show the shared hover fill and pressed shrink of
     /// `IconActionButtonStyle`. Exists only in the Next release's catalog, so

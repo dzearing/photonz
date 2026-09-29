@@ -7978,6 +7978,24 @@ private final class Run {
                 wrong.append("a hairline is \(Self.round2(off))pt tall, not \(Self.round2(want))pt")
             }
         }
+        if let want = claim.height {
+            let probe = ToolBarLayoutProbe.shared
+            let heights = probe.bar.map { [$0.height] } ?? probe.measured.map(\.frame.height)
+            if heights.isEmpty {
+                wrong.append("it has drawn no glass to measure")
+            } else if let off = heights.first(where: { abs($0 - want) > 0.5 }) {
+                wrong.append("its glass is \(Self.round2(off))pt tall, not \(Self.round2(want))pt")
+            }
+        }
+        if let want = claim.zoomSlider {
+            if let width = ToolBarLayoutProbe.shared.zoomSlider?.width {
+                if abs(width - want) > 0.5 {
+                    wrong.append("its zoom slider is \(Self.round2(width))pt long, not \(Self.round2(want))pt")
+                }
+            } else {
+                wrong.append("it draws no zoom slider to measure")
+            }
+        }
         guard wrong.isEmpty else { throw Failure(description: "the tool bar: " + wrong.joined(separator: "; ")) }
     }
 
@@ -9101,7 +9119,8 @@ private final class Run {
         // one frame per group for the whole app, and a window closing as the
         // next opens can leave it holding the other window's.
         let row = topLeft(EditorChromeLayout.toolBarFrame(canvasSize: canvas.bounds.size,
-                                                          toolBarWidth: editor.toolBarWidth))
+                                                          toolBarWidth: editor.toolBarWidth,
+                                                          bar: Experiments.shared.toolBar))
         let gap = row.minY - picture.maxY
         let overlapsAcross = picture.minX < row.maxX && row.minX < picture.maxX
         let facts: [String: Any] = [
@@ -9149,6 +9168,8 @@ private final class Run {
                 "toolGaps": ToolBarLayoutProbe.shared.toolGaps.map(round2),
                 "hairlineHeights": ToolBarLayoutProbe.shared.hairlineHeights.map(round2),
                 "hairlineRoom": ToolBarLayoutProbe.shared.hairlineRoom.map { $0.map(round2) },
+                "zoomSliderWidth": ToolBarLayoutProbe.shared.zoomSlider.map { round2($0.width) as Any }
+                    ?? NSNull(),
                 "heights": heights.sorted(), "centerLines": centers.sorted(),
                 "linedUp": heights.count <= 1 && centers.count <= 1,
                 // What the zoom percentage has been asked to do, since it is

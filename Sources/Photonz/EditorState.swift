@@ -1484,7 +1484,7 @@ final class EditorState {
     @ObservationIgnored private var viewportTheAppFitted = false
 
     /// The camera that shows the whole document in the canvas above the
-    /// floating tool bar (`EditorChromeLayout.toolBarCovers`).
+    /// floating tool bar (`EditorChromeLayout.toolBarCovers(bar:)`).
     private func fittedViewport(documentSize: CGSize, in size: CGSize) -> Viewport {
         .fit(documentSize: documentSize, in: size, obscuredBottom: fitObscuredBottom)
     }
@@ -1492,7 +1492,7 @@ final class EditorState {
     /// What the floating tool bar covers at the foot of the canvas, which a
     /// fitted picture keeps clear of. Nothing in View mode, which has no bar.
     private var fitObscuredBottom: CGFloat {
-        isWatching ? 0 : EditorChromeLayout.toolBarCovers
+        isWatching ? 0 : EditorChromeLayout.toolBarCovers(bar: Experiments.shared.toolBar)
     }
 
     /// Records a camera the app placed on its own, so a resize can tell

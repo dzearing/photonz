@@ -65,6 +65,12 @@ public enum EditorChromeLayout {
     /// and a fit that moved every time you picked up Measure would be worse.
     public static let toolBarCovers: CGFloat = toolBarInset + toolBarHeight
 
+    /// The same band for the bar in use: the one glass bar is shorter than
+    /// the separate capsules, so a picture fitted above it keeps more room.
+    public static func toolBarCovers(bar: ToolBarSpacing) -> CGFloat {
+        toolBarInset + bar.height
+    }
+
     /// The same band, with the tool settings capsule standing in between.
     ///
     /// The capsule (`ToolSettingsBar`) rides on its own row above the bar for
@@ -76,9 +82,13 @@ public enum EditorChromeLayout {
     /// A height of zero is the no-capsule case and gives back exactly
     /// `aboveToolBar`, so nothing moves when the flag is off or the tool in
     /// hand has nothing to set.
-    public static func aboveToolBar(toolSettingsHeight: CGFloat) -> CGFloat {
-        guard toolSettingsHeight > 0 else { return aboveToolBar }
-        return aboveToolBar + toolSettingsHeight + toolBarStackGap
+    ///
+    /// `bar` is the bar in use: whatever stacks above it clears ITS height.
+    public static func aboveToolBar(toolSettingsHeight: CGFloat,
+                                    bar: ToolBarSpacing = .capsules) -> CGFloat {
+        let clear = toolBarCovers(bar: bar) + toolBarStackGap
+        guard toolSettingsHeight > 0 else { return clear }
+        return clear + toolSettingsHeight + toolBarStackGap
     }
 
     /// Where the tool settings capsule sits: centred like the bar, one
@@ -89,11 +99,12 @@ public enum EditorChromeLayout {
     /// Nil when there is no capsule, so callers can treat "no capsule" and "no
     /// rect" as the same thing.
     public static func toolSettingsFrame(canvasSize: CGSize,
-                                         width: CGFloat, height: CGFloat) -> CGRect? {
+                                         width: CGFloat, height: CGFloat,
+                                         bar: ToolBarSpacing = .capsules) -> CGRect? {
         guard width > 0, height > 0 else { return nil }
         let capped = min(width, toolBarBudget(canvasWidth: canvasSize.width))
         return CGRect(x: (canvasSize.width - capped) / 2,
-                      y: canvasSize.height - toolBarInset - toolBarHeight
+                      y: canvasSize.height - toolBarCovers(bar: bar)
                         - toolBarStackGap - height,
                       width: capped, height: height)
     }
@@ -103,24 +114,26 @@ public enum EditorChromeLayout {
     /// bottom edge clear of the bar and of the tool settings capsule when one
     /// is up. Top-left origin, like every other rect the placement code takes.
     public static func bottomNoticeFrame(canvasSize: CGSize, noticeSize: CGSize,
-                                         toolSettingsHeight: CGFloat = 0) -> CGRect {
+                                         toolSettingsHeight: CGFloat = 0,
+                                         bar: ToolBarSpacing = .capsules) -> CGRect {
         CGRect(x: (canvasSize.width - noticeSize.width) / 2,
-               y: canvasSize.height - aboveToolBar(toolSettingsHeight: toolSettingsHeight)
+               y: canvasSize.height - aboveToolBar(toolSettingsHeight: toolSettingsHeight, bar: bar)
                  - noticeSize.height,
                width: noticeSize.width, height: noticeSize.height)
     }
 
     /// Where the floating tool bar sits: centred, `toolBarInset` off the
-    /// floor, `toolBarHeight` tall, and as wide as it measures. A bar that has
+    /// floor, as tall as the bar in use, and as wide as it measures. A bar that has
     /// not been measured yet (`toolBarWidth` of 0), or one that somehow
     /// overflows, reserves its whole `toolBarBudget`, which is the widest it
     /// can ever be inside the canvas.
-    public static func toolBarFrame(canvasSize: CGSize, toolBarWidth: CGFloat) -> CGRect {
+    public static func toolBarFrame(canvasSize: CGSize, toolBarWidth: CGFloat,
+                                    bar: ToolBarSpacing = .capsules) -> CGRect {
         let budget = toolBarBudget(canvasWidth: canvasSize.width)
         let width = toolBarWidth > 0 ? min(toolBarWidth, budget) : budget
         return CGRect(x: (canvasSize.width - width) / 2,
-                      y: canvasSize.height - toolBarInset - toolBarHeight,
-                      width: width, height: toolBarHeight)
+                      y: canvasSize.height - toolBarCovers(bar: bar),
+                      width: width, height: bar.height)
     }
 
     /// The chrome along the bottom of the canvas that a floating panel (the
@@ -130,14 +143,15 @@ public enum EditorChromeLayout {
     /// jump when one appears for two seconds.
     public static func bottomChrome(canvasSize: CGSize, toolBarWidth: CGFloat,
                                     noticeSize: CGSize,
-                                    toolSettingsSize: CGSize = .zero) -> [CGRect] {
+                                    toolSettingsSize: CGSize = .zero,
+                                    bar: ToolBarSpacing = .capsules) -> [CGRect] {
         let capsule = toolSettingsFrame(canvasSize: canvasSize,
                                         width: toolSettingsSize.width,
-                                        height: toolSettingsSize.height)
+                                        height: toolSettingsSize.height, bar: bar)
         return [bottomNoticeFrame(canvasSize: canvasSize, noticeSize: noticeSize,
-                                  toolSettingsHeight: capsule?.height ?? 0)]
+                                  toolSettingsHeight: capsule?.height ?? 0, bar: bar)]
             + (capsule.map { [$0] } ?? [])
-            + [toolBarFrame(canvasSize: canvasSize, toolBarWidth: toolBarWidth)]
+            + [toolBarFrame(canvasSize: canvasSize, toolBarWidth: toolBarWidth, bar: bar)]
     }
 
     // MARK: Corner chrome
@@ -299,9 +313,13 @@ public enum EditorChromeLayout {
         return min(maximum, current + Int(slack / spacing.widestSlotWidth))
     }
 
-    /// How the floating bar spaces what is on it: the tools, the hairlines
-    /// between tool families and between sections, and the room at its ends.
+    /// How the floating bar is sized and spaces what is on it: its height,
+    /// the tools, the hairlines between tool families and between sections,
+    /// the room at its ends, and the zoom slider's length.
     public struct ToolBarSpacing: Sendable, Equatable {
+        /// How tall the glass is drawn: every group on it, and every band
+        /// that has to clear it (`toolBarCovers(bar:)`, `aboveToolBar`).
+        public var height: CGFloat
         /// Between two neighbouring tools.
         public var toolGap: CGFloat
         /// How tall a hairline is drawn.
@@ -312,6 +330,8 @@ public enum EditorChromeLayout {
         public var sectionGap: CGFloat
         /// Between the glass's rounded ends and the first and last control.
         public var endPadding: CGFloat
+        /// How long the zoom slider runs.
+        public var zoomSliderWidth: CGFloat
 
         /// One tool's share of the bar: its 28pt control and the gap after it.
         public var slotWidth: CGFloat { toolBarControlSize + toolGap }
@@ -320,8 +340,9 @@ public enum EditorChromeLayout {
         public var widestSlotWidth: CGFloat { 54 + toolGap }
 
         /// Current's row of separate capsules, as measured off the running app.
-        public static let capsules = ToolBarSpacing(toolGap: 14, hairlineHeight: 20, hairlineMargin: 0,
-                                                    sectionGap: 14, endPadding: 18)
+        public static let capsules = ToolBarSpacing(height: toolBarGroupHeight,
+                                                    toolGap: 14, hairlineHeight: 20, hairlineMargin: 0,
+                                                    sectionGap: 14, endPadding: 18, zoomSliderWidth: 110)
 
         /// The one glass bar (`next-one-glass-tool-bar`), as tight as
         /// `video.html` draws it. The mock's `.tool` is 30pt wide with 2pt
@@ -329,11 +350,12 @@ public enum EditorChromeLayout {
         /// a 4pt gap keeps that step. Its `.tsep` is 18pt tall, sits 2pt gap
         /// plus 4pt margin from the tools in its strip (4 + 2 here), and 4pt
         /// gap plus 4pt margin from the sections either side of it (8 here).
-        /// The mock's glass is 38pt tall and ends 9pt past its last tool;
-        /// this one is 48pt tall, so its ends take the 10pt rim it has above
-        /// and below, which keeps each rounded end concentric with its tool.
-        public static let oneGlass = ToolBarSpacing(toolGap: 4, hairlineHeight: 18, hairlineMargin: 2,
-                                                    sectionGap: 8, endPadding: 10)
+        /// The mock's glass is a 28pt row inside 4pt of padding and a 1pt
+        /// edge, 38pt tall, and ends 8pt plus that edge past its last tool;
+        /// its `.zslider` is 92pt.
+        public static let oneGlass = ToolBarSpacing(height: 38,
+                                                    toolGap: 4, hairlineHeight: 18, hairlineMargin: 2,
+                                                    sectionGap: 8, endPadding: 9, zoomSliderWidth: 92)
 
         public static func bar(oneGlass isOneGlass: Bool) -> ToolBarSpacing {
             isOneGlass ? .oneGlass : .capsules

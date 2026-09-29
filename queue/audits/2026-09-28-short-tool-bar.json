@@ -1,0 +1,27 @@
+{
+  "feature": "The floating tool bar is as short as the mock",
+  "epic": "video-editing",
+  "summary": "The glass tool bar under the picture is now 38 points tall, as the video mock draws it, instead of 48, and its zoom slider is the mock's 92 points. A fitted picture gets back the 10 points the bar gave up.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: Scripts/playtest/one-glass-tool-bar-walk.json and Scripts/playtest/a-fitted-picture-clears-the-tool-bar-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording, press Command 2 and look at the bar under the picture.", "shot": "2026-09-28-short-tool-bar-1-video-sc.png" },
+    { "do": "Compare it with the mock's bar, drawn above it here.", "shot": "2026-09-28-short-tool-bar-side-by-side.png" },
+    { "do": "Open a tall screenshot and press Command 0: the whole picture fits above the bar.", "shot": "2026-09-28-short-tool-bar-tall-fitted-sc.png" },
+    { "do": "Press I for Measure: the hint and the Snap and Show capsule stack above the bar.", "shot": "2026-09-28-short-tool-bar-measure-stack-sc.png" },
+    { "do": "Drag the zoom slider from one end to the other." },
+    { "do": "Click each tool quickly without aiming carefully." }
+  ],
+  "evaluate": [
+    "Does the bar now read as low and light as the one you drew?",
+    "With 5 points of glass above and below the tools, does the lit tool's circle look crowded against the rim?",
+    "Is the shorter zoom slider still fine enough to land on the zoom you want?",
+    "Do the Measure hint and its settings capsule sit at the right distance above the shorter bar?"
+  ],
+  "rough": [
+    "The ends of the bar now sit 9 points past the end tools, as the mock's do, so the rounded end is no longer concentric with the end tool's circle.",
+    "While the grid is being adjusted, the bar that replaces the tools is 38 points too, so nothing above it moves; its buttons are regular Mac buttons and sit a little tight in it.",
+    "The app's tools are still 28 point circles where the mock draws 30 point rounded squares, and the zoom reading is a menu with a chevron where the mock prints a plain percentage.",
+    "Current keeps its separate 48 point capsules and 110 point slider."
+  ]
+}

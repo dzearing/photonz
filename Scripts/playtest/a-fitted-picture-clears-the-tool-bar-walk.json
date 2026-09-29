@@ -15,7 +15,7 @@
     { "do": "wait", "seconds": 0.4 },
     { "do": "action", "action": "zoomToFit" },
     { "do": "wait", "seconds": 0.4 },
-    { "do": "toolBar", "stage": "2-tall-fitted", "clearOfPicture": true },
+    { "do": "toolBar", "stage": "2-tall-fitted", "clearOfPicture": true, "height": 38 },
     { "do": "describe", "stage": "2-tall-fitted", "note": "THE TEST: Cmd-0 fits the tall picture into the canvas above the bar, so its bottom edge is not under it" },
     { "do": "snapshot", "name": "2-tall-fitted" },
 
@@ -41,7 +41,7 @@
 
     { "do": "key", "key": "2", "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "toolBar", "stage": "6-recording-tracks-open", "clearOfPicture": true },
+    { "do": "toolBar", "stage": "6-recording-tracks-open", "clearOfPicture": true, "height": 38 },
     { "do": "describe", "stage": "6-recording-tracks-open", "note": "Edit mode (Cmd-2): the tool bar and the tracks came up and the recording refitted into the shorter canvas, clear of the bar" },
     { "do": "snapshot", "name": "6-recording-tracks-open" },
 
