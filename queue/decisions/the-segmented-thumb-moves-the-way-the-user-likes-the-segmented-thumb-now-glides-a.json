@@ -1,0 +1,51 @@
+{
+  "id": "the-segmented-thumb-moves-the-way-the-user-likes-the-segmented-thumb-now-glides-a",
+  "taskId": "the-segmented-thumb-moves-the-way-the-user-likes",
+  "question": "The segmented thumb now glides and stops. How should it feel?",
+  "context": "The View | Edit thumb used to fly out of its rail. It now glides and stops, on every segmented control. Try it in Photonz Dev once it refreshes (switch View and Edit on a recording), or look at the filmed frames in the brief.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep this glide",
+      "summary": "The glass slides to the new option in about three tenths of a second, stretching a little across both options on the way, and stops. No overshoot, no bounce.",
+      "pros": [
+        "Feels like a Mac control",
+        "Still reads as a pane of glass, not flat paint",
+        "Matches the component page exactly"
+      ],
+      "cons": [
+        "The stretch is still a touch more than the system control does"
+      ],
+      "mitigation": "The stretch never leaves the rail and is over in a tenth of a second.",
+      "declines": true
+    },
+    {
+      "id": "b",
+      "label": "A plain slide",
+      "summary": "No stretch at all: the glass keeps its size and slides straight across, the way the system segmented control does.",
+      "pros": [
+        "Exactly what a Mac user expects",
+        "Calmest in a dense panel"
+      ],
+      "cons": [
+        "Loses the last bit of liquid feel you asked for in the morning"
+      ],
+      "mitigation": "The glass still refracts what is under it as it moves."
+    },
+    {
+      "id": "c",
+      "label": "Quicker glide",
+      "summary": "The same glide and stretch in about two tenths of a second.",
+      "pros": [
+        "Snappier when flipping back and forth"
+      ],
+      "cons": [
+        "The stretch is hard to see at that speed"
+      ],
+      "mitigation": "A second click mid-move already carries on from where the glass is."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-29T16:04:45.109Z"
+}

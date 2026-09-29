@@ -39,11 +39,16 @@ import SwiftUI
 ///   picked keeps its place, dimmed, and says why in its tooltip; the whole
 ///   control dims under `.disabled`. One tab stop, arrows move the pick and
 ///   stop at the ends, and the focus ring sits round the plate.
-/// * **Changing the value.** The thumb MOVES as liquid glass: it stretches
-///   over the slot it left and the slot it is going to, squashed a little,
-///   then lets go, runs a few points past and settles (`SegmentThumbMorph`,
-///   the page's 420ms). It never leaves the rail, and a second choice
-///   mid-flight carries on from where it is. Grab the thumb and drag it and it
+/// * **Changing the value.** The thumb glides to the new segment and stops,
+///   the way a Mac segmented control does: its leading edge reaches the new
+///   slot first, spanning both a little squashed, and the trailing edge
+///   follows it in (`SegmentThumbMorph`, the page's 300ms). No overshoot, no
+///   bounce, never out of the rail, and a second choice mid-flight carries on
+///   from where it is. That move is the thumb's ONLY animator: a pick made
+///   inside an animation (View | Edit changes under `.viewEditMode`) once had
+///   SwiftUI animate the thumb's placement too, on top of the morph, and flung
+///   it a whole segment out of the rail (2026-09-29, filmed by
+///   `segmented-thumb-film-walk`). Grab the thumb and drag it and it
 ///   follows the pointer, landing on the nearest segment when let go. Under
 ///   Reduce Motion it cross-fades instead; under Increase Contrast or Reduce
 ///   Transparency it is an opaque lighter plate with a firmer edge.
@@ -275,6 +280,10 @@ struct DesignedSegments<Value: Hashable>: View {
     /// A morph under way: where the thumb was when it began, and when.
     @State private var morphFrom: CGRect?
     @State private var morphStart: Date?
+    /// The segment the thumb last set off for. For the one pass between a
+    /// new pick and `onChange` starting its morph, the thumb stays here
+    /// rather than flashing on the new segment for a frame.
+    @State private var restingOn: Int?
     /// A drag of the thumb under way: where its middle is, and how far from
     /// its middle the hand took hold.
     @State private var dragCenter: CGFloat?
@@ -282,7 +291,6 @@ struct DesignedSegments<Value: Hashable>: View {
     /// A drag that began off the thumb belongs to the segment it began on.
     @State private var dragIgnored = false
     @State private var rowWidth: CGFloat = 0
-    @Namespace private var glass
 
     private typealias Palette = VideoKit.Palette
 
@@ -338,7 +346,10 @@ struct DesignedSegments<Value: Hashable>: View {
             }
         }
         .simultaneousGesture(thumbDrag)
-        .onChange(of: pickedIndex) { old, _ in startMorph(leaving: old) }
+        .onChange(of: pickedIndex) { old, new in
+            startMorph(leaving: old)
+            restingOn = new
+        }
         .task(id: morphStart) {
             // The morph's clock stops once it has landed, so a resting
             // control asks for no frames at all.
@@ -380,6 +391,12 @@ struct DesignedSegments<Value: Hashable>: View {
             TimelineView(.animation(paused: morphStart == nil && dragCenter == nil)) { context in
                 placed(thumb, in: thumbFrame(target: target, row: row, at: context.date))
             }
+            // The morph and the drag are the only things that move the thumb.
+            // Without this, a pick made inside `withAnimation` animated the
+            // thumb's placement as well, and SwiftUI's animation of it added
+            // to the morph's own travel: the thumb went a whole segment the
+            // wrong way, out of the rail, before coming back.
+            .transaction { $0.disablesAnimations = true; $0.animation = nil }
         }
     }
 
@@ -399,6 +416,9 @@ struct DesignedSegments<Value: Hashable>: View {
         if let morphFrom, let morphStart {
             return SegmentThumbMorph(from: morphFrom, to: target, row: row)
                 .frame(at: date.timeIntervalSince(morphStart))
+        }
+        if let restingOn, restingOn != pickedIndex, let slot = slots[restingOn] {
+            return slot
         }
         return target
     }
@@ -474,18 +494,17 @@ struct DesignedSegments<Value: Hashable>: View {
             // glass under the mock's brighter fill, a hairline, and one lit
             // line along its top. The fill is what reads as "lighter" (and
             // what an offscreen render still shows); the glass is what makes
-            // it a pane rather than paint as it moves.
-            GlassEffectContainer {
-                Capsule()
-                    .fill(LinearGradient(colors: [Palette.segThumbHi.color(scheme),
-                                                  Palette.segThumb.color(scheme)],
-                                         startPoint: .top, endPoint: .bottom))
-                    .overlay(Capsule().strokeBorder(Palette.segThumbEdge))
-                    .overlay(TopLight(inset: 1, tone: Palette.segThumbSpec))
-                    .glassEffect(.regular, in: .capsule)
-                    .glassEffectID("thumb", in: glass)
-            }
-            .background(ThumbLift())
+            // it a pane rather than paint as it moves. No `glassEffectID`: that
+            // asks the system to morph the glass's shape with its own spring,
+            // a second animator on a view the morph is already moving.
+            Capsule()
+                .fill(LinearGradient(colors: [Palette.segThumbHi.color(scheme),
+                                              Palette.segThumb.color(scheme)],
+                                     startPoint: .top, endPoint: .bottom))
+                .overlay(Capsule().strokeBorder(Palette.segThumbEdge))
+                .overlay(TopLight(inset: 1, tone: Palette.segThumbSpec))
+                .glassEffect(.regular, in: .capsule)
+                .background(ThumbLift())
             .overlay(focusRing)
         case .accent:
             Capsule()

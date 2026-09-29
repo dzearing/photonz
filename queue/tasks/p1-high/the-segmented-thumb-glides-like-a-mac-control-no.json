@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p1-high",
   "seq": 0.00001,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T14:47:27.540Z",
-  "updated": "2026-09-29T14:47:27.622Z",
+  "updated": "2026-09-29T16:05:10.068Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -30,6 +30,27 @@
     {
       "t": "2026-09-29T14:47:27.621Z",
       "note": "seq 400 -> 0.00001"
+    },
+    {
+      "t": "2026-09-29T15:22:57.835Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T16:04:59.778Z",
+      "note": "owns these walks: segmented-thumb-film-walk, segmented-thumb-glass-walk"
+    },
+    {
+      "t": "2026-09-29T16:05:10.016Z",
+      "note": "Reproduced first with a new walk step, filmThumb (SCStream of the window at 120fps, each frame read column by column through the rail). Before the fix: Edit to View drew the whole glass capsule on the panel toggle for ~50ms (frames with no glass on the rail at all), then 102pt on a 96pt rail; View to Edit pressed the glass 4pt over the rail's left padding, cut off by the rail. The Across panel picker stayed within 0.5pt. Cause: EditorState.setViewEditMode changes the mode inside withAnimation(.viewEditMode), so SwiftUI animated the thumb's placement additively on top of the TimelineView morph (old-to-new distance counted twice, the wrong way first). glassEffectID was NOT the cause (panel pickers had it too and stayed inside), but was removed anyway so the thumb has one animator."
+    },
+    {
+      "t": "2026-09-29T16:05:10.067Z",
+      "note": "Fix: .transaction{disablesAnimations; animation=nil} on the thumb's TimelineView; a restingOn state keeps the thumb on its old slot for the one pass before onChange starts the morph (no flash on the new slot); glassEffectID + GlassEffectContainer dropped (plain .glassEffect stays); SegmentThumbMorph now the page's 300ms two-leg curve, no settle, tests hold no-overshoot and monotonic edges. After: 0.0pt past rest in both directions, 0 frames off the rail; segmented-thumb-film-walk (inside: true on all four moves), segmented-thumb-glass-walk (real drag), segment-tooltips, view-mode-and-edit-mode, panel-toggle-titlebar all green at Next defaults; Scripts/test.sh 10536 tests green. Card for the feel is on the-segmented-thumb-moves-the-way-the-user-likes (old card withdrawn as overtaken). Left rough: View to Edit on the big fixture skips the glide's first ~100ms because the mode switch holds the main thread (folded into switching-a-long-recording-to-edit-mode-draws-it)."
     }
+  ],
+  "started": "2026-09-29T15:22:57.833Z",
+  "walks": [
+    "segmented-thumb-film-walk",
+    "segmented-thumb-glass-walk"
   ]
 }

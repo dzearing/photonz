@@ -7,7 +7,9 @@ import Testing
 ///
 /// The user, 2026-09-29: the thumb should "use liquid glass animation effect
 /// when snapping between options", then, of the first try, that the overshoot
-/// was obnoxious on a move of more than one step because it left the rail.
+/// was obnoxious on a move of more than one step because it left the rail, and
+/// that afternoon that it "overshoots like CRAZY... This doesn't feel mac
+/// native". So it glides and stops: no overshoot, no settle, no bounce.
 @Suite("The segmented thumb's morph and drag")
 struct SegmentThumbMotionTests {
     /// Three 60pt segments, 2pt apart, 24pt tall, in a 184pt row.
@@ -38,7 +40,7 @@ struct SegmentThumbMotionTests {
 
     @Test("Part way through it stretches over both slots, squashed a little")
     func stretchesAcrossBoth() {
-        let stretched = morph(0, 2).frame(at: SegmentThumbMorph.duration * 0.4)
+        let stretched = morph(0, 2).frame(at: SegmentThumbMorph.duration * 0.45)
         #expect(abs(stretched.minX - Self.slots[0].minX) < 0.01)
         #expect(abs(stretched.maxX - Self.slots[2].maxX) < 0.01)
         #expect(stretched.height < Self.slots[2].height)
@@ -55,25 +57,35 @@ struct SegmentThumbMotionTests {
         }
     }
 
-    @Test("It overshoots its slot by a few points at most, and only on the far side")
-    func settlesByAFewPoints() {
-        // 0 -> 1 has room past the slot, so the settle shows there.
-        let frames = samples(morph(0, 1))
-        let furthest = frames.map(\.minX).max() ?? 0
-        #expect(furthest > Self.slots[1].minX)
-        #expect(furthest - Self.slots[1].minX <= SegmentThumbMorph.maxSettle + 0.001)
-        // Width never grows past the slot once the stretch has let go.
-        let late = frames.suffix(frames.count / 6)
-        #expect(late.allSatisfy { abs($0.width - 60) < 0.01 })
+    @Test("It never goes past its new slot, or back past its old one", arguments: [(0, 1), (0, 2), (2, 0), (1, 0), (2, 1)])
+    func noOvershoot(from: Int, to: Int) {
+        let low = min(Self.slots[from].minX, Self.slots[to].minX)
+        let high = max(Self.slots[from].maxX, Self.slots[to].maxX)
+        for frame in samples(morph(from, to)) {
+            #expect(frame.minX >= low - 0.001)
+            #expect(frame.maxX <= high + 0.001)
+        }
     }
 
-    @Test("A far move settles no further than a near one")
-    func settleDoesNotScaleWithDistance() {
-        let wide = [CGRect(x: 0, y: 0, width: 40, height: 24),
-                    CGRect(x: 400, y: 0, width: 40, height: 24)]
-        let move = SegmentThumbMorph(from: wide[1], to: wide[0], row: 0...600)
-        let past = samples(move).map { wide[0].minX - $0.minX }.max() ?? 0
-        #expect(past <= SegmentThumbMorph.maxSettle + 0.001)
+    @Test("Each edge travels one way only: nothing bounces", arguments: [(0, 1), (0, 2), (2, 0), (1, 2)])
+    func edgesAreMonotonic(from: Int, to: Int) {
+        let frames = samples(morph(from, to))
+        let rightward = Self.slots[to].minX > Self.slots[from].minX
+        for (a, b) in zip(frames, frames.dropFirst()) {
+            if rightward {
+                #expect(b.minX >= a.minX - 0.001)
+                #expect(b.maxX >= a.maxX - 0.001)
+            } else {
+                #expect(b.minX <= a.minX + 0.001)
+                #expect(b.maxX <= a.maxX + 0.001)
+            }
+        }
+    }
+
+    @Test("It takes about three tenths of a second, like the component page")
+    func quick() {
+        #expect(SegmentThumbMorph.duration == 0.3)
+        #expect(SegmentThumbMorph.squash > 0.9)
     }
 
     @Test("A thumb that is already there does not move")
@@ -94,7 +106,7 @@ struct SegmentThumbMotionTests {
     @Test("Position and size move together: no jump where one leg of the move hands to the next")
     func noJumps() {
         let move = morph(0, 2)
-        for offset in [0.4, 0.82] {
+        for offset in [0.45] {
             let join = SegmentThumbMorph.duration * offset
             let before = move.frame(at: join - 0.0001), after = move.frame(at: join + 0.0001)
             #expect(abs(before.minX - after.minX) < 0.5)

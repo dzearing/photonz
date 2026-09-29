@@ -3214,6 +3214,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// its own outline (`scrubbing-is-smooth-never-goes-black-and-the-pic`),
     /// neither of which a snapshot taken after the hand lets go can see.
     case expectScrubSmooth(name: String, moves: Int)
+    /// Films the window while a segmented control's thumb moves and reads
+    /// where the glass is drawn in every frame against its rail
+    /// (`PlaytestThumbFilm`). Frames go to `<name>-<n>-sc.png`, the readings
+    /// to `<name>.json`. Needs the Screen Recording grant.
+    case filmThumb(PlaytestThumbFilm)
     /// Where a named layer's box must have landed, in the two spaces that
     /// matter.
     ///
@@ -3489,7 +3494,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "filmThumb", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -3588,6 +3593,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectPlaybackNeverBlank: "expectPlaybackNeverBlank"
         case .expectPlaybackShows: "expectPlaybackShows"
         case .expectScrubSmooth: "expectScrubSmooth"
+        case .filmThumb: "filmThumb"
         case .expectBox: "expectBox"
         case .expectField: "expectField"
         case .expectCaption: "expectCaption"
@@ -4592,6 +4598,32 @@ public enum PlaytestStep: Sendable, Equatable {
                     + "at least 4 and at most 400, not \(moves)")
             }
             self = .expectScrubSmooth(name: try f.string("name"), moves: Int(moves))
+        case "filmThumb":
+            let rail = try f.optionalStrings("rail")
+            guard !rail.isEmpty else {
+                throw f.invalid("rail", "names the controls whose boxes, joined, are the rail")
+            }
+            let seconds = try f.optionalNumber("seconds") ?? PlaytestThumbFilm.defaultSeconds
+            guard seconds >= 0.1, seconds <= 3 else {
+                throw f.invalid("seconds", "a thumb is filmed for 0.1 to 3 seconds, not \(seconds)")
+            }
+            let keyName = try f.optionalString("key"), press = try f.optionalString("press")
+            let trigger: PlaytestThumbFilm.Trigger
+            switch (keyName, press) {
+            case (let keyName?, nil):
+                guard let key = PlaytestKey(keyName) else {
+                    throw f.invalid("key", "\"\(keyName)\" is not a key")
+                }
+                trigger = .key(key, try f.modifiers())
+            case (nil, let press?):
+                trigger = .press(control: press, in: try f.optionalString("in"))
+            default:
+                throw f.invalid("key", "a thumb is set off by exactly one of \"key\" or \"press\"")
+            }
+            self = .filmThumb(PlaytestThumbFilm(
+                name: try f.string("name"), rail: rail,
+                pad: CGFloat(try f.optionalNumber("pad") ?? 0), seconds: seconds,
+                trigger: trigger, inside: try f.optionalFlag("inside")))
         case "expectCaption":
             func word<V: CaptionClaimWord>(_ field: String) throws -> V? {
                 guard let raw = try f.optionalString(field) else { return nil }

@@ -1,0 +1,35 @@
+{
+  "out": "/tmp/photonz-playtest/segmented-thumb-film",
+  "seed": "The user, 2026-09-29, of View | Edit in the title bar: 'the segmented control overshoots like CRAZY. I'm on Edit, click View, look at the crazy weird overshoot. When I click the opposite direction it does the same thing, but gets clipped.' At Next defaults with no flag set, this walk FILMS the thumb: every frame the window server draws while it moves, read column by column for where the lighter glass is against its rail. It films View to Edit and Edit to View in the title bar of an open recording, then a two-step move and back on a panel picker (Across, Left to Right), and claims the glass never leaves its rail in any frame.",
+  "setup": {
+    "forget": ["text", "shapes", "tools"]
+  },
+  "steps": [
+    { "do": "open", "file": "fixtures/Full screen Retina recording 3456x2234.mp4", "width": 1360, "height": 900 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "appearance", "value": "dark" },
+    { "do": "expectTimeline", "mode": "view" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "filmThumb", "name": "1-view-to-edit", "rail": ["View Mode", "Edit Mode"], "key": "2", "modifiers": ["command"], "seconds": 0.8, "inside": true },
+    { "do": "expectTimeline", "mode": "edit" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "filmThumb", "name": "2-edit-to-view", "rail": ["View Mode", "Edit Mode"], "key": "1", "modifiers": ["command"], "seconds": 0.8, "inside": true },
+    { "do": "expectTimeline", "mode": "view" },
+
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1360, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [140, 130] },
+    { "do": "type", "text": "Sign in" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [180, 145] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Left", "in": "Across", "reads": "Across, already on Left, tooltip \"Left\"" },
+    { "do": "filmThumb", "name": "3-across-left-to-right", "rail": ["Left", "Right"], "pad": 2, "press": "Right", "in": "Across", "seconds": 0.8, "inside": true },
+    { "do": "expect", "control": "Right", "in": "Across", "reads": "Across, already on Right, tooltip \"Right\"" },
+    { "do": "filmThumb", "name": "4-across-right-to-left", "rail": ["Left", "Right"], "pad": 2, "press": "Left", "in": "Across", "seconds": 0.8, "inside": true },
+    { "do": "appearance", "value": "system" }
+  ]
+}

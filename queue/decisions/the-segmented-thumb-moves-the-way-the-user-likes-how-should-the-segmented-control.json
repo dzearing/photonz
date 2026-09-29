@@ -1,0 +1,55 @@
+{
+  "id": "the-segmented-thumb-moves-the-way-the-user-likes-how-should-the-segmented-control",
+  "taskId": "the-segmented-thumb-moves-the-way-the-user-likes",
+  "question": "How should the segmented control's glass thumb move when you pick another option?",
+  "context": "Every segmented control (View | Edit in the title bar, the panel's pickers) now has a lighter glass thumb that stretches across and settles when the pick changes. Try it in Photonz Dev once it refreshes, then pick.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep it as it is",
+      "summary": "Picking an option stretches the glass over both options, squashes it a touch, then it lets go and settles a few points past its new place. About four tenths of a second.",
+      "pros": [
+        "Reads as liquid glass, which is what you asked for",
+        "Matches the component page exactly"
+      ],
+      "cons": [
+        "On a fast run of clicks it can feel a little slow"
+      ],
+      "mitigation": "A second click mid-move carries on from where the glass is, so it never waits.",
+      "declines": true
+    },
+    {
+      "id": "b",
+      "label": "Quicker, same shape",
+      "summary": "The same stretch and settle, in about a quarter of a second.",
+      "pros": [
+        "Snappier on repeated clicks",
+        "Still clearly glass"
+      ],
+      "cons": [
+        "The stretch is harder to see at that speed"
+      ],
+      "mitigation": "The squash can be made a little deeper so it still reads."
+    },
+    {
+      "id": "c",
+      "label": "A plain glide",
+      "summary": "No stretch or squash: the glass slides across and eases to a stop, like the system control.",
+      "pros": [
+        "Calm and familiar",
+        "Never distracting in a dense panel"
+      ],
+      "cons": [
+        "Loses the liquid feel you asked for"
+      ],
+      "mitigation": "The glass itself still refracts as it moves, so it is not flat paint."
+    }
+  ],
+  "recommended": "a",
+  "status": "withdrawn",
+  "created": "2026-09-29T13:56:52.278Z",
+  "withdrawn": {
+    "reason": "Overtaken: the user answered it themselves on 2026-09-29 ('overshoots like CRAZY... doesn't feel mac native'). The stretch-and-settle it asks about is gone; a new card asks about the glide that replaced it.",
+    "at": "2026-09-29T16:04:45.042Z"
+  }
+}

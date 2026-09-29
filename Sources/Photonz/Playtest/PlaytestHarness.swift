@@ -2312,6 +2312,9 @@ private final class Run {
             note(number, step.name, try await checkScrubSmooth(name: name, moves: moves),
                  state: describe())
 
+        case .filmThumb(let film):
+            note(number, step.name, try await filmThumb(film, number: number), state: describe())
+
         case .expectBox(let layer, let at, let size, let corner, let onScreen, let reachable, let within):
             note(number, step.name,
                  try checkBox(layer, at: at, size: size, corner: corner, onScreen: onScreen,
@@ -8423,6 +8426,150 @@ private final class Run {
     /// what the picture on screen was drawn at against where the playhead and
     /// the picked layer's outline are, so "the rectangle lags its outline" is a
     /// number of points rather than a feeling.
+    /// Films the window while a segmented control's thumb moves and reads
+    /// where the glass is drawn in every frame against its rail
+    /// (`PlaytestThumbFilm`, `ThumbFootprint`). Every frame goes to
+    /// `<name>-<n>-sc.png`, all of them stacked to `<name>-strip-sc.png`, and
+    /// the readings to `<name>.json`.
+    private func filmThumb(_ film: PlaytestThumbFilm, number: Int) async throws -> String {
+        guard CGPreflightScreenCaptureAccess() else {
+            captures.skippedUngranted()
+            throw Failure(description: "filming the thumb needs the probe's Screen Recording grant, and it has none")
+        }
+        let parts = try film.rail.map { try panelTarget($0, kind: .control) }
+        guard let host = parts.first?.window else {
+            throw Failure(description: "the rail's controls are in no window")
+        }
+        let rail = parts.map { $0.convert($0.bounds, to: nil) }
+            .reduce(CGRect.null) { $0.union($1) }
+            .insetBy(dx: -film.pad, dy: -film.pad)
+        let scale = host.backingScaleFactor
+        let frame = host.frame
+        // Wide enough either side to see a thumb that leaves the rail.
+        let margin = max(40, rail.width * 0.6)
+        let strip = CGRect(x: max(0, rail.minX - margin), y: rail.minY,
+                           width: min(frame.width, rail.maxX + margin) - max(0, rail.minX - margin),
+                           height: rail.height)
+        let crop = CGRect(x: strip.minX * scale, y: (frame.height - strip.maxY) * scale,
+                          width: strip.width * scale, height: strip.height * scale).integral
+        let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
+        guard let scWindow = content.windows.first(where: { $0.windowID == CGWindowID(host.windowNumber) }) else {
+            throw Failure(description: "window \(host.windowNumber) is not in shareable content")
+        }
+        // A walk's window sits at alpha 0 between pictures, and the compositor
+        // holds nothing for it then (see `screenCapture`), so it is shown,
+        // still behind the person's windows, for the length of the film.
+        let hidden = host.alphaValue == 0
+        if hidden {
+            MainThreadMeter.shared.setAsidePasses()
+            Self.keepBehindThePerson(host)
+            host.alphaValue = 1
+            harnessWork { host.display() }
+            await sleep(0.25)
+        }
+        defer {
+            if hidden { host.alphaValue = 0; MainThreadMeter.shared.countPassesAgain() }
+        }
+        let camera = PlaytestWindowFilm(crop: crop)
+        try await camera.start(scWindow, size: CGSize(width: frame.width * scale, height: frame.height * scale))
+        await sleep(0.15)
+        switch film.trigger {
+        case .key(let key, let modifiers):
+            try await perform(.key(key, modifiers), number: number)
+        case .press(let control, let row):
+            try await perform(.press(control: control, in: row, count: 1, modifiers: [], across: nil),
+                              number: number)
+        }
+        await sleep(film.seconds)
+        await camera.stop()
+        let frames = camera.frames
+        guard frames.count >= 2 else {
+            throw Failure(description: "the film caught \(frames.count) frame(s); nothing to read")
+        }
+        // Rails in the strip's own columns, in pixels.
+        let railColumns = Int(((rail.minX - strip.minX) * scale).rounded())...Int(((rail.maxX - strip.minX) * scale).rounded()) - 1
+        let height = frames[0].image.height
+        let band = Int(Double(height) * 0.19)...Int(Double(height) * 0.27)
+        // Read off the first frame, taken before the thumb was set off.
+        let backdrop = ThumbFootprint.backdrop(
+            columns: PlaytestWindowFilm.columns(of: frames[0].image, rows: band), rail: railColumns)
+        let thumbs = frames.map { each in
+            ThumbFootprint.read(columns: PlaytestWindowFilm.columns(of: each.image, rows: band),
+                                rail: railColumns, backdrop: backdrop)
+        }
+        // Where the thumb rests before and after: the rail clips what it
+        // holds, so a flung thumb shows as glass pressed over the padding a
+        // resting one never covers, not as glass past the rail.
+        guard let before = thumbs.first ?? nil, let after = thumbs.last ?? nil else {
+            throw Failure(description: "no thumb could be seen at rest on the rail in the first or last frame")
+        }
+        let room = min(before.lowerBound, after.lowerBound)...max(before.upperBound, after.upperBound)
+        func points(_ column: Int) -> Double { Double(column - railColumns.lowerBound) / scale }
+        var readings: [[String: Any]] = []
+        var worst = 0
+        for (index, each) in frames.enumerated() {
+            let outside = thumbs[index].map { ThumbFootprint.outside($0, of: room) } ?? 0
+            worst = max(worst, outside)
+            if let data = ImageCodec.encode(each.image, format: .png) {
+                try? data.write(to: out.appendingPathComponent("\(film.name)-\(index)-sc.png"))
+            }
+            var entry: [String: Any] = ["frame": index, "ms": Int((each.time * 1000).rounded()),
+                                        "outsidePt": Double(outside) / scale]
+            if let thumb = thumbs[index] {
+                entry["thumbPt"] = [points(thumb.lowerBound), points(thumb.upperBound + 1)]
+            }
+            readings.append(entry)
+        }
+        write(json: ["railPt": [0, rail.width], "roomPt": [points(room.lowerBound), points(room.upperBound + 1)],
+                     "scale": scale, "backdrop": backdrop, "frames": readings],
+              to: "\(film.name).json")
+        if let sheet = Self.stacked(frames.map(\.image)),
+           let data = ImageCodec.encode(sheet, format: .png) {
+            try data.write(to: out.appendingPathComponent("\(film.name)-strip-sc.png"))
+            captures.photographed("\(film.name)-strip")
+        }
+        // A thumb gone from the rail altogether is the worst frame of all:
+        // on 2026-09-29 the whole pane sat on the panel toggle beside View |
+        // Edit, where a reading that looks along the rail finds nothing.
+        let gone = thumbs.filter { $0 == nil }.count
+        let moving = readings.filter { ($0["thumbPt"] as? [Double]) != readings.first?["thumbPt"] as? [Double] }.count
+        let travel = readings.compactMap { $0["thumbPt"] as? [Double] }
+        let lowest = travel.map { $0[0] }.min() ?? 0, highest = travel.map { $0[1] }.max() ?? 0
+        let summary = String(format: "%d frames over %.0fms, %d of them away from the start; the rail is 0 to %.1fpt "
+                                + "and the thumb rests between %.1f and %.1fpt; it was drawn from %.1f to %.1fpt, "
+                                + "furthest past where it rests %.1fpt; %d frames with no glass on the rail at all",
+                             frames.count, (frames.last?.time ?? 0) * 1000, moving, rail.width,
+                             points(room.lowerBound), points(room.upperBound + 1), lowest, highest,
+                             Double(worst) / scale, gone)
+        if let inside = film.inside {
+            if inside, worst > Int(scale) || gone > 0 {
+                throw Failure(description: "the thumb left its room on the rail: " + summary)
+            }
+            if !inside, worst <= Int(scale), gone == 0 {
+                throw Failure(description: "the thumb never left its room, and this walk claims it would: " + summary)
+            }
+        }
+        return summary
+    }
+
+    /// Pictures one above the other, for a filmstrip.
+    private static func stacked(_ images: [CGImage]) -> CGImage? {
+        guard let first = images.first else { return nil }
+        let width = images.map(\.width).max() ?? first.width
+        let height = images.reduce(0) { $0 + $1.height + 2 }
+        guard let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8,
+                                      bytesPerRow: 0, space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        context.setFillColor(CGColor(red: 1, green: 0, blue: 1, alpha: 1))
+        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        var top = 0
+        for image in images {
+            context.draw(image, in: CGRect(x: 0, y: height - top - image.height, width: image.width, height: image.height))
+            top += image.height + 2
+        }
+        return context.makeImage()
+    }
+
     private func checkScrubSmooth(name: String, moves: Int) async throws -> String {
         let editor = try requireEditor()
         guard let document = editor.shownDocument, document.hasTime else {

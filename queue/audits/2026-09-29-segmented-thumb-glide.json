@@ -1,0 +1,27 @@
+{
+  "feature": "The segmented thumb glides like a Mac control",
+  "epic": "design-system",
+  "summary": "Switching View and Edit in the title bar no longer flings the glass thumb out of its rail or onto the panel toggle. Every segmented control's thumb now glides to the new option in about 0.3s and stops, with no overshoot and no bounce.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any recording so View | Edit shows in the title bar.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording. The title bar shows View | Edit with View picked." },
+    { "do": "Click Edit. The glass stretches across both words and settles on Edit, never leaving the rail.", "shot": "2026-09-29-segmented-thumb-glide-view-to-edit-sc.png" },
+    { "do": "Click View. It glides back and stops on View, and never touches the panel toggle.", "shot": "2026-09-29-segmented-thumb-glide-edit-to-view-sc.png" },
+    { "do": "For comparison, this is how Edit to View used to look: the whole thumb jumped onto the panel toggle and then slid back.", "shot": "2026-09-29-segmented-thumb-glide-before-edit-to-view-sc.png" },
+    { "do": "Press Cmd-1 and Cmd-2 a few times quickly. Each new pick carries on from wherever the glass is." },
+    { "do": "Pick a text layer and click Left, Center and Right under Across in the panel. They move the same way." },
+    { "do": "Grab the thumb under Across and drag it. It follows the pointer and lands on the nearest option when you let go." }
+  ],
+  "evaluate": [
+    "Does View | Edit now feel like a native Mac segmented control?",
+    "Is the slight stretch across both options in the middle of a move welcome, or would you rather it just slid?",
+    "Does 0.3 seconds feel right, or slow when you switch back and forth?"
+  ],
+  "rough": [
+    "Cause, measured on real frames: the title bar changes View and Edit inside an animation, and SwiftUI animated the thumb's position on top of its own glide, so the distance between the two options was added twice. The panel pickers change without an animation, and they stayed within half a point of their rail the whole time.",
+    "Switching to Edit on a big recording keeps the app busy for a moment, so the first tenth of a second of the glide is skipped. That is the mode switch being slow, not the thumb, and it has been added to the existing task about switching to Edit without a hitch.",
+    "The move now matches the component page exactly (300ms, the same two curves, the same small squash). The glass no longer morphs its shape by itself, so the thumb has only one thing moving it.",
+    "The pictures are frames filmed from the real window while the thumb moved, one row per frame, in dark mode, taken with the probe's Screen Recording grant on an unlocked screen."
+  ]
+}

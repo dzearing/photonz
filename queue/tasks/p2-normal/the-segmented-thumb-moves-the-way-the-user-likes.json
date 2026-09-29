@@ -1,0 +1,42 @@
+{
+  "id": "the-segmented-thumb-moves-the-way-the-user-likes",
+  "title": "The segmented thumb moves the way the user likes",
+  "goal": "The segmented control's thumb now glides to a new option and stops, with a slight stretch on the way and no overshoot. The user judges how that feels; if they want it changed, a runner retunes the move to their answer.",
+  "epic": "design-system",
+  "priority": "p2-normal",
+  "seq": 3430,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-29T13:56:44.029Z",
+  "updated": "2026-09-29T16:04:45.075Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Motion lives in Sources/PhotonzCore/SegmentThumbMotion.swift (SegmentThumbMorph: duration 0.3, squash 0.94, stretch at 0.45, curves (.33,0,.4,1) then (.2,0,0,1)) and docs/design/mocks/shared/components/segmented.js (the page keyframes, 300ms, efa1d36f). Keep them in lockstep. segmented-thumb-film-walk films the title bar and a panel picker and fails if the glass leaves its rail. Audit: queue/audits/2026-09-29-segmented-thumb-glide.json. The first card (stretch, squash and settle) was withdrawn: the user answered it by filing the-segmented-thumb-glides-like-a-mac-control-no.",
+  "acceptance": [
+    "The user has answered the card about how the thumb moves",
+    "If the answer asks for a change, the move is retuned on the component page and in the app to match it, and segmented-thumb-film-walk and segmented-thumb-glass-walk still pass at Next defaults"
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T13:56:44.031Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-29T13:57:01.878Z",
+      "note": "waiting on the card: how the glass thumb should move"
+    },
+    {
+      "t": "2026-09-29T16:04:45.067Z",
+      "note": "the question \"How should the segmented control's glass thumb move when you pick another option?\" was taken down without an answer: Overtaken: the user answered it themselves on 2026-09-29 ('overshoots like CRAZY... doesn't feel mac native'). The stretch-and-settle it asks about is gone; a new card asks about the glide that replaced it.. Nobody chose anything, so nothing here was decided."
+    },
+    {
+      "t": "2026-09-29T16:04:45.074Z",
+      "note": "waiting, but every question on this task was taken down without an answer. Nothing returns a task to the queue except an answer, so this will sit here until someone opens a new question."
+    }
+  ],
+  "walks": [
+    "segmented-thumb-film-walk",
+    "segmented-thumb-glass-walk"
+  ]
+}

@@ -118,16 +118,16 @@ struct Sheet: View {
                     seg(["All", "Screenshots", "Recordings"], plate: .accent)
                 }
             }
-            // The morph from Fill to Crop, a frame every 60ms of its 420ms:
-            // the stretch over both slots, the squash, the few points past
-            // Crop, and home.
-            Specimen(name: "THE MORPH, FILL TO CROP, EVERY 60MS") {
+            // The morph from Fill to Crop, a frame every 40ms of its 300ms:
+            // the leading edge reaching Crop, both slots spanned a little
+            // squashed, the trailing edge following it in. Nothing past Crop.
+            Specimen(name: "THE MORPH, FILL TO CROP, EVERY 40MS") {
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach(0..<2) { row in
                         HStack(spacing: 14) {
                             ForEach(0..<4) { column in
                                 seg(["Fill", "Fit", "Crop"], on: 2, size: .small,
-                                    morph: (from: 0, at: Double(row * 4 + column) * 0.06))
+                                    morph: (from: 0, at: Double(row * 4 + column) * 0.04))
                                     .fixedSize()
                             }
                         }

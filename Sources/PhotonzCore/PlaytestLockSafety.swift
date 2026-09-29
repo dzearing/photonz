@@ -201,6 +201,11 @@ public enum PlaytestLockSafety {
         // hands the window a wheel event. The first locked run of
         // transport-volume-walk is its watch; if it refuses there, take it out.
         "wheel",
+        // Added 2026-09-29 by reading, NOT yet watched under a lock: it finds
+        // the rail in the app's own register as `press` does, and films the
+        // window by its id as `snapshot` does. segmented-thumb-film-walk is its
+        // watch.
+        "filmThumb",
         "snapshot",
         "tool", "toolBar", "type", "wait", "waitFor", "writePicture", "writeRecording", "writeSVG",
         // A video export asks the editor to write a file and then opens the
