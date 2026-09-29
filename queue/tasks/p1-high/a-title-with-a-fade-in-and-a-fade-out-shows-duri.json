@@ -1,7 +1,7 @@
 {
   "id": "a-title-with-a-fade-in-and-a-fade-out-shows-duri",
   "title": "A title with a fade in and a fade out shows during playback",
-  "goal": "User 2026-09-28: 'I tried to make some text on a video for an intro title. I added the title, then tried to do fade in and fade out. Seemed correct but during playback the text is not visible ever.' Reproduce exactly that path first. Theories to test, none proven: the Fade In and Fade Out presets (Animate In/Out, 4760f7d7) each write opacity keys and the second overwrites or brackets the first so opacity is 0 across the title's whole span; the keys are written relative to the wrong time (document vs the layer's own in point) so they fall outside the title's bar; the canvas shows the static opacity while stopped but playback evaluates the keys; the title's layer time and its keys disagree after the title was moved or trimmed.",
+  "goal": "A title typed over a screen recording shows while the video plays, fading in and out the way its Fade In and Fade Out say, on recordings of any size, and keeps its fade out at the end when its bar is trimmed.",
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 0.0003,
@@ -9,10 +9,10 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-29T05:06:39.236Z",
-  "updated": "2026-09-29T05:12:44.442Z",
+  "updated": "2026-09-29T05:51:45.955Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Filed from the intake window.",
+  "notes": "Filed from the intake window. User's words: User 2026-09-28: 'I tried to make some text on a video for an intro title. I added the title, then tried to do fade in and fade out. Seemed correct but during playback the text is not visible ever.'\n\nCAUSE (reproduced): EditorState.submit composites a document with time at the size it is shown (CompositeScale, commit 33932f22, 2026-09-26) via document.magnified(by: scale), but RenderScheduler/renderInteractive never got the scale, so DocumentRenderer laid text out with boxInPoints = the SHRUNK frame at the full font size and TextRasterizer drew nothing. Any recording whose shown scale < 1 (a 3456x2234 Retina recording fitted in a window: scale 0.25-0.5) lost every title, stopped or playing, fades or not. Samples (1280x800) are shown at >= 1 so every walk passed. Export (render(scale:)) always passed contentScale and was fine. Annotations render identically with or without it.\nFIX: DocumentRenderer.renderInteractive(_:store:contentScale:) and RenderScheduler.submit(...contentScale:), EditorState.submit passes the CompositeScale. Tests: Tests/PhotonzRenderTests/ShownSizeCompositeTests.swift.\nSECOND DEFECT (found by probing): trimming a title's bar (moveLayerStart/End, trimClipEnd, marked stretch, stretch removal) left an Animate Out's keys at the old end unless the opacity motion matched the Fade row's exact shape; Slide In + Fade Out dragged longer went off early and stayed gone. TitleTime.refitFade(_:was:) now keeps keys in the last 520ms (and back half) of the old stretch at their distance from the end, squeezing them after the last earlier key when the bar gets too short; the Fade row's own (uneased) fade is re-cut as before. Tests: Tests/PhotonzCoreTests/TitleFadePlaybackTests.swift.\nWALK: Scripts/playtest/a-faded-title-shows-while-playing-walk.json with new step expectPlaybackShows (plays from the playhead, logs a layer's opacity at N moments, re-renders each moment without the layer and fails where the picture is identical). Before the fix: NOT in the picture at 15 of 15 moments with opacity 0.49..1.00..0.32. After: drawn at all 16.",
   "acceptance": [
     "Reproduced first with a walk at Next defaults: press T over a recording, type a title, right-click Animate In > Fade, Animate Out > Fade, play; photograph the canvas at in+0.1 s, the middle, out-0.1 s, and log the evaluated opacity at 20 moments; the report names the cause",
     "Core tests (PhotonzCore, written first): a layer with Fade In and Fade Out has opacity 0 at its in point, 1 in the middle, 0 at its out point, whatever order the two were applied in and after moving or trimming its bar; presets write keys at the layer's own in and out",
@@ -33,7 +33,26 @@
     {
       "t": "2026-09-29T05:12:44.437Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T05:51:45.796Z",
+      "note": "owns these walks: a-faded-title-shows-while-playing-walk"
+    },
+    {
+      "t": "2026-09-29T05:51:45.848Z",
+      "note": "Reproduced: the user's path (T at 1s, Animate In > Fade, Animate Out > Fade, Space) works on the 1280x800 samples and FAILS on the user's own 3456x2234 recording (copied to /tmp) and on the 3456x2234 fixture: the panel reads Opacity 100 mid-play and the canvas shows the title's outline with no words. Stopped, and with no fades at all, it is equally invisible, so the fades were a red herring. Cause: the canvas composite scale (CompositeScale, 2026-09-26) was never passed to the renderer, so text was laid out at full size in a shrunk box. None of the four theories in the report held: core evaluation of both preset orders, move and trim was checked at 20 moments (opacity 0 at in, 1 middle, 0 at out)."
+    },
+    {
+      "t": "2026-09-29T05:51:45.901Z",
+      "note": "Before building (adversarial): a Premiere user expects a title's intro and outro to stay at the ends when its bar is trimmed (Essential Graphics' responsive time); probing every In x Out preset pair against trims found the Out stayed at the old end except for Fade+Fade. Fixed in refitFade and covered for all 16 pairs x 3 trims."
+    },
+    {
+      "t": "2026-09-29T05:51:45.954Z",
+      "note": "Verified: Scripts/test.sh 10453/10453 green; new walk a-faded-title-shows-while-playing-walk fails on the unfixed canvas (15/15 moments not drawn) and passes fixed (16/16 drawn), 3 real captures; exported MP4 at full size and 1080p read with ffmpeg at 0.5/1.25/2.3/3.5s: absent, up, up, fading, same as playback. Neighbour walks green: title-flies-in-grows-and-fades-out, scrub-never-blacks-out, a-title-reads-over-a-video, title-on-the-timeline, key-a-title-s-scale, title-bar-right-click-menu. Audit queue/audits/2026-09-28-faded-title-shows-while-playing.json. Folded a possible link into every-caption-style-control-changes-the-captions (captions on a big recording went through the same shrunk composite); not filed separately."
     }
   ],
-  "started": "2026-09-29T05:12:44.436Z"
+  "started": "2026-09-29T05:12:44.436Z",
+  "walks": [
+    "a-faded-title-shows-while-playing-walk"
+  ]
 }

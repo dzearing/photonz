@@ -251,7 +251,7 @@ extension PhotonzDocument {
                                  sourceInMS: time.sourceInMS, sourceLengthMS: time.sourceLengthMS)
             if let words { cut.captionWords = words }
         }
-        refitFade(id)
+        refitFade(id, was: time)
         return true
     }
 }

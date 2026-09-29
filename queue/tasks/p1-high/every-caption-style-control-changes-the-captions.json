@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-29T05:18:04.932Z",
-  "updated": "2026-09-29T05:18:05.009Z",
+  "updated": "2026-09-29T05:51:14.061Z",
   "deps": [
     "every-dropdown-in-the-panel-opens-when-you-click"
   ],
@@ -31,6 +31,10 @@
     {
       "t": "2026-09-29T05:18:05.008Z",
       "note": "seq 400 -> 0.00035"
+    },
+    {
+      "t": "2026-09-29T05:51:14.060Z",
+      "note": "Possibly related, not confirmed: until the fix for a-title-with-a-fade-in-and-a-fade-out-shows-duri (2026-09-28), the canvas composited any recording shown below its own size (a 3456x2234 Mac recording fitted in a window) without telling the renderer the scale, so words were set at full size inside a shrunk box and drew nothing. If captions looked unchanged or missing on a big recording, re-check with that fix in before chasing the style controls."
     }
   ]
 }

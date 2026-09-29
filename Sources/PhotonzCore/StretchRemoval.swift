@@ -74,7 +74,7 @@ extension PhotonzDocument {
                         $0.retimed(startMS: squeeze($0.startMS), endMS: squeeze($0.endMS))
                     }
                 }
-                refitFade(layer.id)
+                refitFade(layer.id, was: time)
             }
             changed = true
         }

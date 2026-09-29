@@ -2232,6 +2232,11 @@ private final class Run {
                  try await checkPlaybackNeverBlank(name: name, seconds: seconds, moments: moments),
                  state: describe())
 
+        case .expectPlaybackShows(let layer, let name, let seconds, let moments):
+            note(number, step.name,
+                 try await checkPlaybackShows(layer: layer, name: name, seconds: seconds, moments: moments),
+                 state: describe())
+
         case .expectScrubSmooth(let name, let moves):
             note(number, step.name, try await checkScrubSmooth(name: name, moves: moves),
                  state: describe())
@@ -8141,6 +8146,139 @@ private final class Run {
             + "looked \(moments) times (\(name)-1.png to \(name)-\(looks.count).png), "
             + "the clip on screen was drawn in every one (\(seen.sorted().joined(separator: ", "))); "
             + lateness + gapNote
+    }
+
+    /// One look at a playing document for `expectPlaybackShows`: the moment,
+    /// what the layer was doing in the document the picture was drawn from,
+    /// and that stretch of the picture.
+    private struct ShowsLook {
+        let playheadMS: Int
+        let on: Bool
+        let opacity: Double
+        let drawn: PhotonzDocument?
+        let pictures: ImageStore
+        let box: CGRect?
+        let crop: CGImage?
+    }
+
+    /// Plays from the playhead and watches one layer (`expectPlaybackShows`).
+    ///
+    /// Whether a layer is IN a picture cannot be read off the document, which
+    /// is exactly how a title that was on, fully up and never drawn passed
+    /// every walk. So after the playing stops, each moment the layer was on
+    /// and at least half up is drawn again from the very document and pictures
+    /// the canvas had, without the layer, and the two are compared over the
+    /// layer's box: the same picture both ways is a layer the canvas lost.
+    private func checkPlaybackShows(layer query: String, name: String, seconds: Double,
+                                    moments: Int) async throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.document, document.hasTime else {
+            throw Failure(description: "there is nothing in time in this document to play")
+        }
+        guard let target = document.allLayers.first(where: { $0.name == query || $0.text?.string == query })
+        else {
+            throw Failure(description: "no layer is called or says \"\(query)\"")
+        }
+        editor.playDocument()
+        let started = Date()
+        var looks: [ShowsLook] = []
+        var pictures: [CGImage] = []
+        for moment in 1...moments {
+            let due = seconds * Double(moment) / Double(moments)
+            let wait = due - Date().timeIntervalSince(started)
+            if wait > 0 { await sleep(wait) }
+            let drawn = editor.shownDrawnDocument
+            let shown = drawn?.allLayers.first { $0.id == target.id }
+            let picture = editor.renderedImage
+            if let picture, let look = Self.quarter(of: picture) { pictures.append(look) }
+            var crop: CGImage?
+            var box: CGRect?
+            if let picture, let frame = shown?.frame {
+                let inside = frame.integral.intersection(CGRect(x: 0, y: 0, width: picture.width,
+                                                                height: picture.height))
+                if !inside.isNull, inside.width >= 1, inside.height >= 1 {
+                    box = inside
+                    crop = picture.cropping(to: inside).flatMap(Self.copied)
+                }
+            }
+            looks.append(ShowsLook(playheadMS: editor.shownMomentMS ?? editor.documentTimeMS,
+                                   on: shown?.isVisible ?? false, opacity: shown?.style.opacity ?? 0,
+                                   drawn: drawn, pictures: editor.store.snapshot(), box: box, crop: crop))
+        }
+        editor.pauseDocument()
+        for (index, look) in pictures.enumerated() {
+            try writePNG(look, name: "\(name)-\(index + 1)")
+        }
+        // Each look that should show the layer, drawn again without it.
+        var lost: [String] = []
+        var checked = 0
+        var readings: [String] = []
+        for look in looks {
+            let when = String(format: "%.2fs", Double(look.playheadMS) / 1000)
+            guard look.on else { readings.append("\(when) off"); continue }
+            var reading = "\(when) \(String(format: "%.2f", look.opacity))"
+            if look.opacity >= 0.5, var without = look.drawn, let box = look.box, let crop = look.crop {
+                let scale = without.canvasSize.width / max(1, document.canvasSize.width)
+                without.updateLayer(id: target.id) { $0.isVisible = false }
+                let reference = DocumentRenderer().renderInteractive(without, store: look.pictures,
+                                                                     contentScale: scale)
+                let difference = reference.flatMap { $0.cropping(to: box) }
+                    .map { Self.meanDifference(crop, $0) } ?? 0
+                checked += 1
+                if difference < 1 {
+                    lost.append(when)
+                    reading += " NOT DRAWN"
+                } else {
+                    reading += " drawn"
+                }
+            }
+            readings.append(reading)
+        }
+        let said = readings.joined(separator: ", ")
+        guard lost.isEmpty else {
+            throw Failure(description: "\"\(query)\" was on and at least half up but NOT in the picture "
+                + "at \(lost.count) of \(checked) moments (\(lost.joined(separator: ", "))): \(said)")
+        }
+        guard checked > 0 else {
+            throw Failure(description: "\"\(query)\" was never on and half up while it played, so "
+                + "nothing was checked: \(said)")
+        }
+        return "played \(seconds)s from the playhead, looked \(moments) times (\(name)-1.png to "
+            + "\(name)-\(pictures.count).png); \"\(query)\" was in the picture at all \(checked) moments "
+            + "it was up: \(said)"
+    }
+
+    /// A picture copied out of the one it was cut from, so a look keeps only
+    /// its own few pixels rather than the whole frame.
+    private static func copied(_ image: CGImage) -> CGImage? {
+        guard let context = CGContext(data: nil, width: image.width, height: image.height,
+                                      bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        return context.makeImage()
+    }
+
+    /// The average difference of two same-sized pictures, per channel, 0 to 255.
+    private static func meanDifference(_ a: CGImage, _ b: CGImage) -> Double {
+        let width = min(a.width, b.width), height = min(a.height, b.height)
+        guard width > 0, height > 0 else { return 0 }
+        func bytes(_ image: CGImage) -> [UInt8] {
+            var data = [UInt8](repeating: 0, count: width * height * 4)
+            if let context = CGContext(data: &data, width: width, height: height, bitsPerComponent: 8,
+                                       bytesPerRow: width * 4, space: CGColorSpaceCreateDeviceRGB(),
+                                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) {
+                context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+            }
+            return data
+        }
+        let left = bytes(a), right = bytes(b)
+        var total = 0
+        for index in left.indices where index % 4 != 3 {
+            total += abs(Int(left[index]) - Int(right[index]))
+        }
+        return Double(total) / Double(width * height * 3)
     }
 
     /// One display frame of a scrub, as the canvas showed it

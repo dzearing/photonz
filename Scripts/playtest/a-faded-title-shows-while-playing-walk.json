@@ -1,0 +1,229 @@
+{
+  "out": "/tmp/photonz-playtest/a-faded-title-shows-while-playing-walk",
+  "seed": "The user's own path, at Next defaults with no flag touched: a full-screen Retina recording (the size a Mac records, and the size where the canvas composites below full size), 3.6 seconds long, T and a click at one second, a title typed, then right-click on the title for Animate In, Fade and Animate Out, Fade. Stopped a quarter second in, in the middle and a tenth of a second before its end, the title is photographed; then it plays from its in point and at twenty moments the walk logs the title's opacity and draws each moment again without the title to prove the words are really in the picture. Before the fix the title was on and fully up in the document and not one pixel of it was drawn, stopped or playing.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "timelineOpen": true
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "fixtures/Full screen Retina recording 3456x2234.mp4",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        1100,
+        900
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Ship it faster"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "field": "Clip line",
+      "reads": "Ship it faster 1.0s → 3.6s · 2.6s · 1.0x"
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        1400,
+        1000
+      ],
+      "space": "document",
+      "choose": "Animate In > Fade"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        1400,
+        1000
+      ],
+      "space": "document",
+      "choose": "Animate Out > Fade"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Key 4",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key 5",
+      "present": false
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-fading-in",
+      "note": "a quarter second after it arrives, half way through its fade in: the words are coming up over the recording"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-fading-in"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-middle",
+      "note": "THE TEST: two and a quarter seconds, the middle of the title, fully up. Before the fix this picture had the title's outline and handles and no words at all"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-middle"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-fading-out",
+      "note": "three and a half seconds, a tenth of a second before its end, nearly faded out"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-fading-out"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-plays",
+      "note": "THE PLAYBACK TEST: Space's play from the title's in point for three and a half seconds, twenty looks: the opacity at each, and the words proven in the picture at every moment they are at least half up"
+    },
+    {
+      "do": "expectPlaybackShows",
+      "layer": "Ship it faster",
+      "name": "playing",
+      "seconds": 3,
+      "moments": 20
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "describe",
+      "stage": "5-exported",
+      "note": "THE EXPORT: the same edit written out as an MP4 from the document, the title in it"
+    },
+    {
+      "do": "writeVideo",
+      "name": "faded-title",
+      "format": "mp4",
+      "seconds": 3.6,
+      "within": 0.4
+    },
+    {
+      "do": "writeVideo",
+      "name": "faded-title-1080p",
+      "format": "mp4",
+      "seconds": 3.6,
+      "within": 0.4,
+      "size": "p1080"
+    }
+  ]
+}

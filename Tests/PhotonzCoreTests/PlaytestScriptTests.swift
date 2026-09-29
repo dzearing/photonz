@@ -2770,6 +2770,38 @@ struct PlaytestScriptTests {
         }
     }
 
+    // A title with a fade in and a fade out never showed while it played, on
+    // a recording big enough to be composited at its shown size, and every
+    // walk that played one passed because none looked for the words
+    // (`a-title-with-a-fade-in-and-a-fade-out-shows-duri`).
+    @Test("An expectPlaybackShows step plays from the playhead and watches one layer")
+    func expectPlaybackShowsParses() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectPlaybackShows", "layer": "Ship it faster", "name": "play",
+                       "seconds": 4, "moments": 20 },
+                     { "do": "expectPlaybackShows", "layer": "Title", "name": "again" } ] }
+        """)
+        guard case .expectPlaybackShows(let layer, let name, let seconds, let moments) = script.steps[0],
+              case .expectPlaybackShows(_, _, let fallbackSeconds, let fallbackMoments) = script.steps[1] else {
+            Issue.record("expectPlaybackShows"); return
+        }
+        #expect(layer == "Ship it faster")
+        #expect(name == "play")
+        #expect(seconds == 4)
+        #expect(moments == 20)
+        #expect(fallbackSeconds == 3)
+        #expect(fallbackMoments == 20)
+        #expect(script.steps[0].name == "expectPlaybackShows")
+        #expect(PlaytestStep.names.contains("expectPlaybackShows"))
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectPlaybackShows"))
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "expectPlaybackShows", "name": "x" } ] }"#)
+        }
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "expectPlaybackShows", "layer": "T", "name": "x", "moments": 1 } ] }"#)
+        }
+    }
+
     @Test("An expectPlaybackNeverBlank step defaults to three seconds and twenty moments")
     func expectPlaybackNeverBlankDefaults() throws {
         let script = try decode("""

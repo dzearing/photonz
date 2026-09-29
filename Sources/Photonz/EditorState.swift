@@ -4297,6 +4297,10 @@ final class EditorState {
         // its own (`CompositeScale`): a full-screen Retina recording fitted in
         // a window is shown at under half its pixels, and drawing all of them
         // every refresh of a scrub kept the picture behind the hand.
+        // The renderer is told the scale too: it is what sets words out in
+        // their own box again, and without it a title on a big recording drew
+        // nothing at all.
+        var contentScale: CGFloat = 1
         if document.hasTime {
             let scale = CompositeScale.forShown(zoom * (hostWindow?.backingScaleFactor ?? 2))
             if scale < 1 {
@@ -4304,6 +4308,7 @@ final class EditorState {
                                   height: (document.canvasSize.height * scale).rounded())
                 document = document.magnified(by: scale)
                 document.canvasSize = size
+                contentScale = scale
             }
         }
         // Not while the motion preview is running. A sharp copy of a moving
@@ -4339,6 +4344,6 @@ final class EditorState {
         // budget lets go while the render waits its turn would otherwise draw
         // as nothing (`scrubbing-is-smooth-never-goes-black-and-the-pic`).
         let pictures = document.hasTime ? store.snapshot() : nil
-        Task { await scheduler.submit(document, store: pictures, stamp: moment) }
+        Task { await scheduler.submit(document, store: pictures, stamp: moment, contentScale: contentScale) }
     }
 }

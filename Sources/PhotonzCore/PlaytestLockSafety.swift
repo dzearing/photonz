@@ -179,6 +179,12 @@ public enum PlaytestLockSafety {
         // run of scrub-never-blacks-out-walk is its watch; if it refuses
         // there, take it out.
         "expectScrubSmooth",
+        // Added 2026-09-28 by reading, NOT yet watched under a lock: it plays
+        // through the editor's own calls and reads the picture and the drawn
+        // document the editor holds, finding its layer by the layer's own name
+        // or words, never an accessibility name. The first locked run of
+        // a-faded-title-shows-while-playing-walk is its watch.
+        "expectPlaybackShows",
         // Watched on 2026-09-19, forced under a lock: it asks the app's own
         // toast controller what the corner is saying, so there is no name to
         // look up and nothing for a lock to take away.

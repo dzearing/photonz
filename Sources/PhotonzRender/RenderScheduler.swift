@@ -26,6 +26,7 @@ public actor RenderScheduler {
     private struct Job {
         let document: PhotonzDocument
         let store: ImageStore?
+        let contentScale: CGFloat
         let stamp: Int
         let asked: ContinuousClock.Instant
     }
@@ -59,8 +60,13 @@ public actor RenderScheduler {
     /// second while a hand scrubs, and a frame dropped between the ask and the
     /// draw used to draw as nothing: the black flash of
     /// `scrubbing-is-smooth-never-goes-black-and-the-pic`.
-    public func submit(_ document: PhotonzDocument, store: ImageStore? = nil, stamp: Int = 0) {
-        pending = Job(document: document, store: store, stamp: stamp, asked: .now)
+    ///
+    /// `contentScale` is how much `document` was magnified by on its way here
+    /// (`DocumentRenderer.renderInteractive`).
+    public func submit(_ document: PhotonzDocument, store: ImageStore? = nil, stamp: Int = 0,
+                       contentScale: CGFloat = 1) {
+        pending = Job(document: document, store: store, contentScale: contentScale,
+                      stamp: stamp, asked: .now)
         guard drainTask == nil else { return }
         drainTask = Task { await drain() }
     }
@@ -81,7 +87,8 @@ public actor RenderScheduler {
             pending = nil
             // Incremental: unchanged regions are reused from the last frame.
             let began = ContinuousClock.now
-            let image = renderer.renderInteractive(job.document, store: job.store ?? store)
+            let image = renderer.renderInteractive(job.document, store: job.store ?? store,
+                                                   contentScale: job.contentScale)
             let done = ContinuousClock.now
             await onFrame(Frame(image: image, document: job.document, stamp: job.stamp,
                                 drawMS: Self.ms(done - began), sinceAskedMS: Self.ms(done - job.asked)))

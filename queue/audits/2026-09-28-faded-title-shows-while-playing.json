@@ -1,0 +1,29 @@
+{
+  "feature": "A title with a fade in and a fade out shows during playback",
+  "epic": "video-titles-graphics",
+  "summary": "A title on a full-size Mac screen recording now shows, stopped and playing, fading in and out as its keys say. Before, it never drew at all on a recording that big, fades or not. Trimming a title's bar now also keeps its Animate Out at the new end.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Use one of your own screen recordings (full screen, Retina), or the walk a-faded-title-shows-while-playing-walk, which opens a 3456 x 2234 recording.",
+  "switched": {},
+  "try": [
+    { "do": "Open a full-screen recording. Put the playhead at one second, press T, click on the picture and type a title, then press Command Return.", "shot": "2026-09-28-faded-title-0-before-the-fix.png" },
+    { "do": "Right-click the title on the canvas and choose Animate In > Fade, then right-click again and choose Animate Out > Fade." },
+    { "do": "Step a quarter second forward: the words are half way up.", "shot": "2026-09-28-faded-title-1-fading-in.png" },
+    { "do": "Step to the middle of the title: the words are fully up.", "shot": "2026-09-28-faded-title-2-middle.png" },
+    { "do": "Step to just before the title's end: the words are almost gone.", "shot": "2026-09-28-faded-title-3-fading-out.png" },
+    { "do": "Put the playhead back on the title's in point and press Space: the words fade up, hold, and fade away." },
+    { "do": "Drag the right end of the title's bar a second later, then play again: the fade out now finishes at the new end." },
+    { "do": "Export as MP4 at 1080p and scrub the file: the title fades the same way.", "shot": "2026-09-28-faded-title-4-exported-1080p.png" }
+  ],
+  "evaluate": [
+    "On your own recording, is the title there the moment you type it, before any fade is added?",
+    "Does the fade in and fade out during playback look like the diamonds on the title's row say it should?",
+    "After dragging the title's end later or earlier, does its fade out still finish exactly at the end of the bar?",
+    "Does the exported file look the same as playback?"
+  ],
+  "rough": [
+    "The first picture (step 1) is from BEFORE the fix, the same moment as step 4: the outline and handles with no words. That is what you saw.",
+    "The fault was not the fades. Since 2026-09-26 the canvas has drawn a big recording at the size the window shows it, to keep scrubbing smooth, and never told the drawing step, so words were set at full size inside a box shrunk to a fraction of that and drew nothing. Samples at 1280 x 800 never shrink, which is why every walk passed. Export was never affected.",
+    "The stopped pictures are at 1.25s, the middle and 3.5s rather than a tenth of a second after the in point: the walk steps a quarter second at a time. The playback check logs twenty moments and finds the words in the picture at every one where they are at least half up.",
+    "No mock covers this: it is a fault in a surface that already matches the video mock's title, so there is no side-by-side here."
+  ]
+}

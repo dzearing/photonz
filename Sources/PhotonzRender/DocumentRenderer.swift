@@ -272,6 +272,8 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// document does not change when it arrives and `RenderDiff` alone would
     /// hand back the empty frame drawn before it (`MovieFramesInHand.swift`).
     private var lastPictures: [UUID: ObjectIdentifier?] = [:]
+    /// The magnification `lastFrame` was composited at.
+    private var lastContentScale: CGFloat = 1
     private var frameBuffer: UnsafeMutableRawPointer?
     private var frameBufferCapacity = 0
     private var frameSize = (width: 0, height: 0)
@@ -287,21 +289,32 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// Latest-wins re-render for the editing session. Same output as
     /// `render(_:store:)`; unchanged documents return the previous frame
     /// object, small edits patch only their dirty region.
-    public func renderInteractive(_ document: PhotonzDocument, store: ImageStore) -> CGImage? {
+    ///
+    /// `contentScale` is how much `document` was magnified by before it got
+    /// here (`PhotonzDocument.magnified(by:)`): below one for a recording the
+    /// canvas composites at the size it is shown (`CompositeScale`). Every
+    /// rasterizer that lays something out in a box (words, shapes, paths,
+    /// measurements) needs it to find the box in document points again. Left
+    /// at one on a shrunk document, a 223pt title was set inside a box a
+    /// quarter of its size and drew nothing at all.
+    public func renderInteractive(_ document: PhotonzDocument, store: ImageStore,
+                                  contentScale: CGFloat = 1) -> CGImage? {
         let width = Int(document.canvasSize.width.rounded())
         let height = Int(document.canvasSize.height.rounded())
         guard width >= 1, height >= 1 else { return nil }
+        let contentScale = contentScale > 0 && contentScale.isFinite ? contentScale : 1
 
         interactiveLock.lock()
         defer { interactiveLock.unlock() }
 
         let pictures = Self.pictures(in: document, store: store)
-        defer { lastPictures = pictures }
+        defer { lastPictures = pictures; lastContentScale = contentScale }
         // A picture that arrived, went, or was read again at another size
         // since the last frame changes pixels the document says nothing
-        // about, so the whole canvas is drawn again.
+        // about, so the whole canvas is drawn again. So does a new scale.
         if let lastDocument, let lastFrame, frameBuffer != nil,
-           frameSize == (width, height), pictures == lastPictures {
+           frameSize == (width, height), pictures == lastPictures,
+           contentScale == lastContentScale {
             switch RenderDiff.dirtyRegion(from: lastDocument, to: document) {
             case .none:
                 return lastFrame
@@ -309,13 +322,13 @@ public final class DocumentRenderer: @unchecked Sendable {
                 where Double(dirty.width * dirty.height)
                     < Self.fullRenderAreaShare * Double(width * height):
                 return renderLocked(document, store: store, region: dirty,
-                                    width: width, height: height)
+                                    width: width, height: height, contentScale: contentScale)
             default:
                 break
             }
         }
         return renderLocked(document, store: store, region: nil,
-                            width: width, height: height)
+                            width: width, height: height, contentScale: contentScale)
     }
 
     /// Which bitmap every visible picture layer would be drawn with right now.
@@ -332,8 +345,9 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// Renders `region` (or everything) of the composite into the persistent
     /// buffer and snapshots it as a CGImage. Must hold `interactiveLock`.
     private func renderLocked(_ document: PhotonzDocument, store: ImageStore,
-                              region: CGRect?, width: Int, height: Int) -> CGImage? {
-        guard let output = compositeImage(document, store: store) else { return nil }
+                              region: CGRect?, width: Int, height: Int,
+                              contentScale: CGFloat) -> CGImage? {
+        guard let output = compositeImage(document, store: store, contentScale: contentScale) else { return nil }
         let rowBytes = width * 4
         if frameBufferCapacity < rowBytes * height {
             frameBuffer?.deallocate()

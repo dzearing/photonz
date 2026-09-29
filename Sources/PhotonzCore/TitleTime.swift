@@ -239,7 +239,7 @@ extension PhotonzDocument {
         let landing = min(max(0, ms), time.outMS - LayerTime.shortestMS)
         guard landing != time.inMS else { return false }
         updateLayer(id: id) { $0.time = LayerTime(inMS: landing, outMS: time.outMS) }
-        refitFade(id)
+        refitFade(id, was: time)
         refreshDuration()
         return true
     }
@@ -253,7 +253,7 @@ extension PhotonzDocument {
         let landing = max(ms, time.inMS + LayerTime.shortestMS)
         guard landing != time.outMS else { return false }
         updateLayer(id: id) { $0.time = LayerTime(inMS: time.inMS, outMS: landing) }
-        refitFade(id)
+        refitFade(id, was: time)
         refreshDuration()
         return true
     }
@@ -281,21 +281,72 @@ extension PhotonzDocument {
         return true
     }
 
-    /// The fade re-cut to the stretch it is now on.
+    /// The fade re-cut to the stretch it is now on, and every other way it
+    /// comes on and goes off kept at the ends.
     ///
     /// Without this, dragging a title longer leaves the last key where it was
     /// and the words fade out on the old end and stay gone: a motion is written
-    /// in milliseconds and knows nothing about the bar being dragged. Only a
-    /// fade in the shape the Fade row writes is touched, so a motion somebody
-    /// has edited by hand is left exactly as they left it.
-    mutating func refitFade(_ id: UUID) {
-        guard let layer = layer(id: id), let time = layer.time,
-              let fade = layer.titleFadeMS,
-              let refitted = TitleTime.fade(overMS: fade, lengthMS: time.lengthMS) else { return }
-        updateLayer(id: id) { found in
-            var motions = (found.motions ?? []).filter { $0.property != .opacity }
-            motions.append(refitted)
-            found.motions = motions
+    /// in milliseconds and knows nothing about the bar being dragged. A fade in
+    /// the shape the Fade row writes is re-cut whole. Past that, the keys an
+    /// Animate Out wrote (anything in the last half second of the old stretch,
+    /// in its back half) keep their distance from the end, the way Premiere
+    /// keeps a graphic's outro at its out point; an Animate In needs nothing,
+    /// since its keys are written from the in point and go where it goes. A
+    /// key somebody put in the middle stays exactly where they put it. `old`
+    /// is the stretch the layer was on before the edit.
+    mutating func refitFade(_ id: UUID, was old: LayerTime) {
+        guard let layer = layer(id: id), let time = layer.time, layer.isPlacedInTime else { return }
+        let delta = time.lengthMS - old.lengthMS
+        // The Fade row's own fade, which it wrote with no ease on any key. Two
+        // presets can draw the same four keys, eased, and those are refitted
+        // below with their eases kept.
+        let fadeRow = (layer.motions ?? []).first { $0.property == .opacity }
+        let fadeShape = layer.titleFadeMS != nil
+            && (fadeRow?.keyframes.allSatisfy { $0.ease == nil } ?? false)
+        if fadeShape, let fade = layer.titleFadeMS,
+           let refitted = TitleTime.fade(overMS: fade, lengthMS: time.lengthMS) {
+            updateLayer(id: id) { found in
+                var motions = (found.motions ?? []).filter { $0.property != .opacity }
+                motions.append(refitted)
+                found.motions = motions
+            }
+        }
+        guard delta != 0 || time.sourceInMS != old.sourceInMS else { return }
+        let window = TitleAnimation.lengthMS + PropertyKeys.nearMS
+        let outroFrom = max(old.lengthMS - window, old.lengthMS / 2 + 1)
+        updateLayer(id: id) { edited in
+            edited.motions = edited.motions.map { motions in
+                motions.map { motion in
+                    guard motion.repeats == .once, motion.isOn,
+                          !(fadeShape && motion.property == .opacity) else { return motion }
+                    // Each key as a distance from the in point, which is what
+                    // stays put while the end moves.
+                    let keys = motion.keyframes
+                    let from = keys.map { $0.atMS - old.sourceInMS }
+                    let outro = from.indices.filter { from[$0] >= outroFrom }
+                    let rest = from.indices.filter { from[$0] < outroFrom }
+                    var to = from
+                    for index in outro { to[index] = from[index] + delta }
+                    // Shortened past what the keys before it leave room for:
+                    // the out is squeezed in between them and the new end
+                    // rather than jumping them.
+                    if let first = outro.map({ from[$0] }).min(),
+                       let last = outro.map({ from[$0] }).max() {
+                        let floor = (rest.map { from[$0] }.max() ?? 0) + MotionStopDrag.shortestMS
+                        if first + delta < floor {
+                            let end = max(floor, last + delta)
+                            let span = Double(max(1, last - first))
+                            for index in outro {
+                                let along = Double(from[index] - first) / span
+                                to[index] = floor + Int((Double(end - floor) * along).rounded())
+                            }
+                        }
+                    }
+                    var list = keys
+                    for index in list.indices { list[index].atMS = to[index] + time.sourceInMS }
+                    return list == keys ? motion : motion.rebuilt(from: list)
+                }
+            }
         }
     }
 }

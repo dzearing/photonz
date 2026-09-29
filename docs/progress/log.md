@@ -20167,3 +20167,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - All 91 switch descriptions over the user's budget rewritten in `FeatureCatalog.swift`: two sentences and 40 words at most, mostly what it changes and then what Off means. Three short ones that ran to three sentences trimmed too.
 - Tests: `FlagDescriptionBudgetTests` has no allowance any more and checks sentences as well (`CopyBudget.sentences(in:)`, `flagDescriptionSentences = 2`). Audit: `queue/audits/2026-09-28-experiments-switch-descriptions.json`.
 - Open: the cut detail was not carried into `docs/design`; git history of the catalogue holds it.
+
+## 2026-09-28 — A title with a fade in and a fade out shows during playback
+
+- Reproduced on the user's own 3456x2234 recording, not on the 1280x800 samples: the title never drew at all, stopped or playing, fades or not. Cause: since `33932f22` the canvas composites a recording at the size it is shown (`CompositeScale`) but never told the renderer, so words were set at full size in a shrunk box. `DocumentRenderer.renderInteractive(…contentScale:)` and `RenderScheduler.submit(…contentScale:)` now carry it; `EditorState.submit` passes it. Export was always fine. Tests: `ShownSizeCompositeTests`.
+- Also: trimming a title's bar left an Animate Out's keys at the old end. `refitFade(_:was:)` keeps Out keys at their distance from the end (squeezed when the bar gets too short). Tests: `TitleFadePlaybackTests`, every In x Out pair.
+- Walks: new step `expectPlaybackShows` (re-renders each moment without the layer to prove it is in the picture); `a-faded-title-shows-while-playing-walk` fails 15/15 on the old canvas, passes 16/16 now, and exports at full size and 1080p. Audit: `queue/audits/2026-09-28-faded-title-shows-while-playing.json`.
+- Open: captions on a big recording went through the same path; noted on `every-caption-style-control-changes-the-captions`.
