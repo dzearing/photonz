@@ -1,0 +1,33 @@
+{
+  "id": "the-mix-meter-goes-and-the-timeline-opens-and-cl",
+  "title": "The MIX meter goes, and the timeline opens and closes from a toggle beside the scrubber",
+  "goal": "User 2026-09-29, pointing at the 'MIX' meter in the timeline bar: 'this mix thing seems to not function or provide any value. maybe remove it. Also the x next to it should really be a toggle button that sits to the right of the playback slider and looks similar to the right panel's toggle button except vertical.' MixMeter is drawn at TimelineDock.swift:272 (labelled) and MotionStripView.swift:963/1028; the right panel's toggle is TitlebarPanelToggle.swift.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 0.00016,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-29T13:26:25.569Z",
+  "updated": "2026-09-29T13:26:25.656Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "The MIX meter is removed from the timeline bar and the transport (both places); the loudness guard that keeps an export from clipping (e8a02838) keeps working without any on-screen meter, and still warns at export if it had to bring the mix down",
+    "The timeline's close (x) is removed; in its place a toggle button sits immediately right of the playback slider on the transport: the same size, glyph weight, hover, pressed and on/off look as the title bar's right-panel toggle (TitlebarPanelToggle), with the glyph turned to show a panel along the bottom (e.g. SF Symbol rectangle.bottomthird.inset.filled / its outline for off), and a tooltip 'Show Timeline' / 'Hide Timeline' with its shortcut",
+    "It toggles the timeline tracks open and closed with the same animation as View/Edit's timeline, is highlighted while the timeline is open, and works in Edit mode (in View mode it switches to Edit and opens the timeline)",
+    "Nothing in the transport jumps when the meter goes: the slider takes the freed width",
+    "Walk at Next defaults: photograph the transport before/after, toggle the timeline closed and open with a pointer click, and compare the toggle side by side with the title bar's panel toggle"
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T13:26:25.571Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-29T13:26:25.655Z",
+      "note": "seq 400 -> 0.00016"
+    }
+  ]
+}
