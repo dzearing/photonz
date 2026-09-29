@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T06:02:48.695Z",
-  "updated": "2026-09-28T12:19:18.904Z",
+  "updated": "2026-09-29T04:29:18.297Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-23: Scripts/playtest.sh Scripts/playtest/captions-write-themselves-walk.json, picture 2-the-captions-wrote-themselves-sc.png (queue/audits/2026-09-23-captions-write-themselves-2-the-captions-wrote-themselves.png): the In 0:00 · Out 0:17 · Cancel · Trim capsule covers the middle of the caption line The transport bar and the timeline appear. The capsule comes from document.opensWithTrimInHand (EditorState.openRecordingAsDocument sets .trim). Options: lift the capsule above the caption band, or drop the fast-lane trim once the document has captions.",
@@ -67,6 +67,31 @@
     {
       "t": "2026-09-28T12:19:18.903Z",
       "note": "seq 350 -> 70"
+    },
+    {
+      "t": "2026-09-29T04:03:12.136Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T04:15:39.874Z",
+      "note": "Reproduced 2026-09-28 with a new walk (Scripts/playtest/trim-bar-clears-captions-and-notices-walk.json, first version): picking Trim right after Add Captions, the offscreen render shows the 'Captions written · 62 words...' notice drawn directly UNDER the trim capsule (both were padded to exactly EditorChromeLayout.aboveToolBar, capsule drawn last), so the notice could not be read at all. The caption itself cleared the capsule by ~20pt at 66% fit, but only by luck of the zoom: the capsule is pinned above the tool bar and the caption is 5% up the picture, so zoomed in (83%) the capsule sits on the caption line. Adversarial pass: the mock (video-cut-wt) has no trim capsule on the canvas at all, so this is app chrome; Premiere keeps trim on the timeline. Fix: one layout for the canvas foot (EditorChromeLayout.canvasFoot, CanvasFootStack view): capsule above the tool bar, notice stacked above the capsule, both lifted just clear of the Captions layer's box when they would cover it; the box, not the cue on screen, so nothing hops during playback."
+    },
+    {
+      "t": "2026-09-29T04:24:23.329Z",
+      "note": "owns these walks: trim-bar-clears-captions-and-notices-walk"
+    },
+    {
+      "t": "2026-09-29T04:29:18.242Z",
+      "note": "left rough (in the audit, not filed: the user reacts there, and neither is broken): the bar clears the whole two-line Captions box so it can sit a line higher than needed with one line showing; when the notice has to rise over the caption the order reads notice, caption, trim bar rather than one stack. Walks run green: the new walk plus trim-is-a-tool, captions-write-themselves, undo-while-trimming, trim-with-pieces, the three notice walks, crop-cue, crop-rounds-the-card, an-editing-session (its Clip added pill now clears the caption)."
+    },
+    {
+      "t": "2026-09-29T04:29:18.295Z",
+      "note": "Shipped dd15d5fe: one layout for the foot of the canvas (EditorChromeLayout.canvasFoot + CanvasFootStack). A notice raised with Trim in hand now stacks on top of the trim bar instead of lying hidden under it, and the bar and notice rise just clear of the Captions box when they would cover it. Verified by trim-bar-clears-captions-and-notices-walk at Next defaults (new captionsExpectFootApart check, real window captures of a refusal and of the zoomed-in case), neighbouring walks green, Scripts/test.sh green. Audit: queue/audits/2026-09-28-trim-bar-clears-captions.json"
     }
-  ]
+  ],
+  "started": "2026-09-29T04:03:12.135Z",
+  "walks": [
+    "trim-bar-clears-captions-and-notices-walk"
+  ],
+  "completed": "2026-09-29T04:29:18.296Z"
 }

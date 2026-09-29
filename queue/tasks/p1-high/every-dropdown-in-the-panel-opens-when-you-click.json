@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p1-high",
   "seq": 0.0001,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T05:19:48.286Z",
-  "updated": "2026-09-29T08:22:07.057Z",
+  "updated": "2026-09-29T08:22:31.111Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window. The caption style task (every-caption-style-control-changes-the-captions) depends on this.",
@@ -65,6 +65,10 @@
     {
       "t": "2026-09-29T08:22:07.056Z",
       "note": "Asked for a sweep (not --now): the dropdown component every video walk touches changed; 15 walks run by hand."
+    },
+    {
+      "t": "2026-09-29T08:22:31.109Z",
+      "note": "Every video panel dropdown and the timeline Easing open on a click anywhere on the face: VideoKit.Dropdown is now an AppKit pull-down exactly the face's size holding the drawn face (was a 37pt-wide 1%-opacity overlay that took no clicks). Reproduced first with a pointer click; proved by three walks that click all 23 dropdowns at centre and both ends and pick from each at Next defaults; Space/Return open a focused one; tests keep every dropdown in a click walk and forbid near-invisible hit targets. Commit e121747f, audit queue/audits/2026-09-29-every-dropdown-opens-on-a-click.json."
     }
   ],
   "started": "2026-09-29T06:09:06.214Z",
@@ -72,5 +76,6 @@
     "every-dropdown-opens-on-a-click-walk",
     "every-title-dropdown-opens-on-a-click-walk",
     "every-clip-dropdown-opens-on-a-click-walk"
-  ]
+  ],
+  "completed": "2026-09-29T08:22:31.110Z"
 }

@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-28T12:18:54.396Z",
-  "updated": "2026-09-28T12:19:18.852Z",
+  "updated": "2026-09-29T03:10:22.610Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-09-27-one-glass-tool-bar.json (task the-floating-tool-bar-is-one-glass-bar-as-the-mo, done 2026-09-27): 'The mock's bar is tighter: 4pt between tools where the app has 14pt, and 18pt hairlines where the app's are 20pt. The spacing inside the tools is unchanged by this task.' Pictures and recordings share the bar, so the change reaches both.",
@@ -27,6 +27,27 @@
     {
       "t": "2026-09-28T12:19:18.851Z",
       "note": "seq 3480 -> 60"
+    },
+    {
+      "t": "2026-09-29T02:48:08.135Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T03:10:02.496Z",
+      "note": "owns these walks: one-glass-tool-bar-walk"
+    },
+    {
+      "t": "2026-09-29T03:10:02.549Z",
+      "note": "Before building: the mock's .tool is 30pt wide 2pt apart (32pt step); app tools are 28pt circles, so 4pt gap keeps the step. Hairlines 18pt, 6pt from tools in a family (mock 2 gap + 4 margin), 8pt from sections (4 + 4). End padding 10 (concentric on the 48pt bar; mock 8 + 1 border on a 38pt bar). Current's capsules keep 14/20/18. Fit step now counts the tight 32pt slot (under-shedding otherwise). Walk one-glass-tool-bar-walk was failing on main before this change (read the recording before Cmd-2 put the bar up); added the Cmd-2 step. Walk now claims toolGap 4 and hairline 18, measured off every tool and hairline frame. Gotcha: wrapping a Divider in onGeometryChange made it lie flat and stretch the bar full width; the probe sits in a background. Filed p1: the-floating-tool-bar-is-as-short-as-the-mock-dr (48pt vs 38pt height, slider 110 vs 92). 11 tool-bar walks pass; Scripts/test.sh 10430 tests pass."
+    },
+    {
+      "t": "2026-09-29T03:10:22.608Z",
+      "note": "Next's one glass bar spaces tools 4pt apart (the mock's 32pt step), 18pt hairlines 6/8pt from their neighbours, 10pt ends (EditorChromeLayout.ToolBarSpacing, tested; fit step uses the tight slot). one-glass-tool-bar-walk claims toolGap 4 and hairline 18 at Next defaults and passes, plus 10 other tool-bar walks; Scripts/test.sh green. Audit queue/audits/2026-09-28-tight-tool-bar.json with side-by-side against video.html. Commit 98f6c6f5. Height 48 vs 38 filed p1."
     }
-  ]
+  ],
+  "started": "2026-09-29T02:48:08.133Z",
+  "walks": [
+    "one-glass-tool-bar-walk"
+  ],
+  "completed": "2026-09-29T03:10:22.609Z"
 }

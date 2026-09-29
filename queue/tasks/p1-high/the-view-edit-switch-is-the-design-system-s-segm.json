@@ -1,18 +1,18 @@
 {
   "id": "the-view-edit-switch-is-the-design-system-s-segm",
   "title": "The View / Edit switch is the design system's segmented control",
-  "goal": "User 2026-09-28: 'the view/edit is not a segmented control per our design components. http://127.0.0.1:8791/#comp-segmented'. The switch shipped in 136d05b1 as a stock NSSegmentedControl (TitlebarViewEditSwitch.swift) because the intake window's own acceptance asked for 'a native NSSegmentedControl look'; that was wrong: the design system's component page docs/design/mocks/pages/comp-segmented.html is the spec. A drawn Segmented already exists in Sources/Photonz/VideoKit/VideoKitControls.swift:86, scoped to video; check it against the component page before reusing it.",
+  "goal": "The View | Edit switch at the top right of a recording window, and every other row of side-by-side choices in the app, look and move like the segmented control on the design system page: a soft capsule with one raised plate that slides to your choice.",
   "epic": "design-system",
   "priority": "p1-high",
   "seq": 0.0004,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T05:03:31.501Z",
-  "updated": "2026-09-29T05:03:31.583Z",
+  "updated": "2026-09-29T10:48:42.292Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Filed from the intake window. The intake window's acceptance on view-mode-and-edit-mode-a-recording-opens-to-wat caused the stock control; do not repeat.",
+  "notes": "Original goal (user 2026-09-28): the view/edit is not a segmented control per our design components, http://127.0.0.1:8791/#comp-segmented. Shipped in 136d05b1 as a stock NSSegmentedControl (TitlebarViewEditSwitch.swift) because the intake acceptance asked for a native look; the component page docs/design/mocks/pages/comp-segmented.html is the spec. A drawn Segmented already existed in Sources/Photonz/VideoKit/VideoKitControls.swift, scoped to video. Filed from the intake window. The intake window's acceptance on view-mode-and-edit-mode-a-recording-opens-to-wat caused the stock control; do not repeat.",
   "acceptance": [
     "One shared SegmentedControl in the app's design-system layer (not VideoKit-only) matches comp-segmented.html in every state and size it shows: track, sliding selected thumb and its animation, radius, height, padding, typography, icon+label and icon-only variants, hover, pressed, focus ring, disabled, light and dark; an ImageRenderer snapshot of each state sits next to the mock's frame in the audit with differences listed and fixed",
     "The View | Edit title bar switch uses it, sized to sit with the title bar's other controls; its keys (Cmd-1, Cmd-2, E) and walk markers keep working",
@@ -28,6 +28,47 @@
     {
       "t": "2026-09-29T05:03:31.582Z",
       "note": "seq 400 -> 0.0004"
+    },
+    {
+      "t": "2026-09-29T09:27:55.135Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T09:29:56.836Z",
+      "note": "Review before building: (1) walks find system segmented pickers by reading the AppKit control, so the drawn control must hang a named marker on every segment (same words, same row, 'already on X') or every walk that presses Hug/Fixed, Row/Column, a colour scope or an arrowhead goes red. (2) About 40 segmented pickers sit in files SHARED with Current; the drawn look goes behind a Next-only switch on by default (next-designed-segmented) and the shared control falls back to the system picker in Current, so Current does not change. (3) Icon segments (alignment, arrowheads) were named by their symbol's description ('align left'); the drawn icon segment keeps that name. (4) A Final Cut or Photoshop user expects a Mac segmented switch in a title bar: the mock's capsule with a sliding plate reads the same, and the keys stay (Cmd-1, Cmd-2, E)."
+    },
+    {
+      "t": "2026-09-29T10:48:10.266Z",
+      "note": "owns these walks: view-mode-and-edit-mode-walk, segment-tooltips-walk, contents-for-several-walk, pick-leaves-settings-alone-walk, copy-own-color-walk"
+    },
+    {
+      "t": "2026-09-29T10:48:10.319Z",
+      "note": "Built: SegmentedControl (Sources/Photonz/DesignSystem/SegmentedControl.swift), one travelling plate on the mock's spring, 24/28/32 sizes, fill/natural forms, picture segments, hover/press/focus/disabled, arrows stop at the ends, dropdown when words would be cut. Behind next-designed-segmented (Next, on by default); with it off the control hands back the system picker so Current keeps its look (the title bar switch in Current is now a SwiftUI system picker rather than a bare NSSegmentedControl: same look, one row tooltip instead of one per half). Callers that were already drawn (Library scope, transition overlap, motion path, caption lines) stay drawn in both releases."
+    },
+    {
+      "t": "2026-09-29T10:48:10.372Z",
+      "note": "Moved onto it (36 + 4): CalloutInspector x2, CanvasInspector, DesignedColorPicker x2 (format, swatches), PathLineStylePickers, ArrowheadStylePicker, ToolSettingsCapsule, HistoryOverlay (accent plate per history.css), ResizeDialog, ArrangementInspector x3, MeasureInspector x3, MeasurePartSettings x3, CanvasGridSettingsView, ExportDialog x2, VideoExportDialog x5, RecordingExportDialog x2, CaptionsInspector, TextInspector x2, RecordingSetupController, TitlebarViewEditSwitch; VideoKit.Segmented removed (TransitionInspector, PropertyKeysInspector, CaptionStyleInspector, LibraryPanel). SegmentedControlUsageTests bans NSSegmentedControl / .segmented outside it (the walk harness may still READ the system control for Current). UX-PATTERNS: 'The one segmented control'. Scripts/segmented-gallery.swift draws every state; test.sh typechecks it."
+    },
+    {
+      "t": "2026-09-29T10:48:10.425Z",
+      "note": "Verified: Scripts/test.sh 10464/10464; 108 walks run in batches (every walk pressing a segment word, plus library/export/history/resize/colour picker walks): all green except panel-rows-read-as-one-column-walk, failing at step 27 on two shadows both called Kind, already failing in the 2026-09-27 sweep and unrelated to segments. Five walks renamed align left/center/right to Left/Center/Right. Mishap: running Scripts/build-app.sh --help started a dev build; it died on the closed pipe, and the dev app binary is untouched (still 02:09)."
+    },
+    {
+      "t": "2026-09-29T10:48:10.481Z",
+      "note": "left rough (audit, no task earned): title bar at 24pt not the page's 32pt tool bar size; focus ring round the plate not a segment; fill form shares spare room instead of strict equal columns when words are unequal; collapsed dropdown face 24pt vs 28pt; panel rows 28pt now, a little taller than the system control."
+    },
+    {
+      "t": "2026-09-29T10:48:42.290Z",
+      "note": "SegmentedControl (Sources/Photonz/DesignSystem) is the app's one segmented control, drawn to comp-segmented.html behind next-designed-segmented (Next, on by default; Current keeps the system look). The View | Edit switch and all 40 other segmented pickers use it; a test bans any other; UX-PATTERNS names it. Verified with Scripts/test.sh 10464/10464, 108 walks (one pre-existing unrelated failure, filed) and real title bar captures; audit queue/audits/2026-09-29-segmented-control.json. Commit 8e594bb1."
     }
-  ]
+  ],
+  "started": "2026-09-29T09:27:55.133Z",
+  "walks": [
+    "view-mode-and-edit-mode-walk",
+    "segment-tooltips-walk",
+    "contents-for-several-walk",
+    "pick-leaves-settings-alone-walk",
+    "copy-own-color-walk"
+  ],
+  "completed": "2026-09-29T10:48:42.291Z"
 }

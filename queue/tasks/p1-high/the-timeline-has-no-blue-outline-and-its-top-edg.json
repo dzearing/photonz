@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 0.0028,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T05:20:33.092Z",
-  "updated": "2026-09-29T11:35:08.035Z",
+  "updated": "2026-09-29T11:36:41.080Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window. Outline: TimelineDock's own accent strokeBorder overlay, drawn while timelineHasKeyboard && !isWatching (the timeline takes the keyboard on open), removed; keyboard routing unchanged. Resize: Sources/PhotonzCore/TimelineDockHeight.swift (floor = ruler + one sound lane + scroller strip [+ caption bar]; ceiling = 70% of window minus transport+bar; drag one for one; 0 stored = default), tested in TimelineDockHeightTests. View: Sources/Photonz/TimelineResizeEdge.swift (Divider + 14pt grab strip, resizeUpDown cursor, double-click resets), overlaid on TimelineDock's top in Edit only; height in @AppStorage timeline.height (EditorState.timelineHeightKey, forgotten by walk setup 'motion'); TimelineDock now takes windowHeight from EditorView. Harness: new windowClick step (window-posted click with click count) for the double-click; listed in walk-needs-the-mac.mjs, refused under a lock. Walk: Scripts/playtest/timeline-dock-resizes-walk.json.",
@@ -45,10 +45,15 @@
     {
       "t": "2026-09-29T11:35:08.034Z",
       "note": "Adversarial pass before building: a Premiere/FCP user expects the panel boundary to drag with a resize cursor and to stay put across sessions; the risks were a live drag feeding back through a moving handle (global coordinate space fixes it), a tiny window where 70% is less than one track (the floor wins), and a chosen height taller than the tracks (kept, empty space under the add row, like Premiere). After: timeline-dock-resizes-walk at Next defaults, 25 steps ok, 6 real window captures: no outline with the keyboard on the timeline or the canvas; a real drag up 300pt grew the dock under the pointer (picture refit 99%->41%); a drag down stopped at one track (86%); a real double-click (new windowClick step) sprang it back; a drag up 150 left it mid height. Scripts/test.sh: 10477 tests passed. Left rough, not filed (below the bar): grabbing the edge's upper half hands the keyboard to the canvas; hover cursor not photographable. Filed a-walk-that-closes-a-recording-and-opens-one-aga (p1, reproduced on unchanged main: probe SIGSEGV in MainThreadMeter after closeDocument + reopen of a recording), which is why the walk does not reopen to prove the height is remembered."
+    },
+    {
+      "t": "2026-09-29T11:36:41.078Z",
+      "note": "The blue outline was TimelineDock's own accent ring shown while the timeline held the keyboard; removed, keys unchanged. The dock's top edge is now a drag handle like the right panel's (hairline, grab strip, resize cursor): clamped between one track and 70% of the window, double-click resets, remembered in timeline.height. Rules in PhotonzCore TimelineDockHeight (12 tests). Verified by timeline-dock-resizes-walk at Next defaults (real drags and a real double-click, 6 captures), the four timeline/dock key walks, and Scripts/test.sh (10477 passed). Audit: queue/audits/2026-09-29-timeline-dock-resize.json. Commit 2c6b55bd."
     }
   ],
   "started": "2026-09-29T11:05:39.706Z",
   "walks": [
     "timeline-dock-resizes-walk"
-  ]
+  ],
+  "completed": "2026-09-29T11:36:41.079Z"
 }

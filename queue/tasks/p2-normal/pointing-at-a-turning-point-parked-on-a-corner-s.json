@@ -1,0 +1,34 @@
+{
+  "id": "pointing-at-a-turning-point-parked-on-a-corner-s",
+  "title": "Pointing at a turning point parked on a corner shows the grab hand again",
+  "goal": "When a layer's turning point is dragged onto one of its corners, pointing at that spot should show the hand that says you can grab the turning point. Since some change on 2026-09-28 or 2026-09-29, the pointer shows nothing there at all, so a person cannot tell which of the two marks on that spot a press would take.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-29T12:27:19.954Z",
+  "updated": "2026-09-29T12:28:00.719Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by the rotating check at 2026-09-29T11:03:34Z. No task owned it, because no standing walk task was open (see the loop task filed alongside this one). Reproduced by the daily digest on 2026-09-29 at 87071807 with the probe built at 05:10: `Scripts/playtest-all.sh --no-build motion-pivot-in-a-corner` -> `motion-pivot-in-a-corner-walk 7s FAILED step 24 (expectCue): the canvas says a press here would be \"none\", not \"grab\"`. Its log at step 21 says `move to (420, 230) document = view (448, 262); nothing under the pointer watches for one`, so the pointer is not reaching whatever watches the canvas at that point. Last pass seen in the loop log: the rotating check around 2026-09-28T21:11Z. Between the two: the floating tool bar spacing and height (98f6c6f5, 3e3bafea), the canvas foot layout (dd15d5fe), the dropdown rebuild (e121747f), the segmented control (8e594bb1) and the timeline outline and resize edge (2c6b55bd). Start by running the walk at each of those.",
+  "acceptance": [
+    "motion-pivot-in-a-corner-walk passes at Next defaults",
+    "The task log names the change that broke it and why the pointer stopped reacting over that spot",
+    "Other walks that check what the pointer says over the canvas still pass (Scripts/playtest-all.sh --no-build expectCue is not a name, so run the motion and cursor walks)"
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T12:27:19.956Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-29T12:28:00.718Z",
+      "note": "seq 3500 -> 10"
+    }
+  ],
+  "walks": [
+    "motion-pivot-in-a-corner-walk"
+  ]
+}

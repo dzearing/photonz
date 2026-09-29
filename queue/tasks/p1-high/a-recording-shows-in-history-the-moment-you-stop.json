@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-28T13:48:59.731Z",
-  "updated": "2026-09-28T18:08:01.734Z",
+  "updated": "2026-09-29T12:28:58.322Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -56,6 +56,10 @@
     {
       "t": "2026-09-28T18:08:01.732Z",
       "note": "Stop now puts the recording in history and the corner card up at once (placeholder tile), and the file fills it in when macOS finishes closing it; open/copy/GIF/Show in Finder/clipboard wait for the file. Measured with the new probe drill Scripts/recording-latency-drill.sh: Stop to tile was 61/311/820 ms at 5/60/180 s with system audio + mic (all of it ScreenCaptureKit closing the file, no app commit caused it), now 1-2 ms at every length. Tests green (10,300), history and opening-a-recording walks pass. Commit 800a6d01; audit queue/audits/2026-09-28-recording-shows-in-history-at-stop.json."
+    },
+    {
+      "t": "2026-09-29T12:28:58.321Z",
+      "note": "left rough (digest 2026-09-29, from queue/audits/2026-09-28-recording-shows-in-history-at-stop.json): the corner card says Copied to clipboard the moment it appears, but the copy lands with the file up to a second later on a long recording, so a paste in that second gets the old clipboard. Not filed: it is under a second and nobody has hit it; file it if it is seen twice."
     }
   ],
   "started": "2026-09-28T17:21:20.589Z",

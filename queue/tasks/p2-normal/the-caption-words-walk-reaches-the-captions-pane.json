@@ -2,14 +2,14 @@
   "id": "the-caption-words-walk-reaches-the-captions-pane",
   "title": "The caption words walk reaches the Captions panel again",
   "goal": "A walk that checks how caption words pop has stopped working: the talking recording now opens to watch, with the editing panel shut, so the walk never reaches the caption controls it is meant to check. It should switch to editing first, like the other caption walks.",
-  "epic": "design-system",
+  "epic": "video-audio",
   "priority": "p2-normal",
-  "seq": 3470,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T08:21:33.788Z",
-  "updated": "2026-09-29T08:21:33.791Z",
+  "updated": "2026-09-29T12:28:00.987Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-29 on main before and after the dropdown change: `Scripts/playtest.sh Scripts/playtest/caption-words-pop-walk.json --no-build` -> `[10 reveal] FAILED: no control called \"Caption style Caption\" is in the panel; the ones that are: Volume (Transport) ... View Mode (the title bar's switch, on), Edit Mode (the title bar's switch), Panel (the title bar's panel toggle, panel closed)`. Cause: view-mode-and-edit-mode-a-recording-opens-to-wat (done) makes a recording open in View mode. Fix: add {\"do\":\"press\",\"control\":\"Edit Mode\"} after the tool step, as every-dropdown-opens-on-a-click-walk does. Other walks that open a talk and expect the panel may need the same; `queue/bin/sweep.sh status` will list them.",
@@ -21,6 +21,18 @@
     {
       "t": "2026-09-29T08:21:33.790Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-29T09:08:23.690Z",
+      "note": "Heads up from every-caption-style-control-changes-the-captions (2026-09-29): its Current word glow step is now a colour well (press Color in \"Word glow\", press Shades 3, escape) since the named-colour menus are gone. The walk still fails at step 10 because the recording opens in View mode with the panel closed; add a press on Edit Mode before selectRow, as every-caption-control-changes-the-captions-walk does."
+    },
+    {
+      "t": "2026-09-29T12:27:41.531Z",
+      "note": "triage 2026-09-29: retagged design-system -> video-audio: the walk checks captions, which the video-audio epic owns; design-system is staged next, and this serves the focus"
+    },
+    {
+      "t": "2026-09-29T12:28:00.986Z",
+      "note": "seq 3470 -> 60"
     }
   ],
   "walks": [

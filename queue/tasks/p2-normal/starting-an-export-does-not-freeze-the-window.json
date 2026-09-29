@@ -5,11 +5,11 @@
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-28T12:18:54.317Z",
-  "updated": "2026-09-29T00:40:22.834Z",
+  "updated": "2026-09-29T00:40:32.812Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Named in the rough list of queue/audits/2026-09-27-fast-video-export.json ('The window still stalls once, for about 300 ms, the moment an export starts. The old export did the same (measured) and the cause is not found yet'). Measured again by the digest 2026-09-28: Scripts/playtest.sh Scripts/playtest/export-card-while-writing-walk.json --no-build -> '[10 wait] 5.0s, never went quiet (150 of 151 slices busy, 0 restless, busiest 18.3ms); mainBusy 1972.9ms over 4027 passes, longest 292.3ms' and '[12 action] started-at-1080p.mp4 landed in 76132 ms ... while it wrote, mainBusy 16289.5ms over 38078 passes, longest 292.3ms'. The objective video-beats-premiere asks that no press keeps the main thread busy over 50 ms. Also worth a look: 16s of main thread over a 76s write means the window is about a fifth busy the whole time it exports.",
@@ -55,10 +55,15 @@
     {
       "t": "2026-09-29T00:40:22.833Z",
       "note": "owns these walks: export-card-while-writing-walk"
+    },
+    {
+      "t": "2026-09-29T00:40:32.810Z",
+      "note": "Cause named: the progress card was a macOS sheet, whose slide holds the main thread ~270ms in and out. Now the mock's export toast (comp-feedback) at the foot of the canvas, window usable while it writes, Export dimmed meanwhile. export-card-while-writing-walk: longest after start 325.8ms -> 26.1ms (asserted <50ms), write 0.23 of running time. Tests 10409 green; 4 export walks pass. Audit queue/audits/2026-09-28-export-toast.json. Commit 59fdd064."
     }
   ],
   "started": "2026-09-28T23:54:33.978Z",
   "walks": [
     "export-card-while-writing-walk"
-  ]
+  ],
+  "completed": "2026-09-29T00:40:32.811Z"
 }

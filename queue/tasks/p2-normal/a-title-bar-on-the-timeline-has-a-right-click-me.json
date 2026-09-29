@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-24T02:23:06.770Z",
-  "updated": "2026-09-28T01:15:13.866Z",
+  "updated": "2026-09-29T12:28:58.375Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the-video-properties-look-like-the-rest-of-the-d: SpeedInspector.placedInTime still has a Playhead row with Start Here and End Here because a placed layer bar has no .contextMenu (clip bars get TimelineClipMenu in ClipPiecesBar). EditorState startPlacedLayerHere/endPlacedLayerHere/setPlacedLayerFade already exist.",
@@ -68,6 +68,10 @@
     {
       "t": "2026-09-28T01:15:13.864Z",
       "note": "Title bars on the timeline now right-click to Start at Playhead, End at Playhead and Fade (plus the clip menu's Duplicate/Delete); Start Here/End Here left the Time section. Checks in PhotonzCore with tests; title-bar-right-click-menu-walk passes at Next defaults and reads the clip line back; menu pictures on a hidden window now show the window. Full suite green (10,178). Audit: queue/audits/2026-09-27-title-bar-right-click-menu.json. Commit 3c4b1be5."
+    },
+    {
+      "t": "2026-09-29T12:28:58.374Z",
+      "note": "left rough (digest 2026-09-29): the 2026-09-28 digest said a title's Option-Q and Option-W trims were not honoured and should ride with the next keys task. No keys task has opened since, so it stays here; the gap report (docs/design/video-vs-premiere.md) does not list those chords."
     }
   ],
   "started": "2026-09-28T00:55:54.761Z",

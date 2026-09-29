@@ -4,12 +4,12 @@
   "goal": "On a five minute recording, the first time you press play the window stops answering for about a sixth of a second before the picture moves. Later presses are fine. A press should never hold the window that long.",
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
-  "seq": 3450,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T00:40:01.314Z",
-  "updated": "2026-09-29T00:40:01.317Z",
+  "updated": "2026-09-29T12:28:00.772Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while fixing starting-an-export-does-not-freeze-the-window. Repro (temp walk: openLongRetinaTalk, wait 1.5, videoPause, wait 0.6, key l, wait 0.5, key k, wait 0.3, key l, wait 0.5, key k): Scripts/playtest.sh /tmp/exstall/lonly.json --no-build, run twice. Output: first L wait -> \"0.5s, never went quiet (14 of 14 slices busy); mainBusy 410.6ms over 269 passes, longest 156.7ms\" and \"... longest 149.3ms\"; second L -> longest 34.6ms / 22.0ms. During an export the same first press read longest 67.4ms. Not yet sampled: run sample(1) on the probe across the first L to find the long pass.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-09-29T00:40:01.316Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-29T12:28:00.771Z",
+      "note": "seq 3450 -> 20"
     }
   ]
 }

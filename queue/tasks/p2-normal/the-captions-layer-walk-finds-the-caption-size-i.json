@@ -1,0 +1,37 @@
+{
+  "id": "the-captions-layer-walk-finds-the-caption-size-i",
+  "title": "The captions layer walk finds the caption size in the panel again",
+  "goal": "A walk that checks captions are one layer, picked and sized like any other, now stops at its first panel check: with the captions layer picked it finds no text size control in the panel at all. Either the panel stopped showing the captions' size when they are picked, or the walk is looking in the wrong place; find out which and make the walk pass.",
+  "epic": "video-audio",
+  "priority": "p2-normal",
+  "seq": 50,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-29T02:22:27.047Z",
+  "updated": "2026-09-29T12:28:01.739Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-28 (runner of a-walk-s-command-z-undoes-what-it-says-or-the-wa): `Scripts/playtest.sh Scripts/playtest/captions-are-one-layer-walk.json --no-build` -> '[10 action] captions: one layer picked, box (128.0, 626.4, 1024.0, 93.6), 10 captions filling it at 36 pt' then '[11 expect] FAILED: no menu called \"Size\" is in the panel to read; the ones that are: none'. Same failure on three runs. Last touched by 6aa4ed87 (Captions only when you ask for them), which swapped the walk to captionsWriteQuietly. Not caused by the Command Z change: step 11 comes before any undo, and the walk's Command Z steps (30, 31) are now shortcut Undo steps.",
+  "acceptance": [
+    "captions-are-one-layer-walk passes at Next defaults",
+    "With the Captions layer picked, the panel shows its text size, or the walk reads it where the panel now shows it"
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T02:22:27.049Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-29T12:28:00.931Z",
+      "note": "seq 3460 -> 50"
+    },
+    {
+      "t": "2026-09-29T12:28:01.738Z",
+      "note": "triage 2026-09-29: retagged video-cutting -> video-audio: captions belong to video-audio"
+    }
+  ],
+  "walks": [
+    "captions-are-one-layer-walk"
+  ]
+}

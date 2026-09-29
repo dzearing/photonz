@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-27T23:53:20.520Z",
-  "updated": "2026-09-28T12:19:18.684Z",
+  "updated": "2026-09-29T01:14:24.263Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of export-and-playback-keep-to-the-in-and-out-marks, whose title named playback but whose acceptance covered export only; export shipped there. Premiere binds Play In to Out to Cmd+Shift+Space on Mac (check before binding: TimelineMenuKeys). Marks: PhotonzDocument.markedRangeMS / exportRangeMS(.marked) in Sources/PhotonzCore/VideoExportRange.swift. Ruler menu rows: EditorState+TimelineMenus.swift timelineRulerMenuRows.",
@@ -27,6 +27,40 @@
     {
       "t": "2026-09-28T12:19:18.683Z",
       "note": "seq 3440 -> 30"
+    },
+    {
+      "t": "2026-09-29T00:54:48.326Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T01:13:54.681Z",
+      "note": "owns these walks: play-in-to-out-walk, play-in-to-out-from-the-ruler-walk"
+    },
+    {
+      "t": "2026-09-29T01:14:10.385Z",
+      "note": "review before building: Premiere's Mac key is Option-K, already Go to Previous Key here (EditorCommands); binding Premiere's Windows chord with Cmd for Ctrl (Cmd-Shift-Space), which nothing else uses. No mock shows the command, so it lives in the Video menu and the ruler right-click menu beside Set In/Set Out."
+    },
+    {
+      "t": "2026-09-29T01:14:10.385Z",
+      "note": "built: TimelineKeyCommand.playInToOut + PhotonzDocument.playInToOutMS (tests first in TimelineKeysTests); EditorState.playInToOut sets documentPlaybackStopMS which restartDocumentClock stops at; cleared on pause and on a J/K/L rate change."
+    },
+    {
+      "t": "2026-09-29T01:14:10.385Z",
+      "note": "verified: Scripts/test.sh green (10413 tests); play-in-to-out-walk and play-in-to-out-from-the-ruler-walk ok at Next defaults with real captures; extract-from-the-ruler-menu, export-keeps-to-the-in-and-out and timeline-right-click walks still ok."
+    },
+    {
+      "t": "2026-09-29T01:14:10.385Z",
+      "note": "left rough (no task: nobody is stopped by it): J/K/L during a Play In to Out takes over and runs past the Out; no transport button for Play In to Out. Both in the audit's rough list."
+    },
+    {
+      "t": "2026-09-29T01:14:24.261Z",
+      "note": "Cmd-Shift-Space, a ruler right-click row and a Video menu row play from the In and stop on the Out; plain Space unchanged; no marks = key does nothing, row dimmed/absent. Tests first in TimelineKeysTests, Scripts/test.sh green, play-in-to-out-walk + play-in-to-out-from-the-ruler-walk ok at Next defaults with real captures. Audit queue/audits/2026-09-28-play-in-to-out.json. Commit bea4a579."
     }
-  ]
+  ],
+  "started": "2026-09-29T00:54:48.325Z",
+  "walks": [
+    "play-in-to-out-walk",
+    "play-in-to-out-from-the-ruler-walk"
+  ],
+  "completed": "2026-09-29T01:14:24.262Z"
 }

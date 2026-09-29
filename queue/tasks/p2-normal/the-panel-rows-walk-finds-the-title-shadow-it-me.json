@@ -1,0 +1,37 @@
+{
+  "id": "the-panel-rows-walk-finds-the-title-shadow-it-me",
+  "title": "The panel-rows walk finds the title shadow it means",
+  "goal": "A check that walks through a title's panel stops early because the title now has two shadows and the check asks for the shadow setting without saying which one, so the rest of what it checks never runs.",
+  "epic": "video-titles-graphics",
+  "priority": "p2-normal",
+  "seq": 80,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-29T10:48:17.589Z",
+  "updated": "2026-09-29T12:28:01.094Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-29: Scripts/playtest-all.sh --no-build panel-rows-read-as-one-column-walk -> FAILED step 27 (reveal): 2 controls in the panel are called \"Kind\": Kind (Shadow 1, Drop), Kind (Shadow 2, Drop). Add an \"in\" naming the row it is on. Also failing in the 2026-09-27 full sweep (walks-that-fail-in-the-full-sweep-6), before the segmented-control change. Check first whether a fresh title getting two drop shadows is itself a bug.",
+  "acceptance": [
+    "panel-rows-read-as-one-column-walk runs to the end at Next defaults",
+    "If a new title really carries two shadows, the walk names which one it reveals rather than dropping one"
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T10:48:17.591Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-29T12:27:41.573Z",
+      "note": "triage 2026-09-29: retagged design-system -> video-titles-graphics: the walk reads a title's panel, and the open question is whether a new title wrongly gets two shadows"
+    },
+    {
+      "t": "2026-09-29T12:28:01.093Z",
+      "note": "seq 3490 -> 80"
+    }
+  ],
+  "walks": [
+    "panel-rows-read-as-one-column-walk"
+  ]
+}

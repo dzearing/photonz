@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-28T02:00:22.538Z",
-  "updated": "2026-09-29T01:41:25.792Z",
+  "updated": "2026-09-29T01:41:42.932Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building a-transition-can-sit-before-across-or-after-the (2026-09-28). The hold is ClipTransition.holdMS; between clips it is the gap between the two clips (editPoints accepts gap == arrival hold, editPointCut reads the gap as the hold, PhotonzDocument.setTransition ripples). Inside one clip the pieces butt, so ClipPieces.setTransition refuses holdMS > 0 and EditorState.canHoldClipTransition is false for .join. Doing it there means pieces carrying a hold gap in startMS/totalLengthMS, or splitting the clip at the join into two clips when a hold is asked for.",
@@ -42,10 +42,15 @@
     {
       "t": "2026-09-29T01:41:25.791Z",
       "note": "owns these walks: hold-on-black-at-a-blade-cut-walk"
+    },
+    {
+      "t": "2026-09-29T01:41:42.930Z",
+      "note": "Dip on a blade cut inside one clip now shows Hold on black; a hold cuts the clip in two at the join and holds on the gap, rippling everything after; one undo restores the one clip. Core JoinHoldTests + full suite (10418) green; walk hold-on-black-at-a-blade-cut-walk ok at Next defaults with 3 real captures; audit queue/audits/2026-09-28-hold-on-black-at-a-blade-cut.json. Commit 37971208."
     }
   ],
   "started": "2026-09-29T01:26:22.399Z",
   "walks": [
     "hold-on-black-at-a-blade-cut-walk"
-  ]
+  ],
+  "completed": "2026-09-29T01:41:42.931Z"
 }

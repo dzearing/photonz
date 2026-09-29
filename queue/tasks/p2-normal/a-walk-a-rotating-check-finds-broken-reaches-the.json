@@ -1,0 +1,32 @@
+{
+  "id": "a-walk-a-rotating-check-finds-broken-reaches-the",
+  "title": "A walk a rotating check finds broken reaches the queue the same day",
+  "goal": "The rules promise that a walk the rotating check finds broken is written onto a task the same day. That only happens while a whole-set task is open. The rest of the time the failure goes into the loop log and nowhere else, so a real break can sit unowned until the next whole-set run, which is at most once a day and often cut short. Make sure every broken walk a check finds ends up on a task someone will pick up.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "loop",
+  "created": "2026-09-29T12:27:28.972Z",
+  "updated": "2026-09-29T12:28:00.879Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence 2026-09-29: queue/loop.log from 2026-09-28T12:14Z to now prints 'No standing walk task is open, so this is recorded here and in the loop log only.' 13 times (queue/bin/sweep-slice-record.mjs line 96). Most of those walks were picked up by runners who happened to see them (captions-are-one-layer, caption-words-pop, keys-copy, panel-rows each have a task), but motion-pivot-in-a-corner-walk, failing since the 11:03Z check and reproduced by the digest, had no owner until the digest filed pointing-at-a-turning-point-parked-on-a-corner-s. The last whole-set run to finish was 2026-09-27T12:07Z: the two on 2026-09-28 went blind and the third was cut short at 234 of 653 walks. The 2026-09-28 digest raised this and filed nothing; this is the second sighting. The code comment says a check does not open the standing task because 'a task opened off fifty walks would claim more than it knows': a task that names only the walks it saw fail claims nothing more.",
+  "acceptance": [
+    "When a rotating check finds a walk failing and no open task names that walk, the failure lands on an open task that the dashboard shows (the standing walk task, opened if it has to be, or the task that owns the walk)",
+    "A walk that already belongs to an open task is written onto that task, not onto a new one",
+    "A drill in queue/bin shows both cases, and the rotating check never files more than one task per check",
+    "CLAUDE.md's line about where a rotating check's failures go says what the code now does"
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T12:27:28.974Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-29T12:28:00.878Z",
+      "note": "seq 3510 -> 40"
+    }
+  ]
+}

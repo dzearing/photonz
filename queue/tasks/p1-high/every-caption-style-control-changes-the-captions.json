@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 0.00035,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T05:18:04.932Z",
-  "updated": "2026-09-29T05:51:14.061Z",
+  "updated": "2026-09-29T09:08:54.391Z",
   "deps": [
     "every-dropdown-in-the-panel-opens-when-you-click"
   ],
@@ -35,6 +35,37 @@
     {
       "t": "2026-09-29T05:51:14.060Z",
       "note": "Possibly related, not confirmed: until the fix for a-title-with-a-fade-in-and-a-fade-out-shows-duri (2026-09-28), the canvas composited any recording shown below its own size (a 3456x2234 Mac recording fitted in a window) without telling the renderer the scale, so words were set at full size inside a shrunk box and drew nothing. If captions looked unchanged or missing on a big recording, re-check with that fix in before chasing the style controls."
+    },
+    {
+      "t": "2026-09-29T08:39:30.865Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T08:41:25.517Z",
+      "note": "Reproduced at HEAD (after e121747f, the dropdown fix this task depended on): /tmp/photonz-playtest/every-dropdown-opens-on-a-click-walk/2-after-every-click-sc.png (01:25 today, no flags) shows Show=1 word, Said=Dim, Coming=Hidden, Colour=Cyan, Pill=Pink, Glow=Green, Stroke=Black, Animation=Pop all read back AND the canvas caption changed (one word, cyan on a pink pill, green glow). So the cause of the user's report was the dead dropdown hit target (37x16 invisible menu over a 148x24 face), fixed by the dependency; the look model and the render were fine. Left for this task: colour rows are still named-colour menus (should be the standard picker), Timing, a core test per control, a before/after walk."
+    },
+    {
+      "t": "2026-09-29T08:41:25.570Z",
+      "note": "Adversarial pass: a Photoshop/Premiere user expects a colour swatch that opens a picker, not a word menu; None has to be reachable inside the picker (Photoshop's slashed none swatch) or Pill/Glow/Stroke can never be switched off again. Two Glow and two Stroke wells can be on screen (Text section and Current word), so the wells need distinct names (picker title 'Word glow'). The text Colour row cannot be None. Plan: CaptionLookControl in PhotonzCore (every panel control reads/writes the look through it, tested per control + render), ColorWellButton gains a None choice, caption colour rows become wells in both Captions and Text sections, Timing buttons checked at narrow dock."
+    },
+    {
+      "t": "2026-09-29T09:08:23.637Z",
+      "note": "owns these walks: every-caption-control-changes-the-captions-walk, captions-panel-keeps-its-margins-walk, every-dropdown-opens-on-a-click-walk"
+    },
+    {
+      "t": "2026-09-29T09:08:23.743Z",
+      "note": "Built: CaptionLookControl (PhotonzCore) is the one list every caption panel row writes through (EditorState.setCaption); CaptionLookControlTests drives every value of every control on every preset, checks each touches only its own setting, that the drawn caption layers change, and that both panel sources set every control through it (no direct changeCaptionLook writes). Colour, Pill, Glow, Stroke (Current word) and Colour, Background, Glow, Stroke (Text) are ColorWellButtons opening DesignedColorPicker with opacity, eyedropper and recents; the picker gained a None swatch (Photoshop's slashed square) beside the eyedropper for slots that allow none; a well holding none is struck through and says None. CaptionColourNames deleted. Timing falls back to arrow-only buttons with tooltips when the dock is too narrow (ViewThatFits), never 'Ear...'. New walk actions captionsNoteDrawn/captionsExpectDrawnChanged. Walk every-caption-control-changes-the-captions-walk (no flags) clicks every dropdown face and every well, reads back, and fails if the drawn caption did not change after each; also None, undo and playback. Scale and Speed sliders are not walk-addressable (plain SwiftUI Slider) so the core test covers them. Left rough, not filed: colour lands on release only (no live caption preview path), noted in the audit."
+    },
+    {
+      "t": "2026-09-29T09:08:54.389Z",
+      "note": "Reproduced at HEAD: after the dropdown fix (e121747f) every caption dropdown already reached the look and canvas, so that was the cause. Shipped in 1e175328: CaptionLookControl in PhotonzCore as the one path every caption row writes through, with CaptionLookControlTests failing any dead control. Caption colours (Current word and Text) are colour wells on the standard DesignedColorPicker, which gains a None swatch. Timing falls back to arrow icons in a narrow dock. every-caption-control-changes-the-captions-walk (no flags) clicks every control and fails unless the drawn caption changes, including None, undo and playback: 136/136 ok with 12 real pictures. Scripts/test.sh passed 10461. Audit: queue/audits/2026-09-29-caption-style-controls.json"
     }
-  ]
+  ],
+  "started": "2026-09-29T08:39:30.863Z",
+  "walks": [
+    "every-caption-control-changes-the-captions-walk",
+    "captions-panel-keeps-its-margins-walk",
+    "every-dropdown-opens-on-a-click-walk"
+  ],
+  "completed": "2026-09-29T09:08:54.390Z"
 }

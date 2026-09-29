@@ -1,18 +1,18 @@
 {
   "id": "the-direction-of-a-pinch-picks-what-it-zooms-up",
   "title": "The direction of a pinch picks what it zooms: up-down for rows, side to side for time",
-  "goal": "User 2026-09-28: 'when I use the trackpad to zoom in, if I'm pinch zooming vertically, it just makes the rows bigger. If I'm pinch zooming horizontally it changes the scale.' Shipped in f10a9c49: a pinch zooms time and rows together about the pointer (Option time only, Shift rows only). The user wants the axis chosen by the direction the fingers spread. NSEvent magnify carries only a scalar, so read the two touches (NSView allowedTouchTypes .indirect, touchesBegan/Moved, NSTouch normalizedPosition) during the gesture and use the spread vector's angle.",
+  "goal": "You asked for the timeline to zoom by the direction you pinch: spreading your fingers up and down makes the rows taller, spreading them side to side stretches time. Today a pinch zooms both together. Make the direction of the pinch pick what it zooms.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 0.0029,
-  "status": "pending",
+  "seq": 20,
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T05:21:39.259Z",
-  "updated": "2026-09-29T05:21:39.338Z",
+  "updated": "2026-09-29T12:28:00.611Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Filed from the intake window.",
+  "notes": "Filed from the intake window.\n\nEarlier goal, moved here by the 2026-09-29 digest: User 2026-09-28: 'when I use the trackpad to zoom in, if I'm pinch zooming vertically, it just makes the rows bigger. If I'm pinch zooming horizontally it changes the scale.' Shipped in f10a9c49: a pinch zooms time and rows together about the pointer (Option time only, Shift rows only). The user wants the axis chosen by the direction the fingers spread. NSEvent magnify carries only a scalar, so read the two touches (NSView allowedTouchTypes .indirect, touchesBegan/Moved, NSTouch normalizedPosition) during the gesture and use the spread vector's angle.",
   "acceptance": [
     "Core logic (PhotonzCore, tests first): given the two touch positions at the start and now, classify the pinch as horizontal (angle within about 35 degrees of horizontal), vertical (within about 35 degrees of vertical), or diagonal, deciding once near the start of the gesture and holding it until the fingers lift so it never flips mid-pinch",
     "Horizontal spread or squeeze zooms time only, vertical zooms row height only, both anchored on the pointer exactly as now; diagonal zooms both together (today's behaviour)",
@@ -28,6 +28,35 @@
     {
       "t": "2026-09-29T05:21:39.337Z",
       "note": "seq 400 -> 0.0029"
+    },
+    {
+      "t": "2026-09-29T11:50:44.699Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T11:57:52.200Z",
+      "note": "owns these walks: timeline-pinch-direction-walk, timeline-pinch-both-ways-walk"
+    },
+    {
+      "t": "2026-09-29T12:09:58.673Z",
+      "note": "Built and pushed 658cf1eb: TimelinePinchSteer (core, 20 tests) + touch feed in TimelineWheel (.gesture monitor, allowedTouchTypes .indirect) + walk step spread. timeline-pinch-direction-walk and timeline-pinch-both-ways-walk green at Next defaults with real window captures; Scripts/test.sh 10498 green. Audit queue/audits/2026-09-29-timeline-pinch-direction.json. Adversarial: a Premiere/FCP user has no pinch-by-direction at all (FCP pinches time only), so this beats them; risk is real trackpad touches not arriving via the local .gesture monitor, which no script can prove. Rough items (unverified real touches, ~2mm hold at start) are the card's options b and c, not separate tasks. Blocked only on the person-verification card the acceptance asks for."
+    },
+    {
+      "t": "2026-09-29T12:10:03.830Z",
+      "note": "Everything built, walked green and pushed (658cf1eb); waiting on the user to confirm on a real trackpad that the pinch direction picks the axis, per the acceptance's person-verification card."
+    },
+    {
+      "t": "2026-09-29T12:27:41.591Z",
+      "note": "triage 2026-09-29: goal rewritten in plain words; the technical notes (touch positions, angle) stay in its notes and acceptance"
+    },
+    {
+      "t": "2026-09-29T12:28:00.610Z",
+      "note": "seq 0.0029 -> 20"
     }
+  ],
+  "started": "2026-09-29T11:50:44.698Z",
+  "walks": [
+    "timeline-pinch-direction-walk",
+    "timeline-pinch-both-ways-walk"
   ]
 }

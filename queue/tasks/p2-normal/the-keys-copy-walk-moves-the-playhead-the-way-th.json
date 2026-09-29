@@ -1,0 +1,41 @@
+{
+  "id": "the-keys-copy-walk-moves-the-playhead-the-way-th",
+  "title": "The keys copy walk moves the playhead the way the ruler moves it now",
+  "goal": "A walk that checks copying animation keys between two titles fails since dragging along the ruler started drawing a range: its drags meant to move the playhead now draw a range and let go of the title, so the panel it reads is gone. The walk should move the playhead the way a person now would.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 70,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-28T21:42:58.855Z",
+  "updated": "2026-09-29T12:28:01.760Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-28 14:45: Scripts/playtest-all.sh --no-build keys-copy-between -> 'keys-copy-between-layers-walk 20s FAILED step 63 (expect): no control called \"Key\" in \"Scale\" is in the panel to read; the ones that are: Key Scale 1, Key Scale 2, ...'. The loop's rotating check at 2026-09-28T20:19:50Z (queue/loop.log) reports the same failure right after 99b2fc1c (ruler range) landed, before the marquee task's code existed. Steps 61 and 64 are windowDrag at y=750 (the ruler row) from x=600 (about 0:02.3, away from the playhead at 0:03), so the ruler reads them as a new range (RulerRange.grip -> .newRange), markRulerRange selects nothing, and the Scale key row leaves the panel. Fix: start those drags on the playhead (x about 709) or replace them with clickRuler at the seconds they land on (about 2.9 and 2.96).",
+  "acceptance": [
+    "keys-copy-between-layers-walk passes at Next defaults",
+    "Its playhead moves go through the playhead or a click on the ruler, not a drag started away from the playhead"
+  ],
+  "log": [
+    {
+      "t": "2026-09-28T21:42:58.857Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-29T02:32:47.768Z",
+      "note": "2026-09-28 (Command Z task): the walk's undo at step 103 is now proven: a copy with steps 61-67 removed runs to the end, dip flat after shortcut Undo. Step 63 still fails as this task describes; nothing else in the walk blocks it."
+    },
+    {
+      "t": "2026-09-29T12:28:01.039Z",
+      "note": "seq 3440 -> 70"
+    },
+    {
+      "t": "2026-09-29T12:28:01.759Z",
+      "note": "triage 2026-09-29: retagged video-cutting -> video-transitions-motion: copying keys between layers is motion work"
+    }
+  ],
+  "walks": [
+    "keys-copy-between-layers-walk"
+  ]
+}

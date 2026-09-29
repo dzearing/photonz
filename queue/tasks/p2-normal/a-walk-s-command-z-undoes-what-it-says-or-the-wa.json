@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-28T10:03:10.017Z",
-  "updated": "2026-09-28T12:19:18.797Z",
+  "updated": "2026-09-29T02:33:08.810Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-28 while working walks-that-drag-a-clip-on-the-timeline-by-window. keys-copy-between-layers-walk pressed {do:key,key:z,modifiers:[command]} after dipping a volume point; a new expectLevel claim after it failed: 'Tutorial Sample's level line is not where the walk said: it is not flat (2.49s 0.3 dB, 3.48s -60.5 dB, 4.48s 0.3 dB)'. The key step's own note said 'Edit > Undo carries this chord, but that item is dimmed and empty, so the MENU did not run'. Replacing it with {do:shortcut,key:z,modifiers:[command],menuItem:Undo} (which falls back to action undo) made the dip come back flat. Same in a-clip-s-sound-is-linked-under-it-walk: the clip stayed at 0.86s after key cmd+z. Survey of /tmp/photonz-playtest/*/log.json on 2026-09-28: 20 of 31 logged command+z presses say 'MENU did not run' (a-recording-opens-to-watch, captions-are-one-layer, captions-from-the-sound, extract-a-marked-stretch, lens, magnify-lens, normalize-quiet-system-audio, opacity-on-a-video-shape, panel-change-can-be-taken-back, path-demo, pen-draws-a-path, premiere-keys-on-the-timeline, undo-shortcut, tutorial-layers-and-undo...). Some of those went to the responder chain, which may still have undone a text edit, so each needs checking, not blanket rewriting. PlaytestHarness.swift case .key logs frozenMenuBar but does not throw. 18 walks use key cmd+z.",
@@ -30,10 +30,36 @@
     {
       "t": "2026-09-28T12:19:18.796Z",
       "note": "seq 3460 -> 50"
+    },
+    {
+      "t": "2026-09-29T01:58:07.758Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T02:32:47.557Z",
+      "note": "Rule: a key step whose chord has a written stand-in (PlaytestMenuStandIn), whose menu row is dimmed and empty, and whose press nothing else took (responder chain / nobody) now FAILS the walk, naming the shortcut step to use (PlaytestMenuStandIn.pressRanNothing, unit tested). A press the pen, the timeline, the window or the menu itself took still passes. Chords with no stand-in (cmd+a, cmd+d, cmd+g...) keep the note: a view's keyDown may answer them, so the walk's own claims must speak."
+    },
+    {
+      "t": "2026-09-29T02:32:47.611Z",
+      "note": "With the rule on, 12 of 28 walks that press a stand-in chord failed at the press (their undo, fill, delete layer or copy merged had never run). Moved 24 walks' key steps to shortcut steps with menuItem (Undo, Fill with Foreground, Delete Layer, Copy Merged). Left as key on purpose: pen-draws-a-path-walk (tests the pen's own one-anchor undo, taken by window) and menu-keys-do-what-they-say-walk (front:true, proves the live menu takes the key). panel-change-can-be-taken-back-walk and undo-shortcut-walk had been written around the dead press (claimed nothing changed, then undid with an action step); rewritten to claim the undo's result (Fill back on; one layer)."
+    },
+    {
+      "t": "2026-09-29T02:32:47.664Z",
+      "note": "a-clip-s-sound-is-linked-under-it-walk: its undo was already a claimed shortcut and passes; it then failed at step 22, Volume reading -9.6 / -9.7 against -9.3 dB (a 7 point level drag lands a sub-pixel differently run to run; one run read -9.3). expect reads now takes a margin, '-9.3 dB ±0.5' (PlaytestReading, unit tested); passes on two runs. keys-copy-between-layers-walk: its undo claim (expectLevel flat after shortcut Undo) passes in a scratch copy with the ruler drags at steps 61-67 removed; the full walk still fails at step 63, which the-keys-copy-walk-moves-the-playhead-the-way-th owns."
+    },
+    {
+      "t": "2026-09-29T02:32:47.716Z",
+      "note": "Walk runs: all 24 converted walks + a-clip-s-sound pass except captions-are-one-layer-walk, which fails at step 11 (no Size menu in the panel) before any undo; unrelated, filed as the-captions-layer-walk-finds-the-caption-size-i. Scripts/test.sh green (10423 tests)."
+    },
+    {
+      "t": "2026-09-29T02:33:08.808Z",
+      "note": "Shipped in c489684d. A key step whose chord has a stand-in, whose menu row is dead and whose press nothing took now fails the walk and names the shortcut step (PlaytestMenuStandIn.pressRanNothing, tested). 24 walks moved to shortcut Undo / Fill with Foreground / Delete Layer / Copy Merged; panel-change-can-be-taken-back and undo-shortcut now claim the undo's result. expect reads takes a margin ('-9.3 dB ±0.5', PlaytestReading, tested) so a-clip-s-sound passes (twice). keys-copy's undo claim passes in a copy without the ruler drags; its step 63 belongs to the-keys-copy-walk-moves-the-playhead-the-way-th. All converted walks pass except captions-are-one-layer (step 11, before any undo, filed separately). Scripts/test.sh green, 10423 tests."
     }
   ],
   "walks": [
     "keys-copy-between-layers-walk",
     "a-clip-s-sound-is-linked-under-it-walk"
-  ]
+  ],
+  "started": "2026-09-29T01:58:07.757Z",
+  "completed": "2026-09-29T02:33:08.809Z"
 }

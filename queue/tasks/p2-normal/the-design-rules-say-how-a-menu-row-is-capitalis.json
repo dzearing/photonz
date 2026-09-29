@@ -4,12 +4,12 @@
   "goal": "The video mocks write menu rows in sentence case (Apply to every cut, Reset to defaults) and the app writes them in Mac title case (Apply to Every Cut, Reset to Defaults). Nothing in the design rules says which wins, so every task that adds a menu row picks one, explains itself in its audit, and the user reads the same departure again and again. Settle it once in the rules.",
   "epic": "video-editing",
   "priority": "p2-normal",
-  "seq": 90,
+  "seq": 100,
   "status": "pending",
   "release": "next",
   "area": "docs",
   "created": "2026-09-28T12:19:03.272Z",
-  "updated": "2026-09-28T12:19:19.010Z",
+  "updated": "2026-09-29T12:28:01.201Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Recurring in audits across four tasks in three days: the-dock-headers-match-the-mock-small-caps-title (Copy Look vs the mock's Copy properties), the-properties-menu-puts-a-clip-back-the-way-it (queue/audits/2026-09-27-properties-reset-to-defaults.json: 'Items are Title Case like every other menu in the app'), one-step-puts-a-transition-on-every-cut (queue/audits/2026-09-27-transition-on-every-cut.json: 'Menu rows are in macOS title case ... the mock writes sentence case'), one-key-puts-the-usual-transition-on-the-cut-at. grep of UX-PATTERNS.md and AGENTS.md finds no casing rule.",
@@ -26,6 +26,10 @@
     {
       "t": "2026-09-28T12:19:19.009Z",
       "note": "seq 3490 -> 90"
+    },
+    {
+      "t": "2026-09-29T12:28:01.200Z",
+      "note": "seq 90 -> 100"
     }
   ]
 }

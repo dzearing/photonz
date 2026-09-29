@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-24T09:07:24.604Z",
-  "updated": "2026-09-28T12:19:18.956Z",
+  "updated": "2026-09-29T05:02:17.347Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by panel-copy-and-flag-descriptions-have-a-length-b (2026-09-24). Gate: Tests/PhotonzCoreTests/FlagDescriptionBudgetTests.swift, budget CopyBudget.flagDescriptionWords (40). `allowed` holds 92 of the 95 switches at their word count of 2026-09-24; none may grow, and one brought inside the budget must be struck off. Descriptions live in Sources/PhotonzCore/FeatureCatalog.swift. Longest: Turn Into Path 557, then 538, 520. Detail cut from a description belongs in docs/design or the tutorial, not the window. The Experiments window search reads descriptions (FeatureFlag search haystack), so keep the words someone would search for. Big job: fine to land in batches, lowering the allowance as each batch goes.",
@@ -54,6 +54,27 @@
     {
       "t": "2026-09-28T12:19:18.955Z",
       "note": "seq 340 -> 80"
+    },
+    {
+      "t": "2026-09-29T04:44:45.242Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T05:02:03.561Z",
+      "note": "owns these walks: experiments-groups-walk"
+    },
+    {
+      "t": "2026-09-29T05:02:03.617Z",
+      "note": "Rewrote all 91 over-budget descriptions in FeatureCatalog.swift to <=2 sentences and <=40 words (most: what it does, then 'Off means ...'), trimmed 3 short ones that ran to 3 sentences. Test: allowance list removed from FlagDescriptionBudgetTests; added CopyBudget.sentences(in:) + flagDescriptionSentences=2 with a test that no description runs past two sentences. IconPreviewTests no longer demands >200 chars. Full suite green (10,444). experiments-groups-walk ran, real capture in the audit. Left rough (no task, under the bar): the cut detail was not moved into docs/design; git history holds it."
+    },
+    {
+      "t": "2026-09-29T05:02:17.345Z",
+      "note": "All 91 over-budget switch descriptions in FeatureCatalog.swift rewritten to two sentences and 40 words at most, most ending in what Off means; allowance list removed and a two-sentence check added (FlagDescriptionBudgetTests, CopyBudget.sentences). Full suite green, experiments-groups-walk photographed the window (audit 2026-09-28-experiments-switch-descriptions). Commit 0a86e65b."
     }
-  ]
+  ],
+  "started": "2026-09-29T04:44:45.240Z",
+  "walks": [
+    "experiments-groups-walk"
+  ],
+  "completed": "2026-09-29T05:02:17.346Z"
 }
