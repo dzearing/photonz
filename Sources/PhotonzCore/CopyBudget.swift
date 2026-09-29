@@ -108,6 +108,32 @@ public enum CopyBudget {
         text.split(whereSeparator: { $0.isWhitespace }).count
     }
 
+    /// How many sentences an Experiments switch description may run to: what
+    /// the switch changes, and what Off means (the user's card, 2026-09-25).
+    public static let flagDescriptionSentences = 2
+
+    /// Sentences in a piece of text: each full stop, question or exclamation
+    /// mark that ends a word, plus a closing run with no stop of its own. A
+    /// stop inside a number ("2.5") or an ellipsis does not end one.
+    public static func sentences(in text: String) -> Int {
+        let chars = Array(text.trimmingCharacters(in: .whitespacesAndNewlines))
+        guard !chars.isEmpty else { return 0 }
+        var count = 0
+        var openSinceLastStop = false
+        for (index, c) in chars.enumerated() {
+            let next = index + 1 < chars.count ? chars[index + 1] : nil
+            let previous = index > 0 ? chars[index - 1] : nil
+            let endsAWord = next == nil || next?.isWhitespace == true
+            if ".!?".contains(c), endsAWord, previous != "." {
+                count += 1
+                openSinceLastStop = false
+            } else if !c.isWhitespace {
+                openSinceLastStop = true
+            }
+        }
+        return count + (openSinceLastStop ? 1 : 0)
+    }
+
     /// How an allowed offender is named in a list: its opening forty characters.
     public static func key(_ text: String) -> String {
         String(text.prefix(40))

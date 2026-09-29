@@ -187,9 +187,9 @@ struct IconPreviewTests {
         #expect(flag != nil, "the Experiments window builds its list from this catalogue")
         #expect(flag?.isEnabled == true)
         #expect(flag?.title == "See an icon at the size it will be used")
-        // Long enough to say what it does and what off means, like every other
-        // flag's write-up.
-        #expect((flag?.description.count ?? 0) > 200)
+        // Says what it does and what off means, inside every switch's budget.
+        #expect(flag?.description.contains("Off means") == true)
+        #expect(CopyBudget.words(in: flag?.description ?? "") <= CopyBudget.flagDescriptionWords)
         // Current never grows it: the whole feature is Next's.
         #expect(FeatureCatalog.defaultSettings(for: .current).flags
             .contains { $0.name == FeatureCatalog.iconPreviewsFlag } == false)

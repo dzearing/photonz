@@ -150,6 +150,14 @@ struct CopyBudgetTests {
         #expect(CopyBudget.words(in: "  two   words ") == 2)
     }
 
+    @Test func sentencesAreCountedByTheirStops() {
+        #expect(CopyBudget.sentences(in: "One thing. Off means another.") == 2)
+        #expect(CopyBudget.sentences(in: "No stop at the end") == 1)
+        #expect(CopyBudget.sentences(in: "Magnifies 2.5 times. Really? Yes!") == 3)
+        #expect(CopyBudget.sentences(in: "Waits... then goes.") == 1)
+        #expect(CopyBudget.sentences(in: "   ") == 0)
+    }
+
     @Test func anOffenderIsKnownByItsOpeningWords() {
         let long = "Motion is set on one layer at a time, because the numbers it animates are that layer's own."
         #expect(CopyBudget.key(long) == "Motion is set on one layer at a time, be")

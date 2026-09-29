@@ -1,0 +1,25 @@
+{
+  "feature": "Experiments switches say what they do in a sentence or two",
+  "epic": "video-editing",
+  "summary": "Every switch in the Experiments window now says what it changes in at most two sentences and 40 words, usually what it does and then what Off means, instead of paragraphs that ran to 557 words.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open the Experiments window from the menu bar menu.", "shot": "2026-09-28-experiments-switch-descriptions-1-sc.png" },
+    { "do": "Scroll the whole list and read a few descriptions under Video and Drawing." },
+    { "do": "Type captions into Search flags and check the caption switch still turns up." },
+    { "do": "Type pen into Search flags and read what the Pen switch says Off means." },
+    { "do": "Find Turn a rectangle into a path, once the longest at 557 words, and read it." }
+  ],
+  "evaluate": [
+    "Can you tell what each switch changes without reading anything twice?",
+    "Where a description says what Off means, is that the thing you would want to know before switching it off?",
+    "Does any switch now say too little to decide whether to turn it off?",
+    "Do the words you would search for (a key, a menu name, a tool) still find the switch?"
+  ],
+  "rough": [
+    "The detail cut from the old descriptions was not moved into a design doc; it is still readable in git history of the feature catalogue.",
+    "A few switches (Every handle says what it does, The panel shows the sections that matter, See every moving part on one strip) do not say what Off means, because Off simply means the feature is absent.",
+    "Three switches that were already under 40 words ran to three sentences and were trimmed to two."
+  ]
+}
