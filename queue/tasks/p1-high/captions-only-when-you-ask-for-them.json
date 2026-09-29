@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 0.0012,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-28T13:48:59.813Z",
-  "updated": "2026-09-28T13:49:07.515Z",
+  "updated": "2026-09-28T19:00:56.036Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window. Supersedes the auto-on-open part of captions-write-themselves-from-the-speech (done).",
@@ -30,6 +30,37 @@
     {
       "t": "2026-09-28T13:49:07.514Z",
       "note": "seq 400 -> 0.0012"
+    },
+    {
+      "t": "2026-09-28T18:24:11.329Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-28T18:26:08.526Z",
+      "note": "Review before building: Premiere puts this under Captions > Transcribe (a button, never automatic); CapCut and Descript have one Auto captions / Transcribe action. So: no listening on open at all; one verb, Add Captions, on the clip's and a sound's right click, on the timeline's + menu (Captions), in the Video menu, and as the Captions section's only control before any exist. The captions still land in one undo step at the end, so while listening there is no real track yet: a placeholder Captions row at the top of the tracks carries the progress bar and an x to cancel, and the rest of the editor stays usable. Tutorial 'Captions from the speech' opened on 'Captions write themselves': its first card becomes Add Captions and waits for them to land (new document-change trigger). 17 walks waited for auto captions: they switch to the harness writing them quietly."
+    },
+    {
+      "t": "2026-09-28T19:00:28.818Z",
+      "note": "owns these walks: captions-on-demand-walk, tutorial-captions-from-the-speech-walk, captions-write-themselves-walk"
+    },
+    {
+      "t": "2026-09-28T19:00:28.872Z",
+      "note": "Built: auto-listen removed (writeCaptionsByThemselves, the Auto switch, its setting and CaptionAutoRun gone; no speech work until asked). Add Captions / Rewrite Captions / Cancel Captions on a clip's or sound's right click, the + menu (Captions), Video menu; the Captions section shows only the Add Captions button before any exist. While listening a Captions row at the top of the tracks shows 'Listening N%' and an x. Tutorial 'Captions from the speech' opens on Add Captions and waits for them (new trigger captionsAdded). 17 walks that waited for auto captions now write them via captionsWriteQuietly. Verified: Scripts/test.sh green (10301); captions-on-demand-walk ok with 6 real captures; tutorial, write-themselves, margins, guides, sits-quiet, pick-answers, editing-session, saves-as-project, layer-list, painted-caption, long-captioned, fix-a-caption-word walks ok (fix-a-caption-word flaked once on focus, clean on rerun). captions-are-one-layer-walk fails at 'Size' menu: already failing in the 16:34 rotating check before this change, not mine."
+    },
+    {
+      "t": "2026-09-28T19:00:28.925Z",
+      "note": "left rough: language picker appears only once captions exist, so a non-English talk is heard in English first then Rewrite; did not file (the user records in English, nobody has hit it). Add Captions from a clip hears the document's longest sound, not necessarily that clip; same result with one recording, not filed. The + menu's Captions adds an empty captions track when there is nothing to hear or captions already exist."
+    },
+    {
+      "t": "2026-09-28T19:00:56.034Z",
+      "note": "Captions are made only on demand: auto-listen on open and the Auto switch removed; Add Captions on clip/sound right click, timeline + menu (Captions), Video menu, and as the Captions section's only control; a Listening row with an x on the timeline while it works; captions guide opens on Add Captions. Verified by Scripts/test.sh (10301 green), captions-on-demand-walk at Next defaults (6 real captures: 10 s open with no captions, right click, + menu, listening row, cancel), and 13 related walks. Audit queue/audits/2026-09-28-captions-on-demand.json. Commit 6aa4ed87."
     }
-  ]
+  ],
+  "started": "2026-09-28T18:24:11.327Z",
+  "walks": [
+    "captions-on-demand-walk",
+    "tutorial-captions-from-the-speech-walk",
+    "captions-write-themselves-walk"
+  ],
+  "completed": "2026-09-28T19:00:56.035Z"
 }

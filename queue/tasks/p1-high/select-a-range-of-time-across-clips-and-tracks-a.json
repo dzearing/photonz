@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 0.0026,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-28T13:48:59.894Z",
-  "updated": "2026-09-28T20:05:41.861Z",
+  "updated": "2026-09-28T20:06:12.653Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window. 2026-09-28: split. Merge into One Clip + Break Apart -> merge-a-range-into-one-clip-and-break-it-apart-a; marquee and Option-drag/R track range -> marquee-over-the-tracks-and-a-range-limited-to-t; Cmd-C/X/V of a range -> copy-cut-and-paste-a-range-of-time. Built: PhotonzCore/RulerRange.swift (grip, drawn, moving, markRange, splitEveryClip(atEdgesOf:), putTransitionOnEveryCut(within:), CaptionCues.replacing), Photonz/EditorState+RulerRange.swift, TimelineDock ruler gesture/band/wash, dragRuler walk step.",
@@ -47,6 +47,10 @@
     {
       "t": "2026-09-28T20:05:41.860Z",
       "note": "Built and verified. Walks at Next defaults, all green: draw-a-range-on-the-ruler-walk (dragRuler 0:05 to 0:09 across the cut, Cmd-T puts Cross dissolve on the 1 cut inside, right-click Split at Range Edges gives 2 pieces each, Delete leaves the gap, Shift-Delete closes it, a drag on the Out grip moves only the Out, a click outside drops the range), draw-a-range-by-hand-walk (real pointer via windowDrag: drag drew In 2958/Out 4943 with playhead untouched, Out grip to 5935, a drag from the playhead scrubbed), captions-and-export-for-a-range-walk (Add Captions for Range lands captions only inside 0:02 to 0:06; Export Range opens the sheet on In to Out). Touched walks re-run green: extract-from-the-ruler-menu (now chooses Ripple Delete), extract-a-marked-stretch, export-keeps-to-the-in-and-out, the-ninety-second-cut, premiere-keys-on-the-timeline, default-transition-*, transition-on-every-cut, timeline-right-click (its 6pt drags that used to scrub now click, since a drag away from the playhead draws a range). Scripts/test.sh: 10329 tests pass. Left rough (in the audit, not filed): range actions are on the ruler right-click only, not on a clip inside the range; Add Captions for Range listens to the whole file. No mock draws a range; band follows the existing In/Out wash."
+    },
+    {
+      "t": "2026-09-28T20:06:12.651Z",
+      "note": "Drag on the ruler draws a range across every track (In and Out set together, band with grips, wash down the tracks); grips move an end, the playhead still scrubs, a click outside drops it. Range right-click: Add Transition, Split at Range Edges, Delete, Ripple Delete, Add Captions for Range, Export Range; Delete/Shift-Delete and Cmd-T act on it. Verified by draw-a-range-on-the-ruler, draw-a-range-by-hand (real pointer) and captions-and-export-for-a-range walks at Next defaults, touched walks re-run green, 10329 tests pass. Commit 99b2fc1c. Merge, marquee/track range and copy/paste split into three p1 tasks. Audit: queue/audits/2026-09-28-range-on-the-ruler.json"
     }
   ],
   "started": "2026-09-28T19:18:49.687Z",
@@ -54,5 +58,6 @@
     "draw-a-range-on-the-ruler-walk",
     "draw-a-range-by-hand-walk",
     "captions-and-export-for-a-range-walk"
-  ]
+  ],
+  "completed": "2026-09-28T20:06:12.652Z"
 }

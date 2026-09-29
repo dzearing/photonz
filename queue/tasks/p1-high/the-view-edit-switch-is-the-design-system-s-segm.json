@@ -1,0 +1,33 @@
+{
+  "id": "the-view-edit-switch-is-the-design-system-s-segm",
+  "title": "The View / Edit switch is the design system's segmented control",
+  "goal": "User 2026-09-28: 'the view/edit is not a segmented control per our design components. http://127.0.0.1:8791/#comp-segmented'. The switch shipped in 136d05b1 as a stock NSSegmentedControl (TitlebarViewEditSwitch.swift) because the intake window's own acceptance asked for 'a native NSSegmentedControl look'; that was wrong: the design system's component page docs/design/mocks/pages/comp-segmented.html is the spec. A drawn Segmented already exists in Sources/Photonz/VideoKit/VideoKitControls.swift:86, scoped to video; check it against the component page before reusing it.",
+  "epic": "design-system",
+  "priority": "p1-high",
+  "seq": 0.0004,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-29T05:03:31.501Z",
+  "updated": "2026-09-29T05:03:31.583Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window. The intake window's acceptance on view-mode-and-edit-mode-a-recording-opens-to-wat caused the stock control; do not repeat.",
+  "acceptance": [
+    "One shared SegmentedControl in the app's design-system layer (not VideoKit-only) matches comp-segmented.html in every state and size it shows: track, sliding selected thumb and its animation, radius, height, padding, typography, icon+label and icon-only variants, hover, pressed, focus ring, disabled, light and dark; an ImageRenderer snapshot of each state sits next to the mock's frame in the audit with differences listed and fixed",
+    "The View | Edit title bar switch uses it, sized to sit with the title bar's other controls; its keys (Cmd-1, Cmd-2, E) and walk markers keep working",
+    "Every other segmented or tab-like picker in the app (VideoKit.Segmented users, Picker(.segmented), any NSSegmentedControl) is moved onto the shared control, listed in the task log",
+    "A test fails if NSSegmentedControl or Picker with .segmented style is used anywhere in Sources/Photonz outside the shared control",
+    "UX-PATTERNS names the shared control as the only segmented control"
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T05:03:31.503Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-29T05:03:31.582Z",
+      "note": "seq 400 -> 0.0004"
+    }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 0.0006,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-28T14:56:09.427Z",
-  "updated": "2026-09-28T14:56:14.670Z",
+  "updated": "2026-09-28T17:05:31.192Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -28,6 +28,35 @@
     {
       "t": "2026-09-28T14:56:14.669Z",
       "note": "seq 400 -> 0.0006"
+    },
+    {
+      "t": "2026-09-28T16:36:43.940Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-28T16:39:12.823Z",
+      "note": "Reproduced (/tmp/vol-repro/repro.json at Next defaults, openSampleRecording): the transport's controls are Volume (the speaker, which does toggle mute), Go to Start, Play, Go to End, Scrub, Full Screen. There is NO level control. The grey 56pt capsule right of the speaker is the MixMeter (audio headroom), empty while paused, drawn exactly like a slider track, so a click on it does nothing. Capture confirms. The engine only ever has outputVolume 0 or 1."
+    },
+    {
+      "t": "2026-09-28T16:39:12.876Z",
+      "note": "Pre-build review: QuickTime/YouTube put a speaker + short slider there; a click on the track jumps, drag is live, dragging while muted unmutes, the slider reads empty while muted, unmuting at level 0 comes back at half. Level is how you LISTEN: per user (UserDefaults), not the document, not undo. Taper: output = level squared so the bottom half of the slider is not all 'loud'. Scrub audition follows the same level. Mix meter moves off the transport into the timeline's own bar with a MIX label (Edit only), where Premiere keeps its audio meters beside the timeline. Mock (video.html .transport .vol) draws only the speaker button; the slider is beyond the mock at the user's ask."
+    },
+    {
+      "t": "2026-09-28T17:05:19.361Z",
+      "note": "owns these walks: transport-volume-walk"
+    },
+    {
+      "t": "2026-09-28T17:05:19.413Z",
+      "note": "Built: PlayerVolume (PhotonzCore, 13 tests) holds level + mute; output = level squared; level saved per user in UserDefaults player.volumeLevel (forgotten by walks under 'motion'). TransportVolumeSlider in TimelineDock.swift takes press/drag/wheel in an AppKit view with acceptsFirstMouse, because a SwiftUI DragGesture only starts in the active app (the first walk's press did nothing). The engine's mainMixer and the scrub engine both follow the gain. MixMeter(labelled:) is now on the timeline's bar with MIX in front of it. Walk steps added: expectTimeline volumePercent/muted/outputGain (outputGain is read off the engine) and a 'wheel' step. transport-volume-walk is green at Next defaults; the-timeline-is-the-one-in-the-mock, mix-says-how-loud, view-mode-and-edit-mode, sound-channel, sound-on-the-timeline and hear-the-scrub walks are all green; Scripts/test.sh passed 10292 tests. Rough items (no meter in View, mute not remembered, drag checked only by clicks) are kept in the audit's rough list and this log; none is broken, so none clears the follow-up bar."
+    },
+    {
+      "t": "2026-09-28T17:05:31.190Z",
+      "note": "Transport volume slider shipped in Next (TimelineDock TransportVolumeSlider + PhotonzCore PlayerVolume): click, drag, wheel, mute toggle, level heard at once and remembered per user; mix meter moved to the timeline bar labelled MIX. Verified by transport-volume-walk at Next defaults (plays, clicks 20% -> engine 0.04, mutes -> 0, unmutes -> 0.04, wheel -> 40%, Edit 60%, reopen keeps 60%), 6 neighbouring walks green, Scripts/test.sh 10292 tests passed. Audit queue/audits/2026-09-28-transport-volume.json."
     }
-  ]
+  ],
+  "started": "2026-09-28T16:36:43.939Z",
+  "walks": [
+    "transport-volume-walk"
+  ],
+  "completed": "2026-09-28T17:05:31.191Z"
 }

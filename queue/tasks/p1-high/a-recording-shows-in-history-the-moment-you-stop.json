@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 0.001,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-28T13:48:59.731Z",
-  "updated": "2026-09-28T13:49:07.459Z",
+  "updated": "2026-09-28T18:08:01.734Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -28,6 +28,37 @@
     {
       "t": "2026-09-28T13:49:07.457Z",
       "note": "seq 390 -> 0.001"
+    },
+    {
+      "t": "2026-09-28T17:21:20.590Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-28T18:00:25.114Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-09-28T18:00:46.778Z",
+      "note": "Reproduced with a probe drill (--recording-latency-diag, same stop-and-file sequence as RecordingCoordinator.stop before the fix): Stop to tile 21 ms (5 s, no sound), 61 ms (5 s, system+mic), 42 ms (60 s, no sound), 311 ms (60 s, system+mic), 820 ms (180 s, system+mic). Nearly all of it is SCRecordingOutput closing the file (outputFinished 15/60/38/310/818 ms); moving the file and listing it took 1-2 ms, and the poster/duration already ran lazily after the tile. No commit introduced it: ScreenRecorder is unchanged since 3c43f723 (2026-06-22). macOS spends about 4.5 ms per recorded second closing a file with sound, so the wait grew with longer recordings with sound."
+    },
+    {
+      "t": "2026-09-28T18:00:46.830Z",
+      "note": "Before building: a Premiere/QuickTime user expects Stop to be instant and the clip to be in the bin at once. Risks found and handled: (1) the saving tile has no file, so opening, copying, GIF, Show in Finder and paste all wait for it to land (CaptureStore.whenLanded); (2) deleting a saving tile trashes the file when it lands; (3) the folder listing spells the landed file differently (/private/var vs /var), which the first drill run caught (tile identity changed, poster never loaded), so the reserved URL is kept across the landing (reservedURLs); (4) a new recording started while the last one is still closing no longer has its stream cleared (ScreenRecorder.stop identity check)."
+    },
+    {
+      "t": "2026-09-28T18:00:46.883Z",
+      "note": "Shipped: RecordingCoordinator.stop hides the stop control, lists the recording in history (CaptureStore.beginSaving) and fires the corner card at once, then files the file when macOS hands it back (finishSaving/failSaving). CaptureLibrary.merging (PhotonzCore, tested) folds saving recordings into the listing by date. After: Stop to tile 1-2 ms at 5, 60 and 180 s with system audio and mic; file lands 35-305 ms later; poster about 80 ms after that. Drill: Scripts/recording-latency-drill.sh <s> [--system-audio] [--with-microphone], exits 1 over RecordingStopBudget (300 ms). No transcription runs anywhere on the Stop-to-history path; auto-captions start only in an editor window (EditorState.writeCaptionsByThemselves), which the task captions-only-when-you-ask-for-them owns."
+    },
+    {
+      "t": "2026-09-28T18:00:46.936Z",
+      "note": "left rough: drill recordings run 4-7% longer than the time slept between start and stop (180 s slept, 192.5 s file). Picture and sound agree in the user's own recordings (ffprobe: 4.70 vs 4.73 s, 7.30 vs 7.32 s), so nothing a person would notice; not filed. Audit rough items (no picture of the saving tile; Copied-to-clipboard shows before the copy lands) stay here, not filed."
+    },
+    {
+      "t": "2026-09-28T18:08:01.732Z",
+      "note": "Stop now puts the recording in history and the corner card up at once (placeholder tile), and the file fills it in when macOS finishes closing it; open/copy/GIF/Show in Finder/clipboard wait for the file. Measured with the new probe drill Scripts/recording-latency-drill.sh: Stop to tile was 61/311/820 ms at 5/60/180 s with system audio + mic (all of it ScreenCaptureKit closing the file, no app commit caused it), now 1-2 ms at every length. Tests green (10,300), history and opening-a-recording walks pass. Commit 800a6d01; audit queue/audits/2026-09-28-recording-shows-in-history-at-stop.json."
     }
-  ]
+  ],
+  "started": "2026-09-28T17:21:20.589Z",
+  "walks": [],
+  "completed": "2026-09-28T18:08:01.733Z"
 }

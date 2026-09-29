@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 390,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T03:09:40.311Z",
-  "updated": "2026-09-29T03:24:09.599Z",
+  "updated": "2026-09-29T03:44:00.267Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while tightening the bar (task the-floating-tool-bar-sits-as-tight-as-the-mock, 2026-09-28). Side by side: queue/audits/2026-09-28-tight-tool-bar-side-by-side.png. Mock: docs/design/mocks/shared/components/toolbar.css .cnv .tbar padding var(--s1) var(--s2) round 28pt .tool, so 38pt with the 1px border; .zslider width 92px. App: EditorChromeLayout.toolBarGroupHeight = 48 is shared by Current's capsules and feeds toolBarCovers / aboveToolBar / the tool settings stack, so the one bar needs its own height (ToolBarSpacing is where the one bar's numbers now live) and those derived bands must read the bar in use. ToolBarSpacing.oneGlass.endPadding is 10 = the rim at 48pt; at 38pt the rim is 5 and the mock's end is 8 + 1. Zoom slider width lives in EditorView.zoomBar (110).",
@@ -44,11 +44,16 @@
     {
       "t": "2026-09-29T03:43:39.000Z",
       "note": "Rough items: the non-concentric end, the tight grid-adjust buttons, and the circle-vs-rounded-square tools and chevron readout are known, visible only on close comparison, and left in the audit for the user to react to rather than filed. left rough: toolBar step's 'they DO NOT line up' line counts groups from an earlier window still open in the walk (Color at another centre); cosmetic in the log only, the claims read the newest bar."
+    },
+    {
+      "t": "2026-09-29T03:44:00.265Z",
+      "note": "Next's one glass bar is 38pt tall with 9pt ends and a 92pt zoom slider, as video.html draws it; Current keeps 48pt/110pt. Height lives on ToolBarSpacing and every band that clears the bar (fit, notice/crop/trim capsules, tool settings capsule, measure legend, grid-adjust bar) reads the bar in use. Verified: Scripts/test.sh green (10436), one-glass-tool-bar-walk and a-fitted-picture-clears-the-tool-bar-walk ok at Next defaults with new height/zoomSlider claims, 10 neighbouring tool bar walks ok. Commit 3e3bafea, audit queue/audits/2026-09-28-short-tool-bar.json."
     }
   ],
   "walks": [
     "one-glass-tool-bar-walk",
     "a-fitted-picture-clears-the-tool-bar-walk"
   ],
-  "started": "2026-09-29T03:24:09.592Z"
+  "started": "2026-09-29T03:24:09.592Z",
+  "completed": "2026-09-29T03:44:00.266Z"
 }

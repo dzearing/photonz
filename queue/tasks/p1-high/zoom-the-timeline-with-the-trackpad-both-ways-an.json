@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 0.0027,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-28T13:48:59.977Z",
-  "updated": "2026-09-28T14:50:59.834Z",
+  "updated": "2026-09-28T23:39:06.294Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -38,6 +38,37 @@
     {
       "t": "2026-09-28T14:50:59.833Z",
       "note": "User 2026-09-28: the horizontal scrollbar appearing/disappearing while zooming makes the page jump; scrollers go bottom/right in reserved space. Acceptance updated."
+    },
+    {
+      "t": "2026-09-28T22:47:30.744Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-28T22:50:39.648Z",
+      "note": "Review before building: (1) the jump the user saw is the overview bar appearing ABOVE the ruler whenever the timeline is opened out, which grows the dock by 15pt and pushes the ruler, transport and picture; fix = scrollers in always-reserved space at the bottom (time) and right (rows). (2) Row zoom must not grow the dock either, or plain pinch would move everything above; the dock keeps its height and taller rows scroll inside it, as Premiere's panel does. (3) Pinch anchor today is x only and the closest zoom is one second across, which is ~30 frames: not single frames; bring the closest window to a quarter second and let the ruler write hundredths. (4) Shift-Z is Punch In's key in the menu: when the timeline has the keyboard Shift-Z fits, and it falls through to Punch In while a region is drawn. (5) A trackpad pinch cannot be synthesized, so the walk drives the same call the gesture makes (as the canvas pinch step does). (6) Mouse users keep Option-scroll to zoom time; Cmd-scroll grows rows, per the goal's Premiere/FCP note."
+    },
+    {
+      "t": "2026-09-28T23:38:35.586Z",
+      "note": "owns these walks: timeline-pinch-both-ways-walk, open-out-the-timeline-walk, the-timeline-is-the-one-in-the-mock-walk"
+    },
+    {
+      "t": "2026-09-28T23:38:46.728Z",
+      "note": "Built: pinch zooms time+rows anchored on the pointer (EditorState.pinchTimeline, TimelineRowZoom in core), Option=time, Shift=rows, Cmd-scroll rows, Option-scroll time at pointer; zoom buttons removed; scrollers (TimelineScrollers.swift) live in the dock's existing bottom/right margins so the dock height at Fit is byte-identical to before and nothing ever moves; Shift-Z fits (falls through to Punch In when a region is drawn); Zoom to Fit + Compact Tracks on ruler and track right-click; zoom+row height kept per file (TimelineViewMemory, forgotten by walks under 'motion'); closest zoom 1s -> 250ms, ruler in hundredths. New walk step timelinePinch checks anchor drift + ruler/dock/rows movement after every nudge; timeline-pinch-both-ways-walk green at Next defaults (240 option nudges, 0 moves, 0 drifts). 16 timeline walks + zoom walks + marquee walks green; first-long-jump-when-zoomed-in-walk failed once at 51ms vs 50ms then passed twice (noise)."
+    },
+    {
+      "t": "2026-09-28T23:38:46.782Z",
+      "note": "left rough (no task: covered by audit rough for the user to react to): at 4x rows the track name centres in the row and can scroll out of view; a real trackpad gesture is not synthesizable so the walk drives the gesture's own call."
+    },
+    {
+      "t": "2026-09-28T23:39:06.292Z",
+      "note": "Pinch on the tracks zooms time and rows together about the pointer (Option time only, Shift rows only), zoom buttons gone, Shift-Z and right-click Zoom to Fit, scrollers in the dock's existing margins so nothing jumps, zoom kept per file. Commit f10a9c49. Verified: full suite green (10,409 tests), timeline-pinch-both-ways-walk green at Next defaults with 20 Option round trips showing 0 moves and 0 drifts, 16 timeline walks, zoom walks and marquee walks green. Audit queue/audits/2026-09-28-timeline-trackpad-zoom.json."
     }
-  ]
+  ],
+  "started": "2026-09-28T22:47:30.743Z",
+  "walks": [
+    "timeline-pinch-both-ways-walk",
+    "open-out-the-timeline-walk",
+    "the-timeline-is-the-one-in-the-mock-walk"
+  ],
+  "completed": "2026-09-28T23:39:06.293Z"
 }

@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 0.00261,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-28T19:54:57.558Z",
-  "updated": "2026-09-28T19:54:57.561Z",
+  "updated": "2026-09-28T20:53:42.481Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of select-a-range-of-time-across-clips-and-tracks-a (2026-09-28). The document has no notion of a clip that holds clips: ClipPieces is one file sliced (a split adds a piece, never a clip), and a track holds separate clip layers. A merge needs a nested clip content kind (children clips on their own inner timeline, rendered and mixed as one layer), which is a PhotonzCore model change plus DocumentRenderer and audio mix work. The range is document.markedRangeMS; its menu is EditorState.rulerRangeMenuRows() in EditorState+RulerRange.swift, where the row goes. Walk base: Scripts/playtest/draw-a-range-on-the-ruler-walk.json.",
@@ -24,6 +24,31 @@
     {
       "t": "2026-09-28T19:54:57.560Z",
       "note": "created (user)"
+    },
+    {
+      "t": "2026-09-28T20:21:54.771Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-28T20:35:10.711Z",
+      "note": "Adversarial pass: a merged clip is modelled as a clip whose recording is a little timeline (whole covered clips on their own clock, range = window), so move/trim/split/transition reuse clip machinery and dissolves have spare. Inner clips are sealed (not group children) so ripple/lift/landing can never move them on the wrong clock. Per track merge (Premiere nests all tracks into one; the task says 'on each track', and it keeps sound on sound tracks). Break Apart heals the range-edge cuts back into the original clips. Known gaps up front: the merged clip's own sound shows no linked bar under it, and there is no canvas move of a merged clip (it has no box of its own)."
+    },
+    {
+      "t": "2026-09-28T20:53:24.599Z",
+      "note": "owns these walks: merge-a-range-into-one-clip-walk"
+    },
+    {
+      "t": "2026-09-28T20:53:24.652Z",
+      "note": "Built: PhotonzCore MergedClip.swift (Layer.merged holds whole covered clips on their own clock; drawn/movieFrames/audioMix/edit-point transitions/project media/package images read through it; Break Apart heals range-edge cuts; ⇧⌘G ungroup on a merged clip breaks it apart). App: Merge into One Clip on the range menu, Break Apart on the merged clip's menu. 20 tests in MergedClipTests; walk merge-a-range-into-one-clip-walk green at Next defaults with 7 real captures and a never-blank playback through the merged clip. Left rough, not filed (no one has asked, and the audit's rough list puts them in front of the user to react to): no waveform on the merged clip's sound bar, no canvas move of a merged clip, a join transition inside a split merged clip isn't drawn, a merged clip at non-100% speed is silent, and a range-edge transition is paid from the merged clip's own spare."
+    },
+    {
+      "t": "2026-09-28T20:53:42.479Z",
+      "note": "Merge into One Clip on the ruler range's right click and Break Apart (also Shift-Cmd-G) on the merged clip, shipped in ba28f22d. Core: MergedClip.swift, 20 tests (plays, sounds, undo, move, trim, split, transition, break apart, save). Walk merge-a-range-into-one-clip-walk green at Next defaults with 7 real captures and never-blank playback. Audit: queue/audits/2026-09-28-merge-range-into-one-clip.json."
     }
-  ]
+  ],
+  "started": "2026-09-28T20:21:54.770Z",
+  "walks": [
+    "merge-a-range-into-one-clip-walk"
+  ],
+  "completed": "2026-09-28T20:53:42.480Z"
 }

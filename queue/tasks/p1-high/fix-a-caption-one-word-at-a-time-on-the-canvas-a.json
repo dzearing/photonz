@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-25T11:57:41.780Z",
-  "updated": "2026-09-25T13:37:19.859Z",
+  "updated": "2026-09-28T18:55:04.770Z",
   "deps": [
     "captions-are-one-layer-positioned-and-styled-lik"
   ],
@@ -65,6 +65,10 @@
     {
       "t": "2026-09-25T13:37:19.857Z",
       "note": "Shipped in 907bc80a. Double-click a caption word on the picture or its chip on the Words lane to type over just that word (Return/click away keep, Escape cancels, Tab/Shift-Tab step across lines, two words split the time evenly). Words lane: drag carries the rest of the line (squeezing the word before when earlier), Shift ripples later lines, Command moves one word, edges stretch; snaps; one undo step. Right-click word menu on lane and picture. Fold arrow on the Captions track; chips lettered with ellipsis at the mock's 26 pt. Fixes survive Write Again via heardAs. Verified: CaptionWordEditTests (35) and TextWordRectsTests; fix-a-caption-word-walk at Next defaults green with 9 real captures; all caption walks green except captions-panel-keeps-its-margins-walk, which fails on clean main (logged on its owner). Full suite green except VideoExportBudgetTests, failing identically on clean main (logged on the flake task). Audit queue/audits/2026-09-25-fix-a-caption-word.json."
+    },
+    {
+      "t": "2026-09-28T18:55:04.769Z",
+      "note": "2026-09-28 (captions-only-when-you-ask-for-them): captions are now made on demand only. Nothing listens as a recording opens and the Auto switch is gone; Add Captions lives on a clip's or sound's right click, the timeline's + menu, Video > Add Captions and the Captions section's one button. Walks that waited for captions to write themselves now write them (captionsWriteQuietly)."
     }
   ],
   "started": "2026-09-25T12:25:30.571Z",

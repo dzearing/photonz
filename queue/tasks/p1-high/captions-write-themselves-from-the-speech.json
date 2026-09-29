@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-23T11:53:46.781Z",
-  "updated": "2026-09-24T06:14:36.873Z",
+  "updated": "2026-09-28T18:55:04.821Z",
   "deps": [
     "tracks-you-can-add-rename-group-hide-mute-lock-a"
   ],
@@ -62,6 +62,10 @@
     {
       "t": "2026-09-24T06:14:36.871Z",
       "note": "Captions write themselves when a talking recording opens (Auto switch turns it off), land on one Captions track with a Words lane and a lit word, retype in place on the track or the picture, retime by their edges, take one look (Caption/Lower third/Karaoke + font, size, colour, plate, lit word, position), and export burned in or as SRT/VTT beside the film. Commit f72accee. Verified: CaptionTrackTests 24 + CaptionPlateRenderTests 4, full suite green but the known export-size flake; captions-write-themselves-walk at Next defaults with 8 real captures; 12 neighbouring walks ok. Audit queue/audits/2026-09-23-captions-write-themselves.json."
+    },
+    {
+      "t": "2026-09-28T18:55:04.820Z",
+      "note": "2026-09-28 (captions-only-when-you-ask-for-them): captions are now made on demand only. Nothing listens as a recording opens and the Auto switch is gone; Add Captions lives on a clip's or sound's right click, the timeline's + menu, Video > Add Captions and the Captions section's one button. Walks that waited for captions to write themselves now write them (captionsWriteQuietly)."
     }
   ],
   "started": "2026-09-24T05:08:24.325Z",

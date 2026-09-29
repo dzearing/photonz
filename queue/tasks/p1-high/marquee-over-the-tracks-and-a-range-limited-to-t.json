@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 0.00262,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-28T19:55:09.566Z",
-  "updated": "2026-09-28T19:55:09.569Z",
+  "updated": "2026-09-28T21:57:46.202Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of select-a-range-of-time-across-clips-and-tracks-a (2026-09-28). The ruler range is document.markedRangeMS (every unlocked track). A track-limited range needs its own state (range plus track ids) and track-scoped versions of liftStretch/extractStretch/putTransitionOnEveryCut(within:) in PhotonzCore (MarkedStretch.swift, RulerRange.swift). Piece-level multi-selection does not exist yet: selection is layers (multiSelectedLayerIDs) plus one selectedClipPieceIndex. Empty lane space: TimelineTrackRows.swift lanes.",
@@ -23,6 +23,35 @@
     {
       "t": "2026-09-28T19:55:09.568Z",
       "note": "created (user)"
+    },
+    {
+      "t": "2026-09-28T21:13:14.634Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-28T21:16:11.684Z",
+      "note": "Pre-build review: (1) A drag on bare lane space scrubs today; Premiere and Final Cut both draw a marquee there, so a drag becomes the box and a click still moves the playhead (ruler and scrub bar keep scrubbing). (2) The model cuts a recording into PIECES of one layer, so a box over part of a cut recording must pick pieces, not the whole layer, or Delete would take the whole recording: whole clips go to the existing layer multi-selection (drag, delete all work), a single piece to the existing piece pick, and several pieces to a new piece pick. (3) A clip's own sound is drawn on an audio track but is the same layer: a box or range over only its sound row takes the clip (Premiere's linked selection). (4) R is Final Cut's Range tool and Premiere's Rate Stretch; the user named R, so R it is, only while the timeline has the keyboard. (5) No mock draws the marquee or a track range; the green band follows the ruler range already shipped. (6) A track range is selection state, not a document edit: it is not in undo, like a pick."
+    },
+    {
+      "t": "2026-09-28T21:16:11.739Z",
+      "note": "owns these walks: marquee-and-track-range-walk"
+    },
+    {
+      "t": "2026-09-28T21:57:26.108Z",
+      "note": "Built: core TrackRange.swift (layerIDs(onTracks:), marqueePicks, liftPicks/rippleDeletePicks, track-limited lift/extract/split/transitions; MarkedStretch + removeTime take onTracks/onlyLayers), TrackRangeTests (24). App: EditorState+TrackRange.swift (lane press/drag/release, pick rules, held range/pieces, menu rows), TimelineLaneMarquee gesture on bare lanes, Range tool (R, bar button), TimelineLaneBoxView draws the box and per-track band. Walk steps dragTracks + expectTimelinePick. marquee-and-track-range-walk green at Next defaults (11 real captures); 21 related walks + an-editing-session green. keys-copy-between-layers-walk fails, but that came from the ruler range commit (rotating check 20:19Z); filed as the-keys-copy-walk-moves-the-playhead-the-way-th."
+    },
+    {
+      "t": "2026-09-28T21:57:26.161Z",
+      "note": "Rough items from the audit kept here, not filed. None is broken, and each is a follow-on the user can raise from the audit: Shift to add to a box pick; dragging picked pieces as a group; Cmd-T and Split for box-picked pieces; the '<name> copy' naming, which comes from the existing Lift."
+    },
+    {
+      "t": "2026-09-28T21:57:46.200Z",
+      "note": "Shipped in 54f70028. A drag in empty track space draws a box that picks the clips it touches on the tracks it crosses, or only the pieces of a cut recording it touched. Option-drag, or R (Range tool, with a bar button), picks a stretch of time on the crossed tracks only, drawn over those tracks alone. Delete, Shift-Delete, Cmd-T and the right-click act on that stretch and leave other tracks alone. Verified with TrackRangeTests (24), full suite green (10,374), and marquee-and-track-range-walk at Next defaults with 11 real captures, plus 22 related walks. Audit: queue/audits/2026-09-28-marquee-and-track-range.json."
     }
-  ]
+  ],
+  "started": "2026-09-28T21:13:14.633Z",
+  "walks": [
+    "marquee-and-track-range-walk"
+  ],
+  "completed": "2026-09-28T21:57:46.201Z"
 }

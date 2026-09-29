@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-25T15:10:08.404Z",
-  "updated": "2026-09-26T01:24:26.395Z",
+  "updated": "2026-09-28T18:55:04.716Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window. The word-editing task (fix-a-caption-one-word-at-a-time-on-the-canvas-a) now builds on this layer.",
@@ -52,6 +52,10 @@
     {
       "t": "2026-09-26T01:24:26.393Z",
       "note": "Shipped in 3ac98a03. Captions land as ONE Captions layer (group carrying its own CaptionLook; cues are the transcript and all fill its box): one row with the captions mark in the layers list (not openable), one Captions track; picked from the list or by clicking the words, dragged anywhere, side handles set the wrap width, bigger type grows the box up from its floor; default box centred in the lower third inside title-safe. Bottom/Middle/Top is gone. Picked Captions layer shows a Text section (font, size, weight, colour, background, align), Appearance and Effects, the Captions section, no Layout section. Old caption groups open as one Captions layer in place (same words, times, look). Duplicate keeps caption words so several Captions layers place and style independently. Double-click word fixing unchanged (fix-a-caption-word-walk green). Verified: CaptionsLayerTests (13) + caption suites; captions-are-one-layer-walk at Next defaults with 5 real captures; all 20 caption walks green except captions-panel-keeps-its-margins-walk (known clean-main failure on the clip's Animate > Position, owned elsewhere). Full suite green except 7 walk-setup tests broken by two untracked walks from the opens-sharp task (logged there; pass with them aside). Not done here: plate corner radius, walking Effects/rotation/keyframes on captions (audit rough; styling folded into how-the-words-show). Audit queue/audits/2026-09-25-captions-are-one-layer.json."
+    },
+    {
+      "t": "2026-09-28T18:55:04.715Z",
+      "note": "2026-09-28 (captions-only-when-you-ask-for-them): captions are now made on demand only. Nothing listens as a recording opens and the Auto switch is gone; Add Captions lives on a clip's or sound's right click, the timeline's + menu, Video > Add Captions and the Captions section's one button. Walks that waited for captions to write themselves now write them (captionsWriteQuietly)."
     }
   ],
   "started": "2026-09-26T00:49:44.952Z",
