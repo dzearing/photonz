@@ -494,6 +494,11 @@ public struct MotionStripRuler: Hashable, Sendable {
         return timecode(whole) + "." + String(Int(tenths) % 10)
     }
 
+    /// Whether the numbers along the top are in hundredths of a second: a
+    /// document's ruler opened out far enough that tenths would repeat. A
+    /// reading shown beside the ruler matches its precision.
+    public var readsHundredths: Bool { !repeats && Self.step(for: spanMS) < 100 }
+
     /// A step that gives between four and nine numbers, chosen off the 1, 2, 5
     /// ladder so every one of them is round.
     static func step(for span: Double) -> Double {

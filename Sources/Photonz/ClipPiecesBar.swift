@@ -124,6 +124,13 @@ struct ClipPiecesBar: View {
             ForEach(shownCuts(pieces), id: \.index) { cut in
                 band(cut, x0: x0, ruler: ruler)
             }
+            if !isLinkedSound, let session = editorState.clipTransitionDrag, session.layerID == layerID,
+               case .join(_, let index) = session.place, let cut = pieces.cut(at: index) {
+                TransitionLengthBubble(
+                    pointerX: x0 + laneWidth * ruler.fraction(
+                        spanningMS: Double(cut.atMS + session.pointerFromCutMS)),
+                    laneWidth: laneWidth, height: barHeight)
+            }
             // Where this bar runs under a hold that pushed the picture alone,
             // and is therefore no longer in step with it (`HoldPush.swift`).
             // Drawn UNDER the grips, and drawn nowhere else: a document nobody
@@ -768,7 +775,9 @@ struct ClipPiecesBar: View {
     /// ACROSS the join and never sits to one side of it.
     @ViewBuilder
     private func band(_ cut: ClipCut, x0: CGFloat, ruler: MotionStripRuler) -> some View {
-        if let transition = cut.drawnTransition {
+        // The length a hand is dragging while it drags, so the band follows the
+        // pointer rather than waiting for the release.
+        if let transition = editorState.drawnClipTransition(cut, at: .join(clip: layerID, index: cut.index)) {
             let width = laneWidth * ruler.fraction(spanningMS: Double(transition.lengthMS))
             let x = x0 + laneWidth * ruler.fraction(spanningMS: Double(cut.atMS - transition.beforeMS))
             let picked = editorState.selectedClipCutIndex == cut.index && isPicked
@@ -801,12 +810,20 @@ struct ClipPiecesBar: View {
             .contextMenu {
                 if kind != nil { TimelineCutMenu(layerID: layerID, cut: cut.index) }
             }
-            .overlay(alignment: .leading) { bandGrip(cut, leading: true, width: width) }
-            .overlay(alignment: .trailing) { bandGrip(cut, leading: false, width: width) }
+            .overlay(alignment: .leading) {
+                if ClipTransitionEdgeDrag.canGrab(leadingEdge: true, of: transition) {
+                    bandGrip(cut, leading: true, width: width)
+                }
+            }
+            .overlay(alignment: .trailing) {
+                if ClipTransitionEdgeDrag.canGrab(leadingEdge: false, of: transition) {
+                    bandGrip(cut, leading: false, width: width)
+                }
+            }
             .offset(x: x)
             .playtestField(Self.bandName(layerName: layerName, cut: cut.index))
             .panelHelp("\(transition.kind.title) over the join after piece \(cut.index). "
-                       + "Drag either end to change how long it takes.")
+                       + "Drag an end to change how long it takes.")
         }
     }
 
@@ -822,6 +839,8 @@ struct ClipPiecesBar: View {
                 .frame(width: 3, height: barHeight - 4)
                 .contentShape(Rectangle().inset(by: -5))
                 .gesture(bandDrag(cut, leading: leading))
+                .playtestControl("\(Self.bandName(layerName: layerName, cut: cut.index)) "
+                                 + (leading ? "start" : "end"), detail: layerName)
         }
     }
 

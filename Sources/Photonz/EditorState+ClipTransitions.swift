@@ -18,13 +18,26 @@ import PhotonzCore
 /// and how long the hand has made it.
 struct ClipTransitionDragSession: Equatable {
     let place: TimelineCutPlace
-    /// Which end is in the hand. Both ends do the same thing — the band grows
-    /// or shrinks about the cut — because a transition is measured ACROSS the
-    /// join and never sits to one side of it.
-    let grabbedLeadingEdge: Bool
-    let startedAtMS: Int
+    /// The end in the hand and the rule it follows (`ClipTransitionEdgeDrag`):
+    /// across the cut both ends move away from it together; to one side of it
+    /// only the far end is a grip.
+    let hand: ClipTransitionEdgeDrag
+    /// Where the grabbed end was when it was grabbed, in milliseconds from the
+    /// cut, so the bubble can ride where the POINTER is even once a stop holds
+    /// the end back.
+    let grabbedEdgeFromCutMS: Int
     /// What the length would be if you let go now.
     var landingMS: Int
+    /// What is holding the end short of the pointer, if anything.
+    var stop: ClipTransitionEdgeDrag.Stop?
+    /// How far the hand has travelled since it took hold, positive rightwards.
+    var travelledMS = 0
+
+    var grabbedLeadingEdge: Bool { hand.grabbedLeadingEdge }
+    var startedAtMS: Int { hand.startedAtMS }
+
+    /// Where the pointer is, in milliseconds from the cut.
+    var pointerFromCutMS: Int { grabbedEdgeFromCutMS + travelledMS }
 
     /// The clip whose bar the band is drawn on: the clip itself for a join,
     /// the arriving clip for a cut between two.
@@ -94,6 +107,16 @@ extension EditorState {
         }
         guard let id = clipInHandID, let cut = clipCutInHand else { return nil }
         return document.documentCut(at: .join(clip: id, index: cut.index))
+    }
+
+    /// The cut in hand as the panel shows it: with the length a hand is
+    /// dragging written in, so the Length and Paid with rows keep up with the
+    /// band rather than waiting for the release.
+    var shownCutInHand: DocumentCut? {
+        guard let inHand = cutInHand else { return nil }
+        guard let session = clipTransitionDrag, session.place == inHand.place,
+              let document else { return inHand }
+        return withDraggedClipTransition(document).documentCut(at: inHand.place) ?? inHand
     }
 
     /// Whether transitions are reachable at all: the switch is on, the document
@@ -358,16 +381,22 @@ extension EditorState {
 
     // MARK: The band under a hand
 
-    /// Take hold of one end of the band drawn over a cut.
+    /// Take hold of one end of the band drawn over a cut. The end sitting on
+    /// the cut of a band placed to one side of it is not a grip.
     func beginClipTransitionDrag(place: TimelineCutPlace, leadingEdge: Bool) {
-        guard let drawn = document?.documentCut(at: place)?.cut.drawnTransition else { return }
+        guard !clipTransitionDragCalledOff, let cut = document?.documentCut(at: place)?.cut,
+              let drawn = cut.drawnTransition,
+              ClipTransitionEdgeDrag.canGrab(leadingEdge: leadingEdge, of: drawn) else { return }
         pauseDocument()
         closeTransitionPicker()
         pickCut(place)
-        clipTransitionDrag = ClipTransitionDragSession(place: place,
-                                                       grabbedLeadingEdge: leadingEdge,
-                                                       startedAtMS: drawn.lengthMS,
-                                                       landingMS: drawn.lengthMS)
+        let hand = ClipTransitionEdgeDrag(startedAtMS: drawn.lengthMS, grabbedLeadingEdge: leadingEdge,
+                                          alignment: drawn.drawnAlignment,
+                                          longestMS: cut.longestMS(for: drawn))
+        clipTransitionDrag = ClipTransitionDragSession(
+            place: place, hand: hand,
+            grabbedEdgeFromCutMS: ClipTransitionEdgeDrag.edgeOffsetMS(of: drawn, leadingEdge: leadingEdge),
+            landingMS: drawn.lengthMS)
         watchForClipTransitionEscape()
     }
 
@@ -376,31 +405,36 @@ extension EditorState {
         beginClipTransitionDrag(place: .join(clip: layerID, index: cutIndex), leadingEdge: leadingEdge)
     }
 
-    /// The hand moved. Nothing is written down: the bar and the canvas both
-    /// read the landing, so the band follows the hand and the whole drag is
-    /// still one step to undo.
-    ///
-    /// Dragging the LEFT end left makes it longer, and the right end right does
-    /// the same, because both ends move away from the cut. Across the cut the
-    /// band grows by twice what the hand travelled, since the other end moves
-    /// with it; before or after the cut one end stays on the cut, so the band
-    /// grows by what the hand travelled.
+    /// The hand moved. Nothing is written down: the bar, the band and the
+    /// canvas all read the landing, so the end follows the hand and the whole
+    /// drag is still one step to undo. The arithmetic is
+    /// `ClipTransitionEdgeDrag`.
     func updateClipTransitionDrag(byMS delta: Int) {
-        guard var session = clipTransitionDrag,
-              let cut = document?.documentCut(at: session.place)?.cut,
-              let transition = cut.transition else { return }
-        let travelled = session.grabbedLeadingEdge ? -delta : delta
-        let longest = cut.longestMS(for: transition)
-        let growth = transition.drawnAlignment == .across ? travelled * 2 : travelled
-        session.landingMS = min(max(ClipTransition.shortestMS, session.startedAtMS + growth),
-                                longest)
+        guard var session = clipTransitionDrag, session.travelledMS != delta else { return }
+        let landing = session.hand.landing(travelledMS: delta)
+        session.travelledMS = delta
+        session.stop = landing.stop
+        let lengthChanged = landing.lengthMS != session.landingMS
+        session.landingMS = landing.lengthMS
         clipTransitionDrag = session
-        rerender()
+        if lengthChanged { rerender() }
+    }
+
+    /// The transition on a cut as it is drawn right now: the hand's length
+    /// while its band is dragged, else what is written down. Every view of a
+    /// band reads this, so none of them can wait for the release.
+    func drawnClipTransition(_ cut: ClipCut, at place: TimelineCutPlace) -> ClipTransition? {
+        guard var drawn = cut.drawnTransition else { return nil }
+        if let session = clipTransitionDrag, session.place == place {
+            drawn.lengthMS = session.landingMS
+        }
+        return drawn
     }
 
     /// Let go: one step for undo covering the whole drag.
     func commitClipTransitionDrag() {
         stopWatchingForClipTransitionEscape()
+        clipTransitionDragCalledOff = false
         guard let session = clipTransitionDrag else { return }
         clipTransitionDrag = nil
         guard session.landingMS != session.startedAtMS,
@@ -409,10 +443,13 @@ extension EditorState {
         documentMomentChanged()
     }
 
+    /// Escape: the band goes back to the length it had, and the rest of the
+    /// gesture does nothing. The watch stays on until the button comes up, so
+    /// the next press takes hold as normal.
     func cancelClipTransitionDrag() {
-        stopWatchingForClipTransitionEscape()
         guard clipTransitionDrag != nil else { return }
         clipTransitionDrag = nil
+        clipTransitionDragCalledOff = true
         documentMomentChanged()
     }
 
@@ -429,16 +466,28 @@ extension EditorState {
         return document
     }
 
-    /// What the capsule over the band says while it is being dragged.
+    /// What the bubble by the pointer says while a band's end is dragged.
     var clipTransitionReadout: String? {
         guard let session = clipTransitionDrag else { return nil }
-        return ClipTransitionCopy.seconds(session.landingMS)
+        return ClipTransitionCopy.dragReadout(session.landingMS, stop: session.stop,
+                                              fine: motionStripRuler.readsHundredths)
     }
 
     private func watchForClipTransitionEscape() {
         guard clipTransitionEscapeWatch == nil else { return }
-        clipTransitionEscapeWatch = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard event.keyCode == 53, let self, clipTransitionDrag != nil else { return event }
+        clipTransitionEscapeWatch = NSEvent.addLocalMonitorForEvents(
+            matching: [.keyDown, .leftMouseUp]) { [weak self] event in
+            guard let self else { return event }
+            if event.type == .leftMouseUp {
+                // The gesture's own end commits; this only lets go of a drag
+                // Escape called off, whose gesture may never say it ended.
+                if clipTransitionDragCalledOff {
+                    clipTransitionDragCalledOff = false
+                    stopWatchingForClipTransitionEscape()
+                }
+                return event
+            }
+            guard event.keyCode == 53, clipTransitionDrag != nil else { return event }
             cancelClipTransitionDrag()
             return nil
         }

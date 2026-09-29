@@ -1567,7 +1567,7 @@ private final class Run {
             await giveTheFrontBack(front)
             note(number, "windowClick", "\(count == 2 ? "double-click" : "\(count) click(s)") at "
                  + "\(short(at.point)) \(at.space.rawValue), posted to the window\(front.note)")
-        case .dragGrip(let control, let by, let steps, let within, let hold, let modifiers):
+        case .dragGrip(let control, let by, let steps, let within, let hold, let modifiers, let cancel):
             // A grip on the timeline pulled by real mouse moves, and where it
             // was DRAWN read back after every one (`GripTrace`). The fault it
             // exists for lives between pictures: a bar end that lands half way
@@ -1599,16 +1599,36 @@ private final class Run {
             await sleep(0.1)
             var samples = [GripTrace.Sample(pointerX: start.x, gripX: start.x)]
             var readings: [[String: Any]] = []
+            var cancelled = ""
             for i in 1...steps {
                 let x = start.x + by * CGFloat(i) / CGFloat(steps)
                 post(.leftMouseDragged, at: CGPoint(x: x, y: start.y), pressure: 1)
                 // One frame and a bit: what a person sees before the next move.
                 await sleep(0.03)
+                if cancel, i == steps / 2 {
+                    // Escape to whatever holds the keyboard, as a hand's key
+                    // goes, with the button still down.
+                    if let key = NSEvent.keyEvent(
+                        with: .keyDown, location: .zero, modifierFlags: [], timestamp: stamp,
+                        windowNumber: window.windowNumber, context: nil, characters: "\u{1b}",
+                        charactersIgnoringModifiers: "\u{1b}", isARepeat: false, keyCode: 53) {
+                        NSApp.postEvent(key, atStart: false)
+                    }
+                    await sleep(0.1)
+                    cancelled = ", Escape pressed at move \(i)"
+                }
+                // Past an Escape the drag is over and the grip is where it
+                // was put back to, so its trace stops there.
+                guard cancelled.isEmpty else { continue }
                 let grip = (try? gripMiddle())?.x ?? .nan
-                let snapped = editor?.clipBarSnap != nil
+                // A transition's end held back by the spare media or by the
+                // shortest length is caught, as a bar end on a magnet is.
+                let snapped = editor?.clipBarSnap != nil || editor?.clipTransitionDrag?.stop != nil
                 samples.append(GripTrace.Sample(pointerX: x, gripX: grip, snapped: snapped))
-                readings.append(["step": i, "pointerX": Double(x), "gripX": Double(grip),
-                                 "snapped": snapped])
+                var reading: [String: Any] = ["step": i, "pointerX": Double(x), "gripX": Double(grip),
+                                              "snapped": snapped]
+                if let words = editor?.clipTransitionReadout { reading["readout"] = words }
+                readings.append(reading)
             }
             var held = ""
             if let hold, let content = window.contentView {
@@ -1623,7 +1643,7 @@ private final class Run {
             let data = try JSONSerialization.data(withJSONObject: readings, options: [.prettyPrinted])
             try data.write(to: out.appendingPathComponent("grip-trace-\(number).json"))
             note(number, "dragGrip", "\(control) pulled \(short(CGPoint(x: by, y: 0))) in \(steps) moves: "
-                 + trace.summary + held + front.note)
+                 + trace.summary + held + cancelled + front.note)
             if let within, !trace.follows(within: within) {
                 throw Failure(description: "\(control) did not follow the pointer within \(within)pt: "
                     + trace.summary + " (every step is in grip-trace-\(number).json)")
@@ -4752,11 +4772,13 @@ private final class Run {
                     throw Failure(description: "there is no transition on the cut in hand to "
                         + "drag longer")
                 }
-                editor.beginClipTransitionDrag(place: inHand.place, leadingEdge: false)
+                // The far end of a band placed before its cut is its left one.
+                let leading = was.drawnAlignment == .before
+                editor.beginClipTransitionDrag(place: inHand.place, leadingEdge: leading)
                 guard editor.clipTransitionDrag != nil else {
                     throw Failure(description: "could not take hold of the band over the cut")
                 }
-                editor.updateClipTransitionDrag(byMS: step8)
+                editor.updateClipTransitionDrag(byMS: leading ? -step8 : step8)
                 editor.commitClipTransitionDrag()
                 guard let now = editor.cutInHand?.cut.drawnTransition,
                       now.lengthMS > was.lengthMS else {

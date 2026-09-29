@@ -2423,9 +2423,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// (`GripTrace`). `within` claims it stayed that many points from under
     /// the pointer at every step it was not caught on something, and never
     /// once went the other way. `hold` names a picture taken with the button
-    /// still down, and `modifiers` are held for the whole drag.
+    /// still down, and `modifiers` are held for the whole drag. `cancel`
+    /// presses Escape half way along and carries on to the end before letting
+    /// go, the way a hand changes its mind.
     case dragGrip(control: String, by: CGFloat, steps: Int, within: CGFloat?, hold: String?,
-                  modifiers: [PlaytestModifier])
+                  modifiers: [PlaytestModifier], cancel: Bool)
     case dragFile(file: String, at: PlaytestPoint, hold: String?, release: Bool, leave: Bool,
                   says: String?)
     /// A file carried from the Finder onto the TIMELINE, over the lane of the
@@ -3823,7 +3825,8 @@ public enum PlaytestStep: Sendable, Equatable {
                              steps: max(1, try f.optionalNumber("steps").map { Int($0) } ?? Self.defaultDragSteps),
                              within: try f.optionalNumber("within").map { CGFloat($0) },
                              hold: try f.optionalString("hold"),
-                             modifiers: try f.modifiers())
+                             modifiers: try f.modifiers(),
+                             cancel: try f.optionalFlag("cancel") ?? false)
         case "dragFile":
             self = .dragFile(file: try f.string("file"), at: try f.point("at"),
                              hold: try f.optionalString("hold"),

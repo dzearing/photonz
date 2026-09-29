@@ -1,0 +1,28 @@
+{
+  "feature": "A transition's edge follows the pointer while you drag it",
+  "epic": "video-transitions-motion",
+  "summary": "Dragging either end of a transition now resizes it live under the pointer, on a cut between two clips and on a clip you cut with the blade, and a small bubble beside the pointer says the length as you go.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording, press B and cut it twice, then delete the middle piece.", "shot": "2026-09-29-transition-edge-follows-3.png" },
+    { "do": "Click the join and press Cmd-T for a cross dissolve." },
+    { "do": "Drag the band's right end slowly outward, and watch the band, the bubble and the panel's Length row.", "shot": "2026-09-29-transition-edge-follows-1.png" },
+    { "do": "Keep dragging well past where it can go: the end stops, and the bubble turns amber and says max.", "shot": "2026-09-29-transition-edge-follows-2.png" },
+    { "do": "Start another drag and press Escape halfway: the band goes back and the rest of the drag does nothing." },
+    { "do": "Let go of a drag, then press Cmd-Z: the whole drag comes back in one step." },
+    { "do": "Pick After it in the panel and drag the band's far end: only that end is a grip now.", "shot": "2026-09-29-transition-edge-follows-4.png" }
+  ],
+  "evaluate": [
+    "Does the band's end stay under your pointer the whole way, with no lag or jump on release?",
+    "Is the bubble where your eye already is, and does it get in the way of anything?",
+    "Is the amber 'max' look clear enough that you know the spare footage ran out?",
+    "With a transition placed Before or After the cut, is it OK that the end sitting on the cut cannot be dragged?"
+  ],
+  "rough": [
+    "The bubble shows tenths of a second (0.8s), and hundredths only once the ruler is zoomed in far enough to count in hundredths. It does not show frames.",
+    "For a transition placed before or after the cut, the end on the cut is no longer a grip. Before this, dragging it moved the OTHER end the opposite way from the pointer.",
+    "The spare-footage labels at the cut sit on top of the band and can crowd the bubble on a short transition. That was already the case before this change.",
+    "The other timeline drags (clip ends, sound fades, key diamonds, keys, caption word chips) were checked by reading the code: each draws from its live drag. Only clip ends and bars have a walk that drags them with the pointer."
+  ]
+}

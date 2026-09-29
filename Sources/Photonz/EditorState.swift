@@ -1313,6 +1313,9 @@ final class EditorState {
     /// dragged to. Kept out of the document so the whole drag is one step to
     /// undo, exactly like the bar drag next door.
     var clipTransitionDrag: ClipTransitionDragSession?
+    /// Escape called a band's drag off and the button is still down: the rest
+    /// of that gesture does nothing, rather than taking hold again.
+    @ObservationIgnored var clipTransitionDragCalledOff = false
     /// The clip's bar under a hand: which edge, what it was when it was
     /// grabbed, and where it has got to. Kept out of the document so a whole
     /// drag is one step to undo, exactly like the timing drag next door.

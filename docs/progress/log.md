@@ -20213,3 +20213,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - The page's light rail went from 0.075 to 0.22 (`segmented.css`): 0.075 measured 1.19:1, under the user's 1.5:1.
 - New walk `segmented-thumb-glass-walk` (no flags, real pointer drag). Audit `queue/audits/2026-09-29-segmented-thumb-glass.json`.
 - Open: a card asks the user to judge the feel of the move; Reduce Motion and Increase Contrast paths were not seen live.
+
+## 2026-09-29 — a transition's edge follows the pointer
+
+- Reproduced the user's report with a pointer walk: a transition on a clip's own join (blade cut) did not move until release; one on a cut between two clips already did.
+- `ClipTransitionEdgeDrag` (PhotonzCore, tested) is the drag rule; both band views and the panel draw the live length; a length bubble rides beside the pointer (amber with max/min at a stop); a one-sided band's end on the cut is no longer a grip; Escape stays called off until the button comes up.
+- New walk `transition-edge-follows-the-pointer-walk`; `dragGrip` gained `cancel`.
+- Next: nothing open from this; other timeline drags were checked by reading and all draw live.

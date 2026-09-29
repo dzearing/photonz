@@ -92,7 +92,7 @@ struct TransitionInspector: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
-        if let inHand = editorState.cutInHand {
+        if let inHand = editorState.shownCutInHand {
             VStack(alignment: .leading, spacing: 7) {
                 if let transition = inHand.cut.transition {
                     type(inHand, current: transition.kind)

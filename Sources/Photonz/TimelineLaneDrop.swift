@@ -200,6 +200,12 @@ struct TimelineEditPointView: View {
             ZStack(alignment: .topLeading) {
                 if drawn.holdMS > 0 { held(drawn) }
                 band(drawn)
+                if let session = editorState.clipTransitionDrag, session.place == place {
+                    TransitionLengthBubble(
+                        pointerX: laneWidth * editorState.motionStripRuler.fraction(
+                            ofMS: Double(point.atMS + session.pointerFromCutMS)),
+                        laneWidth: laneWidth, height: height)
+                }
             }
         } else {
             seam
@@ -234,11 +240,8 @@ struct TimelineEditPointView: View {
     /// while its band is dragged, else what is written down.
     private var transitionDrawn: ClipTransition? {
         guard Experiments.shared.transitionsAtACutEnabled,
-              var drawn = editorState.document?.documentCut(at: place)?.cut.drawnTransition else { return nil }
-        if let session = editorState.clipTransitionDrag, session.place == place {
-            drawn.lengthMS = session.landingMS
-        }
-        return drawn
+              let cut = editorState.document?.documentCut(at: place)?.cut else { return nil }
+        return editorState.drawnClipTransition(cut, at: place)
     }
 
     private var seam: some View {
@@ -295,21 +298,25 @@ struct TimelineEditPointView: View {
             .onTapGesture(count: 2) { editorState.openTransitionPicker(at: place) }
             .onTapGesture { editorState.pickEditPoint(point) }
             .contextMenu { MenuRowsView(rows: editorState.timelineEditPointMenuRows(point)) }
-            .overlay(alignment: .leading) { bandGrip(leading: true, width: width) }
-            .overlay(alignment: .trailing) { bandGrip(leading: false, width: width) }
+            .overlay(alignment: .leading) {
+                if ClipTransitionEdgeDrag.canGrab(leadingEdge: true, of: drawn) { bandGrip(leading: true) }
+            }
+            .overlay(alignment: .trailing) {
+                if ClipTransitionEdgeDrag.canGrab(leadingEdge: false, of: drawn) { bandGrip(leading: false) }
+            }
             .transitionPicker(at: place, editorState: editorState)
             .playtestControl("Transition \(name)", detail: "Timeline")
             .accessibilityLabel("\(drawn.kind.title), \(name)")
             .accessibilityAddTraits(picked ? .isSelected : [])
             .panelHelp("\(drawn.kind.title), \(ClipTransitionCopy.seconds(drawn.lengthMS)). "
-                       + "Drag either end to change its length.")
+                       + "Drag an end to change its length.")
             .panelReadout("\(drawn.kind.title.lowercased()) \(ClipTransitionCopy.seconds(drawn.lengthMS)) "
                           + "on the cut from \(name)\(picked ? ", picked" : "")")
             .offset(x: x0)
     }
 
-    /// One end of the band. Both grow or shrink it about the cut.
-    private func bandGrip(leading: Bool, width: CGFloat) -> some View {
+    /// One end of the band, which follows the hand (`ClipTransitionEdgeDrag`).
+    private func bandGrip(leading: Bool) -> some View {
         Color.clear
             .frame(width: 8, height: height)
             .contentShape(Rectangle())

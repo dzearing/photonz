@@ -178,9 +178,9 @@ finishes; an icon repeats.
 | --- | --- |
 | Pick a cut | Click a join grip on the clip's bar in the timeline, or click the band over one. The playhead goes to the cut, so the canvas shows the frames the panel is talking about. |
 | The panel | `TransitionInspector`, the Transition section, present only when the clip in hand has a cut at all. |
-| The band | `ClipPiecesBar.band`, drawn over the join, with a grip at each end. Both ends do the same thing, because a transition is measured across the join. |
+| The band | `ClipPiecesBar.band` over a clip's own join, `TimelineEditPointView.band` over a cut between two clips. Across the cut both ends are grips and move away from it together; placed before or after the cut, only the end away from the cut is a grip. The grabbed end stays under the pointer (`ClipTransitionEdgeDrag`, PhotonzCore) until the spare media or the shortest length stops it, the band, the panel and the canvas all draw the drag's length every frame (`EditorState.drawnClipTransition`, `shownCutInHand`), and a bubble beside the pointer says the length in the canvas's drag readout style, amber with max or min at a stop (`TransitionLengthBubble`). Escape puts it back; letting go is one undo step. |
 | The menu | Video ▸ Transition at Cut, acting on the cut in hand: the one picked, else the one the playhead is standing on (within a second of it). |
-| The walk | `Scripts/playtest/transitions-at-a-cut-walk.json`, eleven real pictures. |
+| The walk | `Scripts/playtest/transitions-at-a-cut-walk.json`, eleven real pictures; `transition-edge-follows-the-pointer-walk.json` pulls each kind of band by real mouse moves and reads where its end was drawn after every one. |
 
 ## 8. What this deliberately does not do
 
