@@ -224,7 +224,7 @@ extension EditorState {
     /// Export Range: the export sheet, which writes In to Out whenever the
     /// marks are set (`VideoExportRange`).
     func exportRange() {
-        guard documentHasTime, document?.markedRangeMS != nil else { return }
+        guard documentHasTime, document?.markedRangeMS != nil, videoExport == nil else { return }
         pauseDocument()
         isExportDialogPresented = true
     }

@@ -344,6 +344,59 @@ struct VideoExportDialog: View {
     }
 }
 
+/// A video export while it writes, as a toast at the foot of the canvas: how
+/// far along it is, and the one thing you can do about it. The toast the
+/// status mock draws for an export (`comp-feedback`, Toasts), with the ring
+/// filling rather than spinning because the fraction is known.
+///
+/// Not a sheet, on purpose. An AppKit sheet holds the main thread for its
+/// whole slide, about 270 ms on the way in and again on the way out, so the
+/// window stopped answering the moment every export began. And the mock's
+/// rule is that work never blocks the canvas: the window stays yours while
+/// the file writes, which is how Final Cut shares.
+struct VideoExportToast: View {
+    let run: VideoExportRun
+    let stop: () -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            ProgressView(value: min(1, max(0, run.fraction)))
+                .progressViewStyle(.circular)
+                .controlSize(.small)
+                .playtestControl(VideoExportProgressSheet.progressLabel, detail: "\(run.percent)%")
+            VStack(alignment: .leading, spacing: 1) {
+                Text(run.title)
+                    .font(.system(size: 11.5))
+                Text("\(run.fileName) · \(run.percent)%")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+            }
+            .lineLimit(1)
+            .truncationMode(.middle)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .allowsHitTesting(false)
+            Button(action: stop) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .semibold))
+                    .frame(width: 18, height: 18)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.borderless)
+            // It came up on its own, so it never takes the keyboard off the
+            // canvas.
+            .focusable(false)
+            .help("Cancel")
+            .accessibilityLabel("Cancel")
+            .playtestControl("Cancel export")
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 10)
+        .frame(maxWidth: 320)
+        .glassEffect(.regular, in: .rect(cornerRadius: 12))
+    }
+}
+
 /// What a video export looks like while it is happening: how far along it is,
 /// and the one thing you can do about it.
 ///

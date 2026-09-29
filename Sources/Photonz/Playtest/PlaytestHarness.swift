@@ -13858,13 +13858,23 @@ private final class Run {
             // put straight back.
             let hidden = window.alphaValue == 0
             if hidden {
+                MainThreadMeter.shared.setAsidePasses()
                 Self.keepBehindThePerson(window)
                 window.alphaValue = 1
-                window.display()
+                // A whole window drawn at once because the harness hid it, not
+                // anything the app chose to do: kept off the app's account,
+                // or a walk reading the main thread counts the photograph.
+                harnessWork { window.display() }
                 await sleep(0.25)
             }
-            let image = try await photograph(window, as: scWindow)
-            if hidden { window.alphaValue = 0 }
+            let image: CGImage
+            do {
+                image = try await photograph(window, as: scWindow)
+            } catch {
+                if hidden { window.alphaValue = 0; MainThreadMeter.shared.countPassesAgain() }
+                throw error
+            }
+            if hidden { window.alphaValue = 0; MainThreadMeter.shared.countPassesAgain() }
             let rep = NSBitmapImageRep(cgImage: image)
             guard let png = harnessWork({ rep.representation(using: .png, properties: [:]) }) else {
                 captureFailed(name, "the window came back but would not encode as a PNG")
@@ -14600,6 +14610,16 @@ final class MainThreadMeter {
     /// thread, it is a thread that never came back (`settle`).
     private var passesSinceAsked = 0
 
+    /// Above zero while the harness is showing a window it had hidden, just
+    /// for the length of a photograph (`screenCapture`). The first pass after
+    /// a hidden editor comes out redraws and recomposites all of it, which
+    /// measured 80 ms on a five minute timeline, and no person ever waits
+    /// through that: their window was never hidden.
+    private var setAside = 0
+
+    func setAsidePasses() { setAside += 1 }
+    func countPassesAgain() { setAside = max(0, setAside - 1) }
+
     func install() {
         guard observer == nil else { return }
         let observer = CFRunLoopObserverCreateWithHandler(nil, CFRunLoopActivity.allActivities.rawValue, true, 0) { [unowned self] _, activity in
@@ -14608,7 +14628,12 @@ final class MainThreadMeter {
             case .afterWaiting, .entry:
                 if activeSince == nil { activeSince = now; excludedInPass = 0 }
             case .beforeWaiting, .exit:
-                if let since = activeSince {
+                if activeSince != nil, setAside > 0 {
+                    // A pass while the harness has the window out only to
+                    // photograph it: whatever it cost is the photograph's.
+                    activeSince = nil
+                    excludedInPass = 0
+                } else if let since = activeSince {
                     let d = max(0, now - since - excludedInPass)
                     busy += d
                     sinceAsked += d

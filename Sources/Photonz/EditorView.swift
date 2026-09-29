@@ -356,9 +356,6 @@ struct EditorView: View {
                 ExportDialog()
             }
         }
-        .sheet(item: $editorState.videoExport) { run in
-            VideoExportProgressSheet(run: run) { editorState.cancelVideoExport() }
-        }
         .sheet(isPresented: $editorState.isBlankCanvasDialogPresented) {
             // Where the canvas lands is the editor's call (empty window fills
             // itself, a busy one opens a new window), so both routes into this
@@ -387,39 +384,56 @@ struct EditorView: View {
                 // One word of a caption, open for typing over itself.
                 .overlay(alignment: .topLeading) { CaptionWordCanvasOverlay() }
                 .overlay(alignment: .bottom) {
-                    // One slot: the "Copied" notice and the Measure mode hint
-                    // never stack. The notice wins while it is up.
-                    if let notice = editorState.copyConfirmation {
-                        canvasNoticeChip(title: notice.title, line: notice.line,
-                                         action: notice.action)
-                    } else if editorState.showsMeasureHint {
-                        measureHintChip
-                    } else if editorState.showsPathEditHint {
-                        // The same chip, for the other half of the job: with a
-                        // path picked it says what its points do, because
-                        // double clicking a point and Option dragging a lever
-                        // are not things anybody guesses at.
-                        //
-                        // It is read BEFORE the Pen's, and that order is the
-                        // whole fix: with the Pen in hand over a path picked up
-                        // again, the one chip on screen at the exact moment
-                        // somebody wants to round a corner was still talking
-                        // about placing the next anchor. A path is only
-                        // picked here when the Pen is NOT mid-draw — the first
-                        // anchor of a new shape lets the last one go
-                        // (`penMouseDown`) — so the Pen's own line is never
-                        // covered up while it is the one that matters.
-                        canvasNoticeChip(title: PathEditHint.title,
-                                         detail: editorState.pathEditHintText)
-                    } else if editorState.showsPenHint {
-                        // The Pen's chip stays up the whole time the tool is in
-                        // hand, rather than fading like the Measure one: it is
-                        // the only place Return and Escape are told apart, and
-                        // the moment you need that is several clicks after you
-                        // picked the tool up.
-                        canvasNoticeChip(title: PenSession.hintTitle,
-                                         detail: editorState.penHintText)
+                    // Toasts stack from the foot of the canvas, newest nearest
+                    // (`comp-feedback`): an export writing sits above the one
+                    // notice pill, and stays until the file lands.
+                    VStack(spacing: 8) {
+                        if let run = editorState.videoExport {
+                            VideoExportToast(run: run) { editorState.cancelVideoExport() }
+                                .transition(.opacity.combined(with: .move(edge: .bottom)))
+                        }
+                        // One slot: the "Copied" notice and the Measure mode hint
+                        // never stack. The notice wins while it is up.
+                        if let notice = editorState.copyConfirmation {
+                            canvasNoticeChip(title: notice.title, line: notice.line,
+                                             action: notice.action)
+                        } else if editorState.showsMeasureHint {
+                            measureHintChip
+                        } else if editorState.showsPathEditHint {
+                            // The same chip, for the other half of the job: with a
+                            // path picked it says what its points do, because
+                            // double clicking a point and Option dragging a lever
+                            // are not things anybody guesses at.
+                            //
+                            // It is read BEFORE the Pen's, and that order is the
+                            // whole fix: with the Pen in hand over a path picked up
+                            // again, the one chip on screen at the exact moment
+                            // somebody wants to round a corner was still talking
+                            // about placing the next anchor. A path is only
+                            // picked here when the Pen is NOT mid-draw — the first
+                            // anchor of a new shape lets the last one go
+                            // (`penMouseDown`) — so the Pen's own line is never
+                            // covered up while it is the one that matters.
+                            canvasNoticeChip(title: PathEditHint.title,
+                                             detail: editorState.pathEditHintText)
+                        } else if editorState.showsPenHint {
+                            // The Pen's chip stays up the whole time the tool is in
+                            // hand, rather than fading like the Measure one: it is
+                            // the only place Return and Escape are told apart, and
+                            // the moment you need that is several clicks after you
+                            // picked the tool up.
+                            canvasNoticeChip(title: PenSession.hintTitle,
+                                             detail: editorState.penHintText)
+                        }
                     }
+                    // Above the tool bar, not behind it: it used to sit 14pt
+                    // off the bottom, inside the bar's own band, so the one
+                    // line telling you what a click does was covered by the bar
+                    // you had just used. And above the tool settings capsule
+                    // when one is up, which for Measure — the tool that owns
+                    // its hint — it always is.
+                    .padding(.bottom, EditorChromeLayout.aboveToolBar(
+                        toolSettingsHeight: editorState.toolSettingsSize.height))
                 }
                 .overlay(alignment: .bottom) {
                     if Experiments.shared.toolOptionsEnabled,
@@ -462,6 +476,7 @@ struct EditorView: View {
                 .animation(.easeInOut(duration: 0.2), value: editorState.showsPathEditHint)
                 .animation(.easeInOut(duration: 0.2), value: editorState.measureModeHint)
                 .animation(.easeInOut(duration: 0.2), value: editorState.copyConfirmation)
+                .animation(.easeInOut(duration: 0.2), value: editorState.videoExport?.id)
                 .animation(.easeInOut(duration: 0.2), value: editorState.activeTool)
                 .animation(.easeInOut(duration: 0.2), value: editorState.measureLegendEntries)
                 .animation(.easeInOut(duration: 0.25), value: editorState.measureLegendAnchor)
@@ -633,13 +648,6 @@ struct EditorView: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
             .glassEffect(.regular, in: .capsule)
-            // Above the tool bar, not behind it: it used to sit 14pt off the
-            // bottom, inside the bar's own band, so the one line telling you
-            // what a click does was covered by the bar you had just used. And
-            // above the tool settings capsule when one is up, which for Measure
-            // — the tool that owns this hint — it always is.
-            .padding(.bottom, EditorChromeLayout.aboveToolBar(
-                toolSettingsHeight: editorState.toolSettingsSize.height))
             .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
 

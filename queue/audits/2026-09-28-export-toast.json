@@ -1,0 +1,29 @@
+{
+  "feature": "Starting an export does not freeze the window",
+  "epic": "video-beats-premiere",
+  "summary": "Starting a video export no longer holds the window for a third of a second. While the file writes, its progress shows as a toast at the foot of the canvas and the window stays yours: play, scrub and edit as usual.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: export-card-while-writing-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open a long screen recording, ideally five minutes at full Retina size." },
+    { "do": "Press Shift Command E, set Size to 1080p, press Export and pick a place." },
+    { "do": "Watch the toast at the foot of the canvas: Writing the video, the file name and the percent, with a ring filling.", "shot": "2026-09-28-export-toast-1.png" },
+    { "do": "While it writes, press L to play and K to stop, and drag the playhead." },
+    { "do": "Open the File menu: Export is dimmed until this file lands." },
+    { "do": "Start another export and press the x on the toast: it stops and leaves no half-written file." }
+  ],
+  "evaluate": [
+    "Did the toast appear the instant the save box closed, with no hitch?",
+    "Is the foot of the canvas the right place for it, or would you rather it sat in a corner?",
+    "Is being able to keep working while it writes what you want, or should an export hold the window?",
+    "Does the small line say what you want to know (file and percent), or would format and size read better?"
+  ],
+  "rough": [
+    "Before: the longest main thread stretch after starting was 325.8 ms (292.3 ms in the digest). After: 26.1 ms, and 22.9 ms across the whole 75 second write in a run without photographs.",
+    "The cause was not the export. The card was a macOS sheet, and a sheet holds the window for its whole slide, about 270 ms on the way in and again on the way out. Measured with a bare AppKit window: beginSheet 268 ms, endSheet 265 ms, whatever the settings.",
+    "Export time held: the five minute sample wrote in 74 to 75 seconds, 0.23 of its running time.",
+    "Against the mock (comp-feedback, Toasts): the toast sits centred at the foot of the canvas, in the same slot as the app's other notices, where the mock's specimen stacks them on the right. The ring fills rather than spins because the fraction is known (the mock's Progress rule). The small line reads file and percent where the mock's reads format and scale.",
+    "The first press of L on a long recording still holds the window for about 150 ms, with or without an export running. That is filed as its own task.",
+    "The recording player window in the Current release still shows the old sheet. Next opens recordings in the editor, so it never sees that window."
+  ]
+}

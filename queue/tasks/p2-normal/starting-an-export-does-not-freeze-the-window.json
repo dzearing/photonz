@@ -5,11 +5,11 @@
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-28T12:18:54.317Z",
-  "updated": "2026-09-28T12:19:18.631Z",
+  "updated": "2026-09-29T00:40:22.834Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Named in the rough list of queue/audits/2026-09-27-fast-video-export.json ('The window still stalls once, for about 300 ms, the moment an export starts. The old export did the same (measured) and the cause is not found yet'). Measured again by the digest 2026-09-28: Scripts/playtest.sh Scripts/playtest/export-card-while-writing-walk.json --no-build -> '[10 wait] 5.0s, never went quiet (150 of 151 slices busy, 0 restless, busiest 18.3ms); mainBusy 1972.9ms over 4027 passes, longest 292.3ms' and '[12 action] started-at-1080p.mp4 landed in 76132 ms ... while it wrote, mainBusy 16289.5ms over 38078 passes, longest 292.3ms'. The objective video-beats-premiere asks that no press keeps the main thread busy over 50 ms. Also worth a look: 16s of main thread over a 76s write means the window is about a fifth busy the whole time it exports.",
@@ -27,6 +27,38 @@
     {
       "t": "2026-09-28T12:19:18.630Z",
       "note": "seq 3470 -> 20"
+    },
+    {
+      "t": "2026-09-28T23:54:33.980Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T00:40:22.567Z",
+      "note": "Reproduced: export-card-while-writing-walk read longest 325.8ms right after startExportAt1080p (digest had 292.3ms). Whole write mainBusy 1.3s over 76s, not 16s: no second stall while it writes."
+    },
+    {
+      "t": "2026-09-29T00:40:22.621Z",
+      "note": "Cause: the progress card was a SwiftUI .sheet. sample(1) across the start: 184 main thread samples (~340ms) in SheetBridge.presentSheetIfNecessary > NSSheetMoveHelper openSheet > NSMoveHelper _doAnimation, a nested run loop for the slide, each step also re-rendering the parent window for the dimming mask (_cacheDisplayInRect). A bare AppKit window measures beginSheet 268ms and endSheet 265ms; disablesAnimations, animationBehavior .none and animationResizeTime overrides change nothing. So any sheet holds the window ~270ms in and out."
+    },
+    {
+      "t": "2026-09-29T00:40:22.673Z",
+      "note": "Fix, from the user's mock comp-feedback (Toasts: 'Exporting 12 artboards' toast with cancel x; Progress: 'Block the canvas while work runs' is a don't): VideoExportToast at the foot of the canvas, stacked above the notice pill, determinate ring, x cancels. The window stays usable while it writes (like Final Cut). Export... is disabled while a video writes, and so is Export Range. Adversarial pass: closing the window mid-write lets the write finish (the task holds the editor state); playing mid-write works but the export and the canvas share the store, so a borrowed frame can be dropped under the canvas, costing a re-decode at worst."
+    },
+    {
+      "t": "2026-09-29T00:40:22.727Z",
+      "note": "After: longest 26.1ms after start (walk step now asserts longestUnderMS 50), 22.9ms across the whole write in a run without photographs; export 74-75s = 0.23 of running time. Harness fix: showing a hidden window for its screen capture billed its redraw (80ms) to the app, now set aside (MainThreadMeter.setAsidePasses). Walk also presses L/K mid-write to prove the window answers. The x on the toast verified by a temp walk (stops, no file). Export menu dimming verified by code only."
+    },
+    {
+      "t": "2026-09-29T00:40:22.781Z",
+      "note": "left rough: Current's recording player window (VideoEditorView) keeps the sheet card; Next never opens that window. Filed the-first-press-of-play-on-a-long-recording-does for the ~150ms first L press (pre-existing, not export). Audit rough items: placement/small-line differences vs mock stay in the audit for the user to react to."
+    },
+    {
+      "t": "2026-09-29T00:40:22.833Z",
+      "note": "owns these walks: export-card-while-writing-walk"
     }
+  ],
+  "started": "2026-09-28T23:54:33.978Z",
+  "walks": [
+    "export-card-while-writing-walk"
   ]
 }

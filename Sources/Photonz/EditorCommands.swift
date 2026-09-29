@@ -384,7 +384,10 @@ struct EditorCommands: Commands {
                 }
             }
             .keyboardShortcut("e", modifiers: [.command, .shift])
-            .disabled(editor?.document == nil && !(offersRecordingExportSheet(video)))
+            // One file at a time: the window stays usable while a video
+            // writes, but a second export would have nowhere to go.
+            .disabled((editor?.document == nil && !(offersRecordingExportSheet(video)))
+                      || editor?.videoExport != nil)
             // Copy Merged took this key and moved next to Copy in Edit, where
             // the difference between the two copies is readable. Off, the
             // picture-of-everything copy stays here as Copy Image.
