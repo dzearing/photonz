@@ -102,9 +102,18 @@
     if (from) {
       var lo = Math.min(from.x, x1), hi = Math.max(from.x + from.w, x1 + w1);
       var t = function (x, sy) { return 'translate(' + x + 'px,' + y1 + 'px) scale(1,' + sy + ')'; };
+      /* The settle is a FIXED few pixels past the target, never a fraction
+         of the distance: a spring curve overshoots in proportion to travel,
+         so two or three segments away it threw the thumb out of the rail
+         (the user, 2026-09-29: "obnoxious... overshoots out of the container
+         in an exaggerated form"). It is also clamped inside the rail. */
+      var dir = x1 > from.x ? 1 : -1;
+      var minX = 2, maxX = seg.clientWidth - 2 - w1;
+      var over = Math.max(minX, Math.min(maxX, x1 + dir * Math.min(3, Math.abs(x1 - from.x) * 0.06)));
       plate.__morph = plate.animate([
         { transform: t(from.x, 1),  width: from.w + 'px', offset: 0,    easing: 'cubic-bezier(.3,0,.5,1)' },
-        { transform: t(lo, .86),    width: (hi - lo) + 'px', offset: .42, easing: 'cubic-bezier(.2,1.5,.45,1)' },
+        { transform: t(lo, .88),    width: (hi - lo) + 'px', offset: .4, easing: 'cubic-bezier(.22,1,.36,1)' },
+        { transform: t(over, 1),    width: w1 + 'px', offset: .82, easing: 'ease-in-out' },
         { transform: t(x1, 1),      width: w1 + 'px', offset: 1 }
       ], { duration: 420 });
     } else if (!snap) {
