@@ -1,0 +1,47 @@
+{
+  "id": "the-direction-of-a-pinch-picks-what-it-zooms-up-on-your-trackpad-does-the-way-yo",
+  "taskId": "the-direction-of-a-pinch-picks-what-it-zooms-up",
+  "question": "On your trackpad, does the way you pinch on the timeline pick what it zooms?",
+  "context": "Shipped in 658cf1eb. The walks prove the axis choice with made-up fingers, but a real trackpad pinch cannot be done from a script, so only a person can confirm the touches arrive and the feel is right.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Feels right",
+      "summary": "Side to side zooms time only, up and down makes rows taller only, and on the slant both. Nothing to change.",
+      "pros": [
+        "The task closes as it is"
+      ],
+      "cons": [
+        "None"
+      ],
+      "mitigation": "Tuning can still be asked for later."
+    },
+    {
+      "id": "b",
+      "label": "Direction makes no difference",
+      "summary": "Every pinch still zooms time and rows together, whichever way the fingers spread.",
+      "pros": [
+        "Tells the loop the trackpad touches are not reaching the timeline"
+      ],
+      "cons": [
+        "Another pass is needed to read the fingers a different way"
+      ],
+      "mitigation": "Option and Shift still pick one axis in the meantime."
+    },
+    {
+      "id": "c",
+      "label": "Works but needs tuning",
+      "summary": "It picks by direction, but too often lands on the slant (both), or picks too slowly or too eagerly. Say which in a comment.",
+      "pros": [
+        "Keeps the behaviour, adjusts the feel"
+      ],
+      "cons": [
+        "Needs a word from you on what feels off"
+      ],
+      "mitigation": "The angle (35 degrees) and the travel before deciding (about 2 mm) are single numbers to change."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-29T12:09:58.619Z"
+}
