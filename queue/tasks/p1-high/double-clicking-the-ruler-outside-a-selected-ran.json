@@ -1,0 +1,33 @@
+{
+  "id": "double-clicking-the-ruler-outside-a-selected-ran",
+  "title": "Double-clicking the ruler outside a selected range clears it",
+  "goal": "User 2026-09-29: 'when I have a range selected in the scrub bar, and I double click elsewhere on the scrub bar, I want the range cleared.' Range selection shipped with select-a-range-of-time-across-clips-and-tracks-a. Reproduce the current behaviour first (what a double-click outside the range does today).",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 0.00015,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-29T13:25:11.740Z",
+  "updated": "2026-09-29T13:25:11.823Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "With a range selected, double-clicking the ruler or scrub bar anywhere outside the range clears the range (and its In/Out), and the playhead lands where you double-clicked",
+    "A single click outside the range keeps today's behaviour; double-clicking INSIDE the range does not clear it",
+    "Escape with the pointer over the timeline, and right-click on the ruler > Clear Range, also clear it (Premiere's Clear In and Out, Opt-X, too)",
+    "Clearing is not an undo step of its own unless setting the range was",
+    "Walk at Next defaults: drag a range on the ruler, double-click outside it with a pointer click (not an accessibility press), check the range is gone and the playhead moved; double-click inside a new range and check it stays"
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T13:25:11.742Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-29T13:25:11.822Z",
+      "note": "seq 400 -> 0.00015"
+    }
+  ]
+}
