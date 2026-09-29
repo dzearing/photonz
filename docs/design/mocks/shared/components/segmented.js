@@ -70,17 +70,44 @@
        `notr` stuck forever and that control never animated again. Anything
        that can outlive an early return is the wrong place for this. */
     var snap = !animate || REDUCED || !plate.__placed;
-    if (snap) {
-      plate.style.transition = 'none';
-      void plate.offsetWidth;   // let the no-transition state take effect
+    var x1 = btn.offsetLeft, y1 = btn.offsetTop, w1 = btn.offsetWidth, h1 = btn.offsetHeight;
+    var key = x1 + ',' + y1 + ',' + w1 + ',' + h1;
+
+    /* THE GLASS MORPH (2026-09-29, the user: "should use liquid glass
+       animation effect when snapping between options"). A move is not a plain
+       slide: the thumb first stretches to span where it was and where it is
+       going, slightly squashed like a drop of liquid pulled along, then springs
+       into its new slot with a small overshoot and settles. Interruptible: a
+       second click starts the next morph from wherever the thumb is right now.
+       A relayout that lands on the same target while a morph is running (the
+       ResizeObserver fires in the wake of every selection change) leaves the
+       morph alone instead of restarting it. */
+    if (!snap && plate.__morph && plate.__morph.playState === 'running' && plate.__target === key) return;
+    var from = null;
+    if (!snap && window.Element && plate.animate) {
+      var pr = plate.getBoundingClientRect(), sr = seg.getBoundingClientRect();
+      from = { x: pr.left - sr.left - seg.clientLeft, y: y1, w: pr.width };
+      if (plate.__morph) plate.__morph.cancel();
+      if (Math.abs(from.x - x1) < 0.5 && Math.abs(from.w - w1) < 0.5) from = null;
     }
+    plate.style.transition = 'none';
+    void plate.offsetWidth;   // let the no-transition state take effect
     plate.classList.remove('off');
-    plate.style.width = btn.offsetWidth + 'px';
-    plate.style.height = btn.offsetHeight + 'px';
-    plate.style.transform = 'translate(' + btn.offsetLeft + 'px,' + btn.offsetTop + 'px)';
+    plate.style.width = w1 + 'px';
+    plate.style.height = h1 + 'px';
+    plate.style.transform = 'translate(' + x1 + 'px,' + y1 + 'px)';
     plate.__placed = true;
-    if (snap) {
-      void plate.offsetWidth;
+    plate.__target = key;
+    void plate.offsetWidth;
+    if (from) {
+      var lo = Math.min(from.x, x1), hi = Math.max(from.x + from.w, x1 + w1);
+      var t = function (x, sy) { return 'translate(' + x + 'px,' + y1 + 'px) scale(1,' + sy + ')'; };
+      plate.__morph = plate.animate([
+        { transform: t(from.x, 1),  width: from.w + 'px', offset: 0,    easing: 'cubic-bezier(.3,0,.5,1)' },
+        { transform: t(lo, .86),    width: (hi - lo) + 'px', offset: .42, easing: 'cubic-bezier(.2,1.5,.45,1)' },
+        { transform: t(x1, 1),      width: w1 + 'px', offset: 1 }
+      ], { duration: 420 });
+    } else if (!snap) {
       plate.style.transition = '';
     }
   }

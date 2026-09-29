@@ -47,6 +47,41 @@
      <span class="seg multi">…</span>    independent toggles, not a radio group
    ============================================================ */
 
+/* THE RAIL AND THE THUMB (2026-09-29). The user: "the thumb should be lighter
+   than the rail" and, of the old one, "I can barely see the thumb". The rail is
+   now a RECESSED track, darker than what it sits on, and the thumb a lighter
+   pane of glass on it: a brighter fill, a bright specular line along its top, a
+   soft drop shadow and a hairline. Both themes, both ways of choosing one. */
+:root{
+  --seg-rail:rgba(18,24,40,.075);
+  --seg-rail-inset:inset 0 1px 2px rgba(18,24,40,.10);
+  --seg-thumb:rgba(255,255,255,.96);
+  --seg-thumb-hi:rgba(255,255,255,1);
+  --seg-thumb-edge:rgba(18,24,40,.10);
+  --seg-thumb-spec:inset 0 1px 0 rgba(255,255,255,1);
+  --seg-thumb-lift:0 1px 2px rgba(18,24,40,.14), 0 3px 8px rgba(18,24,40,.10);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --seg-rail:rgba(0,0,0,.30);
+    --seg-rail-inset:inset 0 1px 2px rgba(0,0,0,.35);
+    --seg-thumb:rgba(255,255,255,.17);
+    --seg-thumb-hi:rgba(255,255,255,.26);
+    --seg-thumb-edge:rgba(255,255,255,.14);
+    --seg-thumb-spec:inset 0 1px 0 rgba(255,255,255,.34);
+    --seg-thumb-lift:0 1px 2px rgba(0,0,0,.45), 0 3px 10px rgba(0,0,0,.30);
+  }
+}
+:root[data-theme="dark"]{
+  --seg-rail:rgba(0,0,0,.30);
+  --seg-rail-inset:inset 0 1px 2px rgba(0,0,0,.35);
+  --seg-thumb:rgba(255,255,255,.17);
+  --seg-thumb-hi:rgba(255,255,255,.26);
+  --seg-thumb-edge:rgba(255,255,255,.14);
+  --seg-thumb-spec:inset 0 1px 0 rgba(255,255,255,.34);
+  --seg-thumb-lift:0 1px 2px rgba(0,0,0,.45), 0 3px 10px rgba(0,0,0,.30);
+}
+
 .seg{
   --seg-h:28px;
   position:relative;          /* the travelling plate positions against this */
@@ -57,10 +92,10 @@
   padding:2px;
   flex:none;
   border-radius:999px;
-  background:var(--glass-thin);
+  background:var(--seg-rail);
   backdrop-filter:var(--lg-blur-sm); -webkit-backdrop-filter:var(--lg-blur-sm);
   border:1px solid var(--edge-lo);
-  box-shadow:inset 0 1px 0 var(--edge-hi);
+  box-shadow:var(--seg-rail-inset);
   /* the no-wrap guarantee, stated once */
   flex-wrap:nowrap;
   white-space:nowrap;
@@ -100,11 +135,11 @@
    (The no-JS fallback. With `segmented.js` attached the travelling plate
    below takes these over — but it uses the same tokens, so both look alike.) */
 .seg>button.on{
-  background:var(--raised);
-  border-color:var(--raised-edge);
+  background:linear-gradient(180deg,var(--seg-thumb-hi),var(--seg-thumb));
+  border-color:var(--seg-thumb-edge);
   color:var(--ink);
   font-weight:620;
-  box-shadow:inset 0 1px 0 var(--edge-hi), var(--shadow-1);
+  box-shadow:var(--seg-thumb-spec), var(--seg-thumb-lift);
 }
 .seg>button:hover:not(.on){color:var(--ink);background:color-mix(in srgb,var(--glass) 55%, transparent)}
 .seg>button:active{transform:scale(.97)}
@@ -123,7 +158,11 @@
 .seg>.seg-plate{
   position:absolute;left:0;top:0;z-index:0;
   border-radius:999px;
-  background:var(--raised);
+  /* Glass: lighter than the rail, with its own blur so it reads as a pane
+     lying on the track rather than paint on it. */
+  background:linear-gradient(180deg,var(--seg-thumb-hi),var(--seg-thumb));
+  backdrop-filter:blur(10px) saturate(1.7); -webkit-backdrop-filter:blur(10px) saturate(1.7);
+  transform-origin:50% 50%;
   /* The SAME edge recipe as `.btn`: a dark hairline all round plus one bright
      inner line along the top. It used to carry `--raised-edge`, which in dark
      is a light rgba — so the plate was outlined in white on every side while
@@ -131,8 +170,8 @@
      along its top. Side by side with a button the shape read as a different
      kind of object. `--ctl-gloss` is the shared token for that top line, so
      this cannot drift from the button again. */
-  border:1px solid var(--edge-lo);
-  box-shadow:var(--ctl-gloss), var(--shadow-1);
+  border:1px solid var(--seg-thumb-edge);
+  box-shadow:var(--seg-thumb-spec), var(--seg-thumb-lift);
   pointer-events:none;
   transition:transform var(--dur-3) var(--ease-spring),
              width var(--dur-3) var(--ease-spring);
