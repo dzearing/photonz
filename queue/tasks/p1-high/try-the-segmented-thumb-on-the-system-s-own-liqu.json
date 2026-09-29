@@ -1,0 +1,38 @@
+{
+  "id": "try-the-segmented-thumb-on-the-system-s-own-liqu",
+  "title": "Try the segmented thumb on the system's own Liquid Glass morph",
+  "goal": "User 2026-09-29, after asking whether Swift gives real Liquid Glass or we fake it: they want the thumb moved by macOS's own glass morph instead of the hand-written per-frame animation. Today (50cda9d8) the thumb is a real .glassEffect capsule, but it is placed frame by frame by a TimelineView running SegmentThumbMorph, with glassEffectID removed; that fixed the overshoot (filmed: 0 frames off the rail) but the motion is still ours, not the system's, and the lighter look is a gradient painted over the glass. Build the system version and compare the two on real frames.",
+  "epic": "design-system",
+  "priority": "p1-high",
+  "seq": 0.00001,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-29T23:28:33.182Z",
+  "updated": "2026-09-29T23:28:43.043Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "The thumb's motion comes from the system: a real .glassEffect capsule behind the selected segment, in a GlassEffectContainer, with one .glassEffectID shared across the segment slots (or matchedGeometryEffect on a single glass capsule, whichever the system morphs natively), the selection changed inside withAnimation with the system's own smooth curve; no TimelineView placement and no SegmentThumbMorph for a click",
+    "Only one animator: the pick is isolated from any outer withAnimation (e.g. View/Edit's mode animation) so nothing adds to the morph (the cause found in 50cda9d8)",
+    "Lighter than the rail through the glass itself (.tint on the glass, or the clear/regular variant over the recessed rail), no gradient painted over it; measured thumb vs rail contrast at least 1.5:1 in light and dark, title bar and panel",
+    "Filmed with the filmThumb walk step at 120 fps, all four moves: no thumb pixel outside the rail, no overshoot past rest",
+    "Drag to slide still follows the pointer and lands on release",
+    "Behind a temporary flag so both versions can be compared; a card asks the user to try both (with filmed frames side by side) and pick; the loser is deleted after the answer"
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T23:28:33.184Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-29T23:28:42.984Z",
+      "note": "seq 400 -> 0.00001"
+    },
+    {
+      "t": "2026-09-29T23:28:43.042Z",
+      "note": "User 2026-09-29: they did not reject a Liquid Glass segmented control; they rejected the first version because it looked like two separate buttons with no animation. A stock Picker(.segmented) / NSSegmentedControl rendered as a real single glass control is a fair third candidate to film alongside ours if it can wear the component's look."
+    }
+  ]
+}

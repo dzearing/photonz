@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 0.00016,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T13:26:25.569Z",
-  "updated": "2026-09-29T13:26:25.656Z",
+  "updated": "2026-09-29T16:36:21.598Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -28,6 +28,29 @@
     {
       "t": "2026-09-29T13:26:25.655Z",
       "note": "seq 400 -> 0.00016"
+    },
+    {
+      "t": "2026-09-29T16:19:28.065Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T16:24:25.369Z",
+      "note": "owns these walks: timeline-toggle-beside-the-scrubber-walk, the-timeline-is-the-layer-list-walk, mix-says-how-loud-walk"
+    },
+    {
+      "t": "2026-09-29T16:36:07.322Z",
+      "note": "Adversarial pass: the x went to View mode (tool bar and panel vanish), which is not what a toggle beside the transport should do; Premiere/FCP hide the timeline without leaving editing. So the toggle closes the tracks and stays in Edit; from View it goes to Edit with tracks up. Hidden tracks are per window, reset on open (the remembered fold View/Edit replaced 2026-09-28 stays gone). With tracks down, the panel's Layers list returns via the existing TimelineIsTheLayerList rule. Placed at the far right after the length (not between slider and length) so the length stays with its slider and the toggle stacks under the panel toggle; noted in the audit's rough. The mix flag gated only the meter, so it was retired; the dock now asks for sound shapes (the meter used to), so export headroom still reads the real files. Left rough, not filed: no outline variant of the glyph exists, so on/off differ in brightness only, same as the panel toggle."
+    },
+    {
+      "t": "2026-09-29T16:36:21.596Z",
+      "note": "MIX meter removed from the timeline bar and DocumentTransportBar, its flag retired; loudness guard and Export Sound's held-down notice unchanged (dock now loads sound shapes). The timeline x is replaced by a toggle at the right end of the transport matching the title bar panel toggle (size, weight, style, on/off tint), tooltip Show/Hide Timeline with ⌥⌘T, View menu row added. Closes/opens tracks staying in Edit; from View goes to Edit with tracks up. Verified: test.sh 10541/10541, 5 walks ok incl. new timeline-toggle-beside-the-scrubber-walk at Next defaults with real pointer presses. Commit d2798c8a; audit queue/audits/2026-09-29-timeline-toggle.json"
     }
-  ]
+  ],
+  "started": "2026-09-29T16:19:28.064Z",
+  "walks": [
+    "timeline-toggle-beside-the-scrubber-walk",
+    "the-timeline-is-the-layer-list-walk",
+    "mix-says-how-loud-walk"
+  ],
+  "completed": "2026-09-29T16:36:21.597Z"
 }

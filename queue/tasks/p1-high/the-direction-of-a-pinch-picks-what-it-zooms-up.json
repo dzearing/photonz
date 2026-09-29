@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T05:21:39.259Z",
-  "updated": "2026-09-29T13:20:02.640Z",
+  "updated": "2026-09-29T18:19:36.048Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.\n\nEarlier goal, moved here by the 2026-09-29 digest: User 2026-09-28: 'when I use the trackpad to zoom in, if I'm pinch zooming vertically, it just makes the rows bigger. If I'm pinch zooming horizontally it changes the scale.' Shipped in f10a9c49: a pinch zooms time and rows together about the pointer (Option time only, Shift rows only). The user wants the axis chosen by the direction the fingers spread. NSEvent magnify carries only a scalar, so read the two touches (NSView allowedTouchTypes .indirect, touchesBegan/Moved, NSTouch normalizedPosition) during the gesture and use the spread vector's angle.",
@@ -56,11 +56,20 @@
     {
       "t": "2026-09-29T13:20:02.639Z",
       "note": "decision \"On your trackpad, does the way you pinch on the timeline pick what it zooms?\" resolved: Feels right"
+    },
+    {
+      "t": "2026-09-29T18:18:41.305Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T18:19:36.046Z",
+      "note": "Shipped in 658cf1eb: pinch direction picks the axis (sideways = time, up-down = rows, slant = both; Option/Shift still force one; no touches = both). User confirmed on a real trackpad (card answered 'Feels right'). Re-ran timeline-pinch-direction-walk and timeline-pinch-both-ways-walk on today's head: both green at Next defaults. Audit queue/audits/2026-09-29-timeline-pinch-direction.json."
     }
   ],
-  "started": "2026-09-29T11:50:44.698Z",
+  "started": "2026-09-29T18:18:41.303Z",
   "walks": [
     "timeline-pinch-direction-walk",
     "timeline-pinch-both-ways-walk"
-  ]
+  ],
+  "completed": "2026-09-29T18:19:36.047Z"
 }

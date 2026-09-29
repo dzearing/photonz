@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 0.00015,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T13:25:11.740Z",
-  "updated": "2026-09-29T14:44:11.937Z",
+  "updated": "2026-09-29T15:08:48.130Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -32,7 +32,31 @@
     {
       "t": "2026-09-29T14:44:11.932Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T14:47:49.985Z",
+      "note": "Reproduced with a real-pointer walk (Scripts/playtest/double-click-clears-a-range-walk.json, pre-fix): a range just drawn by hand does clear on a double-click beside it, because the first click of the pair already drops a range still in hand. But marks set with I and O (and a drawn range once anything else has been picked) survive a double-click beside them: step 31 FAILED 'there is an In at 3000ms; there is an Out at 5000ms'. The transport's scrub bar never clears marks on any click. Escape does nothing to the marks."
+    },
+    {
+      "t": "2026-09-29T14:47:50.038Z",
+      "note": "Adversarial review before building: Premiere clears In/Out with Opt-X or the ruler's right-click, Final Cut drops a range on a click beside it; a double-click beside is a gentle superset that never collides with a single click (still Premiere's: marks stay). Risk: Escape is the canvas's deselect key; Escape clears the marks only while the timeline has the keyboard (any press in the dock gives it, the same panel-focus rule every timeline key uses) and only when there are marks, otherwise it carries on to the canvas. Treating keyboard focus as 'pointer over the timeline'."
+    },
+    {
+      "t": "2026-09-29T15:08:24.176Z",
+      "note": "owns these walks: double-click-clears-a-range-walk"
+    },
+    {
+      "t": "2026-09-29T15:08:48.074Z",
+      "note": "Root cause: the first click of a double-click moves the playhead under the pointer, so the second press lands ON the playhead and was taken as a scrub. Fixed in the playhead branch plus core rulerClickClearsMarks. Neighbour walks green (draw-a-range x2, captions-and-export-for-a-range, export-keeps-to-the-in-and-out after renaming its row to Clear Range, extract-from-the-ruler-menu, timeline-right-click, play-in-to-out-from-the-ruler, copy-a-range-from-its-menu, the-ninety-second-cut, window-modes, notice-carries-the-way-out). Left rough, no task: Escape follows timeline keyboard focus rather than pointer hover (same as every timeline key); a by-name press on the transport Scrub control does not drive its drag gesture, so the walk uses a pointer windowClick there."
+    },
+    {
+      "t": "2026-09-29T15:08:48.128Z",
+      "note": "A double-click on the ruler or transport scrub bar outside the marked range clears it (drawn or I/O marks) and moves the playhead there; inside it stays; a single click is unchanged. Escape on a focused timeline and a new Clear Range right-click row (Opt-X) clear it too; clearing is one undo step, as setting was. Commit e2c35cc4. Verified: new core tests + full suite (10,526) green; real-pointer walk double-click-clears-a-range-walk green at Next defaults with 7 real captures; 11 neighbouring walks green. Audit queue/audits/2026-09-29-double-click-clears-range.json."
     }
   ],
-  "started": "2026-09-29T14:44:11.931Z"
+  "started": "2026-09-29T14:44:11.931Z",
+  "walks": [
+    "double-click-clears-a-range-walk"
+  ],
+  "completed": "2026-09-29T15:08:48.129Z"
 }

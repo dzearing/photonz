@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 0.0031,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T13:05:09.653Z",
-  "updated": "2026-09-29T18:02:43.658Z",
+  "updated": "2026-09-29T18:03:11.426Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.\n\nBuilt 2026-09-29: model AudioLevel.noiseReduction + SoundRef.cleaned/Layer.playedSound (Sources/PhotonzCore/NoiseCleaning.swift); DSP Sources/PhotonzMedia/NoiseCleaner.swift; cleaned-copy cache and background rendering Sources/Photonz/CleanedSounds.swift (+ SoundFiles.swift hooks); Normalize/Clean actions in EditorState+Audio.swift; menu rows in EditorState+TimelineMenus.swift; panel in SoundInspector.swift (SoundGainInspector); segment badge/ring in ClipPiecesBar.swift. Fixture Scripts/playtest/fixtures/Noisy voice recording 1280x800.mp4 (say + ffmpeg pink/brown noise + 60/180 Hz hum). Walk normalize-cleans-noise-walk. Docs video-audio.md 5e.",
@@ -49,11 +49,16 @@
     {
       "t": "2026-09-29T18:02:43.657Z",
       "note": "Found and fixed on the way: the full test suite hung twice (0% CPU) with the shared async thread pool starved by blocking decodes (SoundFile.read, TextReader, the new cleaner tests). SoundFile.read/loudnessLUFS and NoiseCleaner now decode on a dispatch queue (PhotonzMedia/OffThePool.swift); the suite then passed 10,561 tests in 267 s."
+    },
+    {
+      "t": "2026-09-29T18:03:11.424Z",
+      "note": "Normalize cleans noise first when Clean noise is checked (on by default, remembered per user; checkbox under the panel's Normalize button and in the Normalize submenu), one undo step; Clean Noise / Remove Noise Cleaning on right-click; Noise row Light/Medium/Strong. On-device spectral cleaning (NoiseCleaner), background render with a ring on the segment, playback and export read the cleaned copy. Measured on the noisy fixture: floor -25.3 dBFS after Normalize alone vs -44.1 dBFS with Clean noise (18.8 dB lower), voice within 0.5 dB. Walks normalize-cleans-noise-walk (no flags) and normalize-quiet-system-audio-walk green; full suite 10,561 tests green. Commit a96b4e54. Audit queue/audits/2026-09-29-clean-noise.json with A/B clip."
     }
   ],
   "started": "2026-09-29T16:53:09.819Z",
   "walks": [
     "normalize-cleans-noise-walk",
     "normalize-quiet-system-audio-walk"
-  ]
+  ],
+  "completed": "2026-09-29T18:03:11.425Z"
 }
