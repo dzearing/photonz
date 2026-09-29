@@ -9954,6 +9954,8 @@ private final class Run {
             }
         }
         menu.update()
+        let shown = await showForMenuPicture(host)
+        defer { hideAfterMenuPicture(host, shown) }
         let shotURL = out.appendingPathComponent("\(shotName)-sc.png")
         let noteURL = out.appendingPathComponent("menu-shot.txt")
         // Both go before the picture is taken, so that afterwards the file
@@ -10221,17 +10223,9 @@ private final class Run {
             }
         }
         // A window still at alpha 0 photographs as a blank rectangle with the
-        // menu over it (a recording opened by a walk stays hidden until a
-        // picture asks for it), so it is shown for the menu's picture the way
-        // `capture` shows it for its own, and put straight back.
-        let hidden = shot != nil && window.alphaValue == 0
-        if hidden {
-            Self.keepBehindThePerson(window)
-            window.alphaValue = 1
-            window.display()
-            await sleep(0.25)
-        }
-        defer { if hidden { window.alphaValue = 0 } }
+        // menu over it, so it is shown for the picture and put straight back.
+        let shown = shot != nil ? await showForMenuPicture(window) : false
+        defer { hideAfterMenuPicture(window, shown) }
         if opened {
             let hop = PlaytestTrackingHop {
                 readAndChoose()
@@ -10562,6 +10556,10 @@ private final class Run {
         // object, asked to update first, which validates every row exactly as
         // opening it does.
         let opener = try clicking.map { try pressTarget($0, in: nil) }
+        // The window behind the menu is in its picture, so a window still at
+        // alpha 0 is shown for it (`showForMenuPicture`).
+        let shown = shot != nil ? await showForMenuPicture(host) : false
+        defer { hideAfterMenuPicture(host, shown) }
         var opened = "read without opening it"
         var mustOpen = (shot != nil || opener != nil) && spots.isEmpty
         if !spots.isEmpty {
@@ -14585,6 +14583,32 @@ private final class Run {
     static func keepBehindThePerson(_ window: NSWindow) {
         window.level = PlaytestHarness.walkWindowLevel
         window.orderBack(nil)
+    }
+
+    /// Shows a window still at alpha 0 for the length of a picture of a menu
+    /// open over it, and answers whether it did, for `hideAfterMenuPicture`.
+    ///
+    /// A recording opened by a walk stays hidden until a picture asks for it,
+    /// and a menu photographed over a window at alpha 0 floats on an empty
+    /// plate: the compositor holds nothing for the window (see
+    /// `screenCapture`). The right click path showed the window first and the
+    /// dropdown and menu bar paths did not, so every picture of a panel
+    /// dropdown on a video came back as the menu alone while the right click
+    /// menu in the same walk came back whole (2026-09-29).
+    private func showForMenuPicture(_ window: NSWindow) async -> Bool {
+        guard window.alphaValue == 0 else { return false }
+        MainThreadMeter.shared.setAsidePasses()
+        Self.keepBehindThePerson(window)
+        window.alphaValue = 1
+        harnessWork { window.display() }
+        await sleep(0.25)
+        return true
+    }
+
+    private func hideAfterMenuPicture(_ window: NSWindow, _ shown: Bool) {
+        guard shown else { return }
+        window.alphaValue = 0
+        MainThreadMeter.shared.countPassesAgain()
     }
 
     /// One photograph of this window, at the size of everything hanging off it.
