@@ -108,4 +108,12 @@ extension PhotonzDocument {
         guard end > start else { return nil }
         return start..<end
     }
+
+    /// Where Premiere's Play In to Out starts and stops: the In (or the start)
+    /// to the Out (or the end), never past the last frame there is to show.
+    /// Nil where nothing is marked.
+    public func playInToOutMS(lastFrameMS: Int) -> ClosedRange<Int>? {
+        guard let range = markedRangeMS, range.lowerBound < lastFrameMS else { return nil }
+        return range.lowerBound...min(range.upperBound, lastFrameMS)
+    }
 }

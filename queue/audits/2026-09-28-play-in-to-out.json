@@ -1,0 +1,27 @@
+{
+  "feature": "Play In to Out",
+  "epic": "video-cutting",
+  "summary": "With an In and an Out set, you can play just the marked stretch: it starts at the In and stops on the Out. Plain Space still plays to the end.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: play-in-to-out-walk, play-in-to-out-from-the-ruler-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording and click the timeline so it has the keyboard." },
+    { "do": "Put the playhead somewhere, press I; move it later, press O." },
+    { "do": "Press Command-Shift-Space.", "shot": "2026-09-28-play-in-to-out-1.png" },
+    { "do": "Watch it stop on the Out mark.", "shot": "2026-09-28-play-in-to-out-2.png" },
+    { "do": "Press Space: it plays on past the Out, as before." },
+    { "do": "Right-click the ruler and choose Play In to Out.", "shot": "2026-09-28-play-in-to-out-3.png" },
+    { "do": "Clear both marks (Option-X) and press Command-Shift-Space: nothing happens, and the Video menu row is dimmed." }
+  ],
+  "evaluate": [
+    "Is Command-Shift-Space a key your hand would find, given Premiere's Mac key (Option-K) is Previous Key here?",
+    "Does stopping exactly on the Out feel right, or would you rather it looped the stretch?",
+    "Is the ruler menu, beside Set In and Set Out, where you would look for it?",
+    "Should the transport carry a Play In to Out button, the way Premiere's monitor does?"
+  ],
+  "rough": [
+    "Premiere's Mac key for Play In to Out is Option-K, which Photonz already spends on Go to Previous Key, so this uses Premiere's Windows chord with Command for Control.",
+    "J, K or L pressed during a Play In to Out takes over and no longer stops at the Out.",
+    "No mock page shows this command, so there was nothing to compare side by side; it lives in the Video menu and the ruler's right-click menu."
+  ]
+}

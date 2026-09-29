@@ -1,0 +1,25 @@
+{
+  "out": "/tmp/photonz-playtest/play-in-to-out-from-the-ruler-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "key", "key": "i" },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "key", "key": "o" },
+    { "do": "key", "key": "home" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "markInMS": 2000, "markOutMS": 4000, "playheadMS": 0, "rate": 0 },
+
+    { "do": "describe", "stage": "0-ruler-menu", "note": "right-click on the ruler, Play In to Out: it plays from the In and stops on the Out" },
+    { "do": "rightClick", "at": [1200, 860], "space": "window", "shot": "0-ruler-menu-play-in-to-out", "choose": "Play In to Out" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "rate": 1, "playheadMS": 3000, "withinMS": 1000 },
+    { "do": "wait", "seconds": 2.5 },
+    { "do": "expectTimeline", "rate": 0, "playheadMS": 4000 },
+    { "do": "snapshot", "name": "1-stopped-at-the-out" }
+  ]
+}

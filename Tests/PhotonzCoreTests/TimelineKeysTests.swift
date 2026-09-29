@@ -37,6 +37,15 @@ struct TimelineKeysTests {
         #expect(command(.space, focused: false) == .playPause)
     }
 
+    @Test("⌘⇧Space plays In to Out wherever the keyboard is, and plain Space is still play")
+    func playInToOutKey() {
+        for focused in [true, false] {
+            #expect(command(.space, [.command, .shift], focused: focused) == .playInToOut)
+            #expect(command(.space, focused: focused) == .playPause)
+        }
+        #expect(TimelineKeyCommand.playInToOut.startsAnEdit == false)
+    }
+
     @Test("J, K and L shuttle on a focused timeline and nowhere else")
     func jklShuttle() {
         #expect(command(.letter("j")) == .shuttle(.reverse))
@@ -318,6 +327,38 @@ struct TimelineKeysTests {
         #expect(clear(&doc, out: true))
         #expect(doc.markOutMS == nil)
         #expect(!clear(&doc, out: true))
+    }
+
+    // MARK: - Play In to Out
+
+    @Test("Play In to Out runs from the In to the Out")
+    func playInToOutStretch() {
+        var doc = PhotonzDocument.recording(Self.movie, name: "take")
+        let last = doc.documentDurationMS - 1
+        #expect(doc.playInToOutMS(lastFrameMS: last) == nil)
+        doc.setMarkIn(atMS: 1000)
+        doc.setMarkOut(atMS: 3000)
+        #expect(doc.playInToOutMS(lastFrameMS: last) == 1000...3000)
+    }
+
+    @Test("One mark alone plays to the end, or from the start")
+    func playInToOutOneMark() {
+        var doc = PhotonzDocument.recording(Self.movie, name: "take")
+        let last = doc.documentDurationMS - 1
+        doc.setMarkIn(atMS: 2000)
+        #expect(doc.playInToOutMS(lastFrameMS: last) == 2000...last)
+        doc.clearMarkIn()
+        doc.setMarkOut(atMS: 3000)
+        #expect(doc.playInToOutMS(lastFrameMS: last) == 0...3000)
+    }
+
+    @Test("An Out on the very end stops on the last frame")
+    func playInToOutAtTheEnd() {
+        var doc = PhotonzDocument.recording(Self.movie, name: "take")
+        let last = doc.documentDurationMS - 1
+        doc.setMarkIn(atMS: 1000)
+        doc.setMarkOut(atMS: doc.documentDurationMS)
+        #expect(doc.playInToOutMS(lastFrameMS: last) == 1000...last)
     }
 }
 

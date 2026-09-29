@@ -50,6 +50,9 @@ extension EditorState {
         static let breakApart = MenuShortcut.commandShift("g")
         /// Final Cut's Zoom to Fit, which the user asked for by name.
         static let zoomToFit = MenuShortcut(key: "z", modifiers: .shift)
+        /// Premiere's Play In to Out, ⌃⇧Space on Windows, with ⌘ for ⌃
+        /// (`TimelineKeys`).
+        static let playInToOut = MenuShortcut.commandShift(" ")
     }
 
     // MARK: A clip
@@ -499,6 +502,9 @@ extension EditorState {
         rows.append(.command("Set Out", TimelineMenuKeys.markOut) { self.setMarkOut(atMS: ms) })
         if document.markInMS != nil || document.markOutMS != nil {
             rows.append(.command("Clear In and Out", TimelineMenuKeys.clearInOut) { self.clearMarkInOut() })
+            rows.append(.command("Play In to Out", TimelineMenuKeys.playInToOut, enabled: canPlayInToOut) {
+                self.playInToOut()
+            })
         }
         if takesOut, !onTheStretch { rows += [.separator] + extractAndLift }
         rows.append(.separator)

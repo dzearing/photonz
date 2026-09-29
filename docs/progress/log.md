@@ -20128,3 +20128,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Zoom buttons removed; Shift-Z and right-click Zoom to Fit. Scrollers moved into the dock's existing margins so nothing jumps.
 - New walk step `timelinePinch` + `timeline-pinch-both-ways-walk`; `expectTimeline` gained `zoomScale`/`rowScale`.
 - Next: user judges the pinch feel on a real trackpad (audit 2026-09-28-timeline-trackpad-zoom).
+
+## 2026-09-28 — Play In to Out
+
+- ⌘⇧Space (Premiere's Windows ⌃⇧Space; its Mac ⌥K is Previous Key here) and a "Play In to Out" row on the ruler's right-click menu and in the Video menu play from the In and stop on the Out. Plain Space unchanged; with no marks the key does nothing and the menu row is dimmed or absent.
+- Core: `TimelineKeyCommand.playInToOut`, `PhotonzDocument.playInToOutMS(lastFrameMS:)` (TimelineMarks.swift). App: `EditorState.documentPlaybackStopMS`, which the play clock stops at; cleared on pause and when J/K/L change speed.
+- Walks: `play-in-to-out-walk` (lock-safe), `play-in-to-out-from-the-ruler-walk`. Audit: `queue/audits/2026-09-28-play-in-to-out.json`.
+- Open: no transport button for it; no looping.

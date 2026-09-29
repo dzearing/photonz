@@ -461,6 +461,9 @@ struct EditorCommands: Commands {
                     editor?.toggleDocumentPlayback()
                 }
                 .keyboardShortcut(.space, modifiers: [])
+                Button("Play In to Out") { editor?.playInToOut() }
+                    .keyboardShortcut(.space, modifiers: [.command, .shift])
+                    .disabled(!(editor?.canPlayInToOut ?? false))
                 Button("Play Backward") { editor?.shuttle(.reverse) }
                     .keyboardShortcut(timelineKeys ? KeyboardShortcut("j", modifiers: []) : nil)
                 Button("Stop") { editor?.shuttle(.stop) }

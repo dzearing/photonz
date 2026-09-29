@@ -199,6 +199,28 @@ extension EditorState {
         isDocumentPlaying ? pauseDocument() : playDocument()
     }
 
+    /// Premiere's Play In to Out (⌘⇧Space, and the ruler's menu): from the In,
+    /// stopping on the Out. Asked again while it plays, it starts over at the
+    /// In; nothing marked, nothing to do.
+    var canPlayInToOut: Bool {
+        documentHasTime && document?.playInToOutMS(lastFrameMS: lastDocumentTimeMS) != nil
+    }
+
+    @discardableResult
+    func playInToOut() -> Bool {
+        guard documentHasTime,
+              let stretch = document?.playInToOutMS(lastFrameMS: lastDocumentTimeMS) else { return false }
+        pauseDocument()
+        scrubDocument(toMS: stretch.lowerBound)
+        documentPlaybackStopMS = stretch.upperBound
+        playDocument()
+        guard isDocumentPlaying else {
+            documentPlaybackStopMS = nil
+            return false
+        }
+        return true
+    }
+
     /// Sound plays with the picture only at normal speed forwards. A shuttle
     /// at double speed, or backwards, runs silent rather than garbled.
     var playsSoundAtRate: Bool { documentPlaybackRate == 1 }
@@ -210,6 +232,9 @@ extension EditorState {
         guard documentHasTime, rate != 0 else { return }
         if isDocumentPlaying {
             guard rate != documentPlaybackRate else { return }
+            // A shuttle takes over from a Play In to Out: J, K and L go where
+            // they are told, past the Out if need be.
+            documentPlaybackStopMS = nil
             documentPlaybackRate = rate
             playheadTravel = rate < 0 ? .backward : .forward
             timelineShuttle.playing(at: rate)
@@ -238,6 +263,7 @@ extension EditorState {
         guard isDocumentPlaying else { return }
         noteRecordingPlace()
         isDocumentPlaying = false
+        documentPlaybackStopMS = nil
         documentPlaybackRate = 1
         timelineShuttle.stopped()
         stopAudio()
@@ -254,8 +280,9 @@ extension EditorState {
         documentPlaybackTask?.cancel()
         documentPlaybackStartedAt = Date()
         documentPlaybackStartedAtMS = documentTimeMS
-        let end = lastDocumentTimeMS
         let rate = documentPlaybackRate
+        // Forwards it runs to the end, or to the Out on a Play In to Out.
+        let end = rate > 0 ? min(documentPlaybackStopMS ?? lastDocumentTimeMS, lastDocumentTimeMS) : lastDocumentTimeMS
         documentPlaybackTask = Task { @MainActor [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(MovieRef.frameStepMS))

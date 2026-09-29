@@ -1,0 +1,42 @@
+{
+  "out": "/tmp/photonz-playtest/play-in-to-out-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "key", "key": "i" },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "key", "key": "o" },
+    { "do": "key", "key": "end" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "markInMS": 2000, "markOutMS": 4000, "playheadMS": 7999, "rate": 0 },
+
+    { "do": "describe", "stage": "0-play-in-to-out", "note": "Command-Shift-Space, Premiere's Play In to Out: the playhead jumps from the end back to the In and plays" },
+    { "do": "key", "key": "space", "modifiers": ["command", "shift"] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "rate": 1, "playheadMS": 2300, "withinMS": 300 },
+    { "do": "snapshot", "name": "0-playing-the-marked-stretch" },
+    { "do": "wait", "seconds": 2.5 },
+    { "do": "describe", "stage": "1-stopped-at-the-out", "note": "it stops on the Out, not the end" },
+    { "do": "expectTimeline", "rate": 0, "playheadMS": 4000, "markInMS": 2000, "markOutMS": 4000 },
+    { "do": "snapshot", "name": "1-stopped-at-the-out" },
+
+    { "do": "describe", "stage": "2-plain-space-runs-on", "note": "plain Space from the Out plays on past it, as it always has" },
+    { "do": "key", "key": "space" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectTimeline", "rate": 1, "playheadMS": 5000, "withinMS": 400 },
+    { "do": "key", "key": "space" },
+
+    { "do": "describe", "stage": "3-no-marks", "note": "with the marks cleared the key does nothing at all" },
+    { "do": "key", "key": "i", "modifiers": ["option"] },
+    { "do": "key", "key": "o", "modifiers": ["option"] },
+    { "do": "key", "key": "home" },
+    { "do": "expectTimeline", "hasIn": false, "hasOut": false, "playheadMS": 0 },
+    { "do": "key", "key": "space", "modifiers": ["command", "shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "rate": 0, "playheadMS": 0 }
+  ]
+}

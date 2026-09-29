@@ -113,7 +113,7 @@ extension TimelineKeyCommand {
     /// canvas's arrow, so it is not one, and neither are the mode keys.
     public var startsAnEdit: Bool {
         switch self {
-        case .playPause, .shuttle, .stepFrames, .editPoint, .goToStart, .goToEnd,
+        case .playPause, .playInToOut, .shuttle, .stepFrames, .editPoint, .goToStart, .goToEnd,
              .selectTool, .showMode, .toggleViewEdit:
             return false
         case .markIn, .markOut, .clearIn, .clearOut, .addMarker, .splitAtPlayhead, .lift,

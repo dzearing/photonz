@@ -79,6 +79,8 @@ public enum ShuttleKey: Hashable, Sendable {
 /// What a timeline key does.
 public enum TimelineKeyCommand: Hashable, Sendable {
     case playPause
+    /// Premiere's Play In to Out: from the In, stopping at the Out.
+    case playInToOut
     case shuttle(ShuttleKey)
     case stepFrames(Int)
     case editPoint(forward: Bool)
@@ -145,6 +147,9 @@ public enum TimelineKeys {
         // The keys nothing else in a document with time wants.
         switch (press.key, mods) {
         case (.space, []): return .playPause
+        // Premiere's Play In to Out is ⌃⇧Space on Windows; its Mac key, ⌥K,
+        // is Previous Key here, so the Windows chord with ⌘ for ⌃.
+        case (.space, [.command, .shift]): return .playInToOut
         case (.home, []): return .goToStart
         case (.end, []): return .goToEnd
         case (.letter("k"), [.command]): return .splitAtPlayhead

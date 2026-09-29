@@ -1140,6 +1140,9 @@ final class EditorState {
     var documentTimeMS: Int = 0
     /// Whether the document is playing.
     var isDocumentPlaying = false
+    /// Where a Play In to Out stops: the Out. Nil for plain play, which runs
+    /// to the end.
+    @ObservationIgnored var documentPlaybackStopMS: Int?
     /// How loud this window is listening: the speaker and the slider on the
     /// transport. How you are LISTENING, not part of the document, so it is
     /// not saved, not an undo step, and never reaches an export. The level is

@@ -78,6 +78,8 @@ extension EditorState {
         switch command {
         case .playPause:
             toggleDocumentPlayback()
+        case .playInToOut:
+            return playInToOut()
         case .shuttle(let key):
             shuttle(key)
         case .stepFrames(let frames):
