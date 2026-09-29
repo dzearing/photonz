@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-29T13:02:36.363Z",
-  "updated": "2026-09-29T13:08:06.457Z",
+  "updated": "2026-09-29T13:12:32.623Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -46,6 +46,10 @@
     {
       "t": "2026-09-29T13:08:06.456Z",
       "note": "User 2026-09-29: the overshoot was obnoxious on multi-step moves (it left the rail). Page fixed in 85a035e7: settle is a fixed min(3px, 6% of travel), clamped inside the rail, no distance-proportional spring. The app morph must follow the same rule: the thumb never leaves the rail and never overshoots by more than a few points, however far it moves."
+    },
+    {
+      "t": "2026-09-29T13:12:32.621Z",
+      "note": "Also from the mock: never animate a thumb's position and size on different paths (transform vs frame). In WebKit they desynced and the thumb left the rail. The SwiftUI morph must move frame and size as one animation."
     }
   ]
 }
