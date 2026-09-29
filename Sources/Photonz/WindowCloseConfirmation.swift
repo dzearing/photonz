@@ -174,6 +174,15 @@ private final class CloseGuardDelegate: NSObject, NSWindowDelegate {
 
     override nonisolated func forwardingTarget(for aSelector: Selector!) -> Any? {
         if original?.responds(to: aSelector) == true { return original }
+        // The window signed this proxy up for every notification the original
+        // answered, back when it was set as the delegate, and never signs it
+        // off. Once SwiftUI's delegate is gone (it is only held weakly) the
+        // next one of those threw "unrecognized selector", and an exception
+        // thrown through a Swift task leaves the thread's executor record
+        // pointing at a dead frame, so the app crashed at the next main-actor
+        // check. Found by a walk that ordered a closed window back on screen
+        // (2026-09-29); swallowed here so no route can do it again.
+        if !super.responds(to: aSelector) { return OrphanedNotificationSink.shared }
         return super.forwardingTarget(for: aSelector)
     }
 
@@ -245,5 +254,23 @@ private final class CloseGuardDelegate: NSObject, NSWindowDelegate {
                 completion?(false)
             }
         }
+    }
+}
+
+/// Takes a notification addressed to a delegate that no longer exists and does
+/// nothing with it. Only notification-shaped selectors (`windowDidX:`, one
+/// argument, nothing returned) are ever answered: those are the only ones that
+/// reach the proxy without asking `responds(to:)` first, because the
+/// notification center calls its observers straight.
+private final class OrphanedNotificationSink: NSObject, Sendable {
+    static let shared = OrphanedNotificationSink()
+
+    override class func resolveInstanceMethod(_ selector: Selector!) -> Bool {
+        let name = NSStringFromSelector(selector)
+        guard name.hasSuffix(":"), name.filter({ $0 == ":" }).count == 1 else {
+            return super.resolveInstanceMethod(selector)
+        }
+        let ignore: @convention(block) (AnyObject, AnyObject?) -> Void = { _, _ in }
+        return class_addMethod(self, selector, imp_implementationWithBlock(ignore), "v@:@")
     }
 }

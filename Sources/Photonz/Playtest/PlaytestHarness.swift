@@ -112,7 +112,26 @@ enum PlaytestHarness {
         let run = Run(scriptURL: scriptURL, coordinator: coordinator)
         self.run = run
         watchForWindowsOverThePerson()
+        forgetEditorsWhoseWindowCloses()
         Task { await run.start() }
+    }
+
+    /// A closed window's editor is not an open editor. The list above only
+    /// ever grew, so after a walk closed a recording and opened it again the
+    /// closed editor still matched the file, was taken for the new one, and
+    /// its dead window was ordered back on screen: AppKit then handed that
+    /// window's close guard a notification meant for SwiftUI's delegate, which
+    /// was already gone, and the exception it threw through the walk's task
+    /// took the app down on the next main-thread check (2026-09-29).
+    private static func forgetEditorsWhoseWindowCloses() {
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification, object: nil, queue: .main) { note in
+            guard let closing = note.object as? NSWindow else { return }
+            MainActor.assumeIsolated {
+                editors.removeAll { $0.hostWindow === closing }
+                recordings.removeAll { $0.hostWindow === closing }
+            }
+        }
     }
 
     /// Every editor that has announced itself, ready or not — an empty window
@@ -11604,6 +11623,7 @@ private final class Run {
             + "\(document?.markers.count ?? 0) marker(s), runs \(editor.documentLengthMS)ms, "
             + (editor.isTimelineSnapping ? "snapping" : "snapping off")
             + ", " + (editor.isMotionStripOpen ? "tracks open" : "no tracks")
+            + String(format: ", dock %.0f pt tall", editor.timelineDockFrame.height)
             + ", \(editor.viewEditMode.title) mode"
             + (editor.isInspectorShown ? ", panel showing" : ", no panel")
             + (editor.isWatching ? ", no tool bar" : ", tool bar")
@@ -11632,6 +11652,10 @@ private final class Run {
         if let want = claim.rowScale, abs(editor.timelineRowZoom.scale - want) > want * 0.01 {
             wrong.append(String(format: "the rows are %.2f times their compact height, not %.2f",
                                 editor.timelineRowZoom.scale, want))
+        }
+        if let want = claim.dockHeight, abs(editor.timelineDockFrame.height - want) > 1 {
+            wrong.append(String(format: "the timeline dock stands %.0f points tall, not %.0f",
+                                editor.timelineDockFrame.height, want))
         }
         if let want = claim.open, want != editor.isMotionStripOpen {
             wrong.append(editor.isMotionStripOpen ? "the timeline's tracks are open" : "the timeline's tracks are not showing")

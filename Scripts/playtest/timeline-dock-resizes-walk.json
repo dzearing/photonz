@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/timeline-dock-resizes-walk",
-  "seed": "The timeline dock under a recording, at Next defaults with no flag set: no blue outline round it whether the keyboard is on the timeline or the canvas, and its top edge is a drag handle like the right panel's edge. A real drag up makes it taller, down makes it shorter, and a double-click on the edge puts it back.",
+  "seed": "The timeline dock under a recording, at Next defaults with no flag set: no blue outline round it whether the keyboard is on the timeline or the canvas, and its top edge is a drag handle like the right panel's edge. A real drag up makes it taller, down makes it shorter, and a double-click on the edge puts it back. Closing the recording and opening it again brings the dock back at the height it was dragged to.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -153,6 +153,10 @@
       "name": "4-reset"
     },
     {
+      "do": "expectTimeline",
+      "dockHeight": 228
+    },
+    {
       "do": "windowDrag",
       "from": [
         864,
@@ -176,6 +180,43 @@
     {
       "do": "snapshot",
       "name": "5-mid"
+    },
+    {
+      "do": "expectTimeline",
+      "dockHeight": 378
+    },
+    {
+      "do": "action",
+      "action": "closeDocument"
+    },
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectTimeline",
+      "dockHeight": 378
+    },
+    {
+      "do": "describe",
+      "stage": "6-reopened",
+      "note": "closed and opened again: the dock comes back at the middle height it was dragged to, not the default"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-reopened"
     }
   ]
 }

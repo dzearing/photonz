@@ -4537,7 +4537,11 @@ public enum PlaytestStep: Sendable, Equatable {
                 muted: fields["muted"] as? Bool,
                 outputGain: try f.optionalNumber("outputGain"),
                 zoomScale: try f.optionalNumber("zoomScale"),
-                rowScale: try f.optionalNumber("rowScale"))
+                rowScale: try f.optionalNumber("rowScale"),
+                dockHeight: try f.optionalNumber("dockHeight"))
+            if let height = claim.dockHeight, height <= 0 {
+                throw f.invalid("dockHeight", "the timeline dock stands some points tall, not \(height)")
+            }
             if let percent = claim.volumePercent, !(0...100).contains(percent) {
                 throw f.invalid("volumePercent", "the volume slider reads 0 to 100, not \(percent)")
             }
@@ -4549,7 +4553,7 @@ public enum PlaytestStep: Sendable, Equatable {
                     + "\"keyboard\", \"rate\", \"blade\", \"markInMS\", \"markOutMS\", \"hasIn\", "
                     + "\"hasOut\", \"markers\", \"rulerMatches\", \"rulerAtPlayhead\", \"lengthMS\", "
                     + "\"open\", \"mode\", \"tool\", \"timelineTool\", \"tracks\", "
-                    + "\"volumePercent\", \"muted\", \"outputGain\", \"zoomScale\" or \"rowScale\"")
+                    + "\"volumePercent\", \"muted\", \"outputGain\", \"zoomScale\", \"rowScale\" or \"dockHeight\"")
             }
             self = .expectTimeline(claim)
         case "expectPlaybackNeverBlank":
@@ -4914,6 +4918,10 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
     public var zoomScale: Double?
     /// How many times their compact height the rows are.
     public var rowScale: Double?
+    /// How tall the whole timeline dock stands, transport to bottom, in
+    /// window points, to within one. Dragged by its top edge and remembered
+    /// (`TimelineDockHeight`).
+    public var dockHeight: Double?
 
     public init(playheadMS: Int? = nil, withinMS: Int = 0, keyboard: Keyboard? = nil, rate: Double? = nil,
                 blade: Bool? = nil, markInMS: Int? = nil, markOutMS: Int? = nil,
@@ -4922,7 +4930,9 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
                 snapping: Bool? = nil, open: Bool? = nil, tool: String? = nil,
                 timelineTool: TimelineTool? = nil, tracks: [String]? = nil,
                 mode: ViewEditMode? = nil, volumePercent: Int? = nil, muted: Bool? = nil,
-                outputGain: Double? = nil, zoomScale: Double? = nil, rowScale: Double? = nil) {
+                outputGain: Double? = nil, zoomScale: Double? = nil, rowScale: Double? = nil,
+                dockHeight: Double? = nil) {
+        self.dockHeight = dockHeight
         self.zoomScale = zoomScale
         self.rowScale = rowScale
         self.volumePercent = volumePercent
@@ -4954,7 +4964,7 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
             || markOutMS != nil || hasIn != nil || hasOut != nil || markers != nil
             || rulerMatches != nil || rulerAtPlayhead != nil || lengthMS != nil || tracks != nil
             || volumePercent != nil || muted != nil || outputGain != nil
-            || zoomScale != nil || rowScale != nil
+            || zoomScale != nil || rowScale != nil || dockHeight != nil
     }
 }
 
