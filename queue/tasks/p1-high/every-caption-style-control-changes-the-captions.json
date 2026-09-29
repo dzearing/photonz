@@ -10,7 +10,9 @@
   "area": "app",
   "created": "2026-09-29T05:18:04.932Z",
   "updated": "2026-09-29T05:18:05.009Z",
-  "deps": [],
+  "deps": [
+    "every-dropdown-in-the-panel-opens-when-you-click"
+  ],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
   "acceptance": [

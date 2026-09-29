@@ -1,0 +1,34 @@
+{
+  "id": "every-dropdown-in-the-panel-opens-when-you-click",
+  "title": "Every dropdown in the panel opens when you click it",
+  "goal": "User 2026-09-28: 'NONE of the dropdowns work. They are all broken.' Every video panel dropdown is VideoKit.Dropdown (VideoKitControls.swift:283-312): a drawn SelectFace with a SwiftUI Menu (borderlessButton, label Text(value) in Color.clear) overlaid at .opacity(0.011). Leading theory, UNPROVEN: a real pointer click never reaches that near-transparent menu (or only its tiny invisible label's area), while walks pass because they open menus through accessibility (press by name) rather than clicking at a point, so every dropdown can be dead to a person while every walk is green. Reproduce with a REAL click first.",
+  "epic": "design-system",
+  "priority": "p1-high",
+  "seq": 0.0001,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-29T05:19:48.286Z",
+  "updated": "2026-09-29T05:19:48.367Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window. The caption style task (every-caption-style-control-changes-the-captions) depends on this.",
+  "acceptance": [
+    "Reproduced first: a walk at Next defaults CLICKS (pointer click at the control's centre, and near each end, not an accessibility press) every dropdown in the Captions, Time, Transition, Sound and Properties sections and records whether the menu opened; also by hand in the probe; the report names the cause",
+    "Every dropdown opens on a click anywhere on its face, shows its choices, and choosing one changes the value; keyboard (space/return when focused) opens it too",
+    "The dropdown is one design-system component (docs/design/mocks/pages comp-select or the matching comp page) built so its face IS the hit target, not a transparent overlay; it matches the mock's look in every state",
+    "Walk rule: a walk may not open a menu, dropdown or button by accessibility press in a test meant to prove it works for a person; the harness gains a pointer-click-at-control step and the walks for these sections use it (a test enforces this for panel controls)",
+    "A test fails if any control in Sources/Photonz uses an opacity below 0.05 as a hit target",
+    "Every other drawn control that uses the same overlay trick (search for .opacity(0.0 and Color.clear labels) is listed and fixed or filed"
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T05:19:48.288Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-29T05:19:48.366Z",
+      "note": "seq 400 -> 0.0001"
+    }
+  ]
+}
