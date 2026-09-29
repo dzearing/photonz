@@ -1,0 +1,23 @@
+{
+  "feature": "View to Edit on a long recording, without the hitch",
+  "epic": "video-editing",
+  "summary": "Pressing Cmd-2 on a five minute recording with captions starts the slide into Edit at once. The editor now comes in over a few frames while it slides, so the window never stalls for 190ms before it moves.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/view-to-edit-on-a-long-recording-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a long recording (five minutes or more). It opens in View." },
+    { "do": "Press Captions > Add Captions, or open one that already has captions, then press Cmd-1 to get back to View." },
+    { "do": "Press Cmd-2.", "shot": "2026-09-29-view-to-edit-long-recording-1-edit-sc.png" },
+    { "do": "Watch the panel and the tracks as they slide in." },
+    { "do": "Press Cmd-1, then Cmd-2 again a few times." }
+  ],
+  "evaluate": [
+    "Does the slide start the moment you press Cmd-2, with no pause before it?",
+    "Can you see the panel's sections or the track rows arriving one after another, or does it read as one slide?",
+    "Does the View | Edit thumb in the title bar glide smoothly when you press Cmd-2?"
+  ],
+  "rough": [
+    "The slide itself still draws at a low frame rate going into Edit (each frame takes 30 to 50ms of main thread work), on short recordings too. Edit to View is smooth. Filed as its own task.",
+    "The longest single pass is now about 75 to 85ms (it was about 190ms). The heaviest remaining piece is the Captions section's style tiles and dropdowns, built in one pass."
+  ]
+}

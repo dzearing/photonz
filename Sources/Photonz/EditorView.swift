@@ -100,8 +100,9 @@ struct EditorView: View {
                         // you picked up Measure, which is exactly what this
                         // stack exists to avoid.
                         // Not in View mode, which is a player: the bar goes
-                        // with the rest of the editing (`ViewEditMode`).
-                        if !editorState.isWatching {
+                        // with the rest of the editing (`ViewEditMode`). Coming
+                        // back, it follows a pass behind (`EditModeArrival`).
+                        if !editorState.isWatching && editorState.editArrival.showsToolBar {
                         VStack(spacing: EditorChromeLayout.toolBarStackGap) {
                             // The `if` is the "takes no room" rule: an empty
                             // capsule still counts as a stack child, and the
@@ -294,6 +295,13 @@ struct EditorView: View {
             .onChange(of: editorState.activeTool) { _, tool in
                 if tool != .wand { isWandToleranceShown = false }
                 if tool != .crop { isCropAspectShown = false }
+            }
+            // Edit mode arriving from View: each stage has drawn by the time
+            // this runs, so the next one gets a pass of its own
+            // (`EditModeArrival`).
+            .onChange(of: editorState.editArrival) { _, now in
+                guard now.next != nil else { return }
+                DispatchQueue.main.async { editorState.advanceEditArrival() }
             }
         }
         // Fill the window even in the empty state — the HStack otherwise hugs

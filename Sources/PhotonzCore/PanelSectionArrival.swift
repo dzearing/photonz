@@ -75,3 +75,44 @@ public enum PanelSectionArrival {
         return target.filter { have.contains($0) || $0 == arriving }
     }
 }
+
+/// What the dock has built, pass to pass, over `PanelSectionArrival`.
+///
+/// One case starts from nothing on purpose: a dock SLIDING INTO a window that
+/// is already up (Edit mode arriving on a recording opened in View). There is
+/// a previous frame to protect there, the picture and the transport, and the
+/// panel is still mostly off the window's edge, so its first pass builds no
+/// section at all and they follow one pass at a time while it moves. Building
+/// them all in the pass that started the slide held a five minute captioned
+/// recording's window for about 190ms (2026-09-28).
+public struct DockArrival: Sendable, Equatable {
+    public private(set) var mounted: [String] = []
+    /// Nothing built yet, and nothing to be built until the next pass.
+    public private(set) var isHeld: Bool
+
+    public init(slidingIn: Bool = false) {
+        isHeld = slidingIn
+    }
+
+    /// The sections the dock may draw this pass, noted for the next one.
+    public mutating func showing(_ target: [String]) -> [String] {
+        guard !isHeld else { return [] }
+        mounted = PanelSectionArrival.showing(target: target, mounted: mounted)
+        return mounted
+    }
+
+    /// True when the dock owes `target` another pass.
+    public func isWaiting(for target: [String]) -> Bool {
+        isHeld ? !target.isEmpty : PanelSectionArrival.isWaiting(target: target, mounted: mounted)
+    }
+
+    /// Let the next section in: the top one, when the dock was held.
+    public mutating func allowNext(_ target: [String]) {
+        if isHeld {
+            isHeld = false
+            mounted = Array(target.prefix(1))
+        } else {
+            mounted = PanelSectionArrival.next(target: target, mounted: mounted)
+        }
+    }
+}

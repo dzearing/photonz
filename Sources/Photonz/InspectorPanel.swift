@@ -306,7 +306,8 @@ struct InspectorPanel: View {
         // click that brings new sections in, when the canvas gets the frame to
         // itself and the panel follows in the next one.
         let wanted = orderedAvailableSections
-        let sections = arrivals.showing(wanted)
+        // Sliding in with Edit mode, the dock waits its turn (`EditModeArrival`).
+        let sections = arrivals.showing(wanted) { !editorState.editArrival.panelMayFill }
         let _ = arrivalPass // the catch-up pass reads its own trigger
         // How tall each list section may be drawn, so that the forms under it
         // stay where they are instead of being carried off the bottom.
@@ -412,7 +413,8 @@ struct InspectorPanel: View {
                         // A video with nothing picked: the timeline has taken
                         // the list's place, so the dock says where to click
                         // rather than standing empty.
-                        if sections.isEmpty, !showsLayersList {
+                        // Not while the sections are only held back a pass.
+                        if wanted.isEmpty, !showsLayersList {
                             Text("Pick a clip on the timeline")
                                 .font(.callout)
                                 .foregroundStyle(.secondary)
@@ -455,6 +457,10 @@ struct InspectorPanel: View {
                 // click that keeps the same sections — moving the selection from
                 // one group to another — never reaches it at all.
                 .onChange(of: wanted) { catchUp() }
+                // A dock that slid in with Edit mode built nothing in its first
+                // pass, and starts filling when its turn comes.
+                .onAppear { catchUp() }
+                .onChange(of: editorState.editArrival) { catchUp() }
                 .onChange(of: arrivalPass) { catchUp() }
                 // The app opened the Library for you: put it where you can see it.
                 // On appear too, because showing the shelf opens the dock as well,
@@ -524,7 +530,8 @@ struct InspectorPanel: View {
     /// One more waiting section, a pass from now; the pass it makes asks for
     /// the next through `arrivalPass`, until nothing is waiting.
     private func catchUp() {
-        guard !arrivals.isCatchingUp, arrivals.isWaiting(for: orderedAvailableSections) else { return }
+        guard editorState.editArrival.panelMayFill,
+              !arrivals.isCatchingUp, arrivals.isWaiting(for: orderedAvailableSections) else { return }
         arrivals.isCatchingUp = true
         DispatchQueue.main.async {
             arrivals.isCatchingUp = false
@@ -1565,24 +1572,26 @@ private struct SectionDrag: Equatable {
 /// to force a re-draw — the pass that mounts the sections it held back — the
 /// panel does with its own `@State` counter.
 @MainActor private final class DockArrivals {
-    private var mounted: [InspectorSectionID] = []
+    private var state = DockArrival()
+    private var hasStarted = false
 
     /// The sections the dock may draw this pass, and a note of them for the
     /// next one. Safe to call more than once per pass: the answer does not
-    /// change until `allow` opens the gate.
-    func showing(_ target: [InspectorSectionID]) -> [InspectorSectionID] {
-        let raw = PanelSectionArrival.showing(target: target.map(\.rawValue),
-                                              mounted: mounted.map(\.rawValue))
-        let sections = raw.compactMap(InspectorSectionID.init(rawValue:))
-        mounted = sections
-        return sections
+    /// change until `allow` opens the gate. The first pass of a dock sliding
+    /// in with Edit mode builds nothing (`DockArrival`).
+    func showing(_ target: [InspectorSectionID],
+                 slidingIn: () -> Bool) -> [InspectorSectionID] {
+        if !hasStarted {
+            hasStarted = true
+            if slidingIn() { state = DockArrival(slidingIn: true) }
+        }
+        return state.showing(target.map(\.rawValue)).compactMap(InspectorSectionID.init(rawValue:))
     }
 
     /// True when `target` asks for a section that has not been built, so the
     /// panel owes it one more pass.
     func isWaiting(for target: [InspectorSectionID]) -> Bool {
-        PanelSectionArrival.isWaiting(target: target.map(\.rawValue),
-                                      mounted: mounted.map(\.rawValue))
+        state.isWaiting(for: target.map(\.rawValue))
     }
 
     /// A catch-up pass is on its way, so a second one is not asked for.
@@ -1590,9 +1599,7 @@ private struct SectionDrag: Equatable {
 
     /// Let the next section the selection asked for be built on the next pass.
     func allowNext(_ target: [InspectorSectionID]) {
-        mounted = PanelSectionArrival.next(target: target.map(\.rawValue),
-                                           mounted: mounted.map(\.rawValue))
-            .compactMap(InspectorSectionID.init(rawValue:))
+        state.allowNext(target.map(\.rawValue))
     }
 }
 

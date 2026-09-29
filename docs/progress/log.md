@@ -20229,3 +20229,9 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Measured on the new fixture `Noisy voice recording 1280x800.mp4` (macOS speech + fan-band noise + 60 Hz hum): noise floor after Normalize alone -25.3 dBFS, with Clean noise -44.1 dBFS (18.8 dB lower), voice within 0.5 dB. A/B clip in `queue/audits/2026-09-29-clean-noise-ab.m4a`.
 - Walks: new `normalize-cleans-noise-walk` (no flags); `normalize-quiet-system-audio-walk`'s Loudness for Web gain moved +28.7 to +28.3 since it now measures the cleaned sound. New waitFor condition `soundSettled`.
 - Open: no microphone recording was available to the loop; the audit asks the user to judge it on a real recording. The mock's sound Effects menu (Noise reduction) waits for a sound Effects group.
+
+## 2026-09-29 — View to Edit on a long recording, without the hitch
+
+- Cmd-2 on a five minute captioned recording held the window ~190ms in one pass (panel ~110, tracks ~60, tool bar ~30). New `EditModeArrival` (PhotonzCore, tested) stages the editor over passes while it slides: frames first, then ruler + tool bar, then track rows, then the panel's sections one a pass (`DockArrival(slidingIn:)`, extending `PanelSectionArrival`). Longest pass now ~75-80ms.
+- New walk `view-to-edit-on-a-long-recording-walk` (fails over 100ms); `the-ninety-second-cut-walk` holds its Cmd-2 wait under 150ms.
+- Next: the slide itself still draws at a low frame rate going into Edit (filed `the-slide-into-edit-mode-draws-every-frame-like`).

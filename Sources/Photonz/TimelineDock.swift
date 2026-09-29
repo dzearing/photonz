@@ -397,6 +397,10 @@ struct TimelineDock: View {
     }
 
     private var grid: some View {
+        // Edit mode arriving from View holds this space empty for a pass
+        // (`EditModeArrival`); its height is the tracks' own, so nothing moves.
+        Group {
+        if editorState.editArrival.showsTimeline {
         GeometryReader { geo in
             // The rows' scroller lives in the dock's right hand margin, always,
             // so it coming and going never narrows the lanes.
@@ -421,7 +425,11 @@ struct TimelineDock: View {
                                 TimelineCaptionsListeningRow(laneWidth: laneWidth)
                             }
                             let rows = editorState.timelineRowZoom
-                            ForEach(editorState.timelineRows) { row in
+                            // Edit mode arriving from View draws its rows a
+                            // pass after the dock starts to slide
+                            // (`EditModeArrival`).
+                            ForEach(editorState.editArrival.showsTrackRows
+                                    ? editorState.timelineRows : []) { row in
                                 switch row {
                                 case .group(let group, let isCollapsed, let tracks):
                                     TimelineGroupRow(group: group, isCollapsed: isCollapsed,
@@ -495,6 +503,10 @@ struct TimelineDock: View {
                     .frame(height: Self.scrollerStrip, alignment: .bottom)
             }
             .panelReadout(editorState.timelineRowsReading)
+        }
+        } else {
+            Color.clear
+        }
         }
         .frame(height: bodyHeight)
         .padding(.horizontal, 12)

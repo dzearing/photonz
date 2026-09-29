@@ -1045,6 +1045,18 @@ final class EditorState {
     private(set) var viewEditMode: ViewEditMode = .edit
     /// The layer picked when View put the handles away, handed back on Edit.
     @ObservationIgnored var pickedBeforeView: UUID?
+    /// How far Edit mode has got arriving, a pass at a time: the ruler and
+    /// the tool bar, the tracks' rows and the panel's sections each wait
+    /// for their turn (`EditModeArrival`).
+    /// Settled whenever nothing is arriving.
+    private(set) var editArrival: EditModeArrival = .settled
+    /// One pass on. Called by the editor view once the last stage has drawn.
+    func advanceEditArrival() {
+        guard let next = editArrival.next else { return }
+        // On the same curve as the switch, so the tool bar that comes in
+        // here slides up after the rest rather than appearing.
+        withAnimation(.viewEditMode) { editArrival = next }
+    }
     /// A walk that says the tracks are open (`setup.timelineOpen`) opens
     /// every recording in Edit, as a person who goes straight to editing does.
     static var walkOpensRecordingsInEdit = false
@@ -1067,6 +1079,10 @@ final class EditorState {
             if activeTool != .select { setTool(.select) }
             takeTimelineKeyboard()
         }
+        // The editor comes in over a few passes, not all in this one: on a
+        // five minute captioned recording building it here held the window
+        // for about 190ms before the slide could start (`EditModeArrival`).
+        editArrival = mode == .edit && documentHasTime ? .start : .settled
         withAnimation(.viewEditMode) {
             viewEditMode = mode
             refitForViewEditMode()
@@ -1081,6 +1097,7 @@ final class EditorState {
     /// than animated: the window should open already being what it is.
     func openInItsMode(_ document: PhotonzDocument, forAGuide: Bool = false) {
         pickedBeforeView = nil
+        editArrival = .settled
         timelineTracksShown = true
         viewEditMode = Self.walkOpensRecordingsInEdit
             ? .edit : ViewEditMode.opening(document, forAGuide: forAGuide)

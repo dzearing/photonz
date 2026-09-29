@@ -1,0 +1,32 @@
+{
+  "out": "/tmp/photonz-playtest/view-to-edit-on-a-long-recording-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "describe", "stage": "why", "note": "Going from View to Edit on a five minute recording with captions spent about 180ms building the panel, the tool bar and the timeline in one pass, so the slide-in stuttered before it started (2026-09-28). The editor now comes in over a few passes while it slides: the ruler and the tool bar, then the rows, then the panel's sections one a pass. Each pass measured about 80ms at worst on 2026-09-29; the walk fails if any pass after Cmd-2 or Cmd-1 runs past 100ms." },
+    { "do": "action", "action": "openLongRetinaTalk" },
+    { "do": "action", "action": "captionsWriteQuietly" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "expectTimeline", "lengthMS": 319240, "rate": 0 },
+
+    { "do": "describe", "stage": "first-switch", "note": "Cmd-2: the editor comes in without a hitch" },
+    { "do": "key", "key": "2", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8, "longestUnderMS": 100 },
+    { "do": "expectTimeline", "mode": "edit", "open": true },
+    { "do": "snapshot", "name": "1-edit" },
+    { "do": "key", "key": "1", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8, "longestUnderMS": 100 },
+
+    { "do": "describe", "stage": "second-switch", "note": "and again" },
+    { "do": "key", "key": "2", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8, "longestUnderMS": 100 },
+    { "do": "expectTimeline", "mode": "edit", "open": true },
+    { "do": "key", "key": "1", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8, "longestUnderMS": 100 },
+
+    { "do": "describe", "stage": "third-switch", "note": "and a third time" },
+    { "do": "key", "key": "2", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8, "longestUnderMS": 100 },
+    { "do": "expectTimeline", "mode": "edit", "open": true },
+    { "do": "snapshot", "name": "2-edit-again" }
+  ]
+}
