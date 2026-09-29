@@ -101,21 +101,26 @@
     void plate.offsetWidth;
     if (from) {
       var lo = Math.min(from.x, x1), hi = Math.max(from.x + from.w, x1 + w1);
-      var t = function (x, sy) { return 'translate(' + x + 'px,' + y1 + 'px) scale(1,' + sy + ')'; };
-      /* The settle is a FIXED few pixels past the target, never a fraction
-         of the distance: a spring curve overshoots in proportion to travel,
-         so two or three segments away it threw the thumb out of the rail
-         (the user, 2026-09-29: "obnoxious... overshoots out of the container
-         in an exaggerated form"). It is also clamped inside the rail. */
+      /* Position and size are animated as the SAME kind of property (left,
+         top, width, height), never transform for one and width for the
+         other: WebKit runs a transform on the compositor and width on the
+         main thread, so the two drifted apart mid-move and the thumb arrived
+         at its new slot still wide, 40px out of the rail (the user,
+         2026-09-29, in the Ghoztty viewer; Chrome hid it). The squash is a
+         height change about the centre for the same reason. */
+      var k = function (x, w, sq) {
+        var h = h1 * sq;
+        return { transform: 'none', left: x + 'px', top: (y1 + (h1 - h) / 2) + 'px', width: w + 'px', height: h + 'px' };
+      };
       var dir = x1 > from.x ? 1 : -1;
       var minX = 2, maxX = seg.clientWidth - 2 - w1;
       var over = Math.max(minX, Math.min(maxX, x1 + dir * Math.min(3, Math.abs(x1 - from.x) * 0.06)));
-      plate.__morph = plate.animate([
-        { transform: t(from.x, 1),  width: from.w + 'px', offset: 0,    easing: 'cubic-bezier(.3,0,.5,1)' },
-        { transform: t(lo, .88),    width: (hi - lo) + 'px', offset: .4, easing: 'cubic-bezier(.22,1,.36,1)' },
-        { transform: t(over, 1),    width: w1 + 'px', offset: .82, easing: 'ease-in-out' },
-        { transform: t(x1, 1),      width: w1 + 'px', offset: 1 }
-      ], { duration: 420 });
+      var f0 = k(from.x, from.w, 1), f1 = k(lo, hi - lo, .88), f2 = k(over, w1, 1), f3 = k(x1, w1, 1);
+      f0.offset = 0;  f0.easing = 'cubic-bezier(.3,0,.5,1)';
+      f1.offset = .4; f1.easing = 'cubic-bezier(.22,1,.36,1)';
+      f2.offset = .82; f2.easing = 'ease-in-out';
+      f3.offset = 1;
+      plate.__morph = plate.animate([f0, f1, f2, f3], { duration: 420 });
     } else if (!snap) {
       plate.style.transition = '';
     }
