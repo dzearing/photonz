@@ -638,6 +638,11 @@ public enum PlaytestCondition: Hashable, Sendable {
     /// waits for it here rather than guessing at a delay and photographing a
     /// percentage.
     case exportSizeWeighed
+    /// Every sound is settled: no cleaned copy is still being made and no
+    /// Normalize is still measuring. Both run in the background, so a walk
+    /// that reads the gain Normalize set waits for this rather than guessing
+    /// at a delay (`CleanedSounds.swift`).
+    case soundSettled
     /// A dialog is up (or has gone), named by the words at the top of it:
     /// "Resize Image", "Export", "New Frame", "Blank Canvas", "Canvas Size".
     ///
@@ -3785,9 +3790,10 @@ public enum PlaytestStep: Sendable, Equatable {
             case "tutorialStep": .tutorialStep(try f.string("value"))
             case "tutorialFinished": .tutorialFinished(try f.string("value"))
             case "exportSizeWeighed": .exportSizeWeighed
+            case "soundSettled": .soundSettled
             case "dialogUp": .dialog(try f.string("value"), up: true)
             case "dialogGone": .dialog(try f.string("value"), up: false)
-            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionDirectlyUnder, layerRowInView, tutorialStep, tutorialFinished, exportSizeWeighed, dialogUp or dialogGone")
+            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionDirectlyUnder, layerRowInView, tutorialStep, tutorialFinished, exportSizeWeighed, soundSettled, dialogUp or dialogGone")
             }
             self = .waitFor(parsed, timeout: try f.optionalNumber("timeout") ?? Self.defaultTimeout)
         case "startGuide":

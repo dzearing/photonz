@@ -1258,6 +1258,12 @@ final class EditorState {
     /// press because an `AVAudioEngine` is not cheap to build, and outside the
     /// observation graph because nothing on screen is drawn from it.
     @ObservationIgnored var audioPlayerStorage: DocumentAudioPlayer?
+    /// How many cleaned copies of sounds had landed when the sound last
+    /// started, so a playthrough picks up one that lands mid-way.
+    @ObservationIgnored var cleanedSoundsHeard = 0
+    /// How many Normalizes are still measuring, which a scripted walk waits
+    /// out before it reads the gain one set.
+    @ObservationIgnored var soundsBeingNormalized = 0
     /// What a drag on the playhead sounds like, made the first time somebody
     /// drags one (`ScrubAudioPlayer.swift`). Its own engine because a scrub
     /// and a playthrough want opposite things from the same plan.

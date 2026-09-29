@@ -35,6 +35,23 @@ final class SoundLibrary {
     /// to be drawn again straight away.
     @ObservationIgnored private var reading: Set<UUID> = []
 
+    // Clean noise (`CleanedSounds.swift`).
+    /// The cleaned copies known to be on disk, by the id the mix plays them as.
+    @ObservationIgnored var cleanedFiles: [UUID: URL] = [:]
+    /// The newest cleaned copy of each file at each strength: what plays while
+    /// a newer one (after a trim) is still being made.
+    @ObservationIgnored var lastCleaned: [CleaningGroup: SoundRef] = [:]
+    /// The cleanings under way or waiting to start, by the id they will play
+    /// as, and which file at which strength each one is.
+    @ObservationIgnored var cleaningTasks: [UUID: Task<URL?, Never>] = [:]
+    @ObservationIgnored var pendingGroups: [UUID: CleaningGroup] = [:]
+    /// How far along each cleaning being made is, nought to one, by the id it
+    /// will play as. Observed: the segment draws it.
+    var cleaningProgress: [UUID: Double] = [:]
+    /// Counts the cleaned copies that have landed, so whatever is playing
+    /// can pick one up the moment it does.
+    var cleanedArrivals = 0
+
     /// The file types Add Sound will open. Recordings are in the list on
     /// purpose: taking the sound off a video you are not otherwise using is a
     /// perfectly ordinary thing to want.
@@ -65,7 +82,8 @@ final class SoundLibrary {
     /// Where this sound lives. A recording's own sound is looked up among the
     /// recordings, because it IS the recording.
     func url(for ref: SoundRef) -> URL? {
-        urls[ref.id] ?? MovieLibrary.shared.url(forID: ref.id)
+        if ref.cleaning != nil { return cleanedURLOrStandIn(for: ref) }
+        return urls[ref.id] ?? MovieLibrary.shared.url(forID: ref.id)
     }
 
     /// The same question asked with an id on its own, which is what saving a
@@ -87,7 +105,24 @@ final class SoundLibrary {
     // MARK: The shape of it
 
     /// The shape of this sound, if it has been read yet.
-    func waveform(for ref: SoundRef) -> Waveform? { waveforms[ref.id] }
+    ///
+    /// A cleaned copy still being made draws as the last cleaned copy of the
+    /// same file, or the file itself, until it lands.
+    func waveform(for ref: SoundRef) -> Waveform? {
+        if let known = waveforms[ref.id] { return known }
+        guard ref.cleaning != nil else { return nil }
+        if let group = CleaningGroup(ref), let last = lastCleaned[group], let known = waveforms[last.id] {
+            return known
+        }
+        return waveforms[ref.sourceID]
+    }
+
+    /// The shape of this sound exactly, never a stand-in: what Normalize
+    /// measures.
+    func exactWaveform(for ref: SoundRef) -> Waveform? { waveforms[ref.id] }
+
+    /// Keep a shape read somewhere else.
+    func remember(_ waveform: Waveform, for ref: SoundRef) { waveforms[ref.id] = waveform }
 
     /// The shape of every sound a mix plays, as far as they have been read.
     ///
@@ -124,8 +159,15 @@ final class SoundLibrary {
     /// moment later and it redraws. Reading a file twice at once is refused,
     /// which matters because every row of the strip asks on every redraw.
     func loadWaveform(for ref: SoundRef) {
-        guard waveforms[ref.id] == nil, !reading.contains(ref.id),
-              let url = url(for: ref) else { return }
+        guard waveforms[ref.id] == nil, !reading.contains(ref.id) else { return }
+        // A cleaned copy is read once it is on disk; until then it is asked
+        // for, and the file it is made from draws in its place.
+        if ref.cleaning != nil, cleanedFileOnDisk(ref) == nil {
+            clean(ref, waitingFirst: true)
+            loadWaveform(for: ref.source)
+            return
+        }
+        guard let url = url(for: ref) else { return }
         reading.insert(ref.id)
         Task { [weak self] in
             let reading = await SoundFile.read(at: url)

@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/normalize-quiet-system-audio-walk",
-  "seed": "A screen recording whose system audio came in quiet (peak -32.7 dBFS, -42.7 LUFS, the level the user's own recordings measured on 2026-09-25), at Next defaults with no flag set. The waveform draws in decibels so the quiet sound is visible at all; right-click the audio segment, Normalize > Peaks to -1 dB, and the segment wears +31.7 dB, the Gain row says so, and the waveform grows. Undo takes it back; the panel's Normalize button does the same; Normalize > Loudness for Web sets a smaller gain because the peak ceiling holds it.",
+  "seed": "A screen recording whose system audio came in quiet (peak -32.7 dBFS, -42.7 LUFS, the level the user's own recordings measured on 2026-09-25), at Next defaults with no flag set. The waveform draws in decibels so the quiet sound is visible at all; right-click the audio segment, Normalize > Peaks to -1 dB, and the segment wears +31.7 dB, the Gain row says so, and the waveform grows. Undo takes it back; the panel's Normalize button does the same; Normalize > Loudness for Web sets a smaller gain because the peak ceiling holds it. Clean noise is on by default, so every Normalize here measures the cleaned sound.",
   "setup": { "front": true, "timelineOpen": true, "forget": ["all"] },
   "steps": [
     { "do": "open", "file": "fixtures/Quiet system audio recording 1280x800.mp4", "width": 1440, "height": 900 },
@@ -31,8 +31,8 @@
 
     { "do": "rightClick", "at": [576, 850], "space": "window", "choose": "Normalize > Loudness for Web, -14 LUFS" },
     { "do": "wait", "seconds": 1.5 },
-    { "do": "expect", "field": "Gain in dB", "reads": "+28.7" },
-    { "do": "describe", "stage": "4-loudness", "note": "Normalize > Loudness for Web: +28.7 dB (the fixture measures -42.7 LUFS in ffmpeg), less than the peak normalize, so the loudest peak stays under -1 dB" },
+    { "do": "expect", "field": "Gain in dB", "reads": "+28.3" },
+    { "do": "describe", "stage": "4-loudness", "note": "Normalize > Loudness for Web: +28.3 dB, measured on the noise-cleaned sound since Clean noise is on by default (the raw fixture measures -42.7 LUFS in ffmpeg and gave +28.7 before cleaning), less than the peak normalize, so the loudest peak stays under -1 dB" },
     { "do": "panel", "stage": "4-loudness" },
     { "do": "snapshot", "name": "4-loudness" }
   ]

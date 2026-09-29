@@ -406,6 +406,45 @@ dBFS peak was three per cent of the lane.
 - Normalizing new recordings automatically on open was left out: the capture
   is not the quiet part. It is a question in the audit for the user.
 
+## 5e. Clean noise (2026-09-29)
+
+The user: "when we normalize, we should have a noise cleaning option checked by
+default. Simply amplifying the signal amplifies background noise."
+
+- **The value** is `AudioLevel.noiseReduction` (Light, Medium, Strong; nil is
+  off). Nothing else about cleaning is in the document.
+- **What plays** is `Layer.playedSound`: the file, or for a cleaned segment a
+  `SoundRef` of its own (`SoundRef.cleaned`), same length, an id worked out
+  from the file, the strength and the stretches the segment plays, and a
+  `cleaning` that says what it is a copy of. `audioMix()` hands that out, so
+  the player, the scrub, the exporter, the meter and the waveform all find
+  the cleaned copy by `sound.id` with no special case.
+- **The cleaning** (`NoiseCleaner`, PhotonzMedia) is spectral noise reduction
+  on this Mac: STFT frames of about 40 ms at a quarter hop, the noise learned
+  per frequency from the quiet stretches of what the segment plays
+  (`NoiseReduction.quietStretchesMS`: the quietest tenth of its 20 ms buckets,
+  plus 3 dB, digital silence skipped), then a decision-directed Wiener gain
+  (the thing that keeps it from sounding watery) held above the strength's
+  floor (-12, -20, -30 dB). Two streaming passes, written lossless (ALAC in
+  CAF) sample for sample in step with the original.
+- **The copy** lives in Caches (`Cleaned sound/<id>.caf`, pruned after a week
+  untouched) and is made in the background (`CleanedSounds.swift`). Until it
+  lands, playback plays the last cleaned copy of the same file at the same
+  strength, or the file; the segment wears a filling ring, then a sparkle; a
+  playthrough under way restarts on the cleaned copy the moment it lands.
+  Normalize and every export wait for it (`readyURL`, `readyURLs`).
+- **Normalize cleans first** when Clean noise is checked (beside Normalize in
+  the Gain section, and in the Normalize submenu; remembered per user in
+  `sound.normalizeCleansNoise`, on by default), measures the cleaned sound, and
+  writes the cleaning and the gain as one undo step.
+- **Measured** on `Noisy voice recording 1280x800.mp4` (spoken words over
+  fan-band noise and a 60 Hz hum): after Normalize alone the noise floor sits
+  at -25.3 dBFS; after Normalize with Clean noise at Medium, -44.1 dBFS, 18.8
+  dB lower, with the voice within 0.5 dB (`NoiseCleanerTests.fixtureMeasures`).
+- The mock lists Noise reduction in the sound's Effects menu
+  (`pages/video-audio.html`, `#efxMenu`); sound has no Effects group yet, so
+  the strength lives on a Noise row under Gain until it does.
+
 ## 6. Where it is in the window
 
 | What | Where |

@@ -5,14 +5,14 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 0.0031,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T13:05:09.653Z",
-  "updated": "2026-09-29T13:05:09.744Z",
+  "updated": "2026-09-29T18:02:43.658Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Filed from the intake window.",
+  "notes": "Filed from the intake window.\n\nBuilt 2026-09-29: model AudioLevel.noiseReduction + SoundRef.cleaned/Layer.playedSound (Sources/PhotonzCore/NoiseCleaning.swift); DSP Sources/PhotonzMedia/NoiseCleaner.swift; cleaned-copy cache and background rendering Sources/Photonz/CleanedSounds.swift (+ SoundFiles.swift hooks); Normalize/Clean actions in EditorState+Audio.swift; menu rows in EditorState+TimelineMenus.swift; panel in SoundInspector.swift (SoundGainInspector); segment badge/ring in ClipPiecesBar.swift. Fixture Scripts/playtest/fixtures/Noisy voice recording 1280x800.mp4 (say + ffmpeg pink/brown noise + 60/180 Hz hum). Walk normalize-cleans-noise-walk. Docs video-audio.md 5e.",
   "acceptance": [
     "Normalize (right-click and the panel's Normalize) applies noise reduction first by default; the choice sits beside it as a checkbox Clean noise, checked by default and remembered per user; Normalize without it stays one click away",
     "Noise reduction runs on this Mac only (no network), learns the noise from the quiet stretches of the segment, and reduces steady hiss, hum, fan and room tone without making speech sound watery; strength is one slider (Light, Medium, Strong; Medium default) in the segment's panel",
@@ -29,6 +29,31 @@
     {
       "t": "2026-09-29T13:05:09.743Z",
       "note": "seq 400 -> 0.0031"
+    },
+    {
+      "t": "2026-09-29T16:53:09.821Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T16:57:11.972Z",
+      "note": "Pre-build review: (1) Premiere users expect DeNoise/Enhance Speech as an effect with an amount; here it rides with Normalize (checked by default) plus a Noise row with Light/Medium/Strong in the Sound panel and Clean Noise / Remove Noise Cleaning on the segment's right-click, so it is where a hand already is. (2) Real-time spectral denoise on AVAudioEngine per segment would need a custom AU; instead the app renders a cleaned copy of the file in the background (Caches, keyed by source+strength+learned ranges) and playback/export read it through the same mix plan, so hear==export stays true; until it lands playback uses the last cleaned copy of that sound or the original, and swaps the moment it is ready. (3) Learning the noise: quietest 20 ms buckets of the stretches the segment plays (10th percentile +3 dB), falls back to the quietest frames when a clip has no pauses. (4) The mock (video-audio.html #efxMenu) lists Noise reduction under Effects; there is no Effects group for sound in the app yet, so the strength lives on the Sound panel under Gain for now. (5) No real fan recording on this Mac without a microphone grant: the fixture is spoken 'say' speech mixed with fan-band noise and 60 Hz hum, and the audit says so."
+    },
+    {
+      "t": "2026-09-29T17:33:16.459Z",
+      "note": "owns these walks: normalize-cleans-noise-walk, normalize-quiet-system-audio-walk"
+    },
+    {
+      "t": "2026-09-29T18:02:43.602Z",
+      "note": "Rough items from the audit: mock Effects-group placement filed as a-picked-sound-has-the-effects-list-the-audio-mo (p2). Left rough, logged only: a noiseless recording still learns 'noise' from its quietest moments (the quiet tone walk's Loudness for Web gain moved +28.7 to +28.3); cleaned copies are keyed per sound id, so reopening a plain file (new id) makes a fresh copy, pruned after a week; the ring on the segment and the mid-playthrough swap to the cleaned copy were built but not photographed or heard in a walk (a 10 s copy is ready in under a second)."
+    },
+    {
+      "t": "2026-09-29T18:02:43.657Z",
+      "note": "Found and fixed on the way: the full test suite hung twice (0% CPU) with the shared async thread pool starved by blocking decodes (SoundFile.read, TextReader, the new cleaner tests). SoundFile.read/loudnessLUFS and NoiseCleaner now decode on a dispatch queue (PhotonzMedia/OffThePool.swift); the suite then passed 10,561 tests in 267 s."
     }
+  ],
+  "started": "2026-09-29T16:53:09.819Z",
+  "walks": [
+    "normalize-cleans-noise-walk",
+    "normalize-quiet-system-audio-walk"
   ]
 }

@@ -341,17 +341,12 @@ struct ClipPiecesBar: View {
             .overlay(alignment: .bottomLeading) {
                 // The gain Normalize wrote, where Premiere puts a clip's
                 // badges: on the clip, small, out of the waveform's way.
-                if isSound, let gain = soundLevel?.clipGainLabel, shown.width > 48 {
-                    Text(gain)
-                        .font(.system(size: 9, weight: .semibold))
-                        .monospacedDigit()
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 1)
-                        .background(Capsule().fill(.black.opacity(0.45)))
-                        .padding(3)
-                        .allowsHitTesting(false)
-                        .accessibilityLabel("Gain \(gain)")
+                // Beside it, whether its noise is cleaned, and while the
+                // cleaned sound is being made, how far along that is.
+                if isSound, shown.width > 48, soundLevel?.clipGainLabel != nil
+                    || soundLevel?.noiseReduction != nil {
+                    soundBadge(gain: soundLevel?.clipGainLabel, cleaned: soundLevel?.noiseReduction != nil,
+                               progress: editorState.soundCleaningProgress(of: layerID))
                 }
             }
             .overlay {
@@ -422,6 +417,35 @@ struct ClipPiecesBar: View {
         }
     }
 
+    /// The badge on a sound's segment: its gain, a sparkle when its noise is
+    /// cleaned, and a ring filling while the cleaned sound is being made.
+    private func soundBadge(gain: String?, cleaned: Bool, progress: Double?) -> some View {
+        HStack(spacing: 3) {
+            if let progress {
+                ProgressRing(fraction: progress)
+                    .frame(width: 8, height: 8)
+            } else if cleaned {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 10, weight: .semibold))
+            }
+            if let gain {
+                Text(gain)
+                    .font(.system(size: 9, weight: .semibold))
+                    .monospacedDigit()
+            }
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 4)
+        .padding(.vertical, 1)
+        .background(Capsule().fill(.black.opacity(0.45)))
+        .padding(3)
+        .allowsHitTesting(false)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel([gain.map { "Gain \($0)" },
+                             progress != nil ? "Cleaning noise" : (cleaned ? "Noise cleaned" : nil)]
+            .compactMap { $0 }.joined(separator: ", "))
+    }
+
     /// How loud this layer's sound is set to play, gain included.
     private var soundLevel: AudioLevel? {
         editorState.document?.layer(id: layerID)?.soundLevel
@@ -432,7 +456,8 @@ struct ClipPiecesBar: View {
     /// first time, so a bar with no waveform in it yet is a bar rather than a
     /// wait (`SoundFiles.swift`).
     private var waveform: Waveform? {
-        guard let sound = editorState.document?.layer(id: layerID)?.sound else { return nil }
+        // What plays, so a cleaned segment draws its cleaned sound.
+        guard let sound = editorState.document?.layer(id: layerID)?.playedSound else { return nil }
         let already = SoundLibrary.shared.waveform(for: sound)
         #if PHOTONZ_PLAYTEST
         DrawnWaveforms.shared.bar(of: layerID, drew: already != nil)
@@ -1237,6 +1262,22 @@ private struct BarWatch: ViewModifier {
             content.playtestHover(name, perform: hover).panelReadout(readout)
         } else {
             content
+        }
+    }
+}
+
+/// A small ring that fills clockwise from the top: how far along something
+/// running in the background is, where a spinner would say only that it is.
+private struct ProgressRing: View {
+    let fraction: Double
+
+    var body: some View {
+        ZStack {
+            Circle().stroke(.white.opacity(0.3), lineWidth: 1.5)
+            Circle()
+                .trim(from: 0, to: max(0.04, min(1, fraction)))
+                .stroke(.white, style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+                .rotationEffect(.degrees(-90))
         }
     }
 }

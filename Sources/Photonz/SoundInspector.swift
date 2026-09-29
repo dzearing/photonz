@@ -108,11 +108,17 @@ struct SoundInspector: View {
 /// right-click menu as well.
 struct SoundGainInspector: View {
     @Environment(EditorState.self) private var editorState
+    /// Clean noise beside Normalize, remembered per user and on until
+    /// somebody unchecks it (`EditorState.normalizeCleansNoise`).
+    @AppStorage(EditorState.normalizeCleansNoiseKey) private var cleansNoise = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             if editorState.soundLayerInHand != nil {
                 gain
+                if let reduction = editorState.soundLevelInHand.noiseReduction {
+                    noise(reduction)
+                }
             }
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
@@ -156,16 +162,69 @@ struct SoundGainInspector: View {
                     .panelReadout(editorState.soundLevelInHand.clipGainField)
                 }
             }
-            // Under the box it sets, in the control column.
+            // Under the box it sets, in the control column, with the choice
+            // of cleaning the noise first right under it: the column is too
+            // narrow for the two side by side without clipping a word.
             VideoKit.FieldRow(label: "") {
-                Button("Normalize") {
-                    guard let id = editorState.soundLayerInHand?.id else { return }
-                    let ids = editorState.soundLayers(actingOn: id)
-                    Task { await editorState.normalizeSound(layers: ids) }
+                VStack(alignment: .leading, spacing: 5) {
+                    Button("Normalize") {
+                        guard let id = editorState.soundLayerInHand?.id else { return }
+                        let ids = editorState.soundLayers(actingOn: id)
+                        Task { await editorState.normalizeSound(layers: ids) }
+                    }
+                    .controlSize(.small)
+                    .fixedSize()
+                    .playtestControl("Normalize", detail: "Gain")
+                    .panelHelp("Bring the loudest peak to -1 dB.")
+                    Toggle(isOn: $cleansNoise) {
+                        Text("Clean noise")
+                            .font(.system(size: 11))
+                            .lineLimit(1)
+                    }
+                    .toggleStyle(.checkbox)
+                    .fixedSize()
+                    .controlSize(.small)
+                    .playtestControl("Clean noise", detail: cleansNoise ? "Gain, on" : "Gain, off")
+                    .panelHelp("Take out hiss, hum and room noise before raising the level.")
                 }
+            }
+        }
+    }
+
+    /// How hard the noise is taken out, once it is: Light, Medium or Strong
+    /// on one slider, and the way to stop cleaning it. While the cleaned
+    /// sound is being made the row says how far along it is.
+    private func noise(_ reduction: NoiseReduction) -> some View {
+        let progress = editorState.soundLayerInHand.flatMap { editorState.soundCleaningProgress(of: $0.id) }
+        let reading = progress.map { "Cleaning \(Int(($0 * 100).rounded()))%" } ?? reduction.title
+        return VideoKit.FieldRow(label: "Noise") {
+            HStack(spacing: 6) {
+                Slider(value: Binding(
+                    get: { Double(reduction.step) },
+                    set: { editorState.setSoundNoiseReductionInHand(NoiseReduction(step: Int($0.rounded()))) }
+                ), in: 0...2, step: 1)
                 .controlSize(.small)
-                .playtestControl("Normalize", detail: "Gain")
-                .panelHelp("Bring the loudest peak to -1 dB.")
+                .frame(minWidth: PanelSliderRow.trackMinimum)
+                .playtestField("Noise")
+                .panelHelp("How much noise to take out.")
+                Text(reading)
+                    .font(.system(size: 11, weight: .medium))
+                    .monospacedDigit()
+                    .foregroundStyle(VideoKit.Palette.ink)
+                    .frame(minWidth: 52, alignment: .leading)
+                    .fixedSize()
+                    .panelReadout(reading)
+                    .playtestField("Noise reading")
+                Button {
+                    editorState.setSoundNoiseReductionInHand(nil)
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(VideoKit.Palette.ink.opacity(0.55))
+                }
+                .buttonStyle(.plain)
+                .playtestControl("Remove Noise Cleaning", detail: "Gain")
+                .panelHelp("Stop cleaning the noise.")
+                .accessibilityLabel("Remove Noise Cleaning")
             }
         }
     }

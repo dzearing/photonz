@@ -285,7 +285,7 @@ extension EditorState {
                                             canvasSize: document.canvasSize,
                                             format: format, quality: quality, size: size)
         let mix = AudioMixSegment.windowed(document.audioMix(), to: span)
-        let soundURLs = SoundLibrary.shared.urls(for: mix)
+        let soundURLs = await SoundLibrary.shared.readyURLs(for: mix)
         // Drawn at the file's size rather than the canvas's: a 1080p file
         // off a Retina recording has no use for the other 60% of the pixels,
         // and drawing them only to throw them away was a third of the write.
@@ -329,7 +329,7 @@ extension EditorState {
         defer { pictures.putTheStoreBack() }
         return try await DocumentMovieWriter.weigh(
             span: span, canvasSize: document.canvasSize, quality: quality, size: size,
-            mix: mix, soundURLs: SoundLibrary.shared.urls(for: mix),
+            mix: mix, soundURLs: await SoundLibrary.shared.readyURLs(for: mix),
             frames: { ms in await pictures.frame(atMS: ms) },
             onProgress: onProgress)
     }

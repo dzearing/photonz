@@ -1,0 +1,30 @@
+{
+  "feature": "Normalize cleans background noise",
+  "epic": "video-audio",
+  "summary": "Normalize now takes out hiss, hum, fan and room tone before it raises the level, so a quiet recording comes up without its noise coming up with it. It is on by default, runs on this Mac, and is a setting on the segment you can change or remove.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open Scripts/playtest/fixtures/Noisy voice recording 1280x800.mp4 (walk: normalize-cleans-noise-walk).",
+  "switched": {},
+  "try": [
+    { "do": "Open the noisy recording and click its clip on the timeline. Under Gain, Clean noise is already checked beside Normalize.", "shot": "2026-09-29-clean-noise-1-noisy-sc.png" },
+    { "do": "Uncheck Clean noise and press Normalize: +29.5 dB, and the noise between the words fills the lane.", "shot": "2026-09-29-clean-noise-2-normalize-alone-sc.png" },
+    { "do": "Press Cmd-Z, check Clean noise, press Normalize: a ring fills on the segment, then +30.7 dB with a sparkle, flat pauses, and a Noise row at Medium.", "shot": "2026-09-29-clean-noise-3-normalize-clean-sc.png" },
+    { "do": "Press space and listen to a pause, then drag the Noise slider to Strong and to Light." },
+    { "do": "Right-click the segment: Normalize has Clean Noise checked inside it, and Remove Noise Cleaning sits below it." },
+    { "do": "Press the x at the end of the Noise row: the row goes, the gain stays, the noise is back. Cmd-Z brings it back.", "shot": "2026-09-29-clean-noise-4-removed-sc.png" },
+    { "do": "Play queue/audits/2026-09-29-clean-noise-ab.m4a: ten seconds normalized alone, a short gap, then the same ten seconds normalized with Clean noise." }
+  ],
+  "evaluate": [
+    "On one of your own recordings, does Medium take the fan or room tone out without the voice sounding watery or swallowed at the ends of words?",
+    "Is Clean noise under the Normalize button the right place, or would you rather find the strength in a sound Effects list as the mock draws it?",
+    "Does the sparkle on the segment tell you the sound is cleaned, or is it too small to notice?",
+    "Should Clean noise also be offered on its own when a recording is added, without Normalize?"
+  ],
+  "rough": [
+    "Measured on the fixture: noise floor after Normalize alone -25.3 dBFS, after Normalize with Clean noise -44.1 dBFS (18.8 dB lower); the voice within 0.5 dB (-17.9 against -18.4 dBFS RMS over the spoken windows).",
+    "The fixture is not a microphone recording: it is macOS speech mixed with fan-band noise and a 60 Hz hum, because this Mac gave the loop no microphone. Judge it on a real recording of yours before trusting it.",
+    "The mock puts Noise reduction in the sound's Effects menu (video-audio.html, efxMenu). Sound has no Effects group yet, so the strength lives on a Noise row under Gain for now.",
+    "The acceptance asked for Clean noise beside Normalize; the panel column is too narrow for both on one line, so it sits directly under the button.",
+    "On a recording with no noise at all, cleaning still learns from its quietest moments and changes loudness slightly: the quiet test tone's Loudness for Web gain moved from +28.7 to +28.3 dB.",
+    "The ring on the segment while a copy is being made was not photographed: on a ten second clip the copy is ready in well under a second. A playthrough that is under way restarts on the cleaned sound when it lands; that was built but not heard in a walk."
+  ]
+}

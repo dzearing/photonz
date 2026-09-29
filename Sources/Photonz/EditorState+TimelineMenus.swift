@@ -182,8 +182,10 @@ extension EditorState {
         return rows
     }
 
-    /// **Normalize ▸** and, once a sound has gain, **Reset Gain**. Every
-    /// picked sound when the clicked one is among the picks.
+    /// **Normalize ▸**, with Clean Noise checked inside it (remembered, on
+    /// until somebody unchecks it); **Clean Noise** or **Remove Noise
+    /// Cleaning**; and, once a sound has gain, **Reset Gain**. Every picked
+    /// sound when the clicked one is among the picks.
     func soundGainMenuRows(layerID: UUID) -> [MenuRow] {
         let ids = soundLayers(actingOn: layerID)
         guard !ids.isEmpty else { return [] }
@@ -194,7 +196,23 @@ extension EditorState {
         normalize += AudioNormalize.Target.allCases.map { target in
             .command(target.title) { Task { await self.normalizeSoundLoudness(layers: ids, to: target) } }
         }
+        normalize += [
+            .separator,
+            .toggle("Clean Noise", isOn: normalizeCleansNoise) {
+                self.normalizeCleansNoise.toggle()
+            },
+        ]
         var rows: [MenuRow] = [.submenu("Normalize", normalize)]
+        let cleaned = ids.contains { document?.layer(id: $0)?.soundLevel?.noiseReduction != nil }
+        if cleaned {
+            rows.append(.command("Remove Noise Cleaning") {
+                self.setSoundNoiseReduction(nil, layers: ids)
+            })
+        } else {
+            rows.append(.command("Clean Noise") {
+                self.setSoundNoiseReduction(.standard, layers: ids)
+            })
+        }
         let gained = ids.contains { (document?.layer(id: $0)?.soundLevel?.clipGainDB ?? 0) != 0 }
         if gained {
             rows.append(.command("Reset Gain") {

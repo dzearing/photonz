@@ -20220,3 +20220,12 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - `ClipTransitionEdgeDrag` (PhotonzCore, tested) is the drag rule; both band views and the panel draw the live length; a length bubble rides beside the pointer (amber with max/min at a stop); a one-sided band's end on the cut is no longer a grip; Escape stays called off until the button comes up.
 - New walk `transition-edge-follows-the-pointer-walk`; `dragGrip` gained `cancel`.
 - Next: nothing open from this; other timeline drags were checked by reading and all draw live.
+
+## 2026-09-29: Normalize cleans background noise, on by default
+
+- User 2026-09-29: raising a quiet recording raises its noise. Normalize now cleans the noise first when Clean noise is checked (under the Normalize button, and in the Normalize submenu; remembered per user, on by default), measures the cleaned sound, and writes the cleaning and the gain as one undo step. Right-click also has Clean Noise / Remove Noise Cleaning; the Gain section grows a Noise row (Light, Medium, Strong slider, and an x to remove) once a segment is cleaned.
+- Model: `AudioLevel.noiseReduction`; `Layer.playedSound` / `SoundRef.cleaned` give a cleaned segment a sound id of its own, so the mix, player, scrub, exporter, meter and waveform find the cleaned copy by id (`NoiseCleaning.swift`, `NoiseCleaningTests`). Noise learned from `NoiseReduction.quietStretchesMS`.
+- DSP: `NoiseCleaner` (PhotonzMedia, vDSP): STFT, per-bin noise profile from the pauses, decision-directed Wiener gain above a floor (-12/-20/-30 dB), streamed in two passes to ALAC CAF, sample-aligned (`NoiseCleanerTests`). App side `CleanedSounds.swift`: copies in Caches, made in the background with a ring on the segment, a stand-in until they land, playback restarts on the copy when it lands, Normalize and exports wait for it.
+- Measured on the new fixture `Noisy voice recording 1280x800.mp4` (macOS speech + fan-band noise + 60 Hz hum): noise floor after Normalize alone -25.3 dBFS, with Clean noise -44.1 dBFS (18.8 dB lower), voice within 0.5 dB. A/B clip in `queue/audits/2026-09-29-clean-noise-ab.m4a`.
+- Walks: new `normalize-cleans-noise-walk` (no flags); `normalize-quiet-system-audio-walk`'s Loudness for Web gain moved +28.7 to +28.3 since it now measures the cleaned sound. New waitFor condition `soundSettled`.
+- Open: no microphone recording was available to the loop; the audit asks the user to judge it on a real recording. The mock's sound Effects menu (Noise reduction) waits for a sound Effects group.

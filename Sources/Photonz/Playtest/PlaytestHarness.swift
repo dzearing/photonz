@@ -13776,6 +13776,7 @@ private final class Run {
         return switch condition {
         // Answered above, where it does not need a window with an editor in it.
         case .exportSizeWeighed: ExportWeigh.onScreen?.isSettled == true
+        case .soundSettled: SoundLibrary.shared.cleaningTasks.isEmpty && editor.soundsBeingNormalized == 0
         case .edgeMap: !editor.snappingEdgeMap.isEmpty
         case .captionField: window?.firstResponder is NSTextView
         case .tool(let tool): editor.activeTool == tool

@@ -38,10 +38,15 @@ public struct SoundRef: Hashable, Codable, Sendable {
     /// a trim moves the layer's in and out and never shortens this, which is
     /// what lets the timeline draw what a trim put out of play.
     public let durationMS: Int
+    /// Set only on a cleaned copy of a sound, which the mix plays in place of
+    /// the file when its segment is cleaned (`NoiseCleaning.swift`). Never in
+    /// a document: a layer holds the file, and says how hard to clean it.
+    public let cleaning: SoundCleaning?
 
-    public init(id: UUID = UUID(), durationMS: Int) {
+    public init(id: UUID = UUID(), durationMS: Int, cleaning: SoundCleaning? = nil) {
         self.id = id
         self.durationMS = max(0, durationMS)
+        self.cleaning = cleaning
     }
 }
 

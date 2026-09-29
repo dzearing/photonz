@@ -1,0 +1,51 @@
+{
+  "out": "/tmp/photonz-playtest/normalize-cleans-noise-walk",
+  "seed": "A screen recording whose voice sits over a fan's hiss and a mains hum (peak -30.5 dBFS, noise floor -54.9 dBFS in the lead-in, -45.2 LUFS), at Next defaults with no flag set. Clean noise sits beside Normalize, checked. Unchecked, Normalize sets +29.5 dB and the noise rises with the voice into a thick band between the words. Undone, checked again, Normalize cleans first: the segment shows its ring while the cleaned sound is made, then +30.7 dB and a sparkle, the waveform flat between the words, and a Noise row at Medium. Remove Noise Cleaning takes the row away; undo brings it back.",
+  "setup": { "front": true, "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "open", "file": "fixtures/Noisy voice recording 1280x800.mp4", "width": 1440, "height": 900 },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "tool", "tool": "select" },
+    { "do": "press", "control": "Noisy voice recording 1280x800 clip" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "field": "Gain in dB", "reads": "0.0" },
+    { "do": "describe", "stage": "1-noisy", "note": "The noisy recording picked: quiet voice over a fan and hum, drawn in decibels on the Audio track; Gain at 0.0 dB with Normalize and a checked Clean noise beside it" },
+    { "do": "panel", "stage": "1-noisy" },
+    { "do": "snapshot", "name": "1-noisy" },
+
+    { "do": "press", "control": "Clean noise" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Normalize" },
+    { "do": "waitFor", "condition": "soundSettled", "timeout": 30 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "field": "Gain in dB", "reads": "+29.5" },
+    { "do": "describe", "stage": "2-normalize-alone", "note": "Clean noise unchecked, Normalize: +29.5 dB, and the fan and hum rise with the voice into a thick band between the words" },
+    { "do": "panel", "stage": "2-normalize-alone" },
+    { "do": "snapshot", "name": "2-normalize-alone" },
+
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "field": "Gain in dB", "reads": "0.0" },
+    { "do": "press", "control": "Clean noise" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Normalize" },
+    { "do": "waitFor", "condition": "soundSettled", "timeout": 60 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "field": "Gain in dB", "reads": "+30.7" },
+    { "do": "expect", "field": "Noise reading", "reads": "Medium" },
+    { "do": "describe", "stage": "3-normalize-clean", "note": "Clean noise checked, Normalize: the noise is cleaned first, +30.7 dB, a sparkle on the segment, the waveform flat between the words, and a Noise row at Medium" },
+    { "do": "panel", "stage": "3-normalize-clean" },
+    { "do": "snapshot", "name": "3-normalize-clean" },
+
+    { "do": "press", "control": "Remove Noise Cleaning" },
+    { "do": "waitFor", "condition": "soundSettled", "timeout": 30 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "field": "Gain in dB", "reads": "+30.7" },
+    { "do": "describe", "stage": "4-removed", "note": "Remove Noise Cleaning: the Noise row goes, the gain stays, and the band between the words is back" },
+    { "do": "snapshot", "name": "4-removed" },
+
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "field": "Noise reading", "reads": "Medium" }
+  ]
+}

@@ -51,8 +51,9 @@ public enum SoundFile {
         else { return nil }
 
         let durationMS = Int((duration.seconds * 1000).rounded())
-        let peaks = (try? peaks(of: track, in: asset)) ?? []
-        return Reading(durationMS: durationMS, waveform: Waveform(peaks: peaks))
+        let handed = HandedTrack(track: track, asset: asset)
+        let found = await OffThePool.run { (try? Self.peaks(of: handed.track, in: handed.asset)) ?? [] }
+        return Reading(durationMS: durationMS, waveform: Waveform(peaks: found))
     }
 
     /// The loudest sample in each bucket of the file, start to end.
@@ -125,6 +126,11 @@ public enum SoundFile {
     public static func loudnessLUFS(at url: URL, sourceRangesMS ranges: [Range<Int>]) async -> Double? {
         let asset = AVURLAsset(url: url)
         guard let track = try? await asset.loadTracks(withMediaType: .audio).first else { return nil }
+        let handed = HandedTrack(track: track, asset: asset)
+        return await OffThePool.run { loudness(of: handed.track, in: handed.asset, ranges: ranges) }
+    }
+
+    private static func loudness(of track: AVAssetTrack, in asset: AVAsset, ranges: [Range<Int>]) -> Double? {
         var meter: LoudnessMeter?
         for range in ranges where !range.isEmpty {
             let timeRange = CMTimeRange(

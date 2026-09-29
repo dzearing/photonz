@@ -267,6 +267,91 @@ extension EditorState {
             level.clipGainDB = dB
             if level != before { levels[id] = level }
         }
+        setSoundLevels(levels)
+    }
+
+    /// **Normalize**: bring each layer's loudest peak, over the stretch it
+    /// plays, to -1 dBFS. Written as gain, so it can be undone or changed
+    /// and the file is never touched. Cleans the noise first when Clean
+    /// noise is checked (`normalizeCleansNoise`), and measures the cleaned
+    /// sound, so the voice lands where it would have without it.
+    func normalizeSound(layers ids: [UUID]) async {
+        await normalize(layers: ids) { played, pieces in
+            guard let wave = await self.measuredShape(of: played),
+                  let peak = AudioNormalize.peakDBFS(of: wave, playedBy: pieces) else { return nil }
+            return AudioNormalize.gainDB(toPeak: AudioNormalize.peakTargetDBFS, fromPeakDBFS: peak)
+        }
+    }
+
+    /// **Normalize Loudness**: bring each layer to a loudness target (-14
+    /// LUFS for the web, -16 for a podcast), measured off the file over the
+    /// stretch it plays, and never past -1 dBFS at its loudest peak.
+    func normalizeSoundLoudness(layers ids: [UUID], to target: AudioNormalize.Target) async {
+        await normalize(layers: ids) { played, pieces in
+            let url = played.cleaning == nil
+                ? SoundLibrary.shared.url(for: played)
+                : await SoundLibrary.shared.readyURL(for: played)
+            guard let url else { return nil }
+            let ranges = AudioNormalize.sourceRangesMS(playedBy: pieces)
+            guard let lufs = await SoundFile.loudnessLUFS(at: url, sourceRangesMS: ranges) else { return nil }
+            let peak = await self.measuredShape(of: played).flatMap { AudioNormalize.peakDBFS(of: $0, playedBy: pieces) }
+            return AudioNormalize.gainDB(toLoudness: target.lufs, fromLUFS: lufs, peakDBFS: peak)
+        }
+    }
+
+    /// Both Normalizes: clean first where Clean noise is checked, measure
+    /// what will play, and write the cleaning and the gain as ONE step to
+    /// undo, onto whatever the level has become by the time the measuring
+    /// is done.
+    private func normalize(layers ids: [UUID],
+                           measure: (SoundRef, ClipPieces) async -> Double?) async {
+        let cleans = normalizeCleansNoise
+        soundsBeingNormalized += 1
+        defer { soundsBeingNormalized -= 1 }
+        var wanted: [UUID: (reduction: NoiseReduction?, gainDB: Double)] = [:]
+        for id in ids {
+            guard var layer = document?.layer(id: id), layer.sound != nil,
+                  let pieces = layer.clipPieces else { continue }
+            var level = layer.soundLevel ?? AudioLevel()
+            if cleans, level.noiseReduction == nil { level.noiseReduction = .standard }
+            layer.setSoundLevel(level)
+            guard let played = layer.playedSound, let dB = await measure(played, pieces) else { continue }
+            wanted[id] = (level.noiseReduction, dB)
+        }
+        guard let document else { return }
+        var levels: [UUID: AudioLevel] = [:]
+        for (id, change) in wanted {
+            guard let layer = document.layer(id: id), layer.sound != nil else { continue }
+            var level = layer.soundLevel ?? AudioLevel()
+            let before = level
+            level.noiseReduction = change.reduction
+            level.clipGainDB = change.gainDB
+            if level != before { levels[id] = level }
+        }
+        setSoundLevels(levels)
+    }
+
+    /// A sound's shape as Normalize measures it: a cleaned sound's own,
+    /// made first if it has to be, never the stand-in the lane draws.
+    private func measuredShape(of played: SoundRef) async -> Waveform? {
+        guard played.cleaning != nil else { return await soundShape(of: played) }
+        if await SoundLibrary.shared.readyURL(for: played) != nil,
+           let exact = SoundLibrary.shared.exactWaveform(for: played) {
+            return exact
+        }
+        return await soundShape(of: played.source)
+    }
+
+    /// A sound's shape, read now if the timeline has not read it yet.
+    private func soundShape(of sound: SoundRef) async -> Waveform? {
+        if let known = SoundLibrary.shared.exactWaveform(for: sound) { return known }
+        guard let url = SoundLibrary.shared.url(for: sound),
+              let reading = await SoundFile.read(at: url), !reading.waveform.isEmpty else { return nil }
+        return reading.waveform
+    }
+
+    /// Write levels onto several layers as one step to undo.
+    func setSoundLevels(_ levels: [UUID: AudioLevel]) {
         guard !levels.isEmpty else { return }
         perform { doc in
             for (id, level) in levels { doc.updateLayer(id: id) { $0.setSoundLevel(level) } }
@@ -274,45 +359,48 @@ extension EditorState {
         followAudio()
     }
 
-    /// **Normalize**: bring each layer's loudest peak, over the stretch it
-    /// plays, to -1 dBFS. Written as gain, so it can be undone or changed
-    /// and the file is never touched.
-    func normalizeSound(layers ids: [UUID]) async {
-        var gains: [UUID: Double] = [:]
-        for id in ids {
-            guard let layer = document?.layer(id: id), let sound = layer.sound,
-                  let pieces = layer.clipPieces, let wave = await soundShape(of: sound),
-                  let peak = AudioNormalize.peakDBFS(of: wave, playedBy: pieces)
-            else { continue }
-            gains[id] = AudioNormalize.gainDB(toPeak: AudioNormalize.peakTargetDBFS, fromPeakDBFS: peak)
-        }
-        setSoundClipGain(gains)
+    // MARK: - Clean noise
+
+    /// Where "Clean noise" beside Normalize is remembered, per user.
+    static let normalizeCleansNoiseKey = "sound.normalizeCleansNoise"
+
+    /// Whether Normalize cleans the noise first. On until somebody unchecks it.
+    var normalizeCleansNoise: Bool {
+        get { UserDefaults.standard.object(forKey: Self.normalizeCleansNoiseKey) as? Bool ?? true }
+        set { UserDefaults.standard.set(newValue, forKey: Self.normalizeCleansNoiseKey) }
     }
 
-    /// **Normalize Loudness**: bring each layer to a loudness target (-14
-    /// LUFS for the web, -16 for a podcast), measured off the file over the
-    /// stretch it plays, and never past -1 dBFS at its loudest peak.
-    func normalizeSoundLoudness(layers ids: [UUID], to target: AudioNormalize.Target) async {
-        var gains: [UUID: Double] = [:]
+    /// Clean noise on several layers at a strength, or stop cleaning it
+    /// (nil), as one step to undo. The cleaned copy starts being made at once.
+    func setSoundNoiseReduction(_ reduction: NoiseReduction?, layers ids: [UUID]) {
+        guard let document else { return }
+        var levels: [UUID: AudioLevel] = [:]
         for id in ids {
-            guard let layer = document?.layer(id: id), let sound = layer.sound,
-                  let pieces = layer.clipPieces,
-                  let url = SoundLibrary.shared.url(for: sound)
-            else { continue }
-            let ranges = AudioNormalize.sourceRangesMS(playedBy: pieces)
-            guard let lufs = await SoundFile.loudnessLUFS(at: url, sourceRangesMS: ranges) else { continue }
-            let peak = await soundShape(of: sound).flatMap { AudioNormalize.peakDBFS(of: $0, playedBy: pieces) }
-            gains[id] = AudioNormalize.gainDB(toLoudness: target.lufs, fromLUFS: lufs, peakDBFS: peak)
+            guard let layer = document.layer(id: id), layer.sound != nil else { continue }
+            var level = layer.soundLevel ?? AudioLevel()
+            guard level.noiseReduction != reduction else { continue }
+            level.noiseReduction = reduction
+            levels[id] = level
         }
-        setSoundClipGain(gains)
+        setSoundLevels(levels)
+        for id in levels.keys {
+            if let played = self.document?.layer(id: id)?.playedSound, played.cleaning != nil {
+                SoundLibrary.shared.clean(played, waitingFirst: false)
+            }
+        }
     }
 
-    /// A sound's shape, read now if the timeline has not read it yet.
-    private func soundShape(of sound: SoundRef) async -> Waveform? {
-        if let known = SoundLibrary.shared.waveform(for: sound) { return known }
-        guard let url = SoundLibrary.shared.url(for: sound),
-              let reading = await SoundFile.read(at: url), !reading.waveform.isEmpty else { return nil }
-        return reading.waveform
+    /// The panel's Noise slider: the picked sound's strength.
+    func setSoundNoiseReductionInHand(_ reduction: NoiseReduction?) {
+        guard let id = soundLayerInHand?.id else { return }
+        setSoundNoiseReduction(reduction, layers: soundLayers(actingOn: id))
+    }
+
+    /// How far along the cleaned copy of this layer's sound is, or nil where
+    /// none is being made: the mark on its segment.
+    func soundCleaningProgress(of id: UUID) -> Double? {
+        guard let sound = document?.layer(id: id)?.sound else { return nil }
+        return SoundLibrary.shared.cleaningProgress(ofSource: sound.sourceID)
     }
 
     /// What the mix is called before anybody renames it: the document's own
@@ -401,6 +489,7 @@ extension EditorState {
         guard documentHasAudio else { return }
         loadSoundShapes()
         audioPlayer.setOutputGain(playerVolume.outputGain)
+        cleanedSoundsHeard = SoundLibrary.shared.cleanedArrivals
         audioPlayer.play(audioMix, fromMS: documentTimeMS)
     }
 
@@ -490,6 +579,12 @@ extension EditorState {
     /// Keep every layer's level where the plan says it is as the playhead moves.
     func followAudio() {
         guard isDocumentPlaying else { return }
+        // A cleaned copy landed while this was playing a stand-in for it:
+        // carry on from here with the cleaned sound.
+        if audioPlayerStorage != nil, cleanedSoundsHeard != SoundLibrary.shared.cleanedArrivals {
+            startAudio()
+            return
+        }
         audioPlayerStorage?.follow(audioMix, atMS: documentTimeMS)
     }
 
@@ -528,7 +623,7 @@ extension EditorState {
             raiseCanvasNotice(.mixWritten(file: nil))
             return
         }
-        let urls = SoundLibrary.shared.urls(for: mix)
+        let urls = await SoundLibrary.shared.readyURLs(for: mix)
         let shapes = soundShapes
         do {
             let headroom = try await AudioMixdown.write(mix, urls: urls, to: url, peaks: shapes)

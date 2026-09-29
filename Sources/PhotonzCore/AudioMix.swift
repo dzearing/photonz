@@ -68,12 +68,19 @@ public struct AudioLevel: Hashable, Codable, Sendable {
     }
     private var storedClipGainDB: Double
 
+    /// Clean noise: how hard the hiss, hum and room tone under this sound are
+    /// taken out before anything else happens to it (`NoiseCleaning.swift`).
+    /// Nil where nobody asked, which plays the file as recorded.
+    public var noiseReduction: NoiseReduction?
+
     public init(gain: Double = AudioLevel.unityGain, points: [AudioLevelPoint] = [],
-                fadeCurve: EasingCurve = .linear, clipGainDB: Double = 0) {
+                fadeCurve: EasingCurve = .linear, clipGainDB: Double = 0,
+                noiseReduction: NoiseReduction? = nil) {
         self.gain = Self.bounded(gain)
         self.points = Self.tidied(points)
         self.fadeCurve = fadeCurve
         self.storedClipGainDB = Self.boundedClipGainDB(clipGainDB)
+        self.noiseReduction = noiseReduction
     }
 
     /// How far gain may go either way. Forty eight decibels up brings the
@@ -229,6 +236,7 @@ public struct AudioLevel: Hashable, Codable, Sendable {
     /// is what decides whether it is written down at all.
     public var isUntouched: Bool {
         gain == Self.unityGain && points.isEmpty && fadeCurve == .linear && clipGainDB == 0
+            && noiseReduction == nil
     }
 
     // MARK: - Fades
@@ -332,7 +340,7 @@ public struct AudioLevel: Hashable, Codable, Sendable {
         return String(format: "%.1f dB", dB)
     }
 
-    private enum CodingKeys: String, CodingKey { case gain, points, fadeCurve, clipGainDB }
+    private enum CodingKeys: String, CodingKey { case gain, points, fadeCurve, clipGainDB, noiseReduction }
 
     /// A level nobody has touched writes nothing, so every document written
     /// before sound existed reads back identical.
@@ -342,6 +350,7 @@ public struct AudioLevel: Hashable, Codable, Sendable {
         if !points.isEmpty { try c.encode(points, forKey: .points) }
         if fadeCurve != .linear { try c.encode(fadeCurve, forKey: .fadeCurve) }
         if clipGainDB != 0 { try c.encode(clipGainDB, forKey: .clipGainDB) }
+        try c.encodeIfPresent(noiseReduction, forKey: .noiseReduction)
     }
 
     public init(from decoder: Decoder) throws {
@@ -349,7 +358,8 @@ public struct AudioLevel: Hashable, Codable, Sendable {
         self.init(gain: try c.decodeIfPresent(Double.self, forKey: .gain) ?? Self.unityGain,
                   points: try c.decodeIfPresent([AudioLevelPoint].self, forKey: .points) ?? [],
                   fadeCurve: try c.decodeIfPresent(EasingCurve.self, forKey: .fadeCurve) ?? .linear,
-                  clipGainDB: try c.decodeIfPresent(Double.self, forKey: .clipGainDB) ?? 0)
+                  clipGainDB: try c.decodeIfPresent(Double.self, forKey: .clipGainDB) ?? 0,
+                  noiseReduction: try? c.decodeIfPresent(NoiseReduction.self, forKey: .noiseReduction))
     }
 }
 
@@ -465,7 +475,8 @@ extension PhotonzDocument {
                 mix += layer.mergedSound(canvasSize: canvasSize, pixelScale: pixelScale)
                 return
             }
-            guard let sound = layer.sound, layer.isVisible, !silenced.contains(layer.id),
+            // A cleaned segment plays its cleaned copy (`NoiseCleaning.swift`).
+            guard let sound = layer.playedSound, layer.isVisible, !silenced.contains(layer.id),
                   let time = layer.time,
                   let pieces = layer.clipPieces
             else { return }
