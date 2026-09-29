@@ -119,11 +119,13 @@
     {
       "do": "expect",
       "control": "Kind",
+      "in": "Shadow 1",
       "present": true
     },
     {
       "do": "reveal",
-      "control": "Kind"
+      "control": "Kind",
+      "in": "Shadow 1"
     },
     {
       "do": "wait",
