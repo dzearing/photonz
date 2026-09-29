@@ -2077,6 +2077,12 @@ final class EditorState {
     /// whether it has one more row to clear. Session chrome only.
     var toolSettingsSize: CGSize = .zero
 
+    /// Where the bottom of the canvas put its pieces, in canvas view points:
+    /// the modal tool's capsule, the notice pill and the caption boxes, as
+    /// `CanvasFootStack` last laid them out. Read by walks, which fail if two
+    /// of them overlap. Session chrome only.
+    @ObservationIgnored var canvasFootReading = CanvasFootReading()
+
     /// The selected caliper's live label-size preview during a slider drag (no
     /// history); the canvas overlay reads it so the pill resizes live.
     var measureLabelPreview: (id: UUID, scale: CGFloat)?

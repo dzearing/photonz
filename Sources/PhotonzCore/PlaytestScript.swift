@@ -1004,6 +1004,12 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Fail unless the Captions layer wears the standard look in the box a
     /// fresh one lands in: what the Caption track bar's Reset does.
     case captionsExpectReset
+    /// Fail unless the bottom of the canvas has its pieces apart: the modal
+    /// tool's capsule (Trim, Crop), the notice pill and the caption boxes on
+    /// the picture, each one that is up, overlapping none of the others
+    /// (`EditorChromeLayout.canvasFoot`). Fails too when no caption box is
+    /// on the canvas, since then there is nothing to keep apart from.
+    case captionsExpectFootApart
     /// Put the playhead 40 ms into the next word said after it, where the
     /// word being said has only just started its motion
     /// (`CaptionWordStyle.swift`); `captionsStepIntoWord` moves 90 ms further
@@ -1248,6 +1254,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .captionsStyleCaption, .captionsStyleLowerThird, .captionsStyleKaraoke,
              .captionsPositionTop, .captionsPositionBottom, .captionsExpectLitWord,
              .captionsExpectGuides, .captionsExpectNoGuides, .captionsExpectReset,
+             .captionsExpectFootApart,
              .captionsSeekIntoNextWord, .captionsStepIntoWord, .captionsExpectOneWordPopping,
              .captionsExpectOneLayerPicked, .captionsExpectMovedTogether,
              .captionsExportFiles, .captionsExpectEditingOnCanvas,

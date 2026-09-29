@@ -369,6 +369,17 @@ extension PhotonzDocument {
         return found
     }
 
+    /// Where the captions are drawn, in canvas points: the box of every
+    /// visible Captions layer. The box and not the cue on screen, because every
+    /// cue fills the same box and chrome that keeps clear of it must not hop
+    /// up and down as the words change (`EditorChromeLayout.canvasFoot`).
+    public var captionBoxesOnCanvas: [CGRect] {
+        captionsLayers.compactMap { layer in
+            guard layer.isVisible else { return nil }
+            return canvasLayer(id: layer.id)?.frame
+        }
+    }
+
     /// The Captions layer holding a cue, or nil for a cue somebody moved out.
     public func captionsLayer(holding cueID: UUID) -> Layer? {
         captionsLayers.first { layer in layer.children.contains { $0.id == cueID } }

@@ -1,0 +1,142 @@
+{
+  "out": "/tmp/photonz-playtest/trim-bar-clears-captions-and-notices-walk",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleTalk"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "2",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekQuarter"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "0-a-talk-before-its-captions",
+      "note": "A recording with somebody talking, at Next's defaults with no switch touched, in Edit mode and paused a quarter of the way in"
+    },
+    {
+      "do": "snapshot",
+      "name": "0-a-talk-before-its-captions"
+    },
+    {
+      "do": "press",
+      "control": "Add Captions"
+    },
+    {
+      "do": "action",
+      "action": "captionsWaitToLand"
+    },
+    {
+      "do": "action",
+      "action": "videoBeginTrim"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.35
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectFootApart"
+    },
+    {
+      "do": "describe",
+      "stage": "1-trim-picked-while-the-notice-is-up",
+      "note": "THE POINT. Trim picked straight after the captions land, while Captions written is still up. The trim bar sits just above the tool bar, the notice stacks on top of it instead of lying under it, and the caption line is clear of both"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-trim-picked-while-the-notice-is-up"
+    },
+    {
+      "do": "dropImage",
+      "file": "fixtures/Not really a recording.mp4",
+      "at": [
+        640,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectNotice",
+      "says": "Not really a recording.mp4"
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectFootApart"
+    },
+    {
+      "do": "describe",
+      "stage": "1b-a-refusal-with-trim-in-hand",
+      "note": "A file that will not open, dropped on the picture with Trim still in hand: the refusal stacks on top of the trim bar, clear of it and of the caption line, and reads end to end"
+    },
+    {
+      "do": "snapshot",
+      "name": "1b-a-refusal-with-trim-in-hand"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectFootApart"
+    },
+    {
+      "do": "describe",
+      "stage": "2-zoomed-in-the-bar-rises-over-the-caption",
+      "note": "Zoomed in, the caption line comes down to where the trim bar sits. The bar rises just clear of it rather than covering it"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-zoomed-in-the-bar-rises-over-the-caption"
+    },
+    {
+      "do": "action",
+      "action": "videoTrimCancel"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-trim-put-down",
+      "note": "Cancel puts Trim down; nothing else on the canvas moved"
+    }
+  ]
+}

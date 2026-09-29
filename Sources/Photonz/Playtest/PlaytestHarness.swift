@@ -3823,6 +3823,21 @@ private final class Run {
                                   + "\(layer.captionsLook?.preset.title ?? "no look"), not reset to \(fresh)")
                 }
                 note(number, step.name, "captions: reset to the standard look at \(fresh)", state: describe())
+            case .captionsExpectFootApart:
+                let foot = editor.canvasFootReading
+                guard !foot.captions.isEmpty else {
+                    throw Failure(description: "there is no Captions box on the canvas to keep the foot apart from")
+                }
+                var pieces: [(String, CGRect)] = foot.captions.map { ("the captions", $0) }
+                if let capsule = foot.capsule { pieces.append(("the \(editor.activeTool == .trim ? "trim" : "crop") bar", capsule)) }
+                if let notice = foot.notice { pieces.append(("the notice", notice)) }
+                for (i, a) in pieces.enumerated() {
+                    for b in pieces[(i + 1)...] where a.0 != b.0 && a.1.intersects(b.1) {
+                        throw Failure(description: "\(a.0) at \(a.1.integral) overlaps \(b.0) at \(b.1.integral)")
+                    }
+                }
+                note(number, step.name, "canvas foot: " + pieces.map { "\($0.0) \($0.1.integral)" }
+                        .joined(separator: ", ") + ", none overlapping", state: describe())
             case .captionsExpectLitWord:
                 guard let shown = editor.document?.drawn(atTimeMS: editor.documentTimeMS),
                       let lit = shown.allLayers.first(where: { $0.isCaption && $0.isVisible }),
@@ -5056,6 +5071,7 @@ private final class Run {
                  .captionsExpectOneLayerPicked, .captionsExpectMovedTogether,
                  .captionsExpectLitWord, .captionsExportFiles,
                  .captionsExpectGuides, .captionsExpectNoGuides, .captionsExpectReset,
+                 .captionsExpectFootApart,
                  .captionsSeekIntoNextWord, .captionsStepIntoWord, .captionsExpectOneWordPopping,
                  .captionsExpectEditingOnCanvas,
                  .captionsWriteFilmWithFileBeside,

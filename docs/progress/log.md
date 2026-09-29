@@ -20154,3 +20154,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Next's one glass bar is 38pt tall (28pt row, 5pt rim, as `video.html`'s `.tbar`), its ends 9pt past the end tools, its zoom slider 92pt. Current's capsules keep 48pt and 110pt.
 - Core: `ToolBarSpacing.height` / `.zoomSliderWidth`; `toolBarCovers(bar:)` and a `bar:` parameter on `aboveToolBar`, `toolSettingsFrame`, `toolBarFrame`, `bottomNoticeFrame`, `bottomChrome`. App: `Experiments.shared.toolBar` is the bar in use; the fit, overlays, measure legend and grid-adjust bar read it.
 - Walks: `toolBar` steps can claim `height` and `zoomSlider`. Audit: `queue/audits/2026-09-28-short-tool-bar.json`.
+
+## 2026-09-28 — The trim bar, the notices and the captions stay apart
+
+- Reproduced: a notice raised with Trim in hand ("Captions written", a refusal) lay wholly under the trim capsule, since both were padded to `aboveToolBar`; zoomed in, the capsule sat on the caption line.
+- Core: `EditorChromeLayout.canvasFoot` (capsule at the base, notice stacked above it, either lifted just clear of the caption boxes, never off the top) and `PhotonzDocument.captionBoxesOnCanvas` (every visible Captions layer's box, so nothing hops as words change). Tests: `CanvasFootTests`, `CaptionsLayerTests`.
+- App: `CanvasFootStack` replaces the two bottom overlays in `EditorView`; it reads the viewport in its own body so a zoom does not rebuild the editor. Current is unchanged (crop capsule, Trim and captions are all Next switches).
+- Walks: new `captionsExpectFootApart` action; `trim-bar-clears-captions-and-notices-walk` (fixture `Not really a recording.mp4` raises a 3s refusal the capture can catch). Audit: `queue/audits/2026-09-28-trim-bar-clears-captions.json`.

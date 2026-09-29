@@ -1,0 +1,24 @@
+{
+  "feature": "The trim bar, the notices and the captions stay apart",
+  "epic": "video-audio",
+  "summary": "With Trim in hand on a captioned recording, a notice now sits on top of the trim bar instead of hidden under it, and the bar rises just clear of the caption line whenever it would cover it.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Walk: Scripts/playtest/trim-bar-clears-captions-and-notices-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording with somebody talking, press Command 2, and pause a quarter of the way in." },
+    { "do": "Press Add Captions, and as soon as the words land press C for Trim." },
+    { "do": "Drop a file that is not a recording onto the picture while Trim is still in hand.", "shot": "2026-09-28-trim-bar-clears-captions-1-refusal.png" },
+    { "do": "Zoom in once with Command Plus until the caption line comes down to the bottom of the canvas.", "shot": "2026-09-28-trim-bar-clears-captions-2-zoomed.png" },
+    { "do": "Press Escape to put Trim down, then drag a second recording onto the timeline.", "shot": "2026-09-28-trim-bar-clears-captions-3-clip-added.png" }
+  ],
+  "evaluate": [
+    "With the notice above the caption and the trim bar below it, do the two still read as one bottom stack, or as scattered?",
+    "When you zoom in, does the trim bar rising over the caption feel right, or would you rather the caption were covered and the bar stayed put?",
+    "Is the gap the bar leaves above the caption line too big, given it clears the room for two lines even when one is showing?"
+  ],
+  "rough": [
+    "The bar keeps clear of the whole Captions box, which holds two lines, so with one line on screen it rises a line higher than it strictly needs to. It never hops as the words change, which is why.",
+    "When the notice has to rise over the caption it ends up above the caption line while the trim bar stays below it, so the three read notice, caption, bar rather than one stack.",
+    "The mock (Video cut walkthrough) has no trim bar on the canvas at all: trimming there is done on the clip's edges. The bar is the app's own chrome."
+  ]
+}

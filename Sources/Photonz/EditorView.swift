@@ -384,63 +384,73 @@ struct EditorView: View {
                 // One word of a caption, open for typing over itself.
                 .overlay(alignment: .topLeading) { CaptionWordCanvasOverlay() }
                 .overlay(alignment: .bottom) {
-                    // Toasts stack from the foot of the canvas, newest nearest
-                    // (`comp-feedback`): an export writing sits above the one
-                    // notice pill, and stays until the file lands.
-                    VStack(spacing: 8) {
-                        if let run = editorState.videoExport {
-                            VideoExportToast(run: run) { editorState.cancelVideoExport() }
-                                .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    // The foot of the canvas as one layout: a modal tool's
+                    // capsule (Trim, Crop) sits clear of the tool bar, the
+                    // notice stacks on top of it rather than under it, and
+                    // both rise over the captions when they would cover them
+                    // (`EditorChromeLayout.canvasFoot`). They used to be two
+                    // overlays padded to the same line, so a notice raised
+                    // with Trim in hand was never seen.
+                    //
+                    // The base is above the tool bar, not behind it: the
+                    // notice used to sit 14pt off the bottom, inside the bar's
+                    // own band, so the one line telling you what a click does
+                    // was covered by the bar you had just used. And above the
+                    // tool settings capsule when one is up, which for Measure
+                    // (the tool that owns its hint) it always is.
+                    CanvasFootStack(
+                        base: EditorChromeLayout.aboveToolBar(
+                            toolSettingsHeight: editorState.toolSettingsSize.height, bar: barSpacing),
+                        hasCapsule: showsCropActionBar || editorState.activeTool == .trim
+                    ) {
+                        if showsCropActionBar {
+                            cropActionBar
+                        } else if editorState.activeTool == .trim {
+                            trimActionBar
                         }
-                        // One slot: the "Copied" notice and the Measure mode hint
-                        // never stack. The notice wins while it is up.
-                        if let notice = editorState.copyConfirmation {
-                            canvasNoticeChip(title: notice.title, line: notice.line,
-                                             action: notice.action)
-                        } else if editorState.showsMeasureHint {
-                            measureHintChip
-                        } else if editorState.showsPathEditHint {
-                            // The same chip, for the other half of the job: with a
-                            // path picked it says what its points do, because
-                            // double clicking a point and Option dragging a lever
-                            // are not things anybody guesses at.
-                            //
-                            // It is read BEFORE the Pen's, and that order is the
-                            // whole fix: with the Pen in hand over a path picked up
-                            // again, the one chip on screen at the exact moment
-                            // somebody wants to round a corner was still talking
-                            // about placing the next anchor. A path is only
-                            // picked here when the Pen is NOT mid-draw — the first
-                            // anchor of a new shape lets the last one go
-                            // (`penMouseDown`) — so the Pen's own line is never
-                            // covered up while it is the one that matters.
-                            canvasNoticeChip(title: PathEditHint.title,
-                                             detail: editorState.pathEditHintText)
-                        } else if editorState.showsPenHint {
-                            // The Pen's chip stays up the whole time the tool is in
-                            // hand, rather than fading like the Measure one: it is
-                            // the only place Return and Escape are told apart, and
-                            // the moment you need that is several clicks after you
-                            // picked the tool up.
-                            canvasNoticeChip(title: PenSession.hintTitle,
-                                             detail: editorState.penHintText)
+                    } notice: {
+                        // Toasts stack from the foot of the canvas, newest nearest
+                        // (`comp-feedback`): an export writing sits above the one
+                        // notice pill, and stays until the file lands.
+                        VStack(spacing: 8) {
+                            if let run = editorState.videoExport {
+                                VideoExportToast(run: run) { editorState.cancelVideoExport() }
+                                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+                            }
+                            // One slot: the "Copied" notice and the Measure mode hint
+                            // never stack. The notice wins while it is up.
+                            if let notice = editorState.copyConfirmation {
+                                canvasNoticeChip(title: notice.title, line: notice.line,
+                                                 action: notice.action)
+                            } else if editorState.showsMeasureHint {
+                                measureHintChip
+                            } else if editorState.showsPathEditHint {
+                                // The same chip, for the other half of the job: with a
+                                // path picked it says what its points do, because
+                                // double clicking a point and Option dragging a lever
+                                // are not things anybody guesses at.
+                                //
+                                // It is read BEFORE the Pen's, and that order is the
+                                // whole fix: with the Pen in hand over a path picked up
+                                // again, the one chip on screen at the exact moment
+                                // somebody wants to round a corner was still talking
+                                // about placing the next anchor. A path is only
+                                // picked here when the Pen is NOT mid-draw — the first
+                                // anchor of a new shape lets the last one go
+                                // (`penMouseDown`) — so the Pen's own line is never
+                                // covered up while it is the one that matters.
+                                canvasNoticeChip(title: PathEditHint.title,
+                                                 detail: editorState.pathEditHintText)
+                            } else if editorState.showsPenHint {
+                                // The Pen's chip stays up the whole time the tool is in
+                                // hand, rather than fading like the Measure one: it is
+                                // the only place Return and Escape are told apart, and
+                                // the moment you need that is several clicks after you
+                                // picked the tool up.
+                                canvasNoticeChip(title: PenSession.hintTitle,
+                                                 detail: editorState.penHintText)
+                            }
                         }
-                    }
-                    // Above the tool bar, not behind it: it used to sit 14pt
-                    // off the bottom, inside the bar's own band, so the one
-                    // line telling you what a click does was covered by the bar
-                    // you had just used. And above the tool settings capsule
-                    // when one is up, which for Measure — the tool that owns
-                    // its hint — it always is.
-                    .padding(.bottom, EditorChromeLayout.aboveToolBar(
-                        toolSettingsHeight: editorState.toolSettingsSize.height, bar: barSpacing))
-                }
-                .overlay(alignment: .bottom) {
-                    if Experiments.shared.toolOptionsEnabled,
-                       editorState.activeTool == .crop, editorState.cropRect != nil {
-                        cropActionBar
-                    } else if editorState.activeTool == .trim {
-                        trimActionBar
                     }
                 }
                 .overlay(alignment: .topLeading) {
@@ -2369,12 +2379,15 @@ struct EditorView: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .glassEffect(.regular, in: .capsule)
-        // Clear of the floating tool bar, and of the tool settings capsule
-        // when one is up, so they read as a stack rather than one covering
-        // the other.
-        .padding(.bottom, EditorChromeLayout.aboveToolBar(
-            toolSettingsHeight: editorState.toolSettingsSize.height, bar: barSpacing))
+        // Placed by `CanvasFootStack`: clear of the floating tool bar, of the
+        // tool settings capsule when one is up, and of the captions.
         .transition(.opacity.combined(with: .move(edge: .bottom)))
+    }
+
+    /// Crop's Cancel · Crop capsule is up.
+    private var showsCropActionBar: Bool {
+        Experiments.shared.toolOptionsEnabled && editorState.activeTool == .crop
+            && editorState.cropRect != nil
     }
 
     /// What ends a trim: the same glass capsule Crop uses, in the same place,
@@ -2413,8 +2426,7 @@ struct EditorView: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .glassEffect(.regular, in: .capsule)
-        .padding(.bottom, EditorChromeLayout.aboveToolBar(
-            toolSettingsHeight: editorState.toolSettingsSize.height, bar: barSpacing))
+        // Placed by `CanvasFootStack`, with the crop capsule's rules.
         .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
 

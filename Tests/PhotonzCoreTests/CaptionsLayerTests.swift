@@ -71,6 +71,18 @@ final class CaptionsLayerTests: XCTestCase {
         XCTAssertEqual(layer.localBounds, layer.frame, "the box you select is the box they fill")
     }
 
+    // MARK: - What the chrome keeps clear of
+
+    func testTheCaptionBoxesOnTheCanvasAreEachVisibleCaptionsLayersBox() throws {
+        var document = captioned()
+        let layer = try captionsLayer(document)
+        XCTAssertEqual(document.captionBoxesOnCanvas, [layer.frame],
+                       "one box for every cue, so it never moves while the words change")
+        document.updateLayer(id: layer.id) { $0.isVisible = false }
+        XCTAssertEqual(document.captionBoxesOnCanvas, [], "a hidden Captions layer draws nothing to cover")
+        XCTAssertEqual(PhotonzDocument(canvasSize: size).captionBoxesOnCanvas, [])
+    }
+
     // MARK: - An ordinary frame
 
     func testMovingTheBoxOnceMovesEveryCaption() throws {

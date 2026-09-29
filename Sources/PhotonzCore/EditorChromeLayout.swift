@@ -122,6 +122,58 @@ public enum EditorChromeLayout {
                width: noticeSize.width, height: noticeSize.height)
     }
 
+    /// The bottom paddings of the two things that stack above the tool bar.
+    public struct CanvasFoot: Equatable, Sendable {
+        /// The modal tool's capsule (Trim's In · Out · Cancel · Trim, Crop's
+        /// Cancel · Crop).
+        public var capsuleBottom: CGFloat
+        /// The notice pill.
+        public var noticeBottom: CGFloat
+    }
+
+    /// One layout for the bottom of the canvas, so the capsule a modal tool
+    /// puts up, the notice pill and the captions on the picture never cover
+    /// one another.
+    ///
+    /// Both used to be padded to exactly `base`, so a notice raised while Trim
+    /// was in hand ("Captions written") lay wholly under the capsule, and on a
+    /// small picture both sat on the caption line. Now the capsule keeps
+    /// `base`, the notice stacks one `toolBarStackGap` above it, and either one
+    /// that would cover a rect in `keepClear` (the caption boxes, in canvas view
+    /// points, top-left origin) rises just clear of it. A lift that would take
+    /// it off the top of the canvas is not made: sitting where it always does
+    /// beats vanishing.
+    ///
+    /// `capsuleSize` is nil when no modal tool is up; both are centred.
+    public static func canvasFoot(canvasSize: CGSize, base: CGFloat, capsuleSize: CGSize?,
+                                  noticeSize: CGSize, keepClear: [CGRect]) -> CanvasFoot {
+        func lifted(_ bottom: CGFloat, _ size: CGSize) -> CGFloat {
+            guard size.width > 0, size.height > 0 else { return bottom }
+            var lift = bottom
+            // Lowest first, and round again after each rise: clearing one box
+            // can land the pill on the next one up.
+            let boxes = keepClear.filter { !$0.isEmpty }.sorted { $0.maxY > $1.maxY }
+            for _ in 0...boxes.count {
+                let rect = CGRect(x: (canvasSize.width - size.width) / 2,
+                                  y: canvasSize.height - lift - size.height,
+                                  width: size.width, height: size.height)
+                guard let hit = boxes.first(where: {
+                    rect.intersects($0.insetBy(dx: 0, dy: -toolBarStackGap / 2))
+                }) else { return lift }
+                lift = canvasSize.height - hit.minY + toolBarStackGap
+                if lift + size.height > canvasSize.height { return bottom }
+            }
+            return lift
+        }
+        guard let capsuleSize else {
+            let notice = lifted(base, noticeSize)
+            return CanvasFoot(capsuleBottom: base, noticeBottom: notice)
+        }
+        let capsule = lifted(base, capsuleSize)
+        let notice = lifted(capsule + capsuleSize.height + toolBarStackGap, noticeSize)
+        return CanvasFoot(capsuleBottom: capsule, noticeBottom: notice)
+    }
+
     /// Where the floating tool bar sits: centred, `toolBarInset` off the
     /// floor, as tall as the bar in use, and as wide as it measures. A bar that has
     /// not been measured yet (`toolBarWidth` of 0), or one that somehow
