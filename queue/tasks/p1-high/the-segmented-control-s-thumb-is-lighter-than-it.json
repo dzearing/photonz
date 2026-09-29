@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-29T13:02:36.363Z",
-  "updated": "2026-09-29T13:07:15.519Z",
+  "updated": "2026-09-29T13:08:06.457Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -42,6 +42,10 @@
     {
       "t": "2026-09-29T13:07:15.518Z",
       "note": "Intake window updated the component page and shared CSS/JS (605a5c4a + this): recessed rail, lighter glass thumb tokens (--seg-rail, --seg-thumb*), and the stretch-squash-spring morph (420ms). Build the app control to match that page; the mock half of acceptance item 2 is done."
+    },
+    {
+      "t": "2026-09-29T13:08:06.456Z",
+      "note": "User 2026-09-29: the overshoot was obnoxious on multi-step moves (it left the rail). Page fixed in 85a035e7: settle is a fixed min(3px, 6% of travel), clamped inside the rail, no distance-proportional spring. The app morph must follow the same rule: the thumb never leaves the rail and never overshoots by more than a few points, however far it moves."
     }
   ]
 }
