@@ -275,10 +275,13 @@ struct ReadRunAsTextFixtureTests {
         // screen, so picking all six reads Mixed in the Size menu.
         let sizes = try Set(Self.rowLabels.map { try reading($0).fontSize })
         #expect(sizes.count == 1)
-        // And it is a size out of what they measured, not a number from
-        // somewhere else: they each fitted between 28.0 and 28.5.
+        // And it is the size the type really was: 13 point labels on a 2x
+        // capture, which is 26 of the document's own points. It was 28.0 to
+        // 28.5 until 2026-09-29, the size that covers the ink, which the
+        // system font's optical size puts 9 per cent above the truth
+        // (`ReadSizeGroundTruthTests`).
         let one = try #require(sizes.first)
-        #expect(one > 28 && one < 28.5)
+        #expect(abs(one - 26) <= 0.5, "the rows came back \(one), not 26")
     }
 
     @Test func theHeadingIsNotDraggedToTheSizeOfItsRows() throws {
@@ -312,16 +315,20 @@ struct ReadRunAsTextFixtureTests {
     }
 
     @Test func theRetypedWordsAreTheSizeTheOldOnesWere() throws {
-        // The number this feature lives on. Set the words the app chose and
-        // measure them: they have to cover the space the picture's ink covered,
-        // or a label lands somewhere other than where it was.
+        // Set the words the app chose and measure them. They are the size the
+        // type really was, which on this 2x capture is a few per cent SHORTER
+        // than the ink they replace: the system font at 26 is a narrower
+        // drawing than the same font at 13 magnified. The user took that trade
+        // on 2026-09-20. What it must never do is come out longer, and it must
+        // not come out shorter than the optical size costs, or the size is
+        // wrong for some other reason.
         for index in 0..<9 {
             let reading = try reading(index)
             let ink = try #require(Self.reads[index].inkRect)
             let mask = try #require(TextReader.render(reading.string, in: reading.face,
                                                       size: reading.fontSize, scale: 1))
             let bounds = try #require(mask.inkBounds())
-            #expect(abs(bounds.width - ink.width) <= 3,
+            #expect(bounds.width <= ink.width + 1 && bounds.width >= ink.width * 0.88,
                     "run \(index) came out \(bounds.width) px wide, was \(ink.width)")
             #expect(abs(bounds.height - ink.height) <= 3,
                     "run \(index) came out \(bounds.height) px tall, was \(ink.height)")
@@ -331,7 +338,9 @@ struct ReadRunAsTextFixtureTests {
     @Test func theWordsLandWhereTheInkWas() throws {
         // The frame a text layer gets is not the picture's frame: the box holds
         // the ascent above the letters and the descent below. Setting the words
-        // in that box has to put their ink back on the picture's ink.
+        // in that box has to put their ink back on the picture's ink: the same
+        // left edge, and the same bottom, which is the line they sit on. (Not
+        // the same top: at the true size the words are a pixel shorter.)
         for index in [0, 3, 8] {
             let reading = try reading(index)
             let ink = try #require(Self.reads[index].inkRect)
@@ -344,7 +353,7 @@ struct ReadRunAsTextFixtureTests {
                                                       size: reading.fontSize, scale: 1))
             let inside = try #require(mask.inkBounds())
             #expect(abs(box.minX + inside.minX - ink.minX) < 0.51)
-            #expect(abs(box.minY + inside.minY - ink.minY) < 0.51)
+            #expect(abs(box.minY + inside.maxY - ink.maxY) < 0.51)
         }
     }
 

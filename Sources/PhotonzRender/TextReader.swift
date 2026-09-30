@@ -115,9 +115,20 @@ public enum TextReader {
     /// Helvetica Neue when the question is asked the wrong way round.
     ///
     /// `layerScale` is how many image pixels there are per DOCUMENT point,
-    /// which is what turns the size that was identified into the size the layer
-    /// has to be SET at to cover the same space. A screenshot opened whole is
-    /// 1; the same picture shown at half size on the canvas is 2.
+    /// which is what turns the size the type was into document points. A
+    /// screenshot opened whole is 1; the same picture shown at half size on the
+    /// canvas is 2. So a 13 point label on a Retina capture opened whole comes
+    /// back 26: the size the type really was, in the document's own points.
+    ///
+    /// That is NOT the size that covers the picture's ink exactly, and on the
+    /// system font no size does. SF Pro carries an optical size: at 13 points
+    /// it is a wider, looser drawing than at 26, so 13 point type magnified
+    /// twice is 7.7 per cent wider than 26 point type (measured in
+    /// `ReadSizeGroundTruthTests`). The reader used to re-fit the size at the
+    /// layer's scale, which covered the ink and came back 28.4, a number the
+    /// type never was. The user chose the true size on 2026-09-20: a spec
+    /// written off the Size menu is right, and the retyped words land a few per
+    /// cent short, on the same left edge and the same line.
     ///
     /// `family` is the family the picture this run was cut out of is set in,
     /// where the caller knows it (`pageFamily`). Given one, the face is chosen
@@ -155,6 +166,8 @@ public enum TextReader {
         /// depends on what the page settles, which is what makes settling
         /// cheap.
         let scores: [TextReading.Scored]
+        /// Pixels per point of the type, which the scores were measured at.
+        let captureScale: CGFloat
     }
 
     /// A run measured, or the refusal that ended it before it got that far.
@@ -181,7 +194,7 @@ public enum TextReader {
         let scores = score(string, against: ink.mask, inkHeight: inkRect.height,
                            scale: captureScale)
         return .measured(Measured(mask: ink.mask, inkRect: inkRect, string: string,
-                                  color: color, scores: scores))
+                                  color: color, scores: scores, captureScale: captureScale))
     }
 
     /// Which face a measured run comes back in, and at what size, given what
@@ -195,21 +208,19 @@ public enum TextReader {
         guard let reading = identified.reading else {
             return Read(outcome: identified, inkRect: run.inkRect, scores: run.scores)
         }
-        // The face has been identified at the size the type was set at. The
-        // SIZE is a different question with a different answer: what the layer
-        // needs is whatever makes that face cover the space the picture's ink
-        // covers, in the document's own units. So the size is matched again, in
-        // the chosen face, at the scale the layer will be drawn at.
-        guard let landed = best(run.string, in: reading.face, against: run.mask,
-                                inkHeight: run.inkRect.height, scale: layerScale),
-              landed.agreement >= TextReading.landedBar
-        else {
+        // The face was identified at the size the type was set at, and that
+        // size is the answer: it only has to be carried into the document's
+        // own points. It is never re-fitted at the layer's scale, because on
+        // the system font that fit is a size the type never was
+        // (`read(_:captureScale:layerScale:preferring:at:)`).
+        let size = reading.fontSize * run.captureScale / layerScale
+        guard size.isFinite, size > 0.25 else {
             return Read(outcome: .refused(.noFaceMatches), inkRect: run.inkRect,
                         scores: run.scores)
         }
         return Read(outcome: .read(TextReading.Reading(
-            string: reading.string, face: reading.face, fontSize: landed.fontSize,
-            colorHex: reading.colorHex, agreement: landed.agreement,
+            string: reading.string, face: reading.face, fontSize: size,
+            colorHex: reading.colorHex, agreement: reading.agreement,
             provenance: reading.provenance)), inkRect: run.inkRect, scores: run.scores)
     }
 
@@ -315,14 +326,11 @@ public enum TextReader {
 
     /// Sets every run at the size its KIND of label settled on.
     ///
-    /// Settled in layer points rather than in the size the face was identified
-    /// at, because those two are not one number divided by the other: rendering
-    /// the same words at a different scale moves the ink by an antialiased edge
-    /// either side, and measured on the settings pane that is a 6 to 10 per
-    /// cent difference, per run. So the sizes compared here are the ones each
-    /// run would actually be SET at, multiplied back up by its own scale so a
-    /// label somebody shrank after separating is still comparable with the
-    /// labels beside it.
+    /// Settled in the picture's own pixels (each run's size multiplied back up
+    /// by its own layer scale), so a label somebody shrank after separating is
+    /// still comparable with the labels beside it. And judged at the size the
+    /// type was set at: a cohort's size is asked of each run's ink at the
+    /// capture's scale, the same question its face was identified by.
     ///
     /// Two runs never take it:
     ///
@@ -349,7 +357,7 @@ public enum TextReader {
                   runs[index].layerScale > 0
             else { return reads[index] }
             return hold(reads[index], of: run, to: settled / runs[index].layerScale,
-                        scale: runs[index].layerScale)
+                        typeSize: settled / max(run.captureScale, 0.01))
         }
         guard spreading, reads.count > 1 else { return reads.indices.map(one) }
         var landed = [Read?](repeating: nil, count: reads.count)
@@ -362,14 +370,18 @@ public enum TextReader {
         return landed.indices.map { landed[$0] ?? reads[$0] }
     }
 
-    /// One run set at `size` instead of the size it fitted itself at, if its
-    /// own ink can still be accounted for at that size. The run as it was
-    /// otherwise.
+    /// One run set at `size` document points instead of the size it fitted
+    /// itself at, if its own ink can still be accounted for at that size. The
+    /// run as it was otherwise.
+    ///
+    /// `typeSize` is the same size in points of the TYPE, which is what the
+    /// ink is asked about, at the capture's own scale.
     private static func hold(_ read: Read, of run: Measured, to size: CGFloat,
-                             scale: CGFloat) -> Read {
-        guard let reading = read.outcome.reading, size > 0.5, size < 2000,
-              size != reading.fontSize,
-              let mask = render(reading.string, in: reading.face, size: size, scale: scale)
+                             typeSize: CGFloat) -> Read {
+        guard let reading = read.outcome.reading, size > 0.25, size < 2000,
+              size != reading.fontSize, typeSize > 0.5, typeSize < 2000,
+              let mask = render(reading.string, in: reading.face, size: typeSize,
+                                scale: run.captureScale)
         else { return read }
         let agreement = TextReading.agreement(run.mask, mask)
         guard agreement >= TextReading.landedBar else { return read }
@@ -879,6 +891,13 @@ public enum TextReader {
     /// measured, and the box is placed by how far its own ink sits inside it.
     ///
     /// `ink` is where the picture's ink sat, in document points.
+    ///
+    /// Placed by the ink's left edge and its BOTTOM, which is the line the
+    /// words sit on. The two only differ when the retyped words are not the
+    /// picture's height, and on a Retina capture they are not: the true size of
+    /// system-font type is a narrower, slightly shorter drawing than the type
+    /// magnified (`read(_:captureScale:layerScale:preferring:at:)`), and words
+    /// placed by their top would sit a pixel above the line they came from.
     public static func frame(for text: TextContent, placingInkAt ink: CGRect,
                              scale: CGFloat = 1) -> CGRect {
         var text = text
@@ -891,7 +910,7 @@ public enum TextReader {
               let bounds = mask.inkBounds(), scale > 0
         else { return CGRect(origin: ink.origin, size: box) }
         return CGRect(x: ink.minX - bounds.minX / scale,
-                      y: ink.minY - bounds.minY / scale,
+                      y: ink.maxY - bounds.maxY / scale,
                       width: box.width, height: box.height)
     }
 }

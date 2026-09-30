@@ -27,7 +27,7 @@
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "2-all-six-rows-at-one-size",
       "note": "THE FIRST TEST, and the whole point of the task: all six row labels picked at once, and the Size menu says one number. It used to say Mixed, which is the app telling you in one word that six labels which are identical on screen came back six different sizes." },
-    { "do": "expect", "menu": "Size", "reads": "28 px" },
+    { "do": "expect", "menu": "Size", "reads": "26 px" },
     { "do": "expect", "menu": "Weight", "reads": "Regular" },
     { "do": "expect", "menu": "Font", "reads": "SF Pro" },
     { "do": "snapshot", "name": "size-2-six-rows-one-size" },
@@ -59,7 +59,7 @@
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "5-three-section-labels-at-one-size",
       "note": "THE THIRD TEST: the three section labels picked together read one size instead of Mixed." },
-    { "do": "expect", "menu": "Size", "reads": "23 px" },
+    { "do": "expect", "menu": "Size", "reads": "21 px" },
     { "do": "snapshot", "name": "size-5-sections-agree" },
 
     { "do": "selectRow", "row": "Style" },
@@ -70,7 +70,7 @@
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "6-and-their-rows-at-a-smaller-one",
       "note": "THE FOURTH TEST, and the one that says this settles wobble rather than flattening a page: the five rows under those sections read one size too, and it is a SMALLER one. The panel comes back reading like the panel." },
-    { "do": "expect", "menu": "Size", "reads": "22 px" },
+    { "do": "expect", "menu": "Size", "reads": "20 px" },
     { "do": "snapshot", "name": "size-6-rows-smaller" },
     { "do": "render", "name": "size-7-panel-doc" }
   ],

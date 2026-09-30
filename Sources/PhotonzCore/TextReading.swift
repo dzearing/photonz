@@ -215,20 +215,14 @@ public enum TextReading {
     /// a face that is not the one in it.
     public static let agreementBar = 0.62
 
-    /// And how closely what actually LANDS has to agree, once that face is set
-    /// at the size this document needs.
+    /// And how closely a run held to its cohort's size still has to agree
+    /// with its own ink before it takes that size.
     ///
-    /// Lower than `agreementBar` on purpose, and the reason is a real limit
-    /// rather than a fudge. A Retina capture's document is in the capture's own
-    /// device pixels, so a label set at 13 points in the picture has to be set
-    /// at 26 in the document to cover the same space — and the system font is
-    /// not one shape at both sizes: it tracks its letters closer together as it
-    /// gets bigger. The words come back a fraction of a pixel per letter tight,
-    /// which is not something an eye finds and is something an overlap score
-    /// punishes hard, because half a pixel of displacement costs half of every
-    /// stroke's width. So the face is judged at the size it was set at, where
-    /// the question is fair, and this second number only has to catch a result
-    /// that has genuinely landed somewhere else.
+    /// Lower than `agreementBar` on purpose. A face has already been
+    /// identified by then; this only has to catch a run the cohort's size
+    /// cannot account for, which keeps the size it fitted itself at rather
+    /// than losing its reading. Asked at the capture's own scale, the size the
+    /// type was set at, which is the same question the face was chosen by.
     public static let landedBar = 0.55
 
     /// How far ahead of the next family the winner has to be before the app
@@ -636,13 +630,12 @@ public enum TextReading {
     /// against 4.484. So there is nothing to be gained by searching for a
     /// better one, and a search costs a render per label per candidate.
     ///
-    /// It is deliberately NOT rounded to a whole point, tempting as that is.
-    /// Measured: holding the settings pane's six rows to 28 rather than 28.38
-    /// puts "Copy to clipboard" 3 pixels short of the ink it is replacing and
-    /// drops its agreement to 0.502, under `landedBar`, so the label that was
-    /// meant to come back tidy comes back not at all. The Size menu says whole
-    /// points anyway (`TextStyles.sizeWords`), so six labels settled at 28.38
-    /// all read "28 pt" — one number, which is the thing being asked for.
+    /// It is deliberately NOT rounded to a whole point. The middle of a real
+    /// cohort is already within a hair of one (the settings pane's rows settle
+    /// at 13.0 points of type, 26 in a Retina capture's document), and the Size
+    /// menu says whole numbers anyway (`TextStyles.sizeWords`), so six labels
+    /// settled at one size all read one number, which is the thing being asked
+    /// for.
     ///
     /// Nil for an empty cohort, which is a cohort with nothing to settle.
     public static func pageSize(of fits: [CGFloat]) -> CGFloat? {

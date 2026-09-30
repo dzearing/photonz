@@ -18,20 +18,20 @@ import Testing
 /// Read at the scale it was set at, the reading is right: every size, every
 /// face, 1x and 2x, lands within a point of the type that made it.
 ///
-/// Read into a document measured in the CAPTURE'S OWN PIXELS — which is what
-/// opening a Retina screenshot gives you, a 2x picture laid out one document
-/// point per pixel — a 13 point label comes back as a 28 point layer where 26
-/// is the size the type really was. About 9 per cent high, every label by the
-/// same amount.
+/// Read into a document measured in the CAPTURE'S OWN PIXELS, which is what
+/// opening a Retina screenshot gives you (a 2x picture laid out one document
+/// point per pixel), a 13 point label used to come back as a 28 point layer
+/// where 26 is the size the type really was. About 9 per cent high, every
+/// label by the same amount. Since 2026-09-29 it comes back 26.
 ///
-/// ## Why
+/// ## Why it was high
 ///
 /// Not antialiasing, not the coverage floor, not rounding. It is the system
 /// font: **SF Pro at 13 points is a different drawing from SF Pro at 26**. The
 /// small one is wider and set further apart, because the typeface carries an
 /// optical size and the operating system applies it. Measured here, "Launch at
 /// login" is 181 pixels of ink wide set at 13 points and photographed at 2x,
-/// and 168 pixels wide set at 26 points and photographed at 1x — the same em in
+/// and 168 pixels wide set at 26 points and photographed at 1x: the same em in
 /// the same number of pixels, 7.7 per cent apart. Helvetica Neue and SF Mono,
 /// which carry no optical size, come out pixel for pixel identical.
 ///
@@ -39,8 +39,15 @@ import Testing
 /// number. The size the type really was is 13 points, which is 26 of the
 /// document's own points. The size that makes the retyped words cover the ink
 /// they replace is 28.4, because SF Pro at 28 is narrower than SF Pro at 13
-/// magnified. The reader reports the second and the Size menu calls it the
-/// size, which is the gap this suite pins.
+/// magnified. The reader used to report the second and the Size menu called it
+/// the size.
+///
+/// ## What it says now
+///
+/// The first. The user chose it on 2026-09-20 (the card "should the Size menu
+/// say the size the type really was"): a spec written off the Size menu is
+/// right, and the retyped words come out a few per cent shorter than the
+/// letters they replaced, on the same left edge and the same line.
 ///
 /// Serialized, like every suite that leans on the recogniser.
 @Suite("A size read off a capture against type of a known size", .serialized)
@@ -204,15 +211,14 @@ struct ReadSizeGroundTruthTests {
 
     // MARK: - The gap, and what causes it
 
-    /// The gap the study was opened for, pinned as a number.
+    /// The gap the study was opened for, closed.
     ///
-    /// A 2x capture opened as a document measured in its own pixels — which is
-    /// every Retina screenshot this app opens — reads its 13 point labels as 28
-    /// point layers where 26 is what the type really was. This test does not
-    /// say that is acceptable. It says how big it is and that it is the same
-    /// for every label, so a change that closes it can be seen to have closed
-    /// it.
-    @Test func aRetinaCaptureReadIntoAPixelDocumentReadsAboutNinePerCentHigh() throws {
+    /// A 2x capture opened as a document measured in its own pixels, which is
+    /// every Retina screenshot this app opens, used to read its 13 point
+    /// labels as 28 point layers. They read 26 now, which is the size the type
+    /// really was in the document's own points, and every label reads the
+    /// same.
+    @Test func aRetinaCaptureReadIntoAPixelDocumentReadsTheSizeTheTypeWas() throws {
         let rows: [(words: String, size: CGFloat, weight: TextWeight, ink: String)] = [
             ("Launch at login", 13, .regular, "#3c3c43"),
             ("Show in menu bar", 13, .regular, "#3c3c43"),
@@ -222,21 +228,87 @@ struct ReadSizeGroundTruthTests {
         let image = try #require(Self.pane(rows, face: "SF Pro", scale: 2))
         let readings = Self.readings(of: image, captureScale: 2, layerScale: 1)
         var off: [Double] = []
+        var sizes: Set<CGFloat> = []
         for row in rows {
             let reading = try #require(readings.first { $0.string == row.words },
                                        "\(row.words) did not come back")
             // The type was 13 points in a 2x picture, so it is 26 of the
             // document's own points.
             off.append(reading.fontSize / (row.size * 2) - 1)
+            sizes.insert(reading.fontSize)
+            #expect(abs(reading.fontSize - row.size * 2) <= 0.5,
+                    "\(row.words) was 26 in the document, came back \(reading.fontSize)")
         }
-        let worst = try #require(off.map(abs).max())
         print(String(format: "A 2x capture read into a 1x document: %@",
                      off.map { String(format: "%+.1f%%", $0 * 100) }.joined(separator: " ")))
-        // Every label is wrong by the SAME amount, which is what says this is
-        // the face rather than noise.
-        #expect(Set(off.map { ($0 * 1000).rounded() }).count == 1)
-        #expect(worst > 0.04, "the gap has closed to \(worst); update this test and the audit")
-        #expect(worst < 0.12, "the gap has grown to \(worst)")
+        #expect(sizes.count == 1, "one kind of label, one size: \(sizes)")
+    }
+
+    /// The round trip again, into a document measured in the capture's own
+    /// pixels, which is how the app opens every screenshot. Every face, both
+    /// scales: the size is the type's size times the capture's scale, whether
+    /// or not the face carries an optical size.
+    @Test func typeOfAKnownSizeReadIntoAPixelDocumentIsThatSizeInItsPixels() throws {
+        let faces = [TextReading.Face(fontName: "SF Pro", weight: .regular),
+                     TextReading.Face(fontName: "SF Pro", weight: .semibold),
+                     TextReading.Face(fontName: "Helvetica Neue", weight: .regular)]
+        var table: [String] = []
+        for face in faces {
+            for scale in [CGFloat(1), 2] {
+                for size in [CGFloat(11), 13, 17] {
+                    let image = try #require(Self.capture("Launch at login", face: face,
+                                                          size: size, scale: scale))
+                    let read = TextReader.read(image, captureScale: scale, layerScale: 1,
+                                               preferring: face.fontName, at: face.weight)
+                    let reading = try #require(read.outcome.reading,
+                                               "\(face.fontName) \(face.weight) \(size)@\(scale)x")
+                    let truth = size * scale
+                    table.append(String(format: "%@ %@ %.0f@%.0fx: read %.2f of %.0f (%+.1f%%)",
+                                        face.fontName, "\(face.weight)", size, scale,
+                                        reading.fontSize, truth,
+                                        (reading.fontSize / truth - 1) * 100))
+                    #expect(abs(reading.fontSize - truth) <= max(0.5, truth * 0.025),
+                            """
+                            \(face.fontName) \(face.weight) set at \(size) at \(scale)x \
+                            came back \(reading.fontSize) in a pixel document, not \(truth)
+                            """)
+                }
+            }
+        }
+        print("Round trip into a document in the capture's own pixels:\n  "
+                + table.joined(separator: "\n  "))
+    }
+
+    /// What saying the true size costs on the canvas, and what it must not.
+    ///
+    /// The words come back a few per cent shorter than the letters they
+    /// replace, which is the trade the user took. They must still start on
+    /// the same left edge and sit on the same line: "Show in menu bar" has no
+    /// descender, so the bottom of its ink IS its baseline.
+    @Test func theTrueSizeSitsOnTheSameLineFromTheSameLeftEdge() throws {
+        let face = TextReading.Face(fontName: "SF Pro", weight: .regular)
+        let image = try #require(Self.capture("Show in menu bar", face: face,
+                                              size: 13, scale: 2))
+        let read = TextReader.read(image, captureScale: 2, layerScale: 1,
+                                   preferring: "SF Pro", at: .regular)
+        let reading = try #require(read.outcome.reading)
+        let ink = try #require(read.inkRect)
+        var text = TextContent(string: reading.string, fontName: reading.face.fontName,
+                               fontSize: reading.fontSize, colorHex: reading.colorHex,
+                               weight: reading.face.weight)
+        text.staysOnOneLine = true
+        let box = TextReader.frame(for: text, placingInkAt: ink, scale: 1)
+        let mask = try #require(TextReader.render(reading.string, in: reading.face,
+                                                  size: reading.fontSize, scale: 1))
+        let inside = try #require(mask.inkBounds())
+        let landed = inside.offsetBy(dx: box.minX, dy: box.minY)
+        print(String(format: "Picture ink %.0fx%.0f, retyped at %.2f: %.0fx%.0f",
+                     ink.width, ink.height, reading.fontSize, landed.width, landed.height))
+        #expect(abs(landed.minX - ink.minX) < 0.51, "left edge moved")
+        #expect(abs(landed.maxY - ink.maxY) < 0.51, "the words left their line")
+        // Shorter, never longer, and not by more than the optical size costs.
+        #expect(landed.width <= ink.width + 1)
+        #expect(landed.width >= ink.width * 0.88)
     }
 
     /// The cause, in one measurement: the same em in the same number of pixels,
@@ -302,6 +374,36 @@ struct ReadSizeGroundTruthTests {
                                        "\(words) did not come back")
             #expect(abs(reading.fontSize - 13) <= 0.25,
                     "\(words) came back \(reading.fontSize), not 13 point type")
+        }
+    }
+
+    /// And opened the way the app opens it, one document point per pixel, the
+    /// same rows read 26: the number the Size menu shows, and the size the
+    /// type really was.
+    @Test func theRealSettingsPaneRowsReadTwentySixInAPixelDocument() throws {
+        let url = try #require(Bundle.module.url(forResource: "Fixtures/settings-pane-2x",
+                                                 withExtension: "png"))
+        let image = try #require(ImageCodec.decode(try Data(contentsOf: url)))
+        let readings = Self.readings(of: image, captureScale: 2, layerScale: 1)
+        for words in ["Launch at login", "Show in menu bar", "Copy to clipboard"] {
+            let reading = try #require(readings.first { $0.string == words },
+                                       "\(words) did not come back")
+            #expect(abs(reading.fontSize - 26) <= 0.5,
+                    "\(words) came back \(reading.fontSize), not 26")
+        }
+    }
+
+    /// The Effects panel's rows are 10 point type: 20 in a pixel document.
+    @Test func theRealEffectsPanelRowsReadTwentyInAPixelDocument() throws {
+        let url = try #require(Bundle.module.url(forResource: "Fixtures/effects-panel-2x",
+                                                 withExtension: "png"))
+        let image = try #require(ImageCodec.decode(try Data(contentsOf: url)))
+        let readings = Self.readings(of: image, captureScale: 2, layerScale: 1)
+        for words in ["Style", "Color", "Position", "Width", "Offset"] {
+            let reading = try #require(readings.first { $0.string == words },
+                                       "\(words) did not come back")
+            #expect(abs(reading.fontSize - 20) <= 0.5,
+                    "\(words) came back \(reading.fontSize), not 20")
         }
     }
 }

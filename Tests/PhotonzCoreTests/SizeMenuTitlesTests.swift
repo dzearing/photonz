@@ -54,8 +54,15 @@ import Testing
         #expect(TextStyles.sizeTitle(1024) == "1024 px")
     }
 
-    @Test func dropsTheFractionTheWayTheMenuAlwaysHas() {
-        #expect(TextStyles.sizeTitle(24.7) == "24 px\u{2007}")
+    /// To the NEAREST whole number, not down. A size read off a screenshot is
+    /// a measurement, and 13 point type on a Retina capture measures 25.7 to
+    /// 26.3 of the document's own points; dropping the fraction told a person
+    /// writing a spec that it was 25 (`ReadSizeGroundTruthTests`).
+    @Test func roundsTheFractionToTheNearestWholeNumber() {
+        #expect(TextStyles.sizeTitle(24.7) == "25 px\u{2007}")
+        #expect(TextStyles.sizeTitle(24.4) == "24 px\u{2007}")
+        #expect(TextStyles.sizeWords(25.69) == "26 px")
+        #expect(TextStyles.sizeWords(43.8) == "44 px")
     }
 
     // MARK: - What anything that reads a size back sees

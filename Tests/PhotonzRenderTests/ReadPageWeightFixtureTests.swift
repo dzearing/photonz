@@ -23,6 +23,8 @@ import Testing
 /// The sizes wobbled the same way and are settled the same way, per cohort: the
 /// rows fit at 22.2, 21.4, 22.4, 22.4 and 21.9 points on their own and are one
 /// size on screen, while the sections over them really are bigger and stay so.
+/// (Those were the sizes that cover the ink. Since 2026-09-29 the reader says
+/// the size the type really was, and the rows, 10 point type, read 20.)
 ///
 /// Serialized, like the suite next door and for the same reason: every test
 /// here waits on ONE lazily read capture.
@@ -134,13 +136,16 @@ struct ReadPageWeightFixtureTests {
     @Test func theRetypedWordsStillCoverTheInkTheyReplace() throws {
         // What holding a label to its cohort's size must not cost: the words
         // still have to land on the ink the picture had, or a label ends up
-        // somewhere other than where it was.
+        // somewhere other than where it was. At the size the type really was
+        // they land a few per cent short (the system font's optical size,
+        // `ReadSizeGroundTruthTests`), shortest on a word as brief as "4 px",
+        // and never longer.
         for read in Self.reads {
             guard let reading = read.outcome.reading, let ink = read.inkRect else { continue }
             let mask = try #require(TextReader.render(reading.string, in: reading.face,
                                                       size: reading.fontSize, scale: 1))
             let bounds = try #require(mask.inkBounds())
-            #expect(abs(bounds.width - ink.width) <= 3,
+            #expect(bounds.width <= ink.width + 1 && bounds.width >= ink.width * 0.85,
                     "\(reading.string) came out \(bounds.width) px wide, was \(ink.width)")
             #expect(abs(bounds.height - ink.height) <= 3,
                     "\(reading.string) came out \(bounds.height) px tall, was \(ink.height)")

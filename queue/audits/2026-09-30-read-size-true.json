@@ -1,0 +1,28 @@
+{
+  "feature": "A size read off a screenshot is the size the type really was",
+  "epic": "measure-redline",
+  "summary": "Reading labels off a Retina screenshot now gives the size the type really was. The settings pane's 13 point rows say 26 px instead of 28, and the Effects panel's 10 point rows say 20 instead of 22, so a spec written off the Size menu is right.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png." },
+    { "do": "Pick the Background row, run Separate into Layers, then press Read the Words." },
+    { "do": "Command-click the six row labels from Launch at login down to Copy to clipboard and read Size in the Text section: 26 px.", "shot": "2026-09-30-read-size-true-1-rows-sc.png" },
+    { "do": "Pick the General heading on its own: 44 px, still bigger than the rows.", "shot": "2026-09-30-read-size-true-2-heading-sc.png" },
+    { "do": "Open Tests/PhotonzRenderTests/Fixtures/effects-panel-2x.png, separate it and press Read the Words." },
+    { "do": "Pick Style, Color, Position, Width and Offset together: 20 px. The three section labels read 21 px.", "shot": "2026-09-30-read-size-true-3-effects-rows-sc.png" },
+    { "do": "Turn a retyped label's visibility off and on and compare it with the ink it replaced: same left edge, same line, a few per cent shorter." }
+  ],
+  "evaluate": [
+    "Does 26 px for the settings rows match what you would write in a spec for 13 point labels on a Retina screen?",
+    "The retyped words now land a few per cent short of the original ink, on the same left edge and line. Is that invisible at the zoom you redline at?",
+    "Sizes now round to the nearest whole number instead of dropping the fraction. Does any size you know read one off?",
+    "Would you rather the panel said 13 pt for a Retina capture than 26 px?"
+  ],
+  "rough": [
+    "Round trip against type of a known size (18 combinations: SF Pro regular and semibold, Helvetica Neue; 11, 13 and 17 point; 1x and 2x): every reading within a point. Into a Retina document: SF Pro 11/13/17 read 22.17, 25.69, 33.92 of 22, 26, 34; semibold 22.14, 26.00, 34.00; Helvetica Neue 21.84, 26.00, 34.13. Worst error 1.2 per cent, was 6.5 to 11 per cent.",
+    "Cause: the system font has an optical size. 13 point SF Pro doubled is 181 by 25 pixels of ink, 26 point SF Pro is 168 by 24, 7.7 per cent narrower. Fonts without it (Helvetica Neue, SF Mono) are identical both ways. It was never antialiasing, rounding or the search.",
+    "The gap is closed rather than labelled: the Size menu says the true size, as you chose on 2026-09-20. The cost is that the retyped words cover a few per cent less width than the ink (up to 15 per cent on a word as short as '4 px'), so the words are now placed by their left edge and their baseline rather than their top.",
+    "The Size menu used to drop the fraction (25.7 said 25). It now rounds, which changes every size title in the app by at most one."
+  ]
+}

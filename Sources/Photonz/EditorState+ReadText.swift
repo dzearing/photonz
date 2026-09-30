@@ -112,8 +112,8 @@ extension EditorState {
         // of the label in it — and the face is identified at that size, because
         // the system font is a different shape at label size and at heading
         // size. The layer's is how many of the picture's pixels fit in a
-        // document point, which is what decides how big the words have to be
-        // SET to cover the same space.
+        // document point, which carries the size the type was into the
+        // document's own points: 13 point type on a Retina capture is 26.
         let captureScale = max(1, document.pixelScale)
         let pixels = ref.pixelSize
         let layerScale = layer.frame.width > 0 ? pixels.width / layer.frame.width : 1

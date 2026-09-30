@@ -130,8 +130,12 @@ public struct TextStyles: Equatable, Codable, Sendable {
 
     /// The same words with nothing padding them, for anything that says a size
     /// in a sentence rather than drawing it in a box.
+    ///
+    /// Rounded to the nearest whole number rather than cut down to one: a size
+    /// read off a screenshot is a measurement, and 25.7 is 26 point type.
     public static func sizeWords(_ size: CGFloat) -> String {
-        DocumentUnit.text(digits: String(Int(size)))
+        guard size.isFinite else { return DocumentUnit.text(digits: "0") }
+        return DocumentUnit.text(digits: String(Int(size.rounded())))
     }
 
     /// What a padded title says, for anything reading a control back: a walk
