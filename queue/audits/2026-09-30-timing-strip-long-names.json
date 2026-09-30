@@ -1,0 +1,31 @@
+{
+  "feature": "A long layer name on the timing strip reads in full",
+  "epic": "icon-animate",
+  "summary": "A layer name too long for the timing strip's name column is still cut in the middle, which keeps the end where two siblings differ, and resting the pointer on it now shows the whole name. A name that fits is left exactly as it was.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/timing-strip-long-names-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Draw a rectangle, choose Layer > Rename Layer… and name it settings-capture-top." },
+    { "do": "With it picked, choose Add Motion > Rotation in the Motion section." },
+    { "do": "Draw an ellipse, name it settings-capture-left and give it a Rotation too." },
+    { "do": "Draw one more rectangle, keep its name Rectangle, and give it a Rotation." },
+    { "do": "Look at the three headings on the timing strip: the long two read setting...ure-top and setting...ure-left, Rectangle reads whole.", "shot": "2026-09-30-timing-strip-names-1.png" },
+    { "do": "Rest the pointer on setting...ure-top for a second: the tooltip reads settings-capture-top.", "shot": "2026-09-30-timing-strip-names-2.png" },
+    { "do": "Rest the pointer on Rectangle: nothing comes up, because nothing was cut." },
+    { "do": "Compare with the mock's strip (Make a bell swing, the timing dock at the bottom).", "shot": "2026-09-30-timing-strip-names-mock.png" }
+  ],
+  "evaluate": [
+    "Can you tell the top and left layers apart on the strip without resting on them?",
+    "Is a one second rest an acceptable price for reading a long name in full, or do you want a column you can drag wider?",
+    "Is it right that a short name gets no tooltip at all, rather than every heading having one?",
+    "Does the tooltip sitting over the heading above it get in your way?"
+  ],
+  "rough": [
+    "Chosen: the app's own tooltip plus the middle cut the strip already had. A column you drag wider would be a new control, and would need your call before it was built.",
+    "The tooltip is drawn above the heading, so while it is up it covers the heading and lane above that one.",
+    "The cut keeps only about half the name at each end, so two names that differ only in the MIDDLE (capture-top-settings, capture-left-settings) still read nearly alike until you rest on them.",
+    "Departs from the mock, pre-existing and not from this change: the mock puts a small glyph for the layer's kind (path, circle) in front of each heading, and the app draws the name alone. Filed as its own task.",
+    "The mock draws no name too long for the column, so it has nothing to say about the tooltip. Its ellipsis (in CSS) cuts the end, where the app cuts the middle. The app's cut is deliberate: the end is where siblings differ.",
+    "The video timeline's row header is a different view and already carries the whole name on the system tooltip. It is untouched here."
+  ]
+}

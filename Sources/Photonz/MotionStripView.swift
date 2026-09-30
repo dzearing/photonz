@@ -386,6 +386,8 @@ private struct MotionStripGroupView: View {
                     .truncationMode(.middle)
                     .foregroundStyle(isPicked ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                     .frame(width: MotionStripView.labelWidth - 6, alignment: .leading)
+                    .wholeNameTip(group.layerName, weight: .semibold,
+                                  room: MotionStripView.labelWidth - 6)
                 if let bar = group.bar {
                     clipBar(bar)
                 } else {
@@ -576,6 +578,8 @@ struct MotionStripLaneView: View {
                 .foregroundStyle(lane.isOn ? AnyShapeStyle(.secondary) : AnyShapeStyle(.tertiary))
                 .padding(.leading, 10)
                 .frame(width: MotionStripView.labelWidth - 6, alignment: .leading)
+                .wholeNameTip(lane.title, weight: .regular,
+                              room: MotionStripView.labelWidth - 6 - 10)
             ZStack(alignment: .topLeading) {
                 RoundedRectangle(cornerRadius: 5)
                     .fill(.quaternary.opacity(0.5))
@@ -587,6 +591,34 @@ struct MotionStripLaneView: View {
         }
         .frame(height: MotionStripView.laneHeight)
         .playtestField("Timing \(layerName) \(lane.title)")
+    }
+}
+
+// MARK: - A name the column cuts
+
+extension View {
+    /// The whole of a name the label column has had to cut, on the tooltip a
+    /// pointer resting on it raises.
+    ///
+    /// The column stays one width, because the lanes have to start at exactly
+    /// the point the ruler counts from, so a long name is cut in the middle,
+    /// which keeps the end where two siblings usually differ
+    /// (settings-capture-top, settings-capture-left). What was cut out is
+    /// one rest of the pointer away. A name that fits gets no tooltip at all:
+    /// a tip that only repeats what is already on screen is noise.
+    ///
+    /// `room` is the width the words themselves get, and the size and weight
+    /// are the ones the label is drawn at, so "cut" here means cut on screen.
+    @ViewBuilder
+    func wholeNameTip(_ name: String, size: CGFloat = 10, weight: NSFont.Weight,
+                      room: CGFloat) -> some View {
+        let font = NSFont.systemFont(ofSize: size, weight: weight)
+        let natural = (name as NSString).size(withAttributes: [.font: font]).width
+        if natural > room {
+            toolTip(name)
+        } else {
+            self
+        }
     }
 }
 
