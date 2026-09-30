@@ -1,10 +1,10 @@
 {
   "id": "the-floating-tool-bar-shows-as-many-tools-as-the",
-  "title": "The floating tool bar shows as many tools as the window has room for",
+  "title": "The floating tool bar fills the room it has, and has no zoom slider",
   "goal": "User 2026-09-29, screenshot of the bar on a video with a wide window (Select, Blade, Text, Shape, Align, More, Grid, zoom): 'why is the toolbar so narrow? Shouldn't it auto adjust based on the available space.' Since c6b356fa (next-video-tool-bar) a document with time folds the bar to a FIXED set (Select | Blade, Title/Text, Shape | Measure) with every other tool under an always-present More, regardless of width. Photoshop, Final Cut and Keynote show every tool that fits and overflow only what does not.",
   "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 0.00002,
+  "seq": 2e-05,
   "status": "pending",
   "release": "next",
   "area": "app",
@@ -15,9 +15,10 @@
   "notes": "Filed from the intake window.",
   "acceptance": [
     "ToolBarFold (PhotonzCore, tests first) folds by AVAILABLE WIDTH: given the bar's room and each slot's width, it keeps slots in priority order (the video tools first on a document with time, then the rest in the bar's normal order), never splits a family, and puts only what does not fit under More",
+    "The zoom slider is removed from the tool bar entirely (user 2026-09-29: 'we do not need a zoom slider in the toolbar... that's totally shitty ux'), on pictures and videos. Zoom stays on the trackpad pinch, Cmd +/-, Cmd 0 (fit), Cmd 1 (100%) and the View menu; the percentage stays only as a compact menu button at the bar's right end (Fit, 50%, 100%, 200%) unless the user says to drop that too; nothing else on the canvas takes the slider's place",
     "More appears only when something is folded, and lists exactly the folded tools; when everything fits there is no More",
     "It re-folds live as the window or the right panel resizes and as View/Edit changes, animating tools in and out smoothly with no jump of the tools that stay",
-    "The bar's maximum width is bounded by the canvas area (with the standard side margins), and the zoom slider and percentage keep their place at the right",
+    "The bar's maximum width is bounded by the canvas area (with the standard side margins)",
     "Pictures behave the same way (one rule for every document), and the fold keeps the lit tool visible: a tool in hand is never hidden under More if there is room to swap it in",
     "Walk at Next defaults photographs a recording at three window widths (narrow, medium, wide) showing the bar filling the room, and More only when needed"
   ],
