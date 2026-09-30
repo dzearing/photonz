@@ -46,6 +46,27 @@ struct PlaytestThumbFilmTests {
         #expect(film.inside == nil)
     }
 
+    @Test("A film can allow a little slack past where the thumb rests, and allows none unless it says")
+    func parsesSlack() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "filmThumb", "name": "h", "rail": ["All", "Videos"], "press": "Screenshots",
+                       "slack": 2, "inside": true },
+                     { "do": "filmThumb", "name": "p", "rail": ["Left", "Right"], "press": "Right" } ] }
+        """)
+        guard case .filmThumb(let slack) = script.steps[0],
+              case .filmThumb(let none) = script.steps[1] else { Issue.record("filmThumb"); return }
+        #expect(slack.slack == 2)
+        #expect(none.slack == 0)
+        // Slack is for a look that changes under a press, never for a flung
+        // thumb: more than a few points is refused.
+        #expect(throws: PlaytestScriptError.self) {
+            try decode(#"{ "steps": [ { "do": "filmThumb", "name": "x", "rail": ["A"], "key": "1", "slack": 8 } ] }"#)
+        }
+        // How many pixels past its room a film may draw the thumb before it fails.
+        #expect(slack.allowedPixels(scale: 2) == 6)
+        #expect(none.allowedPixels(scale: 2) == 2)
+    }
+
     @Test("It needs exactly one thing to set the thumb off, a rail, and a sane length",
           arguments: [
               #"{ "do": "filmThumb", "name": "x", "rail": ["A"] }"#,
@@ -61,10 +82,10 @@ struct PlaytestThumbFilmTests {
 
     // MARK: Reading a frame
 
-    /// A strip 60 columns wide with the rail at columns 20...39: the rail is
-    /// dark (0.05), the title bar to its left middling (0.15), the window's
-    /// dark corner to its right (0.02), and the thumb light (0.3) wherever
-    /// `lit` says.
+    /// A strip 60 columns wide with the rail at columns 20...39, read as how
+    /// colourful each column is: the grey rail barely (0.05), the title bar to
+    /// its left a little more (0.15), the window's corner to its right hardly
+    /// at all (0.02), and the tinted chip strongly (0.3) wherever `lit` says.
     private func strip(lit: ClosedRange<Int>?) -> [Double] {
         (0..<60).map { column in
             if let lit, lit.contains(column) { return 0.3 }
@@ -83,7 +104,18 @@ struct PlaytestThumbFilmTests {
         #expect(ThumbFootprint.backdrop(columns: columns, rail: rail) == 0.15)
     }
 
-    @Test("The thumb is the run of columns clearly lighter than the backdrop")
+    @Test("A pixel's colourfulness is 0 for any grey and 1 for a pure colour; the tinted chip is far from grey")
+    func colourfulness() {
+        #expect(ThumbFootprint.colourfulness(r: 1, g: 1, b: 1) == 0)
+        #expect(ThumbFootprint.colourfulness(r: 0.2, g: 0.2, b: 0.2) == 0)
+        #expect(ThumbFootprint.colourfulness(r: 0, g: 0, b: 1) == 1)
+        // The chip (the Mac's blue taken deeper) against the light rail.
+        let chip = ThumbFootprint.colourfulness(r: 0, g: 0.40, b: 0.84)
+        let rail = ThumbFootprint.colourfulness(r: 0xE1 / 255, g: 0xE4 / 255, b: 0xEA / 255)
+        #expect(chip - rail > ThumbFootprint.lift * 5)
+    }
+
+    @Test("The thumb is the run of columns clearly more colourful than the backdrop")
     func findsTheThumb() {
         #expect(ThumbFootprint.read(columns: strip(lit: 22...29), rail: rail, backdrop: 0.1) == 22...29)
     }
@@ -103,12 +135,12 @@ struct PlaytestThumbFilmTests {
         #expect(thumb.map { ThumbFootprint.outside($0, of: 20...39) } == outside)
     }
 
-    @Test("No light glass anywhere reads as no thumb")
+    @Test("No tinted glass anywhere reads as no thumb")
     func noThumb() {
         #expect(ThumbFootprint.read(columns: strip(lit: nil), rail: rail, backdrop: 0.15) == nil)
     }
 
-    @Test("A lone light column, a letter's stroke, is not a thumb")
+    @Test("A lone colourful column, a letter's stroke, is not a thumb")
     func ignoresSpecks() {
         var columns = strip(lit: nil)
         columns[30] = 0.9

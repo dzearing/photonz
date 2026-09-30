@@ -182,7 +182,7 @@ struct LibraryPanel: View {
         // dropdown when its words will not fit.
         SegmentedControl("Shelf", selection: scope,
                          options: LibraryScope.allCases.map { .init($0, $0.segmentTitle) },
-                         size: .small, fallsBackToSystem: false) {
+                         fallsBackToSystem: false) {
             scopeRaw = $0.rawValue
         }
             .panelHelp("What the shelf is showing")

@@ -1,0 +1,41 @@
+{
+  "id": "two-walks-that-fail-on-main-pass-again",
+  "title": "Three walks that fail on main pass again",
+  "goal": "Two scripted checks of the video editor fail on the current code for reasons in the checks themselves, so they no longer prove anything: one looks for a menu under its old name, the other presses Undo while the app is in the background where the menu bar is frozen.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 3490,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-30T18:46:24.565Z",
+  "updated": "2026-09-30T18:55:45.091Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-30 on unchanged HEAD 26b43510 in a clean worktree (git worktree add /tmp/photonz-head HEAD; Scripts/playtest.sh <walk> --no-build): every-title-dropdown-opens-on-a-click-walk: step 66 (panelMenu) FAILED: no menu called \"Easing\" is in the window; the ones that are: ... Curve (Linear) 153.0pt wide ... every-caption-control-changes-the-captions-walk: step 87 (key) FAILED: command+z is Edit > Undo, which is dimmed and empty in a walk, and nothing else took the press. menu-checkmarks-walk and panel-name-walk got front: true for the same frozen-menu reason on 2026-09-30 (902f8163). Found by the segmented-control task running its segment walks; not caused by it (same failures on HEAD).",
+  "acceptance": [
+    "every-title-dropdown-opens-on-a-click-walk passes at Next defaults, naming the Curve menu the panel now shows",
+    "every-caption-control-changes-the-captions-walk passes, its Undo reaching the app (front: true, or an app-level undo)",
+    "library-import-walk passes: importing b-roll.mp4 shows its pill under the canvas",
+    "All three pass twice in a row"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T18:46:24.567Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-30T18:55:45.036Z",
+      "note": "also library-import-walk, same day, fails identically on unchanged HEAD 26b43510 and on the segmented-control change: step 10 (expectNotice) FAILED: no pill is up under the canvas, so it cannot be saying \"b-roll.mp4 is in the Library\" (run alone twice, no system alert in front)."
+    },
+    {
+      "t": "2026-09-30T18:55:45.090Z",
+      "note": "walks every-title-dropdown-opens-on-a-click-walk, every-caption-control-changes-the-captions-walk -> every-title-dropdown-opens-on-a-click-walk, every-caption-control-changes-the-captions-walk, library-import-walk"
+    }
+  ],
+  "walks": [
+    "every-title-dropdown-opens-on-a-click-walk",
+    "every-caption-control-changes-the-captions-walk",
+    "library-import-walk"
+  ]
+}

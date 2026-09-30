@@ -311,9 +311,9 @@ extension Experiments {
     /// its separate capsules.
     var oneGlassToolBarEnabled: Bool { isEnabled(FeatureCatalog.oneGlassToolBarFlag) }
 
-    /// `next-designed-segmented`: whether every segmented choice is the
-    /// system's `NSSegmentedControl` as one capsule (`SegmentedControl`) rather
-    /// than the SwiftUI segmented picker. Next only, so Current keeps the picker.
+    /// `next-designed-segmented`: whether every segmented choice is the design
+    /// system's drawn control (`SegmentedControl`) rather than the system's.
+    /// Next only, so Current keeps the system control.
     var designedSegmentedEnabled: Bool { isEnabled(FeatureCatalog.designedSegmentedFlag) }
 
     /// The floating bar in use: the one glass bar as `video.html` sizes it,

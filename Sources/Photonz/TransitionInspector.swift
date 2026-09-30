@@ -184,7 +184,7 @@ struct TransitionInspector: View {
             PanelRowLabel(text: "The overlap sits")
             SegmentedControl("The overlap sits", selection: current,
                              options: ClipTransitionAlignment.allCases.map { .init($0, $0.title) },
-                             size: .small, fallsBackToSystem: false) {
+                             fallsBackToSystem: false) {
                 editorState.setClipTransitionAlignment($0)
             }
         }

@@ -11,6 +11,7 @@
 import AppKit
 import CoreImage
 import CoreMedia
+import PhotonzCore
 import ScreenCaptureKit
 
 final class PlaytestWindowFilm: NSObject, SCStreamOutput, @unchecked Sendable {
@@ -104,7 +105,7 @@ final class PlaytestWindowFilm: NSObject, SCStreamOutput, @unchecked Sendable {
         return bytes
     }
 
-    /// Each column's brightness (0...1) along a band of rows, the middle value
+    /// Each column's colourfulness (0...1, `ThumbFootprint.colourfulness`) along a band of rows, the middle value
     /// down the band so a letter crossing it does not light a column.
     static func columns(of image: CGImage, rows: ClosedRange<Int>) -> [Double] {
         let width = image.width, height = image.height
@@ -122,8 +123,8 @@ final class PlaytestWindowFilm: NSObject, SCStreamOutput, @unchecked Sendable {
         return (0..<width).map { x in
             let values = band.map { y -> Double in
                 let at = (y * width + x) * 4
-                return (0.2126 * Double(bytes[at]) + 0.7152 * Double(bytes[at + 1])
-                    + 0.0722 * Double(bytes[at + 2])) / 255
+                return ThumbFootprint.colourfulness(r: Double(bytes[at]) / 255, g: Double(bytes[at + 1]) / 255,
+                                                    b: Double(bytes[at + 2]) / 255)
             }.sorted()
             return values.isEmpty ? 0 : values[values.count / 2]
         }

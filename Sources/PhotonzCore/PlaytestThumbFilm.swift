@@ -33,27 +33,46 @@ public struct PlaytestThumbFilm: Sendable, Equatable {
     /// A claim: true fails the step when any frame draws the thumb past the
     /// rail, false when none does. Nil films and reports without claiming.
     public var inside: Bool?
+    /// Points past where the thumb rests that a frame may draw it without
+    /// failing `inside`, for a look that changes under the press itself: the
+    /// history bar is not the key window until it is clicked, and its glass
+    /// draws a paler rim until then, which reads as a chip 1.5pt narrower.
+    /// Never more than `mostSlack`: a flung thumb goes further than that.
+    public var slack: CGFloat
+
+    public static let mostSlack: CGFloat = 3
 
     public init(name: String, rail: [String], pad: CGFloat = 0, seconds: Double = Self.defaultSeconds,
-                trigger: Trigger, inside: Bool? = nil) {
+                trigger: Trigger, inside: Bool? = nil, slack: CGFloat = 0) {
         self.name = name
         self.rail = rail
         self.pad = pad
         self.seconds = seconds
         self.trigger = trigger
         self.inside = inside
+        self.slack = slack
+    }
+
+    /// How many pixels past its room a frame may draw the thumb before the
+    /// film fails: one point for the reading's own edge, and the slack.
+    public func allowedPixels(scale: CGFloat) -> Int {
+        Int(((1 + slack) * scale).rounded())
     }
 }
 
-/// Where a thumb is drawn in one frame, read off the brightness of a strip of
-/// columns through the rail (one number per column, 0 black to 1 white),
-/// wider than the rail so a thumb that leaves it is still seen.
+/// Where a thumb is drawn in one frame, read off how colourful a strip of
+/// columns through the rail is (one number per column, 0 grey to 1 pure
+/// colour, `colourfulness`), wider than the rail so a thumb that leaves it is
+/// still seen.
 ///
-/// The rail is darker than what it sits on and the thumb is a pane lighter
-/// than both, so the thumb is the run of columns clearly brighter than the
-/// backdrop that lies most over the rail (the panel toggle beside View | Edit
-/// is bright too, but never on the rail). The backdrop is read once, off a
-/// frame taken before the thumb moves (`backdrop(columns:rail:)`).
+/// The thumb is the accent-tinted glass chip (the user, 2026-09-30), and
+/// everything round it is grey: the rail, the title bar, the panel toggle
+/// beside View | Edit, the white and grey words. So the thumb is the run of
+/// columns clearly more colourful than the backdrop that lies most over the
+/// rail. (Until that day the thumb was a pane lighter than its rail and this
+/// read brightness; a tinted chip is darker than a light rail.) The backdrop
+/// is read once, off a frame taken before the thumb moves
+/// (`backdrop(columns:rail:)`).
 ///
 /// The rail clips what it holds, so a thumb flung past it does not show past
 /// it: it shows as glass pressed flat against the rail's end, over the
@@ -61,8 +80,14 @@ public struct PlaytestThumbFilm: Sendable, Equatable {
 /// it rests, and `outside(_:of:)` counts what goes beyond that.
 public enum ThumbFootprint {
 
-    /// Brighter than the backdrop by at least this.
+    /// More colourful than the backdrop by at least this.
     public static let lift: Double = 0.06
+
+    /// How far a pixel is from grey: its strongest channel less its weakest,
+    /// 0 for any grey, white or black, 1 for a pure colour.
+    public static func colourfulness(r: Double, g: Double, b: Double) -> Double {
+        max(r, g, b) - min(r, g, b)
+    }
     /// A run narrower than this is a letter's stroke, not glass.
     public static let narrowest = 3
     /// Columns this close to the rail's edge are its hairline and shadow, not

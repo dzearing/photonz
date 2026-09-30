@@ -1,0 +1,137 @@
+{
+  "out": "/tmp/photonz-playtest/segmented-history-film",
+  "seed": "The user, 2026-09-30: the picked choice on every segmented control is a tinted Liquid Glass chip that moves to the new segment as liquid glass, in the title bar, the history bar and the panel alike. At Next defaults with no flag set, this walk opens the history bar and clicks its filter with the pointer on each segment's face (All to Screenshots, Screenshots to Videos, Videos back to All), FILMING each move at 120 fps and claiming the chip never leaves its rail in any frame, then photographs the filter at rest in light and dark. It runs with the probe in front: the history bar only takes a click when it can take the keys, which a walk's windows never do while a person is working. Each film allows 2pt of slack past where the chip rests: a walk's history bar is not the key window until the click lands, and its glass draws a paler rim until then, which reads as a chip 1.5pt narrower at rest than the same chip under the press.",
+  "setup": {
+    "forget": [
+      "text",
+      "shapes",
+      "tools"
+    ],
+    "captures": [
+      "fixtures/Photonz drop probe.png"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1360,
+      "height": 1000
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "shortcut",
+      "key": "h",
+      "modifiers": [
+        "command",
+        "shift"
+      ],
+      "menuItem": "Show History",
+      "checked": false
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "expect",
+      "control": "All",
+      "reads": "already on All, tooltip none"
+    },
+    {
+      "do": "describe",
+      "stage": "1-light-history-all",
+      "note": "the history filter at rest in light: the tinted chip on All, white word on it, the other words dark on the light rail"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-light-history-all",
+      "window": "Capture History"
+    },
+    {
+      "do": "filmThumb",
+      "name": "2-all-to-screenshots",
+      "rail": [
+        "All",
+        "Videos"
+      ],
+      "pad": 2,
+      "press": "Screenshots",
+      "seconds": 0.8,
+      "inside": true,
+      "slack": 2
+    },
+    {
+      "do": "expect",
+      "control": "Screenshots",
+      "reads": "already on Screenshots, tooltip none"
+    },
+    {
+      "do": "filmThumb",
+      "name": "3-screenshots-to-videos",
+      "rail": [
+        "All",
+        "Videos"
+      ],
+      "pad": 2,
+      "press": "Videos",
+      "seconds": 0.8,
+      "inside": true,
+      "slack": 2
+    },
+    {
+      "do": "expect",
+      "control": "Videos",
+      "reads": "already on Videos, tooltip none"
+    },
+    {
+      "do": "filmThumb",
+      "name": "4-videos-to-all",
+      "rail": [
+        "All",
+        "Videos"
+      ],
+      "pad": 2,
+      "press": "All",
+      "seconds": 0.8,
+      "inside": true,
+      "slack": 2
+    },
+    {
+      "do": "expect",
+      "control": "All",
+      "reads": "already on All, tooltip none"
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-dark-history-all",
+      "note": "the history filter in dark: the chip on All, every word readable over the dark bar"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-dark-history-all",
+      "window": "Capture History"
+    },
+    {
+      "do": "appearance",
+      "value": "system"
+    }
+  ]
+}

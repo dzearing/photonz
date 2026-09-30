@@ -20290,3 +20290,12 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - menu-checkmarks-walk and panel-name-walk were wrong: the ⇧⌘H trick died when walk windows stopped taking key (2026-09-26). Both now run `front`; the harness's frozen-menu failure says so.
 - layers-lazy-rows, normalize-cleans-noise and an-editing-session pass as they are. scrub-never-blacks-out is a load flake (7 of 8, the failure right after a rebuild, one 44.8ms composite).
 - Open: the pending segmented-control card's audit photos show the old 13pt words.
+
+## 2026-09-30 — Our segmented control is back, with a tinted glass chip
+
+- The user sent back the Mac's own segmented control. In Next every row of side-by-side choices is our drawn control again: a solid rail per scheme and the picked choice on a Liquid Glass chip tinted with the accent, white word on it. The chip stretches across on a pick (front edge first, back edge following) and never leaves the rail: filmed at 120 fps in the title bar, a panel row and the history bar.
+- Legibility is a build gate: `SegmentInk` (PhotonzCore) holds the colours and tests every word, state, scheme and Mac accent at 4.5:1; `Scripts/segmented-contrast.swift`, run by `Scripts/test.sh`, draws the shipped control in every state over white, black and grey and measures each word against the pixels behind it.
+- Found on the real window: tinted glass alone veils toward white in light (white word 1.6:1), so the accent is laid over the glass; `.smooth` springs overshot the rail by 5pt, so the edges use timing curves; `.interactive()` glass swells past any clip, so it is off; SwiftUI glass blanks its panel in an offscreen picture, so `labelsWhole` reads with the glass switched to `.identity`.
+- Harness: `filmThumb` reads the chip by colour, takes an optional slack, and walks can press the history bar (with the probe in front).
+- Three walks fail identically on unchanged HEAD; filed as two-walks-that-fail-on-main-pass-again.
+- Open: the user's yes on the card (keep / more glass with a dark word / slower stretch).

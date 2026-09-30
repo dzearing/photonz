@@ -1,0 +1,30 @@
+{
+  "feature": "Segmented control: our rail with a tinted glass chip",
+  "epic": "design-system",
+  "summary": "Every row of side-by-side choices is our own control again: a solid grey rail, and the picked choice on a Liquid Glass chip tinted with your accent, its word in white. On a new pick the chip stretches across to the new choice and settles, and every word reads at 4.5:1 or better in every state.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording for View | Edit and the video panel; pick a text layer for Across and Down; press Shift-Cmd-H for the history bar.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording and press Cmd-2, then Cmd-1: watch the chip on View | Edit in the title bar.", "shot": "2026-09-30-tinted-segmented-film-title-bar-sc.png" },
+    { "do": "Pick a text layer and click Center, then Right, in the Across row of the Text section.", "shot": "2026-09-30-tinted-segmented-film-panel-sc.png" },
+    { "do": "Press Shift-Cmd-H and click Screenshots, then Videos, then All in the history bar.", "shot": "2026-09-30-tinted-segmented-film-history-sc.png" },
+    { "do": "Switch the Mac to Light, then Dark, and look at the Across and Down rows.", "shot": "2026-09-30-tinted-segmented-panel-light-sc.png" },
+    { "do": "Look at the title bar's View | Edit in Light and in Dark.", "shot": "2026-09-30-tinted-segmented-title-bar-light-sc.png" },
+    { "do": "Look at the history bar's filter in Dark.", "shot": "2026-09-30-tinted-segmented-history-dark-sc.png" },
+    { "do": "Grab the chip in any row and drag it along the rail, then let go." }
+  ],
+  "evaluate": [
+    "Is this the tinted glass chip you pictured, or should the glass show more (the accent is laid over the glass so a white word always reads)?",
+    "Does the stretch as the chip travels read as liquid glass, or is it too quick to notice at about a third of a second?",
+    "Is the white word on the picked chip, and every grey word on the rail, easy to read everywhere you use the app?",
+    "Does the solid rail sit well in the title bar and over screenshots in the history bar?"
+  ],
+  "rough": [
+    "Tinted glass on its own could not hold a white word: measured in the app, it veiled the chip to #B0CCE0 (regular glass) and #7B92BA (clear glass) in light, where white reads 1.6:1 and 3.3:1. So the accent is laid over the glass at 88% and the glass shows at the chip's rim and a little through. Measured on the real window, white on the chip reads 5.4:1 in light and 7.2:1 in dark in all three places.",
+    "The chip is a deeper shade of your accent, not the accent itself: white on the Mac's own blue is 4.0:1.",
+    "The chip does not swell under a press the way interactive glass does: that swell drew 1.5pt past the chip and past any clip, so the pressed segment shrinks to 97% instead.",
+    "The chip moves on eased curves rather than a spring: the no-bounce spring was filmed carrying it 5pt past the end of the rail before settling.",
+    "The component page's drawn specimen still shows the old grey plate, not the tinted chip: the page's words now describe the tinted chip, but its shared drawing was left as drawn.",
+    "The page asks for fill, edge and lift on the picked segment; the chip has fill and the glass rim for an edge, and no drop shadow."
+  ]
+}

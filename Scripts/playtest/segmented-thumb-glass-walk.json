@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/segmented-thumb-glass",
-  "seed": "The user, 2026-09-29: 'what happened to using the native liquid glass segmented control.' Every segmented choice is the system's own control. At Next defaults with no flag set, this walk picks a label so the Text section's Across and Down rows show, photographs them in dark and light, presses Center and then Right with the pointer on their faces and checks each pick took, then opens a recording and switches the title bar's View | Edit with Cmd-2 and with the pointer both ways, photographing it in light and dark (it must be ONE capsule, not the toolbar's two separated buttons). Last it opens the history bar and photographs its filter in light and dark: the picked label must be readable.",
+  "seed": "The user, 2026-09-30: 'this IS the native slider, but it's ugly and I want to go back to our custom one', with the picked choice a TINTED Liquid Glass chip, white word on it, and every word readable in every state ('I do not want white on white or black on black cases EVER'). At Next defaults with no flag set, this walk picks a label so the Text section's Across and Down rows show, photographs them in dark and light, presses Center and then Right with the pointer on their faces (photographing straight after the press to catch the chip mid-travel) and checks each pick took, then opens a recording and switches the title bar's View | Edit with Cmd-2 and with the pointer both ways, photographing it in light and dark. Last it opens the history bar and photographs its filter in light and dark: the same rail, the same tinted chip. segmented-history-film-walk clicks and films the history filter.",
   "setup": {
     "forget": [
       "text",
@@ -77,7 +77,7 @@
     {
       "do": "describe",
       "stage": "1-dark-rest",
-      "note": "THE TEST: Across and Down in the Text section, dark. The system's own segmented control, one capsule, the picked segment clearly lit"
+      "note": "THE TEST: Across and Down in the Text section, dark. Our rail, the picked segment a tinted glass chip with its word in white, the other words clearly readable on the rail"
     },
     {
       "do": "snapshot",
@@ -105,7 +105,7 @@
     {
       "do": "describe",
       "stage": "3-dark-settled",
-      "note": "pressed Center with the pointer: the system's selection moved from Left to Center"
+      "note": "pressed Center with the pointer: the tinted chip travelled from Left to Center and settled inside the rail"
     },
     {
       "do": "snapshot",
@@ -118,7 +118,7 @@
     {
       "do": "describe",
       "stage": "4-light-rest",
-      "note": "the same rows in light: the picked segment readable at a glance"
+      "note": "the same rows in light: the tinted chip on a light grey rail, dark words beside it"
     },
     {
       "do": "snapshot",
@@ -142,7 +142,7 @@
     {
       "do": "describe",
       "stage": "5-light-pressed-right",
-      "note": "a second pointer press, on Right: the system's selection followed"
+      "note": "a second pointer press, on Right: the chip followed"
     },
     {
       "do": "snapshot",
@@ -217,7 +217,7 @@
     {
       "do": "describe",
       "stage": "7-dark-title-bar-edit",
-      "note": "Cmd-2, then Edit Mode and View Mode pressed with the pointer: one capsule in the title bar, never two loose buttons; dark"
+      "note": "Cmd-2, then Edit Mode and View Mode pressed with the pointer: one rail in the title bar, the chip on Edit; dark"
     },
     {
       "do": "snapshot",
@@ -234,7 +234,7 @@
     {
       "do": "describe",
       "stage": "8-light-after-dark-title-bar-edit",
-      "note": "the same window switched from dark back to light: the picked half still reads at a glance on the white title bar"
+      "note": "the same window switched from dark back to light: the chip on Edit, its white word readable on the white title bar"
     },
     {
       "do": "snapshot",
@@ -257,7 +257,7 @@
     {
       "do": "describe",
       "stage": "9-light-history-filter",
-      "note": "the history bar's All / Screenshots / Videos filter: the same system control as the panel and the title bar, the picked label readable"
+      "note": "the history bar's All / Screenshots / Videos filter: the same rail and tinted chip as the panel and the title bar"
     },
     {
       "do": "snapshot",
@@ -275,7 +275,7 @@
     {
       "do": "describe",
       "stage": "10-dark-history-filter",
-      "note": "the history filter in dark: All is picked and its label readable"
+      "note": "the history filter in dark: the chip on All, every word readable over the dark bar"
     },
     {
       "do": "snapshot",

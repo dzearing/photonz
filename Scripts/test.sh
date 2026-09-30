@@ -107,4 +107,24 @@ if (( status == 0 )); then
   fi
 fi
 
+# Every word on the segmented control reads at 4.5:1 or better, measured on the
+# shipped control drawn in every state, light and dark, over white, black and
+# grey (the user, 2026-09-30: "I do not want white on white or black on black
+# cases EVER"). Scripts/segmented-contrast.swift says how it measures.
+if (( status == 0 )); then
+  contrast_bin="$(mktemp -t photonz-segmented-contrast-XXXXXX)"
+  if ! swiftc -parse-as-library -swift-version 6 \
+      Sources/Photonz/VideoKit/*.swift \
+      Sources/PhotonzCore/SegmentThumbMotion.swift Sources/PhotonzCore/SegmentInk.swift \
+      Sources/PhotonzCore/RGBA.swift Sources/Photonz/DesignSystem/SegmentedControl.swift \
+      Scripts/segmented-contrast.swift -o "$contrast_bin"; then
+    echo "==> The segmented control no longer draws on its own: Scripts/segmented-contrast.swift is out of step."
+    status=1
+  elif ! "$contrast_bin" "${TMPDIR:-/tmp}/photonz-segmented-contrast"; then
+    echo "==> A word on the segmented control is unreadable (listed above)."
+    status=1
+  fi
+  rm -f "$contrast_bin"
+fi
+
 exit "$status"

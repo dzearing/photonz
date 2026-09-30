@@ -4651,10 +4651,15 @@ public enum PlaytestStep: Sendable, Equatable {
             default:
                 throw f.invalid("key", "a thumb is set off by exactly one of \"key\" or \"press\"")
             }
+            let slack = try f.optionalNumber("slack") ?? 0
+            guard slack >= 0, slack <= Double(PlaytestThumbFilm.mostSlack) else {
+                throw f.invalid("slack", "a film allows 0 to \(PlaytestThumbFilm.mostSlack)pt past where the thumb rests, "
+                                + "not \(slack): further than that is a flung thumb")
+            }
             self = .filmThumb(PlaytestThumbFilm(
                 name: try f.string("name"), rail: rail,
                 pad: CGFloat(try f.optionalNumber("pad") ?? 0), seconds: seconds,
-                trigger: trigger, inside: try f.optionalFlag("inside")))
+                trigger: trigger, inside: try f.optionalFlag("inside"), slack: CGFloat(slack)))
         case "filmWindow":
             let keyName = try f.string("key")
             guard let key = PlaytestKey(keyName) else {

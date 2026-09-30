@@ -1,18 +1,18 @@
 {
   "id": "every-segmented-control-is-apple-s-own-liquid-gl",
   "title": "Our segmented control, with the picked chip as tinted Liquid Glass that moves as glass",
-  "goal": "You asked on 2026-09-29 why the app was not using the Mac's own Liquid Glass segmented control. Every row of side-by-side choices is now the system control itself, one continuous track in the title bar and in the panel. What is left is your yes: the Mac fills the picked choice with the accent colour and switches without a slide, which may not be the glass you pictured.",
+  "goal": "You sent back the Mac's own segmented control on 2026-09-30. Every row of side-by-side choices is our drawn control again: a solid rail, and the picked choice on a Liquid Glass chip tinted with your accent that stretches across as it moves, with every word readable at 4.5:1 or better. What is left is your yes on the card.",
   "epic": "design-system",
   "priority": "p1-high",
-  "seq": 0.000001,
+  "seq": 1e-06,
   "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T02:46:57.276Z",
-  "updated": "2026-09-30T17:10:27.298Z",
+  "updated": "2026-09-30T19:17:01.300Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Filed from the intake window.",
+  "notes": "Filed from the intake window. Built 2026-09-30: Sources/Photonz/DesignSystem/SegmentedControl.swift (DesignedSegments, ChipGlassSwitch), Sources/PhotonzCore/SegmentInk.swift (+tests: every word/state/scheme/accent at 4.5:1), SegmentThumbMotion.swift restored (drag), Scripts/segmented-contrast.swift (run by Scripts/test.sh: draws the shipped control in 14 specimens x light/dark x white/black/grey and measures each word against the pixels behind it; fails below 4.5:1). Walks: segmented-thumb-film-walk (title bar + panel films), segmented-history-film-walk (front: true; history bar films, slack 2pt), segmented-thumb-glass-walk (stills). Audit queue/audits/2026-09-30-tinted-segmented.json.",
   "acceptance": [
     "Legible, as the user asked (2026-09-30: 'I didn't ask specifically for 4.5. I asked specifically for legible'): the text is plainly readable against what is actually behind it, in every state, scheme and backdrop, with no white on white or black on black ever. The system's own pairings count as legible and are kept as they are (white on the system accent, the system label colours on glass); do not darken or alter the system accent to hit a ratio. The automated check catches the real failures: text and background too close to tell apart (below about 3:1, or the same colour family on the same lightness)",
     "Back to our own segmented control (the drawn one from before 5a81d5a3: our rail, our sizes, our layout) everywhere: title bar View | Edit, the history filter, every panel picker; the Mac's stock control is removed again (user 2026-09-30: 'this IS the native slider, but it's ugly and I want to go back to our custom one')",
@@ -107,12 +107,37 @@
     {
       "t": "2026-09-30T17:10:27.297Z",
       "note": "USER CORRECTION 2026-09-30 10:12: they asked for LEGIBLE, not 4.5:1 (the intake window invented the number). Keep the system accent as the system draws it with white text on it; do not darken the accent. Only guard against genuinely unreadable text (white on white, black on black, same-on-same)."
+    },
+    {
+      "t": "2026-09-30T19:17:01.299Z",
+      "note": "walks segmented-thumb-glass-walk, segmented-thumb-film-walk, segment-tooltips-walk, transition-placement-and-hold-walk, transition-edge-follows-the-pointer-walk -> segmented-thumb-glass-walk, segmented-thumb-film-walk, segmented-history-film-walk, segment-tooltips-walk, transition-placement-and-hold-walk, transition-edge-follows-the-pointer-walk"
+    },
+    {
+      "t": "2026-09-30T19:20:00.000Z",
+      "note": "Built: our drawn control back in Next everywhere (rail solid per scheme; chip = SwiftUI .glassEffect(.regular.tint(chip)) with the chip colour laid over it at 88%; words drawn twice, own ink outside the chip and white inside it, masked by the same capsule; disabled greys the chip instead of fading; picked word semibold with the row sized by the semibold word so a pick never reflows). The four video rows 5a81d5a3 had set to .small are back to 28pt. SegmentRoom (only for NSSegmentedControl) deleted. comp-segmented.html restored from before 5a81d5a3 with its two lines the user's 2026-09-30 answer overruled rewritten; UX-PATTERNS 'The one segmented control' rewritten."
+    },
+    {
+      "t": "2026-09-30T19:20:01.000Z",
+      "note": "Measured and fixed on the real window: (1) tinted glass alone veiled to #B0CCE0 regular / #7B92BA clear in light (white 1.6 / 3.3:1), and a solid capsule under it changed nothing, so the colour goes over the glass; white on the chip now 5.4:1 light, 7.2:1 dark in title bar, panel and history bar. (2) The glass draws over siblings inside a GlassEffectContainer, so no container. (3) .smooth(duration:) springs carried the chip's front edge 5pt past the rail end (filmed, and reproduced with a plain red capsule instead of glass, so it was the spring, not the glass): both edges now ride timingCurve(…, 0, 1) curves; 0.0pt past rest in every film. (4) .interactive() glass swelled 1.5pt past the chip under a press, ignoring clipShape and mask: dropped. (5) Any SwiftUI glass blanks the surrounding panel in an offscreen cacheDisplay picture (captions-panel-keeps-its-margins-walk labelsWhole failed): labelsWhole now takes its picture with ChipGlassSwitch.offscreen on (glass becomes .identity, same view). Doing that on every snapshot, or removing the glass view instead of swapping to .identity, or forcing a relayout, each broke a walk (history filter deaf to the next click; caption word field lost the keyboard in a batch), so it is only in labelsWhole. NSGlassEffectView in a representable was tried and dropped: its SwiftUI PlatformGroupContainer swallowed clicks on the history filter."
+    },
+    {
+      "t": "2026-09-30T19:20:02.000Z",
+      "note": "Harness: filmThumb reads the chip by colourfulness (ThumbFootprint.colourfulness) instead of brightness, since a tinted chip is darker than a light rail; filmThumb takes an optional slack (0 to 3pt, tested) used only by the history films, where the bar is not key until the click lands and its glass rim reads 1.5pt narrower before it. panelWindows() now includes the Capture History panel, so a walk can press its filter (it only takes the click with the probe in front: front: true)."
+    },
+    {
+      "t": "2026-09-30T19:20:03.000Z",
+      "note": "Verified: Scripts/test.sh 10681/10681 plus segmented-contrast (270 words, all >= 4.5:1; proven to fail with a 1.79:1 word colour). 167 walks that touch segmented rows run on the final build: all pass except three that fail identically on unchanged HEAD 26b43510 in a clean worktree (every-title-dropdown-opens-on-a-click-walk, every-caption-control-changes-the-captions-walk, library-import-walk), filed as two-walks-that-fail-on-main-pass-again. segmented-history-film-walk failed once in a batch while a 30-hour-old system alert was in front of every app, and passed alone before and after."
+    },
+    {
+      "t": "2026-09-30T19:20:04.000Z",
+      "note": "left rough (in the audit, not filed): the component page's shared drawing still shows the old grey plate (mock drawings are not edited to match code); no drop-shadow lift on the chip; under Reduce Motion the chip moves at once rather than cross-fading; the offscreen .png a snapshot writes shows the chip without its glass only in labelsWhole pictures, and a panel with a chip can draw partly blank in other offscreen .png files (audits use the real -sc captures). The reddit reference could not be fetched (reddit blocks the fetch and curl), so the effect follows the task's own words."
     }
   ],
   "started": "2026-09-30T15:05:01.245Z",
   "walks": [
     "segmented-thumb-glass-walk",
     "segmented-thumb-film-walk",
+    "segmented-history-film-walk",
     "segment-tooltips-walk",
     "transition-placement-and-hold-walk",
     "transition-edge-follows-the-pointer-walk"

@@ -1,0 +1,50 @@
+{
+  "id": "every-segmented-control-is-apple-s-own-liquid-gl-the-picked-choice-is-now-a-tinte",
+  "taskId": "every-segmented-control-is-apple-s-own-liquid-gl",
+  "question": "The picked choice is now a tinted glass chip that stretches across as it moves. Is this the effect you meant?",
+  "context": "Built on 2026-09-30: our drawn segmented control is back everywhere, with the picked choice as a Liquid Glass chip tinted with the accent. Tinted glass alone washed out in light (a white word read 1.6:1 on it), so the accent is laid over the glass. Filmed at 120 fps in the title bar, a panel row and the history bar: it stretches across and never leaves the rail.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Yes, keep it",
+      "summary": "Every row of choices keeps our grey rail with the accent-tinted glass chip, white word on it, stretching across in about a third of a second.",
+      "pros": [
+        "Every word measured at 4.5:1 or better on the real window, light and dark",
+        "Same control and same motion in the title bar, the panel and the history bar"
+      ],
+      "cons": [
+        "The accent covers most of the glass, so the chip reads more as a coloured pill with a glass rim than as clear glass"
+      ],
+      "mitigation": "The glass still shows at the rim and a little through; a later pass can tune how much once you have lived with it."
+    },
+    {
+      "id": "b",
+      "label": "More glass, dark word",
+      "summary": "The chip becomes mostly glass with only a light accent tint, and the picked word turns dark instead of white so it stays readable.",
+      "pros": [
+        "Looks more like clear Liquid Glass",
+        "A dark word reads well on a pale chip"
+      ],
+      "cons": [
+        "No longer white on the accent, which is what you asked for",
+        "The pick stands out less from the rail at a glance"
+      ],
+      "mitigation": "The chip keeps a stronger accent rim so the pick is still easy to find."
+    },
+    {
+      "id": "c",
+      "label": "Keep it, slower stretch",
+      "summary": "Same look, but the chip takes about half a second to travel so the stretch is easier to see.",
+      "pros": [
+        "The liquid stretch is more visible"
+      ],
+      "cons": [
+        "A slower control can feel sluggish when clicking quickly"
+      ],
+      "mitigation": "A quick second click still retargets the chip from wherever it is."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-30T19:16:26.123Z"
+}

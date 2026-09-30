@@ -3092,46 +3092,57 @@ changes.
 | `.irow` | `VideoKit.FieldRow` | 76pt label column |
 | `.select`, `.select.sm`, `.select.comp` | `VideoKit.SelectFace`, `Dropdown`, `DropdownRow` | the face inside a real pop-up button exactly its size, so a click anywhere on it opens the menu; rows are `VideoKit.Choice` values; accent edge while open |
 | `.field .v` | `VideoKit.ValueFace` | a value you read, not set: the filled box, as tall as a small dropdown |
-| `.seg`, `.seg.sm`, `.seg.lg`, `.seg.fill`, `.seg.icons` | `SegmentedControl` (app, `Sources/Photonz/DesignSystem`) | not a kit piece: the system's own segmented control, made in one place for the whole app, see "The one segmented control" below |
+| `.seg`, `.seg.sm`, `.seg.lg`, `.seg.fill`, `.seg.icons` | `SegmentedControl` (app, `Sources/Photonz/DesignSystem`) | not a kit piece: the one segmented control the whole app uses, see "The one segmented control" below |
 
 One deliberate difference: the kit's accent is the app's system accent, not
 `--accent`, so a window never shows two blues.
 
 ### The one segmented control
 
-**The segmented control is the system's.** `SegmentedControl`
-(`Sources/Photonz/DesignSystem/SegmentedControl.swift`) is the ONLY place a
-segmented control is made: panel rows, popovers, dialogs, the history bar and
-the title bar's View | Edit all use it, and it is macOS's own
-`NSSegmentedControl`, one continuous track (style pinned to `.rounded`, never
-left on `.automatic`), one pick. macOS draws the track, the picked segment, its
-contrast and how it changes; nothing is painted over it. The user, 2026-09-29:
-"what happened to using the native liquid glass segmented control." The drawn
-control before it (a recessed rail with a sliding pane of glass) overshot its
-rail and put a white word on white glass. `comp-segmented.html` documents the
-system control.
+`SegmentedControl` (`Sources/Photonz/DesignSystem/SegmentedControl.swift`) is
+the ONLY segmented control in the app: panel rows, popovers, dialogs, the
+history bar and the title bar's View | Edit all use it. It is
+`comp-segmented.html` built once: a solid recessed capsule rail, one chip under
+the picked segment that is a pane of the system's own Liquid Glass tinted with
+the accent (the accent laid over the glass so the glass shows at its rim), the
+picked word white on it, 24 / 28 / 32 heights (28 is the panel's), `.fill`
+equal columns in a panel or popover and `.natural` widths in a row of other
+controls, picture segments that are square and named by their tooltips, and a
+dropdown in its place when the words would be cut short. The user, 2026-09-30,
+of a day on the Mac's own control: "this IS the native slider, but it's ugly
+and I want to go back to our custom one", with the picked choice as tinted
+glass that moves as glass.
 
-What macOS 26 draws, filmed in the app: in a window in front the picked segment
-is filled with the accent colour, in a window behind it is a grey plate, and a
-new pick switches at once rather than sliding.
+**It moves as glass.** On a new pick the chip's front edge sets off first and
+its back edge follows, so it stretches across the gap and draws itself in as it
+lands; both ride timing curves that end exactly where they are going. The
+"no bounce" `.smooth` spring was filmed carrying the chip 5pt past the rail's
+end, and interactive glass swelling past the chip under a press, so neither is
+used. `segmented-thumb-film-walk` and `segmented-history-film-walk` film every
+placement at 120 fps and fail on a frame past where the chip rests.
 
-Sizes are the system's: `.small` in a dense panel row and in the title bar,
-`.regular` in dialogs and the history bar. `.fill` takes the row's width (equal
-columns when the longest word fits an equal share, each word's own width when
-not); `.natural` is equal segments as wide as the longest word. Picture segments
-are named by their picture's description, which is also their tooltip. Short of
-room for the system's own padding, each word keeps its width with a 5pt margin a
-side (the colour picker's four swatch scopes, a Mixed Arrangement row); only
-when even that would cut a word does the control become a dropdown of the same
-choices. The words follow the size: 11pt at `.small`, 13pt at `.regular`.
+**Every word is readable, always.** The user, 2026-09-30: "I do not want white
+on white or black on black cases EVER." Every word the control draws, in every
+state (rest, hovered, pressed, unavailable, disabled, picked, under the moving
+chip), light and dark, over any backdrop, reads at 4.5:1 or better. The
+colours live in `SegmentInk` (PhotonzCore, tested for every accent the Mac
+offers), and `Scripts/segmented-contrast.swift` draws the shipped control in
+every state and measures each word against the pixels behind it on every test
+run. How it holds: the rail is solid, so a screenshot behind the history bar
+never reaches a word; the chip's colour is laid over its glass, because tinted
+glass alone veils toward white in light (a white word measured 1.6:1 on it);
+the chip is the accent taken deeper when white would not read on the accent
+itself (white on the Mac's blue is 4.0:1); a word the moving chip passes over
+is drawn white inside the chip and its own colour outside; a disabled control
+greys its chip instead of fading, because a faded word cannot keep 4.5:1.
 
-Never `Picker` with `.segmented` and never `NSSegmentedControl` outside that
-file: `SegmentedControlUsageTests` fails the build on either, and on the control
-being drawn again (a glass pane, a thumb, a rail). In Current (the
-`next-designed-segmented` switch off) it is the SwiftUI segmented picker each
-place first had, so Current keeps its look. A walk presses each segment by its
-word (a picture segment by its name) with a real click on its face, and reads
-`<row>, already on …, tooltip …`.
+Never `Picker` with `.segmented`, never `NSSegmentedControl`:
+`SegmentedControlUsageTests` fails the build on either. In Current (the
+`next-designed-segmented` switch off) it hands back the system control, so
+Current keeps its look. Each segment is pressed by a walk by its word (a picture
+segment by its tooltip word) and reads `already on …, tooltip …` like the
+system control did. The history bar takes a click only when it can take the
+keys, so a walk that clicks it runs with the probe in front.
 
 **What was withdrawn with the old D18**: numbered rows being "wrong", a row per
 layer, a row named after its layer, a 92px lowercase label column, a clip's

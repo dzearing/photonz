@@ -2473,7 +2473,15 @@ private final class Run {
         case .labelsWhole(let stage, let wanted, let reportOnly):
             let window = try requireWindow()
             guard let content = window.contentView else { throw Failure(description: "the window has no content view") }
-            let readings = try PlaytestLabelReader.read(try picture(of: content), size: content.bounds.size,
+            // A pane of Liquid Glass stops everything round it drawing into
+            // an offscreen picture, and this step reads the words off one, so
+            // the segmented chips' glass sits it out. Only here: switching it
+            // for every snapshot cost a caption word field its keyboard in a
+            // run of walks (fix-a-caption-word-walk, 2026-09-30).
+            var shot: NSBitmapImageRep?
+            try Self.withoutChipGlass { shot = try picture(of: content) }
+            guard let shot else { throw Failure(description: "could not make a picture of the window") }
+            let readings = try PlaytestLabelReader.read(shot, size: content.bounds.size,
                                                         panel: PanelEdgeProbe.shared.panel)
             let zones = try contentZones(in: content)
             let cut = CutLabelRule.cut(readings, outside: zones)
@@ -5945,7 +5953,12 @@ private final class Run {
         let settings = NSApp.windows.filter {
             $0.title == SettingsWindowModel.windowTitle && $0.isVisible
         }
-        return [host] + attached + sheet + settings
+        // The history bar is its own panel and never becomes key during a
+        // walk, so its filter was out of reach: a walk could photograph it
+        // and never press it. It is last, so a word it shares with the
+        // document's own panel ("All") finds the document's first.
+        let history = NSApp.windows.filter { $0.title == "Capture History" && $0.isVisible }
+        return [host] + attached + sheet + settings + history
     }
 
     /// Every named thing the panel and whatever is open above it are showing
@@ -8605,7 +8618,7 @@ private final class Run {
                              points(room.lowerBound), points(room.upperBound + 1), lowest, highest,
                              Double(worst) / scale, gone)
         if let inside = film.inside {
-            if inside, worst > Int(scale) || gone > 0 {
+            if inside, worst > film.allowedPixels(scale: scale) || gone > 0 {
                 throw Failure(description: "the thumb left its room on the rail: " + summary)
             }
             if !inside, worst <= Int(scale), gone == 0 {
@@ -14391,6 +14404,14 @@ private final class Run {
         drawTooltip(over: view, into: rep)
         fillBackground(of: view, into: rep)
         return rep
+    }
+
+    /// Runs `body` with the segmented chips drawn without their glass. Taking
+    /// an offscreen picture makes SwiftUI draw the change first.
+    private static func withoutChipGlass(_ body: () throws -> Void) rethrows {
+        ChipGlassSwitch.shared.offscreen = true
+        defer { ChipGlassSwitch.shared.offscreen = false }
+        try body()
     }
 
     /// Where the words are the document's and not the app's, in the content
