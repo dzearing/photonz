@@ -1,0 +1,36 @@
+{
+  "id": "dragging-a-layer-feels-physical-the-row-lifts-ri",
+  "title": "Dragging a layer feels physical: the row lifts, rides the pointer up and down, and the list opens a gap for it",
+  "goal": "User 2026-09-30: 'when I try to rearrange layers, the drag is not smooth. I want to drag the item intuitively and have something of a shadow where it will be dropped that gets injected in the spot, and things make room for it. It should feel super smooth and not like you're dragging some random thing and hoping for an insertion line to show up, but things move out of the way for you and you're dragging the item and it is horizontally locked but you can vertically move it up and down the list. If you drag a group, we minimize it and let you drag the root and position it elsewhere... if you drag to the end of a group, does it land inside the group or below the group? I think we can solve that by which item's half you're over. If you're over the bottom half of the group's last item, into group. If top half of item below, inserted below group.' Applies to the Layers list in the right panel (and the timeline's track headers where tracks reorder). Replaces today's drag-image plus insertion line. Reference: docs/design/mocks/pages/layers-pane.html; UX-PATTERNS motion rules for a list that only moves.",
+  "epic": "design-system",
+  "priority": "p1-high",
+  "seq": 0.000004,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-30T20:26:39.038Z",
+  "updated": "2026-09-30T20:26:39.135Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Drop rules in PhotonzCore first, with tests, exactly as the user specified: the target is decided by which half of which row the pointer is over; over the bottom half of a group's LAST child lands inside the group as its last child; over the top half of the row below the group lands below the group at the group's level; top half of a row inserts above it, bottom half below it (and into an expanded group's first slot when over the bottom half of the group header); a group can never be dropped into itself or its descendants; locked layers and the canvas/background row keep their rules",
+    "Pressing and moving a row lifts it: the real row (not a ghosted drag image) rises with a soft shadow and slight scale, follows the pointer vertically 1:1, and is locked horizontally",
+    "The other rows move out of the way with a smooth spring as the pointer crosses row halves, opening a gap exactly the dragged row's height where it will land (the 'shadow' slot), so the drop place is always visible without an insertion line",
+    "Dragging a group collapses it into its header row for the drag (children tucked away with a quick animation) and restores its expansion after the drop",
+    "Letting go settles the row into the gap with the same spring; Esc returns it to where it came from; the whole move is one undo step",
+    "Near the list's top or bottom edge the list autoscrolls smoothly, and the gap keeps tracking the pointer",
+    "60 fps throughout with 200 layers (Instruments or a signpost walk); no row jumps or flickers",
+    "Walk at Next defaults with pointer drags: reorder within a list, into the end of a group (bottom half of its last child), out below a group (top half of the row below), drag a group elsewhere; photograph mid-drag (lifted row, open gap) and after"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T20:26:39.040Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-30T20:26:39.133Z",
+      "note": "seq 430 -> 0.000004"
+    }
+  ]
+}
