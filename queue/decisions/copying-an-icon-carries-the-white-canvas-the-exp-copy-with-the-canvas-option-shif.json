@@ -1,0 +1,54 @@
+{
+  "id": "copying-an-icon-carries-the-white-canvas-the-exp-copy-with-the-canvas-option-shif",
+  "taskId": "copying-an-icon-carries-the-white-canvas-the-exp",
+  "question": "Copy with the canvas: Option Shift Command C is already Copy Look. Where does it go?",
+  "context": "You chose that Copy leaves a blank canvas out and that holding Option gives the copy WITH the canvas. The first half shipped today. The second half cannot be built as written: a Mac menu only swaps a row under Option when the two rows share a key, and Copy Merged plus Option (Option Shift Command C) is already Copy Look. Tested: with both on that key, the Option row swallows the press and Copy Look stops working.",
+  "options": [
+    {
+      "id": "a",
+      "label": "A row of its own under Copy Merged",
+      "summary": "Edit shows Copy Merged, then Copy Merged with Background on Control Shift Command C, always visible. Copy Look keeps its keys.",
+      "pros": [
+        "You can see it without knowing a trick",
+        "No key anybody uses today moves"
+      ],
+      "cons": [
+        "Two copy rows side by side in Edit, the clutter your answer B avoided",
+        "Control is not the key a Mac user reaches for first"
+      ],
+      "mitigation": "It sits directly under Copy Merged so the pair reads as one choice, the same choice the Export sheet offers with Include the background."
+    },
+    {
+      "id": "b",
+      "label": "Hold Option, and Copy Look moves",
+      "summary": "Exactly your answer B: hold Option in Edit and Copy Merged becomes Copy Merged with Background on Option Shift Command C. Copy Look and Paste Look move to Control Option Command C and V.",
+      "pros": [
+        "Nothing extra in the menu until you hold Option, the ordinary Mac way",
+        "The shortcut is Copy Merged plus Option, easy to guess"
+      ],
+      "cons": [
+        "Copy Look and Paste Look change keys that already shipped",
+        "A variant behind Option is easy never to find"
+      ],
+      "mitigation": "Copy Look and Paste Look stay on the layer right-click menu and in the Layer menu with their new keys printed beside them."
+    },
+    {
+      "id": "c",
+      "label": "Leave the white version to Export",
+      "summary": "Copy always leaves a blank canvas out and there is no copy with it. To hand over the icon on its white, export a PNG with Include the background ticked.",
+      "pros": [
+        "One copy, nothing new to learn",
+        "No key moves"
+      ],
+      "cons": [
+        "A wireframe drawn on white and pasted into a dark chat loses its backing, with no quick way back",
+        "Costs a save and a file each time"
+      ],
+      "mitigation": "The Export sheet already shows the canvas colour and the checkbox, so the way back is visible there.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-30T11:03:15.912Z"
+}
