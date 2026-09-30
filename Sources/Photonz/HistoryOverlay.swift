@@ -106,9 +106,9 @@ struct HistoryOverlay: View {
         // trailing edge (a ZStack, so the button's width never shifts the picker
         // off-center the way an HStack + Spacer would).
         ZStack {
-            // The one segmented control, glass thumb and all: the user asked
-            // for every segmented control to look and move the same
-            // (2026-09-29), so the filter no longer lights in the accent.
+            // The one segmented control, the system's own: the user asked
+            // for every segmented control to look and move the same, and for
+            // it to be the native one (2026-09-29).
             SegmentedControl("Filter captures", selection: $filter,
                              options: CaptureFilter.allCases.map { .init($0, $0.title) },
                              form: .natural)

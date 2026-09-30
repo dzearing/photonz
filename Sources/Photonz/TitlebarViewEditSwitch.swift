@@ -7,11 +7,12 @@ import SwiftUI
 // panel toggle (`TitlebarPanelToggle`), to that button's left, so the two can
 // never swap places whichever was installed first.
 //
-// The design system's segmented control (`SegmentedControl`), at the small
-// size so it stands exactly as tall as the panel toggle beside it. Until
-// 2026-09-29 this was a bare NSSegmentedControl, and the user turned it down:
-// the switch is the component on `comp-segmented.html`, like every other row
-// of side-by-side choices in the app.
+// The app's one segmented control (`SegmentedControl`), which is the system's
+// own, at the small size so it stands as tall as the panel toggle beside it.
+// Its style is pinned (`.rounded`), never left for macOS to choose: the first
+// View | Edit switch, a bare NSSegmentedControl on `.automatic`, was seen as
+// two loose buttons on 2026-09-28. Filmed in this title bar on 2026-09-29,
+// every style draws one continuous control.
 
 extension Animation {
     /// View and Edit coming and going: everything that folds away does it on

@@ -46,6 +46,10 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
-  "created": "2026-09-29T16:04:45.109Z"
+  "status": "withdrawn",
+  "created": "2026-09-29T16:04:45.109Z",
+  "withdrawn": {
+    "reason": "The drawn thumb it asks about is gone: every segmented control is now the Mac's own, which switches the way macOS switches it (every-segmented-control-is-apple-s-own-liquid-gl).",
+    "at": "2026-09-30T04:18:48.563Z"
+  }
 }

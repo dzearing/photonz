@@ -361,7 +361,7 @@ struct CaptionsTextInspector: View {
                 Text("Align").font(.caption).foregroundStyle(.secondary)
                 SegmentedControl("Align", selection: look.alignment,
                                  options: TextAlign.allCases.map {
-                                     .init($0, $0.title, image: Image(systemName: $0.symbolName))
+                                     .init($0, $0.title, image: SegmentedControl<TextAlign>.symbol($0.symbolName, named: $0.title))
                                  },
                                  form: .natural, showsTitles: false,
                                  systemHelp: "Where the words sit across the box") { align in

@@ -20243,3 +20243,21 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Contrast measured on real captures: light rail .22→.32, dark .30→.45, dark glass tint .65→1.0: title bar 1.80, panel 1.81–2.05, history 1.50–1.53 (was 1.30–1.45 in the short places). `segmented.css` tokens match.
 - `segmented-thumb-film-drawn-walk` deleted; the glass walk now photographs the history filter and a dark-to-light title bar.
 - Open: walks cannot click the history strip (filed a-walk-can-click-the-history-bar-and-film-its-fi).
+
+## 2026-09-29 — Every segmented control is the Mac's own
+
+- `SegmentedControl` (Next) now wraps `NSSegmentedControl` directly: style pinned
+  to `.rounded`, `.selectOne`, fill rows in equal columns or each word's own
+  width, a dropdown when words cannot fit, per-option disabled by AppKit,
+  picture options as named `NSImage`s. SwiftUI's segmented picker was measured
+  and ruled out (never stretches; resets the style to `.automatic`). Current
+  keeps its SwiftUI picker through `next-designed-segmented`.
+- Deleted the drawn rail/glass thumb, `SegmentThumbDrag` and its tests, the
+  offscreen gallery. Video panel rows ask for `.small` like every panel row.
+- Measured on macOS 26: one continuous track everywhere (the separated title
+  bar look was not reproduced), accent-filled pick in front, grey behind, no
+  slide on a switch.
+- Walks: segmented-thumb-glass/film walks rewritten for pointer presses; 118
+  segment-touching walks green. Tests 10560/10560.
+- comp-segmented.html and UX-PATTERNS document the system control. Card asks
+  the user to confirm (keep, glass toolbar for View | Edit, or back to drawn).

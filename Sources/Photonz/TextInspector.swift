@@ -48,14 +48,14 @@ private extension TextVerticalAlign {
     /// 11pt medium is the size `Image(systemName:)` already draws at inside a
     /// small segmented picker, so the pictures do not move: rendered both
     /// ways, light and dark, the row comes out pixel for pixel the same.
-    var glyph: Image {
+    var glyph: NSImage? {
         guard let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: title) else {
-            return Image(systemName: symbolName)
+            return nil
         }
         let sized = image.withSymbolConfiguration(
             NSImage.SymbolConfiguration(pointSize: 11, weight: .medium)) ?? image
         sized.accessibilityDescription = title
-        return Image(nsImage: sized)
+        return sized
     }
 }
 
@@ -145,7 +145,7 @@ struct TextInspector: View {
                 // `allCases` that built them.
                 SegmentedControl("Words across the box", selection: across.isMixed ? nil : across.value,
                                  options: TextAlign.allCases.map {
-                                     .init($0, $0.title, image: Image(systemName: $0.symbolName))
+                                     .init($0, $0.title, image: SegmentedControl<TextAlign>.symbol($0.symbolName, named: $0.title))
                                  },
                                  form: .natural, showsTitles: false,
                                  systemHelp: across.isMixed

@@ -6,38 +6,7 @@
 <title>Photonz · comp-segmented</title>
 <link rel="stylesheet" href="/shared/photonz-ds.css">
 <style>
-  /* comp-segmented — layout from docpage, callouts from redline. Local rules
-     only for the anatomy stage and the too-narrow demonstration. */
-  #comp-segmented .cg-anat{position:relative;display:grid;place-items:center;min-height:200px;
-    border-radius:var(--r3);
-    background:radial-gradient(320px 180px at 50% 0%,color-mix(in srgb,var(--accent) 14%,transparent),transparent 66%)}
-  #comp-segmented .rl-frame{--rl-gut:104px}
-  #comp-segmented .rl-co .card{width:214px}
-  #comp-segmented .cg-col{width:216px;padding:var(--pad-sm);border-radius:var(--r3);
-    border:1px solid var(--edge-lo);background:color-mix(in srgb,var(--panel) 45%,transparent);
-    display:flex;flex-direction:column;gap:var(--gap-sm)}
-  #comp-segmented .cg-bad{border-color:color-mix(in srgb,var(--crit) 34%,var(--edge-lo))}
-  /* the wrap that used to happen, drawn on purpose so the rule has a picture */
-  #comp-segmented .cg-wrapped{display:flex;flex-wrap:wrap;gap:2px;padding:2px;width:100%;
-    border-radius:999px;background:var(--glass-thin);border:1px solid var(--edge-lo)}
-  #comp-segmented .cg-wrapped span{flex:1 1 auto;text-align:center;padding:4px 8px;border-radius:999px;
-    font-size:11.5px;font-weight:560;color:var(--dim);white-space:nowrap}
-  #comp-segmented .cg-wrapped span.on{background:var(--raised);color:var(--ink);box-shadow:var(--shadow-1)}
-  /* slowed to 5x so the spring is legible; the real value is --dur-3 */
-  #comp-segmented .cg-slow .seg-plate{transition-duration:1.2s}
-  /* the live width demo in section 03. It needs more than the 216px the
-     specimen columns use, or it would start life already collapsed. */
-  #comp-segmented .cg-col.cg-wide{width:auto;min-width:0;flex:1 1 360px}
-  #comp-segmented .cg-rz{width:340px;max-width:100%;transition:width .12s linear}
-  #comp-segmented .cg-range{width:100%;accent-color:var(--accent);margin:2px 0 0}
-  #comp-segmented .cg-play{border:1px solid var(--line);background:var(--panel);border-radius:var(--r1);
-    font-size:9.5px;font-weight:600;color:var(--dim);padding:2px 7px;line-height:1.4;margin-left:6px}
-  /* the rejected behaviour, rebuilt on purpose: no travelling plate, selection
-     cross-fades on the buttons themselves, slowed to match the demo beside it */
-  #comp-segmented .cg-xfade .seg-plate{display:none}
-  #comp-segmented .cg-xfade>button{transition:background 1.2s ease, box-shadow 1.2s ease, color 1.2s ease}
-  #comp-segmented .cg-xfade>button.on{background:var(--raised);border-color:var(--raised-edge);
-    box-shadow:inset 0 1px 0 var(--edge-hi), var(--shadow-1)}
+  #comp-segmented .cg-sheet{width:100%;border-radius:var(--r3);border:1px solid var(--edge-lo)}
 </style>
 </head>
 <body class="page">
@@ -45,264 +14,87 @@
   <section class="screen on" id="comp-segmented">
     <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Segmented control</h2><span class="k">· Component library</span><a class="backchip" data-target="comp-index"><i class="ic ic-chevron-left"></i> Component library</a></div>
 
-    <p class="docintro">One of a small set of exclusive options, with <b>all of them visible at once</b>. That last part is the entire reason it exists rather than being a <code>.select</code>: you can compare the options and hit one directly, without opening anything. It costs horizontal space to do that, which is why the rules below are mostly about <b>when not to use it</b>.</p>
+    <p class="docintro">One of a small set of exclusive options, with <b>all of them visible at once</b>. That is the whole reason it exists rather than a <code>.select</code>: you compare the options and hit one directly, without opening anything. It costs width to do that, so most of this page is about <b>when not to use it</b>. It is <b>the system's own segmented control</b>, drawn by macOS, not by us.</p>
 
-    <!-- 1 · ANATOMY -->
+    <!-- 1 · THE SYSTEM'S CONTROL -->
     <div class="docblk">
       <div class="docspec">
-        <div class="rl-frame">
-          <div class="cg-anat">
-            <span class="seg" id="cg-demo">
-              <button class="on">Fill</button><button>Fit</button><button>Stretch</button>
-            </span>
-          </div>
-          <span class="rl-co" data-rl-for="#cg-demo" data-rl-side="l" data-rl-x="left" data-rl-row="-60"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Track</b>A capsule of the same glass as every other control, 28px tall, with 2px of padding so the selected plate never touches the edge.</span></span>
-          <span class="rl-co" data-rl-for="#cg-demo>button.on" data-rl-side="l" data-rl-row="34"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Selected</b>A raised plate: its own fill, its own hairline, and <code>--shadow-1</code>. All three, because on a glass panel a fill alone is not enough contrast to find at a glance.</span></span>
-          <span class="rl-co" data-rl-for="#cg-demo>button:last-child" data-rl-side="r" data-rl-row="-60"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>Segment</b>A capsule inside a capsule, so round stays inside round. 11.5px, one line, never wrapped.</span></span>
-          <span class="rl-co" data-rl-for="#cg-demo" data-rl-side="r" data-rl-x="right" data-rl-row="34"><button class="n" type="button"></button><span class="l"></span><span class="card"><b>One row, always</b>The control is <code>flex-wrap:nowrap</code> and, when told to fill, a single-row grid. A wrapped segmented control reads as broken.</span></span>
-        </div>
-        <p class="docsp-d" style="text-align:center;color:var(--faint)">Click a number to read what that part does.</p>
+        <img class="cg-sheet" src="/api/audit-shot/2026-09-29-system-segmented-before-after-sc.png" alt="Every placement before and after: the Text panel's Across and Down rows, the title bar's View and Edit switch, and the history bar's filter, in light and dark">
+        <p class="docsp-d" style="text-align:center;color:var(--faint)">Top: the drawn control it replaced. Middle: the system control in a window in the back. Bottom: the same, in front. Photographed in the app, 2026-09-29.</p>
       </div>
       <div class="docmeta">
-        <div class="docnum">01</div><h3 class="docname">Anatomy</h3>
-        <p class="docrule">A <b>recessed rail</b>, darker than what it sits on, holding capsule segments, and one of them lifted on a <b>lighter pane of glass</b>. <b>The thumb is always lighter than the rail</b> (2026-09-29: the old plate matched the rail and could barely be seen). <b>It carries fill, hairline and lift together</b> — dropping any one of the three is how it ends up invisible on a glass panel, which is exactly what happened to the color picker's scope switch before this component existed.</p>
-        <p class="docrule"><b>There is one segmented control and one style.</b> Every place in the app that offers a few exclusive choices side by side (a panel row, a dialog, the history bar's filter, the title bar's View | Edit) draws this same rail and this same glass thumb, and moves it the same way. Only the size changes. There is no accent variant: the user, 2026-09-29, of the history filter's solid blue thumb beside the glass everywhere else: "I'm seeing inconsistent segmented controls. What I'd like to see is the system glass morph consistently." In the app the thumb is a pane of the system's own Liquid Glass with nothing painted over it.</p>
+        <div class="docnum">01</div><h3 class="docname">It is the system's</h3>
+        <p class="docrule">Every row of side-by-side choices in the app (a panel row, a dialog, the history bar's filter, the title bar's View | Edit) is macOS's own segmented control, <b>one continuous track</b>, the same everywhere. macOS draws the track, the picked segment, its contrast in light, dark and Increase Contrast, and how it changes. Nothing is painted over it.</p>
+        <p class="docrule">What macOS 26 draws, filmed in the app: in a window in front, the picked segment is <b>filled with the accent colour</b>; in a window behind, it is a grey plate. A new pick <b>switches at once</b>, it does not slide.</p>
         <div class="docdd">
-          <span class="do">Give the selected segment all three: fill, edge and lift.</span>
-          <span class="no">Mark selection with colour alone. On glass it disappears.</span>
+          <span class="do">Use the system control and let macOS draw it.</span>
+          <span class="no">Draw a rail, a thumb or a glass pane of your own. That is what made the history filter's word unreadable.</span>
         </div>
-        <p class="docapi"><b>API</b> <code>node.fit = "cover"</code>. The options are <code>enum("fit")</code>, so the same list feeds the control, a menu, and an agent's completion.</p>
+        <p class="docapi"><b>Decision</b> 2026-09-29, the user: "what happened to using the native liquid glass segmented control." Until then this page specified a drawn control: a recessed rail with a sliding pane of glass. The drawn one overshot its rail and put a white word on white glass, so it was retired the same day.</p>
       </div>
     </div>
 
-    <!-- 2 · SIZES & FORMS -->
+    <!-- 2 · SIZES AND FORMS -->
     <div class="docblk">
-      <div class="docspec">
-        <div class="docrow mid">
-          <div class="docsp"><span class="docsp-l"><b>Small</b> .sm · 24px</span><span class="pad"><span class="seg sm"><button class="on">All</button><button>Text</button><button>Shapes</button></span></span></div>
-          <div class="docsp"><span class="docsp-l"><b>Default</b> 28px</span><span class="pad"><span class="seg"><button class="on">All</button><button>Text</button><button>Shapes</button></span></span></div>
-          <div class="docsp"><span class="docsp-l"><b>Large</b> .lg · 32px</span><span class="pad"><span class="seg lg"><button class="on">All</button><button>Text</button><button>Shapes</button></span></span></div>
-        </div>
-        <div class="docgrid n3">
-          <div class="docsp">
-            <span class="pad col"><span class="seg fill"><button class="on">Fill</button><button>Fit</button><button>Crop</button></span></span>
-            <span class="docsp-l"><b>Fill</b> .fill</span>
-            <p class="docsp-d">Equal columns across the container. This is the automatic form inside a panel or a popover, so a column of controls lines up.</p>
-          </div>
-          <div class="docsp">
-            <span class="pad"><span class="seg icons"><button class="on" data-tip="Align left"><i class="ic ic-align-left"></i></button><button data-tip="Align centre"><i class="ic ic-align-center-h"></i></button><button data-tip="Align right"><i class="ic ic-align-right"></i></button></span></span>
-            <span class="docsp-l"><b>Icons</b> .icons</span>
-            <p class="docsp-d">Square segments, so they stay circular inside the capsule. Every one needs a tooltip, because an icon with no label is unlabelled.</p>
-          </div>
-          <div class="docsp">
-            <span class="pad"><span class="seg"><button class="on"><i class="ic ic-eye"></i>Show</button><button><i class="ic ic-eye-off"></i>Hide</button></span></span>
-            <span class="docsp-l"><b>Icon plus label</b></span>
-            <p class="docsp-d">Only when the icon adds something the word does not. Two decorations in one segment is just a wider segment.</p>
-          </div>
-        </div>
-      </div>
       <div class="docmeta">
         <div class="docnum">02</div><h3 class="docname">Sizes &amp; forms</h3>
-        <p class="docrule">Three heights, chosen by <b>where it sits</b> rather than how important it is: 24 dense, <b>28 default</b>, 32 in a toolbar. Height is the only thing the size class changes — <b>width is never set by the size</b>, it comes from the labels, which is why two 28px controls next to each other are routinely different widths. That is the form, not a mistake: natural widths in a row of other controls, equal columns when it owns the width.</p>
+        <p class="docrule">The system's control sizes, chosen by <b>where it sits</b>: <b>small</b> in a dense panel row and in the title bar beside the panel button, <b>regular</b> in dialogs and the history bar.</p>
+        <p class="docrule"><b>Fill</b> (a panel row or popover): the control takes the row's width, in equal columns when the longest word fits an equal share, and each word's own width when it does not. <b>Natural</b> (in a row of other controls): equal segments as wide as the longest word.</p>
+        <p class="docrule"><b>Pictures</b> instead of words: every picture segment is named, and that name is its tooltip, because a picture with no word is unlabelled.</p>
         <div class="docdd">
           <span class="do">Let it fill the column inside a panel, so a stack of rows aligns.</span>
           <span class="no">Mix sizes in one panel. Pick the density once.</span>
         </div>
-        <p class="docapi"><b>Measured</b> across the mock set: every one of the 51 controls in a real panel, dock or popover is <b>28px</b>. Not one uses <code>.sm</code>; the only 24s and 32s live on specimen pages like this one. So 28 is not the default in theory, it is the only size the product actually uses — treat 24 and 32 as exceptions that need a reason.</p>
       </div>
     </div>
 
     <!-- 3 · IT NEVER WRAPS -->
     <div class="docblk">
-      <div class="docspec">
-        <div class="docgrid n2">
-          <div class="cg-col cg-bad">
-            <span class="docsp-l"><b>What used to happen</b></span>
-            <span class="cg-wrapped">
-              <span class="on">Union</span><span>Subtract</span><span>Intersect</span><span>Exclude</span><span>Flatten</span><span>Outline</span>
-            </span>
-            <p class="docsp-d">Six options in a 216px column. The second row has no left edge to align to and the two survivors stretch to fill it, so the wrap reads as damage rather than as a choice.</p>
-          </div>
-          <div class="cg-col cg-wide">
-            <span class="docsp-l"><b>What happens now</b> drag the handle</span>
-            <div class="cg-rz" id="cg-rz">
-              <span class="seg fill"><button class="on">Union</button><button>Subtract</button><button>Intersect</button><button>Exclude</button></span>
-            </div>
-            <input class="cg-range" id="cg-range" type="range" min="120" max="340" value="340" aria-label="Container width">
-            <p class="docsp-d"><b id="cg-w">340px</b> — the control collapses to a menu the moment a label would lose more than an ellipsis is worth, and comes back when the room does. It never wraps and never overflows at any width in between.</p>
-          </div>
-        </div>
-      </div>
       <div class="docmeta">
         <div class="docnum">03</div><h3 class="docname">It never wraps. It becomes a menu.</h3>
-        <p class="docrule">A wrapped segmented control is broken, not compact — so the component is <code>nowrap</code> and single-row by construction. But "then use a <code>.select</code>" was advice to whoever wrote the page, and <b>a page cannot know how wide it will be</b>. So the honest failure shipped instead: a four-option control at 120px truncated every label to 27px and read <code>U… S… I… E…</code>. <b>The control now does it itself</b>, and the trigger is measured rather than guessed.</p>
+        <p class="docrule">When the words would have to be cut short, the control turns into a dropdown holding the same choices, and comes back when the room does. A wrapped or truncated segmented control reads as broken. Picture rows never collapse.</p>
         <div class="docdd">
           <span class="do">Let it collapse. The menu still shows every option.</span>
-          <span class="no">Ship six segments and hope the dock is wide. It never is.</span>
+          <span class="no">Ship six segments and hope the panel is wide. It never is.</span>
         </div>
-        <p class="docapi"><b>API</b> the collapse is presentation only — same <code>enum("boolean")</code>, same <code>.on</code> class, same <code>change</code> event, so a page that already handles the control keeps working when it turns into a menu. <code>.seg.no-collapse</code> opts out; icon-only controls never collapse.</p>
       </div>
     </div>
 
-    <!-- 4 · STATES -->
+    <!-- 4 · STATES AND KEYBOARD -->
     <div class="docblk">
-      <div class="docspec">
-        <div class="docrow mid">
-          <div class="docsp mid"><span class="docsp-l">rest</span><span class="pad"><span class="seg"><button class="on">Fill</button><button>Fit</button></span></span></div>
-          <div class="docsp mid"><span class="docsp-l">hover an unselected one</span><span class="pad"><span class="seg"><button class="on">Fill</button><button style="color:var(--ink);background:color-mix(in srgb,var(--glass) 55%,transparent)">Fit</button></span></span></div>
-          <div class="docsp mid"><span class="docsp-l">focus</span><span class="pad"><span class="seg"><button class="on">Fill</button><button style="box-shadow:var(--ring)">Fit</button></span></span></div>
-          <div class="docsp mid"><span class="docsp-l">one option unavailable</span><span class="pad"><span class="seg"><button class="on">Fill</button><button disabled data-tip="Stretch needs a fixed frame">Stretch</button></span></span></div>
-          <div class="docsp mid"><span class="docsp-l">whole control disabled</span><span class="pad"><span class="seg" style="opacity:.42"><button class="on">Fill</button><button>Fit</button></span></span></div>
-        </div>
-      </div>
       <div class="docmeta">
         <div class="docnum">04</div><h3 class="docname">States &amp; keyboard</h3>
-        <p class="docrule">The selected segment does not have a hover state, because it is already the answer; hovering the others previews where the plate would move. <b>A single disabled segment keeps its place in the row</b> rather than disappearing, so the set does not resize under the pointer, and it explains itself in a tooltip.</p>
+        <p class="docrule">All of it is the system's. One option that cannot be picked keeps its place, dimmed by macOS, and says why in its tooltip. The whole control dims when it is disabled. Keyboard focus and arrows behave as they do in every Mac app.</p>
         <div class="docdd">
           <span class="do">Keep an unavailable option visible and say why in its tooltip.</span>
           <span class="no">Remove a segment when it is unavailable. The row jumps.</span>
         </div>
-        <p class="docrule" style="margin-top:var(--gap-sm)">One tab stop for the whole control, then arrows move inside it, stepping over disabled segments. <b>Arrowing does not wrap</b>: off the last segment you stay on the last segment. You can see both ends of a segmented control, so they are real ends — jumping the plate from one side of the track to the other reads as the value having been reset rather than nudged. A menu wraps because you cannot see where its list stops; this can, so it stops.</p>
-        <p class="docapi"><b>API</b> <code>enum("fit")</code> returns each option with its own <code>enabled</code> and <code>disabledReason</code>, so the control never decides this on its own.</p>
       </div>
     </div>
 
-    <!-- 5 · CHANGING THE VALUE -->
-    <div class="docblk">
-      <div class="docspec">
-        <div class="docrow mid">
-          <div class="docsp mid" style="flex:1 1 260px">
-            <span class="docsp-l"><b>Live</b> click it</span>
-            <span class="pad"><span class="seg"><button class="on">Fill</button><button>Fit</button><button>Crop</button></span></span>
-          </div>
-          <div class="docsp mid" style="flex:1 1 260px">
-            <span class="docsp-l"><b>Slowed to 5×</b> <button class="cg-play" type="button">Play</button></span>
-            <span class="pad"><span class="seg cg-slow" id="cg-motion"><button class="on">Fill</button><button>Fit</button><button>Crop</button></span></span>
-          </div>
-        </div>
-        <div class="docgrid n2">
-          <div class="cg-col cg-bad">
-            <span class="docsp-l"><b>What it used to do</b> cross-fade</span>
-            <span class="pad"><span class="seg cg-xfade"><button class="on">Fill</button><button>Fit</button><button>Crop</button></span></span>
-            <p class="docsp-d">Selection lived on each button, so one plate faded out while another faded in. For about 60ms in the middle <b>both segments are half-lit and neither reads as selected</b> — the control blinks instead of answering.</p>
-          </div>
-          <div class="cg-col">
-            <span class="docsp-l"><b>What it does now</b> reposition</span>
-            <span class="pad"><span class="seg cg-slow"><button class="on">Fill</button><button>Fit</button><button>Crop</button></span></span>
-            <p class="docsp-d">One plate travels between slots. There is never a frame without exactly one selected segment, and the movement itself shows you which way the value went.</p>
-          </div>
-        </div>
-      </div>
-      <div class="docmeta">
-        <div class="docnum">05</div><h3 class="docname">Changing the value</h3>
-        <p class="docrule">The thumb <b>moves as liquid glass, it does not blink or slide</b>: it stretches to span the slot it left and the slot it is going to, squashed a little like a drop pulled along, then glides into place and stops, with no overshoot and no bounce, like the Mac's own control (about 300ms, interruptible from wherever it is). In the app this is the system's own Liquid Glass: one glass pane inside a glass container, slid by the system's smooth animation (the glass-ID swap between segments was filmed and jumps, so it is not used). It is still, at heart, the Move case in <a class="backchip" data-target="lang-motion" style="display:inline-flex;vertical-align:baseline">motion</a> — reposition · spring · 240ms — because the selection is one object going somewhere, not two objects swapping opacity. It is also what the native macOS control does.</p>
-        <div class="docdd">
-          <span class="do">Animate position, so one plate is visible in every frame.</span>
-          <span class="no">Cross-fade two plates. Mid-transition nothing looks selected.</span>
-        </div>
-        <p class="docapi"><b>API</b> <code>segmented.js</code> owns this. The plate follows the <code>.on</code> class with a <code>MutationObserver</code>, so it stays correct even when a page moves the selection itself. Listen with <code>seg.addEventListener('change', e =&gt; e.detail.value)</code>. Under <code>prefers-reduced-motion</code> the thumb still moves, it just arrives instantly, with no stretch.</p>
-      </div>
-    </div>
-
-    <!-- 6 · WHERE IT LIVES -->
-    <div class="docblk">
-      <div class="docspec">
-        <div class="docgrid n3">
-          <div class="docsp">
-            <span class="pad col"><span class="cg-col" style="width:100%;border:0;background:transparent;padding:0">
-              <span class="setrow"><span class="rl">Fit</span><span class="seg sm"><button class="on">Fill</button><button>Fit</button></span></span>
-              <span class="setrow"><span class="rl">Scale</span><span class="seg sm"><button>1x</button><button class="on">2x</button><button>3x</button></span></span>
-            </span></span>
-            <span class="docsp-l"><b>A panel row</b></span>
-            <p class="docsp-d">The most common home. Small size, right column, and the options are two or three short words.</p>
-          </div>
-          <div class="docsp">
-            <span class="pad col"><span class="seg fill"><button class="on">Shades</button><button>Related</button><button>Document</button></span></span>
-            <span class="docsp-l"><b>A popover</b></span>
-            <p class="docsp-d">Equal columns, filling the width. The color picker's scope switch: three answers to one question, all worth seeing.</p>
-          </div>
-          <div class="docsp">
-            <span class="pad"><span class="seg lg"><button class="on">Image</button><button>UI</button><button>Video</button></span></span>
-            <span class="docsp-l"><b>A toolbar</b></span>
-            <p class="docsp-d">Large size, for a switch that changes what the whole surface is showing. Rare, and never more than three.</p>
-          </div>
-        </div>
-      </div>
-      <div class="docmeta">
-        <div class="docnum">06</div><h3 class="docname">Where it lives</h3>
-        <p class="docrule">Three homes, and the size follows the home. What all three have in common: <b>the options are peers</b>. A segmented control implies the choices are the same kind of thing at the same level, which is why it is wrong for a list that mixes a default with three exceptions.</p>
-        <div class="docdd">
-          <span class="do">Use it when the options are genuinely parallel.</span>
-          <span class="no">Use it as a two-state toggle. That is a <code>.switch</code>.</span>
-        </div>
-        <p class="docapi"><b>API</b> selection writes straight through: <code>view.workspace = "video"</code>.</p>
-      </div>
-    </div>
-
-    <!-- 7 · IN THE API -->
+    <!-- 5 · WHEN TO USE SOMETHING ELSE -->
     <div class="doccard">
-      <div class="dochead"><span class="docnum">07</span><h3>In the API</h3><span class="k">and when to use something else</span></div>
+      <div class="dochead"><span class="docnum">05</span><h3>When to use it</h3><span class="k">and when to use something else</span></div>
       <div class="docbody">
         <table class="doctbl">
           <thead><tr><th>Situation</th><th>Control</th><th>Why</th></tr></thead>
           <tbody>
-            <tr><td><b>2 to 4 exclusive options, short labels, room to show them</b></td><td><code>.seg</code></td><td>All the options visible, one click to any of them</td></tr>
+            <tr><td><b>2 to 4 exclusive options, short labels, room to show them</b></td><td>segmented</td><td>All the options visible, one click to any of them</td></tr>
             <tr><td>5 or more options</td><td><code>.select</code></td><td>Five segments are unreadable at panel width</td></tr>
-            <tr><td>Any number, but the labels are long</td><td><code>.select</code></td><td>Truncated segments are worse than a closed menu — and the control will now collapse to one on its own</td></tr>
-            <tr><td>Exactly two, and one is "off"</td><td><code>.switch</code></td><td>On/off is a state, not a choice between peers</td></tr>
+            <tr><td>Any number, but the labels are long</td><td><code>.select</code></td><td>Cut-short segments are worse than a closed menu, and the control collapses to one on its own</td></tr>
+            <tr><td>Exactly two, and one is "off"</td><td><code>.switch</code></td><td>On and off is a state, not a choice between peers</td></tr>
             <tr><td>2 to 4, but each needs a sentence</td><td><code>.radio</code></td><td>A segment has room for a word, not an explanation</td></tr>
             <tr><td>Independent options, more than one at a time</td><td><code>.check</code></td><td>A segmented control is exclusive by definition</td></tr>
           </tbody>
         </table>
-        <p class="docnote">This component had <b>no owner</b> before this page: it was styled in five different files at once, plus two bespoke copies inside the color picker, so the same control came out at two heights on one popover with a selected segment you could barely see. Everything about <code>.seg</code> is now in <code>segmented.css</code> and nowhere else. <b>Compact windows</b>: it takes the equal-column form and labels truncate; it never gains a row, and if truncation bites, the panel should have used a select.</p>
+        <p class="docnote">In the app: <code>SegmentedControl</code> (<code>Sources/Photonz/DesignSystem/SegmentedControl.swift</code>) is the one place a segmented control is made, and <code>SegmentedControlUsageTests</code> fails the build on any other, or on the control being drawn again.</p>
       </div>
     </div>
 
     <div class="caption">
-      <div class="c"><div class="lab">The idea</div><p>A segmented control <b>spends width to save a click</b>. That trade is good when there are three short options and bad when there are six, so most of the spec is a boundary rather than a style.</p></div>
-      <div class="c"><div class="lab g2">Now settled</div><p>Because a segmented control and a select render the same <code>enum</code>, the control picks between them itself — from its own measured width, at runtime rather than build time. Authors choose the property, not the widget, and <b>no panel can be wrong about it</b>, including panels that get resized after they are written.</p></div>
-      <div class="c"><div class="lab g2">Open question</div><p>The threshold is one ellipsis of overflow, because the glyph costs about two characters and clipping less than that loses more than it saves. That is defensible but it is still a line: across the mock set it collapses exactly one control today, a six-option paint switch. Should a control that <b>only just</b> fits also collapse, on the grounds that it will not fit in a narrower window either?</p></div>
+      <div class="c"><div class="lab">The idea</div><p>A segmented control <b>spends width to save a click</b>. That trade is good when there are three short options and bad when there are six, so most of the spec is a boundary rather than a style. The style is the system's.</p></div>
     </div>
   </section>
 </main>
-<script src="/shared/photonz-ds.js"></script>
-<script>
-/* The motion section only teaches anything if you can watch it more than once.
-   Step the two slowed demos through their options together, so the travelling
-   plate and the cross-fade it replaced are compared on the same beat. */
-(function () {
-  var demos = [].slice.call(document.querySelectorAll('#comp-segmented .cg-slow, #comp-segmented .cg-xfade'));
-  var btn = document.querySelector('#comp-segmented .cg-play');
-  if (!btn || !demos.length) return;
-  var timer = null, i = 0;
-  function step() {
-    i++;
-    demos.forEach(function (seg) {
-      var b = [].slice.call(seg.children).filter(function (x) { return x.tagName === 'BUTTON'; });
-      b[i % b.length].click();
-    });
-  }
-  btn.addEventListener('click', function () {
-    if (timer) { clearInterval(timer); timer = null; btn.textContent = 'Play'; return; }
-    btn.textContent = 'Stop';
-    step();
-    timer = setInterval(step, 1600);
-  });
-})();
-
-/* Section 03 · drive the container width so the collapse can be watched
-   happening, rather than described. The control is doing its own measuring —
-   nothing here tells it which form to take. */
-(function () {
-  var range = document.getElementById('cg-range');
-  var box = document.getElementById('cg-rz');
-  var out = document.getElementById('cg-w');
-  if (!range || !box) return;
-  range.addEventListener('input', function () {
-    box.style.width = range.value + 'px';
-    if (out) out.textContent = range.value + 'px';
-  });
-})();
-</script>
 </body>
 </html>

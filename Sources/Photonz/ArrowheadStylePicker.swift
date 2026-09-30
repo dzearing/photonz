@@ -27,14 +27,14 @@ extension ArrowheadStyle {
     /// the description is ours, so every ending answers to its own name.
     /// (A SwiftUI `.accessibilityLabel` on the Image does not reach the
     /// segment; this is the way in.)
-    var glyph: Image {
+    var glyph: NSImage? {
         guard let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: title) else {
-            return Image(systemName: symbolName)
+            return nil
         }
         let sized = image.withSymbolConfiguration(
             NSImage.SymbolConfiguration(pointSize: 11, weight: .medium)) ?? image
         sized.accessibilityDescription = title
-        return Image(nsImage: sized)
+        return sized
     }
 
     /// What the tooltip says under the picture.

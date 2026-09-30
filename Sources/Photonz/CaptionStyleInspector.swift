@@ -26,7 +26,7 @@ struct CaptionWordsInspector: View {
             if look.show.usesLines {
                 VideoKit.FieldRow(label: "Lines") {
                     SegmentedControl("Lines", selection: look.lines, options: [.init(1, "1"), .init(2, "2")],
-                                     fallsBackToSystem: false) { lines in
+                                     size: .small, fallsBackToSystem: false) { lines in
                         set(.lines, .count(lines))
                     }
                     .playtestControl("Caption lines", detail: "the Captions section")

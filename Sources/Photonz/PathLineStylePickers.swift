@@ -28,7 +28,7 @@ enum PathLineStyleGlyph {
     /// A stub of a thick line with one end shaped. Thick and short on purpose:
     /// the whole difference between the three is what happens in the last half
     /// width, so a hairline would show nothing at all.
-    static func end(_ end: PathLineEnd, named: String) -> Image {
+    static func end(_ end: PathLineEnd, named: String) -> NSImage {
         draw(named: named) { context in
             context.setLineCap(end == .flat ? .butt : (end == .round ? .round : .square))
             context.setLineWidth(8)
@@ -44,7 +44,7 @@ enum PathLineStyleGlyph {
     /// exactly one line width at the outside of the bend and a right angle is
     /// the widest that difference ever gets on a picture this size: a carried
     /// point is square, a sliced one is chamfered, a round one is an arc.
-    static func corner(_ corner: PathLineCorner, named: String) -> Image {
+    static func corner(_ corner: PathLineCorner, named: String) -> NSImage {
         draw(named: named) { context in
             context.setLineJoin(corner == .sharp ? .miter : (corner == .round ? .round : .bevel))
             context.setMiterLimit(pathMiterLimit)
@@ -58,7 +58,7 @@ enum PathLineStyleGlyph {
     }
 
     /// The line itself, solid or broken up.
-    static func pattern(_ pattern: PathLinePattern, named: String) -> Image {
+    static func pattern(_ pattern: PathLinePattern, named: String) -> NSImage {
         draw(named: named) { context in
             context.setLineCap(.round)
             context.setLineWidth(3)
@@ -76,7 +76,7 @@ enum PathLineStyleGlyph {
     /// which is what a screen reader reads out and what a scripted walk presses
     /// it by, so the name is set on the image itself. (A SwiftUI
     /// `.accessibilityLabel` on the Image does not reach the segment.)
-    private static func draw(named: String, _ paint: @escaping (CGContext) -> Void) -> Image {
+    private static func draw(named: String, _ paint: @escaping (CGContext) -> Void) -> NSImage {
         let image = NSImage(size: size, flipped: false) { _ in
             guard let context = NSGraphicsContext.current?.cgContext else { return true }
             context.setStrokeColor(NSColor.labelColor.cgColor)
@@ -87,7 +87,7 @@ enum PathLineStyleGlyph {
         // segment's picture is legible against its highlight.
         image.isTemplate = true
         image.accessibilityDescription = named
-        return Image(nsImage: image)
+        return image
     }
 }
 
@@ -103,7 +103,7 @@ where Value.AllCases: RandomAccessCollection {
     let label: String
     let reading: StyleReading<Value>
     let title: (Value) -> String
-    let glyph: (Value) -> Image
+    let glyph: (Value) -> NSImage
     let help: (Value) -> String
     let pick: (Value) -> Void
 

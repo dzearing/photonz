@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p2-normal",
   "seq": 3430,
-  "status": "blocked",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T13:56:44.029Z",
-  "updated": "2026-09-29T16:04:45.075Z",
+  "updated": "2026-09-30T04:18:48.648Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Motion lives in Sources/PhotonzCore/SegmentThumbMotion.swift (SegmentThumbMorph: duration 0.3, squash 0.94, stretch at 0.45, curves (.33,0,.4,1) then (.2,0,0,1)) and docs/design/mocks/shared/components/segmented.js (the page keyframes, 300ms, efa1d36f). Keep them in lockstep. segmented-thumb-film-walk films the title bar and a panel picker and fails if the glass leaves its rail. Audit: queue/audits/2026-09-29-segmented-thumb-glide.json. The first card (stretch, squash and settle) was withdrawn: the user answered it by filing the-segmented-thumb-glides-like-a-mac-control-no.",
@@ -33,6 +33,18 @@
     {
       "t": "2026-09-29T16:04:45.074Z",
       "note": "waiting, but every question on this task was taken down without an answer. Nothing returns a task to the queue except an answer, so this will sit here until someone opens a new question."
+    },
+    {
+      "t": "2026-09-30T04:18:48.588Z",
+      "note": "the question \"The segmented thumb now glides and stops. How should it feel?\" was taken down without an answer: The drawn thumb it asks about is gone: every segmented control is now the Mac's own, which switches the way macOS switches it (every-segmented-control-is-apple-s-own-liquid-gl).. Nobody chose anything, so nothing here was decided."
+    },
+    {
+      "t": "2026-09-30T04:18:48.595Z",
+      "note": "waiting, but every question on this task was taken down without an answer. Nothing returns a task to the queue except an answer, so this will sit here until someone opens a new question."
+    },
+    {
+      "t": "2026-09-30T04:18:48.647Z",
+      "note": "Superseded: the drawn thumb whose motion this tuned no longer exists; every segmented control is the system's own (every-segmented-control-is-apple-s-own-liquid-gl, its card asks the user to confirm the look)."
     }
   ],
   "walks": [

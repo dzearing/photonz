@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p1-high",
   "seq": 0.000001,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T02:46:57.276Z",
-  "updated": "2026-09-30T02:46:57.366Z",
+  "updated": "2026-09-30T04:23:46.058Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -30,6 +30,54 @@
     {
       "t": "2026-09-30T02:46:57.365Z",
       "note": "seq 400 -> 0.000001"
+    },
+    {
+      "t": "2026-09-30T03:05:20.633Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-30T04:18:48.702Z",
+      "note": "owns these walks: segmented-thumb-glass-walk, segmented-thumb-film-walk, segment-tooltips-walk, transition-placement-and-hold-walk, transition-edge-follows-the-pointer-walk"
+    },
+    {
+      "t": "2026-09-30T04:19:04.629Z",
+      "note": "Inventory: 34 segmented controls in 23 files, all through SegmentedControl: title bar View|Edit, history filter, Library scope, Text Across/Down, Captions align, Arrowhead ending, path line pattern/end/corner, Arrangement (3), Measure (3+3), Callout (2), Canvas, Grid settings, Colour picker (2), Transition overlap, Property keys path shape, Caption lines, Tool settings capsule, Resize, Export/Video/Recording export dialogs (9), Recording setup. No caller used a per-option disabled state."
+    },
+    {
+      "t": "2026-09-30T04:19:04.683Z",
+      "note": "Adversarial review before building: SwiftUI Picker(.segmented) cannot do it (measured: never stretches, a 280pt frame stays 87pt; and it resets NSSegmentedControl.segmentStyle to .automatic on every update). So SegmentedControl wraps NSSegmentedControl directly: .rounded pinned, .selectOne, fill form equal columns or proportional, ViewThatFits to a dropdown when words cannot fit, per-option selectionDisabled via setEnabled(forSegment:), tooltips via the app's HintAnchors laid over equal segments, picture options now NSImage (their accessibilityDescription is the name a walk presses). The Next switch next-designed-segmented stays so Current keeps its SwiftUI picker."
+    },
+    {
+      "t": "2026-09-30T04:19:04.738Z",
+      "note": "What macOS 26 draws, measured in the probe (styles automatic, rounded and capsule compared in panel, title bar and history bar; front and back): all three styles look identical; one continuous track in the title bar (the reported separated look was NOT reproduced, with automatic either); picked segment accent blue when the window is in front, grey behind; Cmd-2 switches with no slide (filmed densely). Pointer-click film has no frames while the click is held, so a slide there cannot be ruled out. No glass selection pane."
+    },
+    {
+      "t": "2026-09-30T04:19:04.791Z",
+      "note": "Deleted: DesignedSegments, thumb/glass/rail palette, SegmentColumnsLayout, SegmentThumbDrag (PhotonzCore) + tests, Scripts/segmented-gallery.swift + its test.sh typecheck. SegmentedControlUsageTests now asserts the system control (NSSegmentedControl(), .rounded, .selectOne) and fails on glassEffect/thumb words. Video panel rows (Transition overlap, Property keys, Caption lines, Library scope) now ask for .small like every other panel row: at regular size 'Before the cut | Across it | After it' collapsed to its dropdown."
+    },
+    {
+      "t": "2026-09-30T04:19:04.845Z",
+      "note": "Verified: Scripts/test.sh 10560/10560. Walks: segmented-thumb-glass-walk (rewritten: the thumb drag became pointer presses; title bar pressed by pointer both ways) and segmented-thumb-film-walk (title bar films kept, panel films became pointer presses) green; 10 walks that read 'already on' + 108 caption/export/library/measure/callout/arrow/transition/colour/view-mode walks: all green after the .small fix (two transition walks had failed on the collapsed row). Front-of-screen copies of both walks run while the user was away for the active-look pictures."
+    },
+    {
+      "t": "2026-09-30T04:19:04.898Z",
+      "note": "Docs: comp-segmented.html rewritten to document the system control (it is what this task asked); UX-PATTERNS 'The one segmented control' says the control is the system's. Audit queue/audits/2026-09-29-system-segmented.json. Card asks the user to confirm (keep / glass toolbar for View|Edit / back to drawn). Readable-label task was already dropped; the-segmented-thumb-moves-the-way-the-user-likes dropped and its card withdrawn as superseded."
+    },
+    {
+      "t": "2026-09-30T04:19:04.954Z",
+      "note": "left rough (not filed, in the audit): segment tooltips are laid over equal columns, so a .fill row squeezed to proportional widths would place a tooltip slightly off (no such row has tooltips today); mock set's shared segmented.css still draws the old rail on other mock pages (mocks are never edited to match code)."
+    },
+    {
+      "t": "2026-09-30T04:23:46.056Z",
+      "note": "Built and verified: every segmented control in Next is the Mac's own NSSegmentedControl, one continuous track (tests 10560/10560, 118 segment walks green, audit 2026-09-29-system-segmented). Waiting on the user's confirmation card: macOS 26 fills the pick with the accent colour in front and switches without sliding, which may not be the glass they pictured."
     }
+  ],
+  "started": "2026-09-30T03:05:20.631Z",
+  "walks": [
+    "segmented-thumb-glass-walk",
+    "segmented-thumb-film-walk",
+    "segment-tooltips-walk",
+    "transition-placement-and-hold-walk",
+    "transition-edge-follows-the-pointer-walk"
   ]
 }

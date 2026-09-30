@@ -201,7 +201,7 @@ private struct MotionPathRow: View {
             PanelRowLabel(text: "Path")
             SegmentedControl("Path", selection: shape,
                              options: MotionPathShape.allCases.map { .init($0, $0.title) },
-                             fallsBackToSystem: false) {
+                             size: .small, fallsBackToSystem: false) {
                 editorState.setMotionPathShape($0)
             }
         }

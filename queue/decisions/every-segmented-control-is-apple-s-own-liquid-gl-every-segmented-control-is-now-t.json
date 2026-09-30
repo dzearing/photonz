@@ -1,0 +1,50 @@
+{
+  "id": "every-segmented-control-is-apple-s-own-liquid-gl-every-segmented-control-is-now-t",
+  "taskId": "every-segmented-control-is-apple-s-own-liquid-gl",
+  "question": "Every segmented control is now the Mac's own. Is this what you wanted?",
+  "context": "Filmed and photographed in the app on 2026-09-29: the Mac's own segmented control on macOS 26 is one track, accent-filled when the window is in front, and switches at once. The sheet and the film strip are in the audit.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep the Mac's own control",
+      "summary": "Every row of side-by-side choices stays exactly as macOS draws it: one continuous track, the picked segment filled with your accent colour in the front window and grey behind, switching at once.",
+      "pros": [
+        "It is the real system control, so it matches every other Mac app and follows every macOS update",
+        "Nothing of ours is drawn on it, so the picked word is always readable"
+      ],
+      "cons": [
+        "The picked segment is accent blue in the front window, not a glass pane",
+        "It switches at once rather than sliding"
+      ],
+      "mitigation": "Nothing to soften: this is the look and motion macOS gives its own apps."
+    },
+    {
+      "id": "b",
+      "label": "Glass toolbar for View | Edit",
+      "summary": "Give recording windows a real macOS toolbar so View | Edit sits in it the way Finder's view switcher does, in Liquid Glass. Panel rows and dialogs stay as they are now.",
+      "pros": [
+        "The title bar switch gets the glass look Finder and Mail show"
+      ],
+      "cons": [
+        "A toolbar draws a bar across the top of the window, which the editor was built not to have",
+        "Only the title bar changes; panel rows still use the accent fill"
+      ],
+      "mitigation": "The bar can be transparent over the canvas, but it still takes height from the window."
+    },
+    {
+      "id": "c",
+      "label": "Back to the drawn glass",
+      "summary": "Put back the control we drew ourselves: a recessed rail with one pane of glass sliding to the picked segment.",
+      "pros": [
+        "The selection slides and is a glass pane rather than a colour fill"
+      ],
+      "cons": [
+        "It is ours, not the Mac's: it produced the overshoot and the white-on-white history filter"
+      ],
+      "mitigation": "Its walks and films are still in history, so the known problems would be fixed first."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-30T04:18:29.172Z"
+}

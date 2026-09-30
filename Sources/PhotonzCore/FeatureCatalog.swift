@@ -548,8 +548,8 @@ public enum FeatureCatalog {
             Definition(
                 flag: FeatureFlag(
                     name: designedSegmentedFlag,
-                    title: "Side-by-side choices slide",
-                    description: "Every row of side-by-side choices is a soft capsule with one raised plate that slides to what you pick, the View and Edit switch included. Off means the system's segmented control.",
+                    title: "Side-by-side choices are one glass capsule",
+                    description: "Every row of side-by-side choices is the system's Liquid Glass segmented control as one capsule, filling its row where a panel row asks for it, the View and Edit switch included. Off means the segmented picker each place first had.",
                     area: .appearance,
                     isEnabled: false,
                     parameters: []),

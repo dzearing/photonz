@@ -1,61 +1,47 @@
 import AppKit
-// The gallery script (`Scripts/segmented-gallery.swift`) compiles this file
-// with the drag's own source beside it rather than as a module.
-#if canImport(PhotonzCore)
 import PhotonzCore
-#endif
 import SwiftUI
 
 /// **The segmented control**: a small set of exclusive choices, all of them on
-/// screen at once (`docs/design/mocks/pages/comp-segmented.html`,
-/// `shared/components/segmented.css`).
+/// screen at once (`docs/design/mocks/pages/comp-segmented.html`).
 ///
-/// The only segmented control in the app. Before it there were three: the
-/// system's (`Picker` with `.segmented`, about forty of them across the panel,
-/// the dialogs and the colour picker), a bare `NSSegmentedControl` for View |
-/// Edit in the title bar, and a drawn one the video panel kept to itself.
-/// The user turned down the title bar's on 2026-09-28 because it was not the
-/// design system's, and the others were not either. `SegmentedControlUsageTests`
-/// fails the build on a segmented control made any other way.
+/// It is the system's own control, `NSSegmentedControl`, so macOS draws all of
+/// it: its track, its picked segment, its contrast and its motion. The user, 2026-09-29:
+/// "what happened to using the native liquid glass segmented control." Before
+/// that this file drew a rail and slid a pane of glass along it, and the
+/// drawing is what produced an unreadable white-on-white history filter and a
+/// thumb that overshot its rail. Nothing here draws the control any more.
 ///
-/// What the component page asks for, and where it is done here:
+/// Why AppKit's control rather than SwiftUI's `Picker(.segmented)`, which is
+/// the same control underneath: measured on 2026-09-29, the picker never
+/// stretches (a picker framed 280pt wide stays 87pt), so a panel row cannot
+/// have its equal columns; and it resets AppKit's style to `.automatic` on
+/// every update, leaving the look to macOS. The first View | Edit switch was
+/// a bare control on `.automatic` and was seen as two loose buttons in the
+/// title bar. Here the style is pinned to `.rounded`: one control, the same
+/// everywhere, title bar included (filmed there on 2026-09-29).
 ///
-/// * **One look, everywhere.** A recessed capsule rail, darker than what it
-///   sits on, with a hairline and a soft inner shadow, 2pt of padding, 2pt
-///   between segments; capsule segments; ONE thumb under the picked segment,
-///   a pane of the system's own Liquid Glass with nothing painted over it,
-///   lighter than the rail. There is no style to pick: the history bar's
-///   filter once lit its plate a solid blue, and the user, 2026-09-29: "I'm
-///   seeing inconsistent segmented controls. What I'd like to see is the
-///   system glass morph consistently." Only the size differs from place to
-///   place.
-/// * **Sizes.** 24, 28 (the default, and the only size the mocks' panels use)
-///   and 32. The size sets the height and the type; the width always comes from
-///   the words.
-/// * **Forms.** `.fill` takes its container's width in equal columns, the form
-///   inside a panel or a popover; `.natural` hugs its words. Pictures instead
-///   of words are square segments, each named by its tooltip.
-/// * **It never wraps.** When the words would have to be cut short, the
+/// What macOS 26 draws, filmed the same day: one continuous track; in an
+/// active window the picked segment is filled with the accent colour, in an
+/// inactive one it is a grey plate; a new pick switches at once rather than
+/// sliding.
+///
+/// * **Sizes** are the system's control sizes. With no size given it takes
+///   the size around it (`.controlSize(.small)` in a dense panel row).
+/// * **Forms.** `.fill` takes its container's width, in equal columns when
+///   the widest word fits an equal share and each word's own width otherwise;
+///   `.natural` is equal segments as wide as the widest word.
+/// * **It never wraps.** When the words would have to be cut short the
 ///   control becomes a dropdown holding the same choices. Pictures never do.
-/// * **States.** Hovering an unpicked segment lifts its ink and lays a faint
-///   glass behind it; pressing shrinks it to 97%; one option that cannot be
-///   picked keeps its place, dimmed, and says why in its tooltip; the whole
-///   control dims under `.disabled`. One tab stop, arrows move the pick and
-///   stop at the ends, and the focus ring sits round the plate.
-/// * **Changing the value.** The glass slides to the new segment and stops,
-///   moved by SwiftUI's own animation of its frame on the system's smooth
-///   curve (the page's 300ms), so the system reshapes the glass as it goes.
-///   No overshoot, no bounce, never out of the rail (filmed by
-///   `segmented-thumb-film-walk`). That curve is the thumb's ONLY animator: a
-///   pick made inside another animation (View | Edit changes under
-///   `.viewEditMode`) once flung a drawn thumb a whole segment out of its rail.
-///   Grab the thumb and drag it and it follows the pointer, landing on the
-///   nearest segment when let go. Under Reduce Motion it cross-fades instead;
-///   under Increase Contrast or Reduce Transparency the system's glass turns
-///   firmer by itself.
+/// * **Disabled** is the system's: one option that cannot be picked is
+///   dimmed by AppKit and says why in its tooltip; the whole control dims
+///   under `.disabled`.
+/// * **Motion** is the system's. A pick made inside another animation (View |
+///   Edit under `.viewEditMode`) cannot disturb it: SwiftUI's transactions do
+///   not reach an AppKit control.
 ///
 /// With the Next release's `next-designed-segmented` switch off, which is
-/// always the case in Current, this is the system's segmented picker exactly as
+/// always the case in Current, this is the SwiftUI segmented picker exactly as
 /// each caller had it, so Current does not change.
 struct SegmentedControl<Value: Hashable>: View {
     /// One choice.
@@ -65,8 +51,9 @@ struct SegmentedControl<Value: Hashable>: View {
         /// for it even when the segment shows a picture instead.
         var title: String
         /// A picture in front of the word, or in place of it when the control
-        /// `showsTitles` is false.
-        var image: Image?
+        /// `showsTitles` is false. Its `accessibilityDescription` is the name
+        /// the segment answers to, so build it named (`SegmentedControl.symbol`).
+        var image: NSImage?
         /// What resting on it says. A picture segment without one says its title.
         var help: String?
         /// The key that picks it, printed quieter in its tooltip.
@@ -75,7 +62,7 @@ struct SegmentedControl<Value: Hashable>: View {
         /// place, dimmed, and its tooltip says this.
         var disabledReason: String?
 
-        init(_ value: Value, _ title: String, image: Image? = nil, help: String? = nil,
+        init(_ value: Value, _ title: String, image: NSImage? = nil, help: String? = nil,
              key: String? = nil, disabledReason: String? = nil) {
             self.value = value
             self.title = title
@@ -86,40 +73,23 @@ struct SegmentedControl<Value: Hashable>: View {
         }
     }
 
-    /// `.seg.sm`, `.seg`, `.seg.lg`.
+    /// The system's control sizes.
     enum Size {
         case small, regular, large
 
-        var height: CGFloat {
+        var controlSize: NSControl.ControlSize {
             switch self {
-            case .small: 24
-            case .regular: 28
-            case .large: 32
-            }
-        }
-
-        var fontSize: CGFloat {
-            switch self {
-            case .small: 11
-            case .regular: 11.5
-            case .large: 12.5
-            }
-        }
-
-        /// Either side of a segment's words (`--gap-sm`, `--s3`, `--s4`).
-        var padding: CGFloat {
-            switch self {
-            case .small: 8
-            case .regular: 12
-            case .large: 16
+            case .small: .small
+            case .regular: .regular
+            case .large: .large
             }
         }
     }
 
     enum Form {
-        /// Equal columns across the container (`.seg.fill`).
+        /// The container's width, in equal segments.
         case fill
-        /// Each segment as wide as its words (`.seg`).
+        /// As wide as the system draws it.
         case natural
     }
 
@@ -127,22 +97,23 @@ struct SegmentedControl<Value: Hashable>: View {
     let options: [Option]
     /// Nil lights nothing: the picked things disagree, or nothing is picked.
     let selection: Value?
-    var size: Size = .regular
+    /// Nil takes the control size around it.
+    var size: Size?
     var form: Form = .fill
     var showsTitles = true
-    /// What the whole control's system help tag says with the designed control
-    /// off, for a caller that had one (`segmentToolTips`' fallback).
+    /// What the whole control's system help tag says in Current, for a caller
+    /// that had one (`segmentToolTips`' fallback).
     var systemHelp: String?
     /// Tooltips under the segments rather than over them, for a control at the
     /// very top of a window.
     var tipsBelow = false
     /// False for a control that was already drawn before the switch existed
-    /// (the Library's scope, the video panel's rows): it stays drawn with the
-    /// switch off too, because the system control is the thing it replaced.
+    /// (the Library's scope, the video panel's rows): it is this control with
+    /// the switch off too, because the SwiftUI picker is not what it replaced.
     var fallsBackToSystem = true
     let pick: (Value) -> Void
 
-    init(_ label: String, selection: Value?, options: [Option], size: Size = .regular,
+    init(_ label: String, selection: Value?, options: [Option], size: Size? = nil,
          form: Form = .fill, showsTitles: Bool = true,
          systemHelp: String? = nil, tipsBelow: Bool = false, fallsBackToSystem: Bool = true,
          pick: @escaping (Value) -> Void) {
@@ -158,7 +129,7 @@ struct SegmentedControl<Value: Hashable>: View {
         self.pick = pick
     }
 
-    init(_ label: String, selection: Binding<Value>, options: [Option], size: Size = .regular,
+    init(_ label: String, selection: Binding<Value>, options: [Option], size: Size? = nil,
          form: Form = .fill, showsTitles: Bool = true,
          systemHelp: String? = nil, tipsBelow: Bool = false) {
         self.init(label, selection: selection.wrappedValue, options: options, size: size,
@@ -166,24 +137,91 @@ struct SegmentedControl<Value: Hashable>: View {
                   systemHelp: systemHelp, tipsBelow: tipsBelow) { selection.wrappedValue = $0 }
     }
 
+    /// A symbol as a segment's picture, carrying the option's name: a segment
+    /// answers to its picture's description (a SwiftUI `.accessibilityLabel`
+    /// does not reach it), which is what a screen reader says and what a walk
+    /// presses it by.
+    static func symbol(_ name: String, named title: String) -> NSImage? {
+        let image = NSImage(systemSymbolName: name, accessibilityDescription: title)
+        image?.accessibilityDescription = title
+        return image
+    }
+
     var body: some View {
         if Experiments.shared.designedSegmentedEnabled || !fallsBackToSystem {
-            DesignedSegments(label: label, options: options, selection: selection, size: size,
-                             form: form, showsTitles: showsTitles,
-                             tipsBelow: tipsBelow, pick: pick)
+            if showsTitles {
+                // Every word whole on one row, or a dropdown of the same
+                // choices: a bar whose words do not fit is the wrong control
+                // for the room, and a cut-short one reads as broken.
+                ViewThatFits(in: .horizontal) {
+                    segments
+                    collapsed
+                }
+            } else {
+                segments
+            }
         } else {
-            systemPicker
+            swiftUIPicker
         }
     }
 
-    /// Current's control: the system picker, built the way every caller built
+    private var segments: some View {
+        SystemSegments(label: label, options: options, selection: selection,
+                       size: size?.controlSize, form: form, showsTitles: showsTitles, pick: pick)
+            .overlay { tips }
+    }
+
+    /// One tooltip per segment, laid over it: an `NSSegmentedControl` takes
+    /// its tooltips from the system, and the app's own tooltip is what every
+    /// other control shows. An even row of anchors is a row of equal
+    /// segments, which is every control that has tips today (pictures, and
+    /// the title bar's two words); a `.fill` row squeezed into each word's own
+    /// width would place them a little off. The anchors take no clicks.
+    @ViewBuilder private var tips: some View {
+        let texts = options.map(tip(for:))
+        if texts.contains(where: { $0 != nil }) {
+            HStack(spacing: 0) {
+                ForEach(options.indices, id: \.self) { index in
+                    if let text = texts[index] {
+                        Color.clear
+                            .toolTip(text, key: options[index].disabledReason == nil ? options[index].key : nil,
+                                     below: tipsBelow)
+                    } else {
+                        Color.clear
+                    }
+                }
+            }
+            .allowsHitTesting(false)
+        }
+    }
+
+    /// What resting on a segment says: why it cannot be picked, its own
+    /// help, or for a picture (or a segment with a key) its name.
+    private func tip(for option: Option) -> String? {
+        option.disabledReason ?? option.help
+            ?? (showsTitles && option.key == nil ? nil : option.title)
+    }
+
+    /// Short of room: the same choices in a dropdown, the picked one ticked.
+    private var collapsed: some View {
+        VideoKit.Dropdown(
+            label: label,
+            value: options.first { $0.value == selection }?.title ?? "",
+            size: size == .large ? .regular : .small,
+            choices: options.map { option in
+                .item(option.title, isOn: option.value == selection,
+                      isEnabled: option.disabledReason == nil) { pick(option.value) }
+            })
+    }
+
+    /// Current's control: the SwiftUI picker, built the way every caller built
     /// it before this type existed.
-    @ViewBuilder private var systemPicker: some View {
+    @ViewBuilder private var swiftUIPicker: some View {
         let picker = Picker(label, selection: Binding<Value?>(
             get: { selection },
             set: { if let value = $0 { pick(value) } })) {
             ForEach(options.indices, id: \.self) { index in
-                systemLabel(options[index]).tag(Value?.some(options[index].value))
+                swiftUILabel(options[index]).tag(Value?.some(options[index].value))
             }
         }
         .pickerStyle(.segmented)
@@ -195,448 +233,119 @@ struct SegmentedControl<Value: Hashable>: View {
         }
     }
 
-    @ViewBuilder private func systemLabel(_ option: Option) -> some View {
+    @ViewBuilder private func swiftUILabel(_ option: Option) -> some View {
         if let image = option.image, !showsTitles {
-            image
+            Image(nsImage: image)
         } else {
             Text(option.title)
         }
     }
 }
 
-// MARK: - The drawn control
+// MARK: - The system control
 
-/// The row of segments, the space a thumb, a slot and a drag are measured in.
-private let segmentedRowSpace = "segmented-row"
-
-/// The drawn control. Internal rather than private so
-/// `Scripts/segmented-gallery.swift` can draw each state beside the mock.
-struct DesignedSegments<Value: Hashable>: View {
-    typealias Option = SegmentedControl<Value>.Option
-
+/// `NSSegmentedControl`, one capsule (`.rounded`), one pick (`.selectOne`).
+private struct SystemSegments<Value: Hashable>: NSViewRepresentable {
     let label: String
-    let options: [Option]
+    let options: [SegmentedControl<Value>.Option]
     let selection: Value?
-    let size: SegmentedControl<Value>.Size
+    /// Nil takes the environment's.
+    let size: NSControl.ControlSize?
     let form: SegmentedControl<Value>.Form
     let showsTitles: Bool
-    let tipsBelow: Bool
     let pick: (Value) -> Void
-    /// For the gallery only: draw this segment hovered, and the focus ring
-    /// on, without a pointer or a keyboard.
-    var shownHovered: Int?
-    var shownFocused = false
 
-    init(label: String, options: [Option], selection: Value?, size: SegmentedControl<Value>.Size,
-         form: SegmentedControl<Value>.Form, showsTitles: Bool, tipsBelow: Bool,
-         shownHovered: Int? = nil, shownFocused: Bool = false, pick: @escaping (Value) -> Void) {
-        self.label = label
-        self.options = options
-        self.selection = selection
-        self.size = size
-        self.form = form
-        self.showsTitles = showsTitles
-        self.tipsBelow = tipsBelow
-        self.shownHovered = shownHovered
-        self.shownFocused = shownFocused
-        self.pick = pick
+    func makeNSView(context: Context) -> NSSegmentedControl {
+        let control = NSSegmentedControl()
+        // Pinned, never `.automatic`, so macOS never picks another look for
+        // it (the first View | Edit switch, on automatic, was seen separated).
+        control.segmentStyle = .rounded
+        control.trackingMode = .selectOne
+        control.segmentDistribution = .fillEqually
+        control.target = context.coordinator
+        control.action = #selector(Coordinator.changed(_:))
+        control.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        return control
     }
 
-    @State private var pointerOver: Int?
-    private var hovered: Int? { pointerOver ?? shownHovered }
-    @FocusState private var isFocused: Bool
-    @Environment(\.isEnabled) private var isEnabled
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.colorScheme) private var scheme
+    func updateNSView(_ control: NSSegmentedControl, context: Context) {
+        context.coordinator.values = options.map(\.value)
+        context.coordinator.pick = pick
 
-    /// Every segment's box in the row, where the glass is placed and what a
-    /// drag is measured against.
-    @State private var slots: [Int: CGRect] = [:]
-    /// A drag of the thumb under way: where its middle is, and how far from
-    /// its middle the hand took hold.
-    @State private var dragCenter: CGFloat?
-    @State private var grabOffset: CGFloat = 0
-    /// A drag that began off the thumb belongs to the segment it began on.
-    @State private var dragIgnored = false
-    @State private var rowWidth: CGFloat = 0
+        let controlSize = size ?? Self.appKitSize(context.environment.controlSize)
+        if control.controlSize != controlSize {
+            control.controlSize = controlSize
+            control.font = .systemFont(ofSize: NSFont.systemFontSize(for: controlSize))
+        }
+        control.isEnabled = context.environment.isEnabled
+        control.setAccessibilityLabel(label)
 
-    private typealias Palette = VideoKit.Palette
-
-    var body: some View {
-        Group {
-            if showsTitles {
-                // Every word whole on one row, or a dropdown of the same
-                // choices: a bar whose words do not fit is the wrong control
-                // for the room, and a wrapped or cut-short one reads as broken.
-                ViewThatFits(in: .horizontal) {
-                    bar
-                    collapsed
-                }
-            } else {
-                bar
+        if control.segmentCount != options.count { control.segmentCount = options.count }
+        for (index, option) in options.enumerated() {
+            let word = showsTitles || option.image == nil ? option.title : ""
+            if control.label(forSegment: index) != word { control.setLabel(word, forSegment: index) }
+            if control.image(forSegment: index) !== option.image {
+                control.setImage(option.image, forSegment: index)
             }
+            control.setEnabled(option.disabledReason == nil, forSegment: index)
         }
-        .opacity(isEnabled ? 1 : 0.42)
+        let picked = options.firstIndex { $0.value == selection } ?? -1
+        if control.selectedSegment != picked { control.selectedSegment = picked }
     }
 
-    /// Either side of a segment's words. The fill form is the one a panel, a
-    /// dock or a popover uses, and there the words only claim the least room
-    /// they can stand in: the columns share out whatever the row has on top,
-    /// which at a dock's usual width is more than the mock's
-    /// `calc(var(--s2) - 1px)`. So a tight row (Arrangement with Mixed beside
-    /// its word) keeps its bar of words, and only a row too narrow for the
-    /// words themselves becomes a dropdown.
-    private var wordPadding: CGFloat {
-        form == .fill ? 3 : size.padding
-    }
-
-    private var pickedIndex: Int? { options.firstIndex { $0.value == selection } }
-
-    private var bar: some View {
-        SegmentColumnsLayout(form: form, spacing: 2) {
-            ForEach(options.indices, id: \.self) { index in
-                segment(index)
-            }
+    /// `.natural` is equal segments as wide as the widest word. `.fill` asks
+    /// for the least room that shows every word whole, and takes whatever
+    /// room it is given: equal columns when the widest word fits an equal
+    /// share, else each segment keeps its own width and the rest is shared
+    /// out (a panel row of Before the cut | Across it | After it), so no word
+    /// is cut while there is room for all of them.
+    func sizeThatFits(_ proposal: ProposedViewSize, nsView control: NSSegmentedControl,
+                      context: Context) -> CGSize? {
+        let equal = Self.width(of: control, laidOut: .fillEqually)
+        guard form == .fill else {
+            if control.segmentDistribution != .fillEqually { control.segmentDistribution = .fillEqually }
+            return equal
         }
-        .coordinateSpace(.named(segmentedRowSpace))
-        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { rowWidth = $0 }
-        .background(alignment: .topLeading) { thumb }
-        .simultaneousGesture(thumbDrag)
-        .padding(2)
-        .frame(height: size.height)
-        .frame(minWidth: 0, maxWidth: form == .fill ? .infinity : nil)
-        // The recessed rail: darker than what it sits on, pressed in.
-        .background(Capsule().fill(Palette.segRail.shadow(
-            .inner(color: Palette.segRailInset.color(scheme), radius: 1, y: 1))))
-        .overlay(Capsule().strokeBorder(Palette.edgeLo).allowsHitTesting(false))
-        .focusable(interactions: .activate)
-        .focused($isFocused)
-        .focusEffectDisabled()
-        .onKeyPress(.leftArrow) { step(-1) }
-        .onKeyPress(.rightArrow) { step(1) }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(label)
-    }
-
-    /// The system glass's one curve: the component page's 300ms, with no
-    /// bounce, so the glass stops where it lands.
-    private static var glassCurve: Animation { .smooth(duration: 0.3) }
-
-    /// Under Reduce Motion the glass does not travel: it fades out where it
-    /// was as it fades in on the new segment.
-    private static var fadeCurve: Animation { .easeInOut(duration: 0.14) }
-
-    /// Where the glass is: under the hand during a drag, else on the picked
-    /// segment. Nil draws no thumb (nothing picked, or not measured yet).
-    private var thumbRect: CGRect? {
-        if let dragCenter, let ordered = orderedSlots {
-            return SegmentThumbDrag.frame(centerX: dragCenter, slots: ordered, row: 0...rowWidth)
+        guard let width = proposal.width, width.isFinite else {
+            return Self.width(of: control, laidOut: .fit)
         }
-        return pickedIndex.flatMap { slots[$0] }
+        let laidOut: NSSegmentedControl.Distribution = width >= equal.width ? .fillEqually : .fillProportionally
+        if control.segmentDistribution != laidOut { control.segmentDistribution = laidOut }
+        return CGSize(width: width, height: equal.height)
     }
 
-    /// The thumb: ONE pane of the system's Liquid Glass that stays put as a
-    /// view and is moved by SwiftUI's own animation of its frame, so the
-    /// system reshapes the glass as it slides. Nothing here places it frame
-    /// by frame, and nothing is painted over it.
-    ///
-    /// The glass's other morph, removing the pane from one segment and
-    /// putting one on the next under a shared `glassEffectID`, was filmed at
-    /// 120 fps four ways on 2026-09-29 and every time it jumped: glass on View
-    /// one frame, on Edit the next, nothing between.
-    @ViewBuilder private var thumb: some View {
-        if let rect = thumbRect {
-            GlassEffectContainer {
-                ZStack(alignment: .topLeading) {
-                    Color.clear
-                        .glassEffect(thumbGlass, in: .capsule)
-                        .overlay(focusRing)
-                        .frame(width: rect.width, height: rect.height)
-                        .position(x: rect.midX, y: rect.midY)
-                        // Under Reduce Motion a new pick is a new pane, so the
-                        // old one fades as the new one appears; otherwise it is
-                        // the same pane, slid.
-                        .id(reduceMotion ? pickedIndex : nil)
-                        .transition(.opacity)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            }
-            // A new pane for a new appearance: a pane changing the glass it
-            // wears as the theme flipped once stayed dark on a light rail.
-            .id(scheme)
-            // The one animator. A pick made inside someone else's animation
-            // (View | Edit changes under `.viewEditMode`) moves the glass on
-            // this curve and no other.
-            .transaction(value: pickedIndex) {
-                $0.animation = reduceMotion ? Self.fadeCurve : Self.glassCurve
-            }
+    /// How big the control asks to be when its segments are laid out one way.
+    private static func width(of control: NSSegmentedControl,
+                              laidOut distribution: NSSegmentedControl.Distribution) -> CGSize {
+        let was = control.segmentDistribution
+        guard was != distribution else { return control.intrinsicContentSize }
+        control.segmentDistribution = distribution
+        defer { control.segmentDistribution = was }
+        return control.intrinsicContentSize
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(pick: pick) }
+
+    private static func appKitSize(_ size: ControlSize) -> NSControl.ControlSize {
+        switch size {
+        case .mini: .mini
+        case .small: .small
+        case .large: .large
+        case .extraLarge: .extraLarge
+        default: .regular
         }
     }
 
-    /// Lighter than the rail by the glass alone, measured on real captures
-    /// (2026-09-29): in light the regular glass is the white pane; in dark the
-    /// regular glass goes as dark as the rail, and the clear glass under a
-    /// white tint is what clears 1.5:1. A white tint on light glass greys it
-    /// (1.15:1), so light wears none. The numbers are on `segRail`.
-    private var thumbGlass: Glass {
-        scheme == .dark ? .clear.tint(Palette.segGlassTintDark) : .regular
-    }
+    @MainActor
+    final class Coordinator: NSObject {
+        var values: [Value] = []
+        var pick: (Value) -> Void
 
-    private var orderedSlots: [CGRect]? {
-        let ordered = options.indices.compactMap { slots[$0] }
-        return ordered.count == options.count && !ordered.isEmpty ? ordered : nil
-    }
+        init(pick: @escaping (Value) -> Void) { self.pick = pick }
 
-    /// Take hold of the thumb and slide it: it follows the pointer along the
-    /// rail, and on letting go the same pane slides onto the segment under its
-    /// middle. A drag that starts anywhere else is left to the segment it
-    /// started on.
-    private var thumbDrag: some Gesture {
-        DragGesture(minimumDistance: 3, coordinateSpace: .named(segmentedRowSpace))
-            .onChanged { drag in
-                if dragIgnored { return }
-                if dragCenter == nil {
-                    guard !reduceMotion, let pickedIndex, let slot = slots[pickedIndex],
-                          slot.contains(drag.startLocation) else {
-                        dragIgnored = true
-                        return
-                    }
-                    grabOffset = drag.startLocation.x - slot.midX
-                }
-                let lowest = slots[0]?.midX ?? 0
-                let highest = slots[options.count - 1]?.midX ?? rowWidth
-                dragCenter = min(max(drag.location.x - grabOffset, lowest), highest)
-            }
-            .onEnded { _ in
-                defer { dragIgnored = false }
-                guard let center = dragCenter, let ordered = orderedSlots else {
-                    dragCenter = nil
-                    return
-                }
-                let landing = SegmentThumbDrag.landing(
-                    centerX: center, slots: ordered,
-                    available: options.map { $0.disabledReason == nil })
-                withAnimation(Self.glassCurve) {
-                    dragCenter = nil
-                    if let landing, landing != pickedIndex { pick(options[landing].value) }
-                }
-            }
-    }
-
-    @ViewBuilder private var focusRing: some View {
-        if isFocused || shownFocused {
-            Capsule().stroke(Palette.accent.opacity(0.38), lineWidth: 3).padding(-1.5)
+        @objc func changed(_ control: NSSegmentedControl) {
+            guard values.indices.contains(control.selectedSegment) else { return }
+            pick(values[control.selectedSegment])
         }
-    }
-
-    private func segment(_ index: Int) -> some View {
-        let option = options[index]
-        let isOn = index == pickedIndex
-        let isAvailable = option.disabledReason == nil
-        let lit = isOn || (hovered == index && isAvailable)
-        return Button {
-            pick(option.value)
-        } label: {
-            HStack(spacing: 5) {
-                if let image = option.image {
-                    image
-                        .font(.system(size: 13, weight: .medium))
-                        .imageScale(.small)
-                        .accessibilityHidden(true)
-                }
-                if showsTitles || option.image == nil {
-                    Text(option.title)
-                        .font(.system(size: size.fontSize, weight: isOn ? .semibold : .medium))
-                        .tracking(-0.03)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                }
-            }
-            .foregroundStyle(lit ? AnyShapeStyle(Palette.ink) : AnyShapeStyle(Palette.dim))
-            .padding(.horizontal, showsTitles || option.image == nil ? wordPadding : 0)
-            .frame(minWidth: showsTitles ? 0 : size.height - 4, maxWidth: .infinity,
-                   maxHeight: .infinity)
-            .background {
-                if hovered == index, !isOn, isAvailable {
-                    Capsule().fill(Palette.glassHover)
-                }
-            }
-            .contentShape(Capsule())
-        }
-        .buttonStyle(SegmentPressStyle())
-        .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(segmentedRowSpace)) } action: {
-            slots[index] = $0
-        }
-        .disabled(!isAvailable)
-        .opacity(isAvailable ? 1 : 0.42)
-        .kitHover(option.title) { inside in
-            if inside { pointerOver = index } else if pointerOver == index { pointerOver = nil }
-        }
-        .modifier(SegmentTip(text: tip(for: option),
-                             key: option.disabledReason == nil ? option.key : nil,
-                             below: tipsBelow))
-        // Read the way a walk read a system segment: which one is on, then
-        // what resting on it says.
-        .playtestControl(option.title, detail: Self.walkDetail(isOn: isOn, title: option.title,
-                                                               tip: tip(for: option)))
-        .accessibilityLabel(option.title)
-        .accessibilityAddTraits(isOn ? .isSelected : [])
-    }
-
-    /// What resting on a segment says: why it cannot be picked, its own
-    /// help, or for a picture (or a segment with a key) its name.
-    private func tip(for option: Option) -> String? {
-        option.disabledReason ?? option.help
-            ?? (showsTitles && option.key == nil ? nil : option.title)
-    }
-
-    static func walkDetail(isOn: Bool, title: String, tip: String?) -> String {
-        (isOn ? "already on \(title), " : "") + "tooltip " + (tip.map { "\"\($0)\"" } ?? "none")
-    }
-
-    /// An arrow moves the pick one segment, stepping over any that cannot be
-    /// picked, and stops at the ends: both ends are in view, so they are real
-    /// ends, and a plate jumping across the track reads as the value reset.
-    private func step(_ direction: Int) -> KeyPress.Result {
-        var index = (pickedIndex ?? (direction > 0 ? -1 : options.count)) + direction
-        while options.indices.contains(index) {
-            if options[index].disabledReason == nil {
-                pick(options[index].value)
-                return .handled
-            }
-            index += direction
-        }
-        return .handled
-    }
-
-    /// Short of room: the same choices in a dropdown, the picked one ticked.
-    private var collapsed: some View {
-        VideoKit.Dropdown(
-            label: label,
-            value: pickedIndex.map { options[$0].title } ?? "",
-            size: size == .large ? .regular : .small,
-            choices: options.map { option in
-                .item(option.title, isOn: option.value == selection,
-                      isEnabled: option.disabledReason == nil) { pick(option.value) }
-            })
-    }
-}
-
-/// A pressed segment shrinks a little (`.seg>button:active`).
-private struct SegmentPressStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
-            .animation(.easeOut(duration: 0.09), value: configuration.isPressed)
-    }
-}
-
-/// A segment's tooltip, when it has something to say.
-private struct SegmentTip: ViewModifier {
-    let text: String?
-    let key: String?
-    let below: Bool
-
-    func body(content: Content) -> some View {
-        if let text {
-            content.toolTip(text, key: key, below: below)
-        } else {
-            content
-        }
-    }
-}
-
-extension VideoKit.Palette {
-    /// Behind a hovered segment: `color-mix(var(--glass) 55%, transparent)`.
-    static let glassHover = VideoKit.Tone(light: VideoKit.rgb(0xFFFFFF, 0.74 * 0.55),
-                                          dark: VideoKit.rgb(0x1A1D27, 0.72 * 0.55))
-    /// The recessed rail (`--seg-rail`, `--seg-rail-inset`). The glass thumb
-    /// takes some of its shade from the rail under it, so the rail is what
-    /// sets the user's 1.5:1. Measured on real captures (2026-09-29): at .22
-    /// light and .30 dark the white title bar read 1.45:1 and the history
-    /// strip's filter 1.30 to 1.40:1; at .32 and .45 the title bar reads 1.80,
-    /// the panel 2.05 light and 1.81 dark, and the history strip, glass on
-    /// glass and the hardest place, 1.50 light and 1.53 dark.
-    static let segRail = VideoKit.Tone(light: VideoKit.rgb(0x121828, 0.32),
-                                       dark: VideoKit.rgb(0x000000, 0.45))
-    static let segRailInset = VideoKit.Tone(light: VideoKit.rgb(0x121828, 0.10),
-                                            dark: VideoKit.rgb(0x000000, 0.35))
-    /// The glass thumb's tint in dark, what lifts the clear glass above the
-    /// rail with nothing painted over it: full white, which on the history
-    /// strip's near-black glass is what clears 1.5:1 (.65 read 1.30:1).
-    static let segGlassTintDark = Color.white
-}
-
-// MARK: - Columns
-
-/// The segments laid out on one row, never two.
-///
-/// `.natural`: each segment as wide as its words. `.fill`: equal columns when
-/// the widest word fits an equal share, which is the component's fill form;
-/// when it does not, each segment keeps its own width and the room left over
-/// is shared out, so no label is cut while there is room for all of them
-/// (the dock rule in `segmented.css`). Short of room altogether, every
-/// segment gives up the same share of its width; the control's own
-/// `ViewThatFits` turns into a dropdown before that shows.
-struct SegmentColumnsLayout: Layout {
-    enum Form { case fill, natural }
-
-    var form: Form
-    var spacing: CGFloat
-
-    init<Value>(form: SegmentedControl<Value>.Form, spacing: CGFloat) {
-        self.form = form == .fill ? .fill : .natural
-        self.spacing = spacing
-    }
-
-    init(fills: Bool, spacing: CGFloat) {
-        self.form = fills ? .fill : .natural
-        self.spacing = spacing
-    }
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let natural = naturalWidths(subviews)
-        let gaps = spacing * CGFloat(max(0, subviews.count - 1))
-        let height = subviews.map { $0.sizeThatFits(.unspecified).height }.max() ?? 0
-        let wanted = natural.reduce(0, +) + gaps
-        let width: CGFloat
-        switch form {
-        case .fill: width = proposal.width ?? wanted
-        case .natural: width = min(wanted, proposal.width ?? wanted)
-        }
-        return CGSize(width: width, height: proposal.height ?? height)
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let sized = Self.widths(natural: naturalWidths(subviews), room: bounds.width,
-                                spacing: spacing, fills: form == .fill)
-        var x = bounds.minX
-        for (index, subview) in subviews.enumerated() {
-            subview.place(at: CGPoint(x: x, y: bounds.minY), anchor: .topLeading,
-                          proposal: ProposedViewSize(width: sized[index], height: bounds.height))
-            x += sized[index] + spacing
-        }
-    }
-
-    /// The width each segment gets, given their natural widths and the room.
-    static func widths(natural: [CGFloat], room total: CGFloat, spacing: CGFloat,
-                       fills: Bool) -> [CGFloat] {
-        guard !natural.isEmpty else { return [] }
-        let count = CGFloat(natural.count)
-        let room = max(0, total - spacing * (count - 1))
-        let sum = natural.reduce(0, +)
-        if sum > room {
-            return natural.map { sum > 0 ? $0 * room / sum : room / count }
-        }
-        guard fills else { return natural }
-        let share = room / count
-        if let widest = natural.max(), widest <= share {
-            return Array(repeating: share, count: natural.count)
-        }
-        return natural.map { $0 + (room - sum) / count }
-    }
-
-    private func naturalWidths(_ subviews: Subviews) -> [CGFloat] {
-        subviews.map { $0.sizeThatFits(.unspecified).width }
     }
 }

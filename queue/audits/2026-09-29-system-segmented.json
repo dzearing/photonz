@@ -1,0 +1,28 @@
+{
+  "feature": "Every segmented control is the system's own",
+  "epic": "design-system",
+  "summary": "Every row of side-by-side choices (panel rows, dialogs, the history bar's filter, the title bar's View | Edit) is now macOS's own segmented control, one continuous track that macOS draws. The drawn rail and sliding glass pane are gone.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open any screen recording and look at View | Edit at the right of the title bar.", "shot": "2026-09-29-system-segmented-title-bar-dark-sc.png" },
+    { "do": "Click Edit, then View, then press Cmd-2 and Cmd-1.", "shot": "2026-09-29-system-segmented-title-bar-film-sc.png" },
+    { "do": "Make a text layer, select it, and click Center and Right in the Text section's Across row.", "shot": "2026-09-29-system-segmented-panel-front-sc.png" },
+    { "do": "Open the history bar (Shift-Cmd-H) and read the All / Screenshots / Videos filter in light and dark.", "shot": "2026-09-29-system-segmented-history-light-sc.png" },
+    { "do": "Compare every placement before and after on one sheet.", "shot": "2026-09-29-system-segmented-before-after-sc.png" },
+    { "do": "Pick a cut between two clips with a cross dissolve and use The overlap sits row in the Transition section." }
+  ],
+  "evaluate": [
+    "Is this the native control you meant, or did you expect a glass selection that slides between segments?",
+    "In the front window macOS fills the picked segment with your accent blue. Is that acceptable next to the rest of the app?",
+    "Does the title bar switch read as one control beside the panel button, not two loose buttons?",
+    "Is the picked word readable everywhere you look, the history filter included?"
+  ],
+  "rough": [
+    "macOS 26 does not slide the selection: filmed in front, Cmd-2 switches View to Edit from one frame to the next. The pointer film has no frames while the click is held, so a slide during a click cannot be ruled out there.",
+    "In a window in front the picked segment is accent blue, as macOS draws it; in a window behind it is grey. The drawn control's white glass pane is gone with the rest of it.",
+    "The Liquid Glass look Finder shows in its toolbar comes from a real window toolbar, which this editor deliberately does not have (it would draw a bar across the top). Not tried here.",
+    "The mock page comp-segmented.html was rewritten to document the system control, as this task asked; the mock set's own segmented.css still draws the old rail on other mock pages.",
+    "The old drawn control's thumb drag and its always-on keyboard focus are gone: arrows and Tab reach the control the way they do in every Mac app (Full Keyboard Access decides Tab)."
+  ]
+}

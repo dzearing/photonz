@@ -1,0 +1,34 @@
+{
+  "id": "a-walk-can-click-the-history-bar-and-film-its-fi",
+  "title": "A walk can click the history bar and film its filter moving",
+  "goal": "Scripted walks cannot click anything in the history bar, so nobody can prove by a walk that its All / Screenshots / Videos filter moves like every other segmented control, or that its buttons work. Make a walk able to press the history bar the way a pointer does, then film the filter moving.",
+  "epic": "design-system",
+  "priority": "p2-normal",
+  "seq": 3470,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-30T01:58:12.466Z",
+  "updated": "2026-09-30T04:18:48.759Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-09-29 while doing every-segmented-control-is-the-one-system-glass. With the history window added to PlaytestHarness.panelWindows() (the harness only looks in the editor, its children, sheets and Settings), a press step found \"Videos\" and clicked it: note \"\\\"Videos\\\" in tooltip none at window (891, 174), one click; ... no view bodies counted\", and the snapshot after still showed the thumb on All with the capture still listed. Giving the history panel a hosting view with acceptsFirstMouse true changed nothing. Likely cause: a walk never lets the history panel (HistoryOverlayPanel, nonactivating, canBecomeKey true) become key (AppFront.showFloating), so the mouse-down is spent making it key; the menu-picture path works round it by making the strip key for one second (PlaytestHarness ~9947). The harness change and the acceptsFirstMouse try were both reverted. A person is not affected: their strip is key when it opens.",
+  "acceptance": [
+    "A walk step presses Videos in the history bar at a point on its face and the filter changes to Videos",
+    "segmented-thumb-film-walk films the history filter All to Videos and back with filmThumb, inside its rail in every frame",
+    "focus-drill reads clean for that walk"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T01:58:12.468Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-30T04:18:48.758Z",
+      "note": "2026-09-29: the history filter is now the Mac's own segmented control (every-segmented-control-is-apple-s-own-liquid-gl). There is no drawn thumb to film; what is left is proving a click on the filter and on the bar's buttons works."
+    }
+  ],
+  "walks": [
+    "segmented-thumb-film-walk"
+  ]
+}

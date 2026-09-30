@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/segmented-thumb-glass",
-  "seed": "The user, 2026-09-29: the segmented control's thumb should be lighter than its rail ('I can barely see the thumb atm') and should move as Liquid Glass when it snaps between options. At Next defaults with no flag set, this walk picks a label so the Text section's Across and Down rows show, photographs the thumb in dark and light, presses Center by its face so the glass morphs across, photographs straight after the press (to catch the thumb mid-stretch) and again once it has settled, then takes hold of the thumb and drags it from Center to Right with a real pointer drag and checks the pick followed the hand. Last it opens a recording and switches the title bar's View | Edit both ways, in light and in dark, because every segmented control in the app is the same one. Then it switches that window back from dark to light and photographs the title bar again: on 2026-09-29 the glass read only 1.14:1 against its rail there. Last it opens the history bar and photographs its filter in light and dark: the same control, the same glass, no blue plate (the user, 2026-09-29: 'What I'd like to see is the system glass morph consistently').",
+  "seed": "The user, 2026-09-29: 'what happened to using the native liquid glass segmented control.' Every segmented choice is the system's own control. At Next defaults with no flag set, this walk picks a label so the Text section's Across and Down rows show, photographs them in dark and light, presses Center and then Right with the pointer on their faces and checks each pick took, then opens a recording and switches the title bar's View | Edit with Cmd-2 and with the pointer both ways, photographing it in light and dark (it must be ONE capsule, not the toolbar's two separated buttons). Last it opens the history bar and photographs its filter in light and dark: the picked label must be readable.",
   "setup": {
     "forget": [
       "text",
@@ -77,7 +77,7 @@
     {
       "do": "describe",
       "stage": "1-dark-rest",
-      "note": "THE TEST: Across and Down in the Text section, dark. The picked segment's thumb is a lighter pane of glass on a darker, recessed rail, visible at a glance"
+      "note": "THE TEST: Across and Down in the Text section, dark. The system's own segmented control, one capsule, the picked segment clearly lit"
     },
     {
       "do": "snapshot",
@@ -105,7 +105,7 @@
     {
       "do": "describe",
       "stage": "3-dark-settled",
-      "note": "the glass has travelled from Left to Center and settled, inside the rail"
+      "note": "pressed Center with the pointer: the system's selection moved from Left to Center"
     },
     {
       "do": "snapshot",
@@ -118,23 +118,16 @@
     {
       "do": "describe",
       "stage": "4-light-rest",
-      "note": "the same rows in light: a white thumb on a clearly greyer rail"
+      "note": "the same rows in light: the picked segment readable at a glance"
     },
     {
       "do": "snapshot",
       "name": "4-light-rest"
     },
     {
-      "do": "windowDrag",
-      "from": [
-        1238,
-        369
-      ],
-      "to": [
-        1268,
-        369
-      ],
-      "steps": 14
+      "do": "press",
+      "control": "Right",
+      "in": "Across"
     },
     {
       "do": "wait",
@@ -148,12 +141,12 @@
     },
     {
       "do": "describe",
-      "stage": "5-light-dragged",
-      "note": "took hold of the thumb on Center and dragged it right: it followed the hand and landed on Right"
+      "stage": "5-light-pressed-right",
+      "note": "a second pointer press, on Right: the system's selection followed"
     },
     {
       "do": "snapshot",
-      "name": "5-light-dragged"
+      "name": "5-light-pressed-right"
     },
     {
       "do": "open",
@@ -194,13 +187,37 @@
       "mode": "edit"
     },
     {
+      "do": "press",
+      "control": "View Mode"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectTimeline",
+      "mode": "view"
+    },
+    {
+      "do": "press",
+      "control": "Edit Mode"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectTimeline",
+      "mode": "edit"
+    },
+    {
       "do": "appearance",
       "value": "dark"
     },
     {
       "do": "describe",
       "stage": "7-dark-title-bar-edit",
-      "note": "Cmd-2: the thumb went over to Edit; dark"
+      "note": "Cmd-2, then Edit Mode and View Mode pressed with the pointer: one capsule in the title bar, never two loose buttons; dark"
     },
     {
       "do": "snapshot",
@@ -217,7 +234,7 @@
     {
       "do": "describe",
       "stage": "8-light-after-dark-title-bar-edit",
-      "note": "the same window switched from dark back to light: the glass on Edit is still clearly lighter than its rail on the white title bar"
+      "note": "the same window switched from dark back to light: the picked half still reads at a glance on the white title bar"
     },
     {
       "do": "snapshot",
@@ -240,7 +257,7 @@
     {
       "do": "describe",
       "stage": "9-light-history-filter",
-      "note": "the history bar's All / Screenshots / Videos filter: the same rail and glass thumb as the panel and the title bar, no blue plate"
+      "note": "the history bar's All / Screenshots / Videos filter: the same system control as the panel and the title bar, the picked label readable"
     },
     {
       "do": "snapshot",
@@ -258,7 +275,7 @@
     {
       "do": "describe",
       "stage": "10-dark-history-filter",
-      "note": "the history filter in dark: the glass thumb on All, lighter than its rail"
+      "note": "the history filter in dark: All is picked and its label readable"
     },
     {
       "do": "snapshot",
