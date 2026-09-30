@@ -78,6 +78,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         MainActor.assumeIsolated {
+            // Read the running release's switches before anything draws, so
+            // the first frame is mixed the way that release mixes.
+            _ = Experiments.shared
             AppDelegate.coordinator?.start()
             #if PHOTONZ_PLAYTEST
             // Non-shipping builds only; the probe alone acts on either of these.

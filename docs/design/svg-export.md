@@ -225,6 +225,52 @@ this app just wrote. Every one of these was measured rather than assumed
   the canvas corner lands in the wrong place. A transform on the element itself
   it gets right.
 
+### Where see-through paint is mixed
+
+A shadow, a faded layer and a soft edge are each a colour laid over another at
+some fraction, and the fraction can be applied to two different sets of
+numbers. Core Image's default is to turn the stored sRGB numbers into LIGHT
+first, mix, and turn back: half black over white leaves half the light, which
+is stored as 188. A browser, CSS, Figma and every SVG reader mix the stored
+numbers as they are: the same half black over white is 128.
+
+`color-interpolation-filters="sRGB"` settles the inside of a filter, but not
+the last step, where the filter's result lands on whatever is under it. No
+attribute asks a reader to do that in light. So while the canvas mixed in
+light, a 55% black shadow over white came out of the file at 134 where the
+canvas drew 192, and a navy shadow over nothing came back navy where the canvas
+drew a washed-out grey-blue.
+
+**The canvas moved, not the file** (the user, 2026-09-20: "Match the web").
+Next mixes in the stored numbers: `CompositingSpace.sRGB`, a Core Image working
+space of extended sRGB (extended so a Display P3 screenshot's colours outside
+sRGB survive exactly as they did in light). Now the canvas, the file and a
+browser agree: the same 55% shadow is 191 on the canvas and 190 in the file,
+and the navy shadow is navy in both (`CompositingSpaceRenderTests`).
+
+* **What changed shade.** Only see-through paint: shadows read deeper, faded
+  layers stronger, and a quarter-strength colour keeps its hue instead of
+  drifting grey. Anything opaque comes out byte for byte the same in either
+  space, words and pictures included.
+* **Current is untouched.** The switch is `next-web-compositing`, on by default
+  in Next and absent from Current, so the same drawing can be opened in both
+  and compared. The app hands the running release's answer to
+  `CompositingSetting.shared`, which every `DocumentRenderer()` reads at every
+  frame, so a flip in the Experiments window reaches an open canvas and an
+  open canvas never shows the two mixed together.
+* **Two things read the space.** A brightness matte reads a grey as the number
+  the colour picker showed, so it only converts out of light when it is in
+  light. The shadow reader that lifts a card's shadow off a screenshot fits
+  its numbers in the space they will be drawn in; in sRGB the round trip off
+  the settings-pane capture is tighter than it ever was in light (worst 13
+  levels over the whole picture against 67), because macOS itself mixes a
+  window's shadows that way.
+* **A coloured shadow's colour.** The tint went through `CIColorMatrix`
+  already multiplied by its opacity, and that filter works on colour before
+  alpha is applied, so the opacity was applied twice. In light the second
+  error (raw numbers read as light) hid it. In sRGB the colour goes in as it is
+  written; light keeps Current's numbers.
+
 ### A viewport where a transform would not do
 
 Two shapes people draw all the time could not wear a shadow under those rules:
@@ -378,13 +424,9 @@ covers the writing itself.
   a group that is turned. See "A shadow and a blur" above for the table and the
   reasons. A plain drop shadow and a blur go out as shapes, ring or no ring,
   frame or no frame.
-* **A shadow comes back a different SHADE wherever it is see-through.** The
-  canvas mixes a shadow into what is under it in linear light and every SVG
-  reader mixes it in sRGB, so a 55% black shadow over a white frame comes back
-  134 where the canvas draws 192, and a coloured shadow over nothing at all
-  comes back its own colour where the canvas draws a washed-out one. Nothing in
-  the file can ask a reader to mix in linear light. The placing is exact: the
-  same shape over nothing is 0.002 off.
+* **In Current, a shadow comes back a different SHADE wherever it is
+  see-through.** Current still mixes in light, so the file disagrees with its
+  canvas there. Next does not: see "Where see-through paint is mixed" below.
 * **A sweeping gradient falls back.** A conic ramp can be approximated with
   wedges, at the cost of a big file.
 * **A shape whose LAYER box is rounded off falls back** (as opposed to the

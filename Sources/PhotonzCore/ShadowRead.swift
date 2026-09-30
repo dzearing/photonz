@@ -161,8 +161,13 @@ public enum ShadowRead {
     /// another control's pixels never vote on what is behind this one. The
     /// shadow itself IS backdrop: it is a slow ramp off the page colour, and
     /// the sweep's own region growing keeps it with the page.
+    ///
+    /// `space` is where the renderer that will lay the shadow down again mixes
+    /// see-through paint (`CompositingSpace`), because the numbers only mean
+    /// the same shadow when they are fitted where they will be drawn.
     public static func read(_ box: CGRect, in field: PixelField,
-                            isBackdrop: (Int, Int) -> Bool) -> Reading? {
+                            isBackdrop: (Int, Int) -> Bool,
+                            space: CompositingSpace = .standard) -> Reading? {
         guard !field.isEmpty, box.width >= 2, box.height >= 2 else { return nil }
         // Each edge is read outward until the picture starts getting DARKER
         // again, and cut there. A shadow only ever fades; something further out
@@ -196,13 +201,18 @@ public enum ShadowRead {
         // How dark each reading is, as the opacity a BLACK shadow would need —
         // and how far it points away from black, which is the tint check.
         //
-        // IN LINEAR LIGHT, because that is where the renderer lays a shadow
-        // down. Read in the numbers a PNG stores, a shadow ten percent black
-        // over a near-white page measures about nineteen levels; laid down
-        // again by the renderer, that same ten percent darkens the page by
+        // IN `space`, because that is where the renderer lays a shadow down.
+        // Read in the numbers a PNG stores, a shadow ten percent black over a
+        // near-white page measures about nineteen levels; laid down again by a
+        // renderer mixing in light, that same ten percent darkens the page by
         // nine. Fitting in the wrong space produces numbers that look right in
         // the inspector and a card that comes out twice as dark as it was.
-        let lit = linear(page)
+        func working(_ color: RGBA) -> RGBA {
+            RGBA(r: space.working(color.r), g: space.working(color.g),
+                 b: space.working(color.b), a: color.a)
+        }
+        func slope(_ value: Double) -> Double { space.slope(atWorking: value) }
+        let lit = working(page)
         let weight = lit.r * lit.r + lit.g * lit.g + lit.b * lit.b
         guard weight > 0.0001 else { return nil }
         var curves: [Side: [Darkness]] = [:]
@@ -210,14 +220,14 @@ public enum ShadowRead {
             guard let profile = profiles[side] else { continue }
             var readings: [Darkness] = []
             for color in profile {
-                let c = linear(color)
+                let c = working(color)
                 let d = [lit.r - c.r, lit.g - c.g, lit.b - c.b]
                 let alpha = (d[0] * lit.r + d[1] * lit.g + d[2] * lit.b) / weight
                 // How many levels out of 255 this reading moves for a whole
                 // unit of opacity, worked out where the reading actually sits.
                 // Every tolerance here is written in levels, which is the unit
                 // a screenshot is stored in and an error is visible in, and
-                // this is what carries them into linear light.
+                // this is what carries them into the working space.
                 let channels = [(c.r, lit.r), (c.g, lit.g), (c.b, lit.b)]
                 let per = channels.map { 255 * slope($0.0) * $0.1 }.max() ?? 0
                 // A glow is not a shadow, and neither is a coloured cast.
@@ -469,25 +479,11 @@ public enum ShadowRead {
 
     /// One reading off the picture, as the opacity a black shadow would need to
     /// account for it — plus how many levels out of 255 that reading moves for
-    /// a whole unit of opacity, so an error worked out in linear light can be
+    /// a whole unit of opacity, so an error worked out in the working space can be
     /// judged in the levels a person would actually see.
     struct Darkness {
         let alpha: Double
         let levelsPerAlpha: Double
-    }
-
-    /// One channel of sRGB into the light it stands for.
-    static func linear(_ c: Double) -> Double {
-        c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4)
-    }
-
-    static func linear(_ color: RGBA) -> RGBA {
-        RGBA(r: linear(color.r), g: linear(color.g), b: linear(color.b), a: color.a)
-    }
-
-    /// How fast sRGB moves when the light behind it does, at that much light.
-    static func slope(_ light: Double) -> Double {
-        light <= 0.0031308 ? 12.92 : (1.055 / 2.4) * pow(max(light, 1e-6), 1 / 2.4 - 1)
     }
 
     /// The standard normal's own integral: how much of a gaussian sits left of

@@ -1,0 +1,29 @@
+{
+  "feature": "See-through things are the shade a browser draws",
+  "epic": "icon-export",
+  "summary": "In Next, shadows, faded layers and soft edges now mix with what is under them the way a browser, Figma and the exported SVG do, so the icon you approve is the icon you hand over. A 55% black shadow over white is 191 on the canvas and 190 in the file, where it used to be 192 against 134.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open any drawing that has a soft shadow or a layer below 100% opacity on a white page, and look at how deep the shadow reads now.", "shot": "2026-09-30-web-compositing-matching-the-web.png" },
+    { "do": "Draw a rectangle on a white page, add a Shadow in Effects, and set its Opacity to 55%." },
+    { "do": "Choose File, Export, save it as SVG, and open the file in Safari beside the canvas." },
+    { "do": "Set the shadow's colour to a deep navy, export again, and compare the colour in the browser." },
+    { "do": "Open the settings pane screenshot, run Separate into Layers, and drag the first card away from where it was.", "shot": "2026-09-30-web-compositing-separated-shadow.png" },
+    { "do": "Open Experiments, turn off \"See-through things are the shade a browser draws\", then close and reopen the drawing to compare it with the lighter mix." }
+  ],
+  "evaluate": [
+    "Does the exported shadow in the browser look the same shade as the one on the canvas?",
+    "Do your existing drawings still look right with deeper shadows, or does one now look too heavy?",
+    "Does a navy shadow read as navy, rather than grey-blue?",
+    "Does a separated card's shadow still match the screenshot it came off, with no grey halo left behind?"
+  ],
+  "rough": [
+    "Every see-through thing in an existing drawing is deeper in Next than it was. A shadow you nudged by eye until it looked right may now look heavier than you meant.",
+    "Current is left exactly as it was, so Current's canvas and its exported SVG still disagree on shadow shade.",
+    "In Current a coloured shadow still comes out washed toward grey. Next fixes that: the colour was being faded by its own opacity twice.",
+    "Blurs and blend modes now mix in the same space as the web too, so a blur's soft edge reads a little darker than before.",
+    "Flipping the switch reaches an open canvas only on its next redraw (the next edit), so the steps say to reopen the drawing.",
+    "There is no mock for this: the side-by-side is the decision's own pair of pictures, and the second shot here is the real window."
+  ]
+}

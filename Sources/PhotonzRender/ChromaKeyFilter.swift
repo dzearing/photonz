@@ -48,7 +48,8 @@ enum ChromaKeyFilter {
     /// Both pictures are already in canvas space by the time they get here, so
     /// the mask lines up with what it is masking without anything being moved.
     static func matted(_ over: CIImage, by under: CIImage,
-                       kind: LayerMatte, extent: CGRect) -> CIImage {
+                       kind: LayerMatte, extent: CGRect,
+                       space: CompositingSpace = .standard) -> CIImage {
         let mask: CIImage
         switch kind {
         case .shape:
@@ -59,14 +60,15 @@ enum ChromaKeyFilter {
             // Core Image holds is premultiplied and its empty parts are black.
             //
             // Read in the numbers the colour was WRITTEN in, not in light.
-            // Core Image works in linear light, where a mid grey is about five
-            // per cent rather than half — so a black to white ramp used as a
-            // matte would be almost entirely hidden, and the mid grey somebody
-            // picked to mean "half there" would come out a twentieth there.
-            // The tone curve first puts the picture back into the numbers the
-            // colour picker showed.
-            mask = under
-                .applyingFilter("CILinearToSRGBToneCurve")
+            // Mixing in light, Core Image holds a mid grey as about five per
+            // cent rather than half — so a black to white ramp used as a matte
+            // would be almost entirely hidden, and the mid grey somebody picked
+            // to mean "half there" would come out a twentieth there. The tone
+            // curve first puts the picture back into the numbers the colour
+            // picker showed. Mixing the way the web does, it is already there.
+            let written = space == .linearLight
+                ? under.applyingFilter("CILinearToSRGBToneCurve") : under
+            mask = written
                 .applyingFilter("CIColorMatrix", parameters: [
                 "inputRVector": CIVector(x: 0, y: 0, z: 0, w: 0),
                 "inputGVector": CIVector(x: 0, y: 0, z: 0, w: 0),

@@ -14,6 +14,10 @@ struct ShadowScene {
     let width: Int
     let height: Int
     private(set) var samples: [UInt8]
+    /// Where paint is mixed into the scene. Light unless a test says otherwise,
+    /// which is how the renderer mixed until Next started mixing the way a
+    /// browser does (`CompositingSpace`).
+    var space: CompositingSpace = .linearLight
 
     init(width: Int, height: Int, page: (Double, Double, Double)) {
         self.width = width
@@ -40,18 +44,18 @@ struct ShadowScene {
         return min(max(0.5 - d, 0), 1)
     }
 
-    /// Lay `color` over the scene at `alpha` per pixel, IN LINEAR LIGHT, which
-    /// is where a renderer lays paint down — and therefore the only blend that
+    /// Lay `color` over the scene at `alpha` per pixel, in `space`, which is
+    /// where the renderer lays paint down — and therefore the only blend that
     /// makes the numbers in a test the numbers the app would have to read back.
     mutating func composite(_ color: (Double, Double, Double), alpha: [Double]) {
-        let ink = [color.0, color.1, color.2].map { Self.linear($0 / 255) }
+        let ink = [color.0, color.1, color.2].map { space.working($0 / 255) }
         for i in 0..<(width * height) {
             let a = min(max(alpha[i], 0), 1)
             guard a > 0 else { continue }
             for c in 0..<3 {
-                let was = Self.linear(Double(samples[i * 4 + c]) / 255)
+                let was = space.working(Double(samples[i * 4 + c]) / 255)
                 let now = was * (1 - a) + ink[c] * a
-                samples[i * 4 + c] = UInt8((Self.srgb(now) * 255).rounded())
+                samples[i * 4 + c] = UInt8((space.encoded(now) * 255).rounded())
             }
         }
     }

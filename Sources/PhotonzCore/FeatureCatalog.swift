@@ -164,6 +164,9 @@ public enum FeatureCatalog {
 
     public static let blendModeFlag = "next-blend-mode"
 
+    /// See-through paint mixed the way a browser mixes it (`CompositingSpace`).
+    public static let webCompositingFlag = "next-web-compositing"
+
     public static let layersCombineFlag = "next-layers-combine"
 
     public static let tutorialsFlag = "next-tutorials"
@@ -1037,6 +1040,16 @@ public enum FeatureCatalog {
                     title: "A layer can say how it mixes with what is under it",
                     description: "Adds a Blending row under Opacity: Normal, Multiply, Screen, Darken or Lighten, previewed on the canvas as you move down the list. Off means no Blending row.",
                     area: .layers,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: webCompositingFlag,
+                    title: "See-through things are the shade a browser draws",
+                    description: "Shadows, faded layers and soft edges mix with what is under them the way a browser, Figma and an exported file do, so what you approve is what you hand over. Off means the lighter mix Photonz has always drawn.",
+                    area: .canvas,
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

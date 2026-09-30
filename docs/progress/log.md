@@ -20276,3 +20276,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - `EveryCommandIsInTheMenuBarTests` reads every right-click row (MenuRow lists, `.contextMenu` blocks, the track header menu) plus named panel verbs out of the source and fails on one with no bar row; `sameCommand` names rows the bar says in other words, `noRow` the one exception (Delete Style).
 - `menus` walk step: `choose` picks a row by path. New walk `every-command-in-the-menu-bar-walk` (front).
 - menu-checkmarks-walk fails on main before this change (probe menu bar frozen, no `front`); noted on the sweep task.
+
+## 2026-09-30 — Next mixes see-through paint the way the web does
+
+- The user's answer "Match the web" is built: `CompositingSpace` (core), `CompositingSetting.shared` (render), one CIContext per space, and the flag `next-web-compositing` (on in Next, absent in Current). An exported shadow now matches the canvas within a level.
+- Fixed on the way: a coloured shadow's tint was multiplied by its opacity twice (CIColorMatrix works before alpha is applied). Fixed in sRGB only; light keeps Current's numbers.
+- The shadow reader fits in the renderer's space. The round trip off the settings-pane capture is tighter in sRGB.
+- Open: a flag flip reaches an open canvas only on its next redraw.

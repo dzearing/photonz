@@ -48,6 +48,32 @@ struct ShadowReadTests {
         #expect(reading.style.kind == .drop)
     }
 
+    /// Next mixes see-through paint the way a browser does, in the numbers the
+    /// colour was written in, so a shadow read off a picture is fitted there
+    /// too. Fitted in light instead, the same shadow would be read at about
+    /// twice its opacity and the separated card would come out too dark.
+    @Test func aShadowMixedTheWayABrowserMixesComesBackWithItsNumbers() throws {
+        let box = CGRect(x: 120, y: 100, width: 400, height: 200)
+        var scene = ShadowScene(width: 640, height: 440, page: page)
+        scene.space = .sRGB
+        scene.castShadow(box, radius: 16, sigma: 4, offset: CGSize(width: 0, height: 6),
+                         opacity: 0.25)
+        scene.paint(box, radius: 16, (255, 255, 255))
+
+        let reading = try #require(ShadowRead.read(box, in: scene.field,
+                                                   isBackdrop: anywhereOutside(box),
+                                                   space: .sRGB))
+        #expect(abs(reading.style.radius - 4) <= 0.4)
+        #expect(abs(reading.style.offset.height - 6) <= 0.4)
+        #expect(abs(reading.style.opacity - 0.25) <= 0.02)
+
+        // Read in the wrong space, the answer is plainly wrong, which is what
+        // says the space is really being used.
+        let wrong = ShadowRead.read(box, in: scene.field, isBackdrop: anywhereOutside(box),
+                                    space: .linearLight)
+        #expect(wrong.map { abs($0.style.opacity - 0.25) > 0.04 } ?? true)
+    }
+
     @Test func aShadowThrownSidewaysSaysWhichWay() throws {
         let box = CGRect(x: 140, y: 120, width: 360, height: 180)
         var scene = ShadowScene(width: 640, height: 440, page: page)

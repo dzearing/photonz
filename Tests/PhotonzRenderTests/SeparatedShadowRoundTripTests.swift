@@ -59,16 +59,21 @@ struct SeparatedShadowRoundTripTests {
         return doc
     }
 
-    @Test func rebuildingTheCaptureFromItsPiecesPutsTheShadowsBack() throws {
+    /// In both places the canvas can mix see-through paint: the shadow is
+    /// read in the space it will be drawn in, so either way it goes back on
+    /// the page the shade it came off it (`CompositingSpace`).
+    @Test(arguments: CompositingSpace.allCases)
+    func rebuildingTheCaptureFromItsPiecesPutsTheShadowsBack(space: CompositingSpace) throws {
         let capture = try #require(Self.capture)
         let analysis = EdgeMapAnalyzer.analyzeFully(capture)
-        let result = try #require(LayerSeparator.separate(capture, luma: analysis.luma))
+        let result = try #require(LayerSeparator.separate(capture, luma: analysis.luma,
+                                                          compositing: space))
         let card = try #require(result.boxes.first { $0.rect.width > 1000 })
         let shadow = try #require(card.shadow)
 
         let store = ImageStore()
         let size = CGSize(width: capture.width, height: capture.height)
-        let rebuilt = try #require(DocumentRenderer().render(rebuild(result, size: size,
+        let rebuilt = try #require(DocumentRenderer(compositing: space).render(rebuild(result, size: size,
                                                                     store: store),
                                                             store: store))
         let want = try #require(LayerSeparator.read(capture))
@@ -102,7 +107,7 @@ struct SeparatedShadowRoundTripTests {
         // And the whole picture, which also carries every run of text that was
         // cut out and laid back — a wider claim, kept as the honest headline.
         let all = compare { _, _ in true }
-        print("ROUND TRIP the capture rebuilt from its own pieces: in the cards' shadow "
+        print("ROUND TRIP (\(space)) the capture rebuilt from its own pieces: in the cards' shadow "
             + "bands, worst channel difference \(band.worst)/255 at \(band.at), mean "
             + "\(String(format: "%.3f", band.mean))/255. Over the whole picture, worst "
             + "\(all.worst)/255 at \(all.at), mean \(String(format: "%.3f", all.mean))/255. "

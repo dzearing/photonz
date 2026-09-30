@@ -10,7 +10,30 @@ import PhotonzCore
 /// Coordinate convention: the document model is top-left origin (UI-style);
 /// Core Image is bottom-left. This renderer flips layer frames accordingly.
 public final class DocumentRenderer: @unchecked Sendable {
-    private let context: CIContext
+    /// Where this renderer's context comes from: a space it was built for, a
+    /// setting it follows frame by frame, or a context of its own.
+    private enum Source {
+        case pinned(CompositingSpace)
+        case following(CompositingSetting)
+        case own(CIContext)
+    }
+    private let source: Source
+
+    /// Where this renderer mixes see-through paint right now.
+    public var compositing: CompositingSpace {
+        switch source {
+        case .pinned(let space): return space
+        case .following(let setting): return setting.space
+        case .own: return .standard
+        }
+    }
+
+    private var context: CIContext {
+        switch source {
+        case .own(let context): return context
+        default: return Self.context(for: compositing)
+        }
+    }
 
     /// Per-layer content rendered once and reused across composites: CPU
     /// rasterizations (text, annotations) keyed by content value + raster
@@ -129,19 +152,48 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// dozens of Metal contexts at once, exhausting GPU resources on
     /// constrained machines (e.g. CI VMs), observed as a full stall. The
     /// per-renderer raster/wrap caches below stay per-instance.
-    private static let sharedContext = CIContext(options: [.cacheIntermediates: true])
+    ///
+    /// One per compositing space, since a context's working space is fixed
+    /// when it is made. Mixing in light is Core Image's default. Mixing the way
+    /// the web does is a working space of plain (extended) sRGB: nothing is
+    /// turned into light on the way in, so a fraction applies to the stored
+    /// numbers, and extended so a Display P3 screenshot's colours outside sRGB
+    /// survive the trip exactly as they do in light.
+    private static let lightContext = CIContext(options: [.cacheIntermediates: true])
+    private static let webContext = CIContext(options: [
+        .cacheIntermediates: true,
+        .workingColorSpace: CGColorSpace(name: CGColorSpace.extendedSRGB) as Any
+    ])
 
-    public init() {
-        self.context = DocumentRenderer.sharedContext
+    static func context(for space: CompositingSpace) -> CIContext {
+        switch space {
+        case .linearLight: return lightContext
+        case .sRGB: return webContext
+        }
+    }
+
+    /// A renderer that mixes the way the app is set to (`CompositingSetting`).
+    public convenience init() {
+        self.init(following: .shared)
+    }
+
+    /// A renderer that follows `setting`, reading it at every frame.
+    public init(following setting: CompositingSetting) {
+        self.source = .following(setting)
+    }
+
+    /// A renderer that always mixes in `space`, whatever the app is set to.
+    public init(compositing space: CompositingSpace) {
+        self.source = .pinned(space)
     }
 
     /// A renderer on a context of its own, for a timing test that has to read
     /// its subject's cost and not the queue in front of it. Inside the full
-    /// suite every other render suite is drawing through `sharedContext` at
+    /// suite every other render suite is drawing through the shared contexts at
     /// the same moment, and a 48 point icon strip that costs 6ms read 360ms
     /// waiting behind them while its yardstick, on its own context, read 8ms.
     init(privateContext context: CIContext) {
-        self.context = context
+        self.source = .own(context)
     }
 
     /// The cached CIImage wrap of a stored bitmap (keyed by object identity).
@@ -274,6 +326,9 @@ public final class DocumentRenderer: @unchecked Sendable {
     private var lastPictures: [UUID: ObjectIdentifier?] = [:]
     /// The magnification `lastFrame` was composited at.
     private var lastContentScale: CGFloat = 1
+    /// Where `lastFrame` was mixed. A frame mixed the other way cannot be
+    /// patched, or a canvas open when the switch flips shows both at once.
+    private var lastCompositing: CompositingSpace?
     private var frameBuffer: UnsafeMutableRawPointer?
     private var frameBufferCapacity = 0
     private var frameSize = (width: 0, height: 0)
@@ -308,13 +363,14 @@ public final class DocumentRenderer: @unchecked Sendable {
         defer { interactiveLock.unlock() }
 
         let pictures = Self.pictures(in: document, store: store)
-        defer { lastPictures = pictures; lastContentScale = contentScale }
+        let space = compositing
+        defer { lastPictures = pictures; lastContentScale = contentScale; lastCompositing = space }
         // A picture that arrived, went, or was read again at another size
         // since the last frame changes pixels the document says nothing
         // about, so the whole canvas is drawn again. So does a new scale.
         if let lastDocument, let lastFrame, frameBuffer != nil,
            frameSize == (width, height), pictures == lastPictures,
-           contentScale == lastContentScale {
+           contentScale == lastContentScale, space == lastCompositing {
             switch RenderDiff.dirtyRegion(from: lastDocument, to: document) {
             case .none:
                 return lastFrame
@@ -596,7 +652,8 @@ public final class DocumentRenderer: @unchecked Sendable {
                                       onDesignedSurface: onDesignedSurface,
                                       contentScale: contentScale,
                                       magnifyNearest: magnifyNearest) {
-                    drawn = ChromaKeyFilter.matted(drawn, by: mask, kind: matte, extent: clip)
+                    drawn = ChromaKeyFilter.matted(drawn, by: mask, kind: matte, extent: clip,
+                                                   space: compositing)
                 }
             }
             output = composite(drawn, over: output, mode: layer.effectiveBlendMode, extent: clip)
@@ -2114,10 +2171,18 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// makes a card cast one shadow instead of three.
     private func cast(_ image: CIImage, shadow: ShadowStyle) -> CIImage {
         let color = ciColor(hex: shadow.colorHex, alpha: shadow.opacity)
+        // CIColorMatrix works on colour BEFORE it is multiplied by alpha, so
+        // the colour goes in as it is written and the alpha does the fading.
+        // Mixing the way the web does, that is exactly the shadow's colour.
+        // Mixing in light keeps the numbers Current has always drawn with,
+        // which fade the colour by the opacity a second time and then read it
+        // as light: a navy shadow there comes out a washed grey-blue, and
+        // changing it would change every coloured shadow Current has drawn.
+        let tint = compositing == .sRGB ? 1 : color.alpha
         var silhouette = image.applyingFilter("CIColorMatrix", parameters: [
-            "inputRVector": CIVector(x: 0, y: 0, z: 0, w: color.red * color.alpha),
-            "inputGVector": CIVector(x: 0, y: 0, z: 0, w: color.green * color.alpha),
-            "inputBVector": CIVector(x: 0, y: 0, z: 0, w: color.blue * color.alpha),
+            "inputRVector": CIVector(x: 0, y: 0, z: 0, w: color.red * tint),
+            "inputGVector": CIVector(x: 0, y: 0, z: 0, w: color.green * tint),
+            "inputBVector": CIVector(x: 0, y: 0, z: 0, w: color.blue * tint),
             "inputAVector": CIVector(x: 0, y: 0, z: 0, w: color.alpha)
         ])
         // Spread: grow/shrink the silhouette SHAPE before blurring. Dilate

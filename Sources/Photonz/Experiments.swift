@@ -1,5 +1,6 @@
 import Observation
 import PhotonzCore
+import PhotonzRender
 import SwiftUI
 
 /// App-level access to the Experiments settings: which release this launch is
@@ -40,7 +41,9 @@ final class Experiments {
     var needsRelaunch: Bool { selectedRelease != release }
 
     private let store: ExperimentsStore
-    private var settingsByRelease: [Release: FeatureFlagSettings]
+    private var settingsByRelease: [Release: FeatureFlagSettings] {
+        didSet { applyCompositing() }
+    }
 
     init(store: ExperimentsStore = ExperimentsStore(defaults: UserDefaultsExperimentsDefaults())) {
         self.store = store
@@ -49,6 +52,15 @@ final class Experiments {
         selectedRelease = selected
         settingsByRelease = Dictionary(uniqueKeysWithValues:
             Release.allCases.map { ($0, store.settings(for: $0)) })
+        applyCompositing()
+    }
+
+    /// Every renderer that has not been told otherwise follows this, so the
+    /// running release's switch reaches the canvas, the exports and the
+    /// separator alike, and a flip in the Experiments window reaches a canvas
+    /// that is already open (`CompositingSpace`).
+    private func applyCompositing() {
+        CompositingSetting.shared.space = CompositingSpace.chosen(by: activeSettings)
     }
 
     // MARK: - Reading (the running release)

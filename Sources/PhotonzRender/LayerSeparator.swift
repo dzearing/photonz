@@ -173,7 +173,9 @@ public enum LayerSeparator {
     public static func separate(_ image: CGImage, luma: LumaField,
                                 gap: Double = TextLineBounds.defaultGap,
                                 minElement: Double = ElementBounds.defaultMinElement,
-                                boxes: Bool = true) -> Result? {
+                                boxes: Bool = true,
+                                compositing: CompositingSpace = CompositingSetting.shared.space)
+        -> Result? {
         let w = image.width, h = image.height
         guard w > 0, h > 0, luma.width == w, luma.height == h else { return nil }
         guard var pixels = read(image) else { return nil }
@@ -277,7 +279,8 @@ public enum LayerSeparator {
                 // comes off WITH the card, and the space underneath is plain
                 // page again rather than a grey halo of a card that has moved.
                 let surround: (Int, Int) -> Bool = { found.isSurround($0, $1, of: box) }
-                let shadow = ShadowRead.read(box.rect, in: field, isBackdrop: surround)
+                let shadow = ShadowRead.read(box.rect, in: field, isBackdrop: surround,
+                                             space: compositing)
                 let out = shadow.map { max(1, Int($0.reach.rounded(.up))) } ?? 1
                 let close = box.rect.insetBy(dx: CGFloat(-out), dy: CGFloat(-out))
                     .integral.intersection(bounds)
