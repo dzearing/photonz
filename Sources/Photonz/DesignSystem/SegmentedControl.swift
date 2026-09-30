@@ -273,10 +273,13 @@ private struct SystemSegments<Value: Hashable>: NSViewRepresentable {
         context.coordinator.pick = pick
 
         let controlSize = size ?? Self.appKitSize(context.environment.controlSize)
-        if control.controlSize != controlSize {
-            control.controlSize = controlSize
-            control.font = .systemFont(ofSize: NSFont.systemFontSize(for: controlSize))
-        }
+        if control.controlSize != controlSize { control.controlSize = controlSize }
+        // The words follow the size on their own check: SwiftUI hands an
+        // environment's control size to the control before this runs, so a
+        // font set only when the size changed was never set at all, and every
+        // small row drew its words at the regular 13pt (found 2026-09-30).
+        let fontSize = NSFont.systemFontSize(for: controlSize)
+        if control.font?.pointSize != fontSize { control.font = .systemFont(ofSize: fontSize) }
         control.isEnabled = context.environment.isEnabled
         control.setAccessibilityLabel(label)
 
@@ -299,19 +302,72 @@ private struct SystemSegments<Value: Hashable>: NSViewRepresentable {
     /// share, else each segment keeps its own width and the rest is shared
     /// out (a panel row of Before the cut | Across it | After it), so no word
     /// is cut while there is room for all of them.
+    ///
+    /// Short of the system's own widths, the words keep their width with a
+    /// tighter margin before the control gives up and becomes a dropdown
+    /// (`SegmentRoom`), and that tight width is what it asks for when asked
+    /// what it would like, so the dropdown only arrives when a word really
+    /// would be cut.
     func sizeThatFits(_ proposal: ProposedViewSize, nsView control: NSSegmentedControl,
                       context: Context) -> CGSize? {
+        // Every measure below is of the system's own widths, so any tight
+        // widths from the last pass come off first.
+        Self.setWidths(nil, of: control)
         let equal = Self.width(of: control, laidOut: .fillEqually)
         guard form == .fill else {
             if control.segmentDistribution != .fillEqually { control.segmentDistribution = .fillEqually }
             return equal
         }
+        let fit = Self.width(of: control, laidOut: .fit)
+        let words = wordWidths(of: control)
+        let tight = words.map { Self.tightWidth(of: control, words: $0) } ?? fit.width
         guard let width = proposal.width, width.isFinite else {
-            return Self.width(of: control, laidOut: .fit)
+            return CGSize(width: tight, height: equal.height)
         }
-        let laidOut: NSSegmentedControl.Distribution = width >= equal.width ? .fillEqually : .fillProportionally
-        if control.segmentDistribution != laidOut { control.segmentDistribution = laidOut }
+        switch SegmentRoom.layout(available: width, equal: equal.width, systemFit: fit.width, tight: tight) {
+        case .equal:
+            if control.segmentDistribution != .fillEqually { control.segmentDistribution = .fillEqually }
+        case .proportional:
+            if control.segmentDistribution != .fillProportionally { control.segmentDistribution = .fillProportionally }
+        case .tight, .tooNarrow:
+            if let words {
+                let chrome = tight - SegmentRoom.tightWidth(words: words, chrome: 0)
+                if control.segmentDistribution != .fit { control.segmentDistribution = .fit }
+                Self.setWidths(SegmentRoom.tightWidths(words: words, available: width, chrome: chrome),
+                               of: control)
+            } else if control.segmentDistribution != .fillProportionally {
+                control.segmentDistribution = .fillProportionally
+            }
+        }
         return CGSize(width: width, height: equal.height)
+    }
+
+    /// How wide each segment's word is in the control's own font, or nil for
+    /// a control with pictures on it, which keeps the system's widths.
+    private func wordWidths(of control: NSSegmentedControl) -> [CGFloat]? {
+        guard showsTitles, options.allSatisfy({ $0.image == nil }), !options.isEmpty else { return nil }
+        let font = control.font ?? .systemFont(ofSize: NSFont.systemFontSize(for: control.controlSize))
+        return options.map { ceil(($0.title as NSString).size(withAttributes: [.font: font]).width) }
+    }
+
+    /// The width the control asks for with each word given a tight margin,
+    /// its edge included, as AppKit measures it.
+    private static func tightWidth(of control: NSSegmentedControl, words: [CGFloat]) -> CGFloat {
+        let was = control.segmentDistribution
+        control.segmentDistribution = .fit
+        setWidths(words.map { $0 + SegmentRoom.tightMargin }, of: control)
+        let width = control.intrinsicContentSize.width
+        setWidths(nil, of: control)
+        control.segmentDistribution = was
+        return width
+    }
+
+    /// Gives each segment its own width, or hands them all back to the system.
+    private static func setWidths(_ widths: [CGFloat]?, of control: NSSegmentedControl) {
+        for index in 0..<control.segmentCount {
+            let width = widths.map { $0.indices.contains(index) ? $0[index] : 0 } ?? 0
+            if control.width(forSegment: index) != width { control.setWidth(width, forSegment: index) }
+        }
     }
 
     /// How big the control asks to be when its segments are laid out one way.

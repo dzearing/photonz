@@ -10092,8 +10092,8 @@ private final class Run {
         if let dead = (ticked + unticked).first(where: { !liveRows.contains($0) }) {
             throw Failure(description: "\(name) ▸ \(dead) has nothing behind it, so its checkmark is the default "
                 + "it would wear with no document at all, not this one's. \(Self.frozenMenuBar) "
-                + "Open the Capture History first (a `shortcut` step on ⇧⌘H): it takes key, and that is enough "
-                + "for every window scoped row to read the real document.")
+                + "Put \"front\": true in the walk's setup: since 2026-09-26 no window a walk opens takes key "
+                + "(the Capture History included), so only a probe in front reads the real document.")
         }
         for row in ticked + unticked where !rows.contains(row) {
             throw Failure(description: "no row called \"\(row)\" in the \(name) menu; the rows are: "

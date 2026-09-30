@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/panel-name",
-  "setup": { "forget": ["all"] },
+  "setup": { "forget": ["all"], "front": true },
   "steps": [
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
     { "do": "wait", "seconds": 1 },
@@ -21,7 +21,7 @@
     { "do": "wait", "seconds": 0.6 },
     { "do": "hover", "at": [640, 400], "space": "view" },
 
-    { "do": "describe", "stage": "why-the-history-stays-open", "note": "The View menu's rows read the FOCUSED window, and macOS will not give a background app the front spot. The history overlay does take key when it opens, which is enough for the row below to read the real document rather than its own default." },
+    { "do": "describe", "stage": "why-the-history-stays-open", "note": "The View menu's rows read the FOCUSED window, and since 2026-09-26 no window a walk puts up takes key, so the walk runs with the probe in front (front: true in its setup)." },
     { "do": "shortcut", "key": "h", "modifiers": ["command", "shift"], "menuItem": "Show History", "checked": false },
     { "do": "wait", "seconds": 1 },
     { "do": "menus", "stage": "3-view-menu", "menu": "View" },

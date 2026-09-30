@@ -20283,3 +20283,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Fixed on the way: a coloured shadow's tint was multiplied by its opacity twice (CIColorMatrix works before alpha is applied). Fixed in sRGB only; light keeps Current's numbers.
 - The shadow reader fits in the renderer's space. The round trip off the settings-pane capture is tighter in sRGB.
 - Open: a flag flip reaches an open canvas only on its next redraw.
+
+## 2026-09-30 — Walks the rotating checks found failing (sweep-7)
+
+- Six walks were right and the app was wrong: since the system segmented control landed, the colour picker's swatch scopes (Shades, Related, Document, Recent) and a Mixed Arrangement's Free | Stack | Grid had become dropdowns, the Mixed one empty. Two causes: SwiftUI sets the control size before `updateNSView`, so small rows never got their 11pt font and drew 13pt words; and the system pads each word about 18pt. Fixed in `SegmentedControl` (the font follows the size on its own check) and `SegmentRoom` (PhotonzCore, tested): a tight step, each word plus 5pt a side, before the dropdown.
+- menu-checkmarks-walk and panel-name-walk were wrong: the ⇧⌘H trick died when walk windows stopped taking key (2026-09-26). Both now run `front`; the harness's frozen-menu failure says so.
+- layers-lazy-rows, normalize-cleans-noise and an-editing-session pass as they are. scrub-never-blacks-out is a load flake (7 of 8, the failure right after a rebuild, one 44.8ms composite).
+- Open: the pending segmented-control card's audit photos show the old 13pt words.

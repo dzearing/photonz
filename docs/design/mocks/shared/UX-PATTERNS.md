@@ -3120,7 +3120,10 @@ Sizes are the system's: `.small` in a dense panel row and in the title bar,
 columns when the longest word fits an equal share, each word's own width when
 not); `.natural` is equal segments as wide as the longest word. Picture segments
 are named by their picture's description, which is also their tooltip. Short of
-room for the words, the control becomes a dropdown of the same choices.
+room for the system's own padding, each word keeps its width with a 5pt margin a
+side (the colour picker's four swatch scopes, a Mixed Arrangement row); only
+when even that would cut a word does the control become a dropdown of the same
+choices. The words follow the size: 11pt at `.small`, 13pt at `.regular`.
 
 Never `Picker` with `.segmented` and never `NSSegmentedControl` outside that
 file: `SegmentedControlUsageTests` fails the build on either, and on the control
