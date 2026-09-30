@@ -1,0 +1,34 @@
+{
+  "id": "the-picked-segment-s-label-is-readable-on-the-gl",
+  "title": "The picked segment's label is readable on the glass thumb, in the history bar and everywhere",
+  "goal": "User 2026-09-29 19:44, screenshot of the history bar: the All / Screenshots / Videos filter now shows a bright white glass thumb with the word 'All' invisible on it, and it looks different from the grey glass thumb on View | Edit. Since ff9d0a4a (every segmented control is the one system glass thumb) the dark-scheme glass is .clear.tint(Color.white) (SegmentedControl.swift:382, segGlassTintDark at :567) and the picked label is Palette.ink (:455), white in dark: white on white. The history HUD sits over arbitrary desktop content and screenshots, so a clear glass tinted pure white reads as a white pill there and as grey glass over the editor's dark chrome.",
+  "epic": "design-system",
+  "priority": "p1-high",
+  "seq": 0.000005,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-30T02:45:21.096Z",
+  "updated": "2026-09-30T02:45:21.179Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Reproduced first: photographs of the history bar, the title bar View | Edit and a panel picker, dark and light, over a light and a dark background behind the history bar; measure label vs thumb contrast for the picked segment in each",
+    "The picked label meets WCAG AA contrast (4.5:1) against the thumb as rendered, in every placement and scheme, including over a white screenshot behind the history bar",
+    "The thumb reads the same in every placement: the same glass variant and tint everywhere (no pure white tint), so the history bar's thumb looks like View | Edit's; if the glass alone cannot hold contrast over a light backdrop, the thumb gets the system's regular glass (not clear) and the label follows the system's vibrant/primary label colour on glass rather than a fixed ink",
+    "Still one style, one motion (the system glass morph), never out of the rail",
+    "A snapshot test renders the picked segment over white and over black backdrops and fails below 4.5:1 label contrast",
+    "Walk photographs all three placements after the fix, side by side"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T02:45:21.098Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-30T02:45:21.178Z",
+      "note": "seq 400 -> 0.000005"
+    }
+  ]
+}

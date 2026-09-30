@@ -4,12 +4,12 @@
   "goal": "User 2026-09-29, with a screenshot of the history bar's All / Screenshots / Videos filter showing a solid blue thumb: 'I'm seeing inconsistent segmented controls. What I'd like to see is the system glass morph consistently.' The shared SegmentedControl has a .accent plate style used by HistoryOverlay.swift:113 (solid blue), a .raised glass style elsewhere, and a hand-rolled motion; try-the-segmented-thumb-on-the-system-s-own-liqu adds the system morph behind a flag. The user has decided: the system glass morph is the only one.",
   "epic": "design-system",
   "priority": "p1-high",
-  "seq": 2e-05,
-  "status": "pending",
+  "seq": 0.00002,
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T00:35:02.164Z",
-  "updated": "2026-09-30T00:45:54.954Z",
+  "updated": "2026-09-30T01:59:04.818Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -34,6 +34,48 @@
     {
       "t": "2026-09-30T00:45:54.953Z",
       "note": "From try-the-segmented-thumb-on-the-system-s-own-liqu (commit a4496daf): the system version is in, behind next-system-glass-thumb (on in Next): ONE .glassEffect pane in a GlassEffectContainer whose frame SwiftUI animates on .smooth(0.3), a transaction keyed on the pick as its only animator (DesignedSegments.systemGlassThumb). The glassEffectID swap (glass removed from one slot, inserted on the next) was filmed at 120 fps four ways and JUMPS every time with nothing between, so do not rebuild on it. Glass that reads lighter than the rail with nothing painted over: light .regular, dark .clear.tint(white .65); a white tint on light glass greys it (1.15:1). Contrast measured: panel light 1.64, panel dark 1.55-1.61, title bar dark 1.58, title bar LIGHT 1.45 in a window opened in light and 1.14 after the app switched dark to light (the drawn thumb read 1.61 there): the user's 1.5:1 is not met on the light title bar yet; the suggested fix is a slightly darker light rail over the white title bar, not paint on the glass. The .accent plate (history filter) and the opaque Increase Contrast / Reduce Transparency plate are not glass and still use the drawn glide; Reduce Motion cross-fades. segmented-thumb-film-drawn-walk films the drawn glide with the switch off and goes with the switch. Side-by-side pictures: queue/audits/2026-09-29-segmented-system-glass-*-sc.png."
+    },
+    {
+      "t": "2026-09-30T01:17:16.143Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-30T01:23:11.698Z",
+      "note": "owns these walks: segmented-thumb-film-walk, segmented-thumb-glass-walk"
+    },
+    {
+      "t": "2026-09-30T01:58:31.696Z",
+      "note": "Adversarial review before building: (1) the history strip is glass itself, so a glass thumb on its rail is glass on glass, the hardest place for contrast; (2) with the drawn plate gone, Reduce Motion and Increase Contrast / Reduce Transparency lose their hand-made fallbacks: Reduce Motion now cross-fades the glass, and the system glass handles the accessibility settings itself; (3) Current must not change: SegmentedControl still hands Current the system picker (next-designed-segmented), untouched; (4) a Photoshop or Mac user expects every segmented control to look and move the same, which is exactly the ask."
+    },
+    {
+      "t": "2026-09-30T01:58:31.751Z",
+      "note": "Inventory (Sources/Photonz, Playtest excluded): 38 SegmentedControl call sites, all on the shared control: CalloutInspector 90/118, CanvasInspector 138, DesignedColorPicker 211/299, TransitionInspector 185, PathLineStylePickers 130, RecordingExportDialog 142/148, ToolSettingsCapsule 84, HistoryOverlay 111 (was plateStyle .accent, now plain), PropertyKeysInspector 202, CaptionStyleInspector 28, TitlebarViewEditSwitch 34, MeasureInspector 89/104/114, ArrangementInspector 101/241/572, ResizeDialog 35, MeasurePartSettings 85/198/226, CanvasGridSettingsView 95, ExportDialog 444/458, LibraryPanel 183, VideoExportDialog 127/132/139/147/155, ArrowheadStylePicker 79, CaptionsInspector 362, TextInspector 146/159, RecordingSetupController 113. Picker(.segmented) only inside SegmentedControl's Current fallback; no NSSegmentedControl built; no TabView. Hand-built rows: VideoEditorView cropRow (Current's recording window only, never reached in Next) and EditorView cropAspectLocks (hidden in Next, where next-tool-options puts crop aspect in the tool flyout): both Current-only, left as they are. Not segmented controls: GradientPaintControls PaintTypeRow (preview tiles), TimelineDock tool bar (a tool palette, Blade is its own toggle), NewFrameDialog icon-size chips (part of a larger radio group), the main tool bar, radio lists in New Canvas / New Video / Experiments, mute/solo/lock toggles."
+    },
+    {
+      "t": "2026-09-30T01:58:31.804Z",
+      "note": "Contrast, reproduced first on real captures (probe Screen Recording granted, screen unlocked), thumb vs rail by relative luminance just above the words: before, light title bar opened in light 1.45:1 (SHORT), dark to light 1.66, dark 1.60, panel 1.57 dark / 1.66 light, history filter 1.40 light / 1.30 dark (SHORT, both ways of switching). The 1.14 reading did not reproduce. Fix: rail light .22 to .32, dark .30 to .45, dark glass tint white .65 to 1.0; nothing painted on the glass. After: title bar 1.80 light / 1.80 dark / 2.05 dark-to-light, panel 2.05 light / 1.81 dark, history 1.50 light / 1.53 dark (both after switching too). segmented.css tokens moved to match with the numbers. Measurement script was /tmp/segwalks/measure-all.py."
+    },
+    {
+      "t": "2026-09-30T01:58:31.859Z",
+      "note": "left rough: unpicked words on the light history strip (Screenshots, Videos) are faint grey on the grey rail; in the audit's rough for the user to react to, not filed (one sighting, depends on the wallpaper behind the strip)."
+    },
+    {
+      "t": "2026-09-30T01:58:31.913Z",
+      "note": "History filter not filmed: a walk's click on the history strip does nothing (strip never key in a walk). Photographed at rest in light and dark instead (segmented-thumb-glass-walk steps 9, 10). Filed a-walk-can-click-the-history-bar-and-film-its-fi (p2) with the reproduction."
+    },
+    {
+      "t": "2026-09-30T01:58:31.965Z",
+      "note": "walks segmented-thumb-film-walk, segmented-thumb-glass-walk -> segmented-thumb-film-walk, segmented-thumb-glass-walk"
+    },
+    {
+      "t": "2026-09-30T01:59:04.816Z",
+      "note": "Commit ff9d0a4a. SegmentedControl has one look and one motion: a system Liquid Glass pane slid by .smooth(0.3); PlateStyle (.accent/.raised), the drawn thumb, the TimelineView glide, SegmentThumbMorph and next-system-glass-thumb are deleted (drag keeps SegmentThumbDrag; Reduce Motion cross-fades). History filter lost its blue thumb. Inventory in the log: 38 call sites, all shared; the two hand-built crop-aspect rows are Current-only. comp-segmented.html, UX-PATTERNS, history.css and segmented.css say one style; SegmentedControlUsageTests.oneStyleOneMotion guards it. Contrast measured on real captures (reproduced short first: light title bar 1.45, history 1.30-1.40): rail .32 light / .45 dark and dark tint 1.0 give title bar 1.80 (2.05 after dark to light), panel 1.81-2.05, history 1.50-1.53. Filmed with filmThumb at Next defaults in the title bar and a panel, both ways: 0 frames off the rail; the history filter is photographed at rest in light and dark but NOT filmed, because a walk's click on the history strip does nothing (filed a-walk-can-click-the-history-bar-and-film-its-fi, p2). segmented-thumb-film-walk and segmented-thumb-glass-walk green at defaults, Scripts/test.sh green (10,563 tests). Audit queue/audits/2026-09-29-one-segmented-glass.json."
     }
-  ]
+  ],
+  "started": "2026-09-30T01:17:16.142Z",
+  "walks": [
+    "segmented-thumb-film-walk",
+    "segmented-thumb-glass-walk"
+  ],
+  "completed": "2026-09-30T01:59:04.817Z"
 }
