@@ -1,0 +1,33 @@
+{
+  "id": "one-information-architecture-written-down-and-ap",
+  "title": "One information architecture, written down and applied to every surface",
+  "goal": "User 2026-09-29, after zoom turned up in the tool bar: 'zoom isn't a tool... please use consistent IA you'd see in a professional product.' Controls have landed wherever the task that added them put them (a zoom slider and percentage in the tool bar, a MIX meter in the timeline bar, a close x on the timeline, panel sections of verbs, readouts in chrome). Write one placement contract modelled on Photoshop, Final Cut Pro, Keynote and Pixelmator Pro, then move every control that breaks it.",
+  "epic": "design-system",
+  "priority": "p1-high",
+  "seq": 0.00003,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-30T02:48:58.643Z",
+  "updated": "2026-09-30T02:48:58.728Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "A short IA contract at the top of UX-PATTERNS.md (one table): Title bar: document name/state, window-level mode (View | Edit), panel toggles. Tool bar: tools only (things you pick then use on the canvas), plus the colour pair. Inspector (right panel): properties of the selection, as label/value rows. Transport: playback only (play, step, scrubber, time, volume, full screen, timeline toggle). Timeline: time and tracks, with its own header controls (add track, snapping). Menu bar: every command, with its shortcut. Right-click: the verbs for the thing under the pointer. View menu + keys + pinch: zoom and view options (never a control in a bar). Toasts: results, never instructions. Nothing appears in two places unless the table says so",
+    "The runner and manager prompts link the contract and say a control is placed by it, and a placement that is not in the table needs a decision card",
+    "An audit walks every surface of the Next editor (picture and video, View and Edit) and lists each control with where it is and where the contract puts it, with photographs; every misplaced control is moved in this task if small or filed p1 if not (known today: zoom slider and percentage in the tool bar, filed in the-floating-tool-bar-shows-as-many-tools-as-the; MIX meter and the timeline close x, filed in the-mix-meter-goes-...)",
+    "Every command reachable from a bar or a right-click is also in the menu bar with its shortcut, and the menu bar is organised like a professional Mac editor (File, Edit, View, Image/Layer, Clip/Sequence for video, Window, Help)",
+    "A test lists the tool bar's items and fails if anything that is not a tool is in it"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T02:48:58.645Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-30T02:48:58.727Z",
+      "note": "seq 400 -> 0.00003"
+    }
+  ]
+}
