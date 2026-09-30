@@ -1,6 +1,6 @@
 {
   "id": "the-floating-tool-bar-shows-as-many-tools-as-the",
-  "title": "The floating tool bar fills the room it has, and has no zoom slider",
+  "title": "The floating tool bar holds only tools, and fills the room it has",
   "goal": "User 2026-09-29, screenshot of the bar on a video with a wide window (Select, Blade, Text, Shape, Align, More, Grid, zoom): 'why is the toolbar so narrow? Shouldn't it auto adjust based on the available space.' Since c6b356fa (next-video-tool-bar) a document with time folds the bar to a FIXED set (Select | Blade, Title/Text, Shape | Measure) with every other tool under an always-present More, regardless of width. Photoshop, Final Cut and Keynote show every tool that fits and overflow only what does not.",
   "epic": "video-editing",
   "priority": "p1-high",
@@ -15,7 +15,7 @@
   "notes": "Filed from the intake window.",
   "acceptance": [
     "ToolBarFold (PhotonzCore, tests first) folds by AVAILABLE WIDTH: given the bar's room and each slot's width, it keeps slots in priority order (the video tools first on a document with time, then the rest in the bar's normal order), never splits a family, and puts only what does not fit under More",
-    "The zoom slider is removed from the tool bar entirely (user 2026-09-29: 'we do not need a zoom slider in the toolbar... that's totally shitty ux'), on pictures and videos. Zoom stays on the trackpad pinch, Cmd +/-, Cmd 0 (fit), Cmd 1 (100%) and the View menu; the percentage stays only as a compact menu button at the bar's right end (Fit, 50%, 100%, 200%) unless the user says to drop that too; nothing else on the canvas takes the slider's place",
+    "No zoom control of any kind in the tool bar: the slider AND the percentage menu are removed, on pictures and videos (user 2026-09-29: 'we do not need a zoom slider in the toolbar... that's totally shitty ux... zoom isn't a tool'). The tool bar holds tools only. Zoom stays where it already lives: trackpad pinch, Cmd +/-, Cmd 0 (fit), Cmd 1 (100%) and the View menu. Add no replacement zoom widget or readout anywhere without asking the user first",
     "More appears only when something is folded, and lists exactly the folded tools; when everything fits there is no More",
     "It re-folds live as the window or the right panel resizes and as View/Edit changes, animating tools in and out smoothly with no jump of the tools that stay",
     "The bar's maximum width is bounded by the canvas area (with the standard side margins)",
