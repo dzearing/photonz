@@ -3,6 +3,7 @@
   "focus": "video-editing",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
+    "Every area of the window has one purpose, and everything in it serves that purpose. Putting a control in an area whose purpose it does not share (zoom in the tool bar, a meter in the timeline bar, a sentence in the chrome) confuses people, however useful the control is. Elegant, easy to understand and sensible to an end user beats complete. (The user, 2026-09-29.)",
     "One focus at a time. A feature is not done when it compiles, it is done when it is playtestable and has an audit report the user can act on.",
     "The user's mocks are the design floor. They are ideas to build on, which means a runner may go further than a mock, never below it or away from it: its look, layout, controls, copy length and interactions are what ships. A departure is a decision card, never a quiet rewrite, and a mock page is never edited to match the code.",
     "Delight and ease are acceptance criteria, not aspirations. If a feature works but feels clumsy, it is not done.",

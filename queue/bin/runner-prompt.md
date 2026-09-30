@@ -12,6 +12,8 @@ Feature work dominates. Foundational work earns its place by unblocking the feat
 
 **Would someone who knows the grown-up tool get this, and is it easier?** Before and after every feature, ask it in those words. For video: would a Premiere or Final Cut editor find tracks, clips, the blade, the transport and the transition picker where they expect them, with the keys they expect (J/K/L, I/O, B, V, space, arrows)? Is it quicker than Premiere for a screen recording? And does it bring what Photoshop users have for free into time: a text layer, moved from A to B, grown or shrunk, faded in, with a transition, all by direct manipulation on the canvas and the timeline, never a form. If the honest answer is no, it is not done.
 
+**Every area has one purpose.** The title bar, tool bar, inspector, transport, timeline, menus and right-click menus each do one kind of job (the table in UX-PATTERNS). A control goes in the area whose purpose it shares, or it confuses people however useful it is. The bar is elegant and easy for an end user to understand, not complete.
+
 **A tool bar holds tools.** A tool is something you pick and then use on the canvas. Zoom, view options, readouts and settings are not tools and never go in the tool bar (the user, 2026-09-29: "zoom isn't a tool").
 
 **Actions live where you click.** Not every action needs a tool or a panel button. Right-click on a clip, a cut, a track header, the scrub bar, a layer or the canvas opens the actions for that thing, the way Premiere and Photoshop do. When you add an action, add it to the right-click menu of the thing it acts on first; a panel control is for values you tune, not verbs you do once.
