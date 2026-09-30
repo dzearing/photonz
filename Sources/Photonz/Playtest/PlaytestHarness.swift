@@ -2565,7 +2565,7 @@ private final class Run {
                  "Help ▸ Tutorials offers \(inMenu.joined(separator: ", ")); "
                  + "the Tutorials window offers \(inWindow.joined(separator: ", "))")
 
-        case .menus(let stage, let menu, let oneKeyEach, let wantedBar):
+        case .menus(let stage, let menu, let oneKeyEach, let wantedBar, let choose):
             let tree = try readMenuBar(only: menu)
             write(json: tree, to: "menus-\(stage).json")
             let focused = tree["focused"] as? Bool ?? false
@@ -2602,6 +2602,7 @@ private final class Run {
                 throw Failure(description: "a key does one thing, and these live rows share one: "
                               + liveClashes.map(\.sentence).joined(separator: "; "))
             }
+            if !choose.isEmpty { try chooseMenuBarRow(choose) }
 
         // The Tutorials window is not an editor and carries no playtest markers,
         // so it is read and pressed through the accessibility tree: the same
@@ -12965,6 +12966,35 @@ private final class Run {
         tutorials.update()
         let titles = TutorialTrack.allCases.map(\.title)
         return tutorials.items.map(\.title).filter { titles.contains($0) }
+    }
+
+    /// Picks one row of the menu bar by its path, the way a click on it does:
+    /// the menus on the way are brought up to date first, as opening them
+    /// would, and a missing or dimmed row fails the walk naming what was there.
+    private func chooseMenuBarRow(_ path: [String]) throws {
+        guard var menu = NSApp.mainMenu else { throw Failure(description: "the app has no menu bar") }
+        var item: NSMenuItem?
+        for (depth, title) in path.enumerated() {
+            menu.update()
+            menu.delegate?.menuNeedsUpdate?(menu)
+            guard let found = menu.items.first(where: { $0.title == title }) else {
+                let there = menu.items.filter { !$0.isSeparatorItem && !$0.isHidden }.map(\.title)
+                throw Failure(description: "no row called \"\(title)\" in \(path.prefix(depth).joined(separator: " > ")); "
+                              + "it holds \(there.joined(separator: ", "))")
+            }
+            if depth < path.count - 1 {
+                guard let submenu = found.submenu else {
+                    throw Failure(description: "\"\(title)\" opens no menu")
+                }
+                menu = submenu
+            }
+            item = found
+        }
+        guard let item, let owner = item.menu, let index = owner.items.firstIndex(of: item) else { return }
+        guard item.isEnabled else {
+            throw Failure(description: "\(path.joined(separator: " > ")) is dimmed")
+        }
+        owner.performActionForItem(at: index)
     }
 
     private func readMenuBar(only wanted: String?) throws -> [String: Any] {

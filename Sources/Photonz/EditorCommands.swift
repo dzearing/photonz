@@ -460,6 +460,10 @@ struct EditorCommands: Commands {
                 .disabled(editor?.selection == nil)
             Divider()
             fillRows
+            if Experiments.shared.proMenuBarEnabled {
+                Divider()
+                toolsMenu
+            }
         }
 
         // Must REPLACE, not append: SwiftUI's built-in .undoRedo items carry the
@@ -892,9 +896,19 @@ struct EditorCommands: Commands {
                 Button(kind.title) { editor?.setClipTransitionInHand(kind) }
                     .disabled(!(editor?.cutInHand?.cut.canAfford(kind) ?? false))
             }
+            // The Transitions section's plus: the transition in hand (the
+            // cut's, else the tile picked there) on every cut, or as ⌘T's.
+            if Experiments.shared.proMenuBarEnabled, let kind = editor?.transitionKindInHand {
+                Divider()
+                Button("Apply to Every Cut") { editor?.putTransitionOnEveryCut(kind) }
+                    .help("\(kind.title) on every cut")
+                Button("Set as Default Transition") { editor?.setDefaultTransition(kind) }
+                    .help("\(kind.title) on Command T")
+                    .disabled(editor?.defaultTransitionKind == kind)
+            }
         }
         .disabled(!(editor?.canWorkWithClipTransitions ?? false)
-                  || editor?.cutInHand == nil)
+                  || (editor?.cutInHand == nil && !Experiments.shared.proMenuBarEnabled))
     }
 
     // MARK: Sound
@@ -969,6 +983,316 @@ struct EditorCommands: Commands {
             .disabled(!(editor?.canRevertToOriginal ?? false))
     }
 
+    // MARK: Every command, in the menu bar too
+
+    // What a right-click or the panel does, as a row that acts on the thing in
+    // hand (`EditorState+MenuBar`): the placement contract's menu bar row says a
+    // command reachable only from a bar or a right-click is a bug, and
+    // `EveryCommandIsInTheMenuBarTests` reads both sides and fails on one.
+
+    /// Edit ▸ Tools: every tool on the bar, the one in hand ticked, each letter
+    /// printed on the row a press of it would pick now (`ToolMenu`). A letter
+    /// the timeline takes while it has the keyboard is not promised then, the
+    /// same rule the bar's tooltips keep.
+    @ViewBuilder private var toolsMenu: some View {
+        let tools = menuTools
+        Menu("Tools") {
+            ForEach(tools, id: \.self) { tool in
+                let key = editor.flatMap { editor in
+                    ToolMenu.printedKey(for: tool, among: tools, active: editor.activeTool,
+                                        remembered: { editor.lastTool(in: $0) })
+                }
+                Toggle(tool.barTitle, isOn: Binding(
+                    get: { editor?.activeTool == tool && !(editor?.isTimelineBlade ?? false) },
+                    set: { _ in pickTool(tool, key: key, among: tools) }))
+                .keyboardShortcut(key.flatMap { key in
+                    !timelineKeys || TimelineKeys.leavesToTheCanvas(key)
+                        ? KeyboardShortcut(KeyEquivalent(key), modifiers: []) : nil
+                })
+            }
+            // The timeline's Blade, on a video, where the bar shows it too.
+            if timed, Experiments.shared.videoToolBarEnabled, Experiments.shared.toolGroupsEnabled {
+                Divider()
+                Toggle("Blade", isOn: Binding(
+                    get: { editor?.isTimelineBlade ?? false },
+                    set: { _ in
+                        editor?.setTool(.select)
+                        editor?.perform(timelineCommand: .bladeTool)
+                    }))
+                .keyboardShortcut("b", modifiers: [])
+            }
+        }
+        .disabled(editor?.document == nil)
+    }
+
+    /// The tools the bar offers in this window, in its order.
+    private var menuTools: [Tool] {
+        let layout = ToolBarLayout.bar(withFrame: Experiments.shared.framesEnabled,
+                                       withLens: Experiments.shared.lensEnabled,
+                                       withPen: Experiments.shared.penEnabled)
+        let bounds = ToolGroup.bounds.tools.filter { editor?.boundsToolsOffered.contains($0) ?? ($0 == .crop) }
+        return ToolMenu.tools(layout, bounds: bounds)
+    }
+
+    /// A tool row, picked or pressed: what its letter hands you, read live, so
+    /// a click and a key can never pick two different tools.
+    private func pickTool(_ tool: Tool, key: Character?, among tools: [Tool]) {
+        guard let editor else { return }
+        let picked = key.flatMap {
+            ToolMenu.tool(forKey: $0, among: tools, active: editor.activeTool,
+                          remembered: { editor.lastTool(in: $0) })
+        } ?? tool
+        editor.setTool(picked)
+        if editor.isTimelineBlade { editor.isTimelineBlade = false }
+    }
+
+    // Layer: the verbs the layers list's right-click has.
+    @ViewBuilder private var layerListRows: some View {
+        let selected = editor?.selectedLayerID
+        Button("Rename Layer…") { editor?.renameLayerInHand() }
+            .disabled(selected == nil)
+        Button("Select Pixels") { if let selected { editor?.selectLayerPixels(id: selected) } }
+            .disabled(selected == nil)
+        if timed {
+            Button("Put on Timeline") { if let selected { editor?.putLayerOnTimeline(selected) } }
+                .disabled(!(selected.map { editor?.canPutOnTimeline($0) ?? false } ?? false))
+        }
+    }
+
+    // Layer: the Effects list's plus and its rows' x.
+    @ViewBuilder private var effectRows: some View {
+        let canRestyle = editor?.hasRestylableSelection ?? false
+        Menu("Add Effect") {
+            ForEach(AddableEffect.allCases) { kind in
+                Button(kind.title) { editor?.addEffect(kind) }
+                    .disabled(!(editor?.canAddEffect(kind) ?? false))
+            }
+            let saved = editor?.namedEffectStyles ?? []
+            if !saved.isEmpty {
+                Section("Saved effects") {
+                    ForEach(saved) { style in
+                        Button(style.name) { editor?.addEffectStyle(styleID: style.id) }
+                    }
+                }
+            }
+        }
+        .disabled(!canRestyle)
+        let effects = canRestyle ? (editor?.layerEffectRows ?? []) : []
+        Menu("Remove Effect") {
+            ForEach(effects) { row in
+                Button(row.title) { editor?.removeEffect(row: row) }
+            }
+        }
+        .disabled(effects.isEmpty)
+    }
+
+    // Clip: the clip's own right-click verbs that were nowhere else.
+    @ViewBuilder private var clipItselfRows: some View {
+        let clip = editor?.clipInHandID
+        Button("Rename…") { if let clip { editor?.beginRenamingClip(clip) } }
+            .disabled(clip == nil)
+        Button("Select Forward") { if let clip { editor?.selectClipsForward(from: clip, onItsTrackOnly: false) } }
+            .disabled(clip == nil)
+        let media = editor?.mediaURLInHand
+        Button("Reveal in Finder") { if let media { NSWorkspace.shared.activateFileViewerSelecting([media]) } }
+            .disabled(media == nil)
+    }
+
+    // Clip: a cut's Roll Edit, beside the transition rows.
+    @ViewBuilder private var rollEditRow: some View {
+        Button("Roll Edit to Playhead") { editor?.rollCutInHand() }
+            .disabled(!(editor?.canRollCutInHand ?? false))
+    }
+
+    // Clip: the sound's gain, as its right-click and the Sound section have it.
+    @ViewBuilder private var soundCleanupRows: some View {
+        let sound = editor?.soundLayerInHand
+        let ids = sound.map { editor?.soundLayers(actingOn: $0.id) ?? [] } ?? []
+        Menu("Normalize") {
+            Button("Peaks to -1 dB") {
+                if let editor { Task { await editor.normalizeSound(layers: ids) } }
+            }
+            Divider()
+            ForEach(AudioNormalize.Target.allCases, id: \.self) { target in
+                Button(target.title) {
+                    if let editor { Task { await editor.normalizeSoundLoudness(layers: ids, to: target) } }
+                }
+            }
+            Divider()
+            Toggle("Clean Noise", isOn: Binding(
+                get: { editor?.normalizeCleansNoise ?? false },
+                set: { _ in editor?.normalizeCleansNoise.toggle() }))
+        }
+        .disabled(ids.isEmpty)
+        let cleaned = ids.contains { editor?.document?.layer(id: $0)?.soundLevel?.noiseReduction != nil }
+        Button(cleaned ? "Remove Noise Cleaning" : "Clean Noise") {
+            editor?.setSoundNoiseReduction(cleaned ? nil : .standard, layers: ids)
+        }
+        .disabled(ids.isEmpty)
+        let gained = ids.contains { (editor?.document?.layer(id: $0)?.soundLevel?.clipGainDB ?? 0) != 0 }
+        Button("Reset Gain") {
+            editor?.setSoundClipGain(Dictionary(uniqueKeysWithValues: ids.map { ($0, 0.0) }))
+        }
+        .disabled(!gained)
+    }
+
+    // Clip ▸ Animate: a title's time, and the keys and path of the picked layer.
+    @ViewBuilder private var placedLayerRows: some View {
+        let placed = editor?.placedLayerInHand
+        Button("Start at Playhead") { if let placed { editor?.startPlacedLayerHere(placed.id) } }
+            .disabled(!(placed.map { editor?.canStartPlacedLayerHere($0.id) ?? false } ?? false))
+        Button("End at Playhead") { if let placed { editor?.endPlacedLayerHere(placed.id) } }
+            .disabled(!(placed.map { editor?.canEndPlacedLayerHere($0.id) ?? false } ?? false))
+        Menu("Fade") {
+            ForEach(TitleTime.fadeStopsMS, id: \.self) { ms in
+                Toggle(TitleTime.fadeTitle(ms), isOn: Binding(
+                    get: { (placed?.titleFadeMS ?? 0) == ms },
+                    set: { _ in if let placed { editor?.setPlacedLayerFade(ms, layerID: placed.id) } }))
+            }
+        }
+        .disabled(placed == nil)
+        let animates = placed != nil && !(placed.map { editor?.isClipLocked($0.id) ?? true } ?? true)
+        Menu("Animate In") {
+            ForEach(TitleAnimation.allCases, id: \.self) { kind in
+                Button(kind.title) { if let placed { editor?.animate(kind, isIn: true, layerID: placed.id) } }
+            }
+        }
+        .disabled(!animates)
+        Menu("Animate Out") {
+            ForEach(TitleAnimation.allCases, id: \.self) { kind in
+                Button(kind.title) { if let placed { editor?.animate(kind, isIn: false, layerID: placed.id) } }
+            }
+        }
+        .disabled(!animates)
+    }
+
+    @ViewBuilder private var keyLaneRows: some View {
+        Button("Remove Key at Playhead") { editor?.removeKeyAtPlayhead() }
+            .disabled(!(editor?.canRemoveKeyAtPlayhead ?? false))
+        Button("Select All Keys") { editor?.selectAllKeysInHand() }
+            .disabled(!(editor?.canSelectAllKeys ?? false))
+        let lane = editor?.keyLaneInHand
+        Toggle("Show Graph", isOn: Binding(
+            get: { lane.map { editor?.isKeyLaneGraphed($0.motionID) ?? false } ?? false },
+            set: { _ in if let lane { editor?.toggleKeyGraph(lane.motionID) } }))
+        .disabled(!(editor?.canGraphKeyLaneInHand ?? false))
+        let property = editor?.animatingPropertyInHand
+        Button("Stop Animating") { if let property { editor?.toggleKeying(property) } }
+            .disabled(property == nil)
+    }
+
+    @ViewBuilder private var straightenRow: some View {
+        Button("Straighten This Stretch") { editor?.straightenStretchInHand() }
+            .disabled(editor?.curvedStretchInHand == nil)
+    }
+
+    // Sequence: the ruler's marker rows that act on one that is there.
+    @ViewBuilder private var markerRows: some View {
+        let marker = editor?.markerAtPlayhead
+        Button("Remove Marker") { if let marker { editor?.removeMarker(marker) } }
+            .disabled(marker == nil)
+        Button("Clear All Markers") { editor?.removeAllMarkers() }
+            .disabled(editor?.document?.markers.isEmpty ?? true)
+    }
+
+    // Sequence: what a range drawn on the ruler or across tracks does.
+    @ViewBuilder private var rangeRows: some View {
+        let onTracks = editor?.trackRangeHeld != nil
+        Button("Split at Range Edges") {
+            onTracks ? editor?.splitTrackRangeEdges() : editor?.splitAtRangeEdges()
+        }
+        .disabled(!(onTracks ? (editor?.canSplitTrackRangeEdges ?? false) : (editor?.canSplitAtRangeEdges ?? false)))
+        Button("Merge into One Clip") { editor?.mergeRangeIntoOneClip() }
+            .disabled(!(editor?.canMergeRange ?? false))
+        if Experiments.shared.captionsFromTheSoundEnabled {
+            Button("Add Captions for Range") { editor?.addCaptionsInRange() }
+                .disabled(!(editor?.canAddCaptionsInRange ?? false))
+        }
+        Button("Export Range…") { editor?.exportRange() }
+            .disabled(editor?.document?.markedRangeMS == nil)
+    }
+
+    /// Sequence ▸ Track: everything a track's header offers, on the track in
+    /// hand (the one picked, else the clip in hand's), and the gutter's + for
+    /// a new track of each kind.
+    @ViewBuilder private var trackMenu: some View {
+        let track = editor?.trackInHand
+        let index = editor?.trackInHandIndex
+        Menu("Track") {
+            Button("Add Video Track") { editor?.addTrack(.video) }
+            Button("Add Audio Track") { editor?.addTrack(.audio) }
+            Button("Add Captions Track") { editor?.addTrack(.captions) }
+            Divider()
+            Button("Add Track Above") { if let track, let index { editor?.addTrack(track.kind, at: index) } }
+                .disabled(track == nil)
+            Button("Add Track Below") { if let track, let index { editor?.addTrack(track.kind, at: index + 1) } }
+                .disabled(track == nil)
+            Divider()
+            Button("Rename Track…") { editor?.renameTrackInHand() }
+                .disabled(track == nil)
+            if track?.kind == .audio {
+                Toggle("Mute Track", isOn: Binding(
+                    get: { track?.isMuted ?? false },
+                    set: { _ in if let track { editor?.toggleTrackMuted(track.id) } }))
+            } else {
+                Toggle("Hide Track", isOn: Binding(
+                    get: { track?.isHidden ?? false },
+                    set: { _ in if let track { editor?.toggleTrackHidden(track.id) } }))
+                .disabled(track == nil)
+            }
+            Toggle("Solo Track", isOn: Binding(
+                get: { track?.isSolo ?? false },
+                set: { _ in if let track { editor?.toggleTrackSolo(track.id) } }))
+            .disabled(track == nil)
+            Toggle("Lock Track", isOn: Binding(
+                get: { track?.isLocked ?? false },
+                set: { _ in if let track { editor?.toggleTrackLocked(track.id) } }))
+            .disabled(track == nil)
+            Divider()
+            Button("Group Track") { if let track { editor?.groupTracks(from: track.id) } }
+                .disabled(track == nil || track?.groupID != nil)
+            Button("Ungroup Tracks") { if let group = track?.groupID { editor?.ungroupTracks(group) } }
+                .disabled(track?.groupID == nil)
+            Divider()
+            Button("Delete Track", role: .destructive) { if let track { editor?.deleteTrack(track.id) } }
+                .disabled(track == nil)
+            Button("Delete Empty Tracks", role: .destructive) { editor?.deleteEmptyTracks() }
+                .disabled(!(editor?.hasEmptyTracks ?? false))
+        }
+    }
+
+    // Sequence: the captions' own reset, and the word being said.
+    @ViewBuilder private var captionEditRows: some View {
+        Button("Reset Captions") { editor?.resetCaptions() }
+            .disabled(!(editor?.canResetCaptions ?? false))
+        let word = editor?.captionWordInHand
+        Menu("Caption Word") {
+            Button("Edit Word") { if let word { editor?.beginEditingCaptionWord(word, place: .canvas) } }
+            Button("Split Here") { if let word { editor?.splitCaptionWord(word, atMS: editor?.documentTimeMS) } }
+                .disabled(!((word.flatMap { editor?.captionWord($0) }?.text.count ?? 0) >= 2))
+            Button("Merge with Next") { if let word { editor?.mergeCaptionWordWithNext(word) } }
+                .disabled(!(word.map { editor?.canMergeCaptionWord($0) ?? false } ?? false))
+            Button("Delete Word", role: .destructive) { if let word { editor?.deleteCaptionWord(word) } }
+            Divider()
+            Button("Move to Next Line") { if let word { editor?.moveCaptionWordToNextLine(word) } }
+            Button("Play From Here") { if let word { editor?.playFromCaptionWord(word) } }
+            Button("Start Here") { editor?.goToStartOfCaptionInHand() }
+        }
+        .disabled(word == nil)
+    }
+
+    // View: how the timeline's rows are looked at, and the captions' guides.
+    @ViewBuilder private var timelineViewRows: some View {
+        Button("Compact Tracks") { editor?.resetTimelineRows() }
+            .disabled(editor?.timelineRowZoom.isCompact ?? true)
+        if Experiments.shared.captionsFromTheSoundEnabled {
+            Toggle("Caption Safe Areas", isOn: Binding(
+                get: { EditorState.showsSafeAreas },
+                set: { _ in editor?.toggleSafeAreas() }))
+            .disabled(!(editor?.hasCaptions ?? false))
+        }
+    }
+
     // MARK: Clip and Sequence (`next-a-pro-menu-bar`)
 
     /// What acts on the picked clip, the way Final Cut's and Premiere's Clip
@@ -983,6 +1307,10 @@ struct EditorCommands: Commands {
                 rippleTrimRows
                 breakApartRow
                 Divider()
+            }
+            clipItselfRows
+            Divider()
+            if Experiments.shared.cutRecordingEnabled {
                 freezeAndSpeedRows
                 Divider()
             }
@@ -993,16 +1321,27 @@ struct EditorCommands: Commands {
             if Experiments.shared.transitionsAtACutEnabled {
                 transitionAtCutMenu
                 if Experiments.shared.cutRecordingEnabled { applyDefaultTransitionRow }
-                Divider()
             }
+            if Experiments.shared.cutRecordingEnabled { rollEditRow }
+            Divider()
             if Experiments.shared.soundOnTheTimelineEnabled {
                 detachAudioRow
                 flattenLevelRow
+                soundCleanupRows
                 Divider()
             }
-            Section("Animate") {
+            // A submenu rather than a section: everything a key, a path or a
+            // title's time does made the Clip menu taller than a laptop's
+            // screen, and a menu that scrolls hides its own rows. The keys it
+            // prints still answer from inside it.
+            Menu("Animate") {
+                placedLayerRows
+                Divider()
                 keyNavigationRows
                 animateRows
+                Divider()
+                keyLaneRows
+                straightenRow
             }
         }
     }
@@ -1018,13 +1357,17 @@ struct EditorCommands: Commands {
             editPointRows
             Divider()
             markRows
+            markerRows
             Divider()
             extractLiftRows
             if Experiments.shared.cutRecordingEnabled {
+                rangeRows
                 splitEverythingRow
                 Divider()
                 snapRow
             }
+            Divider()
+            trackMenu
             Divider()
             if Experiments.shared.soundOnTheTimelineEnabled {
                 addSoundRow
@@ -1033,6 +1376,7 @@ struct EditorCommands: Commands {
             }
             if Experiments.shared.captionsFromTheSoundEnabled {
                 captionRows
+                captionEditRows
                 Divider()
             }
             revertRecordingRow
@@ -1214,6 +1558,9 @@ struct EditorCommands: Commands {
             // duplicate-selected-layer case when no region is marqueed).
             Button("Duplicate Layer") { editor?.duplicateSelectedLayers() }
                 .disabled(!hasLayerSelection)
+            if Experiments.shared.proMenuBarEnabled {
+                layerListRows
+            }
             // Photoshop keeps Copy Layer Style and Paste Layer Style on the
             // layer's own right click menu with NO key at all, so nothing
             // Photoshop-shaped is being displaced here and there is no key to
@@ -1231,6 +1578,9 @@ struct EditorCommands: Commands {
                 Button("Paste Look") { editor?.pasteLook() }
                     .keyboardShortcut("v", modifiers: [.command, .option, .shift])
                     .disabled(!(editor?.canPasteLook ?? false))
+            }
+            if Experiments.shared.proMenuBarEnabled {
+                effectRows
             }
             Button("Merge Down") { editor?.mergeDown() }
                 .keyboardShortcut("e", modifiers: .command)
@@ -1703,6 +2053,7 @@ struct EditorCommands: Commands {
                 Button("Zoom Timeline to Fit") { editor?.fitTimeline() }
                     .keyboardShortcut(timelineKeys ? KeyboardShortcut("\\", modifiers: []) : nil)
                     .disabled(!(editor?.isTimelineOpenedOut ?? false))
+                timelineViewRows
             }
             // The grid you build against (Next, `next-canvas-grid`), on the key
             // Photoshop uses for its own. It is a view preference, not part of

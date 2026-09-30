@@ -141,6 +141,16 @@ extension PhotonzDocument {
         return CaptionCue.words(cue.words, fittedTo: time)
     }
 
+    /// The word being said at `ms`: the caption up then, and the last of its
+    /// words to have started. Nil where no caption is up. What the menu bar's
+    /// caption word rows act on, the menu bar having no pointer to aim with.
+    public func captionWord(atMS ms: Int) -> CaptionWordRef? {
+        guard let cue = captionLayers.last(where: { $0.time?.contains(ms: ms) == true }),
+              let words = captionWordsAsShown(of: cue.id),
+              let index = words.lastIndex(where: { $0.startMS <= ms }) else { return nil }
+        return CaptionWordRef(cueID: cue.id, index: index)
+    }
+
     /// The word `step` words on from `ref`, running on into the next line and
     /// back into the one before: what Tab and Shift-Tab walk while typing.
     public func captionWord(from ref: CaptionWordRef, step: Int) -> CaptionWordRef? {

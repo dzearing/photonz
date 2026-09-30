@@ -1,0 +1,31 @@
+{
+  "feature": "Every command is also in the menu bar",
+  "epic": "design-system",
+  "summary": "Everything a right-click or the panel does now has a row in the menu bar too, and acts on what you have in hand: tracks, markers, sound cleanup, caption words, keys, effects, clip verbs, and every tool with its letter under Edit, Tools.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a screen recording and switch to Edit (Command 2).",
+  "switched": {},
+  "try": [
+    { "do": "Open the Clip menu and look for Rename, Select Forward, Reveal in Finder, Normalize, Clean Noise and Reset Gain.", "shot": "2026-09-30-every-command-1-clip.png" },
+    { "do": "Open Clip, Animate: the title's Start and End at Playhead, Fade, Animate In and Out, and the key rows live here now." },
+    { "do": "Open Sequence, Track and choose Add Audio Track. A new empty audio track appears under the others.", "shot": "2026-09-30-every-command-2-sequence.png" },
+    { "do": "Choose Sequence, Track, Delete Empty Tracks. The empty track goes." },
+    { "do": "Choose Sequence, Add Marker, then Sequence, Remove Marker with the playhead still on it." },
+    { "do": "Click the picture, open Edit, Tools and pick Line. Press M twice and look again: Ellipse Select is ticked and M has moved onto Rectangle Select.", "shot": "2026-09-30-every-command-3-edit.png" },
+    { "do": "Pick a layer with a shadow and open Layer, Remove Effect." }
+  ],
+  "evaluate": [
+    "Tools sit under Edit, Tools. Would you rather have a top-level Tools menu, the way Preview and Pixelmator Pro have one?",
+    "Is Sequence, Track where you would look for Add Track, Mute, Solo and Lock?",
+    "Clip, Animate is now a submenu so the Clip menu fits on a laptop screen. Do you miss Key at Playhead and Go to Next Key at the top level of Clip?",
+    "Apply to Every Cut and Set as Default Transition sit at the foot of Clip, Transition at Cut and use the cut's own transition, else the one picked in Transitions. Is it clear which transition they mean?",
+    "Sequence, Caption Word acts on the word being said at the playhead. Useful, or one submenu too many?"
+  ],
+  "rough": [
+    "The mocks draw no menu bar, so there is no mock frame to set this beside; it is checked against the placement contract's menu bar row and the IA audit's list of gaps instead.",
+    "Delete Style, on a saved caption style's right-click, has no row: nothing in the document says which saved style is in hand. A test names it as the one exception.",
+    "The Library tile's Add at Playhead is matched to File, Import Media, which asks for a file rather than taking the tile you pointed at.",
+    "An effect row's own Move Up and Move Down (its dropdown, not a right-click) are not in the check; only right-click menus and the panel verbs named in the task are.",
+    "Normalize, Add Effect and Remove Effect read as live rows even when every row inside them is dimmed; that is how the Mac draws a submenu's own row.",
+    "Right after a click hands the keyboard from the timeline to the picture, the W on Magic Wand and the K on Lens can be missing for one look at the menu; the next look has them."
+  ]
+}

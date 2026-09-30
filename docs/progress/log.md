@@ -20269,3 +20269,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Key clashes fixed: Shift Z is Punch In only (timeline fit on backslash, card open), Shift Cmd G breaks apart a merged clip in hand else ungroups, Ripple Delete moved from Option Delete to Shift Delete.
 - `menus` step: `oneKeyEach` and `bar`. New walk `pro-menu-bar-walk` (front).
 - Next: the every-command task places the remaining rows; the Shift Z card.
+
+## 2026-09-30 — Every command is also in the menu bar (Next)
+
+- Every right-click and panel verb has a menu bar row acting on the thing in hand (`EditorState+MenuBar`: track = picked else the clip in hand's; marker = the one within a frame of the playhead; caption word = the one being said; key lane = the picked keys' else the panel's). Edit ▸ Tools lists every bar tool, a letter printed on the row its press picks now (`ToolMenu`, PhotonzCore, tested); Sequence gains Track ▸, Remove Marker, Clear All Markers, the range rows, Reset Captions and Caption Word ▸; Clip gains Rename, Select Forward, Reveal, Roll Edit, Normalize ▸, Clean Noise, Reset Gain and folds its Animate rows into Clip ▸ Animate ▸ (the menu scrolled on a laptop screen otherwise); Layer gains Rename Layer, Select Pixels, Put on Timeline, Add Effect ▸, Remove Effect ▸; View gains Compact Tracks and Caption Safe Areas.
+- `EveryCommandIsInTheMenuBarTests` reads every right-click row (MenuRow lists, `.contextMenu` blocks, the track header menu) plus named panel verbs out of the source and fails on one with no bar row; `sameCommand` names rows the bar says in other words, `noRow` the one exception (Delete Style).
+- `menus` walk step: `choose` picks a row by path. New walk `every-command-in-the-menu-bar-walk` (front).
+- menu-checkmarks-walk fails on main before this change (probe menu bar frozen, no `front`); noted on the sweep task.

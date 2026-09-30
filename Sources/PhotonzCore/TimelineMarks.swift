@@ -51,6 +51,14 @@ extension PhotonzDocument {
         return true
     }
 
+    /// The marker the playhead is standing on: the nearest one within
+    /// `withinMS` of `ms`, nil when none is that close. What Sequence ▸ Remove
+    /// Marker takes away, the menu bar having no pointer to aim with.
+    public func marker(nearMS ms: Int, withinMS reach: Int) -> UUID? {
+        markers.filter { abs($0.atMS - ms) <= reach }
+            .min { abs($0.atMS - ms) < abs($1.atMS - ms) }?.id
+    }
+
     @discardableResult
     public mutating func removeAllMarkers() -> Bool {
         guard !markers.isEmpty else { return false }

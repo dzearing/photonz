@@ -1047,11 +1047,11 @@ struct PlaytestScriptTests {
           ]
         }
         """)
-        guard case .menus(let allStage, let allMenu, _, let allBar) = script.steps[0] else { Issue.record("menus"); return }
+        guard case .menus(let allStage, let allMenu, _, let allBar, _) = script.steps[0] else { Issue.record("menus"); return }
         #expect(allStage == "capture-names")
         #expect(allMenu == nil)
         #expect(allBar.isEmpty)
-        guard case .menus(let oneStage, let oneMenu, let oneKeyEach, _) = script.steps[1] else { Issue.record("menus"); return }
+        guard case .menus(let oneStage, let oneMenu, let oneKeyEach, _, _) = script.steps[1] else { Issue.record("menus"); return }
         #expect(oneStage == "capture-only")
         #expect(oneMenu == "Capture")
         #expect(!oneKeyEach)
@@ -1065,9 +1065,23 @@ struct PlaytestScriptTests {
         { "steps": [ { "do": "menus", "stage": "video", "oneKeyEach": true,
                        "bar": ["File", "Edit", "Image", "Layer", "Clip", "Sequence", "View", "Window", "Help"] } ] }
         """)
-        guard case .menus(_, _, let oneKeyEach, let bar) = script.steps[0] else { Issue.record("menus"); return }
+        guard case .menus(_, _, let oneKeyEach, let bar, let choose) = script.steps[0] else { Issue.record("menus"); return }
         #expect(oneKeyEach)
         #expect(bar == ["File", "Edit", "Image", "Layer", "Clip", "Sequence", "View", "Window", "Help"])
+        #expect(choose.isEmpty)
+    }
+
+    /// `choose` picks a row of the menu bar by its path, the way a click on it
+    /// does, after the reading: what proves a row with no key acts.
+    @Test func aMenusStepCanChooseARowByItsPath() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "menus", "stage": "tracks", "choose": "Sequence > Track > Add Audio Track" } ] }
+        """)
+        guard case .menus(_, _, _, _, let choose) = script.steps[0] else { Issue.record("menus"); return }
+        #expect(choose == ["Sequence", "Track", "Add Audio Track"])
+        #expect(throws: PlaytestScriptError.self) {
+            try decode("{ \"steps\": [ { \"do\": \"menus\", \"stage\": \"x\", \"choose\": \"Sequence\" } ] }")
+        }
     }
 
     @Test func aMenusStepNeedsAStage() {

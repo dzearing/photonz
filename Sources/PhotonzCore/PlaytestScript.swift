@@ -3395,7 +3395,12 @@ public enum PlaytestStep: Sendable, Equatable {
     ///
     /// `bar` names the top-level menus after the app's own, in order, and
     /// fails the walk when the menu bar reads any other way.
-    case menus(stage: String, menu: String?, oneKeyEach: Bool = false, bar: [String] = [])
+    ///
+    /// `choose` picks one row by its path ("Sequence > Track > Add Audio
+    /// Track"), after the reading, the way a click on it does: the proof that a
+    /// row with no key acts. Fails when the row is missing or dimmed.
+    case menus(stage: String, menu: String?, oneKeyEach: Bool = false, bar: [String] = [],
+               choose: [String] = [])
     /// Write the measured frame of every glass group along the bottom of the
     /// canvas to the log and to `toolbar-<stage>.json`: its height, its top and
     /// bottom edge, and its centre line, left to right.
@@ -4719,9 +4724,15 @@ public enum PlaytestStep: Sendable, Equatable {
         case "readClipboard":
             self = .readClipboard(stage: try f.string("stage"))
         case "menus":
+            let choose = (try f.optionalString("choose"))?
+                .components(separatedBy: ">").map { $0.trimmingCharacters(in: .whitespaces) } ?? []
+            if !choose.isEmpty, choose.count < 2 || choose.contains(where: \.isEmpty) {
+                throw PlaytestScriptError.invalidField(index: index, step: "menus", field: "choose",
+                                                       reason: "a path from a menu to its row, \"Sequence > Add Marker\"")
+            }
             self = .menus(stage: try f.string("stage"), menu: try f.optionalString("menu"),
                           oneKeyEach: try f.optionalFlag("oneKeyEach") ?? false,
-                          bar: try f.optionalStrings("bar"))
+                          bar: try f.optionalStrings("bar"), choose: choose)
         case "toolBar":
             let slots = f.has("slots") ? try f.optionalStrings("slots") : nil
             let more = f.has("more") ? fields["more"] as? [String] : nil

@@ -1,0 +1,231 @@
+{
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2
+    },
+    {
+      "do": "key",
+      "key": "2",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "menus",
+      "stage": "1-video",
+      "oneKeyEach": true,
+      "bar": [
+        "File",
+        "Edit",
+        "Image",
+        "Layer",
+        "Clip",
+        "Sequence",
+        "Measure",
+        "View",
+        "Window",
+        "Help"
+      ]
+    },
+    {
+      "do": "menuShot",
+      "menu": "Clip",
+      "name": "every-command-1-clip"
+    },
+    {
+      "do": "menuShot",
+      "menu": "Sequence",
+      "name": "every-command-2-sequence"
+    },
+    {
+      "do": "click",
+      "at": [
+        400,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "menus",
+      "stage": "2-canvas-has-the-keyboard",
+      "oneKeyEach": true
+    },
+    {
+      "do": "key",
+      "key": "m"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectTimeline",
+      "tool": "rectSelect"
+    },
+    {
+      "do": "key",
+      "key": "m"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectTimeline",
+      "tool": "ellipseSelect"
+    },
+    {
+      "do": "menus",
+      "stage": "3-ellipse-in-hand",
+      "oneKeyEach": true
+    },
+    {
+      "do": "menus",
+      "stage": "4-pick-line",
+      "menu": "Edit",
+      "choose": "Edit > Tools > Line"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectTimeline",
+      "tool": "line"
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectTimeline",
+      "tool": "select"
+    },
+    {
+      "do": "menus",
+      "stage": "5-tracks-before",
+      "menu": "Sequence",
+      "choose": "Sequence > Track > Add Audio Track"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectTimeline",
+      "tracks": [
+        "V1",
+        "Audio",
+        "Audio 2"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "6-audio-track-added",
+      "note": "Sequence > Track > Add Audio Track, picked from the menu bar, added a track."
+    },
+    {
+      "do": "menus",
+      "stage": "7-add-marker",
+      "menu": "Sequence",
+      "choose": "Sequence > Add Marker"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectTimeline",
+      "markers": 1
+    },
+    {
+      "do": "menus",
+      "stage": "8-remove-marker",
+      "menu": "Sequence",
+      "choose": "Sequence > Remove Marker"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectTimeline",
+      "markers": 0
+    },
+    {
+      "do": "menus",
+      "stage": "9-delete-empty-tracks",
+      "menu": "Sequence",
+      "choose": "Sequence > Track > Delete Empty Tracks"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectTimeline",
+      "tracks": [
+        "V1",
+        "Audio"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "10-empty-tracks-gone",
+      "note": "Sequence > Track > Delete Empty Tracks took the new, empty audio track away again."
+    },
+    {
+      "do": "menuShot",
+      "menu": "Edit",
+      "name": "every-command-3-edit"
+    },
+    {
+      "do": "blank",
+      "canvasWidth": 800,
+      "canvasHeight": 600,
+      "width": 1100,
+      "height": 800
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "menus",
+      "stage": "11-picture",
+      "oneKeyEach": true,
+      "bar": [
+        "File",
+        "Edit",
+        "Image",
+        "Layer",
+        "Measure",
+        "View",
+        "Window",
+        "Help"
+      ]
+    }
+  ]
+}
