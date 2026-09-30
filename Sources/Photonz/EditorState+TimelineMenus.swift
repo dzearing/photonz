@@ -26,7 +26,13 @@ extension EditorState {
         /// Premiere's Add Edit. B picks up the Blade.
         static let split = MenuShortcut.command("k")
         static let delete = MenuShortcut(key: DeleteKeyCharacters.backwards, modifiers: [])
-        static let rippleDelete = MenuShortcut(key: DeleteKeyCharacters.backwards, modifiers: .option)
+        /// ⇧⌫, the key the timeline answers for it (`TimelineKeys`), on the
+        /// pro menu bar: ⌥⌫ is Photoshop's Fill with Foreground, and one key
+        /// printed on two rows is a key that lies on one of them.
+        @MainActor static var rippleDelete: MenuShortcut {
+            MenuShortcut(key: DeleteKeyCharacters.backwards,
+                         modifiers: Experiments.shared.proMenuBarEnabled ? .shift : .option)
+        }
         static let detachAudio = MenuShortcut(key: "d", modifiers: [.control, .shift])
         static let duplicate = MenuShortcut.command("j")
         static let clearInOut = MenuShortcut(key: "x", modifiers: .option)
@@ -48,8 +54,9 @@ extension EditorState {
         /// Final Cut's Break Apart Clip Items, which is Photoshop's Ungroup
         /// too: the one key that takes a thing made of things apart.
         static let breakApart = MenuShortcut.commandShift("g")
-        /// Final Cut's Zoom to Fit, which the user asked for by name.
-        static let zoomToFit = MenuShortcut(key: "z", modifiers: .shift)
+        /// Premiere's Zoom to Sequence. ⇧Z, Final Cut's, is Punch In here,
+        /// the key its mock prints, so one key never means two things.
+        static let zoomToFit = MenuShortcut(key: "\\", modifiers: [])
         /// Premiere's Play In to Out, ⌃⇧Space on Windows, with ⌘ for ⌃
         /// (`TimelineKeys`).
         static let playInToOut = MenuShortcut.commandShift(" ")
@@ -92,7 +99,8 @@ extension EditorState {
         // Clips merged into one open back into their parts.
         if layer.isMergedClip {
             rows.append(.command("Break Apart",
-                                 Experiments.shared.layerGroupsEnabled ? TimelineMenuKeys.breakApart : nil,
+                                 Experiments.shared.layerGroupsEnabled || Experiments.shared.proMenuBarEnabled
+                                     ? TimelineMenuKeys.breakApart : nil,
                                  enabled: document.canBreakApart(layerID)) {
                 self.breakApartClip(layerID)
             })

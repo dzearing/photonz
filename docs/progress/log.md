@@ -20261,3 +20261,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
   segment-touching walks green. Tests 10560/10560.
 - comp-segmented.html and UX-PATTERNS document the system control. Card asks
   the user to confirm (keep, glass toolbar for View | Edit, or back to drawn).
+
+## 2026-09-30 — The menu bar reads like a pro Mac editor's (Next)
+
+- `next-a-pro-menu-bar` (on in Next): File, Edit, Image, Layer, Clip + Sequence (only with time), Measure, View, Window, Help. Capture is File ▸ Capture, Show History is in Window, the Video menu (and the recording window's leftover rows) is gone in Next.
+- SwiftUI always places CommandMenus after View; `MenuBarArranger` moves View back (pure order in `MenuBarOrder`, tested). It re-runs after every event, on any item added to the bar, and when the bar is replaced. SwiftUI then fills a moved menu lazily, which is fine for keys (measured) but the harness now asks menus to fill before reading (`PlaytestHarness.fill`).
+- Key clashes fixed: Shift Z is Punch In only (timeline fit on backslash, card open), Shift Cmd G breaks apart a merged clip in hand else ungroups, Ripple Delete moved from Option Delete to Shift Delete.
+- `menus` step: `oneKeyEach` and `bar`. New walk `pro-menu-bar-walk` (front).
+- Next: the every-command task places the remaining rows; the Shift Z card.

@@ -22,8 +22,8 @@
     },
     {
       "do": "menus",
-      "stage": "2-capture",
-      "menu": "Capture"
+      "stage": "2-file-and-capture",
+      "menu": "File"
     },
     {
       "do": "tool",

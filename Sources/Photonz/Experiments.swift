@@ -844,6 +844,12 @@ extension Experiments {
     /// the canvas answers and Duplicate prints ⌘D, which is Deselect.
     var menuKeysDoWhatTheySayEnabled: Bool { isEnabled(FeatureCatalog.menuKeysDoWhatTheySayFlag) }
 
+    /// `next-a-pro-menu-bar`: whether the menu bar reads File, Edit, Image,
+    /// Layer, Clip and Sequence (with time), Measure, View, Window, Help, with
+    /// Capture folded into File and a picture showing no video menu. Off, the
+    /// old Capture and Video menus, with View before them.
+    var proMenuBarEnabled: Bool { isEnabled(FeatureCatalog.proMenuBarFlag) }
+
     /// `next-cut-says-what-it-cannot-do`: whether ⌘X, ⌫, ⌥⌫ and the bucket
     /// refuse, out loud, when the marquee is over a layer no piece can be
     /// taken out of or filled in (`RegionSliceRefusal`). Off, cut silently

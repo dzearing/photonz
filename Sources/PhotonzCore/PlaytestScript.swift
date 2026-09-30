@@ -3389,7 +3389,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// This is how an unmanned runner names a real menu item. Reading ANOTHER
     /// app's menus needs an Accessibility grant only a person can give, but the
     /// probe is our own app and can always say what is in its own menu bar.
-    case menus(stage: String, menu: String?)
+    ///
+    /// `oneKeyEach` fails the walk when two rows the bar shows print the same
+    /// shortcut (`MenuKeyClash`): a key does one thing, so the other row lies.
+    ///
+    /// `bar` names the top-level menus after the app's own, in order, and
+    /// fails the walk when the menu bar reads any other way.
+    case menus(stage: String, menu: String?, oneKeyEach: Bool = false, bar: [String] = [])
     /// Write the measured frame of every glass group along the bottom of the
     /// canvas to the log and to `toolbar-<stage>.json`: its height, its top and
     /// bottom edge, and its centre line, left to right.
@@ -4713,7 +4719,9 @@ public enum PlaytestStep: Sendable, Equatable {
         case "readClipboard":
             self = .readClipboard(stage: try f.string("stage"))
         case "menus":
-            self = .menus(stage: try f.string("stage"), menu: try f.optionalString("menu"))
+            self = .menus(stage: try f.string("stage"), menu: try f.optionalString("menu"),
+                          oneKeyEach: try f.optionalFlag("oneKeyEach") ?? false,
+                          bar: try f.optionalStrings("bar"))
         case "toolBar":
             let slots = f.has("slots") ? try f.optionalStrings("slots") : nil
             let more = f.has("more") ? fields["more"] as? [String] : nil

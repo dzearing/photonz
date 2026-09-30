@@ -1,0 +1,62 @@
+{
+  "id": "the-menu-bar-reads-like-a-professional-mac-edito",
+  "title": "The menu bar reads like a professional Mac editor's",
+  "goal": "The menus along the top of the screen are organised the way someone who knows Photoshop or Final Cut expects: File, Edit, then the menus for what the document is made of, View, Window and Help, with the video menus only on a document that has time. Today a picture still shows a Video menu full of dimmed rows from the retired recording window, and custom menus may sit after View.",
+  "epic": "design-system",
+  "priority": "p1-high",
+  "seq": 400,
+  "status": "done",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-30T06:05:26.008Z",
+  "updated": "2026-09-30T07:18:56.690Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the IA contract task (one-information-architecture-written-down-and-ap). Contract row: 'Menu bar: every command, findable, with its shortcut ... organised as a pro Mac editor'. Inventory (2026-09-29): menus are declared in EditorCommands.swift:281-1488 in the order App, File, Capture, Image, Video, Edit, Layer, Measure, View, Help; SwiftUI puts CommandMenus between Edit and View or after View, not verified on screen. Video menu on pictures: EditorCommands.swift:449 onward still has Set Trim Start/End I/O, Crop to Region, Reset Crop, Export, mostly disabled. Clashes to reproduce first: Timeline Zoom to Fit Shift Z (EditorState+TimelineMenus.swift:52) vs Video > Punch In Shift Z (EditorCommands.swift:672); Break Apart Shift Cmd G vs Ungroup. Canvas right-click's Actual Size Cmd 1 was removed in the IA task. Full inventory in docs/design/ia-audit-2026-09-29.md.",
+  "acceptance": [
+    "A picture shows no Video menu; a document with time does, and none of its rows are left over from the retired recording window",
+    "The top-level order, checked on the running probe with a menus or menuShot step, is Photonz, File, Edit, then Image, Layer, Clip and Sequence (with time), Measure, View, Window, Help, or the order a decision card settles",
+    "The Video menu's rows are split between a Clip menu (what acts on the picked clip: split, speed, freeze, detach audio, transitions) and a Sequence menu (what acts on time: markers, In and Out, extract, lift, playback), the way Final Cut and Premiere split them, or a decision card says why not",
+    "Every shortcut printed in a menu does what it says on both a picture and a video: Cmd 1 is View on a video, Shift Z is not both Punch In and timeline Zoom to Fit, Shift Cmd G is not both Ungroup and Break Apart",
+    "A walk at Next defaults photographs the menu bar on a picture and on a video, and an audit is written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T06:05:26.010Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-30T06:25:32.941Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-30T06:29:34.427Z",
+      "note": "Reproduced on the probe (menus step, /tmp/menu-repro/walk.json): top-level order is Photonz, File, Edit, View, Capture, Image, Video, Layer, Measure, Window, Help (SwiftUI puts every CommandMenu AFTER View), and the launch-state Video menu (what a picture gets) carries Set Trim Start/End I/O, Crop to Region, Reset Crop, Revert, Export from the retired recording window. Shortcut clashes read from source: Shift Z is Punch In on the menu and Zoom to Fit while the timeline has the keyboard (context split, TimelineKeys.swift:187); Break Apart prints Shift Cmd G on the clip right-click but nothing routes that chord to it, and Layer > Ungroup holds it."
+    },
+    {
+      "t": "2026-09-30T06:29:34.482Z",
+      "note": "Adversarial review: a Photoshop user looks for File, Edit, Image, Layer, ..., View, Window, Help with View near the end; a Premiere/FCP user expects Clip (speed, freeze, detach audio, break apart) and Sequence (marks, extract/lift, add edit to all tracks, snap, playback). Capture has no row in the contract: Preview puts screenshots under File > Take Screenshot, so Capture becomes a File submenu (names and keys unchanged) rather than a top-level menu. The mock prints Punch In on Shift Z (video-zoom-wt) while the user's timeline-zoom ask named Shift Z for Zoom to Fit: two floors on one key, so the mock keeps it for now, Zoom to Fit takes Premiere's backslash, and a card asks which Shift Z should mean. Frozen menu bar risk: rows only go live when a window is key, so the walk opens the Capture History first to read the live bar."
+    },
+    {
+      "t": "2026-09-30T07:18:16.307Z",
+      "note": "owns these walks: pro-menu-bar-walk, history-menu-title-walk, menu-checkmarks-walk, menu-bar, timeline-pinch-both-ways-walk"
+    },
+    {
+      "t": "2026-09-30T07:18:45.972Z",
+      "note": "Built behind next-a-pro-menu-bar (on in Next, absent in Current): Capture folded into File > Capture, Show History into Window, Video split into Clip and Sequence shown only with time, the recording window's rows gone, MenuBarArranger moves View after the document menus (SwiftUI puts CommandMenus after View). Keys: Shift Z = Punch In only (timeline fits on backslash; card on shift-z-means-the-one-thing-you-choose-on-a-vide), Shift Cmd G = Clip > Break Apart with a merged clip in hand else Layer > Ungroup, Ripple Delete moved off Option Delete (Fill with Foreground clash found by the new oneKeyEach check) to Shift Delete. Harness: menus step gained oneKeyEach and bar, and fills lazily-built menus before reading. Walks: pro-menu-bar-walk (new, front) plus 15 neighbours green; Scripts/test.sh green (10590 tests). Left rough, folded into every-command-in-the-app-is-also-in-the-menu-bar: Export Sound and caption exports placement."
+    },
+    {
+      "t": "2026-09-30T07:18:56.688Z",
+      "note": "Next's menu bar reads File, Edit, Image, Layer, Clip and Sequence (with time), Measure, View, Window, Help (flag next-a-pro-menu-bar, on at Next defaults). Capture is File > Capture, Show History is in Window, no Video menu on a picture. Shift Z is Punch In only (timeline fits on backslash; card filed), Shift Cmd G breaks apart a merged clip in hand, Ripple Delete moved off Option Delete. Verified: pro-menu-bar-walk (order asserted with bar, oneKeyEach on picture, video and with a merged clip, Shift Cmd G ran Clip > Break Apart) plus 15 neighbouring walks green; Scripts/test.sh green. Audit queue/audits/2026-09-30-pro-menu-bar.json."
+    }
+  ],
+  "started": "2026-09-30T06:25:32.939Z",
+  "walks": [
+    "pro-menu-bar-walk",
+    "history-menu-title-walk",
+    "menu-checkmarks-walk",
+    "menu-bar",
+    "timeline-pinch-both-ways-walk"
+  ],
+  "completed": "2026-09-30T07:18:56.689Z"
+}

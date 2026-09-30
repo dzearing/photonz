@@ -1,0 +1,30 @@
+{
+  "feature": "The menu bar reads like a pro Mac editor's",
+  "epic": "design-system",
+  "summary": "The menus along the top now run File, Edit, Image, Layer, then Clip and Sequence on a video, Measure, View, Window, Help. A picture no longer shows a Video menu of leftover rows, and no two rows print the same key.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/pro-menu-bar-walk.json (needs the Mac to itself: it brings the probe to the front so the menu bar reads live).",
+  "switched": {},
+  "try": [
+    { "do": "Open a picture and read along the menu bar: File, Edit, Image, Layer, Measure, View, Window, Help.", "shot": "2026-09-30-pro-menu-bar-1-file.png" },
+    { "do": "Open File ▸ Capture for Capture Region, Full Screen and Record, on their usual keys." },
+    { "do": "Press Shift Command H, then open Window: Show History is ticked.", "shot": "2026-09-30-pro-menu-bar-2-window.png" },
+    { "do": "Open a recording: Clip and Sequence appear between Layer and Measure. Open Clip.", "shot": "2026-09-30-pro-menu-bar-3-clip.png" },
+    { "do": "Open Sequence: play, edits, marks, extract and lift, snapping, sound, captions.", "shot": "2026-09-30-pro-menu-bar-4-sequence.png" },
+    { "do": "Merge two clips from the ruler's right-click, then press Shift Command G: they come apart." },
+    { "do": "Click the timeline and press backslash: the whole video fits across it. Shift Z is Punch In.", "shot": "2026-09-30-pro-menu-bar-5-view.png" }
+  ],
+  "evaluate": [
+    "Does Capture as a File submenu (the way Preview files Take Screenshot) feel right, or do you want Capture back as its own menu?",
+    "Is Show History in the Window menu where you would look for the capture history?",
+    "Is the split between Clip and Sequence where a Premiere or Final Cut hand expects each row?",
+    "Should Sound (Add Sound, Export Sound) and Captions stay in Sequence, or earn their own place?",
+    "Ripple Delete moved from Option Delete (Photoshop's Fill with Foreground) to Shift Delete, the key the timeline already answered. Does that key work for you?"
+  ],
+  "rough": [
+    "There is no menu bar mock page to compare against; the order follows the placement contract in UX-PATTERNS and Photoshop, Premiere and Final Cut.",
+    "SwiftUI always puts its own menus after View, so the app moves View into place itself; after some rebuilds (a right-click menu closing) that happens on the next turn of the run loop.",
+    "Shift Z was two commands at once (Punch In and timeline Fit). It is Punch In now, as the punch-in mock prints; Fit moved to backslash, Premiere's key. A card asks which you want, because on 2026-09-28 you named Shift Z for Fit.",
+    "Many Clip rows read dimmed in View mode (the pictures were taken there); they come alive in Edit mode, as before.",
+    "Export Sound and the caption exports still sit in Sequence rather than under File ▸ Export; left for the every-command task, which places each row."
+  ]
+}

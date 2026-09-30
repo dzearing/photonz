@@ -1,0 +1,287 @@
+{
+ "out": "/tmp/photonz-playtest/pro-menu-bar-walk",
+ "seed": "The menu bar reads like a professional Mac editor's, at Next defaults with no flag changed. On a picture it runs File, Edit, Image, Layer, Measure, View, Window, Help: no Video menu of rows left over from the retired recording window, Capture folded into File the way Preview files Take Screenshot, and Show History in Window. On a video, Clip and Sequence arrive between Layer and Measure, split the way Final Cut and Premiere split them. On both, no two live rows print the same shortcut. It needs the probe in front, because a menu bar only reads live for the app that has focus.",
+ "setup": {
+  "forget": [
+   "all"
+  ],
+  "front": true,
+  "scratch": [
+   "sample:recording as b-roll.mp4"
+  ]
+ },
+ "steps": [
+  {
+   "do": "blank",
+   "canvasWidth": 800,
+   "canvasHeight": 600,
+   "width": 1100,
+   "height": 800
+  },
+  {
+   "do": "wait",
+   "seconds": 1.5
+  },
+  {
+   "do": "menus",
+   "stage": "1-picture",
+   "oneKeyEach": true,
+   "bar": [
+    "File",
+    "Edit",
+    "Image",
+    "Layer",
+    "Measure",
+    "View",
+    "Window",
+    "Help"
+   ]
+  },
+  {
+   "do": "menuShot",
+   "menu": "File",
+   "name": "pro-menu-bar-1-file"
+  },
+  {
+   "do": "shortcut",
+   "key": "h",
+   "modifiers": [
+    "command",
+    "shift"
+   ],
+   "menuItem": "Show History",
+   "checked": false
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "menuShot",
+   "menu": "Window",
+   "name": "pro-menu-bar-2-window",
+   "ticked": [
+    "Show History"
+   ]
+  },
+  {
+   "do": "shortcut",
+   "key": "h",
+   "modifiers": [
+    "command",
+    "shift"
+   ],
+   "menuItem": "Show History",
+   "checked": true
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2
+  },
+  {
+   "do": "menus",
+   "stage": "2-video",
+   "oneKeyEach": true,
+   "bar": [
+    "File",
+    "Edit",
+    "Image",
+    "Layer",
+    "Clip",
+    "Sequence",
+    "Measure",
+    "View",
+    "Window",
+    "Help"
+   ]
+  },
+  {
+   "do": "menuShot",
+   "menu": "Clip",
+   "name": "pro-menu-bar-3-clip"
+  },
+  {
+   "do": "menuShot",
+   "menu": "Sequence",
+   "name": "pro-menu-bar-4-sequence"
+  },
+  {
+   "do": "menuShot",
+   "menu": "View",
+   "name": "pro-menu-bar-5-view"
+  },
+  {
+   "do": "describe",
+   "stage": "3-video-menus",
+   "note": "Clip holds what acts on the clip in hand (split, delete, ripple, break apart, freeze, speed, punch in, transitions, detach audio, keys); Sequence holds what acts on the time (play, edits, marks, extract, lift, split everything, snap, sound, captions, revert). View sits after them, before Window."
+  },
+  {
+   "do": "key",
+   "key": "2",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "press",
+   "control": "Timeline Select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectTimeline",
+   "keyboard": "timeline"
+  },
+  {
+   "do": "menus",
+   "stage": "4-timeline-has-the-keyboard",
+   "oneKeyEach": true,
+   "bar": [
+    "File",
+    "Edit",
+    "Image",
+    "Layer",
+    "Clip",
+    "Sequence",
+    "Measure",
+    "View",
+    "Window",
+    "Help"
+   ]
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "action",
+   "action": "clipDragEndIn"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "dropOnTimeline",
+   "file": "scratch/b-roll.mp4",
+   "track": "V1",
+   "seconds": 6.95
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "action",
+   "action": "clipDragStartIn"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "dragRuler",
+   "from": 5.0,
+   "to": 9.0
+  },
+  {
+   "do": "clickRuler",
+   "seconds": 6.0
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "rightClick",
+   "at": [
+    750,
+    860
+   ],
+   "space": "window",
+   "choose": "Merge into One Clip"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectClip",
+   "clip": "Merged Clip",
+   "track": "V1",
+   "startsAt": 5.0,
+   "endsAt": 9.0,
+   "count": 1
+  },
+  {
+   "do": "menus",
+   "stage": "5-a-merged-clip-in-hand",
+   "oneKeyEach": true,
+   "bar": [
+    "File",
+    "Edit",
+    "Image",
+    "Layer",
+    "Clip",
+    "Sequence",
+    "Measure",
+    "View",
+    "Window",
+    "Help"
+   ]
+  },
+  {
+   "do": "describe",
+   "stage": "5-merged",
+   "note": "A merged clip is picked, so Clip > Break Apart holds Shift Command G and Layer > Ungroup lets go of it: one key, one row."
+  },
+  {
+   "do": "key",
+   "key": "g",
+   "modifiers": [
+    "command",
+    "shift"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectClip",
+   "clip": "Merged Clip",
+   "count": 0
+  },
+  {
+   "do": "expectClip",
+   "clip": "Tutorial Sample",
+   "track": "V1",
+   "startsAt": 0.0,
+   "endsAt": 7.0,
+   "count": 1
+  },
+  {
+   "do": "describe",
+   "stage": "6-broken-apart-by-key",
+   "note": "Shift Command G, printed beside Clip > Break Apart, broke the merged clip back into its two clips."
+  }
+ ]
+}

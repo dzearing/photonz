@@ -194,9 +194,9 @@ struct TimelineKeysTests {
         #expect(command(.letter("+")) == .zoomIn)
         #expect(command(.letter("-")) == .zoomOut)
         #expect(command(.letter("\\")) == .zoomToFit)
-        // Final Cut's and the user's ⇧Z fits too, on the timeline only: on the
-        // canvas it is Punch In.
-        #expect(command(.letter("z"), .shift) == .zoomToFit)
+        // ⇧Z is Punch In, the key the mock prints for it, wherever the
+        // keyboard is: one key, one meaning (the menu bar task, 2026-09-29).
+        #expect(command(.letter("z"), .shift) == nil)
         #expect(command(.letter("z"), .shift, focused: false) == nil)
         // ⌘= and ⌘- zoom the canvas, as they always have.
         #expect(command(.letter("="), .command) == nil)

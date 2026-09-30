@@ -1047,14 +1047,27 @@ struct PlaytestScriptTests {
           ]
         }
         """)
-        guard case .menus(let allStage, let allMenu) = script.steps[0] else { Issue.record("menus"); return }
+        guard case .menus(let allStage, let allMenu, _, let allBar) = script.steps[0] else { Issue.record("menus"); return }
         #expect(allStage == "capture-names")
         #expect(allMenu == nil)
-        guard case .menus(let oneStage, let oneMenu) = script.steps[1] else { Issue.record("menus"); return }
+        #expect(allBar.isEmpty)
+        guard case .menus(let oneStage, let oneMenu, let oneKeyEach, _) = script.steps[1] else { Issue.record("menus"); return }
         #expect(oneStage == "capture-only")
         #expect(oneMenu == "Capture")
+        #expect(!oneKeyEach)
         #expect(script.steps[0].name == "menus")
         #expect(PlaytestStep.names.contains("menus"))
+    }
+
+    /// `oneKeyEach` makes the reading a test: two rows on one shortcut fail it.
+    @Test func aMenusStepCanRequireOneKeyEach() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "menus", "stage": "video", "oneKeyEach": true,
+                       "bar": ["File", "Edit", "Image", "Layer", "Clip", "Sequence", "View", "Window", "Help"] } ] }
+        """)
+        guard case .menus(_, _, let oneKeyEach, let bar) = script.steps[0] else { Issue.record("menus"); return }
+        #expect(oneKeyEach)
+        #expect(bar == ["File", "Edit", "Image", "Layer", "Clip", "Sequence", "View", "Window", "Help"])
     }
 
     @Test func aMenusStepNeedsAStage() {

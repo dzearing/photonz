@@ -1,0 +1,57 @@
+{
+  "id": "shift-z-means-the-one-thing-you-choose-on-a-vide-on-a-video-what-should-shift-z-d",
+  "taskId": "shift-z-means-the-one-thing-you-choose-on-a-vide",
+  "question": "On a video, what should Shift Z do?",
+  "context": "Two things you asked for want the same key. The punch-in mock prints Shift Z beside Punch in; your timeline zoom request on 2026-09-28 named Shift Z for Zoom to Fit. One key can only do one thing, so today Shift Z is Punch In and the timeline fits on backslash.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Punch In, as the mock",
+      "summary": "Shift Z punches in on the box you drew on the picture, as the punch-in mock prints it. The timeline fits itself to the whole video on backslash, which is Premiere's key for it. This is how it works today.",
+      "pros": [
+        "Matches the punch-in mock",
+        "Backslash is what a Premiere editor already presses",
+        "No change to what shipped"
+      ],
+      "cons": [
+        "Final Cut editors reach for Shift Z to fit the timeline and get a punch-in instead"
+      ],
+      "mitigation": "Zoom Timeline to Fit sits in the View menu and the timeline right-click with backslash printed beside it."
+    },
+    {
+      "id": "b",
+      "label": "Fit the timeline, as you asked",
+      "summary": "Shift Z fits the timeline to the whole video, Final Cut's key and the one you named on 2026-09-28. Punch In keeps its menu row and right-click row with no key, like Freeze Frame.",
+      "pros": [
+        "What you asked for by name",
+        "A Final Cut editor's hand already knows it",
+        "Fitting is pressed far more often than punching in"
+      ],
+      "cons": [
+        "Departs from the key the punch-in mock prints",
+        "Punch In has no key at all"
+      ],
+      "mitigation": "Punch In stays one click away in the Clip menu and on the picture's right-click."
+    },
+    {
+      "id": "c",
+      "label": "Leave both on backslash and Shift Z as they are",
+      "summary": "Nothing changes and this question is retired.",
+      "pros": [
+        "No more work"
+      ],
+      "cons": [
+        "Same as the first option"
+      ],
+      "mitigation": "The first option already describes the result.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "withdrawn",
+  "created": "2026-09-30T07:17:58.696Z",
+  "withdrawn": {
+    "reason": "refiled with two options; the third repeated the first",
+    "at": "2026-09-30T07:18:07.576Z"
+  }
+}

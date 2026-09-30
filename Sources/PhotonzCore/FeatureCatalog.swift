@@ -132,6 +132,8 @@ public enum FeatureCatalog {
 
     public static let menuKeysDoWhatTheySayFlag = "next-menu-keys-do-what-they-say"
 
+    public static let proMenuBarFlag = "next-a-pro-menu-bar"
+
     public static let pasteHandsYouThePointerFlag = "next-paste-hands-you-the-pointer"
 
     public static let cutSaysWhatItCannotDoFlag = "next-cut-says-what-it-cannot-do"
@@ -1211,6 +1213,16 @@ public enum FeatureCatalog {
                     title: "Start a video from an empty timeline",
                     description: "File \u{25B8} New Video starts a video from nothing: pick a size and a length, and you get an empty V1 over an empty Audio track, the Library open for Import. Off means a video only starts from a recording.",
                     area: .canvas,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: proMenuBarFlag,
+                    title: "The menu bar reads like a pro editor's",
+                    description: "The menus run File, Edit, Image, Layer, Clip and Sequence on a video, then View, Window and Help, with Capture inside File. Off means the old Capture and Video menus, with View before them.",
+                    area: .layers,
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

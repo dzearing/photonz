@@ -208,6 +208,17 @@ extension EditorState {
         documentMomentChanged()
     }
 
+    /// Clip ▸ Break Apart, on ⇧⌘G: the merged clip in hand, picked or under
+    /// the playhead, the same clip every other Clip menu row acts on.
+    var canBreakApartInHand: Bool {
+        guard let id = clipInHandID, let document else { return false }
+        return document.canBreakApart(id)
+    }
+
+    func breakApartInHand() {
+        if let id = clipInHandID { breakApartClip(id) }
+    }
+
     /// Add Transition: whether the marked stretch has a cut inside it.
     var canAddTransitionInRange: Bool {
         guard Experiments.shared.transitionsAtACutEnabled, documentHasTime,

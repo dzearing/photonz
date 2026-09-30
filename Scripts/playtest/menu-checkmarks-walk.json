@@ -6,11 +6,11 @@
     { "do": "wait", "seconds": 1.5 },
     { "do": "describe", "stage": "what-this-proves", "note": "A menu item that is simply on or off keeps ONE name and says its state with a checkmark. Every menuShot photographs the real menu over the window and names the rows that must, and must not, be ticked, so the walk fails if a checkmark lies. The pictures are real screen captures: a menu draws outside this process, so no offscreen render can show one." },
 
-    { "do": "menuShot", "menu": "Capture", "name": "capture-menu-history-off",
+    { "do": "menuShot", "menu": "Window", "name": "window-menu-history-off",
       "ticked": [], "unticked": ["Show History"] },
     { "do": "shortcut", "key": "h", "modifiers": ["command", "shift"], "menuItem": "Show History", "checked": false },
     { "do": "wait", "seconds": 1 },
-    { "do": "menuShot", "menu": "Capture", "name": "capture-menu-history-on",
+    { "do": "menuShot", "menu": "Window", "name": "window-menu-history-on",
       "ticked": ["Show History"], "unticked": [] },
 
     { "do": "describe", "stage": "why-the-history-stays-open", "note": "The View menu's rows read the FOCUSED window, and macOS will not give a background app the front spot. The history overlay does take key when it opens, and that is enough for every row below to read the real document instead of its own default. So it stays up for the rest of the walk." },

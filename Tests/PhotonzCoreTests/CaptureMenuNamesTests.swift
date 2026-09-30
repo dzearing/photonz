@@ -10,6 +10,12 @@ import Testing
         #expect(CaptureMenuNames.history == "Show History")
     }
 
+    /// The capture commands' own menu: a top-level menu before the pro menu
+    /// bar, a submenu of File (Preview's Take Screenshot) with it.
+    @Test func theCaptureCommandsAreFiledUnderOneName() {
+        #expect(CaptureMenuNames.menuTitle == "Capture")
+    }
+
     // MARK: Recording is an action pair, not a setting
 
     @Test func recordingOffersToStopWhileItIsRecording() {

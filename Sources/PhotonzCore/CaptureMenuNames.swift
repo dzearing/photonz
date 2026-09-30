@@ -10,6 +10,9 @@
 /// actions. `history` is a setting, so it keeps one name and wears a checkmark
 /// while the overlay is up (see `MenuToggleNames`).
 public enum CaptureMenuNames {
+    /// The menu they sit in: a top-level menu, or File ▸ Capture on the pro
+    /// menu bar (`next-a-pro-menu-bar`), where Preview has Take Screenshot.
+    public static let menuTitle = "Capture"
     public static let captureRegion = "Capture Region"
     public static let captureFullScreen = "Capture Full Screen"
     public static let startRecording = "Record Screen / Video…"

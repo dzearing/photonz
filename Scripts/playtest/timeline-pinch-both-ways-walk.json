@@ -35,10 +35,10 @@
     { "do": "describe", "stage": "3-tall-tracks", "note": "Shift-pinches change the rows alone: out to two and a half times their compact height, time left where it was. The track headers grew with their rows" },
     { "do": "snapshot", "name": "3-tall-tracks" },
 
-    { "do": "key", "key": "z", "modifiers": ["shift"] },
+    { "do": "key", "key": "\\" },
     { "do": "wait", "seconds": 0.3 },
     { "do": "expectTimeline", "zoomScale": 1, "rowScale": 2.5 },
-    { "do": "describe", "stage": "4-shift-z-fits", "note": "Shift-Z, Final Cut's Zoom to Fit: the whole recording is back across the width in one press. It leaves the rows as tall as they were, as Final Cut's does" },
+    { "do": "describe", "stage": "4-backslash-fits", "note": "Backslash, Premiere's Zoom to Sequence (Shift-Z is Punch In): the whole recording is back across the width in one press. It leaves the rows as tall as they were" },
 
     { "do": "timelinePinch", "by": 3, "steps": 12, "modifiers": ["option"], "x": 0.6, "y": 0.5 },
     { "do": "wait", "seconds": 0.8 },

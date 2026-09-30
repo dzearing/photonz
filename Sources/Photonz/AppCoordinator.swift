@@ -116,6 +116,8 @@ final class AppCoordinator {
         // release is running. Rename it (and keep renaming it: SwiftUI rebuilds
         // the menu bar as scenes come and go).
         applyAppMenuTitle()
+        // View after the document menus, where Photoshop and Final Cut have it.
+        MenuBarArranger.start()
         NotificationCenter.default.addObserver(
             forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) { _ in
             MainActor.assumeIsolated { AppCoordinator.applyAppMenuTitle() }

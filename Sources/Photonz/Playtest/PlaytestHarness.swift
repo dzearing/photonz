@@ -2565,7 +2565,7 @@ private final class Run {
                  "Help ▸ Tutorials offers \(inMenu.joined(separator: ", ")); "
                  + "the Tutorials window offers \(inWindow.joined(separator: ", "))")
 
-        case .menus(let stage, let menu):
+        case .menus(let stage, let menu, let oneKeyEach, let wantedBar):
             let tree = try readMenuBar(only: menu)
             write(json: tree, to: "menus-\(stage).json")
             let focused = tree["focused"] as? Bool ?? false
@@ -2575,11 +2575,33 @@ private final class Run {
                 : "nothing in the probe has focus, so this menu bar is frozen at the state it was built in at launch: what is dimmed, and any checkmark on a window's own setting, is NOT what a person would see. Order, names and shortcuts are exact. Menu bar reads:"
             let open = (tree["windows"] as? [[String: Any]] ?? [])
                 .map { $0["title"] as? String ?? "?" }.joined(separator: ", ")
-            let reading = "\(heading)\n\(outline)\n  windows open: \(open)"
+            // One key, one row. A dimmed row declines the press, so it is the
+            // live rows that must not share a key; the dimmed ones are named
+            // too, because a person reads every key the menus print.
+            let menusRead = tree["menus"] as? [[String: Any]] ?? []
+            let liveClashes = MenuKeyClash.clashes(in: Self.keyedRows(menusRead, liveOnly: true))
+            let anyClashes = MenuKeyClash.clashes(in: Self.keyedRows(menusRead, liveOnly: false))
+            let clashLine = anyClashes.isEmpty
+                ? "one key each: no two rows print the same shortcut"
+                : "rows that print the same shortcut: " + anyClashes.map(\.sentence).joined(separator: "; ")
+            let reading = "\(heading)\n\(outline)\n  windows open: \(open)\n  \(clashLine)"
             // The same reading as a file you can just `cat`. The JSON is for a
             // program; nobody should have to unpick log.json to quote a menu.
             try? Data(reading.utf8).write(to: out.appendingPathComponent("menus-\(stage).txt"))
             note(number, step.name, reading, state: tree)
+            // The order along the top, after the app's own menu (whose name
+            // carries the release and the bundle).
+            if !wantedBar.isEmpty {
+                let read = Array((NSApp.mainMenu?.items.map(\.title) ?? []).dropFirst())
+                guard read == wantedBar else {
+                    throw Failure(description: "the menu bar reads \(read.joined(separator: ", ")), "
+                                  + "not \(wantedBar.joined(separator: ", "))")
+                }
+            }
+            if oneKeyEach, !liveClashes.isEmpty {
+                throw Failure(description: "a key does one thing, and these live rows share one: "
+                              + liveClashes.map(\.sentence).joined(separator: "; "))
+            }
 
         // The Tutorials window is not an editor and carries no playtest markers,
         // so it is read and pressed through the accessibility tree: the same
@@ -13048,7 +13070,7 @@ private final class Run {
                 return MenuDestination(item: item, path: (path + [item.title]).joined(separator: " ▸ "))
             }
             if let submenu = item.submenu, depth < 4 {
-                submenu.update()
+                fill(submenu)
                 if let found = find(chord: chord, flags: flags, in: submenu,
                                     path: path + [item.title], depth: depth + 1) {
                     return found
@@ -13115,10 +13137,40 @@ private final class Run {
         default: break
         }
         if let submenu = item.submenu, depth < 4 {
-            submenu.update()
+            fill(submenu)
             entry["items"] = submenu.items.map { describe(item: $0, depth: depth + 1) }
         }
         return entry
+    }
+
+    /// Every visible row with a shortcut, as "Menu ▸ Row" and the chord it
+    /// prints, read off a `readMenuBar` tree. `liveOnly` keeps just the rows a
+    /// press would reach: not dimmed, and not under a dimmed submenu.
+    static func keyedRows(_ items: [[String: Any]], path: [String] = [],
+                          liveOnly: Bool) -> [MenuKeyClash.Row] {
+        var rows: [MenuKeyClash.Row] = []
+        for item in items {
+            guard item["separator"] == nil, item["hidden"] == nil,
+                  let title = item["title"] as? String else { continue }
+            if liveOnly, (item["enabled"] as? Bool) == false { continue }
+            if let chord = item["shortcut"] as? String {
+                rows.append(MenuKeyClash.Row(path: (path + [title]).joined(separator: " ▸ "), chord: chord))
+            }
+            if let children = item["items"] as? [[String: Any]] {
+                rows += keyedRows(children, path: path + [title], liveOnly: liveOnly)
+            }
+        }
+        return rows
+    }
+
+    /// Ask a menu to fill itself in, the way AppKit does before it opens one
+    /// or looks along it for a key. SwiftUI fills a menu lazily when the menu
+    /// bar has been rearranged (`MenuBarArranger`) and for menus it added after
+    /// launch (Clip and Sequence), so a reading that only called `update()`
+    /// saw them empty while a person opening them saw every row.
+    static func fill(_ menu: NSMenu) {
+        menu.delegate?.menuNeedsUpdate?(menu)
+        menu.update()
     }
 
     /// The chord as a person reads it on the menu: ⇧⌘4, not "4" plus a mask.

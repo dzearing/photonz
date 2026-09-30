@@ -181,10 +181,6 @@ public enum TimelineKeys {
         // The range goes, the way a click beside it drops it. On the canvas
         // Escape keeps letting go of a pick and putting a tool down.
         case (.escape, []) where !press.isRepeat: return .clearMarks
-        // Final Cut's key for the whole timeline, which the user asked for by
-        // name. On the canvas ⇧Z is Punch In, so only while the timeline has
-        // the keyboard.
-        case (.letter("z"), [.shift]): return .zoomToFit
         default: break
         }
         guard mods.isEmpty, case .letter(let character) = press.key else { return nil }

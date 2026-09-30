@@ -335,6 +335,7 @@ struct EditorCommands: Commands {
                                       ? KeyboardShortcut("i", modifiers: [.command, .shift]) : nil)
                     .disabled(!(editor?.canImportMedia ?? false))
             }
+            fileCaptureSubmenu
             Divider()
             // ⌘S means the same thing in both editors: commit back to where
             // the media came from. For an image that's the flattened composite
@@ -395,431 +396,6 @@ struct EditorCommands: Commands {
                 Button("Copy Image") { editor?.copyCompositeToClipboard() }
                     .keyboardShortcut("c", modifiers: [.command, .shift])
                     .disabled(editor?.document == nil)
-            }
-        }
-
-        CommandMenu("Capture") {
-            // The same shortcuts are registered as global Carbon hotkeys
-            // (CaptureCenter) on the resident agent; these menu items make them
-            // discoverable and clickable, and work with no editor window open.
-            // ⇧⌘3/⇧⌘4 only reach us once the system Screenshots shortcuts are
-            // disabled in System Settings.
-            // Same names and order as the menu bar menu (MenuBarMenu), so a
-            // command learned in one menu is found in the other.
-            Button(CaptureMenuNames.captureRegion) { coordinator.capture.beginRectCapture() }
-                .keyboardShortcut("4", modifiers: [.command, .shift])
-            Button(CaptureMenuNames.captureFullScreen) { coordinator.capture.captureFullScreen() }
-                .keyboardShortcut("3", modifiers: [.command, .shift])
-            Button(CaptureMenuNames.recording(isRecording: coordinator.capture.isRecording)) {
-                coordinator.capture.toggleRecording()
-            }
-            .keyboardShortcut("5", modifiers: [.command, .shift])
-            Divider()
-            Button(CaptureMenuNames.editLastCapture) { coordinator.editLastCapture() }
-                .keyboardShortcut("6", modifiers: [.command, .shift])
-                .disabled(coordinator.lastCapture == nil)
-            // A setting, so one name and a checkmark rather than a title that
-            // rewrites itself. The checkmark is also written straight onto the
-            // live item whenever history opens or closes (MainMenuState):
-            // SwiftUI re-runs this body only while handling an event, and ⇧⌘H
-            // rebuilds it from the state before the toggle ran, which left the
-            // menu a step behind.
-            Toggle(CaptureMenuNames.history, isOn: Binding(
-                get: { coordinator.isHistoryShown },
-                set: { _ in coordinator.toggleHistory() }))
-            .keyboardShortcut("h", modifiers: [.command, .shift])
-            Divider()
-            Button("Request Screen Recording Access…") {
-                coordinator.capture.requestScreenRecordingAccess()
-            }
-            .help("Registers Photonz in System Settings → Privacy → Screen & System Audio Recording and opens that pane.")
-        }
-
-        CommandMenu("Image") {
-            Button("Resize Image…") { editor?.isResizeDialogPresented = true }
-                .keyboardShortcut("i", modifiers: [.command, .option])
-                .disabled(editor?.document == nil)
-            Button("Canvas Size…") { editor?.isCanvasSizeDialogPresented = true }
-                .keyboardShortcut("c", modifiers: [.command, .option])
-                .disabled(editor?.document == nil)
-        }
-
-        // Video menu: only meaningful in a recording window (phase 13.3). Gated
-        // on the focused video state so it disables in image windows.
-        CommandMenu("Video") {
-            let hasVideo = video?.isReady ?? false
-            // A document with time plays in the editor, not in a recording
-            // window, so the row plays whichever is in front of you.
-            let timed = editor?.documentHasTime ?? false
-            // The Premiere keys that are also Photoshop tool letters mean the
-            // timeline's thing only while the timeline has the keyboard, and
-            // the rows print them only then, so the menu never promises a key
-            // the canvas is about to spend on a tool (`EditorState+TimelineKeys`).
-            let timelineKeys = timed && (editor?.timelineHasKeyboard ?? false)
-            if timed {
-                Button((editor?.isDocumentPlaying ?? false) ? "Pause" : "Play") {
-                    editor?.toggleDocumentPlayback()
-                }
-                .keyboardShortcut(.space, modifiers: [])
-                Button("Play In to Out") { editor?.playInToOut() }
-                    .keyboardShortcut(.space, modifiers: [.command, .shift])
-                    .disabled(!(editor?.canPlayInToOut ?? false))
-                Button("Play Backward") { editor?.shuttle(.reverse) }
-                    .keyboardShortcut(timelineKeys ? KeyboardShortcut("j", modifiers: []) : nil)
-                Button("Stop") { editor?.shuttle(.stop) }
-                    .keyboardShortcut(timelineKeys ? KeyboardShortcut("k", modifiers: []) : nil)
-                    .disabled(!(editor?.isDocumentPlaying ?? false))
-                Button("Play Forward") { editor?.shuttle(.forward) }
-                    .keyboardShortcut(timelineKeys ? KeyboardShortcut("l", modifiers: []) : nil)
-                Divider()
-                Button("Go to Previous Edit") { editor?.goToEditPoint(forward: false) }
-                    .keyboardShortcut(timelineKeys ? KeyboardShortcut(.upArrow, modifiers: []) : nil)
-                    .disabled(!(editor?.canGoToEditPoint(forward: false) ?? false))
-                Button("Go to Next Edit") { editor?.goToEditPoint(forward: true) }
-                    .keyboardShortcut(timelineKeys ? KeyboardShortcut(.downArrow, modifiers: []) : nil)
-                    .disabled(!(editor?.canGoToEditPoint(forward: true) ?? false))
-            } else {
-                Button((video?.isPlaying ?? false) ? "Pause" : "Play") { video?.togglePlayPause() }
-                    .keyboardShortcut(.space, modifiers: [])
-                    .disabled(!hasVideo)
-            }
-            Divider()
-            if Experiments.shared.cutRecordingEnabled {
-                // One key, one meaning, two places it can land. A recording
-                // that opens as a DOCUMENT is cut on the timeline
-                // (`EditorState+ClipBar`); the old recording window is still
-                // cut on its strip until it retires. Nothing here is a second
-                // way to do the same thing: they are the same command reaching
-                // whichever surface is in front of you.
-                let onTimeline = editor?.documentHasTime ?? false
-                // Premiere's Add Edit, ⌘K, on the timeline, where B picks up
-                // the Blade; the recording window keeps its B.
-                Button("Split at Playhead") {
-                    onTimeline ? editor?.splitClipAtPlayhead() : video?.cutAtPlayhead()
-                }
-                .keyboardShortcut(onTimeline ? KeyboardShortcut("k", modifiers: .command)
-                                             : KeyboardShortcut("b", modifiers: []))
-                .disabled(!(onTimeline ? (editor?.canSplitClipAtPlayhead ?? false)
-                                       : (video?.canCutAtPlayhead ?? false)))
-                // Keys picked on a lane are the smaller and more recent thing
-                // in hand, so ⌫ takes those and leaves the clip alone
-                // (`EditorState+KeyLanes`).
-                let keysPicked = onTimeline && (editor?.canDeletePickedKeys ?? false)
-                // A range drawn on the ruler is in hand when nothing else is
-                // picked, and ⌫ lifts it (`EditorState+RulerRange`).
-                let rangeHeld = onTimeline && editor?.rulerRangeHeld != nil
-                // ...and so is a range on some tracks, or pieces a box picked
-                // (`EditorState+TrackRange`).
-                let trackHeld = onTimeline && !rangeHeld
-                    && (editor?.trackRangeHeld != nil || editor?.timelinePicksHeld != nil)
-                let trackRange = trackHeld && editor?.trackRangeHeld != nil
-                Button(keysPicked ? "Delete Keys" : rangeHeld || trackRange ? "Delete Range"
-                       : trackHeld ? "Delete Pieces" : "Delete This Piece") {
-                    if keysPicked {
-                        editor?.deletePickedKeys()
-                    } else if rangeHeld {
-                        editor?.liftMarkedStretch()
-                    } else if trackHeld {
-                        editor?.liftTrackThing()
-                    } else {
-                        onTimeline ? editor?.deleteClipPieceInHand() : video?.deleteSelectedPiece()
-                    }
-                }
-                // A MENU ROW carries U+0008 for ⌫, which is not the U+007F
-                // the key sends: AppKit normalises the press to backspace
-                // before it looks along the menu bar, so a row holding U+007F
-                // prints ⌫ beside its name and the key never reaches it. This
-                // row held U+007F and the walk that presses ⌫ for it failed
-                // for five days. See `DeleteKeyCharacters.menuKeyEquivalent`
-                // for the measurement, including the half that says a text
-                // field with the keyboard still keeps the key.
-                .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuKeyEquivalent), modifiers: [])
-                .disabled(!(keysPicked || (rangeHeld && (editor?.canTakeOutMarkedStretch ?? false))
-                            || (trackHeld && (editor?.canTakeOutTrackThing ?? false))
-                            || (onTimeline ? (editor?.canDeleteClipPieceInHand ?? false)
-                                                      : (video?.canDeleteSelectedPiece ?? false))))
-                // Premiere's Ripple Delete, on its Mac key: what is picked goes
-                // and everything after it pulls back to close the gap, so a
-                // title stays over the frame it was put on
-                // (`EditorState+TimelineMenus`).
-                if onTimeline {
-                    Button("Ripple Delete") { editor?.rippleDeleteInHand() }
-                        .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuKeyEquivalent), modifiers: .option)
-                        .disabled(!(editor?.canRippleDeleteInHand ?? false))
-                    // Premiere's Add Edit to All Tracks.
-                    Button("Split Everything at Playhead") {
-                        if let editor { editor.splitEverything(atMS: editor.documentTimeMS) }
-                    }
-                    .keyboardShortcut("k", modifiers: [.command, .shift])
-                    .disabled(!(editor?.canSplitEverythingAtPlayhead ?? false))
-                    // Premiere's Q and W. Plain letters, like I and O: the
-                    // timeline answers them while it has the keyboard, and on
-                    // the canvas W is still the Magic Wand.
-                    Button("Ripple Trim Start to Playhead") { editor?.rippleTrimToPlayhead(.start) }
-                        .keyboardShortcut(timelineKeys ? KeyboardShortcut("q", modifiers: []) : nil)
-                        .disabled(!(editor?.canRippleTrimToPlayhead(.start) ?? false))
-                    Button("Ripple Trim End to Playhead") { editor?.rippleTrimToPlayhead(.end) }
-                        .keyboardShortcut(timelineKeys ? KeyboardShortcut("w", modifiers: []) : nil)
-                        .disabled(!(editor?.canRippleTrimToPlayhead(.end) ?? false))
-                    // Final Cut's ⌘T: the default transition on the cut
-                    // picked, else the cut at the playhead. Premiere's ⌘D is
-                    // Photoshop's Deselect here, and the canvas keeps it.
-                    if Experiments.shared.transitionsAtACutEnabled {
-                        Button("Apply Default Transition") { editor?.applyDefaultTransition() }
-                            .keyboardShortcut("t", modifiers: .command)
-                            .disabled(!(editor?.canApplyDefaultTransition() ?? false))
-                    }
-                    // Premiere's Sequence > Snap in Timeline, on its S. A
-                    // setting, so it keeps its name and wears a checkmark; the
-                    // magnet in the timeline's bar is the same switch.
-                    Toggle(MenuToggleNames.snapInTimeline, isOn: Binding(
-                        get: { editor?.isTimelineSnapping ?? true },
-                        set: { _ in editor?.toggleTimelineSnapping() }))
-                    .keyboardShortcut(timelineKeys ? KeyboardShortcut("s", modifiers: []) : nil)
-                }
-                // A freeze is not a special object: it is a piece whose in and
-                // out are the same frame, so it drops onto the timeline like
-                // any other piece and can be moved, lengthened and thrown away
-                // like any other piece (`video-freeze-wt`).
-                // No key: ⇧F walks the Frame slot, ⌥F fills the flow, and a
-                // freeze is a thing you do once in a cut rather than forty
-                // times. The row is where you would look for it.
-                Button("Freeze Frame") { editor?.holdFrameAtPlayhead() }
-                    .disabled(!(editor?.canHoldFrameAtPlayhead ?? false))
-                // Retiming is a property of the piece you are on, so it is a
-                // list of speeds rather than a surface of its own
-                // (`video-speed`). Its sound goes with it, at the same rate.
-                Menu("Speed") {
-                    ForEach(EditorState.clipSpeeds, id: \.self) { percent in
-                        Button(ClipSpeed.title(percent)) {
-                            editor?.setClipSpeedInHand(percent)
-                        }
-                        .disabled(!(editor?.canSetClipSpeed(percent) ?? false))
-                    }
-                }
-                .disabled(editor?.clipSpeedInHand == nil)
-                Divider()
-            }
-            // The ruler's marks, at the playhead. The same rows the ruler's
-            // right click offers there; M, I and O are Photoshop's tool keys
-            // on the canvas and the timeline's marks while it has the keyboard.
-            // The playhead from key to key, on the pair of keys the user
-            // asked for. K alone is still the Lens and, once the timeline
-            // owns the keyboard, Premiere's Stop; the chords are free of it.
-            if editor?.documentHasTime ?? false {
-                Button("Go to Next Key") { editor?.goToKey(forward: true) }
-                    .keyboardShortcut("k", modifiers: .shift)
-                    .disabled(!(editor?.canGoToKey(forward: true) ?? false))
-                Button("Go to Previous Key") { editor?.goToKey(forward: false) }
-                    .keyboardShortcut("k", modifiers: .option)
-                    .disabled(!(editor?.canGoToKey(forward: false) ?? false))
-                Divider()
-                // The mock's Animate commands (`video-move-wt.html`,
-                // `#cmdMenu`). No K for Key at Playhead: K is the Lens on the
-                // canvas and Premiere's Stop on the timeline.
-                Section("Animate") {
-                    Button("Key at Playhead") { editor?.keyAtPlayhead() }
-                        .disabled(!(editor?.canKeyAtPlayhead ?? false))
-                    Toggle(MenuToggleNames.curveThePath, isOn: Binding(
-                        get: { editor?.motionPathShape == .curved },
-                        set: { editor?.setMotionPathShape($0 ? .curved : .straight) }))
-                        .disabled(editor?.motionPathShape == nil)
-                    // The same list as Between the keys' Curve, acting on the
-                    // stretch under the playhead.
-                    Menu("Easing") {
-                        ForEach(Array(EasingCurve.named.enumerated()), id: \.offset) { _, curve in
-                            Toggle(curve.title, isOn: Binding(
-                                get: { editor?.betweenKeysCurve == curve },
-                                set: { if $0 { editor?.curveBetweenKeys(curve) } }))
-                        }
-                    }
-                    .disabled(editor?.betweenKeysCurve == nil)
-                }
-                Divider()
-            }
-            if editor?.documentHasTime ?? false {
-                Button("Add Marker") { if let editor { editor.addMarker(atMS: editor.documentTimeMS) } }
-                    .keyboardShortcut(timelineKeys ? KeyboardShortcut("m", modifiers: []) : nil)
-                Button("Set In") { if let editor { editor.setMarkIn(atMS: editor.documentTimeMS) } }
-                    .keyboardShortcut(timelineKeys ? KeyboardShortcut("i", modifiers: []) : nil)
-                Button("Set Out") { if let editor { editor.setMarkOut(atMS: editor.documentTimeMS) } }
-                    .keyboardShortcut(timelineKeys ? KeyboardShortcut("o", modifiers: []) : nil)
-                Button("Clear In") { editor?.clearMarkIn() }
-                    .keyboardShortcut("i", modifiers: .option)
-                    .disabled(editor?.document?.markInMS == nil)
-                Button("Clear Out") { editor?.clearMarkOut() }
-                    .keyboardShortcut("o", modifiers: .option)
-                    .disabled(editor?.document?.markOutMS == nil)
-                Button("Clear In and Out") { editor?.clearMarkInOut() }
-                    .keyboardShortcut("x", modifiers: .option)
-                    .disabled(!(editor?.canClearMarkInOut ?? false))
-                // Premiere's Extract and Lift. Plain keys, like I and O: the
-                // timeline answers them while it has the keyboard.
-                Button("Extract") { editor?.extractMarkedStretch() }
-                    .keyboardShortcut(timelineKeys ? KeyboardShortcut("'", modifiers: []) : nil)
-                    .disabled(!(editor?.canTakeOutMarkedStretch ?? false))
-                Button("Lift") { editor?.liftMarkedStretch() }
-                    .keyboardShortcut(timelineKeys ? KeyboardShortcut(";", modifiers: []) : nil)
-                    .disabled(!(editor?.canTakeOutMarkedStretch ?? false))
-                Divider()
-            }
-            // Where the camera is pointed, and where it goes next
-            // (`ClipReframe.swift`). Both rows act on the clip in hand at the
-            // playhead, so a punch-in costs no aiming beyond the box you drew
-            // on the picture. ⇧Z is the clickthrough's own key.
-            if Experiments.shared.punchInEnabled {
-                Button("Punch In") { editor?.punchInOnRegion() }
-                    .keyboardShortcut("z", modifiers: [.shift])
-                    .disabled(!(editor?.canPunchIn ?? false))
-                Button("Pull Back Out") { editor?.pullReframeBackOut() }
-                    .keyboardShortcut("z", modifiers: [.shift, .option])
-                    .disabled(!(editor?.canPullBackOut ?? false))
-                Button("Reset Reframe") { editor?.resetReframeInHand() }
-                    .disabled(!(editor?.canResetReframe ?? false))
-                Divider()
-            }
-            // What happens at a CUT (`docs/design/video-transitions.md`). The
-            // menu acts on the cut in hand — the one picked, else the one the
-            // playhead is standing on — so putting a dissolve on the join you
-            // are looking at costs no aiming. Every one of these is also a
-            // click on the band in the timeline; this is the way in that can be
-            // found by reading.
-            if Experiments.shared.transitionsAtACutEnabled {
-                Menu("Transition at Cut") {
-                    Button("Hard Cut") { editor?.setClipTransitionInHand(nil) }
-                        .disabled(editor?.cutInHand?.cut.transition == nil)
-                    Divider()
-                    ForEach(ClipTransitionKind.allCases, id: \.self) { kind in
-                        Button(kind.title) { editor?.setClipTransitionInHand(kind) }
-                            .disabled(!(editor?.cutInHand?.cut.canAfford(kind) ?? false))
-                    }
-                }
-                .disabled(!(editor?.canWorkWithClipTransitions ?? false)
-                          || editor?.cutInHand == nil)
-                Divider()
-            }
-            // Sound rides the same time axis as the picture, so there is no
-            // mixer window and no audio mode: these four rows are the whole of
-            // it, and everything else a piece of sound needs — cut it, move it,
-            // name it, switch it off, undo any of it — is what the timeline
-            // already does to a layer (`docs/design/video-audio.md`).
-            if Experiments.shared.soundOnTheTimelineEnabled {
-                // ⌃⇧D, the key the cut clickthrough's command menu prints for
-                // it (`video-cut-wt`): two modifiers away from ⌘D, so not a key
-                // anybody presses by accident on a take they have already cut.
-                Button("Detach Audio") { editor?.detachSound() }
-                    .keyboardShortcut("d", modifiers: [.control, .shift])
-                    .disabled(!(editor?.canDetachSound ?? false))
-                Button("Add Sound…") { editor?.addSoundFromFile() }
-                    .disabled(!(editor?.documentHasTime ?? false))
-                Button("Flatten Level") { editor?.clearSoundLevelPoints() }
-                    .disabled((editor?.soundLevelInHand.points.isEmpty ?? true))
-                Button("Export Sound…") { editor?.exportSound() }
-                    .disabled(!(editor?.documentHasAudio ?? false))
-                Divider()
-            }
-            // Captions are what the Title / Text tool does when the document
-            // has time, so they live here beside the sound they are written
-            // from rather than in a caption menu
-            // (`docs/design/mocks/pages/video-captions.html`).
-            if Experiments.shared.captionsFromTheSoundEnabled {
-                // Premiere's Transcribe: captions are made only when asked.
-                if editor?.isWritingCaptions == true {
-                    Button("Cancel Captions") { editor?.stopWritingCaptions() }
-                } else {
-                    Button(editor?.hasCaptions == true ? "Rewrite Captions" : "Add Captions") {
-                        editor?.writeCaptions()
-                    }
-                    .disabled(!(editor?.canWriteCaptions ?? false))
-                }
-                Button("Captions Later") {
-                    editor?.nudgeCaptions(byMS: EditorState.captionNudgeMS)
-                }
-                .keyboardShortcut(.rightArrow, modifiers: [.option, .shift])
-                .disabled(!(editor?.canNudgeCaptions ?? false))
-                Button("Captions Earlier") {
-                    editor?.nudgeCaptions(byMS: -EditorState.captionNudgeMS)
-                }
-                .keyboardShortcut(.leftArrow, modifiers: [.option, .shift])
-                .disabled(!(editor?.canNudgeCaptions ?? false))
-                Button("Clear Captions") { editor?.clearCaptions() }
-                    .disabled(!(editor?.canClearCaptions ?? false))
-                Button("Export Captions as SRT…") { editor?.exportCaptions(as: .srt) }
-                    .disabled(!(editor?.canExportCaptions ?? false))
-                Button("Export Captions as WebVTT…") { editor?.exportCaptions(as: .vtt) }
-                    .disabled(!(editor?.canExportCaptions ?? false))
-                Divider()
-            }
-            // A recording opened in the editor: every edit thrown away, back
-            // to the recording as it opened, in one undo step
-            // (`EditorState+RevertRecording`). The rows under it are the small
-            // recording window's, which only Current still opens.
-            if timed {
-                Button("Revert to Original") { editor?.revertToOriginal() }
-                    .disabled(!(editor?.canRevertToOriginal ?? false))
-            } else {
-                // I and O belong to the recording window here; a document with
-                // time spends them on its marks, above.
-                Button("Set Trim Start to Playhead") {
-                    if let video { video.setTrimIn(video.currentTime) }
-                }
-                .keyboardShortcut("i", modifiers: [])
-                .disabled(!hasVideo)
-                Button("Set Trim End to Playhead") {
-                    if let video { video.setTrimOut(video.currentTime) }
-                }
-                .keyboardShortcut("o", modifiers: [])
-                .disabled(!hasVideo)
-                Divider()
-                Button((video?.isCropping ?? false) ? "Finish Crop" : "Crop to Region") {
-                    if let video {
-                        if video.isCropping { video.commitCrop() } else { video.beginCrop() }
-                    }
-                }
-                .disabled(!hasVideo)
-                Button("Reset Crop") { video?.clearCrop() }
-                    .disabled(!(video?.crop != nil))
-                Divider()
-                // The saved trim/crop is reversible: the untouched original is kept
-                // beside the recording, so this clears the edits and the next save
-                // puts the whole clip back.
-                Button("Revert to Original") { video?.revertToOriginal() }
-                    .disabled(!(video?.canRevertToOriginal ?? false))
-                Divider()
-                // One way out, not three. The format and the size preset are
-                // chosen ON the sheet, where you can see what they cost, rather
-                // than in a submenu you had to get right before the save box
-                // appeared (Next, `next-recording-export-sheet`). No key of its
-                // own: File ▸ Export… carries ⇧⌘E for both editors.
-                if Experiments.shared.recordingExportSheetEnabled {
-                    Button("Export…") { video?.isExportSheetPresented = true }
-                        .disabled(!hasVideo)
-                } else {
-                    Button("Export MP4…") {
-                        if let video { coordinator.saveRecording(video, as: .mp4) }
-                    }
-                    .disabled(!hasVideo)
-                    Menu("Export GIF") {
-                        ForEach(VideoExportQuality.allCases, id: \.self) { quality in
-                            Button(quality.label) {
-                                if let video {
-                                    coordinator.saveRecording(video, as: .gif, quality: quality)
-                                }
-                            }
-                        }
-                    }
-                    .disabled(!hasVideo)
-                    Menu("Export HEIC") {
-                        ForEach(VideoExportQuality.allCases, id: \.self) { quality in
-                            Button(quality.label) {
-                                if let video {
-                                    coordinator.saveRecording(video, as: .heic, quality: quality)
-                                }
-                            }
-                        }
-                    }
-                    .disabled(!hasVideo)
-                }
             }
         }
 
@@ -905,6 +481,704 @@ struct EditorCommands: Commands {
                 .disabled(!(editor?.canRedo ?? false))
         }
 
+        documentMenus
+
+        viewAndHelpCommands
+    }
+
+    // MARK: - The menus for what the document is made of
+
+    /// Image, Layer, then Clip and Sequence on a document with time, then
+    /// Measure: the order a Photoshop or Final Cut user reads along the top of
+    /// the screen (`MenuBarOrder`). Declared in that order because SwiftUI
+    /// lays its menus out in the order they are declared; `MenuBarArranger`
+    /// then puts View after them.
+    ///
+    /// With `next-a-pro-menu-bar` off, the old set: Capture, Image, Video,
+    /// Layer, Measure.
+    @CommandsBuilder private var documentMenus: some Commands {
+        if !Experiments.shared.proMenuBarEnabled {
+            captureMenu
+        }
+        imageMenu
+        if !Experiments.shared.proMenuBarEnabled {
+            videoMenu
+        }
+        layerMenu
+        // Only on a document with time: a picture has no clips and no
+        // sequence, and a menu of dimmed rows it can never use is a menu that
+        // lies about what the document is.
+        if Experiments.shared.proMenuBarEnabled && timed {
+            clipMenu
+            sequenceMenu
+        }
+        measureMenu
+    }
+
+    /// Whether the document in front has time, so a video rather than a
+    /// picture.
+    private var timed: Bool { editor?.documentHasTime ?? false }
+
+    /// The Premiere keys that are also Photoshop tool letters mean the
+    /// timeline's thing only while the timeline has the keyboard, and the rows
+    /// print them only then, so the menu never promises a key the canvas is
+    /// about to spend on a tool (`EditorState+TimelineKeys`).
+    private var timelineKeys: Bool { timed && (editor?.timelineHasKeyboard ?? false) }
+
+    // MARK: Capture
+
+    // The same shortcuts are registered as global Carbon hotkeys
+    // (CaptureCenter) on the resident agent; these menu items make them
+    // discoverable and clickable, and work with no editor window open.
+    // ⇧⌘3/⇧⌘4 only reach us once the system Screenshots shortcuts are
+    // disabled in System Settings.
+    // Same names and order as the menu bar menu (MenuBarMenu), so a
+    // command learned in one menu is found in the other.
+    @ViewBuilder private var captureRows: some View {
+        Button(CaptureMenuNames.captureRegion) { coordinator.capture.beginRectCapture() }
+            .keyboardShortcut("4", modifiers: [.command, .shift])
+        Button(CaptureMenuNames.captureFullScreen) { coordinator.capture.captureFullScreen() }
+            .keyboardShortcut("3", modifiers: [.command, .shift])
+        Button(CaptureMenuNames.recording(isRecording: coordinator.capture.isRecording)) {
+            coordinator.capture.toggleRecording()
+        }
+        .keyboardShortcut("5", modifiers: [.command, .shift])
+        Divider()
+        Button(CaptureMenuNames.editLastCapture) { coordinator.editLastCapture() }
+            .keyboardShortcut("6", modifiers: [.command, .shift])
+            .disabled(coordinator.lastCapture == nil)
+    }
+
+    // A setting, so one name and a checkmark rather than a title that
+    // rewrites itself. The checkmark is also written straight onto the
+    // live item whenever history opens or closes (MainMenuState):
+    // SwiftUI re-runs this body only while handling an event, and ⇧⌘H
+    // rebuilds it from the state before the toggle ran, which left the
+    // menu a step behind.
+    @ViewBuilder private var historyToggle: some View {
+        Toggle(CaptureMenuNames.history, isOn: Binding(
+            get: { coordinator.isHistoryShown },
+            set: { _ in coordinator.toggleHistory() }))
+        .keyboardShortcut("h", modifiers: [.command, .shift])
+    }
+
+    @ViewBuilder private var screenRecordingAccessRow: some View {
+        Button("Request Screen Recording Access…") {
+            coordinator.capture.requestScreenRecordingAccess()
+        }
+        .help("Registers Photonz in System Settings → Privacy → Screen & System Audio Recording and opens that pane.")
+    }
+
+    /// The top-level Capture menu, before the pro menu bar. With it, the same
+    /// rows are File ▸ Capture and Window ▸ Show History.
+    @CommandsBuilder private var captureMenu: some Commands {
+        CommandMenu(CaptureMenuNames.menuTitle) {
+            captureRows
+            historyToggle
+            Divider()
+            screenRecordingAccessRow
+        }
+    }
+
+    /// File ▸ Capture, where Preview keeps Take Screenshot: the capture
+    /// commands under their own names and keys, one level down.
+    @ViewBuilder private var fileCaptureSubmenu: some View {
+        if Experiments.shared.proMenuBarEnabled {
+            Divider()
+            Menu(CaptureMenuNames.menuTitle) {
+                captureRows
+                Divider()
+                screenRecordingAccessRow
+            }
+        }
+    }
+
+    // MARK: Image
+
+    @CommandsBuilder private var imageMenu: some Commands {
+        CommandMenu("Image") {
+            Button("Resize Image…") { editor?.isResizeDialogPresented = true }
+                .keyboardShortcut("i", modifiers: [.command, .option])
+                .disabled(editor?.document == nil)
+            Button("Canvas Size…") { editor?.isCanvasSizeDialogPresented = true }
+                .keyboardShortcut("c", modifiers: [.command, .option])
+                .disabled(editor?.document == nil)
+        }
+    }
+
+    // MARK: Playing the time
+
+    @ViewBuilder private var transportRows: some View {
+        Button((editor?.isDocumentPlaying ?? false) ? "Pause" : "Play") {
+            editor?.toggleDocumentPlayback()
+        }
+        .keyboardShortcut(.space, modifiers: [])
+        Button("Play In to Out") { editor?.playInToOut() }
+            .keyboardShortcut(.space, modifiers: [.command, .shift])
+            .disabled(!(editor?.canPlayInToOut ?? false))
+        Button("Play Backward") { editor?.shuttle(.reverse) }
+            .keyboardShortcut(timelineKeys ? KeyboardShortcut("j", modifiers: []) : nil)
+        Button("Stop") { editor?.shuttle(.stop) }
+            .keyboardShortcut(timelineKeys ? KeyboardShortcut("k", modifiers: []) : nil)
+            .disabled(!(editor?.isDocumentPlaying ?? false))
+        Button("Play Forward") { editor?.shuttle(.forward) }
+            .keyboardShortcut(timelineKeys ? KeyboardShortcut("l", modifiers: []) : nil)
+    }
+
+    @ViewBuilder private var editPointRows: some View {
+        Button("Go to Previous Edit") { editor?.goToEditPoint(forward: false) }
+            .keyboardShortcut(timelineKeys ? KeyboardShortcut(.upArrow, modifiers: []) : nil)
+            .disabled(!(editor?.canGoToEditPoint(forward: false) ?? false))
+        Button("Go to Next Edit") { editor?.goToEditPoint(forward: true) }
+            .keyboardShortcut(timelineKeys ? KeyboardShortcut(.downArrow, modifiers: []) : nil)
+            .disabled(!(editor?.canGoToEditPoint(forward: true) ?? false))
+    }
+
+    // MARK: Cutting
+
+    // One key, one meaning, two places it can land. A recording
+    // that opens as a DOCUMENT is cut on the timeline
+    // (`EditorState+ClipBar`); the old recording window is still
+    // cut on its strip until it retires. Nothing here is a second
+    // way to do the same thing: they are the same command reaching
+    // whichever surface is in front of you.
+    @ViewBuilder private var splitAndDeleteRows: some View {
+        let onTimeline = timed
+        // Premiere's Add Edit, ⌘K, on the timeline, where B picks up
+        // the Blade; the recording window keeps its B.
+        Button("Split at Playhead") {
+            onTimeline ? editor?.splitClipAtPlayhead() : video?.cutAtPlayhead()
+        }
+        .keyboardShortcut(onTimeline ? KeyboardShortcut("k", modifiers: .command)
+                                     : KeyboardShortcut("b", modifiers: []))
+        .disabled(!(onTimeline ? (editor?.canSplitClipAtPlayhead ?? false)
+                               : (video?.canCutAtPlayhead ?? false)))
+        // Keys picked on a lane are the smaller and more recent thing
+        // in hand, so ⌫ takes those and leaves the clip alone
+        // (`EditorState+KeyLanes`).
+        let keysPicked = onTimeline && (editor?.canDeletePickedKeys ?? false)
+        // A range drawn on the ruler is in hand when nothing else is
+        // picked, and ⌫ lifts it (`EditorState+RulerRange`).
+        let rangeHeld = onTimeline && editor?.rulerRangeHeld != nil
+        // ...and so is a range on some tracks, or pieces a box picked
+        // (`EditorState+TrackRange`).
+        let trackHeld = onTimeline && !rangeHeld
+            && (editor?.trackRangeHeld != nil || editor?.timelinePicksHeld != nil)
+        let trackRange = trackHeld && editor?.trackRangeHeld != nil
+        Button(keysPicked ? "Delete Keys" : rangeHeld || trackRange ? "Delete Range"
+               : trackHeld ? "Delete Pieces" : "Delete This Piece") {
+            if keysPicked {
+                editor?.deletePickedKeys()
+            } else if rangeHeld {
+                editor?.liftMarkedStretch()
+            } else if trackHeld {
+                editor?.liftTrackThing()
+            } else {
+                onTimeline ? editor?.deleteClipPieceInHand() : video?.deleteSelectedPiece()
+            }
+        }
+        // A MENU ROW carries U+0008 for ⌫, which is not the U+007F
+        // the key sends: AppKit normalises the press to backspace
+        // before it looks along the menu bar, so a row holding U+007F
+        // prints ⌫ beside its name and the key never reaches it. This
+        // row held U+007F and the walk that presses ⌫ for it failed
+        // for five days. See `DeleteKeyCharacters.menuKeyEquivalent`
+        // for the measurement, including the half that says a text
+        // field with the keyboard still keeps the key.
+        .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuKeyEquivalent), modifiers: [])
+        .disabled(!(keysPicked || (rangeHeld && (editor?.canTakeOutMarkedStretch ?? false))
+                    || (trackHeld && (editor?.canTakeOutTrackThing ?? false))
+                    || (onTimeline ? (editor?.canDeleteClipPieceInHand ?? false)
+                                              : (video?.canDeleteSelectedPiece ?? false))))
+    }
+
+    // Premiere's Ripple Delete, on its Mac key: what is picked goes
+    // and everything after it pulls back to close the gap, so a
+    // title stays over the frame it was put on
+    // (`EditorState+TimelineMenus`).
+    //
+    // On the pro menu bar it prints ⇧⌫, the key the timeline answers for it,
+    // and only while the timeline has the keyboard: ⌥⌫ is Photoshop's Fill
+    // with Foreground in Edit, and one key on two rows lies on one of them.
+    @ViewBuilder private var rippleDeleteRow: some View {
+        let pro = Experiments.shared.proMenuBarEnabled
+        Button("Ripple Delete") { editor?.rippleDeleteInHand() }
+            .keyboardShortcut(pro
+                ? (timelineKeys ? KeyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuKeyEquivalent),
+                                                   modifiers: .shift) : nil)
+                : KeyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuKeyEquivalent), modifiers: .option))
+            .disabled(!(editor?.canRippleDeleteInHand ?? false))
+    }
+
+    // Premiere's Add Edit to All Tracks.
+    @ViewBuilder private var splitEverythingRow: some View {
+        Button("Split Everything at Playhead") {
+            if let editor { editor.splitEverything(atMS: editor.documentTimeMS) }
+        }
+        .keyboardShortcut("k", modifiers: [.command, .shift])
+        .disabled(!(editor?.canSplitEverythingAtPlayhead ?? false))
+    }
+
+    // Premiere's Q and W. Plain letters, like I and O: the
+    // timeline answers them while it has the keyboard, and on
+    // the canvas W is still the Magic Wand.
+    @ViewBuilder private var rippleTrimRows: some View {
+        Button("Ripple Trim Start to Playhead") { editor?.rippleTrimToPlayhead(.start) }
+            .keyboardShortcut(timelineKeys ? KeyboardShortcut("q", modifiers: []) : nil)
+            .disabled(!(editor?.canRippleTrimToPlayhead(.start) ?? false))
+        Button("Ripple Trim End to Playhead") { editor?.rippleTrimToPlayhead(.end) }
+            .keyboardShortcut(timelineKeys ? KeyboardShortcut("w", modifiers: []) : nil)
+            .disabled(!(editor?.canRippleTrimToPlayhead(.end) ?? false))
+    }
+
+    // Final Cut's ⌘T: the default transition on the cut
+    // picked, else the cut at the playhead. Premiere's ⌘D is
+    // Photoshop's Deselect here, and the canvas keeps it.
+    @ViewBuilder private var applyDefaultTransitionRow: some View {
+        if Experiments.shared.transitionsAtACutEnabled {
+            Button("Apply Default Transition") { editor?.applyDefaultTransition() }
+                .keyboardShortcut("t", modifiers: .command)
+                .disabled(!(editor?.canApplyDefaultTransition() ?? false))
+        }
+    }
+
+    // Premiere's Sequence > Snap in Timeline, on its S. A
+    // setting, so it keeps its name and wears a checkmark; the
+    // magnet in the timeline's bar is the same switch.
+    @ViewBuilder private var snapRow: some View {
+        Toggle(MenuToggleNames.snapInTimeline, isOn: Binding(
+            get: { editor?.isTimelineSnapping ?? true },
+            set: { _ in editor?.toggleTimelineSnapping() }))
+        .keyboardShortcut(timelineKeys ? KeyboardShortcut("s", modifiers: []) : nil)
+    }
+
+    // Final Cut's Break Apart Clip Items, on its key, which is Photoshop's
+    // Ungroup too: the one key that takes a thing made of things apart. The
+    // row holds it only while a merged clip is in hand, and Layer ▸ Ungroup
+    // holds it the rest of the time, so the two never print the same key.
+    @ViewBuilder private var breakApartRow: some View {
+        let breaks = editor?.canBreakApartInHand ?? false
+        Button("Break Apart") { editor?.breakApartInHand() }
+            .keyboardShortcut(breaks ? KeyboardShortcut("g", modifiers: [.command, .shift]) : nil)
+            .disabled(!breaks)
+    }
+
+    // A freeze is not a special object: it is a piece whose in and
+    // out are the same frame, so it drops onto the timeline like
+    // any other piece and can be moved, lengthened and thrown away
+    // like any other piece (`video-freeze-wt`).
+    // No key: ⇧F walks the Frame slot, ⌥F fills the flow, and a
+    // freeze is a thing you do once in a cut rather than forty
+    // times. The row is where you would look for it.
+    // Retiming is a property of the piece you are on, so it is a
+    // list of speeds rather than a surface of its own
+    // (`video-speed`). Its sound goes with it, at the same rate.
+    @ViewBuilder private var freezeAndSpeedRows: some View {
+        Button("Freeze Frame") { editor?.holdFrameAtPlayhead() }
+            .disabled(!(editor?.canHoldFrameAtPlayhead ?? false))
+        Menu("Speed") {
+            ForEach(EditorState.clipSpeeds, id: \.self) { percent in
+                Button(ClipSpeed.title(percent)) {
+                    editor?.setClipSpeedInHand(percent)
+                }
+                .disabled(!(editor?.canSetClipSpeed(percent) ?? false))
+            }
+        }
+        .disabled(editor?.clipSpeedInHand == nil)
+    }
+
+    // MARK: Keys
+
+    // The playhead from key to key, on the pair of keys the user
+    // asked for. K alone is still the Lens and, once the timeline
+    // owns the keyboard, Premiere's Stop; the chords are free of it.
+    @ViewBuilder private var keyNavigationRows: some View {
+        Button("Go to Next Key") { editor?.goToKey(forward: true) }
+            .keyboardShortcut("k", modifiers: .shift)
+            .disabled(!(editor?.canGoToKey(forward: true) ?? false))
+        Button("Go to Previous Key") { editor?.goToKey(forward: false) }
+            .keyboardShortcut("k", modifiers: .option)
+            .disabled(!(editor?.canGoToKey(forward: false) ?? false))
+    }
+
+    // The mock's Animate commands (`video-move-wt.html`,
+    // `#cmdMenu`). No K for Key at Playhead: K is the Lens on the
+    // canvas and Premiere's Stop on the timeline.
+    @ViewBuilder private var animateRows: some View {
+        Button("Key at Playhead") { editor?.keyAtPlayhead() }
+            .disabled(!(editor?.canKeyAtPlayhead ?? false))
+        Toggle(MenuToggleNames.curveThePath, isOn: Binding(
+            get: { editor?.motionPathShape == .curved },
+            set: { editor?.setMotionPathShape($0 ? .curved : .straight) }))
+            .disabled(editor?.motionPathShape == nil)
+        // The same list as Between the keys' Curve, acting on the
+        // stretch under the playhead.
+        Menu("Easing") {
+            ForEach(Array(EasingCurve.named.enumerated()), id: \.offset) { _, curve in
+                Toggle(curve.title, isOn: Binding(
+                    get: { editor?.betweenKeysCurve == curve },
+                    set: { if $0 { editor?.curveBetweenKeys(curve) } }))
+            }
+        }
+        .disabled(editor?.betweenKeysCurve == nil)
+    }
+
+    // MARK: Marks
+
+    // The ruler's marks, at the playhead. The same rows the ruler's
+    // right click offers there; M, I and O are Photoshop's tool keys
+    // on the canvas and the timeline's marks while it has the keyboard.
+    @ViewBuilder private var markRows: some View {
+        Button("Add Marker") { if let editor { editor.addMarker(atMS: editor.documentTimeMS) } }
+            .keyboardShortcut(timelineKeys ? KeyboardShortcut("m", modifiers: []) : nil)
+        Button("Set In") { if let editor { editor.setMarkIn(atMS: editor.documentTimeMS) } }
+            .keyboardShortcut(timelineKeys ? KeyboardShortcut("i", modifiers: []) : nil)
+        Button("Set Out") { if let editor { editor.setMarkOut(atMS: editor.documentTimeMS) } }
+            .keyboardShortcut(timelineKeys ? KeyboardShortcut("o", modifiers: []) : nil)
+        Button("Clear In") { editor?.clearMarkIn() }
+            .keyboardShortcut("i", modifiers: .option)
+            .disabled(editor?.document?.markInMS == nil)
+        Button("Clear Out") { editor?.clearMarkOut() }
+            .keyboardShortcut("o", modifiers: .option)
+            .disabled(editor?.document?.markOutMS == nil)
+        Button("Clear In and Out") { editor?.clearMarkInOut() }
+            .keyboardShortcut("x", modifiers: .option)
+            .disabled(!(editor?.canClearMarkInOut ?? false))
+    }
+
+    // Premiere's Extract and Lift. Plain keys, like I and O: the
+    // timeline answers them while it has the keyboard.
+    @ViewBuilder private var extractLiftRows: some View {
+        Button("Extract") { editor?.extractMarkedStretch() }
+            .keyboardShortcut(timelineKeys ? KeyboardShortcut("'", modifiers: []) : nil)
+            .disabled(!(editor?.canTakeOutMarkedStretch ?? false))
+        Button("Lift") { editor?.liftMarkedStretch() }
+            .keyboardShortcut(timelineKeys ? KeyboardShortcut(";", modifiers: []) : nil)
+            .disabled(!(editor?.canTakeOutMarkedStretch ?? false))
+    }
+
+    // MARK: Reframing
+
+    // Where the camera is pointed, and where it goes next
+    // (`ClipReframe.swift`). Both rows act on the clip in hand at the
+    // playhead, so a punch-in costs no aiming beyond the box you drew
+    // on the picture. ⇧Z is the clickthrough's own key, and the only thing
+    // ⇧Z means: the timeline fits itself on Premiere's \ instead.
+    @ViewBuilder private var punchInRows: some View {
+        Button("Punch In") { editor?.punchInOnRegion() }
+            .keyboardShortcut("z", modifiers: [.shift])
+            .disabled(!(editor?.canPunchIn ?? false))
+        Button("Pull Back Out") { editor?.pullReframeBackOut() }
+            .keyboardShortcut("z", modifiers: [.shift, .option])
+            .disabled(!(editor?.canPullBackOut ?? false))
+        Button("Reset Reframe") { editor?.resetReframeInHand() }
+            .disabled(!(editor?.canResetReframe ?? false))
+    }
+
+    // MARK: Transitions
+
+    // What happens at a CUT (`docs/design/video-transitions.md`). The
+    // menu acts on the cut in hand — the one picked, else the one the
+    // playhead is standing on — so putting a dissolve on the join you
+    // are looking at costs no aiming. Every one of these is also a
+    // click on the band in the timeline; this is the way in that can be
+    // found by reading.
+    @ViewBuilder private var transitionAtCutMenu: some View {
+        Menu("Transition at Cut") {
+            Button("Hard Cut") { editor?.setClipTransitionInHand(nil) }
+                .disabled(editor?.cutInHand?.cut.transition == nil)
+            Divider()
+            ForEach(ClipTransitionKind.allCases, id: \.self) { kind in
+                Button(kind.title) { editor?.setClipTransitionInHand(kind) }
+                    .disabled(!(editor?.cutInHand?.cut.canAfford(kind) ?? false))
+            }
+        }
+        .disabled(!(editor?.canWorkWithClipTransitions ?? false)
+                  || editor?.cutInHand == nil)
+    }
+
+    // MARK: Sound
+
+    // Sound rides the same time axis as the picture, so there is no
+    // mixer window and no audio mode: everything a piece of sound needs —
+    // cut it, move it, name it, switch it off, undo any of it — is what the
+    // timeline already does to a layer (`docs/design/video-audio.md`).
+    // ⌃⇧D, the key the cut clickthrough's command menu prints for
+    // it (`video-cut-wt`): two modifiers away from ⌘D, so not a key
+    // anybody presses by accident on a take they have already cut.
+    @ViewBuilder private var detachAudioRow: some View {
+        Button("Detach Audio") { editor?.detachSound() }
+            .keyboardShortcut("d", modifiers: [.control, .shift])
+            .disabled(!(editor?.canDetachSound ?? false))
+    }
+
+    @ViewBuilder private var addSoundRow: some View {
+        Button("Add Sound…") { editor?.addSoundFromFile() }
+            .disabled(!(editor?.documentHasTime ?? false))
+    }
+
+    @ViewBuilder private var flattenLevelRow: some View {
+        Button("Flatten Level") { editor?.clearSoundLevelPoints() }
+            .disabled((editor?.soundLevelInHand.points.isEmpty ?? true))
+    }
+
+    @ViewBuilder private var exportSoundRow: some View {
+        Button("Export Sound…") { editor?.exportSound() }
+            .disabled(!(editor?.documentHasAudio ?? false))
+    }
+
+    // MARK: Captions
+
+    // Captions are what the Title / Text tool does when the document
+    // has time, so they live beside the sound they are written
+    // from rather than in a caption menu
+    // (`docs/design/mocks/pages/video-captions.html`).
+    @ViewBuilder private var captionRows: some View {
+        // Premiere's Transcribe: captions are made only when asked.
+        if editor?.isWritingCaptions == true {
+            Button("Cancel Captions") { editor?.stopWritingCaptions() }
+        } else {
+            Button(editor?.hasCaptions == true ? "Rewrite Captions" : "Add Captions") {
+                editor?.writeCaptions()
+            }
+            .disabled(!(editor?.canWriteCaptions ?? false))
+        }
+        Button("Captions Later") {
+            editor?.nudgeCaptions(byMS: EditorState.captionNudgeMS)
+        }
+        .keyboardShortcut(.rightArrow, modifiers: [.option, .shift])
+        .disabled(!(editor?.canNudgeCaptions ?? false))
+        Button("Captions Earlier") {
+            editor?.nudgeCaptions(byMS: -EditorState.captionNudgeMS)
+        }
+        .keyboardShortcut(.leftArrow, modifiers: [.option, .shift])
+        .disabled(!(editor?.canNudgeCaptions ?? false))
+        Button("Clear Captions") { editor?.clearCaptions() }
+            .disabled(!(editor?.canClearCaptions ?? false))
+        Button("Export Captions as SRT…") { editor?.exportCaptions(as: .srt) }
+            .disabled(!(editor?.canExportCaptions ?? false))
+        Button("Export Captions as WebVTT…") { editor?.exportCaptions(as: .vtt) }
+            .disabled(!(editor?.canExportCaptions ?? false))
+    }
+
+    // A recording opened in the editor: every edit thrown away, back
+    // to the recording as it opened, in one undo step
+    // (`EditorState+RevertRecording`).
+    @ViewBuilder private var revertRecordingRow: some View {
+        Button("Revert to Original") { editor?.revertToOriginal() }
+            .disabled(!(editor?.canRevertToOriginal ?? false))
+    }
+
+    // MARK: Clip and Sequence (`next-a-pro-menu-bar`)
+
+    /// What acts on the picked clip, the way Final Cut's and Premiere's Clip
+    /// menus hold it: cut it, retime it, freeze it, reframe it, what happens at
+    /// its cuts, its sound, and its keys. Each row acts on the clip in hand,
+    /// the one picked, else the one under the playhead.
+    @CommandsBuilder private var clipMenu: some Commands {
+        CommandMenu(MenuBarOrder.clip) {
+            if Experiments.shared.cutRecordingEnabled {
+                splitAndDeleteRows
+                rippleDeleteRow
+                rippleTrimRows
+                breakApartRow
+                Divider()
+                freezeAndSpeedRows
+                Divider()
+            }
+            if Experiments.shared.punchInEnabled {
+                punchInRows
+                Divider()
+            }
+            if Experiments.shared.transitionsAtACutEnabled {
+                transitionAtCutMenu
+                if Experiments.shared.cutRecordingEnabled { applyDefaultTransitionRow }
+                Divider()
+            }
+            if Experiments.shared.soundOnTheTimelineEnabled {
+                detachAudioRow
+                flattenLevelRow
+                Divider()
+            }
+            Section("Animate") {
+                keyNavigationRows
+                animateRows
+            }
+        }
+    }
+
+    /// What acts on the time as a whole, the way Premiere's Sequence menu
+    /// holds it: playing it, moving between edits, the marks and what cuts
+    /// between them, splitting every track, snapping, the sound and captions
+    /// that run the length of it, and putting the recording back.
+    @CommandsBuilder private var sequenceMenu: some Commands {
+        CommandMenu(MenuBarOrder.sequence) {
+            transportRows
+            Divider()
+            editPointRows
+            Divider()
+            markRows
+            Divider()
+            extractLiftRows
+            if Experiments.shared.cutRecordingEnabled {
+                splitEverythingRow
+                Divider()
+                snapRow
+            }
+            Divider()
+            if Experiments.shared.soundOnTheTimelineEnabled {
+                addSoundRow
+                exportSoundRow
+                Divider()
+            }
+            if Experiments.shared.captionsFromTheSoundEnabled {
+                captionRows
+                Divider()
+            }
+            revertRecordingRow
+        }
+    }
+
+    // MARK: Video, before the pro menu bar
+
+    // Video menu: only meaningful in a recording window (phase 13.3). Gated
+    // on the focused video state so it disables in image windows. The rows
+    // under Revert are the small recording window's, which only Current still
+    // opens; the pro menu bar has no Video menu at all.
+    @CommandsBuilder private var videoMenu: some Commands {
+        CommandMenu("Video") {
+            let hasVideo = video?.isReady ?? false
+            // A document with time plays in the editor, not in a recording
+            // window, so the row plays whichever is in front of you.
+            if timed {
+                transportRows
+                Divider()
+                editPointRows
+            } else {
+                Button((video?.isPlaying ?? false) ? "Pause" : "Play") { video?.togglePlayPause() }
+                    .keyboardShortcut(.space, modifiers: [])
+                    .disabled(!hasVideo)
+            }
+            Divider()
+            if Experiments.shared.cutRecordingEnabled {
+                splitAndDeleteRows
+                if timed {
+                    rippleDeleteRow
+                    splitEverythingRow
+                    rippleTrimRows
+                    applyDefaultTransitionRow
+                    snapRow
+                }
+                freezeAndSpeedRows
+                Divider()
+            }
+            if timed {
+                keyNavigationRows
+                Divider()
+                Section("Animate") {
+                    animateRows
+                }
+                Divider()
+                markRows
+                extractLiftRows
+                Divider()
+            }
+            if Experiments.shared.punchInEnabled {
+                punchInRows
+                Divider()
+            }
+            if Experiments.shared.transitionsAtACutEnabled {
+                transitionAtCutMenu
+                Divider()
+            }
+            if Experiments.shared.soundOnTheTimelineEnabled {
+                detachAudioRow
+                addSoundRow
+                flattenLevelRow
+                exportSoundRow
+                Divider()
+            }
+            if Experiments.shared.captionsFromTheSoundEnabled {
+                captionRows
+                Divider()
+            }
+            if timed {
+                revertRecordingRow
+            } else {
+                recordingWindowRows
+            }
+        }
+    }
+
+    @ViewBuilder private var recordingWindowRows: some View {
+        let hasVideo = video?.isReady ?? false
+        // I and O belong to the recording window here; a document with
+        // time spends them on its marks, above.
+        Button("Set Trim Start to Playhead") {
+            if let video { video.setTrimIn(video.currentTime) }
+        }
+        .keyboardShortcut("i", modifiers: [])
+        .disabled(!hasVideo)
+        Button("Set Trim End to Playhead") {
+            if let video { video.setTrimOut(video.currentTime) }
+        }
+        .keyboardShortcut("o", modifiers: [])
+        .disabled(!hasVideo)
+        Divider()
+        Button((video?.isCropping ?? false) ? "Finish Crop" : "Crop to Region") {
+            if let video {
+                if video.isCropping { video.commitCrop() } else { video.beginCrop() }
+            }
+        }
+        .disabled(!hasVideo)
+        Button("Reset Crop") { video?.clearCrop() }
+            .disabled(!(video?.crop != nil))
+        Divider()
+        // The saved trim/crop is reversible: the untouched original is kept
+        // beside the recording, so this clears the edits and the next save
+        // puts the whole clip back.
+        Button("Revert to Original") { video?.revertToOriginal() }
+            .disabled(!(video?.canRevertToOriginal ?? false))
+        Divider()
+        // One way out, not three. The format and the size preset are
+        // chosen ON the sheet, where you can see what they cost, rather
+        // than in a submenu you had to get right before the save box
+        // appeared (Next, `next-recording-export-sheet`). No key of its
+        // own: File ▸ Export… carries ⇧⌘E for both editors.
+        if Experiments.shared.recordingExportSheetEnabled {
+            Button("Export…") { video?.isExportSheetPresented = true }
+                .disabled(!hasVideo)
+        } else {
+            Button("Export MP4…") {
+                if let video { coordinator.saveRecording(video, as: .mp4) }
+            }
+            .disabled(!hasVideo)
+            Menu("Export GIF") {
+                ForEach(VideoExportQuality.allCases, id: \.self) { quality in
+                    Button(quality.label) {
+                        if let video {
+                            coordinator.saveRecording(video, as: .gif, quality: quality)
+                        }
+                    }
+                }
+            }
+            .disabled(!hasVideo)
+            Menu("Export HEIC") {
+                ForEach(VideoExportQuality.allCases, id: \.self) { quality in
+                    Button(quality.label) {
+                        if let video {
+                            coordinator.saveRecording(video, as: .heic, quality: quality)
+                        }
+                    }
+                }
+            }
+            .disabled(!hasVideo)
+        }
+    }
+
+    // MARK: Layer
+
+    @CommandsBuilder private var layerMenu: some Commands {
         CommandMenu("Layer") {
             let selectedID = editor?.selectedLayerID
             let hasLayerSelection = editor?.hasLayerSelection ?? false
@@ -1040,8 +1314,11 @@ struct EditorCommands: Commands {
                 Button("Group") { editor?.groupSelection() }
                     .keyboardShortcut("g", modifiers: .command)
                     .disabled(!(editor?.canGroupSelection ?? false))
+                // ⇧⌘G goes to Clip ▸ Break Apart while a merged clip is in
+                // hand, so one key never sits on two rows.
                 Button("Ungroup") { editor?.ungroupSelection() }
-                    .keyboardShortcut("g", modifiers: [.command, .shift])
+                    .keyboardShortcut(Experiments.shared.proMenuBarEnabled && (editor?.canBreakApartInHand ?? false)
+                                      ? nil : KeyboardShortcut("g", modifiers: [.command, .shift]))
                     .disabled(!(editor?.canUngroupSelection ?? false))
             }
             // Groups that arrange their own contents (`next-auto-layout`),
@@ -1248,7 +1525,11 @@ struct EditorCommands: Commands {
             Divider()
             deleteLayerRow
         }
+    }
 
+    // MARK: Measure
+
+    @CommandsBuilder private var measureMenu: some Commands {
         // The mock's Measure command group (§6, `next-measure-panel`): the tool,
         // then the same commands the Measurements panel menu offers, in the
         // panel's order and under the panel's names (§6's mirror rule: a panel
@@ -1292,9 +1573,8 @@ struct EditorCommands: Commands {
                     .disabled(count == 0)
             }
         }
-
-        viewAndHelpCommands
     }
+
 
     /// The View menu's additions, the Help menu, and the app menu's Settings
     /// row, together in one place. They are grouped only because a `Commands`
@@ -1416,6 +1696,14 @@ struct EditorCommands: Commands {
                 .keyboardShortcut((editor?.documentHasTime ?? false) ? "0" : "1",
                                   modifiers: (editor?.documentHasTime ?? false) ? [.command, .option] : .command)
                 .disabled(!hasDocument)
+            // The timeline, fitted to the whole of the time: the row its
+            // right-click has, on Premiere's \, which the timeline answers
+            // while it has the keyboard (⇧Z is Punch In).
+            if Experiments.shared.proMenuBarEnabled && timed {
+                Button("Zoom Timeline to Fit") { editor?.fitTimeline() }
+                    .keyboardShortcut(timelineKeys ? KeyboardShortcut("\\", modifiers: []) : nil)
+                    .disabled(!(editor?.isTimelineOpenedOut ?? false))
+            }
             // The grid you build against (Next, `next-canvas-grid`), on the key
             // Photoshop uses for its own. It is a view preference, not part of
             // the picture, so it belongs on this menu next to the zooms rather
@@ -1479,6 +1767,15 @@ struct EditorCommands: Commands {
                 .disabled(!hasDocument || !(editor?.hasIconFrames ?? false))
             }
             Divider()
+        }
+        // The capture history is a window of its own, so on the pro menu bar
+        // it is where a Mac user looks for one: Window, with the checkmark
+        // saying whether it is up (Photoshop's Window ▸ History).
+        CommandGroup(after: .windowArrangement) {
+            if Experiments.shared.proMenuBarEnabled {
+                Divider()
+                historyToggle
+            }
         }
         // There is no Help menu until this: macOS supplies a default one whose
         // single row opens a help book Photonz does not have. Replacing the
