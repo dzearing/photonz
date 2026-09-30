@@ -1,0 +1,67 @@
+{
+  "id": "dragging-a-component-from-the-library-drops-one-when-you-drag-a-component-off-th",
+  "taskId": "dragging-a-component-from-the-library-drops-one",
+  "question": "When you drag a component off the Library, where should its original go?",
+  "context": "Nothing drops twice. The second Button is the component's original: the first time you drag a tile, the copy lands under your pointer and the original arrives beside it, because on 2026-09-20 you chose Always a copy and that option listed a second drawing as its downside. On a video it makes two tracks. To make one drag give one thing, the original has to go somewhere else.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Only the copy lands",
+      "summary": "Dragging Button onto the picture puts down one Button: one drawing, one row in Layers, one bar on the timeline. The original is kept with the document but out of your picture. Edit Original, on the copy or on the Library tile, opens it on its own with every look side by side, and Done brings you back.",
+      "pros": [
+        "One drag, one thing, every time",
+        "Matches how Figma and Sketch treat a library component: you place an instance, the original lives in the library",
+        "Your picture and your film only hold what you put there"
+      ],
+      "cons": [
+        "The biggest change: editing an original becomes a trip to a view of its own instead of a drawing on your canvas",
+        "You can no longer see the original and your work in the same view"
+      ],
+      "mitigation": "A component you make out of your own drawing stays where you drew it, so only things that come off the Library shelf work this way. The view Edit Original opens shows every look of the component beside each other."
+    },
+    {
+      "id": "b",
+      "label": "The original lands hidden",
+      "summary": "One Button appears where you let go. The original still comes into the document, but hidden: a greyed row at the bottom of Layers, and on a video a dimmed bar. Edit Original shows it and picks it.",
+      "pros": [
+        "Small change; editing an original works as it does today",
+        "The original is still in the layers list if you go looking"
+      ],
+      "cons": [
+        "Layers still shows two Buttons, and on a video there are still two tracks",
+        "Showing it by accident puts a second Button back in your picture and in your export"
+      ],
+      "mitigation": "The hidden row wears the original's four diamond mark and sits last in the list, out of the way."
+    },
+    {
+      "id": "c",
+      "label": "The original lands off the picture",
+      "summary": "One Button appears where you let go. The original is set down in the grey area outside the picture, so it is never in an export, but you can scroll or zoom out to see and edit it there.",
+      "pros": [
+        "The original is still a drawing you can see and edit in place",
+        "Nothing new to learn about editing"
+      ],
+      "cons": [
+        "Layers still shows two Buttons, and on a video a second track",
+        "Zoom to fit pulls the original into view, and it can be dragged back into the picture by accident"
+      ],
+      "mitigation": "The original sits just past the picture's right edge, where zoom to fit reaches it only if you ask for everything."
+    },
+    {
+      "id": "d",
+      "label": "Keep both on the picture",
+      "summary": "Nothing changes: the first drag of a tile still puts down the copy and the original beside it, and the notice explains which is which.",
+      "pros": [
+        "No change"
+      ],
+      "cons": [
+        "It keeps reading as a drop that landed twice, which is what prompted this report"
+      ],
+      "mitigation": "None.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-30T04:43:25.576Z"
+}

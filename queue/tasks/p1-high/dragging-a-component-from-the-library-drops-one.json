@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 0.000004,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T02:56:58.111Z",
-  "updated": "2026-09-30T02:56:58.195Z",
+  "updated": "2026-09-30T04:43:39.803Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -28,6 +28,31 @@
     {
       "t": "2026-09-30T02:56:58.194Z",
       "note": "seq 400 -> 0.000004"
+    },
+    {
+      "t": "2026-09-30T04:39:50.938Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-30T04:43:13.677Z",
+      "note": "owns these walks: component-drag-lands-a-copy-walk, component-on-the-timeline-walk"
+    },
+    {
+      "t": "2026-09-30T04:43:13.730Z",
+      "note": "Reproduced. component-drag-lands-a-copy-walk (Next defaults, Button starter): first drop takes the layer count 1 -> 3 (rows Button, Button, Background); second drop 3 -> 4. component-on-the-timeline-walk (sample recording): first insert 1 -> 3 with two bars on two tracks (Button 2 and Button), one undo step (undo 3 -> 1); second drop 3 -> 4. So nothing fires twice: the second drawing is the component's ORIGINAL, which insertStarterComponent / insertSharedComponent bring in beside the copy on the first drop of a tile (1beb145e, from the 2026-09-20 answer 'Always a copy', whose own con was 'A drawing you did not ask for appears beside your drop the first time')."
+    },
+    {
+      "t": "2026-09-30T04:43:13.783Z",
+      "note": "Handlers: only CanvasNSView registers com.photonz.component-id (CanvasDrop.performDragOperation -> onDropComponent -> EditorState.placeComponent, once). TimelineFileDropDelegate, WindowFileDrop and PanelFileDrop take FileDrop.types (+transition) only, so no second surface can take a component; AppKit hands a drop to one destination. A REAL pointer drag could not be driven from here: this terminal is not Accessibility-trusted (AXIsProcessTrusted false) and a walk cannot run a real NSDraggingSession (pickUpTile refuses the session by design). Other shelves: Media tile drag onto a layer row adds one layer (document-media-walk 2 -> 3); a text style drop adds no layers. No double drop there."
+    },
+    {
+      "t": "2026-09-30T04:43:39.801Z",
+      "note": "Reproduced at Next defaults: nothing fires twice. The first drag of a tile lands the copy AND the component's original beside it (from the 2026-09-20 'Always a copy' answer), which on a video also makes two tracks. Where the original should live instead is a UX call: decision card opened, recommending the original stay out of the picture and open on its own via Edit Original."
     }
+  ],
+  "started": "2026-09-30T04:39:50.937Z",
+  "walks": [
+    "component-drag-lands-a-copy-walk",
+    "component-on-the-timeline-walk"
   ]
 }
