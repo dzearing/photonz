@@ -1,0 +1,51 @@
+{
+  "id": "try-the-segmented-thumb-on-the-system-s-own-liqu-which-segmented-thumb-should-sta",
+  "taskId": "try-the-segmented-thumb-on-the-system-s-own-liqu",
+  "question": "Which segmented thumb should stay: the system's Liquid Glass or the drawn glide?",
+  "context": "Both versions are in the app now behind the switch Choices slide as system glass (on by default). Filmed side by side at 120 fps: neither leaves its rail or overshoots. The system version is fainter only on the light title bar.",
+  "options": [
+    {
+      "id": "a",
+      "label": "System glass",
+      "summary": "The thumb is one plain pane of the Mac's own Liquid Glass that the system slides straight to the new choice and stops. What you get today with no switch changed.",
+      "pros": [
+        "Real Liquid Glass, moved by the system, nothing painted on top",
+        "A straight, calm slide like the Mac's own controls"
+      ],
+      "cons": [
+        "Fainter on the light title bar: 1.45:1 against the rail, 1.14:1 after switching from dark to light, under your 1.5:1",
+        "No crisp edge or lit top line, so it reads softer"
+      ],
+      "mitigation": "Darken the light rail a little where it sits on the white title bar, so the plain glass clears 1.5:1 there without painting over it."
+    },
+    {
+      "id": "b",
+      "label": "Drawn glide",
+      "summary": "The thumb keeps the drawn look (white plate, hairline, lit top edge over the glass) and our own glide that stretches across both choices and then catches up.",
+      "pros": [
+        "Clearest thumb everywhere: 1.61:1 on the light title bar, up to 2.15:1 in the panel",
+        "The stretch reads as liquid"
+      ],
+      "cons": [
+        "The motion and the lighter look are ours, painted over the glass, not the system's"
+      ],
+      "mitigation": "Already filmed to stay inside its rail with no overshoot."
+    },
+    {
+      "id": "c",
+      "label": "System slide, drawn look",
+      "summary": "The system slides the pane the way option A does, but the pane wears the drawn white plate, hairline and lit top edge.",
+      "pros": [
+        "System motion with the clearest thumb"
+      ],
+      "cons": [
+        "Paint over the glass again, the thing you asked to move away from",
+        "Not built or filmed yet"
+      ],
+      "mitigation": "Small change: the drawn look goes back onto the pane the system already slides, then filmed like the other two."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-30T00:45:04.211Z"
+}
