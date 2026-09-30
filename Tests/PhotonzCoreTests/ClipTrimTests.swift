@@ -314,6 +314,24 @@ struct ClipTrimTests {
         // A moment past the end of everything has no clip to offer.
         #expect(document.clipToTrim(pickedLayerID: nil, atTimeMS: 99_000) == nil)
     }
+
+    @Test("of two clips under the playhead, the one on top answers, inside a group too")
+    func picksTheTopmostClipThroughGroups() throws {
+        let movie = MovieRef(pixelSize: CGSize(width: 1280, height: 800), durationMS: 8000)
+        var document = PhotonzDocument.recording(movie, name: "Recording")
+        let under = try #require(document.layers.first { $0.isClip })
+        var over = under.reidentified()
+        over.time = LayerTime(inMS: 2000, outMS: 5000, sourceInMS: 0, sourceLengthMS: 8000)
+        // A title on top of both never answers, however far up it sits.
+        var title = Layer(name: "Title", content: .group(GroupContent(children: [])), frame: .zero)
+        title.time = LayerTime(inMS: 0, outMS: 8000)
+        document.layers.append(Layer(name: "Group", content: .group(GroupContent(children: [over])),
+                                     frame: .zero))
+        document.layers.append(title)
+        #expect(document.clipToTrim(pickedLayerID: nil, atTimeMS: 3000) == over.id)
+        // Outside the top clip's stretch, the one under it answers.
+        #expect(document.clipToTrim(pickedLayerID: nil, atTimeMS: 6000) == under.id)
+    }
 }
 
 // While a trim runs, the whole recording is on the timeline.

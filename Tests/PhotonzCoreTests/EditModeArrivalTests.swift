@@ -35,4 +35,15 @@ struct EditModeArrivalTests {
         #expect(passes.map(\.panelMayFill) == [false, false, false, true])
         #expect(passes.last == .settled)
     }
+
+    /// Filmed 2026-09-30 on a five minute captioned recording: building the
+    /// rest while the frames moved left the slide 8 or 9 pictures in its first
+    /// 330ms, 90 to 120ms apart; waiting for it to land gave 23 to 26, never
+    /// more than 20ms apart.
+    @Test func everythingAfterTheKeyPassWaitsForTheSlideToLand() {
+        #expect(EditModeArrival.keyPass.nextWaitsForTheSlide)
+        #expect(EditModeArrival.timeline.nextWaitsForTheSlide == false)
+        #expect(EditModeArrival.trackRows.nextWaitsForTheSlide == false)
+        #expect(EditModeArrival.panelSections.nextWaitsForTheSlide == false)
+    }
 }

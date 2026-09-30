@@ -211,6 +211,13 @@ extension PhotonzDocument {
         if let pickedLayerID, let picked = layer(id: pickedLayerID), picked.time != nil {
             return picked.isPlacedInTime ? nil : pickedLayerID
         }
-        return allLayers.last { $0.time?.contains(ms: ms) == true && !$0.isPlacedInTime }?.id
+        // Walked in place rather than through `allLayers`, which copies every
+        // layer out: a caption carries its every word, and the panel asks this
+        // several times each time it draws (2026-09-30, the slide into Edit).
+        var topmost: UUID?
+        forEachLayer { layer in
+            if layer.time?.contains(ms: ms) == true, !layer.isPlacedInTime { topmost = layer.id }
+        }
+        return topmost
     }
 }

@@ -189,6 +189,9 @@ struct EditorView: View {
                             // its top row isn't clipped / unreachable.
                             .ignoresSafeArea(.container, edges: .vertical)
                         InspectorPanel()
+                            // Nothing handed in, so nothing to draw it again for
+                            // when this closure runs (`InspectorPanel: Equatable`).
+                            .equatable()
                             .frame(width: panelWidth)
                             .tutorialAnchor(.panel)
                     }
@@ -301,11 +304,16 @@ struct EditorView: View {
                 if tool != .crop { isCropAspectShown = false }
             }
             // Edit mode arriving from View: each stage has drawn by the time
-            // this runs, so the next one gets a pass of its own
+            // this runs, so the next one gets a pass of its own, and the one
+            // after the key pass waits for the slide to land first
             // (`EditModeArrival`).
             .onChange(of: editorState.editArrival) { _, now in
                 guard now.next != nil else { return }
-                DispatchQueue.main.async { editorState.advanceEditArrival() }
+                if now.nextWaitsForTheSlide {
+                    editorState.advanceEditArrivalOnceTheSlideLands()
+                } else {
+                    DispatchQueue.main.async { editorState.advanceEditArrival() }
+                }
             }
         }
         // Fill the window even in the empty state — the HStack otherwise hugs
@@ -489,10 +497,11 @@ struct EditorView: View {
                     // left is the icon previews.
                     if let held = editorState.heldFrameNow { heldFrameBadge(held) }
                 }
-                .overlay(alignment: Self.alignment(for: editorState.measureLegendAnchor)) {
-                    let entries = editorState.measureLegendEntries
-                    if !entries.isEmpty { measureLegend(entries) }
-                }
+                // Its own view, because where it parks is worked out from the
+                // viewport: read out here, every frame of a slide into Edit
+                // resized the canvas, moved the viewport and rebuilt the whole
+                // editor, panel and timeline included (`MeasureLegendOverlay`).
+                .overlay { MeasureLegendOverlay() }
                 .animation(.easeInOut(duration: 0.2), value: editorState.showsMeasureHint)
                 .animation(.easeInOut(duration: 0.2), value: editorState.showsPenHint)
                 .animation(.easeInOut(duration: 0.2), value: editorState.showsPathEditHint)
@@ -500,17 +509,11 @@ struct EditorView: View {
                 .animation(.easeInOut(duration: 0.2), value: editorState.copyConfirmation)
                 .animation(.easeInOut(duration: 0.2), value: editorState.videoExport?.id)
                 .animation(.easeInOut(duration: 0.2), value: editorState.activeTool)
-                .animation(.easeInOut(duration: 0.2), value: editorState.measureLegendEntries)
-                .animation(.easeInOut(duration: 0.25), value: editorState.measureLegendAnchor)
         } else {
             emptyState
         }
     }
 
-    /// The mock's glass legend (§5, `next-measure-roles`): while the Measure
-    /// tool is active, the measurement kinds present in the document, each
-    /// swatched in its canvas ink (Alignment as a dashed line). Chrome only —
-    /// it can never appear in an export.
     /// A file handed to this window from outside it: Finder, the dock, a recent
     /// item, the Open panel. A recording goes to the recording door rather than
     /// being read as a photograph, which got nothing and left the window as it
@@ -521,55 +524,6 @@ struct EditorView: View {
             return
         }
         editorState.openImage(at: url)
-    }
-
-    private func measureLegend(_ entries: [EditorState.MeasureLegendEntry]) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            ForEach(entries) { entry in
-                HStack(spacing: 8) {
-                    legendSwatch(color: Color(hex: entry.colorHex), dashed: entry.isDashed)
-                    Text(entry.label)
-                        .font(.caption)
-                        .foregroundStyle(.primary)
-                }
-            }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .glassEffect(.regular, in: .rect(cornerRadius: 10))
-        // The slot's inset on every side, except the top, which the placement
-        // sets: in the top-right corner the legend hangs one stack gap under
-        // the inspector toggle instead of sitting on it.
-        .padding(.top, editorState.measureLegendTopInset)
-        .padding([.leading, .trailing, .bottom], EditorState.measureLegendInset)
-        .allowsHitTesting(false)
-        .transition(.opacity)
-    }
-
-    /// The slot the legend picked, as a SwiftUI overlay alignment.
-    private static func alignment(for anchor: PanelAnchor) -> Alignment {
-        switch anchor {
-        case .topLeading: .topLeading
-        case .topTrailing: .topTrailing
-        case .bottomLeading: .bottomLeading
-        case .bottomTrailing: .bottomTrailing
-        case .leading: .leading
-        case .trailing: .trailing
-        }
-    }
-
-    /// A short line of the entry's ink: solid for a role, dashed for Alignment.
-    private func legendSwatch(color: Color, dashed: Bool) -> some View {
-        HStack(spacing: 2) {
-            if dashed {
-                ForEach(0..<3, id: \.self) { _ in
-                    Capsule().fill(color).frame(width: 4, height: 3)
-                }
-            } else {
-                Capsule().fill(color).frame(width: 16, height: 3)
-            }
-        }
-        .frame(width: 16, alignment: .leading)
     }
 
     /// The Measure tool's hint: a small glass pill saying what a click does in
@@ -3353,5 +3307,81 @@ private struct ToolBarGroupChrome: ViewModifier {
 private extension View {
     func toolBarGroup(_ name: String, padding: CGFloat, isSection: Bool) -> some View {
         modifier(ToolBarGroupChrome(name: name, padding: padding, isSection: isSection))
+    }
+}
+
+/// The Measure tool's glass legend (§5, `next-measure-roles`), in whichever
+/// canvas slot it wins: while the tool is active, the measurement kinds present
+/// in the document, each swatched in its canvas ink (Alignment as a dashed
+/// line). Chrome only; it can never appear in an export.
+///
+/// A view of its own on purpose. Where the legend parks is worked out against
+/// the viewport (`measureLegendAnchor`), and the viewport moves on every frame
+/// the canvas changes size. Read in the editor's own body, that read tied the
+/// whole editor to the viewport: every frame of a slide between View and Edit
+/// ran the editor's layout again and made a new panel and timeline, about a
+/// hundred times in a 0.8s switch, where it now runs about twenty
+/// (2026-09-30). In here it costs the legend alone.
+private struct MeasureLegendOverlay: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        let entries = editorState.measureLegendEntries
+        let anchor = editorState.measureLegendAnchor
+        ZStack {
+            if !entries.isEmpty { legend(entries) }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: Self.alignment(for: anchor))
+        .allowsHitTesting(false)
+        .animation(.easeInOut(duration: 0.2), value: entries)
+        .animation(.easeInOut(duration: 0.25), value: anchor)
+    }
+
+    private func legend(_ entries: [EditorState.MeasureLegendEntry]) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(entries) { entry in
+                HStack(spacing: 8) {
+                    swatch(color: Color(hex: entry.colorHex), dashed: entry.isDashed)
+                    Text(entry.label)
+                        .font(.caption)
+                        .foregroundStyle(.primary)
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .glassEffect(.regular, in: .rect(cornerRadius: 10))
+        // The slot's inset on every side, except the top, which the placement
+        // sets: in the top-right corner the legend hangs one stack gap under
+        // the inspector toggle instead of sitting on it.
+        .padding(.top, editorState.measureLegendTopInset)
+        .padding([.leading, .trailing, .bottom], EditorState.measureLegendInset)
+        .transition(.opacity)
+    }
+
+    /// A short line of the entry's ink: solid for a role, dashed for Alignment.
+    private func swatch(color: Color, dashed: Bool) -> some View {
+        HStack(spacing: 2) {
+            if dashed {
+                ForEach(0..<3, id: \.self) { _ in
+                    Capsule().fill(color).frame(width: 4, height: 3)
+                }
+            } else {
+                Capsule().fill(color).frame(width: 16, height: 3)
+            }
+        }
+        .frame(width: 16, alignment: .leading)
+    }
+
+    /// The slot the legend picked, as a SwiftUI alignment.
+    private static func alignment(for anchor: PanelAnchor) -> Alignment {
+        switch anchor {
+        case .topLeading: .topLeading
+        case .topTrailing: .topTrailing
+        case .bottomLeading: .bottomLeading
+        case .bottomTrailing: .bottomTrailing
+        case .leading: .leading
+        case .trailing: .trailing
+        }
     }
 }

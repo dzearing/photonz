@@ -1057,6 +1057,20 @@ final class EditorState {
         // here slides up after the rest rather than appearing.
         withAnimation(.viewEditMode) { editArrival = next }
     }
+    /// Counts the stages sent to wait for a slide, so one left over from an
+    /// earlier switch (View, Edit and back inside a quarter second) never
+    /// lands in a later one.
+    @ObservationIgnored private var editArrivalWait = 0
+    /// One pass on, once the slide the key pass set off has landed
+    /// (`EditModeArrival.nextWaitsForTheSlide`).
+    func advanceEditArrivalOnceTheSlideLands() {
+        editArrivalWait &+= 1
+        let wait = editArrivalWait
+        DispatchQueue.main.asyncAfter(deadline: .now() + ViewEditMode.transitionSeconds) { [weak self] in
+            guard let self, self.editArrivalWait == wait, self.editArrival.nextWaitsForTheSlide else { return }
+            self.advanceEditArrival()
+        }
+    }
     /// A walk that says the tracks are open (`setup.timelineOpen`) opens
     /// every recording in Edit, as a person who goes straight to editing does.
     static var walkOpensRecordingsInEdit = false

@@ -2314,6 +2314,8 @@ private final class Run {
 
         case .filmThumb(let film):
             note(number, step.name, try await filmThumb(film, number: number), state: describe())
+        case .filmWindow(let film):
+            note(number, step.name, try await filmWindow(film, number: number), state: describe())
 
         case .expectBox(let layer, let at, let size, let corner, let onScreen, let reachable, let within):
             note(number, step.name,
@@ -8611,6 +8613,82 @@ private final class Run {
             }
         }
         return summary
+    }
+
+    /// Films the editor window below its title bar while a key sets something
+    /// sliding, and reads when it drew each new picture (`SlideCadence`).
+    ///
+    /// The title bar is left out on purpose: the View | Edit control there is
+    /// the system's own and animates its thumb without the app, so a window
+    /// whose main thread stalled would still look busy if it were in frame.
+    private func filmWindow(_ film: PlaytestSlideFilm, number: Int) async throws -> String {
+        guard CGPreflightScreenCaptureAccess() else {
+            captures.skippedUngranted()
+            throw Failure(description: "filming the window needs the probe's Screen Recording grant, and it has none")
+        }
+        let host = try requireWindow()
+        guard let content = host.contentView else { throw Failure(description: "the window has no content view") }
+        let frame = host.frame
+        // Half a point to the pixel: enough to see the slide, small enough that
+        // sixty frames of it do not fill the disk.
+        let scale: CGFloat = 0.5
+        let below = content.bounds.height - content.safeAreaInsets.top
+        let crop = CGRect(x: 0, y: (frame.height - below) * scale,
+                          width: frame.width * scale, height: below * scale).integral
+        let shareable = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
+        guard let scWindow = shareable.windows.first(where: { $0.windowID == CGWindowID(host.windowNumber) }) else {
+            throw Failure(description: "window \(host.windowNumber) is not in shareable content")
+        }
+        // The same dance `filmThumb` does for a walk's window, which sits at
+        // alpha 0 between pictures.
+        let hidden = host.alphaValue == 0
+        if hidden {
+            MainThreadMeter.shared.setAsidePasses()
+            Self.keepBehindThePerson(host)
+            host.alphaValue = 1
+            harnessWork { host.display() }
+            await sleep(0.25)
+        }
+        defer {
+            if hidden { host.alphaValue = 0; MainThreadMeter.shared.countPassesAgain() }
+        }
+        let camera = PlaytestWindowFilm(crop: crop)
+        try await camera.start(scWindow, size: CGSize(width: frame.width * scale, height: frame.height * scale))
+        await sleep(0.15)
+        let keyAt = PlaytestWindowFilm.hostNow
+        try await perform(.key(film.key, film.modifiers), number: number)
+        await sleep(film.seconds)
+        await camera.stop()
+        let frames = camera.frames
+        // A frame counts when it draws something the one before it did not.
+        // Reading and writing a hundred frames is the harness's work, not a
+        // pass the app made anybody wait through.
+        var drawn: [Double] = []
+        var readings: [[String: Any]] = []
+        harnessWork {
+            var last: [UInt8]?
+            for (index, each) in frames.enumerated() {
+                let print = PlaytestWindowFilm.print(of: each.image)
+                let changed = last.map { zip($0, print).contains { abs(Int($0) - Int($1)) > 2 } } ?? false
+                last = print
+                let ms = (each.hostTime - keyAt) * 1000
+                if changed { drawn.append(ms) }
+                readings.append(["frame": index, "ms": Int(ms.rounded()), "changed": changed])
+                if let data = ImageCodec.encode(each.image, format: .png) {
+                    try? data.write(to: out.appendingPathComponent("\(film.name)-\(index)-sc.png"))
+                }
+            }
+        }
+        let cadence = SlideCadence.read(picturesAtMS: drawn, keyAtMS: 0, withinMS: film.withinMS)
+        write(json: ["frames": readings, "firstMS": cadence.firstMS ?? -1, "lastMS": cadence.lastMS ?? -1,
+                     "pictures": cadence.pictures, "longestStillMS": cadence.longestStillMS],
+              to: "\(film.name).json")
+        if !frames.isEmpty { captures.photographed("\(film.name)-0") }
+        if let ceiling = film.longestStillUnderMS, cadence.pictures > 0, cadence.longestStillMS >= ceiling {
+            throw Failure(description: String(format: "the window sat still for %.0fms in the middle of the slide, "
+                + "past the %.0fms this walk allows: ", cadence.longestStillMS, ceiling) + cadence.summary)
+        }
+        return cadence.summary
     }
 
     /// Pictures one above the other, for a filmstrip.

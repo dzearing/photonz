@@ -1,0 +1,25 @@
+{
+  "feature": "A smooth slide into Edit mode",
+  "epic": "video-editing",
+  "summary": "Pressing Cmd-2 on a recording in View now slides the panel, tool bar and tracks in as smoothly as Cmd-1 slides them out. The panel's sections, the tool bar and the track rows now fill in right after the slide lands instead of during it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a long recording with captions (five minutes is where it showed), so it opens in View.",
+  "switched": {},
+  "try": [
+    { "do": "Press Cmd-2 and watch the panel slide in from the right.", "shot": "2026-09-30-slide-into-edit-1-sliding-sc.png" },
+    { "do": "Watch the moment the slide stops: the panel and tracks are still empty.", "shot": "2026-09-30-slide-into-edit-2-landed-sc.png" },
+    { "do": "Watch the tool bar, the track rows and the panel's sections fill in.", "shot": "2026-09-30-slide-into-edit-3-filled-sc.png" },
+    { "do": "Press Cmd-1, then Cmd-2 again, and compare the two slides." },
+    { "do": "Press Cmd-2 then Cmd-1 quickly, inside a quarter second, and check the window lands in View cleanly." }
+  ],
+  "evaluate": [
+    "Does the slide into Edit now feel as smooth as the slide back to View?",
+    "Does the panel and tracks filling in just after the slide read as intended, or as the app catching up?",
+    "Is the fill-in quick enough that you never try to click something that is not there yet?",
+    "On a short recording with no captions, does anything about the switch feel different from before?"
+  ],
+  "rough": [
+    "The editor's contents land about 0.3 to 0.7s after the key on a five minute captioned recording, visibly after the slide. The pieces cost the same to build as before, they just no longer land while things move. Filed as a follow-up: make them cheap enough to come with the slide.",
+    "The main thread is still busy about 630 to 680ms of the 0.8s after Cmd-2, so this task's second check (well under half) is not met. The time is the same; it no longer lands in the slide.",
+    "Pictures are from a walk's film of the window below the title bar, at half size."
+  ]
+}

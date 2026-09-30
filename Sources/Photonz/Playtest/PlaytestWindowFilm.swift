@@ -17,6 +17,9 @@ final class PlaytestWindowFilm: NSObject, SCStreamOutput, @unchecked Sendable {
     struct Frame {
         /// Seconds since filming began.
         let time: TimeInterval
+        /// Seconds on the host clock, the one `hostNow` reads, so a frame can
+        /// be put against the moment a key went down.
+        let hostTime: TimeInterval
         let image: CGImage
     }
 
@@ -78,8 +81,27 @@ final class PlaytestWindowFilm: NSObject, SCStreamOutput, @unchecked Sendable {
         lock.lock()
         if began == nil { began = stamp }
         let time = began.map { CMTimeGetSeconds(CMTimeSubtract(stamp, $0)) } ?? 0
-        kept.append(Frame(time: time, image: strip))
+        kept.append(Frame(time: time, hostTime: CMTimeGetSeconds(stamp), image: strip))
         lock.unlock()
+    }
+
+    /// Now, on the clock the frames are stamped with.
+    static var hostNow: TimeInterval { CMTimeGetSeconds(CMClockGetTime(CMClockGetHostTimeClock())) }
+
+    /// A picture shrunk to a few hundred grey values: two frames whose prints
+    /// differ drew something different.
+    static func print(of image: CGImage) -> [UInt8] {
+        let width = 64, height = 40
+        var bytes = [UInt8](repeating: 0, count: width * height)
+        bytes.withUnsafeMutableBytes { raw in
+            guard let context = CGContext(
+                data: raw.baseAddress, width: width, height: height, bitsPerComponent: 8,
+                bytesPerRow: width, space: CGColorSpaceCreateDeviceGray(),
+                bitmapInfo: CGImageAlphaInfo.none.rawValue) else { return }
+            context.interpolationQuality = .medium
+            context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        }
+        return bytes
     }
 
     /// Each column's brightness (0...1) along a band of rows, the middle value

@@ -1635,3 +1635,14 @@ struct SectionHelpMark: View {
         }
     }
 }
+
+/// The panel takes nothing from whoever draws it: everything it shows it reads
+/// for itself, and it redraws when that changes. So a pass of the editor
+/// around it is never a reason to draw it again. Without this, every pass of
+/// the editor made a new panel and SwiftUI could not tell it was the same one:
+/// in the first 100ms of the slide into Edit on a long captioned recording
+/// the panel's body ran five times, and two of those were only the editor
+/// around it passing again (2026-09-30).
+extension InspectorPanel: Equatable {
+    nonisolated static func == (lhs: InspectorPanel, rhs: InspectorPanel) -> Bool { true }
+}
