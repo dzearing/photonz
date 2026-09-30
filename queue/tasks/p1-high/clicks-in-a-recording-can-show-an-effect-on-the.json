@@ -1,0 +1,35 @@
+{
+  "id": "clicks-in-a-recording-can-show-an-effect-on-the",
+  "title": "Clicks in a recording can show an effect on the cursor",
+  "goal": "User 2026-09-30: 'when that happens, I'd love to have an option to have some UI effect on the cursor when the click happens.' Builds on the recorded clicks. Compare Screen Studio and ScreenFlow click highlights: one switch, a few good looks, done.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 0.000006,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-30T20:39:10.252Z",
+  "updated": "2026-09-30T20:39:21.117Z",
+  "deps": [
+    "a-recording-remembers-where-the-cursor-went-and"
+  ],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "A Clicks row on the recording clip's properties: a switch (off by default) and a style dropdown: Ripple (a ring that expands and fades), Pulse (a soft filled circle), Spotlight (dims everything except around the click briefly); colour from the design system's colour well, size Small/Medium/Large",
+    "The effect plays at each recorded click, centred on the click, in the canvas during playback and scrubbing, and in export, identically; its timing (about 400 ms) never delays the video",
+    "Each click shows as a small tick on the clip's bar in the timeline; right-click a tick: Hide This Click, and ticks can be dragged to adjust time",
+    "Works on recordings with no track only once clicks are added by hand; otherwise the row says nothing and is disabled with a tooltip",
+    "Walk records clicks, turns Ripple on, and photographs three moments across one click; export frames match"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T20:39:10.254Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-30T20:39:21.116Z",
+      "note": "seq 440 -> 0.000006"
+    }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T20:57:12.631Z",
-  "updated": "2026-09-30T12:29:20.319Z",
+  "updated": "2026-09-30T14:59:15.980Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found 2026-09-29 by switching-a-long-recording-to-edit-mode-draws-it, after it split the Cmd-2 key pass up (EditModeArrival). Reproduce: Scripts/playtest.sh Scripts/playtest/segmented-thumb-film-walk.json, then read /tmp/photonz-playtest/segmented-thumb-film/1-view-to-edit.json frames. Output 2026-09-29: View to Edit thumb positions change at ms 289, 351, 360, 375, 411, 421, 429, 437, 491, 500 (steps of 10 to 62ms); Edit to View changes every ~9ms from 256 to 495. Long captioned sample (Scripts/playtest/view-to-edit-on-a-long-recording-walk.json): wait after Cmd-2 reads mainBusy 633 to 758ms over 0.8s, with passes of 30 to 50ms all through the 250ms slide; after Cmd-1 about 530ms. Suspects: the panel move transition narrows the canvas every frame (HStack), so the canvas, its viewport refit, the tool bar fit budget (reconcileToolbarCount) and the whole panel lay out per frame; the dock growing relays the grid every frame. Idea: slide the panel with an offset over a fixed canvas width and refit once at the end.",
@@ -30,10 +30,32 @@
     {
       "t": "2026-09-30T12:29:20.318Z",
       "note": "seq 3450 -> 20"
+    },
+    {
+      "t": "2026-09-30T13:36:50.771Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-30T14:58:54.963Z",
+      "note": "Reproduced 2026-09-30. Thumb film no longer measures anything (the View | Edit control is the system's own; thumbPt stayed constant), so added a filmWindow walk step (films the window below the title bar, reports when it drew each new picture). Filmed on the 5 min captioned sample: staged arrivals during the slide gave 8-9 pictures in the first 330ms, 90-123ms apart; Edit to View ~8-20ms apart. xctrace profile: both directions ~480ms main busy per switch; into Edit the arrival passes (40-90ms each) land during the motion."
+    },
+    {
+      "t": "2026-09-30T14:58:55.017Z",
+      "note": "Fix: every stage after the key pass waits for the slide to land (EditModeArrival.nextWaitsForTheSlide, EditorState.advanceEditArrivalOnceTheSlideLands with a generation guard). Filmed after: 22-25 pictures in the slide, longest still 17-19ms. Also: Measure legend moved into its own view (its anchor read the viewport, so the editor's layout closure re-ran every frame, ~100 times per switch, now ~20); InspectorPanel is Equatable/.equatable() (no inputs); clipToTrim walks layers in place instead of copying allLayers. Variants measured: one pass after the slide (same smoothness, 110-150ms stall), all at the key (326ms before anything moves), tool bar with the key pass (+30-40ms latency). Chose staged-after."
+    },
+    {
+      "t": "2026-09-30T14:58:55.071Z",
+      "note": "Acceptance: (1) met, measured by filmWindow instead of the thumb (longest still 17-19ms in the slide; walk claims <30ms). (2) NOT met: mainBusy after Cmd-2 still 626-684ms; the time is the same, it just no longer lands in the slide. Filed edit-mode-s-contents-come-in-with-the-slide-not for it. (3) View playback untouched by the change (arrival timing only runs on a switch; legend/panel/clipToTrim changes only remove work); playing-a-recording-never-blinks, a-faded-title-shows-while-playing, an-editing-session walks green; not measured against a baseline build. Walks green: 16 edit-mode walks, legend/measure walks, segmented thumb walks. Full suite 10674 passed. Left rough (audit rough, not filed separately): film frames are half size below the title bar."
+    },
+    {
+      "t": "2026-09-30T14:59:15.978Z",
+      "note": "Stages after the key pass wait for the slide to land (EditModeArrival.nextWaitsForTheSlide); filmed slide now 22-25 pictures, longest still 17-19ms (was 90-123ms). Legend isolated, panel equatable, clipToTrim no-copy. New filmWindow walk step; view-to-edit-on-a-long-recording-walk claims <30ms. Main-thread busy unchanged (criterion 2 not met), follow-up edit-mode-s-contents-come-in-with-the-slide-not filed. Suite 10674 green, 28 related walks green. Audit queue/audits/2026-09-30-slide-into-edit.json. Commit 26b43510."
     }
   ],
   "walks": [
     "segmented-thumb-film-walk",
     "view-to-edit-on-a-long-recording-walk"
-  ]
+  ],
+  "started": "2026-09-30T13:36:50.770Z",
+  "completed": "2026-09-30T14:59:15.979Z"
 }

@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-09-29T22:45:20.557Z",
-  "updated": "2026-09-30T12:29:21.079Z",
+  "updated": "2026-09-30T18:46:16.303Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nOpened by the rotating check at 2026-09-29T22:45:20Z, not by a full sweep: it ran 50 of 682 walks and found the ones below failing with no other open task naming them. Nothing here is a claim about the rest of the set.\n\nFailing walks (1): layers-lazy-rows-walk\n\nFull output: /Users/dzearing/git/photonz/queue/sweep/slice-2026-09-29-153123.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -66,7 +66,61 @@
     {
       "t": "2026-09-30T12:29:21.078Z",
       "note": "triage 2026-09-30: moved to the front of p2. It now holds eleven walks the rotating checks found failing since 2026-09-29 22:45Z, including scrub-never-blacks-out-walk (the video focus: the picture trailed the playhead by 2 display frames at 1 of 165 frames, 11:54Z check). an-editing-session-walk failed at 05:36Z but passed in the 12:24Z check, so it is probably no longer this task's."
+    },
+    {
+      "t": "2026-09-30T12:32:23.174Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-30T13:20:19.169Z",
+      "note": "owns these walks: layers-lazy-rows-walk, contents-for-several-walk, copies-share-choice-walk, copy-own-color-walk, chrome-says-labels-walk, menu-checkmarks-walk, normalize-cleans-noise-walk, panel-name-walk, picker-controls-walk, scrub-never-blacks-out-walk, styled-row-walk, an-editing-session-walk"
+    },
+    {
+      "t": "2026-09-30T13:20:19.224Z",
+      "note": "App was broken, walks right (6 walks): contents-for-several, copies-share-choice, copy-own-color, chrome-says-labels, styled-row, picker-controls. Since 5a81d5a3 (system segmented control) two rows collapsed into dropdowns: the colour picker's Shades|Related|Document|Recent (a 'Shades v' dropdown) and a Mixed Arrangement's Free|Stack|Grid (an EMPTY dropdown). Cause 1: SwiftUI hands .controlSize(.small) to the NSSegmentedControl before updateNSView, so the font-on-size-change guard never fired and every small row drew 13pt words (debug-measured: size=small font=13). Cause 2: the system pads each word ~18pt; Mixed Arrangement gets 113pt, asks 133pt. Fix: font follows size on its own check; new PhotonzCore SegmentRoom (tested) adds a tight step (word + 10pt, spare shared) before the dropdown. Photographed: all four swatch words whole, Free|Stack|Grid whole beside Mixed."
+    },
+    {
+      "t": "2026-09-30T13:20:19.279Z",
+      "note": "Walks wrong, app moved on (2): menu-checkmarks-walk, panel-name-walk. Their ⇧⌘H trick stopped working on 2026-09-26 when walk windows stopped taking key, so the View menu read frozen. Fix: front:true in their setup (they photograph open menus, so they already needed the Mac to themselves). The harness's frozen-menu failure now says front:true instead of the dead History advice."
+    },
+    {
+      "t": "2026-09-30T13:20:19.331Z",
+      "note": "Passing already, no change (3): layers-lazy-rows-walk (2/2), normalize-cleans-noise-walk (2/2), an-editing-session-walk (2/2). scrub-never-blacks-out-walk is a load flake, not broken: 7 of 8 runs passed, 5 in a row; the one failure came straight after a probe rebuild, with a 44.8ms worst composite (about 3 display frames) against 16.8ms normally, i.e. one hitch. Left rough, not filed: if it keeps failing in rotating checks while the loop is idle, file the occasional slow composite during a scrub as its own task."
+    },
+    {
+      "t": "2026-09-30T13:20:19.385Z",
+      "note": "Verified: Scripts/test.sh 10664/10664. 33 walks re-run on the fixed build, all green: every walk above a second time, the 25 walks that press a segmented row by its label, both segmented-thumb walks, style-users-walk. Asked for a sweep: the font fix changes every small segmented row in Next."
+    },
+    {
+      "t": "2026-09-30T13:20:48.133Z",
+      "note": "All 12 walks green twice in a row on 902f8163. Six were right and the app was wrong: the Next segmented control drew small rows at 13pt and collapsed the colour picker's swatch scopes and a Mixed Arrangement into dropdowns (one empty); fixed in SegmentedControl + new tested PhotonzCore SegmentRoom, photographed whole in the probe. Two walks were wrong (menu-checkmarks, panel-name: dead ⇧⌘H trick), now front:true, harness advice updated. Three already passed; scrub-never-blacks-out is a load flake (7/8). Tests 10664/10664, 33 walks green, sweep requested."
+    },
+    {
+      "t": "2026-09-30T18:46:16.227Z",
+      "note": "2026-09-30 (every-segmented-control task): two more walks fail on unchanged HEAD 26b43510, reproduced in a clean worktree with Scripts/playtest.sh --no-build: every-title-dropdown-opens-on-a-click-walk fails step 66 (panelMenu) 'no menu called \"Easing\" is in the window' (the panel's menu now reads 'Curve (Linear)', so the walk names a menu that was renamed); every-caption-control-changes-the-captions-walk fails step 87 (key) 'command+z is Edit > Undo, which is dimmed and empty in a walk' (the walk needs front: true for the menu bar, like menu-checkmarks-walk got on 2026-09-30)."
+    },
+    {
+      "t": "2026-09-30T18:46:16.302Z",
+      "note": "walks layers-lazy-rows-walk, contents-for-several-walk, copies-share-choice-walk, copy-own-color-walk, chrome-says-labels-walk, menu-checkmarks-walk, normalize-cleans-noise-walk, panel-name-walk, picker-controls-walk, scrub-never-blacks-out-walk, styled-row-walk, an-editing-session-walk -> layers-lazy-rows-walk, contents-for-several-walk, copies-share-choice-walk, copy-own-color-walk, chrome-says-labels-walk, menu-checkmarks-walk, normalize-cleans-noise-walk, panel-name-walk, picker-controls-walk, scrub-never-blacks-out-walk, styled-row-walk, an-editing-session-walk, every-title-dropdown-opens-on-a-click-walk, every-caption-control-changes-the-captions-walk"
     }
   ],
-  "standing": "walk-sweep"
+  "standing": "walk-sweep",
+  "started": "2026-09-30T12:32:23.173Z",
+  "walks": [
+    "layers-lazy-rows-walk",
+    "contents-for-several-walk",
+    "copies-share-choice-walk",
+    "copy-own-color-walk",
+    "chrome-says-labels-walk",
+    "menu-checkmarks-walk",
+    "normalize-cleans-noise-walk",
+    "panel-name-walk",
+    "picker-controls-walk",
+    "scrub-never-blacks-out-walk",
+    "styled-row-walk",
+    "an-editing-session-walk",
+    "every-title-dropdown-opens-on-a-click-walk",
+    "every-caption-control-changes-the-captions-walk"
+  ],
+  "completed": "2026-09-30T13:20:48.134Z"
 }

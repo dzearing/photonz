@@ -1,0 +1,33 @@
+{
+  "id": "a-zoom-region-that-frames-a-spot-and-can-follow",
+  "title": "A zoom region that frames a spot, and can follow the mouse",
+  "goal": "User 2026-09-30: 'separately, I'd love a way to have some rectangle region that zooms a particular spot. If it can follow the mouse, that's amazing. This would help highlight something while it's done.' Punch In and Hold exists (46935c65) as a clip right-click preset; this makes zoom a first-class, visible thing with a region you draw and an option to track the recorded cursor, like Screen Studio's auto-zoom.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 0.0000055,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-30T20:39:10.336Z",
+  "updated": "2026-09-30T20:39:21.177Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window. Follow Cursor and Suggest Zooms need the cursor track; the plain zoom region does not and may land first.",
+  "acceptance": [
+    "Add Zoom (right-click the clip or the timeline at the playhead, and the Clip menu) creates a Zoom region: a bar on the clip's zoom lane with an in and out you drag, and a rectangle on the canvas you draw and resize for the area to fill the frame; eases in and out (duration adjustable by dragging the bar's ramp handles)",
+    "Follow Cursor (a switch on the zoom's properties) makes the rectangle track the recorded cursor path with smoothing so it glides rather than jitters, keeping the cursor inside the frame with a margin; the zoom level stays the rectangle's size",
+    "Suggest Zooms (right-click the clip) proposes zoom regions around clusters of clicks from the recorded track, each one editable or removable",
+    "Zoom renders the same in playback, scrubbing and export, sharp (frames decoded at the zoomed size), at 60 fps",
+    "Walk: add a zoom with Follow Cursor on a recording with a moving cursor, photograph three moments showing the frame tracking it, and export frames match"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T20:39:10.338Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-30T20:39:21.176Z",
+      "note": "seq 450 -> 0.0000055"
+    }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "blocked",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T12:19:16.059Z",
-  "updated": "2026-09-30T12:29:20.481Z",
+  "updated": "2026-09-30T20:39:20.900Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: Sources/Photonz/Capture/ScreenRecorder.swift:59 sets streamConfig.showsCursor = true and nothing in Capture/ records pointer or click events, so the pointer exists only as pixels. Competitor gap named by the manager passes of 2026-09-19 and 2026-09-20 as an open thread (cursor and click highlighting) and deferred while nine cards were pending; one card is pending today. It is time sensitive in a way the rest of the video queue is not: data not recorded now cannot be recovered later. Sits behind the p1 rebuild chain on purpose; nothing here should jump the user tasks. Hiding the pointer after the fact needs it NOT burned in, which is a capture change with its own cost; the card asks what the user wants first rather than deciding that here.",
@@ -66,6 +66,10 @@
     {
       "t": "2026-09-30T12:29:20.480Z",
       "note": "seq 190 -> 50"
+    },
+    {
+      "t": "2026-09-30T20:39:20.899Z",
+      "note": "folded into a-recording-remembers-where-the-cursor-went-and (the user asked for it on 2026-09-30, filed p1)"
     }
   ],
   "source": "manager"

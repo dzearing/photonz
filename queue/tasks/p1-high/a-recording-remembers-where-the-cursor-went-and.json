@@ -1,0 +1,36 @@
+{
+  "id": "a-recording-remembers-where-the-cursor-went-and",
+  "title": "A recording remembers where the cursor went and every click",
+  "goal": "User 2026-09-30: 'for video playback, I need it to be easy to track clicks in the video. Maybe we can detect this?' Photonz makes the recording itself (Capture/ScreenRecorder.swift, ScreenCaptureKit), so instead of detecting clicks from pixels afterwards it can record them, the way Screen Studio does. Today the recorder captures only the picture. Foundation for click effects and a zoom that follows the mouse.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 0.000005,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-30T20:39:10.170Z",
+  "updated": "2026-09-30T20:39:21.059Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "While recording, the app samples the cursor position (at the recording frame rate) and every mouse down/up (button, position, time) with a global event monitor, mapped into the recording's pixel space (display, window or region recordings, Retina scale), and stores it beside the video as a small sidecar the document references (not pixels in the model); PhotonzCore types and tests first",
+    "Starting it never slows the recording or the Stop-to-history time (see a-recording-shows-in-history-the-moment-you-stop); if a permission is needed, it is asked once per launch at most, with plain words, and recording works without it",
+    "Opening a recording loads the cursor track; a debug-free walk records 5 s with scripted clicks and asserts the stored clicks match in time (within one frame) and position (within 2 px)",
+    "Recordings made before this have no track and nothing breaks; right-click on the timeline > Add Click at Playhead lets a person add one by hand (position from where they click on the canvas)"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T20:39:10.172Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-30T20:39:20.956Z",
+      "note": "Folded in the manager's p2 twin a-recording-remembers-where-the-pointer-went-and; read its goal and notes for anything extra."
+    },
+    {
+      "t": "2026-09-30T20:39:21.058Z",
+      "note": "seq 430 -> 0.000005"
+    }
+  ]
+}
