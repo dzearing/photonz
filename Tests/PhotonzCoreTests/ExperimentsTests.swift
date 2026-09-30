@@ -483,6 +483,17 @@ struct FeatureCatalogTests {
         #expect(!FeatureCatalog.defaultSettings(for: .current).isEnabled(FeatureCatalog.designedSegmentedFlag))
     }
 
+    @Test func theSystemGlassThumbFlagIsNextOnlyAndOnByDefault() {
+        // A temporary comparison (2026-09-29): on, the segmented thumb is
+        // moved by the system's own Liquid Glass morph; off, by the drawn
+        // glide. It lives beside the designed control, so Next only.
+        #expect(FeatureCatalog.systemGlassThumbFlag == "next-system-glass-thumb")
+        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.systemGlassThumbFlag))
+        #expect(FeatureCatalog.flags(for: .next).contains { $0.name == FeatureCatalog.systemGlassThumbFlag })
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.systemGlassThumbFlag })
+        #expect(!FeatureCatalog.defaultSettings(for: .current).isEnabled(FeatureCatalog.systemGlassThumbFlag))
+    }
+
     @Test func theToolBarFeedbackFlagIsNextOnlyAndOnByDefault() {
         // Tool bar buttons show the shared hover fill and pressed shrink that
         // every other icon button in the app has. Next only; Current keeps

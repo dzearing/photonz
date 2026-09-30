@@ -44,6 +44,7 @@ struct PanelFieldRow<Control: View>: View {
 @MainActor final class Experiments {
     static let shared = Experiments()
     var designedSegmentedEnabled: Bool { true }
+    var systemGlassThumbEnabled: Bool { false }
 }
 
 // MARK: - The sheet

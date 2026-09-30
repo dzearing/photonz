@@ -304,6 +304,11 @@ extension Experiments {
     /// Next only, so Current keeps the system control.
     var designedSegmentedEnabled: Bool { isEnabled(FeatureCatalog.designedSegmentedFlag) }
 
+    /// `next-system-glass-thumb`: whether the designed segmented thumb is
+    /// moved by the system's Liquid Glass morph rather than the drawn glide.
+    /// A temporary comparison; the loser goes once the user picks.
+    var systemGlassThumbEnabled: Bool { isEnabled(FeatureCatalog.systemGlassThumbFlag) }
+
     /// The floating bar in use: the one glass bar as `video.html` sizes it,
     /// or Current's separate capsules. Everything that has to clear the bar
     /// (a fit, the notice pill, the capsules stacked above it) reads its

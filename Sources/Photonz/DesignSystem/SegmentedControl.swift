@@ -332,6 +332,9 @@ struct DesignedSegments<Value: Hashable>: View {
         }
         .coordinateSpace(.named(segmentedRowSpace))
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { rowWidth = $0 }
+        .background(alignment: .topLeading) {
+            if systemGlass, shownMorph == nil { systemGlassThumb }
+        }
         .backgroundPreferenceValue(SegmentBoxesKey.self) { anchors in
             GeometryReader { proxy in
                 if let pickedIndex, let anchor = anchors[pickedIndex] {
@@ -339,7 +342,7 @@ struct DesignedSegments<Value: Hashable>: View {
                     if let shownMorph, let from = anchors[shownMorph.from] {
                         placed(thumb, in: SegmentThumbMorph(from: proxy[from], to: proxy[anchor], row: row)
                             .frame(at: shownMorph.at))
-                    } else {
+                    } else if !systemGlass {
                         thumbLayer(target: proxy[anchor], row: row)
                     }
                 }
@@ -373,6 +376,69 @@ struct DesignedSegments<Value: Hashable>: View {
         .onKeyPress(.rightArrow) { step(1) }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(label)
+    }
+
+    /// The system's version (`next-system-glass-thumb`, on while the user
+    /// compares the two): ONE pane of the system's Liquid Glass that stays
+    /// put as a view and is moved by SwiftUI's own animation of its frame on
+    /// the system's smooth curve, so the glass reshapes itself as it goes.
+    /// Nothing here places it frame by frame.
+    ///
+    /// The glass's other morph, removing the pane from one segment and
+    /// putting one on the next under a shared `glassEffectID`, was filmed at
+    /// 120 fps four ways on 2026-09-29 (in the anchors' pass, in a plain
+    /// background, in a row layout, with `.matchedGeometry` and a wide
+    /// container) and every time it jumped: glass on View one frame, on Edit
+    /// the next, nothing between.
+    ///
+    /// Only the raised glass thumb moves this way: the accent plate, and the
+    /// opaque plate under Increase Contrast or Reduce Transparency, are not
+    /// glass, and Reduce Motion cross-fades, so those keep the drawn glide.
+    private var systemGlass: Bool {
+        Experiments.shared.systemGlassThumbEnabled && plateStyle == .raised && !solidThumb && !reduceMotion
+    }
+
+    /// The system glass's one curve: the component page's 300ms, with no
+    /// bounce, so the glass stops where it lands.
+    private static var glassCurve: Animation { .smooth(duration: 0.3) }
+
+    /// Placed from the segments' measured boxes in a plain background.
+    @ViewBuilder private var systemGlassThumb: some View {
+        let rect: CGRect? = if let dragCenter, let ordered = orderedSlots {
+            // Under the hand it follows the pointer; let go and the same pane
+            // slides onto its segment.
+            SegmentThumbDrag.frame(centerX: dragCenter, slots: ordered, row: 0...rowWidth)
+        } else {
+            pickedIndex.flatMap { slots[$0] }
+        }
+        if let rect {
+            GlassEffectContainer {
+                Color.clear
+                    .glassEffect(thumbGlass, in: .capsule)
+                    .overlay(focusRing)
+                    .frame(width: rect.width, height: rect.height)
+                    .position(x: rect.midX, y: rect.midY)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            }
+            // A new pane for a new appearance: a pane changing the glass it
+            // wears as the theme flipped once stayed dark on a light rail.
+            .id(scheme)
+            // The one animator. A pick made inside someone else's animation
+            // (View | Edit changes under `.viewEditMode`) moves the glass on
+            // this curve and no other.
+            .transaction(value: pickedIndex) { $0.animation = Self.glassCurve }
+        }
+    }
+
+    /// Lighter than the rail by the glass alone, measured on real captures
+    /// (2026-09-29): in light the regular glass is the white pane (1.64:1 in
+    /// the panel, 1.45 to 1.66:1 in the title bar, where the rail over a white
+    /// bar leaves 1.6:1 at most); in dark the regular glass goes as dark as
+    /// the rail, and the clear glass under a white tint is what clears 1.5:1
+    /// (1.55 to 1.61:1). A white tint on light glass greys it (1.15:1), so
+    /// light wears none.
+    private var thumbGlass: Glass {
+        scheme == .dark ? .clear.tint(Palette.segGlassTintDark) : .regular
     }
 
     /// The thumb, drawn where the picked segment is, or where a morph or a
@@ -426,7 +492,7 @@ struct DesignedSegments<Value: Hashable>: View {
     /// The pick changed, by a click, a key, a drag or the document: the thumb
     /// sets off from wherever it is right now toward the new segment.
     private func startMorph(leaving old: Int?) {
-        guard !reduceMotion, dragCenter == nil, let old, let oldSlot = slots[old] else { return }
+        guard !reduceMotion, !systemGlass, dragCenter == nil, let old, let oldSlot = slots[old] else { return }
         let now = Date()
         morphFrom = thumbFrame(target: oldSlot, row: 0...max(rowWidth, oldSlot.maxX), at: now)
         morphStart = now
@@ -468,6 +534,14 @@ struct DesignedSegments<Value: Hashable>: View {
                 let landing = SegmentThumbDrag.landing(
                     centerX: center, slots: ordered,
                     available: options.map { $0.disabledReason == nil })
+                if systemGlass {
+                    // Let go: the glass under the hand morphs onto its slot.
+                    withAnimation(Self.glassCurve) {
+                        dragCenter = nil
+                        if let landing, landing != pickedIndex { pick(options[landing].value) }
+                    }
+                    return
+                }
                 morphFrom = held
                 morphStart = Date()
                 dragCenter = nil
@@ -708,6 +782,9 @@ extension VideoKit.Palette {
                                             dark: VideoKit.rgb(0xFFFFFF, 0.34))
     /// Under Increase Contrast or Reduce Transparency: an opaque plate, still
     /// lighter than the rail, with a firmer edge.
+    /// The system glass thumb's tint in dark, what lifts the clear glass
+    /// above the rail with nothing painted over it.
+    static let segGlassTintDark = Color.white.opacity(0.65)
     static let segThumbSolid = VideoKit.Tone(light: VideoKit.rgb(0xFFFFFF),
                                              dark: VideoKit.rgb(0x4E5360))
     static let segThumbEdgeStrong = VideoKit.Tone(light: VideoKit.rgb(0x121828, 0.32),

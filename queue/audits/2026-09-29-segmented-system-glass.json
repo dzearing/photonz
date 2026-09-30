@@ -1,0 +1,26 @@
+{
+  "feature": "The segmented thumb on the system's own Liquid Glass",
+  "epic": "design-system",
+  "summary": "Every segmented control's thumb is now one pane of the system's Liquid Glass, slid to the new choice by the system's own animation, with nothing painted over it. The old drawn glide is still one switch away so you can compare the two and pick.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. To see the drawn glide instead, turn off \"Choices slide as system glass\" in the Experiments window.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording and click Edit, then View, in the title bar. The glass slides straight across and stops, no stretch.", "shot": "2026-09-29-segmented-system-glass-title-bar-film-sc.png" },
+    { "do": "Pick a text layer and click Left, Center and Right under Across in the panel.", "shot": "2026-09-29-segmented-system-glass-panel-film-sc.png" },
+    { "do": "Grab the thumb under Across and drag it. It follows the pointer and slides onto the nearest choice when you let go." },
+    { "do": "Switch the Mac to Light and look at View | Edit on the white title bar.", "shot": "2026-09-29-segmented-system-glass-at-rest-sc.png" },
+    { "do": "Turn off \"Choices slide as system glass\" in Experiments and repeat the first two steps to feel the drawn glide." }
+  ],
+  "evaluate": [
+    "Does the system slide feel more like a Mac control than the drawn stretch?",
+    "On the light title bar, can you still see at a glance which of View and Edit is picked?",
+    "Do you miss the drawn thumb's crisp edge and lit top line, or does the plain glass look right?"
+  ],
+  "rough": [
+    "The system's other glass morph, where the glass leaves one choice and grows out on the next under a shared name, never moved: filmed at 120 fps four different ways, it jumped from View to Edit with nothing in between. So the system version is one glass pane that the system slides.",
+    "On the light title bar the system glass is fainter than the drawn thumb: 1.45:1 against the rail in a window opened in light, 1.14:1 after switching the app from dark to light, against 1.61:1 for the drawn thumb. It clears 1.5:1 everywhere else (1.55 to 1.64:1). The glass decides its own shade from what is behind it, and a white tint made it greyer, not lighter.",
+    "In dark the plain glass came out as dark as the rail, so dark uses the clear glass with a white tint.",
+    "The system glass has no hairline or lit top edge, so it reads softer than the drawn thumb.",
+    "The frames are filmed from the real window at 120 fps, in dark, with the probe's Screen Recording grant on an unlocked screen; neither version ever left its rail or passed its resting place."
+  ]
+}
