@@ -100,7 +100,8 @@ struct CaptionCuesLayer: View, Equatable {
         let room = rect.width - placed.hiddenLeading
         guard room > 40 else { return }
         let left = rect.minX + placed.hiddenLeading + 8
-        let words = fitted(placed.cue.name, width: max(0, room - 4 - 16), in: inside, ink: kind.ink)
+        let words = fitted(placed.cue.name, width: max(0, room - 4 - 16), in: inside,
+                            ink: kind.ink(inside.environment.colorScheme))
         var type = inside
         type.addFilter(.shadow(color: .black.opacity(0.35), radius: 1))
         type.draw(words, at: CGPoint(x: left, y: height / 2), anchor: .leading)

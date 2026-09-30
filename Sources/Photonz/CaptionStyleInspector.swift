@@ -255,6 +255,7 @@ struct CaptionStylePreview: View, Equatable {
     }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.displayScale) private var displayScale
+    @Environment(\.inkPass) private var inkPass
     @State private var played: VideoKit.PlayedReel?
 
     /// What a reel was drawn for: the style, the tile's size and the screen's.
@@ -338,16 +339,30 @@ struct CaptionStylePreview: View, Equatable {
 
     @ViewBuilder private func frame(atMS ms: Int, size: CGSize) -> some View {
         let box = Self.textBox(size)
-        if let text = look.previewText(atMS: ms, fontSize: Self.fontSize, width: box.width),
+        if let text = look.previewText(atMS: ms, fontSize: Self.fontSize, width: box.width)
+            .map(inkOnly),
            let image = TextRasterizer.rasterize(
                text, size: box,
                outlines: look.strokeHex.map { [TextRasterizer.TextOutline(width: 1, colorHex: $0)] } ?? [],
                scale: displayScale) {
             Image(decorative: image, scale: displayScale)
+                .measuredInk()
                 .shadow(color: glow, radius: look.glowHex == nil ? 0 : 3)
                 .shadow(color: .black.opacity(look.shadow == .none ? 0 : 0.6), radius: 1.5, y: 1)
                 .frame(width: size.width, height: size.height)
         }
+    }
+
+    /// The legibility check's mask drawing asks for the words alone, so each
+    /// is read on its own rather than the plate gluing a line into one blob.
+    /// Its drawing of what is behind leaves the plate out along with the
+    /// words, which judges a light word against the darker picture under the
+    /// plate: stricter than the eye, never kinder (`LegibilitySheet`).
+    private func inkOnly(_ text: TextContent) -> TextContent {
+        guard inkPass == .mask else { return text }
+        var words = text
+        words.plateHex = nil
+        return words
     }
 
     /// The same two shadows the still frame wears, for the playing one.

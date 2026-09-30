@@ -11,6 +11,11 @@ struct PhotonzApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     init() {
+        #if DEBUG
+        // `swift build && .build/debug/Photonz --legibility-sheet`: draws every
+        // shared control, measures its words and exits (`LegibilitySheet`).
+        LegibilitySheet.runIfAsked()
+        #endif
         #if PHOTONZ_PLAYTEST
         // Before anything reads a feature flag, and before the menu bar exists:
         // a walk that says it runs with a feature switched off has to have it

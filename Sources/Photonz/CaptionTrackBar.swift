@@ -115,11 +115,14 @@ struct CaptionBarButtonStyle: ButtonStyle {
         let filled: Bool
         @State private var hovering = false
         @Environment(\.isEnabled) private var isEnabled
+        @Environment(\.shownPointer) private var shown
 
         var body: some View {
-            let lit = filled || hovering || configuration.isPressed
+            let pressed = configuration.isPressed || shown == .pressed
+            let lit = filled || hovering || pressed
             configuration.label
                 .labelStyle(Tight())
+                .measuredInk()
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(lit ? VideoKit.Palette.ink : VideoKit.Palette.dim)
                 .padding(.horizontal, 8)
@@ -128,9 +131,9 @@ struct CaptionBarButtonStyle: ButtonStyle {
                     .fill(lit ? AnyShapeStyle(VideoKit.Palette.glassThin) : AnyShapeStyle(Color.clear)))
                 .overlay(RoundedRectangle(cornerRadius: 7)
                     .strokeBorder(lit ? AnyShapeStyle(VideoKit.Palette.edgeLo) : AnyShapeStyle(Color.clear)))
-                .scaleEffect(configuration.isPressed ? 0.97 : 1)
+                .scaleEffect(pressed ? 0.97 : 1)
                 .contentShape(RoundedRectangle(cornerRadius: 7))
-                .opacity(isEnabled ? 1 : 0.4)
+                .opacity(isEnabled ? 1 : 0.55)
                 .fixedSize()
                 .playtestHover { hovering = $0 }
                 .animation(.easeOut(duration: 0.12), value: hovering)

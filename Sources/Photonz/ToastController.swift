@@ -354,7 +354,7 @@ struct NoteToastView: View {
         }
         .frame(width: 244, alignment: .leading)
         .padding(12)
-        .glassEffect(.regular, in: .rect(cornerRadius: 16))
+        .regularGlass(in: .rect(cornerRadius: 16))
         .padding(8) // room for the shadow so it isn't clipped, matching ToastView
         .opacity(faded && !hovered ? 0 : 1)
         .animation(.easeOut(duration: hovered ? 0.15 : fadeSeconds), value: faded || hovered)
@@ -401,7 +401,7 @@ struct ProgressToastView: View {
         }
         .frame(width: 216)
         .padding(12)
-        .glassEffect(.regular, in: .rect(cornerRadius: 16))
+        .regularGlass(in: .rect(cornerRadius: 16))
         .padding(8) // room for the shadow so it isn't clipped, matching ToastView
     }
 }
@@ -480,7 +480,7 @@ private struct ToastView: View {
             }
         }
         .padding(12)
-        .glassEffect(.regular, in: .rect(cornerRadius: 16))
+        .regularGlass(in: .rect(cornerRadius: 16))
         .contentShape(RoundedRectangle(cornerRadius: 16))
         // Double-click anywhere on the toast = Edit (same as the hover button).
         .onTapGesture(count: 2, perform: onEdit)

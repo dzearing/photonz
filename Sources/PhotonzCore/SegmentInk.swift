@@ -1,11 +1,12 @@
 import Foundation
 
 /// The segmented control's colours (`SegmentedControl`, in the app), and the
-/// rule they are held to: every word it draws reads at 4.5:1 or better against
-/// what is drawn behind it, in every state, in light and dark, over anything.
+/// rule they are held to: every word it draws is legible against what is drawn
+/// behind it (`Legibility`), in every state, in light and dark, over anything.
 /// The user, 2026-09-30: "I do not want white on white or black on black cases
-/// EVER." The history bar's filter had shipped a white word on white glass the
-/// day before.
+/// EVER", and "I didn't ask specifically for 4.5. I asked specifically for
+/// legible." The history bar's filter had shipped a white word on white glass
+/// the day before.
 ///
 /// What a word can sit on, and how each is kept readable:
 ///
@@ -15,28 +16,20 @@ import Foundation
 /// * **The chip** under the picked word is a pane of the system's Liquid
 ///   Glass tinted with the accent, and the accent laid over it at
 ///   `chipCover`. Tinted glass alone was measured in the app on 2026-09-30:
-///   it veils whatever is under it in light, and drew the chip #B0CCE0
-///   (regular) and #7B92BA (clear), where white reads 1.6:1 and 3.3:1. So the
-///   colour goes on top, the glass showing at its rim and a little through
-///   it, and the rule is checked with the glass under it as bright as white.
-///   White on the Mac's own blue is only 4.0:1 even solid, so the chip is the
-///   accent taken deeper, keeping its hue, until white reads at `chipMargin`.
+///   it veils whatever is under it in light, and drew the chip #B0CCE0, where
+///   white reads 1.6:1. So the colour goes on top, the glass showing at its
+///   rim and a little through it, and the rule is checked with the glass
+///   under it as bright as white. The accent is the system's own, never taken
+///   deeper, and the word on it is white, the system's own pairing; only an
+///   accent white would vanish into (yellow) takes a dark word instead.
 /// * **A word the chip is passing over** is drawn in the chip's ink inside the
 ///   chip and in its own outside it, so a moving chip never puts a grey word
 ///   on blue.
-/// * **Disabled** greys the chip rather than fading the control: a control at
-///   42% opacity, the old way, cannot keep its words at 4.5:1.
+/// * **Disabled** greys the chip rather than fading the control.
 public enum SegmentInk {
     public enum Scheme: CaseIterable, Sendable {
         case light, dark
     }
-
-    /// The least contrast any word may have: WCAG's for body text.
-    public static let minimum = 4.5
-
-    /// White on the chip as drawn, with the brightest glass under it: a
-    /// little above `minimum`, for the glass's sheen at the rim.
-    public static let chipMargin = 5.0
 
     /// How much of the chip's colour lies over its glass. The rest is the
     /// glass showing through, which is what makes it read as glass.
@@ -48,8 +41,18 @@ public enum SegmentInk {
         over(RGBA(r: chip.r, g: chip.g, b: chip.b, a: chipCover), RGBA(r: 1, g: 1, b: 1))
     }
 
-    /// The words on the chip.
+    /// The words on a grey chip, and on the accent wherever they read.
     public static let chipWord = RGBA(r: 1, g: 1, b: 1)
+
+    /// The word on an accent white would vanish into: the kit's ink.
+    public static let darkChipWord = hex(0x1A1C22)
+
+    /// The picked word on the chip for an accent: white, the system's own
+    /// pairing, unless white is not legible on it even at its most veiled
+    /// (the yellow accent, 1.6:1), where it is dark.
+    public static func pickedWord(on accent: RGBA) -> RGBA {
+        Legibility.isLegible(ink: chipWord, on: drawnChip(chip(accent: accent))) ? chipWord : darkChipWord
+    }
 
     /// The recessed track: darker than the panel and the title bar it sits on
     /// in light, darker than the dark panel in dark.
@@ -68,7 +71,7 @@ public enum SegmentInk {
     }
 
     /// A word that cannot be picked right now: quieter than an unpicked one,
-    /// never below `minimum`.
+    /// never below legible.
     public static func unavailableWord(_ scheme: Scheme) -> RGBA {
         scheme == .light ? hex(0x5C6371) : hex(0x7E8594)
     }
@@ -83,18 +86,10 @@ public enum SegmentInk {
         scheme == .light ? hex(0x505662) : hex(0x4B515D)
     }
 
-    /// The chip's colour for an accent: the accent itself when white reads on
-    /// it at `chipMargin` as drawn (`drawnChip`), otherwise the accent taken
-    /// deeper, step by step, until it does. Only the depth changes, so the hue
-    /// is the accent's.
+    /// The chip's colour for an accent: the accent itself, as the system
+    /// draws it. Never taken deeper to chase a ratio (the user, 2026-09-30).
     public static func chip(accent: RGBA) -> RGBA {
-        var shade = RGBA(r: accent.r, g: accent.g, b: accent.b)
-        var steps = 0
-        while contrast(chipWord, drawnChip(shade)) < chipMargin, steps < 100 {
-            shade = RGBA(r: shade.r * 0.97, g: shade.g * 0.97, b: shade.b * 0.97)
-            steps += 1
-        }
-        return shade
+        RGBA(r: accent.r, g: accent.g, b: accent.b)
     }
 
     /// One word and what is drawn behind it, named by the state it is drawn in.
@@ -116,9 +111,9 @@ public enum SegmentInk {
             Pair(state: "unpicked hovered", word: hoveredWord(scheme), behind: hoverGround),
             Pair(state: "unpicked pressed", word: hoveredWord(scheme), behind: hoverGround),
             Pair(state: "unavailable", word: unavailableWord(scheme), behind: rail),
-            Pair(state: "picked", word: chipWord, behind: chip),
-            Pair(state: "picked pressed", word: chipWord, behind: chip),
-            Pair(state: "under the moving chip", word: chipWord, behind: chip),
+            Pair(state: "picked", word: pickedWord(on: accent), behind: chip),
+            Pair(state: "picked pressed", word: pickedWord(on: accent), behind: chip),
+            Pair(state: "under the moving chip", word: pickedWord(on: accent), behind: chip),
             Pair(state: "disabled unpicked", word: word(scheme), behind: rail),
             Pair(state: "disabled picked", word: chipWord, behind: greyChip),
         ]

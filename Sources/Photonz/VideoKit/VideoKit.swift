@@ -65,7 +65,11 @@ extension VideoKit {
         static let panel2 = Tone(light: rgb(0xF1F3F7), dark: rgb(0x181B22))
         static let ink = Tone(light: rgb(0x1A1C22), dark: rgb(0xE7E9EE))
         static let dim = Tone(light: rgb(0x5C6371), dark: rgb(0xB0B6C2))
-        static let faint = Tone(light: rgb(0x8B92A1), dark: rgb(0x8B93A2))
+        /// The mock's #8B92A1 in light, taken a step deeper: on a hovered
+        /// tile's plate and on the transport's glass the mock's value read
+        /// 2.6:1, grey on grey (`LegibilitySheet`, the user 2026-09-30: "I do
+        /// not want white on white or black on black cases EVER").
+        static let faint = Tone(light: rgb(0x7C8392), dark: rgb(0x8B93A2))
         static let line = Tone(light: rgb(0xE2E4EA), dark: rgb(0x262A33))
         static let lineStrong = Tone(light: rgb(0xD4D7DF), dark: rgb(0x333846))
         /// Components, and anything keyed: key diamonds, animating rows.
@@ -111,5 +115,79 @@ extension VideoKit {
         static let rowLabelWidth: CGFloat = 76
         /// The narrowest a picker tile gets before the grid drops a column.
         static let tileMinimumWidth: CGFloat = 96
+    }
+}
+
+// MARK: - Drawn for the legibility check
+
+extension VideoKit {
+    /// How a piece is drawn when nobody is pointing at it. Always `.live` in
+    /// the app; the legibility check (`LegibilitySheet`) draws every piece
+    /// hovered and pressed this way, because a hover is `@State` inside the
+    /// piece and an offscreen picture has no pointer. The app's hover seam
+    /// (`playtestHover`, which `kitHover` answers with) reports a hover for
+    /// anything other than `.live`, and the button styles read `.pressed`.
+    enum ShownPointer: Sendable { case live, hovered, pressed }
+
+    /// Which of the legibility check's three drawings this is. The check
+    /// draws a control as shipped, then with its words and icons left out
+    /// (what lies behind them), then with only them, in one flat colour (where
+    /// they are, even a white word on white). Words are `Text` and the check
+    /// reaches them itself; anything else that carries ink (an SF Symbol
+    /// drawn as an `Image`, words drawn into a bitmap) says so with
+    /// `measuredInk()`.
+    enum InkPass: Sendable { case shown, bare, mask }
+
+    /// The flat colour of the mask drawing. Nothing in the app is this colour.
+    static let maskInk = Color(.sRGB, red: 1, green: 0, blue: 1)
+}
+
+private struct ShownPointerKey: EnvironmentKey {
+    static let defaultValue = VideoKit.ShownPointer.live
+}
+
+private struct InkPassKey: EnvironmentKey {
+    static let defaultValue = VideoKit.InkPass.shown
+}
+
+private struct DrawnOffscreenKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    var shownPointer: VideoKit.ShownPointer {
+        get { self[ShownPointerKey.self] }
+        set { self[ShownPointerKey.self] = newValue }
+    }
+
+    var inkPass: VideoKit.InkPass {
+        get { self[InkPassKey.self] }
+        set { self[InkPassKey.self] = newValue }
+    }
+
+    /// True while the legibility check draws a control into a picture, where
+    /// an AppKit view (a tooltip's tracking anchor) cannot be drawn and would
+    /// leave SwiftUI's placeholder over the words. Never true in the app.
+    var drawnOffscreen: Bool {
+        get { self[DrawnOffscreenKey.self] }
+        set { self[DrawnOffscreenKey.self] = newValue }
+    }
+}
+
+extension View {
+    /// Marks this view as ink (an icon, a bitmap of words) the legibility
+    /// check measures against what is behind it. Does nothing in the app.
+    func measuredInk() -> some View { modifier(MeasuredInk()) }
+}
+
+private struct MeasuredInk: ViewModifier {
+    @Environment(\.inkPass) private var pass
+
+    func body(content: Content) -> some View {
+        switch pass {
+        case .shown: content
+        case .bare: content.opacity(0)
+        case .mask: content.brightness(1).colorMultiply(VideoKit.maskInk)
+        }
     }
 }

@@ -74,6 +74,7 @@ extension VideoKit {
         var body: some View {
             Button(action: action) {
                 Image(systemName: symbol)
+                    .measuredInk()
                     .font(.system(size: role == .primary ? 13 : 11, weight: .semibold))
                     .foregroundStyle(role == .primary ? AnyShapeStyle(Color.white)
                                      : isHovering ? AnyShapeStyle(Palette.ink)

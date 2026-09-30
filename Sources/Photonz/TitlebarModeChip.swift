@@ -129,12 +129,16 @@ struct TitlebarModeChip: View {
                 Image(systemName: modes.mode.symbol)
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(.secondary)
+                    .measuredInk()
                 Text(label)
                     .font(.system(size: 11, weight: .medium))
                     .lineLimit(1)
                 Image(systemName: "chevron.down")
                     .font(.system(size: 7, weight: .bold))
-                    .foregroundStyle(.tertiary)
+                    // Secondary, not tertiary: tertiary read 1.9:1 on the
+                    // title bar (`LegibilitySheet`).
+                    .foregroundStyle(.secondary)
+                    .measuredInk()
             }
             .padding(.leading, 8)
             .padding(.trailing, 7)

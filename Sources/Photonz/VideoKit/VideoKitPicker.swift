@@ -60,7 +60,9 @@ extension VideoKit {
             .overlay(shape.strokeBorder(borderStyle, lineWidth: isSelected ? 2 : 1))
             .shadow(color: isHovering && !isSelected ? .black.opacity(0.35) : .clear, radius: 6, y: 5)
             .offset(y: isHovering && !isDisabled ? -1 : 0)
-            .opacity(isDisabled ? 0.42 : 1)
+            // Quieter, never gone: at 42% its faint detail read 1.5:1, under
+            // the system's own disabled label (`Legibility.disabledFloor`).
+            .opacity(isDisabled ? 0.55 : 1)
             .contentShape(shape)
             .kitHover(name) { isHovering = $0 }
             .animation(.easeOut(duration: 0.12), value: isHovering)

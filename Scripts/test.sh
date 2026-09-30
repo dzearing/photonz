@@ -107,24 +107,21 @@ if (( status == 0 )); then
   fi
 fi
 
-# Every word on the segmented control reads at 4.5:1 or better, measured on the
-# shipped control drawn in every state, light and dark, over white, black and
-# grey (the user, 2026-09-30: "I do not want white on white or black on black
-# cases EVER"). Scripts/segmented-contrast.swift says how it measures.
+# Every word and icon on every shared control is legible against what is drawn
+# behind it, in every state, light and dark, over what can be behind it (the
+# user, 2026-09-30: "I do not want white on white or black on black cases
+# EVER"). The debug build the tests just made draws the shipped controls and
+# measures them: Sources/Photonz/DesignSystem/LegibilitySheet.swift says how,
+# LegibilityCatalogue.swift lists what it draws. Next, at its defaults.
 if (( status == 0 )); then
-  contrast_bin="$(mktemp -t photonz-segmented-contrast-XXXXXX)"
-  if ! swiftc -parse-as-library -swift-version 6 \
-      Sources/Photonz/VideoKit/*.swift \
-      Sources/PhotonzCore/SegmentThumbMotion.swift Sources/PhotonzCore/SegmentInk.swift \
-      Sources/PhotonzCore/RGBA.swift Sources/Photonz/DesignSystem/SegmentedControl.swift \
-      Scripts/segmented-contrast.swift -o "$contrast_bin"; then
-    echo "==> The segmented control no longer draws on its own: Scripts/segmented-contrast.swift is out of step."
+  if ! swift build >/dev/null 2>&1; then
+    echo "==> The app would not build for the legibility check."
     status=1
-  elif ! "$contrast_bin" "${TMPDIR:-/tmp}/photonz-segmented-contrast"; then
-    echo "==> A word on the segmented control is unreadable (listed above)."
+  elif ! .build/debug/Photonz --legibility-sheet "${TMPDIR:-/tmp}/photonz-legibility" \
+      -experiments.release next -experiments.next.flags defaults; then
+    echo "==> A word or icon is unreadable against what is behind it (listed above)."
     status=1
   fi
-  rm -f "$contrast_bin"
 fi
 
 exit "$status"

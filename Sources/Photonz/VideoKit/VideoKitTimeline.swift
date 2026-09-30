@@ -40,9 +40,9 @@ extension VideoKit {
         var body: some View {
             HStack(spacing: isAutomatic ? 3 : 5) {
                 if isAutomatic {
-                    Image(systemName: "sparkles").font(.system(size: 9, weight: .semibold))
+                    Image(systemName: "sparkles").font(.system(size: 9, weight: .semibold)).measuredInk()
                 } else if let symbol {
-                    Image(systemName: symbol).font(.system(size: 9, weight: .semibold))
+                    Image(systemName: symbol).font(.system(size: 9, weight: .semibold)).measuredInk()
                 }
                 Text(isUpper ? title.uppercased() : title)
                     .font(.system(size: 10, weight: .semibold))
@@ -206,6 +206,15 @@ extension VideoKit {
             }
         }
 
+        /// The words on a clip of this kind, in the scheme it is drawn in. A
+        /// caption cue's lavender on its own lavender wash over the light panel
+        /// reads 2.1:1, the same colour on itself, so in light its words take
+        /// the component colour's deeper light tone (the legibility check,
+        /// `LegibilitySheet`). Every other kind reads the same in both.
+        func ink(_ scheme: ColorScheme) -> Color {
+            self == .caption ? Palette.comp.color(scheme) : ink
+        }
+
         /// A 135 degree gradient, top left to bottom right.
         private static func diagonal(_ from: UInt32, _ to: UInt32) -> LinearGradient {
             LinearGradient(colors: [rgb(from), rgb(to)], startPoint: .topLeading, endPoint: .bottomTrailing)
@@ -236,6 +245,7 @@ extension VideoKit {
         var height: CGFloat = Metrics.laneHeight
 
         @State private var isHovering = false
+        @Environment(\.colorScheme) private var scheme
 
         var body: some View {
             let shape = RoundedRectangle(cornerRadius: Metrics.clipCornerRadius)
@@ -272,11 +282,11 @@ extension VideoKit {
 
         @ViewBuilder private var content: some View {
             if let levels {
-                Waveform(levels: levels, color: kind.ink)
+                Waveform(levels: levels, color: kind.ink(scheme))
             } else {
                 Text(title)
                     .font(.system(size: height < Metrics.laneHeight ? 9.5 : 10, weight: .semibold))
-                    .foregroundStyle(kind.ink)
+                    .foregroundStyle(kind.ink(scheme))
                     .lineLimit(1)
                     .truncationMode(.tail)
                     .padding(.horizontal, 8)

@@ -22,6 +22,7 @@ import SwiftUI
 /// ⌫.
 struct ClipPiecesBar: View {
     @Environment(EditorState.self) private var editorState
+    @Environment(\.colorScheme) private var colorScheme
     let layerID: UUID
     let layerName: String
     /// The stretch as the strip is SHOWING it, which is the landing while a
@@ -559,7 +560,7 @@ struct ClipPiecesBar: View {
                 if width - hiddenLeading > 40, !isLinkedSound {
                     Text(layerName)
                         .font(.system(size: isSound ? 9 : 9.5, weight: .semibold))
-                        .foregroundStyle(kind.ink)
+                        .foregroundStyle(kind.ink(colorScheme))
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .shadow(color: .black.opacity(0.35), radius: 1)

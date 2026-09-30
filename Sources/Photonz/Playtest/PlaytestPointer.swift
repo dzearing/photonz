@@ -95,9 +95,30 @@ extension View {
         #if PHOTONZ_PLAYTEST
         return onHover(perform: perform)
             .background(HoverTargetAnchor(name: name, perform: perform))
+            .modifier(ShownHover(perform: perform))
         #else
         return onHover(perform: perform)
+            .modifier(ShownHover(perform: perform))
         #endif
+    }
+}
+
+/// A hover told from outside: the legibility check draws a control hovered by
+/// setting `shownPointer`, since an offscreen picture has no pointer and the
+/// hover itself is `@State` inside the control (`LegibilitySheet`). `.live`,
+/// which is all the app ever sets, leaves the real pointer in charge.
+private struct ShownHover: ViewModifier {
+    @Environment(\.shownPointer) private var shown
+    let perform: (Bool) -> Void
+
+    func body(content: Content) -> some View {
+        content.onAppear {
+            guard shown != .live else { return }
+            // Settled at once: a picture taken mid-animation shows neither look.
+            var settled = Transaction()
+            settled.disablesAnimations = true
+            withTransaction(settled) { perform(true) }
+        }
     }
 }
 

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-30T13:43:32.879Z",
-  "updated": "2026-09-30T19:36:54.617Z",
+  "updated": "2026-09-30T20:15:56.889Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -32,7 +32,34 @@
     {
       "t": "2026-09-30T19:36:54.611Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-30T20:15:41.712Z",
+      "note": "owns these walks: segmented-thumb-glass-walk"
+    },
+    {
+      "t": "2026-09-30T20:15:56.678Z",
+      "note": "Adversarial review before building: (1) most hover states are @State inside controls and an offscreen picture has no pointer, so a shared seam (shownPointer env, answered by playtestHover and the button styles) draws hovered/pressed; (2) a white word on white leaves no trace in a picture, so each specimen is drawn three ways (shipped / words hidden by a no-op TextRenderer / words only in a flat mask colour) and the mask says where words are; (3) Liquid Glass and AppKit views do not draw offscreen (glass blanks its contents; NSViewRepresentable shows SwiftUI's yellow placeholder), so glass is stood in by white/black/grey under the kit glass tone and tooltip anchors stand aside (drawnOffscreen env); (4) a WCAG ratio alone flags white on the system accent and white on the mock's saturated clips while passing lavender on pale lavender, so the rule is 3:1, or 2:1 plainly another colour, never same family; disabled 1.8:1 = the system's disabled label."
+    },
+    {
+      "t": "2026-09-30T20:15:56.730Z",
+      "note": "Built: PhotonzCore Legibility + InkReading (tested, 14 tests); app DEBUG-only LegibilitySheet + LegibilityCatalogue (100 specimens, 1150 words/icons, ~12s) run by Scripts/test.sh via .build/debug/Photonz --legibility-sheet; replaces Scripts/segmented-contrast.swift. Seams: shownPointer/inkPass/drawnOffscreen env (VideoKit.swift), .measuredInk() on icons and caption bitmaps, .regularGlass(in:) for toasts. Drill: faint made #FBFCFE -> check failed at 1.00:1 naming every panel label, exit 1."
+    },
+    {
+      "t": "2026-09-30T20:15:56.783Z",
+      "note": "Today's offenders, all fixed: (1) caption clip name in light lavender on pale lavender 2.11:1 -> ClipKind.ink(scheme) uses the comp tone (#9A5CFF light) in ClipBar, ClipPiecesBar, CaptionCuesLayer; (2) destructive icon/pill buttons under the pointer: red on a red wash, 2.0-2.9:1 -> white on system red; (3) disabled icon/pill/caption bar buttons and picker tiles at 40-42% read 1.5-1.6:1 -> 55%; (4) faint grey on a hovered tile and on the transport glass 2.55-2.98:1 -> Palette.faint light #8B92A1 -> #7C8392; (5) mode chip chevron .tertiary 1.9:1 -> .secondary; (6) segmented chip: accent was being deepened to chase 4.5 (against the user's 10:12 correction) -> chip is the system accent, white on it, dark word only on yellow and graphite (SegmentInk.pickedWord)."
+    },
+    {
+      "t": "2026-09-30T20:15:56.835Z",
+      "note": "Verified: Scripts/test.sh 10696/10696 plus the legibility check green; segmented-thumb-glass-walk passes with 10 real captures (history filter white on system blue legible). UX-PATTERNS: new section 'Text is always legible (a rule the build enforces)', segmented section updated. Shared controls changed, so Current gets these fixes too (task says 'anywhere in the app')."
+    },
+    {
+      "t": "2026-09-30T20:15:56.888Z",
+      "note": "left rough, not filed (under the bar or covered here): private badges not on the sheet (CaptionGuidesOverlay badge, ColorDropNote pill, canvasNoticeChip, heldFrameBadge, HistoryOverlayCell caption) since they need EditorState/coordinator; focus rings only on the segmented control; AppKit menus/popups unmeasured (system pairings); caption preview judged against the picture without its plate (stricter than the eye)."
     }
   ],
-  "started": "2026-09-30T19:36:54.610Z"
+  "started": "2026-09-30T19:36:54.610Z",
+  "walks": [
+    "segmented-thumb-glass-walk"
+  ]
 }

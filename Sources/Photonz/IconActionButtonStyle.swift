@@ -44,18 +44,24 @@ struct IconActionButtonStyle: ButtonStyle {
         let style: IconActionButtonStyle
         @State private var hovering = false
         @Environment(\.isEnabled) private var isEnabled
+        @Environment(\.shownPointer) private var shown
 
         var body: some View {
             let destructive = configuration.role == .destructive
-            let pressed = configuration.isPressed
+            let pressed = configuration.isPressed || shown == .pressed
             let hovered = style.pointerFeedback && hovering
             let lit = pressed || hovered
             // Over the accent circle the wash is white, so the tool in hand
             // brightens under the pointer instead of going muddy.
             let tint: Color = style.isActive ? .white : (destructive ? .red : .primary)
-            let foreground: Color = style.isActive ? .white : (lit ? tint : style.restingTint)
+            // A destructive button under the pointer is the system's own
+            // white on red: red on a wash of red was one colour on itself,
+            // 2.0:1 on light glass over a dark window (`LegibilitySheet`).
+            let alarmed = destructive && lit && !style.isActive
+            let foreground: Color = style.isActive || alarmed ? .white : (lit ? tint : style.restingTint)
 
             configuration.label
+                .measuredInk()
                 .font(style.keepsLabelFont ? nil : .system(size: 13, weight: .semibold))
                 .foregroundStyle(foreground)
                 .frame(width: style.diameter, height: style.diameter)
@@ -63,11 +69,14 @@ struct IconActionButtonStyle: ButtonStyle {
                     if style.isActive {
                         accentCircle
                     }
-                    Circle().fill(tint.opacity(fillOpacity(pressed: pressed, hovered: hovered)))
+                    Circle().fill(alarmed ? Color.red
+                                  : tint.opacity(fillOpacity(pressed: pressed, hovered: hovered)))
                 }
                 .scaleEffect(pressed && style.pointerFeedback ? 0.90 : 1)
                 .contentShape(style.squareHitTarget ? AnyShape(Rectangle()) : AnyShape(Circle()))
-                .opacity(isEnabled ? 1 : 0.4)
+                // Quieter, never gone: at 40% a glyph on light glass read
+                // 1.6:1, under the system's own disabled label.
+                .opacity(isEnabled ? 1 : 0.55)
                 .playtestHover { hovering = $0 }
                 .animation(.easeOut(duration: 0.12), value: hovering)
                 .animation(.easeOut(duration: 0.10), value: pressed)
@@ -128,24 +137,29 @@ struct PillActionButtonStyle: ButtonStyle {
         let prominent: Bool
         @State private var hovering = false
         @Environment(\.isEnabled) private var isEnabled
+        @Environment(\.shownPointer) private var shown
 
         var body: some View {
             let destructive = configuration.role == .destructive
-            let pressed = configuration.isPressed
+            let pressed = configuration.isPressed || shown == .pressed
             let active = pressed || hovering
             let tint: Color = destructive ? .red : .primary
+            // Destructive under the pointer: the system's white on red, never
+            // red words on a wash of red (see `IconActionButtonStyle`).
+            let alarmed = destructive && active
 
             configuration.label
+                .measuredInk()
                 .font(.caption.weight(.medium))
-                .foregroundStyle(active ? tint : Color.secondary)
+                .foregroundStyle(alarmed ? Color.white : active ? tint : Color.secondary)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
                 .background {
-                    Capsule().fill(tint.opacity(fillOpacity(pressed: pressed)))
+                    Capsule().fill(alarmed ? Color.red : tint.opacity(fillOpacity(pressed: pressed)))
                 }
                 .scaleEffect(pressed ? 0.96 : 1)
                 .contentShape(Capsule())
-                .opacity(isEnabled ? 1 : 0.4)
+                .opacity(isEnabled ? 1 : 0.55)
                 .playtestHover { hovering = $0 }
                 .animation(.easeOut(duration: 0.12), value: hovering)
                 .animation(.easeOut(duration: 0.10), value: pressed)

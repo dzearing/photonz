@@ -3097,6 +3097,39 @@ changes.
 One deliberate difference: the kit's accent is the app's system accent, not
 `--accent`, so a window never shows two blues.
 
+### Text is always legible (a rule the build enforces)
+
+The user, 2026-09-30: "I do not want white on white or black on black cases
+EVER", and "I didn't ask specifically for 4.5. I asked specifically for
+legible." No exceptions, in any state, scheme or backdrop.
+
+**The rule** (`Legibility`, PhotonzCore, tested): a word or icon is legible
+against what is actually drawn behind it when its contrast is 3:1 or better;
+between 2:1 and 3:1 only when it is plainly another colour from its ground (a
+real colour against a grey, or two different hues: white on a saturated clip,
+red on a grey plate), never the same family (white on white, black on black,
+grey on grey, lavender on pale lavender); a word that cannot act may go as quiet
+as the system's own disabled label on a window, 1.8:1, and no quieter. The
+system's own pairings are legible as the system draws them (white on the
+accent, the system label colours on glass): never darken or recolour a system
+colour to chase a number.
+
+**The check.** `Scripts/test.sh` ends by running the debug build with
+`--legibility-sheet` (`Sources/Photonz/DesignSystem/LegibilitySheet.swift`). It
+draws every shared control that carries words or an icon
+(`LegibilityCatalogue.swift`: the segmented control, pill, icon, tool bar,
+caption bar and transport buttons, dropdown faces, panel rows and section
+headers, tooltips, toasts, the transport, track headers, clip names and
+badges, picker tiles, the video badge, the title bar View | Edit and mode chip,
+the history filter, caption style previews) at rest, hovered, pressed,
+selected, open, disabled and focused where the control has that state, light
+and dark, over white, black and grey where it is glass or sits on anything. It
+measures each word against the pixels behind it and fails naming the control,
+the state, the scheme and the backdrop. A new shared control that carries words
+gets its specimens in the catalogue; an icon drawn as an `Image` or words drawn
+into a bitmap say `.measuredInk()` so the check can find them; glass inside a
+control is `.regularGlass(in:)` so it can be drawn offscreen at all.
+
 ### The one segmented control
 
 `SegmentedControl` (`Sources/Photonz/DesignSystem/SegmentedControl.swift`) is
@@ -3121,20 +3154,20 @@ end, and interactive glass swelling past the chip under a press, so neither is
 used. `segmented-thumb-film-walk` and `segmented-history-film-walk` film every
 placement at 120 fps and fail on a frame past where the chip rests.
 
-**Every word is readable, always.** The user, 2026-09-30: "I do not want white
+**Every word is legible, always.** The user, 2026-09-30: "I do not want white
 on white or black on black cases EVER." Every word the control draws, in every
 state (rest, hovered, pressed, unavailable, disabled, picked, under the moving
-chip), light and dark, over any backdrop, reads at 4.5:1 or better. The
+chip), light and dark, over any backdrop, passes the legibility rule below. The
 colours live in `SegmentInk` (PhotonzCore, tested for every accent the Mac
-offers), and `Scripts/segmented-contrast.swift` draws the shipped control in
-every state and measures each word against the pixels behind it on every test
-run. How it holds: the rail is solid, so a screenshot behind the history bar
-never reaches a word; the chip's colour is laid over its glass, because tinted
-glass alone veils toward white in light (a white word measured 1.6:1 on it);
-the chip is the accent taken deeper when white would not read on the accent
-itself (white on the Mac's blue is 4.0:1); a word the moving chip passes over
-is drawn white inside the chip and its own colour outside; a disabled control
-greys its chip instead of fading, because a faded word cannot keep 4.5:1.
+offers), and the legibility check draws the shipped control in every state on
+every test run. How it holds: the rail is solid, so a screenshot behind the
+history bar never reaches a word; the chip's colour is laid over its glass,
+because tinted glass alone veils toward white in light (a white word measured
+1.6:1 on it); the chip is the system's accent as the system draws it, never
+taken deeper, with white on it, and a dark word only on an accent white would
+vanish into (yellow, and graphite under the brightest glass); a word the moving
+chip passes over is drawn in the chip's ink inside the chip and its own colour
+outside; a disabled control greys its chip instead of fading.
 
 Never `Picker` with `.segmented`, never `NSSegmentedControl`:
 `SegmentedControlUsageTests` fails the build on either. In Current (the

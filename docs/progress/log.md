@@ -20299,3 +20299,10 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Harness: `filmThumb` reads the chip by colour, takes an optional slack, and walks can press the history bar (with the probe in front).
 - Three walks fail identically on unchanged HEAD; filed as two-walks-that-fail-on-main-pass-again.
 - Open: the user's yes on the card (keep / more glass with a dark word / slower stretch).
+
+## 2026-09-30 — Text is always legible: a build-failing check
+
+- `Scripts/test.sh` now ends with the app's debug build drawing every shared control with words or an icon (`--legibility-sheet`, `Sources/Photonz/DesignSystem/LegibilitySheet.swift` + `LegibilityCatalogue.swift`), in its states, light and dark, and measuring each word against the pixels behind it (`Legibility` / `InkReading`, PhotonzCore, tested). Replaces `Scripts/segmented-contrast.swift`.
+- Rule: 3:1, or 2:1 when plainly another colour, never the same family; 1.8:1 when disabled. The segmented chip is the system accent again (not deepened).
+- Fixed what it found: caption clip names in light, destructive hover, disabled opacity, the light faint grey, the mode chip chevron.
+- Next: private badges (caption guides, colour drop note, canvas notice, held frame) are not on the sheet yet.

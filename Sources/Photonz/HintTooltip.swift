@@ -459,9 +459,12 @@ private struct ToolTipModifier: ViewModifier {
     let detail: String?
     let fallback: String?
     let side: HintTooltipController.Side
+    @Environment(\.drawnOffscreen) private var drawnOffscreen
 
     func body(content: Content) -> some View {
-        if Experiments.shared.toolTipsEnabled {
+        if drawnOffscreen {
+            content
+        } else if Experiments.shared.toolTipsEnabled {
             content.background { HintAnchor(label: label, key: key, detail: detail, side: side) }
         } else {
             content.help(fallback ?? "\(label)\(key.map { " (\($0))" } ?? "")")
@@ -511,9 +514,12 @@ private struct SegmentToolTips: ViewModifier {
     /// What the whole row says when the designed tooltip is off.
     let fallback: String
     let side: HintTooltipController.Side
+    @Environment(\.drawnOffscreen) private var drawnOffscreen
 
     func body(content: Content) -> some View {
-        if Experiments.shared.toolTipsEnabled, labels.count > 1 {
+        if drawnOffscreen {
+            content
+        } else if Experiments.shared.toolTipsEnabled, labels.count > 1 {
             content.overlay {
                 HStack(spacing: 0) {
                     ForEach(Array(labels.enumerated()), id: \.offset) { segment in

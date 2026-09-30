@@ -1,9 +1,5 @@
 import AppKit
-// The contrast sheet (`Scripts/segmented-contrast.swift`) compiles this file
-// with the few PhotonzCore sources it draws with beside it, not as a module.
-#if canImport(PhotonzCore)
 import PhotonzCore
-#endif
 import SwiftUI
 
 /// **The segmented control**: a small set of exclusive choices, all of them on
@@ -23,15 +19,16 @@ import SwiftUI
 ///   between segments, capsule segments, and ONE chip under the picked
 ///   segment: a pane of the system's Liquid Glass tinted with the accent,
 ///   the picked word white on it. Only the size differs from place to place.
-/// * **Every word is readable, always** (the user, 2026-09-30: "I do not
+/// * **Every word is legible, always** (the user, 2026-09-30: "I do not
 ///   want white on white or black on black cases EVER"). The colours are
-///   `SegmentInk`'s, which PhotonzCore tests at 4.5:1 or better for every
-///   state, scheme and accent, and `Scripts/segmented-contrast.swift` measures
-///   on the drawn control on every test run. The rail is solid, so nothing
-///   behind the control reaches its words; the chip is the accent taken
-///   deeper when white would not read on the accent itself, laid over its
-///   glass so the glass's veil can never wash it out; a word the chip passes
-///   over is white inside the chip and its own colour outside it.
+///   `SegmentInk`'s, which PhotonzCore tests for every state, scheme and
+///   accent, and the legibility check (`LegibilitySheet`) measures on the
+///   drawn control on every test run. The rail is solid, so nothing behind
+///   the control reaches its words; the chip is the system's accent as it
+///   draws it, laid over its glass so the glass's veil can never wash it
+///   out, with white on it (dark only on an accent white would vanish into);
+///   a word the chip passes over is in the chip's ink inside the chip and
+///   its own colour outside it.
 /// * **Sizes.** 24, 28 (the default, and the only size the mocks' panels use)
 ///   and 32. The size sets the height and the type; the width always comes from
 ///   the words.
@@ -224,8 +221,8 @@ struct SegmentedControl<Value: Hashable>: View {
 /// The row of segments, the space the chip, a slot and a drag are measured in.
 private let segmentedRowSpace = "segmented-row"
 
-/// The drawn control. Internal rather than private so
-/// `Scripts/segmented-contrast.swift` can draw each state and measure it.
+/// The drawn control. Internal rather than private so the legibility check
+/// (`LegibilityCatalogue`) can draw each state and measure it.
 struct DesignedSegments<Value: Hashable>: View {
     typealias Option = SegmentedControl<Value>.Option
 
@@ -237,22 +234,21 @@ struct DesignedSegments<Value: Hashable>: View {
     let showsTitles: Bool
     let tipsBelow: Bool
     let pick: (Value) -> Void
-    /// For the contrast sheet only: draw this segment hovered, the focus ring
-    /// on, the chip stopped part way (a fraction of the way from the first
-    /// segment to the picked one), and the words or not, without a pointer, a
-    /// keyboard or a clock.
+    /// For the legibility sheet only: draw this segment hovered, the focus
+    /// ring on, and the chip stopped part way (a fraction of the way from the
+    /// first segment to the picked one), without a pointer, a keyboard or a
+    /// clock.
     var shownHovered: Int?
     var shownFocused = false
     var shownTravel: CGFloat?
-    var showsWords = true
-    /// For the contrast sheet: draw the glass as plain white, the brightest
+    /// For the legibility sheet: draw the glass as plain white, the brightest
     /// it can be under the chip's colour. An offscreen render has no glass.
     var glassAsWhite = false
 
     init(label: String, options: [Option], selection: Value?, size: SegmentedControl<Value>.Size,
          form: SegmentedControl<Value>.Form, showsTitles: Bool, tipsBelow: Bool,
          shownHovered: Int? = nil, shownFocused: Bool = false, shownTravel: CGFloat? = nil,
-         showsWords: Bool = true, glassAsWhite: Bool = false, pick: @escaping (Value) -> Void) {
+         glassAsWhite: Bool = false, pick: @escaping (Value) -> Void) {
         self.label = label
         self.options = options
         self.selection = selection
@@ -263,7 +259,6 @@ struct DesignedSegments<Value: Hashable>: View {
         self.shownHovered = shownHovered
         self.shownFocused = shownFocused
         self.shownTravel = shownTravel
-        self.showsWords = showsWords
         self.glassAsWhite = glassAsWhite
         self.pick = pick
     }
@@ -450,7 +445,7 @@ struct DesignedSegments<Value: Hashable>: View {
         }
     }
 
-    /// The chip's colour: the accent, taken deeper until white reads on it
+    /// The chip's colour: the accent as the system draws it
     /// (`SegmentInk.chip`), or grey while the control is disabled.
     private var chipColor: Color {
         guard isEnabled else { return Self.paint(SegmentInk.disabledChip(inkScheme)) }
@@ -481,12 +476,14 @@ struct DesignedSegments<Value: Hashable>: View {
         .compositingGroup()
     }
 
-    /// The words again, white, showing only inside the chip.
+    /// The words again, in the chip's ink (white, or dark on an accent white
+    /// would vanish into), showing only inside the chip.
     @ViewBuilder private var wordsOnChip: some View {
         if let rect = chipRect {
             SegmentColumnsLayout(form: form, spacing: 2) {
                 ForEach(options.indices, id: \.self) { index in
-                    face(index, ink: Self.paint(SegmentInk.chipWord))
+                    face(index, ink: Self.paint(isEnabled ? SegmentInk.pickedWord(on: accent)
+                                                : SegmentInk.chipWord))
                 }
             }
             .mask { atChip(rect) { Capsule() } }
@@ -647,6 +644,7 @@ struct DesignedSegments<Value: Hashable>: View {
                     .renderingMode(.template)
                     .font(.system(size: 13, weight: .medium))
                     .imageScale(.small)
+                    .measuredInk()
                     .accessibilityHidden(true)
             }
             if showsTitles || option.image == nil {
@@ -665,7 +663,6 @@ struct DesignedSegments<Value: Hashable>: View {
             }
         }
         .foregroundStyle(ink)
-        .opacity(showsWords ? 1 : 0)
         .padding(.horizontal, showsTitles || option.image == nil ? wordPadding : 0)
         .frame(minWidth: showsTitles ? 0 : size.height - 4, maxWidth: .infinity, maxHeight: .infinity)
     }

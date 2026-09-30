@@ -1,0 +1,28 @@
+{
+  "feature": "Text is always legible, checked on every build",
+  "epic": "design-system",
+  "summary": "Every shared control with words or an icon is drawn in its states, light and dark, and each word is measured against what is behind it. The build fails on anything unreadable. Six offenders it found are fixed.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The check itself runs in Scripts/test.sh; its pictures land in $TMPDIR/photonz-legibility.",
+  "switched": {},
+  "try": [
+    { "do": "Open the capture history bar in light mode and look at the All | Screenshots | Videos filter: white on the system blue, the blue as the Mac draws it.", "shot": "2026-09-30-legibility-history-filter-sc.png" },
+    { "do": "Switch to dark mode and look at View | Edit in the title bar.", "shot": "2026-09-30-legibility-title-bar-dark-sc.png" },
+    { "do": "In the history bar, point at a thumbnail's trash button: it turns into a white bin on a solid red circle." },
+    { "do": "Add captions to a recording in light mode and look at the caption clip's name on the timeline: deeper purple on its pale purple." },
+    { "do": "Hover a transition tile in the picker in light mode: the small grey detail under the name stays readable." },
+    { "do": "Run Scripts/test.sh and read its last two lines: the words measured and the verdict." }
+  ],
+  "evaluate": [
+    "Is a white bin on a red circle the right way for a delete button to answer the pointer, or too loud?",
+    "Does the slightly deeper grey for quiet labels (light mode) still look like the mock's quiet grey to you?",
+    "Is the picked word on a yellow or graphite accent, now dark instead of white, the right call?",
+    "Are disabled buttons now at the right quietness: clearly off, still readable?"
+  ],
+  "rough": [
+    "The rule is legible, not 4.5:1: 3:1, or 2:1 when the word is plainly another colour (white on a saturated clip), and 1.8:1 when disabled, the system's own disabled label. The segmented chip is the system accent again, no longer deepened.",
+    "The mock's quiet grey (#8B92A1) is a step deeper in light (#7C8392): at the mock's value it read 2.6:1 on a hovered tile and on the transport glass.",
+    "Liquid Glass cannot be drawn offscreen, so controls on glass are checked over white, black and grey under the mock's glass tone, not the real glass.",
+    "AppKit menus, pop-up buttons and system buttons are the system's own and are not drawn. A focus ring is checked only on the segmented control. A few private badges (caption guide badge, color drop note, canvas notice chip, held frame badge) are not on the sheet yet.",
+    "These fixes live in shared controls, so Current gets them too: the task says no unreadable text anywhere in the app."
+  ]
+}
