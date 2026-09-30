@@ -4,7 +4,7 @@
   "goal": "You asked on 2026-09-29 why the app was not using the Mac's own Liquid Glass segmented control. Every row of side-by-side choices is now the system control itself, one continuous track in the title bar and in the panel. What is left is your yes: the Mac fills the picked choice with the accent colour and switches without a slide, which may not be the glass you pictured.",
   "epic": "design-system",
   "priority": "p1-high",
-  "seq": 0.000001,
+  "seq": 1e-06,
   "status": "pending",
   "release": "next",
   "area": "app",
@@ -16,6 +16,7 @@
   "acceptance": [
     "Back to our own segmented control (the drawn one from before 5a81d5a3: our rail, our sizes, our layout) everywhere: title bar View | Edit, the history filter, every panel picker; the Mac's stock control is removed again (user 2026-09-30: 'this IS the native slider, but it's ugly and I want to go back to our custom one')",
     "The selected chip is TINTED Liquid Glass: a real .glassEffect(.regular.tint(accent).interactive(), in: .capsule) (or the equivalent Glass API) behind the picked segment, so at rest it reads as a tinted glass pill, with the picked label in the colour the system uses on tinted glass (white on the accent), readable at 4.5:1 in light and dark and over any backdrop (history bar included)",
+    "Legible in every state, ALWAYS (user 2026-09-30: 'I do not want white on white or black on black cases EVER'): the picked and unpicked labels, at rest, hovered, pressed, disabled and mid-move, in light and dark, over white and black backdrops, in every placement, measured at 4.5:1 or better against what is actually drawn behind them; a snapshot test renders all of these and fails below 4.5:1",
     "When the selection changes, that tinted glass chip moves to the new segment as liquid glass: one glass shape, moved by SwiftUI's own animation (matchedGeometryEffect or a shared glassEffectID in a GlassEffectContainer, whichever the system morphs smoothly), stretching as it travels and settling with no overshoot outside the rail; only one animator (the pick is isolated from any outer withAnimation)",
     "Reference the user gave: https://www.reddit.com/r/SwiftUI/comments/1qvs87l/how_to_create_segmented_pickers_with_liquid_glass/ (the intake window could not fetch it; try it, and match the effect it shows)",
     "Filmed with filmThumb at 120 fps in the title bar, the history bar and a panel: tinted chip at rest in each, the move between segments, and never a pixel outside the rail",

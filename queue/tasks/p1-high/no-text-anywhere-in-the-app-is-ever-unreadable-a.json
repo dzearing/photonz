@@ -1,0 +1,32 @@
+{
+  "id": "no-text-anywhere-in-the-app-is-ever-unreadable-a",
+  "title": "No text anywhere in the app is ever unreadable: a contrast check that fails the build",
+  "goal": "User 2026-09-30: 'make sure that the text is legible. I do not want white on white or black on black cases EVER.' The history filter shipped white text on a white glass thumb (2026-09-29), and nothing caught it. Build a guard that renders the app's text-bearing controls in every state and fails on low contrast.",
+  "epic": "design-system",
+  "priority": "p1-high",
+  "seq": 0.000002,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-30T13:43:32.879Z",
+  "updated": "2026-09-30T13:43:32.965Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "A snapshot-contrast test (ImageRenderer, in Scripts/test.sh) renders every shared control that carries text or an icon (segmented control, buttons, dropdown rows, tool bar, panel rows and headers, tooltips, toasts, transport, timeline headers and clip names, the history bar, the View | Edit switch, badges, caption and title previews) in every state (rest, hover, pressed, selected, disabled, focused) and in light and dark, over white, black and mid-grey backdrops where the control is translucent or glass",
+    "For each render it measures the text or icon colour against the pixels actually behind it and fails below 4.5:1 for text (3:1 for large text and icons), naming the control, state, scheme and backdrop",
+    "It runs on every commit; today's offenders are listed in the task log and fixed in this task",
+    "UX-PATTERNS states the rule and points at the test"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T13:43:32.881Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-30T13:43:32.964Z",
+      "note": "seq 430 -> 0.000002"
+    }
+  ]
+}
