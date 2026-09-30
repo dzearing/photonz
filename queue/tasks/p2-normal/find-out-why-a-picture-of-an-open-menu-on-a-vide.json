@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T08:21:42.283Z",
-  "updated": "2026-09-29T12:28:01.148Z",
+  "updated": "2026-09-29T23:25:08.279Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-29 around 01:00, screen unlocked, probe Screen Recording granted, person away. `Scripts/playtest.sh Scripts/playtest/video-panel-order-walk.json` then sampling 25 points of /tmp/photonz-playtest/video-panel-order-walk/2-the-speed-dropdown-sc.png: 24 of 25 pure black. Same on main with the dropdown change stashed (baseline check: 24 of 25 black), and on between-the-keys-walk 2-curve-menu-sc.png (25 of 25). zoom-readout-double-click-walk 3-zoom-menu-sc.png on an image document: 0 of 25 black. At about 23:50 on 2026-09-28 the same captions walk photographed its open Show menu over the whole window, so it comes and goes. SCShareableContent listed both windows (menu layer 101, editor layer -1, both isOnScreen true) and a filter by the whole app was still black; a whole-display capture showed another app's browser window over the probe's spot (walk windows sit one level under other apps). Suspect: the covered editor window of a video document is not drawn while the menu tracks. PlaytestPanelMenu.capture.",
@@ -29,11 +29,25 @@
     {
       "t": "2026-09-29T12:28:01.147Z",
       "note": "seq 3480 -> 90"
+    },
+    {
+      "t": "2026-09-29T23:08:32.032Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T23:25:08.225Z",
+      "note": "cause: a recording opened by a walk keeps its editor window at alpha 0 until a picture asks for it. rightClick showed the window for its menu picture (so 3-the-clip-menu in the same walk was whole); panelMenu and the menu bar path did not, so the menu floated on an empty (transparent) plate. Not about video rendering at all: image documents are revealed on open, which is why the zoom menu was fine."
+    },
+    {
+      "t": "2026-09-29T23:25:08.277Z",
+      "note": "Fixed in fd1a578c: panelMenu, menu bar and right-click menu pictures share showForMenuPicture/hideAfterMenuPicture in PlaytestHarness.swift, which shows a still-hidden window for the picture and hides it after. Verified: video-panel-order-walk 2-the-speed-dropdown went from 24/25 empty samples to 0/25 and reads as the whole editor; between-the-keys-walk 2-curve-menu and every-dropdown-opens-on-a-click-walk 2-show-open 0/25; zoom-readout-double-click-walk 3-zoom-menu still whole; menu-checkmarks-walk passes; Scripts/test.sh 10570 tests green."
     }
   ],
   "walks": [
     "video-panel-order-walk",
     "between-the-keys-walk",
     "every-dropdown-opens-on-a-click-walk"
-  ]
+  ],
+  "started": "2026-09-29T23:08:32.030Z",
+  "completed": "2026-09-29T23:25:08.278Z"
 }

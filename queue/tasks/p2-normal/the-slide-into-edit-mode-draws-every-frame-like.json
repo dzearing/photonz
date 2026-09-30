@@ -1,0 +1,39 @@
+{
+  "id": "the-slide-into-edit-mode-draws-every-frame-like",
+  "title": "The slide into Edit mode draws every frame, like the slide back to View",
+  "goal": "Going from View to Edit, the tool bar, tracks and panel slide in at a low frame rate: the window draws a new frame only every 10 to 60 ms while they move, even on a short recording, so the slide looks choppy. Going back to View is smooth. Make the slide into Edit as smooth as the slide out.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-29T20:57:12.631Z",
+  "updated": "2026-09-30T12:29:20.319Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found 2026-09-29 by switching-a-long-recording-to-edit-mode-draws-it, after it split the Cmd-2 key pass up (EditModeArrival). Reproduce: Scripts/playtest.sh Scripts/playtest/segmented-thumb-film-walk.json, then read /tmp/photonz-playtest/segmented-thumb-film/1-view-to-edit.json frames. Output 2026-09-29: View to Edit thumb positions change at ms 289, 351, 360, 375, 411, 421, 429, 437, 491, 500 (steps of 10 to 62ms); Edit to View changes every ~9ms from 256 to 495. Long captioned sample (Scripts/playtest/view-to-edit-on-a-long-recording-walk.json): wait after Cmd-2 reads mainBusy 633 to 758ms over 0.8s, with passes of 30 to 50ms all through the 250ms slide; after Cmd-1 about 530ms. Suspects: the panel move transition narrows the canvas every frame (HStack), so the canvas, its viewport refit, the tool bar fit budget (reconcileToolbarCount) and the whole panel lay out per frame; the dock growing relays the grid every frame. Idea: slide the panel with an offset over a fixed canvas width and refit once at the end.",
+  "acceptance": [
+    "Filming the View | Edit thumb on Cmd-2 (segmented-thumb-film-walk, 1-view-to-edit) shows a new position at least every 20ms once it starts moving, as Edit to View already does",
+    "On the long captioned sample, the main thread is busy for well under half of the 0.8s after Cmd-2 (it is about 650 to 750ms today)",
+    "View mode playback is no slower"
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T20:57:12.633Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-29T20:57:35.140Z",
+      "note": "owns these walks: segmented-thumb-film-walk, view-to-edit-on-a-long-recording-walk"
+    },
+    {
+      "t": "2026-09-30T12:29:20.318Z",
+      "note": "seq 3450 -> 20"
+    }
+  ],
+  "walks": [
+    "segmented-thumb-film-walk",
+    "view-to-edit-on-a-long-recording-walk"
+  ]
+}

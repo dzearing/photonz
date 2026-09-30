@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p2-normal",
   "seq": 140,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T08:38:58.519Z",
-  "updated": "2026-09-29T12:28:01.415Z",
+  "updated": "2026-09-30T12:12:53.439Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured, not guessed. Sources/Photonz/MotionStripView.swift line 33 sets labelWidth to 92, and the layer heading at line 294 draws group.layerName at 10pt semibold in a frame of labelWidth - 6, so 86 points, with lineLimit(1) and truncationMode(.middle) and no help text. The lane titles under it get the same 86 minus a 10 point indent.\n\nThis was flagged twice in two days and by two different pieces of work, which is what takes it past a nit. The video design pass rough list: \"The label column is 92 points, which is what the shipping strip uses, and settings-capture does not fit in it. It ellipses in the mock exactly as it would in the app. That is honest and it is still not good: a layer name is the one thing in that column and it gets cut.\" The mock inherited the number from the shipping strip, so fixing the app fixes both.\n\nIt matters beyond icons. UX-PATTERNS D18 makes the icon timing strip and the video timeline ONE component, so whatever the column does here is what a video timeline full of clip names will do, and clip names are long.\n\nThe cheapest honest answer is a tooltip carrying the whole name plus keeping the middle truncation, and that needs no card because a tooltip is not a new control. A column you can drag wider IS a new control and would need one, so if that is the answer the runner wants, file the card rather than building it. Say in the audit which was chosen and why.",
@@ -81,7 +81,36 @@
     {
       "t": "2026-09-29T12:28:01.414Z",
       "note": "seq 130 -> 140"
+    },
+    {
+      "t": "2026-09-30T11:56:42.002Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-30T12:12:31.907Z",
+      "note": "owns these walks: timing-strip-long-names-walk"
+    },
+    {
+      "t": "2026-09-30T12:12:31.961Z",
+      "note": "Reproduced before fixing: timing-strip-long-names-walk photographed the strip reading setting...ure-top and setting...ure-left. The middle cut already kept the ends apart (acceptance 2 held), but neither name could be read whole and there was nothing to hover. Adversarial pass: a Photoshop/Premiere user expects a fixed-width track header that truncates and shows the whole name on hover, which is what this is; a draggable column would be a new control and would need a decision card, so it was not built."
+    },
+    {
+      "t": "2026-09-30T12:12:32.017Z",
+      "note": "Shipped: MotionStripView.swift wholeNameTip(_:weight:room:) measures the label at its own font and, only when it is cut, puts the app's designed toolTip (next-tool-tips, on by default) carrying the whole name on the heading; lane titles get the same. The column width is unchanged, so lanes still start at the ruler's zero (every row's bar starts at the same x in the pictures). Verified: walk green at Next defaults with 4 real captures; the log shows a pointer resting at (58,959) on the cut heading raising settings-capture-top, and at (41,883) on Rectangle raising no tooltip. motion-timing-strip, motion-strip-way-back, key-lanes, key-lanes-menu and tutorial-get-the-timing-right walks green; Scripts/test.sh green (10657 tests)."
+    },
+    {
+      "t": "2026-09-30T12:12:32.073Z",
+      "note": "left rough: the tooltip is drawn above the heading and covers the heading above it while it is up; the middle cut does not help names that differ only in the middle. Neither earned a task: both are transient or rare, recorded in the audit for the user to react to."
+    },
+    {
+      "t": "2026-09-30T12:12:53.437Z",
+      "note": "A layer name too long for the timing strip's name column keeps its middle cut (which keeps the distinguishing end) and now shows the whole name on the app's own tooltip when the pointer rests on it; a name that fits gains nothing and the column width, so where lanes start, is unchanged. MotionStripView.swift wholeNameTip. Verified with timing-strip-long-names-walk at Next defaults (4 real captures; pointer on the cut heading raised settings-capture-top, on Rectangle nothing), five neighbouring strip walks green, Scripts/test.sh green. Audit: queue/audits/2026-09-30-timing-strip-long-names.json. Mock gap (kind glyph before each heading) filed as each-heading-on-the-timing-strip-carries-a-small."
     }
   ],
-  "source": "manager"
+  "source": "manager",
+  "started": "2026-09-30T11:56:42.001Z",
+  "walks": [
+    "timing-strip-long-names-walk"
+  ],
+  "completed": "2026-09-30T12:12:53.438Z"
 }

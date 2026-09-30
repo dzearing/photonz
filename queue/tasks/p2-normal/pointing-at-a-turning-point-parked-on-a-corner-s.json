@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T12:27:19.954Z",
-  "updated": "2026-09-29T12:28:00.719Z",
+  "updated": "2026-09-29T18:37:44.937Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the rotating check at 2026-09-29T11:03:34Z. No task owned it, because no standing walk task was open (see the loop task filed alongside this one). Reproduced by the daily digest on 2026-09-29 at 87071807 with the probe built at 05:10: `Scripts/playtest-all.sh --no-build motion-pivot-in-a-corner` -> `motion-pivot-in-a-corner-walk 7s FAILED step 24 (expectCue): the canvas says a press here would be \"none\", not \"grab\"`. Its log at step 21 says `move to (420, 230) document = view (448, 262); nothing under the pointer watches for one`, so the pointer is not reaching whatever watches the canvas at that point. Last pass seen in the loop log: the rotating check around 2026-09-28T21:11Z. Between the two: the floating tool bar spacing and height (98f6c6f5, 3e3bafea), the canvas foot layout (dd15d5fe), the dropdown rebuild (e121747f), the segmented control (8e594bb1) and the timeline outline and resize edge (2c6b55bd). Start by running the walk at each of those.",
@@ -26,9 +26,61 @@
     {
       "t": "2026-09-29T12:28:00.718Z",
       "note": "seq 3500 -> 10"
+    },
+    {
+      "t": "2026-09-29T12:56:13.946Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T13:19:51.367Z",
+      "note": "runner failed (exit 143, attempt 1): ▸ Bash cat /tmp/pw-aa | tr '\\n' ' '; echo; Scripts/playtest-all.sh --no-build --only /tmp/pw-ab 2>&1 | grep -E \" ok|…"
+    },
+    {
+      "t": "2026-09-29T13:19:51.840Z",
+      "note": "ran out of turn with 3 file(s) still changed: Sources/Photonz/CanvasPointerCue.swift, Sources/Photonz/Playtest/PlaytestHarness.swift, Sources/Photonz/Playtest/PlaytestPointer.swift. Put aside so the next task started clean; restore with `git stash apply ad0f63cc69d7d36b51c2904299bbbf93bfdfa33d` before carrying on."
+    },
+    {
+      "t": "2026-09-29T18:19:48.466Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T18:19:48.472Z",
+      "note": "a previous attempt at this task left 3 file(s) changed; they are set aside. Restore them with `git stash apply ad0f63cc69d7d36b51c2904299bbbf93bfdfa33d` and carry on, or start over and leave the stash alone."
+    },
+    {
+      "t": "2026-09-29T18:37:25.863Z",
+      "note": "Restored stash ad0f63cc (previous attempt's harness fix). At HEAD a96b4e54 without it the walk passed 6/6 with the person's pointer at the screen edge (1728,987), so no commit broke it; the previous attempt also saw it fail at c489684d, older than every suspect."
+    },
+    {
+      "t": "2026-09-29T18:37:25.917Z",
+      "note": "Cause: every canvas update (CanvasDisplay.apply -> refreshGrabCursor()) re-reads the cue with no event, falling back to window.mouseLocationOutsideOfEventStream = the PERSON's real pointer, not the walk's synthesized one. Outside the canvas bounds that path returns without recording, so the reading stays grab (pass); when the real pointer rests over the probe's canvas area (even with the probe buried under other windows) it records 'none' (fail). Not an app bug: for a person the real pointer is the pointer and the cue is right."
+    },
+    {
+      "t": "2026-09-29T18:37:25.971Z",
+      "note": "Reproduced deterministically (person idle 3h): CGWarpMouseCursorPosition to (300,350) over the probe canvas, then Scripts/playtest.sh Scripts/playtest/motion-pivot-in-a-corner-walk.json --no-build -> FAILED step 24 (expectCue): \"none\", not \"grab\"; same for a scratch walk that nudges+undoes to force a refresh. Pointer put back at (1727,987)."
+    },
+    {
+      "t": "2026-09-29T18:37:26.024Z",
+      "note": "Fix 17daae0b: PlaytestPointer remembers where the walk last put the pointer (every synthesized mouse event and rest); CanvasNSView.restingPointer() reads that during a walk. With the pointer parked over the canvas: pivot walk + scratch walk 5/5 ok. Cue walks (crop-cue, grab-cue, motion-path, notice-waits-under-the-pointer, pen-two-points, screen-drag-cue) 7/7 ok; all 10 motion walks ok. Scripts/test.sh: 10561 tests passed."
+    },
+    {
+      "t": "2026-09-29T18:37:26.079Z",
+      "note": "left rough: flagsChanged's region-tool cursor (CanvasPointerCue.swift ~381) still reads the real pointer, but it only sets NSCursor and records nothing a walk reads, so no task."
+    },
+    {
+      "t": "2026-09-29T18:37:35.260Z",
+      "note": "motion-pivot-in-a-corner-walk flaked on where the person's real pointer rested: a canvas update re-reads the cue from the real OS pointer, not the walk's. No commit broke it (passes at HEAD with the pointer elsewhere; fails every time with it parked over the probe canvas). Fixed in the harness (17daae0b): during a walk the cue reads the walk's pointer. Verified with the pointer over the canvas: pivot walk 5/5, cue walks 7/7, all 10 motion walks, Scripts/test.sh 10561 passed."
     }
   ],
   "walks": [
     "motion-pivot-in-a-corner-walk"
-  ]
+  ],
+  "started": "2026-09-29T18:19:48.465Z",
+  "failures": 0,
+  "lastError": {
+    "at": "2026-09-29T13:19:51.366Z",
+    "exit": 143,
+    "message": "▸ Bash cat /tmp/pw-aa | tr '\\n' ' '; echo; Scripts/playtest-all.sh --no-build --only /tmp/pw-ab 2>&1 | grep -E \" ok|…"
+  },
+  "completed": "2026-09-29T18:37:35.261Z"
 }

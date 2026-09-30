@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-28T16:19:41.372Z",
-  "updated": "2026-09-29T12:28:00.825Z",
+  "updated": "2026-09-29T20:57:46.315Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by view-mode-and-edit-mode-a-recording-opens-to-wat, 2026-09-28. Repro: a walk with openLongRetinaTalk, captionsWaitForThemselves, then key cmd+2 / wait 0.8 / cmd+1 / wait 0.8 repeated. Log: 'command+2 ... wait 0.8s, never went quiet ... busiest 215.4ms; mainBusy 814.6ms over 239 passes, longest 184.9ms' and the second switch 'longest 173.3ms'; Cmd-1 back to View is fine (longest 36 ms). sample(1) during six switches: main thread time is almost all SwiftUI NSHostingView.layout -> ViewGraph render / DisplayList update / AccessibilityNode.updateFocus, with InspectorPanel.body, PanelFieldRowLayout.sizeThatFits, TimelineTrackRow.body, CaptionStylePreview, VideoKit.TileGrid (transition tiles) on top. Ideas: keep the panel in the tree but off screen in View (check playback cost), defer the transitions tile grid a frame, stagger panel vs tracks. The ninety-second-cut walk now presses Cmd-2 before Q with no longestUnderMS on that wait.",
@@ -26,9 +26,44 @@
     {
       "t": "2026-09-29T12:28:00.824Z",
       "note": "seq 3430 -> 30"
+    },
+    {
+      "t": "2026-09-29T16:04:18.213Z",
+      "note": "also seen 2026-09-29 by segmented-thumb-film-walk: pressing Cmd-2 on the full-screen fixture, the title bar's View | Edit thumb draws nothing for ~200ms and its first frame is already a third of the way through its 300ms glide (leading edge at 84 of 92.5pt), because the main thread is busy switching modes (one pass of 137ms in that step's log). Edit to View has no such gap. Films in /tmp/photonz-playtest/segmented-thumb-film/1-view-to-edit.json"
+    },
+    {
+      "t": "2026-09-29T19:45:39.805Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T19:46:20.770Z",
+      "note": "reproduced with new view-to-edit-on-a-long-recording-walk: first Cmd-2 longest pass 193.6ms, mainBusy 848ms over 214 passes, inspectorPanel bodies 35"
+    },
+    {
+      "t": "2026-09-29T19:56:59.406Z",
+      "note": "attribution (longest pass on Cmd-2, by leaving pieces out): panel ~110ms of it (captions section ~85, transitions ~30), tracks ~60, tool bar ~30, base ~25. Plan: panel slides in with sections held and arrives one per pass (existing DockArrivals mechanism), then stagger the tool bar/tracks if the key pass is still heavy. Nothing kept alive in View, so View playback is untouched."
+    },
+    {
+      "t": "2026-09-29T20:57:35.085Z",
+      "note": "walks the-ninety-second-cut-walk -> view-to-edit-on-a-long-recording-walk, the-ninety-second-cut-walk"
+    },
+    {
+      "t": "2026-09-29T20:57:35.194Z",
+      "note": "shipped: EditModeArrival (core, tested) stages Edit over passes: key pass (mode flip, frames), then ruler/playhead/scroller + tool bar, then track rows, then panel sections one a pass via DockArrival(slidingIn:). Longest pass after Cmd-2 on the long captioned sample 193.6ms -> 72-80ms; the-ninety-second-cut-walk Cmd-2 wait now longestUnderMS 150 and reads 78.8ms. View playback measured same build-for-build (mainBusy ~1605ms/3s after vs ~1665ms before, longest 17ms both)."
+    },
+    {
+      "t": "2026-09-29T20:57:35.246Z",
+      "note": "tried and reverted: bringing the Captions section's look rows in a pass after its top rows collided with the next section's arrival pass (82-101ms), worse than leaving it whole (~80ms). left rough, not filed: Captions section is still the heaviest single pass at ~80ms; the audit rough names it. Filed: the-slide-into-edit-mode-draws-every-frame-like (the slide itself runs at a low frame rate, short recordings too)."
+    },
+    {
+      "t": "2026-09-29T20:57:46.313Z",
+      "note": "Cmd-2 on the long captioned sample: longest pass 193.6ms -> 72-80ms. EditModeArrival + DockArrival (core, tested) bring the editor in over passes while it slides. Verified by view-to-edit-on-a-long-recording-walk (<100ms, Next defaults), the-ninety-second-cut-walk (Cmd-2 wait <150ms, read 78.8), 14 walks that switch to Edit all green, View playback measured unchanged, Scripts/test.sh 10570 passed. Commit 222deb83; audit queue/audits/2026-09-29-view-to-edit-long-recording.json."
     }
   ],
   "walks": [
+    "view-to-edit-on-a-long-recording-walk",
     "the-ninety-second-cut-walk"
-  ]
+  ],
+  "started": "2026-09-29T19:45:39.804Z",
+  "completed": "2026-09-29T20:57:46.314Z"
 }

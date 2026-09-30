@@ -1,0 +1,26 @@
+{
+  "id": "a-size-read-off-a-screenshot-is-the-size-the-typ-2026-09-30T02-47-31-043Z",
+  "task": "a-size-read-off-a-screenshot-is-the-size-the-typ",
+  "kind": "task",
+  "label": "A size read off a screenshot is the size the type really was",
+  "title": "A size read off a screenshot is the size the type really was",
+  "outcome": "failed",
+  "at": "2026-09-30T02:47:31.043Z",
+  "files": [
+    "Scripts/playtest/label-size-walk.json",
+    "Sources/Photonz/EditorState+ReadText.swift",
+    "Sources/PhotonzCore/TextReading.swift",
+    "Sources/PhotonzCore/TextStyles.swift",
+    "Sources/PhotonzRender/TextReader.swift",
+    "Tests/PhotonzCoreTests/SizeMenuTitlesTests.swift",
+    "Tests/PhotonzRenderTests/ReadPageWeightFixtureTests.swift",
+    "Tests/PhotonzRenderTests/ReadRunAsTextFixtureTests.swift",
+    "Tests/PhotonzRenderTests/ReadSizeGroundTruthTests.swift"
+  ],
+  "count": 9,
+  "state": "stashed",
+  "stash": "e25795f5febd6ed2b44fbc6216bdefb023174c34",
+  "restore": "git stash apply e25795f5febd6ed2b44fbc6216bdefb023174c34",
+  "why": "",
+  "handed": "2026-09-30T10:07:40.452Z"
+}

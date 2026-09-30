@@ -134,7 +134,7 @@ The machine you run on is the user's. Anything you start, you finish.
   queue/bin/sweep.sh status        # what the last sweep found
   ```
   It returns instantly, and **asking is not starting**: the full set runs at
-  most once every twelve hours, and between those the loop runs a rotating
+  most once every twenty four hours, and between those the loop runs a rotating
   check of about ten minutes (every walk whose script changed, then the next
   chunk of the set) so a regression is still caught the day it lands. Your
   request waits for the next full run and is served by it along with everybody

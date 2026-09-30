@@ -1,0 +1,38 @@
+{
+  "id": "find-out-whether-grid-settings-is-hard-to-read-i",
+  "title": "Find out whether Grid Settings is hard to read in dark appearance over a white picture",
+  "goal": "In a walk's capture, the grid's settings popover in dark appearance, sitting over a white picture, turns light grey from the picture showing through its glass while its words and checkboxes stay white, so the text washes out and ticked boxes read empty. It is not yet known whether a person with the window in front sees the same, or whether it only happens in a window that is not active.",
+  "epic": "design-system",
+  "priority": "p3-low",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-30T06:08:38.373Z",
+  "updated": "2026-09-30T12:29:21.025Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-09-29 while running the IA task. Reproduction (walk windows are never active): a walk with appearance dark, blank 900x700 in a 1400x900 window, action showGrid, action showGridSettings, snapshot. Capture: queue/audits/2026-09-29-grid-settings-dark-over-white.png. Light appearance reads fine (grid-settings-walk 3-open). Not caused by the IA change: the popover's content is unchanged apart from the new Cell row, and the chip-anchored popover also sits over the canvas. Popover is CanvasGridSettingsPopover, anchored in EditorView (gridSettingsBinding(at: .toolBar)).",
+  "acceptance": [
+    "The popover is photographed in dark appearance over a white picture with the window active (a person at the Mac, or a front walk) and the answer is written in the log",
+    "If a person sees it too: the popover's words and controls keep their contrast over any picture, in light and dark, and a walk photographs both"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T06:08:38.375Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-30T12:28:50.445Z",
+      "note": "triage 2026-09-30: p2 -> p3. Serves design-system, staged next, and it is an open question rather than a reproduced defect: only a walk's inactive window has shown it so far."
+    },
+    {
+      "t": "2026-09-30T12:28:50.501Z",
+      "note": "priority p2-normal -> p3-low"
+    },
+    {
+      "t": "2026-09-30T12:29:21.024Z",
+      "note": "seq 3480 -> 40"
+    }
+  ]
+}

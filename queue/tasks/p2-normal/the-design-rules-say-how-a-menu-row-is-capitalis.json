@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 100,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "docs",
   "created": "2026-09-28T12:19:03.272Z",
-  "updated": "2026-09-29T12:28:01.201Z",
+  "updated": "2026-09-30T09:53:01.430Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Recurring in audits across four tasks in three days: the-dock-headers-match-the-mock-small-caps-title (Copy Look vs the mock's Copy properties), the-properties-menu-puts-a-clip-back-the-way-it (queue/audits/2026-09-27-properties-reset-to-defaults.json: 'Items are Title Case like every other menu in the app'), one-step-puts-a-transition-on-every-cut (queue/audits/2026-09-27-transition-on-every-cut.json: 'Menu rows are in macOS title case ... the mock writes sentence case'), one-key-puts-the-usual-transition-on-the-cut-at. grep of UX-PATTERNS.md and AGENTS.md finds no casing rule.",
@@ -30,6 +30,45 @@
     {
       "t": "2026-09-29T12:28:01.200Z",
       "note": "seq 90 -> 100"
+    },
+    {
+      "t": "2026-09-30T02:15:22.010Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-30T02:16:45.672Z",
+      "note": "Surveyed: every mock page writes menu rows in sentence case (app-shell: Copy properties, Reset to style; agent pages: Group selection, Make component). The app's menu rows are uniformly Mac title case: a rough scan of menu and contextMenu sources found 127 title-case rows, 0 sentence-case rows; the only sentence-case strings were panel buttons/labels (MotionListInspector: 'Draw a curve...', 'Use this curve'; 'Between the keys' is a section label). macOS injects title-case rows (Select All, Enter Full Screen) the app cannot reword. UX-PATTERNS §4/§7 have no casing rule. Since the recommended rule (title case) departs from the mocks, acceptance item 2 requires a card first: opened the-design-rules-say-how-a-menu-row-is-capitalis-how-should-a-menu-row-and-a-butt with brief. Nothing further is decidable before the answer: the rule text and the test over registered menu titles both depend on which style wins."
+    },
+    {
+      "t": "2026-09-30T02:16:48.738Z",
+      "note": "The recommended rule (Mac title case) departs from the mocks, so the user decides first: card the-design-rules-say-how-a-menu-row-is-capitalis-how-should-a-menu-row-and-a-butt. Rule text and the menu-title test follow the answer."
+    },
+    {
+      "t": "2026-09-30T02:45:51.774Z",
+      "note": "decision \"How should a menu row and a button be capitalised: Apply to Every Cut (the Mac) or Apply to every cut (the mocks)?\" resolved: The Mac way: Title Case"
+    },
+    {
+      "t": "2026-09-30T09:36:38.845Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-30T09:52:42.614Z",
+      "note": "owns these walks: layers-combine-walk, panel-sections-walk, saved-colour-cannot-come-walk"
+    },
+    {
+      "t": "2026-09-30T09:52:55.684Z",
+      "note": "UX-PATTERNS §7 'How a menu row is capitalised': menu rows, menu headings and buttons in Mac Title Case, labels sentence case, the Mac wins over the mocks (user's answer on the card). MenuTitleCase in PhotonzCore (9 tests); MenuRowsAreTitleCaseTests reads every menu bar row/heading, right-click row, Button/Menu/panel dropdown title in the source and fails on a departure. 13 titles recased (Draw a Curve..., Use This Curve, Hard Cut, Key It (Again), Play from Here, Put It Back (on the Shelf), Reset Label Position(s), Use Automatic for All, Set What It Is For in the Library allowed with reason). Scripts/test.sh 10630 passed; layers-combine, panel-sections, saved-colour-cannot-come walks ok with real captures. Audit queue/audits/2026-09-30-menu-row-title-case.json. Commit c0fa9490."
+    },
+    {
+      "t": "2026-09-30T09:53:01.429Z",
+      "note": "No follow-ups filed: the audit's rough items (mocks left as drawn, macOS rows not read, run-time titles not checked) are by design and did not clear the bar. Probe was quit by the walk harness; no CPU burners left."
     }
-  ]
+  ],
+  "started": "2026-09-30T09:36:38.843Z",
+  "walks": [
+    "layers-combine-walk",
+    "panel-sections-walk",
+    "saved-colour-cannot-come-walk"
+  ],
+  "completed": "2026-09-30T09:52:55.685Z"
 }

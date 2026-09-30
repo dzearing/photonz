@@ -1,0 +1,33 @@
+{
+  "id": "time-on-a-video-reads-in-frames-where-an-editor",
+  "title": "Time on a video reads in frames where an editor expects frames",
+  "goal": "A Premiere or Final Cut editor thinks in frames: they trim a transition to 12 frames and park the playhead at 00:00:04:12. Photonz says 0:04 on the transport and 0.8s beside a transition you drag, so an editor cannot land on a frame they can name. Show time the way an editor reads it wherever a length or a position is set by hand.",
+  "epic": "video-beats-premiere",
+  "priority": "p2-normal",
+  "seq": 25,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-30T12:30:45.465Z",
+  "updated": "2026-09-30T12:30:45.542Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen twice now, so it is filed. First: docs/design/video-vs-premiere.md, 'Seen, not filed: No frames in the time readout. The transport says 0:04 and the ruler counts seconds; Premiere shows 00:00:04:12.' Second: queue/audits/2026-09-29-transition-edge-follows-the-pointer.json rough list: 'The bubble shows tenths of a second (0.8s), and hundredths only once the ruler is zoomed in far enough. It does not show frames.' Serves the video-beats-premiere success criterion that the ruler, playhead, clips and captions agree to the frame at every zoom. Update the gap report's line when this closes.",
+  "acceptance": [
+    "Reproduced first: the transport readout, the ruler at its closest zoom and a transition's length bubble are photographed at Next defaults and what each says is written in the log",
+    "Whether frames show everywhere or behind a choice (Premiere offers one) is put to the user on a decision card with pictures of both before anything visible changes",
+    "Once answered: the transport, the ruler's closest labels, the transition length bubble and the panel's Length row all say the same time for the same moment, to the frame",
+    "Typing a length in frames (12) or in timecode (00:00:00:12) into a length field gives the same result",
+    "A walk at Next defaults drags a transition to a whole number of frames and reads it back from the bubble and the panel"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T12:30:45.467Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-30T12:30:45.541Z",
+      "note": "seq 3480 -> 25"
+    }
+  ]
+}

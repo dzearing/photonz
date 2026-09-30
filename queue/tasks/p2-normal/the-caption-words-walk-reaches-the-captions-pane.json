@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T08:21:33.788Z",
-  "updated": "2026-09-29T12:28:00.987Z",
+  "updated": "2026-09-29T22:05:27.296Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-29 on main before and after the dropdown change: `Scripts/playtest.sh Scripts/playtest/caption-words-pop-walk.json --no-build` -> `[10 reveal] FAILED: no control called \"Caption style Caption\" is in the panel; the ones that are: Volume (Transport) ... View Mode (the title bar's switch, on), Edit Mode (the title bar's switch), Panel (the title bar's panel toggle, panel closed)`. Cause: view-mode-and-edit-mode-a-recording-opens-to-wat (done) makes a recording open in View mode. Fix: add {\"do\":\"press\",\"control\":\"Edit Mode\"} after the tool step, as every-dropdown-opens-on-a-click-walk does. Other walks that open a talk and expect the panel may need the same; `queue/bin/sweep.sh status` will list them.",
@@ -33,9 +33,23 @@
     {
       "t": "2026-09-29T12:28:00.986Z",
       "note": "seq 3470 -> 60"
+    },
+    {
+      "t": "2026-09-29T21:56:44.197Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T22:05:27.239Z",
+      "note": "Reproduced: step 10 reveal failed, panel closed in View mode. Added press Edit Mode + 0.8s wait after the tool step. Walk now ok, 47 steps, 7 real captures (4-past-its-size-on-the-bounce-sc.png shows one word with a gold glow, Show = 1 word). Checked the other walks that open the talk without an Edit press: a-title-reads-over-a-video, a-video-edit-saves-as-a-project, captions-are-one-layer, captions-on-demand, captions-guides-and-track-bar, captions-panel-keeps-its-margins all pass; panel-rows-read-as-one-column fails on a duplicate 'Kind' (Shadow 1/Shadow 2), already owned by the-panel-rows-walk-finds-the-title-shadow-it-me. No audit: walk-only fix, no feature changed. Scripts/test.sh green (10570 tests)."
+    },
+    {
+      "t": "2026-09-29T22:05:27.294Z",
+      "note": "caption-words-pop-walk presses Edit Mode before selecting the Captions row (c173e2b0); passes end to end at Next defaults, 47 steps, 7 real window captures; test suite green"
     }
   ],
   "walks": [
     "caption-words-pop-walk"
-  ]
+  ],
+  "started": "2026-09-29T21:56:44.196Z",
+  "completed": "2026-09-29T22:05:27.295Z"
 }

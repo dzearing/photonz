@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 110,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T18:06:17.241Z",
-  "updated": "2026-09-29T12:28:01.254Z",
+  "updated": "2026-09-30T10:19:28.357Z",
   "deps": [],
   "blockedBy": [],
   "notes": "NOT REPRODUCED BY THE MANAGER, filed p2 as something to look into rather than p1. The screen has been locked since 2026-09-15 so no walk can run, and the loop owns the build directory, so this was read in the code and taken from a runner´s own measurement rather than measured again here.\n\nWhere it comes from: the rough list of queue/audits/2026-09-17-label-size.json, first item. Its words: the size is still about 9 per cent bigger than the type really was; those row labels are 13 points on screen and come back as a 28 point layer on a 2x capture, where 26 would be the true answer. That audit deliberately did not file it, saying it needs its own study rather than a near-twin task. This is that study.\n\nEvidence that cuts the other way, and the first thing to check: Tests/PhotonzRenderTests/ReadPageWeightFixtureTests.swift says the Effects panel rows fit at 22.2, 21.4, 22.4, 22.4 and 21.9 points on a 2x capture. If those rows are 11 points on screen that is dead on, which would mean the error is not a constant nine per cent and is specific to that capture or that face. Settle which before changing anything.\n\nThe mechanism: Sources/PhotonzRender/TextReader.swift, best(_:in:against:inkHeight:scale:) around line 690 and size(of:in:matchingInkHeight:scale:). It sets the string at a probe size, measures the ink height of that render, and scales so the two ink heights match, then nudges over sizeFactors and keeps the best overlap. That is exact only if ink in a capture is measured the same way as ink in a fresh render; antialiasing and the coverage threshold in inkBounds() are the obvious place for a few per cent to come from.\n\nA size a redline is written from is the reason this sits under measure-redline rather than under the reading feature it landed in.\n\n--- WHAT THE STUDY FOUND (2026-09-17, runner) ---\n\nMeasured, not read. Tests/PhotonzRenderTests/ReadSizeGroundTruthTests.swift sets type at a size it chooses, photographs it, and reads it back.\n\n1. The MEASUREMENT is sound. Read at the scale the type was photographed at (layerScale == captureScale), the reading lands within 1.2% of the truth across 18 combinations of size, weight, family and scale. The real settings-pane-2x rows read 13.00 at layerScale 2; the real effects-panel-2x rows read 10.00. Whole numbers, from a measurement that rounds to nothing.\n\n2. The GAP is the conversion into document points. A Retina capture opens as a document measured in its own pixels (Document.withBaseImage sets canvasSize = ref.pixelSize), so layerScale is 1 while captureScale is 2. The size is then re-fitted at layerScale, and THAT number is what the Size menu shows: 28.38 where 26 is the truth on the settings pane, 22.22 where 20 is the truth on the effects panel. +6.5% on type this study set itself, +9.2% and +11% on the two real fixtures.\n\n3. The CAUSE is the system font optical size, and nothing else. \"Launch at login\" set at 13pt drawn at 2x is 182x25 pixels of ink; set at 26pt drawn at 1x it is 168x24. Same em, same pixels, 7.7% apart. Helvetica Neue and SF Mono, which carry no opsz axis, are pixel-for-pixel identical both ways. So it is NOT antialiasing, NOT the 0.1 coverage floor in inkBounds(), NOT rounding and NOT the sizeFactors search. The task notes guessed those; they are ruled out and the ruling-out is a test (theSystemFontIsADifferentDrawingAtLabelSizeAndAtHeadingSize).\n\n4. The note here guessed the Effects panel rows were 11pt and \"dead on\". They are 10pt and read 22. So the error is NOT specific to one capture or one face; it is constant and systematic. That question is settled.\n\n5. Consequence, and why this is a decision rather than a patch: a 13pt label photographed at 2x cannot be reproduced by ANY point size. 28.4 covers the same pixels, 26 is the size the type was. queue/decisions/2026-09-17-read-size-two-answers.png shows both against the original ink.\n\nFOR WHOEVER BUILDS THE ANSWER: the true size is already computed and thrown away. TextReader.measure() scores every face at captureScale (Measured.scores), which IS the accurate number; settle() then re-fits at layerScale and returns that instead. Whichever option wins, the true size is scores-at-captureScale multiplied by captureScale/layerScale. Note also that the panel says px everywhere and DocumentUnit.strays() fails anything saying pt, so any new readout is in px.",
@@ -120,8 +120,49 @@
     {
       "t": "2026-09-29T12:28:01.253Z",
       "note": "seq 100 -> 110"
+    },
+    {
+      "t": "2026-09-30T02:30:58.652Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-30T02:47:30.578Z",
+      "note": "runner failed (exit 143, attempt 1): The walk passes on the real app: rows 26 px, heading 44 px, sections 21 px, rows under them 20 px, with 6 real captures. Now a walk at Next defaults (no flags), following the task's \"try it\" steps."
+    },
+    {
+      "t": "2026-09-30T02:47:31.071Z",
+      "note": "ran out of turn with 9 file(s) still changed: Scripts/playtest/label-size-walk.json, Sources/Photonz/EditorState+ReadText.swift, Sources/PhotonzCore/TextReading.swift, Sources/PhotonzCore/TextStyles.swift, Sources/PhotonzRender/TextReader.swift, Tests/PhotonzCoreTests/SizeMenuTitlesTests.swift, Tests/PhotonzRenderTests/ReadPageWeightFixtureTests.swift, Tests/PhotonzRenderTests/ReadRunAsTextFixtureTests.swift, Tests/PhotonzRenderTests/ReadSizeGroundTruthTests.swift. Put aside so the next task started clean; restore with `git stash apply e25795f5febd6ed2b44fbc6216bdefb023174c34` before carrying on."
+    },
+    {
+      "t": "2026-09-30T10:07:40.447Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-30T10:07:40.453Z",
+      "note": "a previous attempt at this task left 9 file(s) changed; they are set aside. Restore them with `git stash apply e25795f5febd6ed2b44fbc6216bdefb023174c34` and carry on, or start over and leave the stash alone."
+    },
+    {
+      "t": "2026-09-30T10:19:08.793Z",
+      "note": "walks none -> label-size-walk"
+    },
+    {
+      "t": "2026-09-30T10:19:08.847Z",
+      "note": "Restored the previous attempt's stash e25795f5 and finished it. Scripts/test.sh green (10,634 tests). label-size-walk passes at Next defaults (no flags in its setup) with 6 real captures, screen unlocked: rows 26 px, heading 44, sections 21, rows under them 20. Ground truth table printed by ReadSizeGroundTruthTests is in the audit (worst 1.2%). Checked that 'File name prefix' sitting ~10 px right of the other rows is the source capture's own indent (ink at x=121 vs 102), not a placement bug. Left rough, no task earned: short words like '4 px' retype up to 15% narrower than their ink at the true size, inherent to the optical size and the choice the user made."
+    },
+    {
+      "t": "2026-09-30T10:19:19.728Z",
+      "note": "The Size menu now says the size the type really was on a Retina capture (settings pane rows 26 px, was 28; Effects rows 20, was 22). TextReader.settle carries the capture-scale size into document points instead of re-fitting; words placed by left edge + baseline; sizes round. Verified: Scripts/test.sh green (10,634), ground truth worst 1.2% across 18 combinations, label-size-walk passes at Next defaults with 6 real captures. Audit queue/audits/2026-09-30-read-size-true.json. Commit 3099be8a."
     }
   ],
-  "started": "2026-09-17T18:20:58.912Z",
-  "walks": []
+  "started": "2026-09-30T10:07:40.445Z",
+  "walks": [
+    "label-size-walk"
+  ],
+  "failures": 0,
+  "lastError": {
+    "at": "2026-09-30T02:47:30.577Z",
+    "exit": 143,
+    "message": "The walk passes on the real app: rows 26 px, heading 44 px, sections 21 px, rows under them 20 px, with 6 real captures. Now a walk at Next defaults (no flags), following the task's \"try it\" steps."
+  },
+  "completed": "2026-09-30T10:19:19.729Z"
 }

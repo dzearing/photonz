@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-28T21:42:58.855Z",
-  "updated": "2026-09-29T12:28:01.760Z",
+  "updated": "2026-09-29T22:31:11.086Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-28 14:45: Scripts/playtest-all.sh --no-build keys-copy-between -> 'keys-copy-between-layers-walk 20s FAILED step 63 (expect): no control called \"Key\" in \"Scale\" is in the panel to read; the ones that are: Key Scale 1, Key Scale 2, ...'. The loop's rotating check at 2026-09-28T20:19:50Z (queue/loop.log) reports the same failure right after 99b2fc1c (ruler range) landed, before the marquee task's code existed. Steps 61 and 64 are windowDrag at y=750 (the ruler row) from x=600 (about 0:02.3, away from the playhead at 0:03), so the ruler reads them as a new range (RulerRange.grip -> .newRange), markRulerRange selects nothing, and the Scale key row leaves the panel. Fix: start those drags on the playhead (x about 709) or replace them with clickRuler at the seconds they land on (about 2.9 and 2.96).",
@@ -33,9 +33,19 @@
     {
       "t": "2026-09-29T12:28:01.759Z",
       "note": "triage 2026-09-29: retagged video-cutting -> video-transitions-motion: copying keys between layers is motion work"
+    },
+    {
+      "t": "2026-09-29T22:24:18.651Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T22:31:11.084Z",
+      "note": "keys-copy-between-layers-walk passes at Next defaults (no flags; 108 steps, 5 real captures). Steps 61 and 64 now start their windowDrag on the playhead (x=709, then x=690 where the first drag left it) instead of x=600, so the ruler grips the playhead rather than drawing a range; the snap test is kept (19 pt short reads between keys, 7 pt short snaps onto the key). Reproduced the step 63 failure first. Scripts/test.sh green (10570 tests). Commit 954f0b86."
     }
   ],
   "walks": [
     "keys-copy-between-layers-walk"
-  ]
+  ],
+  "started": "2026-09-29T22:24:18.650Z",
+  "completed": "2026-09-29T22:31:11.085Z"
 }

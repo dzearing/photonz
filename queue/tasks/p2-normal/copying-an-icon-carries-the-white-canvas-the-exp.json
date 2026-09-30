@@ -4,12 +4,12 @@
   "goal": "Draw an icon on a blank canvas, press Copy (Shift Command C) and paste it somewhere dark, and the white canvas comes with it as solid pixels. Exporting the same icon as a PNG now leaves that canvas out, so the two ways of handing an icon over disagree: the one you save is see-through and the one you paste is not.",
   "epic": "icon-export",
   "priority": "p2-normal",
-  "seq": 120,
-  "status": "pending",
+  "seq": 70,
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-17T05:51:54.319Z",
-  "updated": "2026-09-29T12:28:01.310Z",
+  "updated": "2026-09-30T12:29:20.595Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while finishing an-icon-exported-as-a-picture-can-come-out-with (2026-09-17). Repro of the composite that Copy puts on the clipboard: PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh /tmp/tmp-png-bg-forced.json --no-build wrote png-export-background-3-file-with-canvas.png, which is the same render EditorState.copyCompositeToClipboard uses (previewRenderer.render(document, store:), no background answer anywhere on that path), and reading its corner back gave top-left (5,5) rgba [255, 255, 255, 255]. The export path in the same walk wrote [0, 0, 0, 0]. The smallest fix is to let the copy take the same SVGExport.Background answer the sheet holds, through PhotonzDocument.drawn(with:flatImages:) (PhotonzCore) the way ExportSizer does; the open question is whether a copy should ask at all or simply always leave a flat canvas out, which is a UX call worth a decision card rather than a guess. PNG and TIFF both go on the pasteboard and both hold alpha.",
@@ -114,7 +114,38 @@
     {
       "t": "2026-09-29T12:28:01.309Z",
       "note": "seq 110 -> 120"
+    },
+    {
+      "t": "2026-09-30T10:33:28.596Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-30T11:02:51.959Z",
+      "note": "owns these walks: copy-leaves-the-canvas-out-walk"
+    },
+    {
+      "t": "2026-09-30T11:03:33.748Z",
+      "note": "Shipped the decided default (commit 0ad13bdd): Copy Merged / Shift Command C on a drawing made on a blank canvas copies with nothing behind it, behind next-copy-leaves-the-canvas-out (on at Next). Only the bottom visible layer is read (FlatBitmap.canvasColor), per the earlier note. Verified: CopyBackgroundTests (5), PlaytestScriptTests parse test, full suite 10640 green, copy-leaves-the-canvas-out-walk green at Next defaults (corners of the PNG on the pasteboard read empty; with the canvas asked for, painted; a screenshot copied with Shift Command C, painted), and the same walk fails at step 21 with the switch off. Nine other copy walks green. Audit: queue/audits/2026-09-30-copy-leaves-the-canvas-out.json."
+    },
+    {
+      "t": "2026-09-30T11:03:33.802Z",
+      "note": "Could not build the Option half of answer B as written. Reproduced with a small AppKit program (/tmp/altkey): an Option alternate of Copy Merged must share the C key, i.e. Option Shift Command C, which is Copy Look. With both present, mainMenu.performKeyEquivalent(Option Shift Command C) returned handled with neither action running (the alternate swallowed it, even disabled and hidden); without the alternate Copy Look fired. So the key is the user's call: decision card opened, recommended a visible row on Control Shift Command C. The app side is ready: EditorState.copyCompositeToClipboard(background: .keep) and the copyImageWithCanvas walk action; the next runner only adds the menu row."
+    },
+    {
+      "t": "2026-09-30T11:03:33.856Z",
+      "note": "left rough: Copy Merged with a marquee up (copyMergedRegion) still carries white inside the marquee. Deliberately untouched: that copy pastes back into Photonz as a layer, and ⌘A ⌘C ⌘V is documented to duplicate what you see, background included. Not filed: no one has hit it and the decision was about the whole-picture hand-off."
+    },
+    {
+      "t": "2026-09-30T11:03:33.916Z",
+      "note": "Copy now leaves a blank canvas out (shipped 0ad13bdd, walk green at Next defaults). The Option-held copy WITH the canvas needs Option Shift Command C, which is Copy Look's key: decision card open on where it goes."
+    },
+    {
+      "t": "2026-09-30T12:29:20.594Z",
+      "note": "seq 120 -> 70"
     }
   ],
-  "started": "2026-09-17T07:12:37.731Z"
+  "started": "2026-09-30T10:33:28.595Z",
+  "walks": [
+    "copy-leaves-the-canvas-out-walk"
+  ]
 }

@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p2-normal",
   "seq": 3470,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T01:58:12.466Z",
-  "updated": "2026-09-30T04:18:48.759Z",
+  "updated": "2026-09-30T12:28:50.393Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-29 while doing every-segmented-control-is-the-one-system-glass. With the history window added to PlaytestHarness.panelWindows() (the harness only looks in the editor, its children, sheets and Settings), a press step found \"Videos\" and clicked it: note \"\\\"Videos\\\" in tooltip none at window (891, 174), one click; ... no view bodies counted\", and the snapshot after still showed the thumb on All with the capture still listed. Giving the history panel a hosting view with acceptsFirstMouse true changed nothing. Likely cause: a walk never lets the history panel (HistoryOverlayPanel, nonactivating, canBecomeKey true) become key (AppFront.showFloating), so the mouse-down is spent making it key; the menu-picture path works round it by making the strip key for one second (PlaytestHarness ~9947). The harness change and the acceptsFirstMouse try were both reverted. A person is not affected: their strip is key when it opens.",
@@ -26,6 +26,10 @@
     {
       "t": "2026-09-30T04:18:48.758Z",
       "note": "2026-09-29: the history filter is now the Mac's own segmented control (every-segmented-control-is-apple-s-own-liquid-gl). There is no drawn thumb to film; what is left is proving a click on the filter and on the bar's buttons works."
+    },
+    {
+      "t": "2026-09-30T12:28:50.392Z",
+      "note": "below the follow-up bar: the drawn thumb it would have filmed is gone (the filter is the system control now), and what is left is a walk tooling gap nobody using the app sees. Folded into every-segmented-control-is-apple-s-own-liquid-gl's log."
     }
   ],
   "walks": [

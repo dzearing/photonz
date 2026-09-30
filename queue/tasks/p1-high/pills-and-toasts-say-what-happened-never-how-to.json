@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p1-high",
   "seq": 420,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T06:06:05.742Z",
-  "updated": "2026-09-30T09:18:29.627Z",
+  "updated": "2026-09-30T09:18:50.486Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the IA contract task. Contract row: 'Toasts: what just happened. Results, with Undo when it applies. Never instructions.' and Canvas: 'never persistent status pills'. Inventory (2026-09-29): standing hints EditorView.swift:437 (Measure), :439 (path edit), :456 (Pen); copy in PhotonzCore/MeasureToolMode.swift:76-79, PenDrawing.swift:574-602, PathEditHint.swift:23-133; result+advice in RegionSliceRefusal.swift:134, TextReading.swift:318, CopyConfirmation.swift:410,417,474,477-480,534; empty-state text EditorView.swift:2468 ('Pick a clip to trim'), InspectorPanel.swift:418 ('Pick a clip on the timeline'). A refusal that needs a choice is an alert, not a toast. ChromeCopyBudgetTests is the existing guard; extend it to hold the no-instructions rule.",
@@ -48,6 +48,10 @@
     {
       "t": "2026-09-30T09:18:29.626Z",
       "note": "Left rough (not filed): Trim/panel empty states with no clip are not photographed by any walk (need a recording in the editor); VideoCropOverlay's 'Drag to crop' pill stays, allow-listed, because it lives in the retired recording window Next does not open; the ComponentPieceRefusal notice has no Detach button (Detach is on the copy's menus). Mock lines moved to tips are named in the audit's rough."
+    },
+    {
+      "t": "2026-09-30T09:18:50.484Z",
+      "note": "Next (next-notices-say-what-happened, on by default): no how-to pill for the Pen, Measure or a path; their words are the tool tips' second line and two tutorial cards; path commands report as notices with a clickable Undo; every notice drops its trailing advice; trim and panel empty states say nothing. Verified: full suite green (10,619 tests), 27 walks green including notices-say-what-happened-walk at Next defaults with 9 real captures, audit queue/audits/2026-09-30-notices-say-what-happened.json. Commit 79c6d148."
     }
   ],
   "started": "2026-09-30T08:37:07.053Z",
@@ -60,5 +64,6 @@
     "turn-into-a-path-walk",
     "tutorial-draw-it-with-the-pen-walk",
     "tutorial-reshape-what-you-drew-walk"
-  ]
+  ],
+  "completed": "2026-09-30T09:18:50.485Z"
 }

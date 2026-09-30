@@ -1,15 +1,15 @@
 {
   "id": "every-segmented-control-is-apple-s-own-liquid-gl",
   "title": "Every segmented control is Apple's own Liquid Glass segmented control",
-  "goal": "User 2026-09-29 19:50: 'I'm really confused, what happened to using the native liquid glass segmented control.' What they want is the system control itself, not our own control with a glass pane in it. Today SegmentedControl (DesignSystem/SegmentedControl.swift) draws its own rail and slides a .glassEffect pane (:338-360), and keeps a stock Picker(.segmented) only as a switched-off fallback (:180-189). Our drawing is what produced the unreadable white-on-white history filter and the earlier overshoots. The first native attempt (a bare NSSegmentedControl in the title bar) looked like two separate buttons with no animation, probably because the title bar gave it the toolbar's separated style; that must not happen again.",
+  "goal": "You asked on 2026-09-29 why the app was not using the Mac's own Liquid Glass segmented control. Every row of side-by-side choices is now the system control itself, one continuous track in the title bar and in the panel. What is left is your yes: the Mac fills the picked choice with the accent colour and switches without a slide, which may not be the glass you pictured.",
   "epic": "design-system",
   "priority": "p1-high",
-  "seq": 0.000001,
+  "seq": 10,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T02:46:57.276Z",
-  "updated": "2026-09-30T04:23:46.058Z",
+  "updated": "2026-09-30T12:29:20.000Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -70,6 +70,18 @@
     {
       "t": "2026-09-30T04:23:46.056Z",
       "note": "Built and verified: every segmented control in Next is the Mac's own NSSegmentedControl, one continuous track (tests 10560/10560, 118 segment walks green, audit 2026-09-29-system-segmented). Waiting on the user's confirmation card: macOS 26 fills the pick with the accent colour in front and switches without sliding, which may not be the glass they pictured."
+    },
+    {
+      "t": "2026-09-30T12:28:50.338Z",
+      "note": "folded in from a-walk-can-click-the-history-bar-and-film-its-fi (dropped 2026-09-30 by triage): a scripted walk still cannot press anything in the history bar (the bar never becomes the key window during a walk), so the history filter's clicks are proven only by it being the same system control the title bar and panel walks press. If the user reports the history filter not answering a click, this is where to start: PlaytestHarness.panelWindows() does not look in the history panel."
+    },
+    {
+      "t": "2026-09-30T12:29:10.178Z",
+      "note": "triage 2026-09-30: goal rewritten in plain words. The build is done; the old goal was the build brief with file and line numbers, and the log keeps that detail."
+    },
+    {
+      "t": "2026-09-30T12:29:19.999Z",
+      "note": "seq 0.000001 -> 10"
     }
   ],
   "started": "2026-09-30T03:05:20.631Z",

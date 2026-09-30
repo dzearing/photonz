@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-23T21:55:35.854Z",
-  "updated": "2026-09-29T12:28:00.665Z",
+  "updated": "2026-09-30T12:29:20.106Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by recordings-and-sounds-in-a-document-sit-on-the-l (2026-09-23): its walk has to run the showLibrary action (the same as View > Library) before any tile exists. Rule lives in PanelSectionVisibility.isShownAutomatically (case library: situation.isLibraryAskedFor, with the user quote) and InspectorPanel (isLibraryVisible gate). Mock: video.html line ~62 (Library keeps its header, the media pool is still one click away) and #gLibrary collapsed at line ~528.",
@@ -51,6 +51,10 @@
     {
       "t": "2026-09-29T12:28:00.664Z",
       "note": "seq 20 -> 30"
+    },
+    {
+      "t": "2026-09-30T12:29:20.105Z",
+      "note": "seq 30 -> 30"
     }
   ]
 }

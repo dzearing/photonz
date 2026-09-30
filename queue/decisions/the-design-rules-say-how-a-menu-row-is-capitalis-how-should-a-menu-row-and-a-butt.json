@@ -1,0 +1,59 @@
+{
+  "id": "the-design-rules-say-how-a-menu-row-is-capitalis-how-should-a-menu-row-and-a-butt",
+  "taskId": "the-design-rules-say-how-a-menu-row-is-capitalis",
+  "question": "How should a menu row and a button be capitalised: Apply to Every Cut (the Mac) or Apply to every cut (the mocks)?",
+  "context": "The mocks write menu rows in sentence case; the app writes all 127 of its menu rows in Mac title case. Four audits in three days explained the same difference. One rule settles it for good.",
+  "options": [
+    {
+      "id": "a",
+      "label": "The Mac way: Title Case",
+      "summary": "Every menu row, menu heading and button reads like the Mac menu bar: Apply to Every Cut, Reset to Defaults, Copy Look. Panel labels keep sentence case. The mocks stay as drawn and audits stop flagging the difference.",
+      "pros": [
+        "Matches the rows macOS writes into our menus itself (Select All, Enter Full Screen, Hide Others), so no menu mixes two styles",
+        "Matches Photoshop, Premiere and Final Cut (Merge Down, Ripple Delete, Add Cross Dissolve)",
+        "127 of the app menu rows already read this way, so nothing a person sees changes"
+      ],
+      "cons": [
+        "Departs from every mock page, which writes rows in sentence case"
+      ],
+      "mitigation": "The rule names the departure once, so no audit has to explain it again, and the mocks keep their wording for everything else."
+    },
+    {
+      "id": "b",
+      "label": "The mock way: Sentence case",
+      "summary": "Every menu row, heading and button the app writes itself reads like the mocks: Apply to every cut, Reset to defaults, Copy properties. Rows macOS supplies stay in title case because the app cannot change them.",
+      "pros": [
+        "The app matches the mocks word for word",
+        "Reads a little softer and more like prose"
+      ],
+      "cons": [
+        "The Edit and Window menus mix both styles, since macOS writes Select All and Enter Full Screen itself",
+        "Looks unlike every other Mac app and every pro tool",
+        "About 127 rows get rewritten"
+      ],
+      "mitigation": "Rewrite them in one pass behind a test, so the change lands at once instead of drifting row by row."
+    },
+    {
+      "id": "c",
+      "label": "Menus the Mac way, buttons the mock way",
+      "summary": "Menu rows and menu headings, in the menu bar and every right-click or panel menu, are Title Case. Buttons inside the panel (Draw a Curve, Use This Curve) keep the mock sentence case, like the labels beside them.",
+      "pros": [
+        "Menus match macOS and the pro tools",
+        "Panel buttons read like the panel labels around them, as the mocks draw them"
+      ],
+      "cons": [
+        "Two rules to remember instead of one",
+        "A button and the menu row that does the same thing can be written differently"
+      ],
+      "mitigation": "The rule lists both cases side by side with examples, and the test checks each surface against its own style."
+    }
+  ],
+  "recommended": "a",
+  "status": "resolved",
+  "created": "2026-09-30T02:16:29.543Z",
+  "answer": {
+    "choice": "a",
+    "note": "",
+    "resolved": "2026-09-30T02:45:51.751Z"
+  }
+}

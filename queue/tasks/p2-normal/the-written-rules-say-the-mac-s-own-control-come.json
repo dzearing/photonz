@@ -1,0 +1,32 @@
+{
+  "id": "the-written-rules-say-the-mac-s-own-control-come",
+  "title": "The written rules say the Mac's own control comes before a drawn one",
+  "goal": "On 2026-09-29 the loop spent seven tasks and about a dozen commits drawing, re-tuning and finally deleting its own segmented control, because a request for the native Liquid Glass control was read as a request to paint glass on a custom one. The design rules and the runner's instructions should say plainly that when macOS has a control for the job, the app uses it, and that drawing a replacement is a question for the user first. The loop's own notes should also agree on how often the whole walk set runs.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 35,
+  "status": "pending",
+  "release": "next",
+  "area": "docs",
+  "created": "2026-09-30T12:30:17.072Z",
+  "updated": "2026-09-30T12:30:20.211Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed by the 2026-09-30 digest's design review. Evidence: done tasks the-segmented-control-s-thumb-is-lighter-than-it, the-segmented-thumb-glides-like-a-mac-control-no, try-the-segmented-thumb-on-the-system-s-own-liqu, every-segmented-control-is-the-one-system-glass, then every-segmented-control-is-apple-s-own-liquid-gl deleting them all; dropped the-picked-segment-s-label-is-readable-on-the-gl and the-segmented-thumb-moves-the-way-the-user-likes; commits 605a5c4a through 5a81d5a3. The digest already fixed the same twelve-hours wording in queue/bin/runner-prompt.md and queue/bin/digest-prompt.md (the code, queue/bin/sweep-schedule.mjs, says 24 hours); CLAUDE.md line 38 is the one left, outside the digest's reach.",
+  "acceptance": [
+    "UX-PATTERNS.md has one short rule near the placement contract: a control macOS provides (segmented control, popup button, checkbox, slider, date picker, colour well, menu) is the system's own; drawing a replacement goes to a decision card with a photographed reason, and the segmented control section is cited as the example",
+    "queue/bin/runner-prompt.md and queue/bin/manager-prompt.md point at that rule where they tell a runner how to build a control",
+    "CLAUDE.md's build and test table says the full walk set runs at most once every twenty four hours (queue/bin/sweep.sh schedule), not twice a day, and its walk count and length are the current ones or are left out",
+    "Nothing in the app changes"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T12:30:17.074Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-30T12:30:20.210Z",
+      "note": "seq 3480 -> 35"
+    }
+  ]
+}

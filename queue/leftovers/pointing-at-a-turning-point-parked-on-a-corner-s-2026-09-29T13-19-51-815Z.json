@@ -1,0 +1,21 @@
+{
+  "id": "pointing-at-a-turning-point-parked-on-a-corner-s-2026-09-29T13-19-51-815Z",
+  "task": "pointing-at-a-turning-point-parked-on-a-corner-s",
+  "kind": "task",
+  "label": "Pointing at a turning point parked on a corner shows the grab hand again",
+  "title": "Pointing at a turning point parked on a corner shows the grab hand again",
+  "outcome": "failed",
+  "at": "2026-09-29T13:19:51.815Z",
+  "files": [
+    "Sources/Photonz/CanvasPointerCue.swift",
+    "Sources/Photonz/Playtest/PlaytestHarness.swift",
+    "Sources/Photonz/Playtest/PlaytestPointer.swift"
+  ],
+  "count": 3,
+  "state": "stashed",
+  "stash": "ad0f63cc69d7d36b51c2904299bbbf93bfdfa33d",
+  "restore": "git stash apply ad0f63cc69d7d36b51c2904299bbbf93bfdfa33d",
+  "why": "",
+  "handed": "2026-09-29T18:37:35.193Z",
+  "clearedWhy": "restored with git stash apply and landed in 17daae0b"
+}

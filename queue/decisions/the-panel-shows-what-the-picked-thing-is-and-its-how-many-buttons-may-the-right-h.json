@@ -1,0 +1,52 @@
+{
+  "id": "the-panel-shows-what-the-picked-thing-is-and-its-how-many-buttons-may-the-right-h",
+  "taskId": "the-panel-shows-what-the-picked-thing-is-and-its",
+  "question": "How many buttons may the right hand panel keep?",
+  "context": "The placement contract says the panel shows what the picked thing is, as label and value rows. Today about forty one-shot buttons sit in it. Pro editors differ: Final Cut's inspector has almost none, Photoshop's Properties panel keeps a few quick actions.",
+  "options": [
+    {
+      "id": "a",
+      "label": "One main action per section",
+      "summary": "Each section keeps at most one button, the action the section exists for (Add Captions in an empty Captions section, Normalize on a sound, Key it). Everything else you do once moves to right-click and the menu bar.",
+      "pros": [
+        "Like Photoshop's Properties panel, which keeps a few quick actions",
+        "The obvious next step is still where your eye already is",
+        "Most of today's rows of buttons go away"
+      ],
+      "cons": [
+        "A judgment call per section on which action is the main one"
+      ],
+      "mitigation": "The contract names the rule (the action the section exists for) so each section answers it the same way."
+    },
+    {
+      "id": "b",
+      "label": "No buttons at all",
+      "summary": "The panel holds only label and value rows, plus the + that adds to a list. Every action lives on right-click and in the menu bar.",
+      "pros": [
+        "The strictest reading of one purpose per area",
+        "The panel is quietest"
+      ],
+      "cons": [
+        "A first timer looking at an empty Captions section has no visible way to add captions",
+        "Further from Photoshop and Premiere, which both keep a few panel buttons"
+      ],
+      "mitigation": "An empty section could show one short label pointing at the right-click, but that is a sentence in the panel."
+    },
+    {
+      "id": "c",
+      "label": "Leave the panel as it is",
+      "summary": "Keep every button where it is today. The actions also get menu rows through the menu bar task.",
+      "pros": [
+        "Nothing moves that people have learned"
+      ],
+      "cons": [
+        "The panel keeps mixing things you tune with things you do once, which is what the placement contract is against"
+      ],
+      "mitigation": "None needed.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-30T06:06:31.114Z"
+}

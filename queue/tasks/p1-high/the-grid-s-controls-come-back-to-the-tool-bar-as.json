@@ -1,0 +1,41 @@
+{
+  "id": "the-grid-s-controls-come-back-to-the-tool-bar-as",
+  "title": "The grid's controls come back to the tool bar as the contract's one exception",
+  "goal": "On 2026-09-29 the grid left the tool bar for the View menu, because the new placement contract says the tool bar holds tools and a way of looking at the picture is never a control in a bar. On 2026-09-06 the user had asked for the grid to be worked from the tool bar. This task exists only if the user wants that back: the grid's icon, cell size and Adjust Grid gear return to the bar, and the contract names the grid as its one exception.",
+  "epic": "design-system",
+  "priority": "p1-high",
+  "seq": 50,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-30T06:06:49.350Z",
+  "updated": "2026-09-30T12:29:20.211Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reverting is small: EditorChromeLayout.ToolBarSection gains .grid back, toolBarSections(showsColor:showsGrid:), gridChipParts/gridSettingsAnchor drop the oneGlass argument, EditorView.toolBarSection gets case .grid: gridChip, CanvasGridControls.cellRow goes, and the four walks lose flags {next-one-glass-tool-bar: false}. See the IA task's commit. The 2026-09-06 asks: the-grid-is-worked-from-the-tool-bar-and-you-can, the-grid-tool-bar-is-two-buttons-and-adjust-mode.",
+  "acceptance": [
+    "The user's answer on the card is in the log",
+    "If the grid comes back: on the one glass bar the grid's section returns after the colour pair, the Cell row leaves Grid Settings, the placement contract names the grid as the tool bar's one exception, and ToolBarPurposeTests allows exactly that section",
+    "The grid walks (grid-bar-two-buttons, grid-off-takes-no-room, grid-settings-narrow, grid-chosen-size) run at Next defaults again with no flag switched"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T06:06:49.352Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-30T06:07:04.183Z",
+      "note": "Waiting on the card: where do you work the grid from"
+    },
+    {
+      "t": "2026-09-30T12:29:20.210Z",
+      "note": "seq 440 -> 50"
+    }
+  ],
+  "walks": [
+    "grid-bar-two-buttons-walk",
+    "grid-off-takes-no-room-walk",
+    "grid-settings-narrow-walk",
+    "grid-chosen-size-walk"
+  ]
+}

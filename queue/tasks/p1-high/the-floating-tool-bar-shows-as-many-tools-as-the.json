@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 0.00002,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T02:48:15.563Z",
-  "updated": "2026-09-30T05:21:44.024Z",
+  "updated": "2026-09-30T05:22:12.245Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -46,6 +46,14 @@
     {
       "t": "2026-09-30T05:21:44.023Z",
       "note": "Adversarial review: a Final Cut/Photoshop user expects every tool that fits and overflow only for the rest: met. Clumsy bit left: picking a painting tool brings the colour pair, which folds 2-3 more tools on a narrow window at that moment (in the audit's rough; not filed, a consequence of the colour pair living on the bar). Grid chip is a view option still on the bar: folded into the IA task's log. Current capsule bar keeps zoom (Current release unchanged)."
+    },
+    {
+      "t": "2026-09-30T05:22:12.189Z",
+      "note": "Asked for a whole-set sweep: the bar is on nearly every walk and its slots moved on videos."
+    },
+    {
+      "t": "2026-09-30T05:22:12.243Z",
+      "note": "Tool bar folds by available width in Next (ToolBarFold in PhotonzCore, tests first; EditorView measures slots and re-folds live). Every tool that fits shows, More only when something is folded, video tools lead and fold last, a tool in hand swaps in. Zoom removed from Next's bar. Verified: Scripts/test.sh 10572 pass; walks tool-bar-fills-its-room (new, Next defaults, 3 widths + panel toggle), video-tool-bar, one-glass-tool-bar, zoom-readout-double-click, colour-only-where-it-paints all green with real captures. Audit: queue/audits/2026-09-29-tool-bar-fills-its-room.json. Commit c03413fb."
     }
   ],
   "started": "2026-09-30T04:59:01.800Z",
@@ -54,5 +62,6 @@
     "video-tool-bar-walk",
     "one-glass-tool-bar-walk",
     "zoom-readout-double-click-walk"
-  ]
+  ],
+  "completed": "2026-09-30T05:22:12.244Z"
 }

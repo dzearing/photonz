@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T10:48:17.589Z",
-  "updated": "2026-09-29T12:28:01.094Z",
+  "updated": "2026-09-29T22:53:01.138Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-29: Scripts/playtest-all.sh --no-build panel-rows-read-as-one-column-walk -> FAILED step 27 (reveal): 2 controls in the panel are called \"Kind\": Kind (Shadow 1, Drop), Kind (Shadow 2, Drop). Add an \"in\" naming the row it is on. Also failing in the 2026-09-27 full sweep (walks-that-fail-in-the-full-sweep-6), before the segmented-control change. Check first whether a fresh title getting two drop shadows is itself a bug.",
@@ -29,9 +29,23 @@
     {
       "t": "2026-09-29T12:28:01.093Z",
       "note": "seq 3490 -> 80"
+    },
+    {
+      "t": "2026-09-29T22:47:28.648Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T22:53:01.078Z",
+      "note": "Two shadows on a new title are deliberate: TitleLook.shadows returns [soft, edge] since a0970339 (edge keeps white words readable over light footage). Not a bug. Walk's expect+reveal of Kind now carry in: Shadow 1; 3-the-shadow-sc.png shows Softness 18 (the soft shadow). Walk ran to done, 5 real captures. Scripts/test.sh green (10570 tests)."
+    },
+    {
+      "t": "2026-09-29T22:53:01.136Z",
+      "note": "panel-rows-read-as-one-column-walk names Shadow 1 for its Kind expect/reveal; runs to the end at Next defaults with 5 real window captures. Two shadows on a new title are intended (a0970339), not a bug. Test suite green."
     }
   ],
   "walks": [
     "panel-rows-read-as-one-column-walk"
-  ]
+  ],
+  "started": "2026-09-29T22:47:28.647Z",
+  "completed": "2026-09-29T22:53:01.137Z"
 }

@@ -1,0 +1,39 @@
+{
+  "id": "the-grid-s-controls-come-back-to-the-tool-bar-as-where-do-you-work-the-grid-from",
+  "taskId": "the-grid-s-controls-come-back-to-the-tool-bar-as",
+  "question": "Where do you work the grid from?",
+  "context": "On 2026-09-29 the grid left the tool bar for the View menu, because the new placement contract says the tool bar holds tools and a way of looking is never a control in a bar. On 2026-09-06 you had asked for the grid to be worked from the tool bar. Which do you want?",
+  "options": [
+    {
+      "id": "a",
+      "label": "The View menu, like Photoshop",
+      "summary": "The tool bar holds only tools. The grid is View, Grid (Cmd '), Grid Settings, Snap to Grid and Adjust Grid, and its cell size is a row in Grid Settings. This is what the app does now.",
+      "pros": [
+        "The tool bar has one purpose, as the placement contract says",
+        "Where Photoshop, Pixelmator Pro and Keynote put it"
+      ],
+      "cons": [
+        "Picking a cell size is two clicks (View, Grid Settings) instead of one on the bar",
+        "Reverses your 2026-09-06 ask to work the grid from the tool bar"
+      ],
+      "mitigation": "Cmd ' still shows and hides it instantly, and Adjust Grid keeps its own bar with the cell size on it while you place guides.",
+      "declines": true
+    },
+    {
+      "id": "b",
+      "label": "Back on the tool bar",
+      "summary": "The grid's icon, its cell size button and the Adjust Grid gear return to the end of the tool bar while the canvas has room, as they were until today. The placement contract names the grid as the tool bar's one exception.",
+      "pros": [
+        "One click to the cell size, as you asked for on 2026-09-06"
+      ],
+      "cons": [
+        "The tool bar holds something that is not a tool, which is what the contract is against",
+        "The bar is wider, so a narrow window folds a tool sooner"
+      ],
+      "mitigation": "The grid only takes one icon while it is off."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-30T06:06:56.620Z"
+}

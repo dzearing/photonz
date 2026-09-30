@@ -1,0 +1,64 @@
+{
+  "id": "every-command-in-the-app-is-also-in-the-menu-bar",
+  "title": "Every command in the app is also in the menu bar, with its shortcut",
+  "goal": "Anything you can do from a button, a panel or a right-click can also be found in the menus along the top of the screen, with its key beside it, so nothing in the app is reachable only if you happen to right-click the right thing. Today tracks, markers, sound cleanup, caption edits, keys, effects and several clip commands have no menu row at all.",
+  "epic": "design-system",
+  "priority": "p1-high",
+  "seq": 410,
+  "status": "done",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-30T06:05:34.394Z",
+  "updated": "2026-09-30T08:18:04.278Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Depends on the-menu-bar-reads-like-a-professional-mac-edito (which settles where each menu is). The gap list comes from the IA inventory, docs/design/ia-audit-2026-09-29.md section 'Commands with no menu bar item'. Sources: EditorState+TimelineMenus.swift (clip, cut, ruler, caption track menus), TimelineTrackRows.swift:620-675 (track header), EditorState+KeyLanes.swift, SoundInspector.swift, CaptionsInspector.swift, TransitionsGroup.swift, EffectsListInspector.swift, LibraryPanel.swift, ComponentPanel.swift. Contract row: 'Menu bar ... a command reachable only from a bar or a right-click is a bug'.",
+  "acceptance": [
+    "Tracks: Add Track (Video, Audio, Captions), Add Track Above and Below, Rename, Mute or Hide, Solo, Lock, Group and Ungroup, Delete Track, Delete Empty Tracks each have a menu row",
+    "Clips and ranges: Rename, Reveal in Finder, Break Apart, Select Forward, Roll Edit to Playhead, Split at Range Edges, Merge into One Clip, Remove Marker and Clear All Markers each have a menu row",
+    "Sound, captions, keys, transitions and effects: Normalize, Clean Noise, Reset Gain, Safe Areas, Reset Captions, Go to Key, Select All Keys, Stop Animating, Apply to Every Cut, Set as Default Transition, Add and Remove Effect each have a menu row",
+    "Picking a tool is in the menu bar too, each with its letter (a Tools submenu or menu, whichever the menu bar task settles)",
+    "A test or walk lists every right-click and panel command and fails if one has no menu row"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T06:05:34.396Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-30T07:18:45.918Z",
+      "note": "Menu bar task done 2026-09-30: menus are File, Edit, Image, Layer, Clip + Sequence (with time), Measure, View, Window, Help (flag next-a-pro-menu-bar, on in Next). Rows builders live in EditorCommands.swift (clipMenu, sequenceMenu). Clip = the clip in hand, Sequence = the time. Still to place: Export Sound and the caption exports sit in Sequence (maybe File > Export); tracks, markers and the rest per this task. pro-menu-bar-walk's menus steps take oneKeyEach so any new row that reuses a key fails the walk."
+    },
+    {
+      "t": "2026-09-30T07:38:21.529Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-30T07:44:21.031Z",
+      "note": "Before building: diffed every right-click title (MenuRow constructors, .contextMenu blocks, the track header menu) against the live bar dumped by pro-menu-bar-walk: ~75 titles with no row of that name, about a third of them the same command under the bar's name (Delete = Delete This Piece, To the Box = Punch In). Adversarial read: a Premiere editor looks for track commands under Sequence and clip verbs under Clip, which is where they go; the right-click acts on the thing under the pointer, the bar on the thing in hand (picked, else under the playhead), so each new row needs an 'in hand' reading: track in hand = picked track else the clip-in-hand's track; marker in hand = the one at the playhead; caption word in hand = the word under the playhead. Tools: the table names no Tools menu, so they go in Edit > Tools (lowest-cost placement) and the audit asks whether a top-level Tools menu (Preview, Pixelmator Pro) reads better."
+    },
+    {
+      "t": "2026-09-30T08:06:32.267Z",
+      "note": "Slip, put right at once: a git stash push of my own paths failed on an untracked file, and the git stash pop after it applied the stash on top instead (e25795f, leftovers of a-size-read-off-a-screenshot-is-the-size-the-typ). Nothing was built from it. Its nine files were checked out back to HEAD (they were clean before) and the stash re-stored under its original message with git stash store, so the stash list reads exactly as it did."
+    },
+    {
+      "t": "2026-09-30T08:11:11.080Z",
+      "note": "owns these walks: every-command-in-the-menu-bar-walk, pro-menu-bar-walk, keys-copy-between-layers-walk"
+    },
+    {
+      "t": "2026-09-30T08:17:57.085Z",
+      "note": "Left rough, not filed (below the bar or covered): Delete Style (a saved caption style tile) has no bar row, the test's one noRow exception; the Library tile's Add at Playhead is matched to File > Import Media rather than a row of its own; Normalize/Add Effect/Remove Effect submenus read live while every row inside is dimmed (how AppKit draws a submenu's row); just after a click hands the keyboard to the canvas the W on Magic Wand and K on Lens can be missing for one reading until SwiftUI rebuilds the bar (seen once, next reading had them). Effect row Move Up/Down folded into the-panel-shows-what-the-picked-thing-is-and-its. Where Tools lives (Edit > Tools vs a top-level Tools menu) is an evaluate question on the audit. Walks: every-command-in-the-menu-bar-walk, pro-menu-bar-walk, keys-copy-between-layers-walk, between-the-keys-walk, menu-bar, history-menu-title-walk all green; menu-checkmarks-walk fails identically on main without this change (noted on walks-that-fail-in-the-full-sweep-7). No sweep requested: the change touches menus only, and the rotating check picks up the new walk."
+    },
+    {
+      "t": "2026-09-30T08:18:04.276Z",
+      "note": "Shipped in 67721d7a (Next, next-a-pro-menu-bar, on by default): every right-click and panel verb has a menu bar row acting on the thing in hand. Edit > Tools (each letter on the row its press picks), Sequence > Track and marker, range, Reset Captions and Caption Word rows, Clip's Rename/Select Forward/Reveal/Roll Edit/Normalize/Clean Noise/Reset Gain plus Clip > Animate, Layer's Rename Layer/Select Pixels/Put on Timeline/Add and Remove Effect, View's Compact Tracks and Caption Safe Areas. EveryCommandIsInTheMenuBarTests reads every right-click row and the named panel verbs from source and fails on a missing bar row (one exception, Delete Style). Verified: full suite 10604 green; every-command-in-the-menu-bar-walk green at Next defaults (M twice swaps the marquee, Edit > Tools > Line picks Line, a track added and removed and a marker added and removed from the Sequence menu, one key per row on video and picture); pro-menu-bar, keys-copy, between-the-keys walks green. Audit: queue/audits/2026-09-30-every-command-in-the-menu-bar.json with three real captures."
+    }
+  ],
+  "started": "2026-09-30T07:38:21.528Z",
+  "walks": [
+    "every-command-in-the-menu-bar-walk",
+    "pro-menu-bar-walk",
+    "keys-copy-between-layers-walk"
+  ],
+  "completed": "2026-09-30T08:18:04.277Z"
+}

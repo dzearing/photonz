@@ -4,12 +4,12 @@
   "goal": "User 2026-09-29, after zoom turned up in the tool bar: 'zoom isn't a tool... please use consistent IA you'd see in a professional product.' Controls have landed wherever the task that added them put them (a zoom slider and percentage in the tool bar, a MIX meter in the timeline bar, a close x on the timeline, panel sections of verbs, readouts in chrome). Write one placement contract modelled on Photoshop, Final Cut Pro, Keynote and Pixelmator Pro, then move every control that breaks it.",
   "epic": "design-system",
   "priority": "p1-high",
-  "seq": 3e-05,
-  "status": "pending",
+  "seq": 0.00003,
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T02:48:58.643Z",
-  "updated": "2026-09-30T02:48:58.728Z",
+  "updated": "2026-09-30T06:09:35.689Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -29,6 +29,44 @@
     {
       "t": "2026-09-30T02:48:58.727Z",
       "note": "seq 400 -> 0.00003"
+    },
+    {
+      "t": "2026-09-30T05:21:44.076Z",
+      "note": "From the tool bar task (2026-09-29): zoom is gone from Next's one glass bar, and the bar now folds by width. The grid chip (a view option, not a tool) is still the last section of the bar on a roomy canvas; moving it is this task's call. Current's separate capsules still carry the zoom capsule."
+    },
+    {
+      "t": "2026-09-30T05:38:20.151Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-30T06:09:06.820Z",
+      "note": "owns these walks: every-area-has-one-purpose-walk, canvas-menu-walk, grid-guides-walk, grid-origin-walk, guides-catch-marks-walk, one-unit-word-walk"
+    },
+    {
+      "t": "2026-09-30T06:09:06.879Z",
+      "note": "Adversarial review before building: a Photoshop, Final Cut, Keynote or Pixelmator Pro user expects the tool bar to hold tools, the inspector values, view options in the View menu and every command in the menu bar. Where Photonz breaks that today: the grid on the tool bar, zoom rows in the canvas right-click (with a Cmd 1 that means View on a video), about forty one-shot buttons in the panel, standing how-to pills, a Video menu of dead rows on pictures, and many commands with no menu row. Two mock-drawn exceptions kept and named in the contract: Select and Blade on both bars, and Easing in the timeline's bar (video.html). One user answer honoured: tool settings in both capsule and panel ('Leave it in both places')."
+    },
+    {
+      "t": "2026-09-30T06:09:06.934Z",
+      "note": "Tension found: on 2026-09-06 the user asked for the grid to be worked from the tool bar; this task (2026-09-29) says view options are never a control in a bar. Followed the newer rule, and filed the-grid-s-controls-come-back-to-the-tool-bar-as behind a card (answering 'View menu' retires it; 'back on the tool bar' reverts in a small change)."
+    },
+    {
+      "t": "2026-09-30T06:09:06.989Z",
+      "note": "Left rough (not filed, in the audit's evaluate): Resize Image at the foot of the Crop list; a picture's title bar shows no name; held-frame and caption AUTO badges standing on the canvas. The inventory's claim that the timeline toggle and full screen are misplaced is wrong by the contract (the transport row names both)."
+    },
+    {
+      "t": "2026-09-30T06:09:35.687Z",
+      "note": "Placement contract at the top of UX-PATTERNS.md (reason in the user's words, one row per area with its one purpose, named exceptions); runner and manager prompts place controls by it and send uncovered placements to a card. Moved in Next: grid off the one glass tool bar to the View menu (Cell row added to Grid Settings; card filed to put it back), zoom rows off the canvas right-click. ToolBarPurposeTests + walk claim toolBar onlyTools hold the bar to tools. Audit of every surface in docs/design/ia-audit-2026-09-29.md with 8 real captures; audit queue/audits/2026-09-29-every-area-has-one-purpose.json. Filed p1: menu bar organisation, a menu row for every command, instruction pills and toasts, panel one-shot buttons (card). Verified: Scripts/test.sh 10577 pass; every-area-has-one-purpose-walk (Next defaults), canvas-menu-walk and 24 grid/tool bar walks green. Commit 7bbf25ec."
     }
-  ]
+  ],
+  "started": "2026-09-30T05:38:20.150Z",
+  "walks": [
+    "every-area-has-one-purpose-walk",
+    "canvas-menu-walk",
+    "grid-guides-walk",
+    "grid-origin-walk",
+    "guides-catch-marks-walk",
+    "one-unit-word-walk"
+  ],
+  "completed": "2026-09-30T06:09:35.688Z"
 }

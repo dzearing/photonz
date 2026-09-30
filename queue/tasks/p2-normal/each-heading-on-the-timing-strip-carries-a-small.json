@@ -1,0 +1,43 @@
+{
+  "id": "each-heading-on-the-timing-strip-carries-a-small",
+  "title": "Each heading on the timing strip carries a small mark for what kind of layer it is",
+  "goal": "The timing strip names each moving layer with its name alone, where the mock puts a small mark in front of the name saying what kind of layer it is (a path, a circle). With it you can tell a shape from a picture from text at a glance, the way the Layers list does.",
+  "epic": "icon-animate",
+  "priority": "p2-normal",
+  "seq": 110,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-30T12:12:41.452Z",
+  "updated": "2026-09-30T12:29:20.812Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found in the side-by-side for a-lane-on-the-timing-strip-says-which-layer-it-b (queue/audits/2026-09-30-timing-strip-names-mock.png vs 2026-09-30-timing-strip-names-1.png). Mock: docs/design/mocks/pages/icon-animate-wt.html, the timing dock: <span class=\"tl\"><i class=\"ic xs ic-bezier\"></i> Bell body</span>. App: Sources/Photonz/MotionStripView.swift MotionStripGroupView draws Text(group.layerName) in a labelWidth - 6 (86pt) frame with no glyph. A glyph costs about 14pt of that, so long names get cut sooner; the whole-name tooltip (wholeNameTip) already covers reading them. Decide which symbol set: the Layers list uses thumbnails, not glyphs, so a small kind glyph may need a mapping from layer kind to SF Symbol; if the mapping is a new choice with a visible consequence, it is a decision card.",
+  "acceptance": [
+    "Every layer heading on the timing strip shows the mark for its kind before its name, as the Make a bell swing mock draws it",
+    "The name keeps as much room as it can: a name that fitted before still fits, or the audit says which ones no longer do and why",
+    "The lanes still start at exactly the point the ruler counts from",
+    "An audit puts a picture of the strip beside the mock frame and lists every difference"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T12:12:41.454Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-30T12:28:50.231Z",
+      "note": "triage 2026-09-30: p1 -> p2. Not a user ask and not the video focus: a mock gap the runner of a-lane-on-the-timing-strip-says-which-layer-it-b found in its side-by-side. p1 is kept for what the user asked for."
+    },
+    {
+      "t": "2026-09-30T12:28:50.283Z",
+      "note": "priority p1-high -> p2-normal"
+    },
+    {
+      "t": "2026-09-30T12:29:20.811Z",
+      "note": "seq 450 -> 110"
+    }
+  ],
+  "walks": [
+    "timing-strip-long-names-walk"
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "id": "walks-that-fail-in-the-full-sweep-7",
+  "title": "Walks that fail in the full sweep",
+  "goal": "The scripted walks are the app driving itself, and the check between tasks found some that no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-09-29T22:45:20.557Z",
+  "updated": "2026-09-30T12:29:21.079Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nOpened by the rotating check at 2026-09-29T22:45:20Z, not by a full sweep: it ran 50 of 682 walks and found the ones below failing with no other open task naming them. Nothing here is a claim about the rest of the set.\n\nFailing walks (1): layers-lazy-rows-walk\n\nFull output: /Users/dzearing/git/photonz/queue/sweep/slice-2026-09-29-153123.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
+  "acceptance": [
+    "Every walk the sweep block names as this task's own either passes or is rewritten to match what the app does now",
+    "Each one is run on its own and passes twice in a row",
+    "Any walk that was wrong rather than broken says so in this task log"
+  ],
+  "log": [
+    {
+      "t": "2026-09-29T22:45:20.559Z",
+      "note": "created (rotating check)"
+    },
+    {
+      "t": "2026-09-29T22:45:20.562Z",
+      "note": "rotating check 2026-09-29T22:45:20Z, 50 walks run from 237 onward in the rotation: layers-lazy-rows-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-30T05:36:15.977Z",
+      "note": "rotating check 2026-09-30T05:36:15Z, 50 walks run from 88 onward in the rotation: an-editing-session-walk, chrome-says-labels-walk, contents-for-several-walk, copies-share-choice-walk, copy-own-color-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-30T07:36:16.807Z",
+      "note": "rotating check 2026-09-30T07:36:16Z, 50 walks run from 173 onward in the rotation: menu-checkmarks-walk (its script changed since the last check) failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-30T08:11:01.605Z",
+      "note": "menu-checkmarks-walk reproduced failing on main at 1de14c91 with no other change (2026-09-30, while running every-command-in-the-app-is-also-in-the-menu-bar): step 12 menuShot fails 'View > Show Grid has nothing behind it... macOS will not give a background app focus, so SwiftUI leaves the probe's menu bar frozen'. Its setup has no front:true, and since 2026-09-26 a walk never brings the probe forward, so its View menu reads frozen. Likely fix: front:true in its setup (it photographs open menus, so it needs the Mac to itself anyway)."
+    },
+    {
+      "t": "2026-09-30T10:05:35.070Z",
+      "note": "rotating check 2026-09-30T10:05:34Z, 50 walks run from 307 onward in the rotation: menu-checkmarks-walk, normalize-cleans-noise-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-30T10:31:20.748Z",
+      "note": "rotating check 2026-09-30T10:31:20Z, 50 walks run from 353 onward in the rotation: panel-name-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-30T11:16:46.058Z",
+      "note": "rotating check 2026-09-30T11:16:45Z, 50 walks run from 401 onward in the rotation: picker-controls-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-30T11:54:36.163Z",
+      "note": "rotating check 2026-09-30T11:54:36Z, 50 walks run from 449 onward in the rotation: scrub-never-blacks-out-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-30T12:24:32.198Z",
+      "note": "rotating check 2026-09-30T12:24:32Z, 50 walks run from 498 onward in the rotation: styled-row-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-09-30T12:29:20.265Z",
+      "note": "seq 3460 -> 10"
+    },
+    {
+      "t": "2026-09-30T12:29:21.078Z",
+      "note": "triage 2026-09-30: moved to the front of p2. It now holds eleven walks the rotating checks found failing since 2026-09-29 22:45Z, including scrub-never-blacks-out-walk (the video focus: the picture trailed the playhead by 2 display frames at 1 of 165 frames, 11:54Z check). an-editing-session-walk failed at 05:36Z but passed in the 12:24Z check, so it is probably no longer this task's."
+    }
+  ],
+  "standing": "walk-sweep"
+}
