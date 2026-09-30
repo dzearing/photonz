@@ -1,0 +1,35 @@
+{
+  "id": "every-segmented-control-is-apple-s-own-liquid-gl",
+  "title": "Every segmented control is Apple's own Liquid Glass segmented control",
+  "goal": "User 2026-09-29 19:50: 'I'm really confused, what happened to using the native liquid glass segmented control.' What they want is the system control itself, not our own control with a glass pane in it. Today SegmentedControl (DesignSystem/SegmentedControl.swift) draws its own rail and slides a .glassEffect pane (:338-360), and keeps a stock Picker(.segmented) only as a switched-off fallback (:180-189). Our drawing is what produced the unreadable white-on-white history filter and the earlier overshoots. The first native attempt (a bare NSSegmentedControl in the title bar) looked like two separate buttons with no animation, probably because the title bar gave it the toolbar's separated style; that must not happen again.",
+  "epic": "design-system",
+  "priority": "p1-high",
+  "seq": 0.000001,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-30T02:46:57.276Z",
+  "updated": "2026-09-30T02:46:57.366Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Every segmented choice in the app (title bar View | Edit, the history bar filter, every panel picker; inventory in the task log) is the system's segmented control: SwiftUI Picker with .pickerStyle(.segmented) (or NSSegmentedControl with segmentStyle .rounded/.automatic as ONE capsule, trackingMode selectOne) so macOS 26 draws it with its own Liquid Glass and its own selection motion; our custom rail, glass pane, thumb motion, SegmentThumbMorph and the plate styles are deleted",
+    "In the title bar it is one continuous capsule with a sliding selection, not separated buttons: check its rendered style there, and if the titlebar accessory forces the separated look, host it so it renders as the standard control (photographed)",
+    "Sizes use the system control sizes (.small in dense panel rows and the title bar to sit with the panel toggle, .regular elsewhere); icons with tooltips where the options are icons; disabled options disabled by the system",
+    "Behaviour kept: a pick inside another animation does not disturb it, keyboard focus and arrows work, walks can press each segment by name and by pointer click",
+    "comp-segmented.html becomes a page that documents the system control (when to use it, sizes, do and don't) with a note of this decision, and UX-PATTERNS says the segmented control is the system's",
+    "The unreadable-label task (the-picked-segment-s-label-is-readable-on-the-gl) is dropped as superseded once this lands, since the system control owns its contrast; photographs of all placements in light and dark confirm the selected label is readable",
+    "A card shows the user photographs of each placement before/after and a short filmed move, asking them to confirm this is what they wanted"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T02:46:57.278Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-30T02:46:57.365Z",
+      "note": "seq 400 -> 0.000001"
+    }
+  ]
+}
