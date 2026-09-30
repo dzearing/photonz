@@ -421,24 +421,26 @@ public enum EditorChromeLayout {
 
     /// One part of the floating tool bar when it is drawn as ONE glass bar
     /// (`next-one-glass-tool-bar`), the way `video.html` draws it: the tools
-    /// and More, the colour pair, the grid, the zoom, with a hairline between
-    /// each. Before, each was its own capsule side by side.
+    /// and More, the colour pair, the grid, with a hairline between each.
+    /// Before, each was its own capsule side by side.
+    ///
+    /// There is no zoom section. The bar holds tools, and zoom is not a tool
+    /// (the user, 2026-09-29: "zoom isn't a tool"): it lives in pinch,
+    /// Cmd +/-, Cmd 0, Cmd 1 and the View menu. The separate capsules Current
+    /// still draws keep their zoom capsule.
     public enum ToolBarSection: String, Sendable, CaseIterable {
-        case tools, color, grid, zoom
+        case tools, color, grid
     }
 
     /// The sections on the bar right now, left to right.
     ///
-    /// The tools and the zoom are always there. The colour pair is there only
-    /// for a tool that paints (`Tool.colorControl`), and the grid only on a
-    /// canvas roomy enough for it (`gridChipParts`). The mock draws no grid;
-    /// it stays beside the zoom because both are about how the canvas is being
-    /// looked at.
+    /// The tools are always there. The colour pair is there only for a tool
+    /// that paints (`Tool.colorControl`), and the grid only on a canvas roomy
+    /// enough for it (`gridChipParts`). The mock draws no grid.
     public static func toolBarSections(showsColor: Bool, showsGrid: Bool) -> [ToolBarSection] {
         var sections: [ToolBarSection] = [.tools]
         if showsColor { sections.append(.color) }
         if showsGrid { sections.append(.grid) }
-        sections.append(.zoom)
         return sections
     }
 

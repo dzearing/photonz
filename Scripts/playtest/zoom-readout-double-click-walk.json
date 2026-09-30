@@ -1,7 +1,8 @@
 {
   "out": "/tmp/photonz-playtest/zoom-double-click",
-  "setup": { "forget": ["grid", "tools", "panel"] },
+  "setup": { "forget": ["grid", "tools", "panel"], "flags": { "next-one-glass-tool-bar": false } },
   "steps": [
+    { "do": "describe", "stage": "why", "note": "The zoom percentage is a control only the separate capsules Current ships still carry. Next's one glass bar holds tools only, and zoom there is pinch, Cmd +/-, Cmd 0, Cmd 1 and the View menu (the user, 2026-09-29: zoom isn't a tool), so this walk turns the one bar off to reach the readout" },
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
     { "do": "wait", "seconds": 1.2 },
     { "do": "describe", "stage": "1-opened", "note": "the picture as it opens, fitted: displayZoom is whatever fit gave it" },
@@ -53,7 +54,7 @@
     { "do": "press", "control": "Zoom level", "count": 2 },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "13-narrow-actual-size", "note": "the number alone still answers a double click: displayZoom must read 100" },
-    { "do": "toolBar", "stage": "14-narrow" },
+    { "do": "toolBar", "stage": "14-narrow", "zoom": true },
     { "do": "snapshot", "name": "6-narrow" }
   ]
 }

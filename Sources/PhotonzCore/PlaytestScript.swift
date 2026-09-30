@@ -3410,7 +3410,8 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `toolGap` claims the points between neighbouring tools and `hairline`
     /// every hairline's height, `height` the glass's own height (the one bar,
     /// or every capsule) and `zoomSlider` the zoom slider's length, each
-    /// within half a point.
+    /// within half a point. `zoom` claims whether the bar carries any zoom
+    /// control at all.
     case toolBar(stage: String, clearOfPicture: Bool?, claim: PlaytestToolBarClaim?)
     /// Write the measured frame of every icon parked on the inspector panel's
     /// trailing edge to the log and to `panel-edge-<stage>.json`: each one's
@@ -4723,11 +4724,12 @@ public enum PlaytestStep: Sendable, Equatable {
             let hairline = try f.optionalNumber("hairline").map { CGFloat($0) }
             let height = try f.optionalNumber("height").map { CGFloat($0) }
             let zoomSlider = try f.optionalNumber("zoomSlider").map { CGFloat($0) }
+            let zoom = try f.optionalFlag("zoom")
             let claim = slots == nil && more == nil && lit == nil && choose == nil && capsules == nil
-                && toolGap == nil && hairline == nil && height == nil && zoomSlider == nil
+                && toolGap == nil && hairline == nil && height == nil && zoomSlider == nil && zoom == nil
                 ? nil : PlaytestToolBarClaim(slots: slots, more: more, lit: lit, choose: choose,
                                              capsules: capsules, toolGap: toolGap, hairline: hairline,
-                                             height: height, zoomSlider: zoomSlider)
+                                             height: height, zoomSlider: zoomSlider, zoom: zoom)
             self = .toolBar(stage: try f.string("stage"),
                             clearOfPicture: try f.optionalFlag("clearOfPicture"), claim: claim)
         case "panelEdge":
@@ -5035,11 +5037,14 @@ public struct PlaytestToolBarClaim: Hashable, Sendable {
     public var height: CGFloat?
     /// How long the zoom slider runs, in points, within half a point.
     public var zoomSlider: CGFloat?
+    /// Whether the bar carries any zoom control, slider or percentage. The
+    /// tool bar holds tools, so Next's claims false.
+    public var zoom: Bool?
 
     public init(slots: [String]? = nil, more: [String]? = nil, lit: String? = nil,
                 choose: String? = nil, capsules: Int? = nil,
                 toolGap: CGFloat? = nil, hairline: CGFloat? = nil,
-                height: CGFloat? = nil, zoomSlider: CGFloat? = nil) {
+                height: CGFloat? = nil, zoomSlider: CGFloat? = nil, zoom: Bool? = nil) {
         self.slots = slots
         self.more = more
         self.lit = lit
@@ -5049,5 +5054,6 @@ public struct PlaytestToolBarClaim: Hashable, Sendable {
         self.hairline = hairline
         self.height = height
         self.zoomSlider = zoomSlider
+        self.zoom = zoom
     }
 }

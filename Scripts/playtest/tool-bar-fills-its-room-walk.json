@@ -1,0 +1,56 @@
+{
+  "out": "/tmp/photonz-playtest/tool-bar-fills-its-room-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "open", "file": "fixtures/Noisy voice recording 1280x800.mp4", "width": 1600, "height": 900 },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "key", "key": "2", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "toolBar", "stage": "1-wide", "zoom": false, "capsules": 1, "more": [],
+      "slots": ["Select", "Blade", "Text", "Shapes", "Measure", "Selection", "Crop", "Arrow", "Highlight", "Lens", "Frame", "Pen", "Fill"] },
+    { "do": "describe", "stage": "1-wide", "note": "a recording at Next defaults in a wide window, in Edit: every tool is on the bar, the video's own first, and there is no More and no zoom" },
+    { "do": "snapshot", "name": "1-wide" },
+
+    { "do": "action", "action": "hideInspector" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "toolBar", "stage": "2-wide-no-panel", "zoom": false, "more": [] },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "open", "file": "fixtures/Noisy voice recording 1280x800.mp4", "width": 750, "height": 760 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "toolBar", "stage": "3-medium", "zoom": false, "capsules": 1,
+      "slots": ["Select", "Blade", "Text", "Shapes", "Measure", "Selection", "Crop", "Arrow", "Highlight", "Lens", "Frame"],
+      "more": ["Pen", "Fill"] },
+    { "do": "describe", "stage": "3-medium", "note": "the same window made narrower, live: the tools that no longer fit folded from the far end into More, and the video's own tools stayed" },
+    { "do": "snapshot", "name": "2-medium" },
+
+    { "do": "open", "file": "fixtures/Noisy voice recording 1280x800.mp4", "width": 690, "height": 700 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "toolBar", "stage": "4-narrow", "zoom": false, "capsules": 1,
+      "slots": ["Select", "Blade", "Text", "Shapes", "Measure", "Selection", "Crop", "Arrow", "Highlight"],
+      "more": ["Lens", "Frame", "Pen", "Fill"] },
+    { "do": "describe", "stage": "4-narrow", "note": "narrower still: fewer tools, the rest under More, nothing clipped" },
+    { "do": "snapshot", "name": "3-narrow" },
+
+    { "do": "key", "key": "g" },
+    { "do": "waitFor", "condition": "tool", "value": "fill", "timeout": 2 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "toolBar", "stage": "5-narrow-fill", "lit": "Fill",
+      "slots": ["Select", "Blade", "Text", "Shapes", "Measure", "Selection", "Fill"] },
+    { "do": "expectNotice", "absent": true },
+    { "do": "describe", "stage": "5-narrow-fill", "note": "G picked up Fill, which was folded: it swapped into the bar in place of the last tool that fit, lit, and no pill says Under More because it is not" },
+    { "do": "snapshot", "name": "4-narrow-fill-in-hand" },
+
+    { "do": "open", "file": "fixtures/Noisy voice recording 1280x800.mp4", "width": 1600, "height": 900 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "toolBar", "stage": "6-wide-again", "zoom": false, "more": [], "lit": "Fill" },
+    { "do": "describe", "stage": "6-wide-again", "note": "wide again: every tool back on the bar and More gone" },
+
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "toolBar", "stage": "7-picture", "zoom": false, "capsules": 1, "clearOfPicture": true },
+    { "do": "describe", "stage": "7-picture", "note": "a picture's bar follows the same rule and carries no zoom either" },
+    { "do": "snapshot", "name": "5-picture" }
+  ]
+}

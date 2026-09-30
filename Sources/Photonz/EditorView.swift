@@ -59,7 +59,10 @@ struct EditorView: View {
     /// two inputs to the overflow loop. Real measurements, so no width estimate
     /// can be wrong (an earlier hand-computed version under-counted and clipped;
     /// a `ViewThatFits` version recursed to death inside `GlassEffectContainer`).
-    @State private var toolbarContentWidth: CGFloat = 0
+    @State private var toolbarWidths = ToolbarWidths()
+    /// How wide each slot on the folded bar was last drawn, by slot, so the
+    /// fold can tell what fits before it draws it (`ToolBarFold.Metrics`).
+    @State private var toolSlotWidths: [String: CGFloat] = [:]
     @State private var toolbarBudget: CGFloat = 0
     /// The canvas's own width, so the bar can decide what it can afford to show
     /// beyond its tools (the zoom slider is the first thing to give way).
@@ -141,7 +144,7 @@ struct EditorView: View {
                             // would shed tools the bar has room for.
                             .background(GeometryReader { proxy in
                                 Color.clear.preference(key: ToolbarContentWidthKey.self,
-                                                       value: proxy.size.width)
+                                                       value: ToolbarWidths(bar: proxy.size.width))
                             })
                             // The bar keeps exactly the animation behaviour it
                             // had: the stack's spring is for the capsule coming
@@ -166,8 +169,9 @@ struct EditorView: View {
                     .onPreferenceChange(ToolSettingsSizeKey.self) { size in
                         editorState.toolSettingsSize = size
                     }
-                    .onPreferenceChange(ToolbarContentWidthKey.self) { width in
-                        toolbarContentWidth = width
+                    .onPreferenceChange(ToolbarContentWidthKey.self) { widths in
+                        toolbarWidths = widths
+                        let width = widths.bar
                         // The legend parks clear of the bar, so it needs the
                         // bar's real width, not a guess.
                         editorState.toolBarWidth = width
@@ -910,11 +914,11 @@ struct EditorView: View {
     /// changes. The policy (and the reason it steps by many tools at once) lives
     /// in `EditorChromeLayout.fittedToolCount`, where it is unit-tested.
     private func reconcileToolbarCount() {
-        guard toolbarBudget > 0, toolbarContentWidth > 0 else { return }
+        guard toolbarBudget > 0, toolbarWidths.bar > 0 else { return }
         let fitted = EditorChromeLayout.fittedToolCount(
             current: toolbarVisibleCount,
             maximum: toolbarSlots.count,
-            contentWidth: toolbarContentWidth,
+            contentWidth: toolbarWidths.bar,
             budget: toolbarBudget,
             spacing: barSpacing)
         if fitted != toolbarVisibleCount { toolbarVisibleCount = fitted }
@@ -1073,15 +1077,15 @@ struct EditorView: View {
         case .tools: toolsSection
         case .color: colorBar
         case .grid: gridChip
-        case .zoom: zoomBar
         }
     }
 
-    /// The tools as the bar has room for them: the video's fold, the whole
-    /// picture bar, or the leading tools and a More.
+    /// The tools as the bar has room for them: the families bar folded to
+    /// its room (`ToolBarFold`), or, one button per tool, the whole row or
+    /// the leading tools and a More.
     @ViewBuilder private var toolsSection: some View {
-        if let fold = videoFold {
-            videoToolsBar(fold, visibleCount: toolbarVisibleCount)
+        if let fold = groupedFold {
+            foldedToolsBar(fold)
         } else if toolbarVisibleCount >= toolbarSlots.count {
             toolsBar
         } else {
@@ -1110,11 +1114,7 @@ struct EditorView: View {
 
     private var toolsBar: some View {
         HStack(spacing: barSpacing.toolGap) {
-            if Experiments.shared.toolGroupsEnabled {
-                groupedToolRow
-            } else {
-                flatToolRow
-            }
+            flatToolRow
         }
         .background { magnifyShortcut }
         .buttonStyle(.borderless)
@@ -1139,29 +1139,6 @@ struct EditorView: View {
         // Making the swatch appear instantly on selection drops it to ~25ms.
         // (The accent circle still slides on TOOL change via `value: activeTool`
         // above, and the swatch still animates in when you pick the arrow tool.)
-    }
-
-    /// The bar as families (`ToolBarLayout.families`), a hairline between
-    /// each: pick, cut and measure the picture; draw on it; paint it. Every
-    /// slot is the same widget the compact bar uses, so the two never drift.
-    @ViewBuilder private var groupedToolRow: some View {
-        ForEach(Array(ToolBarLayout.bar(withFrame: Experiments.shared.framesEnabled,
-                                        withLens: Experiments.shared.lensEnabled,
-                                        withPen: Experiments.shared.penEnabled)
-            .families.enumerated()), id: \.offset) { index, family in
-            if index > 0 {
-                familyHairline
-            }
-            ForEach(family, id: \.self) { entry in
-                slotButton(ToolbarSlot(entry))
-            }
-            // With the tool-options flag off, Resize is still a button and it
-            // stays beside Crop, the family it belongs to.
-            if index == 0, !Experiments.shared.toolOptionsEnabled {
-                resizeButton
-            }
-        }
-        contextualToolOptions
     }
 
     /// One button per tool in the order the bar has always had. What Current
@@ -1228,26 +1205,50 @@ struct EditorView: View {
         .animation(.spring(duration: 0.3), value: editorState.activeTool)
     }
 
-    /// The bar a document with time gets (`ToolBarFold.video`): Select, then
-    /// Blade, Title / Text and Shape, then Measure, with a More button that is
-    /// always there holding every other tool, as `video.html` draws it. A
-    /// narrow window folds the trailing slots into the same More. A folded
-    /// tool in hand does not jump into the row: the More button lights.
-    private func videoToolsBar(_ fold: ToolBarFold, visibleCount: Int) -> some View {
-        let front = toolbarSlots
-        let visible = Array(front.prefix(visibleCount))
-        let more = front.filter { !visible.contains($0) } + foldedSlots(fold)
-        let lit = fold.lit(activeTool: editorState.activeTool,
-                           bladeInHand: editorState.isTimelineBlade).map(ToolbarSlot.init)
-        let families = fold.shown.map { $0.map(ToolbarSlot.init).filter(visible.contains) }
-            .filter { !$0.isEmpty }
+    /// The families bar, folded to the room it has (`ToolBarFold`): every
+    /// tool that fits, in its families with a hairline between, and More only
+    /// while something did not fit. A document with time puts the video's own
+    /// tools first, as `video.html` draws them, so they are the last to fold.
+    /// A tool in hand swaps into the row when there is room for it at all;
+    /// with none, More lights.
+    ///
+    /// The row measures itself and every slot on it, and the fold reads those
+    /// back, so the bar re-folds live as the window, the panel or the mode
+    /// changes the canvas under it. Slots come and go on the same spring as
+    /// everything else on the bar, so the ones that stay slide rather than
+    /// jump.
+    private func foldedToolsBar(_ fold: ToolBarFold) -> some View {
+        let lit = fold.lit(activeTool: editorState.activeTool, bladeInHand: isVideoBar && editorState.isTimelineBlade)
+        let litUnderMore = lit.map(fold.folded.contains) ?? false
+        let families = fold.shown.map(foldSlots)
+        let more = foldSlots(fold.folded)
+        let items = families.enumerated().flatMap { index, family in
+            (index > 0 ? [FoldedRowItem.hairline(before: family[0])] : []) + family.map(FoldedRowItem.slot)
+        }
         return HStack(spacing: barSpacing.toolGap) {
-            ForEach(Array(families.enumerated()), id: \.offset) { index, family in
-                if index > 0 { familyHairline }
-                ForEach(family, id: \.self) { slotButton($0) }
+            HStack(spacing: barSpacing.toolGap) {
+                ForEach(items, id: \.self) { item in
+                    switch item {
+                    case .hairline: familyHairline.transition(.opacity)
+                    case .slot(let slot):
+                        slotButton(slot)
+                            .measuredToolSlot(slot.rawValue)
+                            .transition(.scale(scale: 0.6).combined(with: .opacity))
+                    }
+                }
+                if !more.isEmpty {
+                    overflowMenu(more, lit: litUnderMore)
+                        .measuredToolSlot(Self.moreSlotKey)
+                        .transition(.scale(scale: 0.6).combined(with: .opacity))
+                }
             }
-            if !more.isEmpty {
-                overflowMenu(more, lit: lit.map(more.contains) ?? false)
+            .background(GeometryReader { proxy in
+                Color.clear.preference(key: ToolbarContentWidthKey.self,
+                                       value: ToolbarWidths(toolRow: proxy.size.width))
+            })
+            .onPreferenceChange(ToolSlotWidthsKey.self) { measured in
+                let changed = measured.filter { toolSlotWidths[$0.key] != $0.value }
+                if !changed.isEmpty { toolSlotWidths.merge(changed) { $1 } }
             }
             contextualToolOptions
         }
@@ -1255,26 +1256,79 @@ struct EditorView: View {
         .background { magnifyShortcut }
         .buttonStyle(.borderless)
         .toolBarGroup("Tools", padding: 18, isSection: isOneGlassBar)
-        .toolBarSlotsProbe(shown: visible.map(\.title), more: more.map(\.title),
-                           lit: lit.map { more.contains($0) ? "More" : $0.title })
+        .toolBarSlotsProbe(shown: families.flatMap { $0 }.map(\.title), more: more.map(\.title),
+                           lit: litUnderMore ? "More" : lit.map { ToolbarSlot($0).title })
         .animation(.spring(duration: 0.3), value: editorState.activeTool)
         .animation(.spring(duration: 0.3), value: editorState.isTimelineBlade)
+        .animation(.spring(duration: 0.3), value: fold)
     }
 
-    /// The fold this window's bar uses, nil for the picture's whole bar. Only
-    /// a document with time folds, and only on the families bar it folds from.
-    private var videoFold: ToolBarFold? {
-        guard Experiments.shared.videoToolBarEnabled, Experiments.shared.toolGroupsEnabled,
-              editorState.documentHasTime else { return nil }
-        return .video(of: ToolBarLayout.bar(withFrame: Experiments.shared.framesEnabled,
-                                            withLens: Experiments.shared.lensEnabled,
-                                            withPen: Experiments.shared.penEnabled))
+    /// One thing on the folded row: a slot, or the hairline in front of the
+    /// family a slot starts. Named for that slot, so a hairline keeps its
+    /// identity while the families around it come and go.
+    private enum FoldedRowItem: Hashable {
+        case slot(ToolbarSlot)
+        case hairline(before: ToolbarSlot)
     }
 
-    /// The slots under a video's More, in bar order. Resize stays beside Crop
-    /// while the Crop flyout is not there to hold it.
-    private func foldedSlots(_ fold: ToolBarFold) -> [ToolbarSlot] {
-        var slots = fold.folded.map(ToolbarSlot.init)
+    /// The name the More button's measured width is kept under.
+    private static let moreSlotKey = "more"
+
+    /// The fold this window's bar uses: the families bar, folded to its room.
+    /// Nil for the one-button-per-tool bar Current ships.
+    private var groupedFold: ToolBarFold? {
+        guard Experiments.shared.toolGroupsEnabled else { return nil }
+        let layout = ToolBarLayout.bar(withFrame: Experiments.shared.framesEnabled,
+                                       withLens: Experiments.shared.lensEnabled,
+                                       withPen: Experiments.shared.penEnabled)
+        let lit: ToolBarLayout.Entry? = isVideoBar && editorState.isTimelineBlade
+            ? .blade : layout.entry(for: editorState.activeTool)
+        return ToolBarFold(layout, leading: isVideoBar ? ToolBarFold.videoLeading : [],
+                           room: toolRowRoom, metrics: toolRowMetrics(layout), keeping: lit)
+    }
+
+    /// Whether this is a document with time on the families bar: the video's
+    /// own tools lead it and the Blade is on it.
+    private var isVideoBar: Bool {
+        Experiments.shared.videoToolBarEnabled && Experiments.shared.toolGroupsEnabled
+            && editorState.documentHasTime
+    }
+
+    /// The room the tool row has: the bar's budget inside the canvas, less
+    /// everything on the bar that is not the tool row (its ends, the colour
+    /// pair, the grid). Unbounded until the bar has been measured once, so the
+    /// first pass draws every tool and the fold works from real widths.
+    private var toolRowRoom: CGFloat {
+        guard toolbarBudget > 0, toolbarWidths.bar > 0, toolbarWidths.toolRow > 0 else {
+            return .greatestFiniteMagnitude
+        }
+        return toolbarBudget - (toolbarWidths.bar - toolbarWidths.toolRow)
+    }
+
+    /// How wide each slot on the row was last drawn, a plain control for one
+    /// not drawn yet. Crop carries Resize beside it while the Crop flyout is
+    /// not there to hold it.
+    private func toolRowMetrics(_ layout: ToolBarLayout) -> ToolBarFold.Metrics {
+        let control = EditorChromeLayout.toolBarControlSize
+        var widths: [ToolBarLayout.Entry: CGFloat] = [:]
+        for entry in layout.entries + [.blade] {
+            let slot = ToolbarSlot(entry)
+            var width = toolSlotWidths[slot.rawValue] ?? control
+            if slot == .crop, !Experiments.shared.toolOptionsEnabled {
+                width += barSpacing.toolGap + (toolSlotWidths[ToolbarSlot.resize.rawValue] ?? control)
+            }
+            widths[entry] = width
+        }
+        return ToolBarFold.Metrics(slot: control, gap: barSpacing.toolGap,
+                                   hairline: 1 + 2 * barSpacing.hairlineMargin,
+                                   more: toolSlotWidths[Self.moreSlotKey] ?? control,
+                                   widths: widths)
+    }
+
+    /// The slots for some entries of the fold. Resize stays beside Crop, in
+    /// front or under More, while the Crop flyout is not there to hold it.
+    private func foldSlots(_ entries: [ToolBarLayout.Entry]) -> [ToolbarSlot] {
+        var slots = entries.map(ToolbarSlot.init)
         if !Experiments.shared.toolOptionsEnabled, let crop = slots.firstIndex(of: .crop) {
             slots.insert(.resize, at: crop + 1)
         }
@@ -1285,7 +1339,7 @@ struct EditorView: View {
     /// the timeline takes while it has the keyboard only reach their tool once
     /// the picture is clicked, so they are not promised until then.
     private func barTeachesKey(_ key: Character?) -> Bool {
-        guard let key, videoFold != nil, editorState.timelineHasKeyboard else { return true }
+        guard let key, isVideoBar, editorState.timelineHasKeyboard else { return true }
         return TimelineKeys.leavesToTheCanvas(key)
     }
 
@@ -1554,7 +1608,6 @@ struct EditorView: View {
                     && ($0 != .zoomCallout || !lens) && ($0 != .pen || pen)
             }
         }
-        if let fold = videoFold { return fold.shownEntries.map(ToolbarSlot.init) }
         var slots = ToolBarLayout.bar(withFrame: frames, withLens: lens, withPen: pen)
             .entries.map(ToolbarSlot.init)
         if !Experiments.shared.toolOptionsEnabled, let crop = slots.firstIndex(of: .crop) {
@@ -1597,7 +1650,7 @@ struct EditorView: View {
         case .rectangle: toolButton(.rectangle, "rectangle", "Rectangle")
         case .ellipse: toolButton(.ellipse, "circle", "Ellipse")
         case .highlight: toolButton(.highlight, "highlighter", "Highlight")
-        case .text: toolButton(.text, "character.cursor.ibeam", videoFold == nil ? "Text" : "Title / Text")
+        case .text: toolButton(.text, "character.cursor.ibeam", isVideoBar ? "Title / Text" : "Text")
         case .crop: cropToolButton
         case .resize: resizeButton
         case .zoomCallout: toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout")
@@ -1649,6 +1702,9 @@ struct EditorView: View {
     /// A key picked up a tool that is folded under More: the pill under the
     /// canvas names it and says where it lives, since nothing on the bar does.
     private func sayUnderMore() {
+        // A tool in hand swaps into the row whenever there is room for it, so
+        // the pill only speaks for one that really is still under More.
+        guard groupedFold?.isFolded(editorState.activeTool) ?? true else { return }
         editorState.raiseCanvasNotice(.toolUnderMore(tool: editorState.activeTool.barTitle))
     }
 
@@ -1693,7 +1749,7 @@ struct EditorView: View {
     /// Premiere's tool strip works, so the bar never has two slots lit.
     private func pickFromBar(_ tool: Tool) {
         editorState.setTool(tool)
-        if videoFold != nil, editorState.isTimelineBlade { editorState.isTimelineBlade = false }
+        if isVideoBar, editorState.isTimelineBlade { editorState.isTimelineBlade = false }
     }
 
     /// The Blade, from the bar: the same Blade the timeline's own bar holds.
@@ -1707,13 +1763,13 @@ struct EditorView: View {
     /// Whether the bar lights `tool`'s button. On a video's bar the Blade in
     /// hand outranks the canvas tool (`ToolBarFold.lit`).
     private func barLights(_ tool: Tool) -> Bool {
-        editorState.activeTool == tool && !(videoFold != nil && editorState.isTimelineBlade)
+        editorState.activeTool == tool && !(isVideoBar && editorState.isTimelineBlade)
     }
 
     /// Whether the bar lights the family's slot.
     private func barLights(_ group: ToolGroup) -> Bool {
         ToolGroup.containing(editorState.activeTool) == group
-            && !(videoFold != nil && editorState.isTimelineBlade)
+            && !(isVideoBar && editorState.isTimelineBlade)
     }
 
     /// One family of tools as one slot: the button wears the member used
@@ -3115,11 +3171,40 @@ struct EditorView: View {
 }
 
 /// The floating toolbar's measured natural width, read by the overflow loop in
-/// `EditorView` to decide how many tools fit before the "…" menu takes over.
+/// `EditorView` to decide how many tools fit before the "…" menu takes over,
+/// and the width of the folded tool row inside it. One key for both, so the
+/// two arrive together from the same layout pass: read apart, a bar measured
+/// after a fold beside a row measured before it made the room look wrong for
+/// a pass and the fold flip.
 private struct ToolbarContentWidthKey: PreferenceKey {
-    static let defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
+    static let defaultValue = ToolbarWidths()
+    static func reduce(value: inout ToolbarWidths, nextValue: () -> ToolbarWidths) {
+        let next = nextValue()
+        value.bar = max(value.bar, next.bar)
+        value.toolRow = max(value.toolRow, next.toolRow)
+    }
+}
+
+/// The whole bar's width and its tool row's, zero for one not drawn.
+private struct ToolbarWidths: Equatable {
+    var bar: CGFloat = 0
+    var toolRow: CGFloat = 0
+}
+
+/// Every slot on the folded tool row, by name, as wide as it was drawn.
+private struct ToolSlotWidthsKey: PreferenceKey {
+    static let defaultValue: [String: CGFloat] = [:]
+    static func reduce(value: inout [String: CGFloat], nextValue: () -> [String: CGFloat]) {
+        value.merge(nextValue()) { $1 }
+    }
+}
+
+private extension View {
+    /// Reports how wide this slot is drawn, under `name`.
+    func measuredToolSlot(_ name: String) -> some View {
+        background(GeometryReader { proxy in
+            Color.clear.preference(key: ToolSlotWidthsKey.self, value: [name: proxy.size.width])
+        })
     }
 }
 

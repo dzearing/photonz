@@ -220,16 +220,62 @@ public struct ToolBarLayout: Hashable, Sendable {
 
 /// A tool bar with some of its slots in front and the rest folded under More.
 ///
-/// The fold is by SLOT, so a family is never split: naming one member of a
-/// family keeps the whole family in front (`docs/design/modes.md` §2). Every
-/// folded tool keeps its key and its row under More; nothing is removed. A
-/// document with time uses it for the bar `video.html` draws, and a mode
-/// written down as a record can reuse it for its own front row.
+/// The bar shows every slot that fits the room it has and folds only the rest,
+/// the way Photoshop, Final Cut and Keynote overflow a tool strip: widen the
+/// window and tools come back, narrow it and they fold from the end, and More
+/// is there only while something is in it. The fold is by SLOT, so a family is
+/// never split (`docs/design/modes.md` §2), and every folded tool keeps its key
+/// and its row under More; nothing is removed.
+///
+/// A document with time puts the video's own tools first (`videoLeading`), so
+/// they are the last to fold; a picture folds from the end of its own bar.
 public struct ToolBarFold: Hashable, Sendable {
     /// The slots in front, in families, a hairline between each.
     public let shown: [[ToolBarLayout.Entry]]
-    /// Every slot of the full bar that is not in front, in bar order.
+    /// Every slot that is not in front, in the order the bar would draw it.
     public let folded: [ToolBarLayout.Entry]
+
+    /// How wide the things on the bar are, which is all the fold needs to
+    /// know about how the bar is drawn. The bar is one row: slots, a hairline
+    /// between families and More at the end, `gap` between every two of them.
+    public struct Metrics: Hashable, Sendable {
+        /// A slot nobody has measured: one control.
+        public var slot: CGFloat
+        /// Between any two neighbours on the row.
+        public var gap: CGFloat
+        /// A hairline's own width, the room either side of it included.
+        public var hairline: CGFloat
+        /// The More button.
+        public var more: CGFloat
+        /// Slots measured wider or narrower than `slot`, as they were drawn.
+        public var widths: [ToolBarLayout.Entry: CGFloat]
+
+        public init(slot: CGFloat, gap: CGFloat, hairline: CGFloat, more: CGFloat,
+                    widths: [ToolBarLayout.Entry: CGFloat] = [:]) {
+            self.slot = slot
+            self.gap = gap
+            self.hairline = hairline
+            self.more = more
+            self.widths = widths
+        }
+
+        public func width(of entry: ToolBarLayout.Entry) -> CGFloat {
+            widths[entry] ?? slot
+        }
+
+        /// The row `families` draw, with More at its end or not.
+        public func width(of families: [[ToolBarLayout.Entry]], more hasMore: Bool) -> CGFloat {
+            let rows = families.filter { !$0.isEmpty }
+            var total: CGFloat = 0
+            var children = 0
+            for (index, family) in rows.enumerated() {
+                if index > 0 { total += hairline; children += 1 }
+                for entry in family { total += width(of: entry); children += 1 }
+            }
+            if hasMore { total += more; children += 1 }
+            return total + gap * CGFloat(max(0, children - 1))
+        }
+    }
 
     /// Folds `layout` down to `front`. A front slot the layout does not hold
     /// (the Blade, which only a document with time has) is kept as it is.
@@ -248,6 +294,62 @@ public struct ToolBarFold: Hashable, Sendable {
         self.folded = layout.entries.filter { !seen.contains($0) }
     }
 
+    /// Folds `layout` to the `room` it has: as many slots as fit, in priority
+    /// order, and More for the rest only when there is a rest.
+    ///
+    /// Priority is `leading` first (the video's own tools on a document with
+    /// time), then the rest of the bar in its own order, so the slots that
+    /// fold first are the ones at the far end. The row is drawn as `leading`'s
+    /// families and then the bar's own families, each holding only what is in
+    /// front, so a slot coming or going never reorders the ones that stay.
+    ///
+    /// `lit` is the slot in hand. When it would fold it takes the place of the
+    /// lowest slots that make room for it, so a tool you are holding is on the
+    /// bar whenever the bar has room for it at all; with none it stays under
+    /// More and More lights.
+    public init(_ layout: ToolBarLayout, leading: [[ToolBarLayout.Entry]] = [],
+                room: CGFloat, metrics: Metrics, keeping lit: ToolBarLayout.Entry? = nil) {
+        let draw = Self.drawingOrder(layout, leading: leading)
+        let priority = draw.flatMap { $0 }
+        func row(_ keep: Set<ToolBarLayout.Entry>) -> [[ToolBarLayout.Entry]] {
+            draw.map { $0.filter(keep.contains) }.filter { !$0.isEmpty }
+        }
+        func fits(_ keep: Set<ToolBarLayout.Entry>) -> Bool {
+            metrics.width(of: row(keep), more: keep.count < priority.count) <= room
+        }
+        var count = priority.count
+        while count > 0, !fits(Set(priority.prefix(count))) { count -= 1 }
+        var keep = Set(priority.prefix(count))
+        if let lit, priority.contains(lit), !keep.contains(lit) {
+            var fewer = count
+            while fewer >= 0 {
+                let swapped = Set(priority.prefix(fewer)).union([lit])
+                if fits(swapped) { keep = swapped; break }
+                fewer -= 1
+            }
+        }
+        self.shown = row(keep)
+        self.folded = priority.filter { !keep.contains($0) }
+    }
+
+    /// The families the bar draws in, left to right: `leading`'s, then the
+    /// bar's own with what `leading` already took out of them. Empty families
+    /// are left out, and a slot is never drawn twice.
+    private static func drawingOrder(_ layout: ToolBarLayout,
+                                     leading: [[ToolBarLayout.Entry]]) -> [[ToolBarLayout.Entry]] {
+        var seen: Set<ToolBarLayout.Entry> = []
+        var families: [[ToolBarLayout.Entry]] = []
+        for family in leading + layout.families {
+            var kept: [ToolBarLayout.Entry] = []
+            for entry in family {
+                let slot = slot(for: entry, in: layout)
+                if seen.insert(slot).inserted { kept.append(slot) }
+            }
+            if !kept.isEmpty { families.append(kept) }
+        }
+        return families
+    }
+
     /// The slot in `layout` that `entry` stands for: a member of a family is
     /// the family's slot, so asking for Rectangle keeps all three shapes.
     private static func slot(for entry: ToolBarLayout.Entry,
@@ -259,20 +361,16 @@ public struct ToolBarFold: Hashable, Sendable {
         }
     }
 
-    /// The front row every document with time gets: Select, then Blade,
-    /// Title / Text and Shape, then Measure (UX-PATTERNS D4, video). The mock's
-    /// Hand and Zoom are not tools in this app (space-drag and the zoom slider
-    /// do those jobs), so they are not here.
-    public static let videoFront: [[ToolBarLayout.Entry]] = [
+    /// The tools every document with time puts first, as `video.html` draws
+    /// them: Select, then Blade, Title / Text and Shape, then Measure
+    /// (UX-PATTERNS D4, video). The mock's Hand and Zoom are not tools in this
+    /// app (space-drag, pinch and the View menu do those jobs), so they are
+    /// not here.
+    public static let videoLeading: [[ToolBarLayout.Entry]] = [
         [.tool(.select)],
         [.blade, .tool(.text), .group(.shapes)],
         [.tool(.measure)],
     ]
-
-    /// `layout`, folded to the video's front row.
-    public static func video(of layout: ToolBarLayout) -> ToolBarFold {
-        ToolBarFold(layout, front: videoFront)
-    }
 
     /// Every slot in front, families flattened.
     public var shownEntries: [ToolBarLayout.Entry] { shown.flatMap { $0 } }

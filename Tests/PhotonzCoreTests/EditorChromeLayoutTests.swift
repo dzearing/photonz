@@ -702,28 +702,32 @@ struct GridToolBarCapsuleTests {
 
     // MARK: One glass bar
 
-    @Test func theOneBarAlwaysHasItsToolsAndItsZoom() {
-        // The tools and the zoom are on the bar whatever is in hand, the way
-        // video.html's floating tool bar draws them: nothing else in between.
+    @Test func theOneBarAlwaysHasItsToolsAndNeverAZoom() {
+        // The tool bar holds tools. Zoom is not a tool (the user, 2026-09-29):
+        // it is pinch, Cmd +/-, Cmd 0, Cmd 1 and the View menu, never a
+        // control on this bar, whatever else is on it.
         #expect(EditorChromeLayout.toolBarSections(showsColor: false, showsGrid: false)
-                == [.tools, .zoom])
+                == [.tools])
+        for color in [false, true] {
+            for grid in [false, true] {
+                #expect(!EditorChromeLayout.toolBarSections(showsColor: color, showsGrid: grid)
+                    .map(\.rawValue).contains("zoom"))
+            }
+        }
     }
 
-    @Test func theOneBarPutsTheColourPairBetweenTheToolsAndTheZoom() {
+    @Test func theOneBarPutsTheColourPairAfterTheTools() {
         // The mock's order: the tool strip and More, then the colour pair and
-        // its swap, then the zoom slider.
+        // its swap.
         #expect(EditorChromeLayout.toolBarSections(showsColor: true, showsGrid: false)
-                == [.tools, .color, .zoom])
+                == [.tools, .color])
     }
 
-    @Test func theOneBarKeepsTheGridBesideTheZoom() {
-        // The mock has no grid on its bar. The app keeps it, as a section of
-        // the same bar beside the zoom, since both are about how the canvas is
-        // being looked at.
+    @Test func theOneBarKeepsTheGridAtItsEnd() {
         #expect(EditorChromeLayout.toolBarSections(showsColor: true, showsGrid: true)
-                == [.tools, .color, .grid, .zoom])
+                == [.tools, .color, .grid])
         #expect(EditorChromeLayout.toolBarSections(showsColor: false, showsGrid: true)
-                == [.tools, .grid, .zoom])
+                == [.tools, .grid])
     }
 
     @Test func aHairlineSitsBetweenEveryPairOfSectionsAndNowhereElse() {
@@ -734,7 +738,7 @@ struct GridToolBarCapsuleTests {
         let hairlines = sections.indices.filter {
             EditorChromeLayout.toolBarHasHairline(before: $0)
         }
-        #expect(hairlines == [1, 2])
+        #expect(hairlines == [1])
         #expect(!EditorChromeLayout.toolBarHasHairline(before: 0))
     }
 

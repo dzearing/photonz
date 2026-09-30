@@ -4,12 +4,12 @@
   "goal": "User 2026-09-29, screenshot of the bar on a video with a wide window (Select, Blade, Text, Shape, Align, More, Grid, zoom): 'why is the toolbar so narrow? Shouldn't it auto adjust based on the available space.' Since c6b356fa (next-video-tool-bar) a document with time folds the bar to a FIXED set (Select | Blade, Title/Text, Shape | Measure) with every other tool under an always-present More, regardless of width. Photoshop, Final Cut and Keynote show every tool that fits and overflow only what does not.",
   "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 2e-05,
-  "status": "pending",
+  "seq": 0.00002,
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T02:48:15.563Z",
-  "updated": "2026-09-30T02:48:15.648Z",
+  "updated": "2026-09-30T05:21:44.024Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -30,6 +30,29 @@
     {
       "t": "2026-09-30T02:48:15.647Z",
       "note": "seq 400 -> 0.00002"
+    },
+    {
+      "t": "2026-09-30T04:59:01.802Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-30T05:21:43.917Z",
+      "note": "owns these walks: tool-bar-fills-its-room-walk, video-tool-bar-walk, one-glass-tool-bar-walk, zoom-readout-double-click-walk"
+    },
+    {
+      "t": "2026-09-30T05:21:43.970Z",
+      "note": "Built: ToolBarFold(layout, leading:, room:, metrics:, keeping:) in PhotonzCore/ToolBarLayout.swift folds by measured width (tests: VideoToolBarTests). EditorView measures every slot + the tool row + the whole bar (one preference key so they arrive together) and folds live; Next's one glass bar dropped its zoom section (EditorChromeLayout.toolBarSections). New walk tool-bar-fills-its-room-walk at Next defaults: 1600/750/690 windows, panel hide/show, G swaps Fill in, picture. Walks updated: video-tool-bar, one-glass-tool-bar (zoom:false claims), zoom-readout-double-click (now turns next-one-glass-tool-bar off: the readout only lives on Current's capsules). New toolBar claim 'zoom'. Scripts/test.sh 10572 pass."
+    },
+    {
+      "t": "2026-09-30T05:21:44.023Z",
+      "note": "Adversarial review: a Final Cut/Photoshop user expects every tool that fits and overflow only for the rest: met. Clumsy bit left: picking a painting tool brings the colour pair, which folds 2-3 more tools on a narrow window at that moment (in the audit's rough; not filed, a consequence of the colour pair living on the bar). Grid chip is a view option still on the bar: folded into the IA task's log. Current capsule bar keeps zoom (Current release unchanged)."
     }
+  ],
+  "started": "2026-09-30T04:59:01.800Z",
+  "walks": [
+    "tool-bar-fills-its-room-walk",
+    "video-tool-bar-walk",
+    "one-glass-tool-bar-walk",
+    "zoom-readout-double-click-walk"
   ]
 }

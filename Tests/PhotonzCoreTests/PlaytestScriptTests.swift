@@ -94,6 +94,20 @@ struct PlaytestScriptTests {
         #expect(other.zoomSlider == nil)
     }
 
+    @Test("A toolBar step can claim there is no zoom on the bar at all")
+    func toolBarCanClaimNoZoom() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "toolBar", "stage": "a", "zoom": false },
+                     { "do": "toolBar", "stage": "b", "capsules": 1 } ] }
+        """)
+        guard case .toolBar(_, _, let claim?) = script.steps[0],
+              case .toolBar(_, _, let other?) = script.steps[1] else {
+            Issue.record("toolBar"); return
+        }
+        #expect(claim.zoom == false)
+        #expect(other.zoom == nil)
+    }
+
     @Test("A writePicture step leaves the canvas out unless the walk asks for it")
     func writePictureLeavesTheCanvasOutByDefault() throws {
         let script = try decode("""

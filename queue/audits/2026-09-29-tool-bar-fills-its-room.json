@@ -1,0 +1,28 @@
+{
+  "feature": "The tool bar fills the room it has, and holds only tools",
+  "epic": "video-editing",
+  "summary": "The floating tool bar now shows every tool that fits the canvas and folds only what does not into More, which appears only when something is in it. The zoom slider and percentage are gone from the bar on pictures and videos.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/tool-bar-fills-its-room-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording in a wide window and press Cmd-2 for Edit.", "shot": "2026-09-29-tool-bar-fills-its-room-1-wide.png" },
+    { "do": "Drag the window narrower: tools fold from the far end into More, and the video's own tools stay.", "shot": "2026-09-29-tool-bar-fills-its-room-2-medium.png" },
+    { "do": "Keep narrowing until only the first few tools are left.", "shot": "2026-09-29-tool-bar-fills-its-room-3-narrow.png" },
+    { "do": "Press G while Fill is under More.", "shot": "2026-09-29-tool-bar-fills-its-room-4-narrow-fill-in-hand.png" },
+    { "do": "Hide and show the right panel with the title bar toggle and watch the bar re-fold." },
+    { "do": "Widen the window again: every tool comes back and More goes away." },
+    { "do": "Open a screenshot and check its bar follows the same rule, with no zoom.", "shot": "2026-09-29-tool-bar-fills-its-room-5-picture.png" }
+  ],
+  "evaluate": [
+    "In a wide window, does the bar now feel like it uses the room, the way Photoshop or Final Cut's tool strip does?",
+    "When a tool you pick with its key swaps into the bar (Measure steps aside for Fill), is that what you expect, or should the bar stay still and light More instead?",
+    "On a video with every tool showing, is the order right: Select | Blade, Text, Shape | Measure, then the picture tools?",
+    "Do you miss the zoom percentage anywhere, or are pinch, Cmd +/-, Cmd 0, Cmd 1 and the View menu enough?"
+  ],
+  "rough": [
+    "Picking up a tool that paints (Fill, a shape) brings the colour pair onto the bar, and on a narrow window that folds two or three more tools under More at that moment.",
+    "The mock draws Hand and Zoom tools and a zoom slider on this bar. None of them is built: zoom is not a tool (your call on 2026-09-29) and Hand is space-drag.",
+    "The grid button still sits at the end of the bar when the canvas is roomy. It is a view option, not a tool; moving it is part of the information architecture task, not this one.",
+    "Current's separate capsules (and Next with the one-glass-bar switch turned off) still carry the zoom slider and percentage. Next at its defaults has none."
+  ]
+}

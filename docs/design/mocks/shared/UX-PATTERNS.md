@@ -175,6 +175,12 @@ not switch experiences mid-document; you open a different document.
    (`.ovf`) collapse into a **more** affordance (`.tbar-more`) when the window is
    narrow. This is the canonical tool surface for canvas work; there is no
    permanent options-bar row.
+   **Ruled by the user, 2026-09-29:** the app's bar carries **no zoom control**
+   ("zoom isn't a tool"): the mocks' `.zoomctl` is not built. Zoom is pinch,
+   Cmd +/-, Cmd 0, Cmd 1 and the View menu. The bar shows **every tool that
+   fits** the canvas, folding only the rest from the far end into More, and More
+   is there only while something is in it; a document with time puts the
+   video's own tools first so they fold last (`ToolBarFold`).
 5. **Canvas action cluster** (`.cnv-act`) — top-right of the canvas: the **panel
    toggle** (`ic-sidebar`, `[data-dock-toggle]`) that shows or hides the dock, and
    the **history** entry. Panel visibility is controlled where the canvas is, not

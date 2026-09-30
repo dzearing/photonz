@@ -8112,6 +8112,13 @@ private final class Run {
                 wrong.append("it draws no zoom slider to measure")
             }
         }
+        if let want = claim.zoom {
+            let probe = ToolBarLayoutProbe.shared
+            let has = probe.groups["Zoom"] != nil || probe.zoomSlider != nil
+            if has != want {
+                wrong.append(has ? "it carries a zoom control" : "it carries no zoom control")
+            }
+        }
         guard wrong.isEmpty else { throw Failure(description: "the tool bar: " + wrong.joined(separator: "; ")) }
     }
 
