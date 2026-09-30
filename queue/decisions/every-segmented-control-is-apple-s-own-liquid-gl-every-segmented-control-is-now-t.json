@@ -45,6 +45,11 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
-  "created": "2026-09-30T04:18:29.172Z"
+  "status": "resolved",
+  "created": "2026-09-30T04:18:29.172Z",
+  "answer": {
+    "choice": "c",
+    "note": "Back to our custom one: the native control is ugly. The selected chip should be TINTED Liquid Glass (accent-tinted glass pill) that moves between segments as liquid glass, like https://www.reddit.com/r/SwiftUI/comments/1qvs87l/how_to_create_segmented_pickers_with_liquid_glass/ . Task acceptance rewritten to say exactly this.",
+    "resolved": "2026-09-30T13:42:54.162Z"
+  }
 }
