@@ -4,7 +4,7 @@
   "goal": "User 2026-09-30: 'make sure that the text is legible. I do not want white on white or black on black cases EVER.' The history filter shipped white text on a white glass thumb (2026-09-29), and nothing caught it. Build a guard that renders the app's text-bearing controls in every state and fails on low contrast.",
   "epic": "design-system",
   "priority": "p1-high",
-  "seq": 0.000002,
+  "seq": 2e-06,
   "status": "pending",
   "release": "next",
   "area": "app",
@@ -14,8 +14,9 @@
   "blockedBy": [],
   "notes": "Filed from the intake window.",
   "acceptance": [
+    "Legible, as the user asked (2026-09-30: 'I didn't ask specifically for 4.5. I asked specifically for legible'): the text is plainly readable against what is actually behind it, in every state, scheme and backdrop, with no white on white or black on black ever. The system's own pairings count as legible and are kept as they are (white on the system accent, the system label colours on glass); do not darken or alter the system accent to hit a ratio. The automated check catches the real failures: text and background too close to tell apart (below about 3:1, or the same colour family on the same lightness)",
     "A snapshot-contrast test (ImageRenderer, in Scripts/test.sh) renders every shared control that carries text or an icon (segmented control, buttons, dropdown rows, tool bar, panel rows and headers, tooltips, toasts, transport, timeline headers and clip names, the history bar, the View | Edit switch, badges, caption and title previews) in every state (rest, hover, pressed, selected, disabled, focused) and in light and dark, over white, black and mid-grey backdrops where the control is translucent or glass",
-    "For each render it measures the text or icon colour against the pixels actually behind it and fails below 4.5:1 for text (3:1 for large text and icons), naming the control, state, scheme and backdrop",
+    "For each render it measures the text or icon colour against the pixels actually behind it and fails when text or an icon is unreadable against what is behind it (below about 3:1, or same-on-same), naming the control, state, scheme and backdrop",
     "It runs on every commit; today's offenders are listed in the task log and fixed in this task",
     "UX-PATTERNS states the rule and points at the test"
   ],

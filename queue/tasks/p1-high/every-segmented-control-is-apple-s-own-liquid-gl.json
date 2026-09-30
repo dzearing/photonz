@@ -4,19 +4,20 @@
   "goal": "You asked on 2026-09-29 why the app was not using the Mac's own Liquid Glass segmented control. Every row of side-by-side choices is now the system control itself, one continuous track in the title bar and in the panel. What is left is your yes: the Mac fills the picked choice with the accent colour and switches without a slide, which may not be the glass you pictured.",
   "epic": "design-system",
   "priority": "p1-high",
-  "seq": 1e-06,
-  "status": "pending",
+  "seq": 0.000001,
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T02:46:57.276Z",
-  "updated": "2026-09-30T13:42:54.246Z",
+  "updated": "2026-09-30T17:10:27.298Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
   "acceptance": [
+    "Legible, as the user asked (2026-09-30: 'I didn't ask specifically for 4.5. I asked specifically for legible'): the text is plainly readable against what is actually behind it, in every state, scheme and backdrop, with no white on white or black on black ever. The system's own pairings count as legible and are kept as they are (white on the system accent, the system label colours on glass); do not darken or alter the system accent to hit a ratio. The automated check catches the real failures: text and background too close to tell apart (below about 3:1, or the same colour family on the same lightness)",
     "Back to our own segmented control (the drawn one from before 5a81d5a3: our rail, our sizes, our layout) everywhere: title bar View | Edit, the history filter, every panel picker; the Mac's stock control is removed again (user 2026-09-30: 'this IS the native slider, but it's ugly and I want to go back to our custom one')",
-    "The selected chip is TINTED Liquid Glass: a real .glassEffect(.regular.tint(accent).interactive(), in: .capsule) (or the equivalent Glass API) behind the picked segment, so at rest it reads as a tinted glass pill, with the picked label in the colour the system uses on tinted glass (white on the accent), readable at 4.5:1 in light and dark and over any backdrop (history bar included)",
-    "Legible in every state, ALWAYS (user 2026-09-30: 'I do not want white on white or black on black cases EVER'): the picked and unpicked labels, at rest, hovered, pressed, disabled and mid-move, in light and dark, over white and black backdrops, in every placement, measured at 4.5:1 or better against what is actually drawn behind them; a snapshot test renders all of these and fails below 4.5:1",
+    "The selected chip is TINTED Liquid Glass: a real .glassEffect(.regular.tint(accent).interactive(), in: .capsule) (or the equivalent Glass API) behind the picked segment, so at rest it reads as a tinted glass pill, with the picked label in the colour the system uses on tinted glass (white on the accent), legible in light and dark and over any backdrop (history bar included); white on the system accent as the system draws it",
+    "Legible in every state, ALWAYS (user 2026-09-30: 'I do not want white on white or black on black cases EVER'): the picked and unpicked labels, at rest, hovered, pressed, disabled and mid-move, in light and dark, over white and black backdrops, in every placement, legible against what is actually drawn behind them; a snapshot test renders all of these and fails on unreadable text (see the legibility rule)",
     "When the selection changes, that tinted glass chip moves to the new segment as liquid glass: one glass shape, moved by SwiftUI's own animation (matchedGeometryEffect or a shared glassEffectID in a GlassEffectContainer, whichever the system morphs smoothly), stretching as it travels and settling with no overshoot outside the rail; only one animator (the pick is isolated from any outer withAnimation)",
     "Reference the user gave: https://www.reddit.com/r/SwiftUI/comments/1qvs87l/how_to_create_segmented_pickers_with_liquid_glass/ (the intake window could not fetch it; try it, and match the effect it shows)",
     "Filmed with filmThumb at 120 fps in the title bar, the history bar and a panel: tinted chip at rest in each, the move between segments, and never a pixel outside the rail",
@@ -94,9 +95,21 @@
     {
       "t": "2026-09-30T13:42:54.245Z",
       "note": "seq 10 -> 0.000001"
+    },
+    {
+      "t": "2026-09-30T15:05:01.246Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-30T15:09:26.568Z",
+      "note": "Adversarial review before building (2026-09-30): (1) White on the system accent is only 4.0:1 light / 3.7:1 dark, and tinted glass lightens toward its backdrop, so 'white on the accent' fails 4.5:1 as asked: the chip is tinted with a legible shade of the accent (darkened until white clears 4.5 with margin) laid under the glass as an opaque capsule, so the glass samples that and never the backdrop. (2) The old rail was translucent: over a black screenshot behind the history bar a light-scheme dim label would be black on black, and even on white the old light rail (.32 dark) put the dim label near 3:1. The rail is now opaque per scheme, so nothing behind the control changes what its words sit on. (3) Mid-move a dim label under the travelling chip would be grey on blue: the words are drawn twice, dim outside the chip and white inside it, clipped by the same animated capsule. (4) Disabled at 42% opacity fails 4.5 by design: disabled now greys the chip and keeps every word at 4.5+. (5) The glassEffectID morph was filmed jumping on 2026-09-29, so the chip is one pane moved by SwiftUI's frame animation; the stretch comes from its two edges on two curves (the leading edge first), smooth with no bounce, so it never leaves the rail. (6) Picked words go semibold: segments are sized by the semibold word so a pick never reflows the row mid-move. (7) filmThumb read the thumb as 'lighter than the rail'; a tinted chip is darker, so the film reads colour (chroma) instead."
+    },
+    {
+      "t": "2026-09-30T17:10:27.297Z",
+      "note": "USER CORRECTION 2026-09-30 10:12: they asked for LEGIBLE, not 4.5:1 (the intake window invented the number). Keep the system accent as the system draws it with white text on it; do not darken the accent. Only guard against genuinely unreadable text (white on white, black on black, same-on-same)."
     }
   ],
-  "started": "2026-09-30T03:05:20.631Z",
+  "started": "2026-09-30T15:05:01.245Z",
   "walks": [
     "segmented-thumb-glass-walk",
     "segmented-thumb-film-walk",
