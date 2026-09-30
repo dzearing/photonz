@@ -2515,11 +2515,21 @@ private final class Run {
             NSPasteboard.general.clearContents()
             note(number, step.name, "cleared")
 
-        case .readClipboard(let stage):
+        case .readClipboard(let stage, let behind):
             let types = NSPasteboard.general.types?.map(\.rawValue) ?? []
             let text = NSPasteboard.general.string(forType: .string)
-            note(number, stage, "clipboard types \(types); text:\n\(text ?? "nil")",
-                 state: ["types": types, "text": text ?? NSNull()])
+            // The picture's corners, read off the PNG that went on the
+            // clipboard: what an app that pastes it would get.
+            var corners: String?
+            if let png = NSPasteboard.general.data(forType: .png) {
+                corners = try cornersOf(png, named: "the copied picture", claim: behind)
+            } else if behind != nil {
+                throw Failure(description: "readClipboard was to read the copied picture's corners, "
+                              + "and there is no picture on the clipboard")
+            }
+            note(number, stage, "clipboard types \(types)"
+                 + (corners.map { ", picture with \($0)" } ?? "") + "; text:\n\(text ?? "nil")",
+                 state: ["types": types, "text": text ?? NSNull(), "corners": corners ?? NSNull()])
 
         case .appearance(let which):
             // This app only. The machine's own setting is left alone, because a
@@ -5204,6 +5214,7 @@ private final class Run {
                  .captionsWordSplitAndMerge: break
             case .copySpecList: editor.copyMeasureSpecList()
             case .copyImage: editor.copyCompositeToClipboard()
+            case .copyImageWithCanvas: editor.copyCompositeToClipboard(background: .keep)
             // The same order Edit ▸ Copy, Cut and Paste take things in.
             case .copy: editor.copyWhatIsInHand()
             case .copyMerged: editor.copyMerged()

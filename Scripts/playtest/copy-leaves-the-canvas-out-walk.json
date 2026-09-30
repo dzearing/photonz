@@ -1,0 +1,52 @@
+{
+  "out": "/tmp/photonz-playtest/copy-leaves-the-canvas-out-walk",
+  "seed": "An icon drawn on a blank canvas used to copy with the white canvas behind it, while Export left the canvas out, so the icon you pasted and the icon you saved were two different pictures. The walk draws a triangle on a blank canvas, presses Copy Merged (Shift Command C) exactly as a person would, and reads the four corners of the picture that landed on the clipboard; then it copies with the canvas asked for, and finally copies a screenshot, which is never a blank canvas and must come whole.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "click", "at": [220, 520] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "drag", "from": [440, 200], "to": [560, 210], "steps": 10 },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [700, 520] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [223, 523] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPath", "anchors": 3, "closed": true },
+    { "do": "tool", "tool": "select" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "snapshot", "name": "copy-canvas-1-icon-drawn" },
+    { "do": "clearClipboard" },
+    { "do": "shortcut", "key": "c", "modifiers": ["command", "shift"], "menuItem": "Copy Merged" },
+    { "do": "wait", "seconds": 0.5 },
+    {
+      "do": "readClipboard",
+      "stage": "2-copied-see-through",
+      "behind": "empty"
+    },
+    { "do": "snapshot", "name": "copy-canvas-2-copied" },
+    { "do": "clearClipboard" },
+    { "do": "action", "action": "copyImageWithCanvas" },
+    { "do": "wait", "seconds": 0.5 },
+    {
+      "do": "readClipboard",
+      "stage": "3-copied-with-the-canvas",
+      "behind": "painted"
+    },
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "clearClipboard" },
+    { "do": "shortcut", "key": "c", "modifiers": ["command", "shift"], "menuItem": "Copy Merged" },
+    { "do": "wait", "seconds": 0.5 },
+    {
+      "do": "readClipboard",
+      "stage": "4-a-screenshot-copies-whole",
+      "behind": "painted"
+    },
+    { "do": "snapshot", "name": "copy-canvas-4-screenshot" }
+  ]
+}

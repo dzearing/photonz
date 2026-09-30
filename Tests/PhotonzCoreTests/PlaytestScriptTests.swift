@@ -14,6 +14,24 @@ struct PlaytestScriptTests {
         try PlaytestScript.decode(Data(json.utf8))
     }
 
+    @Test("A readClipboard step can claim what is behind the copied picture")
+    func readClipboardCanClaimTheCorners() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "readClipboard", "stage": "a" },
+                     { "do": "readClipboard", "stage": "b", "behind": "empty" },
+                     { "do": "action", "action": "copyImageWithCanvas" } ] }
+        """)
+        guard case .readClipboard(let first, let unclaimed) = script.steps[0],
+              case .readClipboard(_, let claimed) = script.steps[1],
+              case .action(let action) = script.steps[2] else {
+            Issue.record("readClipboard"); return
+        }
+        #expect(first == "a")
+        #expect(unclaimed == nil)
+        #expect(claimed == .empty)
+        #expect(action == .copyImageWithCanvas)
+    }
+
     @Test("A toolBar step can claim the bar is clear of the fitted picture")
     func toolBarCanClaimItIsClearOfThePicture() throws {
         let script = try decode("""
@@ -822,7 +840,7 @@ struct PlaytestScriptTests {
         guard case .describe(let stage, let note) = script.steps[14] else { Issue.record("describe"); return }
         #expect(stage == "3-distance" && note == "after two clicks")
         guard case .clearClipboard = script.steps[15] else { Issue.record("clearClipboard"); return }
-        guard case .readClipboard(let clipStage) = script.steps[16] else { Issue.record("readClipboard"); return }
+        guard case .readClipboard(let clipStage, _) = script.steps[16] else { Issue.record("readClipboard"); return }
         #expect(clipStage == "8-spec")
         guard case .action(let action) = script.steps[17] else { Issue.record("action"); return }
         #expect(action == .copySpecList)

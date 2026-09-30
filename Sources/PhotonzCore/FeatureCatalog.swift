@@ -130,6 +130,8 @@ public enum FeatureCatalog {
 
     public static let copyPicksYourLayerFlag = "next-copy-picks-your-layer"
 
+    public static let copyLeavesTheCanvasOutFlag = "next-copy-leaves-the-canvas-out"
+
     public static let menuKeysDoWhatTheySayFlag = "next-menu-keys-do-what-they-say"
 
     public static let proMenuBarFlag = "next-a-pro-menu-bar"
@@ -1244,6 +1246,16 @@ public enum FeatureCatalog {
                     name: copyPicksYourLayerFlag,
                     title: "Copy takes the layer you picked",
                     description: "Command C copies only the picked layer's pixels inside the marquee, and Command Shift C copies everything merged. Off means Command C copies every layer flattened together.",
+                    area: .clipboard,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: copyLeavesTheCanvasOutFlag,
+                    title: "A copied picture leaves a blank canvas out",
+                    description: "Copying a drawing made on a blank canvas leaves the canvas out, the way Export does, while screenshots copy whole. Off means the canvas colour always comes with the copy.",
                     area: .clipboard,
                     isEnabled: false,
                     parameters: []),

@@ -837,6 +837,7 @@ extension Experiments {
     /// is Copy Merged; off, the marquee supersedes the layer and ⌘C hands back
     /// every layer flattened together (`CopyRoute`).
     var copyPicksYourLayerEnabled: Bool { isEnabled(FeatureCatalog.copyPicksYourLayerFlag) }
+    var copyLeavesTheCanvasOutEnabled: Bool { isEnabled(FeatureCatalog.copyLeavesTheCanvasOutFlag) }
 
     /// `next-menu-keys-do-what-they-say`: whether ⌘⌫ and ⌥⌫ reach Layer ▸
     /// Delete Layer and Edit ▸ Fill with Foreground from anywhere, and whether

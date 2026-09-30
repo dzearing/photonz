@@ -1,0 +1,24 @@
+{
+  "feature": "A copied icon leaves its blank canvas out",
+  "epic": "icon-export",
+  "summary": "Copy Merged (Shift Command C) on a drawing made on a blank canvas now puts only the drawing on the clipboard, with nothing behind it, the same picture Export saves by default. Screenshots and photographs still copy whole.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. The walk is copy-leaves-the-canvas-out-walk.",
+  "switched": {},
+  "try": [
+    { "do": "File > New, then pick the Pen (P) and draw a closed shape on the white canvas." },
+    { "do": "Press Escape, then Shift Command C.", "shot": "2026-09-30-copy-leaves-the-canvas-out-2.png" },
+    { "do": "Paste into something dark (a dark chat, Keynote on a dark slide, Preview's File > New from Clipboard) and look at the corners." },
+    { "do": "Open a screenshot and press Shift Command C.", "shot": "2026-09-30-copy-leaves-the-canvas-out-4.png" },
+    { "do": "Paste it into the same dark place and check the whole screenshot came with it." }
+  ],
+  "evaluate": [
+    "Does the pasted icon sit on the dark colour with no white box round it?",
+    "Does the pasted screenshot still carry every pixel of its background?",
+    "Is it clear enough, without a sheet, that a copy of a drawing on a blank canvas leaves the canvas out?"
+  ],
+  "rough": [
+    "The copy WITH the canvas (your answer B: hold Option and Copy Merged becomes Copy Merged with Background) is not in the menu yet. Option Shift Command C already belongs to Copy Look, and a Mac menu can only swap a row under Option when both rows share one key, so the white version is on a decision card. Until you answer, Export with Include the background ticked is the way to get it.",
+    "Only the whole-picture copy changed. Copy Merged with a marquee up still copies the white inside the marquee, because that copy pastes back into Photonz as a layer where the white is part of what you picked.",
+    "The pictures are the app window; the clipboard's own contents were checked by the walk reading the four corners of the copied PNG, not photographed on a dark page."
+  ]
+}

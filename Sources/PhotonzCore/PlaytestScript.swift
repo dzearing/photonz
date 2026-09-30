@@ -665,6 +665,9 @@ public enum PlaytestAppearance: String, CaseIterable, Hashable, Codable, Sendabl
 
 public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case copySpecList, copyImage, hideAllMeasurements, showAllMeasurements
+    /// The whole picture copied WITH the canvas it was drawn on, where
+    /// `copyImage` leaves a blank canvas out (`next-copy-leaves-the-canvas-out`).
+    case copyImageWithCanvas
     /// The two copies, called directly: ⌘C takes the layer you picked and
     /// ⇧⌘C takes every layer flattened together. A walk asks for them here
     /// because both are menu chords, and because what they leave on the
@@ -3382,8 +3385,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// the log under `stage`.
     case describe(stage: String, note: String?)
     case clearClipboard
-    /// Log what is on the clipboard.
-    case readClipboard(stage: String)
+    /// Log what is on the clipboard. `behind` is the CLAIM about the picture
+    /// on it, read off its four corners the way `writePicture` reads a file:
+    /// "empty" means nothing behind the drawing, "painted" means a background.
+    case readClipboard(stage: String, behind: PictureCorners?)
     /// Write the app's own menu bar to the log and to `menus-<stage>.json`:
     /// every menu, item, shortcut and enabled state, exactly as it reads on
     /// screen. `menu` narrows it to one top-level menu by title.
@@ -4724,7 +4729,9 @@ public enum PlaytestStep: Sendable, Equatable {
         case "clearClipboard":
             self = .clearClipboard
         case "readClipboard":
-            self = .readClipboard(stage: try f.string("stage"))
+            self = .readClipboard(stage: try f.string("stage"),
+                                  behind: f.has("behind")
+                                      ? try f.enumValue("behind", PictureCorners.self) : nil)
         case "menus":
             let choose = (try f.optionalString("choose"))?
                 .components(separatedBy: ">").map { $0.trimmingCharacters(in: .whitespaces) } ?? []

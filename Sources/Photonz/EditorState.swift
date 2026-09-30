@@ -3115,9 +3115,18 @@ final class EditorState {
     /// (`CompositeCopy`), declared after the image types so image-aware apps
     /// take the picture and text-only fields take the list. One copy, one
     /// hand-off; the "Copied" notice says which of the two landed.
-    func copyCompositeToClipboard() {
+    ///
+    /// Next (`next-copy-leaves-the-canvas-out`): a drawing made on a blank
+    /// canvas copies with nothing behind it, the same picture Export writes by
+    /// default, so the icon you paste and the icon you save agree. A
+    /// screenshot or a photograph is never a blank canvas and copies whole.
+    /// `background: .keep` is the copy WITH the canvas.
+    func copyCompositeToClipboard(background: SVGExport.Background? = nil) {
+        let background = background
+            ?? (Experiments.shared.copyLeavesTheCanvasOutEnabled ? .drop : .keep)
         guard let document,
-              let image = previewRenderer.render(document, store: store) else { return }
+              let image = previewRenderer.render(document.copied(with: background, store: store),
+                                                 store: store) else { return }
         let carriesSpecList = Experiments.shared.measurePanelEnabled
         let specList = carriesSpecList
             ? CompositeCopy.specListText(document: document, name: specListName) : nil
