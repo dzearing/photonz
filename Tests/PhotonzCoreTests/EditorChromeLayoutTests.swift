@@ -706,35 +706,45 @@ struct GridToolBarCapsuleTests {
         // The tool bar holds tools. Zoom is not a tool (the user, 2026-09-29):
         // it is pinch, Cmd +/-, Cmd 0, Cmd 1 and the View menu, never a
         // control on this bar, whatever else is on it.
-        #expect(EditorChromeLayout.toolBarSections(showsColor: false, showsGrid: false)
-                == [.tools])
+        #expect(EditorChromeLayout.toolBarSections(showsColor: false) == [.tools])
         for color in [false, true] {
-            for grid in [false, true] {
-                #expect(!EditorChromeLayout.toolBarSections(showsColor: color, showsGrid: grid)
-                    .map(\.rawValue).contains("zoom"))
-            }
+            #expect(!EditorChromeLayout.toolBarSections(showsColor: color)
+                .map(\.rawValue).contains("zoom"))
         }
     }
 
     @Test func theOneBarPutsTheColourPairAfterTheTools() {
         // The mock's order: the tool strip and More, then the colour pair and
         // its swap.
-        #expect(EditorChromeLayout.toolBarSections(showsColor: true, showsGrid: false)
-                == [.tools, .color])
+        #expect(EditorChromeLayout.toolBarSections(showsColor: true) == [.tools, .color])
     }
 
-    @Test func theOneBarKeepsTheGridAtItsEnd() {
-        #expect(EditorChromeLayout.toolBarSections(showsColor: true, showsGrid: true)
-                == [.tools, .color, .grid])
-        #expect(EditorChromeLayout.toolBarSections(showsColor: false, showsGrid: true)
-                == [.tools, .grid])
+    @Test func theOneBarCarriesNoGrid() {
+        // The grid is a way of looking at the picture, so it is the View
+        // menu's (Show Grid, Grid Settings, Snap to Grid, Adjust Grid), not a
+        // section of the bar that holds tools (the placement contract).
+        for color in [false, true] {
+            #expect(!EditorChromeLayout.toolBarSections(showsColor: color)
+                .map(\.rawValue).contains("grid"))
+        }
+        #expect(EditorChromeLayout.gridChipParts(canvasWidth: 1600, isGridVisible: true,
+                                                 oneGlass: true).isEmpty)
+    }
+
+    @Test func onTheOneBarTheGridsSettingsRiseOutOfTheBar() {
+        // With no grid icon on the bar, the View menu's Grid Settings opens
+        // its popover off the bar as a whole, at every width.
+        for width in stride(from: CGFloat(0), through: 2000, by: 50) {
+            #expect(EditorChromeLayout.gridSettingsAnchor(canvasWidth: width, oneGlass: true)
+                    == .toolBar)
+        }
     }
 
     @Test func aHairlineSitsBetweenEveryPairOfSectionsAndNowhereElse() {
         // A hairline before a section exactly when something came before it:
         // never at the ends of the bar, never two in a row where a section
         // is missing.
-        let sections = EditorChromeLayout.toolBarSections(showsColor: false, showsGrid: true)
+        let sections = EditorChromeLayout.toolBarSections(showsColor: true)
         let hairlines = sections.indices.filter {
             EditorChromeLayout.toolBarHasHairline(before: $0)
         }

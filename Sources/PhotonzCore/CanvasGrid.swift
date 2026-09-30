@@ -797,7 +797,7 @@ public enum CanvasGridCopy {
 
     /// The one line under the controls, in both places they are drawn.
     public static let footnote =
-        "Pick a size on the tool bar and the grid is that size at every zoom. "
+        "Pick a cell size and the grid is that size at every zoom. "
         + "Leave it automatic and it follows the zoom, thinning out as you go and coming back as you "
         + "come closer. Either way it is drawn on the canvas, never into the picture."
 

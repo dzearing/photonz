@@ -1,6 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/grid-bar-two-buttons",
   "setup": {
+    "flags": { "next-one-glass-tool-bar": false },
     "forget": [
       "grid",
       "tools",

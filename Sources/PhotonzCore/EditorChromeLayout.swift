@@ -421,27 +421,27 @@ public enum EditorChromeLayout {
 
     /// One part of the floating tool bar when it is drawn as ONE glass bar
     /// (`next-one-glass-tool-bar`), the way `video.html` draws it: the tools
-    /// and More, the colour pair, the grid, with a hairline between each.
-    /// Before, each was its own capsule side by side.
+    /// and More, then the colour pair, with a hairline between. Before, each
+    /// was its own capsule side by side.
     ///
-    /// There is no zoom section. The bar holds tools, and zoom is not a tool
+    /// The bar holds tools (the placement contract at the top of
+    /// UX-PATTERNS.md). There is no zoom section, because zoom is not a tool
     /// (the user, 2026-09-29: "zoom isn't a tool"): it lives in pinch,
-    /// Cmd +/-, Cmd 0, Cmd 1 and the View menu. The separate capsules Current
-    /// still draws keep their zoom capsule.
+    /// Cmd +/-, Cmd 0, Cmd 1 and the View menu. There is no grid section
+    /// either, for the same reason: the grid is a way of looking at the
+    /// picture, and the View menu carries all of it. The separate capsules
+    /// Current still draws keep their zoom capsule. `ToolBarPurposeTests`
+    /// fails on a new case until the contract says it belongs here.
     public enum ToolBarSection: String, Sendable, CaseIterable {
-        case tools, color, grid
+        case tools, color
     }
 
     /// The sections on the bar right now, left to right.
     ///
     /// The tools are always there. The colour pair is there only for a tool
-    /// that paints (`Tool.colorControl`), and the grid only on a canvas roomy
-    /// enough for it (`gridChipParts`). The mock draws no grid.
-    public static func toolBarSections(showsColor: Bool, showsGrid: Bool) -> [ToolBarSection] {
-        var sections: [ToolBarSection] = [.tools]
-        if showsColor { sections.append(.color) }
-        if showsGrid { sections.append(.grid) }
-        return sections
+    /// that paints (`Tool.colorControl`).
+    public static func toolBarSections(showsColor: Bool) -> [ToolBarSection] {
+        showsColor ? [.tools, .color] : [.tools]
     }
 
     /// Whether a hairline goes before the section at `index`: between every
@@ -563,9 +563,13 @@ public enum EditorChromeLayout {
     /// The icon stays either way, because with the grid off it is the only
     /// thing left saying the grid exists, and pressing it is how you get to the
     /// switch.
+    ///
+    /// The one glass bar (`oneGlass`) carries none of it: the grid is a way of
+    /// looking at the picture, and the View menu is where that lives.
     public static func gridChipParts(canvasWidth: CGFloat,
-                                     isGridVisible: Bool) -> [GridChipPart] {
-        guard showsGridChip(canvasWidth: canvasWidth) else { return [] }
+                                     isGridVisible: Bool,
+                                     oneGlass: Bool = false) -> [GridChipPart] {
+        guard !oneGlass, showsGridChip(canvasWidth: canvasWidth) else { return [] }
         return isGridVisible ? [.settings, .cell, .adjust] : [.settings]
     }
 
@@ -592,8 +596,12 @@ public enum EditorChromeLayout {
     ///
     /// One width, one answer: the app builds the settings once, at the anchor
     /// this names, so the two can never both be up on the one flag.
-    public static func gridSettingsAnchor(canvasWidth: CGFloat) -> GridSettingsAnchor {
-        showsGridChip(canvasWidth: canvasWidth) ? .gridChip : .toolBar
+    ///
+    /// On the one glass bar there is no grid icon at any width, so the
+    /// settings always rise out of the bar.
+    public static func gridSettingsAnchor(canvasWidth: CGFloat,
+                                          oneGlass: Bool = false) -> GridSettingsAnchor {
+        !oneGlass && showsGridChip(canvasWidth: canvasWidth) ? .gridChip : .toolBar
     }
 
     /// The narrowest canvas on which the CROP tool's options still lay

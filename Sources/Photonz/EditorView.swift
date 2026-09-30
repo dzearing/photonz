@@ -940,7 +940,7 @@ struct EditorView: View {
                     && Experiments.shared.canvasGridEnabled
                     && editorState.hasDocument
                     && EditorChromeLayout.gridSettingsAnchor(
-                        canvasWidth: canvasContentWidth) == anchor
+                        canvasWidth: canvasContentWidth, oneGlass: isOneGlassBar) == anchor
             },
             set: { editorState.isGridSettingsPresented = $0 })
     }
@@ -1021,7 +1021,8 @@ struct EditorView: View {
     private var gridChipParts: [EditorChromeLayout.GridChipPart] {
         guard Experiments.shared.canvasGridEnabled, editorState.hasDocument else { return [] }
         return EditorChromeLayout.gridChipParts(canvasWidth: canvasContentWidth,
-                                                isGridVisible: editorState.canvasGrid.isVisible)
+                                                isGridVisible: editorState.canvasGrid.isVisible,
+                                                oneGlass: isOneGlassBar)
     }
 
     /// Whether the bar is ONE glass bar with hairlines between its sections,
@@ -1043,8 +1044,8 @@ struct EditorView: View {
             .padding(.horizontal, barSpacing.hairlineMargin)
     }
 
-    /// The tools, the colours, the grid and the zoom as sections of one glass
-    /// bar, a hairline between each: `video.html`'s floating tool bar, on a
+    /// The tools and the colours as sections of one glass bar, a hairline
+    /// between: `video.html`'s floating tool bar, on a
     /// picture and a video alike. Which sections are on it is
     /// `EditorChromeLayout.toolBarSections`, tested.
     ///
@@ -1053,8 +1054,7 @@ struct EditorView: View {
     /// 10.7 note on `toolsBar` is why nothing here animates on a selection.
     private var oneGlassBar: some View {
         let sections = EditorChromeLayout.toolBarSections(
-            showsColor: editorState.activeTool.colorControl != .hidden,
-            showsGrid: !gridChipParts.isEmpty)
+            showsColor: editorState.activeTool.colorControl != .hidden)
         return HStack(spacing: barSpacing.sectionGap) {
             ForEach(Array(sections.enumerated()), id: \.element) { index, section in
                 if EditorChromeLayout.toolBarHasHairline(before: index) {
@@ -1076,7 +1076,6 @@ struct EditorView: View {
         switch section {
         case .tools: toolsSection
         case .color: colorBar
-        case .grid: gridChip
         }
     }
 

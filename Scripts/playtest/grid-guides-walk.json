@@ -41,8 +41,8 @@
       "name": "1-toolbar"
     },
     {
-      "do": "press",
-      "control": "Adjust Grid"
+      "do": "action",
+      "action": "adjustGrid"
     },
     {
       "do": "wait",

@@ -8119,6 +8119,17 @@ private final class Run {
                 wrong.append(has ? "it carries a zoom control" : "it carries no zoom control")
             }
         }
+        // The bar holds tools (the placement contract): its tools and More,
+        // and the colour pair a painting tool uses. Any other group on it is
+        // a control in an area whose purpose it does not share.
+        if claim.onlyTools == true {
+            let probe = ToolBarLayoutProbe.shared
+            let others = probe.order.filter { probe.groups[$0] != nil && !["Tools", "Color"].contains($0) }
+            if !others.isEmpty || probe.zoomSlider != nil {
+                wrong.append("it carries more than tools: "
+                    + (others + (probe.zoomSlider != nil ? ["a zoom slider"] : [])).joined(separator: ", "))
+            }
+        }
         guard wrong.isEmpty else { throw Failure(description: "the tool bar: " + wrong.joined(separator: "; ")) }
     }
 

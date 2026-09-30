@@ -4725,11 +4725,14 @@ public enum PlaytestStep: Sendable, Equatable {
             let height = try f.optionalNumber("height").map { CGFloat($0) }
             let zoomSlider = try f.optionalNumber("zoomSlider").map { CGFloat($0) }
             let zoom = try f.optionalFlag("zoom")
+            let onlyTools = try f.optionalFlag("onlyTools")
             let claim = slots == nil && more == nil && lit == nil && choose == nil && capsules == nil
                 && toolGap == nil && hairline == nil && height == nil && zoomSlider == nil && zoom == nil
+                && onlyTools == nil
                 ? nil : PlaytestToolBarClaim(slots: slots, more: more, lit: lit, choose: choose,
                                              capsules: capsules, toolGap: toolGap, hairline: hairline,
-                                             height: height, zoomSlider: zoomSlider, zoom: zoom)
+                                             height: height, zoomSlider: zoomSlider, zoom: zoom,
+                                             onlyTools: onlyTools)
             self = .toolBar(stage: try f.string("stage"),
                             clearOfPicture: try f.optionalFlag("clearOfPicture"), claim: claim)
         case "panelEdge":
@@ -5040,11 +5043,16 @@ public struct PlaytestToolBarClaim: Hashable, Sendable {
     /// Whether the bar carries any zoom control, slider or percentage. The
     /// tool bar holds tools, so Next's claims false.
     public var zoom: Bool?
+    /// Whether the bar carries nothing but its tools (and More) and the colour
+    /// pair: no zoom, no grid, no readout. The placement contract at the top
+    /// of UX-PATTERNS.md, checked on the running app.
+    public var onlyTools: Bool?
 
     public init(slots: [String]? = nil, more: [String]? = nil, lit: String? = nil,
                 choose: String? = nil, capsules: Int? = nil,
                 toolGap: CGFloat? = nil, hairline: CGFloat? = nil,
-                height: CGFloat? = nil, zoomSlider: CGFloat? = nil, zoom: Bool? = nil) {
+                height: CGFloat? = nil, zoomSlider: CGFloat? = nil, zoom: Bool? = nil,
+                onlyTools: Bool? = nil) {
         self.slots = slots
         self.more = more
         self.lit = lit
@@ -5055,5 +5063,6 @@ public struct PlaytestToolBarClaim: Hashable, Sendable {
         self.height = height
         self.zoomSlider = zoomSlider
         self.zoom = zoom
+        self.onlyTools = onlyTools
     }
 }

@@ -18,7 +18,7 @@
     { "do": "describe", "stage": "1-before", "note": "grid on, starting at the corner of the picture as it always has: expect gridStart 0, 0 and no guides" },
     { "do": "snapshot", "name": "1-grid-before" },
 
-    { "do": "press", "control": "Adjust Grid" },
+    { "do": "action", "action": "adjustGrid" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "2-mode", "note": "the tool bar has been replaced by the grid bar: the cell button, Clear Guides, Cancel and Done" },
     { "do": "snapshot", "name": "2-mode-entered" },
@@ -78,7 +78,7 @@
     { "do": "describe", "stage": "11-kept", "note": "back to the tools, and the grid keeps its new zero point and its one guide: expect gridStart 622, 431 and y288" },
     { "do": "snapshot", "name": "11-kept" },
 
-    { "do": "press", "control": "Adjust Grid" },
+    { "do": "action", "action": "adjustGrid" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "drag", "from": [622, 200], "to": [100, 120], "steps": 12 },
     { "do": "wait", "seconds": 0.4 },

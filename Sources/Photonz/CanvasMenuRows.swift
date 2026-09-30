@@ -39,8 +39,13 @@ extension EditorState {
     }
 
     /// The picture as a whole: what you can put on it, what you can pick on it,
-    /// and how you are looking at it. Same names and same shortcuts as the menu
-    /// bar rows these come from, so learning one teaches the other.
+    /// and its size. Same names and same shortcuts as the menu bar rows these
+    /// come from, so learning one teaches the other.
+    ///
+    /// No zoom rows. How you look at the picture is the View menu's, the keys'
+    /// and the pinch's (the placement contract at the top of UX-PATTERNS.md),
+    /// and a right click holds the verbs for the thing under the pointer. The
+    /// Actual Size row also printed Cmd 1, which on a video is View.
     private var bareCanvasMenuRows: [MenuRow] {
         var rows: [MenuRow] = []
         if clipboardHasALayer {
@@ -54,9 +59,6 @@ extension EditorState {
         if selection != nil {
             rows.append(.command("Deselect", .command("d")) { self.deselect() })
         }
-        rows.append(.separator)
-        rows.append(.command("Zoom to Fit", .command("0")) { self.zoomToFit() })
-        rows.append(.command("Actual Size", .command("1")) { self.zoomToActualSize() })
         rows.append(.separator)
         rows.append(.command("Canvas Size…") { self.isCanvasSizeDialogPresented = true })
         return rows

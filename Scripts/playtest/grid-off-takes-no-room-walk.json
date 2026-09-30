@@ -1,6 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/grid-off-takes-no-room",
   "setup": {
+    "flags": { "next-one-glass-tool-bar": false },
     "forget": [
       "grid",
       "tools",

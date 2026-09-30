@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/grid-settings-narrow",
   "seed": "The grid's settings have somewhere to open at every width. On a canvas too narrow for the grid's chip the View menu's Grid Settings row used to raise a flag no surface was reading: nothing opened, and the flag stayed up, so widening the window later could present the settings unbidden. Here the settings open off the tool bar instead, carry the same controls, close on escape, and widening afterwards leaves the canvas alone.",
-  "setup": { "forget": ["grid", "tools", "panel"] },
+  "setup": { "forget": ["grid", "tools", "panel"], "flags": { "next-one-glass-tool-bar": false } },
   "steps": [
     { "do": "appearance", "value": "dark" },
     { "do": "blank", "canvasWidth": 400, "canvasHeight": 400, "width": 860, "height": 760 },

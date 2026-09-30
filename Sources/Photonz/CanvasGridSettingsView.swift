@@ -14,8 +14,11 @@ import SwiftUI
 /// reachable three ways, and they are the SAME controls each time rather than
 /// three arrangements that drift apart:
 ///
-/// - **From the grid itself.** The grid's icon in the floating tool bar opens
-///   these and nothing else. It is a door, not a switch: the switch that draws
+/// - **From the grid itself** (the separate capsules only). The one glass bar
+///   carries no grid, since the grid is a way of looking and so the View
+///   menu's (the placement contract), and in there the cell is a row of these
+///   controls instead. On the capsules, the grid's icon opens these and
+///   nothing else. It is a door, not a switch: the switch that draws
 ///   the grid is the first row in here, which is why that icon is all the grid
 ///   takes of the bar while it is off. With the grid on, the cell it works to
 ///   and the gear that takes the canvas over join the icon out there.
@@ -106,6 +109,13 @@ struct CanvasGridControls: View {
                 numberRow(CanvasGridCopy.majorEvery, caption: CanvasGridCopy.majorEveryCaption,
                           suffix: "lines", value: Double(grid.majorEvery),
                           set: { editorState.setCanvasGridMajorEvery(Int($0.rounded())) })
+                // The one glass bar carries no grid (the grid is a way of
+                // looking, so the View menu's, per the placement contract), so
+                // the cell the grid works to is a row in here instead of a
+                // button on the bar. Where it starts is View > Adjust Grid.
+                if Experiments.shared.oneGlassToolBarEnabled {
+                    cellRow
+                }
                 // Two rows are deliberately NOT here any more. The cell the
                 // grid works to is a button on the tool bar with the sizes
                 // behind it, where you can watch the lines change as you pick
@@ -119,6 +129,29 @@ struct CanvasGridControls: View {
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
             }
+        }
+    }
+
+    /// The cell the grid works to, as a menu of the sizes UI is built in:
+    /// the same stops as the size slider, automatic first.
+    private var cellRow: some View {
+        let stops = CanvasGridCellStops.all
+        let selected = CanvasGridCellStops.index(of: grid.minimumCell)
+        return row(CanvasGridCopy.cell, caption: CanvasGridCopy.cellHelp) {
+            Picker(CanvasGridCopy.cell, selection: Binding(
+                get: { selected },
+                set: { editorState.setGridMinimumCell(stops[$0]) })) {
+                ForEach(stops.indices, id: \.self) { index in
+                    Text(index == 0 ? CanvasGridCopy.automaticCell
+                                    : DocumentUnit.text(digits: CanvasGridNumber.text(stops[index])))
+                        .tag(index)
+                }
+            }
+            .labelsHidden()
+            .pickerStyle(.menu)
+            .controlSize(.small)
+            .fixedSize()
+            .playtestControl(CanvasGridCopy.cell, detail: "Grid settings, \(grid.cellButtonText)")
         }
     }
 

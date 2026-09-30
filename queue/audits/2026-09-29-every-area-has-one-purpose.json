@@ -1,0 +1,49 @@
+{
+  "feature": "One information architecture: every area has one purpose",
+  "epic": "design-system",
+  "summary": "The design rules now open with one table saying what each area of the window is for, modelled on Photoshop, Final Cut, Keynote and Pixelmator Pro. The tool bar holds only tools and the colour pair: the grid left it for the View menu, and the canvas right-click lost its zoom rows.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a recording. It opens in View: title bar, picture, transport, nothing else.",
+      "shot": "2026-09-29-every-area-has-one-purpose-1.png"
+    },
+    {
+      "do": "Press Cmd 2. Check each area against the table: tool bar tools only, panel values, transport playback, timeline time and tracks.",
+      "shot": "2026-09-29-every-area-has-one-purpose-2.png"
+    },
+    {
+      "do": "Open a screenshot and press G. The colour pair is the one thing on the bar that is not itself a tool.",
+      "shot": "2026-09-29-every-area-has-one-purpose-4.png"
+    },
+    {
+      "do": "Press Cmd ' to draw the grid. The tool bar does not change.",
+      "shot": "2026-09-29-every-area-has-one-purpose-5.png"
+    },
+    {
+      "do": "Choose View, Grid Settings. The cell size is now a Cell row in here.",
+      "shot": "2026-09-29-every-area-has-one-purpose-6.png"
+    },
+    {
+      "do": "Right-click an empty part of the picture. New Layer, Select All, Canvas Size, and no zoom rows.",
+      "shot": "2026-09-29-every-area-has-one-purpose-8.png"
+    },
+    {
+      "do": "Read the table at the top of docs/design/mocks/shared/UX-PATTERNS.md, and the full audit in docs/design/ia-audit-2026-09-29.md."
+    }
+  ],
+  "evaluate": [
+    "Does each row of the table name the purpose you would give that area yourself?",
+    "Is picking a cell size from View, Grid Settings acceptable, or do you want the grid back on the tool bar (the card asks)?",
+    "Should Resize Image stay at the foot of the Crop tool's list, or live only in the Image menu?",
+    "Should a picture's title bar show its name and saved state the way a recording's does?",
+    "Should the held-frame badge and the caption AUTO badge stay on the canvas, or become panel rows?"
+  ],
+  "rough": [
+    "The grid's move reverses the 2026-09-06 ask to work the grid from the tool bar; it follows the newer rule that view options are never a control in a bar, and a card lets you put it back in one answer.",
+    "Four grid walks now turn the one glass bar off to reach the grid's old capsule, which Next still draws with that switch off.",
+    "The bigger moves are filed, not done: the menu bar's organisation, a menu row for every command, instruction pills and toasts, and the panel's one-shot buttons (the last behind a card).",
+    "In dark appearance over a white picture the Grid Settings popover washes out in a walk's capture (walk windows are never active); filed as something to look into."
+  ]
+}

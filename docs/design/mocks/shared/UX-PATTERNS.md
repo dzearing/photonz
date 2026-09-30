@@ -1,5 +1,55 @@
 # Photonz — UX patterns & interaction model (the app's spine)
 
+## The placement contract: every area has one purpose (read this first)
+
+**Why.** The user, 2026-09-29: the app should be *elegant, easy to understand,
+and make sense for end users*, and *when purpose or intent is mismatched between
+areas, it confuses the user*. Controls had landed wherever the task that added
+them happened to put them: a zoom slider in the tool bar, a meter in the
+timeline's bar, verbs as buttons in the panel, sentences in the chrome. A
+professional Mac editor (Photoshop, Final Cut Pro, Keynote, Pixelmator Pro) is
+easy because each area does ONE kind of job, so a person who knows one knows
+where to look for everything.
+
+**How to use it.** Before you add or move a control, ask *which purpose does it
+serve?* and put it in the row that owns that purpose. Useful is not a reason to
+put it anywhere else. A control that fits no row, or seems to fit two, is a
+decision card for the user, never a guess. Where older text further down this
+document disagrees with this table, the table wins.
+
+| Area | Its one purpose | What goes there | What never does |
+| --- | --- | --- | --- |
+| **Title bar** | Which document, and how you are looking at the window | Document name and state (edited, recording), the window's mode (View / Edit), the panel toggles | Document actions, tools, readouts, settings |
+| **Tool bar** (floating, bottom of the canvas) | Pick the thing you will use on the canvas | Tools only (something you pick, then use on the canvas), plus the colour pair a painting tool uses, plus More for the tools that do not fit | Zoom, view options (grid, rulers), readouts, settings, one-shot commands |
+| **Tool options** (the capsule over the tool bar) | Tune the tool in your hand | The settings of the tool in hand, only while it is in hand, and its commit / cancel while a tool is mid-edit (Crop's tick and cross) | Anything about the selection or the document |
+| **Canvas** | The work, handled directly | The document, handles, guides, measurements drawn on the work, a readout only while a drag is live | Persistent panels, buttons, status pills |
+| **Inspector** (right panel) | What the selection IS | Properties of the selection as label / value rows; the dock's other groups list the document's parts (Layers) and what you can add (Library), and a list may carry its own + | One-shot verbs as buttons (Flatten, Clear, Copy Measurement), explanations, document commands. Whether a section keeps its one main action (Add Captions, Normalize) is the open card "How many buttons may the right hand panel keep?" |
+| **Transport** (video) | Play the time | Play / pause, step, scrubber, time, volume, full screen, the timeline toggle | Edit actions, meters, export, anything that is not playback |
+| **Timeline** (video) | Time and tracks | Tracks, clips, cuts, keys, the ruler, and its own bar as `video.html` draws it: the timeline's tools (Select, Track Select, Range, Blade), snapping, Easing while keys are picked, what letting go of a drag will do; add track | Readouts that are not time, meters, a close button (the transport's toggle opens and closes it), zoom sliders |
+| **Menu bar** | Every command, findable, with its shortcut | Every command the app has, organised as a pro Mac editor: Photonz, File, Edit, Image / Layer, Clip / Sequence (with time), Select, View, Window, Help | Nothing missing: a command reachable only from a bar or a right-click is a bug |
+| **Right-click** | The verbs for the thing under the pointer | The actions for that clip, cut, track, layer, scrub bar or canvas spot | Settings, commands about something else |
+| **View menu, keys and pinch** | How you look at the document | Zoom (pinch, Cmd +, Cmd -, Cmd 0, Cmd 1), grid, rulers, guides, snapping to the view | A control for any of these in a bar |
+| **Sheets and popovers** | A command that needs answers before it runs | Export, Resize, a transition's picker, the grid's settings | Anything you would tune while watching the canvas |
+| **Toasts** | What just happened | Results (Saved, Copied, 3 layers separated), with Undo when it applies | Instructions ("Drag to...", "Press X to..."), errors that need a choice (those are alerts) |
+
+**Nothing appears in two places unless this table says so.** The menu bar is
+the one area that holds everything, so a tool, a right-click verb or a panel
+toggle is ALSO a menu item with its shortcut; beyond that, a control lives in
+one area. The named exceptions: on a video, Select and Blade are on the tool bar
+AND the timeline's bar, because the video mock draws them in both (they act on
+the canvas and on the tracks); the settings of the tool in hand show in the
+tool options capsule AND, with the panel open, in the panel's section for that
+tool (the user chose "Leave it in both places", 2026-09); two doors to one
+setting are allowed otherwise only where §3 "One setting, two doors" says so.
+
+**The first audit against it** (2026-09-29, every surface of the Next editor,
+picture and video, View and Edit, with photographs) is
+`docs/design/ia-audit-2026-09-29.md`: each control, where it is, where this
+table puts it, and what was moved or filed.
+
+**Held by tests.** `ToolBarPurposeTests` lists everything the tool bar can carry
+and fails if any of it is not a tool, the colour pair or More.
+
 **Status: v2.4. D10 is rewritten to say what the user's video mock says (2026-09-27):
 a clip's Animating list shows only what the clip is animating, with an Animate a
 property picker under it for everything else; the old "print the whole

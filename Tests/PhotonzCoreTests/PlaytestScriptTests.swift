@@ -108,6 +108,20 @@ struct PlaytestScriptTests {
         #expect(other.zoom == nil)
     }
 
+    @Test("A toolBar step can claim the bar holds only tools and the colour pair")
+    func toolBarCanClaimOnlyTools() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "toolBar", "stage": "a", "onlyTools": true },
+                     { "do": "toolBar", "stage": "b", "capsules": 1 } ] }
+        """)
+        guard case .toolBar(_, _, let claim?) = script.steps[0],
+              case .toolBar(_, _, let other?) = script.steps[1] else {
+            Issue.record("toolBar"); return
+        }
+        #expect(claim.onlyTools == true)
+        #expect(other.onlyTools == nil)
+    }
+
     @Test("A writePicture step leaves the canvas out unless the walk asks for it")
     func writePictureLeavesTheCanvasOutByDefault() throws {
         let script = try decode("""
