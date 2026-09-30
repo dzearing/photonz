@@ -3013,8 +3013,9 @@ One deliberate difference: the kit's accent is the app's system accent, not
 `SegmentedControl` (`Sources/Photonz/DesignSystem/SegmentedControl.swift`) is
 the ONLY segmented control in the app: panel rows, popovers, dialogs, the
 history bar and the title bar's View | Edit all use it. It is
-`comp-segmented.html` built once: a capsule track, one raised plate that moves
-on the mock's spring rather than fading, 24 / 28 / 32 heights (28 is the
+`comp-segmented.html` built once: a recessed capsule rail, one thumb that is a
+pane of the system's own Liquid Glass, slid by the system's animation rather
+than fading, 24 / 28 / 32 heights (28 is the
 panel's), `.fill` equal columns in a panel or popover and `.natural` widths in a
 row of other controls, picture segments that are square and named by their
 tooltips, and a dropdown in its place when the words would be cut short. Never
@@ -3024,6 +3025,13 @@ tooltips, and a dropdown in its place when the words would be cut short. Never
 Current keeps its look. Each segment is pressed by a walk by its word (a picture
 segment by its tooltip word) and reads `already on …, tooltip …` like the
 system control did.
+
+**One style.** There is no variant: no accent plate, no drawn thumb, no second
+motion. The user, 2026-09-29, of the history bar's solid blue filter beside the
+glass everywhere else: "I'm seeing inconsistent segmented controls. What I'd
+like to see is the system glass morph consistently." Only the size differs from
+place to place. `SegmentedControlUsageTests` fails the build on a style
+parameter or a drawn thumb coming back.
 
 **What was withdrawn with the old D18**: numbered rows being "wrong", a row per
 layer, a row named after its layer, a 92px lowercase label column, a clip's

@@ -74,4 +74,47 @@ struct SegmentedControlUsageTests {
             \(offences.joined(separator: "\n"))
             """)
     }
+    /// Words that mean a second look or a second motion for the thumb. The
+    /// user, 2026-09-29, of the history bar's solid blue filter beside the
+    /// glass everywhere else: "I'm seeing inconsistent segmented controls.
+    /// What I'd like to see is the system glass morph consistently." So there
+    /// is no style to pick (the blue `.accent` plate and the `.raised` one are
+    /// gone) and no drawn motion (the frame-by-frame glide and its morph):
+    /// one pane of the system's Liquid Glass, slid by the system.
+    static let secondStyleWords = ["plateStyle", "PlateStyle", "SegmentThumbMorph", "TimelineView",
+                                   "systemGlassThumbEnabled", "Palette.accent)"]
+
+    @Test("The shared control has one look and one motion: the system's glass")
+    func oneStyleOneMotion() throws {
+        let root = Self.appSources
+        let control = try String(contentsOf: root.appendingPathComponent("DesignSystem/SegmentedControl.swift"),
+                                 encoding: .utf8)
+        let code = control.split(separator: "\n").filter {
+            !$0.drop { $0 == " " }.hasPrefix("//")
+        }.joined(separator: "\n")
+        for word in Self.secondStyleWords {
+            #expect(!code.contains(word), "SegmentedControl.swift has \(word) again: one style, the system glass")
+        }
+        #expect(code.contains(".glassEffect("), "the thumb is a pane of the system's Liquid Glass")
+        #expect(code.contains("GlassEffectContainer"), "the glass pane sits in the system's container")
+
+        guard let walk = FileManager.default.enumerator(at: root, includingPropertiesForKeys: nil) else {
+            Issue.record("could not read \(root.path)")
+            return
+        }
+        var offences: [String] = []
+        for case let file as URL in walk where file.pathExtension == "swift" {
+            let relative = file.path.replacingOccurrences(of: root.path + "/", with: "")
+            let text = try String(contentsOf: file, encoding: .utf8)
+            for (index, line) in text.split(separator: "\n", omittingEmptySubsequences: false).enumerated()
+            where !line.drop(while: { $0 == " " }).hasPrefix("//")
+                && (line.contains("plateStyle:") || line.contains("SegmentThumbMorph")) {
+                offences.append("\(relative):\(index + 1): \(line.trimmingCharacters(in: .whitespaces))")
+            }
+        }
+        #expect(offences.isEmpty, """
+            A segmented control asks for a look of its own. There is one: the system glass.
+            \(offences.joined(separator: "\n"))
+            """)
+    }
 }

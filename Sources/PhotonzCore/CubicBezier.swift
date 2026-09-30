@@ -1,9 +1,7 @@
 import Foundation
 
-/// A CSS timing curve, on its own so a small piece of motion (the segmented
-/// thumb's morph, `SegmentThumbMorph`) can be compiled without the whole of
-/// `LayerMotion`: `Scripts/segmented-gallery.swift` builds the control from
-/// its own files.
+/// A CSS timing curve (`LayerMotion`'s easing), evaluated the way a browser
+/// does it.
 enum CubicBezier {
     /// `cubic-bezier(x1,y1,x2,y2)` evaluated the way a browser does it: find
     /// the parameter whose x is the time you asked for, then read its y.

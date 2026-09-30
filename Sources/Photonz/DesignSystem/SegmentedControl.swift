@@ -1,6 +1,6 @@
 import AppKit
 // The gallery script (`Scripts/segmented-gallery.swift`) compiles this file
-// with the morph's own source beside it rather than as a module.
+// with the drag's own source beside it rather than as a module.
 #if canImport(PhotonzCore)
 import PhotonzCore
 #endif
@@ -20,12 +20,15 @@ import SwiftUI
 ///
 /// What the component page asks for, and where it is done here:
 ///
-/// * **Anatomy.** A recessed capsule rail, darker than what it sits on, with a
-///   hairline and a soft inner shadow, 2pt of padding, 2pt between segments;
-///   capsule segments; ONE thumb under the picked segment, a lighter pane of
-///   Liquid Glass carrying fill, hairline, a lit top line and lift together.
-///   The user, 2026-09-29: "the thumb should be lighter than the rail", of the
-///   old plate that matched its track, "I can barely see the thumb".
+/// * **One look, everywhere.** A recessed capsule rail, darker than what it
+///   sits on, with a hairline and a soft inner shadow, 2pt of padding, 2pt
+///   between segments; capsule segments; ONE thumb under the picked segment,
+///   a pane of the system's own Liquid Glass with nothing painted over it,
+///   lighter than the rail. There is no style to pick: the history bar's
+///   filter once lit its plate a solid blue, and the user, 2026-09-29: "I'm
+///   seeing inconsistent segmented controls. What I'd like to see is the
+///   system glass morph consistently." Only the size differs from place to
+///   place.
 /// * **Sizes.** 24, 28 (the default, and the only size the mocks' panels use)
 ///   and 32. The size sets the height and the type; the width always comes from
 ///   the words.
@@ -39,19 +42,17 @@ import SwiftUI
 ///   picked keeps its place, dimmed, and says why in its tooltip; the whole
 ///   control dims under `.disabled`. One tab stop, arrows move the pick and
 ///   stop at the ends, and the focus ring sits round the plate.
-/// * **Changing the value.** The thumb glides to the new segment and stops,
-///   the way a Mac segmented control does: its leading edge reaches the new
-///   slot first, spanning both a little squashed, and the trailing edge
-///   follows it in (`SegmentThumbMorph`, the page's 300ms). No overshoot, no
-///   bounce, never out of the rail, and a second choice mid-flight carries on
-///   from where it is. That move is the thumb's ONLY animator: a pick made
-///   inside an animation (View | Edit changes under `.viewEditMode`) once had
-///   SwiftUI animate the thumb's placement too, on top of the morph, and flung
-///   it a whole segment out of the rail (2026-09-29, filmed by
-///   `segmented-thumb-film-walk`). Grab the thumb and drag it and it
-///   follows the pointer, landing on the nearest segment when let go. Under
-///   Reduce Motion it cross-fades instead; under Increase Contrast or Reduce
-///   Transparency it is an opaque lighter plate with a firmer edge.
+/// * **Changing the value.** The glass slides to the new segment and stops,
+///   moved by SwiftUI's own animation of its frame on the system's smooth
+///   curve (the page's 300ms), so the system reshapes the glass as it goes.
+///   No overshoot, no bounce, never out of the rail (filmed by
+///   `segmented-thumb-film-walk`). That curve is the thumb's ONLY animator: a
+///   pick made inside another animation (View | Edit changes under
+///   `.viewEditMode`) once flung a drawn thumb a whole segment out of its rail.
+///   Grab the thumb and drag it and it follows the pointer, landing on the
+///   nearest segment when let go. Under Reduce Motion it cross-fades instead;
+///   under Increase Contrast or Reduce Transparency the system's glass turns
+///   firmer by itself.
 ///
 /// With the Next release's `next-designed-segmented` switch off, which is
 /// always the case in Current, this is the system's segmented picker exactly as
@@ -122,12 +123,6 @@ struct SegmentedControl<Value: Hashable>: View {
         case natural
     }
 
-    /// What the picked segment wears. `.accent` is the history bar's filter
-    /// (`history.css`), the one place the mocks light the plate in the accent.
-    enum PlateStyle {
-        case raised, accent
-    }
-
     let label: String
     let options: [Option]
     /// Nil lights nothing: the picked things disagree, or nothing is picked.
@@ -135,7 +130,6 @@ struct SegmentedControl<Value: Hashable>: View {
     var size: Size = .regular
     var form: Form = .fill
     var showsTitles = true
-    var plateStyle: PlateStyle = .raised
     /// What the whole control's system help tag says with the designed control
     /// off, for a caller that had one (`segmentToolTips`' fallback).
     var systemHelp: String?
@@ -149,7 +143,7 @@ struct SegmentedControl<Value: Hashable>: View {
     let pick: (Value) -> Void
 
     init(_ label: String, selection: Value?, options: [Option], size: Size = .regular,
-         form: Form = .fill, showsTitles: Bool = true, plateStyle: PlateStyle = .raised,
+         form: Form = .fill, showsTitles: Bool = true,
          systemHelp: String? = nil, tipsBelow: Bool = false, fallsBackToSystem: Bool = true,
          pick: @escaping (Value) -> Void) {
         self.label = label
@@ -158,7 +152,6 @@ struct SegmentedControl<Value: Hashable>: View {
         self.size = size
         self.form = form
         self.showsTitles = showsTitles
-        self.plateStyle = plateStyle
         self.systemHelp = systemHelp
         self.tipsBelow = tipsBelow
         self.fallsBackToSystem = fallsBackToSystem
@@ -166,17 +159,17 @@ struct SegmentedControl<Value: Hashable>: View {
     }
 
     init(_ label: String, selection: Binding<Value>, options: [Option], size: Size = .regular,
-         form: Form = .fill, showsTitles: Bool = true, plateStyle: PlateStyle = .raised,
+         form: Form = .fill, showsTitles: Bool = true,
          systemHelp: String? = nil, tipsBelow: Bool = false) {
         self.init(label, selection: selection.wrappedValue, options: options, size: size,
-                  form: form, showsTitles: showsTitles, plateStyle: plateStyle,
+                  form: form, showsTitles: showsTitles,
                   systemHelp: systemHelp, tipsBelow: tipsBelow) { selection.wrappedValue = $0 }
     }
 
     var body: some View {
         if Experiments.shared.designedSegmentedEnabled || !fallsBackToSystem {
             DesignedSegments(label: label, options: options, selection: selection, size: size,
-                             form: form, showsTitles: showsTitles, plateStyle: plateStyle,
+                             form: form, showsTitles: showsTitles,
                              tipsBelow: tipsBelow, pick: pick)
         } else {
             systemPicker
@@ -216,15 +209,6 @@ struct SegmentedControl<Value: Hashable>: View {
 /// The row of segments, the space a thumb, a slot and a drag are measured in.
 private let segmentedRowSpace = "segmented-row"
 
-/// Where every segment is, handed up to the one thumb that draws the picked
-/// one (and, in the gallery, a morph from another).
-private struct SegmentBoxesKey: PreferenceKey {
-    static let defaultValue: [Int: Anchor<CGRect>] = [:]
-    static func reduce(value: inout [Int: Anchor<CGRect>], nextValue: () -> [Int: Anchor<CGRect>]) {
-        value.merge(nextValue()) { first, _ in first }
-    }
-}
-
 /// The drawn control. Internal rather than private so
 /// `Scripts/segmented-gallery.swift` can draw each state beside the mock.
 struct DesignedSegments<Value: Hashable>: View {
@@ -236,33 +220,25 @@ struct DesignedSegments<Value: Hashable>: View {
     let size: SegmentedControl<Value>.Size
     let form: SegmentedControl<Value>.Form
     let showsTitles: Bool
-    let plateStyle: SegmentedControl<Value>.PlateStyle
     let tipsBelow: Bool
     let pick: (Value) -> Void
     /// For the gallery only: draw this segment hovered, and the focus ring
     /// on, without a pointer or a keyboard.
     var shownHovered: Int?
     var shownFocused = false
-    /// For the gallery only: draw the thumb this far into a morph from this
-    /// segment to the picked one, so a filmstrip of the move can be drawn.
-    var shownMorph: (from: Int, at: TimeInterval)?
 
     init(label: String, options: [Option], selection: Value?, size: SegmentedControl<Value>.Size,
-         form: SegmentedControl<Value>.Form, showsTitles: Bool,
-         plateStyle: SegmentedControl<Value>.PlateStyle, tipsBelow: Bool,
-         shownHovered: Int? = nil, shownFocused: Bool = false,
-         shownMorph: (from: Int, at: TimeInterval)? = nil, pick: @escaping (Value) -> Void) {
+         form: SegmentedControl<Value>.Form, showsTitles: Bool, tipsBelow: Bool,
+         shownHovered: Int? = nil, shownFocused: Bool = false, pick: @escaping (Value) -> Void) {
         self.label = label
         self.options = options
         self.selection = selection
         self.size = size
         self.form = form
         self.showsTitles = showsTitles
-        self.plateStyle = plateStyle
         self.tipsBelow = tipsBelow
         self.shownHovered = shownHovered
         self.shownFocused = shownFocused
-        self.shownMorph = shownMorph
         self.pick = pick
     }
 
@@ -271,19 +247,11 @@ struct DesignedSegments<Value: Hashable>: View {
     @FocusState private var isFocused: Bool
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
-    @Environment(\.colorSchemeContrast) private var contrast
     @Environment(\.colorScheme) private var scheme
 
-    /// Every segment's box in the row, for a morph's start and a drag.
+    /// Every segment's box in the row, where the glass is placed and what a
+    /// drag is measured against.
     @State private var slots: [Int: CGRect] = [:]
-    /// A morph under way: where the thumb was when it began, and when.
-    @State private var morphFrom: CGRect?
-    @State private var morphStart: Date?
-    /// The segment the thumb last set off for. For the one pass between a
-    /// new pick and `onChange` starting its morph, the thumb stays here
-    /// rather than flashing on the new segment for a frame.
-    @State private var restingOn: Int?
     /// A drag of the thumb under way: where its middle is, and how far from
     /// its middle the hand took hold.
     @State private var dragCenter: CGFloat?
@@ -332,36 +300,8 @@ struct DesignedSegments<Value: Hashable>: View {
         }
         .coordinateSpace(.named(segmentedRowSpace))
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { rowWidth = $0 }
-        .background(alignment: .topLeading) {
-            if systemGlass, shownMorph == nil { systemGlassThumb }
-        }
-        .backgroundPreferenceValue(SegmentBoxesKey.self) { anchors in
-            GeometryReader { proxy in
-                if let pickedIndex, let anchor = anchors[pickedIndex] {
-                    let row = 0...proxy.size.width
-                    if let shownMorph, let from = anchors[shownMorph.from] {
-                        placed(thumb, in: SegmentThumbMorph(from: proxy[from], to: proxy[anchor], row: row)
-                            .frame(at: shownMorph.at))
-                    } else if !systemGlass {
-                        thumbLayer(target: proxy[anchor], row: row)
-                    }
-                }
-            }
-        }
+        .background(alignment: .topLeading) { thumb }
         .simultaneousGesture(thumbDrag)
-        .onChange(of: pickedIndex) { old, new in
-            startMorph(leaving: old)
-            restingOn = new
-        }
-        .task(id: morphStart) {
-            // The morph's clock stops once it has landed, so a resting
-            // control asks for no frames at all.
-            guard morphStart != nil else { return }
-            try? await Task.sleep(for: .seconds(SegmentThumbMorph.duration + 0.02))
-            guard !Task.isCancelled else { return }
-            morphStart = nil
-            morphFrom = nil
-        }
         .padding(2)
         .frame(height: size.height)
         .frame(minWidth: 0, maxWidth: form == .fill ? .infinity : nil)
@@ -378,47 +318,48 @@ struct DesignedSegments<Value: Hashable>: View {
         .accessibilityLabel(label)
     }
 
-    /// The system's version (`next-system-glass-thumb`, on while the user
-    /// compares the two): ONE pane of the system's Liquid Glass that stays
-    /// put as a view and is moved by SwiftUI's own animation of its frame on
-    /// the system's smooth curve, so the glass reshapes itself as it goes.
-    /// Nothing here places it frame by frame.
-    ///
-    /// The glass's other morph, removing the pane from one segment and
-    /// putting one on the next under a shared `glassEffectID`, was filmed at
-    /// 120 fps four ways on 2026-09-29 (in the anchors' pass, in a plain
-    /// background, in a row layout, with `.matchedGeometry` and a wide
-    /// container) and every time it jumped: glass on View one frame, on Edit
-    /// the next, nothing between.
-    ///
-    /// Only the raised glass thumb moves this way: the accent plate, and the
-    /// opaque plate under Increase Contrast or Reduce Transparency, are not
-    /// glass, and Reduce Motion cross-fades, so those keep the drawn glide.
-    private var systemGlass: Bool {
-        Experiments.shared.systemGlassThumbEnabled && plateStyle == .raised && !solidThumb && !reduceMotion
-    }
-
     /// The system glass's one curve: the component page's 300ms, with no
     /// bounce, so the glass stops where it lands.
     private static var glassCurve: Animation { .smooth(duration: 0.3) }
 
-    /// Placed from the segments' measured boxes in a plain background.
-    @ViewBuilder private var systemGlassThumb: some View {
-        let rect: CGRect? = if let dragCenter, let ordered = orderedSlots {
-            // Under the hand it follows the pointer; let go and the same pane
-            // slides onto its segment.
-            SegmentThumbDrag.frame(centerX: dragCenter, slots: ordered, row: 0...rowWidth)
-        } else {
-            pickedIndex.flatMap { slots[$0] }
+    /// Under Reduce Motion the glass does not travel: it fades out where it
+    /// was as it fades in on the new segment.
+    private static var fadeCurve: Animation { .easeInOut(duration: 0.14) }
+
+    /// Where the glass is: under the hand during a drag, else on the picked
+    /// segment. Nil draws no thumb (nothing picked, or not measured yet).
+    private var thumbRect: CGRect? {
+        if let dragCenter, let ordered = orderedSlots {
+            return SegmentThumbDrag.frame(centerX: dragCenter, slots: ordered, row: 0...rowWidth)
         }
-        if let rect {
+        return pickedIndex.flatMap { slots[$0] }
+    }
+
+    /// The thumb: ONE pane of the system's Liquid Glass that stays put as a
+    /// view and is moved by SwiftUI's own animation of its frame, so the
+    /// system reshapes the glass as it slides. Nothing here places it frame
+    /// by frame, and nothing is painted over it.
+    ///
+    /// The glass's other morph, removing the pane from one segment and
+    /// putting one on the next under a shared `glassEffectID`, was filmed at
+    /// 120 fps four ways on 2026-09-29 and every time it jumped: glass on View
+    /// one frame, on Edit the next, nothing between.
+    @ViewBuilder private var thumb: some View {
+        if let rect = thumbRect {
             GlassEffectContainer {
-                Color.clear
-                    .glassEffect(thumbGlass, in: .capsule)
-                    .overlay(focusRing)
-                    .frame(width: rect.width, height: rect.height)
-                    .position(x: rect.midX, y: rect.midY)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                ZStack(alignment: .topLeading) {
+                    Color.clear
+                        .glassEffect(thumbGlass, in: .capsule)
+                        .overlay(focusRing)
+                        .frame(width: rect.width, height: rect.height)
+                        .position(x: rect.midX, y: rect.midY)
+                        // Under Reduce Motion a new pick is a new pane, so the
+                        // old one fades as the new one appears; otherwise it is
+                        // the same pane, slid.
+                        .id(reduceMotion ? pickedIndex : nil)
+                        .transition(.opacity)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
             // A new pane for a new appearance: a pane changing the glass it
             // wears as the theme flipped once stayed dark on a light rail.
@@ -426,76 +367,19 @@ struct DesignedSegments<Value: Hashable>: View {
             // The one animator. A pick made inside someone else's animation
             // (View | Edit changes under `.viewEditMode`) moves the glass on
             // this curve and no other.
-            .transaction(value: pickedIndex) { $0.animation = Self.glassCurve }
+            .transaction(value: pickedIndex) {
+                $0.animation = reduceMotion ? Self.fadeCurve : Self.glassCurve
+            }
         }
     }
 
     /// Lighter than the rail by the glass alone, measured on real captures
-    /// (2026-09-29): in light the regular glass is the white pane (1.64:1 in
-    /// the panel, 1.45 to 1.66:1 in the title bar, where the rail over a white
-    /// bar leaves 1.6:1 at most); in dark the regular glass goes as dark as
-    /// the rail, and the clear glass under a white tint is what clears 1.5:1
-    /// (1.55 to 1.61:1). A white tint on light glass greys it (1.15:1), so
-    /// light wears none.
+    /// (2026-09-29): in light the regular glass is the white pane; in dark the
+    /// regular glass goes as dark as the rail, and the clear glass under a
+    /// white tint is what clears 1.5:1. A white tint on light glass greys it
+    /// (1.15:1), so light wears none. The numbers are on `segRail`.
     private var thumbGlass: Glass {
         scheme == .dark ? .clear.tint(Palette.segGlassTintDark) : .regular
-    }
-
-    /// The thumb, drawn where the picked segment is, or where a morph or a
-    /// drag has it right now.
-    @ViewBuilder private func thumbLayer(target: CGRect, row: ClosedRange<CGFloat>) -> some View {
-        if reduceMotion {
-            // No travel: the old thumb fades out as the new one fades in.
-            ZStack(alignment: .topLeading) {
-                placed(thumb, in: target)
-                    .id(pickedIndex)
-                    .transition(.opacity)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .animation(.easeInOut(duration: 0.14), value: pickedIndex)
-        } else {
-            TimelineView(.animation(paused: morphStart == nil && dragCenter == nil)) { context in
-                placed(thumb, in: thumbFrame(target: target, row: row, at: context.date))
-            }
-            // The morph and the drag are the only things that move the thumb.
-            // Without this, a pick made inside `withAnimation` animated the
-            // thumb's placement as well, and SwiftUI's animation of it added
-            // to the morph's own travel: the thumb went a whole segment the
-            // wrong way, out of the rail, before coming back.
-            .transaction { $0.disablesAnimations = true; $0.animation = nil }
-        }
-    }
-
-    private func placed(_ view: some View, in rect: CGRect) -> some View {
-        view
-            .frame(width: rect.width, height: rect.height)
-            .offset(x: rect.minX, y: rect.minY)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-    }
-
-    /// Where the thumb is at `date`: under the hand, part way through a
-    /// morph, or at rest on `target`.
-    private func thumbFrame(target: CGRect, row: ClosedRange<CGFloat>, at date: Date) -> CGRect {
-        if let dragCenter, let ordered = orderedSlots {
-            return SegmentThumbDrag.frame(centerX: dragCenter, slots: ordered, row: row)
-        }
-        if let morphFrom, let morphStart {
-            return SegmentThumbMorph(from: morphFrom, to: target, row: row)
-                .frame(at: date.timeIntervalSince(morphStart))
-        }
-        if let restingOn, restingOn != pickedIndex, let slot = slots[restingOn] {
-            return slot
-        }
-        return target
-    }
-
-    /// The pick changed, by a click, a key, a drag or the document: the thumb
-    /// sets off from wherever it is right now toward the new segment.
-    private func startMorph(leaving old: Int?) {
-        guard !reduceMotion, !systemGlass, dragCenter == nil, let old, let oldSlot = slots[old] else { return }
-        let now = Date()
-        morphFrom = thumbFrame(target: oldSlot, row: 0...max(rowWidth, oldSlot.maxX), at: now)
-        morphStart = now
     }
 
     private var orderedSlots: [CGRect]? {
@@ -504,8 +388,9 @@ struct DesignedSegments<Value: Hashable>: View {
     }
 
     /// Take hold of the thumb and slide it: it follows the pointer along the
-    /// rail, and on letting go lands on the segment under its middle. A drag
-    /// that starts anywhere else is left to the segment it started on.
+    /// rail, and on letting go the same pane slides onto the segment under its
+    /// middle. A drag that starts anywhere else is left to the segment it
+    /// started on.
     private var thumbDrag: some Gesture {
         DragGesture(minimumDistance: 3, coordinateSpace: .named(segmentedRowSpace))
             .onChanged { drag in
@@ -517,8 +402,6 @@ struct DesignedSegments<Value: Hashable>: View {
                         return
                     }
                     grabOffset = drag.startLocation.x - slot.midX
-                    morphStart = nil
-                    morphFrom = nil
                 }
                 let lowest = slots[0]?.midX ?? 0
                 let highest = slots[options.count - 1]?.midX ?? rowWidth
@@ -530,62 +413,14 @@ struct DesignedSegments<Value: Hashable>: View {
                     dragCenter = nil
                     return
                 }
-                let held = SegmentThumbDrag.frame(centerX: center, slots: ordered, row: 0...rowWidth)
                 let landing = SegmentThumbDrag.landing(
                     centerX: center, slots: ordered,
                     available: options.map { $0.disabledReason == nil })
-                if systemGlass {
-                    // Let go: the glass under the hand morphs onto its slot.
-                    withAnimation(Self.glassCurve) {
-                        dragCenter = nil
-                        if let landing, landing != pickedIndex { pick(options[landing].value) }
-                    }
-                    return
+                withAnimation(Self.glassCurve) {
+                    dragCenter = nil
+                    if let landing, landing != pickedIndex { pick(options[landing].value) }
                 }
-                morphFrom = held
-                morphStart = Date()
-                dragCenter = nil
-                if let landing, landing != pickedIndex { pick(options[landing].value) }
             }
-    }
-
-    /// Lighter glass or the accent, on the thumb.
-    private var solidThumb: Bool { reduceTransparency || contrast == .increased }
-
-    /// The one thumb. It is a single view placed from the picked segment's
-    /// box, so a change of value moves it rather than fading one out while
-    /// another fades in.
-    @ViewBuilder private var thumb: some View {
-        switch plateStyle {
-        case .raised where solidThumb:
-            Capsule()
-                .fill(Palette.segThumbSolid)
-                .overlay(Capsule().strokeBorder(Palette.segThumbEdgeStrong))
-                .background(ThumbLift())
-                .overlay(focusRing)
-        case .raised:
-            // A pane of Liquid Glass lighter than the rail: the system's
-            // glass under the mock's brighter fill, a hairline, and one lit
-            // line along its top. The fill is what reads as "lighter" (and
-            // what an offscreen render still shows); the glass is what makes
-            // it a pane rather than paint as it moves. No `glassEffectID`: that
-            // asks the system to morph the glass's shape with its own spring,
-            // a second animator on a view the morph is already moving.
-            Capsule()
-                .fill(LinearGradient(colors: [Palette.segThumbHi.color(scheme),
-                                              Palette.segThumb.color(scheme)],
-                                     startPoint: .top, endPoint: .bottom))
-                .overlay(Capsule().strokeBorder(Palette.segThumbEdge))
-                .overlay(TopLight(inset: 1, tone: Palette.segThumbSpec))
-                .glassEffect(.regular, in: .capsule)
-                .background(ThumbLift())
-            .overlay(focusRing)
-        case .accent:
-            Capsule()
-                .fill(Palette.accent)
-                .background(ThumbLift())
-                .overlay(focusRing)
-        }
     }
 
     @ViewBuilder private var focusRing: some View {
@@ -617,7 +452,7 @@ struct DesignedSegments<Value: Hashable>: View {
                         .truncationMode(.tail)
                 }
             }
-            .foregroundStyle(ink(isOn: isOn, lit: lit))
+            .foregroundStyle(lit ? AnyShapeStyle(Palette.ink) : AnyShapeStyle(Palette.dim))
             .padding(.horizontal, showsTitles || option.image == nil ? wordPadding : 0)
             .frame(minWidth: showsTitles ? 0 : size.height - 4, maxWidth: .infinity,
                    maxHeight: .infinity)
@@ -626,7 +461,6 @@ struct DesignedSegments<Value: Hashable>: View {
                     Capsule().fill(Palette.glassHover)
                 }
             }
-            .anchorPreference(key: SegmentBoxesKey.self, value: .bounds) { [index: $0] }
             .contentShape(Capsule())
         }
         .buttonStyle(SegmentPressStyle())
@@ -660,11 +494,6 @@ struct DesignedSegments<Value: Hashable>: View {
         (isOn ? "already on \(title), " : "") + "tooltip " + (tip.map { "\"\($0)\"" } ?? "none")
     }
 
-    private func ink(isOn: Bool, lit: Bool) -> AnyShapeStyle {
-        if isOn, plateStyle == .accent { return AnyShapeStyle(Color.white) }
-        return lit ? AnyShapeStyle(Palette.ink) : AnyShapeStyle(Palette.dim)
-    }
-
     /// An arrow moves the pick one segment, stepping over any that cannot be
     /// picked, and stops at the ends: both ends are in view, so they are real
     /// ends, and a plate jumping across the track reads as the value reset.
@@ -693,23 +522,6 @@ struct DesignedSegments<Value: Hashable>: View {
     }
 }
 
-/// A capsule's lit top edge: one bright line along the top, inside the
-/// hairline, fading out down the sides (`--ctl-gloss`, `--seg-thumb-spec`).
-private struct TopLight: View {
-    var inset: CGFloat
-    var tone = VideoKit.Palette.edgeHi
-    @Environment(\.colorScheme) private var scheme
-
-    var body: some View {
-        Capsule()
-            .inset(by: inset)
-            .strokeBorder(LinearGradient(stops: [.init(color: tone.color(scheme), location: 0),
-                                                 .init(color: .clear, location: 0.3)],
-                                         startPoint: .top, endPoint: .bottom),
-                          lineWidth: 1)
-    }
-}
-
 /// A pressed segment shrinks a little (`.seg>button:active`).
 private struct SegmentPressStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
@@ -734,61 +546,25 @@ private struct SegmentTip: ViewModifier {
     }
 }
 
-/// The thumb's lift (`--seg-thumb-lift`): a tight shadow and a soft one,
-/// drawn only OUTSIDE the thumb. A shadow under a see-through pane would show
-/// through it and darken the very thing that has to read lighter, which is
-/// what a CSS box-shadow never does either.
-private struct ThumbLift: View {
-    @Environment(\.colorScheme) private var scheme
-
-    var body: some View {
-        let dark = scheme == .dark
-        let ink = dark ? Color.black : VideoKit.rgb(0x121828)
-        ZStack {
-            Capsule().fill(ink.opacity(dark ? 0.30 : 0.10)).blur(radius: dark ? 5 : 4).offset(y: 3)
-            Capsule().fill(ink.opacity(dark ? 0.45 : 0.14)).blur(radius: 1).offset(y: 1)
-        }
-        .mask {
-            Rectangle()
-                .padding(-14)
-                .overlay(Capsule().blendMode(.destinationOut))
-                .compositingGroup()
-        }
-        .allowsHitTesting(false)
-    }
-}
-
 extension VideoKit.Palette {
     /// Behind a hovered segment: `color-mix(var(--glass) 55%, transparent)`.
     static let glassHover = VideoKit.Tone(light: VideoKit.rgb(0xFFFFFF, 0.74 * 0.55),
                                           dark: VideoKit.rgb(0x1A1D27, 0.72 * 0.55))
-    /// The recessed rail (`--seg-rail`, `--seg-rail-inset`). Light is as dark
-    /// as it is so the white thumb clears the user's 1.5:1 on the lightest
-    /// thing it sits on, the white title bar (it measured 1.19:1 at the page's
-    /// first .075, and 1.48:1 on the title bar at .19).
-    static let segRail = VideoKit.Tone(light: VideoKit.rgb(0x121828, 0.22),
-                                       dark: VideoKit.rgb(0x000000, 0.30))
+    /// The recessed rail (`--seg-rail`, `--seg-rail-inset`). The glass thumb
+    /// takes some of its shade from the rail under it, so the rail is what
+    /// sets the user's 1.5:1. Measured on real captures (2026-09-29): at .22
+    /// light and .30 dark the white title bar read 1.45:1 and the history
+    /// strip's filter 1.30 to 1.40:1; at .32 and .45 the title bar reads 1.80,
+    /// the panel 2.05 light and 1.81 dark, and the history strip, glass on
+    /// glass and the hardest place, 1.50 light and 1.53 dark.
+    static let segRail = VideoKit.Tone(light: VideoKit.rgb(0x121828, 0.32),
+                                       dark: VideoKit.rgb(0x000000, 0.45))
     static let segRailInset = VideoKit.Tone(light: VideoKit.rgb(0x121828, 0.10),
                                             dark: VideoKit.rgb(0x000000, 0.35))
-    /// The thumb, top to bottom (`--seg-thumb-hi`, `--seg-thumb`), its
-    /// hairline and its lit top line.
-    static let segThumbHi = VideoKit.Tone(light: VideoKit.rgb(0xFFFFFF, 1),
-                                          dark: VideoKit.rgb(0xFFFFFF, 0.26))
-    static let segThumb = VideoKit.Tone(light: VideoKit.rgb(0xFFFFFF, 0.96),
-                                        dark: VideoKit.rgb(0xFFFFFF, 0.17))
-    static let segThumbEdge = VideoKit.Tone(light: VideoKit.rgb(0x121828, 0.10),
-                                            dark: VideoKit.rgb(0xFFFFFF, 0.14))
-    static let segThumbSpec = VideoKit.Tone(light: VideoKit.rgb(0xFFFFFF, 1),
-                                            dark: VideoKit.rgb(0xFFFFFF, 0.34))
-    /// Under Increase Contrast or Reduce Transparency: an opaque plate, still
-    /// lighter than the rail, with a firmer edge.
-    /// The system glass thumb's tint in dark, what lifts the clear glass
-    /// above the rail with nothing painted over it.
-    static let segGlassTintDark = Color.white.opacity(0.65)
-    static let segThumbSolid = VideoKit.Tone(light: VideoKit.rgb(0xFFFFFF),
-                                             dark: VideoKit.rgb(0x4E5360))
-    static let segThumbEdgeStrong = VideoKit.Tone(light: VideoKit.rgb(0x121828, 0.32),
-                                                  dark: VideoKit.rgb(0xFFFFFF, 0.36))
+    /// The glass thumb's tint in dark, what lifts the clear glass above the
+    /// rail with nothing painted over it: full white, which on the history
+    /// strip's near-black glass is what clears 1.5:1 (.65 read 1.30:1).
+    static let segGlassTintDark = Color.white
 }
 
 // MARK: - Columns

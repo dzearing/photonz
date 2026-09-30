@@ -111,7 +111,7 @@ fi
 # shipped control beside comp-segmented.html from its own file and the kit.
 if (( status == 0 )); then
   if ! swiftc -typecheck -parse-as-library -swift-version 6 \
-      Sources/Photonz/VideoKit/*.swift Sources/PhotonzCore/CubicBezier.swift \
+      Sources/Photonz/VideoKit/*.swift \
       Sources/PhotonzCore/SegmentThumbMotion.swift Sources/Photonz/DesignSystem/SegmentedControl.swift \
       Scripts/segmented-gallery.swift; then
     echo "==> The segmented control no longer draws on its own: Scripts/segmented-gallery.swift is out of step."

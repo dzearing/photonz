@@ -20235,3 +20235,11 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Cmd-2 on a five minute captioned recording held the window ~190ms in one pass (panel ~110, tracks ~60, tool bar ~30). New `EditModeArrival` (PhotonzCore, tested) stages the editor over passes while it slides: frames first, then ruler + tool bar, then track rows, then the panel's sections one a pass (`DockArrival(slidingIn:)`, extending `PanelSectionArrival`). Longest pass now ~75-80ms.
 - New walk `view-to-edit-on-a-long-recording-walk` (fails over 100ms); `the-ninety-second-cut-walk` holds its Cmd-2 wait under 150ms.
 - Next: the slide itself still draws at a low frame rate going into Edit (filed `the-slide-into-edit-mode-draws-every-frame-like`).
+
+## 2026-09-29 — One segmented control, one glass thumb (every-segmented-control-is-the-one-system-glass)
+
+- `SegmentedControl` has one look and one motion: a pane of the system's Liquid Glass in a `GlassEffectContainer`, slid by `.smooth(0.3)` keyed on the pick. Deleted: `PlateStyle` (`.accent`, `.raised`), the drawn thumb (fill, hairline, lit line, lift), the `TimelineView` glide, `SegmentThumbMorph` (PhotonzCore) and the `next-system-glass-thumb` switch. `SegmentThumbDrag` stays for the drag. Reduce Motion cross-fades the pane. Current still gets the system picker.
+- History bar filter lost its blue thumb (also removed from `history.css`, citing the user). `comp-segmented.html` and UX-PATTERNS say one control, one style; `SegmentedControlUsageTests.oneStyleOneMotion` fails on a style parameter, a morph or a `TimelineView` coming back.
+- Contrast measured on real captures: light rail .22→.32, dark .30→.45, dark glass tint .65→1.0: title bar 1.80, panel 1.81–2.05, history 1.50–1.53 (was 1.30–1.45 in the short places). `segmented.css` tokens match.
+- `segmented-thumb-film-drawn-walk` deleted; the glass walk now photographs the history filter and a dark-to-light title bar.
+- Open: walks cannot click the history strip (filed a-walk-can-click-the-history-bar-and-film-its-fi).

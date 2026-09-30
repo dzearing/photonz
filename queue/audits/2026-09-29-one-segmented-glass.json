@@ -1,0 +1,45 @@
+{
+  "feature": "One segmented control, one glass thumb, everywhere",
+  "epic": "design-system",
+  "summary": "Every row of side-by-side choices in Next is now the same control with the same glass thumb and the same slide: the history bar's filter lost its solid blue thumb, and the drawn thumb and its switch are gone. The rail is a little darker so the glass reads lighter than it everywhere, the white title bar and the history bar included.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Press Shift-Command-H to open the history bar and look at All / Screenshots / Videos: a glass thumb, no blue.",
+      "shot": "2026-09-29-one-segmented-glass-three-places-sc.png"
+    },
+    {
+      "do": "Click Screenshots, then Videos, in the history bar's filter."
+    },
+    {
+      "do": "Open a recording and click Edit, then View, in the title bar.",
+      "shot": "2026-09-29-one-segmented-glass-title-bar-film-sc.png"
+    },
+    {
+      "do": "Pick a text layer and click Left, Center, Right under Across in the panel.",
+      "shot": "2026-09-29-one-segmented-glass-panel-film-sc.png"
+    },
+    {
+      "do": "Grab the thumb under Across and drag it to another choice, then let go."
+    },
+    {
+      "do": "Switch the Mac between Light and Dark with a document and the history bar open, and look at each control again."
+    }
+  ],
+  "evaluate": [
+    "Do the history filter, View | Edit and the panel pickers now look like one control to you?",
+    "Is the picked choice easy to find at a glance on the white title bar and on the history bar?",
+    "Is the rail now too dark or heavy in the light panel?",
+    "Does the history filter's slide feel the same as the title bar's?"
+  ],
+  "rough": [
+    "The history bar's filter was photographed at rest in light and dark, not filmed moving: a scripted walk's click on the history bar does nothing (the bar is never the key window during a walk), so its slide is proven only by being the same control the title bar and panel films show. Filed as a follow-up.",
+    "The rail is darker than the component page first drew it (light .32 instead of .22, dark .45 instead of .30), because the system glass takes part of its shade from the rail under it. Measured thumb to rail: title bar 1.80:1, panel 2.05:1 light and 1.81:1 dark, history bar 1.50:1 light and 1.53:1 dark. The page's tokens were moved to match.",
+    "The history bar is the tightest place: 1.50:1 in light is right on your floor, because there the glass sits on the bar's own glass.",
+    "On the light history bar the unpicked words (Screenshots, Videos) are faint grey on the grey rail.",
+    "The glass has no hairline or lit top edge, unlike the component page's drawn thumb, so it reads softer than the page.",
+    "The 1.14:1 reading on the light title bar after a switch from dark did not come back: it measured 1.66:1 before the rail change and 2.05:1 after.",
+    "Under Reduce Motion the glass fades from one choice to the next instead of sliding; under Increase Contrast or Reduce Transparency the system's glass decides its own look. Neither was photographed."
+  ]
+}

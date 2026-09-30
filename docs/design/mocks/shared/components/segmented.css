@@ -56,9 +56,15 @@
    render the light rail at .075 gave 1.19:1 on a panel (the thumb nearly
    vanished again). The lightest thing it sits on is the white title bar, and
    .22 clears 1.5:1 there (about 1.55:1; 1.75:1 on the grey panel). Dark
-   measures about 2.2:1 as it was. */
+   measures about 2.2:1 as it was.
+   In the app the thumb is the system's own Liquid Glass with nothing painted
+   over it, and the glass takes some of its shade from the rail under it, so
+   the rail is what sets the contrast. Measured on real captures (2026-09-29)
+   the glass cleared 1.5:1 everywhere, the history strip's filter included,
+   only at .32 light and .45 dark (title bar 1.80:1, panel 2.05:1 light and
+   1.81:1 dark, history 1.50 and 1.53:1). */
 :root{
-  --seg-rail:rgba(18,24,40,.22);
+  --seg-rail:rgba(18,24,40,.32);
   --seg-rail-inset:inset 0 1px 2px rgba(18,24,40,.10);
   --seg-thumb:rgba(255,255,255,.96);
   --seg-thumb-hi:rgba(255,255,255,1);
@@ -68,7 +74,7 @@
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --seg-rail:rgba(0,0,0,.30);
+    --seg-rail:rgba(0,0,0,.45);
     --seg-rail-inset:inset 0 1px 2px rgba(0,0,0,.35);
     --seg-thumb:rgba(255,255,255,.17);
     --seg-thumb-hi:rgba(255,255,255,.26);
@@ -78,7 +84,7 @@
   }
 }
 :root[data-theme="dark"]{
-  --seg-rail:rgba(0,0,0,.30);
+  --seg-rail:rgba(0,0,0,.45);
   --seg-rail-inset:inset 0 1px 2px rgba(0,0,0,.35);
   --seg-thumb:rgba(255,255,255,.17);
   --seg-thumb-hi:rgba(255,255,255,.26);

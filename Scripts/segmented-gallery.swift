@@ -5,12 +5,15 @@
 //
 // Run:
 //   swiftc -parse-as-library -swift-version 6 Sources/Photonz/VideoKit/*.swift \
-//     Sources/PhotonzCore/CubicBezier.swift Sources/PhotonzCore/SegmentThumbMotion.swift \
+//     Sources/PhotonzCore/SegmentThumbMotion.swift \
 //     Sources/Photonz/DesignSystem/SegmentedControl.swift Scripts/segmented-gallery.swift \
 //     -o /tmp/segmented-gallery && /tmp/segmented-gallery <output folder>
 //
 // Compiled with the control's own file, the kit it draws with, and the few
 // app seams stubbed below, so what it draws is the shipped code, not a copy.
+// The thumb is a pane of the system's Liquid Glass, which only the window
+// server draws: an offscreen sheet shows the rails, words and states, and the
+// glass itself is judged on a real capture (`segmented-thumb-film-walk`).
 import AppKit
 import SwiftUI
 
@@ -44,7 +47,6 @@ struct PanelFieldRow<Control: View>: View {
 @MainActor final class Experiments {
     static let shared = Experiments()
     var designedSegmentedEnabled: Bool { true }
-    var systemGlassThumbEnabled: Bool { false }
 }
 
 // MARK: - The sheet
@@ -53,16 +55,14 @@ typealias Seg = DesignedSegments<Int>
 
 @MainActor func seg(_ words: [String], on: Int? = 0, size: SegmentedControl<Int>.Size = .regular,
          form: SegmentedControl<Int>.Form = .natural, hovered: Int? = nil, focused: Bool = false,
-         unavailable: Int? = nil, images: [String]? = nil, showsTitles: Bool = true,
-         plate: SegmentedControl<Int>.PlateStyle = .raised,
-         morph: (from: Int, at: TimeInterval)? = nil) -> Seg {
+         unavailable: Int? = nil, images: [String]? = nil, showsTitles: Bool = true) -> Seg {
     Seg(label: "specimen",
         options: words.indices.map { index in
             .init(index, words[index], image: images.map { Image(systemName: $0[index]) },
                   disabledReason: index == unavailable ? "Not now" : nil)
         },
-        selection: on, size: size, form: form, showsTitles: showsTitles, plateStyle: plate,
-        tipsBelow: false, shownHovered: hovered, shownFocused: focused, shownMorph: morph) { _ in }
+        selection: on, size: size, form: form, showsTitles: showsTitles,
+        tipsBelow: false, shownHovered: hovered, shownFocused: focused) { _ in }
 }
 
 struct Specimen<Content: View>: View {
@@ -115,24 +115,8 @@ struct Sheet: View {
                 Specimen(name: "TITLE BAR: VIEW | EDIT") {
                     seg(["View", "Edit"], on: 1, size: .small, form: .fill).frame(width: 96)
                 }
-                Specimen(name: "HISTORY FILTER (ACCENT)") {
-                    seg(["All", "Screenshots", "Recordings"], plate: .accent)
-                }
-            }
-            // The morph from Fill to Crop, a frame every 40ms of its 300ms:
-            // the leading edge reaching Crop, both slots spanned a little
-            // squashed, the trailing edge following it in. Nothing past Crop.
-            Specimen(name: "THE MORPH, FILL TO CROP, EVERY 40MS") {
-                VStack(alignment: .leading, spacing: 8) {
-                    ForEach(0..<2) { row in
-                        HStack(spacing: 14) {
-                            ForEach(0..<4) { column in
-                                seg(["Fill", "Fit", "Crop"], on: 2, size: .small,
-                                    morph: (from: 0, at: Double(row * 4 + column) * 0.04))
-                                    .fixedSize()
-                            }
-                        }
-                    }
+                Specimen(name: "HISTORY FILTER") {
+                    seg(["All", "Screenshots", "Videos"])
                 }
             }
         }

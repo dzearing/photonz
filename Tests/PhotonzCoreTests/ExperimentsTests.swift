@@ -483,15 +483,14 @@ struct FeatureCatalogTests {
         #expect(!FeatureCatalog.defaultSettings(for: .current).isEnabled(FeatureCatalog.designedSegmentedFlag))
     }
 
-    @Test func theSystemGlassThumbFlagIsNextOnlyAndOnByDefault() {
-        // A temporary comparison (2026-09-29): on, the segmented thumb is
-        // moved by the system's own Liquid Glass morph; off, by the drawn
-        // glide. It lives beside the designed control, so Next only.
-        #expect(FeatureCatalog.systemGlassThumbFlag == "next-system-glass-thumb")
-        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.systemGlassThumbFlag))
-        #expect(FeatureCatalog.flags(for: .next).contains { $0.name == FeatureCatalog.systemGlassThumbFlag })
-        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.systemGlassThumbFlag })
-        #expect(!FeatureCatalog.defaultSettings(for: .current).isEnabled(FeatureCatalog.systemGlassThumbFlag))
+    @Test func theSystemGlassThumbFlagIsGoneNowThatItIsTheOnlyThumb() {
+        // A temporary comparison (2026-09-29) between the system's Liquid
+        // Glass morph and the drawn glide. The user picked the system glass
+        // for every segmented control, so the switch and the drawn glide are
+        // deleted rather than defaulted: there is nothing left to compare.
+        #expect(!FeatureCatalog.flags(for: .next).contains { $0.name == "next-system-glass-thumb" })
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == "next-system-glass-thumb" })
+        #expect(!FeatureCatalog.defaultSettings(for: .next).isEnabled("next-system-glass-thumb"))
     }
 
     @Test func theToolBarFeedbackFlagIsNextOnlyAndOnByDefault() {

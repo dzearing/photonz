@@ -79,11 +79,6 @@ public enum FeatureCatalog {
 
     public static let designedSegmentedFlag = "next-designed-segmented"
 
-    /// Temporary, while the user compares the two (2026-09-29): the designed
-    /// segmented thumb moved by the system's Liquid Glass morph, or by the
-    /// drawn glide. The one the user does not pick is deleted with this flag.
-    public static let systemGlassThumbFlag = "next-system-glass-thumb"
-
     public static let blankCanvasFlag = "next-blank-canvas"
 
     public static let blankVideoFlag = "next-blank-video"
@@ -555,16 +550,6 @@ public enum FeatureCatalog {
                     name: designedSegmentedFlag,
                     title: "Side-by-side choices slide",
                     description: "Every row of side-by-side choices is a soft capsule with one raised plate that slides to what you pick, the View and Edit switch included. Off means the system's segmented control.",
-                    area: .appearance,
-                    isEnabled: false,
-                    parameters: []),
-                releases: [.next],
-                enabledByDefaultIn: [.next]),
-            Definition(
-                flag: FeatureFlag(
-                    name: systemGlassThumbFlag,
-                    title: "Choices slide as system glass",
-                    description: "The plate under a picked choice is one pane of the system's own Liquid Glass, slid by the system. Off means the drawn plate that stretches across, for comparing the two.",
                     area: .appearance,
                     isEnabled: false,
                     parameters: []),

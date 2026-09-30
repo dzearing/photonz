@@ -6,9 +6,9 @@ import Foundation
 ///
 /// The user, 2026-09-29, of View | Edit in the title bar: "the segmented
 /// control overshoots like CRAZY. I'm on Edit, click View, look at the crazy
-/// weird overshoot." The motion model (`SegmentThumbMorph`) was bounded to the
-/// row and its tests were green, so whatever flung the thumb was downstream of
-/// it, in the drawing. Only the drawn window can say, frame by frame.
+/// weird overshoot." The motion model of the time was bounded to the row and
+/// its tests were green, so whatever flung the thumb was downstream of it, in
+/// the drawing. Only the drawn window can say, frame by frame.
 public struct PlaytestThumbFilm: Sendable, Equatable {
     /// What sets the thumb off.
     public enum Trigger: Sendable, Equatable {

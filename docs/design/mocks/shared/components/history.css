@@ -27,9 +27,10 @@
   gap:var(--s3);padding:var(--s3) 0 var(--s2)}
 .histbar>.seg{grid-column:2;justify-self:center}
 .histbar>.hb-r{grid-column:3;justify-self:end;display:inline-flex;align-items:center;gap:var(--s1)}
-/* the active scope reads as filled accent, not a neutral pill */
-.histbar .seg button.on{background:var(--accent);color:var(--accent-ink);
-  box-shadow:inset 0 1px 0 var(--edge-hi), var(--shadow-1)}
+/* The filter is the one segmented control, glass thumb and all. It once lit
+   the active scope in filled accent; the user, 2026-09-29: "I'm seeing
+   inconsistent segmented controls. What I'd like to see is the system glass
+   morph consistently." So no override here. */
 @container shell (max-width:620px){
   .histbar{grid-template-columns:1fr auto;row-gap:var(--s2)}
   .histbar>.seg{grid-column:1 / -1;justify-self:center}
