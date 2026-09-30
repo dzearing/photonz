@@ -4,12 +4,12 @@
   "goal": "You sent back the Mac's own segmented control on 2026-09-30. Every row of side-by-side choices is our drawn control again: a solid rail, and the picked choice on a Liquid Glass chip tinted with your accent that stretches across as it moves, with every word readable at 4.5:1 or better. What is left is your yes on the card.",
   "epic": "design-system",
   "priority": "p1-high",
-  "seq": 1e-06,
-  "status": "in_progress",
+  "seq": 0.000001,
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T02:46:57.276Z",
-  "updated": "2026-09-30T19:17:01.300Z",
+  "updated": "2026-09-30T19:17:47.084Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window. Built 2026-09-30: Sources/Photonz/DesignSystem/SegmentedControl.swift (DesignedSegments, ChipGlassSwitch), Sources/PhotonzCore/SegmentInk.swift (+tests: every word/state/scheme/accent at 4.5:1), SegmentThumbMotion.swift restored (drag), Scripts/segmented-contrast.swift (run by Scripts/test.sh: draws the shipped control in 14 specimens x light/dark x white/black/grey and measures each word against the pixels behind it; fails below 4.5:1). Walks: segmented-thumb-film-walk (title bar + panel films), segmented-history-film-walk (front: true; history bar films, slack 2pt), segmented-thumb-glass-walk (stills). Audit queue/audits/2026-09-30-tinted-segmented.json.",
@@ -131,6 +131,10 @@
     {
       "t": "2026-09-30T19:20:04.000Z",
       "note": "left rough (in the audit, not filed): the component page's shared drawing still shows the old grey plate (mock drawings are not edited to match code); no drop-shadow lift on the chip; under Reduce Motion the chip moves at once rather than cross-fading; the offscreen .png a snapshot writes shows the chip without its glass only in labelsWhole pictures, and a panel with a chip can draw partly blank in other offscreen .png files (audits use the real -sc captures). The reddit reference could not be fetched (reddit blocks the fetch and curl), so the effect follows the task's own words."
+    },
+    {
+      "t": "2026-09-30T19:17:47.082Z",
+      "note": "Built and pushed (a42eacb8): our drawn segmented control in Next everywhere, picked choice on an accent-tinted Liquid Glass chip that stretches across and never leaves the rail (filmed at 120 fps in the title bar, a panel row and the history bar), every word at 4.5:1+ (SegmentInk tests + build-failing contrast sheet; 5.4 to 7.2:1 on the real window). Tests 10681/10681, 167 segment walks green but three that fail the same on HEAD (filed). Waiting on the user's yes on the card: keep / more glass with a dark word / slower stretch."
     }
   ],
   "started": "2026-09-30T15:05:01.245Z",

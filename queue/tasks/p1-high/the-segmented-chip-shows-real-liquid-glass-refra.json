@@ -1,0 +1,34 @@
+{
+  "id": "the-segmented-chip-shows-real-liquid-glass-refra",
+  "title": "The segmented chip shows real Liquid Glass refraction",
+  "goal": "User 2026-09-30 12:49, screenshot of the Library's Media | Comps control mid-move: 'I see no liquid glass refraction on the edges.' In a42eacb8 the chip is .glassEffect(.regular.tint(accent)) but covered by the accent at 88% opacity (SegmentedControl.swift:422-427, SegmentInk.chipCover = 0.88) so a white word reads in light mode, and it sits BEHIND the labels over a flat black rail, so the glass has nothing to refract and is mostly painted over. Liquid Glass refraction shows where glass passes over detail (Apple's segmented thumb lifts and lenses the labels as it moves).",
+  "epic": "design-system",
+  "priority": "p1-high",
+  "seq": 5e-7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-30T19:50:30.011Z",
+  "updated": "2026-09-30T19:50:30.094Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Filmed first (filmThumb, 120 fps, dark and light): stills of the chip at rest and mid-move, zoomed on its edges, showing today's lack of refraction",
+    "No opaque paint over the glass: chipCover goes; the chip is the system's tinted glass itself (Glass .regular.tint(accent), or the system's prominent glass styling), with the refraction, rim light and edge lensing the system draws",
+    "While the chip moves (click or drag), it rides ABOVE the labels as a lens, so the words it passes over visibly refract and magnify at its edges, the way Apple's own segmented control does; at rest it settles as the tinted glass chip behind its own word",
+    "The picked word stays legible at rest in light and dark using the system's own treatment for text on tinted glass (vibrant/primary label on glass), not a paint layer; check both schemes with the user's words: legible, never white on white or black on black",
+    "One animator, no overshoot outside the rail (as before)",
+    "A card shows the user filmed frames of a move in dark and light, edges zoomed, and asks whether this is the refraction they meant"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T19:50:30.013Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-30T19:50:30.093Z",
+      "note": "seq 430 -> 5e-7"
+    }
+  ]
+}
