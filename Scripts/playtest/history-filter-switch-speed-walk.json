@@ -1,0 +1,365 @@
+{
+ "out": "/tmp/photonz-playtest/history-filter-switch-speed",
+ "setup": {
+  "forget": [
+   "text",
+   "shapes",
+   "tools"
+  ],
+  "history": 500
+ },
+ "steps": [
+  {
+   "do": "describe",
+   "stage": "why",
+   "note": "The user, 2026-09-30: switching the history filter was slow. Over a made-up history of 500 captures (one in three a recording), this walk opens the history bar, clicks each filter segment with the pointer and holds every switch to one frame of main thread work (under 16ms in any one pass, from the click until the new set is laid out) and to building no more tiles than a strip shows, then walks 40 captures along with the arrow keys and switches again from there, where the strip must jump back to the start rather than scroll through everything in between."
+  },
+  {
+   "do": "blank",
+   "canvasWidth": 900,
+   "canvasHeight": 600,
+   "width": 1360,
+   "height": 1000
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "key",
+   "key": "h",
+   "modifiers": [
+    "command",
+    "shift"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 3
+  },
+  {
+   "do": "snapshot",
+   "name": "1-all",
+   "window": "Capture History"
+  },
+  {
+   "do": "describe",
+   "stage": "take-the-keys",
+   "note": "The first click on the history bar makes it the key window, and that alone costs a pass of about 20ms whatever it clicks (measured 2026-09-30 by clicking All while All was picked). That is the window taking the keyboard, not the filter, so it is clicked here once and not judged."
+  },
+  {
+   "do": "press",
+   "control": "All"
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "press",
+   "control": "Screenshots",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "expectBuilds",
+   "view": "historyTile",
+   "atMost": 24
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "snapshot",
+   "name": "2-screenshots",
+   "window": "Capture History"
+  },
+  {
+   "do": "press",
+   "control": "Videos",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "expectBuilds",
+   "view": "historyTile",
+   "atMost": 24
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "snapshot",
+   "name": "3-videos",
+   "window": "Capture History"
+  },
+  {
+   "do": "press",
+   "control": "All",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "expectBuilds",
+   "view": "historyTile",
+   "atMost": 24
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "press",
+   "control": "Screenshots",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "expectBuilds",
+   "view": "historyTile",
+   "atMost": 24
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "press",
+   "control": "Videos",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "expectBuilds",
+   "view": "historyTile",
+   "atMost": 24
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "press",
+   "control": "All",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "expectBuilds",
+   "view": "historyTile",
+   "atMost": 24
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 2
+  },
+  {
+   "do": "snapshot",
+   "name": "4-forty-along",
+   "window": "Capture History"
+  },
+  {
+   "do": "describe",
+   "stage": "from-far-along",
+   "note": "Switching from forty captures along lays the new set out once where the strip was before it jumps back to the start, so this one switch builds about forty tiles rather than a strip's worth (42 measured, 2026-09-30). Still inside one frame; the ceiling of 48 fails a switch that builds the whole list or scrolls through it."
+  },
+  {
+   "do": "press",
+   "control": "Videos",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "expectBuilds",
+   "view": "historyTile",
+   "atMost": 48
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "snapshot",
+   "name": "5-videos-from-far-along",
+   "window": "Capture History"
+  },
+  {
+   "do": "press",
+   "control": "All",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "expectBuilds",
+   "view": "historyTile",
+   "atMost": 24
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "snapshot",
+   "name": "6-all-back-at-the-start",
+   "window": "Capture History"
+  }
+ ]
+}

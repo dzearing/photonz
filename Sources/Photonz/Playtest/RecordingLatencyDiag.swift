@@ -82,15 +82,14 @@ enum RecordingLatencyDiag {
         out["fileLanded"] = FileManager.default.fileExists(atPath: entry.url.path)
 
         // The tile asks for these and draws a placeholder until they land.
-        _ = store.image(for: entry)
-        _ = store.duration(for: entry)
+        let thumbnail = store.thumbnail(for: entry)
         var posterMS: Double?
         var durationMS: Double?
         let deadline = Date().addingTimeInterval(10)
         while Date() < deadline, posterMS == nil || durationMS == nil {
             try? await Task.sleep(for: .milliseconds(5))
-            if posterMS == nil, store.image(for: entry) != nil { posterMS = ms(stop, Date()) }
-            if durationMS == nil, store.duration(for: entry) != nil { durationMS = ms(stop, Date()) }
+            if posterMS == nil, thumbnail.image != nil { posterMS = ms(stop, Date()) }
+            if durationMS == nil, thumbnail.duration != nil { durationMS = ms(stop, Date()) }
         }
         out["posterMS"] = posterMS
         out["durationMS"] = durationMS

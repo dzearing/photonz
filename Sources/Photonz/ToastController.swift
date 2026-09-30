@@ -514,11 +514,11 @@ private struct ToastView: View {
     /// play badge + duration pill as their history tiles.
     private var thumbnail: some View {
         Group {
-            if let entry, let image = store.image(for: entry) {
+            if let entry, case let thumbnail = store.thumbnail(for: entry), thumbnail.pixelSize != nil {
                 // Same two rules as a history tile: a very wide capture is
                 // cropped rather than squeezed into a sliver inside this box,
                 // and a small one is shown at its own size rather than blown up.
-                CaptureThumbnailImage(entry: entry, store: store, image: image,
+                CaptureThumbnailImage(entry: entry, thumbnail: thumbnail,
                                       available: Self.thumbnailSize, cornerRadius: 10)
             } else {
                 ZStack {

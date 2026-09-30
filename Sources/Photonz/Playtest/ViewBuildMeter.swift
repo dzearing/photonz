@@ -45,6 +45,9 @@ final class ViewBuildMeter {
         case wordsLane
         /// One track of the timeline, header and lane.
         case trackRow
+        /// One capture tile of the history strip. A filter switch builds the
+        /// tiles it brings on screen and no others (`history-filter-switch-speed-walk`).
+        case historyTile
     }
 
     private var counts: [Subject: Int] = [:]

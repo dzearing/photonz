@@ -91,3 +91,45 @@ public struct ThumbnailFit: Equatable, Sendable {
         return ThumbnailFit(cropPixels: crop, drawnSize: drawn, croppedEdge: edge)
     }
 }
+
+/// What to decode for a capture shown small: the part of the bitmap a tile
+/// shows (the ratio cap's crop), shrunk so its short side is no longer than
+/// `ThumbnailFit.decodeShortSide`.
+///
+/// A tile is 100 points tall and a full screen screenshot is 3456x2234 pixels,
+/// 30 MB decoded. Holding that for every tile made the history strip decode and
+/// upload megabytes on the main thread for each tile it brought on screen, which
+/// is what a filter switch or an arrow key was waiting on (2026-09-30). The
+/// crop depends on the picture alone, never on the box it is drawn in, so it is
+/// made here, before the shrink.
+public struct ThumbnailDecodePlan: Equatable, Sendable {
+    /// The part of the full bitmap to keep, in whole pixels, top-left origin.
+    public let crop: CGRect
+    /// The size to decode that part at, in whole pixels.
+    public let outputSize: CGSize
+    /// True when the plan is the whole bitmap at its own size: nothing to do.
+    public let isWhole: Bool
+}
+
+extension ThumbnailFit {
+    /// The short side, in pixels, a decoded thumbnail comes down to. Covers the
+    /// biggest place a capture is shown small (the capture toast, 124 points)
+    /// at 2x, with room.
+    public static let decodeShortSide: CGFloat = 320
+
+    public static func decodePlan(pixelSize: CGSize,
+                                  shortSide: CGFloat = decodeShortSide,
+                                  maxAspect: CGFloat = defaultMaxAspect) -> ThumbnailDecodePlan {
+        let crop = fit(pixelSize: pixelSize, pixelScale: 1,
+                       available: CGSize(width: CGFloat.infinity, height: CGFloat.infinity),
+                       maxAspect: maxAspect).cropPixels
+        guard crop.width >= 1, crop.height >= 1 else {
+            return ThumbnailDecodePlan(crop: .zero, outputSize: .zero, isWhole: false)
+        }
+        let k = min(1, shortSide / min(crop.width, crop.height))
+        let output = CGSize(width: max(1, (crop.width * k).rounded()),
+                            height: max(1, (crop.height * k).rounded()))
+        let whole = crop.size == pixelSize && output == crop.size
+        return ThumbnailDecodePlan(crop: crop, outputSize: output, isWhole: whole)
+    }
+}

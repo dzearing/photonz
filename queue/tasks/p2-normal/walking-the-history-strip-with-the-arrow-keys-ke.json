@@ -1,0 +1,32 @@
+{
+  "id": "walking-the-history-strip-with-the-arrow-keys-ke",
+  "title": "Walking the history strip with the arrow keys keeps up",
+  "goal": "Holding the left or right arrow in the history bar should move the focus one capture per key with no stutter. Today each step costs the app about a tenth of a second, so walking a big history feels sticky.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 3500,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-30T22:54:12.178Z",
+  "updated": "2026-09-30T22:54:27.126Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Measured 2026-09-30 while fixing the filter switch (switching-the-history-filter-is-instant). 40 appKey right steps over the generated 500-capture history (setup \"history\": 500) and over the real ~500-capture Screenshots folder: mainBusy about 4.4s over the 40 steps (about 110ms per step), longest pass 43-60ms, the same with the old full-size thumbnails and the new small ones, so it is not image decoding. Reproduce: Scripts/playtest/history-filter-switch-speed-walk.json, read the wait after the 40 appKey steps. Suspects: every step changes HistoryOverlay.selection, which re-runs the overlay body (filter.apply over 500 entries, several times), rebuilds the focused and unfocused cells, and runs an animated proxy.scrollTo(center) over a LazyHStack at 120fps; the 110ms includes those animation passes, so first split per-pass cost from pass count.",
+  "acceptance": [
+    "Each arrow step in a 500-capture history costs under 16ms in any one pass of main thread work",
+    "A walk presses the arrow 40 times over a made-up history of 500 and fails past that",
+    "The focused capture stays in view as it moves, as it does today"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T22:54:12.180Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-30T22:54:27.125Z",
+      "note": "walks history-filter-switch-speed-walk -> none"
+    }
+  ],
+  "walks": []
+}

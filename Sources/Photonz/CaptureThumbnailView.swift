@@ -29,12 +29,13 @@ struct CaptureThumbnailView: View {
     var onDoubleClick: (() -> Void)? = nil
 
     var body: some View {
+        let thumbnail = store.thumbnail(for: entry)
         Group {
-            if let image = store.image(for: entry) {
+            if thumbnail.pixelSize != nil {
                 if let fixedHeight {
                     // The history strip: a fixed row height, and as much width
                     // as the picture's own shape asks for (up to the ratio cap).
-                    CaptureThumbnailImage(entry: entry, store: store, image: image,
+                    CaptureThumbnailImage(entry: entry, thumbnail: thumbnail,
                                           available: CGSize(width: .infinity, height: fixedHeight),
                                           ringed: ringed)
                         .frame(height: fixedHeight)
@@ -42,7 +43,7 @@ struct CaptureThumbnailView: View {
                     // The card: fill what we are given, but still never draw the
                     // capture bigger than it really is.
                     GeometryReader { geo in
-                        CaptureThumbnailImage(entry: entry, store: store, image: image,
+                        CaptureThumbnailImage(entry: entry, thumbnail: thumbnail,
                                               available: geo.size, ringed: ringed)
                             .frame(width: geo.size.width, height: geo.size.height)
                     }
@@ -74,8 +75,7 @@ struct CaptureThumbnailView: View {
 /// small.
 struct CaptureThumbnailImage: View {
     let entry: CaptureEntry
-    let store: CaptureStore
-    let image: CGImage
+    let thumbnail: CaptureThumbnail
     /// The room the picture has, in points. `.infinity` on a side means "as much
     /// as the picture's own shape asks for" — the history strip's free width.
     let available: CGSize
@@ -85,31 +85,38 @@ struct CaptureThumbnailImage: View {
     var ringed: Bool = false
 
     var body: some View {
-        let fit = ThumbnailFit.fit(pixelSize: CGSize(width: image.width, height: image.height),
-                                   pixelScale: store.pixelScale(for: entry),
+        let fit = ThumbnailFit.fit(pixelSize: thumbnail.pixelSize ?? .zero,
+                                   pixelScale: thumbnail.pixelScale,
                                    available: available)
-        // The store does the cropping: the rect is already whole pixels, and it
-        // keeps the result, so a redraw hands back the same image object rather
-        // than a new one to upload.
-        let shown = store.thumbnail(for: entry, cropped: fit.cropPixels) ?? image
-        Image(decorative: shown, scale: 1)
-            .resizable()
-            .frame(width: fit.drawnSize.width, height: fit.drawnSize.height)
-            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
-            .overlay(RoundedRectangle(cornerRadius: cornerRadius)
-                .strokeBorder(.primary.opacity(0.15)))
-            .overlay(croppedEdge(fit.croppedEdge))
-            .overlay {
-                if entry.kind == .video {
-                    VideoBadgeOverlay(duration: store.duration(for: entry))
-                }
+        // The thumbnail is already the part `fit` shows (the store decodes the
+        // same crop, small), so it only has to be drawn at the size `fit` says.
+        // Until it lands the tile is already its final size, so nothing beside
+        // it moves when it does; it fades in over the placeholder.
+        ZStack {
+            RoundedRectangle(cornerRadius: cornerRadius).fill(.quaternary)
+            if let image = thumbnail.image {
+                Image(decorative: image, scale: 1)
+                    .resizable()
+                    .transition(.opacity)
             }
-            .overlay {
-                if ringed {
-                    RoundedRectangle(cornerRadius: cornerRadius)
-                        .strokeBorder(Color.accentColor, lineWidth: 3)
-                }
+        }
+        .animation(.easeOut(duration: 0.18), value: thumbnail.image == nil)
+        .frame(width: fit.drawnSize.width, height: fit.drawnSize.height)
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+        .overlay(RoundedRectangle(cornerRadius: cornerRadius)
+            .strokeBorder(.primary.opacity(0.15)))
+        .overlay(croppedEdge(fit.croppedEdge))
+        .overlay {
+            if entry.kind == .video {
+                VideoBadgeOverlay(duration: thumbnail.duration)
             }
+        }
+        .overlay {
+            if ringed {
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .strokeBorder(Color.accentColor, lineWidth: 3)
+            }
+        }
     }
 
     /// A cropped tile says so quietly: the cut edge fades out, the way a list

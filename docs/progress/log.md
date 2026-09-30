@@ -20336,3 +20336,10 @@ paint the glass's colour and the measured word ink.
 
 Open: the card asks whether this is the refraction meant; the lens is frosted in
 the middle and barely magnifies (a crisp or growing lens would be ours to draw).
+
+## 2026-09-30 — history filter switch is instant
+
+- Measured first: each history tile held its full screenshot (up to 30 MB decoded) and decoded it on the main thread; one poster landing redrew every tile. Opening the bar froze 320ms, a switch from far along 126ms.
+- Tiles now keep a small crop decoded in the background (`CaptureThumbnail`, `ThumbnailFit.decodePlan`), recordings' posters are cached on disk, cells are keyed by capture, and a filter switch jumps to the start without animating. Switches are 3–11ms in one pass.
+- New harness pieces: setup `"history": N` (a made-up capture folder), `press` `longestUnderMS`, `historyTile` build counter; walk `history-filter-switch-speed-walk`.
+- Next: arrow-key walking in history (~110ms per step) is filed at p2; the segmented chip's late 15–20ms pass is logged on its own task.

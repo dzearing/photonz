@@ -27,6 +27,10 @@ struct PhotonzApp: App {
         // the next run of that walk refuses to start because the name is taken
         // (`PlaytestLentCaptures`).
         PlaytestLentCaptures.recoverFromAKilledRun()
+        // And before the capture store exists: a walk that asked for a
+        // made-up history reads it instead of the person's own folder
+        // (`PlaytestGeneratedHistory`).
+        PlaytestGeneratedHistory.applyEarly()
         #endif
         // The document model measures text — a box around words has to know how
         // tall the words are — and it is pure, so CoreText's answer is handed

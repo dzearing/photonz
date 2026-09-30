@@ -18,6 +18,9 @@ struct HistoryOverlay: View {
     /// Index of the focused item within the *filtered* list (nil = nothing / empty).
     @State private var selection: Int?
     @FocusState private var keyboardFocused: Bool
+    /// True for the one update a filter switch makes, while the focus lands on
+    /// the first item and the strip has already jumped there.
+    @State private var jumpingToStart = false
 
     private var capture: CaptureCenter { coordinator.capture }
     private var allEntries: [CaptureEntry] { capture.store.entries }
@@ -49,7 +52,14 @@ struct HistoryOverlay: View {
         .onAppear { resetSelection(); keyboardFocused = true }
         // Filtering changes which items exist: land the focus on the first one
         // and keep the keyboard target.
-        .onChange(of: filter) { resetSelection(); keyboardFocused = true }
+        .onChange(of: filter) {
+            // The strip jumps to the start itself; the focus landing on the
+            // first item must not animate a scroll there on top of that.
+            jumpingToStart = true
+            resetSelection()
+            keyboardFocused = true
+            DispatchQueue.main.async { jumpingToStart = false }
+        }
         // Folder changes (a deletion, a new capture): keep the index valid.
         .onChange(of: entries.count) { selection = HistorySelection.clamp(selection, count: entries.count) }
     }
@@ -130,24 +140,40 @@ struct HistoryOverlay: View {
     }
 
     private var strip: some View {
-        ScrollViewReader { proxy in
+        let shown = entries
+        let focusedID = selection.flatMap { shown.indices.contains($0) ? shown[$0].id : nil }
+        return ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(alignment: .top, spacing: 14) {
-                    ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
+                    // Keyed by the capture alone, so a capture in both the old
+                    // and the new filter keeps its cell (and its picture) across
+                    // a switch rather than being built again.
+                    ForEach(shown) { entry in
                         HistoryOverlayCell(
                             entry: entry,
                             coordinator: coordinator,
-                            focused: index == selection,
+                            focused: entry.id == focusedID,
                             highlighted: entry.url == coordinator.highlightedCaptureURL)
                         .id(entry.id)
                     }
                 }
                 .padding(.horizontal, 4)
                 .padding(.vertical, 2)
+                // A filter switch swaps the whole set in one frame: no tile
+                // fades or slides, whatever transaction the pick came in.
+                .transaction(value: filter) { $0.animation = nil }
+            }
+            // A new filter starts at its newest capture, at once. Scrolling
+            // there would sweep past, and build, every tile in between.
+            .onChange(of: filter) {
+                guard let first = entries.first else { return }
+                var still = Transaction()
+                still.disablesAnimations = true
+                withTransaction(still) { proxy.scrollTo(first.id, anchor: .leading) }
             }
             // Keep the focused item on screen as ← / → walk off the visible edge.
             .onChange(of: selection) {
-                guard let selection, entries.indices.contains(selection) else { return }
+                guard !jumpingToStart, let selection, entries.indices.contains(selection) else { return }
                 withAnimation(.easeOut(duration: 0.18)) {
                     proxy.scrollTo(entries[selection].id, anchor: .center)
                 }
@@ -229,6 +255,9 @@ private struct HistoryOverlayCell: View {
     private var showsActions: Bool { focused || hovered }
 
     var body: some View {
+        #if PHOTONZ_PLAYTEST
+        let _ = ViewBuildMeter.shared.built(.historyTile)
+        #endif
         VStack(spacing: 6) {
             CaptureThumbnailView(entry: entry, store: store, fixedHeight: 100, minWidth: 96,
                                  ringed: focused || highlighted,

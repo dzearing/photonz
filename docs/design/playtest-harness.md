@@ -303,6 +303,7 @@ or fail. The `setup` line is logged as step 0, so the log says what was done.
 | `expectNoControl` | guide steps, named `"<guide>/<step>"` | Those steps are expected to point at a control that is NOT there, and the usual check turns around for them: the step has to find nothing, or the walk fails saying the declaration is out of date. For the rare walk that exercises the fallback on purpose, like skipping every step of the trim guide so nothing is trimmed and there is no Save button to ring. |
 | `front` | `true` | The probe is the ACTIVE app for the whole walk, as every walk was until 2026-09-26. A walk never brings the probe forward otherwise (the person at the Mac keeps their keys), which leaves the menu bar frozen at launch and makes SwiftUI ignore some clicks and every drag. A walk that proves which menu row a chord reaches, or clicks a cut, a caption or a guide's control, says this. It then needs the Mac to itself (`queue/bin/walk-needs-the-mac.mjs`): it waits for the person to be away and stops if they come back. `windowDrag` and `dragGrip` take the front for their own drag without it. |
 | `flags` | features and whether each is on: `{ "next-measure-modes": false }` | Those features are switched for the length of the run and put back at the end, however it ends. The names are the ones in the Experiments window. |
+| `history` | a count: `500` | History reads a made-up folder of that many captures instead of the person's own Screenshots folder: every third one a recording (the guides' sample), the rest four real screenshot shapes (a whole Retina screen, a window, a region, a toolbar the ratio cap crops), newest first a minute apart. Built once under `/tmp/photonz-playtest/generated-history-<count>` and reused. For a walk about how history copes with a big folder, whose numbers must not depend on whose Mac it ran on (`history-filter-switch-speed-walk`). |
 | `scratch` | files, relative to the script or absolute | Each is copied into an EMPTY FOLDER OF THE WALK'S OWN, made fresh for the run and thrown away at the end. The walk names one as `"scratch/<file name>"` wherever a step takes a file. This is for a walk that WRITES beside the picture it opened — `saveLayers` keeps the layers next to it — so it starts from the same nothing every time and leaves nothing behind. |
 
 The memories a walk can forget, by the word it uses:
@@ -631,7 +632,11 @@ Four steps close it, and one more makes them writable:
   in something only a slider can set. `across` presses a fraction of the way
   along the control's own width instead of in its middle — `"across": 0` is its
   left edge, `1` its right — which is the only way to put a slider on a value
-  that is not halfway. It reads as a percentage in the log line. Either way the press is real
+  that is not halfway. It reads as a percentage in the log line.
+  `longestUnderMS` fails the step when one pass of main thread work in the
+  press's own window (the click until what it changed is laid out, 0.3s) took
+  that long or longer; unlike a guarded `wait`, nothing that happens after that
+  window counts against it. Either way the press is real
   mouse events POSTED to the app's queue. That last word is the whole trick:
   SwiftUI answers a press from inside its own tracking loop, which pulls the
   release out of that queue, so a walk that called `mouseDown` on the view

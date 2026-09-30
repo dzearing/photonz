@@ -13,8 +13,9 @@ import UniformTypeIdentifiers
 /// - Deleting in history moves the file to the Trash; deleting the file in the
 ///   folder removes it from history (a filesystem watcher keeps them in sync).
 ///
-/// Thumbnails are cached in memory; video poster frames are generated on demand
-/// (no poster files are written into the user's folder).
+/// Thumbnails are small, decoded off the main thread and kept in memory, one
+/// observed `CaptureThumbnail` per capture; video poster frames are generated on
+/// demand and kept in the app's own caches folder (never the user's folder).
 @MainActor
 @Observable
 final class CaptureStore {
@@ -24,18 +25,17 @@ final class CaptureStore {
     /// The watched folder (source of truth).
     let directory: URL
 
-    /// Memory caches (observed, so async loads refresh the UI).
-    private var imageCache: [URL: CGImage] = [:]
-    private var durations: [URL: TimeInterval] = [:]
-    private var posterLoading: Set<URL> = []
-    /// Each capture's backing scale (2 for a Retina screenshot). Resolved once
-    /// per file and never observed: it is always worked out in the same pass as
-    /// the image itself, so nothing is waiting on it.
-    @ObservationIgnored private var scaleCache: [URL: CGFloat] = [:]
-    /// The last cropped thumbnail made for each capture, so a tile that redraws
-    /// (hover, selection, the strip scrolling) hands SwiftUI the SAME image
-    /// object instead of a fresh one every pass, which would re-upload it.
-    @ObservationIgnored private var cropCache: [URL: (crop: CGRect, image: CGImage)] = [:]
+    /// Each capture's thumbnail. Not observed as a whole: a tile observes its
+    /// own, so one landing redraws one tile.
+    @ObservationIgnored private var thumbnails: [URL: CaptureThumbnail] = [:]
+    /// Thumbnails asked for and not yet started, newest ask LAST: the tiles on
+    /// screen now are served before the ones an arrow key or a filter switch
+    /// has already moved past.
+    @ObservationIgnored private var thumbnailQueue: [CaptureEntry] = []
+    @ObservationIgnored private var thumbnailsLoading = 0
+    /// Decodes at once. A full screen screenshot takes 30 MB to decode, so a
+    /// strip's worth all at once is a spike of memory for no quicker first tile.
+    private static let thumbnailLoadsAtOnce = 4
     /// Media-file fingerprint each cached poster/duration was derived from, so
     /// saving a trim in the video editor (which rewrites the file) refreshes the
     /// thumbnail and duration pill.
@@ -65,6 +65,9 @@ final class CaptureStore {
     @ObservationIgnored private var reloadDebounce: DispatchWorkItem?
 
     nonisolated static var defaultDirectory: URL {
+        #if PHOTONZ_PLAYTEST
+        if let made = PlaytestGeneratedHistory.folder { return made }
+        #endif
         let pictures = FileManager.default.urls(for: .picturesDirectory, in: .userDomainMask)[0]
         return pictures.appendingPathComponent("Screenshots", isDirectory: true)
     }
@@ -101,23 +104,18 @@ final class CaptureStore {
         let listedNames = Set(urls.map(\.lastPathComponent))
         reservedURLs = reservedURLs.filter { listedNames.contains($0.key) || saving[$0.value] != nil }
 
-        // Drop caches for files that disappeared.
+        // Drop thumbnails for files that disappeared.
         let live = Set(sorted.map(\.url))
-        imageCache = imageCache.filter { live.contains($0.key) }
-        durations = durations.filter { live.contains($0.key) }
-        scaleCache = scaleCache.filter { live.contains($0.key) }
-        cropCache = cropCache.filter { live.contains($0.key) }
+        thumbnails = thumbnails.filter { live.contains($0.key) }
 
-        // Drop video caches whose media file changed (a save in the video
+        // Drop video thumbnails whose media file changed (a save in the video
         // editor commits the trim into it), so the poster and duration
         // regenerate on next display.
         for entry in sorted where entry.kind == .video {
             let stamp = mediaStamp(for: entry.url)
             if mediaStamps[entry.url] != stamp {
                 mediaStamps[entry.url] = stamp
-                imageCache[entry.url] = nil
-                durations[entry.url] = nil
-                cropCache[entry.url] = nil
+                thumbnails[entry.url] = nil
             }
         }
         mediaStamps = mediaStamps.filter { live.contains($0.key) }
@@ -148,11 +146,7 @@ final class CaptureStore {
         // Match by file name: the URL `contentsOfDirectory` yields can differ
         // (percent-encoding, symlink resolution) from our constructed one.
         let entry = entries.first { $0.fileName == url.lastPathComponent }
-        if let entry {
-            imageCache[entry.url] = image
-            scaleCache[entry.url] = max(1, scale)
-            cropCache[entry.url] = nil
-        }
+        if let entry { thumbnailFromMemory(entry.url, image, scale: scale) }
         return entry
     }
 
@@ -232,9 +226,7 @@ final class CaptureStore {
     func replace(at url: URL, with image: CGImage, scale: CGFloat = 1) {
         guard entries.contains(where: { $0.url == url }) else { return }
         writePNG(image, to: url, scale: scale)
-        imageCache[url] = image
-        scaleCache[url] = max(1, scale)
-        cropCache[url] = nil
+        thumbnailFromMemory(url, image, scale: scale)
         reload()
     }
 
@@ -252,10 +244,7 @@ final class CaptureStore {
         }
         try? FileManager.default.trashItem(at: entry.url, resultingItemURL: nil)
         trashSidecar(for: entry.url)
-        imageCache[entry.url] = nil
-        durations[entry.url] = nil
-        scaleCache[entry.url] = nil
-        cropCache[entry.url] = nil
+        thumbnails[entry.url] = nil
         reload()
     }
 
@@ -270,10 +259,7 @@ final class CaptureStore {
             try? FileManager.default.trashItem(at: entry.url, resultingItemURL: nil)
             trashSidecar(for: entry.url)
         }
-        imageCache.removeAll()
-        durations.removeAll()
-        scaleCache.removeAll()
-        cropCache.removeAll()
+        thumbnails.removeAll()
         reload()
     }
 
@@ -291,64 +277,96 @@ final class CaptureStore {
 
     // MARK: - Media access
 
-    /// Thumbnail image: the screenshot itself, or a recording's poster frame
-    /// (generated + cached lazily; the UI refreshes when it lands).
-    func image(for entry: CaptureEntry) -> CGImage? {
-        if let cached = imageCache[entry.url] { return cached }
+    /// The capture's thumbnail, loading it if it has not been asked for yet.
+    /// Cheap enough to call from a view body: no pixels are decoded here, only
+    /// a screenshot's header read so its tile takes its shape at once.
+    func thumbnail(for entry: CaptureEntry) -> CaptureThumbnail {
+        let url = entry.url
+        let thumbnail: CaptureThumbnail
+        if let known = thumbnails[url] {
+            thumbnail = known
+        } else {
+            thumbnail = CaptureThumbnail()
+            thumbnails[url] = thumbnail
+        }
         // A recording still being saved has no file to read yet; its tile is a
         // placeholder until it lands, and reading it now would only fail.
-        if saving[entry.url] != nil { return nil }
-        if entry.kind == .video {
-            loadVideoMetadata(entry)
-            return nil
+        guard !thumbnail.requested, saving[url] == nil else { return thumbnail }
+        thumbnail.requested = true
+        switch entry.kind {
+        case .image:
+            if let header = CaptureThumbnails.header(of: url) {
+                thumbnail.settle(pixelSize: header.pixelSize, pixelScale: header.pixelScale)
+            }
+        case .video:
+            if let cached = CaptureThumbnails.cachedRecordingHeader(at: url, stamp: stamp(for: url)) {
+                thumbnail.settle(pixelSize: cached.0.pixelSize, pixelScale: cached.0.pixelScale)
+            }
         }
-        guard let source = CGImageSourceCreateWithURL(entry.url as CFURL, nil),
-              let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return nil }
-        imageCache[entry.url] = image
-        return image
+        thumbnailQueue.append(entry)
+        startThumbnailLoads()
+        return thumbnail
     }
 
-    /// The part of a capture a tile is showing, as its own image. The whole
-    /// picture comes back unchanged when `crop` covers it, and a real crop is
-    /// remembered so the identical tile drawn again is the identical object.
-    func thumbnail(for entry: CaptureEntry, cropped crop: CGRect) -> CGImage? {
-        guard let full = image(for: entry) else { return nil }
-        let whole = CGRect(x: 0, y: 0, width: CGFloat(full.width), height: CGFloat(full.height))
-        guard crop != whole else { return full }
-        if let cached = cropCache[entry.url], cached.crop == crop { return cached.image }
-        guard let cropped = full.cropping(to: crop) else { return full }
-        cropCache[entry.url] = (crop, cropped)
-        return cropped
+    private func stamp(for url: URL) -> String? {
+        if let known = mediaStamps[url] { return known }
+        let stamp = mediaStamp(for: url)
+        mediaStamps[url] = stamp
+        return stamp
     }
 
-    /// The capture's backing scale: 2 for a Retina screenshot, 1 for an ordinary
-    /// picture. Read from the PNG's DPI, which `writePNG` embeds as 72 x scale.
-    ///
-    /// A thumbnail needs this because a bitmap's pixel count is NOT the size of
-    /// the picture: a 2x capture of a 60x30 point region is a 120x60 bitmap, and
-    /// drawing it at 120x60 points is already twice the size the person saw.
-    ///
-    /// A recording has no such tag and reports 1. That is safe rather than
-    /// merely convenient: a poster frame is always far bigger than a tile, so
-    /// the never-upscale rule never has to decide anything about it.
-    func pixelScale(for entry: CaptureEntry) -> CGFloat {
-        if let cached = scaleCache[entry.url] { return cached }
-        var scale: CGFloat = 1
-        if entry.kind != .video,
-           let source = CGImageSourceCreateWithURL(entry.url as CFURL, nil),
-           let props = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
-           let dpi = props[kCGImagePropertyDPIWidth] as? Double {
-            scale = DisplayScale.pixelScale(forDPI: dpi)
+    private func startThumbnailLoads() {
+        while thumbnailsLoading < Self.thumbnailLoadsAtOnce, let entry = thumbnailQueue.popLast() {
+            // Gone from history, or thrown away (the file changed) since it was
+            // asked for: nobody is waiting on it.
+            guard let thumbnail = thumbnails[entry.url], thumbnail.image == nil else { continue }
+            thumbnailsLoading += 1
+            let url = entry.url
+            let kind = entry.kind
+            let stamp = kind == .video ? stamp(for: url) : nil
+            Task.detached(priority: .userInitiated) {
+                let loaded = kind == .video
+                    ? await CaptureThumbnails.recording(at: url, stamp: stamp)
+                    : CaptureThumbnails.still(at: url)
+                await MainActor.run { [weak self] in
+                    guard let self else { return }
+                    self.thumbnailsLoading -= 1
+                    // Only kept if it is still the same capture's thumbnail.
+                    if let loaded, self.thumbnails[url] === thumbnail { thumbnail.land(loaded) }
+                    self.startThumbnailLoads()
+                }
+            }
         }
-        scaleCache[entry.url] = scale
-        return scale
     }
 
-    /// Recording length, loaded lazily alongside the poster.
-    func duration(for entry: CaptureEntry) -> TimeInterval? {
-        if let d = durations[entry.url] { return d }
-        if entry.kind == .video, saving[entry.url] == nil { loadVideoMetadata(entry) }
-        return nil
+    /// A capture whose pixels are in memory already (one just taken, or just
+    /// saved over): its tile shows it at once, and a small copy replaces it as
+    /// soon as it is made, off the main thread.
+    private func thumbnailFromMemory(_ url: URL, _ image: CGImage, scale: CGFloat) {
+        let thumbnail = CaptureThumbnail()
+        thumbnail.requested = true
+        let pixelScale = max(1, scale)
+        let size = CGSize(width: image.width, height: image.height)
+        let plan = ThumbnailFit.decodePlan(pixelSize: size)
+        thumbnail.land(.init(image: image.cropping(to: plan.crop) ?? image,
+                             pixelSize: size, pixelScale: pixelScale, duration: nil))
+        thumbnails[url] = thumbnail
+        let full = CaptureThumbnails.Loaded(image: image, pixelSize: size, pixelScale: pixelScale, duration: nil)
+        Task.detached(priority: .userInitiated) {
+            guard let image = full.image else { return }
+            let small = CaptureThumbnails.still(from: image, pixelScale: full.pixelScale)
+            await MainActor.run { [weak self] in
+                if self?.thumbnails[url] === thumbnail { thumbnail.land(small) }
+            }
+        }
+    }
+
+    /// The capture's full picture, read from its file. For copying it, never
+    /// for drawing it small: that is `thumbnail(for:)`.
+    func image(for entry: CaptureEntry) -> CGImage? {
+        if saving[entry.url] != nil || entry.kind == .video { return nil }
+        guard let source = CGImageSourceCreateWithURL(entry.url as CFURL, nil) else { return nil }
+        return CGImageSourceCreateImageAtIndex(source, 0, nil)
     }
 
     func copyToPasteboard(_ entry: CaptureEntry) {
@@ -397,25 +415,6 @@ final class CaptureStore {
 
     /// On-disk media location — used by the overlay's drag-to-export.
     func fileURL(for entry: CaptureEntry) -> URL { entry.url }
-
-    // MARK: - Video metadata (lazy)
-
-    private func loadVideoMetadata(_ entry: CaptureEntry) {
-        let url = entry.url
-        guard !posterLoading.contains(url) else { return }
-        posterLoading.insert(url)
-        // The stored file is the truth (phase 19): a saved trim/crop is already
-        // baked into it, so the poster and duration come straight off the file.
-        Task {
-            let poster = await VideoExporter.posterFrame(of: url)
-            let duration = await VideoExporter.duration(of: url)
-            posterLoading.remove(url)
-            // Only keep if the file is still present in history.
-            guard entries.contains(where: { $0.url == url }) else { return }
-            if let poster { imageCache[url] = poster }
-            durations[url] = duration
-        }
-    }
 
     // MARK: - Folder watching
 

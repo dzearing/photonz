@@ -211,10 +211,18 @@ public struct PlaytestSetup: Sendable, Equatable {
     /// takes the person's keys it waits for them to be away and stops when
     /// they come back (`queue/bin/walk-needs-the-mac.mjs`).
     public var front: Bool
+    /// A generated capture folder of this many captures, one in three of them
+    /// a recording, in place of the person's own Screenshots folder, for the
+    /// length of the walk. For a walk about how history copes with a big
+    /// folder: its numbers must not depend on whose Mac it ran on, and lending
+    /// 500 files into somebody's Screenshots folder is not on.
+    public var history: Int?
 
     public init(forget: [PlaytestMemory] = [], captures: [String] = [],
                 scratch: [String] = [], expectNoControl: [String] = [],
-                flags: [PlaytestFlagChoice] = [], timelineOpen: Bool? = nil, front: Bool = false) {
+                flags: [PlaytestFlagChoice] = [], timelineOpen: Bool? = nil, front: Bool = false,
+                history: Int? = nil) {
+        self.history = history
         self.timelineOpen = timelineOpen
         self.front = front
         self.forget = forget
@@ -226,11 +234,18 @@ public struct PlaytestSetup: Sendable, Equatable {
 
     public var isEmpty: Bool {
         forget.isEmpty && captures.isEmpty && scratch.isEmpty && expectNoControl.isEmpty
-            && flags.isEmpty && timelineOpen == nil && !front
+            && flags.isEmpty && timelineOpen == nil && !front && history == nil
+    }
+
+    /// The kind of each capture in a generated history, newest first: every
+    /// third one a recording.
+    public static func generatedHistoryKinds(count: Int) -> [CaptureKind] {
+        (0..<max(0, count)).map { $0 % 3 == 2 ? .video : .image }
     }
 
     /// The known keys, named in the error when a walk uses another one.
-    static let knownKeys = ["captures", "expectNoControl", "flags", "forget", "front", "scratch", "timelineOpen"]
+    static let knownKeys = ["captures", "expectNoControl", "flags", "forget", "front", "history", "scratch",
+                            "timelineOpen"]
 
     /// The word a walk writes in `forget` to start from a machine that has
     /// never run Photonz.
@@ -274,7 +289,17 @@ public struct PlaytestSetup: Sendable, Equatable {
                                                   field: "expectNoControl"),
                   flags: try Self.choices(fields["flags"]),
                   timelineOpen: try Self.yesOrNo(fields["timelineOpen"], field: "timelineOpen"),
-                  front: try Self.yesOrNo(fields["front"], field: "front") ?? false)
+                  front: try Self.yesOrNo(fields["front"], field: "front") ?? false,
+                  history: try Self.count(fields["history"], field: "history"))
+    }
+
+    private static func count(_ raw: Any?, field: String) throws -> Int? {
+        guard let raw, !(raw is NSNull) else { return nil }
+        guard let number = raw as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
+              number.doubleValue == number.doubleValue.rounded(), number.intValue >= 1 else {
+            throw PlaytestScriptError.invalidSetup(field: field, reason: "is a whole number of captures, 1 or more")
+        }
+        return number.intValue
     }
 
     private static func yesOrNo(_ raw: Any?, field: String) throws -> Bool? {
@@ -2797,8 +2822,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// pixel, so a panel that reflows does not break the walk, and it presses
     /// with real mouse events, so a control that is dimmed, covered or wired
     /// to nothing fails the walk the way it would fail a person.
+    ///
+    /// `longestUnderMS` fails the step when any one pass of main thread work
+    /// in the press's own window (the click until what it changed is laid
+    /// out) took that long or longer: a frame the app did not draw.
     case press(control: String, in: String?, count: Int, modifiers: [PlaytestModifier],
-               across: CGFloat?)
+               across: CGFloat?, longestUnderMS: Double? = nil)
     /// Write what the right hand panel is showing to the log and to
     /// `panel-<stage>.json`: every tile on the shelf, every row in the layers
     /// list, and every menu in the dock, by the names a walk has to use for
@@ -4126,7 +4155,8 @@ public enum PlaytestStep: Sendable, Equatable {
             // slider's knob anywhere but halfway.
             let across = try f.optionalNumber("across").map { CGFloat(min(max($0, 0), 1)) }
             self = .press(control: try f.string("control"), in: try f.optionalString("in"),
-                          count: max(1, count), modifiers: try f.modifiers(), across: across)
+                          count: max(1, count), modifiers: try f.modifiers(), across: across,
+                          longestUnderMS: try f.optionalNumber("longestUnderMS"))
         case "panel":
             self = .panel(stage: try f.string("stage"))
         case "expect":

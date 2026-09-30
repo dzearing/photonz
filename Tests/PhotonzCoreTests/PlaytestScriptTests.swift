@@ -1897,7 +1897,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "press", "control": "Each side" } ] }
         """)
-        guard case .press(let control, let row, let count, let modifiers, _) = script.steps[0] else {
+        guard case .press(let control, let row, let count, let modifiers, _, _) = script.steps[0] else {
             Issue.record("press"); return
         }
         #expect(control == "Each side")
@@ -1913,7 +1913,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "press", "control": "Fixed", "in": "Width" } ] }
         """)
-        guard case .press(let control, let row, _, _, _) = script.steps[0] else {
+        guard case .press(let control, let row, _, _, _, _) = script.steps[0] else {
             Issue.record("press"); return
         }
         #expect(control == "Fixed")
@@ -1924,7 +1924,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "press", "control": "Direction", "count": 2, "modifiers": ["option"] } ] }
         """)
-        guard case .press(_, _, let count, let modifiers, _) = script.steps[0] else {
+        guard case .press(_, _, let count, let modifiers, _, _) = script.steps[0] else {
             Issue.record("press"); return
         }
         #expect(count == 2)
@@ -1938,7 +1938,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "press", "control": "Slider", "in": "Label corners", "across": 0.25 } ] }
         """)
-        guard case .press(_, _, _, _, let across) = script.steps[0] else {
+        guard case .press(_, _, _, _, let across, _) = script.steps[0] else {
             Issue.record("press"); return
         }
         #expect(across == 0.25)
@@ -1948,7 +1948,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "press", "control": "Each side" } ] }
         """)
-        guard case .press(_, _, _, _, let across) = script.steps[0] else {
+        guard case .press(_, _, _, _, let across, _) = script.steps[0] else {
             Issue.record("press"); return
         }
         #expect(across == nil)
@@ -1960,10 +1960,31 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "press", "control": "Slider", "across": 4 } ] }
         """)
-        guard case .press(_, _, _, _, let across) = script.steps[0] else {
+        guard case .press(_, _, _, _, let across, _) = script.steps[0] else {
             Issue.record("press"); return
         }
         #expect(across == 1)
+    }
+
+    /// A press can hold what it costs to one frame: the longest single pass
+    /// of main thread work in the press's own window, from the click until
+    /// what it changed has been laid out. The history filter's walk judges a
+    /// switch by it (2026-09-30).
+    @Test func aPressCanHoldItsCostToAFrame() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "press", "control": "Videos", "longestUnderMS": 16 } ] }
+        """)
+        guard case .press(_, _, _, _, _, let longest) = script.steps[0] else {
+            Issue.record("press"); return
+        }
+        #expect(longest == 16)
+        let unsaid = try decode("""
+        { "steps": [ { "do": "press", "control": "Videos" } ] }
+        """)
+        guard case .press(_, _, _, _, _, let none) = unsaid.steps[0] else {
+            Issue.record("press"); return
+        }
+        #expect(none == nil)
     }
 
     @Test func aPressMustNameTheControl() {

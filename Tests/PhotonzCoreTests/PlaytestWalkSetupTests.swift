@@ -265,3 +265,46 @@ struct PlaytestFrontSetupTests {
         }
     }
 }
+
+/// A walk about how history copes with a big folder asks for one of its own:
+/// `"history": 500` swaps the person's Screenshots folder for a generated one
+/// of 500 captures, so its numbers do not depend on whose Mac it ran on.
+@Suite("A walk asks for a generated history")
+struct PlaytestHistorySetupTests {
+
+    @Test("it reads a count")
+    func readsACount() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "setup": { "history": 500 }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(script.setup.history == 500)
+        #expect(script.setup.isEmpty == false)
+    }
+
+    @Test("saying nothing keeps the person's own folder")
+    func unsaid() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "setup": { "forget": ["all"] }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(script.setup.history == nil)
+    }
+
+    @Test("it is a whole number of captures, at least one")
+    func onlyACount() {
+        for bad in ["\"lots\"", "0", "-3", "2.5", "true"] {
+            #expect(throws: PlaytestScriptError.self) {
+                try PlaytestScript.decode(Data("""
+                { "setup": { "history": \(bad) }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+                """.utf8))
+            }
+        }
+    }
+
+    @Test("one in three of them is a recording")
+    func aThirdAreRecordings() {
+        let kinds = PlaytestSetup.generatedHistoryKinds(count: 9)
+        #expect(kinds.count == 9)
+        #expect(kinds.filter { $0 == .video }.count == 3)
+        #expect(PlaytestSetup.generatedHistoryKinds(count: 500).filter { $0 == .video }.count == 166)
+    }
+}

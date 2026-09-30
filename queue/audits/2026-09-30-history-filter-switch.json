@@ -1,0 +1,45 @@
+{
+  "feature": "Switching the history filter is instant",
+  "epic": "video-editing",
+  "summary": "Switching All, Screenshots and Videos in the history bar now swaps the strip in one frame, even with 500 captures, and a switch from far along lands at the start at once. Every tile now keeps a small picture made in the background instead of the whole screenshot.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Best with a big Screenshots folder (yours had about 500 on 2026-09-30).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Press Shift-Command-H to open the history bar."
+    },
+    {
+      "do": "Click Screenshots, then Videos, then All, a few times over.",
+      "shot": "2026-09-30-history-filter-switch-1-screenshots.png"
+    },
+    {
+      "do": "Press the right arrow twenty or thirty times to walk well along the strip."
+    },
+    {
+      "do": "Click Videos: the strip should show the newest recordings at the start, with no scroll back.",
+      "shot": "2026-09-30-history-filter-switch-2-videos-from-far-along.png"
+    },
+    {
+      "do": "Click All again.",
+      "shot": "2026-09-30-history-filter-switch-3-all.png"
+    },
+    {
+      "do": "Close the bar and open it again: tiles already seen appear at once."
+    }
+  ],
+  "evaluate": [
+    "Does a filter switch now feel instant to you, with the chip and the new set arriving together?",
+    "Does a tile you have not seen yet appear quickly enough when it fades in from grey?",
+    "Is jumping straight to the start after a switch from far along what you want, rather than keeping your place?",
+    "Do the thumbnails look as sharp as before, in the bar and on the capture card?"
+  ],
+  "rough": [
+    "Measured in the loop's copy of the app. On your own Screenshots folder, before: opening the bar froze for up to 320ms and the first switch for 45ms. After: opening 135ms and every switch 3 to 11ms. On a made-up folder of 500 captures, a switch from far along went from 126ms to 8ms, and repeat switches rebuild at most 1 tile.",
+    "Opening the bar still stalls for about 125 to 135ms in one pass. On the made-up folder it did that before this change too, so what is left is the bar itself, not the pictures. Not filed yet: it is outside this task, and it is written in this task's log.",
+    "The very first click on the bar still costs one frame of about 20ms whatever it clicks: that is the bar taking the keyboard, not the filter.",
+    "The first time a recording is ever shown, its first Videos switch can take one pass of about 17ms while its poster is made. After that the poster comes from a small cache on disk.",
+    "Walking the strip with the arrow keys still costs about a tenth of a second per step. It was the same before this change, and it is filed on its own.",
+    "The segmented chip takes one more pass of 15 to 20ms just after each move, even with the strip left unchanged. That is logged on the chip's own task.",
+    "No mock page draws the history bar. Its look is unchanged apart from a grey placeholder that fades to the picture."
+  ]
+}

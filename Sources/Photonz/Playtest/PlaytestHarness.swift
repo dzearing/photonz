@@ -2106,9 +2106,18 @@ private final class Run {
                     + "; " + EditorReadWatch.report,
                  state: describe())
 
-        case .press(let control, let row, let count, let modifiers, let across):
+        case .press(let control, let row, let count, let modifiers, let across, let longestUnderMS):
             try await pressControl(control, in: row, count: count, modifiers: modifiers,
                                    across: across, number: number)
+            // Read straight away: the meter was zeroed at the click, and what
+            // it holds now is the press's own window and nothing after it.
+            if let longestUnderMS, MainThreadMeter.shared.longestMS >= longestUnderMS {
+                throw Failure(description: String(
+                    format: "pressing \"%@\" held the main thread for %.1fms in one pass, and this walk "
+                        + "allows under %.0fms: a pass that long is a frame the app did not draw "
+                        + "right after the click",
+                    control, MainThreadMeter.shared.longestMS, longestUnderMS))
+            }
 
         case .dragSection(let section, let past, let stop, let hold, let cancel):
             try await dragSection(section, past: past, stop: stop, hold: hold,
@@ -8561,7 +8570,8 @@ private final class Run {
         case .key(let key, let modifiers):
             try await perform(.key(key, modifiers), number: number)
         case .press(let control, let row):
-            try await perform(.press(control: control, in: row, count: 1, modifiers: [], across: nil),
+            try await perform(.press(control: control, in: row, count: 1, modifiers: [], across: nil,
+                                     longestUnderMS: nil),
                               number: number)
         }
         await sleep(film.seconds)

@@ -184,6 +184,9 @@ struct PlaytestSetupRunner {
         if setup.timelineOpen == true {
             said.append("a recording opens in Edit mode")
         }
+        if setup.history != nil, let made = PlaytestGeneratedHistory.note {
+            said.append(made)
+        }
         if !setup.captures.isEmpty {
             let placed = try lend(setup.captures, besides: scriptURL)
             said.append("lent the capture folder \(placed.joined(separator: ", "))")
