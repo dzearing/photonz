@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-30T02:46:57.276Z",
-  "updated": "2026-09-30T19:17:47.084Z",
+  "updated": "2026-09-30T20:15:56.942Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window. Built 2026-09-30: Sources/Photonz/DesignSystem/SegmentedControl.swift (DesignedSegments, ChipGlassSwitch), Sources/PhotonzCore/SegmentInk.swift (+tests: every word/state/scheme/accent at 4.5:1), SegmentThumbMotion.swift restored (drag), Scripts/segmented-contrast.swift (run by Scripts/test.sh: draws the shipped control in 14 specimens x light/dark x white/black/grey and measures each word against the pixels behind it; fails below 4.5:1). Walks: segmented-thumb-film-walk (title bar + panel films), segmented-history-film-walk (front: true; history bar films, slack 2pt), segmented-thumb-glass-walk (stills). Audit queue/audits/2026-09-30-tinted-segmented.json.",
@@ -135,6 +135,10 @@
     {
       "t": "2026-09-30T19:17:47.082Z",
       "note": "Built and pushed (a42eacb8): our drawn segmented control in Next everywhere, picked choice on an accent-tinted Liquid Glass chip that stretches across and never leaves the rail (filmed at 120 fps in the title bar, a panel row and the history bar), every word at 4.5:1+ (SegmentInk tests + build-failing contrast sheet; 5.4 to 7.2:1 on the real window). Tests 10681/10681, 167 segment walks green but three that fail the same on HEAD (filed). Waiting on the user's yes on the card: keep / more glass with a dark word / slower stretch."
+    },
+    {
+      "t": "2026-09-30T20:15:56.941Z",
+      "note": "From the legibility task (2026-09-30): the chip no longer deepens the accent (the user's 10:12 correction); SegmentInk.chip is the accent as drawn, the picked word white (dark only on yellow/graphite, SegmentInk.pickedWord); SegmentInk.minimum and Scripts/segmented-contrast.swift are gone, replaced by the app-wide legibility check in Scripts/test.sh."
     }
   ],
   "started": "2026-09-30T15:05:01.245Z",

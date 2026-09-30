@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p1-high",
   "seq": 0.000002,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T13:43:32.879Z",
-  "updated": "2026-09-30T20:15:56.889Z",
+  "updated": "2026-09-30T20:16:30.256Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -56,10 +56,15 @@
     {
       "t": "2026-09-30T20:15:56.888Z",
       "note": "left rough, not filed (under the bar or covered here): private badges not on the sheet (CaptionGuidesOverlay badge, ColorDropNote pill, canvasNoticeChip, heldFrameBadge, HistoryOverlayCell caption) since they need EditorState/coordinator; focus rings only on the segmented control; AppKit menus/popups unmeasured (system pairings); caption preview judged against the picture without its plate (stricter than the eye)."
+    },
+    {
+      "t": "2026-09-30T20:16:30.254Z",
+      "note": "Build-failing legibility check in Scripts/test.sh (LegibilitySheet/LegibilityCatalogue, Legibility/InkReading in PhotonzCore): 100 specimens, 1150 words/icons, light+dark, glass over white/black/grey; drill proves it fails at 1.00:1. Fixed caption clip names in light, destructive hover, disabled opacity, light faint grey, mode chip chevron, segmented chip back to the system accent. UX-PATTERNS rule added. Tests 10696/10696 + check green; segmented-thumb-glass-walk green, audit 2026-09-30-legibility-check."
     }
   ],
   "started": "2026-09-30T19:36:54.610Z",
   "walks": [
     "segmented-thumb-glass-walk"
-  ]
+  ],
+  "completed": "2026-09-30T20:16:30.255Z"
 }

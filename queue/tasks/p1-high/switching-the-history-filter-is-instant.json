@@ -1,0 +1,34 @@
+{
+  "id": "switching-the-history-filter-is-instant",
+  "title": "Switching the history filter is instant",
+  "goal": "User 2026-09-30: 'when I switch between filters on the history, it's slow. I think we're spending a lot of time in rendering all the items, the list should be virtualized, filtering should be super fast.' The strip is already a LazyHStack in a ScrollView (HistoryOverlay.swift:133-136), so plain virtualization is in place; measure before changing anything. Suspects: thumbnails decoded synchronously on the main thread as cells appear (CaptureThumbnailView), video thumbnails generated from the file (AVAssetImageGenerator) per switch, no thumbnail cache across filter changes, the ForEach identity changing (Array(entries.enumerated()) rebuilding every cell), the filter change animating a large diff, the ScrollViewReader scrolling through, or the entries list re-read from disk on each switch.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 0.000003,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-30T20:23:18.803Z",
+  "updated": "2026-09-30T20:23:18.883Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Measured first with Instruments/os_signpost in the probe with a realistic history (200+ captures, a third of them recordings): time from the click to the new filter's first full frame, and where the main thread spends it; the report names the cause",
+    "Switching All / Screenshots / Videos shows the new set within one frame (under 16 ms of main-thread work) and the segmented chip's move is never stalled by it",
+    "Thumbnails come from an in-memory cache (and a small on-disk cache for recordings) keyed by file and size; no decode or frame extraction runs on the main thread; a thumbnail not ready yet shows a placeholder that fades to the image",
+    "Cell identity is stable across filters (keyed by capture id only), so switching reuses cells instead of rebuilding them, and the change does not animate a whole-strip diff",
+    "Scroll position resets to the start instantly, not by scrolling through",
+    "A perf test (or signpost walk) with 500 fake entries fails if a switch takes over 16 ms of main-thread time; a perf note in the commit"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T20:23:18.805Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-30T20:23:18.882Z",
+      "note": "seq 430 -> 0.000003"
+    }
+  ]
+}
