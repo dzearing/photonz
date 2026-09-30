@@ -1,15 +1,28 @@
 {
   "feature": "The segmented thumb on the system's own Liquid Glass",
   "epic": "design-system",
-  "summary": "Every segmented control's thumb is now one pane of the system's Liquid Glass, slid to the new choice by the system's own animation, with nothing painted over it. The old drawn glide is still one switch away so you can compare the two and pick.",
+  "summary": "Every segmented control's thumb is now one pane of the system's Liquid Glass, slid to the new choice by the system's own animation, with nothing painted over it. The drawn glide stays behind one switch only until the follow-up task makes the system glass the only style.",
   "setup": "Photonz Dev, release Next, no flag changed from its default. To see the drawn glide instead, turn off \"Choices slide as system glass\" in the Experiments window.",
   "switched": {},
   "try": [
-    { "do": "Open a recording and click Edit, then View, in the title bar. The glass slides straight across and stops, no stretch.", "shot": "2026-09-29-segmented-system-glass-title-bar-film-sc.png" },
-    { "do": "Pick a text layer and click Left, Center and Right under Across in the panel.", "shot": "2026-09-29-segmented-system-glass-panel-film-sc.png" },
-    { "do": "Grab the thumb under Across and drag it. It follows the pointer and slides onto the nearest choice when you let go." },
-    { "do": "Switch the Mac to Light and look at View | Edit on the white title bar.", "shot": "2026-09-29-segmented-system-glass-at-rest-sc.png" },
-    { "do": "Turn off \"Choices slide as system glass\" in Experiments and repeat the first two steps to feel the drawn glide." }
+    {
+      "do": "Open a recording and click Edit, then View, in the title bar. The glass slides straight across and stops, no stretch.",
+      "shot": "2026-09-29-segmented-system-glass-title-bar-film-sc.png"
+    },
+    {
+      "do": "Pick a text layer and click Left, Center and Right under Across in the panel.",
+      "shot": "2026-09-29-segmented-system-glass-panel-film-sc.png"
+    },
+    {
+      "do": "Grab the thumb under Across and drag it. It follows the pointer and slides onto the nearest choice when you let go."
+    },
+    {
+      "do": "Switch the Mac to Light and look at View | Edit on the white title bar.",
+      "shot": "2026-09-29-segmented-system-glass-at-rest-sc.png"
+    },
+    {
+      "do": "Turn off \"Choices slide as system glass\" in Experiments and repeat the first two steps to feel the drawn glide."
+    }
   ],
   "evaluate": [
     "Does the system slide feel more like a Mac control than the drawn stretch?",

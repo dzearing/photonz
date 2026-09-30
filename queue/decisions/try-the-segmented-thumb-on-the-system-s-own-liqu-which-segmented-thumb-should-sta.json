@@ -46,6 +46,10 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
-  "created": "2026-09-30T00:45:04.211Z"
+  "status": "withdrawn",
+  "created": "2026-09-30T00:45:04.211Z",
+  "withdrawn": {
+    "reason": "The user decided in the intake window on 2026-09-29 17:34: the system glass everywhere, no side by side card; every-segmented-control-is-the-one-system-glass makes it the only style.",
+    "at": "2026-09-30T00:45:54.877Z"
+  }
 }

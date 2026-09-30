@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p1-high",
   "seq": 0.00001,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T23:28:33.182Z",
-  "updated": "2026-09-30T00:35:02.107Z",
+  "updated": "2026-09-30T00:46:01.980Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -45,11 +45,29 @@
     {
       "t": "2026-09-30T00:35:02.106Z",
       "note": "User 2026-09-29 17:34: decided. They want the system glass morph, consistently, everywhere. No need for a side-by-side card; the follow-up one-segmented-look task makes it the only style."
+    },
+    {
+      "t": "2026-09-30T00:44:47.190Z",
+      "note": "walks segmented-thumb-film-walk, segmented-thumb-glass-walk -> segmented-thumb-film-walk, segmented-thumb-film-drawn-walk, segmented-thumb-glass-walk"
+    },
+    {
+      "t": "2026-09-30T00:45:20.762Z",
+      "note": "Built the system version behind next-system-glass-thumb (on in Next): one .glassEffect pane in a GlassEffectContainer, frame animated by SwiftUI on .smooth(0.3), transaction keyed on the pick as the only animator; drag follows and slides on release (glass walk green at defaults). glassEffectID swap morph filmed 4 ways (preference pass, plain background, row layout, .matchedGeometry + spacing 400): it jumps every time, so it is not used. Glass: light .regular, dark .clear.tint(white .65); variants measured in the log sheet. Films: both versions 0 frames off the rail, no overshoot. Contrast: panel and dark title bar 1.55-1.64, light title bar 1.45 fresh / 1.14 after a dark to light switch (drawn 1.61): acceptance item 3 not met there, put to the user on the card with a mitigation. Stock Picker(.segmented) not filmed as a third candidate: it cannot wear the component's rail or sizes, and it is still one switch away (Side-by-side choices slide off). Epic design-system is staged next, but this is a user ask (p1, source user). Commit a4496daf. Card asks the user to pick; the loser and the switch are deleted after."
+    },
+    {
+      "t": "2026-09-30T00:45:54.903Z",
+      "note": "the question \"Which segmented thumb should stay: the system's Liquid Glass or the drawn glide?\" was taken down without an answer: The user decided in the intake window on 2026-09-29 17:34: the system glass everywhere, no side by side card; every-segmented-control-is-the-one-system-glass makes it the only style.. Nobody chose anything, so nothing here was decided."
+    },
+    {
+      "t": "2026-09-30T00:46:01.978Z",
+      "note": "System glass thumb shipped in Next (commit a4496daf) behind next-system-glass-thumb, on by default: one Liquid Glass pane in a GlassEffectContainer slid by SwiftUI's .smooth(0.3), the pick's transaction its only animator, no TimelineView or SegmentThumbMorph on that path, nothing painted on the glass. Filmed at 120 fps both versions, all four moves: 0 frames off the rail, no overshoot (segmented-thumb-film-walk at defaults, segmented-thumb-film-drawn-walk with the switch off). Drag follows and lands (segmented-thumb-glass-walk, defaults). Contrast 1.55-1.64 panel and dark title bar; light title bar 1.14-1.45, short of 1.5, folded into every-segmented-control-is-the-one-system-glass as an acceptance item. The glassEffectID swap morph jumps (filmed 4 ways) and is not used. Comparison card withdrawn: the user decided in intake for system glass everywhere. Scripts/test.sh green (10,571 tests). Audit queue/audits/2026-09-29-segmented-system-glass.json."
     }
   ],
   "started": "2026-09-29T23:39:30.690Z",
   "walks": [
     "segmented-thumb-film-walk",
+    "segmented-thumb-film-drawn-walk",
     "segmented-thumb-glass-walk"
-  ]
+  ],
+  "completed": "2026-09-30T00:46:01.979Z"
 }

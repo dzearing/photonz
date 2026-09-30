@@ -4,12 +4,12 @@
   "goal": "User 2026-09-29, with a screenshot of the history bar's All / Screenshots / Videos filter showing a solid blue thumb: 'I'm seeing inconsistent segmented controls. What I'd like to see is the system glass morph consistently.' The shared SegmentedControl has a .accent plate style used by HistoryOverlay.swift:113 (solid blue), a .raised glass style elsewhere, and a hand-rolled motion; try-the-segmented-thumb-on-the-system-s-own-liqu adds the system morph behind a flag. The user has decided: the system glass morph is the only one.",
   "epic": "design-system",
   "priority": "p1-high",
-  "seq": 0.00002,
+  "seq": 2e-05,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T00:35:02.164Z",
-  "updated": "2026-09-30T00:35:02.248Z",
+  "updated": "2026-09-30T00:45:54.954Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -19,7 +19,8 @@
     "An inventory of every segmented or tab-like control in Sources/Photonz (grep SegmentedControl, Picker .segmented, NSSegmentedControl, and hand-built button rows acting as one) is in the task log, each confirmed on the shared control",
     "comp-segmented.html and UX-PATTERNS say there is one segmented control and one style",
     "A test fails if a plate style parameter or any other segmented implementation reappears",
-    "Filmed with filmThumb in three places (history bar, title bar, a panel): same motion, never outside the rail; photographs of all three side by side"
+    "Filmed with filmThumb in three places (history bar, title bar, a panel): same motion, never outside the rail; photographs of all three side by side",
+    "The system glass thumb is at least 1.5:1 lighter than its rail on the light title bar too, including after the app switches from dark to light (measured 1.45 and 1.14 on 2026-09-29), with nothing painted over the glass"
   ],
   "log": [
     {
@@ -29,6 +30,10 @@
     {
       "t": "2026-09-30T00:35:02.247Z",
       "note": "seq 400 -> 0.00002"
+    },
+    {
+      "t": "2026-09-30T00:45:54.953Z",
+      "note": "From try-the-segmented-thumb-on-the-system-s-own-liqu (commit a4496daf): the system version is in, behind next-system-glass-thumb (on in Next): ONE .glassEffect pane in a GlassEffectContainer whose frame SwiftUI animates on .smooth(0.3), a transaction keyed on the pick as its only animator (DesignedSegments.systemGlassThumb). The glassEffectID swap (glass removed from one slot, inserted on the next) was filmed at 120 fps four ways and JUMPS every time with nothing between, so do not rebuild on it. Glass that reads lighter than the rail with nothing painted over: light .regular, dark .clear.tint(white .65); a white tint on light glass greys it (1.15:1). Contrast measured: panel light 1.64, panel dark 1.55-1.61, title bar dark 1.58, title bar LIGHT 1.45 in a window opened in light and 1.14 after the app switched dark to light (the drawn thumb read 1.61 there): the user's 1.5:1 is not met on the light title bar yet; the suggested fix is a slightly darker light rail over the white title bar, not paint on the glass. The .accent plate (history filter) and the opaque Increase Contrast / Reduce Transparency plate are not glass and still use the drawn glide; Reduce Motion cross-fades. segmented-thumb-film-drawn-walk films the drawn glide with the switch off and goes with the switch. Side-by-side pictures: queue/audits/2026-09-29-segmented-system-glass-*-sc.png."
     }
   ]
 }
