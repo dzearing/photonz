@@ -1,0 +1,33 @@
+{
+  "id": "dragging-a-component-from-the-library-drops-one",
+  "title": "Dragging a component from the Library drops one copy, not two",
+  "goal": "User 2026-09-29: 'when I drag a component from library it drops 2 copies.' Reproduce first with a real pointer drag (not an accessibility press or a synthesized drop call): which surfaces receive the drop (canvas and timeline both handling it, or the canvas's onDrop plus an AppKit dragging destination, or one handler firing on both performDragOperation and concludeDragOperation), on a picture and on a video, and whether both copies land in one undo step or two. Related history: 1beb145e 'Dragging a component hands you a copy, not the original'.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 0.000004,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-30T02:56:58.111Z",
+  "updated": "2026-09-30T02:56:58.195Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Reproduced first: a walk at Next defaults drags a component tile from the Library onto the canvas with the pointer, and onto a video's timeline, and counts the new layers; the report names the handler(s) that fire",
+    "One drag and drop makes exactly one new layer (one component instance) wherever it lands, as one undo step",
+    "The drop lands where the pointer let go (canvas point, or timeline track and time), and Esc during the drag cancels it with nothing added",
+    "A test drives the drop handler path twice-safely: a drop delivered to overlapping targets inserts once",
+    "The same check is run for every other Library shelf that can be dragged (media, styles) and any double drop there is fixed too"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T02:56:58.113Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-30T02:56:58.194Z",
+      "note": "seq 400 -> 0.000004"
+    }
+  ]
+}
