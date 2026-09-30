@@ -8546,6 +8546,14 @@ private final class Run {
         defer {
             if hidden { host.alphaValue = 0; MainThreadMeter.shared.countPassesAgain() }
         }
+        // The chip is the system's tinted glass, and the system greys that
+        // tint in a window without the keys. A person's history strip has
+        // them (`AppFront.showFloating`), a walk's never does, so in a walk
+        // that holds the front the filmed window takes them for the film.
+        if holdsTheFront, !host.isKeyWindow, host.canBecomeKey {
+            host.makeKey()
+            await sleep(0.3)
+        }
         let camera = PlaytestWindowFilm(crop: crop)
         try await camera.start(scWindow, size: CGSize(width: frame.width * scale, height: frame.height * scale))
         await sleep(0.15)

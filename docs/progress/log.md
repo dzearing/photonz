@@ -20306,3 +20306,33 @@ retires that window. The 24 editor walks no longer force the flag. New walk:
 - Rule: 3:1, or 2:1 when plainly another colour, never the same family; 1.8:1 when disabled. The segmented chip is the system accent again (not deepened).
 - Fixed what it found: caption clip names in light, destructive hover, disabled opacity, the light faint grey, the mode chip chevron.
 - Next: private badges (caption guides, colour drop note, canvas notice, held frame) are not on the sheet yet.
+
+## 2026-09-30 — The segmented chip is real Liquid Glass and lenses the words
+
+The user, looking at the Library's Media | Comps mid-move: "I see no liquid
+glass refraction on the edges." Filmed first (`segmented-chip-refraction-film-walk`,
+120 fps, dark and light): the chip was the accent painted at 88% over its glass,
+behind the words, over a solid rail, so the glass had nothing to bend.
+
+Now the chip rides ABOVE the words. At rest it is regular glass tinted with the
+accent, nothing over it, the words under it cut away and the picked word drawn
+inside the glass in the system's primary label. While it travels or is dragged
+it is clear glass at `SegmentInk.lensTint` of the accent, its own words gone, so
+the row's words are seen through it and bend at its ends and mirror along its
+rims. Measured with the probe in front: tinted regular glass draws its tint at
+full strength (0,121,255 for system blue), and the system inks primary white in
+dark and black in light whatever the tint, so white on yellow in dark; the words
+take the other scheme (`SegmentInk.pickedWordScheme`) only where the window's own
+label would not read, and only while the window is active (a window in the back
+greys the tint and the window's own label reads on it). Tried and dropped:
+`.glassProminent` as the chip (white on white after a press), telling the glass
+the window is active (no effect), regular glass as the lens (frosts the words
+away).
+
+Walks: the chip is only tinted in an active window, so the three film walks
+hold the front, and `filmThumb` gives the filmed window the keys in a walk that
+holds the front (a walk's history strip never has them). Offscreen pictures
+paint the glass's colour and the measured word ink.
+
+Open: the card asks whether this is the refraction meant; the lens is frosted in
+the middle and barely magnifies (a crisp or growing lens would be ours to draw).

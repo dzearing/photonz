@@ -1,0 +1,190 @@
+{
+  "out": "/tmp/photonz-playtest/segmented-chip-refraction-film",
+  "seed": "The user, 2026-09-30, looking at the Library's Media | Comps control mid-move: 'I see no liquid glass refraction on the edges.' At Next defaults with no flag set, this walk FILMS the picked chip at 120 fps as it moves, in dark and in light: the Library's Media, Comps, Styles, Systems control (pressed by the pointer on Comps, then Media) and the title bar's View | Edit (Cmd-2, Cmd-1). The frames are the record of whether the chip lenses the words it passes over at its edges; every frame is also read for where the chip is against its rail, and the walk claims it never leaves the rail.",
+  "setup": {
+    "forget": [
+      "panel",
+      "text",
+      "shapes",
+      "tools"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1100,
+      "canvasHeight": 700,
+      "width": 1500,
+      "height": 950
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "showMediaShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-dark-library-rest",
+      "note": "THE TEST: the Library's Media, Comps, Styles, Systems control in dark, Media picked: the picked word on the system's tinted glass chip, legible"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-dark-library-rest"
+    },
+    {
+      "do": "filmThumb",
+      "name": "2-dark-media-to-comps",
+      "rail": [
+        "Media",
+        "Systems"
+      ],
+      "pad": 2,
+      "press": "Comps",
+      "seconds": 0.8,
+      "inside": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "filmThumb",
+      "name": "3-dark-comps-to-media",
+      "rail": [
+        "Media",
+        "Systems"
+      ],
+      "pad": 2,
+      "press": "Media",
+      "seconds": 0.8,
+      "inside": true
+    },
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-light-library-rest",
+      "note": "the same control in light, Media picked: the picked word legible on the tinted glass, never white on white"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-light-library-rest"
+    },
+    {
+      "do": "filmThumb",
+      "name": "5-light-media-to-comps",
+      "rail": [
+        "Media",
+        "Systems"
+      ],
+      "pad": 2,
+      "press": "Comps",
+      "seconds": 0.8,
+      "inside": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "filmThumb",
+      "name": "6-light-comps-to-media",
+      "rail": [
+        "Media",
+        "Systems"
+      ],
+      "pad": 2,
+      "press": "Media",
+      "seconds": 0.8,
+      "inside": true
+    },
+    {
+      "do": "open",
+      "file": "fixtures/Full screen Retina recording 3456x2234.mp4",
+      "width": 1360,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectTimeline",
+      "mode": "view"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "filmThumb",
+      "name": "7-light-view-to-edit",
+      "rail": [
+        "View Mode",
+        "Edit Mode"
+      ],
+      "key": "2",
+      "modifiers": [
+        "command"
+      ],
+      "seconds": 0.8,
+      "inside": true
+    },
+    {
+      "do": "expectTimeline",
+      "mode": "edit"
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "filmThumb",
+      "name": "8-dark-edit-to-view",
+      "rail": [
+        "View Mode",
+        "Edit Mode"
+      ],
+      "key": "1",
+      "modifiers": [
+        "command"
+      ],
+      "seconds": 0.8,
+      "inside": true
+    },
+    {
+      "do": "expectTimeline",
+      "mode": "view"
+    },
+    {
+      "do": "appearance",
+      "value": "system"
+    }
+  ]
+}

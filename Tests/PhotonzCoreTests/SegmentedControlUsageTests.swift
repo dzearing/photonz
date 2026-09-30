@@ -103,12 +103,18 @@ struct SegmentedControlUsageTests {
         // curve of its own, and filmed on 2026-09-30 the pane overshot the
         // rail by 6pt while the chip's colour stayed inside it.
         #expect(!code.contains("GlassEffectContainer"), "the chip's glass is one pane, moved by SwiftUI's curve alone")
-        // The colours are SegmentInk's, which are tested at 4.5:1 for every
-        // state (SegmentInkTests), and the words are drawn twice so a word
-        // the chip passes over is never grey on the accent.
+        // The colours are SegmentInk's, which are tested legible for every
+        // state (SegmentInkTests). Nothing is painted over the glass (the
+        // user, 2026-09-30: "I see no liquid glass refraction on the edges"
+        // of a chip covered at 88%): the picked word is inside the glass in
+        // the system's label, the scheme chosen by SegmentInk.
         #expect(code.contains("SegmentInk.chip(accent:"), "the chip takes its colour from SegmentInk")
         #expect(code.contains("SegmentInk.rail("), "the rail takes its colour from SegmentInk")
-        #expect(code.contains("wordsOnChip"), "the words are drawn again in the chip's ink inside the chip")
+        #expect(!code.contains("chipCover"), "nothing is painted over the chip's glass")
+        #expect(code.contains("SegmentInk.pickedWordScheme("), "the picked word takes the system's label SegmentInk picks")
+        // While it travels the chip is clear glass riding over the words, so
+        // they bend at its edges.
+        #expect(code.contains(".clear.tint("), "a travelling chip is a clear glass lens")
         // A disabled control never fades its words below 4.5:1.
         #expect(!code.contains("0.42"), "a faded control cannot keep its words readable")
 

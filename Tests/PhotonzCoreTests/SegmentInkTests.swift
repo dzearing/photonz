@@ -4,12 +4,13 @@ import Testing
 /// The segmented control's colours, held to the user's rule (2026-09-30): "I do
 /// not want white on white or black on black cases EVER", and legible is the
 /// bar, not a WCAG grade ("I asked specifically for legible"): the accent is
-/// the system's own, never deepened, with white on it.
+/// the system's own tinted glass, never deepened or painted over, with the
+/// system's own label on it.
 ///
 /// Every word the control draws sits on something this file names: an unpicked
 /// word on the rail, a hovered or pressed one on the hover plate over the rail,
-/// a picked one on the tinted chip, a word the chip is passing over on the chip
-/// too (it is drawn in the chip's ink wherever the chip covers it). The rail is
+/// a picked one on the tinted glass chip, a word the chip is passing over in
+/// its own ink through the lens the travelling chip becomes. The rail is
 /// opaque, so what lies behind the control (a white title bar, a black
 /// screenshot under the history bar) never reaches a word; the tests still lay
 /// every pair over white, black and mid grey to prove it.
@@ -58,18 +59,40 @@ struct SegmentInkTests {
         }
     }
 
-    @Test("The picked word is white on the accent, and dark only on an accent white would vanish into")
-    func pickedWord() throws {
-        let white = try #require(RGBA(hex: "FFFFFF"))
-        for hex in ["007AFF", "0A84FF", "953D96", "E0383E", "F74F9E", "F7821B", "62BA46"] {
+    @Test("The picked word is the system's own label for the window, white in dark and black in light")
+    func pickedWordIsTheSystemsLabel() throws {
+        let white = try #require(RGBA(hex: "FFFFFF")), black = try #require(RGBA(hex: "000000"))
+        #expect(SegmentInk.systemLabel(.dark) == white)
+        #expect(SegmentInk.systemLabel(.light) == black)
+        // Measured in the app on 2026-09-30 with the probe in front: on blue,
+        // pink, red and graphite glass the system inks its primary label
+        // white in dark and black in light, and both read.
+        for hex in ["007AFF", "0A84FF", "F74F9E", "E0383E", "FF5257", "8C8C8C"] {
             let accent = try #require(RGBA(hex: hex))
-            #expect(SegmentInk.pickedWord(on: accent) == white, "white on \(hex)")
+            #expect(SegmentInk.pickedWordScheme(on: accent, in: .dark) == .dark, "dark keeps white on \(hex)")
+            #expect(SegmentInk.pickedWordScheme(on: accent, in: .light) == .light, "light keeps black on \(hex)")
         }
-        // Yellow, and graphite: veiled by the brightest glass, graphite is a
-        // mid grey that white reads 2.8:1 on, grey on grey.
-        for hex in ["FFC600", "C7F0FF", "8C8C8C"] {
+    }
+
+    @Test("Where the window's own label would not read on the chip, the word takes the other scheme's")
+    func pickedWordFlipsOnlyWhereItMust() throws {
+        // The system put white on yellow glass in dark (measured 2026-09-30):
+        // white on white. Yellow and a pale accent take the light label.
+        for hex in ["FFC600", "C7F0FF"] {
             let accent = try #require(RGBA(hex: hex))
-            #expect(SegmentInk.pickedWord(on: accent) != white, "not white on \(hex)")
+            #expect(SegmentInk.pickedWordScheme(on: accent, in: .dark) == .light, "dark word on \(hex)")
+            #expect(SegmentInk.pickedWord(on: accent, in: .dark) == SegmentInk.systemLabel(.light))
+        }
+        // A disabled chip is a dark grey: black would vanish into it in light.
+        #expect(SegmentInk.pickedWordScheme(on: SegmentInk.disabledChip(.light), in: .light) == .dark)
+    }
+
+    @Test("A window in the back greys the chip, and the window's own label reads on it in both schemes")
+    func windowInTheBack() {
+        for scheme in SegmentInk.Scheme.allCases {
+            let chip = SegmentInk.inactiveChip(scheme)
+            #expect(abs(chip.r - chip.b) < 0.05, "the system's grey")
+            #expect(Legibility.isLegible(ink: SegmentInk.systemLabel(scheme), on: chip))
         }
     }
 
@@ -97,25 +120,38 @@ struct SegmentInkTests {
         let white = try #require(RGBA(hex: "FFFFFF"))
         let states = Set(SegmentInk.pairs(scheme: .light, accent: blue, backdrop: white).map(\.state))
         for state in ["unpicked at rest", "unpicked hovered", "unpicked pressed", "unavailable",
-                      "picked", "picked pressed", "under the moving chip", "disabled unpicked",
-                      "disabled picked"] {
+                      "picked", "picked pressed", "under the moving chip", "picked, window in the back",
+                      "disabled unpicked", "disabled picked"] {
             #expect(states.contains(state), "\(state) is not checked")
         }
     }
 
-    @Test("The picked word reads on the chip even where the glass under it is as bright as white")
-    func chipHoldsOverBrightGlass() throws {
-        // Measured on the app on 2026-09-30: tinted glass alone veiled the
-        // chip to #B0CCE0 in light, where white reads 1.6:1. So the accent is
-        // laid over the glass, and the word is held to the rule with the
-        // glass under it as bright as it can be.
-        #expect(SegmentInk.chipCover >= 0.8 && SegmentInk.chipCover < 1)
+    @Test("The chip is the glass itself: no colour is laid over it")
+    func chipIsTheGlass() throws {
+        // Measured 2026-09-30 with the probe in front: tinted regular glass
+        // draws its tint at full strength (system blue came out 0,121,255,
+        // yellow 253,196,0), so what a word sits on is the accent itself.
         let white = try #require(RGBA(hex: "FFFFFF"))
-        for accent in Self.accents {
-            let chip = SegmentInk.chip(accent: accent)
-            let drawn = SegmentInk.drawnChip(chip)
-            #expect(drawn == SegmentInk.over(RGBA(r: chip.r, g: chip.g, b: chip.b, a: SegmentInk.chipCover), white))
-            #expect(Legibility.isLegible(ink: SegmentInk.pickedWord(on: accent), on: drawn))
+        for scheme in SegmentInk.Scheme.allCases {
+            for accent in Self.accents {
+                let picked = SegmentInk.pairs(scheme: scheme, accent: accent, backdrop: white)
+                    .first { $0.state == "picked" }
+                #expect(picked?.behind == SegmentInk.chip(accent: accent))
+            }
+        }
+    }
+
+    @Test("A travelling chip is a lens: the words under it are their own, seen through a hint of the accent")
+    func travellingChipIsALens() throws {
+        #expect(SegmentInk.lensTint > 0 && SegmentInk.lensTint <= 0.25)
+        let blue = try #require(RGBA(hex: "007AFF")), white = try #require(RGBA(hex: "FFFFFF"))
+        for scheme in SegmentInk.Scheme.allCases {
+            let under = SegmentInk.pairs(scheme: scheme, accent: blue, backdrop: white)
+                .first { $0.state == "under the moving chip" }
+            #expect(under?.word == SegmentInk.word(scheme))
+            let chip = SegmentInk.chip(accent: blue)
+            #expect(under?.behind == SegmentInk.over(RGBA(r: chip.r, g: chip.g, b: chip.b, a: SegmentInk.lensTint),
+                                                     SegmentInk.rail(scheme)))
         }
     }
 

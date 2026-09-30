@@ -42,7 +42,7 @@ enum LegibilityCatalogue {
                       disabledReason: index == unavailable ? "Not now" : nil)
             },
             selection: on, size: size, form: form, showsTitles: pictures == nil, tipsBelow: false,
-            shownHovered: hovered, shownFocused: focused, shownTravel: travel, glassAsWhite: true) { _ in }
+            shownHovered: hovered, shownFocused: focused, shownTravel: travel, glassAsPaint: true) { _ in }
         return AnyView(control
             .frame(width: form == .fill ? width : nil)
             .fixedSize(horizontal: form == .natural, vertical: false))

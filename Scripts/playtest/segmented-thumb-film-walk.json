@@ -1,12 +1,13 @@
 {
   "out": "/tmp/photonz-playtest/segmented-thumb-film",
-  "seed": "The user, 2026-09-30: back to our own segmented control, with the picked choice a TINTED Liquid Glass chip that moves to the new segment as liquid glass, stretching as it travels and never leaving its rail. At Next defaults with no flag set, this walk FILMS the chip at 120 fps in the title bar and a panel: the title bar's View | Edit both ways (Cmd-2, Cmd-1), a panel picker (Across, Left to Right and back, pressed by the pointer on each segment's face). Every frame is read column by column for where the tinted chip is against its rail, and the walk claims it never leaves its rail in any frame. segmented-history-film-walk films the third place, the history bar, which a walk can only click with the probe in front.",
+  "seed": "The user, 2026-09-30: back to our own segmented control, with the picked choice a TINTED Liquid Glass chip that moves to the new segment as liquid glass, stretching as it travels and never leaving its rail. At Next defaults with no flag set, this walk FILMS the chip at 120 fps in the title bar and a panel: the title bar's View | Edit both ways (Cmd-2, Cmd-1), a panel picker (Across, Left to Right and back, pressed by the pointer on each segment's face). Every frame is read column by column for where the tinted chip is against its rail, and the walk claims it never leaves its rail in any frame. segmented-history-film-walk films the third place, the history bar, which a walk can only click with the probe in front. It runs with the probe in front: the chip is the system's tinted glass, and a window in the back greys it as the Mac greys every accent there, so only a window in front shows the colour the film reads.",
   "setup": {
     "forget": [
       "text",
       "shapes",
       "tools"
-    ]
+    ],
+    "front": true
   },
   "steps": [
     {

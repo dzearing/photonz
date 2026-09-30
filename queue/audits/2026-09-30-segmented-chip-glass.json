@@ -1,0 +1,28 @@
+{
+  "feature": "Segmented control: the chip is real Liquid Glass and lenses the words as it moves",
+  "epic": "design-system",
+  "summary": "The picked chip is now the system's own tinted Liquid Glass with nothing painted over it. When you pick another choice it lifts into a clear glass lens and slides over the words, which bend at its edges and mirror along its rims, then it lands as the tinted chip with its word inside.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The Library is in the dock (Media, Comps, Styles, Systems); View | Edit is in the title bar of a recording.",
+  "switched": {},
+  "try": [
+    { "do": "In the Library, click Comps, then Media, and watch the chip's edges as it slides, in Dark.", "shot": "2026-09-30-segmented-chip-glass-dark-move-sc.png" },
+    { "do": "Switch the Mac to Light and click Comps, then Media, again.", "shot": "2026-09-30-segmented-chip-glass-light-move-sc.png" },
+    { "do": "Look at the picked word on the chip at rest, in Dark and in Light.", "shot": "2026-09-30-segmented-chip-glass-rest-sc.png" },
+    { "do": "Open a recording and press Cmd-2, then Cmd-1: the title bar's View | Edit moves the same way." },
+    { "do": "Grab the chip in any row and drag it along the rail, then let go." },
+    { "do": "Click another app so the Photonz window is in the back, and look at the chip." }
+  ],
+  "evaluate": [
+    "Is this the refraction you meant: the words bending at the chip's curved ends and mirrored along its rims as it slides?",
+    "The clear glass frosts the words under the middle of the chip as it passes. Does that read as glass, or do you want the middle crisp and only the edges bending?",
+    "In Light the system puts a black word on the blue chip, where it used to be white. Does black on the tinted glass look right to you?",
+    "With the window in the back, the chip turns grey like every Mac control does. Is that what you expect?"
+  ],
+  "rough": [
+    "The frames above are filmed at 120 fps with the probe in front, which is the only time the chip is tinted: a window in the back greys the tint, as the Mac greys every accent there.",
+    "The middle of the lens is frosted, not sharp: that is the system's clear glass, and SwiftUI offers no sharper glass. A crisp lens would have to be drawn by us.",
+    "The lens bends the words at its edges but barely magnifies them: the chip stays the size of its segment so it never leaves the rail, where Apple's own thumb grows as it lifts.",
+    "The word on the chip is the system's own label for glass: white in Dark, black in Light. Only where that would vanish into your accent (white on yellow in Dark) does it take the other one.",
+    "Dragging the chip turns it into the same lens, but no walk films a drag yet; the click and the key moves are filmed."
+  ]
+}

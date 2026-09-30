@@ -14,44 +14,53 @@ import Foundation
 ///   was behind the control, so a dark word on it over a black screenshot
 ///   under the history bar would have been black on black.
 /// * **The chip** under the picked word is a pane of the system's Liquid
-///   Glass tinted with the accent, and the accent laid over it at
-///   `chipCover`. Tinted glass alone was measured in the app on 2026-09-30:
-///   it veils whatever is under it in light, and drew the chip #B0CCE0, where
-///   white reads 1.6:1. So the colour goes on top, the glass showing at its
-///   rim and a little through it, and the rule is checked with the glass
-///   under it as bright as white. The accent is the system's own, never taken
-///   deeper, and the word on it is white, the system's own pairing; only an
-///   accent white would vanish into (yellow) takes a dark word instead.
-/// * **A word the chip is passing over** is drawn in the chip's ink inside the
-///   chip and in its own outside it, so a moving chip never puts a grey word
-///   on blue.
+///   Glass tinted with the accent, and nothing is painted over it (the user,
+///   2026-09-30: "I see no liquid glass refraction on the edges" of the chip
+///   that had the accent laid over its glass at 88%). Measured with the probe
+///   in front the same day, tinted regular glass draws its tint at full
+///   strength (system blue came out 0,121,255), so the word sits on the
+///   accent itself. The word is the system's own label on glass, white in
+///   dark and black in light; only where that label would not read on the
+///   accent (white on yellow in dark) does it take the other scheme's.
+/// * **A travelling chip** is a lens: clear glass with a hint of the accent
+///   (`lensTint`) riding over the words, so they bend at its edges as it
+///   passes. The words under it are their own ink, seen through it.
+/// * **A window in the back** greys the chip's tint, as the Mac greys every
+///   accent there, and the word keeps the window's own label on it.
 /// * **Disabled** greys the chip rather than fading the control.
 public enum SegmentInk {
     public enum Scheme: CaseIterable, Sendable {
         case light, dark
     }
 
-    /// How much of the chip's colour lies over its glass. The rest is the
-    /// glass showing through, which is what makes it read as glass.
-    public static let chipCover = 0.88
+    /// How much of the accent tints the clear glass of a travelling chip:
+    /// enough to say it is the chip, little enough that the words it lenses
+    /// read through it.
+    public static let lensTint = 0.18
 
-    /// The chip as drawn: its colour at `chipCover` over glass as bright as
-    /// white, the worst the glass can do to a white word.
-    public static func drawnChip(_ chip: RGBA) -> RGBA {
-        over(RGBA(r: chip.r, g: chip.g, b: chip.b, a: chipCover), RGBA(r: 1, g: 1, b: 1))
+    /// The system's primary label on glass: white in dark, black in light
+    /// (measured on tinted glass on 2026-09-30).
+    public static func systemLabel(_ scheme: Scheme) -> RGBA {
+        scheme == .dark ? RGBA(r: 1, g: 1, b: 1) : RGBA(r: 0, g: 0, b: 0)
     }
 
-    /// The words on a grey chip, and on the accent wherever they read.
-    public static let chipWord = RGBA(r: 1, g: 1, b: 1)
+    /// Which scheme's label the picked word takes on a chip of this colour:
+    /// the window's own, unless it would not read there, then the other.
+    public static func pickedWordScheme(on chip: RGBA, in scheme: Scheme) -> Scheme {
+        if Legibility.isLegible(ink: systemLabel(scheme), on: chip) { return scheme }
+        let other: Scheme = scheme == .dark ? .light : .dark
+        return Legibility.isLegible(ink: systemLabel(other), on: chip) ? other : scheme
+    }
 
-    /// The word on an accent white would vanish into: the kit's ink.
-    public static let darkChipWord = hex(0x1A1C22)
+    /// The picked word on a chip of this colour.
+    public static func pickedWord(on chip: RGBA, in scheme: Scheme) -> RGBA {
+        systemLabel(pickedWordScheme(on: chip, in: scheme))
+    }
 
-    /// The picked word on the chip for an accent: white, the system's own
-    /// pairing, unless white is not legible on it even at its most veiled
-    /// (the yellow accent, 1.6:1), where it is dark.
-    public static func pickedWord(on accent: RGBA) -> RGBA {
-        Legibility.isLegible(ink: chipWord, on: drawnChip(chip(accent: accent))) ? chipWord : darkChipWord
+    /// The chip as the system draws it while its window is in the back: its
+    /// tint greyed, whatever the accent (measured 2026-09-30).
+    public static func inactiveChip(_ scheme: Scheme) -> RGBA {
+        scheme == .light ? RGBA(r: 119 / 255, g: 120 / 255, b: 123 / 255) : RGBA(r: 48 / 255, g: 49 / 255, b: 52 / 255)
     }
 
     /// The recessed track: darker than the panel and the title bar it sits on
@@ -104,18 +113,20 @@ public enum SegmentInk {
     public static func pairs(scheme: Scheme, accent: RGBA, backdrop: RGBA) -> [Pair] {
         let rail = over(rail(scheme), backdrop)
         let hoverGround = over(hoverPlate(scheme), rail)
-        let chip = drawnChip(chip(accent: accent))
-        let greyChip = drawnChip(disabledChip(scheme))
+        let chip = chip(accent: accent)
+        let lens = over(RGBA(r: chip.r, g: chip.g, b: chip.b, a: lensTint), rail)
+        let greyChip = disabledChip(scheme)
         return [
             Pair(state: "unpicked at rest", word: word(scheme), behind: rail),
             Pair(state: "unpicked hovered", word: hoveredWord(scheme), behind: hoverGround),
             Pair(state: "unpicked pressed", word: hoveredWord(scheme), behind: hoverGround),
             Pair(state: "unavailable", word: unavailableWord(scheme), behind: rail),
-            Pair(state: "picked", word: pickedWord(on: accent), behind: chip),
-            Pair(state: "picked pressed", word: pickedWord(on: accent), behind: chip),
-            Pair(state: "under the moving chip", word: pickedWord(on: accent), behind: chip),
+            Pair(state: "picked", word: pickedWord(on: chip, in: scheme), behind: chip),
+            Pair(state: "picked pressed", word: pickedWord(on: chip, in: scheme), behind: chip),
+            Pair(state: "under the moving chip", word: word(scheme), behind: lens),
+            Pair(state: "picked, window in the back", word: systemLabel(scheme), behind: inactiveChip(scheme)),
             Pair(state: "disabled unpicked", word: word(scheme), behind: rail),
-            Pair(state: "disabled picked", word: chipWord, behind: greyChip),
+            Pair(state: "disabled picked", word: pickedWord(on: greyChip, in: scheme), behind: greyChip),
         ]
     }
 

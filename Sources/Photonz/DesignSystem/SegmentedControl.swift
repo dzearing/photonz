@@ -16,19 +16,18 @@ import SwiftUI
 /// with the picked choice as a TINTED Liquid Glass chip that moves as glass.
 ///
 /// * **One look, everywhere.** A recessed capsule rail, 2pt of padding, 2pt
-///   between segments, capsule segments, and ONE chip under the picked
+///   between segments, capsule segments, and ONE chip over the picked
 ///   segment: a pane of the system's Liquid Glass tinted with the accent,
-///   the picked word white on it. Only the size differs from place to place.
+///   nothing painted over it, the picked word inside it in the system's own
+///   label for glass. Only the size differs from place to place.
 /// * **Every word is legible, always** (the user, 2026-09-30: "I do not
 ///   want white on white or black on black cases EVER"). The colours are
 ///   `SegmentInk`'s, which PhotonzCore tests for every state, scheme and
 ///   accent, and the legibility check (`LegibilitySheet`) measures on the
 ///   drawn control on every test run. The rail is solid, so nothing behind
-///   the control reaches its words; the chip is the system's accent as it
-///   draws it, laid over its glass so the glass's veil can never wash it
-///   out, with white on it (dark only on an accent white would vanish into);
-///   a word the chip passes over is in the chip's ink inside the chip and
-///   its own colour outside it.
+///   the control reaches its words; the picked word is the system's label
+///   on glass, white in dark and black in light, and the other scheme's
+///   only where that one would not read on the accent (yellow in dark).
 /// * **Sizes.** 24, 28 (the default, and the only size the mocks' panels use)
 ///   and 32. The size sets the height and the type; the width always comes from
 ///   the words.
@@ -43,18 +42,23 @@ import SwiftUI
 ///   whole control under `.disabled` greys its chip and stops answering. One
 ///   tab stop, arrows move the pick and stop at the ends, and the focus ring
 ///   sits round the chip.
-/// * **Changing the value.** The chip travels to the new segment as one pane
-///   of glass, moved by SwiftUI's own animation: its leading edge sets off
-///   first and its trailing edge follows, so it stretches across the gap and
-///   draws itself in as it lands. Both edges ride timing curves that end
-///   exactly where they are going, so it never overshoots and never leaves
-///   the rail (filmed at 120 fps by `segmented-thumb-film-walk` and
-///   `segmented-history-film-walk`). Those two curves are the chip's ONLY
-///   animators: a pick made inside another animation (View | Edit changes
-///   under `.viewEditMode`) once flung a drawn thumb a whole segment out of
-///   its rail. Grab the chip and drag it and it follows the pointer, landing
-///   on the nearest segment when let go. Under Reduce Motion it moves at once.
-///
+/// * **Changing the value.** The chip lifts off its word and travels to the
+///   new segment as a lens: clear glass with a hint of the accent, riding
+///   over the words so they bend at its edges as it passes, the way the
+///   system's own segmented thumb lenses its labels (the user, 2026-09-30:
+///   "I see no liquid glass refraction on the edges"). It lands as the
+///   tinted chip with its word inside. It is moved by SwiftUI's own
+///   animation: its leading edge sets off first and its trailing edge
+///   follows, so it stretches across the gap and draws itself in as it
+///   lands. Both edges ride timing curves that end exactly where they are
+///   going, so it never overshoots and never leaves the rail (filmed at 120
+///   fps by `segmented-thumb-film-walk`, `segmented-history-film-walk` and
+///   `segmented-chip-refraction-film-walk`). Those two curves are the chip's
+///   ONLY animators: a pick made inside another animation (View | Edit
+///   changes under `.viewEditMode`) once flung a drawn thumb a whole segment
+///   out of its rail. Grab the chip and drag it and it follows the pointer as
+///   the same lens, landing on the nearest segment when let go. Under Reduce
+///   Motion it moves at once.
 /// With the Next release's `next-designed-segmented` switch off, which is
 /// always the case in Current, this is the system's segmented picker exactly as
 /// each caller had it, so Current does not change.
@@ -241,14 +245,15 @@ struct DesignedSegments<Value: Hashable>: View {
     var shownHovered: Int?
     var shownFocused = false
     var shownTravel: CGFloat?
-    /// For the legibility sheet: draw the glass as plain white, the brightest
-    /// it can be under the chip's colour. An offscreen render has no glass.
-    var glassAsWhite = false
+    /// For the legibility sheet: draw the chip's glass as the colour it draws
+    /// (measured with the window in front), since an offscreen render has no
+    /// glass.
+    var glassAsPaint = false
 
     init(label: String, options: [Option], selection: Value?, size: SegmentedControl<Value>.Size,
          form: SegmentedControl<Value>.Form, showsTitles: Bool, tipsBelow: Bool,
          shownHovered: Int? = nil, shownFocused: Bool = false, shownTravel: CGFloat? = nil,
-         glassAsWhite: Bool = false, pick: @escaping (Value) -> Void) {
+         glassAsPaint: Bool = false, pick: @escaping (Value) -> Void) {
         self.label = label
         self.options = options
         self.selection = selection
@@ -259,7 +264,7 @@ struct DesignedSegments<Value: Hashable>: View {
         self.shownHovered = shownHovered
         self.shownFocused = shownFocused
         self.shownTravel = shownTravel
-        self.glassAsWhite = glassAsWhite
+        self.glassAsPaint = glassAsPaint
         self.pick = pick
     }
 
@@ -269,6 +274,7 @@ struct DesignedSegments<Value: Hashable>: View {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.appearsActive) private var appearsActive
 
     /// Every segment's box in the row, where the chip is placed and what a
     /// drag is measured against.
@@ -285,6 +291,13 @@ struct DesignedSegments<Value: Hashable>: View {
     /// A drag that began off the chip belongs to the segment it began on.
     @State private var dragIgnored = false
     @State private var rowWidth: CGFloat = 0
+    /// The chip is on its way to a new pick. `travelToken` tells the end of
+    /// the latest trip from the end of one it overtook.
+    @State private var travelling = false
+    @State private var travelToken = 0
+    /// The chip is a lens over the words: travelling, under the hand, or
+    /// stopped part way for the legibility sheet.
+    private var isLifted: Bool { travelling || dragCenter != nil || shownTravel != nil }
 
     private typealias Palette = VideoKit.Palette
 
@@ -325,15 +338,13 @@ struct DesignedSegments<Value: Hashable>: View {
                 segment(index)
             }
         }
-        // The words in their own ink everywhere the chip is not...
+        // The words in their own ink everywhere the chip is not at rest...
         .mask { outsideChip }
         .coordinateSpace(.named(segmentedRowSpace))
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { rowWidth = $0 }
-        // ...and white wherever it is, the same words laid the same way,
-        // clipped by the same moving capsule, so a word the chip is passing
-        // over is never grey on the accent.
-        .overlay { wordsOnChip }
-        .background(alignment: .topLeading) { chip }
+        // ...and the chip over them: the picked word inside it at rest, a
+        // lens over the words it passes while it travels.
+        .overlay(alignment: .topLeading) { chip }
         .simultaneousGesture(chipDrag)
         .onChange(of: pickedIndex) { _, picked in moveChip(to: picked) }
         .onChange(of: slots) { settleChip() }
@@ -386,10 +397,17 @@ struct DesignedSegments<Value: Hashable>: View {
     }
 
     /// The chip: ONE pane of the system's Liquid Glass tinted with the chip's
-    /// colour, with that colour laid over it at `SegmentInk.chipCover` so a
-    /// white word always reads; the glass shows at the rim and a little
-    /// through. It stays put as a view and is moved by SwiftUI's animation of
-    /// its edges; nothing places it frame by frame.
+    /// colour, with nothing painted over it, riding ABOVE the row's words.
+    /// At rest it is regular glass, the words under it cut away and the
+    /// picked word drawn inside it in the system's own label for glass
+    /// (`chipWords`), so it reads as the tinted chip behind its word. While
+    /// it travels (`isLifted`) it turns to clear glass with a hint of the
+    /// accent and its own words go, so the words it passes over are seen
+    /// through it and bend at its edges, the way the system's own segmented
+    /// thumb lenses its labels (the user, 2026-09-30: "I see no liquid glass
+    /// refraction on the edges" of a chip painted over at 88%). It stays put
+    /// as a view and is moved by SwiftUI's animation of its edges; nothing
+    /// places it frame by frame.
     ///
     /// Not in a `GlassEffectContainer`, and not morphed between segments under
     /// a shared `glassEffectID`: that morph was filmed at 120 fps four ways on
@@ -397,37 +415,75 @@ struct DesignedSegments<Value: Hashable>: View {
     /// the next, nothing between.
     @ViewBuilder private var chip: some View {
         if let box = chipRect {
-            let fill = chipColor
+            let fill = Self.paint(chipTint)
             atChip(box) {
                 ZStack {
-                    if glassAsWhite {
-                        Capsule().fill(.white)
-                    } else {
-                        // Not `.interactive()`: interactive glass swells
-                        // 1.5pt past the chip under a press, drawn outside
-                        // any clip SwiftUI puts on it (filmed on 2026-09-30
-                        // in the history bar). The pressed segment shrinks
-                        // to 97% instead.
-                        //
-                        // The same view whether or not a walk is taking an
-                        // offscreen picture, only its glass changes: taking
-                        // the glass view out and putting it back left the
-                        // history bar's filter deaf to the next click.
-                        Color.clear.glassEffect(ChipGlassSwitch.shared.offscreen ? .identity : .regular.tint(fill),
-                                                in: .capsule)
-                    }
-                    // The chip's colour over its glass: tinted glass alone
-                    // veils toward white in light, and a white word read
-                    // 1.6:1 on it (measured 2026-09-30). The glass shows at
-                    // the rim and a little through.
+                    // What the glass draws, as paint, only where no glass can
+                    // be drawn: an offscreen picture (the legibility sheet,
+                    // a walk's labelsWhole), where glass draws nothing.
                     Capsule()
-                        .fill(fill.opacity(SegmentInk.chipCover))
-                        .padding(1)
+                        .fill(fill.opacity(isLifted ? SegmentInk.lensTint : 1))
+                        .opacity(paintsGlass ? 1 : 0)
+                    chipWords(box)
                 }
+                .clipShape(Capsule())
+                // Not `.interactive()`: interactive glass swells 1.5pt past
+                // the chip under a press, drawn outside any clip SwiftUI puts
+                // on it (filmed on 2026-09-30 in the history bar). The
+                // pressed segment shrinks to 97% instead.
+                //
+                // The same view whether or not a walk is taking an offscreen
+                // picture, only its glass changes: taking the glass view out
+                // and putting it back left the history bar's filter deaf to
+                // the next click.
+                .modifier(ChipGlass(glass: glass(fill), drawn: !glassAsPaint))
                 .overlay(focusRing)
             }
             .allowsHitTesting(false)
         }
+    }
+
+    /// Which glass the chip is: none while a picture is taken offscreen,
+    /// clear with a hint of the accent while it travels, regular glass tinted
+    /// with the accent at rest.
+    private func glass(_ fill: Color) -> Glass {
+        if ChipGlassSwitch.shared.offscreen { return .identity }
+        return isLifted ? .clear.tint(fill.opacity(SegmentInk.lensTint)) : .regular.tint(fill)
+    }
+
+    /// Whether the chip's glass is drawn as paint rather than as glass.
+    private var paintsGlass: Bool { glassAsPaint || ChipGlassSwitch.shared.offscreen }
+
+    /// The words inside the chip, laid exactly where the row lays them, in
+    /// the system's primary label for glass. That label is white in dark and
+    /// black in light; where it would not read on the accent (white on
+    /// yellow in dark) the words take the other scheme's
+    /// (`SegmentInk.pickedWordScheme`). In a window in the back the system
+    /// greys the chip, and the window's own label reads on that grey. They go while the chip travels, so the words it passes
+    /// over are the ones seen through it.
+    private func chipWords(_ box: ChipBox) -> some View {
+        GeometryReader { inside in
+            wordRow(ink: chipWordInk)
+                .environment(\.colorScheme, chipWordScheme)
+                .frame(width: rowWidth, height: inside.size.height + box.top * 2, alignment: .topLeading)
+                .offset(x: -box.leading, y: -box.top)
+        }
+        .opacity(isLifted ? 0 : 1)
+        .accessibilityHidden(true)
+    }
+
+    /// The system's primary label, drawn by the glass: near pure white or
+    /// black (measured 2026-09-30). Painted as that where the glass is
+    /// painted, since offscreen the primary label is white at 85% and thin
+    /// icon strokes blend into the accent.
+    private var chipWordInk: AnyShapeStyle {
+        guard paintsGlass else { return AnyShapeStyle(.primary) }
+        return AnyShapeStyle(Self.paint(SegmentInk.systemLabel(chipWordScheme == .dark ? .dark : .light)))
+    }
+
+    private var chipWordScheme: ColorScheme {
+        guard paintsGlass || appearsActive else { return scheme }
+        return SegmentInk.pickedWordScheme(on: chipTint, in: inkScheme) == .dark ? .dark : .light
     }
 
     /// Something the chip's size, where the chip is in the row: the row's
@@ -447,9 +503,8 @@ struct DesignedSegments<Value: Hashable>: View {
 
     /// The chip's colour: the accent as the system draws it
     /// (`SegmentInk.chip`), or grey while the control is disabled.
-    private var chipColor: Color {
-        guard isEnabled else { return Self.paint(SegmentInk.disabledChip(inkScheme)) }
-        return Self.paint(SegmentInk.chip(accent: accent))
+    private var chipTint: RGBA {
+        isEnabled ? SegmentInk.chip(accent: accent) : SegmentInk.disabledChip(inkScheme)
     }
 
     /// The Mac's accent as it is drawn in this scheme.
@@ -468,7 +523,7 @@ struct DesignedSegments<Value: Hashable>: View {
     private var outsideChip: some View {
         ZStack(alignment: .topLeading) {
             Rectangle()
-            if let rect = chipRect {
+            if let rect = chipRect, !isLifted {
                 atChip(rect) { Capsule() }
                     .blendMode(.destinationOut)
             }
@@ -476,19 +531,12 @@ struct DesignedSegments<Value: Hashable>: View {
         .compositingGroup()
     }
 
-    /// The words again, in the chip's ink (white, or dark on an accent white
-    /// would vanish into), showing only inside the chip.
-    @ViewBuilder private var wordsOnChip: some View {
-        if let rect = chipRect {
-            SegmentColumnsLayout(form: form, spacing: 2) {
-                ForEach(options.indices, id: \.self) { index in
-                    face(index, ink: Self.paint(isEnabled ? SegmentInk.pickedWord(on: accent)
-                                                : SegmentInk.chipWord))
-                }
+    /// The row's words, every one in one ink.
+    private func wordRow(ink: some ShapeStyle) -> some View {
+        SegmentColumnsLayout(form: form, spacing: 2) {
+            ForEach(options.indices, id: \.self) { index in
+                face(index, ink: ink)
             }
-            .mask { atChip(rect) { Capsule() } }
-            .allowsHitTesting(false)
-            .accessibilityHidden(true)
         }
     }
 
@@ -506,11 +554,16 @@ struct DesignedSegments<Value: Hashable>: View {
             return
         }
         let forward = target.midX >= (leading + trailing) / 2
+        travelToken += 1
+        let token = travelToken
+        travelling = true
         withAnimation(Self.leadCurve) {
             if forward { chipTrailing = target.maxX } else { chipLeading = target.minX }
         }
         withAnimation(Self.trailCurve) {
             if forward { chipLeading = target.minX } else { chipTrailing = target.maxX }
+        } completion: {
+            if token == travelToken { travelling = false }
         }
     }
 
@@ -635,7 +688,7 @@ struct DesignedSegments<Value: Hashable>: View {
     /// A segment's picture and word in one ink, laid out the same whichever
     /// layer draws it. The width is always the picked (semibold) word's, so a
     /// pick never reflows the row under a travelling chip.
-    private func face(_ index: Int, ink: Color) -> some View {
+    private func face(_ index: Int, ink: some ShapeStyle) -> some View {
         let option = options[index]
         let isOn = index == pickedIndex
         return HStack(spacing: 5) {
@@ -724,6 +777,21 @@ struct DesignedSegments<Value: Hashable>: View {
 @MainActor @Observable final class ChipGlassSwitch {
     static let shared = ChipGlassSwitch()
     var offscreen = false
+}
+
+/// The chip's glass, or none for the legibility sheet's offscreen picture,
+/// which is told once and never changes, so the view is never swapped.
+private struct ChipGlass: ViewModifier {
+    let glass: Glass
+    let drawn: Bool
+
+    func body(content: Content) -> some View {
+        if drawn {
+            content.glassEffect(glass, in: .capsule)
+        } else {
+            content
+        }
+    }
 }
 
 /// Where the chip is in its row, edge by edge.
