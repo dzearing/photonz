@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p1-high",
   "seq": 0.00001,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T14:47:27.540Z",
-  "updated": "2026-09-29T16:05:10.068Z",
+  "updated": "2026-09-30T01:01:54.359Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -46,11 +46,29 @@
     {
       "t": "2026-09-29T16:05:10.067Z",
       "note": "Fix: .transaction{disablesAnimations; animation=nil} on the thumb's TimelineView; a restingOn state keeps the thumb on its old slot for the one pass before onChange starts the morph (no flash on the new slot); glassEffectID + GlassEffectContainer dropped (plain .glassEffect stays); SegmentThumbMorph now the page's 300ms two-leg curve, no settle, tests hold no-overshoot and monotonic edges. After: 0.0pt past rest in both directions, 0 frames off the rail; segmented-thumb-film-walk (inside: true on all four moves), segmented-thumb-glass-walk (real drag), segment-tooltips, view-mode-and-edit-mode, panel-toggle-titlebar all green at Next defaults; Scripts/test.sh 10536 tests green. Card for the feel is on the-segmented-thumb-moves-the-way-the-user-likes (old card withdrawn as overtaken). Left rough: View to Edit on the big fixture skips the glide's first ~100ms because the mode switch holds the main thread (folded into switching-a-long-recording-to-edit-mode-draws-it)."
+    },
+    {
+      "t": "2026-09-30T00:46:18.532Z",
+      "note": "runner exited without finalizing; reset to pending (attempt 1)"
+    },
+    {
+      "t": "2026-09-30T00:59:52.619Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-30T01:01:54.296Z",
+      "note": "Re-claimed only because 1e10db29 (a revert of a queue commit) put this file back to its committed in_progress state; the work itself landed in 50cda9d8 and was marked done at 16:05. Since then a4496daf (try-the-segmented-thumb-on-the-system-s-own-liqu, done) made the system glass thumb the Next default; the drawn glide from this task stays behind the switch. Re-verified today at Next defaults, screen unlocked, Screen Recording granted: segmented-thumb-film-walk, segmented-thumb-film-drawn-walk, segmented-thumb-glass-walk all green; filmThumb on all four moves (title bar both ways, 96pt rail; panel picker both ways, 80pt rail): furthest past rest 0.0pt, 0 frames with no glass on the rail. Remaining one-style work sits on every-segmented-control-is-the-one-system-glass."
+    },
+    {
+      "t": "2026-09-30T01:01:54.357Z",
+      "note": "Fixed in 50cda9d8 (one animator, no overshoot, never out of the rail), now superseded at Next defaults by the system glass thumb (a4496daf). Re-verified 2026-09-29 with filmThumb at 120fps on all four moves: 0.0pt past rest, 0 frames off the rail; the three segmented-thumb walks green at defaults."
     }
   ],
-  "started": "2026-09-29T15:22:57.833Z",
+  "started": "2026-09-30T00:59:52.618Z",
   "walks": [
     "segmented-thumb-film-walk",
     "segmented-thumb-glass-walk"
-  ]
+  ],
+  "failures": 1,
+  "completed": "2026-09-30T01:01:54.358Z"
 }
