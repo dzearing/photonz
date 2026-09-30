@@ -60,6 +60,10 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
-  "created": "2026-09-23T12:19:26.431Z"
+  "status": "withdrawn",
+  "created": "2026-09-23T12:19:26.431Z",
+  "withdrawn": {
+    "reason": "The user asked for this directly on 2026-09-30: click effects on the cursor and a zoom region that can follow the mouse; filed p1 as a-recording-remembers-where-the-cursor-went-and, clicks-in-a-recording-can-show-an-effect-on-the and a-zoom-region-that-frames-a-spot-and-can-follow",
+    "at": "2026-09-30T20:39:32.241Z"
+  }
 }
