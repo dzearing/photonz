@@ -1,0 +1,34 @@
+{
+  "id": "every-segmented-control-is-the-one-system-glass",
+  "title": "Every segmented control is the one system glass morph, everywhere",
+  "goal": "User 2026-09-29, with a screenshot of the history bar's All / Screenshots / Videos filter showing a solid blue thumb: 'I'm seeing inconsistent segmented controls. What I'd like to see is the system glass morph consistently.' The shared SegmentedControl has a .accent plate style used by HistoryOverlay.swift:113 (solid blue), a .raised glass style elsewhere, and a hand-rolled motion; try-the-segmented-thumb-on-the-system-s-own-liqu adds the system morph behind a flag. The user has decided: the system glass morph is the only one.",
+  "epic": "design-system",
+  "priority": "p1-high",
+  "seq": 0.00002,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-30T00:35:02.164Z",
+  "updated": "2026-09-30T00:35:02.248Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "The system glass morph (from try-the-segmented-thumb-on-the-system-s-own-liqu) is the only way any segmented control draws and moves: its temporary flag is removed, the hand-rolled TimelineView motion and SegmentThumbMorph are deleted (drag keeps only what it needs), and there is no plate style choice (.accent and .raised variants removed)",
+    "The history bar's filter, the title bar's View | Edit, and every panel picker look and move identically (same rail, same glass thumb, same selected label treatment), differing only in size classes the design system defines",
+    "An inventory of every segmented or tab-like control in Sources/Photonz (grep SegmentedControl, Picker .segmented, NSSegmentedControl, and hand-built button rows acting as one) is in the task log, each confirmed on the shared control",
+    "comp-segmented.html and UX-PATTERNS say there is one segmented control and one style",
+    "A test fails if a plate style parameter or any other segmented implementation reappears",
+    "Filmed with filmThumb in three places (history bar, title bar, a panel): same motion, never outside the rail; photographs of all three side by side"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T00:35:02.166Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-09-30T00:35:02.247Z",
+      "note": "seq 400 -> 0.00002"
+    }
+  ]
+}

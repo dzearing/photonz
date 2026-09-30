@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p1-high",
   "seq": 0.00001,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T23:28:33.182Z",
-  "updated": "2026-09-29T23:28:43.043Z",
+  "updated": "2026-09-30T00:35:02.107Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -33,6 +33,23 @@
     {
       "t": "2026-09-29T23:28:43.042Z",
       "note": "User 2026-09-29: they did not reject a Liquid Glass segmented control; they rejected the first version because it looked like two separate buttons with no animation. A stock Picker(.segmented) / NSSegmentedControl rendered as a real single glass control is a fair third candidate to film alongside ours if it can wear the component's look."
+    },
+    {
+      "t": "2026-09-29T23:39:30.691Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-29T23:40:37.914Z",
+      "note": "owns these walks: segmented-thumb-film-walk, segmented-thumb-glass-walk"
+    },
+    {
+      "t": "2026-09-30T00:35:02.106Z",
+      "note": "User 2026-09-29 17:34: decided. They want the system glass morph, consistently, everywhere. No need for a side-by-side card; the follow-up one-segmented-look task makes it the only style."
     }
+  ],
+  "started": "2026-09-29T23:39:30.690Z",
+  "walks": [
+    "segmented-thumb-film-walk",
+    "segmented-thumb-glass-walk"
   ]
 }
