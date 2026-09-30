@@ -850,6 +850,12 @@ extension Experiments {
     /// old Capture and Video menus, with View before them.
     var proMenuBarEnabled: Bool { isEnabled(FeatureCatalog.proMenuBarFlag) }
 
+    /// `next-notices-say-what-happened`: whether the canvas stops carrying
+    /// standing how-to pills (Pen, Measure, a path's points) and every notice
+    /// says what happened and stops, with Undo where it applies. Off, the
+    /// hint pills and the advice on the end of a notice come back.
+    var noticesSayWhatHappenedEnabled: Bool { isEnabled(FeatureCatalog.noticesSayWhatHappenedFlag) }
+
     /// `next-cut-says-what-it-cannot-do`: whether ⌘X, ⌫, ⌥⌫ and the bucket
     /// refuse, out loud, when the marquee is over a layer no piece can be
     /// taken out of or filled in (`RegionSliceRefusal`). Off, cut silently

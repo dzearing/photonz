@@ -45,7 +45,19 @@
     { "do": "snapshot", "name": "5-read-the-dots" },
 
     { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "more-than-one-point", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "6-more-than-one-point", "note": "the gestures the path pill used to say under the canvas are on the card now: a box picks several, Arrow keys nudge, Delete takes them out, a double click on the outline adds a point" },
+    { "do": "snapshot", "name": "6-more-than-one-point" },
+
+    { "do": "action", "action": "tutorialNext" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "free-the-sides", "timeout": 6 },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "describe", "stage": "7-free-the-sides", "note": "the last card: Option drag frees the two sides of a point" },
+    { "do": "snapshot", "name": "7-free-the-sides" },
+
+    { "do": "action", "action": "tutorialNext" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "6-finished", "note": "Done closed the guide" }
+    { "do": "describe", "stage": "8-finished", "note": "Done closed the guide" }
   ]
 }

@@ -55,6 +55,12 @@ public enum CanvasNoticeAction: Hashable, Sendable {
     /// true sentence a person cannot act on. Carries the labels counted at the
     /// moment the reading landed, for the same reason as the two above.
     case findStillPictures(labels: [UUID])
+    /// Put back what the notice just reported (Next,
+    /// `next-notices-say-what-happened`). A result that changed the kind of
+    /// thing a layer is (a shape turned into a path, two paths joined, an
+    /// outline closed) used to end its line with "or Command Z to put it
+    /// back"; the contract gives a toast Undo as a button instead.
+    case undo
 
     /// The layers this action would act on.
     public var layerIDs: [UUID] {
@@ -62,6 +68,7 @@ public enum CanvasNoticeAction: Hashable, Sendable {
         case .turnIntoPicture(let id): return [id]
         case .readTheWords(let runs): return runs
         case .findStillPictures(let labels): return labels
+        case .undo: return []
         }
     }
 
@@ -80,7 +87,7 @@ public enum CanvasNoticeAction: Hashable, Sendable {
     /// See `Presentation`.
     public var presentation: Presentation {
         switch self {
-        case .turnIntoPicture, .readTheWords: return .button
+        case .turnIntoPicture, .readTheWords, .undo: return .button
         case .findStillPictures: return .wordsInTheLine
         }
     }
@@ -102,6 +109,7 @@ public enum CanvasNoticeAction: Hashable, Sendable {
         // never say two different numbers (`Batch.stayedPictures`).
         case .findStillPictures(let labels):
             return TextReading.Batch.stayedPictures(labels.count)
+        case .undo: return "Undo"
         }
     }
 
@@ -116,6 +124,7 @@ public enum CanvasNoticeAction: Hashable, Sendable {
     public var shortcutHint: String? {
         switch self {
         case .turnIntoPicture: return "\u{21E7}\u{2318}R"
+        case .undo: return "\u{2318}Z"
         case .readTheWords, .findStillPictures: return nil
         }
     }

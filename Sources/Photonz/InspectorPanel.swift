@@ -414,7 +414,11 @@ struct InspectorPanel: View {
                         // the list's place, so the dock says where to click
                         // rather than standing empty.
                         // Not while the sections are only held back a pass.
-                        if wanted.isEmpty, !showsLayersList {
+                        // Next leaves it empty: an empty state is empty or one
+                        // short label, never an errand
+                        // (`next-notices-say-what-happened`).
+                        if wanted.isEmpty, !showsLayersList,
+                           !Experiments.shared.noticesSayWhatHappenedEnabled {
                             Text("Pick a clip on the timeline")
                                 .font(.callout)
                                 .foregroundStyle(.secondary)

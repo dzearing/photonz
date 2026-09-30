@@ -52,8 +52,9 @@
 
     { "do": "expectLayers", "count": 2 },
     { "do": "expectPath", "anchors": 3, "closed": false },
-    { "do": "expectHint", "contains": "Joined into one path" },
-    { "do": "describe", "stage": "4-one-outline", "note": "THE POINT: one path layer where there were two, three corners, sitting exactly where the two runs were. Compare doc-1-two-runs with doc-4-joined: the picture has not moved. The line under the canvas says it joined and how to put it back" },
+    { "do": "expectNotice", "says": "Joined into one path" },
+    { "do": "expectHint", "contains": "none" },
+    { "do": "describe", "stage": "4-one-outline", "note": "THE POINT: one path layer where there were two, three corners, sitting exactly where the two runs were. Compare doc-1-two-runs with doc-4-joined: the picture has not moved. A notice says it joined, with Undo on it" },
     { "do": "panel", "stage": "4-one-outline" },
     { "do": "render", "name": "doc-4-joined" },
     { "do": "snapshot", "name": "4-one-outline" },
@@ -93,9 +94,9 @@
     { "do": "rightClick", "on": "Path 3", "choose": "Join Paths…" },
     { "do": "wait", "seconds": 1.2 },
     { "do": "expectLayers", "count": 4 },
-    { "do": "expectHint", "contains": "Nothing joined" },
-    { "do": "expectHint", "contains": "2 pt" },
-    { "do": "describe", "stage": "7-it-says-when-nothing-meets", "note": "THE OTHER HALF OF THE PROMISE: a run away on its own picked with the first one. The command is still offered, because a row dimmed for being three points out teaches nobody anything. It changes nothing and the line under the canvas names the gap and what to do about it: drag an end onto another" },
+    { "do": "expectNotice", "says": "Nothing joined" },
+    { "do": "expectNotice", "says": "2 pt" },
+    { "do": "describe", "stage": "7-it-says-when-nothing-meets", "note": "THE OTHER HALF OF THE PROMISE: a run away on its own picked with the first one. The command is still offered, because a row dimmed for being three points out teaches nobody anything. It changes nothing and a notice says so and names the gap" },
     { "do": "snapshot", "name": "7-nothing-meets" },
     { "do": "render", "name": "doc-7-still-four" }
   ]

@@ -7,6 +7,9 @@ struct ToolMode<Mode: Hashable>: Identifiable {
     let title: String
     let symbol: String
     let help: String
+    /// How to use the tool in this mode, as the tip's second line (Next,
+    /// `next-notices-say-what-happened`). Nil for a mode anybody can guess.
+    var toolTipDetail: String? = nil
 
     var id: Mode { mode }
 }
@@ -173,7 +176,9 @@ struct ToolModeButton<Mode: Hashable>: View {
                 plainButton
             }
         }
-        .toolTip(hint, key: keyLabel, fallback: tooltip)
+        .toolTip(hint, key: keyLabel,
+                 detail: Experiments.shared.noticesSayWhatHappenedEnabled ? current?.toolTipDetail : nil,
+                 fallback: tooltip)
         // The label is a bare glyph, so without this the button reaches
         // VoiceOver as an unnamed pop-up. Name the tool AND the live mode,
         // since the mode is the thing the glyph is saying.

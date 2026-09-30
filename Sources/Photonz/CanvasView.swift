@@ -208,6 +208,10 @@ struct CanvasView: NSViewRepresentable {
     /// What the Pen's chip under the canvas should say now, which changes as
     /// the path grows.
     let onPenHintChange: (String) -> Void
+    /// A click on the first point that closing would have left flat, refused.
+    /// Next reports it after the click (`next-notices-say-what-happened`),
+    /// where the chip used to warn about it before.
+    var onPenCloseRefused: () -> Void = {}
     /// A path being reshaped (Next, `next-reshape-a-path`): live while a point
     /// or a lever is under the hand, then once more on release, which is the
     /// one that becomes an undo step.
@@ -428,6 +432,7 @@ struct CanvasView: NSViewRepresentable {
         view.onPathCommit = onPathCommit
         view.onPointerIconFrameChange = onPointerIconFrameChange
         view.onPenHintChange = onPenHintChange
+        view.onPenCloseRefused = onPenCloseRefused
         view.onPathPreview = onPathPreview
         view.onPathEditCommit = onPathEditCommit
         view.onMotionPivotBegin = onMotionPivotBegin
@@ -564,6 +569,7 @@ final class CanvasNSView: NSView {
     var onLensCreate: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onPathCommit: ((PathContent) -> Void) = { _ in }
     var onPenHintChange: ((String) -> Void) = { _ in }
+    var onPenCloseRefused: (() -> Void) = {}
     var onPathPreview: ((UUID, PathContent) -> Void) = { _, _ in }
     var onPathEditCommit: ((UUID, PathContent) -> Void) = { _, _ in }
     var onPathEditHintChange: ((String?) -> Void) = { _ in }

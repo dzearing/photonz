@@ -7982,6 +7982,15 @@ private final class Run {
     private func checkHint(contains: String) throws -> String {
         let editor = try requireEditor()
         let reading = Self.hintReading(editor)
+        // "none" is the claim that NO chip is up: Next puts no how-to line
+        // over the canvas (`next-notices-say-what-happened`).
+        if contains == "none" {
+            guard reading == "none" else {
+                throw Failure(description: "a chip is up under the canvas saying \"\(reading)\", "
+                    + "and this step claims there is none")
+            }
+            return "no chip is up under the canvas, as claimed"
+        }
         guard reading.contains(contains) else {
             throw Failure(description: reading == "none"
                 ? "no chip is up under the canvas, so it cannot be saying \"\(contains)\""

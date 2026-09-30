@@ -332,7 +332,8 @@ final class AppCoordinator {
                     sayAboutRecording(.stillWriting, name: name, symbol: "arrow.down.circle")
                 }
                 guard Date() < giveUpAt else {
-                    let said = RecordingDoor.gaveUpMessage(name: name)
+                    let said = RecordingDoor.gaveUpMessage(
+                        name: name, resultsOnly: Experiments.shared.noticesSayWhatHappenedEnabled)
                     toasts.presentNote(title: said.title, detail: said.detail,
                                        symbol: "exclamationmark.triangle", on: activeScreen())
                     return

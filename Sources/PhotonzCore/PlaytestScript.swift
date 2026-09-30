@@ -2994,7 +2994,9 @@ public enum PlaytestStep: Sendable, Equatable {
     /// with every reshape gesture working and the chip, at the one moment
     /// anybody needed it, talking about something else (2026-09-15). A
     /// substring rather than the whole line, so a walk claims the PROMISE the
-    /// chip makes rather than breaking on a comma.
+    /// chip makes rather than breaking on a comma. `"none"` claims that no
+    /// chip is up at all, which is what Next promises with the Pen, Measure or
+    /// a path in hand (`next-notices-say-what-happened`).
     case expectHint(contains: String)
     /// What the canvas says a press at the pointer would take hold of, right
     /// now: `none`, `grab`, `rotate`, or `resize-<axis>`.

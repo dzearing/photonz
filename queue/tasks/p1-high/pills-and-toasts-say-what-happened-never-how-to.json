@@ -1,0 +1,64 @@
+{
+  "id": "pills-and-toasts-say-what-happened-never-how-to",
+  "title": "Pills and toasts say what happened, never how to do something",
+  "goal": "The little pills and notices over the canvas report results (Saved, Copied, 3 layers separated) and never instructions. Today holding the Pen, Measure or a path point puts a standing sentence of how-to at the foot of the canvas, and several result notices end with a line of advice; the teaching moves to the tool's hover tip and the tutorials, the way a professional Mac editor does it.",
+  "epic": "design-system",
+  "priority": "p1-high",
+  "seq": 420,
+  "status": "in_progress",
+  "release": "next",
+  "area": "app",
+  "created": "2026-09-30T06:06:05.742Z",
+  "updated": "2026-09-30T09:18:29.627Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the IA contract task. Contract row: 'Toasts: what just happened. Results, with Undo when it applies. Never instructions.' and Canvas: 'never persistent status pills'. Inventory (2026-09-29): standing hints EditorView.swift:437 (Measure), :439 (path edit), :456 (Pen); copy in PhotonzCore/MeasureToolMode.swift:76-79, PenDrawing.swift:574-602, PathEditHint.swift:23-133; result+advice in RegionSliceRefusal.swift:134, TextReading.swift:318, CopyConfirmation.swift:410,417,474,477-480,534; empty-state text EditorView.swift:2468 ('Pick a clip to trim'), InspectorPanel.swift:418 ('Pick a clip on the timeline'). A refusal that needs a choice is an alert, not a toast. ChromeCopyBudgetTests is the existing guard; extend it to hold the no-instructions rule.",
+  "acceptance": [
+    "Picking up the Pen, Measure (any mode) or editing a path puts no sentence of instructions over the canvas; what it said is in that tool's hover tip or its tutorial, in the same words",
+    "No notice ends with advice (try again, run it again, switch Fill on, from the Layer menu, Command Z); where the result needs a way out, the notice carries a button (Undo, Show) instead",
+    "Empty states say nothing or one short label: no 'Pick a clip to trim' over the canvas and no 'Pick a clip on the timeline' in the panel",
+    "Where a mock page prints one of these lines, it is not dropped quietly: it moves behind the tool's tip per UX-PATTERNS section 4 and the audit's rough names it, or a decision card asks",
+    "A walk at Next defaults photographs the Pen, Measure and a path edit with no instruction pill, and an audit is written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-09-30T06:06:05.744Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-09-30T08:37:07.054Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-30T08:40:42.245Z",
+      "note": "Epic design-system is staged next, not now; doing it anyway because it is a p1 carried straight out of the user's IA contract (2026-09-29) that the last three commits have been building. Plan: new Next flag next-notices-say-what-happened (on by default in Next, off in Current so Current keeps every line). With it on: no Measure mode pill, no Pen pill, no path-points pill; their words go into a second line of the tool's hover tip (Pen, Measure per mode) and the reshape tutorial (path gestures); the path results (Turned into a path, Joined, Closed, Nothing joined, Nothing closed) become ordinary result notices, the first three with an Undo button; a Pen click on the first point of a flat path raises Nothing closed after the click instead of a warning before it; every notice line loses its trailing advice; the trim capsule and the panel say nothing with no clip picked."
+    },
+    {
+      "t": "2026-09-30T08:40:42.299Z",
+      "note": "Adversarial review before building: (1) a first-time Pen user loses the only on-screen line that tells Return from Esc, and Esc discards a drawing: mitigated by the tip saying it, the Draw it with the Pen tutorial, and Photoshop/Pixelmator both teach this in rich tips with nothing on the canvas. (2) Measure's I key cycles modes and the pill was how you saw the mode you landed on; the tool button's glyph and the tool options capsule's Mode control still show it, so nothing is lost but a two second echo. (3) The mocks print canvas hints: redline.html 'Measure mode: click two points for a live distance', draw.html / vector-wt.html 'Drag an anchor or a handle ...' and 'Click on the artboard to place an anchor'. The user's later contract (canvas: never persistent status pills; toasts: never instructions) wins per UX-PATTERNS 4; they move to the tip and the audit's rough names each. (4) A refused Pen close used to be explained before the click; now it is reported after it, which is what Photoshop does (it says nothing at all)."
+    },
+    {
+      "t": "2026-09-30T09:18:29.518Z",
+      "note": "owns these walks: notices-say-what-happened-walk, close-an-open-path-walk, join-two-pen-paths-walk, path-points-under-the-pen-walk, pen-hands-back-walk, turn-into-a-path-walk, tutorial-draw-it-with-the-pen-walk, tutorial-reshape-what-you-drew-walk"
+    },
+    {
+      "t": "2026-09-30T09:18:29.572Z",
+      "note": "Built behind next-notices-say-what-happened (Next only, on by default; area canvas). Core: NoticeCopy.instructions(in:) is the no-advice test; CopyConfirmation.resultsOnly picks the result line (RegionSliceRefusal.result, TextReading.Refusal.result, LookPaste.result, PathCombinePlan.result, ComponentPieceRefusal.result, separated 'run it again' dropped); new subjects pathTurned/pathJoined/pathClosed/nothingJoined/nothingClosed and CanvasNoticeAction.undo (only undoes while the document is still the one the pill reported; any new edit takes the pill down); RecordingDoor.gaveUpMessage(resultsOnly:). App: showsPenHint/showsPathEditHint false and showMeasureModeHint a no-op with the flag; path commands go through sayWhatHappenedToPaths; the Pen's refused close calls onPenCloseRefused -> Nothing closed notice; HintTooltipView grew an optional detail line (220pt wide) fed by PenSession.toolTipDetail and MeasureToolMode.toolTipDetail; trim capsule and panel empty state say nothing. Tests: NoticesSayWhatHappenedTests, ChromeNeverSaysHowTests (every chrome string of 3+ words that opens on an instruction, shrink-only allowance). expectHint 'none' claims no chip. Full suite green (10,619), 27 walks green including the new notices-say-what-happened-walk at Next defaults with 9 real captures; the Undo button is pressed on its face by the pointer."
+    },
+    {
+      "t": "2026-09-30T09:18:29.626Z",
+      "note": "Left rough (not filed): Trim/panel empty states with no clip are not photographed by any walk (need a recording in the editor); VideoCropOverlay's 'Drag to crop' pill stays, allow-listed, because it lives in the retired recording window Next does not open; the ComponentPieceRefusal notice has no Detach button (Detach is on the copy's menus). Mock lines moved to tips are named in the audit's rough."
+    }
+  ],
+  "started": "2026-09-30T08:37:07.053Z",
+  "walks": [
+    "notices-say-what-happened-walk",
+    "close-an-open-path-walk",
+    "join-two-pen-paths-walk",
+    "path-points-under-the-pen-walk",
+    "pen-hands-back-walk",
+    "turn-into-a-path-walk",
+    "tutorial-draw-it-with-the-pen-walk",
+    "tutorial-reshape-what-you-drew-walk"
+  ]
+}

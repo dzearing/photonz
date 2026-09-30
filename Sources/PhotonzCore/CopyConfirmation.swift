@@ -239,6 +239,20 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// own words rather than the video's: a pill saying "Video written"
         /// over a PNG of one frame is a pill nobody believes.
         case frameWritten(file: String?)
+        /// Shapes became paths (`next-turn-into-path`), said as a result the
+        /// moment it happens, with Undo on the pill (Next,
+        /// `next-notices-say-what-happened`). Before, this was a line of advice
+        /// that stood under the canvas until a point was picked.
+        case pathTurned(paths: Int)
+        /// Open outlines welded into fewer (`PathJoin`).
+        case pathJoined(paths: Int)
+        /// Open outlines shut on their own ends (`PathClosing`).
+        case pathClosed(paths: Int)
+        /// Join Paths was asked for and no two ends were near enough.
+        case nothingJoined(gap: CGFloat)
+        /// Close Path, or the Pen's click on the first point, would have left
+        /// a shape with no inside.
+        case nothingClosed
     }
 
     /// How long the pill stays up before fading. Enough to catch, short enough
@@ -286,11 +300,18 @@ public struct CopyConfirmation: Hashable, Sendable {
     /// every notice but a refusal that knows its own way out, so the pill stays
     /// inert and click-through in every other case.
     public var action: CanvasNoticeAction?
+    /// Next (`next-notices-say-what-happened`): the line says what happened
+    /// and stops there. No "try again", no "from the Layer menu", no "Command
+    /// Z to put it back": where there is a way out, the pill carries it as a
+    /// button. Off (Current), every line keeps the advice it always had.
+    public var resultsOnly: Bool
 
-    public init(subject: Subject, shownAt: Date, action: CanvasNoticeAction? = nil) {
+    public init(subject: Subject, shownAt: Date, action: CanvasNoticeAction? = nil,
+                resultsOnly: Bool = false) {
         self.subject = subject
         self.shownAt = shownAt
         self.action = action
+        self.resultsOnly = resultsOnly
     }
 
     /// How long THIS pill stays up, which depends on how much it is asking of
@@ -307,7 +328,8 @@ public struct CopyConfirmation: Hashable, Sendable {
              .componentVersionGone, .componentVersionsMatched,
              .componentVersionAdded, .regionSliceRefused,
              .separatedIntoLayers, .turnedIntoText, .turnedIntoTextInBatch,
-             .lookPasted, .shapesCombined: return Self.breakLifetime
+             .lookPasted, .shapesCombined,
+             .nothingJoined, .nothingClosed: return Self.breakLifetime
         // ...and a swap is one of them exactly when it left something behind:
         // "Title did not carry over" is a sentence naming a thing you may want
         // to press Command Z about, and the swap that carried everything is
@@ -339,7 +361,7 @@ public struct CopyConfirmation: Hashable, Sendable {
     /// on top of a refusal must take the button away rather than inherit it.
     public func reshown(as subject: Subject, at now: Date,
                         action: CanvasNoticeAction? = nil) -> CopyConfirmation {
-        CopyConfirmation(subject: subject, shownAt: now, action: action)
+        CopyConfirmation(subject: subject, shownAt: now, action: action, resultsOnly: resultsOnly)
     }
 
     /// The verdict, set in its own weight at the head of the pill.
@@ -368,6 +390,11 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .componentInstances: return "Updated"
         case .componentCycle: return "Not placed"
         case .componentDetached: return "Detached"
+        case .pathTurned(let paths): return paths <= 1 ? "Turned into a path" : "Turned into \(paths) paths"
+        case .pathJoined(let paths): return paths <= 1 ? "Joined into one path" : "Joined into \(paths) paths"
+        case .pathClosed(let paths): return paths <= 1 ? "Closed" : "Closed \(paths) paths"
+        case .nothingJoined: return "Nothing joined"
+        case .nothingClosed: return "Nothing closed"
         case .componentSwapped: return "Swapped"
         case .componentChoiceMade: return "Choice added"
         case .componentOriginalArrived: return "Copy placed"
@@ -493,7 +520,7 @@ public struct CopyConfirmation: Hashable, Sendable {
             guard !versions.isEmpty else { return piece }
             return "\(piece) now matches in \(ComponentVersionApply.list(versions))"
         case .componentPieceRefused(let refusal):
-            return refusal.detail
+            return resultsOnly ? refusal.result : refusal.detail
         case .linksBroken(let report):
             return report.detail ?? ""
         case .toolColorStyle(let notice):
@@ -502,7 +529,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             // With a button in the pill the line must stop naming the menu:
             // two ways out in one sentence is one too many to read, and the
             // button IS the way out.
-            return refusal.detail(offeringItsOwnWayOut: action != nil)
+            return resultsOnly ? refusal.result
+                : refusal.detail(offeringItsOwnWayOut: action != nil)
         case .separatedIntoLayers(let runs, let boxes, let skipped, let crowded):
             var parts: [String] = []
             if runs > 0 { parts.append(runs == 1 ? "1 run of text" : "\(runs) runs of text") }
@@ -531,6 +559,9 @@ public struct CopyConfirmation: Hashable, Sendable {
             guard crowded > 0 else {
                 return "\(made). \(skipped) left in the picture, too unclear to read"
             }
+            // Next says the count and stops: how to get the rest out is the
+            // command's own business, not the pill's.
+            guard !resultsOnly else { return "\(made). \(skipped + crowded) left in the picture" }
             return "\(made). \(skipped + crowded) left in the picture, run it again for more"
         case .turnedIntoText(let outcome):
             switch outcome {
@@ -545,7 +576,7 @@ public struct CopyConfirmation: Hashable, Sendable {
                     : "set in \(reading.face.displayName), the closest face to the picture"
                 return "\(TextReading.layerName(for: reading.string)), \(face)"
             case .refused(let why):
-                return why.sentence
+                return resultsOnly ? why.result : why.sentence
             }
         case .turnedIntoTextInBatch(let batch):
             return batch.detail
@@ -567,9 +598,16 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .lookCopied(let layer):
             return layer.isEmpty ? "The look of that layer" : "The look of \(layer)"
         case .lookPasted(let report):
-            return report.detail
+            return resultsOnly ? report.result : report.detail
         case .shapesCombined(let plan):
-            return plan.detail
+            return resultsOnly ? plan.result : plan.detail
+        // Said only by Next, which reports and stops (`resultsOnly`).
+        case .pathTurned, .pathJoined, .pathClosed:
+            return ""
+        case .nothingJoined(let gap):
+            return "No two ends are within \(PathJoin.toleranceText(gap)) of each other"
+        case .nothingClosed:
+            return "The points are in a line"
         }
     }
 

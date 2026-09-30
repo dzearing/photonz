@@ -614,7 +614,10 @@ struct EditorView: View {
                 if let title {
                     Text(title).fontWeight(.semibold).allowsHitTesting(false)
                 }
-                Text(line.lead).allowsHitTesting(false)
+                // A result that is all verdict ("Closed") has no line at all.
+                if !line.lead.isEmpty {
+                    Text(line.lead).allowsHitTesting(false)
+                }
                 // The one run of words in a pill that can be pressed, and it
                 // sits in the sentence at the sentence's own spacing: it is the
                 // end of the line, not a control after it.
@@ -2307,7 +2310,8 @@ struct EditorView: View {
             showsKey: barTeachesKey(of: .measure),
             isActive: barLights(.measure),
             modes: modes.map {
-                ToolMode(mode: $0, title: $0.title, symbol: $0.symbol, help: $0.help)
+                ToolMode(mode: $0, title: $0.title, symbol: $0.symbol, help: $0.help,
+                         toolTipDetail: $0.toolTipDetail)
             },
             selection: $state.measureToolMode,
             namespace: toolbarNamespace,
@@ -2465,9 +2469,13 @@ struct EditorView: View {
     @ViewBuilder private var trimActionBar: some View {
         HStack(spacing: 10) {
             if editorState.trimNeedsAClip {
-                Text("Pick a clip to trim")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+                // Next says nothing here: an empty state is empty or one short
+                // label, never an errand (`next-notices-say-what-happened`).
+                if !Experiments.shared.noticesSayWhatHappenedEnabled {
+                    Text("Pick a clip to trim")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
             } else {
                 Text(editorState.trimReadout)
                     .font(.callout.monospacedDigit())
@@ -3044,6 +3052,16 @@ struct EditorView: View {
         .frame(width: 220)
     }
 
+    /// The how-to line under a tool's name in its tip, for the tools whose
+    /// standing pill it replaces (Next, `next-notices-say-what-happened`).
+    private func toolTipDetail(for tool: Tool) -> String? {
+        guard Experiments.shared.noticesSayWhatHappenedEnabled else { return nil }
+        switch tool {
+        case .pen: return PenSession.toolTipDetail
+        default: return nil
+        }
+    }
+
     private func toolButton(_ tool: Tool, _ symbol: String, _ help: String) -> some View {
         toolButton(tool, help: help) {
             Image(systemName: symbol).font(.system(size: 15, weight: .medium))
@@ -3072,7 +3090,8 @@ struct EditorView: View {
         // accent circle while this is the tool in hand.
         .buttonStyle(.tool(isActive: isActive, in: toolbarNamespace))
         // Tools are sticky (17.12), so no double-click-to-lock is needed.
-        .toolTip(help, key: keyLabel, fallback: "\(help)\(keyHint)")
+        .toolTip(help, key: keyLabel, detail: toolTipDetail(for: tool),
+                 fallback: "\(help)\(keyHint)")
         .accessibilityLabel(help)
         // Every tool button is named for a tutorial here, once, off the tool
         // itself. Renaming the button's words cannot reach the name a guide

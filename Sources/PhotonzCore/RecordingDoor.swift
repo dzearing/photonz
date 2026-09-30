@@ -86,9 +86,13 @@ public enum RecordingDoor {
     }
 
     /// What the corner says when a wait ran out: the file never stopped landing.
-    public static func gaveUpMessage(name: String) -> (title: String, detail: String) {
-        ("\(name) is still not finished",
-         "It was still being written after \(Int(patienceSeconds)) seconds. Try again once it has landed.")
+    /// `resultsOnly` (Next, `next-notices-say-what-happened`) says what
+    /// happened and stops, without the advice to try again.
+    public static func gaveUpMessage(name: String,
+                                     resultsOnly: Bool = false) -> (title: String, detail: String) {
+        let waited = "It was still being written after \(Int(patienceSeconds)) seconds."
+        return ("\(name) is still not finished",
+                resultsOnly ? waited : "\(waited) Try again once it has landed.")
     }
 }
 

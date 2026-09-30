@@ -338,6 +338,13 @@ public struct PathCombinePlan: Hashable, Sendable {
         }
     }
 
+    /// The sentence as a result (Next, `next-notices-say-what-happened`):
+    /// with too little picked it says what was missing, not what to pick.
+    public var result: String {
+        guard takes >= 2 else { return "Fewer than two shapes have an inside" }
+        return detail
+    }
+
     /// The sentence under that verdict.
     ///
     /// On a result it carries exactly the things that are NOT on the canvas to

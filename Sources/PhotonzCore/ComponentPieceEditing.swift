@@ -78,6 +78,17 @@ public struct ComponentPieceRefusal: Hashable, Sendable {
         remedy == .unlock ? "Locked" : "Follows the original"
     }
 
+    /// The why without the what-to-do (Next, `next-notices-say-what-happened`).
+    /// Detach and the wording switch live on the copy's right-click menu and
+    /// in the panel, where a person who wants them already looks.
+    public var result: String {
+        switch remedy {
+        case .unlock: return "\(pieceName) is part of \(component), and this copy is locked"
+        case .exposeWording: return "\(component) decides what \(pieceName) says"
+        case .detach: return "\(pieceName) comes from \(component)"
+        }
+    }
+
     /// One line saying why, and what to do about it. Named things are named:
     /// "Label follows Button" tells you which two things are involved, and a
     /// person who has ten copies on screen needs that.

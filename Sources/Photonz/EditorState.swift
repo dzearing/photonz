@@ -2120,6 +2120,12 @@ final class EditorState {
     /// stopped (`holdCanvasNotice`). Nothing but a pill with a button holds.
     var canvasNoticeHeld = false
 
+    /// The document as a notice carrying Undo left it (Next,
+    /// `next-notices-say-what-happened`). The button undoes only while the
+    /// document is still exactly this, so an edit made in the seconds the pill
+    /// is up is never what its Undo takes off.
+    @ObservationIgnored var canvasNoticeUndoes: PhotonzDocument?
+
     /// The saved colours this window has already said could not come along
     /// (`announceArmedColorStyleLeftBehind`). One line the first time you draw
     /// with a name this picture cannot give that part of the shape, and nothing
@@ -3899,6 +3905,13 @@ final class EditorState {
         // and a tool reappearing several presses later is its own surprise.
         // The paste path re-arms this itself, right after its own edit lands.
         pasteToolReturn = nil
+        // A pill offering Undo is about the step it reported; once another
+        // lands on top its button would take off the wrong one, so it goes.
+        if canvasNoticeUndoes != nil, copyConfirmation?.action == .undo {
+            canvasNoticeUndoes = nil
+            copyConfirmationTimer?.cancel()
+            copyConfirmation = nil
+        }
         let before = document
         flushSelectionToHistory()
         // The edit is worked out first and recorded second, and never in one

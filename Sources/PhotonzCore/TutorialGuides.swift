@@ -1665,10 +1665,10 @@ public enum TutorialGuides {
                 body: "Press P. One press draws one shape, then the pointer comes back with that shape picked, so P again starts the next.",
                 advance: .waitsFor(.toolPicked(.pen))),
             TutorialStep(
-                id: "the-line-underneath",
+                id: "two-ways-to-stop",
                 anchor: .canvas,
-                title: "Read the line under the canvas",
-                body: "It says what the Pen will do next, and it changes as the shape grows. It is the quickest way out of being stuck."),
+                title: "Two ways to stop",
+                body: "Click to place a corner, or press and drag for a curve. Return finishes it open, Esc discards it."),
             TutorialStep(
                 id: "click-the-corners",
                 anchor: .canvas,
@@ -1741,6 +1741,16 @@ public enum TutorialGuides {
                 anchor: .canvas,
                 title: "The dots say what each point is",
                 body: "A square dot is a hard corner, a round one is a bend, and a rounded square is a point curved on one side only."),
+            TutorialStep(
+                id: "more-than-one-point",
+                anchor: .canvas,
+                title: "Pick several, add more",
+                body: "Drag a point to reshape, or a box to pick several. Arrow keys nudge, Delete takes them out. Double click the outline to add one."),
+            TutorialStep(
+                id: "free-the-sides",
+                anchor: .canvas,
+                title: "Free the two sides",
+                body: "Option drag frees the two sides of a point, so each lever steers its own half."),
         ])
 
     /// The other way to get an outline, and for most icons the faster one:

@@ -121,6 +121,7 @@ struct EditorCanvasSurface: View {
                    armedStrokeWidthIsChosen: editorState.armedStrokeWidthIsChosen,
                    onPathCommit: { editorState.addPath($0) },
                    onPenHintChange: { editorState.penHint = $0 },
+                   onPenCloseRefused: { editorState.penCloseRefused() },
                    onPathPreview: { editorState.previewPath($0, $1) },
                    onPathEditCommit: { editorState.commitPath($0, $1) },
                    onPathEditHintChange: { editorState.pathEditHint = $0 },

@@ -115,3 +115,63 @@ struct ChromeCopyBudgetTests {
         }
     }
 }
+
+
+/// The chrome never tells you how to do something
+/// (`pills-and-toasts-say-what-happened-never-how-to`, 2026-09-30).
+///
+/// The placement contract: the canvas carries "never persistent status pills",
+/// toasts carry "never instructions". Teaching belongs in a tool's hover tip
+/// and in the tutorials. This reads every drawn string of three words or more
+/// in the chrome and fails any that opens on an instruction (`NoticeCopy`):
+/// "Drag to crop", "Pick a clip to trim". A command's own name on a menu row
+/// or a button is a verb too, so those are listed by name below, as are the
+/// lines only Current still draws.
+@Suite("Chrome never says how")
+struct ChromeNeverSaysHowTests {
+
+    /// Known and fine, by file, by `CopyBudget.key`. Shrink it; never grow it
+    /// with a new sentence of advice.
+    static let allowed: [String: Set<String>] = [
+        // A row of the empty window's card: a command, not advice.
+        "EditorView.swift": ["Open a file",
+                             // Current only: Next says nothing there.
+                             "Pick a clip to trim"],
+        // Menu rows: commands, named by what they do.
+        "LayerCommandMenu.swift": ["Separate into Layers", "Turn into Text", "Make ···· Fit"],
+        "TimelineTrackRows.swift": ["Delete Empty Tracks"],
+        // The foot of the tool's own press-and-hold list, not the canvas.
+        "ToolModeButton.swift": ["Press ···· to cycle"],
+        // The quiet second line of a trim handle's tooltip.
+        "TrimCopy.swift": ["hold ⌘ to ignore cuts"],
+        // The retired recording window, which Next does not open.
+        "VideoCropOverlay.swift": ["Drag to crop"],
+    ]
+
+    static func instructions(in file: String) throws -> [CopyBudget.Phrase] {
+        let text = try String(contentsOf: ChromeCopyBudgetTests.sources.appendingPathComponent(file),
+                              encoding: .utf8)
+        return CopyBudget.phrases(inSwift: text).filter {
+            !$0.isTooltip && $0.text.split(separator: " ").count >= 3
+                && !NoticeCopy.instructions(in: $0.text).isEmpty
+        }
+    }
+
+    @Test(arguments: ChromeCopyBudgetTests.chromeFiles)
+    func noDrawnStringTellsYouWhatToDo(file: String) throws {
+        let allowed = Self.allowed[file] ?? []
+        let new = try Self.instructions(in: file).filter { !allowed.contains(CopyBudget.key($0.text)) }
+        #expect(new.isEmpty, """
+            \(file) draws instructions in the chrome. Say what happened or show nothing, and put \
+            how to use a tool in its hover tip (.toolTip(_:key:detail:)) or a tutorial: \
+            \(new.map { "line \($0.line): \($0.text)" })
+            """)
+    }
+
+    @Test(arguments: ChromeCopyBudgetTests.chromeFiles)
+    func theAllowanceOnlyShrinks(file: String) throws {
+        let still = Set(try Self.instructions(in: file).map { CopyBudget.key($0.text) })
+        let fixed = (Self.allowed[file] ?? []).subtracting(still)
+        #expect(fixed.isEmpty, "\(file) no longer says these, so strike them off `allowed`: \(fixed)")
+    }
+}

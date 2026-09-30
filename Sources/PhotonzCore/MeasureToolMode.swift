@@ -80,6 +80,11 @@ public enum MeasureToolMode: String, CaseIterable, Hashable, Codable, Sendable {
         }
     }
 
+    /// The second line of the Measure tool's hover tip (Next,
+    /// `next-notices-say-what-happened`): the mode's pill line, word for word,
+    /// now that no pill stands over the canvas to say it.
+    public var toolTipDetail: String { hint }
+
     /// The most characters a hint line may carry: about 330 pt in the pill's
     /// type, which reads in its two seconds and leaves both corners of the
     /// narrowest canvas free.

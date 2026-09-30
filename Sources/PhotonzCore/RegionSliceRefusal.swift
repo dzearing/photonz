@@ -137,6 +137,17 @@ public struct RegionSliceRefusal: Hashable, Sendable {
         }
     }
 
+    /// The same refusal as a result and nothing more (Next,
+    /// `next-notices-say-what-happened`): why the key did nothing, with no
+    /// way out named in words. Where there is one worth offering, the pill
+    /// carries it as a button (`offersTurnIntoPicture`).
+    public var result: String {
+        switch reason {
+        case .notPixels, .canBecomeAPicture: return "Only a picture can have \(pieceClause)"
+        case .adjustedPicture: return "This picture is cropped or turned"
+        }
+    }
+
     /// What the key was going to do to the piece, which is the only word the
     /// three sentences differ by. ⌥⌫ puts colour INTO the marquee rather than
     /// taking anything out of it, and a line that says a piece was taken out

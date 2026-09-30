@@ -536,7 +536,8 @@ extension EditorState {
             // under the canvas names the gap and what to do about it: that is
             // the price of offering the command without planning it first.
             if document.openPathsThatCouldJoin(ids: ids).count >= 2 {
-                turnedIntoPathNotice = PathEditHint.nothingJoined()
+                sayWhatHappenedToPaths(.nothingJoined(gap: PathJoin.tolerance),
+                                       orHint: PathEditHint.nothingJoined())
             }
             return
         }
@@ -605,9 +606,29 @@ extension EditorState {
         // ...and the chip under the canvas says what just happened, in one
         // line, so the second time somebody uses this (with the question
         // silenced) the row does not quietly change kind with nothing said.
-        turnedIntoPathNotice = joinOnly
-            ? PathEditHint.justJoined(paths: alive.count)
-            : PathEditHint.justTurned(paths: alive.count)
+        if joinOnly {
+            sayWhatHappenedToPaths(.pathJoined(paths: alive.count),
+                                   orHint: PathEditHint.justJoined(paths: alive.count))
+        } else {
+            sayWhatHappenedToPaths(.pathTurned(paths: alive.count),
+                                   orHint: PathEditHint.justTurned(paths: alive.count))
+        }
+    }
+
+    /// Says what a path command did: in Next an ordinary notice, with Undo on
+    /// it when something changed (`next-notices-say-what-happened`); with that
+    /// off, the line under the canvas that stood until a point was picked.
+    func sayWhatHappenedToPaths(_ subject: CopyConfirmation.Subject, orHint hint: String) {
+        guard Experiments.shared.noticesSayWhatHappenedEnabled else {
+            turnedIntoPathNotice = hint
+            return
+        }
+        let changedSomething: Bool
+        switch subject {
+        case .pathTurned, .pathJoined, .pathClosed: changedSomething = true
+        default: changedSomething = false
+        }
+        raiseCanvasNotice(subject, action: changedSomething ? .undo : nil)
     }
 
     // MARK: - Close Path (an outline you already finished, shut)
@@ -626,7 +647,7 @@ extension EditorState {
         guard let document else { return }
         let plan = document.closingPaths(ids: ids).plan
         guard let question = ClosePathQuestion(plan: plan) else {
-            turnedIntoPathNotice = PathEditHint.nothingClosed()
+            sayWhatHappenedToPaths(.nothingClosed, orHint: PathEditHint.nothingClosed())
             return
         }
         guard !Self.silencedQuestions.isSilenced(.turnIntoPath) else {
@@ -670,7 +691,7 @@ extension EditorState {
         // ...and the chip says what happened and where the inside now is,
         // because closing an outline changes the picture hardly at all: one
         // straight run appears, and the Fill row turns up on the panel.
-        turnedIntoPathNotice = PathEditHint.justClosed(paths: closes)
+        sayWhatHappenedToPaths(.pathClosed(paths: closes), orHint: PathEditHint.justClosed(paths: closes))
     }
 
     // MARK: - Two shapes become one (join, cut out, keep or drop the overlap)

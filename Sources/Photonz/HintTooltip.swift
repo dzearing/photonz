@@ -113,7 +113,8 @@ final class HintTooltipController {
         guard let current, let panel, panel.isVisible, panel.alphaValue > 0 else { return nil }
         let key = current.key.map { " (\($0))" } ?? ""
         let f = panel.frame
-        return "\(current.label)\(key) \(side == .top ? "above" : "below") at (\(Int(f.minX)), \(Int(f.minY))) \(Int(f.width))x\(Int(f.height))"
+        let detail = current.detail.map { " · \($0)" } ?? ""
+        return "\(current.label)\(key)\(detail) \(side == .top ? "above" : "below") at (\(Int(f.minX)), \(Int(f.minY))) \(Int(f.width))x\(Int(f.height))"
     }
 
     /// The tooltip panel while it floats over `window`, so an offscreen
@@ -150,7 +151,8 @@ final class HintTooltipController {
 
         // Measure the plate with a neutral beak, then place, then draw for
         // real with the beak aimed at the control.
-        let probe = NSHostingView(rootView: HintTooltipView(label: anchor.label, key: anchor.key, side: .top, beakX: 12))
+        let probe = NSHostingView(rootView: HintTooltipView(label: anchor.label, key: anchor.key, detail: anchor.detail,
+                                                     side: .top, beakX: 12))
         let size = probe.fittingSize
         let screen = window.screen ?? NSScreen.main
         let visible = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1600, height: 1000)
@@ -179,7 +181,8 @@ final class HintTooltipController {
         let beakX = min(max(target.midX - origin.x, 14), size.width - 14)
         self.side = side
 
-        let hosting = NSHostingView(rootView: HintTooltipView(label: anchor.label, key: anchor.key, side: side, beakX: beakX))
+        let hosting = NSHostingView(rootView: HintTooltipView(label: anchor.label, key: anchor.key, detail: anchor.detail,
+                                                       side: side, beakX: beakX))
         hosting.frame = CGRect(origin: .zero, size: size)
         panel.contentView = hosting
         let frame = CGRect(origin: origin, size: size)
@@ -279,15 +282,21 @@ final class HintTooltipController {
 final class HintAnchorView: NSView {
     var label: String
     var key: String?
+    /// How to use it, under the name, for a tool whose use is not guessable
+    /// (the Pen, Measure). The one place that teaching lives now the canvas
+    /// carries no how-to pill (`next-notices-say-what-happened`).
+    var detail: String?
     /// The side the control would rather be labelled on. The screen still
     /// overrules it when there is no room there.
     var preferredSide: HintTooltipController.Side
 
     private var trackingArea: NSTrackingArea?
 
-    init(label: String, key: String?, preferredSide: HintTooltipController.Side) {
+    init(label: String, key: String?, detail: String? = nil,
+         preferredSide: HintTooltipController.Side) {
         self.label = label
         self.key = key
+        self.detail = detail
         self.preferredSide = preferredSide
         super.init(frame: .zero)
     }
@@ -338,15 +347,17 @@ final class HintAnchorView: NSView {
 private struct HintAnchor: NSViewRepresentable {
     let label: String
     let key: String?
+    var detail: String?
     let side: HintTooltipController.Side
 
     func makeNSView(context: Context) -> HintAnchorView {
-        HintAnchorView(label: label, key: key, preferredSide: side)
+        HintAnchorView(label: label, key: key, detail: detail, preferredSide: side)
     }
 
     func updateNSView(_ view: HintAnchorView, context: Context) {
         view.label = label
         view.key = key
+        view.detail = detail
         view.preferredSide = side
     }
 }
@@ -355,6 +366,9 @@ private struct HintAnchor: NSViewRepresentable {
 struct HintTooltipView: View {
     let label: String
     let key: String?
+    /// A second line saying how to use the thing named, set quieter and
+    /// wrapped to `detailWidth`. Nil for almost every control.
+    var detail: String? = nil
     let side: HintTooltipController.Side
     /// The beak's tip, measured from the tooltip's left edge.
     let beakX: CGFloat
@@ -378,20 +392,33 @@ struct HintTooltipView: View {
 
     static let beakSize = CGSize(width: 24, height: 9)
 
+    /// How wide the how-to line may run before it wraps: about forty
+    /// characters of it, so a tip with one never grows into a panel.
+    static let detailWidth: CGFloat = 220
+
     var body: some View {
-        HStack(spacing: 8) {
-            Text(label)
-                .font(.system(size: 11, weight: .medium))
-            if let key {
-                Text(key)
-                    .font(.system(size: 9.5, weight: .medium, design: .monospaced))
-                    .opacity(0.7)
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 8) {
+                Text(label)
+                    .font(.system(size: 11, weight: .medium))
+                if let key {
+                    Text(key)
+                        .font(.system(size: 9.5, weight: .medium, design: .monospaced))
+                        .opacity(0.7)
+                }
+            }
+            .lineLimit(1)
+            if let detail {
+                Text(detail)
+                    .font(.system(size: 11))
+                    .opacity(0.75)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(width: Self.detailWidth, alignment: .leading)
             }
         }
         .foregroundStyle(ink)
-        .lineLimit(1)
         .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.vertical, detail == nil ? 4 : 6)
         .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(plate))
         .overlay(alignment: side == .top ? .bottomLeading : .topLeading) {
             // Hung half a pixel into the plate, so two shapes meant to be one
@@ -429,12 +456,13 @@ struct HintBeak: Shape {
 private struct ToolTipModifier: ViewModifier {
     let label: String
     let key: String?
+    let detail: String?
     let fallback: String?
     let side: HintTooltipController.Side
 
     func body(content: Content) -> some View {
         if Experiments.shared.toolTipsEnabled {
-            content.background { HintAnchor(label: label, key: key, side: side) }
+            content.background { HintAnchor(label: label, key: key, detail: detail, side: side) }
         } else {
             content.help(fallback ?? "\(label)\(key.map { " (\($0))" } ?? "")")
         }
@@ -449,9 +477,12 @@ extension View {
     /// always in Current) this is the system help tag instead, reading
     /// `fallback` when given and "label (key)" otherwise, so Current keeps
     /// exactly the text it had.
-    func toolTip(_ label: String, key: String? = nil, fallback: String? = nil,
-                 below: Bool = false) -> some View {
-        modifier(ToolTipModifier(label: label, key: key, fallback: fallback,
+    ///
+    /// `detail` is a second, quieter line saying how to use it, for a tool
+    /// whose use nobody guesses (Next, `next-notices-say-what-happened`).
+    func toolTip(_ label: String, key: String? = nil, detail: String? = nil,
+                 fallback: String? = nil, below: Bool = false) -> some View {
+        modifier(ToolTipModifier(label: label, key: key, detail: detail, fallback: fallback,
                                  side: below ? .bottom : .top))
     }
 }

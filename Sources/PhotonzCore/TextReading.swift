@@ -323,6 +323,16 @@ public enum TextReading {
                     + "so it stays a picture"
             }
         }
+
+        /// The same, as a result and nothing more (Next,
+        /// `next-notices-say-what-happened`): what was found, without the
+        /// errand. Every other refusal already only says what happened.
+        public var result: String {
+            switch self {
+            case .moreThanOneRun: return "More than one run of text here"
+            default: return sentence
+            }
+        }
     }
 
     public enum Outcome: Sendable, Hashable {

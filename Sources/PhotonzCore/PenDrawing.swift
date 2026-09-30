@@ -556,6 +556,14 @@ public struct PenSession: Equatable, Sendable {
     /// What the chip under the canvas says while the Pen is in hand.
     public static let hintTitle = "Pen"
 
+    /// The second line of the Pen's hover tip (Next,
+    /// `next-notices-say-what-happened`): what the chip used to say over the
+    /// canvas, in its own words, gathered into the one place a person looks
+    /// before picking the tool up. Return and Esc are told apart here because
+    /// they do opposite things with a drawing.
+    public static let toolTipDetail = "Click to place a corner, or press and drag for a curve. "
+        + "Click the first point to close the shape. Return finishes it open, Esc discards it."
+
     /// One line saying what to do next, which changes as the path grows.
     ///
     /// The last line is the one that matters: Return and Escape both end a

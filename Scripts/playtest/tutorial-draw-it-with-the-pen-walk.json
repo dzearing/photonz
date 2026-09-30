@@ -24,10 +24,10 @@
 
     { "do": "key", "key": "p" },
     { "do": "waitFor", "condition": "tool", "value": "pen" },
-    { "do": "waitFor", "condition": "tutorialStep", "value": "the-line-underneath", "timeout": 6 },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "two-ways-to-stop", "timeout": 6 },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "3-the-line-underneath", "note": "P really picked the Pen, and the chip under the canvas says what the Pen will do next" },
-    { "do": "snapshot", "name": "3-the-line-underneath" },
+    { "do": "describe", "stage": "3-two-ways-to-stop", "note": "P really picked the Pen, and the card says how to draw and the two ways to stop" },
+    { "do": "snapshot", "name": "3-two-ways-to-stop" },
 
     { "do": "action", "action": "tutorialNext" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "click-the-corners", "timeout": 5 },

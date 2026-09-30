@@ -73,7 +73,16 @@ extension EditorState {
 
     /// Whether that chip is up: only with the Pen in hand, and only in a
     /// release that has a Pen.
+    /// The Pen refused to close a shape on its first point because the points
+    /// are in a line. Next says so as a result (`next-notices-say-what-happened`);
+    /// with that off the Pen's chip has already said it.
+    func penCloseRefused() {
+        guard Experiments.shared.noticesSayWhatHappenedEnabled else { return }
+        raiseCanvasNotice(.nothingClosed)
+    }
+
     var showsPenHint: Bool {
         Experiments.shared.penEnabled && activeTool == .pen
+            && !Experiments.shared.noticesSayWhatHappenedEnabled
     }
 }

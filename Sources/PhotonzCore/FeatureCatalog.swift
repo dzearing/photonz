@@ -238,6 +238,8 @@ public enum FeatureCatalog {
 
     public static let dockHeadersFlag = "next-dock-headers"
 
+    public static let noticesSayWhatHappenedFlag = "next-notices-say-what-happened"
+
     // MARK: - Definitions
 
     private struct Definition {
@@ -1323,6 +1325,16 @@ public enum FeatureCatalog {
                     title: "Panel group headings as the mocks draw them",
                     description: "Each panel group has a small capital title, a chip beside it saying what it holds, such as Clip, Media or an effect count, and its buttons at the far edge. Off means title case headings ending in a grip.",
                     area: .panel,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: noticesSayWhatHappenedFlag,
+                    title: "Notices say what happened",
+                    description: "No line of instructions stands over the canvas for the Pen, Measure or a path, and notices report results with Undo instead of advice. Off means the hint lines and the advice come back.",
+                    area: .canvas,
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

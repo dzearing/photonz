@@ -194,6 +194,13 @@ public struct LookPaste: Hashable, Sendable {
     /// The verdict at the head of the pill.
     public var title: String { layerCount == 0 ? "Nothing took it" : "Pasted" }
 
+    /// The same line as a result (Next, `next-notices-say-what-happened`):
+    /// with nothing picked it says so rather than what to pick.
+    public var result: String {
+        guard layerCount == 0, lockedCount == 0 else { return detail }
+        return "Nothing is picked"
+    }
+
     /// One line saying how far it reached and what did not fit.
     public var detail: String {
         guard layerCount > 0 else {

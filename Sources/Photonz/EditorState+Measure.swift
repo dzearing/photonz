@@ -286,8 +286,9 @@ extension EditorState {
         // on is gone, so the hold goes with it.
         canvasNoticeHeld = false
         let now = Date()
-        let notice = copyConfirmation?.reshown(as: subject, at: now, action: action)
-            ?? CopyConfirmation(subject: subject, shownAt: now, action: action)
+        let notice = CopyConfirmation(subject: subject, shownAt: now, action: action,
+                                      resultsOnly: Experiments.shared.noticesSayWhatHappenedEnabled)
+        canvasNoticeUndoes = action == .undo ? document : nil
         copyConfirmation = notice
         scheduleCanvasNoticeFade()
     }
@@ -367,6 +368,11 @@ extension EditorState {
             // them: the line counted those, so pressing the count may not pick
             // anything else (`next-read-every-label`).
             case .findStillPictures(let labels): self.showStillPictureLabels(ids: labels)
+            // The step the notice reported, and only if it is still the last
+            // one: anything done since would be what came off instead.
+            case .undo:
+                guard let reported = self.canvasNoticeUndoes, self.document == reported else { return }
+                self.undo()
             }
         }
     }
@@ -388,6 +394,9 @@ extension EditorState {
     /// press; the chip's text follows the mode so it never names a stale one.
     func showMeasureModeHint() {
         guard Experiments.shared.measureModesEnabled else { return }
+        // Next: the mode's line is the second line of the tool's hover tip,
+        // and the canvas carries no pill for it (`next-notices-say-what-happened`).
+        guard !Experiments.shared.noticesSayWhatHappenedEnabled else { return }
         // The slot is shared with the "Copied" notice: the latest raise wins.
         copyConfirmationTimer?.cancel()
         copyConfirmation = nil

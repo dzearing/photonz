@@ -35,7 +35,7 @@
     { "do": "key", "key": "p" },
     { "do": "waitFor", "condition": "tool", "value": "pen", "timeout": 2 },
     { "do": "expectPicked", "layers": ["Path"] },
-    { "do": "expectHint", "contains": "Drag a point to reshape this shape" },
+    { "do": "expectHint", "contains": "none" },
     { "do": "describe", "stage": "3-p-over-a-shape-reaches-its-points", "note": "P over a path that is already picked KEEPS the pick, so its points are there to grab: picking up the Pen is how you reach the anchors of a finished shape, and the hand-back did not take that away" },
 
     { "do": "click", "at": [400, 160] },

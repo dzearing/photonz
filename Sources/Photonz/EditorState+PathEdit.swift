@@ -97,6 +97,10 @@ extension EditorState {
     /// Whether that chip is up: a path picked, with Select or the Pen in hand,
     /// in a release that can reshape one.
     var showsPathEditHint: Bool {
-        pathEditChipLayer != nil || (pathEditChipIsAllowed && turnedIntoPathNotice != nil)
+        // Next: what a path's points do is taught by the reshape tutorial, and
+        // what a join or a close did is an ordinary notice with Undo on it
+        // (`next-notices-say-what-happened`), so this pill never stands up.
+        guard !Experiments.shared.noticesSayWhatHappenedEnabled else { return false }
+        return pathEditChipLayer != nil || (pathEditChipIsAllowed && turnedIntoPathNotice != nil)
     }
 }

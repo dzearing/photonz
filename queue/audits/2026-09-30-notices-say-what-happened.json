@@ -1,0 +1,30 @@
+{
+  "feature": "Pills and toasts say what happened, never how to",
+  "epic": "design-system",
+  "summary": "Picking up the Pen or Measure, or reshaping a path, no longer puts a sentence of instructions at the foot of the canvas. How to use the Pen and each Measure mode is now the second line of the tool's hover tip, and path commands report their result with an Undo button.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Press I for Measure, then I again to change mode. Nothing appears over the canvas.", "shot": "2026-09-30-notices-3-measure-tip-sc.png" },
+    { "do": "Rest the pointer on the Measure button in the tool bar and read the tip's second line." },
+    { "do": "Press P for the Pen and rest the pointer on its button.", "shot": "2026-09-30-notices-5-pen-tip-sc.png" },
+    { "do": "Click two points in a straight line, then click the first one again.", "shot": "2026-09-30-notices-6-nothing-closed-sc.png" },
+    { "do": "Press Esc, draw three corners with the Pen and press Return. The path is picked and no line stands under the canvas.", "shot": "2026-09-30-notices-7-path-picked-no-pill-sc.png" },
+    { "do": "Right-click the Path row, choose Close Path and confirm.", "shot": "2026-09-30-notices-9-closed-with-undo-sc.png" },
+    { "do": "Click Undo on the notice before it fades." }
+  ],
+  "evaluate": [
+    "With the pill gone, do you still know which Measure mode you are in from the tool's glyph and the tool options?",
+    "Is the Pen tip's second line the right amount to read, or should it lose the close sentence?",
+    "Is Nothing closed, reported after the click, enough, or do you miss the warning before it?",
+    "Should Turned into a path and Joined notices carry Undo the way Closed does? (They do now.)"
+  ],
+  "rough": [
+    "redline.html prints 'Measure mode: click two points for a live distance' over the canvas. Per the placement contract it now lives in the Measure tip as 'Click twice, then click to place the number' (the app's existing wording for that mode).",
+    "draw.html and vector-wt.html print 'Drag an anchor or a handle ...' and 'Click on the artboard to place an anchor' over the canvas. They are not shown; the Pen tip says 'Click to place a corner, or press and drag for a curve', and dragging points is taught by the Reshape what you drew tutorial.",
+    "The path gestures the pill used to name (box to pick several, Arrow keys, Delete, double click the outline, Option drag a lever) are now two new closing cards in the Reshape what you drew tutorial, not on the canvas.",
+    "The Draw it with the Pen tutorial's 'Read the line under the canvas' card is now 'Two ways to stop' with the Return and Esc words.",
+    "Trim with no clip picked and the panel with no clip picked now show nothing in Next. No walk photographs those two yet: they need a recording open in the editor.",
+    "A copy's refusal ('Label comes from Button') no longer says 'Detach this copy to edit it'. It has no Detach button on the notice yet; Detach is on the copy's own menus."
+  ]
+}

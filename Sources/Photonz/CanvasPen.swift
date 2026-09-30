@@ -230,10 +230,14 @@ extension CanvasNSView {
 
     func penMouseUp(at p: CGPoint, event: NSEvent) {
         guard tool == .pen else { return }
-        switch penSession.release() {
-        // A refused close changed nothing, so it is handled exactly like a
-        // press that placed nothing. The chip is already saying why, because
-        // it has been saying it since the pointer landed on the anchor.
+        let released = penSession.release()
+        // A refused close changed nothing. With the chip up it has been saying
+        // why since the pointer landed on the anchor; without it (Next) the
+        // editor reports the refusal now, as a result.
+        if case .refused = released { onPenCloseRefused() }
+        switch released {
+        // ...and otherwise it is handled exactly like a press that placed
+        // nothing.
         case .placed, .retracted, .refused, .nothing:
             penSession.pointer = p
             penSession.free = event.modifierFlags.contains(.command)
