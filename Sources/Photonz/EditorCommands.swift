@@ -1275,7 +1275,7 @@ struct EditorCommands: Commands {
             Button("Delete Word", role: .destructive) { if let word { editor?.deleteCaptionWord(word) } }
             Divider()
             Button("Move to Next Line") { if let word { editor?.moveCaptionWordToNextLine(word) } }
-            Button("Play From Here") { if let word { editor?.playFromCaptionWord(word) } }
+            Button("Play from Here") { if let word { editor?.playFromCaptionWord(word) } }
             Button("Start Here") { editor?.goToStartOfCaptionInHand() }
         }
         .disabled(word == nil)

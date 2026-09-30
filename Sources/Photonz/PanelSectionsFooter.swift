@@ -162,7 +162,7 @@ struct PanelSectionsList: View {
             // a panel with nothing folded while the chip still claimed to be in
             // Icon, which is a window that has quietly stopped being what it
             // says it is.
-            Button("Use Automatic For All") {
+            Button("Use Automatic for All") {
                 if Experiments.shared.windowModesEnabled {
                     WindowModeStore.shared.showEverything()
                 } else {
@@ -172,7 +172,7 @@ struct PanelSectionsList: View {
                 .font(.caption)
                 .buttonStyle(.link)
                 .disabled(!store.choices.hasAnyCustom)
-                .playtestControl("Use Automatic For All",
+                .playtestControl("Use Automatic for All",
                                  detail: "hands every section back to the automatic rule")
         }
         .padding(.horizontal, 14)

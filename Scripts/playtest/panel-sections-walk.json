@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/panel-sections",
-  "seed": "The list is closed again with Escape, and the rectangle stays picked while it goes: that is what the sections either side of this walk's Motion check depend on. THE CLAIM: the right hand panel shows the sections that matter, and you can say which. A plain box in a plain document brings Layers, Appearance, Effects and Motion, and none of the job sections: no Measurements, no Layout, no Component, no shelf, because this document is doing none of those jobs. The WORDS on the Sections row at the foot of the panel are read at every stage: just Sections while nobody has hidden anything, Sections and 1 hidden once Motion is off, and just Sections again once it is handed back. A section the document has nothing for yet is not hidden and is never counted. Turning Motion off there takes it away for good, in every document, and the dock is shorter by exactly what Motion cost; Use Automatic For All hands it back in one press and the dock is the height it was, to the point. Then the two things the rule DOES let through: a piece of text, which brings its own section and no more, and a copy of a component in a document that now holds one, which brings Component and the shelf you asked for. Read dockSections back at every stage rather than trusting a picture: the heights are the whole point, and stage 1 against stage 3 is the before and after this walk exists for.",
+  "seed": "The list is closed again with Escape, and the rectangle stays picked while it goes: that is what the sections either side of this walk's Motion check depend on. THE CLAIM: the right hand panel shows the sections that matter, and you can say which. A plain box in a plain document brings Layers, Appearance, Effects and Motion, and none of the job sections: no Measurements, no Layout, no Component, no shelf, because this document is doing none of those jobs. The WORDS on the Sections row at the foot of the panel are read at every stage: just Sections while nobody has hidden anything, Sections and 1 hidden once Motion is off, and just Sections again once it is handed back. A section the document has nothing for yet is not hidden and is never counted. Turning Motion off there takes it away for good, in every document, and the dock is shorter by exactly what Motion cost; Use Automatic for All hands it back in one press and the dock is the height it was, to the point. Then the two things the rule DOES let through: a piece of text, which brings its own section and no more, and a copy of a component in a document that now holds one, which brings Component and the shelf you asked for. Read dockSections back at every stage rather than trusting a picture: the heights are the whole point, and stage 1 against stage 3 is the before and after this walk exists for.",
   "setup": {
     "forget": ["panel", "tools", "shapes", "text", "color", "measure", "groups"]
   },
@@ -50,7 +50,7 @@
 
     { "do": "press", "control": "Sections" },
     { "do": "wait", "seconds": 0.7 },
-    { "do": "press", "control": "Use Automatic For All" },
+    { "do": "press", "control": "Use Automatic for All" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "appKey", "key": "escape" },
     { "do": "wait", "seconds": 0.8 },

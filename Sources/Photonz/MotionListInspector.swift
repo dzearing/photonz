@@ -544,7 +544,7 @@ private struct MotionCurveSetting: View {
                     }
                 }
                 Divider()
-                Button("Draw a curve...") { isDrawing = true }
+                Button("Draw a Curve...") { isDrawing = true }
             } label: {
                 HStack(spacing: 5) {
                     CurveThumbnail(curve: motion.curve, side: 14)
@@ -751,10 +751,10 @@ struct CurveEditor: View {
                 .textSelection(.enabled)
             HStack {
                 Spacer()
-                Button("Use this curve") { done(drawn) }
+                Button("Use This Curve") { done(drawn) }
                     .controlSize(.small)
                     .keyboardShortcut(.defaultAction)
-                    .playtestControl("Use this curve", detail: drawn.title)
+                    .playtestControl("Use This Curve", detail: drawn.title)
             }
         }
         .padding(12)

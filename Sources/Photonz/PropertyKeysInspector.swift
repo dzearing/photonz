@@ -139,11 +139,11 @@ private struct BetweenKeysSection: View {
     static let easingHelp = "Easing is how fast it changes between these two keys."
 
     /// The mock's curve menu (`curve.js`): the four standard curves, the four
-    /// shaped ones, each with its shape beside its name, then Draw a curve.
+    /// shaped ones, each with its shape beside its name, then Draw a Curve.
     private func curveChoices(current: EasingCurve?) -> [VideoKit.Choice] {
         [.heading("Standard")] + EasingCurve.named.prefix(4).map { item($0, current: current) }
             + [.heading("Shaped")] + EasingCurve.named.dropFirst(4).map { item($0, current: current) }
-            + [.divider, .item("Draw a curve\u{2026}") { isDrawing = true }]
+            + [.divider, .item("Draw a Curve\u{2026}") { isDrawing = true }]
     }
 
     private func item(_ curve: EasingCurve, current: EasingCurve?) -> VideoKit.Choice {

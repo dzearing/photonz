@@ -125,7 +125,7 @@ each with a switch and a word underneath saying **why it is where it is** —
 Without that word there is no way to tell a section you hid from one the
 document simply has nothing for, and the two want different things from you.
 A row you have answered for also carries a small revert arrow, and
-**Use Automatic For All** at the foot hands the lot back in one press.
+**Use Automatic for All** at the foot hands the lot back in one press.
 
 ## Where the answer lives
 

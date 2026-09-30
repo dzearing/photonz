@@ -26,7 +26,7 @@ import Testing
 @Suite("Every right-click and panel command is also in the menu bar")
 struct EveryCommandIsInTheMenuBarTests {
 
-    private static var root: URL {
+    static var root: URL {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()          // Tests/PhotonzCoreTests
             .deletingLastPathComponent()          // Tests
@@ -104,7 +104,7 @@ struct EveryCommandIsInTheMenuBarTests {
 
     // MARK: Reading the source
 
-    private static func swiftFiles(under folder: String) -> [URL] {
+    static func swiftFiles(under folder: String) -> [URL] {
         let base = root.appendingPathComponent(folder)
         guard let walk = FileManager.default.enumerator(at: base, includingPropertiesForKeys: nil) else { return [] }
         return walk.compactMap { $0 as? URL }.filter { $0.pathExtension == "swift" }
@@ -113,7 +113,7 @@ struct EveryCommandIsInTheMenuBarTests {
     /// The whole string literals in `text` with nothing interpolated into
     /// them, at least two characters long. A literal with `\(` in it is built
     /// at run time and is not a title this can check.
-    private static func literals(in text: Substring) -> [String] {
+    static func literals(in text: Substring) -> [String] {
         var found: [String] = []
         var index = text.startIndex
         while let open = text[index...].firstIndex(of: "\"") {
@@ -150,7 +150,7 @@ struct EveryCommandIsInTheMenuBarTests {
     /// The first argument of every call to `callee` in `text`: what a
     /// `Button`, `Toggle`, `Menu` or `MenuRow` is titled with, ternaries and
     /// all, and never a later argument.
-    private static func firstArguments(of callee: String, in text: Substring) -> [Substring] {
+    static func firstArguments(of callee: String, in text: Substring) -> [Substring] {
         var found: [Substring] = []
         var from = text.startIndex
         while let range = text.range(of: callee + "(", range: from..<text.endIndex) {
@@ -192,7 +192,7 @@ struct EveryCommandIsInTheMenuBarTests {
     }
 
     /// The block a `{` at `open` starts, braces balanced.
-    private static func block(in source: String, from open: String.Index) -> Substring {
+    static func block(in source: String, from open: String.Index) -> Substring {
         var depth = 0
         var index = open
         while index < source.endIndex {
@@ -207,7 +207,7 @@ struct EveryCommandIsInTheMenuBarTests {
     }
 
     /// The titles of every Button, Toggle and Menu in `text`.
-    private static func controlTitles(in text: Substring) -> [String] {
+    static func controlTitles(in text: Substring) -> [String] {
         ["Button", "Toggle", "Menu"].flatMap { callee in
             firstArguments(of: callee, in: text).flatMap(literals(in:))
         }

@@ -166,7 +166,7 @@ struct ColorStyleControl: View, Equatable {
                         // where there IS one to widen: nobody can tick a border
                         // into being a fill colour.
                         if borrowed.contains(where: \.isSavedColor) {
-                            Button("Set what it is for in the Library") {
+                            Button("Set What It Is For in the Library") {
                                 editorState.showStylesShelf()
                             }
                         }

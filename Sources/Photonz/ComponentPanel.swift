@@ -307,12 +307,12 @@ struct ComponentShareRow: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .panelHelp(noteHelp)
             if isMissing {
-                Button("Put it back on the shelf") {
+                Button("Put It Back on the Shelf") {
                     editorState.reshareComponent(componentID)
                 }
                 .buttonStyle(.link)
                 .font(.caption)
-                .playtestControl("Put it back on the shelf", detail: "re-shares this component")
+                .playtestControl("Put It Back on the Shelf", detail: "re-shares this component")
             }
         }
     }
@@ -2093,7 +2093,7 @@ private struct InstanceColorKnob: View {
                         }
                     }
                     if borrowedColors.contains(where: \.isSavedColor) {
-                        Button("Set what it is for in the Library") {
+                        Button("Set What It Is For in the Library") {
                             editorState.showStylesShelf()
                         }
                     }

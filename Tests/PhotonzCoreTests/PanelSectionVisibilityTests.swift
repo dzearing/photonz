@@ -286,7 +286,7 @@ import Testing
         #expect(PanelSectionVisibility.footerLabel(for: rows, in: emptyHanded) == "Sections · 2 hidden")
     }
 
-    /// Both ways back go quiet again: the switch, and Use Automatic For All.
+    /// Both ways back go quiet again: the switch, and Use Automatic for All.
     @Test func turningItBackOnOrHandingItBackGoesQuietAgain() {
         var choices = PanelSectionVisibility.Choices()
         choices.set("motion", shown: false)

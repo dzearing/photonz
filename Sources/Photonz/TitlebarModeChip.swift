@@ -190,7 +190,7 @@ struct WindowModeList: View {
             }
             Divider()
             // The panic button, first under the line so it is findable when you
-            // are annoyed. It is the same act as Use Automatic For All at the
+            // are annoyed. It is the same act as Use Automatic for All at the
             // foot of the panel, and says so by landing you in Everything.
             action(WindowModeCopy.showEverything,
                    symbol: "arrow.uturn.backward",

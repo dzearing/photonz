@@ -2039,13 +2039,13 @@ struct EditorView: View {
                     .truncationMode(.middle)
                 Spacer(minLength: 8)
                 if editorState.canRearmToolColorStyle(letGo) {
-                    Button("Put it back") { editorState.rearmToolColorStyle(letGo) }
+                    Button("Put It Back") { editorState.rearmToolColorStyle(letGo) }
                         .buttonStyle(.link)
                         .font(.callout)
                 }
             }
             .help("New shapes are this colour on their own now. "
-                  + "Put it back to follow \(letGo.name) again.")
+                  + "Put It Back to follow \(letGo.name) again.")
             .transition(.opacity)
         }
     }

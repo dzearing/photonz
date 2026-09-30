@@ -1,0 +1,25 @@
+{
+  "feature": "Menu rows and buttons are in Title Case",
+  "epic": "video-editing",
+  "summary": "The design rules now say every menu row, menu heading and button is written the Mac way (Apply to Every Cut), and a test fails the build on one that is not. The thirteen buttons and rows that were in sentence case now match.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Pick a layer, turn Key on in Appearance, and read the button beside the colour: Key It Again.", "shot": "2026-09-30-menu-row-title-case-1.png" },
+    { "do": "Pick a moving layer, open an easing dropdown in Motion, and read its last row: Draw a Curve..." },
+    { "do": "Draw a curve and read the button that keeps it: Use This Curve." },
+    { "do": "Pick a cut between two clips and open its transition Type dropdown: the last row reads Hard Cut, like Clip > Transition at Cut > Hard Cut." },
+    { "do": "Right-click a caption word: the row reads Play from Here." },
+    { "do": "Open the Sections list at the foot of the panel after hiding a section: Use Automatic for All." }
+  ],
+  "evaluate": [
+    "Do the panel buttons now read like the menu bar rows that do the same thing?",
+    "Is Set What It Is For in the Library (capital For, because it closes 'what it is for') right, or would you rather it were reworded?",
+    "Are the labels beside controls (Between the keys, Tolerance) right to stay in sentence case?"
+  ],
+  "rough": [
+    "The mocks still write rows in sentence case; they are left as drawn, and the rule in UX-PATTERNS §7 says the Mac's casing wins, so audits stop listing it.",
+    "Rows macOS writes itself (Select All, Enter Full Screen) were already Title Case and are not read by the test; only rows the app writes are.",
+    "The test reads titles out of the source, so a title built at run time (a layer's name, a count) is not checked."
+  ]
+}

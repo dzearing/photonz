@@ -328,7 +328,7 @@ public enum EasingCurve: Hashable, Codable, Sendable {
     case custom(x1: Double, y1: Double, x2: Double, y2: Double)
 
     /// The menu, in order. `custom` is not in here: it arrives from the curve
-    /// editor at the bottom of the same menu, under "Draw a curve".
+    /// editor at the bottom of the same menu, under "Draw a Curve".
     public static let named: [EasingCurve] = [
         .linear, .easeInOut, .easeIn, .easeOut,
         .easeInOutSine, .easeOutBack, .easeOutElastic, .steps(4),

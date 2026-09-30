@@ -38,7 +38,7 @@ struct AnnotationInspector: View {
                 if !selection.pinnedCaptionIDs.isEmpty,
                    Experiments.shared.arrowCaptionsEnabled {
                     let pinned = selection.pinnedCaptionIDs
-                    Button(pinned.count > 1 ? "Reset label positions" : "Reset label position") {
+                    Button(pinned.count > 1 ? "Reset Label Positions" : "Reset Label Position") {
                         editorState.resetCaptionPlacement(ids: pinned)
                     }
                     .font(.caption)

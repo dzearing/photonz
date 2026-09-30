@@ -281,7 +281,7 @@ struct SoundFadesInspector: View {
                 .item(curve.title, isOn: curve == current, image: CurveMenuImage.image(for: curve)) {
                     editorState.setSoundFadeCurve(curve)
                 }
-            } + [.divider, .item("Draw a curve...") { isDrawing = true }])
+            } + [.divider, .item("Draw a Curve...") { isDrawing = true }])
         .panelReadout(title)
         .panelHelp("How the fades rise and fall.")
         .playtestField("Curve")

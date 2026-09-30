@@ -63,7 +63,7 @@
     },
     {
       "do": "expect",
-      "control": "Key it",
+      "control": "Key It",
       "present": true
     },
     {
@@ -72,7 +72,7 @@
     },
     {
       "do": "press",
-      "control": "Key it"
+      "control": "Key It"
     },
     {
       "do": "wait",

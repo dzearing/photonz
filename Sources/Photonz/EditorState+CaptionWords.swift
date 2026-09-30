@@ -194,7 +194,7 @@ extension EditorState {
         rows.append(.command("Delete Word", destructive: true) { self.deleteCaptionWord(ref) })
         rows.append(.separator)
         rows.append(.command("Move to Next Line") { self.moveCaptionWordToNextLine(ref) })
-        rows.append(.command("Play From Here") { self.playFromCaptionWord(ref) })
+        rows.append(.command("Play from Here") { self.playFromCaptionWord(ref) })
         return rows
     }
 
@@ -229,7 +229,7 @@ extension EditorState {
         edit { $0.moveCaptionWordsToNextCue(from: ref) }
     }
 
-    /// **Play From Here.**
+    /// **Play from Here.**
     func playFromCaptionWord(_ ref: CaptionWordRef) {
         guard let word = captionWord(ref) else { return }
         moveDocumentPlayhead(toMS: word.startMS)

@@ -20,7 +20,7 @@ import SwiftUI
 /// | Caption | Caption, its own block |
 /// | Label size | Caption |
 /// | Label corners | Caption |
-/// | Reset label position | the end of Appearance |
+/// | Reset Label Position | the end of Appearance |
 ///
 /// Each drawer sits behind the same bracket a shadow's settings sit behind
 /// (`OwnedSettings`), so what a control belongs to is said by where it is
@@ -269,7 +269,7 @@ struct ArrowLabelPlacementReset: View {
     var body: some View {
         let pinned = editorState.shapeSelection.pinnedCaptionIDs
         if !pinned.isEmpty, Experiments.shared.arrowCaptionsEnabled {
-            Button(pinned.count > 1 ? "Reset label positions" : "Reset label position") {
+            Button(pinned.count > 1 ? "Reset Label Positions" : "Reset Label Position") {
                 editorState.resetCaptionPlacement(ids: pinned)
             }
             .font(.caption)
@@ -277,7 +277,7 @@ struct ArrowLabelPlacementReset: View {
             .panelHelp(CrowdWords.all(pinned.count)
                         .map { "Put \($0) labels back where the app places them" }
                   ?? "Put the label back where the app places it")
-            .panelStartProbe(.row, owner: "Reset label position")
+            .panelStartProbe(.row, owner: "Reset Label Position")
         }
     }
 }

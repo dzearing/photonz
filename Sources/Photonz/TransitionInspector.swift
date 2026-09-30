@@ -163,7 +163,7 @@ struct TransitionInspector: View {
             choices: .picking(ClipTransitionKind.allCases, current: current, title: \.title,
                               isEnabled: { inHand.cut.canAfford($0) }) { kind in
                 editorState.setTransition(kind, at: inHand.place)
-            } + [.divider, .item("Hard cut") { editorState.setTransition(nil, at: inHand.place) }])
+            } + [.divider, .item("Hard Cut") { editorState.setTransition(nil, at: inHand.place) }])
         .playtestField("Type")
     }
 

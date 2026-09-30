@@ -88,9 +88,9 @@ struct KeyRows: View {
             // colour is read off the picture rather than asked for,
             // which is the difference between keying a green screen in
             // one click and keying it with an eyedropper and a guess.
-            Button("Key it") { keyIt() }
+            Button("Key It") { keyIt() }
                 .controlSize(.small)
-                .playtestControl("Key it", detail: "Key")
+                .playtestControl("Key It", detail: "Key")
                 .panelHelp("Make the colour behind the subject transparent. "
                            + "The colour is read off the edges of the picture.")
         } else {
@@ -113,11 +113,11 @@ struct KeyRows: View {
                 .foregroundStyle(.secondary)
                 .panelReadout(current.colorHex)
             Spacer(minLength: 0)
-            Button("Key it again") { keyIt() }
+            Button("Key It Again") { keyIt() }
                 .controlSize(.small)
                 .buttonStyle(.link)
                 .font(.caption2)
-                .playtestControl("Key it again", detail: "Key")
+                .playtestControl("Key It Again", detail: "Key")
         }
         .opacity(isOn ? 1 : 0.45)
     }

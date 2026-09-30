@@ -50,7 +50,11 @@ table puts it, and what was moved or filed.
 **Held by tests.** `ToolBarPurposeTests` lists everything the tool bar can carry
 and fails if any of it is not a tool, the colour pair or More.
 
-**Status: v2.4. D10 is rewritten to say what the user's video mock says (2026-09-27):
+**Status: v2.5. §7 gains "How a menu row is capitalised" (2026-09-30): every
+menu row, menu heading and button is in the Mac's Title Case, labels keep
+sentence case, and the Mac wins over the mocks' sentence case; the user chose it
+and `MenuRowsAreTitleCaseTests` holds it.
+v2.4. D10 is rewritten to say what the user's video mock says (2026-09-27):
 a clip's Animating list shows only what the clip is animating, with an Animate a
 property picker under it for everything else; the old "print the whole
 catalogue" rule, which named `video.html` as its model, is withdrawn. D16 says
@@ -1746,6 +1750,35 @@ Copy it: the rules are in **What a number you cannot type looks like** above.
   faked full macOS menu bar (see D3). The shipping app additionally has the native
   menu bar; the mock does not render it. Keep the command surface + Ask present on
   every editor page so the "UI == API == agent" story is always visible.
+
+### How a menu row is capitalised: the Mac way, Title Case
+
+**Every menu row, menu heading and button label is in Title Case**, in the menu
+bar, every right-click menu, every panel dropdown and "..." menu, and every
+button in the panel or the chrome: Apply to Every Cut, Reset to Defaults, Draw a
+Curve..., Key It Again, Hard Cut. **A label beside a control keeps sentence
+case** ("Between the keys"): it names a value, it is not a command.
+
+- Title Case is Apple's: capitalise every word except articles (a, an, the),
+  coordinating conjunctions (and, but, or, nor, for, so, yet) and short
+  prepositions (as, at, by, from, in, into, of, off, on, onto, out, over, per,
+  to, up, via, with), and capitalise those too when they open or close the
+  title. A short word that is a verb's particle or a noun keeps its capital:
+  Punch In, Clear In and Out, Turn Off Snapping.
+- Names keep their own casing (macOS, iCloud, SRT), and numbers are left alone.
+- **The Mac wins over the mocks here.** Every mock page writes its rows in
+  sentence case ("Apply to every cut", "Copy properties"); the app writes them
+  the Mac's way, because macOS writes its own rows into our menus in Title Case
+  (Select All, Enter Full Screen) and so do Photoshop, Premiere and Final Cut
+  (Merge Down, Ripple Delete, Add Cross Dissolve). The mocks keep their wording;
+  only the capitals change. An audit does not list this as a departure. The user
+  chose it on 2026-09-30 (`the-design-rules-say-how-a-menu-row-is-capitalis`).
+
+**Held by tests.** `MenuTitleCaseTests` holds the casing itself
+(`MenuTitleCase` in PhotonzCore); `MenuRowsAreTitleCaseTests` reads every menu
+bar row and heading, every right-click row, and the title of every button, menu
+and panel dropdown row in the app's source, and fails on one that is not in
+Title Case, naming how to write it.
 
 ---
 
