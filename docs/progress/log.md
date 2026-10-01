@@ -20350,3 +20350,10 @@ the middle and barely magnifies (a crisp or growing lens would be ours to draw).
 - App: `LayerRowDragSession`, `LayerRowDragViews`, wired in `LayersListView` behind `next-a-dragged-layer-lifts` (on in Next). Escape cancels, one undo step per drop, edge autoscroll scrolls the AppKit scroll view directly.
 - Walk harness: `dragRow` drives the session in Next (`cancel` added); new `expectRows` step. Walks: `layer-row-lifts-walk`, `layer-row-lifts-by-pointer-walk`, `layer-row-lifts-at-scale-walk`.
 - Next: timeline track headers reorder the same way (`timeline-tracks-reorder-by-dragging-their-header`).
+
+## 2026-09-30 — A recording remembers where the pointer went and every click
+
+- Recordings keep the pointer path and every press/release beside the MP4 (`.photonzpointer`), timed from the stream's first frame on the host clock and mapped into recording pixels. Core in `PhotonzCore/PointerTrack.swift` (20 tests); app in `Capture/PointerTracker.swift`, `ScreenRecorder` (first-frame clock), `CaptureStore` (writes/trashes the sidecar), `MovieLibrary.pointerTrack(for:)`.
+- Add Click at Playhead… on a recording clip's right-click menu and the Clip menu: crosshair, click the picture, Escape cancels, Undo works (`EditorState+Clicks.swift`, `Layer.addedClicks`).
+- Walks: `a-recording-keeps-its-clicks-walk` (real 5 s recording, scripted clicks via `recordScriptedClicks`), `adding-a-click-by-hand-walk`.
+- Next: `clicks-in-a-recording-can-show-an-effect-on-the` draws them (ticks, ring).
