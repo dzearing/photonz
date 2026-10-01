@@ -177,6 +177,10 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// rarely where a person just let go, so without a word a clip that
         /// arrives somewhere else in time reads as a drop that did nothing.
         case clipAdded(name: String)
+        /// A click was added to a recording by hand (`PointerTrack.swift`).
+        /// Nothing draws it yet, so without a word it reads as a click on the
+        /// picture that did nothing.
+        case clickAdded(atMS: Int)
         /// A tool's letter picked up a tool that is folded under More on this
         /// bar (a document with time, `ToolBarFold`). The tool is in hand and
         /// nothing on the bar shows it, so a word says where it lives.
@@ -370,6 +374,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .soundDetached: return "Sound taken off"
         case .soundAdded: return "Sound added"
         case .clipAdded: return "Clip added"
+        case .clickAdded: return "Click added"
         case .toolUnderMore(let tool): return tool
         case .defaultTransitionRefused: return "No transition added"
         case .defaultTransitionSet: return "Default transition"
@@ -441,6 +446,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "No spare frames on that side"
         case .clipAdded(let name):
             return "\(name) is on the timeline at the playhead"
+        case .clickAdded(let ms):
+            return "At \(CaptionProgress.clock(ms))"
         case .toolUnderMore:
             return "Under More"
         case .landedOnTrack(let name, let track, let ms, _):

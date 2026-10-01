@@ -1,5 +1,6 @@
 import AppKit
 import AVFoundation
+import os
 import PhotonzCore
 import ScreenCaptureKit
 
@@ -18,6 +19,15 @@ final class ScreenRecorder: NSObject {
     private var stream: SCStream?
     private var recordingOutput: SCRecordingOutput?
     private var finishContinuation: CheckedContinuation<Void, Never>?
+    /// Hears the stream's frames only to learn when the first one was taken,
+    /// which is the moment the file counts from (`PointerTracker`).
+    private var firstFrame: FirstFrameClock?
+
+    /// The host-clock moment of the recording's first frame, once the stream
+    /// has delivered one: what a click's time is counted from.
+    var firstFrameHostSeconds: Double? { firstFrame?.seconds }
+    /// How the screen lands in the recording's pixels, for the pointer.
+    private(set) var pointerSpace: PointerSpace?
 
     private(set) var isRecording = false
     private(set) var outputURL: URL?
@@ -46,7 +56,7 @@ final class ScreenRecorder: NSObject {
     /// Begin recording per `config` on `screen`, writing MP4 to `url`. The
     /// windows in `excluding` (the stop HUD) are removed from the captured video.
     func start(config: RecordingConfig, screen: NSScreen, to url: URL,
-               excluding excludedWindows: [NSWindow]) async throws {
+               excluding excludedWindows: [NSWindow], pointer: PointerTracker? = nil) async throws {
         guard !isRecording else { throw RecorderError.alreadyRecording }
 
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
@@ -83,8 +93,21 @@ final class ScreenRecorder: NSObject {
         recConfig.outputFileType = .mp4
         let recordingOutput = SCRecordingOutput(configuration: recConfig, delegate: self)
         try stream.addRecordingOutput(recordingOutput)
+        let clock = FirstFrameClock()
+        try stream.addStreamOutput(clock, type: .screen, sampleHandlerQueue: FirstFrameClock.queue)
+        self.firstFrame = clock
 
-        try await stream.startCapture()
+        // The pointer is followed from just before the first frame, so the
+        // place it was in when the picture began is known.
+        let space = PointerSpace(displayFrame: screen.frame, sourceRect: rect, pixelSize: recordedSize)
+        pointerSpace = space
+        pointer?.start(space: space)
+        do {
+            try await stream.startCapture()
+        } catch {
+            pointer?.stop()
+            throw error
+        }
 
         self.stream = stream
         self.recordingOutput = recordingOutput
@@ -158,5 +181,33 @@ extension ScreenRecorder: SCRecordingOutputDelegate {
             self.lastStop?.outputFinished = Date()
             self.resumeFinishIfNeeded()
         }
+    }
+}
+
+// MARK: - When the first frame was taken
+
+/// Remembers the presentation time of the stream's first complete frame, on
+/// the host clock. The recording file starts at that frame, so it is the zero
+/// every pointer time is counted from. Everything after the first frame is
+/// returned from at once: this never touches the picture.
+private final class FirstFrameClock: NSObject, SCStreamOutput, Sendable {
+    static let queue = DispatchQueue(label: "photonz.recording.first-frame", qos: .userInitiated)
+    private let first = OSAllocatedUnfairLock<Double?>(initialState: nil)
+
+    var seconds: Double? { first.withLock { $0 } }
+
+    func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer,
+                of type: SCStreamOutputType) {
+        guard type == .screen, first.withLock({ $0 }) == nil else { return }
+        // Idle frames (nothing changed) carry no picture and are not written.
+        if let attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, createIfNecessary: false)
+            as? [[SCStreamFrameInfo: Any]],
+           let raw = attachments.first?[.status] as? Int,
+           let status = SCFrameStatus(rawValue: raw), status != .complete {
+            return
+        }
+        let pts = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+        guard pts.isValid else { return }
+        first.withLock { if $0 == nil { $0 = pts.seconds } }
     }
 }

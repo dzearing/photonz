@@ -12,6 +12,8 @@ final class RecordingCoordinator {
     private let store: CaptureStore
     private let recorder = ScreenRecorder()
     private let controls = RecordingControlsController()
+    /// Where the pointer goes and every click, taken down beside the picture.
+    let pointer = PointerTracker()
     private var timer: Timer?
     private var startDate: Date?
 
@@ -61,7 +63,8 @@ final class RecordingCoordinator {
         }
 
         do {
-            try await recorder.start(config: config, screen: screen, to: url, excluding: excluded)
+            try await recorder.start(config: config, screen: screen, to: url, excluding: excluded,
+                                     pointer: pointer)
             isRecording = true
             startTimer()
         } catch {
@@ -95,12 +98,21 @@ final class RecordingCoordinator {
         let started = startDate ?? .now
         stopTimer()
         controls.hide()
+        // The pointer stops being followed the moment Stop is pressed, and its
+        // record is written while macOS closes the file, so it never adds to
+        // the wait for either.
+        let take = pointer.stop()
+        let firstFrame = recorder.firstFrameHostSeconds
+        let pointerFile = Task.detached(priority: .userInitiated) { () -> Data? in
+            guard let take, !take.isEmpty else { return nil }
+            return try? JSONEncoder().encode(take.finished(firstFrameHostSeconds: firstFrame))
+        }
         let pending = store.beginSaving(recordingStartedAt: started)
         onRecordingComplete?(pending)
         do {
             let url = try await recorder.stop()
             // The store files the MP4 and derives the poster/duration lazily.
-            store.finishSaving(pending, tempURL: url)
+            store.finishSaving(pending, tempURL: url, pointerTrack: await pointerFile.value)
         } catch {
             NSLog("Recording failed to stop: \(error)")
             store.failSaving(pending)
@@ -109,6 +121,9 @@ final class RecordingCoordinator {
 
     /// When each part of the last stop happened (the probe's latency drill).
     var lastStopTrace: ScreenRecorder.StopTrace? { recorder.lastStop }
+
+    /// When the last recording's first frame was taken, on the host clock.
+    var firstFrameHostSeconds: Double? { recorder.firstFrameHostSeconds }
 
     func toggle(screen: NSScreen) async {
         if isRecording { await stop() } else { await start(config: config, screen: screen) }

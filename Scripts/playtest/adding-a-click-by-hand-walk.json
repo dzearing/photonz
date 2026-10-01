@@ -1,0 +1,23 @@
+{
+  "out": "/tmp/photonz-playtest/adding-a-click-by-hand-walk",
+  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "playheadMS": 2000, "lengthMS": 8000 },
+    { "do": "rightClick", "at": [900, 893], "space": "window", "shot": "0-clip-menu-with-add-click", "choose": "Add Click at Playhead…" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "snapshot", "name": "1-waiting-for-the-click" },
+    { "do": "click", "at": [200, 120] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "expectAddedClick" },
+    { "do": "describe", "stage": "2-click-added", "note": "Playhead at two seconds, right-click the clip, Add Click at Playhead..., click the picture: one click is on the clip at two seconds of the recording, where the picture was clicked, and a pill says Click added" },
+    { "do": "snapshot", "name": "2-click-added" }
+  ]
+}

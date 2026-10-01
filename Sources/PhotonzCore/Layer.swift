@@ -1667,6 +1667,13 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// clip stylable, maskable and effectable like anything else.
     public var movie: MovieRef?
 
+    /// Clicks added to this clip by hand (`PointerTrack.swift`), in its
+    /// recording's own time and pixels, for a recording made before clicks
+    /// were kept or one the pointer missed. The clicks the recorder took down
+    /// itself live beside the file, never here. Nil is every layer in every
+    /// document written before this existed.
+    public var addedClicks: [PointerClick]?
+
     /// The words the machine heard in this caption and when it heard each one
     /// (`Captions.swift`). Nil for every layer that is not a caption, which is
     /// every layer in every document written before captions existed.
@@ -1785,6 +1792,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         // along with the stretch they are pieces of.
         copy.cuts = cuts
         copy.movie = movie
+        copy.addedClicks = addedClicks
         // A copy of clips merged into one holds copies of them, so no clip
         // is in two places under one id.
         copy.merged = merged?.reidentified()

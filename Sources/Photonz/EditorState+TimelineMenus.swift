@@ -122,6 +122,12 @@ extension EditorState {
         if layer.movie != nil {
             rows.append(freezeFrameMenuRow(layerID: layerID, piece: index, enabled: underPlayhead))
             rows.append(contentsOf: punchInMenuRows(layerID: layerID, around: nil))
+            // A click the recording missed, or one made before clicks were
+            // kept: the playhead says when, the next click on the picture
+            // says where (`EditorState+Clicks`).
+            rows.append(.command("Add Click at Playhead\u{2026}", enabled: canAddClick(toClip: layerID)) {
+                self.beginPlacingClick(onClip: layerID)
+            })
         }
         if let piece, !piece.isHeld, layer.hasMediaBehindIt {
             rows.append(.submenu("Speed", EditorState.clipSpeeds.map { percent in

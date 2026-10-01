@@ -875,6 +875,17 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Shut the window holding the sample recording and ask for it again: how a
     /// walk checks that coming back puts the playhead where it was left.
     case reopenSampleRecording
+    /// Make a real five second recording of a corner of the screen through the
+    /// app's own recorder, into a history folder of the walk's own, with three
+    /// clicks scripted into it at known moments and points, then open it as a
+    /// person would. The clicks go in through the same door the Mac's mouse
+    /// monitor uses, since a walk never moves the person's own pointer. Fails
+    /// unless the opened recording carries those three clicks within a frame
+    /// and two pixels, and unless Stop still put the tile up inside its budget.
+    case recordScriptedClicks
+    /// Fail unless the clip in the window has exactly one click added by hand
+    /// (`Add Click at Playhead…`), at the playhead's moment of its recording.
+    case expectAddedClick
     /// Move the playhead to a fraction of what is left to watch, which is a
     /// real scrub's outcome without a walk having to know how long the clip is.
     case videoSeekQuarter, videoSeekMiddle, videoSeekThreeQuarters
@@ -1314,7 +1325,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     public var drivesTheTimeline: Bool {
         switch self {
         case .clipSplit, .clipDeletePiece, .clipHoldFrame,
-             .clipSpeedDouble, .clipSpeedHalf,
+             .clipSpeedDouble, .clipSpeedHalf, .expectAddedClick,
              .soundDetach, .soundAddSample, .soundDuck, .soundLevelHalf,
              .captionsAddVoiceover, .captionsWrite, .captionsWriteHearingNothing,
              .captionsNudgeLater, .captionsNudgeEarlier,

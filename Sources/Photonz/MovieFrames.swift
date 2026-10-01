@@ -28,6 +28,10 @@ final class MovieLibrary {
 
     private var urls: [UUID: URL] = [:]
     private var refsByURL: [URL: MovieRef] = [:]
+    /// Where the pointer went in each recording, read from beside its file
+    /// when the recording is opened (`PointerTrack.swift`). Absent for a
+    /// recording made before Photonz kept it, or brought in from elsewhere.
+    private var pointerTracks: [UUID: PointerTrack] = [:]
 
     /// Read a recording's size and length off the file and hand back the
     /// reference a document can hold. The same file asked for twice is the same
@@ -55,6 +59,7 @@ final class MovieLibrary {
                            hasSound: hasSound)
         urls[ref.id] = standardized
         refsByURL[standardized] = ref
+        pointerTracks[ref.id] = PointerTrackSidecar.load(for: standardized)
         // A recording's sound is the same file as its picture, so the sound
         // library can answer for it from the moment the recording is opened.
         if let sound = ref.soundRef { SoundLibrary.shared.link(sound, to: standardized) }
@@ -62,6 +67,10 @@ final class MovieLibrary {
     }
 
     func url(for movie: MovieRef) -> URL? { urls[movie.id] }
+
+    /// Where the pointer went and every click while this recording was made,
+    /// or nil when nothing was kept.
+    func pointerTrack(for movie: MovieRef) -> PointerTrack? { pointerTracks[movie.id] }
 
     /// File a reference a saved project already holds against the file its
     /// media table found for it (`ProjectMedia`), so the project's clips play
@@ -72,6 +81,7 @@ final class MovieLibrary {
         let standardized = url.standardizedFileURL
         urls[movie.id] = standardized
         if refsByURL[standardized] == nil { refsByURL[standardized] = movie }
+        pointerTracks[movie.id] = PointerTrackSidecar.load(for: standardized)
         if let sound = movie.soundRef { SoundLibrary.shared.link(sound, to: standardized) }
     }
 

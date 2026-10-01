@@ -169,7 +169,7 @@ final class CaptureStore {
     /// The saving recording's file has closed: move it under its reserved name
     /// and let its tile become the real thing.
     @discardableResult
-    func finishSaving(_ entry: CaptureEntry, tempURL: URL) -> CaptureEntry? {
+    func finishSaving(_ entry: CaptureEntry, tempURL: URL, pointerTrack: Data? = nil) -> CaptureEntry? {
         saving[entry.url] = nil
         guard discardedWhileSaving.remove(entry.url) == nil else {
             try? FileManager.default.trashItem(at: tempURL, resultingItemURL: nil)
@@ -184,6 +184,11 @@ final class CaptureStore {
         }
         var landed: CaptureEntry?
         do {
+            // Where the pointer went goes in beside it first, so whatever
+            // opens the recording the moment it lands finds it there.
+            if let pointerTrack {
+                try? pointerTrack.write(to: PointerTrackSidecar.url(for: destination), options: .atomic)
+            }
             try FileManager.default.moveItem(at: tempURL, to: destination)
             reload()
             landed = entries.first { $0.fileName == destination.lastPathComponent }
@@ -264,11 +269,13 @@ final class CaptureStore {
     }
 
     /// A capture's companions go to the Trash with it: the image editor's
-    /// layered `.photonz` package, a recording's `.photonzedits` record, and the
-    /// preserved original a video save kept for reversibility.
+    /// layered `.photonz` package, a recording's `.photonzedits` record and
+    /// where its pointer went, and the preserved original a video save kept
+    /// for reversibility.
     private func trashSidecar(for url: URL) {
         for sidecar in [EditorState.sidecarURL(for: url),
                         VideoEditsSidecar.url(for: url),
+                        PointerTrackSidecar.url(for: url),
                         VideoOriginals.url(for: url)]
         where FileManager.default.fileExists(atPath: sidecar.path) {
             try? FileManager.default.trashItem(at: sidecar, resultingItemURL: nil)

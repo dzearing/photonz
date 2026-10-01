@@ -227,7 +227,9 @@ struct EditorCanvasSurface: View {
                    },
                    onFillSelected: { editorState.fillSelectedLayer(useBackground: $0) },
                    onClearBackground: { editorState.clearBackgroundLayer() },
-                   onWindowChange: { editorState.canvasDidMoveToWindow($0) })
+                   onWindowChange: { editorState.canvasDidMoveToWindow($0) },
+                   placingClick: editorState.clickPlacementClip != nil,
+                   onPlaceClick: { editorState.placeClick(at: $0) })
             // The exact position and size numbers, hung off the selection
             // itself (`ExactPlacement`). Here rather than on the panel because
             // the anchor is worked out in the canvas view's own coordinates,

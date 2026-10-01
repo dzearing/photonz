@@ -1,0 +1,10 @@
+{
+  "out": "/tmp/photonz-playtest/a-recording-keeps-its-clicks-walk",
+  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "recordScriptedClicks" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "describe", "stage": "0-recorded-and-opened", "note": "A real five second recording of a corner of the screen, three clicks scripted into it at 1, 2.5 and 4 seconds, opened as a person opens one: it carries all three, each within a frame and two pixels of where and when it was pressed, and Stop still put the tile up inside its budget" },
+    { "do": "snapshot", "name": "0-a-recording-that-kept-its-clicks" }
+  ]
+}

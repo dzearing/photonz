@@ -1093,6 +1093,9 @@ struct EditorCommands: Commands {
             .disabled(clip == nil)
         Button("Select Forward") { if let clip { editor?.selectClipsForward(from: clip, onItsTrackOnly: false) } }
             .disabled(clip == nil)
+        let clickClip = editor?.clipToAddClickTo
+        Button("Add Click at Playhead\u{2026}") { if let clickClip { editor?.beginPlacingClick(onClip: clickClip) } }
+            .disabled(clickClip == nil)
         let media = editor?.mediaURLInHand
         Button("Reveal in Finder") { if let media { NSWorkspace.shared.activateFileViewerSelecting([media]) } }
             .disabled(media == nil)

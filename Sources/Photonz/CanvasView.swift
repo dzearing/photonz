@@ -350,6 +350,10 @@ struct CanvasView: NSViewRepresentable {
     let onFillSelected: (Bool) -> Void
     let onClearBackground: () -> Void
     let onWindowChange: (NSWindow?) -> Void
+    /// True between Add Click at Playhead and the click on the picture that
+    /// says where it happened: the next press places it.
+    var placingClick: Bool = false
+    var onPlaceClick: (CGPoint) -> Void = { _ in }
 
     func makeNSView(context: Context) -> CanvasNSView {
         let view = CanvasNSView()
@@ -492,6 +496,8 @@ struct CanvasView: NSViewRepresentable {
         view.onFillSelected = onFillSelected
         view.onClearBackground = onClearBackground
         view.onWindowChange = onWindowChange
+        view.placingClick = placingClick
+        view.onPlaceClick = onPlaceClick
         view.onGridOriginChange = onGridOriginChange
         view.onGridAdjustCommit = onGridAdjustCommit
         view.onGridAdjustCancel = onGridAdjustCancel
@@ -664,6 +670,12 @@ final class CanvasNSView: NSView {
     /// The canvas landed in (or left) a window — the reliable moment to size the
     /// window to a just-opened image (mirrors the video preview's hook).
     var onWindowChange: ((NSWindow?) -> Void) = { _ in }
+    /// The next press places a click on a recording rather than doing what
+    /// the tool would (`EditorState+Clicks`). A crosshair says so.
+    var placingClick = false {
+        didSet { if placingClick != oldValue { window?.invalidateCursorRects(for: self) } }
+    }
+    var onPlaceClick: ((CGPoint) -> Void) = { _ in }
     /// The zero point moved to here (live, while placing the grid).
     var onGridOriginChange: ((CGPoint) -> Void) = { _ in }
     /// ⏎ / ⎋ while the grid is being adjusted.

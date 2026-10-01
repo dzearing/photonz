@@ -1,0 +1,29 @@
+{
+  "feature": "A recording remembers where the pointer went and every click",
+  "epic": "video-editing",
+  "summary": "Every screen recording made in Photonz now keeps the pointer's path and each click (when, where, which button) in a small file beside the video, and opening the recording loads them. A recording without them can be given clicks by hand. Nothing draws them yet: ringing a click is the next task.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Record a region of the screen for about five seconds and click a few times inside it, then press Stop." },
+    { "do": "In the Screenshots folder, look beside the new MP4 for a file of the same name ending in .photonzpointer." },
+    { "do": "Open any recording, switch to Edit, put the playhead at two seconds, and right-click its clip on the timeline.", "shot": "2026-09-30-recorded-clicks-1-menu.png" },
+    { "do": "Choose Add Click at Playhead…, then click the picture where the click should be.", "shot": "2026-09-30-recorded-clicks-2-added.png" },
+    { "do": "Press Command Z to take the click back; choose the row again and press Escape to call it off." },
+    { "do": "With a recording's clip selected, open the Clip menu: Add Click at Playhead… is there too." }
+  ],
+  "evaluate": [
+    "Did recording, and pressing Stop, feel exactly as quick as before?",
+    "After choosing Add Click at Playhead…, was it obvious the next click on the picture places it?",
+    "Is the Click added pill enough to know it worked, while nothing draws the click yet?",
+    "Is the clip's right-click menu the place you would look for this?"
+  ],
+  "rough": [
+    "Nothing on screen shows a recorded or added click yet: the ticks on the clip bar and the click ring are the next task (clicks in a recording can show an effect).",
+    "After Add Click at Playhead… the only sign the canvas is waiting is the crosshair over the picture; there is no hint line.",
+    "The walk cannot click on your screen, so its three clicks go in through the same door the Mac's mouse monitor feeds; a real click by a person has not been exercised by a walk. Their timing and placement match within a frame and two pixels, and the file's own length agrees with the clock the clicks are timed on.",
+    "A recording saved in the old recording window (which rewrites the file with the trim baked in) does not load its clicks, rather than loading them on the wrong frames.",
+    "Recording only covers a whole display or a region today; there is no window recording, so there is no window mapping to check.",
+    "No mock draws recorded clicks or a pointer path, so there is no frame to compare against."
+  ]
+}

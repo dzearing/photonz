@@ -353,6 +353,7 @@ extension CanvasNSView {
     /// leaves the plain arrow (Select, Fill). The grab cue restores this when
     /// the pointer leaves a pill, so a hand never lingers over a crosshair tool.
     private var toolCursor: NSCursor? {
+        if placingClick { return .crosshair }
         if tool.isRegionSelectionTool {
             // The badge mirrors the LIVE modifiers so the combine mode is
             // visible before the drag starts (⇧ +, ⌥ −, ⇧⌥ ×).

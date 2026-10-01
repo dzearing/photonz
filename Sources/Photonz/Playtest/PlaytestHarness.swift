@@ -3273,6 +3273,17 @@ private final class Run {
                             subject: "a five minute 2880 × 1800 recording with somebody talking in it",
                             number: number)
 
+        case .action(.recordScriptedClicks):
+            let landed: PlaytestScriptedClicks.Outcome
+            do {
+                landed = try await PlaytestScriptedClicks.run(coordinator: coordinator, out: out)
+            } catch let failure as PlaytestScriptedClicks.Failure {
+                throw Failure(description: failure.description)
+            }
+            try await adopt(landed.editor, window: nil, step: step.name,
+                            subject: "a five second recording with three scripted clicks", number: number)
+            note(number, step.name, landed.summary, state: describe())
+
         case .action(let action) where action == .openSampleRecording:
             guard let url = TutorialSampleRecording.fresh() else {
                 throw Failure(description: "couldn't write the sample recording")
@@ -3798,6 +3809,26 @@ private final class Run {
                 }
                 note(number, step.name, "captions: \(onIt.count) cues on the one \(track.name) track",
                      state: describe())
+            case .expectAddedClick:
+                guard let document = editor.document,
+                      let clip = document.allLayers.first(where: { $0.movie != nil }),
+                      let time = clip.time, let pieces = clip.clipPieces else {
+                    throw Failure(description: "there is no recording in the window")
+                }
+                let added = clip.addedClicks ?? []
+                guard added.count == 1, let click = added.first else {
+                    throw Failure(description: "the clip has \(added.count) clicks added by hand, not 1")
+                }
+                let want = pieces.sourceMS(atMS: editor.documentTimeMS - time.inMS) ?? -1
+                guard click.downMS == want else {
+                    throw Failure(description: "the added click is at \(click.downMS) ms of the recording, "
+                        + "not at the playhead's \(want) ms")
+                }
+                guard editor.clickPlacementClip == nil else {
+                    throw Failure(description: "the canvas is still waiting for a click after one was placed")
+                }
+                note(number, step.name, "one click added by hand at \(click.downMS) ms, "
+                     + "\(Int(click.point.x)),\(Int(click.point.y)) px", state: describe())
             case .captionsExpectInsideMarks:
                 guard let document = editor.document else { throw Failure(description: "no document") }
                 guard let range = document.markedRangeMS else {
@@ -5218,7 +5249,7 @@ private final class Run {
                  .captionsNudgeEarlier, .captionsCorrectFirstWord, .captionsClear,
                  .captionsExpectSound, .captionsExpectTimingsKept, .captionsExpectNone, .captionsWaitToLand,
                  .captionsExpectOneTrack, .captionsExpectOnePicked, .captionsWriteQuietly,
-                 .captionsExpectEndWithRecording, .captionsExpectInsideMarks,
+                 .captionsExpectEndWithRecording, .captionsExpectInsideMarks, .expectAddedClick,
                  .captionsPickFirst, .captionsPickNext, .captionsEditFirstInPlace, .captionsCommitFirstWords,
                  .captionsTrimFirstEnd, .captionsStyleCaption, .captionsStyleLowerThird,
                  .captionsStyleKaraoke, .captionsPositionTop, .captionsPositionBottom,
@@ -5908,7 +5939,8 @@ private final class Run {
                  .openSampleRecording, .openSampleTalk, .openLongTalk, .openLongRetinaTalk,
                  .openScrollingPage, .openRecordingFromDisk,
                  .openMissingRecording,
-                 .openLandingRecording, .reopenSampleRecording, .editLastCapture:
+                 .openLandingRecording, .reopenSampleRecording, .editLastCapture,
+                 .recordScriptedClicks:
                 break  // handled above, in the branch that asks for a recording
             case .clipSplit, .clipDeletePiece, .clipHoldFrame,
                  .clipSpeedDouble, .clipSpeedHalf,

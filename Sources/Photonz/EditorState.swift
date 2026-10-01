@@ -508,6 +508,12 @@ final class EditorState {
 
     var isAdjustingGrid: Bool { gridAdjustment != nil }
 
+    /// The clip a click is being added to by hand, between choosing Add Click
+    /// at Playhead and clicking the picture where it happened. Nil the rest of
+    /// the time (`EditorState+Clicks`).
+    var clickPlacementClip: UUID?
+    @ObservationIgnored var clickPlacementEscape: Any?
+
     /// Where the grid counts from, in document points. It belongs to the
     /// DOCUMENT: a zero point lined up with the content of one screenshot means
     /// nothing in the next picture you open. While the grid is being adjusted

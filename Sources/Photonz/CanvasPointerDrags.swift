@@ -14,6 +14,13 @@ extension CanvasNSView {
 
     override func mouseDown(with event: NSEvent) {
         guard let viewport else { return }
+        // Adding a click by hand: this press says where it happened, and does
+        // nothing else, in View mode or Edit and whatever tool is in hand.
+        if placingClick {
+            window?.makeFirstResponder(self)
+            onPlaceClick(viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil)))
+            return
+        }
         // View mode is a player: nothing on the picture is picked or moved,
         // and a double click goes full screen, as it does in QuickTime.
         if isWatching {
