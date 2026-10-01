@@ -796,6 +796,8 @@ final class EditorState {
                 if selectedClipCutIndex != nil { selectedClipCutIndex = nil }
                 // ...and so does a cut between two clips.
                 if selectedLayerID != nil, selectedEditPoint != nil { selectedEditPoint = nil }
+                // ...and so does a zoom on another clip.
+                if let zoom = selectedZoom, zoom.layerID != selectedLayerID { selectedZoom = nil }
                 // ...and so do pieces a box picked and a range on some tracks
                 // (`EditorState+TrackRange`): one thing is in hand at a time.
                 if selectedLayerID != nil { letGoOfTimelinePicks() }
@@ -1467,6 +1469,14 @@ final class EditorState {
     /// The cut between two clips on one track that is picked
     /// (`comp-video.html` §02). Picking a layer lets it go.
     var selectedEditPoint: TimelineEditPoint?
+    /// The zoom region picked on a clip's Zoom lane (`EditorState+Zoom`).
+    /// Picking another layer lets it go.
+    var selectedZoom: ClipZoomRef?
+    /// A zoom's bar or box under a hand: drawn as the hand has it, written
+    /// down once on letting go (`EditorState+Zoom`).
+    var zoomDrag: ZoomDragSession?
+    /// A press on the picture that the zoom's box took, until it lets go.
+    @ObservationIgnored var zoomBoxPress: ZoomBoxPress?
     /// The cut whose transition picker is open, nil while none is
     /// (`EditorState+ClipTransitions`, "At this cut").
     var transitionPickerPlace: TimelineCutPlace?
@@ -4262,6 +4272,8 @@ final class EditorState {
         // ...and a caption's WORD under a hand on the Words lane, so the line
         // lights its words at the times the hand is giving them.
         document = withDraggedCaptionWord(document)
+        // ...and a zoom's bar or box under a hand (`EditorState+Zoom`).
+        document = withDraggedZoom(document)
         // ...and the BAND over a cut under a hand, for the third time for the
         // same reason: dragging a dissolve longer has to show you the dissolve
         // it is about to be (`EditorState+ClipTransitions`).
@@ -4295,6 +4307,9 @@ final class EditorState {
             inHand?.travel = playheadTravel
             inHand?.nearest = !isDocumentPlaying
             document = document.drawn(atTimeMS: documentTimeMS, framesInHand: inHand)
+            // A zoom picked while the transport is stopped shows the whole
+            // picture, so its box can be seen and moved over what it frames.
+            document = withZoomInHandUnzoomed(document)
         }
         // The inline editor overlay stands in for the layer being edited.
         if let id = editingTextLayerID {

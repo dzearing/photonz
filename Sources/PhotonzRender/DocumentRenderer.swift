@@ -1084,6 +1084,24 @@ public final class DocumentRenderer: @unchecked Sendable {
             image = image.transformed(by: CGAffineTransform(translationX: -flipped.origin.x, y: -flipped.origin.y))
         }
 
+        // A zoom on a clip: only the part of the picture it is on is drawn,
+        // and the step below fills the frame with it (`ClipZoom.swift`). In
+        // fractions of whatever the picture is by now, so it means the same
+        // at any size the frame was read at. Clamped first so the cut edge
+        // takes the picture's own pixels rather than fading out, which the
+        // enlarging resampler below would show as a soft rim.
+        if let window = layer.zoomWindow, image.extent.width > 0, image.extent.height > 0 {
+            let whole = image.extent
+            let part = CGRect(x: whole.minX + window.minX * whole.width,
+                              y: whole.minY + (1 - window.maxY) * whole.height,
+                              width: window.width * whole.width,
+                              height: window.height * whole.height)
+            if part.width >= 1, part.height >= 1 {
+                image = image.clampedToExtent().cropped(to: part)
+                    .transformed(by: CGAffineTransform(translationX: -part.minX, y: -part.minY))
+            }
+        }
+
         // Scale content into the layer's frame — grown, where the content is
         // drawn past it, by exactly the room the rasterizer took, so the shape
         // inside the padding still lands on the frame at its true size.

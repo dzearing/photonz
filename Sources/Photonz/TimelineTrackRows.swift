@@ -68,6 +68,11 @@ struct TimelineTrackRow: View {
                 ForEach(clip.lanes.filter { !keyed.contains($0.motionID) }) { lane in
                     MotionStripLaneView(lane: lane, layerName: clip.layerName, laneWidth: laneWidth)
                 }
+                // Its zooms, one bar each, under the clip they frame.
+                if row.zoomedClips.contains(clip.layerID) {
+                    ZoomLane(layerID: clip.layerID, laneWidth: laneWidth, indent: indent,
+                             isLocked: track.isLocked)
+                }
             }
             ForEach(row.inner) { group in
                 TimelineInnerRow(group: group, laneWidth: laneWidth, isBlade: isBlade,

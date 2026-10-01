@@ -207,6 +207,8 @@ public enum FeatureCatalog {
 
     public static let punchInFlag = "next-punch-in-and-hold"
 
+    public static let zoomRegionsFlag = "next-zoom-regions"
+
     public static let titleOnTheTimelineFlag = "next-a-title-has-an-in-and-an-out"
 
     public static let captionsFromTheSoundFlag = "next-captions-from-the-sound"
@@ -791,6 +793,16 @@ public enum FeatureCatalog {
                     name: punchInFlag,
                     title: "Punch in on something and hold there",
                     description: "Drag a box on a clip and Punch In to move the camera onto it at the playhead and hold, then Pull Back Out. Off means a clip is framed one way for its whole length.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: zoomRegionsFlag,
+                    title: "Zoom in on a spot of a recording, and follow the pointer",
+                    description: "Add Zoom on a recording frames one spot of it for a while: a bar under the clip, a box on the picture, and it can follow the recorded pointer. Off means a recording is always shown whole.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

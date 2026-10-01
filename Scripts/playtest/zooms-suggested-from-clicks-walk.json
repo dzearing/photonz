@@ -1,0 +1,16 @@
+{
+  "out": "/tmp/photonz-playtest/zooms-suggested-from-clicks-walk",
+  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "zoomScriptPointerPath" },
+    { "do": "rightClick", "at": [900, 893], "space": "window", "shot": "0-clip-menu-suggest-zooms", "choose": "Suggest Zooms" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "expectZoomSuggested" },
+    { "do": "describe", "stage": "1-suggested", "note": "A recording with two clicks close together at 2 and 2.6 seconds, right-click, Suggest Zooms: one zoom lands round them, arriving before the first and leaving after the second, picked with its box up" },
+    { "do": "snapshot", "name": "1-a-zoom-round-the-clicks" }
+  ]
+}

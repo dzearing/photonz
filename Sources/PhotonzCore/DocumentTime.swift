@@ -234,6 +234,11 @@ extension PhotonzDocument {
         shown.layers = shown.layers.map {
             $0.movedTree(atDocumentTimeMS: moment, documentCycleMS: cycle)
         }
+        // ...and a clip inside a zoom shows the part of its picture the zoom
+        // is on (`ClipZoom.swift`): its box stays put, the picture in it moves.
+        if hasZooms {
+            shown.layers = shown.layers.map { $0.withZoomShown(atDocumentTimeMS: moment) }
+        }
         // ...and a cut with a transition on it puts a second picture on screen
         // beside the first, or a panel of colour over it
         // (`ClipTransitions.swift`). Last, so a layer told to fade over the

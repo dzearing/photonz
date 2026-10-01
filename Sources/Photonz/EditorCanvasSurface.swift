@@ -171,9 +171,20 @@ struct EditorCanvasSurface: View {
                    // and leaves the layer (`EditorState+KeyLanes`).
                    onDeleteLayer: { id in
                        if editorState.keySelection?.layerID == id, editorState.deletePickedKeys() { return }
+                       // ...and with a zoom picked, the zoom (`EditorState+Zoom`).
+                       if editorState.selectedZoom?.layerID == id {
+                           editorState.removeZoomInHand()
+                           return
+                       }
                        editorState.deleteLayer(id: id)
                    },
-                   onDeleteLayers: { editorState.deleteLayers(ids: $0) },
+                   onDeleteLayers: { ids in
+                       if let zoom = editorState.selectedZoom, ids.contains(zoom.layerID) {
+                           editorState.removeZoomInHand()
+                           return
+                       }
+                       editorState.deleteLayers(ids: ids)
+                   },
                    onDropImageURL: { editorState.addImageLayerOrOpen(at: $0, droppedAt: $1) },
                    onDropMediaURL: { editorState.dropMedia(at: $0, droppedAt: $1) },
                    mediaDropAnswer: { editorState.mediaDropAnswer(for: $0) },
@@ -229,7 +240,13 @@ struct EditorCanvasSurface: View {
                    onClearBackground: { editorState.clearBackgroundLayer() },
                    onWindowChange: { editorState.canvasDidMoveToWindow($0) },
                    placingClick: editorState.clickPlacementClip != nil,
-                   onPlaceClick: { editorState.placeClick(at: $0) })
+                   onPlaceClick: { editorState.placeClick(at: $0) },
+                   zoomBoxUp: editorState.zoomBoxInDocument != nil,
+                   onZoomBoxDown: { editorState.zoomBoxDown(at: $0) },
+                   onZoomBoxDrag: { editorState.zoomBoxDragged(to: $0) },
+                   onZoomBoxRelease: { editorState.zoomBoxReleased(at: $0) })
+            // A picked zoom's box over the whole picture (`ZoomBoxOverlay`).
+            .overlay(alignment: .topLeading) { ZoomBoxOverlay() }
             // The exact position and size numbers, hung off the selection
             // itself (`ExactPlacement`). Here rather than on the panel because
             // the anchor is worked out in the canvas view's own coordinates,

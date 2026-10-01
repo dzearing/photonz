@@ -717,6 +717,10 @@ struct InspectorPanel: View {
             set.insert(.editPoint)
             set.insert(.transition)
         }
+        // The zoom in hand on a recording's Zoom lane (`EditorState+Zoom`).
+        if editorState.canWorkWithZooms, editorState.zoomInHand != nil {
+            set.insert(.zoom)
+        }
         // The transitions to drag onto a cut (`video-transitions.html`,
         // `#gEffects`): wherever the timeline holds a recording, picked or not,
         // because it is where you go to FIND a transition, before any cut is
@@ -900,6 +904,10 @@ struct InspectorPanel: View {
         if editorState.selectedEditPoint != nil || editorState.selectedClipCutIndex != nil,
            set.contains(.editPoint) {
             set.formIntersection([.layers, .editPoint, .transition, .transitions, .library])
+        }
+        // ...and so is a zoom: the panel speaks for the zoom in hand.
+        if set.contains(.zoom) {
+            set.formIntersection([.layers, .zoom, .library])
         }
         if selectedLayer?.isCaptionsLayer == true { set.remove(.placement) }
         return set
@@ -1298,6 +1306,8 @@ struct InspectorPanel: View {
             EditPointInspector()
         case .transition:
             TransitionInspector()
+        case .zoom:
+            ZoomInspector()
         case .transitions:
             TransitionsGroup()
         case .speed:

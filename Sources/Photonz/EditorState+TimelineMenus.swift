@@ -128,6 +128,9 @@ extension EditorState {
             rows.append(.command("Add Click at Playhead\u{2026}", enabled: canAddClick(toClip: layerID)) {
                 self.beginPlacingClick(onClip: layerID)
             })
+            // A spot of the recording filling the frame for a while, at the
+            // playhead, and zooms round every run of clicks (`EditorState+Zoom`).
+            rows.append(contentsOf: addZoomMenuRows(layerID: layerID, atMS: documentTimeMS))
         }
         if let piece, !piece.isHeld, layer.hasMediaBehindIt {
             rows.append(.submenu("Speed", EditorState.clipSpeeds.map { percent in
@@ -549,6 +552,13 @@ extension EditorState {
             self.splitEverything(atMS: ms)
         })
         if let paste = pasteRangeRow(atMS: ms) { rows.append(paste) }
+        // A zoom on the recording playing here, starting here.
+        if canWorkWithZooms, let clip = clipToAddZoom(atMS: ms) {
+            rows.append(.command("Add Zoom") {
+                self.moveDocumentPlayhead(toMS: ms)
+                self.addZoom(toClip: clip, atMS: ms)
+            })
+        }
         if !document.markers.isEmpty {
             rows.append(.separator)
             rows.append(.command("Clear All Markers") { self.removeAllMarkers() })

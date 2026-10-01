@@ -227,6 +227,10 @@ extension EditorState {
     /// picked on a lane first, because they are the smaller and more recent
     /// thing in hand; then a picked piece of a clip; then the picked layers.
     func liftInHand() -> Bool {
+        if selectedZoom != nil {
+            removeZoomInHand()
+            return true
+        }
         if canDeletePickedKeys { return deletePickedKeys() }
         if canDeleteClipPieceInHand {
             deleteClipPieceInHand()

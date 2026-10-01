@@ -46,6 +46,11 @@ extension EditorState {
 
     /// Layers > Delete Layer (⌘⌫): the whole selection in one undo step.
     func deleteSelectedLayers() {
+        // A zoom picked is the thing in hand, never the clip under it.
+        if selectedZoom != nil {
+            removeZoomInHand()
+            return
+        }
         let ids = actionableLayerIDs
         guard !ids.isEmpty else { return }
         deleteLayers(ids: Array(ids))

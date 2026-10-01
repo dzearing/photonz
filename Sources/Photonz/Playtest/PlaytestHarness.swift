@@ -3809,6 +3809,20 @@ private final class Run {
                 }
                 note(number, step.name, "captions: \(onIt.count) cues on the one \(track.name) track",
                      state: describe())
+            case .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
+                 .expectZoomShapedByHand, .expectZoomSuggested:
+                do {
+                    let said = switch action {
+                    case .zoomScriptPointerPath: try PlaytestZoom.scriptPointerPath(editor)
+                    case .expectZoomFollowsCursor: try PlaytestZoom.expectFollows(editor)
+                    case .expectZoomShapedByHand: try PlaytestZoom.expectShapedByHand(editor)
+                    case .expectZoomSuggested: try PlaytestZoom.expectSuggested(editor)
+                    default: try await PlaytestZoom.expectExportMatches(editor)
+                    }
+                    note(number, step.name, said, state: describe())
+                } catch let failure as PlaytestZoom.Failure {
+                    throw Failure(description: failure.description)
+                }
             case .expectAddedClick:
                 guard let document = editor.document,
                       let clip = document.allLayers.first(where: { $0.movie != nil }),
@@ -5250,6 +5264,8 @@ private final class Run {
                  .captionsExpectSound, .captionsExpectTimingsKept, .captionsExpectNone, .captionsWaitToLand,
                  .captionsExpectOneTrack, .captionsExpectOnePicked, .captionsWriteQuietly,
                  .captionsExpectEndWithRecording, .captionsExpectInsideMarks, .expectAddedClick,
+                 .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
+                 .expectZoomShapedByHand, .expectZoomSuggested,
                  .captionsPickFirst, .captionsPickNext, .captionsEditFirstInPlace, .captionsCommitFirstWords,
                  .captionsTrimFirstEnd, .captionsStyleCaption, .captionsStyleLowerThird,
                  .captionsStyleKaraoke, .captionsPositionTop, .captionsPositionBottom,

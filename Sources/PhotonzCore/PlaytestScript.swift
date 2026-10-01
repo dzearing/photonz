@@ -886,6 +886,23 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Fail unless the clip in the window has exactly one click added by hand
     /// (`Add Click at Playhead…`), at the playhead's moment of its recording.
     case expectAddedClick
+    /// Give the recording in the window a pointer path crossing the picture
+    /// and two clicks, as if the recorder had kept them (`PlaytestZoom`).
+    case zoomScriptPointerPath
+    /// Fail unless the one zoom on the recording follows the cursor: at three
+    /// moments of its hold the frame keeps the pointer clear of its edges, at
+    /// the zoom's own size, and moves between them.
+    case expectZoomFollowsCursor
+    /// Fail unless an exported frame at three moments of the zoom's hold is
+    /// what the canvas shows then, and both are zoomed.
+    case expectZoomExportMatches
+    /// Fail unless the one zoom on the recording has been reshaped from how
+    /// Add Zoom made it: a longer way out, an earlier end and a wider box.
+    case expectZoomShapedByHand
+    /// Fail unless Suggest Zooms put exactly one zoom on the recording, in
+    /// place by its first scripted click, still there at its last, and framing
+    /// both.
+    case expectZoomSuggested
     /// Move the playhead to a fraction of what is left to watch, which is a
     /// real scrub's outcome without a walk having to know how long the clip is.
     case videoSeekQuarter, videoSeekMiddle, videoSeekThreeQuarters
@@ -1326,6 +1343,8 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
         switch self {
         case .clipSplit, .clipDeletePiece, .clipHoldFrame,
              .clipSpeedDouble, .clipSpeedHalf, .expectAddedClick,
+             .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
+             .expectZoomShapedByHand, .expectZoomSuggested,
              .soundDetach, .soundAddSample, .soundDuck, .soundLevelHalf,
              .captionsAddVoiceover, .captionsWrite, .captionsWriteHearingNothing,
              .captionsNudgeLater, .captionsNudgeEarlier,

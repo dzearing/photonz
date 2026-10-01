@@ -181,6 +181,9 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// Nothing draws it yet, so without a word it reads as a click on the
         /// picture that did nothing.
         case clickAdded(atMS: Int)
+        /// Zoom regions were put on a recording (`ClipZoom.swift`): one by
+        /// Add Zoom, or as many as Suggest Zooms found runs of clicks for.
+        case zoomsAdded(count: Int)
         /// A tool's letter picked up a tool that is folded under More on this
         /// bar (a document with time, `ToolBarFold`). The tool is in hand and
         /// nothing on the bar shows it, so a word says where it lives.
@@ -375,6 +378,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .soundAdded: return "Sound added"
         case .clipAdded: return "Clip added"
         case .clickAdded: return "Click added"
+        case .zoomsAdded(let count): return count == 1 ? "Zoom added" : "\(count) zooms added"
         case .toolUnderMore(let tool): return tool
         case .defaultTransitionRefused: return "No transition added"
         case .defaultTransitionSet: return "Default transition"
@@ -448,6 +452,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "\(name) is on the timeline at the playhead"
         case .clickAdded(let ms):
             return "At \(CaptionProgress.clock(ms))"
+        case .zoomsAdded:
+            return ""
         case .toolUnderMore:
             return "Under More"
         case .landedOnTrack(let name, let track, let ms, _):

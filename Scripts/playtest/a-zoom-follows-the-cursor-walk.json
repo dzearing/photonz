@@ -1,0 +1,192 @@
+{
+  "out": "/tmp/photonz-playtest/a-zoom-follows-the-cursor-walk",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "zoomScriptPointerPath"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 2.0
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        900,
+        893
+      ],
+      "space": "window",
+      "shot": "0-clip-menu-with-add-zoom",
+      "choose": "Add Zoom"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-zoom-added",
+      "note": "Playhead at two seconds, right-click the recording, Add Zoom: a Zoom lane opens under the clip with one bar from two to five seconds, the canvas shows the whole picture with the zoom's box on it, and the panel shows the Zoom section"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-zoom-added-box-on-the-picture"
+    },
+    {
+      "do": "rightClick",
+      "on": "Zoom lane",
+      "shot": "2-zoom-bar-menu",
+      "choose": "Follow Cursor"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "expectZoomFollowsCursor"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Ease In",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "0.5s"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Ease Out",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "1.0s"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Zoom amount",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "250%",
+      "shot": "2b-zoom-amount-open"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 2.8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "3-box-follows-early"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 3.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "4-box-follows-middle"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 4.2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "5-box-follows-late"
+    },
+    {
+      "do": "action",
+      "action": "expectZoomExportMatches"
+    },
+    {
+      "do": "describe",
+      "stage": "6-zoom-let-go",
+      "note": "With the zoom let go the canvas shows the zoom itself; an exported frame at three moments of its hold matches the canvas and is zoomed"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 2.8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "6-zoomed-early"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 3.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "7-zoomed-middle"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 4.2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "8-zoomed-late"
+    }
+  ]
+}

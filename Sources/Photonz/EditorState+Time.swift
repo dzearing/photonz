@@ -389,8 +389,14 @@ extension EditorState {
             // frames are worth that much more. The second picture of a
             // dissolve has no layer of its own and reads like the first.
             let movieWidth = max(1, request.movie.pixelSize.width)
-            let drawnWidth = document.layer(id: request.layerID)?.frame.width ?? movieWidth
-            return request.movie.decodePixelSize(shownScale: screen * drawnWidth / movieWidth)
+            let layer = document.layer(id: request.layerID)
+            let drawnWidth = layer?.frame.width ?? movieWidth
+            // ...and so is a clip inside a zoom, which shows part of its
+            // picture across the whole of its box (`ClipZoom.swift`), read at
+            // the frame's own moment so frames read ahead are as sharp as the
+            // zoom will be when they are shown.
+            let zoomed = CGFloat(layer?.zoomFactor(atSourceMS: request.sourceMS) ?? 1)
+            return request.movie.decodePixelSize(shownScale: screen * zoomed * drawnWidth / movieWidth)
         }
     }
 

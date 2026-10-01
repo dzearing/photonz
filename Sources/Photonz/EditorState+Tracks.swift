@@ -29,6 +29,9 @@ struct TimelineTrackRowModel: Identifiable, Equatable {
     /// cue can carry a drift mark and an unpicked one can be drawn as the
     /// light `CaptionCueBar`.
     var cuesArePlain = false
+    /// The clips on this track that have zooms, each with a Zoom lane under
+    /// it (`ZoomLane`).
+    var zoomedClips: [UUID] = []
 
     var id: UUID { track.id }
 
@@ -117,8 +120,14 @@ extension EditorState {
             let isOff = track.kind == .audio
                 ? track.isMuted || (soloSound && !track.isSolo)
                 : track.isHidden || (soloPicture && !track.isSolo)
-            return TimelineTrackRowModel(track: track, clips: clips, inner: inner, isOff: isOff,
-                                         linked: linked)
+            var row = TimelineTrackRowModel(track: track, clips: clips, inner: inner, isOff: isOff,
+                                            linked: linked)
+            if Experiments.shared.zoomRegionsEnabled {
+                row.zoomedClips = clips.map(\.layerID).filter {
+                    document.layer(id: $0)?.zooms?.isEmpty == false
+                }
+            }
+            return row
         }
     }
 

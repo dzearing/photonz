@@ -72,6 +72,14 @@ final class MovieLibrary {
     /// or nil when nothing was kept.
     func pointerTrack(for movie: MovieRef) -> PointerTrack? { pointerTracks[movie.id] }
 
+    #if PHOTONZ_PLAYTEST
+    /// A walk giving a recording a pointer path, as if the recorder had kept
+    /// one (`PlaytestZoom`).
+    func setPointerTrackForPlaytest(_ track: PointerTrack, for movie: MovieRef) {
+        pointerTracks[movie.id] = track
+    }
+    #endif
+
     /// File a reference a saved project already holds against the file its
     /// media table found for it (`ProjectMedia`), so the project's clips play
     /// under the ids they were saved with. Nothing is read off the file: the

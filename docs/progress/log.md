@@ -20357,3 +20357,9 @@ the middle and barely magnifies (a crisp or growing lens would be ours to draw).
 - Add Click at Playhead… on a recording clip's right-click menu and the Clip menu: crosshair, click the picture, Escape cancels, Undo works (`EditorState+Clicks.swift`, `Layer.addedClicks`).
 - Walks: `a-recording-keeps-its-clicks-walk` (real 5 s recording, scripted clicks via `recordScriptedClicks`), `adding-a-click-by-hand-walk`.
 - Next: `clicks-in-a-recording-can-show-an-effect-on-the` draws them (ticks, ring).
+
+## 2026-09-30 — Zoom regions on a recording
+
+- A recording can zoom in on a spot for a while (`ClipZoom.swift`): a bar on a Zoom lane under the clip, a box on the picture, eases, Follow Cursor (bakes the stretch of the pointer path it needs into the zoom) and Suggest Zooms from clicks. Drawn as a window into the clip's picture in `drawn(atTimeMS:)`, so canvas and export agree; the renderer crops to it before filling the frame.
+- Walks: a-zoom-follows-the-cursor-walk, a-zoom-is-shaped-by-hand-walk, zooms-suggested-from-clicks-walk. Audit: queue/audits/2026-09-30-zoom-regions.json.
+- Next: framing-a-zoom-shows-one-box-and-the-pointer-say (one box while framing, cursor cue, Escape).

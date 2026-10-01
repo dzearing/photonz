@@ -1,0 +1,31 @@
+{
+  "feature": "Zoom regions that frame a spot and can follow the pointer",
+  "epic": "video-transitions-motion",
+  "summary": "A recording can zoom in on one spot for a while: a bar under the clip says when, a box on the picture says where, and the box can ride along with the recorded pointer. Suggest Zooms puts one round every run of clicks.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording made by Photonz (it keeps where the pointer went); an older recording works too, without Follow Cursor.",
+  "switched": {},
+  "try": [
+    { "do": "Put the playhead where something happens, right-click the clip, choose Add Zoom.", "shot": "2026-09-30-zoom-regions-0-add.png" },
+    { "do": "With the zoom picked, drag the box on the picture to move it, or pull a corner to go in more or less.", "shot": "2026-09-30-zoom-regions-1-box.png" },
+    { "do": "On the Zoom lane under the clip, drag the bar's ends, or the small marks inside it to make the way in and out longer.", "shot": "2026-09-30-zoom-regions-6-shaped.png" },
+    { "do": "Right-click the zoom's bar and choose Follow Cursor, then scrub: the box rides the pointer.", "shot": "2026-09-30-zoom-regions-2-menu.png" },
+    { "do": "Scrub across the zoom with it picked and watch the box follow.", "shot": "2026-09-30-zoom-regions-4-follow-late.png" },
+    { "do": "Click beside the box to let the zoom go, then play: the picture zooms in, follows and eases back out.", "shot": "2026-09-30-zoom-regions-5-zoomed.png" },
+    { "do": "On a recording with clicks, right-click the clip and choose Suggest Zooms.", "shot": "2026-09-30-zoom-regions-7-suggested.png" }
+  ],
+  "evaluate": [
+    "Is showing the whole picture with the box while a zoom is picked the right way to frame it, or do you want to see the zoomed result while you adjust?",
+    "Does a following zoom glide the way you want, or is it too lazy or too twitchy?",
+    "Is the Zoom lane under the clip where you would look for zooms?",
+    "Is Add Zoom on the clip's right-click (and the ruler's, and the Clip menu) enough, or do you want a key for it?",
+    "Are 0.7 second eases and 200% good defaults for a new zoom?"
+  ],
+  "rough": [
+    "No mock draws a zoom region (video-zoom-wt is the punch-in, which still ships). This follows Screen Studio's shape: a bar for when, a box for where.",
+    "While framing, the clip's own selection handles show round the whole picture as well as the zoom's box, so there are two boxes on screen.",
+    "The pointer does not change over the box's corners or body yet, so nothing says a corner can be pulled until you try it.",
+    "Escape does not let go of a picked zoom; a click beside the box, on the empty lane, or on another clip does.",
+    "Follow Cursor reads the pointer against the whole recording, so on a clip that has been cropped the box follows a little off.",
+    "The render change was not timed on its own: it uses the same enlarging resampler as Punch In, which measured 10 ms for a 12 megapixel frame at 200%."
+  ]
+}

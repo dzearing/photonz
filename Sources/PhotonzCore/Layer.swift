@@ -1674,6 +1674,18 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// document written before this existed.
     public var addedClicks: [PointerClick]?
 
+    /// The zoom regions on this clip (`ClipZoom.swift`), on its recording's
+    /// own clock. Nil is every layer in every document written before this
+    /// existed.
+    public var zooms: [ClipZoom]?
+
+    /// The part of the picture a zoom shows at the moment being drawn, as
+    /// fractions of it from the top-left. Set only on a drawn document
+    /// (`PhotonzDocument.drawn(atTimeMS:)`), never on one somebody edits: it
+    /// is the answer to "where is the zoom now", worked out once so every
+    /// renderer reads the same one.
+    public var zoomWindow: CGRect?
+
     /// The words the machine heard in this caption and when it heard each one
     /// (`Captions.swift`). Nil for every layer that is not a caption, which is
     /// every layer in every document written before captions existed.
@@ -1793,6 +1805,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         copy.cuts = cuts
         copy.movie = movie
         copy.addedClicks = addedClicks
+        copy.zooms = zooms
         // A copy of clips merged into one holds copies of them, so no clip
         // is in two places under one id.
         copy.merged = merged?.reidentified()

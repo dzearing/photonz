@@ -1096,6 +1096,32 @@ struct EditorCommands: Commands {
         let clickClip = editor?.clipToAddClickTo
         Button("Add Click at Playhead\u{2026}") { if let clickClip { editor?.beginPlacingClick(onClip: clickClip) } }
             .disabled(clickClip == nil)
+        if Experiments.shared.zoomRegionsEnabled {
+            let zoomClip = editor.flatMap { $0.clipToAddZoom(atMS: $0.documentTimeMS) }
+            Button("Add Zoom") {
+                if let zoomClip, let editor { editor.addZoom(toClip: zoomClip, atMS: editor.documentTimeMS) }
+            }
+            .disabled(zoomClip == nil)
+            let suggestClip = editor?.clipInHandID ?? zoomClip
+            Button("Suggest Zooms") { if let suggestClip { editor?.suggestZooms(onClip: suggestClip) } }
+                .disabled(!(suggestClip.map { editor?.canSuggestZooms(onClip: $0) ?? false } ?? false))
+            // The picked zoom's own verbs, as its bar's right-click has them.
+            let zoomRef = editor?.selectedZoom
+            let zoomNow = zoomRef.flatMap { editor?.zoom($0) }
+            Toggle("Follow Cursor", isOn: Binding(
+                get: { zoomNow?.followsCursor ?? false },
+                set: { on in if let zoomRef { editor?.setZoomFollowsCursor(zoomRef, on) } }))
+                .disabled(zoomRef == nil || !(zoomNow?.followsCursor == true
+                    || zoomRef.map { editor?.canFollowCursor(onClip: $0.layerID) ?? false } == true))
+            Menu("Zoom") {
+                ForEach(EditorState.zoomScaleStops, id: \.self) { stop in
+                    Button("\(stop)%") { if let zoomRef { editor?.setZoomScale(zoomRef, percent: stop) } }
+                }
+            }
+            .disabled(zoomRef == nil)
+            Button("Delete Zoom") { editor?.removeZoomInHand() }
+                .disabled(zoomRef == nil)
+        }
         let media = editor?.mediaURLInHand
         Button("Reveal in Finder") { if let media { NSWorkspace.shared.activateFileViewerSelecting([media]) } }
             .disabled(media == nil)

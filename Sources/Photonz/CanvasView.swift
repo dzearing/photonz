@@ -354,6 +354,12 @@ struct CanvasView: NSViewRepresentable {
     /// says where it happened: the next press places it.
     var placingClick: Bool = false
     var onPlaceClick: (CGPoint) -> Void = { _ in }
+    /// A picked zoom's box is up over the picture (`EditorState+Zoom`): a
+    /// press on its clip goes to the box first.
+    var zoomBoxUp: Bool = false
+    var onZoomBoxDown: (CGPoint) -> Bool = { _ in false }
+    var onZoomBoxDrag: (CGPoint) -> Void = { _ in }
+    var onZoomBoxRelease: (CGPoint) -> Void = { _ in }
 
     func makeNSView(context: Context) -> CanvasNSView {
         let view = CanvasNSView()
@@ -498,6 +504,10 @@ struct CanvasView: NSViewRepresentable {
         view.onWindowChange = onWindowChange
         view.placingClick = placingClick
         view.onPlaceClick = onPlaceClick
+        view.zoomBoxUp = zoomBoxUp
+        view.onZoomBoxDown = onZoomBoxDown
+        view.onZoomBoxDrag = onZoomBoxDrag
+        view.onZoomBoxRelease = onZoomBoxRelease
         view.onGridOriginChange = onGridOriginChange
         view.onGridAdjustCommit = onGridAdjustCommit
         view.onGridAdjustCancel = onGridAdjustCancel
@@ -676,6 +686,13 @@ final class CanvasNSView: NSView {
         didSet { if placingClick != oldValue { window?.invalidateCursorRects(for: self) } }
     }
     var onPlaceClick: ((CGPoint) -> Void) = { _ in }
+    /// A picked zoom's box is up: a press the box takes is the box's from
+    /// down to up (`ZoomBoxOverlay`, `EditorState+Zoom`).
+    var zoomBoxUp = false
+    var zoomBoxPressing = false
+    var onZoomBoxDown: ((CGPoint) -> Bool) = { _ in false }
+    var onZoomBoxDrag: ((CGPoint) -> Void) = { _ in }
+    var onZoomBoxRelease: ((CGPoint) -> Void) = { _ in }
     /// The zero point moved to here (live, while placing the grid).
     var onGridOriginChange: ((CGPoint) -> Void) = { _ in }
     /// ⏎ / ⎋ while the grid is being adjusted.

@@ -522,6 +522,7 @@ extension Experiments {
     /// Punching in on a detail of a clip and holding there
     /// (`ClipReframe.swift`).
     var punchInEnabled: Bool { isEnabled(FeatureCatalog.punchInFlag) }
+    var zoomRegionsEnabled: Bool { isEnabled(FeatureCatalog.zoomRegionsFlag) }
 
     /// `next-open-out-the-timeline`: whether the timeline's own bar carries a
     /// zoom, so a recording longer than a few seconds can be worked on a

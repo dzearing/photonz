@@ -1,0 +1,119 @@
+{
+  "out": "/tmp/photonz-playtest/a-zoom-is-shaped-by-hand-walk",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "zoomScriptPointerPath"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 2.0
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        900,
+        893
+      ],
+      "space": "window",
+      "choose": "Add Zoom"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "0-zoom-added"
+    },
+    {
+      "do": "windowDrag",
+      "from": [
+        970,
+        897
+      ],
+      "to": [
+        910,
+        897
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "windowDrag",
+      "from": [
+        1108,
+        897
+      ],
+      "to": [
+        1060,
+        897
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "drag",
+      "from": [
+        742,
+        413
+      ],
+      "to": [
+        842,
+        480
+      ],
+      "space": "window",
+      "steps": 12,
+      "hold": "1-box-under-the-hand"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "expectZoomShapedByHand"
+    },
+    {
+      "do": "describe",
+      "stage": "2-shaped",
+      "note": "The way out dragged longer by its handle, the bar's end dragged earlier, and the box's corner pulled out on the picture: the zoom eases out over longer, ends sooner, and goes in less far"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-zoom-shaped-by-hand"
+    }
+  ]
+}

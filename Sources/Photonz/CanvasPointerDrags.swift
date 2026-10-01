@@ -21,6 +21,14 @@ extension CanvasNSView {
             onPlaceClick(viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil)))
             return
         }
+        // A picked zoom's box takes a press on its clip before any tool does:
+        // carry it, pull a corner, or draw it again (`EditorState+Zoom`).
+        if zoomBoxUp, !isWatching,
+           onZoomBoxDown(viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))) {
+            window?.makeFirstResponder(self)
+            zoomBoxPressing = true
+            return
+        }
         // View mode is a player: nothing on the picture is picked or moved,
         // and a double click goes full screen, as it does in QuickTime.
         if isWatching {
@@ -739,6 +747,10 @@ extension CanvasNSView {
 
     override func mouseDragged(with event: NSEvent) {
         guard let viewport, !isWatching else { return }
+        if zoomBoxPressing {
+            onZoomBoxDrag(viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil)))
+            return
+        }
         if gridOriginDragging {
             moveGridOrigin(toViewPoint: convert(event.locationInWindow, from: nil),
                            freeing: event.modifierFlags.contains(.command))
@@ -1136,6 +1148,11 @@ extension CanvasNSView {
 
     override func mouseUp(with event: NSEvent) {
         guard let viewport, !isWatching else { return }
+        if zoomBoxPressing {
+            zoomBoxPressing = false
+            onZoomBoxRelease(viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil)))
+            return
+        }
         if gridOriginDragging {
             gridOriginDragging = false
             snapHold = .none

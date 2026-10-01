@@ -728,7 +728,8 @@ struct TimelineDock: View {
                 + CGFloat(group.lanes.count) * (MotionStripView.laneHeight + 3)
         }
         let words = track.isCaptions && !track.clips.isEmpty && wordsOpen ? CaptionWordsLane.height + 3 : 0
-        return lane + CGFloat(motionLanes) * (MotionStripView.laneHeight + 3) + inner + words
+        let zooms = CGFloat(track.zoomedClips.count) * (ZoomLane.height + 3)
+        return lane + CGFloat(motionLanes) * (MotionStripView.laneHeight + 3) + inner + words + zooms
     }
 
     /// The space the tracks are laid out in, which is what a clip carried up
