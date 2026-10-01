@@ -1845,21 +1845,30 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "dragRow", "row": "Label", "onto": "Card", "zone": "inside", "hold": "drop-line" } ] }
         """)
-        guard case .dragRow(let row, let onto, let zone, let hold) = script.steps[0] else {
+        guard case .dragRow(let row, let onto, let zone, let hold, let cancel) = script.steps[0] else {
             Issue.record("dragRow"); return
         }
         #expect(row == "Label")
         #expect(onto == "Card")
         #expect(zone == .inside)
         #expect(hold == "drop-line")
+        #expect(!cancel)
         #expect(script.steps[0].name == "dragRow")
+    }
+
+    @Test func aRowDragCanBeCalledOffWithEscape() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragRow", "row": "Label", "onto": "Card", "cancel": true } ] }
+        """)
+        guard case .dragRow(_, _, _, _, let cancel) = script.steps[0] else { Issue.record("dragRow"); return }
+        #expect(cancel)
     }
 
     @Test func aRowDragLandsAboveTheRowByDefault() throws {
         let script = try decode("""
         { "steps": [ { "do": "dragRow", "row": "Label", "onto": "Card" } ] }
         """)
-        guard case .dragRow(_, _, let zone, _) = script.steps[0] else { Issue.record("dragRow"); return }
+        guard case .dragRow(_, _, let zone, _, _) = script.steps[0] else { Issue.record("dragRow"); return }
         #expect(zone == .above)
     }
 
@@ -3032,6 +3041,30 @@ struct PlaytestScriptTests {
             _ = try decode("""
             { "steps": [ { "do": "expectPlaybackNeverBlank", "name": "play", "moments": 1 } ] }
             """)
+        }
+    }
+
+    // A drag in the layers list is judged by where the rows END UP, including
+    // how deep: the foot of a group and the row under it look alike on a
+    // picture, so the walk says the list it expects, indented by depth.
+    @Test("An expectRows step names the list top down, two spaces a level")
+    func expectRowsNamesTheList() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectRows", "rows": ["Group", "  Rectangle", "Background"] } ] }
+        """)
+        guard case .expectRows(let rows) = script.steps[0] else {
+            Issue.record("expectRows"); return
+        }
+        #expect(rows == ["Group", "  Rectangle", "Background"])
+        #expect(script.steps[0].name == "expectRows")
+        #expect(PlaytestStep.names.contains("expectRows"))
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectRows"))
+    }
+
+    @Test("An expectRows step that names no rows is refused")
+    func expectRowsNeedsRows() {
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "expectRows" } ] }"#)
         }
     }
 

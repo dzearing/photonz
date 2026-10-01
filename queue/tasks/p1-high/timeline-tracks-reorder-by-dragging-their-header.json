@@ -1,0 +1,28 @@
+{
+  "id": "timeline-tracks-reorder-by-dragging-their-header",
+  "title": "Timeline tracks reorder by dragging their headers, the same physical way layer rows do",
+  "goal": "The user asked (2026-09-30) for the lifting, make-room drag to work on the timeline track headers too. Tracks cannot be reordered at all today, so a person who wants a title track above the recording has no way to move it. Dragging a track header should lift it, the other tracks slide aside, and it lands in the gap.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 430,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-01T00:28:12.242Z",
+  "updated": "2026-10-01T00:28:12.245Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split off dragging-a-layer-feels-physical-the-row-lifts-ri, which built the layers-list half: PhotonzCore/LayerRowDrag.swift (halves, gap, offsets, spring-open, tested) and Photonz/LayerRowDragSession.swift + LayerRowDragViews.swift (lifted row, gap, edge autoscroll through the AppKit scroll view, Escape via a local key monitor, allowsWindowActivationEvents for click-through). The same model should drive track headers: tracks are rows of one pitch. grep found no track reorder anywhere today (EditorState+Tracks.swift, TimelineTrackRows.swift).",
+  "acceptance": [
+    "Pressing a track header and moving lifts the whole track (header and lane) under the pointer, locked horizontally",
+    "The other tracks spring out of the way and the gap they open is where the track lands; letting go settles it there in one undo step, Escape puts it back",
+    "Track order and the layers list stay the same story: reordering tracks reorders the layers they hold, and the layers list shows it",
+    "A walk at Next defaults drags a track by the pointer and photographs it mid-drag and after"
+  ],
+  "log": [
+    {
+      "t": "2026-10-01T00:28:12.244Z",
+      "note": "created (user)"
+    }
+  ]
+}

@@ -135,6 +135,9 @@ public enum PlaytestLockSafety {
         // the sharp copy it is drawing and the camera it was drawn for, which
         // are its own state and not a name.
         "expectSharp",
+        // Added 2026-09-30 by reading: it asks the document for its layers
+        // top down, the same list `expectLayers` counts, and no name.
+        "expectRows",
         // Added 2026-09-27 by reading: `blank`'s own door with the New Video
         // sheet in place of the canvas, so nothing in it looks a name up.
         "blankVideo",

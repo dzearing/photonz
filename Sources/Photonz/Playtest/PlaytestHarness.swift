@@ -2064,8 +2064,8 @@ private final class Run {
         case .pickUpTile(let tile, let to):
             try await pickUpTile(tile, to: to, number: number)
 
-        case .dragRow(let row, let onto, let zone, let hold):
-            try await dragRow(row, onto: onto, zone: zone, hold: hold, number: number)
+        case .dragRow(let row, let onto, let zone, let hold, let cancel):
+            try await dragRow(row, onto: onto, zone: zone, hold: hold, cancel: cancel, number: number)
         case .dragColor(let from, let onto, let hold, let expect, let says):
             try await dragColor(from, onto: onto, hold: hold, expect: expect, says: says,
                                 number: number)
@@ -2303,6 +2303,9 @@ private final class Run {
         case .expectLayers(let atLeast, let atMost):
             note(number, step.name, try checkLayers(atLeast: atLeast, atMost: atMost),
                  state: describe())
+
+        case .expectRows(let rows):
+            note(number, step.name, try checkRows(rows), state: describe())
 
         case .expectTimeline(let claim):
             note(number, step.name, try checkTimeline(claim), state: describe())
@@ -9022,6 +9025,22 @@ private final class Run {
         return total == 0 ? 1 : Double(clear) / Double(total)
     }
 
+    /// The layers list top down, every group open, two spaces a level, as an
+    /// `expectRows` step spells it.
+    private func checkRows(_ expected: [String]) throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.document else { throw Failure(description: "no document is open") }
+        let rows = document.panelRows(expanded: Set(document.allLayers.map(\.id))).map { row in
+            String(repeating: "  ", count: row.depth) + (document.layer(id: row.id)?.name ?? "?")
+        }
+        let spelled = rows.map { "\"\($0)\"" }.joined(separator: ", ")
+        guard rows == expected else {
+            throw Failure(description: "the layers list reads \(spelled), not "
+                + expected.map { "\"\($0)\"" }.joined(separator: ", "))
+        }
+        return "the layers list reads \(spelled), as claimed"
+    }
+
     private func checkLayers(atLeast: Int?, atMost: Int?) throws -> String {
         let editor = try requireEditor()
         let layers = editor.document?.allLayers ?? []
@@ -11447,7 +11466,15 @@ private final class Run {
     /// lets go. The line that says what will happen is drawn by the same drop
     /// delegate a pointer drives, so `hold` photographs the real thing.
     private func dragRow(_ name: String, onto: String, zone: PlaytestDropZone,
-                         hold: String?, number: Int) async throws {
+                         hold: String?, cancel: Bool, number: Int) async throws {
+        if Experiments.shared.draggedLayerLiftsEnabled {
+            try await carryRow(name, onto: onto, zone: zone, hold: hold, cancel: cancel, number: number)
+            return
+        }
+        guard !cancel else {
+            throw Failure(description: "a row carried by a drag session cannot be called off from a walk; "
+                + "cancel is for the lifted row in Next")
+        }
         let window = try requireWindow()
         guard let content = window.contentView else {
             throw Failure(description: "the window has no content view")
@@ -11491,6 +11518,128 @@ private final class Run {
         note(number, "dragRow",
              "\"\(name)\" let go \(zone.rawValue) \"\(onto)\": the list \(answered)"
                 + ", drop \(landed ? "landed" : "did not land")\(held), \(rowInHand())",
+             state: describe())
+    }
+
+    /// The same step in Next, where a row is not carried by a drag session at
+    /// all: it is lifted and moved through the very `LayerRowDragSession` the
+    /// list's own press drives, a few points at a time the way a hand moves,
+    /// so the rows spring aside and the gap opens for real. Needs no name
+    /// looked up through accessibility and no front, so it runs on a locked
+    /// Mac and under a person working.
+    ///
+    /// Where on the row it aims is the user's rule: the top half of a row is
+    /// above it and the bottom half below it, and `inside` is the bottom half
+    /// of a group, which is its first slot once it is open. A shut group is
+    /// rested on until it springs open, the way a hand gets inside one.
+    private func carryRow(_ name: String, onto: String, zone: PlaytestDropZone,
+                          hold: String?, cancel: Bool, number: Int) async throws {
+        let window = try requireWindow()
+        guard let content = window.contentView, let editor else {
+            throw Failure(description: "the window has no content view")
+        }
+        let session = editor.layerRowDrag
+        let displays = editor.layerRows
+        guard let source = displays.first(where: { $0.name == name }),
+              let target = displays.first(where: { $0.name == onto }),
+              let index = displays.firstIndex(where: { $0.id == source.id }) else {
+            throw Failure(description: "no row called \"\(name)\" or \"\(onto)\" in the layers list")
+        }
+        let rowHeight = session.scroller?.rowHeight() ?? 38
+        let pitch = rowHeight + LayerListMetrics.spacing
+        let scrolled = session.scroller?.offset() ?? 0
+        let start = (CGFloat(index) + 0.5) * pitch
+        let before = editor.document?.layers
+        guard session.pickUp(source.id, pointerY: start, viewportY: start - scrolled,
+                             rowHeight: rowHeight, spacing: LayerListMetrics.spacing,
+                             editor: editor) else {
+            note(number, "dragRow", "\"\(name)\" could not be picked up: nothing to carry it past, or it is locked",
+                 state: describe())
+            return
+        }
+        await sleep(0.2)
+        let fraction: CGFloat = zone == .above ? 0.25 : 0.75
+        func aim() -> CGFloat? {
+            guard let drag = session.drag,
+                  let standing = drag.rest.firstIndex(where: { $0.id == target.id }) else { return nil }
+            let drawn = standing < drag.gap ? standing : standing + 1
+            return (CGFloat(drawn) + fraction) * pitch
+        }
+        func glide(to goal: CGFloat) async {
+            let from = session.drag?.pointerY ?? start
+            let steps = 14
+            for step in 1...steps {
+                let y = from + (goal - from) * CGFloat(step) / CGFloat(steps)
+                session.move(pointerY: y, viewportY: y - (session.scroller?.offset() ?? 0))
+                await sleep(0.03)
+            }
+        }
+        guard let goal = aim() else {
+            session.cancel()
+            throw Failure(description: "\"\(onto)\" is not a row \"\(name)\" can be carried to")
+        }
+        // What carrying costs the main thread, frame by frame, apart from
+        // what the drop costs: the carry is what has to hold sixty a second.
+        MainThreadMeter.shared.reset()
+        ViewBuildMeter.shared.reset()
+        await glide(to: goal)
+        // Inside a shut group is a rest on it until it springs open, and then
+        // the bottom half of its row again.
+        if zone == .inside, let drag = session.drag,
+           drag.rest.first(where: { $0.id == target.id }).map({ $0.isGroup && !$0.isExpanded }) == true {
+            await sleep(LayerRowDragSession.springDelay + 0.4)
+            if let again = aim() { await glide(to: again) }
+        }
+        await sleep(0.35)
+        let carrying = MainThreadMeter.shared.report + ", " + ViewBuildMeter.shared.report
+        let landing = session.drag?.landing
+        let gapDepth = session.drag?.gapDepth ?? 0
+        var held = ""
+        if let hold {
+            try snapshot(content, name: hold)
+            await screenCapture(window, name: hold)
+            held = ", held \(hold).png"
+        }
+        MainThreadMeter.shared.reset()
+        if cancel {
+            // Escape as a key arrives: through the app's own queue, so it
+            // reaches the very watch a person's key press does.
+            for type in [NSEvent.EventType.keyDown, .keyUp] {
+                if let key = NSEvent.keyEvent(with: type, location: .zero, modifierFlags: [],
+                                              timestamp: ProcessInfo.processInfo.systemUptime,
+                                              windowNumber: window.windowNumber, context: nil,
+                                              characters: "\u{1b}", charactersIgnoringModifiers: "\u{1b}",
+                                              isARepeat: false, keyCode: 53) {
+                    NSApp.postEvent(key, atStart: false)
+                }
+            }
+        } else {
+            session.letGo()
+        }
+        await sleep(0.7)
+        let dropping = MainThreadMeter.shared.report
+        let moved = editor.document?.layers != before
+        if cancel {
+            if moved { throw Failure(description: "Escape was pressed and the layers moved anyway") }
+            if session.isCarrying { throw Failure(description: "Escape was pressed and the row is still in the air") }
+            note(number, "dragRow",
+                 "\"\(name)\" lifted and carried \(zone.rawValue) \"\(onto)\", then Escape: it went back "
+                    + "where it came from and nothing changed\(held), \(rowInHand())",
+                 state: describe())
+            return
+        }
+        let promised = landing.map { drop -> String in
+            let what = editor.document?.layer(id: drop.targetID)?.name ?? "a row"
+            return switch drop {
+            case .above: "above \"\(what)\""
+            case .below: "below \"\(what)\""
+            case .inside: "inside \"\(what)\""
+            }
+        } ?? "back where it came from"
+        note(number, "dragRow",
+             "\"\(name)\" lifted and carried \(zone.rawValue) \"\(onto)\": the gap opened \(promised) "
+                + "at depth \(gapDepth), drop \(moved ? "landed" : "did not land")\(held), \(rowInHand()); "
+                + "while carried \(carrying); settling and landing \(dropping)",
              state: describe())
     }
 
@@ -14937,6 +15086,10 @@ private final class Run {
     /// to prove the row was actually put down rather than merely stopped being
     /// drawn.
     private func rowInHand() -> String {
+        if let editor, let id = editor.layerRowDrag.grabbedID {
+            let name = editor.document?.layer(id: id)?.name ?? "a layer"
+            return "the list is STILL HOLDING \"\(name)\" up"
+        }
         guard let editor, let id = editor.layerRowInHand else {
             return "the list is holding no row"
         }

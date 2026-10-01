@@ -231,6 +231,8 @@ public enum FeatureCatalog {
 
     public static let findALayerFlag = "next-find-a-layer"
 
+    public static let draggedLayerLiftsFlag = "next-a-dragged-layer-lifts"
+
     public static let separationArrivesShutFlag = "next-a-separation-arrives-shut"
 
     public static let whatIsLeftInThePictureFlag = "next-what-a-separation-left-behind"
@@ -949,6 +951,16 @@ public enum FeatureCatalog {
                     name: findALayerFlag,
                     title: "Find a layer by typing",
                     description: "A find field over a long layers list shows only the layers whose rows hold what you type, even inside shut groups. Off means no field and no searching.",
+                    area: .layers,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: draggedLayerLiftsFlag,
+                    title: "A dragged layer lifts and the list makes room",
+                    description: "Dragging a row in the layers list lifts it under the pointer, and the rows around it move aside to open the gap it will land in. Off means a drag image and a drop line.",
                     area: .layers,
                     isEnabled: false,
                     parameters: []),

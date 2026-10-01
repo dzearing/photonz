@@ -20343,3 +20343,10 @@ the middle and barely magnifies (a crisp or growing lens would be ours to draw).
 - Tiles now keep a small crop decoded in the background (`CaptureThumbnail`, `ThumbnailFit.decodePlan`), recordings' posters are cached on disk, cells are keyed by capture, and a filter switch jumps to the start without animating. Switches are 3–11ms in one pass.
 - New harness pieces: setup `"history": N` (a made-up capture folder), `press` `longestUnderMS`, `historyTile` build counter; walk `history-filter-switch-speed-walk`.
 - Next: arrow-key walking in history (~110ms per step) is filed at p2; the segmented chip's late 15–20ms pass is logged on its own task.
+
+## 2026-09-30 — Dragging a layer feels physical (Next)
+
+- Layers list rows now lift and ride the pointer; the rows around them spring aside and the gap is the drop place, indented to the depth it joins. Drop rules in `PhotonzCore/LayerRowDrag.swift` (halves, user's group-foot rule, spring-open reflow), tested.
+- App: `LayerRowDragSession`, `LayerRowDragViews`, wired in `LayersListView` behind `next-a-dragged-layer-lifts` (on in Next). Escape cancels, one undo step per drop, edge autoscroll scrolls the AppKit scroll view directly.
+- Walk harness: `dragRow` drives the session in Next (`cancel` added); new `expectRows` step. Walks: `layer-row-lifts-walk`, `layer-row-lifts-by-pointer-walk`, `layer-row-lifts-at-scale-walk`.
+- Next: timeline track headers reorder the same way (`timeline-tracks-reorder-by-dragging-their-header`).

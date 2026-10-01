@@ -1,0 +1,22 @@
+{
+  "out": "/tmp/photonz-playtest/layer-row-lifts-at-scale",
+  "setup": { "forget": ["all"] },
+  "seed": "A lifted row has to ride the pointer at sixty frames a second in a long list too. A dense screenshot is separated into well over a hundred layers, at Next defaults, and a row is carried several rows down and let go. The dragRow line reports the main thread while the row is carried (every pass has to stay well under a frame) and, apart from that, what the drop itself costs.",
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/dense-page-1x.png", "width": 1400, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "zoomToFit" },
+    { "do": "action", "action": "hideLibrary" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "selectRow", "row": "Background" },
+    { "do": "action", "action": "separateIntoLayers" },
+    { "do": "wait", "seconds": 4 },
+    { "do": "expectLayers", "atLeast": 100, "atMost": 300 },
+    { "do": "click", "at": [60, 860] },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "0-the-wall", "note": "well over a hundred rows, about five showing" },
+    { "do": "dragRow", "row": "design", "onto": "Separate", "zone": "below", "hold": "1-carried-in-a-long-list" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "2-landed" }
+  ]
+}

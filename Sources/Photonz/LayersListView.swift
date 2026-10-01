@@ -257,6 +257,15 @@ struct LayerRowDropDelegate: DropDelegate {
     /// A scroll the READER drives is untouched: a gesture has no destination
     /// to ask about, so it keeps deciding row by row.
     var followingUntil: CFTimeInterval = 0
+    /// How tall everything in the list is, which is how far a drag held at
+    /// the bottom edge may scroll it.
+    var contentHeight: CGFloat = 0
+    /// One row's measured height, for a walk carrying a row the way a hand
+    /// would.
+    var rowHeight: CGFloat = 38
+    /// The AppKit view the list scrolls in, which is what a carried row held
+    /// at an edge scrolls directly (`EnclosingScrollViewReader`).
+    weak var scrollView: NSScrollView?
 }
 
 
@@ -288,6 +297,10 @@ struct LayersListView: View {
     /// whether it is still the newest one: click three rows quickly and only
     /// the third is still settling.
     @State private var revealPass = 0
+    /// This press has already asked to carry a row and been told no (a
+    /// locked row, the Canvas row, a row being renamed), so the rest of its
+    /// moves do not keep asking.
+    @State private var carryRefused = false
     @FocusState private var renameFieldFocused: Bool
     /// The keyboard in the find field, so Escape can hand it back to the
     /// picture rather than leaving a caret blinking over an empty search.
@@ -396,6 +409,11 @@ struct LayersListView: View {
                 scroll.offset = offset
                 recordLayerListScroll(offset)
             }
+            .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                geometry.contentSize.height
+            } action: { _, height in
+                scroll.contentHeight = height
+            }
             // Which row is at the top, watched as a ROW rather than as an
             // offset: the action then fires once per row you scroll past
             // instead of once per frame, which is what keeps this cheap.
@@ -450,7 +468,10 @@ struct LayersListView: View {
             }
         }
         .layersListProbe(rows: displays.map(\.name), rowHeight: rowHeight, viewport: viewport)
-        .onAppear { onMetrics?(unpressed, listExtrasHeight) }
+        .onAppear {
+            onMetrics?(unpressed, listExtrasHeight)
+            handOverScrolling()
+        }
         .onChange(of: unpressed) { _, latest in onMetrics?(latest, listExtrasHeight) }
         // The Rename command asks for a row's field. Only rows this list shows
         // answer, so the Measurements list next door does not open a second
@@ -651,12 +672,17 @@ struct LayersListView: View {
         // app's own pasteboard type and nothing else in the air can look like
         // one.
         let styleDrop = editorState.layerRowStyleDrop
-        return LazyVStack(spacing: LayerListMetrics.spacing) {
-            ForEach(displays) { display in
+        // A row dragged in Next lifts and rides the pointer, and the list opens
+        // the gap it will land in (`LayerRowDragSession`); the drag image and
+        // the drop line are Current's. Either way nothing is carried while a
+        // search is showing, for the reason `LayersRow.canReorder` gives.
+        let lifts = Experiments.shared.draggedLayerLiftsEnabled
+        let session = editorState.layerRowDrag
+        func row(_ display: LayerRowDisplay, thumbnail: CGImage?) -> LayersRow {
                 LayersRow(display: display,
-                          thumbnail: thumbnails[display.id],
+                          thumbnail: thumbnail,
                           showsTwist: showsTwist,
-                          canReorder: !editorState.isSearchingLayers,
+                          canReorder: !editorState.isSearchingLayers && !lifts,
                           componentsEnabled: componentsEnabled,
                           offersMakeComponent: canMakeComponent && display.isSelected,
                           offersDetachInstance: canDetachInstance && display.isSelected,
@@ -670,7 +696,18 @@ struct LayersListView: View {
                           beginRename: beginRename(id:name:),
                           commitRename: commitRename(id:),
                           cancelRename: cancelRename)
+        }
+        return LazyVStack(spacing: LayerListMetrics.spacing) {
+            ForEach(displays) { display in
+                row(display, thumbnail: thumbnails[display.id])
                     .equatable()
+                    .modifier(LayerRowDragPlacement(id: display.id, session: session))
+                    // A plain gesture rather than a simultaneous one, so the
+                    // row's own controls (the twist, the eye, the padlock)
+                    // take their clicks first and a press only becomes a
+                    // carry once it moves. Measured in the list's points, so
+                    // where it started names the row.
+                    .gesture(carryGesture(displays), including: lifts ? .all : .subviews)
             }
             // The Canvas pseudo-layer: pinned at the very bottom (beneath the
             // Background it frames). Not a real layer — no eye/lock/delete/
@@ -679,11 +716,38 @@ struct LayersListView: View {
             // Not while a search is showing: everything in the list then is
             // something that answered what you typed, and a Canvas row sitting
             // under three results reads as a fourth one.
-            if !editorState.isSearchingLayers { canvasRow }
+            if !editorState.isSearchingLayers {
+                canvasRow.modifier(LayerRowDragPlacement(id: nil, session: session))
+            }
         }
+        // The gap a carried row will land in, under the rows, and the row
+        // itself over them. Both are drawn by the stack rather than by a row,
+        // so a row the lazy stack has not built (or has let go of, scrolled far
+        // away) never takes the drag with it.
+        .background(alignment: .top) { LayerDragGap(session: session) }
+        .background { EnclosingScrollViewReader { [scroll] in scroll.scrollView = $0 } }
+        .overlay(alignment: .top) {
+            if let grabbed = session.grabbedID,
+               let display = displays.first(where: { $0.id == grabbed }) {
+                LiftedLayerRow(session: session,
+                               depth: display.row.depth,
+                               row: row(display, thumbnail: thumbnails[grabbed]
+                                    ?? editorState.thumbnails(for: [display])[grabbed]).equatable())
+            }
+        }
+        .coordinateSpace(.named(Self.stackSpace))
+        // A click on a row answers even when the window was not the focused
+        // one: the twist opens, the eye hides, the row is picked. Current gets
+        // that from the drag image's own view, which takes the window's first
+        // click; the lifting drag has no such view, and without this the first
+        // click on a row of a window in the back only brought it forward.
+        .allowsWindowActivationEvents(lifts ? true : nil)
         .padding(.horizontal, EditorChromeLayout.panelListGutter)
         .padding(.bottom, LayerListMetrics.bottomPadding)
-        .onPreferenceChange(LayerRowHeightKey.self) { rowHeight = max(1, $0) }
+        .onPreferenceChange(LayerRowHeightKey.self) {
+            rowHeight = max(1, $0)
+            scroll.rowHeight = rowHeight
+        }
         .onPreferenceChange(LayerCanvasRowHeightKey.self) { canvasRowHeight = max(1, $0) }
         // Rows slide/fade on add, delete, duplicate, reorder, and on a group
         // opening or closing. Keyed on the SHAPE of the list only: a selection
@@ -696,6 +760,54 @@ struct LayersListView: View {
                    value: LayerListSlide.key(shown: displays.map(\.row),
                                              whole: editorState.wholePanelRows,
                                              isSearching: editorState.isSearchingLayers))
+    }
+
+    /// The stack's own points, top of the first row at zero, which is what a
+    /// carried row is measured in.
+    static let stackSpace = "layers.stack"
+
+    /// Press a row and move: it lifts and rides the pointer (Next). Measured
+    /// in the list's own points, so the row it names is the row the press
+    /// started on, and the pointer's place is right however far the list
+    /// scrolls under it.
+    private func carryGesture(_ displays: [LayerRowDisplay]) -> some Gesture {
+        DragGesture(minimumDistance: 4, coordinateSpace: .named(Self.stackSpace))
+            .onChanged { value in
+                let session = editorState.layerRowDrag
+                if !session.isCarrying {
+                    guard !carryRefused else { return }
+                    carryRefused = true
+                    guard !editorState.isSearchingLayers, renamingLayerID == nil else { return }
+                    let pitch = rowHeight + LayerListMetrics.spacing
+                    let index = Int((value.startLocation.y / pitch).rounded(.down))
+                    guard displays.indices.contains(index) else { return }
+                    guard session.pickUp(displays[index].id,
+                                         pointerY: value.startLocation.y,
+                                         viewportY: value.startLocation.y - scroll.offset,
+                                         rowHeight: rowHeight,
+                                         spacing: LayerListMetrics.spacing,
+                                         editor: editorState) else { return }
+                }
+                session.move(pointerY: value.location.y, viewportY: value.location.y - scroll.offset)
+            }
+            .onEnded { _ in
+                carryRefused = false
+                editorState.layerRowDrag.letGo()
+            }
+    }
+
+    /// Lets a carried row scroll the list when it is held near an edge.
+    private func handOverScrolling() {
+        let scroll = scroll
+        editorState.layerRowDrag.scroller = .init(
+            offset: { scroll.offset },
+            viewport: { scroll.viewport },
+            contentHeight: { scroll.contentHeight },
+            rowHeight: { scroll.rowHeight },
+            scrollTo: { y in
+                scroll.offset = y
+                scroll.scrollView?.scrollContent(toTop: y)
+            })
     }
 
     /// How long a list has to be before it is worth offering to search it.

@@ -1,0 +1,383 @@
+{
+  "out": "/tmp/photonz-playtest/layer-row-lifts",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "seed": "The user, 2026-09-30: dragging a layer should feel physical. The row you grab lifts and rides the pointer up and down, the rows around it move out of its way, and the gap they open is where it lands, drawn in at the depth it will join. Which half of which row the pointer is over decides it: the bottom half of a group's last child lands inside the group, the top half of the row under the group lands below it. This walk carries rows at Next defaults through the same drag the pointer drives: a plain reorder, into the foot of a group, out below a group, a carry called off with Escape, a shut group that springs open when the row rests on it, and a whole group moved, photographing each one mid-drag with the gap open, and checking the list after each drop.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 640,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        120
+      ],
+      "to": [
+        240,
+        200
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        300,
+        120
+      ],
+      "to": [
+        420,
+        200
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        300
+      ],
+      "to": [
+        240,
+        380
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        300,
+        300
+      ],
+      "to": [
+        420,
+        380
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle 3"
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle 4",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        560
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Twist",
+      "in": "Group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "0-start",
+      "note": "four rectangles, the top two grouped, the group open"
+    },
+    {
+      "do": "expectRows",
+      "rows": [
+        "Group",
+        "  Rectangle 4",
+        "  Rectangle 3",
+        "Rectangle 2",
+        "Rectangle",
+        "Background"
+      ]
+    },
+    {
+      "do": "dragRow",
+      "row": "Rectangle",
+      "onto": "Rectangle 2",
+      "zone": "above",
+      "hold": "1-lifted-over-the-list"
+    },
+    {
+      "do": "expectRows",
+      "rows": [
+        "Group",
+        "  Rectangle 4",
+        "  Rectangle 3",
+        "Rectangle",
+        "Rectangle 2",
+        "Background"
+      ]
+    },
+    {
+      "do": "dragRow",
+      "row": "Rectangle 2",
+      "onto": "Rectangle 3",
+      "zone": "below",
+      "hold": "2-into-the-foot-of-a-group"
+    },
+    {
+      "do": "expectRows",
+      "rows": [
+        "Group",
+        "  Rectangle 4",
+        "  Rectangle 3",
+        "  Rectangle 2",
+        "Rectangle",
+        "Background"
+      ]
+    },
+    {
+      "do": "dragRow",
+      "row": "Rectangle 4",
+      "onto": "Rectangle",
+      "zone": "above",
+      "hold": "3-out-below-a-group"
+    },
+    {
+      "do": "expectRows",
+      "rows": [
+        "Group",
+        "  Rectangle 3",
+        "  Rectangle 2",
+        "Rectangle 4",
+        "Rectangle",
+        "Background"
+      ]
+    },
+    {
+      "do": "dragRow",
+      "row": "Rectangle",
+      "onto": "Rectangle 4",
+      "zone": "above",
+      "hold": "3b-about-to-be-called-off",
+      "cancel": true
+    },
+    {
+      "do": "expectRows",
+      "rows": [
+        "Group",
+        "  Rectangle 3",
+        "  Rectangle 2",
+        "Rectangle 4",
+        "Rectangle",
+        "Background"
+      ]
+    },
+    {
+      "do": "press",
+      "control": "Twist",
+      "in": "Group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "dragRow",
+      "row": "Rectangle",
+      "onto": "Group",
+      "zone": "inside",
+      "hold": "3c-a-shut-group-sprang-open"
+    },
+    {
+      "do": "expectRows",
+      "rows": [
+        "Group",
+        "  Rectangle",
+        "  Rectangle 3",
+        "  Rectangle 2",
+        "Rectangle 4",
+        "Background"
+      ]
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectRows",
+      "rows": [
+        "Group",
+        "  Rectangle 3",
+        "  Rectangle 2",
+        "Rectangle 4",
+        "Rectangle",
+        "Background"
+      ]
+    },
+    {
+      "do": "dragRow",
+      "row": "Group",
+      "onto": "Background",
+      "zone": "above",
+      "hold": "4-a-whole-group-carried"
+    },
+    {
+      "do": "expectRows",
+      "rows": [
+        "Rectangle 4",
+        "Rectangle",
+        "Group",
+        "  Rectangle 3",
+        "  Rectangle 2",
+        "Background"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle 4"
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "dragRow",
+      "row": "Rectangle 4",
+      "onto": "Background",
+      "zone": "above",
+      "hold": "4b-two-carried-as-one-stack"
+    },
+    {
+      "do": "expectRows",
+      "rows": [
+        "Group",
+        "  Rectangle 3",
+        "  Rectangle 2",
+        "Rectangle 4",
+        "Rectangle",
+        "Background"
+      ]
+    },
+    {
+      "do": "dragRow",
+      "row": "Rectangle",
+      "onto": "Group",
+      "zone": "above"
+    },
+    {
+      "do": "expectRows",
+      "rows": [
+        "Rectangle 4",
+        "Rectangle",
+        "Group",
+        "  Rectangle 3",
+        "  Rectangle 2",
+        "Background"
+      ]
+    },
+    {
+      "do": "snapshot",
+      "name": "5-after"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectRows",
+      "rows": [
+        "Group",
+        "  Rectangle 3",
+        "  Rectangle 2",
+        "Rectangle 4",
+        "Rectangle",
+        "Background"
+      ]
+    },
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "dragRow",
+      "row": "Rectangle 2",
+      "onto": "Rectangle 4",
+      "zone": "below",
+      "hold": "6-light",
+      "cancel": true
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    }
+  ]
+}

@@ -106,7 +106,7 @@ struct LayersRow: View, Equatable {
         }
         return parts.joined(separator: ", ")
     }
-    private var indent: CGFloat { CGFloat(display.row.depth) * 14 }
+    private var indent: CGFloat { CGFloat(display.row.depth) * LayerRowDragSession.indentPerLevel }
 
     /// One closure for picking this row up, so a scripted walk and a pointer
     /// start the very same drag.

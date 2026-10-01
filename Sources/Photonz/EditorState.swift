@@ -2261,6 +2261,11 @@ final class EditorState {
     /// reorder or something arriving from outside. Written only by
     /// `publishRowInHand`.
     var layerRowInHand: UUID?
+    /// A row of the layers list lifted and carried by the pointer, with the
+    /// rows around it opening the gap it will land in (Next). On the editor so
+    /// a scripted walk drives the very drag a hand does. A constant: the
+    /// session watches its own parts, so the editor never redraws for it.
+    let layerRowDrag = LayerRowDragSession()
 
     /// Where the carried row would land, which is what the reorder line in the
     /// list draws. Written only by `publishRowInHand`.

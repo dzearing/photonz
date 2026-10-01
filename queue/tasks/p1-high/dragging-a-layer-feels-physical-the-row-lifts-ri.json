@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p1-high",
   "seq": 0.000004,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T20:26:39.038Z",
-  "updated": "2026-09-30T20:26:39.135Z",
+  "updated": "2026-10-01T00:29:01.380Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -31,6 +31,36 @@
     {
       "t": "2026-09-30T20:26:39.133Z",
       "note": "seq 430 -> 0.000004"
+    },
+    {
+      "t": "2026-09-30T23:10:33.985Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-30T23:15:07.032Z",
+      "note": "Pre-build review: today's reorder is a system drag (onDrag + NSItemProvider, a ghost image) plus a 2pt drop line, read in thirds (LayerDropZone). New plan: a pointer gesture on the list itself (not per row, so a lazily unbuilt row can never cancel it), a pure LayerRowDrag model in PhotonzCore that reads HALVES against the list as drawn (gap included, which is what gives natural hysteresis), and a real LayersRow drawn lifted over the stack while its slot becomes a shadow gap indented to the landing depth. Risks found: (1) the mock's point 4 lets you drop INTO a shut group by hovering it; halves alone lose that, so a shut group springs open after a short rest (the mock's own second half) and then its bottom half means first slot. (2) SwiftUI only runs a DragGesture in the active app, so a pointer walk needs the Mac to itself; the lock-safe dragRow step is rewired to drive the same session the gesture drives. (3) The layers list is shared with Current, so the new drag sits behind a Next flag on by default in Next; Current keeps the drop line. (4) Timeline track headers are left for a follow-up: the acceptance list is all about the Layers list."
+    },
+    {
+      "t": "2026-10-01T00:27:43.680Z",
+      "note": "owns these walks: layer-row-lifts-walk, layer-row-lifts-by-pointer-walk, layer-row-lifts-at-scale-walk"
+    },
+    {
+      "t": "2026-10-01T00:29:01.266Z",
+      "note": "Built: PhotonzCore/LayerRowDrag.swift (halves read against the list as drawn, gap + depth, offsets, spring target, reflow, returnHome; 24 tests in LayerRowDragTests). App: LayerRowDragSession (on EditorState, so walks drive the same drag), LayerRowDragViews (placement, gap, lifted row, count badge, AppKit scroll for edge autoscroll), LayersListView wiring behind next-a-dragged-layer-lifts (on in Next only). Walks: layer-row-lifts-walk (scripted, 9 drags incl. Escape, spring-open, multi-row, light mode, undo), layer-row-lifts-by-pointer-walk (posted mouse events through the list's own gesture; needs the Mac), layer-row-lifts-at-scale-walk (173 layers, carry longest pass 8.6ms). New walk step expectRows; dragRow gained cancel."
+    },
+    {
+      "t": "2026-10-01T00:29:01.323Z",
+      "note": "Gotchas found by reproduction: (1) removing the row's onDrag took away click-through, so the FIRST click on a row of a window in the back (the Twist, in every walk that presses it) only brought the window forward; fixed with .allowsWindowActivationEvents on the list (verified: Twist opens with the probe in the back). (2) Edge autoscroll through SwiftUI ScrollPosition rebuilt the whole list every tick (15 list bodies for one carry, longest pass 17ms at 173 rows); now scrolls the enclosing NSScrollView directly (8 list bodies, one per row passed, longest 8.6ms). (3) After a swap the pointer sits in the gap, so 'resting on a shut group' has to include resting in the gap right under it (LayerRowDrag.springTarget)."
+    },
+    {
+      "t": "2026-10-01T00:29:01.379Z",
+      "note": "left rough: the drop's own main-thread pass is 37-49ms at 173 layers (document edit + list + canvas), after the settle so nothing is moving; spring-open costs ~30ms like the twist does. Neither earned a task: no motion is on screen at that moment. row-put-down-walk still proves the old system-drag cleanup (LayerRowInHand), which only Current uses now; left as is since that code still ships in Current. A pointer drag's trailing tap on the row was not checked with a multi-selection. Rough items in the audit: timeline track headers filed as timeline-tracks-reorder-by-dragging-their-header; the rest stay here."
     }
+  ],
+  "started": "2026-09-30T23:10:33.984Z",
+  "walks": [
+    "layer-row-lifts-walk",
+    "layer-row-lifts-by-pointer-walk",
+    "layer-row-lifts-at-scale-walk"
   ]
 }

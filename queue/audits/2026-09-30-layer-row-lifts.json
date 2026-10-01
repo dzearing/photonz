@@ -1,0 +1,32 @@
+{
+  "feature": "Dragging a layer feels physical",
+  "epic": "design-system",
+  "summary": "Drag a row in the Layers list and the row itself lifts and rides the pointer up and down, while the rows around it slide aside and open the gap it will land in. No drag picture, no drop line: the gap is the promise, drawn in at the depth it will join.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Any picture with a few layers and one group.",
+  "switched": {},
+  "try": [
+    { "do": "Press a layer row and move the pointer down two rows, slowly.", "shot": "2026-09-30-layer-lift-1-lifted-over-the-list-sc.png" },
+    { "do": "Open a group, then carry a loose row onto the bottom half of the group's last row, and let go.", "shot": "2026-09-30-layer-lift-2-into-the-foot-of-a-group-sc.png" },
+    { "do": "Carry a row out of the group onto the top half of the row under the group; watch the gap move out to the left.", "shot": "2026-09-30-layer-lift-3-out-below-a-group-sc.png" },
+    { "do": "Shut the group, carry a row onto it and rest for a moment until it springs open, then let go on its bottom half.", "shot": "2026-09-30-layer-lift-3c-a-shut-group-sprang-open-sc.png" },
+    { "do": "Drag the group row itself somewhere else: it travels shut and opens again where it lands.", "shot": "2026-09-30-layer-lift-4-a-whole-group-carried-sc.png" },
+    { "do": "Command-click two rows and drag one of them: both travel as one row with a 2 on it.", "shot": "2026-09-30-layer-lift-4b-two-carried-as-one-stack-sc.png" },
+    { "do": "Start a drag and press Escape before letting go; then press Command-Z after a real drop.", "shot": "2026-09-30-layer-lift-3b-about-to-be-called-off-sc.png" },
+    { "do": "In a long list, hold a carried row at the bottom edge of the list and let it scroll.", "shot": "2026-09-30-layer-lift-long-list-sc.png" }
+  ],
+  "evaluate": [
+    "Does the row feel like it is in your hand, or does it lag or jump under the pointer?",
+    "At the foot of an open group, can you tell from the gap's indent alone whether the row will land inside the group or below it?",
+    "Is resting on a shut group to spring it open the right way into a shut group, and is the wait about right?",
+    "Is the lifted row's plate and shadow the right amount of lift, in light and in dark?",
+    "When several rows are carried, is a single row with a count clear enough about what will move?"
+  ],
+  "rough": [
+    "This replaces the mock's drag (Layers pane, Drag and drop section): the mock dims the grabbed row in place, tilts a copy under the cursor and draws an indented drop line. Built instead to the user's 2026-09-30 request: the real row lifts, stays upright, and the list makes room.",
+    "The mock drops onto the middle of a shut group directly. Here every row is read in halves, as asked, so a shut group takes a row only after it springs open (0.7 seconds of rest), which is the mock's own second half.",
+    "Measured on 173 layers, not 200: carrying peaks at 8.6ms of main thread per pass, under a frame. The drop itself costs one 37 to 49ms pass, after the row has settled, when nothing is moving.",
+    "A shut group springing open costs a 30ms pass, the same as opening it with its twist.",
+    "Timeline track headers do not reorder at all yet; that half of the request is filed as its own task.",
+    "Current is unchanged: it still drags a picture and draws a drop line."
+  ]
+}

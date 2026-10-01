@@ -1,0 +1,211 @@
+{
+  "out": "/tmp/photonz-playtest/layer-row-lifts-by-pointer",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "seed": "The same physical drag as layer-row-lifts-walk, made by the pointer itself: a press on a row, a pull and a let go posted to the window, so the list's own gesture lifts the row, the rows move aside and the drop lands. At Next defaults. First a loose row is pulled up into the foot of an open group (the bottom half of its last child), then the whole group is pulled down to sit just above the Background (the top half of that row).",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 640,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        120
+      ],
+      "to": [
+        240,
+        200
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        300,
+        120
+      ],
+      "to": [
+        420,
+        200
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        300
+      ],
+      "to": [
+        240,
+        380
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        300,
+        300
+      ],
+      "to": [
+        420,
+        380
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle 3"
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle 4",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        560
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Twist",
+      "in": "Group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "0-start",
+      "note": "four rectangles, the top two grouped, the group open"
+    },
+    {
+      "do": "expectRows",
+      "rows": [
+        "Group",
+        "  Rectangle 4",
+        "  Rectangle 3",
+        "Rectangle 2",
+        "Rectangle",
+        "Background"
+      ]
+    },
+    {
+      "do": "windowDrag",
+      "from": [
+        1150,
+        249
+      ],
+      "to": [
+        1150,
+        180
+      ],
+      "steps": 20
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "1-pulled-into-the-group"
+    },
+    {
+      "do": "expectRows",
+      "rows": [
+        "Group",
+        "  Rectangle 4",
+        "  Rectangle 3",
+        "  Rectangle",
+        "Rectangle 2",
+        "Background"
+      ]
+    },
+    {
+      "do": "windowDrag",
+      "from": [
+        1150,
+        89
+      ],
+      "to": [
+        1150,
+        160
+      ],
+      "steps": 20
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "2-group-pulled-down"
+    },
+    {
+      "do": "expectRows",
+      "rows": [
+        "Rectangle 2",
+        "Group",
+        "  Rectangle 4",
+        "  Rectangle 3",
+        "  Rectangle",
+        "Background"
+      ]
+    }
+  ]
+}
