@@ -1,0 +1,27 @@
+{
+  "out": "/tmp/photonz-playtest/a-click-tick-is-hidden-and-slid-walk",
+  "setup": {
+    "timelineOpen": true,
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "zoomScriptPointerPath" },
+    { "do": "clickRuler", "seconds": 1.5 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [900, 600] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "press", "control": "Clicks" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "rightClick", "on": "Click 1", "shot": "0-click-tick-menu", "choose": "Hide This Click" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "windowDrag", "from": [627, 902], "to": [707, 902], "steps": 10 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "expectClickTicksEdited" },
+    { "do": "describe", "stage": "1-edited", "note": "Right-click the first tick, Hide This Click: its tick goes faint and no ring is drawn there. Drag the second tick right: the click happens later" },
+    { "do": "snapshot", "name": "1-first-hidden-second-slid" }
+  ]
+}

@@ -20363,3 +20363,10 @@ the middle and barely magnifies (a crisp or growing lens would be ours to draw).
 - A recording can zoom in on a spot for a while (`ClipZoom.swift`): a bar on a Zoom lane under the clip, a box on the picture, eases, Follow Cursor (bakes the stretch of the pointer path it needs into the zoom) and Suggest Zooms from clicks. Drawn as a window into the clip's picture in `drawn(atTimeMS:)`, so canvas and export agree; the renderer crops to it before filling the frame.
 - Walks: a-zoom-follows-the-cursor-walk, a-zoom-is-shaped-by-hand-walk, zooms-suggested-from-clicks-walk. Audit: queue/audits/2026-09-30-zoom-regions.json.
 - Next: framing-a-zoom-shows-one-box-and-the-pointer-say (one box while framing, cursor cue, Escape).
+
+## 2026-09-30 — An effect at each click of a recording
+
+- `PhotonzCore/ClickEffect.swift` (21 tests, 3 render tests): `Layer.clickEffect` holds on/off, style (Ripple, Pulse, Spotlight), colour, size, hidden clicks and moved click times; turning it on keeps the recorded clicks in the document (like Follow Cursor), so export needs no sidecar. Each click playing at a moment is drawn as an ordinary shape layer over the clip in `drawn(atTimeMS:)` after the zoom step, timed on the document clock (400 ms) from the frame the click plays at, so speed changes keep the full effect and cut-out clicks draw nothing.
+- App: Clicks rows at the top of a recording's Properties (`ClickEffectRows.swift`), ticks on the clip bar with drag and right-click Hide/Show (`ClickTicksView.swift`), Clip menu Show Click Effects / Hide Click at Playhead / Next Click (`EditorState+ClickEffects.swift`). Flag `next-click-effects`, on by default in Next.
+- Walks: clicks-show-a-ripple-walk (ring at three moments, export matches canvas round the click), a-click-tick-is-hidden-and-slid-walk. Audit: queue/audits/2026-09-30-click-effects.json.
+- Gotcha: a view placed with `.offset` reports its un-offset frame to the walk harness, so walks clicked the wrong spot; the ticks are placed with padding instead.

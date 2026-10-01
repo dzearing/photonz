@@ -1679,6 +1679,11 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// existed.
     public var zooms: [ClipZoom]?
 
+    /// The effect drawn at each click of this clip's recording, and what a
+    /// person changed about its clicks (`ClickEffect.swift`). Nil is every
+    /// layer in every document written before this existed.
+    public var clickEffect: ClickEffect?
+
     /// The part of the picture a zoom shows at the moment being drawn, as
     /// fractions of it from the top-left. Set only on a drawn document
     /// (`PhotonzDocument.drawn(atTimeMS:)`), never on one somebody edits: it
@@ -1806,6 +1811,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         copy.movie = movie
         copy.addedClicks = addedClicks
         copy.zooms = zooms
+        copy.clickEffect = clickEffect
         // A copy of clips merged into one holds copies of them, so no clip
         // is in two places under one id.
         copy.merged = merged?.reidentified()

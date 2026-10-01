@@ -22,6 +22,12 @@ struct PropertyKeysInspector: View {
             if let line = editorState.keyClipLine {
                 ClipLineRow(line: line)
             }
+            // A recording's clicks, drawn or not (`ClickEffectRows`): a
+            // setting of the clip itself, so it sits with the clip line
+            // rather than among what is animating.
+            if let clip = editorState.clickEffectClip {
+                ClickEffectRows(clipID: clip.id)
+            }
             AnimatingHeader()
             // Nothing under the header while nothing is keyed: its own count
             // already reads "nothing yet", and what can be keyed is the

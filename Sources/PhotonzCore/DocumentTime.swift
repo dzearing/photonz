@@ -239,6 +239,12 @@ extension PhotonzDocument {
         if hasZooms {
             shown.layers = shown.layers.map { $0.withZoomShown(atDocumentTimeMS: moment) }
         }
+        // ...and a clip that shows its clicks draws the effect of each one
+        // playing now over itself (`ClickEffect.swift`). After the zoom, so a
+        // click lands where it is in the zoomed picture.
+        if hasClickEffects {
+            shown.layers = shown.layers.flatMap { $0.withClickEffectsDrawn(atDocumentTimeMS: moment) }
+        }
         // ...and a cut with a transition on it puts a second picture on screen
         // beside the first, or a panel of colour over it
         // (`ClipTransitions.swift`). Last, so a layer told to fade over the

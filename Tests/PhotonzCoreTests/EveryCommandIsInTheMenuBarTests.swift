@@ -63,6 +63,11 @@ struct EveryCommandIsInTheMenuBarTests {
         "Rename": "Rename Layer…",
         "Edit Words": "Rename…",
         "Add Transition": "Transition at Cut",
+        // A click's tick on a recording's bar: the Clip menu acts on the
+        // click at the playhead, and steps the playhead on to the next one.
+        "Hide This Click": "Hide Click at Playhead",
+        "Show This Click": "Show Click at Playhead",
+        "Move Playhead to Click": "Next Click",
         "Remove Transition": "Hard Cut",
         "Timing": "Captions Later",
         "Earlier": "Captions Earlier",

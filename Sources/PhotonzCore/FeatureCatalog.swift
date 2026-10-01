@@ -209,6 +209,8 @@ public enum FeatureCatalog {
 
     public static let zoomRegionsFlag = "next-zoom-regions"
 
+    public static let clickEffectsFlag = "next-click-effects"
+
     public static let titleOnTheTimelineFlag = "next-a-title-has-an-in-and-an-out"
 
     public static let captionsFromTheSoundFlag = "next-captions-from-the-sound"
@@ -803,6 +805,16 @@ public enum FeatureCatalog {
                     name: zoomRegionsFlag,
                     title: "Zoom in on a spot of a recording, and follow the pointer",
                     description: "Add Zoom on a recording frames one spot of it for a while: a bar under the clip, a box on the picture, and it can follow the recorded pointer. Off means a recording is always shown whole.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: clickEffectsFlag,
+                    title: "An effect at each click of a recording",
+                    description: "A Clicks row on a recording's Properties draws a ripple, a pulse or a spotlight at every click the recorder took down, and marks each click on the clip's bar. Off means clicks are never drawn.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

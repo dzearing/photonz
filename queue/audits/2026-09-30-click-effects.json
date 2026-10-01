@@ -1,0 +1,32 @@
+{
+  "feature": "An effect at each click of a recording",
+  "epic": "video-editing",
+  "summary": "A recording's clicks can show a ripple, a pulse or a spotlight on the picture as each click lands, in playback, scrubbing and export alike. Each click is a tick on the clip's bar that you can hide or drag to a better moment.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. A recording made in Photonz (it keeps its clicks), or any recording after Add Click at Playhead.",
+  "switched": {},
+  "try": [
+    { "do": "Click the recording on the canvas, then turn on Clicks at the top of its Properties.", "shot": "2026-09-30-click-effects-1-on.png" },
+    { "do": "Open Style and pick Ripple, Pulse or Spotlight.", "shot": "2026-09-30-click-effects-2-style.png" },
+    { "do": "Press Space to play through a click, or scrub across it, and watch the ring spread and fade.", "shot": "2026-09-30-click-effects-3-start.png" },
+    { "do": "Change Color and Size (Small, Medium, Large) and play the click again.", "shot": "2026-09-30-click-effects-4-fade.png" },
+    { "do": "Right-click a tick on the clip's bar and choose Hide This Click.", "shot": "2026-09-30-click-effects-5-tick-menu.png" },
+    { "do": "Drag another tick left or right to move when its effect plays.", "shot": "2026-09-30-click-effects-6-edited.png" },
+    { "do": "Export the video and check the effect is in the file at the same moments." }
+  ],
+  "evaluate": [
+    "Does Medium read as a ring round the pointer, or is it too small or too big on your recordings?",
+    "Is 400 ms long enough to notice the click, especially for Spotlight?",
+    "Are the ticks on the clip's bar easy enough to see and grab, or should they be taller?",
+    "Is the top of Properties the place you would look for this setting?",
+    "Should the blue accent stay the default colour, or would white or yellow read better on screenshots?"
+  ],
+  "rough": [
+    "No mock draws click effects, so the layout follows the task's list and Screen Studio's settings rather than a design page.",
+    "The effect is drawn where the click falls in the uncropped, unrotated recording, so on a cropped or rotated clip it can land off target.",
+    "A ripple near the clip's edge can spill a little past the clip onto whatever is beside it.",
+    "Spotlight always dims with black, so the Color row is hidden for it.",
+    "The ticks are 3 pt wide and 10 pt tall with a 9 pt grab area. A hidden click keeps a faint tick so it can be shown again.",
+    "While a tick is being dragged the canvas does not preview the new moment; the effect moves when you let go.",
+    "The walks script the clicks onto the sample recording rather than recording live ones; the earlier recorded-clicks walk covers the recorder itself."
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "out": "/tmp/photonz-playtest/clicks-show-a-ripple-walk",
+  "setup": {
+    "timelineOpen": true,
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "zoomScriptPointerPath" },
+    { "do": "clickRuler", "seconds": 1.5 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [900, 600] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expect", "control": "Clicks", "reads": "Clicks, off" },
+    { "do": "press", "control": "Clicks" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expect", "control": "Clicks", "reads": "Clicks, on" },
+    { "do": "panelMenu", "menu": "Click Style", "at": ["centre"], "shot": "0-click-style-menu", "choose": "Ripple" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "snapshot", "name": "1-clicks-on-ticks-on-the-bar" },
+    { "do": "action", "action": "expectClickRipple" },
+    { "do": "clickRuler", "seconds": 2.04 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "snapshot", "name": "2-ripple-starts" },
+    { "do": "clickRuler", "seconds": 2.18 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "snapshot", "name": "3-ripple-spreads" },
+    { "do": "clickRuler", "seconds": 2.33 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "snapshot", "name": "4-ripple-fades" },
+    { "do": "action", "action": "expectClickEffectExportMatches" },
+    { "do": "describe", "stage": "5-exported", "note": "Clicks on, Ripple: a ring spreads and fades round the first click across its 400 ms, and an exported frame at each of three moments matches the canvas round the click" },
+    { "do": "panel", "stage": "6-panel" }
+  ]
+}

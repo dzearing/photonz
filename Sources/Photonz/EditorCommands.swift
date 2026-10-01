@@ -1096,6 +1096,25 @@ struct EditorCommands: Commands {
         let clickClip = editor?.clipToAddClickTo
         Button("Add Click at Playhead\u{2026}") { if let clickClip { editor?.beginPlacingClick(onClip: clickClip) } }
             .disabled(clickClip == nil)
+        if Experiments.shared.clickEffectsEnabled {
+            // The Clicks switch on the clip's Properties (`ClickEffectRows`).
+            let effectClip = editor?.clickEffectClip?.id
+            Toggle("Show Click Effects", isOn: Binding(
+                get: { effectClip.map { editor?.clickEffect(ofClip: $0).isOn ?? false } ?? false },
+                set: { on in if let effectClip { editor?.setClickEffectOn(on, onClip: effectClip) } }))
+                .disabled(!(effectClip.map { editor?.hasClicksToShow(onClip: $0) ?? false } ?? false))
+            // A tick's own verbs (`ClickTicksView`), for the click at the playhead.
+            let clickNow = editor?.clickAtPlayhead
+            Button(clickNow?.mark.isHidden == true ? "Show Click at Playhead" : "Hide Click at Playhead") {
+                if let clickNow {
+                    editor?.setClickHidden(!clickNow.mark.isHidden, clickID: clickNow.mark.id, onClip: clickNow.clip)
+                }
+            }
+            .disabled(clickNow == nil)
+            let next = editor?.nextClickMS
+            Button("Next Click") { if let next { editor?.moveDocumentPlayhead(toMS: next) } }
+                .disabled(next == nil)
+        }
         if Experiments.shared.zoomRegionsEnabled {
             let zoomClip = editor.flatMap { $0.clipToAddZoom(atMS: $0.documentTimeMS) }
             Button("Add Zoom") {

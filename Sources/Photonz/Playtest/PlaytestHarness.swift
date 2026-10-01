@@ -3823,6 +3823,17 @@ private final class Run {
                 } catch let failure as PlaytestZoom.Failure {
                     throw Failure(description: failure.description)
                 }
+            case .expectClickRipple, .expectClickEffectExportMatches, .expectClickTicksEdited:
+                do {
+                    let said = switch action {
+                    case .expectClickRipple: try PlaytestClickEffects.expectRipple(editor)
+                    case .expectClickTicksEdited: try PlaytestClickEffects.expectTicksEdited(editor)
+                    default: try await PlaytestClickEffects.expectExportMatches(editor)
+                    }
+                    note(number, step.name, said, state: describe())
+                } catch let failure as PlaytestClickEffects.Failure {
+                    throw Failure(description: failure.description)
+                }
             case .expectAddedClick:
                 guard let document = editor.document,
                       let clip = document.allLayers.first(where: { $0.movie != nil }),
@@ -5266,6 +5277,7 @@ private final class Run {
                  .captionsExpectEndWithRecording, .captionsExpectInsideMarks, .expectAddedClick,
                  .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
                  .expectZoomShapedByHand, .expectZoomSuggested,
+                 .expectClickRipple, .expectClickEffectExportMatches, .expectClickTicksEdited,
                  .captionsPickFirst, .captionsPickNext, .captionsEditFirstInPlace, .captionsCommitFirstWords,
                  .captionsTrimFirstEnd, .captionsStyleCaption, .captionsStyleLowerThird,
                  .captionsStyleKaraoke, .captionsPositionTop, .captionsPositionBottom,

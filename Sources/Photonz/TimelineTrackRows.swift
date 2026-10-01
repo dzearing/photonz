@@ -356,6 +356,14 @@ struct TimelineTrackRow: View {
                     .allowsHitTesting(!track.isLocked)
                     .modifier(TimingName(on: !row.isCaptions, name: "Timing \(clip.layerName)"))
             }
+            // Each click of a recording, as a tick along the foot of its bar
+            // (`ClickTicksView`).
+            if editorState.canWorkWithClickEffects, !isBlade, !isTrackSelect, !row.isCaptions {
+                ForEach(row.clips) { clip in
+                    ClickTicksView(layerID: clip.layerID, laneWidth: laneWidth, height: laneHeight,
+                                   isLocked: track.isLocked)
+                }
+            }
             if isBlade, !track.isLocked {
                 ForEach(row.clips) { clip in
                     TimelineBlade(group: clip, laneWidth: laneWidth)

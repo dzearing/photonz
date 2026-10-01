@@ -903,6 +903,17 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// place by its first scripted click, still there at its last, and framing
     /// both.
     case expectZoomSuggested
+    /// Fail unless the recording's clicks are drawn as a ripple: at three
+    /// moments across its first scripted click there is a ring centred on the
+    /// click, growing and fading, and nothing just before or after
+    /// (`PlaytestClickEffects`).
+    case expectClickRipple
+    /// Fail unless an exported frame at those three moments is what the canvas
+    /// shows round the click, and both differ from the frame without the effect.
+    case expectClickEffectExportMatches
+    /// Fail unless the first click on the recording has been hidden and the
+    /// second slid later by hand.
+    case expectClickTicksEdited
     /// Move the playhead to a fraction of what is left to watch, which is a
     /// real scrub's outcome without a walk having to know how long the clip is.
     case videoSeekQuarter, videoSeekMiddle, videoSeekThreeQuarters
@@ -1345,6 +1356,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .clipSpeedDouble, .clipSpeedHalf, .expectAddedClick,
              .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
              .expectZoomShapedByHand, .expectZoomSuggested,
+             .expectClickRipple, .expectClickEffectExportMatches, .expectClickTicksEdited,
              .soundDetach, .soundAddSample, .soundDuck, .soundLevelHalf,
              .captionsAddVoiceover, .captionsWrite, .captionsWriteHearingNothing,
              .captionsNudgeLater, .captionsNudgeEarlier,
