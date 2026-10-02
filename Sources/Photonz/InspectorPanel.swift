@@ -485,6 +485,13 @@ struct InspectorPanel: View {
                         revealer(proxy).applyEffect(id)
                     }
                 }
+                // ...and the same for a sound's effect added from its plus.
+                .onChange(of: editorState.soundEffectsAdded) {
+                    let delay = InspectorDockReveal.effectRevealDelay
+                    DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                        revealer(proxy).applySection(.soundEffects)
+                    }
+                }
                 // ...and, in the release whose order still leaves a pick's own
                 // section below Appearance and Effects, the pick itself. Both
                 // stores, because a plain click and a shift click are the same act
@@ -707,6 +714,7 @@ struct InspectorPanel: View {
             set.insert(.sound)
             set.insert(.fades)
             set.insert(.gain)
+            set.insert(.soundEffects)
         }
         // Having the app write the captions (Next, `next-captions-from-the-sound`).
         // Present for the whole document rather than for what is picked: unlike
@@ -1058,6 +1066,9 @@ struct InspectorPanel: View {
         case .measurements:
             text = DockGroupHeader.countChip(editorState.measurementCount)
             return text.map { .init(text: $0, field: "Measurements Count") }
+        case .soundEffects:
+            text = DockGroupHeader.countChip(editorState.soundLevelInHand.effectRows.count)
+            return text.map { .init(text: $0, field: "Audio Effects Count") }
         default:
             return nil
         }
@@ -1088,6 +1099,9 @@ struct InspectorPanel: View {
         case .measurements:
             return AnyView(MeasurementsSectionAccessory(
                 showsCount: !Experiments.shared.dockHeadersEnabled))
+        case .soundEffects:
+            // The mock's `#gEffects` plus and its `#efxMenu`.
+            return AnyView(AddSoundEffectButton())
         case .transitions:
             // The mock's `.dgrp-h` plus (`#efxMenu`): the two verbs that act
             // on the picked tile across the whole timeline.
@@ -1326,6 +1340,8 @@ struct InspectorPanel: View {
             SoundFadesInspector()
         case .gain:
             SoundGainInspector()
+        case .soundEffects:
+            SoundEffectsInspector()
         case .captions:
             CaptionsInspector()
         case .shadow:

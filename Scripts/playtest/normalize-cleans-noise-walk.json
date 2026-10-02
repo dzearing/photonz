@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/normalize-cleans-noise-walk",
-  "seed": "A screen recording whose voice sits over a fan's hiss and a mains hum (peak -30.5 dBFS, noise floor -54.9 dBFS in the lead-in, -45.2 LUFS), at Next defaults with no flag set. Clean noise sits beside Normalize, checked. Unchecked, Normalize sets +29.5 dB and the noise rises with the voice into a thick band between the words. Undone, checked again, Normalize cleans first: the segment shows its ring while the cleaned sound is made, then +30.7 dB and a sparkle, the waveform flat between the words, and a Noise row at Medium. Remove Noise Cleaning takes the row away; undo brings it back.",
+  "seed": "A screen recording whose voice sits over a fan's hiss and a mains hum (peak -30.5 dBFS, noise floor -54.9 dBFS in the lead-in, -45.2 LUFS), at Next defaults with no flag set. Clean noise sits beside Normalize, checked. Unchecked, Normalize sets +29.5 dB and the noise rises with the voice into a thick band between the words. Undone, checked again, Normalize cleans first: the segment shows its ring while the cleaned sound is made, then +30.7 dB and a sparkle, the waveform flat between the words, and Noise reduction at Medium in Audio Effects. Its cross takes the row away; undo brings it back.",
   "setup": { "front": true, "timelineOpen": true, "forget": ["all"] },
   "steps": [
     { "do": "open", "file": "fixtures/Noisy voice recording 1280x800.mp4", "width": 1440, "height": 900 },
@@ -32,20 +32,20 @@
     { "do": "waitFor", "condition": "soundSettled", "timeout": 60 },
     { "do": "wait", "seconds": 0.5 },
     { "do": "expect", "field": "Gain in dB", "reads": "+30.7" },
-    { "do": "expect", "field": "Noise reading", "reads": "Medium" },
-    { "do": "describe", "stage": "3-normalize-clean", "note": "Clean noise checked, Normalize: the noise is cleaned first, +30.7 dB, a sparkle on the segment, the waveform flat between the words, and a Noise row at Medium" },
+    { "do": "expect", "field": "Noise reduction reading", "reads": "Medium" },
+    { "do": "describe", "stage": "3-normalize-clean", "note": "Clean noise checked, Normalize: the noise is cleaned first, +30.7 dB, a sparkle on the segment, the waveform flat between the words, and Noise reduction at Medium in Audio Effects" },
     { "do": "panel", "stage": "3-normalize-clean" },
     { "do": "snapshot", "name": "3-normalize-clean" },
 
-    { "do": "press", "control": "Remove Noise Cleaning" },
+    { "do": "press", "control": "Remove Noise reduction" },
     { "do": "waitFor", "condition": "soundSettled", "timeout": 30 },
     { "do": "wait", "seconds": 0.5 },
     { "do": "expect", "field": "Gain in dB", "reads": "+30.7" },
-    { "do": "describe", "stage": "4-removed", "note": "Remove Noise Cleaning: the Noise row goes, the gain stays, and the band between the words is back" },
+    { "do": "describe", "stage": "4-removed", "note": "The cross on Noise reduction: the row goes, the gain stays, and the band between the words is back" },
     { "do": "snapshot", "name": "4-removed" },
 
     { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "expect", "field": "Noise reading", "reads": "Medium" }
+    { "do": "expect", "field": "Noise reduction reading", "reads": "Medium" }
   ]
 }

@@ -2660,6 +2660,14 @@ final class EditorState {
     /// The panel has dealt with the reveal, whether or not it had to move.
     func effectRevealHandled() { effectToReveal = nil }
 
+    /// Counts the audio effects put on from the Audio Effects plus, so the
+    /// panel can bring the row that just arrived into view: the section sits
+    /// under the sound's other sections, and an add whose row lands below the
+    /// panel's bottom edge changed nothing anybody could see but a count.
+    private(set) var soundEffectsAdded = 0
+
+    func revealAddedSoundEffect() { soundEffectsAdded += 1 }
+
     /// Called when what the list holds, or which layers it speaks for, has
     /// changed under the folds. Written only when there is something to clear:
     /// `@Observable` tells every reader about a write whether or not the value

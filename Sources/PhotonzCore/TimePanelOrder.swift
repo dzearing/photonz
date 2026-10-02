@@ -8,10 +8,11 @@ import Foundation
 /// `video.html` draws its dock (2026-09-25). After that:
 ///
 /// - A recording is for PLAYING: how fast it plays (Time), how loud (its
-///   Channel), how its sound fades (Fades) and its Gain.
+///   Channel), how its sound fades (Fades), its Gain and its Audio Effects.
 /// - A title, or anything else placed on the timeline, is for being ON SCREEN
 ///   and read: when it is on and how it fades (Time), its words (Text).
-/// - A sound is for being HEARD: its Channel, its fades, its Gain, then its time.
+/// - A sound is for being HEARD: its Channel, its fades, its Gain, its Audio
+///   Effects, then its time.
 /// - Captions are for CAPTIONING: the captions' own options (Captions), then
 ///   their type (Text), as the captions mock opens its panel.
 ///
@@ -56,9 +57,9 @@ public enum TimePanelOrder {
     /// The sections a role leads with, in order.
     public static func leads(_ role: Role) -> [String] {
         switch role {
-        case .playing: ["keys", "speed", "sound", "fades", "gain"]
+        case .playing: ["keys", "speed", "sound", "fades", "gain", "soundEffects"]
         case .onScreen: ["keys", "speed", "text"]
-        case .heard: ["keys", "sound", "fades", "gain", "speed"]
+        case .heard: ["keys", "sound", "fades", "gain", "soundEffects", "speed"]
         case .captioned: ["captions", "text", "keys"]
         }
     }

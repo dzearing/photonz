@@ -441,9 +441,15 @@ default. Simply amplifying the signal amplifies background noise."
   fan-band noise and a 60 Hz hum): after Normalize alone the noise floor sits
   at -25.3 dBFS; after Normalize with Clean noise at Medium, -44.1 dBFS, 18.8
   dB lower, with the voice within 0.5 dB (`NoiseCleanerTests.fixtureMeasures`).
-- The mock lists Noise reduction in the sound's Effects menu
-  (`pages/video-audio.html`, `#efxMenu`); sound has no Effects group yet, so
-  the strength lives on a Noise row under Gain until it does.
+- **Audio Effects** (2026-10-02) is where the strength lives: a section
+  under Gain, the mock's `#gEffects`, titled Audio Effects because a picked
+  clip already has an Effects section for its picture. Its plus offers the
+  mock's `#efxMenu` (EQ, Compressor, Noise reduction); Noise reduction adds a
+  row at Medium with Light, Medium and Strong under it and a cross that takes
+  it off. The row reads and writes `AudioLevel.noiseReduction`, the same value
+  Clean noise writes (`SoundEffects.swift`, `SoundEffectsInspector.swift`).
+  EQ and Compressor are listed dimmed until they have sound behind them
+  (`SoundEffectKind.isBuilt`).
 
 ## 6. Where it is in the window
 
@@ -470,7 +476,7 @@ points is a smear and a level line has nowhere to be dragged.
 | Source files live in Library, scope Media | **Not built.** Add Sound opens a file; the shelf is a follow-up | The shelf is not what makes sound work, and the task said not to invent a third place for media — this invents none, it just has no shelf yet |
 | Live VU meters over the canvas | **Built, somewhere else** | Cut on 2026-09-21 as answering nothing about the edit. That was right about a meter with ballistics and wrong about the fact underneath it: a mix that adds up past full scale writes a broken file. The meter is in the transport rather than on the canvas, and it reads the plan rather than the engine (§5c) |
 | Mute and Solo | **Cut** | A level at nought IS mute. Solo is a mixer's product |
-| EQ and Compressor in Effects | **Cut** | An effects rack is its own feature |
+| EQ and Compressor in Effects | **Listed, not built yet** (2026-10-02): the Audio Effects plus shows them dimmed beside Noise reduction | Each needs its own sound processing; filed as its own task |
 | Fade in field, fade out field, curve picker, diamonds on the lane | **One thing: points on the level line** | §3 |
 | "Duck music under voiceover" as a menu command | **Cut** | It needs the app to know which layer is a voice. The points do it by hand |
 | No Layers group in the dock | **Not followed** | `video.md` §5 settled this: not everything in a video document has time |

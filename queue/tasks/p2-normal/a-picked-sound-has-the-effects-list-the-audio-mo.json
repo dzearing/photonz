@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T18:02:37.973Z",
-  "updated": "2026-10-02T02:00:12.240Z",
+  "updated": "2026-10-02T12:34:08.202Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by normalize-cleans-background-noise-too-on-by-defa (2026-09-29). Model is AudioLevel.noiseReduction (PhotonzCore/NoiseCleaning.swift); panel today is SoundGainInspector.noise in SoundInspector.swift. EQ and Compressor have no model yet.",
@@ -31,6 +31,31 @@
     {
       "t": "2026-10-02T02:00:12.239Z",
       "note": "seq 30 -> 50"
+    },
+    {
+      "t": "2026-10-02T11:55:56.841Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-02T12:34:08.037Z",
+      "note": "owns these walks: sound-effects-noise-reduction-walk, normalize-cleans-noise-walk"
+    },
+    {
+      "t": "2026-10-02T12:34:08.092Z",
+      "note": "Adversarial review before building: the mock's #gEffects is a separate dock group titled Effects; a picked clip already has an Effects section (its picture), so the sound's list is titled Audio Effects (Premiere's own name) and sits under Gain. EQ and Compressor have no sound processing in the app; building them means widening the cleaned-copy pipeline (SoundCleaning) into an effects chain, its own feature, so they are listed dimmed and filed as a-picked-sound-can-take-an-eq-and-a-compressor-f. The mock's on/off dot needs a bypass state in the model: folded into that task."
+    },
+    {
+      "t": "2026-10-02T12:34:08.147Z",
+      "note": "Built: Audio Effects section with header count + plus (EQ, Compressor dimmed, Noise reduction), Noise reduction row (reading, cross, Light/Medium/Strong), reveal after add; Noise row gone from Gain. Harness: panelMenu 'at' ignores a hover region more than twice the button's height (it took the header for the plus's face and clicked the title). Suite 10920 green. Walks: sound-effects-noise-reduction-walk ok (forced under lock, every step incl. pointer-open of the plus), lock-safe copy of normalize-cleans-noise ok, sound-channel/video-panel-order/sound-fades/clicks-show-a-ripple ok forced."
+    },
+    {
+      "t": "2026-10-02T12:34:08.201Z",
+      "note": "Reviewed on the real app: the added row first landed below the panel's bottom edge (only the count changed); fixed with a scroll to the section. 'Strength' label wrapped; fixed. Left rough (under the bar, in the audit): no menu icons; the reading at the row's end repeats the selected strength. Seen while reproducing: under a lock, a press or click on a timeline clip does not pick it (normalize-cleans-noise-walk fails at step 6 locked, passed unlocked in the 2026-10-01 sweep); not caused by 4bce21d4 (same with it reverted). Not filed: lock-only, and the walk set already treats a lock as unanswered."
     }
+  ],
+  "started": "2026-10-02T11:55:56.840Z",
+  "walks": [
+    "sound-effects-noise-reduction-walk",
+    "normalize-cleans-noise-walk"
   ]
 }

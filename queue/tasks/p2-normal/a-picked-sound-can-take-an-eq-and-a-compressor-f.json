@@ -1,0 +1,28 @@
+{
+  "id": "a-picked-sound-can-take-an-eq-and-a-compressor-f",
+  "title": "A picked sound can take an EQ and a Compressor from its Audio Effects",
+  "goal": "The audio mock's Audio Effects menu offers EQ and Compressor beside Noise reduction. They are listed today but dimmed, because nothing in the app can shape a sound that way yet. Make both real: put one on a picked sound, hear it, export it, and switch it off and on to compare, as the mock's list rows do.",
+  "epic": "video-audio",
+  "priority": "p2-normal",
+  "seq": 3520,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-02T12:33:18.307Z",
+  "updated": "2026-10-02T12:33:18.310Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed by a-picked-sound-has-the-effects-list-the-audio-mo (2026-10-02). Model: SoundEffectKind.isBuilt is false for .eq/.compressor (PhotonzCore/SoundEffects.swift); AudioLevel.addEffect/removeEffect/effectRows are where they plug in. Likely path: widen SoundCleaning (NoiseCleaning.swift) into a processed-copy identity carrying noise + EQ + compressor settings, and render the chain in PhotonzMedia next to NoiseCleaner so the player, exporter, meter and waveform keep keying on sound.id with no special case. Panel: SoundEffectsInspector.swift (rows, OwnedSettings, AddSoundEffectButton).",
+  "acceptance": [
+    "EQ and Compressor in the Audio Effects plus menu are enabled and each adds a row, as pages/video-audio.html #gEffects draws them (EQ reading low cut 80)",
+    "What plays, what is exported and what Normalize measures all carry the EQ and the compression",
+    "Each row has the on switch the mock draws (its .en dot), which stops the effect and keeps its settings; Noise reduction gets the same switch",
+    "A walk at Next defaults adds, switches off and removes an EQ by pointer"
+  ],
+  "log": [
+    {
+      "t": "2026-10-02T12:33:18.309Z",
+      "note": "created (manual)"
+    }
+  ]
+}

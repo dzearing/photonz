@@ -615,6 +615,20 @@ struct DockBudgetScratch: Equatable {
         }
     }
 
+    // MARK: A section something was just added to
+
+    /// Bring a whole section on screen, and only if it is not already there:
+    /// the Audio Effects list after its plus has put a row on it.
+    func applySection(_ id: InspectorSectionID) {
+        guard let frame = scratch.sectionFrames[id] else { return }
+        let action = DockReveal.action(sectionTop: frame.minY, sectionHeight: frame.height,
+                                       viewportHeight: scratch.viewportHeight)
+        guard action != .none else { return }
+        withAnimation(.easeInOut(duration: 0.24)) {
+            proxy.scrollTo(id, anchor: action == .top ? .top : .bottom)
+        }
+    }
+
     // MARK: A pick, in the release without the order
 
     /// How long to wait after a pick before scrolling to the section it brought

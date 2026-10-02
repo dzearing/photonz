@@ -1,0 +1,159 @@
+{
+  "out": "/tmp/photonz-playtest/sound-effects-noise-reduction-walk",
+  "seed": "The noisy screen recording at Next defaults with no flag set. Its clip picked, the panel has Audio Effects under Gain with No effects in it. The plus on its header, clicked by the pointer, offers EQ, Compressor and Noise reduction; Noise reduction puts a row on at Medium, the strength Normalize's Clean noise cleans at, and the header counts 1. Strong on its Strength segments cleans harder. The cross on the row, clicked, takes it off and the list says No effects; undo brings it back at Strong.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "fixtures/Noisy voice recording 1280x800.mp4",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "selectRow",
+      "row": "Noisy voice recording 1280x800"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Audio Effects Empty",
+      "reads": "No effects"
+    },
+    {
+      "do": "describe",
+      "stage": "1-empty",
+      "note": "The noisy recording picked: Audio Effects sits under Gain with No effects in it and a plus on its header"
+    },
+    {
+      "do": "panel",
+      "stage": "1-empty"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-empty"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Audio Effect",
+      "at": [
+        "centre"
+      ],
+      "choose": "Noise reduction"
+    },
+    {
+      "do": "waitFor",
+      "condition": "soundSettled",
+      "timeout": 60
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "field": "Noise reduction reading",
+      "reads": "Medium"
+    },
+    {
+      "do": "expect",
+      "field": "Audio Effects Count",
+      "reads": "1"
+    },
+    {
+      "do": "expectInView",
+      "field": "Noise reduction",
+      "whole": true
+    },
+    {
+      "do": "describe",
+      "stage": "2-added",
+      "note": "Noise reduction added from the plus: a row at Medium with its Strength under it, the header counting 1, a sparkle on the segment and the waveform flat between the words"
+    },
+    {
+      "do": "panel",
+      "stage": "2-added"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-added"
+    },
+    {
+      "do": "press",
+      "control": "Strong"
+    },
+    {
+      "do": "waitFor",
+      "condition": "soundSettled",
+      "timeout": 60
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "field": "Noise reduction reading",
+      "reads": "Strong"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-strong"
+    },
+    {
+      "do": "press",
+      "control": "Remove Noise reduction"
+    },
+    {
+      "do": "waitFor",
+      "condition": "soundSettled",
+      "timeout": 30
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "field": "Audio Effects Empty",
+      "reads": "No effects"
+    },
+    {
+      "do": "describe",
+      "stage": "4-removed",
+      "note": "The cross on the row: Noise reduction is off, the list says No effects and the band between the words is back"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-removed"
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Noise reduction reading",
+      "reads": "Strong"
+    }
+  ]
+}

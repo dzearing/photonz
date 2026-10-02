@@ -158,6 +158,13 @@ enum InspectorSectionID: String, CaseIterable {
     // audio mock's per-selection slot (`#chExtra`), so the Channel strip above
     // keeps the one Volume row the mock draws; present exactly when Channel is.
     case gain
+    // What is put ON the picked sound: noise reduction now, EQ and a
+    // compressor on its menu (`pages/video-audio.html`, `#gEffects`). Under
+    // Gain, the last of the sound's own sections, as the mock stacks its
+    // Effects group under the channel strip; present exactly when Channel is.
+    // Titled Audio Effects rather than the mock's Effects, Premiere's own
+    // name for it, because a picked clip already brings the layer's Effects.
+    case soundEffects
     // Having the app write the words off the sound (Next,
     // `next-captions-from-the-sound`). Directly under Sound, because it is the
     // one thing you do WITH a recording's sound that is not about how loud it
@@ -221,6 +228,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .sound: "Channel"
         case .fades: "Fades"
         case .gain: "Gain"
+        case .soundEffects: "Audio Effects"
         case .captions: "Captions"
         case .shadow: "Shadow"
         case .transitions: "Transitions"

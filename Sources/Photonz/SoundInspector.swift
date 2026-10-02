@@ -105,7 +105,9 @@ struct SoundInspector: View {
 /// it from the sound's own peaks. Its own section under Fades, where the mock
 /// keeps what differs per selection (`#chExtra`), so the Channel strip holds
 /// the one Volume row the mock draws. Normalize is on the segment's
-/// right-click menu as well.
+/// right-click menu as well. How hard the noise is cleaned is not here: it is
+/// the Noise reduction row in Audio Effects (`SoundEffectsInspector`), which
+/// Clean noise beside Normalize puts on.
 struct SoundGainInspector: View {
     @Environment(EditorState.self) private var editorState
     /// Clean noise beside Normalize, remembered per user and on until
@@ -116,9 +118,6 @@ struct SoundGainInspector: View {
         VStack(alignment: .leading, spacing: 6) {
             if editorState.soundLayerInHand != nil {
                 gain
-                if let reduction = editorState.soundLevelInHand.noiseReduction {
-                    noise(reduction)
-                }
             }
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
@@ -187,44 +186,6 @@ struct SoundGainInspector: View {
                     .playtestControl("Clean noise", detail: cleansNoise ? "Gain, on" : "Gain, off")
                     .panelHelp("Take out hiss, hum and room noise before raising the level.")
                 }
-            }
-        }
-    }
-
-    /// How hard the noise is taken out, once it is: Light, Medium or Strong
-    /// on one slider, and the way to stop cleaning it. While the cleaned
-    /// sound is being made the row says how far along it is.
-    private func noise(_ reduction: NoiseReduction) -> some View {
-        let progress = editorState.soundLayerInHand.flatMap { editorState.soundCleaningProgress(of: $0.id) }
-        let reading = progress.map { "Cleaning \(Int(($0 * 100).rounded()))%" } ?? reduction.title
-        return VideoKit.FieldRow(label: "Noise") {
-            HStack(spacing: 6) {
-                Slider(value: Binding(
-                    get: { Double(reduction.step) },
-                    set: { editorState.setSoundNoiseReductionInHand(NoiseReduction(step: Int($0.rounded()))) }
-                ), in: 0...2, step: 1)
-                .controlSize(.small)
-                .frame(minWidth: PanelSliderRow.trackMinimum)
-                .playtestField("Noise")
-                .panelHelp("How much noise to take out.")
-                Text(reading)
-                    .font(.system(size: 11, weight: .medium))
-                    .monospacedDigit()
-                    .foregroundStyle(VideoKit.Palette.ink)
-                    .frame(minWidth: 52, alignment: .leading)
-                    .fixedSize()
-                    .panelReadout(reading)
-                    .playtestField("Noise reading")
-                Button {
-                    editorState.setSoundNoiseReductionInHand(nil)
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(VideoKit.Palette.ink.opacity(0.55))
-                }
-                .buttonStyle(.plain)
-                .playtestControl("Remove Noise Cleaning", detail: "Gain")
-                .panelHelp("Stop cleaning the noise.")
-                .accessibilityLabel("Remove Noise Cleaning")
             }
         }
     }

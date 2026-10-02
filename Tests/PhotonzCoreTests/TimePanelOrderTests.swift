@@ -17,7 +17,8 @@ struct TimePanelOrderTests {
 
     static let saved = ["layers", "measureTool", "arrange", "component", "text", "geometry",
                         "color", "effects", "keys", "reframe", "motion", "editPoint",
-                        "transition", "speed", "sound", "fades", "gain", "captions", "library"]
+                        "transition", "speed", "sound", "fades", "gain", "soundEffects", "captions",
+                        "library"]
 
     static func clip() -> Layer {
         var layer = Layer(name: "Recording",
@@ -92,7 +93,8 @@ struct TimePanelOrderTests {
 
     @Test func aClipLeadsWithItsPropertiesThenHowItPlaysThenHowLoud() {
         let order = TimePanelOrder.arrange(Self.saved, for: .playing)
-        #expect(Array(order.prefix(6)) == ["layers", "keys", "speed", "sound", "fades", "gain"])
+        #expect(Array(order.prefix(7)) == ["layers", "keys", "speed", "sound", "fades", "gain",
+                                           "soundEffects"])
     }
 
     @Test func aTitleLeadsWithItsPropertiesThenWhenItIsOnThenItsWords() {
@@ -102,7 +104,8 @@ struct TimePanelOrderTests {
 
     @Test func aSoundLeadsWithItsPropertiesThenItsLevelThenItsTime() {
         let order = TimePanelOrder.arrange(Self.saved, for: .heard)
-        #expect(Array(order.prefix(6)) == ["layers", "keys", "sound", "fades", "gain", "speed"])
+        #expect(Array(order.prefix(7)) == ["layers", "keys", "sound", "fades", "gain", "soundEffects",
+                                           "speed"])
     }
 
     /// The captions mock opens its panel on the captions' own options, then
@@ -129,6 +132,17 @@ struct TimePanelOrderTests {
             let lead = TimePanelOrder.leads(role)
             guard let fades = lead.firstIndex(of: "fades") else { continue }
             #expect(lead.indices.contains(fades + 1) && lead[fades + 1] == "gain")
+        }
+    }
+
+    /// The sound's Effects list sits straight under Gain, the last of the
+    /// sound's own sections, as the audio mock stacks its Effects group under
+    /// the channel strip (`#gEffects`).
+    @Test func theSoundsEffectsFollowItsGainWhereverItLeads() {
+        for role in TimePanelOrder.Role.allCases {
+            let lead = TimePanelOrder.leads(role)
+            guard let gain = lead.firstIndex(of: "gain") else { continue }
+            #expect(lead.indices.contains(gain + 1) && lead[gain + 1] == "soundEffects")
         }
     }
 

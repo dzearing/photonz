@@ -373,13 +373,35 @@ extension EditorState {
     /// Clean noise on several layers at a strength, or stop cleaning it
     /// (nil), as one step to undo. The cleaned copy starts being made at once.
     func setSoundNoiseReduction(_ reduction: NoiseReduction?, layers ids: [UUID]) {
+        changeSoundLevels(layers: ids) { level in
+            guard level.noiseReduction != reduction else { return false }
+            level.noiseReduction = reduction
+            return true
+        }
+    }
+
+    /// The picked sound's Audio Effects list: put one on, or take one off, the
+    /// picked sound and whatever is picked with it, as one step to undo.
+    func addSoundEffectInHand(_ kind: SoundEffectKind) {
+        guard let id = soundLayerInHand?.id, soundLevelInHand.canAddEffect(kind) else { return }
+        changeSoundLevels(layers: soundLayers(actingOn: id)) { $0.addEffect(kind) }
+        revealAddedSoundEffect()
+    }
+
+    func removeSoundEffectInHand(_ kind: SoundEffectKind) {
+        guard let id = soundLayerInHand?.id else { return }
+        changeSoundLevels(layers: soundLayers(actingOn: id)) { $0.removeEffect(kind) }
+    }
+
+    /// Each layer's level changed by `change` (true where it changed), written
+    /// as one step, and any cleaned copy that now has to exist started.
+    private func changeSoundLevels(layers ids: [UUID], _ change: (inout AudioLevel) -> Bool) {
         guard let document else { return }
         var levels: [UUID: AudioLevel] = [:]
         for id in ids {
             guard let layer = document.layer(id: id), layer.sound != nil else { continue }
             var level = layer.soundLevel ?? AudioLevel()
-            guard level.noiseReduction != reduction else { continue }
-            level.noiseReduction = reduction
+            guard change(&level) else { continue }
             levels[id] = level
         }
         setSoundLevels(levels)
@@ -390,7 +412,8 @@ extension EditorState {
         }
     }
 
-    /// The panel's Noise slider: the picked sound's strength.
+    /// The Strength on the Audio Effects list's Noise reduction row: the
+    /// picked sound's strength.
     func setSoundNoiseReductionInHand(_ reduction: NoiseReduction?) {
         guard let id = soundLayerInHand?.id else { return }
         setSoundNoiseReduction(reduction, layers: soundLayers(actingOn: id))

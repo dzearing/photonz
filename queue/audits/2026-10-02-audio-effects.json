@@ -1,0 +1,50 @@
+{
+  "feature": "Audio Effects on a picked sound",
+  "epic": "video-audio",
+  "summary": "A picked clip or sound now has an Audio Effects list under Gain, with a plus whose menu offers EQ, Compressor and Noise reduction. Noise reduction is the same cleaning Normalize's Clean noise does, and you add it, set it Light, Medium or Strong, and take it off right there.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a screen recording with some background hiss (the walk uses fixtures/Noisy voice recording 1280x800.mp4) and pick its clip on the timeline.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Pick the recording's clip on the timeline and scroll the panel to Audio Effects, under Gain.",
+      "shot": "2026-10-02-audio-effects-1-empty-sc.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed."
+    },
+    {
+      "do": "Click the plus on the Audio Effects header and choose Noise reduction.",
+      "shot": "2026-10-02-audio-effects-2-added-sc.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed."
+    },
+    {
+      "do": "Play the clip and listen to the pauses between words."
+    },
+    {
+      "do": "Click Strong on the row's Strength.",
+      "shot": "2026-10-02-audio-effects-3-strong-sc.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed."
+    },
+    {
+      "do": "Click the cross at the end of the Noise reduction row.",
+      "shot": "2026-10-02-audio-effects-4-removed-sc.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed."
+    },
+    {
+      "do": "On another clip, press Normalize in Gain with Clean noise checked and look at Audio Effects."
+    }
+  ],
+  "evaluate": [
+    "Is Audio Effects, directly under Gain, where you would look for noise reduction on a clip?",
+    "Does the name Audio Effects read clearly next to the clip's own Effects section further down?",
+    "Is Light, Medium, Strong as three buttons quicker than the old slider?",
+    "Do EQ and Compressor showing dimmed in the menu read as coming soon rather than broken?"
+  ],
+  "rough": [
+    "Titled Audio Effects, not the mock's Effects: a picked clip already has an Effects section for its picture, and two sections with one name would be a guess.",
+    "The mock (pages/video-audio.html, #gEffects) draws Effects as its own dock group with a rail tab; here it is a section in the panel under Gain, like Channel, Fades and Gain before it.",
+    "EQ and Compressor are in the menu but dimmed: nothing can shape the sound that way yet. Filed as its own task.",
+    "The mock's row has a grip and an on/off dot; this row has a cross instead and no on/off yet. The on/off switch is part of the EQ and Compressor task.",
+    "The mock's menu rows carry icons; these do not.",
+    "The Strength buttons under the row go further than the mock, which draws rows with no settings under them.",
+    "Every picture was taken with the Mac locked, so colours may read dimmed; the menu itself could not be photographed under the lock."
+  ]
+}

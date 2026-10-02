@@ -10974,6 +10974,11 @@ private final class Run {
         where region.window === host && !region.isHiddenOrHasHiddenAncestor {
             let box: CGRect = region.convert(region.bounds, to: nil)
             let area = box.width * box.height
+            // A region more than twice the button's height is the ROW it sits
+            // in, not its face: a plus on a section header has no face of its
+            // own, and the header's hover region round it is the whole header,
+            // whose middle is the title that folds the section.
+            guard box.height <= buttonBox.height * 2 else { continue }
             if box.contains(middle) && area < smallest {
                 face = box
                 smallest = area
