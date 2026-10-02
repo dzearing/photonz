@@ -103,6 +103,28 @@ public enum VideoExporter {
         case writerGaveUp(String)
         /// The file was written but AVFoundation would not finish it.
         case didNotFinish(String)
+        /// AVFoundation stopped handing over pictures part way through.
+        case readerGaveUp(String)
+    }
+
+    /// The reading half of a picture export, handed to the one queue that
+    /// reads it.
+    ///
+    /// None of these are marked Sendable. They are safe to send because the
+    /// guard's queue is serial: the caller waits for each read before it
+    /// touches them again, and once a read is given up on the caller touches
+    /// them never again, only clean-up queued behind that read does.
+    private struct HandedPictures: @unchecked Sendable {
+        let reader: AVAssetReader
+        let output: AVAssetReaderOutput
+        let writer: AVAssetWriter
+    }
+
+    /// One frame handed back from the read queue. The buffer is the reader's
+    /// own and only ever used by the one caller that asked for it.
+    private struct HandedSample: @unchecked Sendable {
+        let sample: CMSampleBuffer?
+        init(_ sample: CMSampleBuffer?) { self.sample = sample }
     }
 
     /// Re-encode the recording at `url` to an animated GIF or HEIC at
@@ -489,7 +511,29 @@ public enum VideoExporter {
 
         let total = max(0.001, composition.duration.seconds)
         var wroteAny = false
-        while let sample = videoOut.copyNextSampleBuffer() {
+        // Every frame is read on a queue of its own and given up on if it
+        // stops coming: on the shared pool, or from a decoder that has stopped
+        // answering, this read waits for ever (`GuardedReads`).
+        let reads = GuardedReads(label: "photonz.export.pictures", limit: readStallLimit)
+        let handed = HandedPictures(reader: reader, output: videoOut, writer: writer)
+        while true {
+            let next: HandedSample
+            do {
+                next = try await reads.run { HandedSample(handed.output.copyNextSampleBuffer()) }
+            } catch {
+                // Stopping a reader that is stuck is stuck too, so the clean-up
+                // waits behind the read rather than in front of the caller.
+                reads.afterwards {
+                    handed.reader.cancelReading()
+                    handed.writer.cancelWriting()
+                }
+                if error is GuardedReads.Stalled {
+                    throw ExportError.readerGaveUp(
+                        "no picture came out of the recording for \(Int(readStallLimit)) seconds")
+                }
+                throw error
+            }
+            guard let sample = next.sample else { break }
             if Task.isCancelled {
                 reader.cancelReading()
                 writer.cancelWriting()
@@ -603,6 +647,13 @@ public enum VideoExporter {
             try? await Task.sleep(for: .milliseconds(5))
         }
     }
+
+    /// How long an export waits for the next picture out of the recording
+    /// before calling the read stuck. A frame takes milliseconds; the slowest
+    /// of every export in the whole test suite, everything running at once,
+    /// took 2.4s (2026-10-02). Past this the reader is waiting on something
+    /// that is not coming, and the person is told so inside a minute.
+    static let readStallLimit: TimeInterval = 30
 
     /// How long an export waits on a writer that has gone quiet before calling
     /// it stuck. Long enough that a machine under real load is never accused,

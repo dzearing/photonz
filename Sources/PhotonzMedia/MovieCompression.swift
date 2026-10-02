@@ -85,13 +85,19 @@ enum MovieCompression {
             return (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
         }
         let asset = AVURLAsset(url: url)
-        guard let track = try? await asset.loadTracks(withMediaType: .video).first,
-              let reader = try? AVAssetReader(asset: asset) else { return 0 }
-        let output = AVAssetReaderTrackOutput(track: track, outputSettings: nil)
+        guard let track = try? await asset.loadTracks(withMediaType: .video).first else { return 0 }
+        // The read blocks, so it never holds a thread of the shared pool
+        // (`GuardedReads` says what that cost an export).
+        let handed = HandedTrack(track: track, asset: asset)
+        return await OffThePool.run { pictureBytes(of: handed, from: Double(fromMS) / 1000) }
+    }
+
+    private static func pictureBytes(of handed: HandedTrack, from: Double) -> Int {
+        guard let reader = try? AVAssetReader(asset: handed.asset) else { return 0 }
+        let output = AVAssetReaderTrackOutput(track: handed.track, outputSettings: nil)
         guard reader.canAdd(output) else { return 0 }
         reader.add(output)
         guard reader.startReading() else { return 0 }
-        let from = Double(fromMS) / 1000
         var bytes = 0
         while let sample = output.copyNextSampleBuffer() {
             let at = CMSampleBufferGetPresentationTimeStamp(sample).seconds

@@ -26,7 +26,8 @@ enum OffThePool {
     }
 }
 
-/// A file's sound track, handed whole to the one queue that reads it.
+/// A file's track (its sound, or the pictures an export weighs), handed whole
+/// to the one queue that reads it.
 ///
 /// `AVAssetTrack` is not marked Sendable. It is safe to send here because the
 /// caller loads it, hands it over and never touches it again: only the queue
