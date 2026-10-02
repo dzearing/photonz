@@ -1,4 +1,6 @@
+import Accelerate
 import AppKit
+import CoreImage
 import CryptoKit
 import Observation
 import PhotonzCore
@@ -123,6 +125,102 @@ enum CaptureThumbnails {
     }
 
     // MARK: - Recordings
+
+    private static let frameContext = CIContext(options: [.cacheIntermediates: false])
+
+    /// The last frame a recording's stream delivered, as a picture: the whole
+    /// frame for an editor to open on, and its tile's thumbnail made from it.
+    /// Read once, at Stop, while macOS is still closing the file.
+    ///
+    /// A stream feeding a recording hands over 4:2:0 video (`420v`), turned
+    /// into RGB here on the CPU in one pass (about 10 ms for a 5K screen).
+    /// Core Image is the fallback for any other layout: its first use in a run
+    /// costs tens of milliseconds of setting up, which is most of what a short
+    /// recording takes macOS to close.
+    static func lastFrame(_ frame: RecordedFrame) -> CGImage? {
+        yuvPicture(frame.buffer) ?? coreImagePicture(frame.buffer)
+    }
+
+    /// A recording's tile thumbnail made from a whole frame of it.
+    static func recordingThumbnail(from full: CGImage, duration: TimeInterval?) -> Loaded {
+        let size = CGSize(width: full.width, height: full.height)
+        return Loaded(image: render(full, ThumbnailFit.decodePlan(pixelSize: size)),
+                      pixelSize: size, pixelScale: 1, duration: duration)
+    }
+
+    private static func colorSpace(of buffer: CVPixelBuffer) -> CGColorSpace? {
+        CVBufferCopyAttachments(buffer, .shouldPropagate)
+            .flatMap { CVImageBufferCreateColorSpaceFromAttachments($0)?.takeRetainedValue() }
+            ?? CGColorSpace(name: CGColorSpace.sRGB)
+    }
+
+    private static func yuvPicture(_ buffer: CVPixelBuffer) -> CGImage? {
+        let format = CVPixelBufferGetPixelFormatType(buffer)
+        let videoRange = format == kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange
+        guard videoRange || format == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange,
+              CVPixelBufferGetPlaneCount(buffer) == 2,
+              let space = colorSpace(of: buffer) else { return nil }
+        var range = videoRange
+            ? vImage_YpCbCrPixelRange(Yp_bias: 16, CbCr_bias: 128, YpRangeMax: 235, CbCrRangeMax: 240,
+                                      YpMax: 255, YpMin: 0, CbCrMax: 255, CbCrMin: 0)
+            : vImage_YpCbCrPixelRange(Yp_bias: 0, CbCr_bias: 128, YpRangeMax: 255, CbCrRangeMax: 255,
+                                      YpMax: 255, YpMin: 0, CbCrMax: 255, CbCrMin: 1)
+        let matrixName = CVBufferCopyAttachment(buffer, kCVImageBufferYCbCrMatrixKey, nil) as? String
+        // vImage's own ITU-R 601 and 709 matrices, written out: its globals
+        // are mutable C state Swift 6 will not read across threads.
+        var matrix = matrixName == (kCVImageBufferYCbCrMatrix_ITU_R_601_4 as String)
+            ? vImage_YpCbCrToARGBMatrix(Yp: 1, Cr_R: 1.402, Cr_G: -0.7141363, Cb_G: -0.3441363, Cb_B: 1.772)
+            : vImage_YpCbCrToARGBMatrix(Yp: 1, Cr_R: 1.5748, Cr_G: -0.4681242, Cb_G: -0.1873243, Cb_B: 1.8556)
+        var info = vImage_YpCbCrToARGB()
+        guard vImageConvert_YpCbCrToARGB_GenerateConversion(
+            &matrix, &range, &info, kvImage420Yp8_CbCr8, kvImageARGB8888,
+            vImage_Flags(kvImageNoFlags)) == kvImageNoError else { return nil }
+
+        guard CVPixelBufferLockBaseAddress(buffer, .readOnly) == kCVReturnSuccess else { return nil }
+        defer { CVPixelBufferUnlockBaseAddress(buffer, .readOnly) }
+        func plane(_ index: Int) -> vImage_Buffer? {
+            guard let base = CVPixelBufferGetBaseAddressOfPlane(buffer, index) else { return nil }
+            return vImage_Buffer(data: base,
+                                 height: vImagePixelCount(CVPixelBufferGetHeightOfPlane(buffer, index)),
+                                 width: vImagePixelCount(CVPixelBufferGetWidthOfPlane(buffer, index)),
+                                 rowBytes: CVPixelBufferGetBytesPerRowOfPlane(buffer, index))
+        }
+        guard var luma = plane(0), var chroma = plane(1) else { return nil }
+        let width = CVPixelBufferGetWidth(buffer), height = CVPixelBufferGetHeight(buffer)
+        let rowBytes = width * 4
+        let pixels = UnsafeMutableRawPointer.allocate(byteCount: rowBytes * height, alignment: 64)
+        var out = vImage_Buffer(data: pixels, height: vImagePixelCount(height),
+                                width: vImagePixelCount(width), rowBytes: rowBytes)
+        // ARGB in, B G R A out: what Core Graphics reads as 32-bit little
+        // endian with the alpha first.
+        let bgra: [UInt8] = [3, 2, 1, 0]
+        guard vImageConvert_420Yp8_CbCr8ToARGB8888(&luma, &chroma, &out, &info, bgra, 255,
+                                                    vImage_Flags(kvImageNoFlags)) == kvImageNoError,
+              let provider = CGDataProvider(dataInfo: nil, data: pixels, size: rowBytes * height,
+                                            releaseData: { _, data, _ in data.deallocate() })
+        else {
+            pixels.deallocate()
+            return nil
+        }
+        return CGImage(width: width, height: height, bitsPerComponent: 8, bitsPerPixel: 32,
+                       bytesPerRow: rowBytes, space: space,
+                       bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipFirst.rawValue
+                                                    | CGBitmapInfo.byteOrder32Little.rawValue),
+                       provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
+    }
+
+    private static func coreImagePicture(_ buffer: CVPixelBuffer) -> CGImage? {
+        let image = CIImage(cvPixelBuffer: buffer)
+        return frameContext.createCGImage(image, from: image.extent, format: .RGBA8,
+                                          colorSpace: colorSpace(of: buffer))
+    }
+
+    /// Files a recording's thumbnail in the poster cache under this exact
+    /// file, so the next launch reads it rather than cutting one from the file.
+    static func cachePoster(_ loaded: Loaded, for url: URL, stamp: String?) {
+        guard let base = posterCacheURL(for: url, stamp: stamp) else { return }
+        writePoster(loaded, to: base)
+    }
 
     /// A recording's thumbnail: from the poster cache when this exact file
     /// (by path, size and modification time) has been seen before, otherwise

@@ -20429,3 +20429,30 @@ the middle and barely magnifies (a crisp or growing lens would be ours to draw).
 - One effects-list row for both lists: `Sources/Photonz/EffectsListRow.swift` is now drawn by the picture Effects list and the sound's Audio Effects list.
 - Walks: `sound-effects-eq-compressor-locked-walk` green under a lock; the pointer version `sound-effects-eq-compressor-walk` waits for an unlocked screen.
 - Open: whether sound rows should keep the eye or take the mock's dot, and whether the effect order should become draggable (asked in the audit).
+
+## 2026-10-02 — A recording is ready the moment you stop it (go loop)
+
+The user saw a lag between Stop and a recording's thumbnail, and could not open
+it at once. The tile already went up at Stop (800a6d01), but its picture and
+the editor both waited for macOS to close the file: about 4 ms per recorded
+second with sound. Baseline: thumbnail 176 ms at 5 s and 398 ms at 60 s.
+
+- The recorder's first-frame output now also holds the newest complete frame
+  (one retained surface, swapped per frame). At Stop it is converted with vImage
+  (the stream is 420v, not BGRA; Core Image's first use cost 40-160 ms) and
+  lands on the tile; when the file lands it goes in the poster cache with the
+  file's real length, and the landing reload no longer throws it away.
+- Next opens a recording macOS is still closing at once, as a stand-in document
+  (`ClosingRecording`, PhotonzCore, tested) on that frame, playhead at Stop's
+  moment, View mode; Play pressed meanwhile starts when the file lands. The file
+  is taken on under the same movie id outside the undo history
+  (`adoptLandedRecording`), so the window does not change and nothing is lost.
+- The corner card says Copying… until the file is copied, then Copied.
+- After: tile picture 18-22 ms and editor picture 8-12 ms at 5, 60 and 180 s;
+  playable is the file close plus ~5 ms. Through a real window 107-188 ms;
+  ~450 ms when it is the first editor window of the run (filed separately).
+- Flag `next-a-recording-is-ready-at-stop` (Next, on). Walk:
+  `a-recording-opens-at-stop-walk`; drill: `Scripts/recording-latency-drill.sh`.
+
+Next: the first editor window's ~200 ms first build
+(`the-first-editor-window-after-launch-opens-as-qu`).

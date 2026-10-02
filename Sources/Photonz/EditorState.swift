@@ -1341,6 +1341,19 @@ final class EditorState {
     var documentTimeMS: Int = 0
     /// Whether the document is playing.
     var isDocumentPlaying = false
+    /// True while this window holds a recording opened the moment it was
+    /// stopped, whose file macOS is still closing: it shows the frame the
+    /// recording ended on, and Play waits for the file
+    /// (`EditorState+ClosingRecording`).
+    var recordingStillLanding = false
+    /// Play was pressed while the file was still landing: it starts the moment
+    /// the file is there.
+    var playWhenLanded = false
+    /// Where the playhead waited while the file landed, so landing can tell
+    /// whether anybody moved it.
+    @ObservationIgnored var closingRecordingWaitingMS: Int?
+    /// What the transport's play button shows: playing, or about to.
+    var showsDocumentPlaying: Bool { isDocumentPlaying || playWhenLanded }
     /// Where a Play In to Out stops: the Out. Nil for plain play, which runs
     /// to the end.
     @ObservationIgnored var documentPlaybackStopMS: Int?
@@ -1742,7 +1755,9 @@ final class EditorState {
     /// The file this window was opened from (screenshot/image/package), for the
     /// window title. Distinct from `documentURL`, which is only set once saved as
     /// a `.photonz` package.
-    private(set) var openedFileURL: URL?
+    // Set from `EditorState+ClosingRecording` too, when a recording opened
+    // before its file landed takes on the file.
+    var openedFileURL: URL?
 
     /// "Untitled N" name for a brand-new (unsaved) window, assigned once at seed
     /// so windows are tellable apart in the ⌘` switcher / Window menu / Dock.
@@ -1871,6 +1886,12 @@ final class EditorState {
         // somebody's video with a PNG of one frame of it. Command S on a
         // recording saves a project instead (`saveDocument`), and the
         // recording on disk is never written over.
+        // Stopped a moment ago and macOS is still closing the file: open on
+        // the frame it ended on rather than waiting for it.
+        if shape == nil, Experiments.shared.recordingReadyAtStop, let store = captureCenter?.store,
+           openClosingRecording(at: url, from: store) {
+            return
+        }
         Task { @MainActor [weak self] in
             guard let self else { return }
             guard let movie = await MovieLibrary.shared.movie(at: url) else {
@@ -2823,7 +2844,7 @@ final class EditorState {
 
     /// Installs a freshly opened document, resetting every per-document bit
     /// of editor state.
-    private func installDocument(_ document: PhotonzDocument, url: URL?) {
+    func installDocument(_ document: PhotonzDocument, url: URL?) {
         // The shelf first, so a file opened today comes up already wearing the
         // edits made to its shared components while it was closed, and the
         // history it starts with is the picture somebody is actually looking at

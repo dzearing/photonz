@@ -5,10 +5,13 @@
 #
 # Records the main display for <seconds> (default 5) through the app's own
 # recording path, with the stop control left off the screen, filing into a
-# scratch folder rather than anybody's history. Prints every step after Stop
-# (tile up, file closed by macOS, file landed, poster, duration) and exits 1
-# when Stop to tile is over the budget (PhotonzCore RecordingStopBudget, 300 ms)
-# or the tile was not in history. The recording is deleted afterwards.
+# scratch folder rather than anybody's history, and opens it in an editor the
+# moment its tile is up. Prints every step after Stop (tile up, tile showing the
+# picture, editor showing the picture, file closed by macOS, file landed,
+# editor playable, duration) and exits 1 when any is over its budget
+# (PhotonzCore RecordingStopBudget: tile 300 ms, thumbnail 100 ms, editor
+# picture 300 ms) or the tile was not in history. The recording is deleted
+# afterwards.
 #
 # It needs the probe's Screen Recording grant and an unlocked screen, and the
 # menu bar shows the recording indicator while it runs.
@@ -46,11 +49,14 @@ if (d.error) { console.log("!! " + d.error); process.exit(1); }
 const f = (v) => v == null ? "never" : v + " ms";
 console.log(`==> ${d.seconds} s recording, sound: ${d.audio.length ? d.audio.join(" + ") : "none"}`);
 console.log(`    tile in history      ${f(d.stopToTileMS)} after Stop${d.tileInHistory ? "" : " (NOT in history)"}`);
+console.log(`    thumbnail shown      ${f(d.stopToThumbnailMS)}`);
+console.log(`    editor shows picture ${f(d.stopToEditorPictureMS)}`);
 console.log(`    file closed by macOS ${f(d.outputFinishedMS)}`);
 console.log(`    file landed          ${f(d.stopToFileLandedMS)}`);
-console.log(`    poster frame         ${f(d.posterMS)}`);
+console.log(`    editor playable      ${f(d.stopToPlayableMS)}`);
 console.log(`    duration             ${f(d.durationMS)}`);
-console.log(d.passed ? `==> PASS: inside the ${d.budgetMS} ms budget`
-                     : `!! FAIL: Stop to tile is over the ${d.budgetMS} ms budget, or the tile was not in history`);
+if (!d.readyAtStop) console.log("    (next-a-recording-is-ready-at-stop is off: thumbnail and editor wait for the file)");
+console.log(d.passed ? `==> PASS: tile inside ${d.budgetMS} ms` + (d.readyAtStop ? `, thumbnail inside ${d.thumbnailBudgetMS} ms, editor picture inside ${d.editorBudgetMS} ms` : "")
+                     : `!! FAIL: a reading is over its budget (tile ${d.budgetMS} ms, thumbnail ${d.thumbnailBudgetMS} ms, editor picture ${d.editorBudgetMS} ms), or the tile was not in history`);
 process.exit(d.passed ? 0 : 1);
 ' "$OUT"

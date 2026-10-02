@@ -94,6 +94,7 @@ final class RecordingCoordinator {
     /// paste before it exists.
     func stop() async {
         guard isRecording else { return }
+        let stoppedAt = PointerTracker.hostNow()
         isRecording = false
         let started = startDate ?? .now
         stopTimer()
@@ -108,9 +109,25 @@ final class RecordingCoordinator {
             return try? JSONEncoder().encode(take.finished(firstFrameHostSeconds: firstFrame))
         }
         let pending = store.beginSaving(recordingStartedAt: started)
+        // The frame the recording ends on is already in memory: it is the
+        // tile's picture from now, and what an editor opened before the file
+        // lands opens on.
+        if Experiments.shared.recordingReadyAtStop, let last = recorder.lastFrame,
+           let firstFrame = recorder.firstFrameHostSeconds {
+            let size = CGSize(width: CVPixelBufferGetWidth(last.frame.buffer),
+                              height: CVPixelBufferGetHeight(last.frame.buffer))
+            let stoppedMS = Int(((stoppedAt - firstFrame) * 1000).rounded())
+            store.holdLastFrame(last.frame, of: pending,
+                                recording: ClosingRecording(pixelSize: size, lastFrameMS: last.fileMS,
+                                                            stoppedMS: stoppedMS,
+                                                            hasSound: config.audio.capturesAnyAudio))
+        }
         onRecordingComplete?(pending)
         do {
             let url = try await recorder.stop()
+            #if PHOTONZ_PLAYTEST
+            if playtestFileCloseSeconds > 0 { try? await Task.sleep(for: .seconds(playtestFileCloseSeconds)) }
+            #endif
             // The store files the MP4 and derives the poster/duration lazily.
             store.finishSaving(pending, tempURL: url, pointerTrack: await pointerFile.value)
         } catch {
@@ -118,6 +135,12 @@ final class RecordingCoordinator {
             store.failSaving(pending)
         }
     }
+
+    #if PHOTONZ_PLAYTEST
+    /// How long a walk makes macOS take to close the file, so it can see a
+    /// window opened before the file lands (`PlaytestOpenAtStop`).
+    @ObservationIgnored var playtestFileCloseSeconds: Double = 0
+    #endif
 
     /// When each part of the last stop happened (the probe's latency drill).
     var lastStopTrace: ScreenRecorder.StopTrace? { recorder.lastStop }

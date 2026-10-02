@@ -3285,6 +3285,24 @@ private final class Run {
                             subject: "a five minute 2880 × 1800 recording with somebody talking in it",
                             number: number)
 
+        case .action(.recordAndOpenAtStop):
+            let landed: (editor: EditorState, summary: String)
+            do {
+                landed = try await PlaytestOpenAtStop.run(coordinator: coordinator)
+            } catch let failure as PlaytestOpenAtStop.Failure {
+                throw Failure(description: failure.description)
+            }
+            try await adopt(landed.editor, window: nil, step: step.name,
+                            subject: "a recording opened the moment it was stopped", number: number)
+            note(number, step.name, landed.summary, state: describe())
+
+        case .action(.expectRecordingLandedInPlace):
+            do {
+                note(number, step.name, try await PlaytestOpenAtStop.expectLandedInPlace(), state: describe())
+            } catch let failure as PlaytestOpenAtStop.Failure {
+                throw Failure(description: failure.description)
+            }
+
         case .action(.recordScriptedClicks):
             let landed: PlaytestScriptedClicks.Outcome
             do {
@@ -5983,7 +6001,7 @@ private final class Run {
                  .openScrollingPage, .openRecordingFromDisk,
                  .openMissingRecording,
                  .openLandingRecording, .reopenSampleRecording, .editLastCapture,
-                 .recordScriptedClicks:
+                 .recordScriptedClicks, .recordAndOpenAtStop, .expectRecordingLandedInPlace:
                 break  // handled above, in the branch that asks for a recording
             case .clipSplit, .clipDeletePiece, .clipHoldFrame,
                  .clipSpeedDouble, .clipSpeedHalf,

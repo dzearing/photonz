@@ -1,0 +1,63 @@
+{
+  "out": "/tmp/photonz-playtest/a-recording-opens-at-stop-walk",
+  "seed": "The user, 2026-10-02: 'when I record a video, it seems to save slowly now, as in I don't see a thumbnail and I can't open it immediately.' At Next defaults with no flag touched: a real three second recording through the app's own recorder, its corner card up, opened the instant its tile is up while macOS is made to take three seconds closing the file. The window must show the recording's last frame inside 300 ms of Stop, the card must say Copying until the file lands, Play pressed meanwhile must start when it lands, and the window must take the file in place. The walk opens the sample recording first, so the window it times is not the first editor window of the run: that one costs about 200 ms more of SwiftUI building the editor for the first time, for any capture, and is its own task.",
+  "setup": {
+    "history": 4,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "action",
+      "action": "recordAndOpenAtStop"
+    },
+    {
+      "do": "expectToast",
+      "says": "Copying"
+    },
+    {
+      "do": "snapshot",
+      "name": "0-open-before-the-file-lands"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-the-card-says-copying",
+      "window": "Toast"
+    },
+    {
+      "do": "action",
+      "action": "videoPlay"
+    },
+    {
+      "do": "describe",
+      "stage": "2-play-pressed-while-it-lands",
+      "note": "Play pressed before the file is there: the transport shows Pause, and nothing plays yet"
+    },
+    {
+      "do": "action",
+      "action": "expectRecordingLandedInPlace"
+    },
+    {
+      "do": "expectToast",
+      "says": "Copied to clipboard"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "3-landed-and-playing"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-the-card-says-copied",
+      "window": "Toast"
+    }
+  ]
+}

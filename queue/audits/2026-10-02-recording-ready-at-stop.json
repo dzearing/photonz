@@ -1,0 +1,29 @@
+{
+  "feature": "A recording is ready the moment you stop it",
+  "epic": "video-editing",
+  "summary": "Stop puts the recording's last frame on its tile in about 20 ms, and opening it shows that frame in the editor straight away while macOS finishes the file, at any length. The corner card says Copying until the file is really on the clipboard.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Record something with sound for a minute or more (⇧⌘5), then press Stop.",
+  "switched": {},
+  "try": [
+    { "do": "Record a minute of anything with ⇧⌘5, then press Stop and watch the corner card.", "shot": "2026-10-02-recording-ready-at-stop-1-the-card-says-copying.png" },
+    { "do": "Click Edit on the card as fast as you can.", "shot": "2026-10-02-recording-ready-at-stop-0-open-before-the-file-lands.png" },
+    { "do": "Press Space before it has had time to settle." },
+    { "do": "Watch the card change to Copied to clipboard, then paste into Messages or Mail.", "shot": "2026-10-02-recording-ready-at-stop-4-the-card-says-copied.png" },
+    { "do": "Let it play, and switch to Edit with E.", "shot": "2026-10-02-recording-ready-at-stop-3-landed-and-playing.png" },
+    { "do": "Open History with ⇧⌘H right after another Stop and look at the newest tile." }
+  ],
+  "evaluate": [
+    "Does the tile show the recording's picture the instant it appears, with no grey placeholder?",
+    "Does the editor open on the last frame with no wait you can notice, even on a three minute recording?",
+    "Is opening on the LAST frame (playhead at the end, Play starts from the top) right, or would you rather it opened on the first?",
+    "Does Copying then Copied read as honest, or is the change in the card distracting?",
+    "Is there any flicker, jump or resize in the window at the moment the file finishes?"
+  ],
+  "rough": [
+    "The very first editor window after the app starts takes about 200 ms longer to build than later ones, for any capture, so Stop to picture reads about 450 ms when that is the first thing you open (107 to 188 ms otherwise). Filed as its own task.",
+    "The editor opens on the recording's last frame with the playhead at the end, because that frame is the one picture there is before the file lands. A normal open starts at the first frame, so the two ways in differ slightly.",
+    "The mock's card only draws the finished state (green check, Copied to clipboard!). The in-progress Copying… state, with a grey arrow, is not in any mock.",
+    "The length shown while the file lands is Stop's moment; the finished file runs about a tenth of a second longer, so the timeline end moves by that much when it lands.",
+    "Saving a project or exporting in the half second before the file lands has nothing to read yet."
+  ]
+}

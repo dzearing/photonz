@@ -20,8 +20,10 @@ final class ToastController {
         /// via its handle instead of the auto-fade lifecycle.
         let progress: ToastProgress?
         /// What a non-progress toast is saying, so a probe can read the corner.
-        let message: String?
-        init(panel: NSPanel, progress: ToastProgress? = nil, message: String? = nil) {
+        /// Asked each time, because a recording's toast changes its words when
+        /// the file lands.
+        let message: () -> String?
+        init(panel: NSPanel, progress: ToastProgress? = nil, message: @escaping () -> String? = { nil }) {
             self.panel = panel
             self.progress = progress
             self.message = message
@@ -51,7 +53,12 @@ final class ToastController {
     /// adds a visible Edit row under the message naming the key (Next,
     /// `next-capture-toast-edit`). Pass a nil shortcut when the key is not
     /// Photonz's to promise, e.g. a Touch Bar Mac where macOS still owns it.
+    ///
+    /// `whileSaving` is what a recording's toast says while macOS is still
+    /// closing its file (`Copying…`): `message` is only said once it is true,
+    /// and a recording that never landed says so instead.
     func present(entry: CaptureEntry?, store: CaptureStore, message: String, on screen: NSScreen,
+                 whileSaving: String? = nil,
                  editAction: ToastEditAction = .onHover,
                  onEdit: @escaping () -> Void,
                  onCopyVideo: (() -> Void)? = nil,
@@ -64,13 +71,14 @@ final class ToastController {
         }
 
         let panel = makePanel()
-        let item = Item(panel: panel, message: message)
+        let said = ToastSaying(entry: entry, store: store, message: message, whileSaving: whileSaving)
+        let item = Item(panel: panel, message: { said.words })
         let id = item.id
 
         let view = ToastView(
             entry: entry,
             store: store,
-            message: message,
+            said: said,
             editAction: editAction,
             onEdit: { [weak self] in onEdit(); self?.remove(id, animated: true) },
             onCopyVideo: onCopyVideo.map { copy in { [weak self] in copy(); self?.remove(id, animated: true) } },
@@ -117,7 +125,7 @@ final class ToastController {
         }
 
         let panel = makePanel()
-        let item = Item(panel: panel, message: title)
+        let item = Item(panel: panel, message: { title })
         let id = item.id
 
         let view = NoteToastView(
@@ -194,7 +202,7 @@ final class ToastController {
     var playtestLines: [String] {
         items.compactMap { item in
             if let progress = item.progress { return progress.title }
-            return item.message
+            return item.message()
         }
     }
     #endif
@@ -438,13 +446,50 @@ enum ToastEditAction: Equatable {
     case always(shortcut: String?)
 }
 
+/// What a capture toast says. A recording's file can still be closing when its
+/// toast goes up, and its copy to the clipboard waits for the file, so until
+/// it lands the toast says the copy is under way rather than done.
+@MainActor
+struct ToastSaying {
+    let entry: CaptureEntry?
+    let store: CaptureStore
+    let message: String
+    let whileSaving: String?
+
+    /// Read from the store, which is observed, so the words change in place
+    /// the moment the file lands.
+    var state: State {
+        guard whileSaving != nil, let entry else { return .done }
+        if store.isSaving(entry.url) { return .underWay }
+        return store.entries.contains { $0.url == entry.url } ? .done : .failed
+    }
+
+    enum State { case underWay, done, failed }
+
+    var words: String {
+        switch state {
+        case .underWay: whileSaving ?? message
+        case .done: message
+        case .failed: "Recording not saved"
+        }
+    }
+
+    var symbol: String {
+        switch state {
+        case .underWay: "arrow.down.circle"
+        case .done: "checkmark.circle"
+        case .failed: "exclamationmark.triangle"
+        }
+    }
+}
+
 /// One capture toast: the thumbnail with a "Copied to clipboard" caption,
 /// Liquid Glass surface. Self-driving lifecycle (hold → fade → dismiss); hover
 /// pins it open at full opacity and reveals Edit / Dismiss.
 private struct ToastView: View {
     let entry: CaptureEntry?
     let store: CaptureStore
-    let message: String
+    let said: ToastSaying
     var editAction: ToastEditAction = .onHover
     var onEdit: () -> Void
     /// Non-nil only for recordings: the Copy button's menu re-copies the clip.
@@ -468,10 +513,10 @@ private struct ToastView: View {
         VStack(spacing: 8) {
             thumbnail
             HStack(spacing: 6) {
-                Image(systemName: "checkmark.circle")
+                Image(systemName: said.symbol)
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.green)
-                Text(message)
+                    .foregroundStyle(said.state == .done ? .green : said.state == .failed ? .orange : .secondary)
+                Text(said.words)
                     .font(.caption.weight(.medium))
                     .foregroundStyle(.secondary)
             }

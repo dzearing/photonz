@@ -196,6 +196,10 @@ extension EditorState {
 
     /// Space, and the play button: the same one switch.
     func toggleDocumentPlayback() {
+        if recordingStillLanding {
+            playWhenLanded.toggle()
+            return
+        }
         isDocumentPlaying ? pauseDocument() : playDocument()
     }
 
@@ -230,6 +234,11 @@ extension EditorState {
     /// speed where it is rather than starting over.
     func playDocument(rate: Double = 1) {
         guard documentHasTime, rate != 0 else { return }
+        // The file is not there yet: play the moment it is.
+        if recordingStillLanding {
+            playWhenLanded = rate > 0
+            return
+        }
         if isDocumentPlaying {
             guard rate != documentPlaybackRate else { return }
             // A shuttle takes over from a Play In to Out: J, K and L go where
@@ -260,6 +269,7 @@ extension EditorState {
     }
 
     func pauseDocument() {
+        if playWhenLanded { playWhenLanded = false }
         guard isDocumentPlaying else { return }
         noteRecordingPlace()
         isDocumentPlaying = false

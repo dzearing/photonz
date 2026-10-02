@@ -883,6 +883,20 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// unless the opened recording carries those three clicks within a frame
     /// and two pixels, and unless Stop still put the tile up inside its budget.
     case recordScriptedClicks
+    /// Make a real three second recording of a corner of the screen through
+    /// the app's own recorder into the walk's made-up history (it refuses
+    /// without `history` in the setup, so the person's folder is never
+    /// touched), put its corner card up, and open it through the app's own
+    /// door the moment its tile is up, as Edit on the card does. macOS is made
+    /// to take three seconds closing the file, so the next steps see the
+    /// window as it is before the file lands. Fails unless the window opened
+    /// on the recording's last frame inside `RecordingStopBudget`.
+    case recordAndOpenAtStop
+    /// Wait for the file `recordAndOpenAtStop` held back to land, and fail
+    /// unless the window took it in place: the same window at the same size,
+    /// the clip as long as the file, playable, and playing if Play was pressed
+    /// while it landed.
+    case expectRecordingLandedInPlace
     /// Fail unless the clip in the window has exactly one click added by hand
     /// (`Add Click at Playhead…`), at the playhead's moment of its recording.
     case expectAddedClick

@@ -255,9 +255,14 @@ final class AppCoordinator {
     func showCaptureToast(_ entry: CaptureEntry) {
         if historyOverlay.isShown { highlightedCaptureURL = entry.url }
         let isVideo = entry.kind == .video
+        // A recording macOS is still closing is copied when it lands, and its
+        // toast says so until then rather than claiming the copy early.
+        let stillClosing = isVideo && Experiments.shared.recordingReadyAtStop
+            && capture.store.isSaving(entry.url)
         toasts.present(
             entry: entry, store: capture.store,
             message: "Copied to clipboard!", on: activeScreen(),
+            whileSaving: stillClosing ? "Copying…" : nil,
             editAction: captureToastEditAction,
             onEdit: { [weak self] in
                 guard let self else { return }
@@ -286,6 +291,14 @@ final class AppCoordinator {
         // Stopped a moment ago and macOS is still closing the file: open it
         // the moment it lands rather than finding nothing there.
         if capture.store.isSaving(url) {
+            // ...unless the frame it ended on is in hand: then the window
+            // opens now on that frame and takes the file when it lands
+            // (`EditorState+ClosingRecording`).
+            if Experiments.shared.recordingReadyAtStop, openWindowAction != nil,
+               capture.store.closingRecordingURL(matching: url) != nil {
+                openWindow(.video(standardizing: url))
+                return
+            }
             capture.store.whenLanded(url) { [weak self] landed in
                 if let landed { self?.openRecording(landed.url) }
             }

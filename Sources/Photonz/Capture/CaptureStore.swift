@@ -60,6 +60,34 @@ final class CaptureStore {
     /// lands.
     @ObservationIgnored private var reservedURLs: [String: URL] = [:]
 
+    /// The last frame of each recording still being closed, by its reserved
+    /// URL: what its tile shows from the moment Stop is pressed, and what an
+    /// editor opened on it shows until the file lands (`ClosingRecording`).
+    @ObservationIgnored private var closing: [URL: ClosingFrame] = [:]
+    /// Editors waiting for a closing recording's frame to be read.
+    @ObservationIgnored private var closingWaiters: [URL: [(ClosingPicture?) -> Void]] = [:]
+    /// A recording landing right now, which the history warm-up leaves to be
+    /// served first rather than queueing it behind every other recording.
+    @ObservationIgnored private var landingNow: URL?
+
+    private struct ClosingFrame {
+        let recording: ClosingRecording
+        /// The identity the recording has from Stop on: its stand-in's, and
+        /// the real file's once it lands, so every frame filed for one is a
+        /// frame of the other.
+        let movieID: UUID
+        var picture: CGImage?
+        var thumbnail: CaptureThumbnails.Loaded?
+        var read = false
+    }
+
+    /// A closing recording's last frame, as an editor opens on it.
+    struct ClosingPicture {
+        let recording: ClosingRecording
+        let movieID: UUID
+        let image: CGImage
+    }
+
     @ObservationIgnored private var watcher: DispatchSourceFileSystemObject?
     @ObservationIgnored private var watchedFD: Int32 = -1
     @ObservationIgnored private var reloadDebounce: DispatchWorkItem?
@@ -104,8 +132,9 @@ final class CaptureStore {
         let listedNames = Set(urls.map(\.lastPathComponent))
         reservedURLs = reservedURLs.filter { listedNames.contains($0.key) || saving[$0.value] != nil }
 
-        // Drop thumbnails for files that disappeared.
-        let live = Set(sorted.map(\.url))
+        // Drop thumbnails for files that disappeared. A recording still being
+        // closed has no file yet and keeps the one its last frame gave it.
+        let live = Set(sorted.map(\.url)).union(saving.keys)
         thumbnails = thumbnails.filter { live.contains($0.key) }
 
         // Drop video thumbnails whose media file changed (a save in the video
@@ -135,7 +164,7 @@ final class CaptureStore {
     /// tile already on screen.
     private func warmRecordings() {
         var waiting: [(CaptureEntry, CaptureThumbnail, String?)] = []
-        for entry in entries where entry.kind == .video && saving[entry.url] == nil {
+        for entry in entries where entry.kind == .video && saving[entry.url] == nil && entry.url != landingNow {
             let thumbnail: CaptureThumbnail
             if let known = thumbnails[entry.url] {
                 thumbnail = known
@@ -234,13 +263,25 @@ final class CaptureStore {
                 try? pointerTrack.write(to: PointerTrackSidecar.url(for: destination), options: .atomic)
             }
             try FileManager.default.moveItem(at: tempURL, to: destination)
+            keepLastFrameThumbnail(from: entry.url, landingAt: destination)
+            if Experiments.shared.recordingReadyAtStop { landingNow = destination }
             reload()
+            landingNow = nil
             landed = entries.first { $0.fileName == destination.lastPathComponent }
+            // No frame held for it, or none read yet: its own poster is asked
+            // for now, at the front of the queue, ahead of the warm-up of every
+            // recording already in history.
+            if Experiments.shared.recordingReadyAtStop, let landed, closing[entry.url] == nil,
+               thumbnails[landed.url]?.image == nil {
+                _ = thumbnail(for: landed)
+            }
         } catch {
             NSLog("Couldn't file recording: \(error)")
             reload()
         }
         land(entry.url, as: landed)
+        if let landed, let shown = closing[entry.url]?.thumbnail { settleLastFrame(shown, landedAt: landed.url) }
+        forgetClosing(entry.url)
         return landed
     }
 
@@ -248,6 +289,7 @@ final class CaptureStore {
     func failSaving(_ entry: CaptureEntry) {
         saving[entry.url] = nil
         discardedWhileSaving.remove(entry.url)
+        forgetClosing(entry.url)
         reload()
         land(entry.url, as: nil)
     }
@@ -271,6 +313,112 @@ final class CaptureStore {
         for waiter in waiters { waiter(entry) }
     }
 
+    // MARK: - The last frame, while the file closes
+
+    /// Hold on to the frame a just-stopped recording ended on: it becomes the
+    /// recording's thumbnail as soon as it is read (off the main thread), and
+    /// an editor opened before the file lands opens on it. The stream's
+    /// buffer is read once, here, and let go of.
+    func holdLastFrame(_ frame: RecordedFrame, of entry: CaptureEntry, recording: ClosingRecording) {
+        let url = entry.url
+        guard saving[url] != nil else { return }
+        closing[url] = ClosingFrame(recording: recording, movieID: UUID())
+        let estimate = TimeInterval(recording.standIn().durationMS) / 1000
+        Task.detached(priority: .userInitiated) {
+            // The whole frame first, which is all an editor waits for...
+            let full = CaptureThumbnails.lastFrame(frame)
+            await MainActor.run { [weak self] in
+                guard let self else { return }
+                if var held = closing[url] {
+                    held.read = true
+                    held.picture = full
+                    closing[url] = held
+                }
+                answerClosingWaiters(url)
+            }
+            // ...then the tile's picture made from it.
+            guard let full else { return }
+            let shown = CaptureThumbnails.recordingThumbnail(from: full, duration: estimate)
+            await MainActor.run { [weak self] in
+                guard let self else { return }
+                // Landed already and the file's own poster on the tile: that
+                // one stays.
+                let thumbnail = thumbnails[url] ?? CaptureThumbnail()
+                if thumbnail.image == nil {
+                    thumbnails[url] = thumbnail
+                    thumbnail.requested = true
+                    thumbnail.land(shown)
+                }
+                if closing[url] != nil {
+                    closing[url]?.thumbnail = shown
+                } else if !isSaving(url), thumbnail.image === shown.image {
+                    settleLastFrame(shown, landedAt: url)
+                }
+            }
+        }
+    }
+
+    /// A closing recording's last frame, once it is read: right away when it
+    /// has been, nil when the recording is not closing or has no frame held.
+    func closingPicture(for url: URL) async -> ClosingPicture? {
+        guard let held = closing[url] else { return nil }
+        if held.read { return picture(of: held) }
+        return await withCheckedContinuation { continuation in
+            closingWaiters[url, default: []].append { continuation.resume(returning: $0) }
+        }
+    }
+
+    /// The reserved URL of the closing recording this URL names, however it
+    /// is spelled, when a frame is held for it while its file closes.
+    func closingRecordingURL(matching url: URL) -> URL? {
+        if closing[url] != nil { return url }
+        let wanted = url.standardizedFileURL.resolvingSymlinksInPath().path
+        return closing.keys.first { $0.standardizedFileURL.resolvingSymlinksInPath().path == wanted }
+    }
+
+    private func picture(of held: ClosingFrame) -> ClosingPicture? {
+        held.picture.map { ClosingPicture(recording: held.recording, movieID: held.movieID, image: $0) }
+    }
+
+    private func answerClosingWaiters(_ url: URL) {
+        let answer = closing[url].flatMap(picture(of:))
+        for waiter in closingWaiters.removeValue(forKey: url) ?? [] { waiter(answer) }
+    }
+
+    private func forgetClosing(_ url: URL) {
+        closing[url] = nil
+        answerClosingWaiters(url)
+    }
+
+    /// The file is about to be listed: the tile keeps the picture its last
+    /// frame gave it rather than being thrown back to a placeholder because a
+    /// file it has never seen appeared under it.
+    private func keepLastFrameThumbnail(from reserved: URL, landingAt destination: URL) {
+        guard closing[reserved] != nil else { return }
+        mediaStamps[destination] = mediaStamp(for: destination)
+        if destination != reserved, let thumbnail = thumbnails[reserved] {
+            thumbnails[destination] = thumbnail
+        }
+    }
+
+    /// The file has landed with its last frame already on the tile: the tile
+    /// takes the file's real length, and the frame goes in the poster cache
+    /// under this exact file so it is never cut from the file again.
+    private func settleLastFrame(_ shown: CaptureThumbnails.Loaded, landedAt url: URL) {
+        guard let thumbnail = thumbnails[url] else { return }
+        let stamp = stamp(for: url)
+        Task.detached(priority: .utility) {
+            let duration = await VideoExporter.duration(of: url)
+            let loaded = CaptureThumbnails.Loaded(image: shown.image, pixelSize: shown.pixelSize,
+                                                  pixelScale: 1, duration: duration)
+            CaptureThumbnails.cachePoster(loaded, for: url, stamp: stamp)
+            await MainActor.run { [weak self] in
+                guard let self, thumbnails[url] === thumbnail else { return }
+                if thumbnail.image == nil || thumbnail.image === shown.image { thumbnail.land(loaded) }
+            }
+        }
+    }
+
     /// Override-in-place (phase 11.5): rewrite an existing capture's pixels.
     func replace(at url: URL, with image: CGImage, scale: CGFloat = 1) {
         guard entries.contains(where: { $0.url == url }) else { return }
@@ -288,6 +436,7 @@ final class CaptureStore {
         if saving[entry.url] != nil {
             saving[entry.url] = nil
             discardedWhileSaving.insert(entry.url)
+            forgetClosing(entry.url)
             reload()
             return
         }

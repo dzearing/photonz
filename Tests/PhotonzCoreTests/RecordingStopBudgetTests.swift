@@ -23,4 +23,20 @@ struct RecordingStopBudgetTests {
         #expect(!RecordingStopBudget.isWithin(stopToTileMS: .nan))
         #expect(!RecordingStopBudget.isWithin(stopToTileMS: -1))
     }
+
+    // MARK: - The picture, as well as the tile
+
+    @Test func theThumbnailIsDueInAHundredMilliseconds() {
+        #expect(RecordingStopBudget.stopToThumbnailMS == 100)
+        #expect(RecordingStopBudget.isWithin(stopToThumbnailMS: 100))
+        #expect(!RecordingStopBudget.isWithin(stopToThumbnailMS: 101))
+        #expect(!RecordingStopBudget.isWithin(stopToThumbnailMS: .infinity))
+    }
+
+    @Test func theEditorShowsThePictureInThreeHundredMilliseconds() {
+        #expect(RecordingStopBudget.stopToEditorPictureMS == 300)
+        #expect(RecordingStopBudget.isWithin(stopToEditorPictureMS: 299))
+        #expect(!RecordingStopBudget.isWithin(stopToEditorPictureMS: 301))
+        #expect(!RecordingStopBudget.isWithin(stopToEditorPictureMS: -5))
+    }
 }

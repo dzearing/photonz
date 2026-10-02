@@ -1379,13 +1379,13 @@ private struct TimelineTransport: View {
             }
             .panelHelp("Go to the start (Home)")
             .playtestControl("Go to Start", detail: "Transport")
-            VideoKit.TransportButton(symbol: editorState.isDocumentPlaying ? "pause.fill" : "play.fill",
-                                     label: editorState.isDocumentPlaying ? "Pause" : "Play",
+            VideoKit.TransportButton(symbol: editorState.showsDocumentPlaying ? "pause.fill" : "play.fill",
+                                     label: editorState.showsDocumentPlaying ? "Pause" : "Play",
                                      role: .primary) {
                 editorState.toggleDocumentPlayback()
             }
-            .panelHelp(editorState.isDocumentPlaying ? "Pause (space)" : "Play (space)")
-            .playtestControl(editorState.isDocumentPlaying ? "Pause" : "Play", detail: "Transport")
+            .panelHelp(editorState.showsDocumentPlaying ? "Pause (space)" : "Play (space)")
+            .playtestControl(editorState.showsDocumentPlaying ? "Pause" : "Play", detail: "Transport")
             VideoKit.TransportButton(symbol: "forward.end.fill", label: "Go to End") {
                 editorState.goToDocumentEnd()
             }

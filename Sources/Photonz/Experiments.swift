@@ -572,6 +572,12 @@ extension Experiments {
     /// where you left it.
     var openingARecording: Bool { isEnabled(FeatureCatalog.openingARecordingFlag) }
 
+    /// `next-a-recording-is-ready-at-stop`: whether Stop lands the stream's
+    /// last frame on the recording's tile at once, whether opening a recording
+    /// macOS is still closing opens on that frame instead of waiting, and
+    /// whether the corner says Copying until the file is really copied.
+    var recordingReadyAtStop: Bool { isEnabled(FeatureCatalog.recordingReadyAtStopFlag) }
+
     /// Whether a sound or a video let go on an editor window lands as a layer,
     /// opens as its own document, or is refused IN WORDS where a yes would have
     /// appeared (`MediaDrop`). Off, all three are one silent no-entry pointer.

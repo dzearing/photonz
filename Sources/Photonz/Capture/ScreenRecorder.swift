@@ -26,6 +26,14 @@ final class ScreenRecorder: NSObject {
     /// The host-clock moment of the recording's first frame, once the stream
     /// has delivered one: what a click's time is counted from.
     var firstFrameHostSeconds: Double? { firstFrame?.seconds }
+
+    /// The newest complete frame the stream has delivered, and the moment of
+    /// the file it sits at (its time less the first frame's). Nil before the
+    /// first frame.
+    var lastFrame: (frame: RecordedFrame, fileMS: Int)? {
+        guard let first = firstFrame?.seconds, let newest = firstFrame?.newest else { return nil }
+        return (newest, Int(((newest.seconds - first) * 1000).rounded()))
+    }
     /// How the screen lands in the recording's pixels, for the pointer.
     private(set) var pointerSpace: PointerSpace?
 
@@ -140,6 +148,7 @@ final class ScreenRecorder: NSObject {
         // A new recording may have started while this one was closing (the
         // stop control goes away at Stop); leave its stream alone.
         if self.stream === stream {
+            firstFrame?.release()
             self.stream = nil
             self.recordingOutput = nil
             self.outputURL = nil
@@ -184,21 +193,30 @@ extension ScreenRecorder: SCRecordingOutputDelegate {
     }
 }
 
-// MARK: - When the first frame was taken
+// MARK: - The first frame, and the last
 
 /// Remembers the presentation time of the stream's first complete frame, on
 /// the host clock. The recording file starts at that frame, so it is the zero
-/// every pointer time is counted from. Everything after the first frame is
-/// returned from at once: this never touches the picture.
+/// every pointer time is counted from.
+///
+/// It also holds on to the newest complete frame, and only that one: the
+/// buffer the stream handed over, retained rather than copied, swapped for the
+/// next as it arrives. At Stop it is the picture the recording ends on, in
+/// memory while macOS is still closing the file, which is what lets the tile
+/// and the editor show the recording at once (`ClosingRecording`). Nothing
+/// here touches a pixel: it is a pointer swap per frame under a lock, and the
+/// one surface held back is one of the eight the stream keeps by default.
 private final class FirstFrameClock: NSObject, SCStreamOutput, Sendable {
     static let queue = DispatchQueue(label: "photonz.recording.first-frame", qos: .userInitiated)
     private let first = OSAllocatedUnfairLock<Double?>(initialState: nil)
+    private let last = OSAllocatedUnfairLock<RecordedFrame?>(initialState: nil)
 
     var seconds: Double? { first.withLock { $0 } }
+    var newest: RecordedFrame? { last.withLock { $0 } }
 
     func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer,
                 of type: SCStreamOutputType) {
-        guard type == .screen, first.withLock({ $0 }) == nil else { return }
+        guard type == .screen else { return }
         // Idle frames (nothing changed) carry no picture and are not written.
         if let attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, createIfNecessary: false)
             as? [[SCStreamFrameInfo: Any]],
@@ -209,5 +227,20 @@ private final class FirstFrameClock: NSObject, SCStreamOutput, Sendable {
         let pts = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
         guard pts.isValid else { return }
         first.withLock { if $0 == nil { $0 = pts.seconds } }
+        guard let buffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+        let frame = RecordedFrame(buffer: buffer, seconds: pts.seconds)
+        last.withLock { $0 = frame }
     }
+
+    /// Lets go of the frame held, so its surface goes back to the stream.
+    func release() { last.withLock { $0 = nil } }
+}
+
+/// One frame the stream delivered, and when, on the host clock.
+struct RecordedFrame: @unchecked Sendable {
+    // A CVPixelBuffer is a reference-counted, IOSurface-backed buffer the
+    // stream never writes to again once it has been delivered; it is only
+    // read from here on. Core Video does not mark it Sendable.
+    let buffer: CVPixelBuffer
+    let seconds: Double
 }

@@ -37,9 +37,12 @@ final class MovieLibrary {
     /// reference a document can hold. The same file asked for twice is the same
     /// reference, so re-opening a recording re-uses whatever frames of it are
     /// already decoded.
-    func movie(at url: URL) async -> MovieRef? {
+    ///
+    /// `id` is the identity to read it under, for a recording that was opened
+    /// before its file landed and already has one (`ClosingRecording`).
+    func movie(at url: URL, as id: UUID? = nil) async -> MovieRef? {
         let standardized = url.standardizedFileURL
-        if let known = refsByURL[standardized] { return known }
+        if let known = refsByURL[standardized], id == nil || known.id == id { return known }
         let asset = AVURLAsset(url: standardized)
         guard let duration = try? await asset.load(.duration),
               let track = try? await asset.loadTracks(withMediaType: .video).first,
@@ -54,7 +57,8 @@ final class MovieLibrary {
         // the sound off it, so it is read once, here, with everything else
         // about the file (`SoundClip.swift`).
         let hasSound = (try? await asset.loadTracks(withMediaType: .audio))?.isEmpty == false
-        let ref = MovieRef(pixelSize: CGSize(width: abs(shown.width), height: abs(shown.height)),
+        let ref = MovieRef(id: id ?? UUID(),
+                           pixelSize: CGSize(width: abs(shown.width), height: abs(shown.height)),
                            durationMS: Int((duration.seconds * 1000).rounded()),
                            hasSound: hasSound)
         urls[ref.id] = standardized
@@ -559,6 +563,14 @@ final class MovieFrameFetcher {
         else { return nil }
         file(image, for: request)
         return image
+    }
+
+    /// File a frame that came from somewhere other than the file: the last
+    /// frame of a recording whose file is still being closed. It is kept like
+    /// any frame read, inside the budget, and stands in for its neighbours
+    /// until they are read.
+    func hold(_ image: CGImage, for request: MovieFrameRequest) {
+        file(image, for: request)
     }
 
     private func file(_ image: CGImage, for request: MovieFrameRequest) {

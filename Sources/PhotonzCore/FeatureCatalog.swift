@@ -200,6 +200,8 @@ public enum FeatureCatalog {
 
     public static let openingARecordingFlag = "next-opening-a-recording"
 
+    public static let recordingReadyAtStopFlag = "next-a-recording-is-ready-at-stop"
+
     public static let droppingMediaFlag = "next-dropping-a-sound-or-a-video"
 
     public static let soundOnTheTimelineFlag = "next-sound-on-the-timeline"
@@ -762,6 +764,16 @@ public enum FeatureCatalog {
                     name: openingARecordingFlag,
                     title: "Opening a recording lands you somewhere you can work",
                     description: "File ▸ Open and Open With in the Finder open a movie as a recording, a missing file says so, and a recording reopens where you left it. Off means History is the only way in.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: recordingReadyAtStopFlag,
+                    title: "A recording is ready the moment you stop it",
+                    description: "Stop puts the recording's last frame on its tile at once, opening it shows that frame while the file finishes, and the corner says Copying until it is copied. Off means the tile and the editor wait for the file.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),
