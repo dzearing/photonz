@@ -318,6 +318,18 @@ struct InspectorPanel: View {
         // How tall each list section may be drawn, so that the forms under it
         // stay where they are instead of being carried off the bottom.
         let ceilings = layout.ceilings(for: sections)
+        // Which sections are folded, read HERE and handed to the rows as a
+        // value, never read inside them. The rows are built in closures that
+        // capture this panel, and the panel's stored setting compares equal
+        // to itself however its contents change, so a click that changed
+        // nothing but a fold left SwiftUI sure the rows were the same and it
+        // never built them again: the click was saved and the header stayed
+        // shut. Wherever the click also moved the dock's height budget the
+        // rows were rebuilt for that and the fold showed, which is why it
+        // worked on a picked clip and never on a recording with nothing
+        // picked (the user, 2026-10-02: "collapsed panels that can't be
+        // expanded"). `Scripts/playtest/every-section-header-opens-walk.json`.
+        let folded = foldedSections
         #if PHOTONZ_PLAYTEST
         let _ = ViewBuildMeter.shared.note(
             "[\(sections.map(\.rawValue).joined(separator: ","))] arrival \(arrivalPass) "
@@ -337,7 +349,7 @@ struct InspectorPanel: View {
                             VStack(alignment: .leading, spacing: 0) {
                                 CollapsibleSection(
                                     title: sectionTitle(id),
-                                    isCollapsed: isCollapsed(id),
+                                    isCollapsed: folded.contains(id),
                                     onToggle: { toggleCollapsed(id) },
                                     onReorder: { pointerY, carriedBy in
                                         sectionDragChanged(id, pointerY: pointerY,
@@ -1563,6 +1575,12 @@ struct InspectorPanel: View {
 
     private func isCollapsed(_ id: InspectorSectionID) -> Bool {
         collapsedRaw.split(separator: ",").contains(Substring(id.rawValue))
+    }
+
+    /// Every section left folded, as a value the rows can be handed. See
+    /// `body` for why the rows must not read the setting themselves.
+    private var foldedSections: Set<InspectorSectionID> {
+        Set(collapsedRaw.split(separator: ",").compactMap { InspectorSectionID(rawValue: String($0)) })
     }
 
     private func toggleCollapsed(_ id: InspectorSectionID) {

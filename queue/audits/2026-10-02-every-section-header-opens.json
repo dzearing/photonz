@@ -1,0 +1,41 @@
+{
+  "feature": "Every panel section opens and closes from its header",
+  "epic": "video-editing",
+  "summary": "In a recording with nothing picked, Time, Captions and Transitions now open and close when you click their headers. Before, the click was saved but the header stayed shut until you picked something.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/every-section-header-opens-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a recording and press Cmd-2 for Edit, with nothing picked."
+    },
+    {
+      "do": "Click the TIME, CAPTIONS and TRANSITIONS headers once each: all three close.",
+      "shot": "2026-10-02-section-headers-2-nothing-picked-shut.png"
+    },
+    {
+      "do": "Click each header again: all three open with their controls.",
+      "shot": "2026-10-02-section-headers-3-nothing-picked-open.png"
+    },
+    {
+      "do": "Press Space: the recording plays, because clicking a header does not take the keyboard."
+    },
+    {
+      "do": "Pick the clip on V1 and click every header from Properties down to Appearance: each one closes.",
+      "shot": "2026-10-02-section-headers-5-clip-shut.png"
+    },
+    {
+      "do": "Open a picture and click the LAYERS header twice: it closes, then opens.",
+      "shot": "2026-10-02-section-headers-13-picture-open.png"
+    }
+  ],
+  "evaluate": [
+    "With nothing picked in a recording, does every header you click now open or close right away?",
+    "Does a section remember being closed when you pick a clip, then a title, then nothing again?",
+    "Is any section left showing that has nothing in it for what you picked?",
+    "After clicking a header, do Space, J, K and L still drive playback the way you expect?"
+  ],
+  "rough": [
+    "Space and Return on a focused header are built but not proven by a walk. A header gets keyboard focus only through Tab with Keyboard navigation turned on in System Settings, the way a button does, and that setting is off on this Mac. Please try it once with the setting on.",
+    "Effects on a clip shows one line, No effects, when it is open. It has an Add button on its header, so it was kept rather than hidden."
+  ]
+}

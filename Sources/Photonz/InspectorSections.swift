@@ -608,6 +608,17 @@ struct CollapsibleSection<Content: View>: View {
         .frame(minHeight: DockMetrics.headerRowHeight)
         .contentShape(Rectangle())
         .gesture(headerGesture)
+        // Reached by Tab when keyboard navigation is on, as a button is, and
+        // opened or shut with Space or Return. Focus for ACTIVATING only: a
+        // click on the header never takes the keyboard, so Space after it
+        // still plays the recording rather than folding the section again.
+        .focusable(interactions: .activate)
+        .onKeyPress(keys: [.space, .return]) { _ in
+            withAnimation(.spring(duration: 0.25)) { onToggle() }
+            return .handled
+        }
+        .accessibilityAddTraits(.isButton)
+        .accessibilityValue(isCollapsed ? "collapsed" : "expanded")
         .playtestHover { isHovering = $0 }
         .panelHelp("Drag to reorder • click to collapse")
         // Named for a scripted walk, so one can collapse a section, or pick it

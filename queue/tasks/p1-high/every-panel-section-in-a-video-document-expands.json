@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 0.0000018,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-02T18:51:26.867Z",
-  "updated": "2026-10-02T18:51:27.043Z",
+  "updated": "2026-10-02T22:00:37.524Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -28,6 +28,30 @@
     {
       "t": "2026-10-02T18:51:27.041Z",
       "note": "seq 440 -> 0.0000018"
+    },
+    {
+      "t": "2026-10-02T21:22:59.278Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-02T22:00:37.354Z",
+      "note": "owns these walks: every-section-header-opens-walk"
+    },
+    {
+      "t": "2026-10-02T22:00:37.413Z",
+      "note": "Reproduced: with the user's own folded set (Time, Captions, Transitions, Effects, Text) written into the probe, a real click on a header in a recording with NOTHING picked (front, press step) saved the change (logged toggle + defaults write) but the header stayed shut. Cause: the dock's rows are built in closures capturing the panel, whose @AppStorage compares equal to itself, so a click that changed only a fold left SwiftUI sure the rows were unchanged and they were never rebuilt (body ran, ForEach content did not). With a clip picked the click also moved the dock height budget, which rebuilt the rows, so it worked there and in pictures. Not a hit-target, per-section storage, TimePanelOrder or video-mode problem."
+    },
+    {
+      "t": "2026-10-02T22:00:37.468Z",
+      "note": "Fix: InspectorPanel.body reads the folded set once (foldedSections) and hands rows a value, so a fold change rebuilds them. Header is now focusable for activation (Tab with keyboard navigation on), Space/Return toggles, button trait + expanded/collapsed value. A click does not take the keyboard (walk checks Space still plays). New walk every-section-header-opens-walk clicks every header shut and open: nothing picked, clip, title, shape, View (no panel), picture; it FAILS on the old build at the user's case. No empty or permanently shut section found: every section shown has content when open."
+    },
+    {
+      "t": "2026-10-02T22:00:37.523Z",
+      "note": "left rough: Space/Return on a focused header not walk-proven. Keyboard navigation is a system-wide setting, off on this Mac; setting it in the probe's own domain was not honoured, and I would not change the user's system setting. Listed in the audit's rough for the user to try. Did not earn a task."
     }
+  ],
+  "started": "2026-10-02T21:22:59.277Z",
+  "walks": [
+    "every-section-header-opens-walk"
   ]
 }
