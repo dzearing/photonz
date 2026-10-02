@@ -146,6 +146,23 @@ extension CanvasNSView {
         case .line:
             path.move(to: start)
             path.addLine(to: end)
+        case .arrow where content.arrowStyle.isHandMade:
+            // The very outline the rasterizer fills, drawn in document space
+            // with this arrow's own hand and carried to the view, so letting go
+            // changes nothing you can see (`HandMadeArrow.swift`).
+            var drawn = content
+            drawn.start = docStart
+            drawn.end = docEnd
+            let outlines = HandMadeArrow.outlines(for: drawn)
+            let origin = viewport.viewPoint(fromDocument: .zero)
+            let unitX = viewport.viewPoint(fromDocument: CGPoint(x: 1, y: 0))
+            let unitY = viewport.viewPoint(fromDocument: CGPoint(x: 0, y: 1))
+            var toView = CGAffineTransform(a: unitX.x - origin.x, b: unitX.y - origin.y,
+                                           c: unitY.x - origin.x, d: unitY.y - origin.y,
+                                           tx: origin.x, ty: origin.y)
+            if let shaft = outlines.shaft.copy(using: &toView) { headPath.addPath(shaft) }
+            if let head = outlines.head.copy(using: &toView) { headPath.addPath(head) }
+            stroke = nil
         case .arrow:
             // Stop the shaft where the ending wants it (doc space → view space),
             // matching the rasterizer exactly: inside a solid head, at the tip

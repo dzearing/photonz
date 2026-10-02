@@ -112,7 +112,12 @@ extension VideoKit {
         var spacing: CGFloat = 8
 
         func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-            let width = proposal.width ?? minimumWidth * 2 + spacing
+            // An unbounded offer (a frame with no maximum) is answered with
+            // the narrowest grid that fits, never by laying out across
+            // infinity: that width becomes a column count, and an infinite
+            // one traps.
+            let offered = proposal.width.flatMap { $0.isFinite ? $0 : nil }
+            let width = offered ?? minimumWidth * 2 + spacing
             let plan = plan(width: width, count: subviews.count)
             let heights = rowHeights(subviews, plan: plan)
             let total = heights.reduce(0, +) + spacing * CGFloat(max(0, heights.count - 1))
@@ -138,7 +143,8 @@ extension VideoKit {
         private struct Plan { let columns: Int; let tileWidth: CGFloat }
 
         private func plan(width: CGFloat, count: Int) -> Plan {
-            let fit = Int(((width + spacing) / (minimumWidth + spacing)).rounded(.down))
+            let ratio = ((width + spacing) / (minimumWidth + spacing)).rounded(.down)
+            let fit = ratio.isFinite ? Int(min(max(ratio, 1), 1000)) : 1
             let columns = max(1, columns ?? fit)
             let tileWidth = max(0, (width - spacing * CGFloat(columns - 1)) / CGFloat(columns))
             return Plan(columns: columns, tileWidth: tileWidth)

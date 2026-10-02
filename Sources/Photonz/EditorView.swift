@@ -2677,6 +2677,13 @@ struct EditorView: View {
         selectedAnnotation?.arrowheadScale ?? editorState.annotationStyles.arrowheadScale(for: editorState.activeTool)
     }
 
+    /// How the picked arrow is drawn, or how the next one will be.
+    private var editedArrowStyle: ArrowStyle {
+        guard Experiments.shared.arrowStylesEnabled else { return .clean }
+        return selectedAnnotation?.arrowStyle
+            ?? editorState.annotationStyles.arrowStyle(forShape: .arrow)
+    }
+
     /// What the picked arrow ends in, or what the next one will.
     private var editedArrowheadStyle: ArrowheadStyle {
         selectedAnnotation?.arrowheadStyle
@@ -2823,9 +2830,14 @@ struct EditorView: View {
                     strokeWidthSlider
                 }
                 if showsArrowheadRow {
-                    arrowheadStyleRow
+                    // How the arrow is drawn comes first: a hand-made one draws
+                    // its own head, so it is not asked what it ends in.
+                    if Experiments.shared.arrowStylesEnabled { arrowStyleRow }
+                    if !editedArrowStyle.isHandMade { arrowheadStyleRow }
                     // An arrow that ends in nothing has no head to size.
-                    if editedArrowheadStyle != .plain { arrowheadSizeSlider }
+                    if editedArrowStyle.isHandMade || editedArrowheadStyle != .plain {
+                        arrowheadSizeSlider
+                    }
                 }
             }
             .disabled(borderOff)
@@ -2947,6 +2959,16 @@ struct EditorView: View {
             })
         }
         .frame(width: 220)
+    }
+
+    /// How the arrow is drawn, as five picture tiles (`ArrowStyleTiles`).
+    private var arrowStyleRow: some View {
+        // As wide as the colour picker above it rather than the 220 of a
+        // slider row: three tiles across need it, or "Hand-drawn" is cut short.
+        ArrowStyleTiles(selection: editedArrowStyle, labelFont: .callout) {
+            editorState.setAnnotationArrowStyle($0)
+        }
+            .frame(width: DesignedColorPicker.width)
     }
 
     /// The five endings an arrow can wear, as pictures. Sits above the size

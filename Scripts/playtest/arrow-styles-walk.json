@@ -1,0 +1,543 @@
+{
+  "out": "/tmp/photonz-playtest/arrow-styles",
+  "setup": {
+    "forget": [
+      "shapes",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1120,
+      "canvasHeight": 980,
+      "width": 1400,
+      "height": 1000
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        70,
+        140
+      ],
+      "to": [
+        340,
+        50
+      ],
+      "steps": 8
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Arrow style Clean",
+      "in": "Arrow Style"
+    },
+    {
+      "do": "expect",
+      "control": "Arrow style Clean",
+      "in": "Arrow Style",
+      "reads": "Arrow Style, on"
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        420,
+        102
+      ],
+      "to": [
+        720,
+        82
+      ],
+      "steps": 8
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Arrow style Clean",
+      "in": "Arrow Style",
+      "reads": "Arrow Style, on"
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        70,
+        300
+      ],
+      "to": [
+        340,
+        210
+      ],
+      "steps": 8
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Arrow style Hand-drawn",
+      "in": "Arrow Style"
+    },
+    {
+      "do": "expect",
+      "control": "Arrow style Hand-drawn",
+      "in": "Arrow Style",
+      "reads": "Arrow Style, on"
+    },
+    {
+      "do": "expect",
+      "control": "Solid head",
+      "present": false
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        420,
+        262
+      ],
+      "to": [
+        720,
+        242
+      ],
+      "steps": 8
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Arrow style Hand-drawn",
+      "in": "Arrow Style",
+      "reads": "Arrow Style, on"
+    },
+    {
+      "do": "dropImage",
+      "file": "fixtures/arrow-references/user-ref-25.png",
+      "at": [
+        900,
+        250
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        70,
+        460
+      ],
+      "to": [
+        340,
+        370
+      ],
+      "steps": 8
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Arrow style Marker",
+      "in": "Arrow Style"
+    },
+    {
+      "do": "expect",
+      "control": "Arrow style Marker",
+      "in": "Arrow Style",
+      "reads": "Arrow Style, on"
+    },
+    {
+      "do": "expect",
+      "control": "Solid head",
+      "present": false
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        420,
+        422
+      ],
+      "to": [
+        720,
+        402
+      ],
+      "steps": 8
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Arrow style Marker",
+      "in": "Arrow Style",
+      "reads": "Arrow Style, on"
+    },
+    {
+      "do": "dropImage",
+      "file": "fixtures/arrow-references/user-ref-27.png",
+      "at": [
+        900,
+        410
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        70,
+        620
+      ],
+      "to": [
+        340,
+        530
+      ],
+      "steps": 8
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Arrow style Brush",
+      "in": "Arrow Style"
+    },
+    {
+      "do": "expect",
+      "control": "Arrow style Brush",
+      "in": "Arrow Style",
+      "reads": "Arrow Style, on"
+    },
+    {
+      "do": "expect",
+      "control": "Solid head",
+      "present": false
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        420,
+        582
+      ],
+      "to": [
+        720,
+        562
+      ],
+      "steps": 8
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Arrow style Brush",
+      "in": "Arrow Style",
+      "reads": "Arrow Style, on"
+    },
+    {
+      "do": "dropImage",
+      "file": "fixtures/arrow-references/user-ref-28.png",
+      "at": [
+        900,
+        570
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        70,
+        780
+      ],
+      "to": [
+        340,
+        690
+      ],
+      "steps": 8
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Arrow style Sketch",
+      "in": "Arrow Style"
+    },
+    {
+      "do": "expect",
+      "control": "Arrow style Sketch",
+      "in": "Arrow Style",
+      "reads": "Arrow Style, on"
+    },
+    {
+      "do": "expect",
+      "control": "Solid head",
+      "present": false
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        420,
+        742
+      ],
+      "to": [
+        720,
+        722
+      ],
+      "steps": 8
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Arrow style Sketch",
+      "in": "Arrow Style",
+      "reads": "Arrow Style, on"
+    },
+    {
+      "do": "dropImage",
+      "file": "fixtures/arrow-references/user-ref-26.png",
+      "at": [
+        900,
+        730
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "dropImage",
+      "file": "fixtures/arrow-references/dark-backdrop.png",
+      "at": [
+        560,
+        895
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        380,
+        930
+      ],
+      "to": [
+        560,
+        860
+      ],
+      "steps": 8
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        590,
+        935
+      ],
+      "to": [
+        750,
+        870
+      ],
+      "steps": 8
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Arrow style Brush",
+      "in": "Arrow Style"
+    },
+    {
+      "do": "describe",
+      "stage": "1-every-style",
+      "note": "each style twice, the four references beside them, a sketch and a brush on a dark picture"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-every-style"
+    },
+    {
+      "do": "render",
+      "name": "2-document"
+    },
+    {
+      "do": "writePicture",
+      "name": "export-1x",
+      "format": "png",
+      "scale": 1
+    },
+    {
+      "do": "writePicture",
+      "name": "export-2x",
+      "format": "png",
+      "scale": 2
+    },
+    {
+      "do": "writePicture",
+      "name": "export-3x",
+      "format": "png",
+      "scale": 3
+    },
+    {
+      "do": "writeSVG",
+      "name": "export"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "key",
+      "key": "s"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "5-tool-settings"
+    },
+    {
+      "do": "panel",
+      "stage": "tool-settings"
+    }
+  ]
+}

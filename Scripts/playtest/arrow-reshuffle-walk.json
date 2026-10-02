@@ -1,0 +1,95 @@
+{
+  "out": "/tmp/photonz-playtest/arrow-reshuffle",
+  "setup": {
+    "forget": [
+      "shapes",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 500,
+      "width": 1300,
+      "height": 800
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        300
+      ],
+      "to": [
+        700,
+        180
+      ],
+      "steps": 8
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Arrow style Hand-drawn",
+      "in": "Arrow Style"
+    },
+    {
+      "do": "render",
+      "name": "1-first-hand"
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        410,
+        240
+      ],
+      "ticked": [
+        "Hand-drawn"
+      ],
+      "choose": "Reshuffle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "render",
+      "name": "2-new-hand"
+    },
+    {
+      "do": "expect",
+      "control": "Arrow style Hand-drawn",
+      "in": "Arrow Style",
+      "reads": "Arrow Style, on"
+    },
+    {
+      "do": "key",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "render",
+      "name": "3-undone"
+    }
+  ]
+}

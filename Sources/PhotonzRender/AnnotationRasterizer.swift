@@ -98,6 +98,18 @@ public enum AnnotationRasterizer {
             path.addLine(to: annotation.end)
             strokeInk(path)
 
+        case .arrow where annotation.arrowStyle.isHandMade:
+            // A hand-made arrow is two shapes, shaft and head, each the union
+            // of the strokes and swells it is drawn in, so see-through ink is
+            // one even wash rather than darker wherever two pieces cross
+            // (`HandMadeArrow.swift`).
+            let outlines = HandMadeArrow.outlines(for: annotation)
+            if !outlines.shaft.isEmpty { fillInk(outlines.shaft) }
+            if !outlines.head.isEmpty { fillHead(outlines.head) }
+            if annotation.hasCaption {
+                drawCaption(annotation, in: context)
+            }
+
         case .arrow:
             let style = annotation.arrowheadStyle
             // Where the shaft stops depends on what it runs into: inside a

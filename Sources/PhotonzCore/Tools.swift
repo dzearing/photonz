@@ -315,6 +315,11 @@ public enum AnnotationBuilder {
     /// and the content's start/end are re-expressed in layer-local coords.
     public static func layer(content: AnnotationContent, from start: CGPoint, to end: CGPoint) -> Layer {
         var content = content
+        // The pad is measured with the arrow where it is going to be drawn: a
+        // hand-made style's bow is a share of the arrow's length, so the ends
+        // the tool happened to be holding would measure the wrong arrow.
+        content.start = start
+        content.end = end
         let pad = content.renderPadding
         var box = CGRect(x: min(start.x, end.x), y: min(start.y, end.y),
                          width: abs(end.x - start.x), height: abs(end.y - start.y))
@@ -354,6 +359,20 @@ public enum AnnotationBuilder {
 }
 
 extension AnnotationContent {
+    /// How far a hand-made arrow's ink reaches past the box between its two
+    /// ends, on whichever side it reaches furthest: its bow, its wobble, its
+    /// head and the second pass of a sketch. Measured off the drawing itself
+    /// (`HandMadeArrow.inkBounds`), so the frame and the ink cannot drift.
+    var handMadeOverhang: CGFloat {
+        guard shape == .arrow, arrowStyle.isHandMade else { return 0 }
+        let ink = HandMadeArrow.inkBounds(for: self)
+        guard !ink.isNull else { return 0 }
+        let box = CGRect(x: min(start.x, end.x), y: min(start.y, end.y),
+                         width: abs(end.x - start.x), height: abs(end.y - start.y))
+        return max(0, box.minX - ink.minX, ink.maxX - box.maxX,
+                   box.minY - ink.minY, ink.maxY - box.maxY)
+    }
+
     /// How far drawing can extend beyond the start/end bounding box.
     /// Rectangles/ellipses inset their stroke and highlights fill, so only
     /// open strokes (caps) and arrowheads (wings) overhang.
@@ -369,7 +388,8 @@ extension AnnotationContent {
             // ending's reach in every direction, not just its width.
             max(strokeWidth * lineEnd.reach,
                 Geometry.arrowheadReach(strokeWidth: strokeWidth, scale: arrowheadScale,
-                                        style: arrowheadStyle)).rounded(.up)
+                                        style: arrowheadStyle),
+                handMadeOverhang).rounded(.up)
         case .rectangle, .ellipse, .highlight:
             0
         }

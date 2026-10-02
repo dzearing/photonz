@@ -1630,6 +1630,26 @@ struct EditorCommands: Commands {
             if Experiments.shared.proMenuBarEnabled {
                 effectRows
             }
+            // How a picked arrow is drawn, and a new hand for it: the same two
+            // rows its right-click menu carries, under the same names, beside
+            // the other look commands. Dimmed rather than absent with no arrow
+            // picked, so the menu is where somebody learns they exist.
+            if Experiments.shared.arrowStylesEnabled {
+                Menu(ArrowStyle.menuTitle) {
+                    ForEach(ArrowStyle.allCases, id: \.self) { style in
+                        Toggle(style.title, isOn: Binding(
+                            get: { editor?.pickedArrowStyle == style },
+                            set: { _ in
+                                if let editor { editor.setArrowStyle(ids: editor.pickedArrowIDs, style) }
+                            }))
+                    }
+                }
+                .disabled(editor?.pickedArrowIDs.isEmpty ?? true)
+                Button(ArrowStyle.reshuffleTitle) {
+                    if let editor { editor.reshuffleArrows(ids: editor.pickedArrowIDs) }
+                }
+                .disabled(editor.map { $0.reshufflableArrows($0.pickedArrowIDs).isEmpty } ?? true)
+            }
             Button("Merge Down") { editor?.mergeDown() }
                 .keyboardShortcut("e", modifiers: .command)
                 .disabled(!(editor?.canMergeDown ?? false))

@@ -20370,3 +20370,10 @@ the middle and barely magnifies (a crisp or growing lens would be ours to draw).
 - App: Clicks rows at the top of a recording's Properties (`ClickEffectRows.swift`), ticks on the clip bar with drag and right-click Hide/Show (`ClickTicksView.swift`), Clip menu Show Click Effects / Hide Click at Playhead / Next Click (`EditorState+ClickEffects.swift`). Flag `next-click-effects`, on by default in Next.
 - Walks: clicks-show-a-ripple-walk (ring at three moments, export matches canvas round the click), a-click-tick-is-hidden-and-slid-walk. Audit: queue/audits/2026-09-30-click-effects.json.
 - Gotcha: a view placed with `.offset` reports its un-offset frame to the walk harness, so walks clicked the wrong spot; the ticks are placed with padding instead.
+
+## 2026-10-01 — Arrows drawn by hand
+
+- `PhotonzCore/ArrowStyle.swift` and `HandMadeArrow.swift` (28 core tests, 8 render tests): Clean, Hand-drawn, Marker, Brush and Sketch, each from one of the user's reference arrows, drawn along a spine from a seed stored on the arrow. Non-destructive: the ends, colour, width and head size stay put whichever style it wears.
+- App: Style tiles in Appearance and in the arrow tool's popover (`ArrowStyleTiles.swift`), Arrow Style and Reshuffle on the arrow's right-click menu and in the Layer menu, the drag preview draws the style live. Flag `next-arrow-styles`, on by default in Next. `VideoKit.TileGrid` no longer traps on an unbounded width offer.
+- Walks: arrow-styles-walk (every style twice beside its reference, on light and dark, exports at 1x/2x/3x and SVG), arrow-reshuffle-walk (needs an unlocked screen). Audit: queue/audits/2026-10-01-arrow-styles.json.
+- Next: arrows-can-be-bent-by-dragging-their-middle, which also carries the bent half of the arrow styles (every style along a curve, photographed).

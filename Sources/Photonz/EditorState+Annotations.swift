@@ -48,6 +48,8 @@ extension EditorState {
         // outlives the frame it was pointing at is an arrow pointing at the
         // wrong thing. Anywhere the picture is playing, nothing changes.
         addDrawnLayer(layer)
+        // The next arrow is drawn by a different hand.
+        if shape == .arrow { nextArrowSeed = HandMadeArrow.seed(after: nextArrowSeed) }
         // ...and if the name could not come along, one line saying so, rather
         // than a shape that is quietly not the colour the swatch promised.
         // After the edit, so it wins the canvas slot the way a break does.
@@ -341,7 +343,14 @@ extension EditorState {
     /// which conflated shape color with the paint-bucket foreground color). The
     /// FG/BG swatch is now only the fill/bucket paint pair.
     var activeAnnotationContent: AnnotationContent? {
-        annotationStyles.content(for: activeTool)
+        var content = annotationStyles.content(for: activeTool)
+        if content?.shape == .arrow {
+            content?.styleSeed = nextArrowSeed
+            // A release without the styles draws the clean arrow it always
+            // has, whatever another release left the tool armed with.
+            if !Experiments.shared.arrowStylesEnabled { content?.arrowStyle = .clean }
+        }
+        return content
     }
 
     /// The non-destructive style a freshly drawn shape inherits (border, corner
@@ -536,6 +545,116 @@ extension EditorState {
             annotationStyles.setArrowheadStyle(style, forShape: .arrow)
         }
         saveAnnotationStyles()
+    }
+
+    /// Arrow-only: how the arrow is DRAWN. Restyles the picked arrow (one undo
+    /// step) and arms the tool, so the next arrow is drawn the same way: the
+    /// tool's popover with nothing picked, and the picked arrow's own when
+    /// there is one.
+    func setAnnotationArrowStyle(_ style: ArrowStyle) {
+        if let layer = selectedAnnotationLayer, layer.annotation?.shape == .arrow {
+            setArrowStyle(ids: [layer.id], style)
+            return
+        }
+        annotationStyles.setArrowStyle(style, forShape: .arrow)
+        saveAnnotationStyles()
+    }
+
+    /// The Style tiles over every picked arrow: one undo step, and the style
+    /// the next arrow starts in. An arrow drawn before there were styles has
+    /// no hand of its own yet (seed 0, which every one of them shares), so it
+    /// is given one as it first goes hand-made, or a page of old arrows would
+    /// all wobble alike.
+    func setArrowStyle(ids: [UUID], _ style: ArrowStyle) {
+        guard let doc = document else { return }
+        let targets = annotationRestyleTargets(ids, in: doc)
+            .filter { doc.layer(id: $0)?.annotation?.shape == .arrow }
+        guard !targets.isEmpty else { return }
+        discardDragPreview()
+        var seed = nextArrowSeed
+        perform { document in
+            for id in targets {
+                let needsAHand = style.isHandMade && document.layer(id: id)?.annotation?.styleSeed == 0
+                if needsAHand { seed = HandMadeArrow.seed(after: seed) }
+                document.updateLayer(id: id) {
+                    $0 = AnnotationBuilder.restyled($0, arrowStyle: style,
+                                                    styleSeed: needsAHand ? seed : nil)
+                }
+            }
+        }
+        nextArrowSeed = HandMadeArrow.seed(after: seed)
+        annotationStyles.setArrowStyle(style, forShape: .arrow)
+        saveAnnotationStyles()
+    }
+
+    /// The picked arrows a menu reaches from the layer it was opened on: the
+    /// whole selection when that layer is part of it.
+    func arrowsReached(fromRow id: UUID) -> [UUID] {
+        guard let doc = document else { return [] }
+        return rowMenuTargets(id).filter { doc.layer(id: $0)?.annotation?.shape == .arrow }
+    }
+
+    /// The arrow's own rows on its right-click menu: the Arrow Style submenu,
+    /// ticked on the style it wears, and Reshuffle while it is hand-made. None
+    /// at all on anything that is not an arrow.
+    func arrowStyleMenuRows(id: UUID) -> [MenuRow] {
+        guard Experiments.shared.arrowStylesEnabled,
+              document?.layer(id: id)?.annotation?.shape == .arrow else { return [] }
+        let arrows = arrowsReached(fromRow: id)
+        let worn = Set(arrows.compactMap { document?.layer(id: $0)?.annotation?.arrowStyle })
+        var rows: [MenuRow] = [
+            .submenu(ArrowStyle.menuTitle, ArrowStyle.allCases.map { style in
+                .toggle(style.title, isOn: worn == [style]) { [weak self] in
+                    guard let self else { return }
+                    self.setArrowStyle(ids: self.arrowsReached(fromRow: id), style)
+                }
+            }),
+        ]
+        if !reshufflableArrows(arrows).isEmpty {
+            rows.append(.command(ArrowStyle.reshuffleTitle) { [weak self] in
+                guard let self else { return }
+                self.reshuffleArrows(ids: self.arrowsReached(fromRow: id))
+            })
+        }
+        rows.append(.separator)
+        return rows
+    }
+
+    /// The picked arrows, for the Layer menu's rows.
+    var pickedArrowIDs: [UUID] {
+        guard let doc = document else { return [] }
+        return actionableLayerIDs.filter { doc.layer(id: $0)?.annotation?.shape == .arrow }
+    }
+
+    /// The style every picked arrow wears, or nil when they differ or none is.
+    var pickedArrowStyle: ArrowStyle? {
+        let worn = Set(pickedArrowIDs.compactMap { document?.layer(id: $0)?.annotation?.arrowStyle })
+        return worn.count == 1 ? worn.first : nil
+    }
+
+    /// The hand-made arrows among `ids`, unlocked: what Reshuffle would redraw.
+    func reshufflableArrows(_ ids: [UUID]) -> [UUID] {
+        guard let doc = document else { return [] }
+        return annotationRestyleTargets(ids, in: doc).filter {
+            guard let a = doc.layer(id: $0)?.annotation else { return false }
+            return a.shape == .arrow && a.arrowStyle.isHandMade
+        }
+    }
+
+    /// Reshuffle: each picked hand-made arrow is drawn again by a new hand,
+    /// keeping its style, ends, colour and width. One undo step.
+    func reshuffleArrows(ids: [UUID]) {
+        let targets = reshufflableArrows(ids)
+        guard !targets.isEmpty else { return }
+        discardDragPreview()
+        var seed = nextArrowSeed
+        perform { document in
+            for id in targets {
+                seed = HandMadeArrow.seed(after: seed)
+                document.updateLayer(id: id) { $0 = AnnotationBuilder.restyled($0, styleSeed: seed) }
+            }
+        }
+        nextArrowSeed = HandMadeArrow.seed(after: seed)
     }
 
     /// The same pick from the docked inspector, over every picked arrow: one

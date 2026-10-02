@@ -1,0 +1,40 @@
+{
+  "feature": "Hand-made arrow styles",
+  "epic": "interaction-foundations",
+  "summary": "An arrow can now be drawn in five styles, picked from picture tiles: Clean (as before), Hand-drawn, Marker, Brush and Sketch, each modelled on one of your four reference arrows. Each arrow keeps its own hand, so it looks the same every time, and Reshuffle on its right-click menu gives it a new one.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Arrows cannot bend yet, so every arrow here is straight.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Pick the Arrow tool (A) and drag an arrow across a picture.",
+      "shot": "2026-10-01-arrow-styles-1-every-style-sc.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed."
+    },
+    { "do": "In Appearance, under Masked by, click the Brush tile in the Style row." },
+    { "do": "Drag a second arrow: it comes out as a brush stroke too, because the tool remembers the last style." },
+    { "do": "Click Sketch, then Marker, then Hand-drawn, and compare each with its reference in docs/design/references/arrows." },
+    { "do": "Right-click a hand-made arrow and choose Reshuffle, then press ⌘Z." },
+    { "do": "Change the arrow's Thickness, Head Size and the Line and Head colours." },
+    {
+      "do": "With the Arrow tool held, press S to open its settings and pick a style for the next arrow.",
+      "shot": "2026-10-01-arrow-styles-2-tool-settings-sc.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed."
+    },
+    { "do": "Zoom in to 800% on a Sketch arrow, then export the picture at 3x." }
+  ],
+  "evaluate": [
+    "Does each hand-made style read as its reference (25 pen, 27 marker, 28 brush, 26 sketch) once arrows can bend?",
+    "Is the Sketch's dry-ink texture rough enough, or should the strokes break up more?",
+    "Is it right that a hand-made arrow drops the Ending picker and draws its own head?",
+    "Are the tiles the right size in the panel, or should the five sit in one row?",
+    "Is Reshuffle the word you would look for on the right-click menu?"
+  ],
+  "rough": [
+    "Arrows cannot bend yet, and three of the four references are curved. The styles already follow a curve in code; bending is the next task (arrows-can-be-bent-by-dragging-their-middle).",
+    "The Sketch's dry ink is broken strokes and flecks, not a grainy texture like reference 26, so it stays sharp at any zoom and in SVG. At the default 4 px it reads cleaner than the reference.",
+    "Brush wings are sized by Head Size, so at 1.0 they are shorter than in reference 28. Raise Head Size to get closer.",
+    "Hand-made arrows hide the Ending picker and the line's Ends row, because each style draws its own head and tail. Head Size, Thickness and both colours still apply.",
+    "The tiles draw each style in the panel's own ink colour, not the arrow's colour, so they read in light and dark.",
+    "The Reshuffle walk (arrow-reshuffle-walk) needs a right-click menu and could not run on the locked Mac. Reshuffle is covered by unit tests, not yet by a walk."
+  ]
+}

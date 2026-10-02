@@ -199,6 +199,9 @@ extension AnnotationContent {
     /// cannot act — the same rule the rest of the panel follows.
     public var showsLineEnds: Bool {
         guard strokeWidth > 0 else { return false }
+        // A hand-made arrow draws its own tail: a brush's point, a marker's
+        // round end, a sketch's open outline (`ArrowStyle.swift`).
+        if shape == .arrow, arrowStyle.isHandMade { return false }
         return shape == .line || shape == .arrow
     }
 }

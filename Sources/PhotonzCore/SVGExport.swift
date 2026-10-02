@@ -1244,6 +1244,22 @@ private struct Writer {
     /// geometry, that `AnnotationRasterizer` paints.
     mutating func arrow(_ annotation: AnnotationContent, level: Int) -> [String] {
         var lines: [String] = []
+        // A hand-made arrow is the very outline the rasterizer fills, shaft
+        // and head, so the export is the same hand as the canvas.
+        if annotation.arrowStyle.isHandMade {
+            let outlines = HandMadeArrow.outlines(for: annotation)
+            if !outlines.shaft.isEmpty {
+                lines.append(indent(level) + "<path d=\"\(SVGExport.pathData(outlines.shaft))\""
+                    + fill(annotation.paint, box: outlines.shaft.boundingBoxOfPath) + "/>")
+            }
+            if !outlines.head.isEmpty {
+                lines.append(indent(level) + "<path d=\"\(SVGExport.pathData(outlines.head))\""
+                    + ownPaint(annotation.headPaint, box: outlines.head.boundingBoxOfPath, as: "fill")
+                    + "/>")
+            }
+            lines.append(contentsOf: caption(annotation, level: level))
+            return lines
+        }
         let style = annotation.arrowheadStyle
         let end = Geometry.arrowShaftEnd(start: annotation.start, end: annotation.end,
                                          strokeWidth: annotation.strokeWidth,

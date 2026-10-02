@@ -67,6 +67,9 @@ struct PartsInspector: View {
             // colour below it, so it reads as "what this calls out, then what
             // that is painted" (`MeasurePartSettings`).
             if Experiments.shared.shapePartsEnabled { MeasureRoleRow() }
+            // How an arrow is drawn, before the parts it paints: the style is
+            // the whole arrow's look, and changes which parts there are to set.
+            if Experiments.shared.shapePartsEnabled { ArrowStyleRow() }
             let column = rows.contains(where: \.hasSwitch)
             ForEach(rows) { row in
                 // The tick column is held open across the whole list, or not at

@@ -35,7 +35,9 @@ struct ShapePartSettings: View {
         let selection = shapes(ids)
         if row.part == .arrowHead, !selection.isEmpty {
             OwnedSettings(owner: row.title) {
-                ending(selection)
+                // A hand-made arrow draws its own head, so only the clean one
+                // is asked what it ends in (`ArrowStyle.swift`).
+                if selection.rows.contains(.headStyle) { ending(selection) }
                 if selection.rows.contains(.headSize) { headSize(selection) }
             }
         } else if let slot = row.slot {
@@ -137,6 +139,29 @@ struct ShapePartSettings: View {
                     preview: { editorState.previewAnnotationRestyle(ids: $0, arrowheadScale: $1) },
                     commit: { editorState.commitAnnotationRestyle(ids: $0, arrowheadScale: $1) })
             .equatable()
+    }
+}
+
+/// How the picked arrows are DRAWN: the five picture tiles, above the parts
+/// they paint, because a style is the whole arrow's look rather than one
+/// part's (`ArrowStyleTiles`).
+struct ArrowStyleRow: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        let arrows = editorState.shapeSelection.members.filter { $0.content.shape == .arrow }
+        if Experiments.shared.arrowStylesEnabled, !arrows.isEmpty {
+            let styles = Set(arrows.map(\.content.arrowStyle))
+            let state = editorState
+            ArrowStyleTiles(selection: styles.count == 1 ? styles.first : nil) { style in
+                // Looked up at the press, so it reaches what is picked then.
+                let ids = state.shapeSelection.members
+                    .filter { $0.content.shape == .arrow }.map(\.id)
+                state.setArrowStyle(ids: ids, style)
+            }
+            .equatable()
+            .panelStartProbe(.row, owner: "Arrow Style")
+        }
     }
 }
 

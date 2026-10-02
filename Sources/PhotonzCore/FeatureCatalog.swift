@@ -229,6 +229,8 @@ public enum FeatureCatalog {
 
     public static let lineEndsFlag = "next-line-ends"
 
+    public static let arrowStylesFlag = "next-arrow-styles"
+
     public static let rowSaysItsWordsFlag = "next-a-row-says-its-words"
 
     public static let separatedRowSaysItsWordsFlag = "next-a-separated-row-says-its-words"
@@ -1005,6 +1007,16 @@ public enum FeatureCatalog {
                     name: lineEndsFlag,
                     title: "Say how a line and an arrow end",
                     description: "A picked line or arrow gets an Ends row under Outline: Flat, Round or Square. Off means a line and an arrow always end round.",
+                    area: .drawing,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: arrowStylesFlag,
+                    title: "Draw arrows by hand",
+                    description: "An arrow gets a Style row of picture tiles: Clean, Hand-drawn, Marker, Brush and Sketch, with Reshuffle on its right-click menu for a new hand. Off means every arrow is the clean geometric one.",
                     area: .drawing,
                     isEnabled: false,
                     parameters: []),

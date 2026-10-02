@@ -715,6 +715,11 @@ final class EditorState {
     /// Styling for new annotations, set from the style popover. Persisted so
     /// the user's color/width survive relaunches.
     var annotationStyles: AnnotationStyles = EditorState.loadAnnotationStyles()
+    /// The hand the next arrow is drawn with (`HandMadeArrow.swift`). Fresh
+    /// every launch and moved on after every arrow, so two arrows drawn one
+    /// after the other never wobble alike; the drag preview and the arrow it
+    /// lands as share it, so nothing changes on release.
+    var nextArrowSeed: UInt32 = UInt32.random(in: 1...UInt32.max)
     /// Styling for new text blocks on a still, set from the font picker.
     /// Persisted like annotation styles. Read it through `textStyles`, which
     /// hands a document with time its title look instead.

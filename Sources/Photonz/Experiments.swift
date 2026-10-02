@@ -455,6 +455,10 @@ extension Experiments {
     /// document holding a square-ended line draws it either way.
     var lineEndsEnabled: Bool { isEnabled(FeatureCatalog.lineEndsFlag) }
 
+    /// `next-arrow-styles`: an arrow can be drawn clean or by hand (Hand-drawn,
+    /// Marker, Brush, Sketch), picked from picture tiles (`ArrowStyleTiles`).
+    var arrowStylesEnabled: Bool { isEnabled(FeatureCatalog.arrowStylesFlag) }
+
     /// The mark under the pointer saying where a press would put the first
     /// point of a shape (`CanvasDrawLanding`).
     var drawLandingEnabled: Bool { isEnabled(FeatureCatalog.drawLandingFlag) }

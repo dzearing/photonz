@@ -167,6 +167,11 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         defaults(forShape: shape).arrowheadStyle
     }
 
+    /// How the next arrow is DRAWN: the style last picked sticks.
+    public func arrowStyle(forShape shape: AnnotationShape) -> ArrowStyle {
+        defaults(forShape: shape).arrowStyle
+    }
+
     /// How round the next caption pill's corners are, 0 square to 1 fully round.
     public func captionRoundness(forShape shape: AnnotationShape) -> CGFloat {
         defaults(forShape: shape).captionRoundness
@@ -374,6 +379,10 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         shapes[shape.rawValue, default: .standard(for: shape)].arrowheadStyle = style
     }
 
+    public mutating func setArrowStyle(_ style: ArrowStyle, forShape shape: AnnotationShape) {
+        shapes[shape.rawValue, default: .standard(for: shape)].arrowStyle = style
+    }
+
     public mutating func setCaptionRoundness(_ roundness: CGFloat, forShape shape: AnnotationShape) {
         shapes[shape.rawValue, default: .standard(for: shape)].captionRoundness = roundness
     }
@@ -565,6 +574,7 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         content.fill = d.fill
         // The ending the tool is armed with, and the corner its label wears.
         content.arrowheadStyle = d.arrowheadStyle
+        content.arrowStyle = d.arrowStyle
         content.captionRoundness = d.captionRoundness
         // Where the last box of this kind put its line is where the next one
         // puts it, exactly as with its width and its corner.
@@ -623,6 +633,8 @@ public struct ShapeDefaults: Equatable, Codable, Sendable {
     public var arrowheadScale: CGFloat
     /// What the next arrow ends in.
     public var arrowheadStyle: ArrowheadStyle = .standard
+    /// How the next arrow is drawn: clean, or one of the hand-made styles.
+    public var arrowStyle: ArrowStyle = .standard
     /// How round the next caption pill is, 0 square to 1 fully round.
     public var captionRoundness: CGFloat = AnnotationContent.captionRoundnessDefault
     /// Interior fill for box shapes; nil = outline only. A paint for the same
@@ -696,6 +708,7 @@ public struct ShapeDefaults: Equatable, Codable, Sendable {
         case cornerRadii = "cornerRadius"
         case layerStyle, captionFontSize, colorStyles
         case arrowheadStyle, captionRoundness
+        case arrowStyle
     }
 
     public init(from decoder: Decoder) throws {
@@ -721,6 +734,8 @@ public struct ShapeDefaults: Equatable, Codable, Sendable {
             ?? .standard
         captionRoundness = try c.decodeIfPresent(CGFloat.self, forKey: .captionRoundness)
             ?? AnnotationContent.captionRoundnessDefault
+        // The style postdates both: a pref from before it draws clean arrows.
+        arrowStyle = try c.decodeIfPresent(ArrowStyle.self, forKey: .arrowStyle) ?? .standard
         // `colorStyles` postdates a tool being able to hold a saved colour at
         // all; absent = holding none, which is what every older pref means.
         colorStyles = try c.decodeIfPresent([ColorStyleBinding].self, forKey: .colorStyles)

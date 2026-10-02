@@ -181,6 +181,15 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     /// dot, a hollow dot, or nothing at all. The solid head is what every arrow
     /// had before there was a choice, so it is what an older document opens as.
     public var arrowheadStyle: ArrowheadStyle
+    /// Arrow-only: how the arrow is DRAWN: clean and geometric, or one of the
+    /// hand-made looks (`ArrowStyle.swift`). Paint, not drawing: the ends,
+    /// colour, thickness and head size stay what they are whichever it wears.
+    public var arrowStyle: ArrowStyle = .standard
+    /// Arrow-only: the hand a hand-made arrow is drawn with. Every wobble, gap
+    /// and swell comes from this number, so the same arrow is drawn the same
+    /// way on the canvas, after reopening and in an export; Reshuffle picks a
+    /// new one. Zero for every arrow drawn before there were styles.
+    public var styleSeed: UInt32 = 0
     /// Rectangle-only: how round each of the four corners is (layer-local
     /// units). Square everywhere = sharp corners. The rasterizer draws a
     /// rounded stroke, so the border follows the corners instead of being
@@ -320,6 +329,7 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         case captionBorder = "captionBorderColorHex"
         case captionTextColorHex
         case start, end, arrowheadScale, arrowheadStyle
+        case arrowStyle, styleSeed
         // The four corners keep the key one radius always wrote, and
         // `CornerRadii` reads either shape out of it.
         case cornerRadii = "cornerRadius"
@@ -351,6 +361,10 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         // drawn before it ended in the solid triangle and still does.
         arrowheadStyle = try c.decodeIfPresent(ArrowheadStyle.self, forKey: .arrowheadStyle)
             ?? .standard
+        // How it is drawn postdates both; every arrow before it was the clean
+        // one, drawn by no hand at all.
+        arrowStyle = try c.decodeIfPresent(ArrowStyle.self, forKey: .arrowStyle) ?? .standard
+        styleSeed = try c.decodeIfPresent(UInt32.self, forKey: .styleSeed) ?? 0
         // `cornerRadius` postdates AnnotationContent too, and reads either
         // shape: the single number every document written before there were
         // four corners holds, or the four a card with a rounded top needs.
@@ -2118,6 +2132,14 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
             let end = CGPoint(x: frame.minX + a.end.x, y: frame.minY + a.end.y)
             let tolerance = a.strokeWidth / 2 + (zoom > 0 ? 6 / zoom : 6)
             if Geometry.distance(from: p, toSegmentFrom: start, to: end) <= tolerance {
+                return true
+            }
+            // A hand-made arrow is hit where its ink is: a bowed line, a
+            // brush's swell or a sketch's outline body can sit well off the
+            // straight line between the ends.
+            if a.shape == .arrow, a.arrowStyle.isHandMade,
+               HandMadeArrow.ink(of: a, reaches: CGPoint(x: p.x - frame.minX, y: p.y - frame.minY),
+                                 within: tolerance - a.strokeWidth / 2) {
                 return true
             }
             // The caption pill hangs off the tail with no stroke of its own, so

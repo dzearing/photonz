@@ -193,6 +193,9 @@ extension Layer {
             to.cornerRadii = from.cornerRadii
             to.fill = from.fill
             to.arrowheadScale = from.arrowheadScale
+            // How it is drawn, hand and all, is the look too.
+            to.arrowStyle = from.arrowStyle
+            to.styleSeed = from.styleSeed
             to.headPaint = from.headPaint
             to.caption = from.caption
             to.captionFontSize = from.captionFontSize

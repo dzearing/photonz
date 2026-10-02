@@ -287,7 +287,7 @@ extension Layer {
                 // ends in something, so the panel never offers a colour for a
                 // tip that is not drawn.
                 slots = [.stroke]
-                if annotation.arrowheadStyle != .plain { slots.append(.arrowHead) }
+                if annotation.drawsArrowhead { slots.append(.arrowHead) }
                 // ...and the label's three, only once there are words for it to
                 // hold. A pill nobody has typed into has nothing to paint.
                 if annotation.hasCaption {
@@ -353,7 +353,7 @@ extension Layer {
         case (.stroke, .path(let path)):
             return path.colorHex
         case (.arrowHead, .annotation(let annotation)):
-            guard annotation.shape == .arrow, annotation.arrowheadStyle != .plain else { return nil }
+            guard annotation.drawsArrowhead else { return nil }
             return annotation.headColorHex
         case (.captionFill, .annotation(let annotation)):
             guard annotation.hasCaption else { return nil }
@@ -407,7 +407,7 @@ extension Layer {
         case (.stroke, .path(let path)):
             return path.paint
         case (.arrowHead, .annotation(let annotation)):
-            guard annotation.shape == .arrow, annotation.arrowheadStyle != .plain else { return nil }
+            guard annotation.drawsArrowhead else { return nil }
             return annotation.headPaint
         case (.border, _):
             return hasBorderColor ? style.borderEffects.first?.paint : nil

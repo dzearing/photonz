@@ -173,6 +173,14 @@ public enum Geometry {
 
     /// Head length actually drawn: capped so a bold head never overshoots the
     /// start on a short drag (keeps a sliver of visible shaft).
+    /// The head length an arrow of this `length` actually draws: the same
+    /// number the solid head uses, so a hand-made head is sized the way the
+    /// Head Size slider says (`HandMadeArrow.swift`).
+    public static func arrowheadLength(strokeWidth: CGFloat, scale: CGFloat,
+                                       length: CGFloat) -> CGFloat {
+        effectiveArrowheadLength(strokeWidth: strokeWidth, scale: scale, length: length)
+    }
+
     private static func effectiveArrowheadLength(strokeWidth: CGFloat, scale: CGFloat,
                                                  length: CGFloat) -> CGFloat {
         min(rawArrowheadLength(strokeWidth: strokeWidth, scale: scale), length * 0.85)

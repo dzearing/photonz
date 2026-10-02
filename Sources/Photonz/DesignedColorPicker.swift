@@ -100,7 +100,7 @@ struct DesignedColorPicker: View {
     @State private var styleName = ""
     @FocusState private var nameFocused: Bool
 
-    private static let width: CGFloat = 268
+    static let width: CGFloat = 268
     private static let squareHeight: CGFloat = 132
 
     var body: some View {

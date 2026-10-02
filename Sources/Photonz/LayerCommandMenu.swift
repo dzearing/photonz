@@ -72,6 +72,11 @@ enum LayerCommandList {
             rows.append(.separator)
         }
 
+        // An arrow: how it is drawn, and a new hand for a hand-made one. On
+        // the whole selection when the arrow you right clicked is part of it,
+        // like every other row here (`ArrowStyle.swift`).
+        rows.append(contentsOf: editorState.arrowStyleMenuRows(id: id))
+
         // ⌘D is Photoshop's Deselect and the app's, so it never duplicated
         // anything. ⌘J (New Layer via Copy) duplicates the picked layer when
         // no marquee is up, which is the key the timeline's Duplicate prints.

@@ -173,7 +173,15 @@ extension Layer {
             minX = min(minX, p.x); maxX = max(maxX, p.x)
             minY = min(minY, p.y); maxY = max(maxY, p.y)
         }
-        if a.shape == .arrow,
+        // A hand-made arrow's ink is its own: a bow, a brush's swell, a
+        // sketch's outline body. It is read off the drawing itself.
+        if a.shape == .arrow, a.arrowStyle.isHandMade {
+            let ink = HandMadeArrow.inkBounds(for: a)
+            if !ink.isNull {
+                include(CGPoint(x: frame.minX + ink.minX, y: frame.minY + ink.minY))
+                include(CGPoint(x: frame.minX + ink.maxX, y: frame.minY + ink.maxY))
+            }
+        } else if a.shape == .arrow,
            let head = Geometry.arrowheadBounds(start: start, end: end, strokeWidth: a.strokeWidth,
                                                scale: a.arrowheadScale, style: a.arrowheadStyle) {
             include(CGPoint(x: head.minX, y: head.minY))
@@ -371,6 +379,8 @@ extension AnnotationBuilder {
                                 strokeWidth: CGFloat? = nil,
                                 arrowheadScale: CGFloat? = nil,
                                 arrowheadStyle: ArrowheadStyle? = nil,
+                                arrowStyle: ArrowStyle? = nil,
+                                styleSeed: UInt32? = nil,
                                 cornerRadius: CGFloat? = nil,
                                 fillColorHex: String?? = nil,
                                 fill: Paint?? = nil,
@@ -433,6 +443,8 @@ extension AnnotationBuilder {
         }
         if let arrowheadScale { a.arrowheadScale = arrowheadScale }
         if let arrowheadStyle { a.arrowheadStyle = arrowheadStyle }
+        if let arrowStyle { a.arrowStyle = arrowStyle }
+        if let styleSeed { a.styleSeed = styleSeed }
         if let cornerRadius { a.cornerRadius = cornerRadius }
         if let fillColorHex { a.fillColorHex = fillColorHex }
         if let fill { a.fill = fill }
