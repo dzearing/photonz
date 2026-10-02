@@ -1,0 +1,32 @@
+{
+  "id": "pressing-a-capture-shortcut-clears-any-toast-on",
+  "title": "Pressing a capture shortcut clears any toast on screen",
+  "goal": "User 2026-10-02: 'if I press ctrl shift 4/5/6, please clear the toast. The toasts are fine to show but if I'm trying to take a screenshot or video or open last session, they're just noise.' Ctrl-Shift-4 (screenshot), Ctrl-Shift-5 (recording) and Ctrl-Shift-6 (open last session) are the app's global capture hotkeys (Capture/HotkeyCenter.swift); toasts are ToastController.swift.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 0.000002,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-02T18:43:34.864Z",
+  "updated": "2026-10-02T18:43:34.959Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Pressing Ctrl-Shift-4, -5 or -6 (whatever each is bound to in Settings, if rebindable) dismisses every visible Photonz toast immediately, before the capture overlay, recording setup or session window appears, so no toast is in the picture or in the way",
+    "The dismissal is instant (no fade that could be captured), and a toast that was about to appear from an earlier action is cancelled too",
+    "Toasts still show normally at all other times, including the ones the capture itself produces afterwards (e.g. 'Saved')",
+    "A walk shows a toast, presses each hotkey (via the hotkey path, not a menu), and checks no toast window remains on screen when the capture overlay or recording setup appears"
+  ],
+  "log": [
+    {
+      "t": "2026-10-02T18:43:34.866Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-02T18:43:34.958Z",
+      "note": "seq 430 -> 0.000002"
+    }
+  ]
+}
