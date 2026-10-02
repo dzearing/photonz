@@ -19,8 +19,11 @@ had asked.
 Now `queue/bin/sweep-schedule.mjs` decides, and it is the one copy of these
 rules:
 
-* the **full set** runs at most once every twelve hours, and only when code has
-  landed since the last one. Requests pile up and the next run serves them all;
+* the **full set** runs at most once every twenty four hours, and only when code
+  has landed since the last one. Requests pile up and the next run serves them all;
+* **landed code is the ask: neither check waits for a request.** Code is
+  anything under `Sources`, `Scripts`, `Resources`, `Vendor` or the package
+  files; a commit of only the queue's own files, docs or unit tests starts nothing;
 * in between, after any task that lands code, a **rotating check** of about ten
   minutes: every walk whose script changed since the last check, then the next
   chunk of the set, carrying on from `rotation.json`. Over a day the rotation
@@ -177,7 +180,7 @@ each caller:
 
 * the dashboard and `sweep.sh status` read it for **what the walk set last
   said**;
-* `queue/bin/sweep-schedule.mjs` counts its twelve hour floor from `began`,
+* `queue/bin/sweep-schedule.mjs` counts its twenty four hour floor from `began`,
   which is **when the loop last spent two hours on the whole set**.
 
 Move the record back to fix the first and you silently reset the second. On
