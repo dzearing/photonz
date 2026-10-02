@@ -1,0 +1,54 @@
+{
+  "out": "/tmp/photonz-playtest/framing-a-zoom-shows-one-box-walk",
+  "seed": "Add Zoom on a recording at Next defaults: the picture shows the zoom's box and nothing else round the clip, the pointer says what a press on each part of the box takes, and Escape lets the zoom go with the recording still picked.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "zoomScriptPointerPath" },
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "zoomAddAtPlayhead" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "expectZoomPicked" },
+    { "do": "expectPicked", "layers": ["Tutorial Sample"], "outline": "none" },
+    { "do": "describe", "stage": "1-one-box", "note": "Add Zoom picks the new zoom: its box is the only frame on the picture, with no outline, handles or turn knob of the clip's own round it" },
+    { "do": "snapshot", "name": "1-framing-one-box" },
+
+    { "do": "move", "at": [260, 112], "space": "window" },
+    { "do": "expectCue", "says": "resize-up-left-down-right" },
+    { "do": "move", "at": [742, 112], "space": "window" },
+    { "do": "expectCue", "says": "resize-up-right-down-left" },
+    { "do": "move", "at": [742, 413], "space": "window" },
+    { "do": "expectCue", "says": "resize-up-left-down-right" },
+    { "do": "move", "at": [500, 260], "space": "window" },
+    { "do": "expectCue", "says": "grab" },
+    { "do": "move", "at": [950, 520], "space": "window" },
+    { "do": "expectCue", "says": "draw" },
+    { "do": "move", "at": [1300, 350], "space": "window" },
+    { "do": "expectCue", "says": "none" },
+
+    { "do": "click", "at": [260, 112], "space": "window" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "action", "action": "expectZoomPicked" },
+    { "do": "drag", "from": [742, 413], "to": [842, 480], "space": "window", "steps": 12 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "expectZoomPicked" },
+    { "do": "move", "at": [842, 476], "space": "window" },
+    { "do": "expectCue", "says": "resize-up-left-down-right" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "expectZoomLetGo" },
+    { "do": "expectPicked", "layers": ["Tutorial Sample"], "outline": "drawn" },
+    { "do": "describe", "stage": "2-let-go", "note": "Escape lets the zoom go: the box leaves, the picture zooms as it plays again, and the recording stays picked with its own frame back" },
+    { "do": "snapshot", "name": "2-zoom-let-go" }
+  ]
+}

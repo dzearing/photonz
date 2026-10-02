@@ -273,6 +273,24 @@ extension CanvasNSView {
         let point = viewPoint ?? restingPointer()
         guard let viewport, let point, bounds.contains(point) else { return applyGrabCursor(nil) }
         let doc = viewport.documentPoint(fromView: point)
+        // A picked zoom's box takes every press on its clip before anything
+        // else does (`mouseDown`), so it answers the pointer first too: the
+        // resize arrows on a corner, the hand on the box, a crosshair beside
+        // it where a drag draws a new one. Off the clip a press only lets the
+        // zoom go, so nothing there offers a grab.
+        if zoomBoxUp {
+            let hit = zoomBoxHit(doc)
+            #if PHOTONZ_PLAYTEST
+            switch hit {
+            case .corner(let handle)?: recordPlaytestCue("resize-" + handle.axis.rawValue)
+            case .body?: recordPlaytestCue("grab")
+            case .beside?: recordPlaytestCue("draw")
+            case nil: recordPlaytestCue("none")
+            }
+            #endif
+            guard let hit else { return applyGrabCursor(nil) }
+            return applyGrabCursor(hit.cue.map { CanvasCursor.cursor(for: $0, transform: .identity) } ?? .crosshair)
+        }
         // A name above a box is that box's drag handle, and `mouseDown` reads
         // it before anything else on the canvas, so the pointer does too. It
         // is the one grab that moves a screen without picking it first, and

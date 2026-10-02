@@ -3822,13 +3822,16 @@ private final class Run {
                 note(number, step.name, "captions: \(onIt.count) cues on the one \(track.name) track",
                      state: describe())
             case .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
-                 .expectZoomShapedByHand, .expectZoomSuggested:
+                 .expectZoomShapedByHand, .expectZoomSuggested, .expectZoomPicked, .expectZoomLetGo, .zoomAddAtPlayhead:
                 do {
                     let said = switch action {
                     case .zoomScriptPointerPath: try PlaytestZoom.scriptPointerPath(editor)
                     case .expectZoomFollowsCursor: try PlaytestZoom.expectFollows(editor)
                     case .expectZoomShapedByHand: try PlaytestZoom.expectShapedByHand(editor)
                     case .expectZoomSuggested: try PlaytestZoom.expectSuggested(editor)
+                    case .expectZoomPicked: try PlaytestZoom.expectPicked(editor)
+                    case .expectZoomLetGo: try PlaytestZoom.expectLetGo(editor)
+                    case .zoomAddAtPlayhead: try PlaytestZoom.addAtPlayhead(editor)
                     default: try await PlaytestZoom.expectExportMatches(editor)
                     }
                     note(number, step.name, said, state: describe())
@@ -5288,7 +5291,7 @@ private final class Run {
                  .captionsExpectOneTrack, .captionsExpectOnePicked, .captionsWriteQuietly,
                  .captionsExpectEndWithRecording, .captionsExpectInsideMarks, .expectAddedClick,
                  .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
-                 .expectZoomShapedByHand, .expectZoomSuggested,
+                 .expectZoomShapedByHand, .expectZoomSuggested, .expectZoomPicked, .expectZoomLetGo, .zoomAddAtPlayhead,
                  .expectClickRipple, .expectClickEffectExportMatches, .expectClickTicksEdited,
                  .captionsPickFirst, .captionsPickNext, .captionsEditFirstInPlace, .captionsCommitFirstWords,
                  .captionsTrimFirstEnd, .captionsStyleCaption, .captionsStyleLowerThird,

@@ -360,9 +360,11 @@ struct CanvasView: NSViewRepresentable {
     /// A picked zoom's box is up over the picture (`EditorState+Zoom`): a
     /// press on its clip goes to the box first.
     var zoomBoxUp: Bool = false
+    var zoomBoxHit: (CGPoint) -> ZoomBoxHit? = { _ in nil }
     var onZoomBoxDown: (CGPoint) -> Bool = { _ in false }
     var onZoomBoxDrag: (CGPoint) -> Void = { _ in }
     var onZoomBoxRelease: (CGPoint) -> Void = { _ in }
+    var onZoomBoxEscape: () -> Bool = { false }
 
     func makeNSView(context: Context) -> CanvasNSView {
         let view = CanvasNSView()
@@ -509,9 +511,11 @@ struct CanvasView: NSViewRepresentable {
         view.placingClick = placingClick
         view.onPlaceClick = onPlaceClick
         view.zoomBoxUp = zoomBoxUp
+        view.zoomBoxHit = zoomBoxHit
         view.onZoomBoxDown = onZoomBoxDown
         view.onZoomBoxDrag = onZoomBoxDrag
         view.onZoomBoxRelease = onZoomBoxRelease
+        view.onZoomBoxEscape = onZoomBoxEscape
         view.onGridOriginChange = onGridOriginChange
         view.onGridAdjustCommit = onGridAdjustCommit
         view.onGridAdjustCancel = onGridAdjustCancel
@@ -692,12 +696,26 @@ final class CanvasNSView: NSView {
     }
     var onPlaceClick: ((CGPoint) -> Void) = { _ in }
     /// A picked zoom's box is up: a press the box takes is the box's from
-    /// down to up (`ZoomBoxOverlay`, `EditorState+Zoom`).
-    var zoomBoxUp = false
+    /// down to up (`ZoomBoxOverlay`, `EditorState+Zoom`). While it is, the
+    /// box is the only frame on the picture: the clip's own outline, handles
+    /// and knob step aside, so there is one thing a press can be about.
+    var zoomBoxUp = false {
+        didSet {
+            guard zoomBoxUp != oldValue else { return }
+            refreshOverlays()
+            refreshGrabCursor()
+        }
+    }
+    /// What a press at a document point would take on the box, read by the
+    /// pointer so it says what the press will do.
+    var zoomBoxHit: ((CGPoint) -> ZoomBoxHit?) = { _ in nil }
     var zoomBoxPressing = false
     var onZoomBoxDown: ((CGPoint) -> Bool) = { _ in false }
     var onZoomBoxDrag: ((CGPoint) -> Void) = { _ in }
     var onZoomBoxRelease: ((CGPoint) -> Void) = { _ in }
+    /// ⎋ while the box is up: a drag on it is put back, otherwise the zoom
+    /// is let go. True when it did either.
+    var onZoomBoxEscape: (() -> Bool) = { false }
     /// The zero point moved to here (live, while placing the grid).
     var onGridOriginChange: ((CGPoint) -> Void) = { _ in }
     /// ⏎ / ⎋ while the grid is being adjusted.

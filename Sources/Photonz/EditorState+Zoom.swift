@@ -387,23 +387,35 @@ extension EditorState {
     /// A press on the picture while the box is up: the box takes it when it
     /// lands on the clip (or just beside a corner), and says what it holds.
     func zoomBoxDown(at p: CGPoint) -> Bool {
-        guard let box = zoomBoxInDocument, let frame = zoomClipFrameInDocument,
-              let start = zoomUnitPoint(fromDocument: p) else { return false }
-        let reach = Self.zoomBoxCornerReach / max(0.01, viewport?.zoom ?? 1)
-        guard frame.insetBy(dx: -reach, dy: -reach).contains(p) else { return false }
-        let corners = [CGPoint(x: box.minX, y: box.minY), CGPoint(x: box.maxX, y: box.minY),
-                       CGPoint(x: box.maxX, y: box.maxY), CGPoint(x: box.minX, y: box.maxY)]
+        guard let box = zoomBoxInDocument, let start = zoomUnitPoint(fromDocument: p) else { return false }
+        guard let hit = zoomBoxHit(at: p) else {
+            // Off the clip: done framing, the way a click off a crop is. The
+            // press goes no further, because the clip's own handles are not
+            // on screen and must not be grabbed blind.
+            letGoOfZoom()
+            return true
+        }
         let grab: ZoomGrab
-        if let index = corners.firstIndex(where: { hypot($0.x - p.x, $0.y - p.y) <= reach }) {
+        switch hit {
+        case .corner:
             // The opposite corner stays put.
-            grab = .boxFrom(zoomUnitPoint(fromDocument: corners[(index + 2) % 4]) ?? start)
-        } else if box.contains(p) {
+            grab = .boxFrom(hit.anchor(of: box).flatMap { zoomUnitPoint(fromDocument: $0) } ?? start)
+        case .body:
             grab = .boxMove
-        } else {
+        case .beside:
             grab = .boxFrom(start)
         }
-        zoomBoxPress = ZoomBoxPress(start: start, startInDocument: p, grab: grab, onTheBox: box.contains(p))
+        zoomBoxPress = ZoomBoxPress(start: start, startInDocument: p, grab: grab, onTheBox: hit != .beside)
         return true
+    }
+
+    /// What a press at `p` (document points) would take on the box, or nil
+    /// when the box is down or the press is off its clip. The pointer reads
+    /// the same answer (`CanvasNSView.refreshGrabCursor`).
+    func zoomBoxHit(at p: CGPoint) -> ZoomBoxHit? {
+        guard let box = zoomBoxInDocument, let frame = zoomClipFrameInDocument else { return nil }
+        let reach = Self.zoomBoxCornerReach / max(0.01, viewport?.zoom ?? 1)
+        return ZoomBoxHit.at(p, box: box, clip: frame, reach: reach)
     }
 
     func zoomBoxDragged(to p: CGPoint) {
@@ -427,6 +439,20 @@ extension EditorState {
             // A click beside the box, not a drag: done framing.
             letGoOfZoom()
         }
+    }
+
+    /// ⎋ while the box is up: a drag on the box goes back where it started;
+    /// otherwise the zoom is let go and its clip stays picked, one step back
+    /// at a time. False when there was nothing to step back from.
+    func zoomBoxEscape() -> Bool {
+        if let press = zoomBoxPress {
+            zoomBoxPress = nil
+            if press.dragging { cancelZoomDrag() }
+            return true
+        }
+        guard selectedZoom != nil else { return false }
+        letGoOfZoom()
+        return true
     }
 
     /// A point of the document as fractions of the picked zoom's picture.

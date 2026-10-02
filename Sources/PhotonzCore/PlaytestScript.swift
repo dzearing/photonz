@@ -37,7 +37,7 @@ public struct PlaytestScript: Sendable, Equatable {
     /// worse than no claim at all.
     public static let pointerCueNames: [String] =
         ["none", "grab", "rotate", "name-grab", "drag-copy",
-         "screen-sweep", "screen-move", "screen-copy"]
+         "screen-sweep", "screen-move", "screen-copy", "draw"]
         + ResizeAxis.allCases.map { "resize-\($0.rawValue)" }
 
     /// Parses a script, naming the step and field of the first problem.
@@ -903,6 +903,14 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// place by its first scripted click, still there at its last, and framing
     /// both.
     case expectZoomSuggested
+    /// Clip > Add Zoom: a zoom on the recording at the playhead, picked, the
+    /// way the menu item does it, with no menu opened.
+    case zoomAddAtPlayhead
+    /// Fail unless a zoom is picked, with its box up on the picture.
+    case expectZoomPicked
+    /// Fail unless no zoom is picked and the recording it was on still is:
+    /// the zoom was let go, one step back, not the whole selection.
+    case expectZoomLetGo
     /// Fail unless the recording's clicks are drawn as a ripple: at three
     /// moments across its first scripted click there is a ring centred on the
     /// click, growing and fading, and nothing just before or after
@@ -1355,8 +1363,8 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
         case .clipSplit, .clipDeletePiece, .clipHoldFrame,
              .clipSpeedDouble, .clipSpeedHalf, .expectAddedClick,
              .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
-             .expectZoomShapedByHand, .expectZoomSuggested,
-             .expectClickRipple, .expectClickEffectExportMatches, .expectClickTicksEdited,
+             .expectZoomShapedByHand, .expectZoomSuggested, .expectZoomPicked, .expectZoomLetGo,
+             .zoomAddAtPlayhead, .expectClickRipple, .expectClickEffectExportMatches, .expectClickTicksEdited,
              .soundDetach, .soundAddSample, .soundDuck, .soundLevelHalf,
              .captionsAddVoiceover, .captionsWrite, .captionsWriteHearingNothing,
              .captionsNudgeLater, .captionsNudgeEarlier,

@@ -1,0 +1,43 @@
+{
+  "feature": "Framing a zoom shows one box",
+  "epic": "video-transitions-motion",
+  "summary": "While a zoom is picked, its box is the only frame on the picture: the clip's own outline, handles and turn knob step aside. The pointer says what each part of the box does, and Escape lets the zoom go with the clip still picked.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording, transport stopped. Walk: Scripts/playtest/framing-a-zoom-shows-one-box-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Put the playhead at 2 seconds, right-click the clip, choose Add Zoom.",
+      "shot": "2026-10-02-zoom-framing-one-box-1.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed. A tutorial card used to be a second cost, and is not since 2026-09-22: a guide a walk is driving keeps its card up however buried the window is, and a walk that finds the card missing stops rather than photographing the window without it."
+    },
+    {
+      "do": "Rest the pointer on a corner of the zoom box: it shows resize arrows."
+    },
+    {
+      "do": "Rest it inside the box: it shows an open hand. Drag to move the box."
+    },
+    {
+      "do": "Rest it on the picture beside the box: it shows a crosshair. Drag to draw a new box."
+    },
+    {
+      "do": "Pull the bottom right corner out: the box grows from the top left corner."
+    },
+    {
+      "do": "Press Escape: the box goes away and the clip stays picked with its own frame back.",
+      "shot": "2026-10-02-zoom-framing-one-box-2-let-go.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed. A tutorial card used to be a second cost, and is not since 2026-09-22: a guide a walk is driving keeps its card up however buried the window is, and a walk that finds the card missing stops rather than photographing the window without it."
+    }
+  ],
+  "evaluate": [
+    "With only the zoom box on screen, is it clear what you are adjusting?",
+    "Is the crosshair beside the box the right hint that a drag there draws a new box?",
+    "Should Escape keep the clip picked (as it does now), or drop everything at once?",
+    "A click off the clip now only lets the zoom go, and the next click picks something else. Is that one click too many?"
+  ],
+  "rough": [
+    "No mock draws a zoom region, so there is no mock frame to set this beside; it follows Final Cut's onscreen controls, which show only the control being edited.",
+    "On a dark recording the dimming outside the box barely shows, so the box's white edge does all the work.",
+    "The hand stays open while you carry the box rather than closing as you drag.",
+    "A press off the clip while framing only lets the zoom go, so the clip's hidden handles can never be grabbed blind. That makes it one click, then another to pick something else."
+  ]
+}

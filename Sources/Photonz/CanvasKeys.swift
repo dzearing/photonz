@@ -235,6 +235,13 @@ extension CanvasNSView {
             return
         }
         if event.keyCode == 53 { // Esc, in priority order: cancel drag → ants → layer → tool
+            // A picked zoom's box owns the picture while it is up: Escape puts
+            // a drag on it back, or lets the zoom go with its clip still
+            // picked, the way it steps out of a group before deselecting.
+            if zoomBoxUp, onZoomBoxEscape() {
+                refreshOverlays()
+                return
+            }
             // A box being swept over a path's points is a drag in flight, so
             // it is let go before anything else: it puts back what was picked
             // when it started, the way every abandoned drag here does.

@@ -124,6 +124,35 @@ enum PlaytestZoom {
         return said
     }
 
+    static func addAtPlayhead(_ editor: EditorState) throws -> String {
+        let ms = editor.documentTimeMS
+        guard let clip = editor.clipToAddZoom(atMS: ms) else {
+            throw Failure(description: "Add Zoom is dimmed at \(ms) ms: no recording here takes one")
+        }
+        editor.addZoom(toClip: clip, atMS: ms)
+        return "Add Zoom at \(ms) ms"
+    }
+
+    static func expectPicked(_ editor: EditorState) throws -> String {
+        let clip = try recording(in: editor)
+        guard editor.selectedZoom?.layerID == clip.id else {
+            throw Failure(description: "no zoom on the recording is picked")
+        }
+        guard let box = editor.zoomBoxInDocument else {
+            throw Failure(description: "a zoom is picked and its box is not up on the picture")
+        }
+        return "a zoom is picked, its box at \(box.integral)"
+    }
+
+    static func expectLetGo(_ editor: EditorState) throws -> String {
+        let clip = try recording(in: editor)
+        guard editor.selectedZoom == nil else { throw Failure(description: "a zoom is still picked") }
+        guard editor.selectedLayerID == clip.id else {
+            throw Failure(description: "the zoom was let go and so was the recording it was on")
+        }
+        return "no zoom is picked, and the recording still is"
+    }
+
     static func expectSuggested(_ editor: EditorState) throws -> String {
         let clip = try recording(in: editor)
         guard let zooms = clip.zooms, zooms.count == 1, let zoom = zooms.first else {

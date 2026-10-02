@@ -243,9 +243,11 @@ struct EditorCanvasSurface: View {
                    placingClick: editorState.clickPlacementClip != nil,
                    onPlaceClick: { editorState.placeClick(at: $0) },
                    zoomBoxUp: editorState.zoomBoxInDocument != nil,
+                   zoomBoxHit: { editorState.zoomBoxHit(at: $0) },
                    onZoomBoxDown: { editorState.zoomBoxDown(at: $0) },
                    onZoomBoxDrag: { editorState.zoomBoxDragged(to: $0) },
-                   onZoomBoxRelease: { editorState.zoomBoxReleased(at: $0) })
+                   onZoomBoxRelease: { editorState.zoomBoxReleased(at: $0) },
+                   onZoomBoxEscape: { editorState.zoomBoxEscape() })
             // A picked zoom's box over the whole picture (`ZoomBoxOverlay`).
             .overlay(alignment: .topLeading) { ZoomBoxOverlay() }
             // The exact position and size numbers, hung off the selection

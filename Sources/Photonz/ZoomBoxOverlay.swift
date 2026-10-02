@@ -9,7 +9,9 @@ import SwiftUI
 /// rest of the picture dimmed. Carry the box to move it, pull a corner to
 /// resize it, or press beside it and drag to draw it again. It always keeps the
 /// frame's shape, because any other shape would stretch the picture. A click
-/// beside it without a drag lets the zoom go, the way a click off a crop does.
+/// beside it without a drag lets the zoom go, the way a click off a crop does,
+/// and so does Escape. While the box is up it is the only frame on the
+/// picture: the clip's own outline and handles step aside (`CanvasNSView`).
 ///
 /// Drawn over the canvas in its own view coordinates; the presses are the
 /// canvas view's, which hands a press on the clip to the box before any tool

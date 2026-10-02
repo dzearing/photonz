@@ -80,7 +80,7 @@ extension CanvasNSView {
     /// zoom, and only while the moving layer is the one picked.
     func refreshMotionPathChrome() {
         let shapes = [motionPathLineLayer, motionPathHaloLayer, motionPathKeysLayer, motionPathHandlesLayer]
-        guard tool == .select, let viewport, let path = motionPath, !isMotionPathHiddenForDrag else {
+        guard tool == .select, !zoomBoxUp, let viewport, let path = motionPath, !isMotionPathHiddenForDrag else {
             for shape in shapes {
                 shape.isHidden = true
                 shape.path = nil
