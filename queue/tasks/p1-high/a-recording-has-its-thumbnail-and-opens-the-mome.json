@@ -1,0 +1,34 @@
+{
+  "id": "a-recording-has-its-thumbnail-and-opens-the-mome",
+  "title": "A recording has its thumbnail and opens the moment you press Stop",
+  "goal": "User 2026-10-02: 'when I record a video, it seems to save slowly now, as in I don't see a thumbnail and I can't open it immediately. It has a lag. What is this lag? Can it be avoided so that recording and then opening is super fast?' Since 800a6d01 the history tile appears at Stop but as a placeholder; its thumbnail and every action (open, copy) wait for ScreenCaptureKit's SCRecordingOutput to close the file (measured 61/311/820 ms at 5/60/180 s with system audio and mic; SCRecordingOutput exposes no fragment interval to shorten it), then a poster is cut from the file (AVAssetImageGenerator). Remove the dependency on the closed file for the first moments.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 0.0000015,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-02T18:51:26.769Z",
+  "updated": "2026-10-02T18:51:26.966Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Measured first with Scripts/recording-latency-drill.sh (and a 5 s, 60 s and 180 s recording): Stop to tile, Stop to thumbnail shown, Stop to the editor open and showing the picture, Stop to playable; the report gives each",
+    "While recording, the stream also keeps the most recent video frame in memory (an extra SCStream screen output holding only the latest sample buffer, no copies, negligible CPU, measured), and at Stop that frame becomes the tile's thumbnail at once and is written to the poster cache when the file's stamp is known",
+    "Opening a recording that is still being closed opens the editor immediately, showing that last frame fitted in View mode with the transport present but playback waiting; the moment the file is closed the movie attaches and plays with no window change, flicker or jump; nothing the user does in that time is lost",
+    "Copy and other file actions on a still-closing recording queue and complete when the file lands, with the corner card saying so honestly (no 'Copied' before it is)",
+    "Targets: Stop to thumbnail under 100 ms and Stop to editor showing the picture under 300 ms at every length; Stop to playable is the file close and is not made worse",
+    "The history warm-up of recordings (the poster pre-load) never runs ahead of a just-finished recording's own tile"
+  ],
+  "log": [
+    {
+      "t": "2026-10-02T18:51:26.771Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-02T18:51:26.964Z",
+      "note": "seq 430 -> 0.0000015"
+    }
+  ]
+}

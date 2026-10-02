@@ -1,0 +1,33 @@
+{
+  "id": "every-panel-section-in-a-video-document-expands",
+  "title": "Every panel section in a video document expands and collapses, and none shows that cannot",
+  "goal": "User 2026-10-02: 'in video, I see collapsed panels that can't be expanded. Never show panels that aren't enabled in a mode. Or, fix the bug to ensure they can be expanded if that's the case... I think it might actually be a bug that I can't collapse/expand these.' Reproduce with a real pointer click on each section header's chevron and title in a video document (View and Edit, with nothing, a clip, a title and a shape selected): which sections ignore the click, and why (header hit target covered, state not stored per section, section forced collapsed by video mode, the panel order logic TimePanelOrder overriding the user's choice).",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 0.0000018,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-02T18:51:26.867Z",
+  "updated": "2026-10-02T18:51:27.043Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window.",
+  "acceptance": [
+    "Reproduced first: a walk at Next defaults opens a recording in Edit, and for each section in the right panel clicks its header with the pointer (not an accessibility press) and records whether it opened and closed; the report names the cause",
+    "Every section shown can be expanded and collapsed by clicking its header (chevron or title), with the standard animation, and remembers its state per section",
+    "A section with nothing to show for the current selection or mode is not shown at all (no permanently collapsed or empty sections), per the IA rule that every area serves its purpose",
+    "Keyboard: the header is focusable and Space or Return toggles it",
+    "The same check passes in a picture document"
+  ],
+  "log": [
+    {
+      "t": "2026-10-02T18:51:26.869Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-02T18:51:27.041Z",
+      "note": "seq 440 -> 0.0000018"
+    }
+  ]
+}
