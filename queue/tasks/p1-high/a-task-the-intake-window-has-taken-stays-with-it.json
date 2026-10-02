@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-02T02:01:14.228Z",
-  "updated": "2026-10-02T02:01:32.713Z",
+  "updated": "2026-10-02T02:02:47.840Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-01 by the digest pass. Commit 7b9ef022 (19:00:11 local) set the-segmented-chip-is-one-glass-material-at-rest in_progress with the log line \"Taken by the intake window at the user's request ... the loop must not claim it\". One second later the digest ran `node queue/bin/queue.mjs guard`, which printed {\"reset\":[\"the-segmented-chip-is-one-glass-material-at-rest\"],...} and logged \"runner exited without finalizing; reset to pending (attempt 1)\". The digest put it back by hand. guardStuck in queue/bin/queue-lib.mjs resets every in_progress task; queue/bin/go-loop.sh runs `Q guard` after every runner (around line 717), so after the loop's next task the hold is undone again and `next` would claim that task, which sits first in p1. Sequenced just ahead of the user's arrows task for that reason: it protects the task the person is working on right now.",
@@ -32,6 +32,10 @@
     {
       "t": "2026-10-02T02:01:32.709Z",
       "note": "seq 0.000005 -> 20"
+    },
+    {
+      "t": "2026-10-02T02:02:47.838Z",
+      "note": "Workaround in use since 02:02Z: the intake window now parks a held task as blocked with no card (52aa6190), which guard leaves alone. It works, but the dashboard then reads it as waiting on a card nobody opened, so a real hold is still needed."
     }
   ]
 }

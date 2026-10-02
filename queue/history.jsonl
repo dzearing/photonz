@@ -8813,3 +8813,4 @@
 {"t":"2026-10-02T02:01:43.674Z","ev":"triage","summary":"closed 2 (segmented chip task answered by the users refraction report, its card withdrawn; three-walks repair task already passing in the full sweep), filed 2 (intake holds survive guard p1, sign-in stall re-notifies on return p2), rewrote 1 rule-scrub task that contradicted the users segmented call, logged findings on 3, resequenced p1 and p2 to steps of 10, guard reset 1 by mistake and restored it (intake window hold)"}
 {"t":"2026-10-02T02:02:17.957Z","ev":"task_blocked","id":"the-segmented-chip-is-one-glass-material-at-rest","from":"in_progress","note":"Held by the intake window, which is fixing it now at the user's request (top priority). Not for the loop.","noQuestion":true}
 {"t":"2026-10-02T02:02:36.207Z","ev":"digest","file":"2026-10-01.md"}
+{"t":"2026-10-02T02:02:47.841Z","ev":"task_note","id":"a-task-the-intake-window-has-taken-stays-with-it"}
