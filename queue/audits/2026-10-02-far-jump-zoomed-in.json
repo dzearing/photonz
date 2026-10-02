@@ -1,0 +1,25 @@
+{
+  "feature": "A far playhead jump on a zoomed-in long recording",
+  "epic": "video-cutting",
+  "summary": "On a five minute captioned recording zoomed in close, a long jump of the playhead now holds the app for about 30ms instead of 45 to 54, and a jump at Fit for about 16ms instead of 20 to 28. Playback and scrubbing also redraw much less of the window each frame.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a long captioned recording (about five minutes) with the timeline open.",
+  "switched": {},
+  "try": [
+    { "do": "Zoom the timeline in four steps with the zoom control so about twenty seconds fill the width.", "shot": "2026-10-02-far-jump-zoomed-in-1.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed." },
+    { "do": "Click the transport's scrubber at the middle, then at three quarters, then back at the middle." },
+    { "do": "Press Fit, then click the scrubber at a quarter and at three quarters." },
+    { "do": "Press play for ten seconds while zoomed in, then pause." },
+    { "do": "Drag the playhead quickly back and forth across the ruler." }
+  ],
+  "evaluate": [
+    "Does each far jump at 16x land as one clean move, with no hitch you can feel?",
+    "Does the timeline's playhead, ruler and words lane arrive in the same frame as the picture, with nothing landing a beat late?",
+    "Does the panel's Time and Transition sections still appear the moment the playhead lands on a clip or a cut?",
+    "Does the sharp zoomed-in copy of the picture still sharpen in a moment after you stop, without a blurry flash first?"
+  ],
+  "rough": [
+    "No visual change was intended. One small one is deliberate: the canvas is now drawn in the window's own colours, so a wide-gamut (Display P3) screenshot shows its colours fully on a wide-gamut screen where before they were clipped to sRGB.",
+    "The first jump right after pressing Fit is still the slowest Fit jump (20 to 25ms in the walk against 16 to 20 for the next). What is left there is SwiftUI's own update and Core Animation's commit, not app code.",
+    "The walk still judges each jump at 50ms, not the 40 these runs stayed under: tightening it risks flaky sweeps on a busy machine."
+  ]
+}
