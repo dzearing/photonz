@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-02T02:01:14.228Z",
-  "updated": "2026-10-02T03:36:17.680Z",
+  "updated": "2026-10-02T03:36:51.975Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-01 by the digest pass. Commit 7b9ef022 (19:00:11 local) set the-segmented-chip-is-one-glass-material-at-rest in_progress with the log line \"Taken by the intake window at the user's request ... the loop must not claim it\". One second later the digest ran `node queue/bin/queue.mjs guard`, which printed {\"reset\":[\"the-segmented-chip-is-one-glass-material-at-rest\"],...} and logged \"runner exited without finalizing; reset to pending (attempt 1)\". The digest put it back by hand. guardStuck in queue/bin/queue-lib.mjs resets every in_progress task; queue/bin/go-loop.sh runs `Q guard` after every runner (around line 717), so after the loop's next task the hold is undone again and `next` would claim that task, which sits first in p1. Sequenced just ahead of the user's arrows task for that reason: it protects the task the person is working on right now.",
@@ -60,9 +60,14 @@
     {
       "t": "2026-10-02T03:36:17.679Z",
       "note": "Built: holdTask/releaseTask in queue-lib (guardStuck and readyTasks skip heldBy; setStatus and settleAnsweredBlock end the hold), queue.mjs hold/release, heldBy on the dashboard row and dialog, intake skill + README + digest prompt updated. Verified: hold-drill.mjs 32/32; screen-gate, queue-cli, decision, churn, state-poll, reach, slice-owner drills and failure-drill.sh all pass; scratch dashboard on :8799 showed 'held by the intake window' on the row and 'held by the intake window since Oct 1 · 8:35 PM' in the dialog. No app code changed, so no walk or audit."
+    },
+    {
+      "t": "2026-10-02T03:36:51.973Z",
+      "note": "Shipped in a25b8e1f: queue.mjs hold <id> [--by holder] [why] and release <id>. A held task is in_progress with heldBy; guard leaves it alone without a failure, next never claims it, any other status or release hands it back, and holding is refused while a live runner has the task. The dashboard row and dialog say 'held by the intake window'. The intake skill, README and digest prompt now say to hold. Verified with queue/bin/hold-drill.mjs (32/32), every existing queue drill plus failure-drill.sh, FlagDefaultsReaderTests, and a scratch dashboard checked in a browser."
     }
   ],
   "started": "2026-10-02T03:28:53.205Z",
   "failures": 1,
-  "walks": []
+  "walks": [],
+  "completed": "2026-10-02T03:36:51.974Z"
 }
