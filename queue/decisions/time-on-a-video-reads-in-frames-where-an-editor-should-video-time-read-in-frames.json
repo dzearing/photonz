@@ -1,0 +1,53 @@
+{
+  "id": "time-on-a-video-reads-in-frames-where-an-editor-should-video-time-read-in-frames",
+  "taskId": "time-on-a-video-reads-in-frames-where-an-editor",
+  "question": "Should video time read in frames (timecode) everywhere, or stay in seconds with timecode as a choice in the View menu?",
+  "context": "Reproduced at Next defaults on 2026-10-02: the transport reads 0:04, the ruler at its closest zoom counts 3.9s, 4s, 4.1s, and a transition's length bubble and panel Length both say 0.8s. Nothing shows frames. The mocks draw seconds everywhere, so showing frames by default would be a departure from them.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Timecode everywhere",
+      "summary": "Every time on a video reads like Premiere: the transport says 00:00:04:12, the ruler counts timecode and shows a tick per frame up close, and a transition you drag says 00:00:00:24 in its bubble and its Length row.",
+      "pros": [
+        "An editor can land on a frame they can name, with nothing to switch on",
+        "One way of reading time across the whole window"
+      ],
+      "cons": [
+        "Long numbers where today there are short ones (0:04 becomes 00:00:04:00)",
+        "Goes against the video mocks, which draw seconds throughout",
+        "Harder going for someone trimming a screen recording who has never heard of frames"
+      ],
+      "mitigation": "Lengths can read short, as 24f in the bubble and the Length row, so only a position on the clock carries the full timecode."
+    },
+    {
+      "id": "b",
+      "label": "Seconds, with Timecode in the View menu",
+      "summary": "Today's seconds stay the default, as the mocks draw them. View, then Time Display, offers Seconds or Timecode, and picking Timecode turns every readout over at once. In both, a drag lands on a whole frame and a length box takes 12f or 00:00:00:12.",
+      "pros": [
+        "Keeps the mocks' look for people who think in seconds",
+        "Matches Premiere, which also lets you pick how time is shown",
+        "Transport, ruler, bubble and panel always agree to the frame, whichever you pick"
+      ],
+      "cons": [
+        "An editor has to find the setting once before frames show"
+      ],
+      "mitigation": "The choice is remembered across documents and launches, so it is set once."
+    },
+    {
+      "id": "c",
+      "label": "Leave time in seconds",
+      "summary": "Nothing visible changes: time keeps reading 0:04, 3.9s and 0.8s, and frames stay out of sight.",
+      "pros": [
+        "No new setting and no long numbers"
+      ],
+      "cons": [
+        "An editor still cannot land on a frame they can name, which is the gap this task was filed for"
+      ],
+      "mitigation": "Seconds with hundredths at the closest zoom already gets within a frame or two.",
+      "declines": true
+    }
+  ],
+  "recommended": "b",
+  "status": "pending",
+  "created": "2026-10-02T07:29:02.857Z"
+}

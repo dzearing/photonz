@@ -1,0 +1,84 @@
+{
+  "out": "/tmp/photonz-playtest/time-reads-today-walk",
+  "seed": "What a video's time says today, at Next defaults with no flag changed, for the frames question: the transport readout and the ruler at fit and at the closest zoom. Every step survives a lock.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "1-at-fit-four-seconds-in"
+    },
+    {
+      "do": "action",
+      "action": "timelineZoomIn"
+    },
+    {
+      "do": "action",
+      "action": "timelineZoomIn"
+    },
+    {
+      "do": "action",
+      "action": "timelineZoomIn"
+    },
+    {
+      "do": "action",
+      "action": "timelineZoomIn"
+    },
+    {
+      "do": "action",
+      "action": "timelineZoomIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "2-closest-zoom"
+    }
+  ]
+}
