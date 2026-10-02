@@ -23,6 +23,18 @@ struct CutLabelRuleTests {
         #expect(!CutLabelRule.isCut("Sample Talk · 1280 x 800 · 0:17"))
     }
 
+    /// A "•••" menu button reads as dots and nothing else ("•..", "...", "…"):
+    /// an icon, not words cut short. A cut label always keeps some of its words.
+    @Test func dotsWithNoWordsAreAnIconNotACutLabel() {
+        #expect(!CutLabelRule.isCut("•.."))
+        #expect(!CutLabelRule.isCut("..."))
+        #expect(!CutLabelRule.isCut("…"))
+        #expect(!CutLabelRule.isCut("-•-"))
+        #expect(!CutLabelRule.isCut(" • .. "))
+        #expect(CutLabelRule.isCut("A…"))
+        #expect(CutLabelRule.isCut("4..."))
+    }
+
     @Test func wordsOverThePictureOrTheLanesAreLeftOut() {
         let lanes = CGRect(x: 100, y: 500, width: 800, height: 200)
         let readings = [

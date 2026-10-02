@@ -27,8 +27,12 @@ public enum CutLabelRule {
 
     /// Whether these words were cut short to fit.
     public static func isCut(_ text: String) -> Bool {
+        // Dots with no words around them are an icon (the "•••" menu button
+        // reads as "•.."), never a label cut short: a cut label keeps some of
+        // its words.
+        guard text.unicodeScalars.contains(where: CharacterSet.alphanumerics.contains) else { return false }
         // The reader sometimes loses a dot of the three ("Lower..").
-        text.contains("…") || text.contains("...") || text.hasSuffix("..")
+        return text.contains("…") || text.contains("...") || text.hasSuffix("..")
     }
 
     /// The readings that are cut, leaving out any whose middle sits in one of
