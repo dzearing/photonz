@@ -135,6 +135,9 @@ final class EditorState {
     /// content caches the interactive composite depends on.
     @ObservationIgnored private let tileRenderer = DocumentRenderer()
     @ObservationIgnored private var crispTileTask: Task<Void, Never>?
+    /// The tile on screen was drawn for a moment the canvas has moved on
+    /// from, and goes with the next picture to land (`refreshCrispTile`).
+    @ObservationIgnored private var crispTileOutOfDate = false
     var isImporterPresented = false
     var isResizeDialogPresented = false
     var isCanvasSizeDialogPresented = false
@@ -4497,13 +4500,26 @@ final class EditorState {
     /// `displayed` is `preview` as the canvas draws it (`displayDocument`),
     /// when the caller already has it: working it out is a walk of the whole
     /// document, and a step of the playhead used to do it twice.
+    ///
+    /// `withTheNextFrame` is for a caller that has just asked for a new
+    /// picture: the tile on screen was drawn for the moment that picture
+    /// replaces, so it comes down in the same pass the picture goes up. Taken
+    /// down here, a step of the playhead drew the canvas once for that and
+    /// again for the picture, and the first of the two was spent showing the
+    /// old moment less sharply (`first-long-jump-when-zoomed-in-walk`).
     private func refreshCrispTile(showing preview: PhotonzDocument? = nil,
-                                  displayed: PhotonzDocument? = nil) {
+                                  displayed: PhotonzDocument? = nil,
+                                  withTheNextFrame: Bool = false) {
         crispTileTask?.cancel()
         crispTileTask = nil
         // Anything on screen was drawn for a different moment than this one.
-        crispTile = nil
-        crispTileViewport = nil
+        if withTheNextFrame, crispTile != nil {
+            crispTileOutOfDate = true
+        } else {
+            crispTileOutOfDate = false
+            crispTile = nil
+            crispTileViewport = nil
+        }
 
         guard Experiments.shared.crispZoomEnabled,
               dragPreview == nil,
@@ -4534,6 +4550,7 @@ final class EditorState {
             guard !Task.isCancelled, let self else { return }
             // The camera or the document may have moved on while this drew.
             guard self.viewport == viewport, self.history?.current == settled else { return }
+            self.crispTileOutOfDate = false
             self.crispTile = tile
             self.crispTileViewport = viewport
         }
@@ -4579,13 +4596,20 @@ final class EditorState {
         // picture is stale before it lands, and asking for one thirty times a
         // second would clear the tile thirty times a second, which every view
         // reading it is told about whether or not the value changed.
-        defer { if !isMotionPlaying { refreshCrispTile(showing: submitted, displayed: displayed) } }
+        defer {
+            if !isMotionPlaying { refreshCrispTile(showing: submitted, displayed: displayed, withTheNextFrame: true) }
+        }
         if scheduler == nil {
             scheduler = RenderScheduler(store: store, onDelivery: { [weak self] frame in
                 await MainActor.run {
                     // Drop the frame if the document was closed while rendering.
                     guard let self, self.history != nil else { return }
                     self.renderedImage = frame.image
+                    if self.crispTileOutOfDate {
+                        self.crispTileOutOfDate = false
+                        self.crispTile = nil
+                        self.crispTileViewport = nil
+                    }
                     self.shownDrawnDocument = frame.document
                     let moment = frame.document.hasTime ? frame.stamp : nil
                     if self.shownMomentMS != moment { self.shownMomentMS = moment }

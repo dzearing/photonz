@@ -296,6 +296,10 @@ struct InspectorPanel: View {
     /// rather than read once, so ticking one in the list at the foot of the
     /// panel redraws the dock in the same frame.
     @State private var sectionVisibility = PanelSectionVisibilityStore.shared
+    /// What the section list needs to know about where the playhead is, as
+    /// the watcher last handed it over. Nil until it has, and worked out on
+    /// the spot until then.
+    @State private var watchedTimeFacts: PanelTimeFacts?
 
     var body: some View {
         #if PHOTONZ_PLAYTEST
@@ -519,6 +523,9 @@ struct InspectorPanel: View {
                 .allowsHitTesting(false)
         }
         .animation(.easeOut(duration: 0.12), value: editorState.panelDropOffer)
+        // Which sections the playhead's place brings in, handed over only
+        // when that changes (`PanelTimeFacts`).
+        .background { PanelTimeFactsWatcher { watchedTimeFacts = $0 } }
         .onAppear(perform: loadOrder)
         .onChange(of: order) { persistOrder() }
         // A panel that goes away mid-drag takes its key watch with it.
@@ -729,7 +736,8 @@ struct InspectorPanel: View {
         // Present only where there is a cut to be on: a clip somebody has split
         // at least once. A recording nobody has cut has no join, and a section
         // about a join that is not there would be a section about nothing.
-        if editorState.canWorkWithClipTransitions, editorState.cutInHand != nil {
+        let timeFacts = watchedTimeFacts ?? PanelTimeFacts(editorState)
+        if timeFacts.showsCut {
             set.insert(.editPoint)
             set.insert(.transition)
         }
@@ -752,7 +760,7 @@ struct InspectorPanel: View {
         // two, because "when is this on screen" and "how fast does this play"
         // are one question asked of two kinds of layer, and a second section
         // called Time would be a second place to look for it.
-        if editorState.canRetimeAClip || editorState.placedLayerInHand != nil {
+        if timeFacts.canRetime || editorState.placedLayerInHand != nil {
             set.insert(.speed)
         }
         // No Reframe section: a punch-in is the clip's own Scale and Position,
@@ -1679,4 +1687,38 @@ struct SectionHelpMark: View {
 /// around it passing again (2026-09-30).
 extension InspectorPanel: Equatable {
     nonisolated static func == (lhs: InspectorPanel, rhs: InspectorPanel) -> Bool { true }
+}
+
+/// The two things the panel's list of sections turns on that depend on where
+/// the playhead is: whether it stands on a cut of the clip in hand, which
+/// brings in Edit Point and Transition, and whether it is over a piece that
+/// can be retimed, which brings in Time.
+///
+/// Read by the panel straight off the editor, they tied the whole panel to
+/// the playhead: every step of it and every frame of playback built every
+/// section again, about 3ms of each far jump
+/// (`first-long-jump-when-zoomed-in-walk`). They flip only when the playhead
+/// crosses into or out of one, so a watcher reads them and hands them over
+/// when they do (`PanelTimeFactsWatcher`).
+struct PanelTimeFacts: Equatable {
+    var showsCut = false
+    var canRetime = false
+
+    @MainActor init(_ editorState: EditorState) {
+        showsCut = editorState.canWorkWithClipTransitions && editorState.cutInHand != nil
+        canRetime = editorState.canRetimeAClip
+    }
+}
+
+/// Reads `PanelTimeFacts` on every step of the playhead, which costs next to
+/// nothing, and tells the panel only when they change.
+private struct PanelTimeFactsWatcher: View {
+    @Environment(EditorState.self) private var editorState
+    let onChange: (PanelTimeFacts) -> Void
+
+    var body: some View {
+        Color.clear
+            .onChange(of: PanelTimeFacts(editorState), initial: true) { _, now in onChange(now) }
+            .accessibilityHidden(true)
+    }
 }
