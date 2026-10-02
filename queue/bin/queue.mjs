@@ -38,6 +38,15 @@
 //                                            pending and visible, is not claimed while the screen is
 //                                            locked, and returns to the queue by itself once it is
 //                                            unlocked. With no argument it says which it is
+//   node queue/bin/queue.mjs hold <id> [--by <holder>] ["why"]
+//                                            somebody other than the loop is working on this task
+//                                            (the intake window, by default). It goes in_progress,
+//                                            guard leaves it alone, the loop never claims it, and the
+//                                            dashboard says who has it. Refused while a loop runner
+//                                            is on it
+//   node queue/bin/queue.mjs release <id> ["note"]
+//                                            hand a held task back to the queue as pending. Finishing
+//                                            it with `status <id> done|dropped|blocked` also ends the hold
 //   node queue/bin/queue.mjs priority <id> <p0-critical|p1-high|p2-normal|p3-low>
 //   node queue/bin/queue.mjs seq <id> <number>   set sort order within the priority (decimals fine)
 //   node queue/bin/queue.mjs decision <taskId> <question> <optionsJSON> [context] [recommended]
@@ -48,7 +57,8 @@
 //                                            never counts as an answer and never starts the work
 //                                            it was blocking; the reason is required
 //   node queue/bin/queue.mjs alive           print the live loop's pid, or "no" if none is running
-//   node queue/bin/queue.mjs guard           reset any in_progress task back to pending (parks one that keeps failing)
+//   node queue/bin/queue.mjs guard           reset any in_progress task back to pending (parks one that keeps failing);
+//                                            a held task is left alone
 //   node queue/bin/queue.mjs compact        collapse old churn events in history.jsonl into counted entries
 //   node queue/bin/queue.mjs reset-health   clear the unhealthy flag (the loop does this on start)
 //   node queue/bin/queue.mjs script <sha256> <running|broken> <path>
@@ -164,7 +174,7 @@ try {
         const t = q.readTaskDetail(args[0]);
         if (!t) throw new Error(`no task ${args[0]}`);
         const last = (t.log || []).slice(-3).map((e) => `  ${e.t}  ${e.note}`);
-        out([`${t.id}`, `  status    ${t.status}`, `  priority  ${t.priority} (seq ${t.seq})`, `  title     ${t.title}`,
+        out([`${t.id}`, `  status    ${t.status}${t.heldBy ? `, held by ${t.heldBy} since ${t.heldSince || '?'}` : ''}`, `  priority  ${t.priority} (seq ${t.seq})`, `  title     ${t.title}`,
           ...(t.goal ? [`  goal      ${t.goal}`] : []), ...(last.length ? ['last log lines:', ...last] : [])].join('\n'));
         break;
       }
@@ -255,6 +265,25 @@ try {
       out(q.setNeedsUnlockedScreen(args[0], args[1] !== 'off', args.slice(2).join(' ')).id);
       break;
     }
+    case 'hold': {
+      if (!args[0]) throw new Error('usage: queue.mjs hold <id> [--by <holder>] ["why"]');
+      const rest = args.slice(1);
+      let by = 'intake';
+      const at = rest.indexOf('--by');
+      if (at >= 0) {
+        by = rest[at + 1] || '';
+        if (!by || by.startsWith('--')) throw new Error('--by needs a holder name');
+        rest.splice(at, 2);
+      }
+      const unknown = rest.filter((a) => /^--/.test(a));
+      if (unknown.length) throw new Error(`unknown option ${unknown.join(', ')}; the only one is --by. Nothing was held.`);
+      out(q.holdTask(args[0], by, rest.join(' ')).id);
+      break;
+    }
+    case 'release':
+      if (!args[0]) throw new Error('usage: queue.mjs release <id> ["note"]');
+      out(q.releaseTask(args[0], args.slice(1).join(' ')).id);
+      break;
     case 'priority':
       out(q.setPriority(args[0], args[1]).id);
       break;

@@ -105,7 +105,7 @@ request)
       // puts the id in its environment, and a request that cannot say who
       // wanted the sweep is a request nobody can judge later.
       import("./queue/bin/queue-lib.mjs").then((q) => {
-        const t = q.readAllTasks().find((t) => t.status === "in_progress");
+        const t = q.readAllTasks().find((t) => t.status === "in_progress" && !t.heldBy);
         console.log(t ? t.id : "a task runner");
       }).catch(() => console.log("a task runner"));
     ' 2>/dev/null || echo "a task runner")" "$URGENT"

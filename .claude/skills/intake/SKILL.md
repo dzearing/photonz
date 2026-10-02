@@ -19,6 +19,26 @@ you to do the work yourself, in which case say so plainly and do it.
 Infrastructure the loop itself runs on is yours to change directly: `queue/`,
 `.claude/skills/`, `CLAUDE.md`, and the loop's own scripts and prompts.
 
+## Taking a task yourself: hold it
+
+When the user asks you to work a queued task here, hold it before you touch
+anything, so the loop never picks up the same task while you are on it:
+
+```
+node queue/bin/queue.mjs hold <id> "the user asked for it here"
+```
+
+A held task is in progress, the loop's safety sweep leaves it alone and the loop
+never claims it, and the dashboard row says "held by the intake window". Do not
+use `status <id> in_progress` for this (the sweep resets that within minutes)
+and do not park it as blocked with no card (it reads as a question nobody
+asked). Hold is refused while a loop runner is already on that task: let it
+finish or stop the loop first.
+
+Hand it back when you stop, in one command: `status <id> done "<what shipped>"`
+(or `dropped`) when it is finished, or `release <id> "<where it stands>"` to give
+it to the loop as pending.
+
 ## Every task the user asks for is p1
 
 `"priority":"p1-high"`, `"source":"user"`, and a low `seq` so it claims ahead of

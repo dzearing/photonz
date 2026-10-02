@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-02T02:01:14.228Z",
-  "updated": "2026-10-02T02:02:47.840Z",
+  "updated": "2026-10-02T03:36:17.680Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-01 by the digest pass. Commit 7b9ef022 (19:00:11 local) set the-segmented-chip-is-one-glass-material-at-rest in_progress with the log line \"Taken by the intake window at the user's request ... the loop must not claim it\". One second later the digest ran `node queue/bin/queue.mjs guard`, which printed {\"reset\":[\"the-segmented-chip-is-one-glass-material-at-rest\"],...} and logged \"runner exited without finalizing; reset to pending (attempt 1)\". The digest put it back by hand. guardStuck in queue/bin/queue-lib.mjs resets every in_progress task; queue/bin/go-loop.sh runs `Q guard` after every runner (around line 717), so after the loop's next task the hold is undone again and `next` would claim that task, which sits first in p1. Sequenced just ahead of the user's arrows task for that reason: it protects the task the person is working on right now.",
@@ -36,6 +36,33 @@
     {
       "t": "2026-10-02T02:02:47.838Z",
       "note": "Workaround in use since 02:02Z: the intake window now parks a held task as blocked with no card (52aa6190), which guard leaves alone. It works, but the dashboard then reads it as waiting on a card nobody opened, so a real hold is still needed."
+    },
+    {
+      "t": "2026-10-02T02:03:00.934Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-02T03:28:38.890Z",
+      "note": "runner exited without finalizing; reset to pending (attempt 1)"
+    },
+    {
+      "t": "2026-10-02T03:28:53.206Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-02T03:30:14.184Z",
+      "note": "Reproduced in a scratch queue: status <id> in_progress, then guard printed reset:[id] and next claimed it. Before building: a hold must survive guard and next; the CLI must refuse to hold a task a live loop runner is on (two hands on one task is the bug itself); any terminal status, or release, ends the hold; a hold with no holder name or named after the loop is refused; the row must say who holds it, since an in-progress row otherwise reads as the loop working on it."
+    },
+    {
+      "t": "2026-10-02T03:36:17.626Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-02T03:36:17.679Z",
+      "note": "Built: holdTask/releaseTask in queue-lib (guardStuck and readyTasks skip heldBy; setStatus and settleAnsweredBlock end the hold), queue.mjs hold/release, heldBy on the dashboard row and dialog, intake skill + README + digest prompt updated. Verified: hold-drill.mjs 32/32; screen-gate, queue-cli, decision, churn, state-poll, reach, slice-owner drills and failure-drill.sh all pass; scratch dashboard on :8799 showed 'held by the intake window' on the row and 'held by the intake window since Oct 1 · 8:35 PM' in the dialog. No app code changed, so no walk or audit."
     }
-  ]
+  ],
+  "started": "2026-10-02T03:28:53.205Z",
+  "failures": 1,
+  "walks": []
 }

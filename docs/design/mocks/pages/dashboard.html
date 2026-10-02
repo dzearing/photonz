@@ -1231,16 +1231,23 @@
       // A task held back for somebody at the Mac says so instead of showing its
       // last log line: it is pending and never claimed, which otherwise reads
       // as the loop ignoring it.
-      var sub = t.waitingForScreen || lastNote(t);
+      // A held task says who has it: in progress otherwise reads as the loop.
+      var sub = t.waitingForScreen || heldWord(t) || lastNote(t);
       h += '<span class="db-title">' + esc(t.title) + (sub ? '<span class="db-sub">' + esc(sub) + '</span>' : '') + '</span>';
       h += '<span class="db-meta">' + rel(t.completed || t.updated) + '</span>';
       h += '</div>';
       return h;
     }).join('');
   }
+  // Somebody other than the loop is working on it (queue.mjs hold).
+  function heldWord(t) {
+    if (!t.heldBy) return '';
+    return 'held by ' + (t.heldBy === 'intake' ? 'the intake window' : t.heldBy);
+  }
   function statusWord(t) {
     if (t.parked) return 'parked';
     if (t.waitingForScreen) return 'waiting for an unlocked screen';
+    if (t.heldBy) return heldWord(t) + (t.heldSince ? ' since ' + absTime(t.heldSince) : '');
     return STATUS_LABEL[t.status];
   }
 

@@ -20377,3 +20377,9 @@ the middle and barely magnifies (a crisp or growing lens would be ours to draw).
 - App: Style tiles in Appearance and in the arrow tool's popover (`ArrowStyleTiles.swift`), Arrow Style and Reshuffle on the arrow's right-click menu and in the Layer menu, the drag preview draws the style live. Flag `next-arrow-styles`, on by default in Next. `VideoKit.TileGrid` no longer traps on an unbounded width offer.
 - Walks: arrow-styles-walk (every style twice beside its reference, on light and dark, exports at 1x/2x/3x and SVG), arrow-reshuffle-walk (needs an unlocked screen). Audit: queue/audits/2026-10-01-arrow-styles.json.
 - Next: arrows-can-be-bent-by-dragging-their-middle, which also carries the bent half of the arrow styles (every style along a curve, photographed).
+
+## 2026-10-01 — A task the intake window takes stays with it
+
+- `queue.mjs hold <id> [--by <holder>] ["why"]` and `queue.mjs release <id>`: a held task is in progress with `heldBy`/`heldSince`, `guard` leaves it alone without counting a failure, `next` never claims it, and any status other than in_progress (or release) hands it back. Hold is refused on a task a live loop runner is on, and for a holder named after the loop.
+- Dashboard: a held row's subline and the task dialog say "held by the intake window" (and since when).
+- Intake skill, queue README and digest prompt say to hold rather than mark in_progress or park as blocked. Drill: `queue/bin/hold-drill.mjs` (32 checks).

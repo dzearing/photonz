@@ -178,6 +178,8 @@ export function taskRow(t) {
   // says WHY a pending task is not being claimed, so it does not read as stuck
   const screen = waitingForScreen(t);
   if (screen) row.waitingForScreen = screen;
+  // an in-progress row otherwise reads as the loop working on it
+  if (t.heldBy) { row.heldBy = t.heldBy; if (t.heldSince) row.heldSince = t.heldSince; }
   // the dialog header names the release, and it opens from the row, so this
   // rides along rather than arriving a beat later and changing under the eye
   if (t.release) row.release = t.release;
@@ -439,6 +441,67 @@ export function setNeedsUnlockedScreen(id, needs, why = '') {
   return t;
 }
 
+// ---- held tasks -------------------------------------------------------------
+// The person sometimes asks the intake window to take a task itself. Marking it
+// in_progress was not enough: guard resets EVERY in_progress task after every
+// runner, so on 2026-10-01 the segmented chip task the intake window had just
+// taken was put back to pending one second later and sat first in line for the
+// loop to claim, with two hands about to change the same code at once.
+//
+// So a task can be HELD by a named holder that is not a loop runner. A held
+// task is in_progress, guard leaves it alone without counting a failure, the
+// loop never claims it, and it is handed back with one command (release, or any
+// terminal status, which ends the hold on its own).
+const LOOP_NAMES = /^(the\s+)?(go[\s-]*)?(loop|runner)s?$/i;
+
+export function holdTask(id, holder = 'intake', why = '') {
+  const t = findTask(id);
+  if (!t) throw new Error(`no task ${id}`);
+  holder = String(holder || '').trim();
+  if (!holder) throw new Error('say who holds it: hold <id> --by <holder>');
+  if (LOOP_NAMES.test(holder)) throw new Error(`"${holder}" is the loop. A hold is for a holder other than a loop runner; the loop claims tasks with next.`);
+  if (t.status === 'done' || t.status === 'dropped') throw new Error(`${id} is already ${t.status}; there is nothing left to hold`);
+  if (t.heldBy) {
+    if (t.heldBy === holder) return t;
+    throw new Error(`${id} is already held by ${t.heldBy}. It hands it back first: release ${id}`);
+  }
+  // A runner on it right now is exactly the collision this exists to stop.
+  const s = readStatus();
+  if (t.status === 'in_progress' && s.task && s.task.id === id && loopAlive(s)) {
+    throw new Error(`a loop runner is working on ${id} right now. Let it finish, or stop the loop, before holding it.`);
+  }
+  const prev = t.status;
+  t.status = 'in_progress';
+  t.heldBy = holder;
+  t.heldSince = now();
+  t.started = t.heldSince;
+  if (t.parked) { t.parked = false; t.parkReason = ''; t.failures = 0; }
+  appendLog(t, `held by ${holder}${why ? `: ${why}` : ''}. The loop leaves it alone until it is handed back.`);
+  saveTask(t);
+  appendEvent('task_held', { id, by: holder, from: prev });
+  return t;
+}
+
+// Hand a held task back to the queue. It goes back to pending (the loop may
+// claim it next) unless the holder is retiring it, which `status` does.
+export function releaseTask(id, note = '') {
+  const t = findTask(id);
+  if (!t) throw new Error(`no task ${id}`);
+  if (!t.heldBy) throw new Error(`${id} is not held by anyone`);
+  const by = t.heldBy;
+  endHold(t);
+  t.status = 'pending';
+  appendLog(t, `${by} handed it back to the queue${note ? `: ${note}` : ''}`);
+  saveTask(t);
+  appendEvent('task_released', { id, by });
+  return t;
+}
+
+function endHold(t) {
+  delete t.heldBy;
+  delete t.heldSince;
+}
+
 export function setSeq(id, seq) {
   if (typeof seq !== 'number' || !isFinite(seq)) throw new Error(`bad seq ${seq}`);
   const t = findTask(id);
@@ -566,6 +629,11 @@ export function setStatus(id, status, note = '', { checkReach = false } = {}) {
   // written and the history does not pretend something happened.
   if (prev === status && !note) return t;
   t.status = status;
+  // Any status but in_progress is the holder handing the task back.
+  if (t.heldBy && status !== 'in_progress') {
+    appendLog(t, `${t.heldBy} handed it back as ${status}`);
+    endHold(t);
+  }
   // Moving a parked task anywhere else un-parks it and gives it a clean slate,
   // so the dashboard's "put it back in the queue" really is a fresh start.
   if (t.parked && status !== 'blocked') { t.parked = false; t.parkReason = ''; t.failures = 0; }
@@ -624,6 +692,7 @@ function settleAnsweredBlock(t, note = '', reason = 'answered while this was sti
   if (!mine.length || mine.some((d) => d.status !== 'resolved')) return null;
   const declined = mine.find((d) => (chosenOption(d) || {}).declines);
   const prev = t.status;
+  endHold(t);
   if (note) appendLog(t, note);
   t.blockedBy = (t.blockedBy || []).filter((b) => !mine.some((d) => d.id === b));
   if (declined) {
@@ -716,7 +785,9 @@ export function waitingForScreen(t) {
 
 export function readyTasks(tasks = readAllTasks()) {
   const doneIds = new Set(tasks.filter((t) => t.status === 'done').map((t) => t.id));
-  const ready = tasks.filter((t) => t.status === 'pending' && (t.deps || []).every((d) => doneIds.has(d))
+  // `!t.heldBy` is belt and braces: a held task is in_progress, but a hand edit
+  // to pending that kept the holder must still not hand it to the loop.
+  const ready = tasks.filter((t) => t.status === 'pending' && !t.heldBy && (t.deps || []).every((d) => doneIds.has(d))
     && !waitingForScreen(t));
   ready.sort((a, b) => PRIORITIES.indexOf(a.priority) - PRIORITIES.indexOf(b.priority) || (a.seq ?? Infinity) - (b.seq ?? Infinity) || (a.created || '').localeCompare(b.created || ''));
   return ready;
@@ -1078,7 +1149,8 @@ export function recordRunnerExit({ taskId = null, exit = 0, error = '', kind = '
 // too rather than being handed back to the loop forever.
 export function guardStuck() {
   const all = readAllTasks();
-  const stuck = all.filter((t) => t.status === 'in_progress');
+  // A held task is in progress on purpose, in somebody else's hands.
+  const stuck = all.filter((t) => t.status === 'in_progress' && !t.heldBy);
   const parked = [];
   for (const t of stuck) {
     t.failures = (t.failures || 0) + 1;
