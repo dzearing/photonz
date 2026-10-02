@@ -1,0 +1,35 @@
+{
+  "id": "the-segmented-chip-is-one-glass-material-at-rest",
+  "title": "The segmented chip is one glass material at rest and in motion, clear and legible",
+  "goal": "User 2026-10-01, three screenshots of View | Edit: at rest a solid blue chip; while switching it turns into murky clear glass with doubled, smeared 'View'; then snaps back to solid blue. 'There should be no snapping to solid, or transitioning of materials! If it's glass, it's glass. And the text layer should probably be on top of the glass so it doesn't become diminished. But it should also be below the glass so the refractions get picked up during the animation. It should be clear, visible, and a consistent material throughout... I think the glass is also incredibly refracted and murky.' Cause: 7d88a0cd did what the intake window's task asked: isLifted switches the chip from .regular.tint(fill) with an opaque fill to .clear.tint(fill * lensTint) (SegmentedControl.swift:425, :451). That instruction was wrong.",
+  "epic": "design-system",
+  "priority": "p1-high",
+  "seq": 1e-7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-02T01:56:45.031Z",
+  "updated": "2026-10-02T01:56:45.116Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window. Supersedes the 'lens while moving, tinted chip at rest' instruction in the-segmented-chip-shows-real-liquid-glass-refra.",
+  "acceptance": [
+    "Filmed first with filmThumb at 120 fps, dark and light, both directions, edges zoomed: the before frames show the solid-to-glass-to-solid swap",
+    "ONE material for the chip at every moment: the same Glass value (one variant, one tint, one opacity) at rest, while moving, while dragged, and while pressed; no isLifted switch of glass type, tint or fill; no opaque fill layered on the glass at any time",
+    "The glass is clear and calm, not murky: the variant and a light accent tint chosen so the chip reads plainly as tinted glass with modest edge refraction (compare side by side with Apple's own glass in the macOS 26 Control Center and toolbar, and pick the gentlest that still reads as the selected state); no heavy distortion, no smeared double image",
+    "Text in two layers, as the user specified: every label is drawn UNDER the glass (so the moving glass refracts the words it passes) AND the labels are drawn again ON TOP of the glass, crisp and full strength, so no word is ever diminished; the on-top label of the picked segment is the readable one at rest, and the refracted copy beneath only shows at the glass's edges as it moves (aligned exactly so it does not read as a doubled word in the middle)",
+    "Legible in every frame, light and dark, in every placement (title bar, history bar, panels): never white on white or black on black",
+    "One animator, no overshoot outside the rail",
+    "Before calling it done, the runner posts the filmed frames (rest, three mid-move frames, rest) for both schemes in the audit, and a card asks the user; the intake window reviews those frames before telling the user it is fixed"
+  ],
+  "log": [
+    {
+      "t": "2026-10-02T01:56:45.033Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-02T01:56:45.115Z",
+      "note": "seq 440 -> 1e-7"
+    }
+  ]
+}

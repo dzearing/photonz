@@ -1,18 +1,18 @@
 {
   "id": "switching-the-history-filter-is-instant",
   "title": "Switching the history filter is instant",
-  "goal": "User 2026-09-30: 'when I switch between filters on the history, it's slow. I think we're spending a lot of time in rendering all the items, the list should be virtualized, filtering should be super fast.' The strip is already a LazyHStack in a ScrollView (HistoryOverlay.swift:133-136), so plain virtualization is in place; measure before changing anything. Suspects: thumbnails decoded synchronously on the main thread as cells appear (CaptureThumbnailView), video thumbnails generated from the file (AVAssetImageGenerator) per switch, no thumbnail cache across filter changes, the ForEach identity changing (Array(entries.enumerated()) rebuilding every cell), the filter change animating a large diff, the ScrollViewReader scrolling through, or the entries list re-read from disk on each switch.",
+  "goal": "Clicking All, Screenshots or Videos in the history bar should show the new set of captures at once, even with hundreds of captures, with no pause while pictures load and no scroll through the strip.",
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 0.000003,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T20:23:18.803Z",
-  "updated": "2026-09-30T20:23:18.883Z",
+  "updated": "2026-09-30T22:55:20.204Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Filed from the intake window.",
+  "notes": "Filed from the intake window. User 2026-09-30: 'when I switch between filters on the history, it's slow ... the list should be virtualized, filtering should be super fast.'\n\nCause, measured (probe, real ~500-capture Screenshots folder and a generated 500): the strip was already lazy, but each tile held the FULL screenshot (up to 3456x2234, 30 MB decoded) for a 100pt tile, decoded + uploaded on the main thread the first time a tile showed (sample: CA::Render::copy_image / ImageIO under CaptureThumbnailImage.body). Opening the bar: one 320ms pass; first switch 45ms; a switch from 40 tiles along 126ms (the new set built at the old offset, then an animated scroll through). Every poster landing also re-ran every tile (one observed imageCache dictionary).\n\nFix: Capture/CaptureThumbnail.swift: one @Observable CaptureThumbnail per capture (tile observes only its own); CaptureStore.thumbnail(for:) reads the header synchronously (size + DPI, no decode, so the tile takes its final shape at once) and queues a background decode (4 at a time, newest ask first) of ThumbnailFit.decodePlan (core, tested): the ratio-cap crop shrunk to a 320px short side. Posters: ~/Library/Caches/<bundle>/CapturePosters/<sha(path|mtime-size)>.jpg + .json (size, duration), header read sync on tile creation. add()/replace() seed the tile from the in-memory image, then swap in the small one. image(for:) now only reads the full file (copy). HistoryOverlay: ForEach keyed by capture id, focus by id, .transaction(value: filter) no animation, onChange(filter) non-animated proxy.scrollTo(first, .leading), selection-follow skipped for that one update (jumpingToStart). Tried ScrollPosition set in the same update as the filter: still 42 tiles from far along, and it broke arrow-follow centring, so reverted.\n\nHarness: setup \"history\": N (PlaytestGeneratedHistory, generated folder under /tmp/photonz-playtest/generated-history-N, CaptureStore.defaultDirectory override, probe only); press \"longestUnderMS\" judges the press's own 0.3s window; ViewBuildMeter .historyTile. Walk: history-filter-switch-speed-walk.",
   "acceptance": [
     "Measured first with Instruments/os_signpost in the probe with a realistic history (200+ captures, a third of them recordings): time from the click to the new filter's first full frame, and where the main thread spends it; the report names the cause",
     "Switching All / Screenshots / Videos shows the new set within one frame (under 16 ms of main-thread work) and the segmented chip's move is never stalled by it",
@@ -29,6 +29,35 @@
     {
       "t": "2026-09-30T20:23:18.882Z",
       "note": "seq 430 -> 0.000003"
+    },
+    {
+      "t": "2026-09-30T21:58:55.827Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-30T22:54:27.182Z",
+      "note": "owns these walks: history-filter-switch-speed-walk"
+    },
+    {
+      "t": "2026-09-30T22:54:50.935324Z",
+      "note": "Adversarial pre-check: a Photoshop/Finder user expects a filter to be instant and to land at the top of the new set; no mock draws the bar, so the look stays as it is and only speed changes. Risk: loading pictures in the background could make tiles jump when they land, so tile size comes from the file header synchronously and only the pixels arrive later."
+    },
+    {
+      "t": "2026-09-30T22:54:50.935582Z",
+      "note": "After (walk, generated 500): judged switches 3-11ms longest pass, repeat switches build 0-1 tiles, far-along switch 7.6ms (42 tiles: new set laid out once at the old offset before the jump; bounded at 48 in the walk). Real folder: open 135ms (was 320), switches 3-11ms, first-ever Videos switch 16.9ms once (posters being made), 10ms warm. First click on the bar costs ~20-37ms whatever it clicks (the panel taking key: clicking the already-picked All reproduces it), so the walk clicks All once unjudged. The segmented chip adds a 15-20ms pass 0.3-1s after each pick even with the strip pinned: logged on the-segmented-chip-shows-real-liquid-glass-refra. Arrow-key walking ~110ms per step before and after: filed walking-the-history-strip-with-the-arrow-keys-ke (p2)."
+    },
+    {
+      "t": "2026-09-30T22:54:50.935583Z",
+      "note": "left rough: opening the history bar still has one ~125-135ms pass (same before this change on the generated folder, so it is the panel/glass/first build, not pictures). Not filed: not reproduced as a person-visible complaint yet; next pass in this area should profile it. Also left: thumbnails are never evicted (small now, ~0.3-0.7MB each, was up to 30MB each)."
+    },
+    {
+      "t": "2026-09-30T22:55:20.202Z",
+      "note": "The history strip's tiles now keep a small crop decoded in the background (CaptureThumbnail, ThumbnailFit.decodePlan), with posters cached on disk, cells keyed by capture and an unanimated jump to the start on a filter change. history-filter-switch-speed-walk (Next defaults, made-up 500 captures) holds every judged switch under 16ms: 3-11ms, 0-1 tiles rebuilt on repeat switches, far-along switch 126ms -> 8ms. Real folder: open 320 -> 135ms. Tests 10710 green; the neighbouring history/toast walks and segmented-history-film pass. Audit: queue/audits/2026-09-30-history-filter-switch.json. Commit 14b3f4c1."
     }
-  ]
+  ],
+  "started": "2026-09-30T21:58:55.825Z",
+  "walks": [
+    "history-filter-switch-speed-walk"
+  ],
+  "completed": "2026-09-30T22:55:20.203Z"
 }

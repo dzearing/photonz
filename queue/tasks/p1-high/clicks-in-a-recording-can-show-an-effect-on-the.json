@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 0.000006,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T20:39:10.252Z",
-  "updated": "2026-09-30T20:39:21.117Z",
+  "updated": "2026-10-01T03:59:34.243Z",
   "deps": [
     "a-recording-remembers-where-the-cursor-went-and"
   ],
@@ -30,6 +30,36 @@
     {
       "t": "2026-09-30T20:39:21.116Z",
       "note": "seq 440 -> 0.000006"
+    },
+    {
+      "t": "2026-10-01T01:32:42.181Z",
+      "note": "Foundation landed (a-recording-remembers-where-the-cursor-went-and): EditorState.clicks(ofClip:) gives every click on a clip (recorded from the .photonzpointer sidecar via MovieLibrary.pointerTrack(for:), plus Layer.addedClicks) in recording source ms and recording pixels; PointerTrack.position(atMS:) gives the pointer at any moment. Map source ms to document time through the clip's pieces. Also: Add Click at Playhead... currently shows only a crosshair while waiting for the canvas click; once ticks exist, consider whether the waiting state needs more than that."
+    },
+    {
+      "t": "2026-10-01T03:12:37.045Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-01T03:15:41.453Z",
+      "note": "Review before building: no mock page draws click effects, so the acceptance list is the target. Screen Studio and ScreenFlow put this as one switch plus a look on the clip, so a Clicks row in the clip's Properties is where a Premiere/Screen Studio person looks. Risks found: (1) recorded clicks live beside the file, so an export or a copy without the sidecar would lose them; following the zoom's Follow Cursor precedent, turning the effect on keeps the recorded clicks in the document. (2) Timing is measured on the document's clock from the frame the click plays at, so a sped-up piece still shows a 400 ms effect and a click in a cut-out stretch shows nothing. (3) Inside a zoom the effect lands where the click is in the zoomed picture and grows with it, since it marks the picture. (4) Hiding a tick should be undoable and reversible, so hidden ticks stay on the bar dimmed with Show This Click. (5) Spotlight dims with black, so Colour applies to Ripple and Pulse and the Colour row is absent for Spotlight. Known limits to state in rough: a cropped or rotated clip draws the effect in the uncropped, unrotated picture's place."
+    },
+    {
+      "t": "2026-10-01T03:59:01.132Z",
+      "note": "owns these walks: clicks-show-a-ripple-walk, a-click-tick-is-hidden-and-slid-walk"
+    },
+    {
+      "t": "2026-10-01T03:59:17.590Z",
+      "note": "Built and verified: core ClickEffect (21 tests) + 3 render tests; Clicks rows on Properties; ticks with drag + right-click Hide/Show; Clip menu rows. Walks clicks-show-a-ripple-walk and a-click-tick-is-hidden-and-slid-walk green at Next defaults; export frames match the canvas round the click (0.0% apart, effect changes the area by 7.0/3.3/0.7% at 40/180/330 ms). Acceptance 4 (no clicks: switch dimmed with a tooltip) is covered by hasClicksToShow tests and the disabled switch, not by a walk. Left rough, in the audit only and not filed (none clears the bar alone): effect ignores clip crop and rotation; a ring near the edge can spill past the clip; no live canvas preview while a tick is dragged; ticks only appear after the next document change when a walk scripts a pointer track (real recordings load it first)."
+    },
+    {
+      "t": "2026-10-01T03:59:34.241Z",
+      "note": "Shipped in 39d066d8: Clicks rows on a recording's Properties (switch, Style Ripple/Pulse/Spotlight, Color, Size), drawn in drawn(atTimeMS:) so canvas, scrubbing and export match; click ticks on the clip bar with drag and right-click Hide/Show; Clip menu rows. Verified by 24 new tests, full suite green (10811), and walks clicks-show-a-ripple-walk and a-click-tick-is-hidden-and-slid-walk at Next defaults. Audit: queue/audits/2026-09-30-click-effects.json."
     }
-  ]
+  ],
+  "started": "2026-10-01T03:12:37.044Z",
+  "walks": [
+    "clicks-show-a-ripple-walk",
+    "a-click-tick-is-hidden-and-slid-walk"
+  ],
+  "completed": "2026-10-01T03:59:34.242Z"
 }

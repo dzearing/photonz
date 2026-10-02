@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 0.0000055,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T20:39:10.336Z",
-  "updated": "2026-09-30T20:39:21.177Z",
+  "updated": "2026-10-01T02:53:47.354Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window. Follow Cursor and Suggest Zooms need the cursor track; the plain zoom region does not and may land first.",
@@ -28,6 +28,33 @@
     {
       "t": "2026-09-30T20:39:21.176Z",
       "note": "seq 450 -> 0.0000055"
+    },
+    {
+      "t": "2026-10-01T01:49:35.709Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-01T02:01:12.799Z",
+      "note": "Adversarial pass before building: there is no mock for a zoom region (video-zoom-wt is the punch-in, already shipped as Scale/Position keys). The grown-up tool here is Screen Studio: a zoom is a bar under the clip for WHEN and a box on the picture for WHERE. Premiere users would reach for Scale/Position keys, which already exist; this is the quicker way for a screen recording. Decisions: (1) a zoom is its own model (Layer.zooms, on the recording's clock like punch-ins and the pointer track), drawn as a window into the clip's picture so the clip's box never moves and a clip laid out small does not grow over its neighbours; (2) the box is locked to the frame's shape, since anything else would stretch the picture; (3) while a zoom is picked and the transport is stopped, the canvas shows the whole picture with the box on it (Screen Studio, FCP Ken Burns) so you can see what you are framing; (4) Follow Cursor bakes the stretch of the pointer path it needs into the zoom so export and copies draw the same thing without the sidecar. Risk: a first-time user will not know the lane exists until they add a zoom; Add Zoom lives on the clip's right-click and the Clip menu where Add Click already is."
+    },
+    {
+      "t": "2026-10-01T02:52:58.952Z",
+      "note": "owns these walks: a-zoom-follows-the-cursor-walk, a-zoom-is-shaped-by-hand-walk, zooms-suggested-from-clicks-walk"
+    },
+    {
+      "t": "2026-10-01T02:53:16.815Z",
+      "note": "Built: ClipZoom (core, 28 tests) + renderer window (3 pixel tests); Layer.zooms on the recording's clock, drawn as Layer.zoomWindow in PhotonzDocument.drawn so canvas, scrub, still and video export share one answer; frames decode at the zoomed size (movieDecodeSize reads zoomFactor at each frame's source ms). App: EditorState+Zoom, ZoomLane under the clip, ZoomBoxOverlay (presses handled in CanvasNSView first, so the box never moves the clip), ZoomInspector section, Add Zoom / Suggest Zooms on clip + ruler right-click and the Clip menu, picked-zoom rows (Follow Cursor, Zoom, Delete Zoom) in the Clip menu, flag next-zoom-regions on by default in Next. Walks green: a-zoom-follows-the-cursor-walk (frame centres 0.38/0.50/0.62 on the pointer, export vs canvas 0.0% apart, zoom changes the frame 9-12%), a-zoom-is-shaped-by-hand-walk (real windowDrag on the ease handle and bar end, canvas drag on the box corner), zooms-suggested-from-clicks-walk. Full suite 10787 green. Left rough: two boxes while framing + no cursor cue + no Escape -> filed framing-a-zoom-shows-one-box-and-the-pointer-say (p2). Cropped clips follow slightly off (pointer is against the whole recording) -> kept here, rare. 60 fps playback not separately measured; the composite uses the punch-in resampler (10 ms at 12 MP, 200%)."
+    },
+    {
+      "t": "2026-10-01T02:53:47.352Z",
+      "note": "Zoom regions on recordings (15680c79): Add Zoom on clip/ruler right-click and the Clip menu puts a bar on a Zoom lane and a box on the picture; ends, eases and box all drag by hand; Follow Cursor tracks the recorded pointer with smoothing and an edge margin; Suggest Zooms frames runs of clicks; same window drawn in canvas, scrub and export, frames read at zoomed size. Verified: 31 new core/render tests, full suite 10787 green, three walks green at Next defaults with real pictures (follow at three moments, export frames match canvas to 0.0%). Audit queue/audits/2026-09-30-zoom-regions.json. Follow-up filed: framing-a-zoom-shows-one-box-and-the-pointer-say."
     }
-  ]
+  ],
+  "started": "2026-10-01T01:49:35.708Z",
+  "walks": [
+    "a-zoom-follows-the-cursor-walk",
+    "a-zoom-is-shaped-by-hand-walk",
+    "zooms-suggested-from-clicks-walk"
+  ],
+  "completed": "2026-10-01T02:53:47.353Z"
 }

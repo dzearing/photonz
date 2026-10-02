@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p1-high",
   "seq": 0.000004,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T20:26:39.038Z",
-  "updated": "2026-10-01T00:29:01.380Z",
+  "updated": "2026-10-01T00:34:44.958Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -55,6 +55,10 @@
     {
       "t": "2026-10-01T00:29:01.379Z",
       "note": "left rough: the drop's own main-thread pass is 37-49ms at 173 layers (document edit + list + canvas), after the settle so nothing is moving; spring-open costs ~30ms like the twist does. Neither earned a task: no motion is on screen at that moment. row-put-down-walk still proves the old system-drag cleanup (LayerRowInHand), which only Current uses now; left as is since that code still ships in Current. A pointer drag's trailing tap on the row was not checked with a multi-selection. Rough items in the audit: timeline track headers filed as timeline-tracks-reorder-by-dragging-their-header; the rest stay here."
+    },
+    {
+      "t": "2026-10-01T00:34:44.956Z",
+      "note": "Shipped in Next (flag next-a-dragged-layer-lifts, on by default): a dragged layer row lifts and rides the pointer vertically, the rows spring aside and the gap (indented to its landing depth) is the drop place; halves rule incl. group foot vs row below, group travels shut and reopens, multi-row carries as one with a count, shut group springs open on rest, Escape returns, one undo step, edge autoscroll. Core rules in PhotonzCore/LayerRowDrag.swift with 24 tests; full suite 10,736 green. Verified by layer-row-lifts-walk (9 scripted drags with expectRows after each, mid-drag pictures, light mode, undo), layer-row-lifts-by-pointer-walk (real posted mouse drags through the gesture) and layer-row-lifts-at-scale-walk (173 layers, carry peak 8.6ms/pass); 29 neighbouring layers-list walks green. Audit queue/audits/2026-09-30-layer-row-lifts.json. Timeline track headers split off as timeline-tracks-reorder-by-dragging-their-header."
     }
   ],
   "started": "2026-09-30T23:10:33.984Z",
@@ -62,5 +66,6 @@
     "layer-row-lifts-walk",
     "layer-row-lifts-by-pointer-walk",
     "layer-row-lifts-at-scale-walk"
-  ]
+  ],
+  "completed": "2026-10-01T00:34:44.957Z"
 }

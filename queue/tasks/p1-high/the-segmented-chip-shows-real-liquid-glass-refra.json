@@ -1,18 +1,18 @@
 {
   "id": "the-segmented-chip-shows-real-liquid-glass-refra",
   "title": "The segmented chip shows real Liquid Glass refraction",
-  "goal": "User 2026-09-30 12:49, screenshot of the Library's Media | Comps control mid-move: 'I see no liquid glass refraction on the edges.' In a42eacb8 the chip is .glassEffect(.regular.tint(accent)) but covered by the accent at 88% opacity (SegmentedControl.swift:422-427, SegmentInk.chipCover = 0.88) so a white word reads in light mode, and it sits BEHIND the labels over a flat black rail, so the glass has nothing to refract and is mostly painted over. Liquid Glass refraction shows where glass passes over detail (Apple's segmented thumb lifts and lenses the labels as it moves).",
+  "goal": "The picked choice in every row of side-by-side choices sits on the Mac's own Liquid Glass, and when you pick another one it slides over the words like a lens, so they visibly bend at its edges, instead of being a flat painted shape with nothing to refract.",
   "epic": "design-system",
   "priority": "p1-high",
   "seq": 5e-7,
-  "status": "in_progress",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T19:50:30.011Z",
-  "updated": "2026-09-30T20:31:36.096Z",
+  "updated": "2026-09-30T22:54:12.126Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Filed from the intake window.",
+  "notes": "Filed from the intake window. The user's words (2026-09-30 12:49, screenshot of the Library's Media | Comps mid-move): 'I see no liquid glass refraction on the edges.' Original filing: User 2026-09-30 12:49, screenshot of the Library's Media | Comps control mid-move: 'I see no liquid glass refraction on the edges.' In a42eacb8 the chip is .glassEffect(.regular.tint(accent)) but covered by the accent at 88% opacity (SegmentedControl.swift:422-427, SegmentInk.chipCover = 0.88) so a white word reads in light mode, and it sits BEHIND the labels over a flat black rail, so the glass has nothing to refract and is mostly painted over. Liquid Glass refraction shows where glass passes over detail (Apple's segmented thumb lifts and lenses the labels as it moves). | Done in 7d88a0cd: DesignedSegments (Sources/Photonz/DesignSystem/SegmentedControl.swift) puts the chip in an overlay ABOVE the words; at rest .regular.tint(accent) with the picked word inside the glass (.primary, colorScheme from SegmentInk.pickedWordScheme, only while appearsActive); while travelling/dragging (isLifted: travelling token + dragCenter + shownTravel) .clear.tint(accent @ SegmentInk.lensTint 0.18), inner words hidden, base words unmasked. chipCover and wordsOnChip are gone. Offscreen (legibility sheet glassAsPaint, walk ChipGlassSwitch) paints the tint and the measured word ink. Measured with the probe in front: tinted regular glass draws its tint at full strength; system primary on it is white in dark / black in light for every tint (white on yellow in dark, hence the flip). Window in the back: tint greyed to 48,49,52 (dark) / 119,120,123 (light). filmThumb makes the filmed window key in a front walk (a walk's history strip never has the keys). Film walks hold the front.",
   "acceptance": [
     "Filmed first (filmThumb, 120 fps, dark and light): stills of the chip at rest and mid-move, zoomed on its edges, showing today's lack of refraction",
     "No opaque paint over the glass: chipCover goes; the chip is the system's tinted glass itself (Glass .regular.tint(accent), or the system's prominent glass styling), with the refraction, rim light and edge lensing the system draws",
@@ -33,7 +33,49 @@
     {
       "t": "2026-09-30T20:31:36.089Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-09-30T21:41:47.671Z",
+      "note": "owns these walks: segmented-chip-refraction-film-walk, segmented-thumb-film-walk, segmented-history-film-walk, segmented-thumb-glass-walk"
+    },
+    {
+      "t": "2026-09-30T21:42:08.521Z",
+      "note": "Filmed today's chip first (segmented-chip-refraction-film-walk, 120 fps, dark and light): accent painted at 88% over the glass, behind the words, on a solid rail; mid-move the words are just cut grey-to-white at a flat capsule edge, no refraction. Saved as the 'before' frames."
+    },
+    {
+      "t": "2026-09-30T21:42:08.521Z",
+      "note": "Adversarial pass: Apple's segmented thumb lifts and lenses the labels as it moves; ours sat behind the labels on a flat rail so the glass had nothing to bend. Walk-side trap: a probe window in the back renders tinted glass GREY (the Mac greys every accent in an inactive window), so any film of the chip must hold the front. The mock (comp-segmented) is unaffected: the user's own ask sets the chip look."
+    },
+    {
+      "t": "2026-09-30T21:42:08.521Z",
+      "note": "Tried: .glassProminent as the chip (white on near-white after a press, rejected), .environment(appearsActive,true) (no effect on the glass), regular glass as the lens (frosts the words away). Clear glass as the lens shows real bending at the ends and mirrored words along the rims."
+    },
+    {
+      "t": "2026-09-30T21:42:08.521Z",
+      "note": "Built: chip above the words; tinted regular glass at rest with the picked word inside in the system's label; clear glass lens while travelling. System ink measured white-in-dark/black-in-light for every tint incl. yellow, so SegmentInk.pickedWordScheme flips only where the label would not read (yellow/pale in dark, grey disabled chip in light), only in an active window. Verified yellow in front (black word) and in the back (grey chip)."
+    },
+    {
+      "t": "2026-09-30T21:42:08.521Z",
+      "note": "Verified: Scripts/test.sh 10699/10699 + legibility sheet; walks: 5 segment*, 14 margins/library/history all ok. Committed 7d88a0cd. Opened the card with the filmed frames (before/now, dark/light, edges enlarged)."
+    },
+    {
+      "t": "2026-09-30T21:42:08.521Z",
+      "note": "left rough: the lens is frosted in the middle and barely magnifies (system clear glass; the chip cannot grow past its rail) -> this is option b on the card, not filed separately. Drag turns the chip into the same lens but no walk films a drag. In walks the history bar's chip is grey (untinted) in snapshots because a walk's strip never takes key; only the film step gives it the keys."
+    },
+    {
+      "t": "2026-09-30T21:42:25.200Z",
+      "note": "Built and committed (7d88a0cd): the chip is the system's tinted Liquid Glass with nothing painted over it, and lifts into a clear glass lens over the words while it moves, so they bend at its ends and mirror along its rims; the picked word is the system's label on glass, flipped only where it would not read. Tests 10699/10699 + legibility sheet green, 19 walks green incl. three 120 fps films. Waiting on the card: is this the refraction the user meant (keep, crisp lens of our own, or stay tinted while moving)."
+    },
+    {
+      "t": "2026-09-30T22:54:12.125Z",
+      "note": "Seen while measuring the history filter (2026-09-30): after each pick in the history bar the main thread takes one extra pass of 15 to 20ms, 0.3 to 1s after the click, and it stays with the strip's contents pinned (entries forced to the whole list, 0 tiles built), so it is the segmented control after its chip moves, not the filter. Longest after a move to All (17-23ms), 13-15ms after the others. Reproduce: Scripts/playtest/history-filter-switch-speed-walk.json with a longestUnderMS 16 on the wait after each press instead of on the press."
     }
   ],
-  "started": "2026-09-30T20:31:36.088Z"
+  "started": "2026-09-30T20:31:36.088Z",
+  "walks": [
+    "segmented-chip-refraction-film-walk",
+    "segmented-thumb-film-walk",
+    "segmented-history-film-walk",
+    "segmented-thumb-glass-walk"
+  ]
 }

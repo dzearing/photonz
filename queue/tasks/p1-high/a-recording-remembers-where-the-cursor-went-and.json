@@ -1,18 +1,18 @@
 {
   "id": "a-recording-remembers-where-the-cursor-went-and",
   "title": "A recording remembers where the cursor went and every click",
-  "goal": "User 2026-09-30: 'for video playback, I need it to be easy to track clicks in the video. Maybe we can detect this?' Photonz makes the recording itself (Capture/ScreenRecorder.swift, ScreenCaptureKit), so instead of detecting clicks from pixels afterwards it can record them, the way Screen Studio does. Today the recorder captures only the picture. Foundation for click effects and a zoom that follows the mouse.",
+  "goal": "A screen recording made in Photonz keeps where the pointer went and every click, beside the video, so later features can ring each click or zoom where it happened. Today only the picture is kept, and a click is lost the moment the recording ends. (The user, 2026-09-30: \"I need it to be easy to track clicks in the video.\")",
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 0.000005,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T20:39:10.170Z",
-  "updated": "2026-09-30T20:39:21.059Z",
+  "updated": "2026-10-01T01:32:53.621Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Filed from the intake window.",
+  "notes": "Filed from the intake window.\n\nBuilt: Sources/PhotonzCore/PointerTrack.swift (PointerTrack, PointerClick, PointerSpace screen->recording pixels, PointerTrackRecording builder timed on the host clock from the first frame, PointerTrackSidecar .photonzpointer, PhotonzDocument.addClick, Layer.addedClicks). App: Capture/PointerTracker.swift (60 Hz poll of NSEvent.mouseLocation + global/local mouse down/up monitors, no permission needed), ScreenRecorder FirstFrameClock (SCStreamOutput noting the first complete frame PTS), RecordingCoordinator encodes the track off-main while macOS closes the file, CaptureStore writes the sidecar beside the MP4 before it lands and trashes it with it, MovieLibrary loads it on open/adopt, EditorState+Clicks.swift (clicks(ofClip:), Add Click at Playhead..., crosshair placement, Escape cancels, Click added pill with Undo). Walks: a-recording-keeps-its-clicks-walk (real 5 s region recording, action recordScriptedClicks, PlaytestScriptedClicks.swift), adding-a-click-by-hand-walk.",
   "acceptance": [
     "While recording, the app samples the cursor position (at the recording frame rate) and every mouse down/up (button, position, time) with a global event monitor, mapped into the recording's pixel space (display, window or region recordings, Retina scale), and stores it beside the video as a small sidecar the document references (not pixels in the model); PhotonzCore types and tests first",
     "Starting it never slows the recording or the Stop-to-history time (see a-recording-shows-in-history-the-moment-you-stop); if a permission is needed, it is asked once per launch at most, with plain words, and recording works without it",
@@ -31,6 +31,48 @@
     {
       "t": "2026-09-30T20:39:21.058Z",
       "note": "seq 430 -> 0.000005"
+    },
+    {
+      "t": "2026-10-01T00:52:13.887Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-01T00:54:34.347Z",
+      "note": "Adversarial review before building. (1) Permission: mouse position and global mouse-down/up monitors need no grant on macOS (only key monitors need Accessibility), so nothing is asked and recording never depends on it. (2) Time base: the file starts at its first frame, not at Start; pointer times are taken against the first frame the stream delivers (host clock, the same clock NSEvent timestamps use), so a click lands on the frame it was made in. (3) Sources today are full display and region only (no window recording exists), so mapping covers display + region at backing scale. (4) A Current trim-save rewrites the file; the track stays in original time, so a rewritten recording does not load a track rather than load a wrong one. (5) A walk cannot click on the person's screen, so the walk feeds scripted clicks into the same handler the OS monitors feed, at known screen points and moments, records a real 5 s recording and checks what comes back after open. (6) Premiere/Screen Studio users expect click data to be invisible until an effect uses it; the visible half (ticks, effects) is the next task (clicks-in-a-recording-can-show-an-effect-on-the). Hand-added clicks live in the document (undoable); the recorded track lives in a .photonzpointer sidecar keyed to the recording, the way pixels live in the store."
+    },
+    {
+      "t": "2026-10-01T01:07:27.295Z",
+      "note": "owns these walks: a-recording-keeps-its-clicks-walk, adding-a-click-by-hand-walk"
+    },
+    {
+      "t": "2026-10-01T01:32:42.207Z",
+      "note": "Core first: 20 tests in Tests/PhotonzCoreTests/PointerTrackTests.swift written before the code, all green. Host clock check: CMClockGetHostTimeClock and systemUptime (NSEvent timestamps) agree to microseconds."
+    },
+    {
+      "t": "2026-10-01T01:32:42.207Z",
+      "note": "a-recording-keeps-its-clicks-walk ok at Next defaults: 3 clicks kept at 1098/2614/4122 ms, 200,120 / 480,300 / 800,500 px (expected = region offset x 2 backing scale, worked out independently of PointerSpace), each within a frame and 2 px; stop to tile 2 ms (budget 300); sidecar 434 bytes. Independent check of the zero: file runs 5.05 s and the first frame was ~5.06 s before Stop. adding-a-click-by-hand-walk ok: right-click clip > Add Click at Playhead..., click on the picture, one click at 2000 ms, Click added pill. Both with real captures (Screen Recording granted, screen unlocked)."
+    },
+    {
+      "t": "2026-10-01T01:32:42.207Z",
+      "note": "Full suite: 10756 tests green. On the way, SeparatedRowsSayTheirWordsTests failed consistently and passed with my work stashed; it turned out to be a stale incremental build of that test module after Layer gained a stored property (recompiling the test file cleared it; passes with my changes)."
+    },
+    {
+      "t": "2026-10-01T01:32:42.207Z",
+      "note": "Slip, no harm: I ran Scripts/build-app.sh --help, which has no help flag and began a DEV build; it died on the closed pipe within seconds. Checked: no build process left, dist/Photonz Dev.app binary still the 17:35 one, untouched."
+    },
+    {
+      "t": "2026-10-01T01:32:42.207Z",
+      "note": "Left rough (in the audit, not filed): a real click by a person is not exercised by a walk (walks cannot click on the person screen; the scripted clicks go through the same handler); the waiting state after Add Click at Playhead... is only a crosshair (folded into clicks-in-a-recording-can-show-an-effect-on-the); a recording rewritten by a Current trim-save does not load its track; no window recording source exists so window mapping does not apply; no mock draws clicks."
+    },
+    {
+      "t": "2026-10-01T01:32:53.619Z",
+      "note": "Recordings now keep the pointer path and every click (time, place, button) in a .photonzpointer file beside the MP4, timed from the first frame and mapped into the recording's pixels; it loads when the recording opens. Right-click a recording clip (or Clip menu) > Add Click at Playhead..., then click the picture, adds one by hand with Undo. Verified: 20 new core tests, full suite 10756 green, a-recording-keeps-its-clicks-walk (real 5 s recording, 3 scripted clicks within a frame and 2 px, Stop to tile 2 ms) and adding-a-click-by-hand-walk, both at Next defaults with real captures. Audit: queue/audits/2026-09-30-recorded-clicks.json. Commit 592b21c0."
     }
-  ]
+  ],
+  "started": "2026-10-01T00:52:13.885Z",
+  "walks": [
+    "a-recording-keeps-its-clicks-walk",
+    "adding-a-click-by-hand-walk"
+  ],
+  "completed": "2026-10-01T01:32:53.620Z"
 }

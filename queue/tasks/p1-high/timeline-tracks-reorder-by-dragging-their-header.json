@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-01T00:28:12.242Z",
-  "updated": "2026-10-01T00:28:12.245Z",
+  "updated": "2026-10-01T11:58:07.520Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split off dragging-a-layer-feels-physical-the-row-lifts-ri, which built the layers-list half: PhotonzCore/LayerRowDrag.swift (halves, gap, offsets, spring-open, tested) and Photonz/LayerRowDragSession.swift + LayerRowDragViews.swift (lifted row, gap, edge autoscroll through the AppKit scroll view, Escape via a local key monitor, allowsWindowActivationEvents for click-through). The same model should drive track headers: tracks are rows of one pitch. grep found no track reorder anywhere today (EditorState+Tracks.swift, TimelineTrackRows.swift).",
@@ -23,6 +23,177 @@
     {
       "t": "2026-10-01T00:28:12.244Z",
       "note": "created (user)"
+    },
+    {
+      "t": "2026-10-01T04:14:00.200Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-01T04:19:28.243Z",
+      "note": "Pre-build review: (1) tracks have different heights (sound lanes taller, key/zoom lanes under clips, group headings), so the layer model's fixed pitch cannot be reused: a new TrackRowDrag reads halves of variable-height rows, same rule as the layers list. (2) Groups: above/below a grouped track joins its group, bottom half of an open heading is the group's first slot, top half of the row under a group lands below it; folded heading's bottom half is below the whole group. (3) Found by reading: a clip's own sound picks the first audio track it fits, so swapping two audio tracks would swap the headers but leave the waveforms where they were; pinning the clip's sound to its track when tracks are written down (test reproduces it first). (4) Locked tracks do not lift, like locked layers. (5) Premiere does not let you drag tracks at all; this goes beyond it. Gated on the same Next switch as the layer lift (on at Next defaults)."
+    },
+    {
+      "t": "2026-10-01T04:35:35.484Z",
+      "note": "owns these walks: track-header-lifts-walk, track-header-lifts-by-pointer-walk"
+    },
+    {
+      "t": "2026-10-01T05:04:34.057Z",
+      "note": "runner failed (exit 1, attempt 1): Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-01T05:04:34.642Z",
+      "note": "ran out of turn with 17 file(s) still changed: Sources/Photonz/EditorState+Tracks.swift, Sources/Photonz/EditorState.swift, Sources/Photonz/Experiments.swift, Sources/Photonz/Playtest/PlaytestHarness.swift, Sources/Photonz/TimelineDock.swift, Sources/Photonz/TimelineTrackRows.swift, Sources/PhotonzCore/DocumentTracks.swift, Sources/PhotonzCore/FeatureCatalog.swift, Sources/PhotonzCore/Layer.swift, Sources/PhotonzCore/PlaytestLockSafety.swift, Sources/PhotonzCore/PlaytestScript.swift, Tests/PhotonzCoreTests/PlaytestScriptTests.swift, Scripts/playtest/track-header-lifts-by-pointer-walk.json, Scripts/playtest/track-header-lifts-walk.json, Sources/Photonz/TrackRowDragSession.swift, Sources/PhotonzCore/TrackRowDrag.swift, Tests/PhotonzCoreTests/TrackReorderTests.swift. Put aside so the next task started clean; restore with `git stash apply 9af77fa9bc9fec059dda28beed38c6b1695b0eef` before carrying on."
+    },
+    {
+      "t": "2026-10-01T05:05:06.186Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-01T05:05:06.192Z",
+      "note": "a previous attempt at this task left 17 file(s) changed; they are set aside. Restore them with `git stash apply 9af77fa9bc9fec059dda28beed38c6b1695b0eef` and carry on, or start over and leave the stash alone."
+    },
+    {
+      "t": "2026-10-01T05:05:08.471Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-01T05:07:09.958Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-01T05:07:11.978Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-01T05:12:13.441Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-01T05:12:15.628Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-01T05:27:17.170Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-01T05:27:19.383Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-01T05:57:20.927Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-01T05:57:23.108Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-01T06:27:24.763Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-01T06:27:26.957Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-01T06:57:28.325Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-01T06:57:30.515Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-01T07:27:31.802Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-01T07:27:34.130Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-01T07:57:35.674Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-01T07:57:37.815Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-01T08:27:39.452Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-01T08:27:41.656Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-01T08:57:43.254Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-01T08:57:45.294Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-01T09:27:46.789Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-01T09:27:48.917Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-01T09:57:50.547Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-01T09:57:52.701Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-01T10:27:54.134Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-01T10:27:56.326Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-01T10:57:57.782Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-01T10:58:00.029Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-01T11:28:01.647Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-01T11:28:03.674Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-01T11:58:05.285Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-01T11:58:07.519Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
     }
-  ]
+  ],
+  "started": "2026-10-01T11:58:05.284Z",
+  "walks": [
+    "track-header-lifts-walk",
+    "track-header-lifts-by-pointer-walk"
+  ],
+  "failures": 1,
+  "lastError": {
+    "at": "2026-10-01T05:04:34.055Z",
+    "exit": 1,
+    "message": "Failed to authenticate: OAuth session expired and could not be refreshed"
+  }
 }
