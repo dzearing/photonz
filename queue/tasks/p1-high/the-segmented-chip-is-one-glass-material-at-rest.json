@@ -4,12 +4,12 @@
   "goal": "User 2026-10-01, three screenshots of View | Edit: at rest a solid blue chip; while switching it turns into murky clear glass with doubled, smeared 'View'; then snaps back to solid blue. 'There should be no snapping to solid, or transitioning of materials! If it's glass, it's glass. And the text layer should probably be on top of the glass so it doesn't become diminished. But it should also be below the glass so the refractions get picked up during the animation. It should be clear, visible, and a consistent material throughout... I think the glass is also incredibly refracted and murky.' Cause: 7d88a0cd did what the intake window's task asked: isLifted switches the chip from .regular.tint(fill) with an opaque fill to .clear.tint(fill * lensTint) (SegmentedControl.swift:425, :451). That instruction was wrong.",
   "epic": "design-system",
   "priority": "p1-high",
-  "seq": 1e-7,
-  "status": "in_progress",
+  "seq": 10,
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-02T01:56:45.031Z",
-  "updated": "2026-10-02T02:00:11.430Z",
+  "updated": "2026-10-02T02:02:17.956Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window. Supersedes the 'lens while moving, tinted chip at rest' instruction in the-segmented-chip-shows-real-liquid-glass-refra.",
@@ -34,6 +34,26 @@
     {
       "t": "2026-10-02T02:00:11.429Z",
       "note": "Taken by the intake window at the user's request (top priority, 2026-10-01 19:00); the loop must not claim it"
+    },
+    {
+      "t": "2026-10-02T02:00:12.868Z",
+      "note": "runner exited without finalizing; reset to pending (attempt 1)"
+    },
+    {
+      "t": "2026-10-02T02:00:27.587Z",
+      "note": "Put back: the digest pass ran guard at 02:00:12Z, one second after the intake window took this task at the user's request, and guard read it as a runner that had walked away. The intake window still has it; the loop must not claim it. The reset above was the digest's mistake, not a failed attempt."
+    },
+    {
+      "t": "2026-10-02T02:01:32.584Z",
+      "note": "seq 1e-7 -> 10"
+    },
+    {
+      "t": "2026-10-02T02:02:17.953Z",
+      "note": "Held by the intake window, which is fixing it now at the user's request (top priority). Not for the loop."
+    },
+    {
+      "t": "2026-10-02T02:02:17.955Z",
+      "note": "waiting, but no decision card was opened against this task. Nothing returns a task to the queue except an answer, so this will sit here until someone opens one."
     }
   ]
 }
