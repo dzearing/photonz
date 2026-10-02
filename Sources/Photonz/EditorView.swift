@@ -105,7 +105,12 @@ struct EditorView: View {
                         // Not in View mode, which is a player: the bar goes
                         // with the rest of the editing (`ViewEditMode`). Coming
                         // back, it follows a pass behind (`EditModeArrival`).
-                        if !editorState.isWatching && editorState.editArrival.showsToolBar {
+                        // Kept behind View once built, out of sight below
+                        // the canvas, so Edit only has to slide it up.
+                        let toolBarHidden = editorState.isWatching
+                        if editorState.editArrival.showsToolBar
+                            && (!toolBarHidden || editorState.isEditorKeptBehindView) {
+                        AsleepBehindView(asleep: editorState.editPiecesAsleep) {
                         VStack(spacing: EditorChromeLayout.toolBarStackGap) {
                             // The `if` is the "takes no room" rule: an empty
                             // capsule still counts as a stack child, and the
@@ -153,12 +158,19 @@ struct EditorView: View {
                             // change to the bar nobody asked for.
                             .animation(nil, value: editorState.activeTool)
                         }
+                        }
+                        .equatable()
                         .padding(.horizontal, EditorChromeLayout.toolBarInset)
                         // The one inset the bar floats at, shared with whatever
                         // stacks above it (EditorChromeLayout.aboveToolBar).
                         .padding(.bottom, EditorChromeLayout.toolBarInset)
                         .animation(.spring(duration: 0.22),
                                    value: editorState.activeTool)
+                        .offset(y: toolBarHidden ? EditorChromeLayout.toolBarHiddenDrop : 0)
+                        .opacity(toolBarHidden ? 0 : 1)
+                        .allowsHitTesting(!toolBarHidden)
+                        .accessibilityHidden(editorState.editPiecesOutOfReach)
+                        .environment(\.editPiecesOutOfReach, editorState.editPiecesOutOfReach)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                         }
                     }
@@ -181,7 +193,11 @@ struct EditorView: View {
                 // LEADING EDGE (grouped here, not a separate sibling), so the two
                 // slide in together as one surface — the border used to pop in
                 // instantly while the panel slid. It runs the full window height.
-                if inspectorShown {
+                //
+                // Kept behind View once built, at no width at all, so it hangs
+                // off the window's right edge where no click reaches it, and
+                // Edit slides it in by giving its width back (`EditModeArrival`).
+                if inspectorShown || editorState.isInspectorKeptBehindView {
                     HStack(spacing: 0) {
                         InspectorResizeHandle(width: $panelWidth)
                             // Only the 1px border runs edge-to-edge under the
@@ -195,7 +211,10 @@ struct EditorView: View {
                             .frame(width: panelWidth)
                             .tutorialAnchor(.panel)
                     }
+                    .frame(width: inspectorShown ? nil : 0, alignment: .leading)
                     .frame(maxHeight: .infinity)
+                    .accessibilityHidden(editorState.editPiecesOutOfReach)
+                    .environment(\.editPiecesOutOfReach, editorState.editPiecesOutOfReach)
                     .transition(.move(edge: .trailing))
                 }
             }
@@ -3407,3 +3426,4 @@ private struct MeasureLegendOverlay: View {
         }
     }
 }
+

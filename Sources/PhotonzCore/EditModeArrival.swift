@@ -21,6 +21,17 @@
 /// for the slide to land (`nextWaitsForTheSlide`) and then come in a pass
 /// each, top of the tracks first, onto a window that has stopped moving: the
 /// slide draws 23 to 26 pictures, never more than 20ms apart.
+///
+/// Waiting still left the tool bar, the rows and the panel coming in up to
+/// 0.7s after the key (2026-10-02). So a recording open in View has Edit's
+/// tool bar and tracks built BEHIND it, out of sight, a pass at a time once
+/// the window has been still a moment, and keeps them for as long as it holds
+/// the recording: Cmd-2 builds nothing for them and they come in with the
+/// slide (`switchingToEdit`). The panel slides in empty and fills a section a
+/// pass once the slide lands, unless `next-panel-with-the-slide` keeps it
+/// built behind View too: a panel full of sections sliding in cost the slide
+/// about half its pictures. Only a Cmd-2 that comes before the build behind
+/// View has started still arrives over the passes above.
 public enum EditModeArrival: Int, Sendable, Hashable, CaseIterable {
     case keyPass
     case timeline
@@ -38,6 +49,17 @@ public enum EditModeArrival: Int, Sendable, Hashable, CaseIterable {
     /// Whether the stage after this one waits for the slide to land rather
     /// than coming in on the next pass.
     public var nextWaitsForTheSlide: Bool { self == .keyPass }
+
+    /// Where Edit stands the moment the window switches into it, and whether
+    /// the switch has to set the passes going itself (the window already
+    /// stood at the start, so nothing watching for a change would notice).
+    /// `current` is wherever the build behind View had got to.
+    public static func switchingToEdit(hasTime: Bool, keptBehindView: Bool,
+                                       current: EditModeArrival) -> (arrival: EditModeArrival, startsArriving: Bool) {
+        guard hasTime else { return (.settled, false) }
+        if keptBehindView { return (current, false) }
+        return (.start, true)
+    }
 
     /// The ruler, the playhead and the tracks' scroller.
     public var showsTimeline: Bool { self >= .timeline }

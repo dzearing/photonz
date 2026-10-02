@@ -136,8 +136,11 @@ private struct CaptionWordChipsView: View {
     private static let chipHeight: CGFloat = 20
     private static let fontSize: CGFloat = 9.5
 
+    /// Kept behind View: no word is being said here, whatever plays.
+    @Environment(\.editPiecesAsleep) private var asleep
+
     var body: some View {
-        let now = editorState.documentTimeMS
+        let now = asleep ? -1 : editorState.documentTimeMS
         let saying = chips.first { $0.word.startMS <= now && now < $0.word.endMS }
         let inHand = editorState.captionWordDrag?.ref
         let typing = editorState.captionWordEdit.flatMap { $0.place == .lane ? $0 : nil }

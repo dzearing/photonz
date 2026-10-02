@@ -16,6 +16,17 @@
 import PhotonzCore
 import SwiftUI
 
+extension EnvironmentValues {
+    /// Edit's pieces kept, out of sight, behind View (`EditModeArrival`):
+    /// nothing in them is there for a walk to find, as nothing is for a
+    /// person.
+    @Entry var editPiecesOutOfReach = false
+    /// Edit's pieces kept behind View while the window is a player: nothing
+    /// in them follows the playhead, so a recording playing in View pays
+    /// nothing for tracks nobody can see (`EditorState.editPiecesAsleep`).
+    @Entry var editPiecesAsleep = false
+}
+
 #if PHOTONZ_PLAYTEST
 
 /// What sort of thing in the panel a marker stands for. A walk names these in
@@ -54,6 +65,9 @@ final class PanelTargetView: NSView {
     /// Exactly the closure the view's own `onDrag` uses. Nil for something
     /// that cannot be picked up, so a walk that tries is told so.
     var payload: (@MainActor () -> NSItemProvider)?
+    /// In one of Edit's pieces kept out of sight behind View: a walk passes
+    /// it by, as a person cannot reach it (`EnvironmentValues.editPiecesOutOfReach`).
+    var isOutOfReach = false
 
     init(name: String, kind: PanelTargetKind, detail: String, steady: [String] = [],
          payload: (@MainActor () -> NSItemProvider)?) {
@@ -84,10 +98,13 @@ private struct PanelTargetAnchor: NSViewRepresentable {
     let payload: (@MainActor () -> NSItemProvider)?
 
     func makeNSView(context: Context) -> PanelTargetView {
-        PanelTargetView(name: name, kind: kind, detail: detail, steady: steady, payload: payload)
+        let view = PanelTargetView(name: name, kind: kind, detail: detail, steady: steady, payload: payload)
+        view.isOutOfReach = context.environment.editPiecesOutOfReach
+        return view
     }
 
     func updateNSView(_ view: PanelTargetView, context: Context) {
+        view.isOutOfReach = context.environment.editPiecesOutOfReach
         view.name = name
         view.kind = kind
         view.detail = detail

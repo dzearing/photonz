@@ -64,12 +64,25 @@ struct TimelineDock: View {
             // In View mode the transport is all there is: a player's bar, and
             // the tracks go with the rest of the editing (`ViewEditMode`). One
             // view either way, so Edit grows the tracks out from under it.
-            if editorState.isMotionStripOpen {
-                VStack(spacing: 0) {
-                    localBar
-                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { localBarHeight = $0 }
-                    grid
+            // Kept behind View once built, folded to no height under the
+            // transport, so Edit only has to open it out (`EditModeArrival`).
+            let open = editorState.isMotionStripOpen
+            if open || editorState.areTracksKeptBehindView {
+                // Asleep behind View: the transport above still reads the
+                // playhead every frame of playback and draws this body again,
+                // and the tracks out of sight sit that out (`editPiecesAsleep`).
+                AsleepBehindView(asleep: editorState.editPiecesAsleep) {
+                    VStack(spacing: 0) {
+                        localBar
+                            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { localBarHeight = $0 }
+                        grid
+                    }
                 }
+                .equatable()
+                .frame(height: open ? nil : 0, alignment: .top)
+                .accessibilityHidden(editorState.editPiecesOutOfReach)
+                .environment(\.editPiecesOutOfReach, editorState.editPiecesOutOfReach)
+                .environment(\.editPiecesAsleep, editorState.editPiecesAsleep)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
@@ -612,7 +625,10 @@ struct TimelineDock: View {
     /// screen: a zoomed timeline with the playhead elsewhere has no playhead
     /// to draw, rather than one pinned to its edge.
     @ViewBuilder private func playhead(laneWidth: CGFloat) -> some View {
-        let fraction = editorState.motionStripRuler.fraction(ofMS: Double(editorState.documentTimeMS))
+        // Not read at all behind View, so playing there never draws the
+        // tracks out of sight again (`AsleepBehindView`).
+        let fraction = editorState.editPiecesAsleep
+            ? -1 : editorState.motionStripRuler.fraction(ofMS: Double(editorState.documentTimeMS))
         if fraction >= -0.001, fraction <= 1.001 {
             VideoKit.Playhead(fraction: fraction)
                 .frame(width: laneWidth)

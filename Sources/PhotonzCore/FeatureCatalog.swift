@@ -60,6 +60,9 @@ public enum FeatureCatalog {
     public static let cornerHandlesFlag = "next-corner-handles"
 
     public static let grabCueFlag = "next-grab-cue"
+    /// Edit's panel built behind View with the rest of Edit, so its sections
+    /// come in with the slide rather than just after it (`EditModeArrival`).
+    public static let panelWithTheSlideFlag = "next-panel-with-the-slide"
 
     public static let edgeGrabFlag = "next-edge-grab"
 
@@ -1414,6 +1417,16 @@ public enum FeatureCatalog {
                     parameters: []),
                 releases: [.next],
                 enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: panelWithTheSlideFlag,
+                    title: "The panel comes in with the slide",
+                    description: "Switching a recording from View to Edit brings the panel's settings in with the slide, at the cost of a slightly less smooth slide. Off means the slide is smooth and the settings fill in just after it lands.",
+                    area: .panel,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: []),
             Definition(
                 flag: FeatureFlag(
                     name: noticesSayWhatHappenedFlag,

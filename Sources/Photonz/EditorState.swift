@@ -378,6 +378,24 @@ final class EditorState {
     var isInspectorShown: Bool {
         document != nil && isLayersPanelVisible && !isInspectorAutoHidden && !isWatching
     }
+    /// The panel built and out of sight while the window is in View, so it
+    /// slides in with Edit rather than being built then (`EditModeArrival`).
+    ///
+    /// Only with `next-panel-with-the-slide`. A panel full of sections
+    /// sliding in cost the slide about half its pictures on a five minute
+    /// captioned recording (2026-10-02: 16 to 18 in its first 330ms, up to
+    /// 40ms still, against 27 or 28 and 19ms without), so by default the
+    /// panel slides in empty and its sections come in a pass each once it
+    /// has landed.
+    var isInspectorKeptBehindView: Bool {
+        isWatching && isEditorKeptBehindView && document != nil && isLayersPanelVisible && !isInspectorAutoHidden
+            && Experiments.shared.panelWithTheSlideEnabled
+    }
+    /// The tracks built and folded away under the transport while the window
+    /// is in View, for the same reason.
+    var areTracksKeptBehindView: Bool {
+        isWatching && isEditorKeptBehindView && timelineTracksShown
+    }
 
     /// Canvas camera. Nil until a document is open. All zoom/pan flows through
     /// `Viewport` (PhotonzCore) so the math stays tested.
@@ -1066,21 +1084,92 @@ final class EditorState {
     /// One pass on. Called by the editor view once the last stage has drawn.
     func advanceEditArrival() {
         guard let next = editArrival.next else { return }
+        if isWatching {
+            // Behind View nothing is on screen to slide, and a pass while the
+            // recording plays would cost the player a frame: wait for it to
+            // stop.
+            guard isEditorKeptBehindView else { return }
+            if isDocumentPlaying {
+                DispatchQueue.main.asyncAfter(deadline: .now() + Self.buildBehindViewDelay) { [weak self] in
+                    self?.advanceEditArrival()
+                }
+                return
+            }
+            editArrival = next
+            return
+        }
+        // A piece still being built behind View when Cmd-2 came waits for the
+        // slide to land, rather than landing in the middle of it.
+        let slideLeft = editSlideLands.timeIntervalSinceNow
+        if slideLeft > 0 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + slideLeft) { [weak self] in
+                self?.advanceEditArrival()
+            }
+            return
+        }
         // On the same curve as the switch, so the tool bar that comes in
         // here slides up after the rest rather than appearing.
         withAnimation(.viewEditMode) { editArrival = next }
     }
+    /// Edit's pieces (the tool bar, the tracks, and the panel where
+    /// `isInspectorKeptBehindView` says so) built and kept, out of sight,
+    /// while the window is in View, so Cmd-2 has nothing left to build for
+    /// them and they come in with the slide (`EditModeArrival`). False
+    /// from a recording opening in View until the window has been still a
+    /// moment; then the pieces arrive behind the player a pass at a time, and
+    /// stay for as long as the window holds the recording.
+    private(set) var isEditorKeptBehindView = false
+    /// How long a recording that opened in View waits before Edit's pieces
+    /// start to be built behind it (past the window's own opening), and how
+    /// often a build that found the recording playing looks again.
+    static let buildBehindViewDelay: Double = 0.6
+    /// Edit's pieces kept behind View, hidden from accessibility. It follows
+    /// the mode once the slide has landed rather than at the key: flipped
+    /// in the key pass, it had every control in the panel and the tracks
+    /// update itself before the slide's first frame.
+    private(set) var editPiecesOutOfReach = false
+    /// Edit's pieces kept behind View, no longer following the playhead
+    /// (`AsleepBehindView`). They wake at the key, so the tracks are right by
+    /// the slide's first frame, and fall asleep once the slide out has
+    /// landed, so going back to View costs its first frame nothing.
+    private(set) var editPiecesAsleep = false
+    @ObservationIgnored private var outOfReachWait = 0
+    private func putEditPiecesInReachOnceTheSlideLands() {
+        outOfReachWait &+= 1
+        let wait = outOfReachWait
+        DispatchQueue.main.asyncAfter(deadline: .now() + ViewEditMode.transitionSeconds) { [weak self] in
+            guard let self, self.outOfReachWait == wait else { return }
+            let out = self.isWatching
+            if self.editPiecesOutOfReach != out { self.editPiecesOutOfReach = out }
+            if self.editPiecesAsleep != out { self.editPiecesAsleep = out }
+        }
+    }
+    /// When the slide into Edit set off by the last switch lands.
+    @ObservationIgnored private var editSlideLands = Date.distantPast
+    /// How long until the slide into Edit lands; 0 once it has.
+    var secondsUntilTheSlideLands: Double { max(0, editSlideLands.timeIntervalSinceNow) }
     /// Counts the stages sent to wait for a slide, so one left over from an
     /// earlier switch (View, Edit and back inside a quarter second) never
     /// lands in a later one.
     @ObservationIgnored private var editArrivalWait = 0
     /// One pass on, once the slide the key pass set off has landed
-    /// (`EditModeArrival.nextWaitsForTheSlide`).
+    /// (`EditModeArrival.nextWaitsForTheSlide`). In View there is no slide:
+    /// the window waits a moment after opening, then starts building Edit
+    /// behind the player.
     func advanceEditArrivalOnceTheSlideLands() {
         editArrivalWait &+= 1
         let wait = editArrivalWait
-        DispatchQueue.main.asyncAfter(deadline: .now() + ViewEditMode.transitionSeconds) { [weak self] in
+        let delay = isWatching ? Self.buildBehindViewDelay : ViewEditMode.transitionSeconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
             guard let self, self.editArrivalWait == wait, self.editArrival.nextWaitsForTheSlide else { return }
+            if self.isWatching, !self.isEditorKeptBehindView {
+                // This pass mounts what the key pass would have (the panel's
+                // empty body, the dock's bar), out of sight; the next one
+                // goes on from there.
+                self.isEditorKeptBehindView = true
+                DispatchQueue.main.async { [weak self] in self?.advanceEditArrival() }
+                return
+            }
             self.advanceEditArrival()
         }
     }
@@ -1109,11 +1198,26 @@ final class EditorState {
         // The editor comes in over a few passes, not all in this one: on a
         // five minute captioned recording building it here held the window
         // for about 190ms before the slide could start (`EditModeArrival`).
-        editArrival = mode == .edit && documentHasTime ? .start : .settled
+        // Built behind View already, it simply slides in; and leaving for
+        // View keeps it, out of sight, for the next time.
+        var startArriving = false
+        if mode == .edit {
+            editSlideLands = Date(timeIntervalSinceNow: ViewEditMode.transitionSeconds)
+            if editPiecesAsleep { editPiecesAsleep = false }
+            let switching = EditModeArrival.switchingToEdit(hasTime: documentHasTime,
+                                                            keptBehindView: isEditorKeptBehindView,
+                                                            current: editArrival)
+            if editArrival != switching.arrival { editArrival = switching.arrival }
+            startArriving = switching.startsArriving
+        } else if documentHasTime {
+            isEditorKeptBehindView = true
+        }
         withAnimation(.viewEditMode) {
             viewEditMode = mode
             refitForViewEditMode()
         }
+        if startArriving { advanceEditArrivalOnceTheSlideLands() }
+        putEditPiecesInReachOnceTheSlideLands()
         if mode == .edit, let picked = pickedBeforeView {
             pickedBeforeView = nil
             if selectedLayerID == nil, document?.layer(id: picked) != nil { selectedLayerID = picked }
@@ -1125,9 +1229,19 @@ final class EditorState {
     func openInItsMode(_ document: PhotonzDocument, forAGuide: Bool = false) {
         pickedBeforeView = nil
         editArrival = .settled
+        isEditorKeptBehindView = false
         timelineTracksShown = true
         viewEditMode = Self.walkOpensRecordingsInEdit
             ? .edit : ViewEditMode.opening(document, forAGuide: forAGuide)
+        outOfReachWait &+= 1
+        editPiecesOutOfReach = viewEditMode == .view && document.hasTime
+        editPiecesAsleep = editPiecesOutOfReach
+        // Opening to watch: nothing of Edit is built yet, and it starts
+        // being built behind the player once the window has settled.
+        if viewEditMode == .view, document.hasTime {
+            editArrival = .start
+            advanceEditArrivalOnceTheSlideLands()
+        }
     }
 
     /// The picture fitted to the room it has in this mode: the whole canvas

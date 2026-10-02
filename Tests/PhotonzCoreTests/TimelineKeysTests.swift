@@ -431,6 +431,19 @@ struct ExpectTimelineStepTests {
         }
     }
 
+    @Test("It claims Edit's tool bar and tracks have all arrived, alone or beside anything else")
+    func arrived() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "steps": [ { "do": "expectTimeline", "arrived": true } ] }
+        """.utf8))
+        guard case .expectTimeline(let claim) = script.steps[0] else {
+            Issue.record("expectTimeline"); return
+        }
+        #expect(claim.arrived == true)
+        #expect(claim.claimsSomething)
+        #expect(PlaytestTimelineClaim().arrived == nil)
+    }
+
     @Test("It claims the transport's volume: the slider, the mute, and what the engine is putting out")
     func volume() throws {
         let script = try PlaytestScript.decode(Data("""

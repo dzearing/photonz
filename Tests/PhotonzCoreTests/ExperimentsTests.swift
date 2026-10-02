@@ -433,6 +433,16 @@ struct FeatureCatalogTests {
             .isEnabled(FeatureCatalog.measureReadoutSlideFlag))
     }
 
+    @Test func thePanelWithTheSlideFlagIsNextOnlyAndOffByDefault() {
+        // Edit's panel built behind View too, so it comes in with the slide:
+        // everything lands at once, and the slide draws about 50 pictures a
+        // second instead of 90 (2026-10-02). Off until the user has weighed it.
+        #expect(FeatureCatalog.panelWithTheSlideFlag == "next-panel-with-the-slide")
+        #expect(FeatureCatalog.flags(for: .next).contains { $0.name == FeatureCatalog.panelWithTheSlideFlag })
+        #expect(!FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.panelWithTheSlideFlag))
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.panelWithTheSlideFlag })
+    }
+
     @Test func theGrabCueFlagIsNextOnlyAndOnByDefault() {
         // The pointer becomes a hand over a pill that drags on its own (an
         // arrow's caption, a measurement's number). Next only; Current keeps

@@ -307,7 +307,9 @@ struct InspectorPanel: View {
         // itself and the panel follows in the next one.
         let wanted = orderedAvailableSections
         // Sliding in with Edit mode, the dock waits its turn (`EditModeArrival`).
-        let sections = arrivals.showing(wanted) { !editorState.editArrival.panelMayFill }
+        let sections = arrivals.showing(wanted) {
+            !editorState.editArrival.panelMayFill || editorState.secondsUntilTheSlideLands > 0
+        }
         let _ = arrivalPass // the catch-up pass reads its own trigger
         // How tall each list section may be drawn, so that the forms under it
         // stay where they are instead of being carried off the bottom.
@@ -537,8 +539,14 @@ struct InspectorPanel: View {
         guard editorState.editArrival.panelMayFill,
               !arrivals.isCatchingUp, arrivals.isWaiting(for: orderedAvailableSections) else { return }
         arrivals.isCatchingUp = true
-        DispatchQueue.main.async {
+        // Built behind a recording playing in View, a section would cost the
+        // player a frame, and built while Edit slides in (a pick handed back)
+        // it would cost the slide one: wait for either (`EditModeArrival`).
+        let behindPlayback = editorState.isWatching && editorState.isDocumentPlaying
+        let wait = behindPlayback ? EditorState.buildBehindViewDelay : editorState.secondsUntilTheSlideLands
+        DispatchQueue.main.asyncAfter(deadline: .now() + wait) {
             arrivals.isCatchingUp = false
+            if wait > 0 { catchUp(); return }
             let latest = orderedAvailableSections
             guard arrivals.isWaiting(for: latest) else { return }
             arrivals.allowNext(latest)

@@ -46,4 +46,38 @@ struct EditModeArrivalTests {
         #expect(EditModeArrival.trackRows.nextWaitsForTheSlide == false)
         #expect(EditModeArrival.panelSections.nextWaitsForTheSlide == false)
     }
+
+    // MARK: Built behind View (2026-10-02)
+
+    /// Edit's pieces built behind View: Cmd-2 builds nothing, so everything
+    /// comes in with the slide rather than up to 0.7s after it.
+    @Test func editBuiltBehindViewSimplySlidesIn() {
+        let kept = EditModeArrival.switchingToEdit(hasTime: true, keptBehindView: true, current: .settled)
+        #expect(kept.arrival == .settled)
+        #expect(kept.startsArriving == false)
+    }
+
+    /// Still being built behind View when Cmd-2 came: it carries on where it
+    /// was rather than starting again.
+    @Test func aBuildBehindViewCarriesOnFromWhereItWas() {
+        let partway = EditModeArrival.switchingToEdit(hasTime: true, keptBehindView: true, current: .trackRows)
+        #expect(partway.arrival == .trackRows)
+        #expect(partway.startsArriving == false)
+    }
+
+    /// Cmd-2 before anything was built behind View: the arrival starts at
+    /// the key pass, and since the window already stood there (a recording
+    /// opens at the start) the switch has to set it going itself.
+    @Test func nothingBuiltYetArrivesAPassAtATime() {
+        let fresh = EditModeArrival.switchingToEdit(hasTime: true, keptBehindView: false, current: .keyPass)
+        #expect(fresh.arrival == .start)
+        #expect(fresh.startsArriving)
+    }
+
+    /// A picture has no View mode and nothing to arrive.
+    @Test func aPictureIsAlwaysSettled() {
+        let picture = EditModeArrival.switchingToEdit(hasTime: false, keptBehindView: false, current: .settled)
+        #expect(picture.arrival == .settled)
+        #expect(picture.startsArriving == false)
+    }
 }

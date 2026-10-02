@@ -46,6 +46,9 @@ public enum EditorChromeLayout {
     /// The bar's own height, which is one group's height: everything that has
     /// to clear the bar measures from this.
     public static let toolBarHeight: CGFloat = toolBarGroupHeight
+    /// How far below its place the bar waits, out of sight, while Edit's
+    /// pieces are kept built behind View: past the canvas's bottom edge.
+    public static let toolBarHiddenDrop: CGFloat = toolBarInset + toolBarHeight
     /// The breathing room between the bar and whatever stacks on top of it, so
     /// the two read as two surfaces rather than one sitting on the other.
     public static let toolBarStackGap: CGFloat = 12

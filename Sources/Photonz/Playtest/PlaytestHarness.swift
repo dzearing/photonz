@@ -12309,6 +12309,8 @@ private final class Run {
             + ", \(editor.viewEditMode.title) mode"
             + (editor.isInspectorShown ? ", panel showing" : ", no panel")
             + (editor.isWatching ? ", no tool bar" : ", tool bar")
+            + (editor.editArrival == .settled ? "" : ", Edit arriving at \(editor.editArrival)")
+            + (editor.isWatching && editor.isEditorKeptBehindView ? ", Edit kept behind View" : "")
             + ", \(editor.activeTool.rawValue) in hand"
             + ", volume \(editor.playerVolume.percent)%"
             + (editor.playerVolume.isMuted ? " muted" : "")
@@ -12338,6 +12340,10 @@ private final class Run {
         if let want = claim.dockHeight, abs(editor.timelineDockFrame.height - want) > 1 {
             wrong.append(String(format: "the timeline dock stands %.0f points tall, not %.0f",
                                 editor.timelineDockFrame.height, want))
+        }
+        if let want = claim.arrived, want != (editor.editArrival == .settled) {
+            wrong.append(editor.editArrival == .settled ? "Edit's tool bar and tracks have all arrived"
+                : "Edit is still arriving, at \(editor.editArrival)")
         }
         if let want = claim.open, want != editor.isMotionStripOpen {
             wrong.append(editor.isMotionStripOpen ? "the timeline's tracks are open" : "the timeline's tracks are not showing")
@@ -13730,6 +13736,9 @@ private final class Run {
 
     private static func findAll<T: NSView>(_ type: T.Type, in view: NSView) -> [T] {
         var found: [T] = []
+        // Edit's pieces kept out of sight behind View hold markers nobody can
+        // reach: passed by, as a person passes them by.
+        if let target = view as? PanelTargetView, target.isOutOfReach { return found }
         if let match = view as? T { found.append(match) }
         for subview in view.subviews { found += findAll(type, in: subview) }
         return found

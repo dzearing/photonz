@@ -64,9 +64,12 @@ struct CaptionTrackBarView: View {
 /// `Active word <w>` and `1.30s / 6.00s`, the mock's two pills.
 private struct CaptionTrackReadouts: View {
     @Environment(EditorState.self) private var editorState
+    /// Kept behind View: the readouts wait for Edit rather than follow the
+    /// playhead out of sight.
+    @Environment(\.editPiecesAsleep) private var asleep
 
     var body: some View {
-        let word = editorState.captionWordBeingSaid
+        let word = asleep ? nil : editorState.captionWordBeingSaid
         HStack(spacing: 6) {
             HStack(spacing: 6) {
                 Text(CaptionTrackBar.activeWord).foregroundStyle(VideoKit.Palette.ink)
@@ -79,7 +82,7 @@ private struct CaptionTrackReadouts: View {
             .accessibilityElement(children: .combine)
             .accessibilityLabel(CaptionTrackBar.activeWord)
             .accessibilityValue(word ?? "")
-            Text(CaptionTrackBar.time(atMS: editorState.documentTimeMS, ofMS: editorState.documentLengthMS))
+            Text(CaptionTrackBar.time(atMS: asleep ? 0 : editorState.documentTimeMS, ofMS: editorState.documentLengthMS))
                 .foregroundStyle(VideoKit.Palette.ink)
                 .modifier(Pill())
         }

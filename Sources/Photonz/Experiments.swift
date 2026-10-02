@@ -248,6 +248,7 @@ extension Experiments {
     /// drags on its own (an arrow's caption, a measurement's number). Exists
     /// only in the Next release's catalog, so Current always reads false.
     var grabCueEnabled: Bool { isEnabled(FeatureCatalog.grabCueFlag) }
+    var panelWithTheSlideEnabled: Bool { isEnabled(FeatureCatalog.panelWithTheSlideFlag) }
 
     /// `next-a-box-says-what-it-picks`: whether a rubber band on the canvas
     /// shows, while it is being drawn, whether it is picking up layers or

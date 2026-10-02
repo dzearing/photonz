@@ -1,0 +1,48 @@
+{
+  "feature": "Edit mode arrives with the slide",
+  "epic": "video-editing",
+  "summary": "Switching a recording from View to Edit no longer leaves the tool bar and the tracks to pop in after the slide: they are built out of sight while you watch, so they come in with it. The panel slides in with them and fills in just after it lands, about 0.1s later.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open a five minute screen recording with captions (it opens in View) and wait a moment before pressing anything.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a long recording with captions; it opens in View. Wait one second."
+    },
+    {
+      "do": "Press Cmd-2.",
+      "shot": "2026-10-02-edit-arrives-1-mid-slide-sc.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed. These are frames the walk filmed, half a point to the pixel."
+    },
+    {
+      "do": "Watch the tool bar and the tracks: they ride in with the slide rather than after it.",
+      "shot": "2026-10-02-edit-arrives-2-landed-sc.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed. These are frames the walk filmed, half a point to the pixel."
+    },
+    {
+      "do": "Watch the panel: Time is there as the slide lands, Captions fills about 0.1s later.",
+      "shot": "2026-10-02-edit-arrives-3-panel-filled-sc.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed. These are frames the walk filmed, half a point to the pixel."
+    },
+    {
+      "do": "Press Cmd-1, then Cmd-2 again a few times: every switch behaves the same."
+    },
+    {
+      "do": "Press Space in View and let it play: the player should be as smooth as before."
+    },
+    {
+      "do": "To compare, turn on The panel comes in with the slide in the Experiments window and press Cmd-2 again."
+    }
+  ],
+  "evaluate": [
+    "Does Cmd-2 now feel like one motion, with nothing popping in after it?",
+    "Is the panel filling in about 0.1s after the slide lands still noticeable to you?",
+    "With The panel comes in with the slide turned on, is the slightly less smooth slide worth having the panel arrive with it?",
+    "Does playing a recording in View still feel as smooth as it did?"
+  ],
+  "rough": [
+    "The panel's sections still arrive after the slide by default: Time as it lands, Captions by about 0.38s after the key, against the 0.35s asked for. Building the panel behind View too (the Experiments switch) lands everything with the slide, but the slide then draws about 17 pictures in its first third of a second instead of 28, with up to a 26 to 40ms pause, so it stays off until you weigh it.",
+    "The main thread is still busy for about 550 to 600ms of the 0.8s after Cmd-2, about the same as before (533 to 639ms measured the same day). That time is the window drawing the slide at the display's full rate, not building, and the slide back to View costs the same; the task asked for well under half and this does not get there.",
+    "Playing a recording in View now costs about 8% more of the main thread (about 1.52s busy in 2s against 1.40s), because the hidden tracks and tool bar are kept; the parts that follow the playhead sleep while hidden. Playing in Edit is unchanged.",
+    "Every picture here was taken with the Mac's screen locked: colours can read dimmed."
+  ]
+}

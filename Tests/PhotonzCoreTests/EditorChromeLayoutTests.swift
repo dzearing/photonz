@@ -5,6 +5,14 @@ import Testing
 @Suite("EditorChromeLayout")
 struct EditorChromeLayoutTests {
 
+    // MARK: The tool bar kept behind View
+
+    /// Out of sight means past the canvas's bottom edge, all of it.
+    @Test func theToolBarWaitsBelowTheCanvas() {
+        #expect(EditorChromeLayout.toolBarHiddenDrop
+                >= EditorChromeLayout.toolBarInset + EditorChromeLayout.toolBarHeight)
+    }
+
     // MARK: Inspector auto-collapse
 
     @Test func inspectorStaysOpenWhenWide() {
