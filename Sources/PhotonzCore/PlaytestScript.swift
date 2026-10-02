@@ -4837,9 +4837,18 @@ public enum PlaytestStep: Sendable, Equatable {
                 pad: CGFloat(try f.optionalNumber("pad") ?? 0), seconds: seconds,
                 trigger: trigger, inside: try f.optionalFlag("inside"), slack: CGFloat(slack)))
         case "filmWindow":
-            let keyName = try f.string("key")
-            guard let key = PlaytestKey(keyName) else {
-                throw f.invalid("key", "\"\(keyName)\" is not a key")
+            let keyName = try f.optionalString("key"), press = try f.optionalString("press")
+            let trigger: PlaytestThumbFilm.Trigger
+            switch (keyName, press) {
+            case (let keyName?, nil):
+                guard let key = PlaytestKey(keyName) else {
+                    throw f.invalid("key", "\"\(keyName)\" is not a key")
+                }
+                trigger = .key(key, try f.modifiers())
+            case (nil, let press?):
+                trigger = .press(control: press, in: try f.optionalString("in"))
+            default:
+                throw f.invalid("key", "a slide is set off by exactly one of \"key\" or \"press\"")
             }
             let seconds = try f.optionalNumber("seconds") ?? PlaytestSlideFilm.defaultSeconds
             guard seconds >= 0.1, seconds <= 3 else {
@@ -4854,7 +4863,7 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("withinMS", "the slide is read for some time after the key, above 0ms")
             }
             self = .filmWindow(PlaytestSlideFilm(
-                name: try f.string("name"), key: key, modifiers: try f.modifiers(),
+                name: try f.string("name"), trigger: trigger,
                 seconds: seconds, withinMS: within, longestStillUnderMS: ceiling))
         case "expectCaption":
             func word<V: CaptionClaimWord>(_ field: String) throws -> V? {

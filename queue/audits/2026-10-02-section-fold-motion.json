@@ -1,0 +1,27 @@
+{
+  "feature": "Panel sections open and shut smoothly",
+  "epic": "design-system",
+  "summary": "Clicking a section header in the right hand panel now grows or shrinks the section in about a quarter of a second, uncovering its rows from the top down, while every section under it slides along on the same curve. Before, it jumped open and shut with nothing animated at all.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open any recording (File > Open Sample Recording works) and pick its clip on the timeline.",
+  "switched": {},
+  "try": [
+    { "do": "Click the TIME header in the right hand panel to shut it.", "shot": "2026-10-02-section-fold-shutting-sc.png" },
+    { "do": "Click TIME again to open it, and watch Speed and Sound come into view from the top while Channel slides down.", "shot": "2026-10-02-section-fold-opening-sc.png" },
+    { "do": "Shut and open Fades, Gain and Appearance the same way.", "shot": "2026-10-02-section-fold-clip-open-sc.png" },
+    { "do": "Click one header five times as fast as you can, and check it lands settled, never half open.", "shot": "2026-10-02-section-fold-rapid-shut-sc.png" },
+    { "do": "Open any picture, draw a rectangle, and fold Layers, Appearance, Effects and Motion." }
+  ],
+  "evaluate": [
+    "Does a section start moving the moment you let go of the click, with no wait before it?",
+    "Does the motion feel like the timeline dock opening, or should it be faster or slower?",
+    "When a section shuts, do the rows under it climb up cleanly without drawing over the rows being hidden?",
+    "Does clicking quickly several times ever leave the panel looking wrong?"
+  ],
+  "rough": [
+    "The very first fold after the app launches still costs one long pass of about 25ms (about one and a half frames). It was the same before this change, and a second recording in the same launch pays only 7ms, so it is SwiftUI warming up once per launch. The walk reads it but does not judge it.",
+    "Motion starts about 50 to 70ms after the click as filmed, against 43ms for the old instant jump: the spring starts gently, so its first frame moves very little.",
+    "In a picture, the window filmed one gap of 26 to 34ms early in the slide where it drew no new picture. In a recording it drew a new one every 9ms through the slide.",
+    "Reduce Motion makes the fold instant in the code, but no walk turns Reduce Motion on, so that path is untested on the running app.",
+    "The mocks do not draw this motion; they only say a header collapses its group. The header itself looks the same as before."
+  ]
+}

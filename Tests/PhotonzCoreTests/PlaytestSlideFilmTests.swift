@@ -43,9 +43,23 @@ struct PlaytestSlideFilmTests {
         #expect(film.withinMS == nil)
     }
 
-    @Test("It needs a key, a sane length and a ceiling above nothing",
+    @Test("A filmWindow step can be set off by a press on a panel control instead of a key")
+    func parsesAPress() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "filmWindow", "name": "time-opens", "press": "Time section", "in": "Time",
+                       "seconds": 0.5 } ] }
+        """)
+        guard case .filmWindow(let film) = script.steps[0] else { Issue.record("filmWindow"); return }
+        #expect(film.trigger == .press(control: "Time section", in: "Time"))
+        #expect(film.key == nil)
+        #expect(film.modifiers == [])
+        #expect(film.seconds == 0.5)
+    }
+
+    @Test("It needs exactly one of a key or a press, a sane length and a ceiling above nothing",
           arguments: [
               #"{ "do": "filmWindow", "name": "x" }"#,
+              #"{ "do": "filmWindow", "name": "x", "key": "1", "press": "Time section" }"#,
               #"{ "do": "filmWindow", "key": "1" }"#,
               #"{ "do": "filmWindow", "name": "x", "key": "not a key" }"#,
               #"{ "do": "filmWindow", "name": "x", "key": "1", "seconds": 9 }"#,

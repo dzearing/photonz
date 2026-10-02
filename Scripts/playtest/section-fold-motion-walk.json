@@ -1,0 +1,595 @@
+{
+ "out": "/tmp/photonz-playtest/section-fold-motion-walk",
+ "seed": "A section in the right hand panel opens and shuts the moment its header is clicked, and moves while it does: it grows and shrinks in height, its body uncovered top down and covered bottom up, while every section under it slides on the same curve. The user, 2026-10-02: expanding and collapsing a pane did not animate like other things and felt laggy, as if heavy UX had to load first. Measured before the fix, the click cost under 10ms of main thread in every section, and the film showed the real trouble: the section jumped shut and open with nothing animated at all. Every header here is clicked with the pointer on its face, at Next defaults, in a recording and in a picture, each click held under 16ms in any one pass; three toggles are filmed, and five clicks in under a second end with the section settled, never half open.",
+ "setup": {
+  "front": true,
+  "timelineOpen": true,
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "describe",
+   "stage": "0-first-fold",
+   "note": "The first fold the app makes after launch is NOT held to a frame: it costs one pass of about 25ms whatever section it is (23 to 26ms over six runs, the same before this change, and 7ms for the first fold in a second recording in the same launch). That is SwiftUI building the fold's path once per launch, so it is clicked here, shut and open, and read but not judged"
+  },
+  {
+   "do": "press",
+   "control": "Captions section"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Captions section"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "describe",
+   "stage": "1-recording-nothing-picked",
+   "note": "A recording with nothing picked: Time, Captions and Transitions each clicked shut and open again by their headers, every click held under 16ms in any one pass of main thread work"
+  },
+  {
+   "do": "press",
+   "control": "Time section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Time section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Captions section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Captions section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Transitions section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Transitions section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "control": "Add Captions",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "Search transitions",
+   "present": true
+  },
+  {
+   "do": "selectRow",
+   "row": "Tutorial Sample"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "2-clip-film",
+   "note": "The clip picked. Time is FILMED shutting and opening: the frames show its body covered from the bottom up and uncovered from the top down while Channel and everything under it slides on the same curve, never a jump"
+  },
+  {
+   "do": "filmWindow",
+   "name": "2-time-shuts",
+   "press": "Time section",
+   "seconds": 0.45
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "field": "Speed",
+   "present": false
+  },
+  {
+   "do": "filmWindow",
+   "name": "2-time-opens",
+   "press": "Time section",
+   "seconds": 0.45
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectInView",
+   "field": "Speed"
+  },
+  {
+   "do": "describe",
+   "stage": "3-clip-every-section",
+   "note": "Every section the clip brings, clicked shut and open again by its header"
+  },
+  {
+   "do": "press",
+   "control": "Properties section",
+   "longestUnderMS": 16,
+   "in": "Properties Kind"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Properties section",
+   "longestUnderMS": 16,
+   "in": "Properties Kind"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Time section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Time section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Channel section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Channel section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Fades section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Fades section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Gain section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Gain section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Audio Effects section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Audio Effects section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Effects section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Effects section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Appearance section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Appearance section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Captions section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Captions section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Transitions section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Transitions section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "control": "Mute",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "Normalize",
+   "present": true
+  },
+  {
+   "do": "snapshot",
+   "name": "3-clip-all-open"
+  },
+  {
+   "do": "blank",
+   "canvasWidth": 1200,
+   "canvasHeight": 800,
+   "width": 1440,
+   "height": 900
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "describe",
+   "stage": "4-picture",
+   "note": "A picture with nothing picked: Layers shut and open by its header, then filmed shutting and opening"
+  },
+  {
+   "do": "press",
+   "control": "Layers section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Layers section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "control": "Visibility",
+   "present": true
+  },
+  {
+   "do": "filmWindow",
+   "name": "4-layers-shuts",
+   "press": "Layers section",
+   "seconds": 0.45
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "control": "Visibility",
+   "present": false
+  },
+  {
+   "do": "filmWindow",
+   "name": "4-layers-opens",
+   "press": "Layers section",
+   "seconds": 0.45
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "control": "Visibility",
+   "present": true
+  },
+  {
+   "do": "describe",
+   "stage": "5-rapid",
+   "note": "FIVE clicks on the Layers header in well under a second, each landing while the last one is still moving: it ends shut, laid out, with nothing half open. Five more and it ends open"
+  },
+  {
+   "do": "windowClick",
+   "at": [
+    1308,
+    54
+   ],
+   "space": "window",
+   "count": 5
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8,
+   "longestUnderMS": 16
+  },
+  {
+   "do": "expect",
+   "control": "Visibility",
+   "present": false
+  },
+  {
+   "do": "snapshot",
+   "name": "5-rapid-shut"
+  },
+  {
+   "do": "windowClick",
+   "at": [
+    1308,
+    54
+   ],
+   "space": "window",
+   "count": 5
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8,
+   "longestUnderMS": 16
+  },
+  {
+   "do": "expect",
+   "control": "Visibility",
+   "present": true
+  },
+  {
+   "do": "snapshot",
+   "name": "5-rapid-open"
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    500,
+    450
+   ],
+   "to": [
+    700,
+    560
+   ],
+   "steps": 10
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "describe",
+   "stage": "6-shape",
+   "note": "A rectangle picked: Layers, Appearance, Effects and Motion clicked shut and open"
+  },
+  {
+   "do": "press",
+   "control": "Layers section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Layers section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Appearance section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Appearance section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Effects section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Effects section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Motion section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Motion section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "snapshot",
+   "name": "6-shape-open"
+  }
+ ]
+}

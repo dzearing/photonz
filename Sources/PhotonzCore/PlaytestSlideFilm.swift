@@ -12,8 +12,9 @@ public struct PlaytestSlideFilm: Sendable, Equatable {
 
     /// Frames go to `<name>-<n>-sc.png` and the readings to `<name>.json`.
     public var name: String
-    public var key: PlaytestKey
-    public var modifiers: [PlaytestModifier]
+    /// What sets the slide off: a key, or a press on a panel control's face
+    /// (a section header opening, say), the same two a `filmThumb` takes.
+    public var trigger: PlaytestThumbFilm.Trigger
     public var seconds: Double
     /// How long after the key the slide is read for, nil for the whole film.
     /// Whatever the window draws after the slide has landed (the editor
@@ -23,15 +24,30 @@ public struct PlaytestSlideFilm: Sendable, Equatable {
     /// key and the last it reads, the window went longer than this without one.
     public var longestStillUnderMS: Double?
 
-    public init(name: String, key: PlaytestKey, modifiers: [PlaytestModifier] = [],
+    /// The key, when a key sets it off.
+    public var key: PlaytestKey? {
+        if case .key(let key, _) = trigger { key } else { nil }
+    }
+
+    public var modifiers: [PlaytestModifier] {
+        if case .key(_, let modifiers) = trigger { modifiers } else { [] }
+    }
+
+    public init(name: String, trigger: PlaytestThumbFilm.Trigger,
                 seconds: Double = Self.defaultSeconds, withinMS: Double? = nil,
                 longestStillUnderMS: Double? = nil) {
         self.name = name
-        self.key = key
-        self.modifiers = modifiers
+        self.trigger = trigger
         self.seconds = seconds
         self.withinMS = withinMS
         self.longestStillUnderMS = longestStillUnderMS
+    }
+
+    public init(name: String, key: PlaytestKey, modifiers: [PlaytestModifier] = [],
+                seconds: Double = Self.defaultSeconds, withinMS: Double? = nil,
+                longestStillUnderMS: Double? = nil) {
+        self.init(name: name, trigger: .key(key, modifiers), seconds: seconds,
+                  withinMS: withinMS, longestStillUnderMS: longestStillUnderMS)
     }
 }
 

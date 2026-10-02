@@ -556,12 +556,20 @@ struct CollapsibleSection<Content: View>: View {
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
                     onHeaderHeight?($0)
                 }
+            // Opened, the body is uncovered top down as the section grows, and
+            // shut, it is covered again from the bottom up as it shrinks, so
+            // everything under it slides on the same curve rather than jumping
+            // to where it ends up. It used to fade in place and slide down from
+            // over its own header, and the click's animation never reached the
+            // dock at all, so in practice it was a jump (filmed 2026-10-02).
+            // The curve is the dock's own, keyed on which sections are folded:
+            // see `InspectorPanel.foldMotion`.
             if !isCollapsed {
                 boundedBody
                     .onGeometryChange(for: CGRect.self) {
                         $0.frame(in: .named(inspectorDockSpace))
                     } action: { onBodyFrame?($0) }
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                    .transition(.sectionReveal)
             }
         }
     }
@@ -614,7 +622,7 @@ struct CollapsibleSection<Content: View>: View {
         // still plays the recording rather than folding the section again.
         .focusable(interactions: .activate)
         .onKeyPress(keys: [.space, .return]) { _ in
-            withAnimation(.spring(duration: 0.25)) { onToggle() }
+            onToggle()
             return .handled
         }
         .accessibilityAddTraits(.isButton)
@@ -687,12 +695,86 @@ struct CollapsibleSection<Content: View>: View {
             }
             .onEnded { _ in
                 guard isCarrying else {
-                    withAnimation(.spring(duration: 0.25)) { onToggle() }
+                    onToggle()
                     return
                 }
                 isCarrying = false
                 onReorderEnd()
             }
+    }
+}
+
+/// How a section's body arrives: laid out at its full height from the first
+/// frame, and given a height that grows from nothing to the whole body, so the
+/// section's height is what animates and the rows below it slide on the same
+/// curve. Nothing inside the body is squeezed or re-flowed while it opens.
+///
+/// Only for arriving. A body on its way out is no longer in the layout at
+/// all: the rows below it close up on their own curve whatever it does, so
+/// what shuts it is the window it is drawn through (`SectionRevealWindow`).
+private struct SectionRevealLayout: Layout {
+    /// How much of the body's height the section takes, 0 to 1.
+    var fraction: CGFloat
+
+    var animatableData: CGFloat {
+        get { fraction }
+        set { fraction = newValue }
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let whole = subviews.first?.sizeThatFits(ProposedViewSize(width: proposal.width, height: nil)) ?? .zero
+        return CGSize(width: whole.width, height: whole.height * min(max(fraction, 0), 1))
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard let body = subviews.first else { return }
+        let whole = body.sizeThatFits(ProposedViewSize(width: bounds.width, height: nil))
+        body.place(at: bounds.origin, anchor: .topLeading,
+                   proposal: ProposedViewSize(width: bounds.width, height: whole.height))
+    }
+}
+
+/// The window a section's body is seen through: the top `fraction` of its
+/// bounds, so a body shutting is covered from the bottom up exactly as fast as
+/// the header under it climbs. Wider than the body on either side and a little
+/// above it, so a focus ring or a knob's shadow at the edge of a control is
+/// never shaved off once the body is open.
+private struct SectionRevealWindow: Shape {
+    var fraction: CGFloat
+
+    var animatableData: CGFloat {
+        get { fraction }
+        set { fraction = newValue }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        Path(CGRect(x: rect.minX - 40, y: rect.minY - 4,
+                    width: rect.width + 80, height: rect.height * min(max(fraction, 0), 1) + 4))
+    }
+}
+
+private struct SectionRevealModifier: ViewModifier {
+    /// How much of its height the body takes in the dock (arriving).
+    let height: CGFloat
+    /// How much of what it takes is drawn (leaving).
+    let shown: CGFloat
+
+    func body(content: Content) -> some View {
+        SectionRevealLayout(fraction: height) { content }
+            .clipShape(SectionRevealWindow(fraction: shown))
+    }
+}
+
+extension AnyTransition {
+    /// A section body uncovered top down as it opens and covered bottom up as
+    /// it shuts, always in step with the rows below it. See
+    /// `SectionRevealLayout` for why the two directions differ.
+    static var sectionReveal: AnyTransition {
+        .asymmetric(
+            insertion: .modifier(active: SectionRevealModifier(height: 0, shown: 1),
+                                 identity: SectionRevealModifier(height: 1, shown: 1)),
+            removal: .modifier(active: SectionRevealModifier(height: 1, shown: 0),
+                               identity: SectionRevealModifier(height: 1, shown: 1)))
     }
 }
 

@@ -231,6 +231,11 @@ private final class Run {
     private var expectNoControl: Set<String> = []
     /// `setup.front`: the probe is the active app for the whole walk.
     private var holdsTheFront = false
+    /// When the last `press` really clicked, on the host clock a film reads.
+    /// A press first waits for the panel to stop moving, which next to a
+    /// shelf of animated previews can be its whole patience, so a film set
+    /// off by a press is timed from this and not from when it asked.
+    private var lastPressClickAt: TimeInterval?
 
     /// How a `wait` step spends its seconds: watching for the editor to go
     /// quiet, or sleeping the whole number the way walks used to.
@@ -6218,7 +6223,7 @@ private final class Run {
     /// 2026-09-04). Posting both first means the loop always finds its way out.
     private func pressControl(_ name: String, in row: String?, count: Int,
                               modifiers: [PlaytestModifier], across: CGFloat?,
-                              number: Int) async throws {
+                              number: Int, alreadySettled: Bool = false) async throws {
         // Waited for and scrolled to, the way a person does it: look for the
         // control, and if the dock has it below the fold, scroll until it is
         // where a press could land. A walk used to have to say `reveal` for
@@ -6228,9 +6233,13 @@ private final class Run {
         var (target, effort) = try await reachableTarget(name, in: row)
         // ...and not pressed until it has stopped moving, so the event lands
         // on the control rather than on whatever slid into its place.
-        let steady = await settled(target, named: name, in: row)
-        target = steady.target
-        if !steady.effort.isEmpty { effort += (effort.isEmpty ? "" : ", ") + steady.effort }
+        // A film has done this already, before its camera started, so the
+        // click lands the moment the camera is rolling (`filmWindow`).
+        if !alreadySettled {
+            let steady = await settled(target, named: name, in: row)
+            target = steady.target
+            if !steady.effort.isEmpty { effort += (effort.isEmpty ? "" : ", ") + steady.effort }
+        }
         // A press lands in the middle of the control, which for a slider means
         // the knob goes halfway and nowhere else. `across` moves the press
         // along the control's own width, so a walk can put a slider on a value
@@ -6266,6 +6275,7 @@ private final class Run {
         MainThreadMeter.shared.install()
         MainThreadMeter.shared.reset()
         ViewBuildMeter.shared.reset()
+        lastPressClickAt = PlaytestWindowFilm.hostNow
         // The release goes in the QUEUE and the press is delivered by hand.
         //
         // Both posted, and about one press in six right after a panel menu had
@@ -8807,7 +8817,7 @@ private final class Run {
         return summary
     }
 
-    /// Films the editor window below its title bar while a key sets something
+    /// Films the editor window below its title bar while a key or a press sets something
     /// sliding, and reads when it drew each new picture (`SlideCadence`).
     ///
     /// The title bar is left out on purpose: the View | Edit control there is
@@ -8844,11 +8854,28 @@ private final class Run {
         defer {
             if hidden { host.alphaValue = 0; MainThreadMeter.shared.countPassesAgain() }
         }
+        // A press waits for its control to stop moving, which beside anything
+        // restless (a picked shape's outline, a shelf of previews) is its
+        // whole two seconds of patience. Waited out BEFORE the camera rolls:
+        // filmed, that wait used up every frame the stream would give, and
+        // the slide itself came out as no pictures at all.
+        if case .press(let control, let row) = film.trigger {
+            let (target, _) = try await reachableTarget(control, in: row)
+            _ = await settled(target, named: control, in: row)
+        }
         let camera = PlaytestWindowFilm(crop: crop)
         try await camera.start(scWindow, size: CGSize(width: frame.width * scale, height: frame.height * scale))
         await sleep(0.15)
-        let keyAt = PlaytestWindowFilm.hostNow
-        try await perform(.key(film.key, film.modifiers), number: number)
+        var keyAt = PlaytestWindowFilm.hostNow
+        switch film.trigger {
+        case .key(let key, let modifiers):
+            try await perform(.key(key, modifiers), number: number)
+        case .press(let control, let row):
+            lastPressClickAt = nil
+            try await pressControl(control, in: row, count: 1, modifiers: [], across: nil,
+                                   number: number, alreadySettled: true)
+            keyAt = lastPressClickAt ?? keyAt
+        }
         await sleep(film.seconds)
         await camera.stop()
         let frames = camera.frames

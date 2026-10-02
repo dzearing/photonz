@@ -43,6 +43,7 @@ struct InspectorPanel: View {
     @Environment(EditorState.self) private var editorState
     @AppStorage(InspectorPanel.sectionOrderKey) private var orderRaw = ""
     @AppStorage(InspectorPanel.collapsedKey) private var collapsedRaw = ""
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// Which one-time section moves this panel's saved order has had. See
     /// `loadOrder`.
     @AppStorage(InspectorPanel.sectionOrderVersionKey) private var orderVersion = 0
@@ -446,6 +447,16 @@ struct InspectorPanel: View {
                         }
                     }
                     .padding(.vertical, DockMetrics.listTopPadding)
+                    // Opening or shutting a section moves the whole dock on
+                    // ONE curve: the section grows or shrinks and everything
+                    // under it slides with it. Keyed here, on the folds, and
+                    // not left to the click's `withAnimation`: the fold is a
+                    // stored setting, and its change reached the dock outside
+                    // the click's transaction, so every section jumped open
+                    // and shut with nothing animated at all (filmed
+                    // 2026-10-02, `section-fold-motion-walk`).
+                    .animation(foldMotion, value: folded)
+                    .onChange(of: folded) { reveal.foldWithoutMotion = false }
                     // NO implicit animation on the section SET (10.7). Animating
                     // section insert/remove forces the whole .regularMaterial panel to
                     // re-blur and an NSColorWell to animate in/out every frame for the
@@ -1583,12 +1594,17 @@ struct InspectorPanel: View {
         Set(collapsedRaw.split(separator: ",").compactMap { InspectorSectionID(rawValue: String($0)) })
     }
 
+    /// The curve a section opens and shuts on, and nothing with Reduce Motion
+    /// on: the section is simply open or shut. The animation is the dock's,
+    /// keyed on the folds (see `body`), so this is the one place it is chosen.
+    private var foldMotion: Animation? {
+        reduceMotion || reveal.foldWithoutMotion ? nil : .spring(duration: 0.25)
+    }
+
     private func toggleCollapsed(_ id: InspectorSectionID) {
         var set = Set(collapsedRaw.split(separator: ",").map(String.init))
         if set.contains(id.rawValue) { set.remove(id.rawValue) } else { set.insert(id.rawValue) }
-        withAnimation(.spring(duration: 0.25)) {
-            collapsedRaw = set.sorted().joined(separator: ",")
-        }
+        collapsedRaw = set.sorted().joined(separator: ",")
     }
 
     /// Opens a section that was left collapsed, and does nothing to one that is
@@ -1597,6 +1613,7 @@ struct InspectorPanel: View {
     private func expand(_ id: InspectorSectionID) {
         var set = Set(collapsedRaw.split(separator: ",").map(String.init))
         guard set.remove(id.rawValue) != nil else { return }
+        reveal.foldWithoutMotion = true
         collapsedRaw = set.sorted().joined(separator: ",")
     }
 }
