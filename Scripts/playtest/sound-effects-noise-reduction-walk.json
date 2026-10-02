@@ -113,7 +113,8 @@
     },
     {
       "do": "press",
-      "control": "Remove Noise reduction"
+      "control": "Remove",
+      "in": "Noise reduction"
     },
     {
       "do": "waitFor",

@@ -393,6 +393,37 @@ extension EditorState {
         changeSoundLevels(layers: soundLayers(actingOn: id)) { $0.removeEffect(kind) }
     }
 
+    /// The row's switch: stop hearing an effect and keep its settings, or
+    /// hear it again, on the picked sound and whatever is picked with it.
+    func setSoundEffectInHand(_ kind: SoundEffectKind, on: Bool) {
+        guard let id = soundLayerInHand?.id else { return }
+        changeSoundLevels(layers: soundLayers(actingOn: id)) { $0.setEffect(kind, on: on) }
+    }
+
+    /// One setting of the EQ, on every picked sound that has an EQ.
+    func changeSoundEQInHand(_ change: @escaping (inout SoundEQ) -> Void) {
+        guard let id = soundLayerInHand?.id else { return }
+        changeSoundLevels(layers: soundLayers(actingOn: id)) { level in
+            guard var eq = level.eq else { return false }
+            change(&eq)
+            guard eq != level.eq else { return false }
+            level.eq = eq
+            return true
+        }
+    }
+
+    /// One setting of the compressor, on every picked sound that has one.
+    func changeSoundCompressorInHand(_ change: @escaping (inout SoundCompressor) -> Void) {
+        guard let id = soundLayerInHand?.id else { return }
+        changeSoundLevels(layers: soundLayers(actingOn: id)) { level in
+            guard var compressor = level.compressor else { return false }
+            change(&compressor)
+            guard compressor != level.compressor else { return false }
+            level.compressor = compressor
+            return true
+        }
+    }
+
     /// Each layer's level changed by `change` (true where it changed), written
     /// as one step, and any cleaned copy that now has to exist started.
     private func changeSoundLevels(layers ids: [UUID], _ change: (inout AudioLevel) -> Bool) {

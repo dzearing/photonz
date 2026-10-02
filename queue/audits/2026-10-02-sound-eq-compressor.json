@@ -1,0 +1,28 @@
+{
+  "feature": "EQ and Compressor on a picked sound",
+  "epic": "video-audio",
+  "summary": "A picked sound can now take an EQ (low cut, low shelf, high shelf) and a Compressor (threshold, ratio) from the plus on Audio Effects. You hear them when it plays, and they go into the export and into what Normalize measures. Every row, Noise reduction included, has a switch that stops the effect and keeps its settings, so you can compare with and without.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a screen recording that has sound (the walk uses fixtures/Noisy voice recording 1280x800.mp4) and pick its clip. Walks: sound-effects-eq-compressor-locked-walk (ran green), sound-effects-eq-compressor-walk (the same steps with the plus clicked at a point; it needs the screen unlocked).",
+  "switched": {},
+  "try": [
+    { "do": "Pick the clip, then click the plus on the Audio Effects header and choose EQ.", "shot": "2026-10-02-sound-eq-compressor-1-eq-sc.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed." },
+    { "do": "Press Space and listen: the low rumble under the voice is gone." },
+    { "do": "Click the plus again and choose Compressor. It reads 3:1.", "shot": "2026-10-02-sound-eq-compressor-2-both-sc.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed." },
+    { "do": "Drag Low cut to about 200 Hz and let go. Play it again." },
+    { "do": "Click the eye on the EQ row. It reads off and its settings fade but stay. Play, then click the eye again to compare.", "shot": "2026-10-02-sound-eq-compressor-3-eq-off-sc.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed." },
+    { "do": "Right-click the EQ row and choose Remove, or click its cross. Press Command-Z to bring it back.", "shot": "2026-10-02-sound-eq-compressor-4-eq-removed-sc.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed." },
+    { "do": "Export the video and play the file: it sounds the way the editor did." }
+  ],
+  "evaluate": [
+    "Does the eye read as on and off for a sound, or would you rather have the mock's dot on sound rows even though picture effects use the eye?",
+    "Is a low cut plus two shelves enough EQ for a voice-over, or do you reach for a fuller parametric EQ?",
+    "The compressor turns the voice back up by half of what it takes off the loudest peak, so it never sounds quieter after you add it. Does that feel right, or would you rather it only turned things down?",
+    "A slider changes the sound when you let go, not while you drag, because the sound is remade each time. Is a moment's wait after letting go acceptable?"
+  ],
+  "rough": [
+    "The mock draws a drag grip on each row. The rows have no grip because the order is fixed: noise reduction, then EQ, then compressor, which is the order the sound passes through them.",
+    "The mock draws a dot as each row's switch. The row is the same row the picture Effects list uses, so the switch is that list's eye, the app's one picture for off (asked for on 2026-09-08).",
+    "Changing a setting remakes the sound in the background, about a second for a short clip. Until it lands, the clip plays the file without the change.",
+    "The pictures were taken with the screen locked, so the plus was pressed, not clicked at a point. The walk that clicks it with the pointer is written but has not run yet."
+  ]
+}

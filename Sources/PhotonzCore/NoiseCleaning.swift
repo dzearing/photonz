@@ -71,30 +71,51 @@ public enum NoiseReduction: String, Codable, CaseIterable, Sendable {
     }
 }
 
-/// What a cleaned sound is a cleaned copy OF.
+/// What a cleaned sound is a cleaned copy OF, and how it was made: the
+/// noise taken out, then the EQ, then the compressor (`SoundEffects.swift`),
+/// whichever of them are on. The name says cleaning because that is the one
+/// it began with; an EQ'd copy is made, kept and played exactly the same way.
 public struct SoundCleaning: Hashable, Codable, Sendable {
     /// The file the cleaned copy is made from.
     public let sourceID: UUID
-    public let reduction: NoiseReduction
+    /// How hard the noise is taken out, nil where it is not.
+    public let reduction: NoiseReduction?
     /// The stretches of the file, in its own milliseconds, the noise is
-    /// learned from: the ones the segment plays.
+    /// learned from: the ones the segment plays. Empty where no noise is
+    /// taken out, since nothing else learns from them.
     public let learnFromMS: [Range<Int>]
+    public let eq: SoundEQ?
+    public let compressor: SoundCompressor?
 
-    public init(sourceID: UUID, reduction: NoiseReduction, learnFromMS: [Range<Int>]) {
+    public init(sourceID: UUID, reduction: NoiseReduction?, learnFromMS: [Range<Int>],
+                eq: SoundEQ? = nil, compressor: SoundCompressor? = nil) {
         self.sourceID = sourceID
         self.reduction = reduction
-        self.learnFromMS = learnFromMS
+        self.learnFromMS = reduction == nil ? [] : learnFromMS
+        self.eq = eq
+        self.compressor = compressor
     }
 
     /// Bumped whenever the cleaning itself changes, so a copy cleaned the old
     /// way is never played as if it were cleaned the new way.
     public static let version = 1
+    /// The same, for the EQ and the compressor.
+    public static let shapingVersion = 1
 
     /// The id the cleaned copy goes by: the same every time for the same
-    /// file, strength and stretches, and different for any other.
+    /// file, strength, stretches and settings, and different for any other.
+    /// A copy with only noise taken out keeps the id it has always had, so
+    /// copies already made are found again.
     public var cleanedID: UUID {
-        var text = "clean-noise/v\(Self.version)/\(sourceID.uuidString)/\(reduction.rawValue)"
+        var text = "clean-noise/v\(Self.version)/\(sourceID.uuidString)/\(reduction?.rawValue ?? "none")"
         for range in learnFromMS { text += "/\(range.lowerBound)-\(range.upperBound)" }
+        if eq != nil || compressor != nil { text += "/shape-v\(Self.shapingVersion)" }
+        if let eq {
+            text += String(format: "/eq/%.2f/%.2f/%.2f", eq.lowCutHz, eq.lowDB, eq.highDB)
+        }
+        if let compressor {
+            text += String(format: "/comp/%.2f/%.2f", compressor.thresholdDB, compressor.ratio)
+        }
         let bytes = Array(text.utf8)
         let high = Self.fnv1a(bytes, basis: 0xcbf2_9ce4_8422_2325)
         let low = Self.fnv1a(bytes, basis: 0x8422_2325_cbf2_9ce4)
@@ -126,7 +147,16 @@ extension SoundRef {
     /// The cleaned copy of this sound, learning its noise from `ranges`.
     /// Cleaning a cleaned copy cleans the file it came from.
     public func cleaned(_ reduction: NoiseReduction, learningFrom ranges: [Range<Int>]) -> SoundRef {
-        let cleaning = SoundCleaning(sourceID: sourceID, reduction: reduction, learnFromMS: ranges)
+        shaped(reduction: reduction, learningFrom: ranges, eq: nil, compressor: nil)
+    }
+
+    /// The copy of this sound made with every effect given, in the order the
+    /// list reads: the file itself where none is given.
+    public func shaped(reduction: NoiseReduction?, learningFrom ranges: [Range<Int>],
+                       eq: SoundEQ?, compressor: SoundCompressor?) -> SoundRef {
+        guard reduction != nil || eq != nil || compressor != nil else { return source }
+        let cleaning = SoundCleaning(sourceID: sourceID, reduction: reduction, learnFromMS: ranges,
+                                     eq: eq, compressor: compressor)
         return SoundRef(id: cleaning.cleanedID, durationMS: durationMS, cleaning: cleaning)
     }
 
@@ -142,13 +172,18 @@ extension SoundRef {
 
 extension Layer {
 
-    /// What this layer's sound plays as: its file, or the cleaned copy of it
-    /// when its segment is cleaned. The mix and the timeline's waveform both
-    /// read this, so the waveform is a picture of what plays.
+    /// What this layer's sound plays as: its file, or the copy of it made
+    /// with the effects switched on in its list. The mix and the timeline's
+    /// waveform both read this, so the waveform is a picture of what plays.
     public var playedSound: SoundRef? {
         guard let sound else { return nil }
-        guard let reduction = soundLevel?.noiseReduction, let pieces = clipPieces else { return sound }
-        return sound.cleaned(reduction, learningFrom: AudioNormalize.sourceRangesMS(playedBy: pieces))
+        guard let level = soundLevel, let pieces = clipPieces else { return sound }
+        let reduction = level.activeNoiseReduction
+        let eq = level.activeEQ, compressor = level.activeCompressor
+        guard reduction != nil || eq != nil || compressor != nil else { return sound }
+        return sound.shaped(reduction: reduction,
+                            learningFrom: reduction == nil ? [] : AudioNormalize.sourceRangesMS(playedBy: pieces),
+                            eq: eq, compressor: compressor)
     }
 }
 

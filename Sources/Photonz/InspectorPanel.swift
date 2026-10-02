@@ -490,10 +490,17 @@ struct InspectorPanel: View {
                     }
                 }
                 // ...and the same for a sound's effect added from its plus.
+                // Looked at three times, a beat apart: an EQ or a compressor
+                // arrives with sliders under it, and a section measured
+                // before they have settled to their height (slow on a cold
+                // launch) is scrolled short by them. A later look does
+                // nothing when an earlier one was right.
                 .onChange(of: editorState.soundEffectsAdded) {
                     let delay = InspectorDockReveal.effectRevealDelay
-                    DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                        revealer(proxy).applySection(.soundEffects)
+                    for wait in [delay, delay * 2, delay * 4] {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + wait) {
+                            revealer(proxy).applySection(.soundEffects)
+                        }
                     }
                 }
                 // ...and, in the release whose order still leaves a pick's own

@@ -2671,6 +2671,19 @@ final class EditorState {
 
     func revealAddedSoundEffect() { soundEffectsAdded += 1 }
 
+    /// The Audio Effects rows whose settings are folded away. By kind, since
+    /// a sound holds at most one of each, so a fold can never land on the
+    /// wrong row the way a place-keyed picture effect's could.
+    private(set) var foldedSoundEffects: Set<SoundEffectKind> = []
+
+    func toggleSoundEffectFolded(_ kind: SoundEffectKind) {
+        if foldedSoundEffects.contains(kind) {
+            foldedSoundEffects.remove(kind)
+        } else {
+            foldedSoundEffects.insert(kind)
+        }
+    }
+
     /// Called when what the list holds, or which layers it speaks for, has
     /// changed under the folds. Written only when there is something to clear:
     /// `@Observable` tells every reader about a write whether or not the value

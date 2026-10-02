@@ -343,11 +343,13 @@ struct ClipPiecesBar: View {
                 // The gain Normalize wrote, where Premiere puts a clip's
                 // badges: on the clip, small, out of the waveform's way.
                 // Beside it, whether its noise is cleaned, and while the
-                // cleaned sound is being made, how far along that is.
+                // cleaned sound is being made, how far along that is (an EQ
+                // or a compressor is made the same way, so it shows too).
+                let progress = editorState.soundCleaningProgress(of: layerID)
                 if isSound, shown.width > 48, soundLevel?.clipGainLabel != nil
-                    || soundLevel?.noiseReduction != nil {
-                    soundBadge(gain: soundLevel?.clipGainLabel, cleaned: soundLevel?.noiseReduction != nil,
-                               progress: editorState.soundCleaningProgress(of: layerID))
+                    || soundLevel?.activeNoiseReduction != nil || progress != nil {
+                    soundBadge(gain: soundLevel?.clipGainLabel, cleaned: soundLevel?.activeNoiseReduction != nil,
+                               progress: progress)
                 }
             }
             .overlay {

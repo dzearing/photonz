@@ -448,8 +448,19 @@ default. Simply amplifying the signal amplifies background noise."
   row at Medium with Light, Medium and Strong under it and a cross that takes
   it off. The row reads and writes `AudioLevel.noiseReduction`, the same value
   Clean noise writes (`SoundEffects.swift`, `SoundEffectsInspector.swift`).
-  EQ and Compressor are listed dimmed until they have sound behind them
-  (`SoundEffectKind.isBuilt`).
+- **EQ and Compressor** (2026-10-02) are built. EQ is a 12 dB/octave low cut
+  (20 to 400 Hz, 80 by default, the mock's "low cut 80") and a shelf at each
+  end (150 Hz and 5 kHz, ±12 dB); Compressor is a threshold and a ratio (-18
+  dB, 3:1 by default), linked across channels, with half of what it takes off
+  a full scale peak made back up and nothing past -1 dBFS
+  (`SoundShaper.swift`). Both ride the same copy Clean noise makes:
+  `SoundCleaning` carries the noise strength, the EQ and the compressor, so
+  the mix, the export, the meter and Normalize hear them with no special
+  case. A copy with only noise in it keeps the id it always had. The rows
+  read in the order the sound passes through them (noise, EQ, compressor),
+  which is fixed. Every row has the eye switch (`AudioLevel.effectsOff`):
+  off keeps the settings and stops the sound of it. The rows are drawn by
+  `EffectsListRow`, the same row a layer's picture Effects list uses.
 
 ## 6. Where it is in the window
 
@@ -476,7 +487,7 @@ points is a smear and a level line has nowhere to be dragged.
 | Source files live in Library, scope Media | **Not built.** Add Sound opens a file; the shelf is a follow-up | The shelf is not what makes sound work, and the task said not to invent a third place for media — this invents none, it just has no shelf yet |
 | Live VU meters over the canvas | **Built, somewhere else** | Cut on 2026-09-21 as answering nothing about the edit. That was right about a meter with ballistics and wrong about the fact underneath it: a mix that adds up past full scale writes a broken file. The meter is in the transport rather than on the canvas, and it reads the plan rather than the engine (§5c) |
 | Mute and Solo | **Cut** | A level at nought IS mute. Solo is a mixer's product |
-| EQ and Compressor in Effects | **Listed, not built yet** (2026-10-02): the Audio Effects plus shows them dimmed beside Noise reduction | Each needs its own sound processing; filed as its own task |
+| EQ and Compressor in Effects | **Built** (2026-10-02): EQ reads "low cut 80", Compressor "3:1", each with its settings under it and the switch on its row | The mock's dot switch is the picture list's eye, and its drag grip is left out because the order is fixed |
 | Fade in field, fade out field, curve picker, diamonds on the lane | **One thing: points on the level line** | §3 |
 | "Duck music under voiceover" as a menu command | **Cut** | It needs the app to know which layer is a voice. The points do it by hand |
 | No Layers group in the dock | **Not followed** | `video.md` §5 settled this: not everything in a video document has time |

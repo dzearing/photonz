@@ -54,13 +54,26 @@ public enum NoiseCleaner {
     public static func write(from source: URL, reduction: NoiseReduction, quietMS: [Range<Int>],
                              to destination: URL,
                              progress: @escaping @Sendable (Double) -> Void = { _ in }) async throws -> Result {
+        try await write(from: source, reduction: reduction, quietMS: quietMS, eq: nil, compressor: nil,
+                        to: destination, progress: progress)
+    }
+
+    /// Make the copy a sound's Effects list asks for: the noise taken out
+    /// where `reduction` says, then the EQ, then the compressor
+    /// (`SoundShaper`). With no noise to take out the learning pass is
+    /// skipped and the samples go straight to the shaping.
+    @discardableResult
+    public static func write(from source: URL, reduction: NoiseReduction?, quietMS: [Range<Int>],
+                             eq: SoundEQ?, compressor: SoundCompressor?,
+                             to destination: URL,
+                             progress: @escaping @Sendable (Double) -> Void = { _ in }) async throws -> Result {
         // Seconds of decoding and arithmetic: off the pool async work shares
         // (`OffThePool`).
         let calledOff = CalledOff()
         return try await withTaskCancellationHandler {
             try await OffThePool.run {
-                try clean(source, reduction: reduction, quietMS: quietMS, to: destination,
-                          calledOff: calledOff, progress: progress)
+                try clean(source, reduction: reduction, quietMS: quietMS, eq: eq, compressor: compressor,
+                          to: destination, calledOff: calledOff, progress: progress)
             }
         } onCancel: {
             calledOff.set()
@@ -77,7 +90,8 @@ public enum NoiseCleaner {
         func check() throws { if isSet { throw CancellationError() } }
     }
 
-    private static func clean(_ source: URL, reduction: NoiseReduction, quietMS: [Range<Int>],
+    private static func clean(_ source: URL, reduction: NoiseReduction?, quietMS: [Range<Int>],
+                              eq: SoundEQ?, compressor: SoundCompressor?,
                               to destination: URL, calledOff: CalledOff,
                               progress: @Sendable (Double) -> Void) throws -> Result {
         guard let probe = try? AVAudioFile(forReading: source) else { throw CleanError.noSound }
@@ -93,14 +107,18 @@ public enum NoiseCleaner {
             progress(value)
         }
 
-        // Pass one: learn the noise.
-        var learner = Learner(channels: channels, sampleRate: rate, quietMS: quietMS)
-        try read(source) { chunk in
-            learner.add(chunk)
-            tell(0.3 * Double(learner.consumed) / Double(length))
-            try calledOff.check()
+        // Pass one: learn the noise, where there is noise to take out.
+        var learner = Learner(channels: channels, sampleRate: rate, quietMS: reduction == nil ? [] : quietMS)
+        let learning = reduction == nil ? 0.0 : 0.3
+        if reduction != nil {
+            try read(source) { chunk in
+                learner.add(chunk)
+                tell(learning * Double(learner.consumed) / Double(length))
+                try calledOff.check()
+            }
         }
         let noise = learner.profile()
+        let shaper = SoundShaper(sampleRate: rate, channels: channels, eq: eq, compressor: compressor)
 
         // Pass two: clean, and write.
         try? FileManager.default.removeItem(at: destination)
@@ -116,25 +134,34 @@ public enum NoiseCleaner {
                                           commonFormat: .pcmFormatFloat32, interleaved: false)
         else { throw CleanError.unwritable }
         var cleaners: [ChannelCleaner] = []
-        for channel in 0..<channels {
-            guard let cleaner = ChannelCleaner(sampleRate: rate, noise: noise.power[channel],
-                                               reduction: reduction) else { throw CleanError.unwritable }
-            cleaners.append(cleaner)
+        if let reduction {
+            for channel in 0..<channels {
+                guard let cleaner = ChannelCleaner(sampleRate: rate, noise: noise.power[channel],
+                                                   reduction: reduction) else { throw CleanError.unwritable }
+                cleaners.append(cleaner)
+            }
         }
         var total = 0
         var written = 0
+        func shapeAndWrite(_ outs: [[Float]]) throws {
+            var outs = outs
+            shaper?.process(&outs)
+            try write(outs, to: file, format: format)
+            written += outs.first?.count ?? 0
+        }
         do {
             try read(source) { chunk in
                 total += chunk.first?.count ?? 0
-                let outs = (0..<channels).map { cleaners[$0].push(chunk[$0]) }
-                try write(outs, to: file, format: format)
-                written += outs.first?.count ?? 0
-                tell(min(0.99, 0.3 + 0.7 * Double(total) / Double(length)))
+                let outs = cleaners.isEmpty ? chunk : (0..<channels).map { cleaners[$0].push(chunk[$0]) }
+                try shapeAndWrite(outs)
+                tell(min(0.99, learning + (1 - learning) * Double(total) / Double(length)))
                 try calledOff.check()
             }
             // What is still inside the frames, cut to exactly the length read.
             let owed = max(0, total - written)
-            try write(cleaners.map { Array($0.finish().prefix(owed)) }, to: file, format: format)
+            if !cleaners.isEmpty {
+                try shapeAndWrite(cleaners.map { Array($0.finish().prefix(owed)) })
+            }
         } catch {
             try? FileManager.default.removeItem(at: destination)
             throw error

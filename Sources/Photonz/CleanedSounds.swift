@@ -16,15 +16,20 @@ import PhotonzMedia
 // Normalize wait for it (`readyURLs`, `readyURL`), so what is written and
 // what is measured is always the cleaned sound.
 
-/// A file cleaned at one strength, whichever stretches taught it the noise.
+/// A file cleaned at one strength and shaped by one EQ and compressor,
+/// whichever stretches taught it the noise.
 struct CleaningGroup: Hashable {
     let sourceID: UUID
-    let reduction: NoiseReduction
+    let reduction: NoiseReduction?
+    let eq: SoundEQ?
+    let compressor: SoundCompressor?
 
     init?(_ ref: SoundRef) {
         guard let cleaning = ref.cleaning else { return nil }
         sourceID = cleaning.sourceID
         reduction = cleaning.reduction
+        eq = cleaning.eq
+        compressor = cleaning.compressor
     }
 }
 
@@ -148,7 +153,8 @@ extension SoundLibrary {
             shape = await SoundFile.read(at: source)?.waveform
             if let shape, !shape.isEmpty { remember(shape, for: ref.source) }
         }
-        let quiet = shape.map { NoiseReduction.quietStretchesMS(of: $0, within: cleaning.learnFromMS) } ?? []
+        let quiet = cleaning.reduction == nil ? []
+            : shape.map { NoiseReduction.quietStretchesMS(of: $0, within: cleaning.learnFromMS) } ?? []
 
         Self.pruneCleanedFolder()
         if let folder = Self.cleanedFolder {
@@ -159,6 +165,7 @@ extension SoundLibrary {
         let partial = destination.deletingPathExtension().appendingPathExtension("partial.caf")
         do {
             try await NoiseCleaner.write(from: source, reduction: cleaning.reduction, quietMS: quiet,
+                                         eq: cleaning.eq, compressor: cleaning.compressor,
                                          to: partial) { value in
                 let id = ref.id
                 Task { @MainActor in

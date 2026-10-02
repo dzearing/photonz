@@ -16,10 +16,8 @@ struct SoundEffectsTests {
         #expect(SoundEffectKind.allCases.map(\.title) == ["EQ", "Compressor", "Noise reduction"])
     }
 
-    @Test func onlyNoiseReductionHasSoundBehindItYet() {
-        #expect(SoundEffectKind.noiseReduction.isBuilt)
-        #expect(!SoundEffectKind.eq.isBuilt)
-        #expect(!SoundEffectKind.compressor.isBuilt)
+    @Test func everyKindOnTheMenuHasSoundBehindIt() {
+        #expect(SoundEffectKind.allCases.allSatisfy { $0.isBuilt })
     }
 
     @Test func aSoundNobodyHasTouchedHasNoEffects() {
@@ -29,7 +27,7 @@ struct SoundEffectsTests {
     @Test func aCleanedSoundShowsNoiseReductionAtItsStrength() {
         for reduction in NoiseReduction.allCases {
             let level = AudioLevel(noiseReduction: reduction)
-            #expect(level.effectRows == [SoundEffectRow(kind: .noiseReduction, reading: reduction.title)])
+            #expect(level.effectRows == [SoundEffectRow(kind: .noiseReduction, reading: reduction.title, isOn: true)])
         }
     }
 
@@ -53,17 +51,6 @@ struct SoundEffectsTests {
         let changed2 = level.addEffect(.noiseReduction)
         #expect(!changed2)
         #expect(level.noiseReduction == .strong)
-    }
-
-    @Test func anEffectWithNoSoundBehindItIsNeverAdded() {
-        var level = AudioLevel()
-        #expect(!level.canAddEffect(.eq))
-        #expect(!level.canAddEffect(.compressor))
-        let changed3 = level.addEffect(.eq)
-        #expect(!changed3)
-        let changed4 = level.addEffect(.compressor)
-        #expect(!changed4)
-        #expect(level == AudioLevel())
     }
 
     /// Removing it from the list is removing the cleaning: the same nil the

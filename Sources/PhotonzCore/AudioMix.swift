@@ -73,14 +73,26 @@ public struct AudioLevel: Hashable, Codable, Sendable {
     /// Nil where nobody asked, which plays the file as recorded.
     public var noiseReduction: NoiseReduction?
 
+    /// The EQ on this sound's Effects list (`SoundEffects.swift`), nil where
+    /// there is none.
+    public var eq: SoundEQ?
+    /// The compressor on this sound's Effects list, nil where there is none.
+    public var compressor: SoundCompressor?
+    /// The effects on the list whose switch is off: kept, and not heard.
+    public var effectsOff: Set<SoundEffectKind>
+
     public init(gain: Double = AudioLevel.unityGain, points: [AudioLevelPoint] = [],
                 fadeCurve: EasingCurve = .linear, clipGainDB: Double = 0,
-                noiseReduction: NoiseReduction? = nil) {
+                noiseReduction: NoiseReduction? = nil, eq: SoundEQ? = nil,
+                compressor: SoundCompressor? = nil, effectsOff: Set<SoundEffectKind> = []) {
         self.gain = Self.bounded(gain)
         self.points = Self.tidied(points)
         self.fadeCurve = fadeCurve
         self.storedClipGainDB = Self.boundedClipGainDB(clipGainDB)
         self.noiseReduction = noiseReduction
+        self.eq = eq
+        self.compressor = compressor
+        self.effectsOff = effectsOff
     }
 
     /// How far gain may go either way. Forty eight decibels up brings the
@@ -236,7 +248,7 @@ public struct AudioLevel: Hashable, Codable, Sendable {
     /// is what decides whether it is written down at all.
     public var isUntouched: Bool {
         gain == Self.unityGain && points.isEmpty && fadeCurve == .linear && clipGainDB == 0
-            && noiseReduction == nil
+            && noiseReduction == nil && eq == nil && compressor == nil && effectsOff.isEmpty
     }
 
     // MARK: - Fades
@@ -340,7 +352,9 @@ public struct AudioLevel: Hashable, Codable, Sendable {
         return String(format: "%.1f dB", dB)
     }
 
-    private enum CodingKeys: String, CodingKey { case gain, points, fadeCurve, clipGainDB, noiseReduction }
+    private enum CodingKeys: String, CodingKey {
+        case gain, points, fadeCurve, clipGainDB, noiseReduction, eq, compressor, effectsOff
+    }
 
     /// A level nobody has touched writes nothing, so every document written
     /// before sound existed reads back identical.
@@ -351,6 +365,11 @@ public struct AudioLevel: Hashable, Codable, Sendable {
         if fadeCurve != .linear { try c.encode(fadeCurve, forKey: .fadeCurve) }
         if clipGainDB != 0 { try c.encode(clipGainDB, forKey: .clipGainDB) }
         try c.encodeIfPresent(noiseReduction, forKey: .noiseReduction)
+        try c.encodeIfPresent(eq, forKey: .eq)
+        try c.encodeIfPresent(compressor, forKey: .compressor)
+        if !effectsOff.isEmpty {
+            try c.encode(SoundEffectKind.allCases.filter(effectsOff.contains), forKey: .effectsOff)
+        }
     }
 
     public init(from decoder: Decoder) throws {
@@ -359,7 +378,13 @@ public struct AudioLevel: Hashable, Codable, Sendable {
                   points: try c.decodeIfPresent([AudioLevelPoint].self, forKey: .points) ?? [],
                   fadeCurve: try c.decodeIfPresent(EasingCurve.self, forKey: .fadeCurve) ?? .linear,
                   clipGainDB: try c.decodeIfPresent(Double.self, forKey: .clipGainDB) ?? 0,
-                  noiseReduction: try? c.decodeIfPresent(NoiseReduction.self, forKey: .noiseReduction))
+                  noiseReduction: try? c.decodeIfPresent(NoiseReduction.self, forKey: .noiseReduction),
+                  eq: try? c.decodeIfPresent(SoundEQ.self, forKey: .eq),
+                  compressor: try? c.decodeIfPresent(SoundCompressor.self, forKey: .compressor),
+                  // A kind a later app added and this one does not know is
+                  // dropped rather than failing the whole level.
+                  effectsOff: Set(((try? c.decodeIfPresent([String].self, forKey: .effectsOff)) ?? nil)?
+                    .compactMap(SoundEffectKind.init(rawValue:)) ?? []))
     }
 }
 

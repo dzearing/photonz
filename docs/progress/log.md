@@ -20421,3 +20421,11 @@ the middle and barely magnifies (a crisp or growing lens would be ours to draw).
 - Drill: `sweep-schedule-drill.mjs` walks a scratch git repo through code landed with no request, queue-only commits, a walk script change, a pending request and a day passing, printing each decision.
 - Dashboard floor read from the schedule (it still said 12h). Sweep size counts refreshed (710 walks, about 175 minutes); the per-walk wall-clock budget is now 24s, up from 20s, because walks slowed to 14.6s.
 - Live decision right after: `slice: code has landed since the last walk check...`, so the next gap between tasks runs a rotating check.
+
+## 2026-10-02 — EQ and Compressor on a picked sound
+
+- A picked sound's Audio Effects plus now adds a working EQ (low cut, low and high shelves) and Compressor (threshold, ratio). They are heard in playback, written into exports and measured by Normalize, because they ride the same processed copy Clean noise makes (`SoundCleaning` now carries noise, EQ and compressor; DSP in `PhotonzMedia/SoundShaper.swift`).
+- Every Audio Effects row, Noise reduction included, has the on switch (`AudioLevel.effectsOff`), which keeps settings and stops the effect.
+- One effects-list row for both lists: `Sources/Photonz/EffectsListRow.swift` is now drawn by the picture Effects list and the sound's Audio Effects list.
+- Walks: `sound-effects-eq-compressor-locked-walk` green under a lock; the pointer version `sound-effects-eq-compressor-walk` waits for an unlocked screen.
+- Open: whether sound rows should keep the eye or take the mock's dot, and whether the effect order should become draggable (asked in the audit).

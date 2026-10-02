@@ -4,20 +4,21 @@ import SwiftUI
 /// **Audio Effects**: what is put ON the picked sound, as a list you add to
 /// (`pages/video-audio.html`, `#gEffects`, and its plus, `#efxMenu`).
 ///
-/// One row per effect, the mock's `.efx`: the name, the value at its end, and
-/// the cross that takes it off, with its settings under it behind the same
-/// rule the layer's own Effects list hangs from its rows (`OwnedSettings`).
+/// One row per effect, drawn by the same row a layer's Effects list draws
+/// (`EffectsListRow`): the chevron and the lit name, the mock's reading at its
+/// end ("low cut 80", "3:1", "off"), the switch that stops it and keeps its
+/// settings, the cross, a right-click menu, and its settings folding under it.
 ///
-/// Noise reduction is the row there is today. It is the very setting
+/// The rows read in the order the sound passes through them, noise reduction,
+/// then EQ, then compressor (`SoundEffectKind.processingOrder`), and that
+/// order is fixed, so the row has no grip. Noise reduction is the very setting
 /// Normalize's Clean noise writes (`AudioLevel.noiseReduction`), so a sound
-/// Normalize cleaned shows it here, and taking it off here is the segment's
-/// Remove Noise Cleaning. EQ and Compressor are on the plus's menu, as the
-/// mock draws it, with no sound behind them yet (`SoundEffectKind.isBuilt`).
+/// Normalize cleaned shows it here.
 struct SoundEffectsInspector: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: EffectsListInspector.paneSpacing) {
             if editorState.soundLayerInHand != nil {
                 let rows = editorState.soundLevelInHand.effectRows
                 if rows.isEmpty {
@@ -41,89 +42,82 @@ struct SoundEffectsInspector: View {
         Text(Self.nothingYet)
             .font(.caption2)
             .foregroundStyle(.tertiary)
-            .panelHelp("Add noise reduction with the plus above")
+            .panelHelp("Add an EQ, a compressor or noise reduction with the plus above")
             .panelReadout(Self.nothingYet)
             .playtestField("Audio Effects Empty")
     }
 }
 
-/// One effect on the sound: its name lit, its reading, the cross, and its
-/// settings under it.
+/// One effect on the sound: the list's row with a sound effect's reading and
+/// settings in it.
 private struct SoundEffectRowView: View {
     @Environment(EditorState.self) private var editorState
     let row: SoundEffectRow
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: ColorPartLayout.spacing) {
-                Text(row.kind.title)
-                    .font(PanelSectionLook.EffectRow.titleFont)
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                Spacer(minLength: 6)
-                Text(reading)
-                    .font(.system(size: 11, weight: .medium))
-                    .monospacedDigit()
-                    .foregroundStyle(VideoKit.Palette.faint)
-                    .lineLimit(1)
-                    .fixedSize()
-                    .panelReadout(reading)
-                    .playtestField("\(row.kind.title) reading")
-                removeButton
-            }
-            .frame(minHeight: ColorPartLayout.rowHeight)
-            OwnedSettings(owner: row.kind.title) { settings }
-        }
-        .playtestField(row.kind.title)
-        .contextMenu {
-            Button("Remove \(row.kind.title)") { editorState.removeSoundEffectInHand(row.kind) }
-        }
+        let kind = row.kind
+        EffectsListRow(
+            title: kind.title,
+            kindWord: kind == .eq ? "EQ" : kind.title.lowercased(),
+            isOn: row.isOn,
+            isFolded: editorState.foldedSoundEffects.contains(kind),
+            toggleFold: { editorState.toggleSoundEffectFolded(kind) },
+            reading: reading,
+            switchReading: row.isOn ? "on" : "off",
+            switchHelp: "Stops it playing, and keeps its settings",
+            setOn: { editorState.setSoundEffectInHand(kind, on: $0) },
+            remove: { editorState.removeSoundEffectInHand(kind) },
+            headerDrop: EmptyModifier(),
+            accessory: { EmptyView() },
+            settings: { settings })
     }
 
-    /// The mock's `.emeta`: the strength, or how far along the cleaned sound
-    /// is while it is being made.
+    /// The mock's `.emeta`: the row's reading, or how far along the copy that
+    /// plays is while it is being made.
     private var reading: String {
-        guard row.kind == .noiseReduction,
+        guard row.isOn, row.kind == .noiseReduction,
               let id = editorState.soundLayerInHand?.id,
               let progress = editorState.soundCleaningProgress(of: id) else { return row.reading }
         return "Cleaning \(Int((progress * 100).rounded()))%"
     }
 
-    private var removeButton: some View {
-        Button {
-            editorState.removeSoundEffectInHand(row.kind)
-        } label: {
-            Image(systemName: "xmark")
-                .font(.system(size: 9, weight: .semibold))
-                .frame(width: 14, height: ColorPartLayout.rowHeight)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .foregroundStyle(.secondary)
-        .panelHelp("Remove \(row.kind.title.lowercased())")
-        .accessibilityLabel("Remove \(row.kind.title)")
-        .playtestControl("Remove \(row.kind.title)", detail: "Audio Effects")
-    }
-
     @ViewBuilder private var settings: some View {
+        let level = editorState.soundLevelInHand
         switch row.kind {
         case .noiseReduction:
             strength
-        case .eq, .compressor:
-            EmptyView()
+        case .eq:
+            let eq = level.eq ?? .standard
+            SoundEffectSlider(label: "Low cut", value: eq.lowCutHz, range: SoundEQ.lowCutRangeHz, step: 5,
+                              spell: { "\(Int($0.rounded())) Hz" }) { new in
+                editorState.changeSoundEQInHand { $0.lowCutHz = new }
+            }
+            SoundEffectSlider(label: "Low", value: eq.lowDB, range: SoundEQ.shelfRangeDB, step: 0.5,
+                              spell: SoundEffectSlider.decibels) { new in
+                editorState.changeSoundEQInHand { $0.lowDB = new }
+            }
+            SoundEffectSlider(label: "High", value: eq.highDB, range: SoundEQ.shelfRangeDB, step: 0.5,
+                              spell: SoundEffectSlider.decibels) { new in
+                editorState.changeSoundEQInHand { $0.highDB = new }
+            }
+        case .compressor:
+            let compressor = level.compressor ?? .standard
+            SoundEffectSlider(label: "Threshold", value: compressor.thresholdDB,
+                              range: SoundCompressor.thresholdRangeDB, step: 1,
+                              spell: { "\(Int($0.rounded())) dB" }) { new in
+                editorState.changeSoundCompressorInHand { $0.thresholdDB = new }
+            }
+            SoundEffectSlider(label: "Ratio", value: compressor.ratio, range: SoundCompressor.ratioRange,
+                              step: 0.5, spell: { "\(SoundCompressor.spell($0)):1" }) { new in
+                editorState.changeSoundCompressorInHand { $0.ratio = new }
+            }
         }
     }
 
     /// Light, Medium or Strong: how hard the noise is taken out.
     private var strength: some View {
         let reduction = editorState.soundLevelInHand.noiseReduction ?? .standard
-        return HStack(spacing: 8) {
-            Text("Strength")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .fixedSize()
-            Spacer(minLength: 8)
+        return PanelFieldRow("Strength") {
             SegmentedControl("Strength", selection: reduction,
                              options: NoiseReduction.allCases.map { .init($0, $0.title) },
                              size: .small, form: .natural) {
@@ -135,9 +129,70 @@ private struct SoundEffectRowView: View {
     }
 }
 
+/// One setting of an audio effect: its name, a track, and what it is set to.
+///
+/// The sound is remade whenever a setting lands, which takes a moment, so a
+/// drag lands once, when it is let go: the reading follows the hand the whole
+/// way and the sound changes when the hand stops, rather than a copy being
+/// started and thrown away on every step of the drag.
+private struct SoundEffectSlider: View {
+    let label: String
+    let value: Double
+    let range: ClosedRange<Double>
+    let step: Double
+    let spell: (Double) -> String
+    let land: (Double) -> Void
+
+    /// Where the hand has the track, while it is being dragged.
+    @State private var draft: Double?
+    @State private var dragging = false
+
+    static func decibels(_ dB: Double) -> String {
+        abs(dB) < 0.05 ? "0 dB" : String(format: "%+.1f dB", dB)
+    }
+
+    var body: some View {
+        let shown = draft ?? value
+        PanelFieldRow(label) {
+            HStack(spacing: 6) {
+                Slider(value: Binding(
+                    get: { shown },
+                    set: { new in
+                        // A press that is not a drag (a click on the track,
+                        // a step from the keyboard or a screen reader)
+                        // lands at once.
+                        // Rounded here rather than given to the slider as a
+                        // step: a stepped track draws a tick for every step,
+                        // and seventy six of them is a dotted line.
+                        let stepped = (new / step).rounded() * step
+                        if dragging { draft = stepped } else { land(stepped) }
+                    }
+                ), in: range) { editing in
+                    dragging = editing
+                    if !editing, let landed = draft {
+                        land(landed)
+                        draft = nil
+                    }
+                }
+                .controlSize(.small)
+                .frame(minWidth: PanelSliderRow.trackMinimum)
+                .playtestField(label)
+                Text(spell(shown))
+                    .font(.system(size: 11))
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .frame(width: 50, alignment: .trailing)
+                    .panelReadout(spell(shown))
+                    .playtestField("\(label) reading")
+            }
+        }
+    }
+}
+
 /// The plus on the Audio Effects header, the mock's `#efxMenu`: EQ,
-/// Compressor and Noise reduction. A row the sound already has, or one with no
-/// sound behind it yet, is listed and dimmed.
+/// Compressor and Noise reduction. A row the sound already has is listed and
+/// dimmed.
 struct AddSoundEffectButton: View {
     @Environment(EditorState.self) private var editorState
 
