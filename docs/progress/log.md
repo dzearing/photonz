@@ -20390,3 +20390,9 @@ the middle and barely magnifies (a crisp or growing lens would be ours to draw).
 - Next only (`next-arrow-bend`, on by default): a smaller handle halfway along a picked arrow; drag bends (⇧ keeps it even), let go on the line or double click straightens, Straighten Arrow on the right-click menu and the Layer menu. The drag rides `EndpointDragSession` (`bendHandle`), see Sources/Photonz/CanvasArrowBend.swift.
 - Walk: `Scripts/playtest/arrow-bend-walk.json` (pointer drag on the handle, expectBox claims for bent/undo/redo/straightened, a picture per style). `expectCue` watched under a lock and moved to the lock-safe list.
 - Next: an S-curve would need a second handle; not filed.
+
+## 2026-10-02 — Walks that fail in the full sweep (8) (go loop)
+
+- `an-editing-session-walk` step 24: the label reader took the Properties header's ••• button ("•..") for a cut label. `CutLabelRule.isCut` now leaves out a reading with no letter or digit (69961eca). Past step 36 it could not be checked: the screen stayed locked, and under a lock a click on a cut does not open the transition picker (same in the two other cut-picker walks, which passed unlocked). So `expectClip` stays off the lock-safe list.
+- `first-long-jump-when-zoomed-in-walk`: the 50ms budget is right and the app sits at 44-54ms per 16x jump. Bisected to f8fe5834: the old 30fps tile timer split each jump across frames, and once the idle app went quiet a jump became one pass. Filed `a-far-playhead-jump-on-a-zoomed-in-long-recordin` with the numbers.
+- One `Scripts/test.sh` run hung in `VideoCutExportTests` (AVAssetReader); the rerun was green. Filed `find-out-why-the-test-suite-sometimes-hangs-in-a`.
