@@ -1,0 +1,35 @@
+{
+  "id": "arrows-can-be-drawn-in-hand-made-styles-not-only",
+  "title": "Arrows can be drawn in hand-made styles, not only mechanical ones",
+  "goal": "User 2026-10-01: 'I would like the arrow tool to have more stylized options... It is extremely mechanical now.' Four references saved in docs/design/references/arrows/: user-ref-25 (a thin hand-drawn curved line with an open hooked head), user-ref-26 (a rough charcoal/marker outline arrow, double-stroked and textured), user-ref-27 (a bold curved stroke with a loose open head), user-ref-28 (a brush stroke that tapers thin at the tail, swells in the middle and ends in a calligraphic swept head). Today arrows have ArrowheadStyle (PhotonzCore/ArrowheadStyle.swift) and straight/curved paths: geometric, uniform width. Compare with Skitch, CleanShot X and Excalidraw's hand-drawn arrows.",
+  "epic": "interaction-foundations",
+  "priority": "p1-high",
+  "seq": 0.00001,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-02T01:58:52.684Z",
+  "updated": "2026-10-02T01:58:52.768Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed from the intake window. References are the user's own images.",
+  "acceptance": [
+    "A Style choice for arrows, shown as visual preset tiles drawn in the real renderer (not words): Clean (today), Hand-drawn (25: thin, slightly irregular line, open hooked head), Marker (27: bold rounded stroke, loose open head), Brush (28: tapered tail, swelling body, swept calligraphic head), Sketch (26: rough double-stroked outline arrow with a dry-ink texture); each matched against its reference side by side in the audit",
+    "Styles are non-destructive render-time properties of the arrow (PhotonzCore model + tests first; the arrow keeps its start, end and bend), so switching style keeps the arrow's path, colour and width, and undo works",
+    "Hand-made styles never wobble between renders: their irregularity comes from a per-arrow seed stored on the arrow, so the same arrow looks identical in the canvas, after reopen and in export; a Reshuffle action (right-click) picks a new seed",
+    "Every style follows the curve when the arrow is bent, scales its detail with the width, and stays crisp at any zoom and in export at 1x/2x/3x; Brush tapers and swells along the path's length",
+    "Colour, width and opacity still apply; Sketch's texture and Brush's taper look right on dark and light pictures",
+    "The style tiles live where arrow options already are (tool options and the arrow's properties), using the design system's tile component; the last used style sticks for the next arrow",
+    "Walk at Next defaults draws one arrow of each style, straight and bent, and photographs them next to the four references"
+  ],
+  "log": [
+    {
+      "t": "2026-10-02T01:58:52.686Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-02T01:58:52.767Z",
+      "note": "seq 440 -> 0.00001"
+    }
+  ]
+}
