@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p1-high",
   "seq": 10,
-  "status": "blocked",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-02T01:56:45.031Z",
-  "updated": "2026-10-02T02:02:17.956Z",
+  "updated": "2026-10-02T02:37:06.775Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window. Supersedes the 'lens while moving, tinted chip at rest' instruction in the-segmented-chip-shows-real-liquid-glass-refra.",
@@ -54,6 +54,11 @@
     {
       "t": "2026-10-02T02:02:17.955Z",
       "note": "waiting, but no decision card was opened against this task. Nothing returns a task to the queue except an answer, so this will sit here until someone opens one."
+    },
+    {
+      "t": "2026-10-02T02:37:06.773Z",
+      "note": "Done in the intake window: one glass material at every moment, words under the glass and crisp on top through a chip-shaped mask, filmed and reviewed; commit 27b9f01a"
     }
-  ]
+  ],
+  "completed": "2026-10-02T02:37:06.774Z"
 }
