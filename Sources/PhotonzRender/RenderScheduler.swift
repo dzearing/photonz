@@ -27,6 +27,7 @@ public actor RenderScheduler {
         let document: PhotonzDocument
         let store: ImageStore?
         let contentScale: CGFloat
+        let colorSpace: CGColorSpace?
         let stamp: Int
         let asked: ContinuousClock.Instant
     }
@@ -62,11 +63,12 @@ public actor RenderScheduler {
     /// `scrubbing-is-smooth-never-goes-black-and-the-pic`.
     ///
     /// `contentScale` is how much `document` was magnified by on its way here
-    /// (`DocumentRenderer.renderInteractive`).
+    /// (`DocumentRenderer.renderInteractive`), and `colorSpace` the colours
+    /// the frame is written in: the window's own, so it goes up as it is.
     public func submit(_ document: PhotonzDocument, store: ImageStore? = nil, stamp: Int = 0,
-                       contentScale: CGFloat = 1) {
+                       contentScale: CGFloat = 1, colorSpace: CGColorSpace? = nil) {
         pending = Job(document: document, store: store, contentScale: contentScale,
-                      stamp: stamp, asked: .now)
+                      colorSpace: colorSpace, stamp: stamp, asked: .now)
         guard drainTask == nil else { return }
         drainTask = Task { await drain() }
     }
@@ -88,7 +90,8 @@ public actor RenderScheduler {
             // Incremental: unchanged regions are reused from the last frame.
             let began = ContinuousClock.now
             let image = renderer.renderInteractive(job.document, store: job.store ?? store,
-                                                   contentScale: job.contentScale)
+                                                   contentScale: job.contentScale,
+                                                   colorSpace: job.colorSpace)
             let done = ContinuousClock.now
             await onFrame(Frame(image: image, document: job.document, stamp: job.stamp,
                                 drawMS: Self.ms(done - began), sinceAskedMS: Self.ms(done - job.asked)))

@@ -8479,7 +8479,8 @@ private final class Run {
                 let scale = without.canvasSize.width / max(1, document.canvasSize.width)
                 without.updateLayer(id: target.id) { $0.isVisible = false }
                 let reference = DocumentRenderer().renderInteractive(without, store: look.pictures,
-                                                                     contentScale: scale)
+                                                                     contentScale: scale,
+                                                                     colorSpace: editor.canvasColorSpace)
                 let difference = reference.flatMap { $0.cropping(to: box) }
                     .map { Self.meanDifference(crop, $0) } ?? 0
                 checked += 1
@@ -9066,8 +9067,13 @@ private final class Run {
     private static func quarter(of image: CGImage) -> CGImage? {
         let width = max(1, image.width / 4)
         let height = max(1, image.height / 4)
+        // In the picture's own colours: the canvas is drawn in the window's
+        // (`EditorState.canvasColorSpace`), and matching that to another
+        // space on every display frame of a scrub cost the main thread 3ms a
+        // frame and made the walk itself the thing that fell behind.
+        let colors = image.colorSpace.flatMap { $0.model == .rgb ? $0 : nil } ?? CGColorSpaceCreateDeviceRGB()
         guard let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8,
-                                      bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(),
+                                      bytesPerRow: 0, space: colors,
                                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
         else { return nil }
         context.interpolationQuality = .low
@@ -9080,8 +9086,11 @@ private final class Run {
     private static func transparentShare(of image: CGImage, in area: CGRect) -> Double {
         let width = image.width, height = image.height
         var bytes = [UInt8](repeating: 0, count: width * height * 4)
+        // Only the alpha is read, so the picture is not matched to any other
+        // colours on the way (`quarter(of:)`).
+        let colors = image.colorSpace.flatMap { $0.model == .rgb ? $0 : nil } ?? CGColorSpaceCreateDeviceRGB()
         guard let context = CGContext(data: &bytes, width: width, height: height, bitsPerComponent: 8,
-                                      bytesPerRow: width * 4, space: CGColorSpaceCreateDeviceRGB(),
+                                      bytesPerRow: width * 4, space: colors,
                                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
         else { return 1 }
         context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))

@@ -107,6 +107,19 @@ extension PhotonzDocument {
         return found
     }
 
+    /// Which values have a lane of keys, for each of these layers that has
+    /// any: what a track row needs from every clip on it, in one pass over the
+    /// document rather than a search per clip.
+    public func keyedMotionIDs(anyOf ids: Set<UUID>) -> [UUID: Set<UUID>] {
+        var found: [UUID: Set<UUID>] = [:]
+        forEachLayer { layer in
+            guard ids.contains(layer.id) else { return }
+            let keyed = keyedMotions(of: layer)
+            if !keyed.isEmpty { found[layer.id] = Set(keyed.map(\.id)) }
+        }
+        return found
+    }
+
     public func hasKeyLanes(layerID: UUID) -> Bool {
         guard let layer = layer(id: layerID) else { return false }
         return !keyedMotions(of: layer).isEmpty

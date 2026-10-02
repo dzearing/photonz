@@ -206,4 +206,26 @@ struct ScaledRenderTests {
         let inside = pixel(output, x: output.width - 2, y: output.height - 2)
         #expect(inside.g > 140 && inside.a > 240)
     }
+
+    /// The canvas's sharp copy goes up over the frame in the window's own
+    /// colours too: in any other space it was matched to the screen on the
+    /// main thread as it landed, the longest pause after every far jump of
+    /// the playhead with the timeline put away.
+    @Test func aCanvasTileIsDrawnInTheColourSpaceItIsAskedFor() throws {
+        let store = ImageStore()
+        let base = store.register(solidImage(width: 40, height: 30, r: 200, g: 40, b: 40))
+        let doc = PhotonzDocument.withBaseImage(base)
+        let p3 = try #require(CGColorSpace(name: CGColorSpace.displayP3))
+        let renderer = DocumentRenderer()
+        let region = CGRect(origin: .zero, size: doc.canvasSize)
+        let plain = try #require(renderer.renderTile(doc, store: store, region: region, scale: 2))
+        let tile = try #require(renderer.renderTile(doc, store: store, region: region, scale: 2,
+                                                    colorSpace: p3))
+        #expect(tile.image.colorSpace?.name == CGColorSpace.displayP3)
+        #expect(plain.image.colorSpace?.name == CGColorSpace.sRGB)
+        let a = pixel(tile.image, x: 40, y: 30)
+        let b = pixel(plain.image, x: 40, y: 30)
+        #expect(abs(Int(a.r) - Int(b.r)) <= 3 && abs(Int(a.g) - Int(b.g)) <= 3 && abs(Int(a.b) - Int(b.b)) <= 3,
+                "the same colour read back in sRGB: \(a) against \(b)")
+    }
 }

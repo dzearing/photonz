@@ -170,8 +170,14 @@ struct ClipFilmstripStrip: View {
         let tiles = ClipFilmstrip.tiles(of: piece, pieceWidth: pieceWidth,
                                         visible: visibleFrom...(visibleFrom + visibleWidth),
                                         nominalWidth: nominal)
+        // Drawn by a ring of views rather than a view per tile, so a far jump
+        // of the playhead hands the views already here new pictures instead
+        // of building new ones (`ClipFilmstrip.slotRing`).
+        let ring = ClipFilmstrip.slotRing(visibleWidth: visibleWidth, tileWidth: tiles.map(\.width).max() ?? 0)
         ZStack(alignment: .topLeading) {
-            ForEach(tiles, id: \.index) { tile in
+            ForEach(tiles.map { (slot: ClipFilmstrip.slot(of: $0.index, ring: ring), tile: $0) },
+                    id: \.slot) { slotted in
+                let tile = slotted.tile
                 ClipFilmstripTile(movie: movie, sourceMS: tile.sourceMS)
                     .frame(width: tile.width, height: stripHeight)
                     .clipped()

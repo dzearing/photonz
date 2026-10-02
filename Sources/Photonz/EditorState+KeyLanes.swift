@@ -31,12 +31,15 @@ extension EditorState {
         return document.keyLanes(layerID: layerID)
     }
 
-    /// The same, asked of the document itself and never of a drag in the
-    /// hand: for a view that only needs WHICH values are keyed, which no drag
-    /// changes, and must not be rebuilt at every move of one.
-    func keyLanesAtRest(layerID: UUID) -> [KeyLane] {
-        guard documentHasTime, let document else { return [] }
-        return document.keyLanes(layerID: layerID)
+    /// Which values are keyed on each of a track's clips that has any, asked
+    /// of the document itself and never of a drag in the hand: for a view that
+    /// only needs WHICH values are keyed, which no drag changes, and must not
+    /// be rebuilt at every move of one. One pass for the whole track: a
+    /// Captions track asking clip by clip searched the document 170 times on
+    /// every far jump of the playhead.
+    func keyedMotionsAtRest(layerIDs: [UUID]) -> [UUID: Set<UUID>] {
+        guard documentHasTime, let document else { return [:] }
+        return document.keyedMotionIDs(anyOf: Set(layerIDs))
     }
 
     /// Whether any clip on a track has a value keyed: the arrow on its header.

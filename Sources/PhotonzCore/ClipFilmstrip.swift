@@ -84,6 +84,26 @@ public enum ClipFilmstrip {
         public let sourceMS: Int
     }
 
+    /// How many views a strip `visibleWidth` points wide draws its tiles
+    /// with: as many as it can ever show at once, with two spare.
+    ///
+    /// A tile is drawn by the view in its `slot`, and the slots come round in
+    /// this ring. A scroll keeps each tile in the view that was drawing it,
+    /// and a far jump of the playhead hands the views already on screen the
+    /// pictures it lands on, rather than throwing them all away and building
+    /// new ones (`first-long-jump-when-zoomed-in-walk`).
+    public static func slotRing(visibleWidth: CGFloat, tileWidth: CGFloat) -> Int {
+        guard tileWidth > 0, visibleWidth > 0 else { return 1 }
+        let across = Int(min(CGFloat(mostTiles), (visibleWidth / tileWidth).rounded(.up)))
+        return across + 2
+    }
+
+    /// The view tile `index` is drawn by, in a ring of `ring` of them.
+    public static func slot(of index: Int, ring: Int) -> Int {
+        let ring = max(1, ring)
+        return ((index % ring) + ring) % ring
+    }
+
     /// The most tiles one piece ever lays out, however it is asked. A window
     /// is a couple of thousand points wide at most, so this is never reached
     /// by anything real; it is here so nothing can ever ask for thousands.

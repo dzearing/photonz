@@ -91,7 +91,11 @@ extension VideoKit {
                     // that number to the left edge and every number after it
                     // along with it: seconds from the moments they named.
                     Color.clear.frame(width: geo.size.width, height: height)
-                    ForEach(ticks, id: \.self) { tick in
+                    // By place along the ruler, not by tick: a far jump of the
+                    // playhead names every tick anew, and a view per tick was
+                    // thrown away and built again for each of them. This way
+                    // the same few views are handed new numbers.
+                    ForEach(Array(ticks.enumerated()), id: \.offset) { _, tick in
                         let isEnd = tick.fraction >= 0.999
                         let x = geo.size.width * min(max(0, tick.fraction), 1)
                         Text(tick.label)

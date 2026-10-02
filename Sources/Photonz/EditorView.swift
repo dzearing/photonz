@@ -514,7 +514,12 @@ struct EditorView: View {
                     // bottom of this canvas already carries the tool bar, the
                     // tool settings capsule and the notice pill, and the top
                     // left is the icon previews.
-                    if let held = editorState.heldFrameNow { heldFrameBadge(held) }
+                    //
+                    // Its own view, because what it says depends on the
+                    // playhead: read out here, every step of the playhead and
+                    // every frame of playback rebuilt the whole editor
+                    // (`first-long-jump-when-zoomed-in-walk`).
+                    HeldFrameBadgeOverlay()
                 }
                 // Its own view, because where it parks is worked out from the
                 // viewport: read out here, every frame of a slide into Edit
@@ -647,33 +652,6 @@ struct EditorView: View {
             .padding(.vertical, 8)
             .glassEffect(.regular, in: .capsule)
             .transition(.opacity.combined(with: .move(edge: .bottom)))
-    }
-
-    /// The one line the canvas says while a frame is being held: which frame it
-    /// is, and how long it is up for.
-    ///
-    /// It names the FRAME rather than the moment, because the question somebody
-    /// looking at a still picture asks is "what am I looking at", and the answer
-    /// is the same wherever the playhead has got to inside the hold.
-    private func heldFrameBadge(_ held: HeldFrame) -> some View {
-        HStack(spacing: 6) {
-            Image(systemName: "snowflake")
-                .font(.system(size: 11, weight: .semibold))
-            Text(held.badge)
-                .font(.system(size: 11, weight: .medium))
-                .monospacedDigit()
-        }
-        .foregroundStyle(.secondary)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .glassEffect(.regular, in: .capsule)
-        .padding(12)
-        // Read, never pressed: the picture underneath it still takes the
-        // pointer, so an arrow can be drawn through the corner it sits in.
-        .allowsHitTesting(false)
-        .playtestField("Held frame badge")
-        .panelReadout(held.badge)
-        .transition(.opacity)
     }
 
     /// The words at the end of a notice's line that are also the way to what
@@ -3427,3 +3405,41 @@ private struct MeasureLegendOverlay: View {
     }
 }
 
+/// Why the picture has stopped moving while the clock has not
+/// (`HeldFrame.swift`), on the canvas's top right corner. A view of its own
+/// because it reads the playhead: read by the editor, every step of it rebuilt
+/// the whole window.
+private struct HeldFrameBadgeOverlay: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        if let held = editorState.heldFrameNow { badge(held) }
+    }
+
+    /// The one line the canvas says while a frame is being held: which frame it
+    /// is, and how long it is up for.
+    ///
+    /// It names the FRAME rather than the moment, because the question somebody
+    /// looking at a still picture asks is "what am I looking at", and the answer
+    /// is the same wherever the playhead has got to inside the hold.
+    @ViewBuilder private func badge(_ held: HeldFrame) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "snowflake")
+                .font(.system(size: 11, weight: .semibold))
+            Text(held.badge)
+                .font(.system(size: 11, weight: .medium))
+                .monospacedDigit()
+        }
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .glassEffect(.regular, in: .capsule)
+        .padding(12)
+        // Read, never pressed: the picture underneath it still takes the
+        // pointer, so an arrow can be drawn through the corner it sits in.
+        .allowsHitTesting(false)
+        .playtestField("Held frame badge")
+        .panelReadout(held.badge)
+        .transition(.opacity)
+    }
+}

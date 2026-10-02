@@ -329,6 +329,9 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// Where `lastFrame` was mixed. A frame mixed the other way cannot be
     /// patched, or a canvas open when the switch flips shows both at once.
     private var lastCompositing: CompositingSpace?
+    /// The colours `lastFrame` is written in. A frame in other colours cannot
+    /// be patched or handed back.
+    private var lastColorSpace: CGColorSpace?
     private var frameBuffer: UnsafeMutableRawPointer?
     private var frameBufferCapacity = 0
     private var frameSize = (width: 0, height: 0)
@@ -352,8 +355,16 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// measurements) needs it to find the box in document points again. Left
     /// at one on a shrunk document, a 223pt title was set inside a box a
     /// quarter of its size and drew nothing at all.
+    ///
+    /// `colorSpace` is the space the frame is written in, sRGB when nil. Pass
+    /// the window's own (`NSWindow.colorSpace`): a frame in any other space is
+    /// matched to the screen on the main thread as it goes up, about 8ms for a
+    /// recording-sized frame on every step of the playhead, while one already
+    /// in the window's colours goes up as it is. Core Image does the matching
+    /// here instead, on the GPU, as part of the draw.
     public func renderInteractive(_ document: PhotonzDocument, store: ImageStore,
-                                  contentScale: CGFloat = 1) -> CGImage? {
+                                  contentScale: CGFloat = 1,
+                                  colorSpace: CGColorSpace? = nil) -> CGImage? {
         let width = Int(document.canvasSize.width.rounded())
         let height = Int(document.canvasSize.height.rounded())
         guard width >= 1, height >= 1 else { return nil }
@@ -364,13 +375,18 @@ public final class DocumentRenderer: @unchecked Sendable {
 
         let pictures = Self.pictures(in: document, store: store)
         let space = compositing
-        defer { lastPictures = pictures; lastContentScale = contentScale; lastCompositing = space }
+        // Four bytes a pixel holds red, green and blue, and nothing else.
+        let colors = colorSpace.flatMap { $0.model == .rgb ? $0 : nil } ?? Self.srgb
+        defer {
+            lastPictures = pictures; lastContentScale = contentScale; lastCompositing = space
+            lastColorSpace = colors
+        }
         // A picture that arrived, went, or was read again at another size
         // since the last frame changes pixels the document says nothing
         // about, so the whole canvas is drawn again. So does a new scale.
         if let lastDocument, let lastFrame, frameBuffer != nil,
            frameSize == (width, height), pictures == lastPictures,
-           contentScale == lastContentScale, space == lastCompositing {
+           contentScale == lastContentScale, space == lastCompositing, colors == lastColorSpace {
             switch RenderDiff.dirtyRegion(from: lastDocument, to: document) {
             case .none:
                 return lastFrame
@@ -378,13 +394,15 @@ public final class DocumentRenderer: @unchecked Sendable {
                 where Double(dirty.width * dirty.height)
                     < Self.fullRenderAreaShare * Double(width * height):
                 return renderLocked(document, store: store, region: dirty,
-                                    width: width, height: height, contentScale: contentScale)
+                                    width: width, height: height, contentScale: contentScale,
+                            colorSpace: colors)
             default:
                 break
             }
         }
         return renderLocked(document, store: store, region: nil,
-                            width: width, height: height, contentScale: contentScale)
+                            width: width, height: height, contentScale: contentScale,
+                            colorSpace: colors)
     }
 
     /// Which bitmap every visible picture layer would be drawn with right now.
@@ -402,7 +420,7 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// buffer and snapshots it as a CGImage. Must hold `interactiveLock`.
     private func renderLocked(_ document: PhotonzDocument, store: ImageStore,
                               region: CGRect?, width: Int, height: Int,
-                              contentScale: CGFloat) -> CGImage? {
+                              contentScale: CGFloat, colorSpace: CGColorSpace) -> CGImage? {
         guard let output = compositeImage(document, store: store, contentScale: contentScale) else { return nil }
         let rowBytes = width * 4
         if frameBufferCapacity < rowBytes * height {
@@ -426,7 +444,7 @@ public final class DocumentRenderer: @unchecked Sendable {
                               width: dirty.width, height: dirty.height)
         let offset = Int(dirty.minY) * rowBytes + Int(dirty.minX) * 4
         context.render(output, toBitmap: buffer + offset, rowBytes: rowBytes,
-                       bounds: ciBounds, format: .RGBA8, colorSpace: Self.srgb)
+                       bounds: ciBounds, format: .RGBA8, colorSpace: colorSpace)
 
         // Snapshot with an explicit copy: the buffer mutates on the next
         // frame while delivered CGImages may stay alive (preview holds).
@@ -434,7 +452,7 @@ public final class DocumentRenderer: @unchecked Sendable {
         guard let provider = CGDataProvider(data: data as CFData),
               let frame = CGImage(width: width, height: height,
                                   bitsPerComponent: 8, bitsPerPixel: 32,
-                                  bytesPerRow: rowBytes, space: Self.srgb,
+                                  bytesPerRow: rowBytes, space: colorSpace,
                                   bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
                                   provider: provider, decode: nil,
                                   shouldInterpolate: false, intent: .defaultIntent) else {
@@ -488,9 +506,13 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// comes back saying which region it actually covers, since it settles on
     /// whole pixels. `magnifyNearest` mirrors the canvas rule that past 2x the
     /// user is inspecting pixels and wants to see them squarely.
+    /// `colorSpace` is the space it is written in, sRGB when nil: the window's
+    /// own, as for `renderInteractive`, so it goes up without being matched to
+    /// the screen on the main thread.
     public func renderTile(_ document: PhotonzDocument, store: ImageStore,
                            region: CGRect, scale: CGFloat,
-                           magnifyNearest: Bool = false) -> CrispTile? {
+                           magnifyNearest: Bool = false,
+                           colorSpace: CGColorSpace? = nil) -> CrispTile? {
         guard scale > 0, scale.isFinite else { return nil }
         let canvas = CGRect(origin: .zero, size: document.canvasSize)
         let wanted = region.standardized.intersection(canvas)
@@ -507,7 +529,9 @@ public final class DocumentRenderer: @unchecked Sendable {
         // Model space is top-left, Core Image's is bottom-left.
         let ciPatch = CGRect(x: patch.minX, y: magnified.canvasSize.height - patch.maxY,
                              width: patch.width, height: patch.height)
-        guard let image = context.createCGImage(output, from: ciPatch) else { return nil }
+        let colors = colorSpace.flatMap { $0.model == .rgb ? $0 : nil } ?? Self.srgb
+        guard let image = context.createCGImage(output, from: ciPatch, format: .RGBA8,
+                                                colorSpace: colors) else { return nil }
         return CrispTile(image: image, region: patch.magnified(by: 1 / scale), scale: scale)
     }
 

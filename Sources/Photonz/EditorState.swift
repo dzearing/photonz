@@ -4494,7 +4494,11 @@ final class EditorState {
     /// the committed one: a preview submits a document nothing has been done to
     /// yet, and a sharp copy of the SETTLED document would be drawn straight
     /// over the top of it and quietly undo what the preview was showing.
-    private func refreshCrispTile(showing preview: PhotonzDocument? = nil) {
+    /// `displayed` is `preview` as the canvas draws it (`displayDocument`),
+    /// when the caller already has it: working it out is a walk of the whole
+    /// document, and a step of the playhead used to do it twice.
+    private func refreshCrispTile(showing preview: PhotonzDocument? = nil,
+                                  displayed: PhotonzDocument? = nil) {
         crispTileTask?.cancel()
         crispTileTask = nil
         // Anything on screen was drawn for a different moment than this one.
@@ -4509,12 +4513,13 @@ final class EditorState {
         let scale = viewport.zoom * (hostWindow?.backingScaleFactor ?? 2)
         guard scale > 1.01, let region = visibleDocumentRect(viewport) else { return }
 
-        let display = displayDocument(document)
+        let display = (preview == nil ? nil : displayed) ?? displayDocument(document)
         let renderer = tileRenderer
         let store = self.store
         // Past 2x somebody is inspecting pixels and wants to see them squarely,
         // which is the rule the canvas already follows for the whole composite.
         let nearest = viewport.zoom >= 2
+        let colors = canvasColorSpace
         crispTileTask = Task { [weak self] in
             // Let the edit or the gesture settle first. The composite lands
             // immediately either way; this only decides how soon the sharp copy
@@ -4524,7 +4529,7 @@ final class EditorState {
             guard !Task.isCancelled else { return }
             let tile = await Task.detached(priority: .userInitiated) {
                 renderer.renderTile(display, store: store, region: region,
-                                    scale: scale, magnifyNearest: nearest)
+                                    scale: scale, magnifyNearest: nearest, colorSpace: colors)
             }.value
             guard !Task.isCancelled, let self else { return }
             // The camera or the document may have moved on while this drew.
@@ -4550,7 +4555,8 @@ final class EditorState {
     /// Hands a document (committed or move-preview) to the render scheduler.
     func submit(_ document: PhotonzDocument) {
         let submitted = document
-        var document = displayDocument(document)
+        let displayed = displayDocument(document)
+        var document = displayed
         // A recording is composited at the size it is shown rather than at
         // its own (`CompositeScale`): a full-screen Retina recording fitted in
         // a window is shown at under half its pixels, and drawing all of them
@@ -4573,7 +4579,7 @@ final class EditorState {
         // picture is stale before it lands, and asking for one thirty times a
         // second would clear the tile thirty times a second, which every view
         // reading it is told about whether or not the value changed.
-        defer { if !isMotionPlaying { refreshCrispTile(showing: submitted) } }
+        defer { if !isMotionPlaying { refreshCrispTile(showing: submitted, displayed: displayed) } }
         if scheduler == nil {
             scheduler = RenderScheduler(store: store, onDelivery: { [weak self] frame in
                 await MainActor.run {
@@ -4602,6 +4608,17 @@ final class EditorState {
         // budget lets go while the render waits its turn would otherwise draw
         // as nothing (`scrubbing-is-smooth-never-goes-black-and-the-pic`).
         let pictures = document.hasTime ? store.snapshot() : nil
-        Task { await scheduler.submit(document, store: pictures, stamp: moment, contentScale: contentScale) }
+        let colors = canvasColorSpace
+        Task {
+            await scheduler.submit(document, store: pictures, stamp: moment, contentScale: contentScale,
+                                   colorSpace: colors)
+        }
     }
+
+    /// The colours the canvas is drawn in: the window's own, so a frame goes
+    /// up as it is rather than being matched to the screen on the main thread
+    /// on its way, which cost a recording about 8ms on every step of the
+    /// playhead (`first-long-jump-when-zoomed-in-walk`). sRGB before there is
+    /// a window.
+    var canvasColorSpace: CGColorSpace? { hostWindow?.colorSpace?.cgColorSpace }
 }

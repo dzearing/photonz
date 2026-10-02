@@ -53,18 +53,27 @@ struct TimelineTrackRow: View {
             if row.isCaptions, !row.clips.isEmpty, editorState.isKeyTrackOpen(track.id) {
                 HStack(spacing: TimelineDock.gap) {
                     CaptionWordsLane.header(indent: indent)
-                    CaptionWordsLane(cueIDs: row.clips.map(\.layerID), laneWidth: laneWidth)
+                    // Only the cues in the window: a word never leaves its
+                    // cue, and reading all 170 cues' words on every step of
+                    // the playhead to throw most of them away was a cost of
+                    // every far jump (`first-long-jump-when-zoomed-in-walk`).
+                    CaptionWordsLane(cueIDs: Self.cuesInSight(row.clips, ruler: editorState.motionStripRuler),
+                                     laneWidth: laneWidth)
                 }
                 .frame(height: CaptionWordsLane.height)
             }
-            ForEach(row.clips) { clip in
-                // A keyed value is a lane of keys, opened and closed by the
-                // arrow on the header (`KeyLanesView`); anything else that
-                // moves keeps its timing bar.
-                // Which values are keyed does not change while a bar is
-                // dragged, so the row asks the document and is not woken by
-                // every move of the hand.
-                let keyed = Set(editorState.keyLanesAtRest(layerID: clip.layerID).map(\.motionID))
+            // A keyed value is a lane of keys, opened and closed by the arrow
+            // on the header (`KeyLanesView`); anything else that moves keeps
+            // its timing bar. Which values are keyed does not change while a
+            // bar is dragged, so the row asks the document and is not woken by
+            // every move of the hand. Only the clips with something under them
+            // are walked: a Captions track's 170 cues have nothing, and an item
+            // each for them was rebuilt on every far jump of the playhead.
+            let keyedByClip = editorState.keyedMotionsAtRest(layerIDs: row.clips.map(\.layerID))
+            ForEach(row.clips.filter {
+                !$0.lanes.isEmpty || keyedByClip[$0.layerID] != nil || row.zoomedClips.contains($0.layerID)
+            }) { clip in
+                let keyed = keyedByClip[clip.layerID] ?? []
                 if !keyed.isEmpty, editorState.isKeyTrackOpen(track.id) {
                     KeyLanesView(layerID: clip.layerID, layerName: clip.layerName, laneWidth: laneWidth,
                                  indent: indent, isLocked: track.isLocked)
@@ -84,6 +93,17 @@ struct TimelineTrackRow: View {
             }
         }
         .playtestHover("Track \(track.name)") { isHovered = $0 }
+    }
+
+    /// The clips whose bars reach into the timeline's window, and any without
+    /// a bar.
+    static func cuesInSight(_ clips: [MotionStripGroup], ruler: MotionStripRuler) -> [UUID] {
+        let start = ruler.startMS
+        let end = ruler.startMS + ruler.spanMS
+        return clips.filter { clip in
+            guard let bar = clip.bar else { return true }
+            return Double(bar.outMS) >= start && Double(bar.inMS) <= end
+        }.map(\.layerID)
     }
 
     /// The cues on a Captions track that nobody is working on: not picked
@@ -856,13 +876,25 @@ struct TimelineGridlines: View {
     let height: CGFloat
 
     var body: some View {
-        ForEach(ruler.secondTicks, id: \.ms) { tick in
-            Rectangle()
-                .fill(VideoKit.Palette.edgeLo)
-                .frame(width: 1, height: height)
-                .offset(x: laneWidth * ruler.fraction(ofMS: tick.ms))
+        // One shape for every line rather than a view each: a far jump of the
+        // playhead on a zoomed timeline moves every second to a new one, and a
+        // view per second was thrown away and built again in every row
+        // (`first-long-jump-when-zoomed-in-walk`).
+        Hairlines(xs: ruler.secondTicks.map { laneWidth * ruler.fraction(ofMS: $0.ms) })
+            .fill(VideoKit.Palette.edgeLo)
+            .frame(width: laneWidth, height: height, alignment: .topLeading)
+            .allowsHitTesting(false)
+    }
+
+    /// A one point line down the whole height at each of `xs`.
+    private struct Hairlines: Shape {
+        let xs: [CGFloat]
+
+        func path(in rect: CGRect) -> Path {
+            var path = Path()
+            for x in xs { path.addRect(CGRect(x: x, y: 0, width: 1, height: rect.height)) }
+            return path
         }
-        .allowsHitTesting(false)
     }
 }
 

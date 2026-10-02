@@ -77,6 +77,19 @@ struct KeyLanesTests {
         #expect(!keyed.hasKeyLanes(anyOf: [UUID()]))
     }
 
+    /// A track row asks which values are keyed on every clip it holds, and a
+    /// Captions track holds 170: one pass for the lot, naming only the clips
+    /// that have a lane, each with the values its lanes are for.
+    @Test func aTrackAsksWhichValuesAreKeyedOnAllItsClipsAtOnce() {
+        let (doc, id) = Self.withTitle()
+        #expect(doc.keyedMotionIDs(anyOf: [id]).isEmpty)
+        let (keyed, keyedID) = Self.keyed()
+        let found = keyed.keyedMotionIDs(anyOf: [UUID(), keyedID])
+        #expect(Array(found.keys) == [keyedID])
+        #expect(found[keyedID] == Set(keyed.keyLanes(layerID: keyedID).map(\.motionID)))
+        #expect(keyed.keyedMotionIDs(anyOf: [UUID()]).isEmpty)
+    }
+
     @Test func aKeyReadsWhatItsMotionsCurveDoesWhereNobodyEasedIt() {
         let (doc, id) = Self.keyed()
         // Keys set through the panel run on the panel's own curve.

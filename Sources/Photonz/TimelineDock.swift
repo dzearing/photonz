@@ -59,7 +59,10 @@ struct TimelineDock: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            transport
+            // Its own view: it reads the playhead, and read in this body every
+            // step of the playhead and every frame of playback rebuilt the
+            // whole timeline under it (`first-long-jump-when-zoomed-in-walk`).
+            TimelineTransport()
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { transportHeight = $0 }
             // In View mode the transport is all there is: a player's bar, and
             // the tracks go with the rest of the editing (`ViewEditMode`). One
@@ -68,9 +71,8 @@ struct TimelineDock: View {
             // transport, so Edit only has to open it out (`EditModeArrival`).
             let open = editorState.isMotionStripOpen
             if open || editorState.areTracksKeptBehindView {
-                // Asleep behind View: the transport above still reads the
-                // playhead every frame of playback and draws this body again,
-                // and the tracks out of sight sit that out (`editPiecesAsleep`).
+                // Asleep behind View: the tracks out of sight sit out every
+                // frame of playback (`editPiecesAsleep`).
                 AsleepBehindView(asleep: editorState.editPiecesAsleep) {
                     VStack(spacing: 0) {
                         localBar
@@ -127,71 +129,6 @@ struct TimelineDock: View {
 
     // MARK: - The transport
 
-    private var transport: some View {
-        VideoKit.TransportBar(current: editorState.documentTimecode
-                                  + (editorState.shuttleReading.map { "  \($0)" } ?? ""),
-                              duration: editorState.documentLengthTimecode) {
-            // QuickTime's speaker and slider. How loud YOU are listening,
-            // not the document's own levels, which are the clips' Volume in
-            // the panel. There is no mix meter: the user found it did
-            // nothing for them (2026-09-29), and a mix too loud for a file is
-            // still held down and said so at export.
-            VideoKit.TransportButton(
-                symbol: Self.speakerSymbol(editorState.playerVolume.tier),
-                label: editorState.playerVolume.isSilent ? "Unmute" : "Mute") {
-                    editorState.toggleDocumentMute()
-                }
-                .panelHelp(editorState.playerVolume.isSilent ? "Turn the sound back on" : "Turn the sound off")
-                .playtestControl("Volume", detail: "Transport")
-                .panelReadout(editorState.playerVolume.isSilent ? "sound off" : "sound on")
-            TransportVolumeSlider(volume: editorState.playerVolume,
-                                  onSet: { editorState.setPlayerVolumeLevel($0) },
-                                  onNudge: { editorState.nudgePlayerVolume(by: $0) })
-        } controls: {
-            VideoKit.TransportButton(symbol: "backward.end.fill", label: "Go to Start") {
-                editorState.goToDocumentStart()
-            }
-            .panelHelp("Go to the start (Home)")
-            .playtestControl("Go to Start", detail: "Transport")
-            VideoKit.TransportButton(symbol: editorState.isDocumentPlaying ? "pause.fill" : "play.fill",
-                                     label: editorState.isDocumentPlaying ? "Pause" : "Play",
-                                     role: .primary) {
-                editorState.toggleDocumentPlayback()
-            }
-            .panelHelp(editorState.isDocumentPlaying ? "Pause (space)" : "Play (space)")
-            .playtestControl(editorState.isDocumentPlaying ? "Pause" : "Play", detail: "Transport")
-            VideoKit.TransportButton(symbol: "forward.end.fill", label: "Go to End") {
-                editorState.goToDocumentEnd()
-            }
-            .panelHelp("Go to the end (End)")
-            .playtestControl("Go to End", detail: "Transport")
-        } scrubber: {
-            TransportScrubber { fraction, phase in
-                scrub(toDocumentFraction: fraction, phase: phase)
-                // A double-click beside the marks lets them go, as on the ruler.
-                if phase == .ended, (NSApp.currentEvent?.clickCount ?? 1) >= 2 {
-                    editorState.clearMarksForADoubleClick(atMS: Int((fraction * Double(editorState.documentLengthMS))
-                        .rounded()))
-                }
-            }
-            .playtestControl("Scrub", detail: "Transport")
-        } trailing: {
-            // A player's far end: full screen, as QuickTime has it. Only in
-            // View, the player; the editor's transport is the mock's.
-            if editorState.isWatching {
-                VideoKit.TransportButton(symbol: "arrow.up.left.and.arrow.down.right",
-                                         label: "Full Screen") {
-                    editorState.hostWindow?.toggleFullScreen(nil)
-                }
-                .panelHelp("Full screen (⌃⌘F)")
-                .playtestControl("Full Screen", detail: "Transport")
-                .transition(.opacity)
-            }
-            TimelineToggleButton()
-        }
-        .tutorialAnchor(.video(.transport))
-    }
-
     static func speakerSymbol(_ tier: PlayerVolume.Tier) -> String {
         switch tier {
         case .off: "speaker.slash.fill"
@@ -210,19 +147,6 @@ struct TimelineDock: View {
         return Double(editorState.documentTimeMS) / Double(length)
     }
 
-    private func scrub(toDocumentFraction fraction: Double, phase: VideoKit.ScrubPhase) {
-        let ms = Int((fraction * Double(editorState.documentLengthMS)).rounded())
-        switch phase {
-        case .began:
-            editorState.beginPlayheadDrag()
-            editorState.dragPlayhead(toMS: ms)
-        case .changed:
-            editorState.dragPlayhead(toMS: ms)
-        case .ended:
-            editorState.dragPlayhead(toMS: ms)
-            editorState.endPlayheadDrag()
-        }
-    }
 
     // MARK: - The timeline's own bar
 
@@ -512,7 +436,7 @@ struct TimelineDock: View {
                         .padding(.leading, Self.lanesLeading)
                 }
                 .overlay(alignment: .topLeading) {
-                    playhead(laneWidth: laneWidth)
+                    TimelinePlayheadLine(laneWidth: laneWidth)
                         .padding(.leading, Self.lanesLeading)
                 }
                 // The ruler and the tracks under it: where a video guide
@@ -618,21 +542,6 @@ struct TimelineDock: View {
                     .allowsHitTesting(false)
                     .panelReadout("range \(range.lowerBound)ms to \(range.upperBound)ms")
             }
-        }
-    }
-
-    /// The red line across every track, and only while its moment is on
-    /// screen: a zoomed timeline with the playhead elsewhere has no playhead
-    /// to draw, rather than one pinned to its edge.
-    @ViewBuilder private func playhead(laneWidth: CGFloat) -> some View {
-        // Not read at all behind View, so playing there never draws the
-        // tracks out of sight again (`AsleepBehindView`).
-        let fraction = editorState.editPiecesAsleep
-            ? -1 : editorState.motionStripRuler.fraction(ofMS: Double(editorState.documentTimeMS))
-        if fraction >= -0.001, fraction <= 1.001 {
-            VideoKit.Playhead(fraction: fraction)
-                .frame(width: laneWidth)
-                .panelReadout("playhead \(editorState.documentTimecode)")
         }
     }
 
@@ -1435,5 +1344,113 @@ private struct TimelineToggleButton: View {
                          detail: isOn ? "the transport's timeline toggle, tracks open"
                                       : "the transport's timeline toggle, tracks closed")
         .panelReadout(isOn ? "timeline toggle on" : "timeline toggle off")
+    }
+}
+
+/// The dock's transport (`.transport`): the timecode, play, the scrubber and
+/// the volume. A view of its own because it reads the playhead every frame:
+/// read by the dock, that rebuilt every track under it.
+private struct TimelineTransport: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        VideoKit.TransportBar(current: editorState.documentTimecode
+                                  + (editorState.shuttleReading.map { "  \($0)" } ?? ""),
+                              duration: editorState.documentLengthTimecode) {
+            // QuickTime's speaker and slider. How loud YOU are listening,
+            // not the document's own levels, which are the clips' Volume in
+            // the panel. There is no mix meter: the user found it did
+            // nothing for them (2026-09-29), and a mix too loud for a file is
+            // still held down and said so at export.
+            VideoKit.TransportButton(
+                symbol: TimelineDock.speakerSymbol(editorState.playerVolume.tier),
+                label: editorState.playerVolume.isSilent ? "Unmute" : "Mute") {
+                    editorState.toggleDocumentMute()
+                }
+                .panelHelp(editorState.playerVolume.isSilent ? "Turn the sound back on" : "Turn the sound off")
+                .playtestControl("Volume", detail: "Transport")
+                .panelReadout(editorState.playerVolume.isSilent ? "sound off" : "sound on")
+            TransportVolumeSlider(volume: editorState.playerVolume,
+                                  onSet: { editorState.setPlayerVolumeLevel($0) },
+                                  onNudge: { editorState.nudgePlayerVolume(by: $0) })
+        } controls: {
+            VideoKit.TransportButton(symbol: "backward.end.fill", label: "Go to Start") {
+                editorState.goToDocumentStart()
+            }
+            .panelHelp("Go to the start (Home)")
+            .playtestControl("Go to Start", detail: "Transport")
+            VideoKit.TransportButton(symbol: editorState.isDocumentPlaying ? "pause.fill" : "play.fill",
+                                     label: editorState.isDocumentPlaying ? "Pause" : "Play",
+                                     role: .primary) {
+                editorState.toggleDocumentPlayback()
+            }
+            .panelHelp(editorState.isDocumentPlaying ? "Pause (space)" : "Play (space)")
+            .playtestControl(editorState.isDocumentPlaying ? "Pause" : "Play", detail: "Transport")
+            VideoKit.TransportButton(symbol: "forward.end.fill", label: "Go to End") {
+                editorState.goToDocumentEnd()
+            }
+            .panelHelp("Go to the end (End)")
+            .playtestControl("Go to End", detail: "Transport")
+        } scrubber: {
+            TransportScrubber { fraction, phase in
+                scrub(toDocumentFraction: fraction, phase: phase)
+                // A double-click beside the marks lets them go, as on the ruler.
+                if phase == .ended, (NSApp.currentEvent?.clickCount ?? 1) >= 2 {
+                    editorState.clearMarksForADoubleClick(atMS: Int((fraction * Double(editorState.documentLengthMS))
+                        .rounded()))
+                }
+            }
+            .playtestControl("Scrub", detail: "Transport")
+        } trailing: {
+            // A player's far end: full screen, as QuickTime has it. Only in
+            // View, the player; the editor's transport is the mock's.
+            if editorState.isWatching {
+                VideoKit.TransportButton(symbol: "arrow.up.left.and.arrow.down.right",
+                                         label: "Full Screen") {
+                    editorState.hostWindow?.toggleFullScreen(nil)
+                }
+                .panelHelp("Full screen (⌃⌘F)")
+                .playtestControl("Full Screen", detail: "Transport")
+                .transition(.opacity)
+            }
+            TimelineToggleButton()
+        }
+        .tutorialAnchor(.video(.transport))
+    }
+
+    private func scrub(toDocumentFraction fraction: Double, phase: VideoKit.ScrubPhase) {
+        let ms = Int((fraction * Double(editorState.documentLengthMS)).rounded())
+        switch phase {
+        case .began:
+            editorState.beginPlayheadDrag()
+            editorState.dragPlayhead(toMS: ms)
+        case .changed:
+            editorState.dragPlayhead(toMS: ms)
+        case .ended:
+            editorState.dragPlayhead(toMS: ms)
+            editorState.endPlayheadDrag()
+        }
+    }
+}
+
+/// The red line across every track, and only while its moment is on
+/// screen: a zoomed timeline with the playhead elsewhere has no playhead
+/// to draw, rather than one pinned to its edge.
+/// A view of its own, because it moves with every step of the playhead: drawn
+/// inside the dock's tracks, each step rebuilt all of them.
+private struct TimelinePlayheadLine: View {
+    @Environment(EditorState.self) private var editorState
+    let laneWidth: CGFloat
+
+    var body: some View {
+        // Not read at all behind View, so playing there never draws the
+        // tracks out of sight again (`AsleepBehindView`).
+        let fraction = editorState.editPiecesAsleep
+            ? -1 : editorState.motionStripRuler.fraction(ofMS: Double(editorState.documentTimeMS))
+        if fraction >= -0.001, fraction <= 1.001 {
+            VideoKit.Playhead(fraction: fraction)
+                .frame(width: laneWidth)
+                .panelReadout("playhead \(editorState.documentTimecode)")
+        }
     }
 }

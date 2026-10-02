@@ -265,4 +265,67 @@ struct IncrementalRenderTests {
         expectMatchesColdRender(image, repainted, store,
                                 "repainting a screen's surface left the old colour behind")
     }
+
+    // MARK: Drawn in the screen's colours
+
+    /// The raw bytes of `image` as stored, without any colour matching.
+    private func storedBytes(_ image: CGImage, x: Int, y: Int) -> [UInt8] {
+        guard let data = image.dataProvider?.data, let base = CFDataGetBytePtr(data) else { return [] }
+        let offset = y * image.bytesPerRow + x * 4
+        return (0..<4).map { base[offset + $0] }
+    }
+
+    /// A frame handed to a window in any colour space but the window's own is
+    /// matched to the screen on the main thread as it goes up, about 8ms for a
+    /// recording-sized frame (`first-long-jump-when-zoomed-in-walk`). Drawn
+    /// straight into the window's space, it goes up as it is.
+    @Test func aFrameIsDrawnInTheColourSpaceItIsAskedFor() throws {
+        let (store, doc) = makeStoreAndDocument()
+        let p3 = try #require(CGColorSpace(name: CGColorSpace.displayP3))
+        let image = try #require(DocumentRenderer().renderInteractive(doc, store: store, colorSpace: p3))
+        #expect(image.colorSpace?.name == CGColorSpace.displayP3)
+        // The same colours, only written in the other space: matched back to
+        // sRGB it is the sRGB render.
+        expectMatchesColdRender(image, doc, store, tolerance: 4, "a frame drawn in Display P3 changed colour")
+        // ...and really written in it: the patch's red is not stored as the
+        // sRGB numbers.
+        let srgb = try #require(DocumentRenderer().renderInteractive(doc, store: store))
+        #expect(storedBytes(image, x: 60, y: 60) != storedBytes(srgb, x: 60, y: 60),
+                "the Display P3 frame stored the sRGB numbers")
+    }
+
+    @Test func aFrameWithNoColourSpaceAskedForIsSRGB() throws {
+        let (store, doc) = makeStoreAndDocument()
+        let image = try #require(DocumentRenderer().renderInteractive(doc, store: store))
+        #expect(image.colorSpace?.name == CGColorSpace.sRGB)
+    }
+
+    /// A window dragged onto another screen asks for that screen's colours,
+    /// and the frame already drawn in the old ones is not handed back.
+    @Test func aNewColourSpaceDrawsTheFrameAgain() throws {
+        let (store, doc) = makeStoreAndDocument()
+        let renderer = DocumentRenderer()
+        let p3 = try #require(CGColorSpace(name: CGColorSpace.displayP3))
+        let first = try #require(renderer.renderInteractive(doc, store: store))
+        let second = try #require(renderer.renderInteractive(doc, store: store, colorSpace: p3))
+        #expect(first !== second)
+        #expect(second.colorSpace?.name == CGColorSpace.displayP3)
+        let third = try #require(renderer.renderInteractive(doc, store: store, colorSpace: p3))
+        #expect(second === third, "the same space again reuses the frame")
+    }
+
+    /// A patch drawn after a move lands in the frame's own space, so the frame
+    /// is one picture in one set of colours.
+    @Test func aPatchedFrameStaysInItsColourSpace() throws {
+        let (store, doc) = makeStoreAndDocument()
+        let renderer = DocumentRenderer()
+        let p3 = try #require(CGColorSpace(name: CGColorSpace.displayP3))
+        _ = renderer.renderInteractive(doc, store: store, colorSpace: p3)
+        var moved = doc
+        let patchID = try #require(moved.layers.last?.id)
+        moved.updateLayer(id: patchID) { $0.frame.origin.x += 10 }
+        let image = try #require(renderer.renderInteractive(moved, store: store, colorSpace: p3))
+        #expect(image.colorSpace?.name == CGColorSpace.displayP3)
+        expectMatchesColdRender(image, moved, store, tolerance: 4, "a patched Display P3 frame diverged")
+    }
 }

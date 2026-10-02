@@ -111,4 +111,20 @@ struct RenderSchedulerTests {
             Issue.record("no frames delivered")
         }
     }
+
+    @Test func writesTheFrameInTheColourSpaceItWasAskedFor() async throws {
+        let store = ImageStore()
+        let base = store.register(solidImage(width: 20, height: 20, r: 255, g: 0, b: 0))
+        let p3 = try #require(CGColorSpace(name: CGColorSpace.displayP3))
+        let collector = FrameCollector()
+        let scheduler = RenderScheduler(store: store) { await collector.add($0) }
+
+        await scheduler.submit(.withBaseImage(base), colorSpace: p3)
+        await scheduler.waitUntilIdle()
+
+        let image = try #require(await collector.images.last)
+        #expect(image.colorSpace?.name == CGColorSpace.displayP3)
+        let p = pixel(image, x: 10, y: 10)
+        #expect(p.r > 240 && p.g < 16, "still red, read back in sRGB")
+    }
 }

@@ -157,4 +157,51 @@ struct ClipFilmstripTests {
         #expect(ClipFilmstrip.tiles(of: piece, pieceWidth: 0, visible: 0...100, nominalWidth: 40).isEmpty)
         #expect(ClipFilmstrip.tiles(of: piece, pieceWidth: 1000, visible: 2000...2100, nominalWidth: 40).isEmpty)
     }
+
+    // MARK: - Which view draws which tile
+
+    /// A tile's slot is the view that draws it. A far jump of the playhead
+    /// carries the window to tiles it has never shown, and a view per tile
+    /// INDEX threw every picture view away and built new ones on each jump,
+    /// a fifth of the pause after it (`first-long-jump-when-zoomed-in-walk`).
+    /// Slots come round in a ring as wide as the window holds, so the jump
+    /// hands the same views new pictures.
+    @Test func aFarJumpDrawsItsTilesWithTheViewsAlreadyThere() {
+        let piece = ClipPiece(sourceInMS: 0, lengthMS: Self.fiveMinutes)
+        let here = ClipFilmstrip.tiles(of: piece, pieceWidth: 100_000, visible: 2000...2900, nominalWidth: 40)
+        let there = ClipFilmstrip.tiles(of: piece, pieceWidth: 100_000, visible: 61_013...61_913,
+                                        nominalWidth: 40)
+        let ring = ClipFilmstrip.slotRing(visibleWidth: 900, tileWidth: here[0].width)
+        let before = Set(here.map { ClipFilmstrip.slot(of: $0.index, ring: ring) })
+        let after = Set(there.map { ClipFilmstrip.slot(of: $0.index, ring: ring) })
+        // Every tile on screen has a view of its own...
+        #expect(before.count == here.count)
+        #expect(after.count == there.count)
+        // ...and at most the one or two the ring holds spare are new.
+        #expect(after.subtracting(before).count <= 2)
+    }
+
+    /// Scrolling keeps each picture in the view that was already drawing it,
+    /// which is what kept a scrolled filmstrip from flickering.
+    @Test func aScrollKeepsEachTileInItsView() {
+        let piece = ClipPiece(sourceInMS: 0, lengthMS: 60_000)
+        let a = ClipFilmstrip.tiles(of: piece, pieceWidth: 6000, visible: 0...500, nominalWidth: 40)
+        let b = ClipFilmstrip.tiles(of: piece, pieceWidth: 6000, visible: 100...600, nominalWidth: 40)
+        let ring = ClipFilmstrip.slotRing(visibleWidth: 500, tileWidth: a[0].width)
+        let slotOf = { (tiles: [ClipFilmstrip.Tile]) in
+            Dictionary(uniqueKeysWithValues: tiles.map { ($0.index, ClipFilmstrip.slot(of: $0.index, ring: ring)) })
+        }
+        let first = slotOf(a)
+        let second = slotOf(b)
+        for (index, slot) in second where first[index] != nil {
+            #expect(first[index] == slot, "tile \(index) moved to another view")
+        }
+        #expect(Set(second.values).count == b.count)
+    }
+
+    @Test func aRingIsNeverEmpty() {
+        #expect(ClipFilmstrip.slotRing(visibleWidth: 0, tileWidth: 40) >= 1)
+        #expect(ClipFilmstrip.slotRing(visibleWidth: 900, tileWidth: 0) >= 1)
+        #expect(ClipFilmstrip.slot(of: -3, ring: 4) >= 0)
+    }
 }
