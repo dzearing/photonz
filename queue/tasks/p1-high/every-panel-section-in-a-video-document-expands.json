@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 0.0000018,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-02T18:51:26.867Z",
-  "updated": "2026-10-02T22:00:37.524Z",
+  "updated": "2026-10-02T22:00:53.730Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -48,10 +48,15 @@
     {
       "t": "2026-10-02T22:00:37.523Z",
       "note": "left rough: Space/Return on a focused header not walk-proven. Keyboard navigation is a system-wide setting, off on this Mac; setting it in the probe's own domain was not honoured, and I would not change the user's system setting. Listed in the audit's rough for the user to try. Did not earn a task."
+    },
+    {
+      "t": "2026-10-02T22:00:53.728Z",
+      "note": "Fixed in dabe96a2: headers in a recording with nothing picked saved the click but never redrew (rows captured the panel and were not rebuilt on a fold-only change); the panel now hands rows the folded set. Headers also fold on Space/Return when focused, and a click leaves the keyboard on the canvas. Verified by every-section-header-opens-walk at Next defaults (nothing picked, clip, title, shape, View, picture; fails on the old build), dock-headers/panel-section-drag/panel-sections/video-panel-order walks, Scripts/test.sh 10975 tests green. Keyboard toggle built but not walk-proven (system keyboard navigation is off). Audit: queue/audits/2026-10-02-every-section-header-opens.json"
     }
   ],
   "started": "2026-10-02T21:22:59.277Z",
   "walks": [
     "every-section-header-opens-walk"
-  ]
+  ],
+  "completed": "2026-10-02T22:00:53.729Z"
 }

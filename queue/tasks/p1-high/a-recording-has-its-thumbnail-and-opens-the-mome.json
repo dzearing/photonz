@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 0.0000015,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-02T18:51:26.769Z",
-  "updated": "2026-10-02T18:51:26.966Z",
+  "updated": "2026-10-02T21:08:33.490Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -29,6 +29,43 @@
     {
       "t": "2026-10-02T18:51:26.964Z",
       "note": "seq 430 -> 0.0000015"
+    },
+    {
+      "t": "2026-10-02T19:32:31.680Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-02T19:37:02.557Z",
+      "note": "Plan + adversarial review: (1) recorder keeps only the latest complete SCStream screen sample buffer (merged into the existing first-frame output, queueDepth raised so the held surface never starves the pool); (2) at Stop the store lands that frame as the tile's thumbnail and, once the file lands, keeps it (stamp set before reload so the landing reload does not throw it away) and writes it to the poster cache with the real duration; (3) Next opens a still-closing recording at once as a provisional document whose clip is the last frame, playhead on that frame's true moment (last PTS minus first PTS), View mode; Space/play while it lands is remembered and starts at landing; at landing the real file facts are adopted under the SAME movie id via History.applyOutsideHistory, so nothing done meanwhile is lost and the held frame keeps drawing until real frames decode; (4) the Stop toast says Copying until the file lands, then Copied. Risks: a first-time user pressing play in the first 300 ms (answered: remembered, glyph shows it); encoder may round the picture size (patched in the landing fix-up); Current must not change, so all of it sits behind a new Next flag default on. Gaps the mock assumes: none, this is latency."
+    },
+    {
+      "t": "2026-10-02T19:38:42.938Z",
+      "note": "Baseline (Scripts/recording-latency-drill.sh, system audio + mic, before any change): 5 s: tile 1 ms, file closed 94 ms, thumbnail 176 ms; 60 s: tile 2 ms, file closed 317 ms, thumbnail 398 ms. Editor open waited for the close plus the door check plus the first decode (not timed by the old drill). 180 s close was 820 ms (800a6d01)."
+    },
+    {
+      "t": "2026-10-02T21:02:59.253Z",
+      "note": "owns these walks: a-recording-opens-at-stop-walk"
+    },
+    {
+      "t": "2026-10-02T21:02:59.307Z",
+      "note": "After (Scripts/recording-latency-drill.sh, system audio + mic, flag on at Next defaults): 5 s: tile 2, thumbnail 20, editor picture 10, file closed 71, editor playable 77 ms; 60 s: tile 2, thumbnail 22, editor picture 11, closed 282, playable 288 ms; 180 s: tile 1, thumbnail 18, editor picture 8, closed 715, playable 720 ms. Playable is the close plus about 5 ms (it used to be the close plus the door check plus the first decode). The drill's editor is windowless; through a real window (a-recording-opens-at-stop-walk) Stop to picture is 107-188 ms, and about 450 ms when it is the first editor window of the run (filed: the-first-editor-window-after-launch-opens-as-qu). CPU: the whole probe reads about 1% while recording (ps, 20 s drill), the held frame is one retained surface swapped per frame under a lock."
+    },
+    {
+      "t": "2026-10-02T21:02:59.360Z",
+      "note": "Gotchas: the stream feeding SCRecordingOutput delivers 420v (biplanar YUV), not BGRA; Core Image's first use cost 40-160 ms, so the frame is converted with vImage (5 ms for 3456x2234). A screen that stops changing sends no more complete frames, so the stand-in runs to Stop's host-clock moment, not the last frame (else the clip grew 0:02 to 0:03 at landing). SCK's default queueDepth is 8 (SCStream.h), so holding one surface needs no change. Files: PhotonzCore/ClosingRecording.swift (+tests), Capture/ScreenRecorder.swift (FirstFrameClock keeps the newest frame), Capture/CaptureStore.swift (holdLastFrame, closingPicture, poster cache at landing), EditorState+ClosingRecording.swift, ToastController (ToastSaying), flag next-a-recording-is-ready-at-stop (Next, on). The drill raised macOS's 'Photonz Probe is requesting to bypass the system private window picker' prompt on screen once; that is the system's own periodic reconfirmation for the probe."
+    },
+    {
+      "t": "2026-10-02T21:02:59.414Z",
+      "note": "left rough: saving a project or exporting during the sub-second landing has no file to read (stand-in has no URL in MovieLibrary); too narrow a window for a person to hit, so not filed. Opening on the last frame (playhead at end) differs from a normal open at the first frame: asked in the audit rather than filed."
+    },
+    {
+      "t": "2026-10-02T21:08:33.488Z",
+      "note": "Stop now puts the recording's last frame (held in memory by the stream, converted with vImage) on its tile in 18-22 ms, and in Next opening a still-closing recording shows that frame in the editor in 8-12 ms (drill) / 107-188 ms through a real window, with Play remembered and the file adopted in place when it lands; the corner card says Copying until the file is copied. Measured with Scripts/recording-latency-drill.sh at 5/60/180 s with sound (playable = file close + ~5 ms, not worse). Flag next-a-recording-is-ready-at-stop (Next, on). Walk a-recording-opens-at-stop-walk green, focus drill clean, related recording walks green, Scripts/test.sh green. Commit 96a7b3c5. Audit queue/audits/2026-10-02-recording-ready-at-stop.json. First-window build cost filed as the-first-editor-window-after-launch-opens-as-qu."
     }
-  ]
+  ],
+  "started": "2026-10-02T19:32:31.679Z",
+  "walks": [
+    "a-recording-opens-at-stop-walk"
+  ],
+  "completed": "2026-10-02T21:08:33.489Z"
 }
