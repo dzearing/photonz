@@ -4,12 +4,12 @@
   "goal": "You reported on 2026-09-29 that dragging a component off the Library drops two copies. Reproduced at Next defaults: nothing fires twice, but the first drag lands your copy and the component's original beside it, and on a video that makes two tracks. Where the original should live instead is on the card; once it is answered, one drag makes exactly one new layer.",
   "epic": "ui-building",
   "priority": "p1-high",
-  "seq": 50,
+  "seq": 10,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T02:56:58.111Z",
-  "updated": "2026-10-02T02:01:33.091Z",
+  "updated": "2026-10-02T12:38:21.393Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -64,6 +64,10 @@
     {
       "t": "2026-10-02T02:01:33.090Z",
       "note": "seq 20 -> 50"
+    },
+    {
+      "t": "2026-10-02T12:38:21.392Z",
+      "note": "seq 50 -> 10"
     }
   ],
   "started": "2026-09-30T04:39:50.937Z",

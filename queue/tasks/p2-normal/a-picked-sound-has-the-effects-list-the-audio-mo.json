@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T18:02:37.973Z",
-  "updated": "2026-10-02T12:34:08.202Z",
+  "updated": "2026-10-02T12:34:33.706Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by normalize-cleans-background-noise-too-on-by-defa (2026-09-29). Model is AudioLevel.noiseReduction (PhotonzCore/NoiseCleaning.swift); panel today is SoundGainInspector.noise in SoundInspector.swift. EQ and Compressor have no model yet.",
@@ -51,11 +51,16 @@
     {
       "t": "2026-10-02T12:34:08.201Z",
       "note": "Reviewed on the real app: the added row first landed below the panel's bottom edge (only the count changed); fixed with a scroll to the section. 'Strength' label wrapped; fixed. Left rough (under the bar, in the audit): no menu icons; the reading at the row's end repeats the selected strength. Seen while reproducing: under a lock, a press or click on a timeline clip does not pick it (normalize-cleans-noise-walk fails at step 6 locked, passed unlocked in the 2026-10-01 sweep); not caused by 4bce21d4 (same with it reverted). Not filed: lock-only, and the walk set already treats a lock as unanswered."
+    },
+    {
+      "t": "2026-10-02T12:34:33.704Z",
+      "note": "Audio Effects section under Gain on a picked sound (SoundEffectsInspector.swift, core SoundEffects.swift): plus menu lists EQ, Compressor (dimmed, filed as a-picked-sound-can-take-an-eq-and-a-compressor-f) and Noise reduction; the row is AudioLevel.noiseReduction, the value Clean noise writes, with Light/Medium/Strong and a cross; Noise row gone from Gain. Verified: suite 10920 green; sound-effects-noise-reduction-walk (no flags, pointer-opened plus, Strong, cross, undo) ok forced under a lock; normalize walk ok via lock-safe copy. Commit d17d4293, audit 2026-10-02-audio-effects."
     }
   ],
   "started": "2026-10-02T11:55:56.840Z",
   "walks": [
     "sound-effects-noise-reduction-walk",
     "normalize-cleans-noise-walk"
-  ]
+  ],
+  "completed": "2026-10-02T12:34:33.705Z"
 }

@@ -4,12 +4,12 @@
   "goal": "The timing strip names each moving layer with its name alone, where the mock puts a small mark in front of the name saying what kind of layer it is (a path, a circle). With it you can tell a shape from a picture from text at a glance, the way the Layers list does.",
   "epic": "icon-animate",
   "priority": "p2-normal",
-  "seq": 150,
+  "seq": 160,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T12:12:41.452Z",
-  "updated": "2026-10-02T02:00:12.809Z",
+  "updated": "2026-10-02T12:38:22.425Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the side-by-side for a-lane-on-the-timing-strip-says-which-layer-it-b (queue/audits/2026-09-30-timing-strip-names-mock.png vs 2026-09-30-timing-strip-names-1.png). Mock: docs/design/mocks/pages/icon-animate-wt.html, the timing dock: <span class=\"tl\"><i class=\"ic xs ic-bezier\"></i> Bell body</span>. App: Sources/Photonz/MotionStripView.swift MotionStripGroupView draws Text(group.layerName) in a labelWidth - 6 (86pt) frame with no glyph. A glyph costs about 14pt of that, so long names get cut sooner; the whole-name tooltip (wholeNameTip) already covers reading them. Decide which symbol set: the Layers list uses thumbnails, not glyphs, so a small kind glyph may need a mapping from layer kind to SF Symbol; if the mapping is a new choice with a visible consequence, it is a decision card.",
@@ -39,6 +39,10 @@
     {
       "t": "2026-10-02T02:00:12.806Z",
       "note": "seq 110 -> 150"
+    },
+    {
+      "t": "2026-10-02T12:38:22.424Z",
+      "note": "seq 150 -> 160"
     }
   ],
   "walks": [

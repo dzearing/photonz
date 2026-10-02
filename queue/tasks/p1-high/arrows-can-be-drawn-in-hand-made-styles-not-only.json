@@ -5,11 +5,11 @@
   "epic": "interaction-foundations",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-02T01:58:52.684Z",
-  "updated": "2026-10-02T02:01:32.857Z",
+  "updated": "2026-10-02T03:28:25.156Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window. References are the user's own images.",
@@ -34,6 +34,36 @@
     {
       "t": "2026-10-02T02:01:32.856Z",
       "note": "seq 0.00001 -> 30"
+    },
+    {
+      "t": "2026-10-02T02:37:30.211Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-02T02:41:45.850Z",
+      "note": "Adversarial review before building: (1) arrows cannot bend at all today (AnnotationContent holds start/end only, the rasterizer draws a straight line), yet 3 of the 4 references are curved and two acceptance items need bent arrows. Filed the prerequisite arrows-can-be-bent-by-dragging-their-middle (p1, seq 29); the styles here are written against a spine that already takes a quadratic curve so the bend only has to supply a control point. (2) Each reference has its OWN head (hooked V, loose two-stroke V, swept calligraphic wings, outline triangle), so for the hand-made styles the head is part of the style: the Ending picker and the tail's Ends row apply to Clean only; Head Size, both colours and Thickness apply to every style. (3) Premiere/Keynote/Skitch users expect a style as a picked look, not settings: one row of picture tiles above the arrow's parts, and the same tiles in the arrow tool's popover. (4) Irregularity must be stable: a stored per-arrow seed, the next arrow gets a fresh one, Reshuffle in the right-click menu. (5) Texture must stay vector so it is crisp at any zoom and in SVG: the Sketch dry-ink look is broken strokes, not a bitmap noise."
+    },
+    {
+      "t": "2026-10-02T03:02:25.183Z",
+      "note": "owns these walks: arrow-styles-walk"
+    },
+    {
+      "t": "2026-10-02T03:07:50.900Z",
+      "note": "walks arrow-styles-walk -> arrow-styles-walk, arrow-reshuffle-walk"
+    },
+    {
+      "t": "2026-10-02T03:28:25.097Z",
+      "note": "Audit rough items: bend -> folded into arrows-can-be-bent-by-dragging-their-middle (its acceptance names every style following the curve and a bent walk). Sketch texture subtler than ref 26, brush wings shorter than ref 28 at Head Size 1.0, tiles in panel ink rather than the arrow's colour, Ending/Ends rows hidden for hand-made: left for the user's reaction on the audit, no task. arrow-reshuffle-walk could not run (screen locked all session, twice tried); Reshuffle is covered by ArrowStyleTests.reshufflingChangesOnlyTheSeed. Found and fixed on the way: VideoKit.TileGrid trapped (Int of infinity) on an unbounded width offer, caught by the probe crashing."
+    },
+    {
+      "t": "2026-10-02T03:28:25.154Z",
+      "note": "Shipped 9b94fbe7: Clean, Hand-drawn, Marker, Brush and Sketch arrow styles (PhotonzCore ArrowStyle/HandMadeArrow, 28 core + 8 render tests), seeded per arrow so they never wobble, Reshuffle on right-click and Layer menu, Style tiles drawn by the real rasterizer in Appearance and the tool popover, live drag preview, SVG/1x/2x/3x export. Verified: Scripts/test.sh green (10847 tests), arrow-styles-walk green at Next defaults with real captures beside the four references, on light and dark. Bent arrows do not exist yet: that half moved to the prerequisite arrows-can-be-bent-by-dragging-their-middle (p1, seq 29). Audit queue/audits/2026-10-01-arrow-styles.json."
     }
-  ]
+  ],
+  "started": "2026-10-02T02:37:30.209Z",
+  "walks": [
+    "arrow-styles-walk",
+    "arrow-reshuffle-walk"
+  ],
+  "completed": "2026-10-02T03:28:25.155Z"
 }

@@ -1,0 +1,31 @@
+{
+  "id": "find-out-why-the-test-suite-sometimes-hangs-in-a",
+  "title": "Find out why the test suite sometimes hangs in a video export test",
+  "goal": "Once in a while the whole test run stops dead inside a video export test and never finishes, which costs the loop the task it was checking. Find what makes the video reader wait for ever there, and make the test (or the exporter) fail fast instead of hanging.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 60,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-02T07:20:57.068Z",
+  "updated": "2026-10-02T12:38:21.884Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-10-02 ~00:15 on HEAD 498436ea + a CutLabelRule change (nothing in PhotonzMedia touched): Scripts/test.sh sat at 0% CPU for 30 minutes. `sample <swiftpm-testing-helper pid>` showed the main test thread in VideoCutExportTests.exportDropsTheMiddle() (VideoCutExportTests.swift:53) -> VideoExporter.exportMP4 -> writeMP4 -> encode -> writePictures (VideoExporter.swift:492), i.e. blocked in `videoOut.copyNextSampleBuffer()` on the AVAssetReader. Killed it and re-ran Scripts/test.sh straight after: 10,893 tests passed in 280s, so NOT reproduced on demand. Conditions at the time: screen locked for hours, and the probe had just run ~40 video walks plus several worktree builds. A runner on 2026-09-21 also hit an export test hang (queue/loop.log around line 241326, re-ran VideoCutExportTests on its own and edited VideoExportBudgetTests). Ideas: a per-test time limit (.timeLimit) on the PhotonzMediaTests export suites so a stuck reader fails the test rather than the run; check whether copyNextSampleBuffer can block when the reader's decoder session is invalidated (screen lock / media server).",
+  "acceptance": [
+    "The cause of the hang is named, with the reproduction that shows it",
+    "A video export test that cannot read its next frame fails within a minute instead of hanging the run",
+    "Scripts/test.sh passes"
+  ],
+  "log": [
+    {
+      "t": "2026-10-02T07:20:57.070Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-02T12:38:21.883Z",
+      "note": "seq 3510 -> 60"
+    }
+  ]
+}

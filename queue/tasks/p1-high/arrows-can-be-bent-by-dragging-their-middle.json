@@ -1,0 +1,59 @@
+{
+  "id": "arrows-can-be-bent-by-dragging-their-middle",
+  "title": "Arrows can be bent by dragging their middle",
+  "goal": "An arrow can be curved: drag the handle in the middle of a selected arrow and the shaft bends into a smooth arc, the head turning to follow it, the way Keynote, Skitch and Excalidraw arrows do. Three of the four hand-made arrow references the user gave on 2026-10-01 are curved, and today every arrow is a ruler-straight line.",
+  "epic": "interaction-foundations",
+  "priority": "p1-high",
+  "seq": 29,
+  "status": "done",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-02T02:38:58.078Z",
+  "updated": "2026-10-02T04:13:16.250Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Prerequisite for arrows-can-be-drawn-in-hand-made-styles-not-only (which depends on it for its bent-arrow acceptance items). AnnotationContent (PhotonzCore/Layer.swift) holds only start/end; arrows are drawn straight in PhotonzRender/AnnotationRasterizer.swift. The hand-made styles are written against a spine (ArrowSpine in PhotonzCore) that already accepts a quadratic curve, so the bend only has to supply the control point. References: docs/design/references/arrows/user-ref-25..28.png.",
+  "acceptance": [
+    "A selected arrow shows a handle at the middle of its shaft; dragging it bends the arrow into a smooth curve that passes through the handle, and the head points along the curve where it ends",
+    "Dragging the handle back onto the straight line (or double clicking it) straightens the arrow; undo and redo step through each bend",
+    "The bend is stored on the arrow as a non-destructive property next to its start and end (PhotonzCore model + tests first), survives save, reopen, copy and SVG export, and moving either end keeps the curve’s shape",
+    "Clicking near the curved shaft selects the arrow; the layer frame grows to hold the curve so nothing is clipped",
+    "Every arrow style (Clean and the hand-made ones from arrows-can-be-drawn-in-hand-made-styles-not-only) follows the curve: Brush tapers and swells along the curve’s length, Sketch’s outline body bends with it",
+    "A walk at Next defaults draws an arrow, bends it by pointer drag on the handle, and photographs it in each style"
+  ],
+  "log": [
+    {
+      "t": "2026-10-02T02:38:58.080Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-02T03:28:25.042Z",
+      "note": "Carries the bent half of arrows-can-be-drawn-in-hand-made-styles-not-only: every hand-made style already draws along ArrowSpine (HandMadeArrow.inks(for:along:), tested in ArrowStyleTests.everyStyleFollowsACurvedSpine); the bend only has to store a control point, pass its spine to inks/outlines/inkBounds/hit test, and extend arrow-styles-walk with a bent arrow per style."
+    },
+    {
+      "t": "2026-10-02T03:37:11.368Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-02T04:07:51.602Z",
+      "note": "owns these walks: arrow-bend-walk"
+    },
+    {
+      "t": "2026-10-02T04:12:53.151Z",
+      "note": "Adversarial pass before building: a Keynote/Excalidraw user expects one mid handle that the curve passes THROUGH (not a Bezier control point off the curve), double click to reset, and the ends to keep the curve when moved; all built that way. Risk found: the handle colliding with the end handles on a short arrow, so it is only offered when it sits 20pt clear of both ends. Risk: double click on an arrow opens its caption, so the bend press is read before every double click."
+    },
+    {
+      "t": "2026-10-02T04:12:53.204Z",
+      "note": "Built: PhotonzCore ArrowBend + 22 core tests (ArrowBendTests) and a render test per style; app handle/drag/commit in CanvasArrowBend.swift, Straighten Arrow on right-click and Layer menu. arrow-bend-walk green (forced under a locked screen, 9 real captures, expectBox claims bent/undo/redo/straight); 19 arrow walks green, arrow-reshuffle-walk refused by the lock (needs a name). Full suite 10870 green. Left rough (no task, under the bar): Shift-even-arc has no walk; handle hides mid-drag like end handles; Hand-drawn wobble puts the dot just beside the ink; no S-curve (one handle)."
+    },
+    {
+      "t": "2026-10-02T04:13:16.248Z",
+      "note": "Shipped 30eb1232. PhotonzCore ArrowBend: bend stored against the line between the ends (survives save, reopen, copy, SVG; moving an end keeps the shape). One spine drives the clean shaft and head, every hand-made style, frame, drawn bounds, hit test and export. Next default-on next-arrow-bend: middle handle drag bends; let go on the line, double click, or Straighten Arrow (right-click and Layer menu) straightens; one undo step each. Verified: 22 core tests plus a per-style render test, full suite 10870 green, arrow-bend-walk green at Next defaults with a pointer drag on the handle and expectBox claims (run under a locked screen, 9 real captures), 19 arrow walks green. Audit: queue/audits/2026-10-01-arrow-bend.json"
+    }
+  ],
+  "started": "2026-10-02T03:37:11.367Z",
+  "walks": [
+    "arrow-bend-walk"
+  ],
+  "completed": "2026-10-02T04:13:16.249Z"
+}

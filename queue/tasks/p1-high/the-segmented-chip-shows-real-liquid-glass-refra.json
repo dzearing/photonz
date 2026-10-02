@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p1-high",
   "seq": 40,
-  "status": "blocked",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T19:50:30.011Z",
-  "updated": "2026-10-02T02:01:32.966Z",
+  "updated": "2026-10-02T12:37:54.620Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window. The user's words (2026-09-30 12:49, screenshot of the Library's Media | Comps mid-move): 'I see no liquid glass refraction on the edges.' Original filing: User 2026-09-30 12:49, screenshot of the Library's Media | Comps control mid-move: 'I see no liquid glass refraction on the edges.' In a42eacb8 the chip is .glassEffect(.regular.tint(accent)) but covered by the accent at 88% opacity (SegmentedControl.swift:422-427, SegmentInk.chipCover = 0.88) so a white word reads in light mode, and it sits BEHIND the labels over a flat black rail, so the glass has nothing to refract and is mostly painted over. Liquid Glass refraction shows where glass passes over detail (Apple's segmented thumb lifts and lenses the labels as it moves). | Done in 7d88a0cd: DesignedSegments (Sources/Photonz/DesignSystem/SegmentedControl.swift) puts the chip in an overlay ABOVE the words; at rest .regular.tint(accent) with the picked word inside the glass (.primary, colorScheme from SegmentInk.pickedWordScheme, only while appearsActive); while travelling/dragging (isLifted: travelling token + dragCenter + shownTravel) .clear.tint(accent @ SegmentInk.lensTint 0.18), inner words hidden, base words unmasked. chipCover and wordsOnChip are gone. Offscreen (legibility sheet glassAsPaint, walk ChipGlassSwitch) paints the tint and the measured word ink. Measured with the probe in front: tinted regular glass draws its tint at full strength; system primary on it is white in dark / black in light for every tint (white on yellow in dark, hence the flip). Window in the back: tint greyed to 48,49,52 (dark) / 119,120,123 (light). filmThumb makes the filmed window key in a front walk (a walk's history strip never has the keys). Film walks hold the front.",
@@ -81,6 +81,18 @@
     {
       "t": "2026-10-02T02:01:32.964Z",
       "note": "seq 10 -> 40"
+    },
+    {
+      "t": "2026-10-02T12:37:54.560Z",
+      "note": "the question \"Is this the Liquid Glass refraction you meant on the segmented chip?\" was taken down without an answer: Answered by the user's 2026-10-01 report on the chip, filed and finished as the-segmented-chip-is-one-glass-material-at-rest (27b9f01a, done in the intake window): one glass material at rest and in motion, words crisp on top.. Nobody chose anything, so nothing here was decided."
+    },
+    {
+      "t": "2026-10-02T12:37:54.567Z",
+      "note": "waiting, but every question on this task was taken down without an answer. Nothing returns a task to the queue except an answer, so this will sit here until someone opens a new question."
+    },
+    {
+      "t": "2026-10-02T12:37:54.619Z",
+      "note": "superseded by the-segmented-chip-is-one-glass-material-at-rest (done 2026-10-02, 27b9f01a), which replaced this task's lens-while-moving instruction at the user's word; its card is withdrawn as answered"
     }
   ],
   "started": "2026-09-30T20:31:36.088Z",

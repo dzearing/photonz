@@ -8814,3 +8814,99 @@
 {"t":"2026-10-02T02:02:17.957Z","ev":"task_blocked","id":"the-segmented-chip-is-one-glass-material-at-rest","from":"in_progress","note":"Held by the intake window, which is fixing it now at the user's request (top priority). Not for the loop.","noQuestion":true}
 {"t":"2026-10-02T02:02:36.207Z","ev":"digest","file":"2026-10-01.md"}
 {"t":"2026-10-02T02:02:47.841Z","ev":"task_note","id":"a-task-the-intake-window-has-taken-stays-with-it"}
+{"t":"2026-10-02T02:03:00.802Z","ev":"leftovers","id":"digest","task":null,"state":"stashed","count":1,"stash":"9aed6f3e1b461fe128eb99832d66e5f45f87c093"}
+{"t":"2026-10-02T02:03:00.941Z","ev":"task_started","id":"a-task-the-intake-window-has-taken-stays-with-it","title":"A task the intake window has taken stays with it until it hands the task back","priority":"p1-high"}
+{"t":"2026-10-02T02:03:38.677Z","ev":"leftovers_cleared","id":"digest","task":null,"why":"intake window's own test edit, restored"}
+{"t":"2026-10-02T02:37:06.776Z","ev":"task_done","id":"the-segmented-chip-is-one-glass-material-at-rest","from":"blocked","note":"Done in the intake window: one glass material at every moment, words under the glass and crisp on top through a chip-shaped mask, filmed and reviewed; commit 27b9f01a"}
+{"t":"2026-10-02T02:37:29.485Z","ev":"loop_started","pid":50834}
+{"t":"2026-10-02T02:37:29.563Z","ev":"loop_awake","held":true,"pid":50844,"screenLocked":true}
+{"t":"2026-10-02T02:37:30.217Z","ev":"task_started","id":"arrows-can-be-drawn-in-hand-made-styles-not-only","title":"Arrows can be drawn in hand-made styles, not only mechanical ones","priority":"p1-high"}
+{"t":"2026-10-02T02:38:58.082Z","ev":"task_created","id":"arrows-can-be-bent-by-dragging-their-middle","priority":"p1-high","title":"Arrows can be bent by dragging their middle"}
+{"t":"2026-10-02T02:41:45.852Z","ev":"task_note","id":"arrows-can-be-drawn-in-hand-made-styles-not-only"}
+{"t":"2026-10-02T03:02:25.185Z","ev":"task_walks","id":"arrows-can-be-drawn-in-hand-made-styles-not-only","walks":["arrow-styles-walk"]}
+{"t":"2026-10-02T03:07:50.902Z","ev":"task_walks","id":"arrows-can-be-drawn-in-hand-made-styles-not-only","walks":["arrow-styles-walk","arrow-reshuffle-walk"]}
+{"t":"2026-10-02T03:28:25.044Z","ev":"task_note","id":"arrows-can-be-bent-by-dragging-their-middle"}
+{"t":"2026-10-02T03:28:25.099Z","ev":"task_note","id":"arrows-can-be-drawn-in-hand-made-styles-not-only"}
+{"t":"2026-10-02T03:28:25.157Z","ev":"task_done","id":"arrows-can-be-drawn-in-hand-made-styles-not-only","from":"in_progress","note":"Shipped 9b94fbe7: Clean, Hand-drawn, Marker, Brush and Sketch arrow styles (PhotonzCore ArrowStyle/HandMadeArrow, 28 core + 8 render tests), seeded per arrow so they never wobble, Reshuffle on right-click and Layer menu, Style tiles drawn by the real rasterizer in Appearance and the tool popover, live drag preview, SVG/1x/2x/3x export. Verified: Scripts/test.sh green (10847 tests), arrow-styles-walk green at Next defaults with real captures beside the four references, on light and dark. Bent arrows do not exist yet: that half moved to the prerequisite arrows-can-be-bent-by-dragging-their-middle (p1, seq 29). Audit queue/audits/2026-10-01-arrow-styles.json."}
+{"t":"2026-10-02T03:28:38.892Z","ev":"task_reset","id":"a-task-the-intake-window-has-taken-stays-with-it","attempt":1}
+{"t":"2026-10-02T03:28:53.212Z","ev":"task_started","id":"a-task-the-intake-window-has-taken-stays-with-it","title":"A task the intake window has taken stays with it until it hands the task back","priority":"p1-high"}
+{"t":"2026-10-02T03:30:14.186Z","ev":"task_note","id":"a-task-the-intake-window-has-taken-stays-with-it"}
+{"t":"2026-10-02T03:36:17.628Z","ev":"task_walks","id":"a-task-the-intake-window-has-taken-stays-with-it","walks":[]}
+{"t":"2026-10-02T03:36:17.681Z","ev":"task_note","id":"a-task-the-intake-window-has-taken-stays-with-it"}
+{"t":"2026-10-02T03:36:51.976Z","ev":"task_done","id":"a-task-the-intake-window-has-taken-stays-with-it","from":"in_progress","note":"Shipped in a25b8e1f: queue.mjs hold <id> [--by holder] [why] and release <id>. A held task is in_progress with heldBy; guard leaves it alone without a failure, next never claims it, any other status or release hands it back, and holding is refused while a live runner has the task. The dashboard row and dialog say 'held by the intake window'. The intake skill, README and digest prompt now say to hold. Verified with queue/bin/hold-drill.mjs (32/32), every existing queue drill plus failure-drill.sh, FlagDefaultsReaderTests, and a scratch dashboard checked in a browser."}
+{"t":"2026-10-02T03:37:11.375Z","ev":"task_started","id":"arrows-can-be-bent-by-dragging-their-middle","title":"Arrows can be bent by dragging their middle","priority":"p1-high"}
+{"t":"2026-10-02T04:07:51.604Z","ev":"task_walks","id":"arrows-can-be-bent-by-dragging-their-middle","walks":["arrow-bend-walk"]}
+{"t":"2026-10-02T04:12:53.153Z","ev":"task_note","id":"arrows-can-be-bent-by-dragging-their-middle"}
+{"t":"2026-10-02T04:12:53.206Z","ev":"task_note","id":"arrows-can-be-bent-by-dragging-their-middle"}
+{"t":"2026-10-02T04:13:16.251Z","ev":"task_done","id":"arrows-can-be-bent-by-dragging-their-middle","from":"in_progress","note":"Shipped 30eb1232. PhotonzCore ArrowBend: bend stored against the line between the ends (survives save, reopen, copy, SVG; moving an end keeps the shape). One spine drives the clean shaft and head, every hand-made style, frame, drawn bounds, hit test and export. Next default-on next-arrow-bend: middle handle drag bends; let go on the line, double click, or Straighten Arrow (right-click and Layer menu) straightens; one undo step each. Verified: 22 core tests plus a per-style render test, full suite 10870 green, arrow-bend-walk green at Next defaults with a pointer drag on the handle and expectBox claims (run under a locked screen, 9 real captures), 19 arrow walks green. Audit: queue/audits/2026-10-01-arrow-bend.json"}
+{"t":"2026-10-02T04:14:50.178Z","ev":"task_started","id":"timeline-tracks-reorder-by-dragging-their-header","title":"Timeline tracks reorder by dragging their headers, the same physical way layer rows do","priority":"p1-high"}
+{"t":"2026-10-02T04:15:04.198Z","ev":"task_note","id":"timeline-tracks-reorder-by-dragging-their-header"}
+{"t":"2026-10-02T04:48:57.333Z","ev":"task_note","id":"timeline-tracks-reorder-by-dragging-their-header"}
+{"t":"2026-10-02T04:48:57.388Z","ev":"task_note","id":"timeline-tracks-reorder-by-dragging-their-header"}
+{"t":"2026-10-02T04:48:57.443Z","ev":"task_note","id":"timeline-tracks-reorder-by-dragging-their-header"}
+{"t":"2026-10-02T04:49:10.774Z","ev":"task_done","id":"timeline-tracks-reorder-by-dragging-their-header","from":"in_progress","note":"Track headers lift and reorder their tracks at Next defaults (498436ea): press and drag a header, the track rides the pointer, others make room, lands in one undo step, Escape returns it; layers list follows; clip sound pinned to its audio track. Layer and track drags now share one lift model (RowLift). Verified by TrackReorderTests/RowLiftTests, full suite, track-header-lifts-walk, the pointer walk (forced under lock), and the three layer-lift walks. Audit: queue/audits/2026-10-01-track-reorder.json"}
+{"t":"2026-10-02T04:52:28.479Z","ev":"task_started","id":"walks-that-fail-in-the-full-sweep-8","title":"Walks that fail in the full sweep","priority":"p2-normal"}
+{"t":"2026-10-02T04:52:36.866Z","ev":"task_walks","id":"walks-that-fail-in-the-full-sweep-8","walks":["an-editing-session-walk","first-long-jump-when-zoomed-in-walk"]}
+{"t":"2026-10-02T06:44:52.892Z","ev":"task_created","id":"a-far-playhead-jump-on-a-zoomed-in-long-recordin","priority":"p2-normal","title":"A far playhead jump on a zoomed-in long recording fits in one frame"}
+{"t":"2026-10-02T06:44:58.539Z","ev":"task_walks","id":"walks-that-fail-in-the-full-sweep-8","walks":["an-editing-session-walk"]}
+{"t":"2026-10-02T06:44:58.593Z","ev":"task_walks","id":"a-far-playhead-jump-on-a-zoomed-in-long-recordin","walks":["first-long-jump-when-zoomed-in-walk"]}
+{"t":"2026-10-02T07:20:57.072Z","ev":"task_created","id":"find-out-why-the-test-suite-sometimes-hangs-in-a","priority":"p2-normal","title":"Find out why the test suite sometimes hangs in a video export test"}
+{"t":"2026-10-02T07:21:32.633Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-8"}
+{"t":"2026-10-02T07:21:32.693Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-8"}
+{"t":"2026-10-02T07:21:32.748Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-8"}
+{"t":"2026-10-02T07:21:32.802Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-8"}
+{"t":"2026-10-02T07:21:48.189Z","ev":"task_done","id":"walks-that-fail-in-the-full-sweep-8","from":"in_progress","note":"an-editing-session-walk: the walk's label reader read the Properties ••• button as a cut label; CutLabelRule now leaves out readings with no letters (69961eca, unit tested). Step 24 passes 2 of 2 and the walk runs whole to step 36. The rest could not be checked on this locked Mac: past step 36 a cut click does not fire under a lock, the same in two other walks that passed unlocked. first-long-jump-when-zoomed-in-walk: the walk is right; a 16x jump costs 44-54ms in one pass since f8fe5834 (bisected). Handed to the new task a-far-playhead-jump-on-a-zoomed-in-long-recordin. Scripts/test.sh green, 10,893 tests (after one run hung in an export test, filed separately)."}
+{"t":"2026-10-02T07:23:54.895Z","ev":"task_started","id":"time-on-a-video-reads-in-frames-where-an-editor","title":"Time on a video reads in frames where an editor expects frames","priority":"p2-normal"}
+{"t":"2026-10-02T07:29:02.858Z","ev":"decision_opened","id":"time-on-a-video-reads-in-frames-where-an-editor-should-video-time-read-in-frames","taskId":"time-on-a-video-reads-in-frames-where-an-editor","question":"Should video time read in frames (timecode) everywhere, or stay in seconds with timecode as a choice in the View menu?"}
+{"t":"2026-10-02T07:29:50.000Z","ev":"task_note","id":"time-on-a-video-reads-in-frames-where-an-editor"}
+{"t":"2026-10-02T07:29:50.053Z","ev":"task_note","id":"time-on-a-video-reads-in-frames-where-an-editor"}
+{"t":"2026-10-02T07:29:50.110Z","ev":"task_note","id":"time-on-a-video-reads-in-frames-where-an-editor"}
+{"t":"2026-10-02T07:29:50.164Z","ev":"task_walks","id":"time-on-a-video-reads-in-frames-where-an-editor","walks":["time-reads-today-walk","transition-edge-follows-the-pointer-walk"]}
+{"t":"2026-10-02T07:35:13.222Z","ev":"task_blocked","id":"time-on-a-video-reads-in-frames-where-an-editor","from":"in_progress","note":"Reproduced at Next defaults (transport 0:04, closest ruler 3.9s/4s/4.1s, bubble and Length 0.8s; no frames anywhere). Waiting on the user: timecode everywhere, or seconds by default with View > Time Display > Timecode (recommended). Card has pictures of each."}
+{"t":"2026-10-02T07:35:31.532Z","ev":"task_started","id":"framing-a-zoom-shows-one-box-and-the-pointer-say","title":"Framing a zoom shows one box, and the pointer says what it will grab","priority":"p2-normal"}
+{"t":"2026-10-02T07:37:30.196Z","ev":"task_note","id":"framing-a-zoom-shows-one-box-and-the-pointer-say"}
+{"t":"2026-10-02T08:02:56.887Z","ev":"task_walks","id":"framing-a-zoom-shows-one-box-and-the-pointer-say","walks":["framing-a-zoom-shows-one-box-walk","a-zoom-is-shaped-by-hand-walk"]}
+{"t":"2026-10-02T08:03:36.721Z","ev":"task_note","id":"framing-a-zoom-shows-one-box-and-the-pointer-say"}
+{"t":"2026-10-02T08:03:36.782Z","ev":"task_done","id":"framing-a-zoom-shows-one-box-and-the-pointer-say","from":"in_progress","note":"While a zoom is picked the clip's outline/handles/knob/motion chrome are hidden (CanvasDisplay, gated on zoomBoxUp); pointer reads ZoomBoxHit (new, PhotonzCore, tested): resize on corners, hand on body, crosshair beside; Escape lets the zoom go and keeps the clip picked, or puts a box drag back. Verified by framing-a-zoom-shows-one-box-walk at Next defaults (green under a lock, 2 real captures; control runs with the fix off fail on the outline and on Escape), Scripts/test.sh 10904 passed. Audit queue/audits/2026-10-02-zoom-framing-one-box.json. Commit add36a54."}
+{"t":"2026-10-02T08:05:45.481Z","ev":"task_started","id":"edit-mode-s-contents-come-in-with-the-slide-not","title":"Edit mode's contents come in with the slide, not after it","priority":"p2-normal"}
+{"t":"2026-10-02T11:49:13.349Z","ev":"decision_opened","id":"edit-mode-s-contents-come-in-with-the-slide-not-when-you-switch-a-recording-to-e","taskId":"edit-mode-s-contents-come-in-with-the-slide-not","question":"When you switch a recording to Edit, should the panel's settings come in with the slide, at the cost of a slightly less smooth slide?"}
+{"t":"2026-10-02T11:49:37.775Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-10-02T11:49:37.831Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-10-02T11:49:37.885Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-10-02T11:49:37.939Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-10-02T11:49:37.992Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-10-02T11:55:29.051Z","ev":"task_blocked","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":"in_progress","note":"Tool bar and tracks now come in with the slide (built behind View), slide smooth (18-20ms stills); panel fills ~0.08s after landing by default. Waiting on the decision whether the panel should come in with the slide at a less smooth slide (switch next-panel-with-the-slide lets the user try it). Main-thread criterion not met: it is the slide's own drawing. Commit 4bce21d4, audit 2026-10-02-edit-arrives-with-the-slide."}
+{"t":"2026-10-02T11:55:56.848Z","ev":"task_started","id":"a-picked-sound-has-the-effects-list-the-audio-mo","title":"A picked sound has the Effects list the audio mock draws","priority":"p2-normal"}
+{"t":"2026-10-02T12:33:18.311Z","ev":"task_created","id":"a-picked-sound-can-take-an-eq-and-a-compressor-f","priority":"p2-normal","title":"A picked sound can take an EQ and a Compressor from its Audio Effects"}
+{"t":"2026-10-02T12:34:08.039Z","ev":"task_walks","id":"a-picked-sound-has-the-effects-list-the-audio-mo","walks":["sound-effects-noise-reduction-walk","normalize-cleans-noise-walk"]}
+{"t":"2026-10-02T12:34:08.094Z","ev":"task_note","id":"a-picked-sound-has-the-effects-list-the-audio-mo"}
+{"t":"2026-10-02T12:34:08.149Z","ev":"task_note","id":"a-picked-sound-has-the-effects-list-the-audio-mo"}
+{"t":"2026-10-02T12:34:08.203Z","ev":"task_note","id":"a-picked-sound-has-the-effects-list-the-audio-mo"}
+{"t":"2026-10-02T12:34:33.707Z","ev":"task_done","id":"a-picked-sound-has-the-effects-list-the-audio-mo","from":"in_progress","note":"Audio Effects section under Gain on a picked sound (SoundEffectsInspector.swift, core SoundEffects.swift): plus menu lists EQ, Compressor (dimmed, filed as a-picked-sound-can-take-an-eq-and-a-compressor-f) and Noise reduction; the row is AudioLevel.noiseReduction, the value Clean noise writes, with Light/Medium/Strong and a cross; Noise row gone from Gain. Verified: suite 10920 green; sound-effects-noise-reduction-walk (no flags, pointer-opened plus, Strong, cross, undo) ok forced under a lock; normalize walk ok via lock-safe copy. Commit d17d4293, audit 2026-10-02-audio-effects."}
+{"t":"2026-10-02T12:37:54.536Z","ev":"decision_withdrawn","id":"the-segmented-chip-shows-real-liquid-glass-refra-is-this-the-liquid-glass-refract","taskId":"the-segmented-chip-shows-real-liquid-glass-refra","question":"Is this the Liquid Glass refraction you meant on the segmented chip?","reason":"Answered by the user's 2026-10-01 report on the chip, filed and finished as the-segmented-chip-is-one-glass-material-at-rest (27b9f01a, done in the intake window): one glass material at rest and in motion, words crisp on top."}
+{"t":"2026-10-02T12:37:54.621Z","ev":"task_dropped","id":"the-segmented-chip-shows-real-liquid-glass-refra","from":"blocked","note":"superseded by the-segmented-chip-is-one-glass-material-at-rest (done 2026-10-02, 27b9f01a), which replaced this task's lens-while-moving instruction at the user's word; its card is withdrawn as answered"}
+{"t":"2026-10-02T12:38:09.568Z","ev":"task_created","id":"a-walk-check-runs-after-code-lands-without-anybo","priority":"p2-normal","title":"A walk check runs after code lands, without anybody asking for one"}
+{"t":"2026-10-02T12:38:15.285Z","ev":"task_note","id":"the-panel-keeps-its-promise-on-a-video-document"}
+{"t":"2026-10-02T12:38:21.394Z","ev":"task_resequenced","id":"dragging-a-component-from-the-library-drops-one","from":50,"to":10}
+{"t":"2026-10-02T12:38:21.448Z","ev":"task_resequenced","id":"a-video-document-shows-the-library-in-its-dock","from":60,"to":20}
+{"t":"2026-10-02T12:38:21.504Z","ev":"task_resequenced","id":"the-panel-shows-what-the-picked-thing-is-and-its","from":70,"to":30}
+{"t":"2026-10-02T12:38:21.560Z","ev":"task_resequenced","id":"the-grid-s-controls-come-back-to-the-tool-bar-as","from":80,"to":40}
+{"t":"2026-10-02T12:38:21.613Z","ev":"task_resequenced","id":"a-walk-check-runs-after-code-lands-without-anybo","from":3530,"to":10}
+{"t":"2026-10-02T12:38:21.668Z","ev":"task_resequenced","id":"time-on-a-video-reads-in-frames-where-an-editor","from":20,"to":20}
+{"t":"2026-10-02T12:38:21.724Z","ev":"task_resequenced","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":40,"to":30}
+{"t":"2026-10-02T12:38:21.776Z","ev":"task_resequenced","id":"a-far-playhead-jump-on-a-zoomed-in-long-recordin","from":3500,"to":40}
+{"t":"2026-10-02T12:38:21.831Z","ev":"task_resequenced","id":"a-picked-sound-can-take-an-eq-and-a-compressor-f","from":3520,"to":50}
+{"t":"2026-10-02T12:38:21.885Z","ev":"task_resequenced","id":"find-out-why-the-test-suite-sometimes-hangs-in-a","from":3510,"to":60}
+{"t":"2026-10-02T12:38:21.941Z","ev":"task_resequenced","id":"the-panel-keeps-its-promise-on-a-video-document","from":80,"to":70}
+{"t":"2026-10-02T12:38:21.993Z","ev":"task_resequenced","id":"shift-z-means-the-one-thing-you-choose-on-a-vide","from":90,"to":80}
+{"t":"2026-10-02T12:38:22.046Z","ev":"task_resequenced","id":"walking-the-history-strip-with-the-arrow-keys-ke","from":100,"to":90}
+{"t":"2026-10-02T12:38:22.101Z","ev":"task_resequenced","id":"a-loop-stalled-on-sign-in-tells-the-person-again","from":60,"to":100}
+{"t":"2026-10-02T12:38:22.157Z","ev":"task_resequenced","id":"the-written-rules-say-the-mac-s-own-control-come","from":70,"to":110}
+{"t":"2026-10-02T12:38:22.211Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":110,"to":120}
+{"t":"2026-10-02T12:38:22.263Z","ev":"task_resequenced","id":"a-menu-that-says-custom-lets-you-get-back-to-cus","from":120,"to":130}
+{"t":"2026-10-02T12:38:22.318Z","ev":"task_resequenced","id":"the-keylines-step-of-the-icon-guide-asks-for-som","from":130,"to":140}
+{"t":"2026-10-02T12:38:22.372Z","ev":"task_resequenced","id":"the-looks-of-one-component-stay-together-as-a-se","from":140,"to":150}
+{"t":"2026-10-02T12:38:22.426Z","ev":"task_resequenced","id":"each-heading-on-the-timing-strip-carries-a-small","from":150,"to":160}
+{"t":"2026-10-02T12:38:41.182Z","ev":"task_note","id":"a-picked-sound-can-take-an-eq-and-a-compressor-f"}
+{"t":"2026-10-02T12:38:48.173Z","ev":"triage","summary":"merged 0, dropped 1 (segmented chip refraction, superseded; card withdrawn), filed 1 (walk checks run without a request), folded 2 (audio effects mock departure into the panel task; second effects list into the EQ task), reset 0, resequenced p1 and p2, open 24 -> 24"}
+{"t":"2026-10-02T12:39:57.802Z","ev":"digest","file":"2026-10-02.md"}

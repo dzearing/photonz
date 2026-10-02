@@ -4,12 +4,12 @@
   "goal": "On 2026-09-29 the grid left the tool bar for the View menu, because the new placement contract says the tool bar holds tools and a way of looking at the picture is never a control in a bar. On 2026-09-06 the user had asked for the grid to be worked from the tool bar. This task exists only if the user wants that back: the grid's icon, cell size and Adjust Grid gear return to the bar, and the contract names the grid as its one exception.",
   "epic": "design-system",
   "priority": "p1-high",
-  "seq": 80,
+  "seq": 40,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T06:06:49.350Z",
-  "updated": "2026-10-02T02:01:33.471Z",
+  "updated": "2026-10-02T12:38:21.558Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reverting is small: EditorChromeLayout.ToolBarSection gains .grid back, toolBarSections(showsColor:showsGrid:), gridChipParts/gridSettingsAnchor drop the oneGlass argument, EditorView.toolBarSection gets case .grid: gridChip, CanvasGridControls.cellRow goes, and the four walks lose flags {next-one-glass-tool-bar: false}. See the IA task's commit. The 2026-09-06 asks: the-grid-is-worked-from-the-tool-bar-and-you-can, the-grid-tool-bar-is-two-buttons-and-adjust-mode.",
@@ -38,6 +38,10 @@
     {
       "t": "2026-10-02T02:01:33.469Z",
       "note": "seq 50 -> 80"
+    },
+    {
+      "t": "2026-10-02T12:38:21.557Z",
+      "note": "seq 80 -> 40"
     }
   ],
   "walks": [

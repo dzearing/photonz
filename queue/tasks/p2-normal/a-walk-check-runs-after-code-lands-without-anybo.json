@@ -1,0 +1,33 @@
+{
+  "id": "a-walk-check-runs-after-code-lands-without-anybo",
+  "title": "A walk check runs after code lands, without anybody asking for one",
+  "goal": "After a task lands app code, the loop is meant to run about ten minutes of scripted walks so a regression is caught the day it lands, and once a day to run the whole set. Today both only happen if a runner has asked for a sweep, and runners are told to ask only when they need the whole set. So since the full run of 2026-10-01 morning nobody asked, and seven app commits went in with no walk check at all. Make the checks happen on their own when code has landed.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-10-02T12:38:09.564Z",
+  "updated": "2026-10-02T12:38:21.612Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence, 2026-10-02 12:40Z, from the digest pass:\n$ queue/bin/sweep-schedule.mjs --decide --locked\n{\"run\":\"nothing\",\"why\":\"no sweep has been asked for\",\"hoursSince\":null,\"nextFullInHours\":null}\n$ node queue/bin/loop-day.mjs --hours 24\n  slices 0m 0.0% 0 rotating check(s)   (9 tasks ran in the same window)\n$ ls queue/sweep/requested.json -> no such file\n$ git log --since=2026-10-01T11:25 --format=%h -- Sources Scripts/playtest | wc -l -> 9\nCause: decide() in queue/bin/sweep-schedule.mjs returns nothing('no sweep has been asked for') before it looks at HEAD or the floor, and the whole-set run clears requested.json. Runner-prompt.md tells runners to ask only when they need the whole set, so nobody asks. Last rotating check: 2026-10-01T04:11Z. Last whole-set run: began 2026-10-01T15:28Z. CLAUDE.md promises 'after any task that lands code, a rotating check'. Fix likely: treat 'code landed under Sources/ or Scripts/playtest since rotation.lastHead / latest.head' as an implicit request, keep explicit requests for --now.",
+  "acceptance": [
+    "With no sweep request pending, a task that lands code under Sources/ or Scripts/playtest/ is followed by a rotating check before the next task (subject to the existing locked-screen and person-at-Mac rules)",
+    "With no sweep request pending, the whole set still runs once the twenty four hour floor has passed and code has landed since the last whole-set run",
+    "A loop pass that lands only queue/ files (digest, task logs) does not trigger either",
+    "A drill in queue/bin moves the clock and HEAD through: code landed with no request, queue-only commit with no request, request pending, and shows the decision for each",
+    "CLAUDE.md, queue/README.md and runner-prompt.md describe what the code now does, in the same words"
+  ],
+  "log": [
+    {
+      "t": "2026-10-02T12:38:09.566Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-02T12:38:21.611Z",
+      "note": "seq 3530 -> 10"
+    }
+  ]
+}

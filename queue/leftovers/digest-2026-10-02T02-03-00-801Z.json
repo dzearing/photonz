@@ -1,0 +1,19 @@
+{
+  "id": "digest-2026-10-02T02-03-00-801Z",
+  "task": null,
+  "kind": "digest",
+  "label": "the daily digest pass",
+  "title": "",
+  "outcome": "ok",
+  "at": "2026-10-02T02:03:00.801Z",
+  "files": [
+    "Tests/PhotonzCoreTests/SegmentInkTests.swift"
+  ],
+  "count": 1,
+  "state": "stashed",
+  "stash": "9aed6f3e1b461fe128eb99832d66e5f45f87c093",
+  "restore": "git stash apply 9aed6f3e1b461fe128eb99832d66e5f45f87c093",
+  "why": "",
+  "handed": "2026-10-02T02:03:38.676Z",
+  "clearedWhy": "intake window's own test edit, restored"
+}

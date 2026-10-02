@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-10-01T04:11:52.684Z",
-  "updated": "2026-10-02T02:00:12.014Z",
+  "updated": "2026-10-02T07:21:48.188Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-01T18:25:09Z: 700 of 702 walks passed in 177 minutes.\n\nFailing walks (2): an-editing-session-walk, first-long-jump-when-zoomed-in-walk\n\nFull output: queue/sweep/2026-10-01-082825.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: jumping-the-playhead-far-along-a-zoomed-in-long: Walk harness: snapshot time no longer counts on the main thread meter, and play/pause/seek/trim actions zero it; every walk with a picture before a timed wait reads differently; a-whole-walk-run-gets-past-the-1080p-export-walk: probe launcher now waits for the last probe to exit (a-whole-walk-run-gets-past-the-1080p-export-walk); the whole set should get past the 1080p export walk; the-floating-tool-bar-sits-as-tight-as-the-mock: tool bar spacing changed in every Next editor window; the tool-bar walks passed, the rest should be checked in the next full run; every-dropdown-in-the-panel-opens-when-you-click: VideoKit.Dropdown rebuilt as an AppKit pull-down; every video panel dropdown and the timeline Easing changed, used by dozens of walks; the-floating-tool-bar-shows-as-many-tools-as-the: The floating tool bar now folds by width and shows every tool that fits (c03413fb): any walk that clicks a tool bar slot at a fixed point, or expects More on a video, may have moved; pills-and-toasts-say-what-happened-never-how-to: notice wording and canvas pills changed at Next defaults; walks that read describe notes about the Measure pill may have stale notes; walks-that-fail-in-the-full-sweep-7: SegmentedControl in Next: small rows now draw 11pt words (were 13pt by a bug) and narrow rows keep segments instead of dropdowns; every walk touching a segmented row is affected; dragging-a-layer-feels-physical-the-row-lifts-ri: Layers list rows now carry their own drag in Next (no onDrag, a gesture per row, window-activation clicks on); 29 neighbouring walks passed, the rest of the ~280 selectRow walks should be seen by the full set\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -38,7 +38,44 @@
     {
       "t": "2026-10-02T02:00:12.013Z",
       "note": "seq 3520 -> 10"
+    },
+    {
+      "t": "2026-10-02T04:52:28.473Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-02T04:52:36.864Z",
+      "note": "owns these walks: an-editing-session-walk, first-long-jump-when-zoomed-in-walk"
+    },
+    {
+      "t": "2026-10-02T06:44:58.537Z",
+      "note": "walks an-editing-session-walk, first-long-jump-when-zoomed-in-walk -> an-editing-session-walk"
+    },
+    {
+      "t": "2026-10-02T07:21:32.631Z",
+      "note": "an-editing-session-walk: the WALK's reader was wrong, not the app. Reproduced (forced on a locked screen): step 24 labelsWhole read the Properties header's ••• menu button as '•..' at 1697,50; the real capture shows the ellipsis button drawn whole. Fixed in CutLabelRule.isCut: a reading with no letter or digit is an icon, never a cut label (test dotsWithNoWordsAreAnIconNotACutLabel). Commit 69961eca. After the fix step 24 passes 2 of 2 and the walk runs whole through step 36 (4 real captures)."
+    },
+    {
+      "t": "2026-10-02T07:21:32.691Z",
+      "note": "an-editing-session-walk past step 36 could not be checked: the screen stayed locked all session, the walk is refused unforced (step 8 expectClip), and forced it stops at step 37 because the click on the cut ('Sample Talk join 1') does not open the transition picker under a lock. That is the lock, not the app: a-video-edit-saves-as-a-project-walk and transition-picker-at-a-cut-walk fail the same way forced, both passed in the unlocked 2026-10-01 sweep, and a build of 30eb1232 (before the track reorder) fails the same way forced. expectClip worked under the lock but stays OFF the lock-safe list for that reason: listing it would let these walks reach a cut press that does not fire under a lock and report false failures in locked partial sweeps."
+    },
+    {
+      "t": "2026-10-02T07:21:32.746Z",
+      "note": "first-long-jump-when-zoomed-in-walk: the walk is RIGHT, the budget is the focus success line. Every jump at 16x on the long talk is 44-54ms in one pass (fails ~1 run in 3). Hand-bisected to f8fe5834 (tiles on Core Animation): b13f03da/5ee0e42c ~160, f8fe5834 onward ~210-240 (sum of 7 timed waits). Not the tiles: CA animation off or no NSView at all changed nothing; a hidden 30fps TimelineView put the old numbers back (155-161). So the old always-running timer split each jump across frames; idle-quiet made it one pass. Filed a-far-playhead-jump-on-a-zoomed-in-long-recordin (p2, video-cutting) with the data and handed the walk to it."
+    },
+    {
+      "t": "2026-10-02T07:21:32.800Z",
+      "note": "Scripts/test.sh: first run hung 30 min at 0% CPU in VideoCutExportTests.exportDropsTheMiddle (blocked in AVAssetReader copyNextSampleBuffer); killed, re-ran: 10,893 tests passed in 280s. Not reproduced on demand, seen once before 2026-09-21: filed find-out-why-the-test-suite-sometimes-hangs-in-a (p2) as an open question."
+    },
+    {
+      "t": "2026-10-02T07:21:48.185Z",
+      "note": "an-editing-session-walk: the walk's label reader read the Properties ••• button as a cut label; CutLabelRule now leaves out readings with no letters (69961eca, unit tested). Step 24 passes 2 of 2 and the walk runs whole to step 36. The rest could not be checked on this locked Mac: past step 36 a cut click does not fire under a lock, the same in two other walks that passed unlocked. first-long-jump-when-zoomed-in-walk: the walk is right; a 16x jump costs 44-54ms in one pass since f8fe5834 (bisected). Handed to the new task a-far-playhead-jump-on-a-zoomed-in-long-recordin. Scripts/test.sh green, 10,893 tests (after one run hung in an export test, filed separately)."
     }
   ],
-  "standing": "walk-sweep"
+  "standing": "walk-sweep",
+  "started": "2026-10-02T04:52:28.472Z",
+  "walks": [
+    "an-editing-session-walk"
+  ],
+  "completed": "2026-10-02T07:21:48.187Z"
 }

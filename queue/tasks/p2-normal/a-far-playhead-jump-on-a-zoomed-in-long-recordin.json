@@ -1,0 +1,38 @@
+{
+  "id": "a-far-playhead-jump-on-a-zoomed-in-long-recordin",
+  "title": "A far playhead jump on a zoomed-in long recording fits in one frame",
+  "goal": "On a five minute captioned recording zoomed in close, every long jump of the playhead holds the app for 44 to 54 milliseconds in one go, right at the 50 millisecond line the video focus promises, so about one jump in three misses it. Make a jump cheap enough, or split its work across frames, so it stays well under that line every time without bringing back anything that redraws while the app is idle.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-02T06:44:52.888Z",
+  "updated": "2026-10-02T12:38:21.775Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-01 on HEAD 498436ea: Scripts/playtest.sh Scripts/playtest/first-long-jump-when-zoomed-in-walk.json --no-build, longest pass per timed wait over 6 runs: step 18 (first jump to the middle at 16x) 42-48ms, step 23 (back to the middle) 35-54ms, failing 2 of 6 ('the main thread froze for 52.3ms in one pass, and this walk allows under 50ms'); Fit jumps (steps 28/30) 23-29ms. The 2026-10-01 full sweep failed it at 50.8ms.\n\nBisected by hand (worktree builds, 2-3 runs per commit, summed longest of the 7 timed waits): b13f03da 166-169, a0970339 162-165, 5ee0e42c 157-161, f8fe5834 207-225, 136d05b1 218-232, 6aa4ed87 209-230, 15680c79 229-242, HEAD 228-242. First slow commit: f8fe5834 'Caption and transition tiles play on Core Animation, so an idle recording sits quiet'.\n\nIt is NOT the tiles: at HEAD, turning their CA keyframe animation off changed nothing (234-242), and showing the still frame with no NSViewRepresentable at all changed nothing (229-239). Putting back a hidden 30fps TimelineView (in CaptionStylePreview.body) brought every jump straight back to the old numbers (155-161: 16x jumps 30-35ms, Fit 14-17ms). So the app did not get slower: before f8fe5834 the tiles' 30fps TimelineView kept SwiftUI on its animation clock, and a jump's work was spread over display frames; with the window idle and quiet, the same work lands in one run-loop pass. Re-adding a timer is not the fix (it cost 881ms busy per 1.5s idle, which f8fe5834 fixed).\n\nWhere the pass goes (sample at 1ms over repeated 3/4<->middle jumps at 16x): mostly SwiftUI graph update and NSHostingView.layout -> ViewGraphRootValueUpdater.render (CanvasDisplayList for CaptionCuesLayer.paint, DisplayList.ViewUpdater), CA::Transaction::commit; app frames: CaptionCuesLayer.paint, TimelineTrackRow.body, CaptionWordsLane/CaptionWordChipsView, EditorState.scrubDocument -> documentMomentChanged -> PhotonzDocument.drawn (many Layer copies), CanvasView.updateNSView. Ideas: let the canvas frame and the timeline's follow-scroll land in separate passes; cut the words lane and cue painting to what is on screen at 16x; avoid Layer copies in drawn().",
+  "acceptance": [
+    "first-long-jump-when-zoomed-in-walk passes 5 runs out of 5 at Next defaults, with every timed jump under 40ms",
+    "a-captioned-recording-sits-quiet-walk still passes: nothing redraws on a timer while the recording sits idle",
+    "Jumps at Fit stay under 25ms"
+  ],
+  "log": [
+    {
+      "t": "2026-10-02T06:44:52.890Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-02T06:44:58.591Z",
+      "note": "walks first-long-jump-when-zoomed-in-walk -> first-long-jump-when-zoomed-in-walk"
+    },
+    {
+      "t": "2026-10-02T12:38:21.774Z",
+      "note": "seq 3500 -> 40"
+    }
+  ],
+  "walks": [
+    "first-long-jump-when-zoomed-in-walk"
+  ]
+}

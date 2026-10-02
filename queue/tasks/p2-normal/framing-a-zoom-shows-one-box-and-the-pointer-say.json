@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-01T02:53:05.298Z",
-  "updated": "2026-10-02T02:00:12.127Z",
+  "updated": "2026-10-02T08:03:36.781Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left rough by a-zoom-region-that-frames-a-spot-and-can-follow (audit 2026-09-30-zoom-regions). Box presses are handled in CanvasNSView via zoomBoxUp/onZoomBoxDown (CanvasPointerDrags.swift) and drawn by ZoomBoxOverlay (hit testing off), so the cursor cue belongs in CanvasPointerCue.toolCursor and the handles in the canvas selection chrome when editorState.showsZoomBox. Seen in /tmp/photonz-playtest/a-zoom-follows-the-cursor-walk/1-zoom-added-box-on-the-picture-sc.png.",
@@ -27,9 +27,32 @@
     {
       "t": "2026-10-02T02:00:12.126Z",
       "note": "seq 3510 -> 30"
+    },
+    {
+      "t": "2026-10-02T07:35:31.524Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-02T07:37:30.194Z",
+      "note": "Reproduced: /tmp/photonz-playtest/a-zoom-is-shaped-by-hand-walk/0-zoom-added-sc.png shows the clip's dashed frame, 8 handles and rotate knob drawn round the zoom box. Review before building: a Premiere/FCP editor framing a zoom (FCP's Ken Burns / Transform onscreen controls) sees ONLY the control being edited; Photoshop's crop hides the layer's transform box too. Plan: hide clip chrome while the box is up, one tested hit test in core (corner/body/beside) read by both the press and the pointer, crosshair beside the box (a drag there draws a new box), Escape lets the zoom go but keeps the clip picked (one step back, like leaving a group), and Escape mid-drag puts the box back."
+    },
+    {
+      "t": "2026-10-02T08:02:56.885Z",
+      "note": "walks a-zoom-is-shaped-by-hand-walk -> framing-a-zoom-shows-one-box-walk, a-zoom-is-shaped-by-hand-walk"
+    },
+    {
+      "t": "2026-10-02T08:03:36.719Z",
+      "note": "left rough (no task, nits): on a dark recording the dim outside the box barely shows; the hand stays open while carrying the box; a press off the clip while framing only lets the zoom go (deliberate, so hidden clip handles are never grabbed blind). a-zoom-is-shaped-by-hand-walk could not run (screen locked, rightClick/windowDrag); its corner drag is covered by the new walk's lock-safe drag."
+    },
+    {
+      "t": "2026-10-02T08:03:36.779Z",
+      "note": "While a zoom is picked the clip's outline/handles/knob/motion chrome are hidden (CanvasDisplay, gated on zoomBoxUp); pointer reads ZoomBoxHit (new, PhotonzCore, tested): resize on corners, hand on body, crosshair beside; Escape lets the zoom go and keeps the clip picked, or puts a box drag back. Verified by framing-a-zoom-shows-one-box-walk at Next defaults (green under a lock, 2 real captures; control runs with the fix off fail on the outline and on Escape), Scripts/test.sh 10904 passed. Audit queue/audits/2026-10-02-zoom-framing-one-box.json. Commit add36a54."
     }
   ],
   "walks": [
+    "framing-a-zoom-shows-one-box-walk",
     "a-zoom-is-shaped-by-hand-walk"
-  ]
+  ],
+  "started": "2026-10-02T07:35:31.523Z",
+  "completed": "2026-10-02T08:03:36.780Z"
 }

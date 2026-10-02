@@ -44,6 +44,10 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
-  "created": "2026-09-30T21:41:37.069Z"
+  "status": "withdrawn",
+  "created": "2026-09-30T21:41:37.069Z",
+  "withdrawn": {
+    "reason": "Answered by the user's 2026-10-01 report on the chip, filed and finished as the-segmented-chip-is-one-glass-material-at-rest (27b9f01a, done in the intake window): one glass material at rest and in motion, words crisp on top.",
+    "at": "2026-10-02T12:37:54.535Z"
+  }
 }

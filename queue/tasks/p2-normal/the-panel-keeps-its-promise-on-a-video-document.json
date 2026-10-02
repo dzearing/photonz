@@ -4,12 +4,12 @@
   "goal": "On a document with time, the strip along the bottom takes its height off the right hand panel as well as off the picture, so on a laptop window there is not enough room left for Appearance and Effects to both be on screen, and the panel goes back to scrolling. Make the two sections nobody should have to scroll to fit on a video document as well as on a still one.",
   "epic": "video-editing",
   "priority": "p2-normal",
-  "seq": 80,
+  "seq": 70,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T02:12:33.004Z",
-  "updated": "2026-10-02T02:00:12.422Z",
+  "updated": "2026-10-02T12:38:21.940Z",
   "deps": [
     "the-timeline-is-the-one-in-the-mock",
     "on-a-video-the-timeline-is-the-layer-list-and-th"
@@ -112,6 +112,14 @@
     {
       "t": "2026-10-02T02:00:12.421Z",
       "note": "seq 40 -> 80"
+    },
+    {
+      "t": "2026-10-02T12:38:15.283Z",
+      "note": "Triage 2026-10-02: the panel on a picked sound grew again. Audio Effects (d17d4293) landed as a section under Gain, where the audio mock (pages/video-audio.html #gEffects) draws Effects as its own dock group with a rail tab. The runner wrote the departure in the audit (queue/audits/2026-10-02-audio-effects.json) but opened no card. Whatever the answer to this task's card is, it should say where a sound's Audio Effects live too, since a dock group of their own is one way to keep Appearance and Effects on screen."
+    },
+    {
+      "t": "2026-10-02T12:38:21.939Z",
+      "note": "seq 80 -> 70"
     }
   ],
   "walks": [],

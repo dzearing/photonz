@@ -5,11 +5,11 @@
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "in_progress",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T12:30:45.465Z",
-  "updated": "2026-10-02T07:29:50.163Z",
+  "updated": "2026-10-02T12:38:21.667Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen twice now, so it is filed. First: docs/design/video-vs-premiere.md, 'Seen, not filed: No frames in the time readout. The transport says 0:04 and the ruler counts seconds; Premiere shows 00:00:04:12.' Second: queue/audits/2026-09-29-transition-edge-follows-the-pointer.json rough list: 'The bubble shows tenths of a second (0.8s), and hundredths only once the ruler is zoomed in far enough. It does not show frames.' Serves the video-beats-premiere success criterion that the ruler, playhead, clips and captions agree to the frame at every zoom. Update the gap report's line when this closes.",
@@ -52,6 +52,14 @@
     {
       "t": "2026-10-02T07:29:50.162Z",
       "note": "owns these walks: time-reads-today-walk, transition-edge-follows-the-pointer-walk"
+    },
+    {
+      "t": "2026-10-02T07:35:13.219Z",
+      "note": "Reproduced at Next defaults (transport 0:04, closest ruler 3.9s/4s/4.1s, bubble and Length 0.8s; no frames anywhere). Waiting on the user: timecode everywhere, or seconds by default with View > Time Display > Timecode (recommended). Card has pictures of each."
+    },
+    {
+      "t": "2026-10-02T12:38:21.666Z",
+      "note": "seq 20 -> 20"
     }
   ],
   "started": "2026-10-02T07:23:54.886Z",

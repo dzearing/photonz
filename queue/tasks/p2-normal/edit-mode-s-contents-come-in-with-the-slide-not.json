@@ -4,12 +4,12 @@
   "goal": "Switching a long captioned recording from View to Edit now slides smoothly, but the tool bar, the track rows and the panel fill in up to about 0.7s after the key, visibly after the slide, and the app stays busy for most of that time. Make those pieces cheap enough to build that they can arrive with the slide again without making it stutter.",
   "epic": "video-editing",
   "priority": "p2-normal",
-  "seq": 40,
-  "status": "pending",
+  "seq": 30,
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T14:58:43.448Z",
-  "updated": "2026-10-02T02:00:12.183Z",
+  "updated": "2026-10-02T12:38:21.723Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows the-slide-into-edit-mode-draws-every-frame-like, which moved every stage after the key pass to wait for the slide (EditModeArrival.nextWaitsForTheSlide). Profiled 2026-09-30 with xctrace Time Profiler against the probe, samples cut to the 500ms after each Cmd-2: about 480ms busy per switch either way; about 270ms of it is per-frame NSHostingView.layout while canvas/panel/dock frames animate. Into Edit, SwiftUI AccessibilityNode.updateFocusResponder was about 28ms per switch (walks the whole responder tree after every render, grows with every view built), AccessibilityViewGraph.update about 10ms more. Per frame the canvas updateNSView runs CanvasNSView.apply → refreshOverlaysInsideTransaction, refreshLayerSelectionDisplay, canvasNameLabels because canvasViewSizeChanged writes a new viewport each frame. Stage costs: key pass ~50ms, timeline+tool bar ~80, track rows ~90 (captions lane with 191 cues and words lane), panel sections 15 to 45ms each (CaptionStylePreview, PanelFieldRowLayout, SystemSegments.sizeThatFits). Measure with a filmWindow step (docs/design/playtest-harness.md) rather than mainBusy alone.",
@@ -26,9 +26,42 @@
     {
       "t": "2026-10-02T02:00:12.182Z",
       "note": "seq 3480 -> 40"
+    },
+    {
+      "t": "2026-10-02T08:05:45.475Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-02T11:49:37.773Z",
+      "note": "Reproduced 2026-10-02 (screen locked, forced walk): View to Edit on the 5 min captioned sample, slide lands ~280ms, ruler ~360ms, tool bar and rows ~400-435ms, panel sections until ~800ms; main thread 615ms of 0.8s. xctrace: almost all of it is SwiftUI/AppKit layout and commit, app code tiny."
+    },
+    {
+      "t": "2026-10-02T11:49:37.829Z",
+      "note": "Adversarial review: no build cost can fit in the 60ms between the slide landing (~290ms) and 350ms, and building during the slide stutters it (2026-09-30), so the pieces have to exist before Cmd-2. Built Edit's pieces behind View, out of sight, after 0.6s idle, paused while playing, kept for the window's life. Risks checked: View playback cost (hidden tracks sleep while hidden: +8% main thread, was +25%), walks finding hidden controls (out of reach once the slide lands), accessibility (hidden after the slide), Cmd-1 latency (same as baseline, 46-88ms first picture)."
+    },
+    {
+      "t": "2026-10-02T11:49:37.883Z",
+      "note": "Finding: a full panel sliding in halves the slide's pictures (16-18 in 330ms, 26-40ms stills) however it moves: offset, width, mask, fixed height, own hosting view, under the canvas, compositingGroup, geometryGroup, opacity 0, no dropdowns, still reels all measured, none helped; only fewer mounted sections did (Captions section is the heavy one). So the panel is behind View only with next-panel-with-the-slide (off); by default it fills a section a pass after the slide (Time ~0.30s, Captions ~0.38s)."
+    },
+    {
+      "t": "2026-10-02T11:49:37.937Z",
+      "note": "Acceptance: (1) tool bar and track rows drawn within the slide (~0.3s) MET; panel sections by ~0.38s NOT MET by default (met with the switch, at the cost of (2)). (2) filmed slide longest still 18-20ms in 4 runs MET (walk claims it; baseline measured 37-45ms the same day). (3) main thread 550-600ms of 0.8s NOT MET (baseline 533-639): it is the window drawing the slide at full rate, the slide back to View costs the same; not reachable without making SwiftUI frames cheaper. Suite 10911 green; 17 related walks green (13 forced under a lock; an-editing-session and video-tool-bar fail identically on the old code under a lock). Commit 4bce21d4. Audit queue/audits/2026-10-02-edit-arrives-with-the-slide.json."
+    },
+    {
+      "t": "2026-10-02T11:49:37.990Z",
+      "note": "Left rough (no task, under the bar): canvas content layer re-set every frame looked like an 18ms colour conversion in the profile but guarding it changed nothing, so it was reverted; the walk's offscreen snapshot right after a switch can take 12-29s (pre-existing, walk overhead only)."
+    },
+    {
+      "t": "2026-10-02T11:55:29.048Z",
+      "note": "Tool bar and tracks now come in with the slide (built behind View), slide smooth (18-20ms stills); panel fills ~0.08s after landing by default. Waiting on the decision whether the panel should come in with the slide at a less smooth slide (switch next-panel-with-the-slide lets the user try it). Main-thread criterion not met: it is the slide's own drawing. Commit 4bce21d4, audit 2026-10-02-edit-arrives-with-the-slide."
+    },
+    {
+      "t": "2026-10-02T12:38:21.722Z",
+      "note": "seq 40 -> 30"
     }
   ],
   "walks": [
     "view-to-edit-on-a-long-recording-walk"
-  ]
+  ],
+  "started": "2026-10-02T08:05:45.474Z"
 }

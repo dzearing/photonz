@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-02T02:01:14.228Z",
-  "updated": "2026-10-02T03:36:51.975Z",
+  "updated": "2026-10-02T03:37:04.809Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-01 by the digest pass. Commit 7b9ef022 (19:00:11 local) set the-segmented-chip-is-one-glass-material-at-rest in_progress with the log line \"Taken by the intake window at the user's request ... the loop must not claim it\". One second later the digest ran `node queue/bin/queue.mjs guard`, which printed {\"reset\":[\"the-segmented-chip-is-one-glass-material-at-rest\"],...} and logged \"runner exited without finalizing; reset to pending (attempt 1)\". The digest put it back by hand. guardStuck in queue/bin/queue-lib.mjs resets every in_progress task; queue/bin/go-loop.sh runs `Q guard` after every runner (around line 717), so after the loop's next task the hold is undone again and `next` would claim that task, which sits first in p1. Sequenced just ahead of the user's arrows task for that reason: it protects the task the person is working on right now.",
@@ -67,7 +67,7 @@
     }
   ],
   "started": "2026-10-02T03:28:53.205Z",
-  "failures": 1,
+  "failures": 0,
   "walks": [],
   "completed": "2026-10-02T03:36:51.974Z"
 }

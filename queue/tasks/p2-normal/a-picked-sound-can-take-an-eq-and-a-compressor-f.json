@@ -4,12 +4,12 @@
   "goal": "The audio mock's Audio Effects menu offers EQ and Compressor beside Noise reduction. They are listed today but dimmed, because nothing in the app can shape a sound that way yet. Make both real: put one on a picked sound, hear it, export it, and switch it off and on to compare, as the mock's list rows do.",
   "epic": "video-audio",
   "priority": "p2-normal",
-  "seq": 3520,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-02T12:33:18.307Z",
-  "updated": "2026-10-02T12:33:18.310Z",
+  "updated": "2026-10-02T12:38:41.181Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by a-picked-sound-has-the-effects-list-the-audio-mo (2026-10-02). Model: SoundEffectKind.isBuilt is false for .eq/.compressor (PhotonzCore/SoundEffects.swift); AudioLevel.addEffect/removeEffect/effectRows are where they plug in. Likely path: widen SoundCleaning (NoiseCleaning.swift) into a processed-copy identity carrying noise + EQ + compressor settings, and render the chain in PhotonzMedia next to NoiseCleaner so the player, exporter, meter and waveform keep keying on sound.id with no special case. Panel: SoundEffectsInspector.swift (rows, OwnedSettings, AddSoundEffectButton).",
@@ -17,12 +17,21 @@
     "EQ and Compressor in the Audio Effects plus menu are enabled and each adds a row, as pages/video-audio.html #gEffects draws them (EQ reading low cut 80)",
     "What plays, what is exported and what Normalize measures all carry the EQ and the compression",
     "Each row has the on switch the mock draws (its .en dot), which stops the effect and keeps its settings; Noise reduction gets the same switch",
-    "A walk at Next defaults adds, switches off and removes an EQ by pointer"
+    "A walk at Next defaults adds, switches off and removes an EQ by pointer",
+    "A sound effect row is the same row the picture Effects list uses (lit name, on switch, right-click menu, settings folding under it), not a second hand-made row: one effects-list row serves both lists"
   ],
   "log": [
     {
       "t": "2026-10-02T12:33:18.309Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-02T12:38:21.829Z",
+      "note": "seq 3520 -> 50"
+    },
+    {
+      "t": "2026-10-02T12:38:41.180Z",
+      "note": "Triage 2026-10-02: the effects list now exists twice. The picture's Effects list (EffectsListInspector.swift: EffectRowView with chevron, eye, right-click menu) and the new Audio Effects list (SoundEffectsInspector.swift: its own row with a cross, no on switch, no right-click) were built separately. This task adds the on switch the mock draws, which is the moment to make the sound rows use the picture list's row instead of growing a second one. Added to acceptance."
     }
   ]
 }

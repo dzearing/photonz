@@ -1,0 +1,50 @@
+{
+  "id": "edit-mode-s-contents-come-in-with-the-slide-not-when-you-switch-a-recording-to-e",
+  "taskId": "edit-mode-s-contents-come-in-with-the-slide-not",
+  "question": "When you switch a recording to Edit, should the panel's settings come in with the slide, at the cost of a slightly less smooth slide?",
+  "context": "Edit's tool bar and tracks now come in with the slide. The panel is the one piece that makes the slide stutter when it slides in full, so it fills in just after. A switch in Experiments (The panel comes in with the slide) lets you try both.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Panel just after the slide",
+      "summary": "The tool bar and the tracks ride in with the slide, which stays perfectly smooth. The panel slides in with them and its settings fill in about a tenth of a second after it lands.",
+      "pros": [
+        "The slide is as smooth as going back to View",
+        "Nothing about the player changes"
+      ],
+      "cons": [
+        "You may still see the panel fill in, top first, right after the slide"
+      ],
+      "mitigation": "Time is already there as the slide lands; Captions follows about 0.1s later."
+    },
+    {
+      "id": "b",
+      "label": "Panel with the slide",
+      "summary": "Everything, panel included, is built while you watch and comes in with the slide in one motion. The slide draws about 17 pictures instead of 28 and can pause for up to 40ms.",
+      "pros": [
+        "One motion, nothing arrives afterwards"
+      ],
+      "cons": [
+        "The slide is visibly less smooth on a long recording",
+        "Turn on The panel comes in with the slide in Experiments to feel it first"
+      ],
+      "mitigation": "Keep trying to make the panel cheaper to move, so the slide recovers."
+    },
+    {
+      "id": "c",
+      "label": "Keep looking for both",
+      "summary": "Leave it as it is now (panel just after) and keep working on making a full panel cheap enough to slide in smoothly.",
+      "pros": [
+        "Aims for both at once"
+      ],
+      "cons": [
+        "More time on performance instead of video features",
+        "Ten approaches to that already measured without a gain"
+      ],
+      "mitigation": "Timeboxed to one more task."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-02T11:49:13.348Z"
+}
