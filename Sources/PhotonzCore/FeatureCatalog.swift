@@ -231,6 +231,8 @@ public enum FeatureCatalog {
 
     public static let arrowStylesFlag = "next-arrow-styles"
 
+    public static let arrowBendFlag = "next-arrow-bend"
+
     public static let rowSaysItsWordsFlag = "next-a-row-says-its-words"
 
     public static let separatedRowSaysItsWordsFlag = "next-a-separated-row-says-its-words"
@@ -1017,6 +1019,16 @@ public enum FeatureCatalog {
                     name: arrowStylesFlag,
                     title: "Draw arrows by hand",
                     description: "An arrow gets a Style row of picture tiles: Clean, Hand-drawn, Marker, Brush and Sketch, with Reshuffle on its right-click menu for a new hand. Off means every arrow is the clean geometric one.",
+                    area: .drawing,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: arrowBendFlag,
+                    title: "Bend an arrow",
+                    description: "A picked arrow shows a handle in the middle of its line that curves it, the head turning to follow, and double clicking the handle straightens it. Off means an arrow has only its two end handles.",
                     area: .drawing,
                     isEnabled: false,
                     parameters: []),

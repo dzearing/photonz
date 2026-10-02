@@ -321,9 +321,9 @@ public enum AnnotationBuilder {
         content.start = start
         content.end = end
         let pad = content.renderPadding
-        var box = CGRect(x: min(start.x, end.x), y: min(start.y, end.y),
-                         width: abs(end.x - start.x), height: abs(end.y - start.y))
-            .insetBy(dx: -pad, dy: -pad)
+        // The box the arrow's own line runs through: the two ends, and the bow
+        // of a bent arrow between them (`ArrowBend.swift`).
+        var box = content.spine.bounds.insetBy(dx: -pad, dy: -pad)
         // Reserve room for the caption pill (plus its shadow) hanging off an
         // arrow's tail, so the label never clips at the frame edge — mirrors
         // MeasureBuilder's chip reservation.
@@ -359,16 +359,15 @@ public enum AnnotationBuilder {
 }
 
 extension AnnotationContent {
-    /// How far a hand-made arrow's ink reaches past the box between its two
-    /// ends, on whichever side it reaches furthest: its bow, its wobble, its
+    /// How far a hand-made arrow's ink reaches past the box its spine runs
+    /// through (its two ends, and its bow when it is bent), on whichever side it reaches furthest: its bow, its wobble, its
     /// head and the second pass of a sketch. Measured off the drawing itself
     /// (`HandMadeArrow.inkBounds`), so the frame and the ink cannot drift.
     var handMadeOverhang: CGFloat {
         guard shape == .arrow, arrowStyle.isHandMade else { return 0 }
         let ink = HandMadeArrow.inkBounds(for: self)
         guard !ink.isNull else { return 0 }
-        let box = CGRect(x: min(start.x, end.x), y: min(start.y, end.y),
-                         width: abs(end.x - start.x), height: abs(end.y - start.y))
+        let box = spine.bounds
         return max(0, box.minX - ink.minX, ink.maxX - box.maxX,
                    box.minY - ink.minY, ink.maxY - box.maxY)
     }

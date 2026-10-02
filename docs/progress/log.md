@@ -20383,3 +20383,10 @@ the middle and barely magnifies (a crisp or growing lens would be ours to draw).
 - `queue.mjs hold <id> [--by <holder>] ["why"]` and `queue.mjs release <id>`: a held task is in progress with `heldBy`/`heldSince`, `guard` leaves it alone without counting a failure, `next` never claims it, and any status other than in_progress (or release) hands it back. Hold is refused on a task a live loop runner is on, and for a holder named after the loop.
 - Dashboard: a held row's subline and the task dialog say "held by the intake window" (and since when).
 - Intake skill, queue README and digest prompt say to hold rather than mark in_progress or park as blocked. Drill: `queue/bin/hold-drill.mjs` (32 checks).
+
+## 2026-10-01 — Arrows bend by their middle (go loop)
+
+- `ArrowBend` (PhotonzCore/ArrowBend.swift): an arrow stores where its bend handle is, as fractions of the line between its ends, so moving an end keeps the curve's shape. `AnnotationContent.spine` is the one curve the clean arrow (`shaftPath`, `headAim`), every hand-made style, the frame, drawn bounds, hit test, caption growth and SVG export read.
+- Next only (`next-arrow-bend`, on by default): a smaller handle halfway along a picked arrow; drag bends (⇧ keeps it even), let go on the line or double click straightens, Straighten Arrow on the right-click menu and the Layer menu. The drag rides `EndpointDragSession` (`bendHandle`), see Sources/Photonz/CanvasArrowBend.swift.
+- Walk: `Scripts/playtest/arrow-bend-walk.json` (pointer drag on the handle, expectBox claims for bent/undo/redo/straightened, a picture per style). `expectCue` watched under a lock and moved to the lock-safe list.
+- Next: an S-curve would need a second handle; not filed.

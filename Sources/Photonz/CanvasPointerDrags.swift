@@ -284,6 +284,13 @@ extension CanvasNSView {
             refreshOverlays()
             return
         }
+        // A picked arrow's bend handle: a press bends it, a double click
+        // straightens it (Next, `next-arrow-bend`). Ahead of every double
+        // click below, which would otherwise read a double click on the
+        // handle as opening the arrow's caption.
+        if let id = selectedLayerID, beginBendDrag(at: uprightPoint(p, of: id), event: event) {
+            return
+        }
         // A double click on one word of a caption opens THAT word, not the
         // line: every automatic caption is wrong a word at a time, and the
         // group walk below would otherwise pick the line and then open all of
@@ -916,6 +923,12 @@ extension CanvasNSView {
             // Live re-render so the pill follows the pointer.
             onCaptionPlacePreview(drag.layerID, drag.center)
             refreshOverlays()
+        } else if var session = endpointDrag, session.bendHandle != nil {
+            session.bendHandle = bendHandlePoint(u, session: session,
+                                                 even: event.modifierFlags.contains(.shift))
+            endpointDrag = session
+            refreshEndpointPreview(constrained: false)
+            refreshOverlays()
         } else if var session = endpointDrag {
             session.drag.update(to: snappedAnnotationPoint(u, shape: session.content.shape,
                                                            opposite: session.drag.fixed,
@@ -1314,6 +1327,24 @@ extension CanvasNSView {
                 onCaptionPlaceCommit(drag.layerID, drag.center)
             } else {
                 onCaptionPlaceCancel()
+            }
+            refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
+            refreshOverlays()
+        } else if let session = endpointDrag, let handle = session.bendHandle {
+            endpointDrag = nil
+            snapGuide = nil
+            let moved = session.bendHandleStart.map {
+                hypot(handle.x - $0.x, handle.y - $0.y) * viewport.zoom >= 2
+            } ?? true
+            if moved {
+                // The same no-flash hold as an end let go: the curve drawn over
+                // the underlay stands in until the new render lands.
+                annotationCommitImage = image
+                endpointHoldLayerID = session.layerID
+                onArrowBendCommit(session.layerID, handle, bendStraightTolerance)
+            } else {
+                clearAnnotationPreview()
+                onAnnotationEndpointsCommit(session.layerID, session.originalStart, session.originalEnd)
             }
             refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
             refreshOverlays()

@@ -139,6 +139,12 @@ extension CanvasNSView {
         // The square on the middle of a moving layer's path, read where
         // `mouseDown` reads it: ahead of the layer underneath.
         if motionPathHandleHit(at: p) != nil { return (.grab, .identity) }
+        // A picked arrow's bend handle, read first in `mouseDown` too.
+        if offeredBendHandle(layer) != nil,
+           AnnotationEndpoints.bendHit(at: uprightPoint(p, of: layer.id), layer: layer,
+                                       zoom: viewport.zoom) {
+            return (.grab, .identity)
+        }
         // The pivot, read between the grabs that belong to the layer's own
         // CONTENT — a line's ends, a caption pill, a caliper's feet — and the
         // box drawn round it, exactly where `mouseDown` reads it. Whether it

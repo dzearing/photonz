@@ -1,0 +1,68 @@
+{
+  "out": "/tmp/photonz-playtest/arrow-bend",
+  "setup": {
+    "forget": [
+      "shapes",
+      "panel"
+    ]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1120, "canvasHeight": 760, "width": 1400, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "arrow" },
+    { "do": "drag", "from": [120, 380], "to": [520, 380], "steps": 8 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectPicked", "layers": ["Arrow"] },
+    { "do": "expectBox", "layer": "Arrow", "at": [104, 364], "size": [432, 32], "within": 2 },
+    { "do": "describe", "stage": "1-straight", "note": "a picked arrow wears a small handle halfway along its line" },
+    { "do": "snapshot", "name": "1-straight-handle" },
+
+    { "do": "move", "at": [320, 380] },
+    { "do": "expectCue", "says": "grab" },
+
+    { "do": "drag", "from": [320, 380], "to": [320, 220], "steps": 10, "hold": "2-bending" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "3-bent", "note": "the shaft curves through the handle and the head turns to follow it" },
+    { "do": "expectBox", "layer": "Arrow", "at": [104, 204], "size": [432, 192], "within": 2 },
+    { "do": "snapshot", "name": "3-bent-clean" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-undone", "note": "one undo straightens it" },
+    { "do": "expectBox", "layer": "Arrow", "at": [104, 364], "size": [432, 32], "within": 2 },
+    { "do": "action", "action": "redo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-redone", "note": "redo bends it again" },
+    { "do": "expectBox", "layer": "Arrow", "at": [104, 204], "size": [432, 192], "within": 2 },
+
+    { "do": "press", "control": "Arrow style Hand-drawn", "in": "Arrow Style" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "6-bent-hand-drawn" },
+    { "do": "press", "control": "Arrow style Marker", "in": "Arrow Style" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "7-bent-marker" },
+    { "do": "press", "control": "Arrow style Brush", "in": "Arrow Style" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "8-bent-brush" },
+    { "do": "press", "control": "Arrow style Sketch", "in": "Arrow Style" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "9-bent-sketch" },
+    { "do": "press", "control": "Arrow style Clean", "in": "Arrow Style" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "drag", "from": [520, 380], "to": [700, 520], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "10-end-moved", "note": "moving the tip keeps the curve's shape" },
+    { "do": "snapshot", "name": "10-end-moved" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "click", "at": [320, 220], "count": 2 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "11-straightened", "note": "a double click on the handle straightens it" },
+    { "do": "expectBox", "layer": "Arrow", "at": [104, 364], "size": [432, 32], "within": 2 },
+    { "do": "snapshot", "name": "11-straightened" }
+  ]
+}

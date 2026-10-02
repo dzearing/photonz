@@ -1,0 +1,51 @@
+{
+  "feature": "Bend an arrow by its middle",
+  "epic": "interaction-foundations",
+  "summary": "A picked arrow now has a small handle halfway along its line. Drag it and the arrow curves through it, the head turning to follow, in every arrow style. Drag it back onto the line or double click it to straighten.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Press A and drag out an arrow, then press Esc. Note the small dot in the middle of the line.",
+      "shot": "2026-10-01-arrow-bend-1-straight-handle-sc.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed."
+    },
+    {
+      "do": "Drag the middle dot up. The line curves through it and the head points along the curve.",
+      "shot": "2026-10-01-arrow-bend-3-bent-clean-sc.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed."
+    },
+    {
+      "do": "Press Cmd-Z, then Shift-Cmd-Z: the bend goes and comes back as one step."
+    },
+    {
+      "do": "In Appearance, pick Brush, then Sketch: the style follows the curve.",
+      "shot": "2026-10-01-arrow-bend-9-bent-sketch-sc.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed."
+    },
+    {
+      "do": "Drag the arrow tip somewhere else: the curve keeps its shape.",
+      "shot": "2026-10-01-arrow-bend-10-end-moved-sc.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed."
+    },
+    {
+      "do": "Double click the middle dot, or right-click the arrow and pick Straighten Arrow.",
+      "shot": "2026-10-01-arrow-bend-11-straightened-sc.png",
+      "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed."
+    }
+  ],
+  "evaluate": [
+    "Is the middle dot easy to find but clearly smaller than the two end handles?",
+    "Does one handle bend the arrow far enough to match the curved references you gave, or do you want an S-curve too?",
+    "When you let go near the straight line, does it snap straight when you expect it to and not before?",
+    "Does the Sketch style read as one bent arrow rather than a bundle of lines?"
+  ],
+  "rough": [
+    "The handle hides while you drag (like the end handles do), so you steer by the curve itself.",
+    "On the Hand-drawn style the line wobbles a few points off its own curve by design, so the middle dot can sit just beside the ink instead of on it.",
+    "One handle makes one smooth arc. A wave or S-shaped arrow would need a second handle, which is not built.",
+    "A very short arrow (under about 40 points on screen) shows no middle dot, so its end handles stay easy to grab.",
+    "All pictures were taken with the Mac screen locked; the walk ran in full and every claim passed.",
+    "Shift while dragging the middle dot keeps it square across the middle for an even arc; no walk checks that yet."
+  ]
+}

@@ -620,6 +620,21 @@ extension EditorState {
         return rows
     }
 
+    /// Straighten Arrow on a bent arrow's right-click menu (Next,
+    /// `next-arrow-bend`): there only while something it reaches is bent.
+    func arrowBendMenuRows(id: UUID) -> [MenuRow] {
+        guard Experiments.shared.arrowBendEnabled,
+              document?.layer(id: id)?.annotation?.shape == .arrow,
+              !straightenableArrows(arrowsReached(fromRow: id)).isEmpty else { return [] }
+        return [
+            .command(ArrowBend.straightenTitle) { [weak self] in
+                guard let self else { return }
+                self.straightenArrows(ids: self.arrowsReached(fromRow: id))
+            },
+            .separator,
+        ]
+    }
+
     /// The picked arrows, for the Layer menu's rows.
     var pickedArrowIDs: [UUID] {
         guard let doc = document else { return [] }
@@ -638,6 +653,59 @@ extension EditorState {
         return annotationRestyleTargets(ids, in: doc).filter {
             guard let a = doc.layer(id: $0)?.annotation else { return false }
             return a.shape == .arrow && a.arrowStyle.isHandMade
+        }
+    }
+
+    /// The bent arrows among `ids`, unlocked: what Straighten Arrow would
+    /// straighten.
+    func straightenableArrows(_ ids: [UUID]) -> [UUID] {
+        guard let doc = document else { return [] }
+        return annotationRestyleTargets(ids, in: doc).filter {
+            guard let a = doc.layer(id: $0)?.annotation else { return false }
+            return a.bends && a.bend != nil
+        }
+    }
+
+    /// Straighten Arrow: each picked bent arrow goes back to the straight line
+    /// between its ends, which stay put. One undo step.
+    func straightenArrows(ids: [UUID]) {
+        let targets = straightenableArrows(ids)
+        guard !targets.isEmpty else { return }
+        discardDragPreview()
+        perform { document in
+            for id in targets {
+                document.updateLayer(id: id) { layer in
+                    guard let a = layer.annotation else { return }
+                    let middle = CGPoint(x: layer.frame.minX + (a.start.x + a.end.x) / 2,
+                                         y: layer.frame.minY + (a.start.y + a.end.y) / 2)
+                    layer = AnnotationBuilder.bending(layer, through: middle,
+                                                      straightWithin: .infinity)
+                }
+            }
+        }
+    }
+
+    /// The bend handle let go on the canvas (document coordinates): the arrow
+    /// curves through `handle`, or straightens when it was let go within
+    /// `straightWithin` of the straight line. One undo step per drag;
+    /// committing where it already was changes nothing and records nothing.
+    func commitArrowBend(id: UUID, through handle: CGPoint, straightWithin: CGFloat) {
+        let handle = parentPoint(handle, of: id)
+        previewMoves = [:]
+        dragPreviewGeneration += 1
+        clearPreviewAfterNextFrame = dragPreview != nil
+        guard let layer = document?.layer(id: id), layer.annotation?.bends == true else { return }
+        let bent = AnnotationBuilder.bending(layer, through: handle, straightWithin: straightWithin)
+        guard bent.annotation?.bend != layer.annotation?.bend else { return }
+        perform { document in
+            // A new curve leaves the tail heading a new way, so the caption
+            // re-picks its spot exactly as it does when an end moves.
+            let canvas = document.canvasSize
+            document.updateLayer(id: id) {
+                $0 = AnnotationBuilder.planningCaption(
+                    AnnotationBuilder.bending($0, through: handle, straightWithin: straightWithin),
+                    canvas: canvas, captionPillSize: $0.measuredCaptionPillSize)
+            }
         }
     }
 

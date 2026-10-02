@@ -113,6 +113,7 @@ struct EditorCanvasSurface: View {
                    onTransformCommit: { editorState.commitLayerTransform(id: $0, transform: $1) },
                    onAnnotationCommit: { editorState.addAnnotation(from: $0, to: $1) },
                    onAnnotationEndpointsCommit: { editorState.commitAnnotationEndpoints(id: $0, start: $1, end: $2) },
+                   onArrowBendCommit: { editorState.commitArrowBend(id: $0, through: $1, straightWithin: $2) },
                    onZoomCalloutCommit: { editorState.addZoomCallout(from: $0, to: $1) },
                    onFrameCreate: { editorState.addFrame(from: $0, to: $1) },
                    onLensCreate: { editorState.addLensDrag(from: $0, to: $1) },

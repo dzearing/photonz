@@ -76,6 +76,8 @@ enum LayerCommandList {
         // the whole selection when the arrow you right clicked is part of it,
         // like every other row here (`ArrowStyle.swift`).
         rows.append(contentsOf: editorState.arrowStyleMenuRows(id: id))
+        // A bent arrow straightens from here too (`ArrowBend.swift`).
+        rows.append(contentsOf: editorState.arrowBendMenuRows(id: id))
 
         // ⌘D is Photoshop's Deselect and the app's, so it never duplicated
         // anything. ⌘J (New Layer via Copy) duplicates the picked layer when

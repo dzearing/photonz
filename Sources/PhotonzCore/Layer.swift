@@ -190,6 +190,11 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     /// way on the canvas, after reopening and in an export; Reshuffle picks a
     /// new one. Zero for every arrow drawn before there were styles.
     public var styleSeed: UInt32 = 0
+    /// Arrow-only: where the bend handle has been dragged to, stated against
+    /// the straight line between the ends so moving either end keeps the
+    /// curve's shape (`ArrowBend.swift`). Nil is a straight arrow, which is
+    /// every arrow drawn before arrows could bend.
+    public var bend: ArrowBend?
     /// Rectangle-only: how round each of the four corners is (layer-local
     /// units). Square everywhere = sharp corners. The rasterizer draws a
     /// rounded stroke, so the border follows the corners instead of being
@@ -329,7 +334,7 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         case captionBorder = "captionBorderColorHex"
         case captionTextColorHex
         case start, end, arrowheadScale, arrowheadStyle
-        case arrowStyle, styleSeed
+        case arrowStyle, styleSeed, bend
         // The four corners keep the key one radius always wrote, and
         // `CornerRadii` reads either shape out of it.
         case cornerRadii = "cornerRadius"
@@ -365,6 +370,8 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         // one, drawn by no hand at all.
         arrowStyle = try c.decodeIfPresent(ArrowStyle.self, forKey: .arrowStyle) ?? .standard
         styleSeed = try c.decodeIfPresent(UInt32.self, forKey: .styleSeed) ?? 0
+        // Bends postdate styles; every arrow before them was straight.
+        bend = try c.decodeIfPresent(ArrowBend.self, forKey: .bend)
         // `cornerRadius` postdates AnnotationContent too, and reads either
         // shape: the single number every document written before there were
         // four corners holds, or the four a card with a rounded top needs.
@@ -648,8 +655,15 @@ extension AnnotationContent {
                               height: captionGrowth.height / length)
             }
         }
-        let dx = start.x - end.x
-        let dy = start.y - end.y
+        // Away from the head along the shaft as it LEAVES the tail, which on a
+        // bent arrow is not the straight line to the tip.
+        var dx = start.x - end.x
+        var dy = start.y - end.y
+        if bend != nil, bends {
+            let tail = spine.direction(at: 0)
+            dx = -tail.dx
+            dy = -tail.dy
+        }
         if dx == 0, dy == 0 { return CGSize(width: 0, height: -1) }
         if abs(dx) >= abs(dy) { return CGSize(width: dx < 0 ? -1 : 1, height: 0) }
         return CGSize(width: 0, height: dy < 0 ? -1 : 1)
@@ -2131,7 +2145,14 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
             let start = CGPoint(x: frame.minX + a.start.x, y: frame.minY + a.start.y)
             let end = CGPoint(x: frame.minX + a.end.x, y: frame.minY + a.end.y)
             let tolerance = a.strokeWidth / 2 + (zoom > 0 ? 6 / zoom : 6)
-            if Geometry.distance(from: p, toSegmentFrom: start, to: end) <= tolerance {
+            if a.bend != nil, a.bends {
+                // A bent arrow is hit along its curve, and the straight line
+                // between its ends is empty air.
+                if a.spine.distance(to: CGPoint(x: p.x - frame.minX, y: p.y - frame.minY))
+                    <= tolerance {
+                    return true
+                }
+            } else if Geometry.distance(from: p, toSegmentFrom: start, to: end) <= tolerance {
                 return true
             }
             // A hand-made arrow is hit where its ink is: a bowed line, a

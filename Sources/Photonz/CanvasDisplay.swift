@@ -1107,6 +1107,12 @@ extension CanvasNSView {
                     let p = viewport.viewPoint(fromDocument: dp.applying(turn))
                     handles.addEllipse(in: CGRect(x: p.x - 5, y: p.y - 5, width: 10, height: 10))
                 }
+                // A picked arrow also wears a smaller handle halfway along its
+                // line, which bends it (Next, `next-arrow-bend`).
+                if let bend = offeredBendHandle(selectedLayer) {
+                    let p = viewport.viewPoint(fromDocument: bend.applying(turn))
+                    handles.addEllipse(in: CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8))
+                }
                 handlesLayer.path = handles
                 handlesLayer.isHidden = false
             } else {

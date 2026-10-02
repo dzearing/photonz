@@ -459,6 +459,11 @@ extension Experiments {
     /// Marker, Brush, Sketch), picked from picture tiles (`ArrowStyleTiles`).
     var arrowStylesEnabled: Bool { isEnabled(FeatureCatalog.arrowStylesFlag) }
 
+    /// `next-arrow-bend`: a picked arrow shows a handle in the middle of its
+    /// line that bends it (`ArrowBend.swift`). The model and the renderer are
+    /// never flagged: a document holding a bent arrow draws it either way.
+    var arrowBendEnabled: Bool { isEnabled(FeatureCatalog.arrowBendFlag) }
+
     /// The mark under the pointer saying where a press would put the first
     /// point of a shape (`CanvasDrawLanding`).
     var drawLandingEnabled: Bool { isEnabled(FeatureCatalog.drawLandingFlag) }

@@ -12,8 +12,8 @@ import Foundation
 //   the arrow's own thickness or length, so a thick arrow is the thin one
 //   drawn bigger rather than the thin one's tremor on a fat line.
 // * **It follows the spine.** Each style is laid along an `ArrowSpine`, a
-//   curve from the tail to the tip, so the day an arrow can bend its style
-//   bends with it. Today the spine is the straight line between the ends.
+//   curve from the tail to the tip, so a bent arrow's style bends with it
+//   (`ArrowBend.swift`).
 //
 // What comes out is a list of `ArrowInk`: lines to stroke and shapes to fill,
 // each marked as shaft or head so the head keeps its own colour. The
@@ -102,6 +102,11 @@ public struct ArrowSpine: Hashable, Sendable {
         }
     }
 
+    /// The curve's parameter `distance` along it from the start.
+    func parameter(atDistance distance: CGFloat) -> CGFloat {
+        parameter(atDistance: distance, lengths: lengthTable())
+    }
+
     private func parameter(atDistance distance: CGFloat, lengths: [CGFloat]) -> CGFloat {
         let steps = lengths.count - 1
         guard steps > 0, let total = lengths.last, total > 0 else { return distance > 0 ? 1 : 0 }
@@ -187,11 +192,12 @@ public enum HandMadeArrow {
         return next
     }
 
-    /// The pieces `content` is drawn in, along the straight line between its
-    /// ends. Empty for a clean arrow, which the rasterizer draws as it always
-    /// has, and for anything that is not an arrow.
+    /// The pieces `content` is drawn in, along its own spine: the straight
+    /// line between its ends, or the curve it has been bent into. Empty for a
+    /// clean arrow, which the rasterizer draws as it always has, and for
+    /// anything that is not an arrow.
     public static func inks(for content: AnnotationContent) -> [ArrowInk] {
-        inks(for: content, along: ArrowSpine(start: content.start, end: content.end))
+        inks(for: content, along: content.spine)
     }
 
     /// The same, along any spine.

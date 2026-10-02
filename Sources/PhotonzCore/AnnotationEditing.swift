@@ -119,6 +119,13 @@ extension Layer {
         return CGPoint(x: frame.minX + local.x, y: frame.minY + local.y)
     }
 
+    /// Where a bendable layer's bend handle is, in document coordinates: on
+    /// the arrow, halfway along it. Nil for anything that does not bend.
+    public var bendHandle: CGPoint? {
+        guard let a = annotation, a.bends else { return nil }
+        return CGPoint(x: frame.minX + a.bendHandle.x, y: frame.minY + a.bendHandle.y)
+    }
+
     /// The draggable endpoint (corner) for whichever endpoint-handled content
     /// this is — a line/arrow vertex or a measure's box corner.
     public func editEndpoint(_ endpoint: AnnotationEndpoint) -> CGPoint? {
@@ -160,15 +167,16 @@ extension Layer {
         let end = CGPoint(x: frame.minX + a.end.x, y: frame.minY + a.end.y)
         // The stroke runs tail to tip for a line, and tail to inside the head
         // for an arrow — exactly what the rasterizer draws.
-        let strokeEnd = a.shape == .arrow
-            ? Geometry.arrowShaftEnd(start: start, end: end, strokeWidth: a.strokeWidth,
-                                     scale: a.arrowheadScale, style: a.arrowheadStyle)
-            : end
+        // A bent arrow's shaft is the curve, so its box is the curve's box.
+        let shaft = a.shape == .arrow
+            ? a.shaftSpine.bounds.offsetBy(dx: frame.minX, dy: frame.minY)
+            : CGRect(x: min(start.x, end.x), y: min(start.y, end.y),
+                     width: abs(end.x - start.x), height: abs(end.y - start.y))
         // A round cap reaches half a stroke past each end and half a stroke
         // either side of the line.
         let cap = a.strokeWidth / 2
-        var minX = min(start.x, strokeEnd.x) - cap, maxX = max(start.x, strokeEnd.x) + cap
-        var minY = min(start.y, strokeEnd.y) - cap, maxY = max(start.y, strokeEnd.y) + cap
+        var minX = shaft.minX - cap, maxX = shaft.maxX + cap
+        var minY = shaft.minY - cap, maxY = shaft.maxY + cap
         func include(_ p: CGPoint) {
             minX = min(minX, p.x); maxX = max(maxX, p.x)
             minY = min(minY, p.y); maxY = max(maxY, p.y)
@@ -182,7 +190,9 @@ extension Layer {
                 include(CGPoint(x: frame.minX + ink.maxX, y: frame.minY + ink.maxY))
             }
         } else if a.shape == .arrow,
-           let head = Geometry.arrowheadBounds(start: start, end: end, strokeWidth: a.strokeWidth,
+           let head = Geometry.arrowheadBounds(start: CGPoint(x: frame.minX + a.headAim.x,
+                                                              y: frame.minY + a.headAim.y),
+                                               end: end, strokeWidth: a.strokeWidth,
                                                scale: a.arrowheadScale, style: a.arrowheadStyle) {
             include(CGPoint(x: head.minX, y: head.minY))
             include(CGPoint(x: head.maxX, y: head.maxY))
@@ -355,6 +365,23 @@ extension AnnotationBuilder {
         updated.frame = rebuilt.frame
         updated.content = rebuilt.content
         return updated
+    }
+
+    /// The layer with its arrow bent so the curve passes through `handle`
+    /// (document coordinates), or straightened when `handle` is within
+    /// `straightWithin` of the straight line between its ends. The ends stay
+    /// where they are and the frame is rebuilt round the new curve.
+    public static func bending(_ layer: Layer, through handle: CGPoint,
+                               straightWithin: CGFloat) -> Layer {
+        guard var a = layer.annotation, a.bends,
+              let start = layer.annotationEndpoint(.start),
+              let end = layer.annotationEndpoint(.end) else { return layer }
+        a.bend = a.bend(through: CGPoint(x: handle.x - layer.frame.minX,
+                                         y: handle.y - layer.frame.minY),
+                        straightWithin: straightWithin)
+        var bent = layer
+        bent.content = .annotation(a)
+        return updating(bent, start: start, end: end)
     }
 
     /// Handle-resize remap: endpoints scale proportionally into the proposed
@@ -802,6 +829,15 @@ public struct AnnotationEndpointDrag: Equatable, Sendable {
 /// Endpoint-handle hit-testing, mirroring `Handles`: document coordinates in,
 /// tolerance in screen points so handles feel the same size at any zoom.
 public enum AnnotationEndpoints {
+    /// Whether `p` (document coordinates) lands on a bendable layer's bend
+    /// handle: the dot halfway along a selected arrow (`ArrowBend.swift`).
+    public static func bendHit(at p: CGPoint, layer: Layer, zoom: CGFloat,
+                               screenTolerance: CGFloat = 8) -> Bool {
+        guard let handle = layer.bendHandle else { return false }
+        let tolerance = zoom > 0 ? screenTolerance / zoom : screenTolerance
+        return hypot(p.x - handle.x, p.y - handle.y) <= tolerance
+    }
+
     public static func hit(at p: CGPoint, layer: Layer, zoom: CGFloat,
                            screenTolerance: CGFloat = 8) -> AnnotationEndpoint? {
         guard layer.hasEndpointHandles else { return nil }

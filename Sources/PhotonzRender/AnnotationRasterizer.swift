@@ -115,13 +115,9 @@ public enum AnnotationRasterizer {
             // Where the shaft stops depends on what it runs into: inside a
             // solid head, at the tip of an open one, on the near edge of a
             // hollow dot so the dot stays hollow.
-            let shaftEnd = Geometry.arrowShaftEnd(start: annotation.start, end: annotation.end,
-                                                  strokeWidth: annotation.strokeWidth,
-                                                  scale: annotation.arrowheadScale, style: style)
-            let shaft = CGMutablePath()
-            shaft.move(to: annotation.start)
-            shaft.addLine(to: shaftEnd)
-            strokeInk(shaft)
+            // A bent arrow's shaft follows its curve (`ArrowBend.swift`); a
+            // straight one is the line it always was.
+            strokeInk(annotation.shaftPath)
             if let circle = Geometry.arrowheadCircle(at: annotation.end,
                                                      strokeWidth: annotation.strokeWidth,
                                                      scale: annotation.arrowheadScale, style: style) {
@@ -131,7 +127,9 @@ public enum AnnotationRasterizer {
                                                    height: 2 * circle.radius), transform: nil)
                 if style == .dot { fillHead(dot) } else { strokeHead(dot) }
             } else {
-                let head = Geometry.arrowhead(start: annotation.start, end: annotation.end,
+                // Aimed along the curve where it ends, so a bent arrow's head
+                // turns to follow it.
+                let head = Geometry.arrowhead(start: annotation.headAim, end: annotation.end,
                                               strokeWidth: annotation.strokeWidth,
                                               scale: annotation.arrowheadScale, style: style)
                 if head.count == 3 {

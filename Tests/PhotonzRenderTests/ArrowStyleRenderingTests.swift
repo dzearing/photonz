@@ -164,4 +164,28 @@ struct ArrowStyleRenderingTests {
         #expect(thickness(atX: 12) < thickness(atX: 240))
         #expect(thickness(atX: 240) >= 12)
     }
+
+    // MARK: - A bent arrow
+
+    /// Every style of a bent arrow paints along its curve: ink at the bow,
+    /// none where the straight line between its ends used to run, and none
+    /// against the edge of the frame that grew to hold it.
+    @Test func aBentArrowPaintsAlongItsCurveInEveryStyle() throws {
+        for style in ArrowStyle.allCases {
+            var bent = layer(style, from: CGPoint(x: 30, y: 200), to: CGPoint(x: 330, y: 200))
+            bent = AnnotationBuilder.bending(bent, through: CGPoint(x: 180, y: 80), straightWithin: 2)
+            let px = try #require(render(bent))
+            let bow = (x: Int(180 - bent.frame.minX), y: Int(80 - bent.frame.minY))
+            // Near it rather than on it: the hand-drawn line bows off its spine.
+            var inkAtBow: UInt8 = 0
+            for dx in -10...10 { for dy in -10...10 { inkAtBow = max(inkAtBow, px.alpha(bow.x + dx, bow.y + dy)) } }
+            #expect(inkAtBow > 100, "\(style) left the bow empty")
+            let chord = (x: Int(180 - bent.frame.minX), y: Int(200 - bent.frame.minY))
+            #expect(px.alpha(chord.x, chord.y) == 0, "\(style) still paints the straight line")
+            var edge = 0
+            for x in 0..<px.width { edge = max(edge, Int(px.alpha(x, 0)), Int(px.alpha(x, px.height - 1))) }
+            for y in 0..<px.height { edge = max(edge, Int(px.alpha(0, y)), Int(px.alpha(px.width - 1, y))) }
+            #expect(edge < 40, "\(style) touches its frame's edge")
+        }
+    }
 }

@@ -1650,6 +1650,12 @@ struct EditorCommands: Commands {
                 }
                 .disabled(editor.map { $0.reshufflableArrows($0.pickedArrowIDs).isEmpty } ?? true)
             }
+            if Experiments.shared.arrowBendEnabled {
+                Button(ArrowBend.straightenTitle) {
+                    if let editor { editor.straightenArrows(ids: editor.pickedArrowIDs) }
+                }
+                .disabled(editor.map { $0.straightenableArrows($0.pickedArrowIDs).isEmpty } ?? true)
+            }
             Button("Merge Down") { editor?.mergeDown() }
                 .keyboardShortcut("e", modifiers: .command)
                 .disabled(!(editor?.canMergeDown ?? false))

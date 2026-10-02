@@ -1261,10 +1261,18 @@ private struct Writer {
             return lines
         }
         let style = annotation.arrowheadStyle
-        let end = Geometry.arrowShaftEnd(start: annotation.start, end: annotation.end,
-                                         strokeWidth: annotation.strokeWidth,
-                                         scale: annotation.arrowheadScale, style: style)
-        if annotation.strokeWidth > 0 {
+        let shaft = annotation.shaftSpine
+        let end = shaft.end
+        if annotation.strokeWidth > 0, annotation.bend != nil {
+            // A bent arrow's shaft is one curve, the same one the canvas strokes.
+            let cap = annotation.showsLineEnds ? annotation.lineEnd.svgName : "round"
+            let ink = stroke(annotation.paint,
+                             box: shaft.bounds.insetBy(dx: -annotation.strokeWidth / 2,
+                                                       dy: -annotation.strokeWidth / 2))
+            lines.append(indent(level) + "<path d=\"\(SVGExport.pathData(annotation.shaftPath))\""
+                + " fill=\"none\"\(ink)" + width(annotation.strokeWidth)
+                + " stroke-linecap=\"\(cap)\"/>")
+        } else if annotation.strokeWidth > 0 {
             // What the two ends of the line look like. An arrow's own ending
             // is the head; the choice only reaches the tail
             // (`AnnotationContent.showsLineEnds`).
@@ -1306,7 +1314,7 @@ private struct Writer {
             return [indent(level) + dot + " fill=\"none\"\(ink)"
                 + width(annotation.strokeWidth) + "/>"]
         }
-        let head = Geometry.arrowhead(start: annotation.start, end: annotation.end,
+        let head = Geometry.arrowhead(start: annotation.headAim, end: annotation.end,
                                       strokeWidth: annotation.strokeWidth,
                                       scale: annotation.arrowheadScale, style: style)
         guard head.count == 3 else { return [] }

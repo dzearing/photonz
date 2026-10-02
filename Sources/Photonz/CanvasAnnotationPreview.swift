@@ -110,6 +110,14 @@ extension CanvasNSView {
             clearAnnotationPreview()
             return
         }
+        // A bend keeps the ends where they are and curves the arrow through
+        // the handle (`CanvasArrowBend`).
+        if session.bendHandle != nil {
+            displayAnnotationPreview(content: bendPreviewContent(session),
+                                     docStart: session.originalStart, docEnd: session.originalEnd,
+                                     style: document?.canvasLayer(id: session.layerID)?.style)
+            return
+        }
         let (docStart, docEnd) = session.drag.endpoints(constrained: constrained)
         displayAnnotationPreview(content: session.content, docStart: docStart, docEnd: docEnd,
                                  style: document?.canvasLayer(id: session.layerID)?.style)
@@ -166,13 +174,20 @@ extension CanvasNSView {
         case .arrow:
             // Stop the shaft where the ending wants it (doc space → view space),
             // matching the rasterizer exactly: inside a solid head, at the tip
-            // of an open one, on the near edge of a hollow dot.
+            // of an open one, on the near edge of a hollow dot. A bent arrow's
+            // shaft is its curve, and its head is aimed along it.
             let ending = content.arrowheadStyle
-            let shaftEndDoc = Geometry.arrowShaftEnd(start: docStart, end: docEnd,
-                                                     strokeWidth: content.strokeWidth,
-                                                     scale: content.arrowheadScale, style: ending)
+            var drawn = content
+            drawn.start = docStart
+            drawn.end = docEnd
+            let shaft = drawn.shaftSpine
             path.move(to: start)
-            path.addLine(to: viewport.viewPoint(fromDocument: shaftEndDoc))
+            if drawn.bend != nil {
+                path.addQuadCurve(to: viewport.viewPoint(fromDocument: shaft.end),
+                                  control: viewport.viewPoint(fromDocument: shaft.control))
+            } else {
+                path.addLine(to: viewport.viewPoint(fromDocument: shaft.end))
+            }
             // Head geometry in document space (its minimum size is in doc
             // points), then mapped to view coords.
             if let circle = Geometry.arrowheadCircle(at: docEnd, strokeWidth: content.strokeWidth,
@@ -189,7 +204,7 @@ extension CanvasNSView {
                     path.addEllipse(in: box)
                 }
             } else {
-                let head = Geometry.arrowhead(start: docStart, end: docEnd,
+                let head = Geometry.arrowhead(start: drawn.headAim, end: docEnd,
                                               strokeWidth: content.strokeWidth,
                                               scale: content.arrowheadScale, style: ending)
                     .map { viewport.viewPoint(fromDocument: $0) }

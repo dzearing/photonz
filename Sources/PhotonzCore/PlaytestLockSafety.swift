@@ -225,6 +225,11 @@ public enum PlaytestLockSafety {
         // it stopped asking accessibility for the name and started asking the
         // panel's own register.
         "focus",
+        // Watched on 2026-10-01: `arrow-bend-walk`, forced under a lock, read
+        // "the canvas says a press here would be \"grab\", as claimed" over an
+        // arrow's bend handle. It asks the canvas for its own answer about the
+        // point the walk moved to, never a name.
+        "expectCue",
         // Watched on 2026-09-21: `turned-words-walk`, forced under a lock,
         // read the canvas's typing field back four times — "corner (370.2,
         // 288.9), leaning 20.0 degrees; draft \"Save\" ... 55.0 by 33.0". It

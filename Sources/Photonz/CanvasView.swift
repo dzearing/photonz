@@ -182,6 +182,9 @@ struct CanvasView: NSViewRepresentable {
     let onTransformCommit: (UUID, LayerTransform) -> Void
     let onAnnotationCommit: (CGPoint, CGPoint) -> Layer?
     let onAnnotationEndpointsCommit: (UUID, CGPoint, CGPoint) -> Void
+    /// A bend handle let go: the arrow, the handle in document coordinates,
+    /// and how near the straight line counts as straight.
+    var onArrowBendCommit: (UUID, CGPoint, CGFloat) -> Void = { _, _, _ in }
     let onZoomCalloutCommit: (CGPoint, CGPoint) -> Void
     /// The frame tool's drag, in document coordinates. A drag that is really a
     /// click arrives with both points equal, and drops the last size used.
@@ -436,6 +439,7 @@ struct CanvasView: NSViewRepresentable {
         view.onTransformCommit = onTransformCommit
         view.onAnnotationCommit = onAnnotationCommit
         view.onAnnotationEndpointsCommit = onAnnotationEndpointsCommit
+        view.onArrowBendCommit = onArrowBendCommit
         view.onZoomCalloutCommit = onZoomCalloutCommit
         view.onFrameCreate = onFrameCreate
         view.onLensCreate = onLensCreate
@@ -580,6 +584,7 @@ final class CanvasNSView: NSView {
     var onTransformCommit: ((UUID, LayerTransform) -> Void) = { _, _ in }
     var onAnnotationCommit: ((CGPoint, CGPoint) -> Layer?) = { _, _ in nil }
     var onAnnotationEndpointsCommit: ((UUID, CGPoint, CGPoint) -> Void) = { _, _, _ in }
+    var onArrowBendCommit: ((UUID, CGPoint, CGFloat) -> Void) = { _, _, _ in }
     var onZoomCalloutCommit: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onFrameCreate: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onLensCreate: ((CGPoint, CGPoint) -> Void) = { _, _ in }
@@ -1878,6 +1883,13 @@ final class CanvasNSView: NSView {
         let originalStart: CGPoint
         let originalEnd: CGPoint
         var drag: AnnotationEndpointDrag
+        /// Set when the press landed on an arrow's BEND handle rather than an
+        /// end: where the handle is now, in document coordinates. The ends
+        /// stay put and the arrow curves through this (`CanvasArrowBend`).
+        var bendHandle: CGPoint? = nil
+        /// Where the bend handle was when the press landed, so a press that
+        /// never moved records nothing.
+        var bendHandleStart: CGPoint? = nil
     }
     var endpointDrag: EndpointDragSession?
     /// After an endpoint commit, the underlay + vector preview stay up until
