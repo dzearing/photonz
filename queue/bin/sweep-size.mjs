@@ -46,8 +46,10 @@ const REFUSAL_SECONDS = 0.9;
 // The seconds a sweep is ALLOWED per walk before it is stopped. Not the
 // measured cost and deliberately not derived from it: this is the safety net,
 // and a net whose size follows the thing it is catching is no net. See
-// capMinutes() for why this number.
-export const BUDGET_SECONDS_PER_WALK = 20;
+// capMinutes() for why this number. Was 20 until 2026-10-02, when a walk had
+// crept to 14.6s (the median of the last ten sweeps) and the net was down to 37
+// per cent over a good sweep; 24 puts it back above half again.
+export const BUDGET_SECONDS_PER_WALK = 24;
 
 // A run reporting less than this per walk did not really run: the probe failed
 // to build, or every walk bailed in the first second. Real walks have never

@@ -404,7 +404,7 @@ say_about_the_hold() {
 }
 
 # The walk checks, run BETWEEN tasks. A runner cannot run the whole set: it is
-# about 560 walks and about 105 minutes (queue/bin/sweep-size.mjs counts it, so
+# about 710 walks and about 175 minutes (queue/bin/sweep-size.mjs counts it, so
 # this comment cannot go stale on its own) and a runner's background work is
 # terminated at 600s, which
 # is how eight of the twenty recorded runner failures happened (2026-09-07
@@ -416,8 +416,9 @@ say_about_the_hold() {
 # every ask started a whole-set run: thirteen of them in twenty four hours,
 # 835 minutes of a 1440 minute day, 58 per cent of the loop's wall clock
 # (queue/bin/loop-day.mjs --hours 24). The schedule now decides
-# (queue/bin/sweep-schedule.mjs): the full set at most once every twelve hours,
-# and a ten minute ROTATING CHECK in between, so a regression is still caught
+# (queue/bin/sweep-schedule.mjs): the full set at most once a day,
+# and a ten minute ROTATING CHECK after each task that lands code, asked for or
+# not (2026-10-02), so a regression is still caught
 # the day it lands.
 sweep_pass() {
   (( SANDBOX == 0 )) || return 0
@@ -449,7 +450,7 @@ sweep_pass() {
     return 0
   fi
 
-  # Inside the twelve hour floor, the rotating check instead: about ten minutes
+  # Inside the once a day floor, the rotating check instead: about ten minutes
   # of walks, every one whose script changed plus the next chunk of the set.
   # This is what keeps a floor from being a trade of safety for speed.
   if queue/bin/sweep.sh slice-due; then

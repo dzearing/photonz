@@ -2,7 +2,7 @@
 # The full walk sweep, owned by the go loop instead of by a task runner.
 #
 # Scripts/playtest-all.sh runs every scripted walk in Scripts/playtest:
-# about 560 walks and about 105 minutes. That size is COUNTED, not remembered:
+# about 710 walks and about 175 minutes. That size is COUNTED, not remembered:
 # queue/bin/sweep-size.mjs reads the walk count off disk and the seconds a walk
 # costs out of the recorded sweeps in queue/history.jsonl, and CI fails if this
 # comment drifts away from it. It used to be typed in, and by 2026-09-19 eleven
@@ -39,10 +39,11 @@
 # ASKING IS NOT STARTING. Until 2026-09-21 a request started a sweep, and since
 # a runner asks after every task the whole set ran after every task: thirteen
 # whole-set runs in twenty four hours, 58 per cent of the loop's wall clock
-# (queue/bin/loop-day.mjs --hours 24). Now the full set runs at most once every
-# twelve hours and requests pile up for it, while a ROTATING CHECK of about ten
-# minutes runs between tasks: every walk whose script changed, then the next
-# chunk of the set, carrying on where it stopped. The arithmetic and the words
+# (queue/bin/loop-day.mjs --hours 24). Now the full set runs at most once a day
+# and requests pile up for it, while a ROTATING CHECK of about ten minutes runs
+# after each task that lands code: every walk whose script changed, then the
+# next chunk of the set, carrying on where it stopped. Landed code is the ask;
+# neither waits for a request (2026-10-02). The arithmetic and the words
 # are in queue/bin/sweep-schedule.mjs; `sweep.sh schedule` prints them.
 #
 # One walk is unaffected and still costs about ten seconds:
@@ -83,7 +84,7 @@ case "${1:-}" in
 # them all, and each one's reason is carried into the result.
 request)
   shift
-  # --now jumps the twelve hour floor. It is for a change every walk touches
+  # --now jumps the once a day floor. It is for a change every walk touches
   # (the renderer, the shell, the walk harness itself), and it costs the loop
   # two hours, so it is a thing you say on purpose rather than the default.
   URGENT=0
@@ -97,8 +98,8 @@ request)
     doc.requests.push({ t: new Date().toISOString(), by, why, ...(urgent === "1" ? { now: true } : {}) });
     fs.writeFileSync(file, JSON.stringify(doc, null, 2) + "\n");
     console.log(`==> Sweep requested (${doc.requests.length} pending). Nothing else for you to do.`);
-    if (urgent === "1") console.log("    You asked for it STRAIGHT AWAY, so it jumps the twelve hour floor and runs after this task.");
-    else console.log("    The full set runs at most once every twelve hours; a rotating check of about ten minutes runs in between. See: queue/bin/sweep.sh schedule");
+    if (urgent === "1") console.log("    You asked for it STRAIGHT AWAY, so it jumps the once a day floor and runs after this task.");
+    else console.log("    The full set runs at most once a day once code has landed, asked for or not; a rotating check of about ten minutes runs after each task that lands code. See: queue/bin/sweep.sh schedule");
     console.log("    Read the result later with: queue/bin/sweep.sh status");
   ' "$REQ" "$why" "$(node -e '
       // Name the asker automatically: the runner knows its task, but nothing
@@ -336,10 +337,11 @@ status)
   if [[ -s "$REQ" ]]; then
     N=$(node -e 'try{console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).requests.length)}catch{console.log(0)}' "$REQ")
     echo "$N sweep request(s) pending."
-    # Say WHY nothing is running rather than letting a pending request look
-    # stuck. The schedule decides; this prints its own sentence.
-    echo "Right now: $(queue/bin/sweep.sh why-not)"
   fi
+  # Say what the loop will do next and why, request or not: landed code is
+  # enough to start a walk check. The schedule decides; this prints its sentence.
+  echo "Right now: $(queue/bin/sweep.sh why-not)"
+
   echo "The schedule: queue/bin/sweep.sh schedule"
   exit 0
   ;;
@@ -373,9 +375,19 @@ summary)
 # -------------------------------------------------------------------- run ----
 # The loop's half. Runs in the loop's own shell, so it can take an hour.
 run)
+  # Landed code is the ask, so no request is needed when the schedule says the
+  # whole set is due: until 2026-10-02 this refused without one, and since
+  # runners ask only when they need the whole set, a day of app commits went in
+  # with no walk run at all.
   if [[ ! -s "$REQ" && "${2:-}" != "--force" ]]; then
-    echo "==> No sweep requested; nothing to do."
-    exit 0
+    LOCKED_FLAG=""
+    screen_locked && LOCKED_FLAG="--locked"
+    DUE=$(queue/bin/sweep-schedule.mjs --decide $LOCKED_FLAG 2>/dev/null \
+          | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).run)}catch{console.log("nothing")}})')
+    if [[ "$DUE" != "full" ]]; then
+      echo "==> No sweep requested and none due ($(queue/bin/sweep.sh why-not)); nothing to do."
+      exit 0
+    fi
   fi
   stamp="$(date +%Y-%m-%d-%H%M%S)"
   RUNLOG="$SDIR/$stamp.log"
@@ -523,17 +535,18 @@ run)
   # hold the loop for a day and more. The cap is what stops that, and it has to
   # sit well above a good sweep and well below a wedged one.
   #
-  # The budget is 20 seconds a walk (BUDGET_SECONDS_PER_WALK in sweep-size.mjs),
-  # floored at two hours. With today's 532 walks:
+  # The budget is 24 seconds a walk (BUDGET_SECONDS_PER_WALK in sweep-size.mjs),
+  # floored at two hours. With 2026-10-02's 710 walks:
   #
-  #   a good full sweep   532 x 12s   = 106 minutes   (measured, see --json)
-  #   this cap            532 x 20s   = 177 minutes
-  #   headroom                          67 per cent
-  #   a wedged probe      532 x 180s  = 26 hours, stopped 59 walks in
+  #   a good full sweep   710 x 14.6s = 173 minutes   (measured, see --json)
+  #   this cap            710 x 24s   = 284 minutes
+  #   headroom                          64 per cent
+  #   a wedged probe      710 x 180s  = 35 hours, stopped 95 walks in
   #
-  # 20s is 67 per cent above the usual 12s and 23 per cent above the slowest
-  # real sweep ever recorded (16.3s a walk, 2026-09-18 03:26), so a busy machine
-  # does not trip it.
+  # 24s is 64 per cent above today's 14.6s and 45 per cent above the slowest
+  # real sweep ever recorded (16.5s a walk, 2026-09-28), so a busy machine does
+  # not trip it. It was 20s until 2026-10-02, when walks had slowed to 14.6s
+  # and the headroom was down to 37 per cent.
   #
   # It used to be a flat two hours, set when a sweep was 52 minutes. By
   # 2026-09-19 the set was 532 walks and a full sweep 106 minutes, so the net had

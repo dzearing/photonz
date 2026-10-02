@@ -22,6 +22,13 @@
 //   carries on where it stopped, so the whole set is covered by rotation about
 //   once a day anyway, spread out in ten minute pieces instead of two hour ones.
 //
+//   Landed code IS the ask. Neither check waits for a request: "code" is
+//   anything under WALK_PATHS (the app, the walk scripts, the package), so a
+//   commit of the queue's own files, docs or unit tests starts nothing. Until
+//   2026-10-02 the gate returned nothing whenever no request was pending, and
+//   runners are told to ask only for the whole set, so after the full run of
+//   2026-10-01 nobody asked and seven app commits landed with no walk check.
+//
 //   A runner that has changed something every walk touches can still have one
 //   now: queue/bin/sweep.sh request --now "<why>" jumps the floor.
 //
@@ -64,13 +71,16 @@ export function decide({
   blindCodeUnchanged = false, // nothing outside queue/ has changed since blind.head
   rotation = null,        // queue/sweep/rotation.json, where the rotation is up to
   head = null,            // the commit the loop is on right now
+  // Whether anything a walk runs (WALK_PATHS) changed between latest.head and
+  // head, and between rotation.lastHead and head. null means not known, and
+  // then only the commits themselves are compared, so a commit of nothing but
+  // queue files reads as new code: the reader of the disk always knows.
+  codeSinceFull = null,
+  codeSinceCheck = null,
   screenLocked = false,
   floorHours = DEFAULTS.floorHours,
 } = {}) {
   const pending = Array.isArray(requests) ? requests : [];
-  const nothing = (why) => ({ run: 'nothing', why, hoursSince: null, nextFullInHours: null });
-
-  if (!pending.length) return nothing('no sweep has been asked for');
 
   const began = latest && latest.began ? Date.parse(latest.began) : NaN;
   const hoursSince = Number.isFinite(began) ? (now - began) / HOUR : null;
@@ -90,8 +100,12 @@ export function decide({
     return out('full', `asked for straight away by ${who.by || 'a task runner'}`);
   }
 
-  const sameCode = !!(head && latest.head && latest.head === head);
+  // "The same code" is the same everything a walk runs, not the same commit:
+  // the loop commits its own queue files all day.
+  const sameCode = !!(head && latest.head && (latest.head === head || codeSinceFull === false));
   const lastChecked = rotation && rotation.lastHead ? rotation.lastHead : null;
+  const checkedCode = !!(head && lastChecked && (lastChecked === head || codeSinceCheck === false));
+  const asked = pending.length ? `, ${pending.length} request(s) pending` : '';
 
   // A whole-set run that went blind is kept out of latest.json (it is not the
   // state of the set), so on its own the floor still reads as a day gone and
@@ -119,7 +133,9 @@ export function decide({
     // The last whole-set run already answered for this exact commit. Running it
     // again would cost two hours to print the same list.
     if (sameCode && latest.complete !== false) {
-      return out('nothing', 'the last full sweep already covered this commit');
+      return out('nothing', latest.head === head
+        ? 'the last full sweep already covered this commit'
+        : 'the last full sweep already covered this code; only the queue, docs or tests have changed since');
     }
     // A locked screen can only ever run the part of the set that never asks for
     // a control by name. Repeating that part against code it has already
@@ -127,16 +143,19 @@ export function decide({
     if (screenLocked && sameCode) {
       return out('nothing', 'the lock-safe part has already run against this commit');
     }
-    return out('full', `${hoursSince.toFixed(1)}h since the last whole-set run`);
+    if (sameCode) {
+      return out('full', `${hoursSince.toFixed(1)}h since the last whole-set run, which did not cover the set${asked}`);
+    }
+    return out('full', `code has landed and it is ${hoursSince.toFixed(1)}h since the last whole-set run${asked}`);
   }
 
-  // Inside the floor: the rotating check, once per commit. A whole-set run
-  // counts as having checked its commit too, so a full sweep is never followed
-  // straight away by a rotating check over the same code.
-  if (head && (lastChecked === head || latest.head === head)) {
+  // Inside the floor: the rotating check, once per change of code. A whole-set
+  // run counts as having checked its code too, so a full sweep is never
+  // followed straight away by a rotating check over the same code.
+  if (head && (checkedCode || sameCode)) {
     return out('nothing', 'nothing new has landed since the last walk check');
   }
-  return out('slice', `${hoursSince.toFixed(1)}h since the last whole-set run, so the rotating check runs instead`);
+  return out('slice', `code has landed since the last walk check and it is ${hoursSince.toFixed(1)}h since the last whole-set run, so the rotating check runs${asked}`);
 }
 
 // Which walks a rotating check covers: the walks named for every check, then
@@ -218,13 +237,48 @@ function git(args, repo = REPO) {
   try { return execFileSync('git', args, { cwd: repo, encoding: 'utf8' }).trim(); } catch { return ''; }
 }
 
-// Whether anything a walk could run differs between two commits: everything
-// but the queue's own files. A commit git cannot read counts as different.
-export function sameCodeOutsideQueue(a, b, repo = REPO) {
+// What a walk actually runs: the app, the scripts that build and drive it (the
+// walks themselves are Scripts/playtest), and what the package pulls in. Not the
+// queue's own files, the docs, the site or the unit tests, which the loop and
+// its runners commit all day without changing anything a walk could see.
+export const WALK_PATHS = ['Sources', 'Scripts', 'Resources', 'Vendor', 'Package.swift', 'Package.resolved'];
+
+// Whether anything under WALK_PATHS changed between two commits. null when
+// either is missing; a commit git cannot read counts as changed.
+export function codeLandedBetween(a, b, repo = REPO) {
+  if (!a || !b) return null;
+  if (a === b) return false;
   try {
-    execFileSync('git', ['diff', '--quiet', a, b, '--', '.', ':(exclude)queue'], { cwd: repo, stdio: 'ignore' });
-    return true;
-  } catch { return false; }
+    execFileSync('git', ['diff', '--quiet', a, b, '--', ...WALK_PATHS], { cwd: repo, stdio: 'ignore' });
+    return false;
+  } catch { return true; }
+}
+
+// The decision, read off the disk: the files under `dir` and the commits in
+// `repo`. The CLI is this and a print; the drill calls it on a scratch repo.
+export function decideFromDisk({
+  repo = REPO, dir = sweepDir(repo), now = Date.now(), head = null,
+  screenLocked = false, floorHours = DEFAULTS.floorHours,
+} = {}) {
+  const at = head || git(['rev-parse', 'HEAD'], repo) || null;
+  const requested = readJSON(join(dir, 'requested.json'));
+  const latest = readJSON(join(dir, 'latest.json'));
+  const blind = readJSON(join(dir, 'blind.json'));
+  const rotation = readJSON(join(dir, 'rotation.json'));
+  return decide({
+    now,
+    requests: (requested && requested.requests) || [],
+    latest,
+    blind,
+    blindCodeUnchanged: !!(blind && blind.head && at && blind.head !== at
+      && codeLandedBetween(blind.head, at, repo) === false),
+    rotation,
+    head: at,
+    codeSinceFull: latest ? codeLandedBetween(latest.head, at, repo) : null,
+    codeSinceCheck: rotation ? codeLandedBetween(rotation.lastHead, at, repo) : null,
+    screenLocked,
+    floorHours,
+  });
 }
 
 // Walk scripts that changed since `base`. A walk rewritten an hour ago is the
@@ -248,19 +302,7 @@ if (isMain) {
   const floorHours = Number(process.env.PHOTONZ_SWEEP_FLOOR_HOURS || DEFAULTS.floorHours);
 
   if (argv.includes('--decide')) {
-    const requested = readJSON(join(dir, 'requested.json'));
-    const blind = readJSON(join(dir, 'blind.json'));
-    const d = decide({
-      requests: (requested && requested.requests) || [],
-      latest: readJSON(join(dir, 'latest.json')),
-      blind,
-      blindCodeUnchanged: !!(blind && blind.head && head && blind.head !== head
-        && sameCodeOutsideQueue(blind.head, head)),
-      rotation: readJSON(join(dir, 'rotation.json')),
-      head,
-      screenLocked: argv.includes('--locked'),
-      floorHours,
-    });
+    const d = decideFromDisk({ dir, head, screenLocked: argv.includes('--locked'), floorHours });
     console.log(JSON.stringify(d));
     process.exit(0);
   }
@@ -309,6 +351,10 @@ if (isMain) {
   The full set runs at most once every ${f} hours, so once a day, and only when
   code has landed since the last one. Asking for a sweep does not start one: the
   requests pile up and the next run serves them all.
+
+  Landed code is the ask: neither check waits for a request. Code is anything
+  under ${WALK_PATHS.join(', ')}; a commit of only the queue's
+  own files, docs or unit tests starts nothing.
 
   In between, after any task that lands code, the loop runs a rotating check of
   about ${DEFAULTS.sliceMinutes} minutes: the walks every check runs (${DEFAULTS.everyCheck.join(', ')}),

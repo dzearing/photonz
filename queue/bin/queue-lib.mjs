@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { readCatalog, flagDefaults, forcedOn } from './flag-defaults.mjs';
+import { DEFAULTS as SWEEP_DEFAULTS } from './sweep-schedule.mjs';
 
 // The queue lives at <repo>/queue. PHOTONZ_QUEUE_DIR points every writer at a
 // throwaway copy instead, which is how the runner-failure drill
@@ -1359,15 +1360,16 @@ export function loopScript(status = readStatus(), alive = loopAlive(status)) {
 
 // ---- the full walk sweep ----------------------------------------------------
 // A runner cannot run the whole walk set: it is
-// about 560 walks and about 105 minutes, and a runner's background work is cut
+// about 710 walks and about 175 minutes, and a runner's background work is cut
 // off at 600s. So it asks with queue/bin/sweep.sh request and the loop runs one
 // between tasks. Requests that nothing ever serves used to be invisible: seven
 // of them sat unserved for three days because the loop had no code to run
 // them. The dashboard shows this so a stalled sweep says so on its own.
 const SWEEP = join(QUEUE, 'sweep');
-// Hours between whole-set runs. The one copy is queue/bin/sweep-schedule.mjs;
-// this is only here so the dashboard can say how long the wait has left.
-const SWEEP_FLOOR_HOURS = 12;
+// Hours between whole-set runs, read from the one copy in
+// queue/bin/sweep-schedule.mjs so the dashboard's wait cannot drift from it
+// (it said twelve here for a week after the floor went to a day).
+const SWEEP_FLOOR_HOURS = SWEEP_DEFAULTS.floorHours;
 // A sweep the LOCK stopped is not a sweep that broke. The walks find every
 // control by its name and a locked screen takes those names away, so the run
 // files nothing, claims nothing and hands its request back

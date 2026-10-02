@@ -20413,3 +20413,11 @@ the middle and barely magnifies (a crisp or growing lens would be ours to draw).
 - Walk: `sound-effects-noise-reduction-walk` (no flags; pointer opens the plus, presses Strong and the cross, undo). Ran forced under a lock; it needs an unlocked screen to run unforced. `normalize-cleans-noise-walk` renamed to the new row.
 - Found: under a lock, a press on a timeline clip does not pick it (that walk passed unlocked in yesterday's sweep). Not a regression of 4bce21d4 (checked with it reverted).
 - Next: `a-picked-sound-can-take-an-eq-and-a-compressor-f`.
+
+## 2026-10-02 — Walk checks run after code lands, with nobody asking (go loop)
+
+- `queue/bin/sweep-schedule.mjs`: `decide()` no longer returns nothing when no request is pending. Landed code is the ask: `codeSinceFull` / `codeSinceCheck` (git diff over `WALK_PATHS`: Sources, Scripts, Resources, Vendor, Package.*) start the rotating check inside the day floor and the whole set past it. Queue-only, docs and test commits start nothing. Requests keep `--now` and their reasons. New `decideFromDisk()` is what the CLI runs.
+- `sweep.sh run` no longer refuses without a request when the schedule says the whole set is due; `sweep.sh status` always prints what happens next.
+- Drill: `sweep-schedule-drill.mjs` walks a scratch git repo through code landed with no request, queue-only commits, a walk script change, a pending request and a day passing, printing each decision.
+- Dashboard floor read from the schedule (it still said 12h). Sweep size counts refreshed (710 walks, about 175 minutes); the per-walk wall-clock budget is now 24s, up from 20s, because walks slowed to 14.6s.
+- Live decision right after: `slice: code has landed since the last walk check...`, so the next gap between tasks runs a rotating check.

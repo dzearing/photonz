@@ -118,7 +118,7 @@ The machine you run on is the user's. Anything you start, you finish.
   Scripts/playtest.sh Scripts/playtest/<name>.json --no-build
   Scripts/playtest-all.sh --no-build <name-fragment>   # a handful at once
   ```
-  The whole set is about 560 walks and about 105 minutes, which is eleven times the 600s
+  The whole set is about 710 walks and about 175 minutes, which is eleven times the 600s
   ceiling on your background work, so starting it inside a task ends with you
   terminated and your task handed back unfinished. That is not hypothetical:
   eight of the twenty recorded runner failures are exactly this, including
@@ -140,7 +140,13 @@ The machine you run on is the user's. Anything you start, you finish.
   check of about ten minutes (every walk whose script changed, then the next
   chunk of the set) so a regression is still caught the day it lands. Your
   request waits for the next full run and is served by it along with everybody
-  else's. `queue/bin/sweep.sh schedule` says the whole of it;
+  else's.
+
+  **Landed code is the ask: neither check waits for a request.** Code is
+  anything under `Sources`, `Scripts`, `Resources`, `Vendor` or the package
+  files; a commit of only the queue's own files, docs or unit tests starts
+  nothing. So you never ask just to get your change walked: committing it is
+  enough. `queue/bin/sweep.sh schedule` says the whole of it;
   `queue/bin/sweep.sh status` says why nothing is running right now.
 
   If you changed something EVERY walk touches (the renderer, the shell, the

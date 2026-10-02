@@ -9,7 +9,11 @@
 // a runner had asked, and a runner asks after every task.
 //
 //   node queue/bin/sweep-schedule-drill.mjs
-import { decide, pickSlice, DEFAULTS } from './sweep-schedule.mjs';
+import { decide, pickSlice, DEFAULTS, decideFromDisk, codeLandedBetween, WALK_PATHS } from './sweep-schedule.mjs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { execFileSync } from 'node:child_process';
 
 let failures = 0;
 const check = (label, ok, got) => {
@@ -23,9 +27,42 @@ const ago = (h) => new Date(now - h * HOUR).toISOString();
 const swept = (h, extra = {}) => ({ began: ago(h), head: 'old', complete: true, ...extra });
 const asked = [{ t: ago(0.1), by: 'a-task', why: 'it landed code' }];
 
+console.log('code landing is the ask (2026-10-02: seven app commits, no request, no walk check)');
+// Until 2026-10-02 the gate returned nothing the moment requests was empty, and
+// runners are told to ask only when they need the whole set, so nobody asked
+// and nothing ran for a day and a half of app commits.
+check('nobody asked, a day has passed and code has landed, so the full set runs',
+  decide({ now, requests: [], latest: swept(26), head: 'new', codeSinceFull: true }).run === 'full',
+  decide({ now, requests: [], latest: swept(26), head: 'new', codeSinceFull: true }));
+check('nobody asked, two hours in and code has landed, so the rotating check runs',
+  decide({ now, requests: [], latest: swept(2), head: 'new', codeSinceFull: true, codeSinceCheck: true, rotation: { cursor: 0, lastHead: 'older' } }).run === 'slice',
+  decide({ now, requests: [], latest: swept(2), head: 'new', codeSinceFull: true, codeSinceCheck: true, rotation: { cursor: 0, lastHead: 'older' } }));
+check('...and its reason says code landed, not that somebody asked',
+  /landed/.test(decide({ now, requests: [], latest: swept(2), head: 'new', codeSinceFull: true, codeSinceCheck: true, rotation: { cursor: 0, lastHead: 'older' } }).why));
+check('only queue files moved HEAD since the last check, so no rotating check',
+  decide({ now, requests: [], latest: swept(2), head: 'digest', codeSinceFull: true, codeSinceCheck: false, rotation: { cursor: 0, lastHead: 'older' } }).run === 'nothing',
+  decide({ now, requests: [], latest: swept(2), head: 'digest', codeSinceFull: true, codeSinceCheck: false, rotation: { cursor: 0, lastHead: 'older' } }));
+check('only queue files moved HEAD since the last whole-set run, a day on, so no whole-set run',
+  decide({ now, requests: [], latest: swept(26), head: 'digest', codeSinceFull: false }).run === 'nothing',
+  decide({ now, requests: [], latest: swept(26), head: 'digest', codeSinceFull: false }));
+check('...and it says the code is what the last sweep saw',
+  /already covered/.test(decide({ now, requests: [], latest: swept(26), head: 'digest', codeSinceFull: false }).why));
+check('a pending request does not make a queue-only commit worth a whole-set run',
+  decide({ now, requests: asked, latest: swept(26), head: 'digest', codeSinceFull: false }).run === 'nothing');
+check('a pending request with code landed still gets its whole-set run a day on',
+  decide({ now, requests: asked, latest: swept(26), head: 'new', codeSinceFull: true }).run === 'full');
+check('a request for one straight away still jumps the floor with no code landed',
+  decide({ now, requests: [{ t: ago(0.1), by: 'a-task', why: 'harness', now: true }], latest: swept(2), head: 'digest', codeSinceFull: false }).run === 'full');
+check('a partial run the lock cut short is owed a whole run a day on, once unlocked, request or not',
+  decide({ now, requests: [], latest: swept(26, { complete: false, partial: true }), head: 'digest', codeSinceFull: false }).run === 'full');
+check('...but not while the screen is still locked',
+  decide({ now, requests: [], latest: swept(26, { complete: false, partial: true }), head: 'digest', codeSinceFull: false, screenLocked: true }).run === 'nothing');
+check('what counts as code: Sources and the walk scripts are in it',
+  WALK_PATHS.includes('Sources') && WALK_PATHS.includes('Scripts'), WALK_PATHS);
+check('...and the queue, docs and tests are not',
+  !WALK_PATHS.some((p) => /^(queue|docs|Tests)/.test(p)), WALK_PATHS);
+
 console.log('when a whole-set run is allowed');
-check('nobody asked, so nothing runs',
-  decide({ now, requests: [], latest: swept(26), head: 'new' }).run === 'nothing');
 check('no sweep has ever run, so the first one runs whatever else is true',
   decide({ now, requests: asked, latest: null, head: 'new' }).run === 'full');
 check('a day has passed and code has landed, so the full set runs',
@@ -125,6 +162,60 @@ s = pickSlice({ walks, cursor: 0, changed: [], always: ['gone-walk'], minutes: 1
 check('a name that is no longer a walk in the set is left out', !s.walks.includes('gone-walk') && s.always.length === 0, s.always);
 check('the end to end editing session walk is in every check',
   DEFAULTS.everyCheck.includes('an-editing-session-walk'), DEFAULTS.everyCheck);
+
+console.log('on disk, moving the clock and HEAD through a real repo');
+// The pure checks above take codeSince* as given. These make real commits and
+// let the CLI's own reading of the disk work them out, so the path list and the
+// git plumbing are drilled too, not only the arithmetic.
+const repo = mkdtempSync(join(tmpdir(), 'sweep-schedule-drill-'));
+try {
+  const g = (...a) => execFileSync('git', a, { cwd: repo, encoding: 'utf8' }).trim();
+  const put = (f, body) => { mkdirSync(join(repo, f, '..'), { recursive: true }); writeFileSync(join(repo, f), body); };
+  const commit = (f, body, msg) => { put(f, body); g('add', '-A'); g('commit', '-q', '-m', msg); return g('rev-parse', 'HEAD'); };
+  g('init', '-q'); g('config', 'user.email', 'drill@example.com'); g('config', 'user.name', 'drill');
+  const dir = join(repo, 'queue', 'sweep');
+  const base = commit('Sources/App/a.swift', '1', 'app');
+  mkdirSync(dir, { recursive: true });
+  const at = (h) => now + h * HOUR;
+  // The whole set ran on `base` at hour 0 and its rotation sits there too.
+  writeFileSync(join(dir, 'latest.json'), JSON.stringify({ began: new Date(now).toISOString(), head: base, complete: true }));
+  writeFileSync(join(dir, 'rotation.json'), JSON.stringify({ cursor: 0, lastHead: base }));
+  const step = (label, h, want, extra = {}) => {
+    const d = decideFromDisk({ repo, dir, now: at(h), ...extra });
+    console.log(`       hour ${String(h).padStart(2)} HEAD ${g('rev-parse', '--short', 'HEAD')}: ${d.run} (${d.why})`);
+    check(label, d.run === want, d);
+    return d;
+  };
+  step('hour 1, nothing new since the whole-set run: nothing', 1, 'nothing');
+  commit('queue/tasks/x.json', '{}', 'queue: a task log');
+  step('hour 2, a queue-only commit with no request: nothing', 2, 'nothing');
+  commit('docs/notes.md', 'x', 'docs');
+  commit('Tests/T.swift', 'x', 'tests');
+  step('hour 3, docs and tests only: nothing', 3, 'nothing');
+  const app = commit('Sources/App/a.swift', '2', 'app change');
+  step('hour 4, app code landed with no request: the rotating check', 4, 'slice');
+  check('codeLandedBetween sees it', codeLandedBetween(base, app, repo) === true);
+  writeFileSync(join(dir, 'rotation.json'), JSON.stringify({ cursor: 50, lastHead: app }));
+  step('hour 5, that check has run: nothing', 5, 'nothing');
+  commit('queue/digest.md', 'x', 'queue: digest');
+  step('hour 6, a queue-only commit after the check: still nothing', 6, 'nothing');
+  commit('Scripts/playtest/new-walk.json', '{}', 'a walk changed');
+  step('hour 7, a walk script changed with no request: the rotating check', 7, 'slice');
+  writeFileSync(join(dir, 'requested.json'), JSON.stringify({ requests: [{ t: new Date(at(7)).toISOString(), by: 'a-task', why: 'it landed code' }] }));
+  step('hour 7, a request pending inside the floor: still the rotating check, not the whole set', 7, 'slice');
+  step('hour 25, a day on with code landed and a request pending: the whole set', 25, 'full');
+  rmSync(join(dir, 'requested.json'));
+  step('hour 25, the same with no request: the whole set all the same', 25, 'full');
+  step('hour 25, locked, code landed: the lock-safe part of the set', 25, 'full', { screenLocked: true });
+  const swept25 = g('rev-parse', 'HEAD');
+  writeFileSync(join(dir, 'latest.json'), JSON.stringify({ began: new Date(at(25)).toISOString(), head: swept25, complete: true }));
+  commit('queue/history.jsonl', 'x', 'queue: history');
+  step('hour 50, a day on but only queue files since: nothing', 50, 'nothing');
+  check('codeLandedBetween says no for queue-only', codeLandedBetween(swept25, g('rev-parse', 'HEAD'), repo) === false);
+  check('codeLandedBetween counts an unreadable commit as different', codeLandedBetween('0'.repeat(40), swept25, repo) === true);
+} finally {
+  rmSync(repo, { recursive: true, force: true });
+}
 
 console.log('defaults');
 check('the floor is a day (2026-09-26: walks took the user\'s Mac away)', DEFAULTS.floorHours === 24, DEFAULTS.floorHours);
