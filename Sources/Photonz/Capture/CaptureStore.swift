@@ -121,6 +121,50 @@ final class CaptureStore {
         mediaStamps = mediaStamps.filter { live.contains($0.key) }
 
         entries = CaptureLibrary.merging(listed: sorted, saving: Array(saving.values))
+        warmRecordings()
+    }
+
+    /// Every recording's tile made ready in the background as soon as the
+    /// folder is read, so picking Videos draws finished tiles in its first
+    /// frame (the user, 2026-10-02: "when I change to videos, it's laggy to
+    /// show"). Recordings are few and their posters small and cached on
+    /// disk; until this, the first Videos pick did each tile's stamp, hash
+    /// and cached-size read on the main thread and then fetched the posters
+    /// four at a time, so tiles popped in one after another. The cached sizes
+    /// are read here off the main thread and the posters queued behind any
+    /// tile already on screen.
+    private func warmRecordings() {
+        var waiting: [(CaptureEntry, CaptureThumbnail, String?)] = []
+        for entry in entries where entry.kind == .video && saving[entry.url] == nil {
+            let thumbnail: CaptureThumbnail
+            if let known = thumbnails[entry.url] {
+                thumbnail = known
+            } else {
+                thumbnail = CaptureThumbnail()
+                thumbnails[entry.url] = thumbnail
+            }
+            guard !thumbnail.requested else { continue }
+            thumbnail.requested = true
+            waiting.append((entry, thumbnail, stamp(for: entry.url)))
+        }
+        guard !waiting.isEmpty else { return }
+        let asked = waiting.map { (url: $0.0.url, stamp: $0.2) }
+        Task.detached(priority: .utility) {
+            let sizes = asked.map { CaptureThumbnails.cachedRecordingHeader(at: $0.url, stamp: $0.stamp) }
+            await MainActor.run { [weak self] in
+                guard let self else { return }
+                for (index, item) in waiting.enumerated() {
+                    guard self.thumbnails[item.0.url] === item.1 else { continue }
+                    if let size = sizes[index], item.1.pixelSize == nil {
+                        item.1.settle(pixelSize: size.0.pixelSize, pixelScale: size.0.pixelScale)
+                    }
+                    // Behind whatever is on screen: the queue is taken from
+                    // its end.
+                    self.thumbnailQueue.insert(item.0, at: 0)
+                }
+                self.startThumbnailLoads()
+            }
+        }
     }
 
     /// Fingerprint of a recording's media file (mtime + size); `nil` when it
