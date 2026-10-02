@@ -1,0 +1,25 @@
+{
+  "feature": "Capture shortcuts clear the toasts",
+  "epic": "video-editing",
+  "summary": "Pressing Shift Command 3, 4, 5 or 6 takes every toast out of the corner at once, before the capture starts, so none of them ends up in your screenshot or recording. A save or GIF copy you started just before the shortcut stays quiet too.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Take a screenshot with Shift Command 4 so a 'Copied to clipboard!' toast shows in the corner.", "shot": "2026-10-02-capture-shortcuts-clear-toasts-1.png" },
+    { "do": "While the toast is still up, press Shift Command 4 again and drag a region over the corner." },
+    { "do": "Open the capture you just took and check the corner of it: there should be no toast in it." },
+    { "do": "With a toast up, press Shift Command 5 and see the recording setup appear with the corner already empty." },
+    { "do": "With a toast up, press Shift Command 6: the toast goes and the last capture opens.", "shot": "2026-10-02-capture-shortcuts-clear-toasts-2.png" },
+    { "do": "Finish a capture after any of these and watch its own 'Copied to clipboard!' toast show as usual." }
+  ],
+  "evaluate": [
+    "Does the toast vanish fast enough that you never see it in a region capture?",
+    "Should Shift Command H (history) also clear the corner, or is it right that it leaves toasts alone?",
+    "When you press a capture shortcut while a GIF copy is still working, is it fine that its 'copied' toast never appears afterwards?"
+  ],
+  "rough": [
+    "You asked for Control Shift 4, 5 and 6; the app's capture shortcuts are Shift Command 3, 4, 5 and 6, so those are what clear the corner. Shift Command 3 (full screen) clears it too, since a toast would land in that picture just the same.",
+    "Stopping a recording with Control Shift F5, and Shift Command H for history, leave the corner alone on purpose.",
+    "The walk presses each shortcut through the same code the system shortcut calls, but stands in for the region overlay, the full-screen shot and the recording setup so it never covers your screen; Shift Command 6 runs for real."
+  ]
+}

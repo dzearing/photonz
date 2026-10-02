@@ -689,6 +689,17 @@ public enum PlaytestAppearance: String, CaseIterable, Hashable, Codable, Sendabl
 }
 
 public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
+    /// The capture shortcut a `hotkey…` action presses, nil for every other.
+    public var captureHotkey: CaptureHotkey? {
+        switch self {
+        case .hotkeyCaptureFullScreen: .captureFullScreen
+        case .hotkeyCaptureRegion: .captureRegion
+        case .hotkeyRecord: .record
+        case .hotkeyEditLastCapture: .editLastCapture
+        default: nil
+        }
+    }
+
     case copySpecList, copyImage, hideAllMeasurements, showAllMeasurements
     /// The whole picture copied WITH the canvas it was drawn on, where
     /// `copyImage` leaves a blank canvas out (`next-copy-leaves-the-canvas-out`).
@@ -872,6 +883,22 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// lends `sample-recording` to the capture folder, which is the only way to
     /// drive the real history door with a real recording in it.
     case editLastCapture
+    /// A capture shortcut pressed the way the system hands it to the app:
+    /// through the same dispatcher the global hotkey calls, so the corner is
+    /// cleared exactly as a person's ⇧⌘3, ⇧⌘4, ⇧⌘5 or ⇧⌘6 clears it. The probe
+    /// never claims those keys from the machine, so this is the only way a
+    /// walk can press them. Where the capture would cover the person's screen
+    /// (the region overlay, the full-screen shot, the recording setup card) the
+    /// walk stands in for it; ⇧⌘6 opens the newest capture for real. Each fails
+    /// if a toast was still on screen at the moment the capture began.
+    case hotkeyCaptureFullScreen, hotkeyCaptureRegion, hotkeyRecord, hotkeyEditLastCapture
+    /// Put up the toast a capture lands with, for the newest thing in history.
+    case showCaptureToast
+    /// Start saving the newest recording the way the window's Save does, as
+    /// far as the corner can tell: after its quiet window a progress bar is
+    /// due. `finishHeldSave` says it saved. Together they are a toast asked for
+    /// before a capture shortcut and due after it.
+    case beginHeldSave, finishHeldSave
     /// Shut the window holding the sample recording and ask for it again: how a
     /// walk checks that coming back puts the playhead where it was left.
     case reopenSampleRecording

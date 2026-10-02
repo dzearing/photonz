@@ -51,6 +51,8 @@ final class AppCoordinator {
     /// The panel of the newest toast, so a `snapshot` of "Toast" photographs
     /// the thing that just got said.
     var newestToastPanel: NSWindow? { toasts.newestPanel }
+    /// How many toast panels are on screen, counted off the windows.
+    var playtestVisibleToastCount: Int { toasts.visiblePanelCount }
     #endif
 
     /// Says in the same corner that a recording is saving, and that it saved.
@@ -126,6 +128,7 @@ final class AppCoordinator {
         capture.onToggleHistory = { [weak self] in self?.toggleHistory() }
         capture.onRequestHistory = { [weak self] in self?.showHistory() }
         capture.onEditLastCapture = { [weak self] in self?.editLastCapture() }
+        capture.onClearToasts = { [weak self] in self?.toasts.clearAll() }
         capture.onCaptureComplete = { [weak self] entry in
             // Auto-copy so the user can paste immediately (image data for
             // screenshots, the file for recordings).
@@ -323,6 +326,9 @@ final class AppCoordinator {
     /// recording that plays opens after one look.
     private func openRecordingOnceItIsThere(_ url: URL) async {
         let name = url.lastPathComponent
+        // A capture shortcut pressed while this waits has cleared the corner,
+        // and these notes belong to before it.
+        let ticket = toasts.ticket
         let giveUpAt = Date().addingTimeInterval(RecordingDoor.patienceSeconds)
         var saidItWasLanding = false
         while true {
@@ -334,17 +340,20 @@ final class AppCoordinator {
             case .gone:
                 // Nothing to come back to, so there is no moment to keep either.
                 RecordingPlaceStore.shared.forget(url: url)
-                sayAboutRecording(.gone, name: name, symbol: "questionmark.folder")
+                sayAboutRecording(.gone, name: name, symbol: "questionmark.folder", ticket: ticket)
                 return
             case .unplayable:
-                sayAboutRecording(.unplayable, name: name, symbol: "exclamationmark.triangle")
+                sayAboutRecording(.unplayable, name: name, symbol: "exclamationmark.triangle",
+                                  ticket: ticket)
                 return
             case .stillWriting:
                 if !saidItWasLanding {
                     saidItWasLanding = true
-                    sayAboutRecording(.stillWriting, name: name, symbol: "arrow.down.circle")
+                    sayAboutRecording(.stillWriting, name: name, symbol: "arrow.down.circle",
+                                      ticket: ticket)
                 }
                 guard Date() < giveUpAt else {
+                    guard toasts.stillWanted(ticket) else { return }
                     let said = RecordingDoor.gaveUpMessage(
                         name: name, resultsOnly: Experiments.shared.noticesSayWhatHappenedEnabled)
                     toasts.presentNote(title: said.title, detail: said.detail,
@@ -368,7 +377,9 @@ final class AppCoordinator {
                           symbol: gone ? "questionmark.folder" : "exclamationmark.triangle")
     }
 
-    private func sayAboutRecording(_ state: RecordingOpenState, name: String, symbol: String) {
+    private func sayAboutRecording(_ state: RecordingOpenState, name: String, symbol: String,
+                                   ticket: ToastHush.Ticket? = nil) {
+        if let ticket, !toasts.stillWanted(ticket) { return }
         guard let said = RecordingDoor.message(for: state, name: name) else { return }
         toasts.presentNote(title: said.title, detail: said.detail,
                            symbol: symbol, on: activeScreen())
@@ -444,6 +455,10 @@ final class AppCoordinator {
         }
         guard !isExportingRecording else { return }
         isExportingRecording = true
+        // The encode takes a moment; a capture shortcut pressed meanwhile
+        // clears the corner and the capture then takes the clipboard, so the
+        // "copied" toast for this would be both noise and out of date.
+        let ticket = toasts.ticket
         // A GIF re-encode takes ~a second; show a live progress toast in the
         // bottom-right stack so the wait isn't a mystery. (MP4 copies are quick
         // and stay silent until the "copied" toast.)
@@ -459,7 +474,9 @@ final class AppCoordinator {
                     try await VideoExporter.exportMP4(from: sourceURL, to: destination,
                                                       cuts: pieces, crop: crop)
                     ClipboardWriter.writeFile(destination)
-                    presentCopyToast(for: sourceURL, message: "Video copied to clipboard!")
+                    if toasts.stillWanted(ticket) {
+                        presentCopyToast(for: sourceURL, message: "Video copied to clipboard!")
+                    }
                 } else {
                     // Preserve the recording's smoothness: match the source fps
                     // (capped at the format's ceiling) instead of the exporter's
@@ -485,7 +502,9 @@ final class AppCoordinator {
                     let data = format == .gif ? try? Data(contentsOf: destination) : nil
                     ClipboardWriter.writeFile(destination, data: data, dataType: format == .gif ? .gif : nil)
                     if let progress { toasts.dismissProgress(progress) }
-                    presentCopyToast(for: sourceURL, message: "GIF copied to clipboard!")
+                    if toasts.stillWanted(ticket) {
+                        presentCopyToast(for: sourceURL, message: "GIF copied to clipboard!")
+                    }
                 }
             } catch {
                 if let progress { toasts.dismissProgress(progress) }

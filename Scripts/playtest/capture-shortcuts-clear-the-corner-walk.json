@@ -1,0 +1,47 @@
+{
+  "out": "/tmp/photonz-playtest/capture-shortcuts-clear-the-corner-walk",
+  "seed": "The user, 2026-10-02: 'if I press [the capture shortcuts], please clear the toast. The toasts are fine to show but if I'm trying to take a screenshot or video or open last session, they're just noise.' At Next defaults with no flag touched, each capture shortcut is pressed through the dispatcher the system hotkey calls, with a toast up in the corner, and the corner must be empty at the instant the capture begins. A save asked for just before the shortcut must not put its bar or its 'saved' toast up afterwards, and a toast asked for after the shortcut shows as normal.",
+  "setup": {
+    "forget": ["all"],
+    "captures": ["sample-recording"]
+  },
+  "steps": [
+    { "do": "action", "action": "showCaptureToast" },
+    { "do": "expectToast", "says": "Copied to clipboard" },
+    { "do": "snapshot", "name": "0-a-toast-in-the-corner", "window": "Toast" },
+    { "do": "action", "action": "hotkeyCaptureRegion" },
+    { "do": "expectToast", "absent": true },
+
+    { "do": "action", "action": "showCaptureToast" },
+    { "do": "action", "action": "showCaptureToast" },
+    { "do": "action", "action": "hotkeyCaptureFullScreen" },
+    { "do": "expectToast", "absent": true },
+
+    { "do": "action", "action": "showCaptureToast" },
+    { "do": "action", "action": "hotkeyRecord" },
+    { "do": "expectToast", "absent": true },
+
+    { "do": "action", "action": "beginHeldSave" },
+    { "do": "wait", "seconds": 1.0, "onTheClock": true },
+    { "do": "expectToast", "says": "Saving" },
+    { "do": "action", "action": "finishHeldSave" },
+    { "do": "expectToast", "says": "saved" },
+    { "do": "action", "action": "hotkeyCaptureRegion" },
+    { "do": "expectToast", "absent": true },
+
+    { "do": "action", "action": "beginHeldSave" },
+    { "do": "action", "action": "hotkeyCaptureRegion" },
+    { "do": "wait", "seconds": 1.0, "onTheClock": true },
+    { "do": "expectToast", "absent": true },
+    { "do": "action", "action": "finishHeldSave" },
+    { "do": "expectToast", "absent": true },
+
+    { "do": "action", "action": "showCaptureToast" },
+    { "do": "expectToast", "says": "Copied to clipboard" },
+    { "do": "action", "action": "hotkeyEditLastCapture" },
+    { "do": "expectToast", "absent": true },
+    { "do": "wait", "seconds": 1.0, "onTheClock": true },
+    { "do": "describe", "stage": "1-last-capture-open-corner-clear", "note": "THE TEST: Shift Command 6 with a toast up. The toast is gone before the recording's window appears, and nothing came back in the corner" },
+    { "do": "snapshot", "name": "1-last-capture-open-corner-clear" }
+  ]
+}

@@ -208,6 +208,8 @@ private final class Run {
     private var savedProjectDocument: PhotonzDocument?
     /// The export `startExportAt1080p` began and when, for `awaitExport`.
     private var startedExport: (url: URL, began: Date)?
+    /// A recording save `beginHeldSave` started and `finishHeldSave` ends.
+    private var heldSave: RecordingSaveAnnouncer.Report?
     /// The caption word a walk opened last, and when it was said then
     /// (`captionsExpectWordFixed`).
     private var openedCaptionWord: (ref: CaptionWordRef, word: TranscribedWord)?
@@ -3159,6 +3161,66 @@ private final class Run {
             try await adoptRecordingDocument(at: newest.url, within: 20, step: step.name,
                                              subject: "the newest recording in history", number: number)
 
+        // A capture shortcut, through the dispatcher the global hotkey calls.
+        // The stand-in reads the corner at the instant the capture would
+        // begin: the region overlay freezes the screen then, so a toast still
+        // up at that moment is in the picture.
+        case .action(let action) where action.captureHotkey != nil:
+            guard let hotkey = action.captureHotkey else { break }
+            var toastsWhenCaptureBegan: Int?
+            coordinator.capture.playtestHotkeyStandIn = { [coordinator] pressed in
+                toastsWhenCaptureBegan = coordinator.playtestVisibleToastCount
+                // ⇧⌘6 opens a window, which a walk keeps under the person's;
+                // the other three would cover or photograph their screen.
+                return pressed != .editLastCapture
+            }
+            defer { coordinator.capture.playtestHotkeyStandIn = nil }
+            let newest = coordinator.lastCapture
+            coordinator.capture.hotkeyPressed(hotkey)
+            guard let seen = toastsWhenCaptureBegan else {
+                throw Failure(description: "\(action.rawValue) never reached the capture it starts")
+            }
+            guard seen == 0 else {
+                throw Failure(description: "\(seen) toast\(seen == 1 ? " was" : "s were") still on "
+                    + "screen when \(hotkey.rawValue) began, so \(seen == 1 ? "it" : "they") "
+                    + "would be in the picture")
+            }
+            if hotkey == .editLastCapture, let newest, newest.kind == .video {
+                try await adoptRecordingDocument(at: newest.url, within: 20, step: step.name,
+                                                 subject: "the newest recording in history",
+                                                 number: number)
+            }
+            note(number, step.name,
+                 "pressed \(hotkey.rawValue): the corner was empty when the capture began",
+                 state: describe())
+
+        case .action(.showCaptureToast):
+            guard let newest = coordinator.lastCapture else {
+                throw Failure(description: "history is empty, so there is no capture to toast; "
+                    + "lend one with \"captures\" in the walk's setup")
+            }
+            coordinator.showCaptureToast(newest)
+            await sleep(0.4)
+            note(number, step.name, "put up the toast for \(newest.url.lastPathComponent)")
+
+        case .action(.beginHeldSave):
+            guard let newest = coordinator.lastCapture else {
+                throw Failure(description: "history is empty, so there is nothing to save; "
+                    + "lend one with \"captures\" in the walk's setup")
+            }
+            heldSave = coordinator.recordingSaves.began(url: newest.url)
+            note(number, step.name, "began saving \(newest.url.lastPathComponent); its progress "
+                 + "bar is due after the quiet window")
+
+        case .action(.finishHeldSave):
+            guard let heldSave else {
+                throw Failure(description: "no save is held; beginHeldSave comes first")
+            }
+            coordinator.recordingSaves.finished(heldSave)
+            self.heldSave = nil
+            await sleep(0.3)
+            note(number, step.name, "the held save finished")
+
         // Asking for a recording that is not there. Nothing is adopted: the
         // point of the step is that NO window opens, and what the walk checks
         // next is the line in the corner (`expectToast`) and the window count.
@@ -6001,6 +6063,8 @@ private final class Run {
                  .openScrollingPage, .openRecordingFromDisk,
                  .openMissingRecording,
                  .openLandingRecording, .reopenSampleRecording, .editLastCapture,
+                 .hotkeyCaptureFullScreen, .hotkeyCaptureRegion, .hotkeyRecord,
+                 .hotkeyEditLastCapture, .showCaptureToast, .beginHeldSave, .finishHeldSave,
                  .recordScriptedClicks, .recordAndOpenAtStop, .expectRecordingLandedInPlace:
                 break  // handled above, in the branch that asks for a recording
             case .clipSplit, .clipDeletePiece, .clipHoldFrame,

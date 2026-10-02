@@ -1,7 +1,7 @@
 {
   "id": "pressing-a-capture-shortcut-clears-any-toast-on",
   "title": "Pressing a capture shortcut clears any toast on screen",
-  "goal": "User 2026-10-02: 'if I press ctrl shift 4/5/6, please clear the toast. The toasts are fine to show but if I'm trying to take a screenshot or video or open last session, they're just noise.' Ctrl-Shift-4 (screenshot), Ctrl-Shift-5 (recording) and Ctrl-Shift-6 (open last session) are the app's global capture hotkeys (Capture/HotkeyCenter.swift); toasts are ToastController.swift.",
+  "goal": "Pressing one of the capture shortcuts takes every toast out of the bottom-right corner at once, so a screenshot, a recording or opening the last capture is never cluttered by an old toast. Toasts still show at every other time.",
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 0.000002,
@@ -9,10 +9,10 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-02T18:43:34.864Z",
-  "updated": "2026-10-02T22:24:44.362Z",
+  "updated": "2026-10-02T22:42:18.155Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Filed from the intake window.",
+  "notes": "Filed from the intake window. Shipped: PhotonzCore/CaptureHotkey.swift (CaptureHotkey.clearsToasts table + ToastHush tickets), CaptureCenter.hotkeyPressed(_:) is the one dispatcher every global hotkey calls and clears the corner first via onClearToasts -> ToastController.clearAll() (instant orderOut, cancels reflow animation, bumps the hush). Deferred toasts take a ticket and are dropped if stale: RecordingSaveAnnouncer reveal + 'saved', copyRecording re-encode 'copied', openRecordingOnceItIsThere notes. The app's shortcuts are Shift-Command 3/4/5/6 (the user said ctrl shift); all four clear. Walk: capture-shortcuts-clear-the-corner-walk (actions hotkeyCapture*, showCaptureToast, beginHeldSave/finishHeldSave; probe-only playtestHotkeyStandIn records toast count where the capture begins).",
   "acceptance": [
     "CORRECTION (user 2026-10-02): the shortcuts are the app's ⇧⌘ capture family (CaptureHotkey.swift: ⇧⌘3 to ⇧⌘6, ⇧⌘6 = edit last capture, which the user just pressed and saw the toasts stay), not Ctrl-Shift; every one of them, as bound in Settings, clears the toasts",
     "Pressing Ctrl-Shift-4, -5 or -6 (whatever each is bound to in Settings, if rebindable) dismisses every visible Photonz toast immediately, before the capture overlay, recording setup or session window appears, so no toast is in the picture or in the way",
@@ -36,7 +36,18 @@
     {
       "t": "2026-10-02T22:24:44.361Z",
       "note": "USER 2026-10-02: pressed Cmd-Shift-6 (open last capture) and the toasts stayed. The keys are the ⇧⌘3-6 capture family (CaptureHotkey), not Ctrl-Shift as the goal says; cover every one, including 6."
+    },
+    {
+      "t": "2026-10-02T22:42:18.098Z",
+      "note": "owns these walks: capture-shortcuts-clear-the-corner-walk"
+    },
+    {
+      "t": "2026-10-02T22:42:18.154Z",
+      "note": "Adversarial: the user said ctrl shift 4/5/6 but the shortcuts are Shift-Command 3/4/5/6 (no rebinding exists); all capture ones clear, history and the F5 stop do not. The region overlay freezes the screen asynchronously after begin(), so clearing synchronously before begin keeps toasts out of the picture. Verified: walk green with the fix, red with the clear commented out ('1 toast was still on screen when captureRegion began'); Scripts/test.sh green, 10983 tests. Rough items in the audit are explanations, nothing filed."
     }
   ],
-  "started": "2026-10-02T22:15:53.800Z"
+  "started": "2026-10-02T22:15:53.800Z",
+  "walks": [
+    "capture-shortcuts-clear-the-corner-walk"
+  ]
 }

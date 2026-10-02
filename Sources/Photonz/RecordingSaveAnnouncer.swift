@@ -28,7 +28,13 @@ final class RecordingSaveAnnouncer {
         /// The last fraction the encoder reported, kept so progress that
         /// arrives before the bar exists is not thrown away.
         var fraction: Double = 0
-        init(url: URL) { self.url = url }
+        /// Taken when the save starts: a capture shortcut pressed while it runs
+        /// clears the corner, and neither the bar nor "Saved" comes back then.
+        let ticket: ToastHush.Ticket
+        init(url: URL, ticket: ToastHush.Ticket) {
+            self.url = url
+            self.ticket = ticket
+        }
     }
 
     private let toasts: ToastController
@@ -50,10 +56,11 @@ final class RecordingSaveAnnouncer {
     /// done, because a bar that flashes up for a fifth of a second is a flicker
     /// nobody can read rather than a report.
     func began(url: URL) -> Report {
-        let report = Report(url: url)
+        let report = Report(url: url, ticket: toasts.ticket)
         report.reveal = Task { [weak self, weak report] in
             try? await Task.sleep(for: .seconds(SaveFeedback.quietWindow))
-            guard !Task.isCancelled, let self, let report else { return }
+            guard !Task.isCancelled, let self, let report,
+                  self.toasts.stillWanted(report.ticket) else { return }
             let progress = self.toasts.presentProgress(
                 title: SaveFeedback.progressTitle(for: url.lastPathComponent),
                 symbol: "arrow.down.doc",
@@ -75,6 +82,7 @@ final class RecordingSaveAnnouncer {
     /// recording's own thumbnail, in the same toast copying a recording uses.
     func finished(_ report: Report) {
         clear(report)
+        guard toasts.stillWanted(report.ticket) else { return }
         let url = report.url
         let entry = store.entries.first(where: { $0.url == url })
         toasts.present(entry: entry, store: store,

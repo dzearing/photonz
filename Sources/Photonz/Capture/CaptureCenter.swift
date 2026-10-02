@@ -66,17 +66,49 @@ final class CaptureCenter {
         // history overlay inside somebody else's walk. A walk presses these
         // through the menu bar anyway, which is in-process and unaffected.
         guard AppInfo.flavor.claimsInputOutsideItself else { return }
-        hotkeys.register(.commandShift(kVK_ANSI_3)) { [weak self] in self?.captureFullScreen() }
-        hotkeys.register(.commandShift(kVK_ANSI_4)) { [weak self] in self?.beginRectCapture() }
-        hotkeys.register(.commandShift(kVK_ANSI_5)) { [weak self] in self?.toggleRecording() }
+        hotkeys.register(.commandShift(kVK_ANSI_3)) { [weak self] in self?.hotkeyPressed(.captureFullScreen) }
+        hotkeys.register(.commandShift(kVK_ANSI_4)) { [weak self] in self?.hotkeyPressed(.captureRegion) }
+        hotkeys.register(.commandShift(kVK_ANSI_5)) { [weak self] in self?.hotkeyPressed(.record) }
         // Dedicated stop shortcut for recording — ⇧⌘5 collides with macOS's own
         // screenshot toolbar, so ⌃⇧F5 reliably stops a recording in progress.
-        hotkeys.register(.controlShift(kVK_F5)) { [weak self] in self?.stopRecordingIfNeeded() }
-        hotkeys.register(.commandShift(kVK_ANSI_H)) { [weak self] in self?.onToggleHistory?() }
+        hotkeys.register(.controlShift(kVK_F5)) { [weak self] in self?.hotkeyPressed(.stopRecording) }
+        hotkeys.register(.commandShift(kVK_ANSI_H)) { [weak self] in self?.hotkeyPressed(.toggleHistory) }
         // ⇧⌘6 continues the 3/4/5 family. Global hotkeys pre-empt the app's own
         // key equivalents, so it must not reuse anything the editor binds.
-        hotkeys.register(.commandShift(kVK_ANSI_6)) { [weak self] in self?.onEditLastCapture?() }
+        hotkeys.register(.commandShift(kVK_ANSI_6)) { [weak self] in self?.hotkeyPressed(.editLastCapture) }
     }
+
+    /// Takes every toast down. The capture shortcuts call it before anything
+    /// of theirs appears (`CaptureHotkey.clearsToasts`).
+    @ObservationIgnored var onClearToasts: (() -> Void)?
+
+    /// Everything a system-wide shortcut does, from the moment it is pressed.
+    /// The capture ones clear the corner FIRST, synchronously, so the toasts
+    /// are off screen before the region overlay's freeze, the full-screen shot,
+    /// the recording setup card or the editor window exists.
+    func hotkeyPressed(_ hotkey: CaptureHotkey) {
+        if hotkey.clearsToasts { onClearToasts?() }
+        #if PHOTONZ_PLAYTEST
+        // A walk presses these while the person keeps working, and the region
+        // overlay covers every display and takes the keys. A walk that only
+        // needs to know what the shortcut did FIRST stands in for the capture.
+        if let standIn = playtestHotkeyStandIn, standIn(hotkey) { return }
+        #endif
+        switch hotkey {
+        case .captureFullScreen: captureFullScreen()
+        case .captureRegion: beginRectCapture()
+        case .record: toggleRecording()
+        case .editLastCapture: onEditLastCapture?()
+        case .stopRecording: stopRecordingIfNeeded()
+        case .toggleHistory: onToggleHistory?()
+        }
+    }
+
+    #if PHOTONZ_PLAYTEST
+    /// Probe only. Called where the capture would begin; return true to keep
+    /// the real one from running.
+    @ObservationIgnored var playtestHotkeyStandIn: ((CaptureHotkey) -> Bool)?
+    #endif
 
     // MARK: - Recording (phase 12)
 

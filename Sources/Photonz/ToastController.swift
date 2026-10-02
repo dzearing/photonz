@@ -207,6 +207,48 @@ final class ToastController {
     }
     #endif
 
+    // MARK: - Clearing the corner for a capture
+
+    /// Which toasts asked for earlier are still wanted (see `ToastHush`).
+    private var hush = ToastHush()
+
+    /// What work that will say something LATER takes when it starts, and hands
+    /// back to `stillWanted` before it says it.
+    var ticket: ToastHush.Ticket { hush.ticket }
+
+    /// False once the corner has been cleared since `ticket` was taken: the
+    /// toast it was for belongs to before the capture and is dropped.
+    func stillWanted(_ ticket: ToastHush.Ticket) -> Bool { hush.stillWanted(ticket) }
+
+    /// Take every toast down at once, hovered and progress ones included, and
+    /// drop any toast already asked for that has not appeared yet. A capture
+    /// shortcut calls this before its overlay, setup card or window appears,
+    /// so nothing in the corner is in the picture or in the way. Instant on
+    /// purpose: a fade is a few frames a freeze-frame could photograph.
+    func clearAll() {
+        hush.clear()
+        guard !items.isEmpty else { return }
+        animTimer?.invalidate()
+        animTimer = nil
+        animStart = nil
+        animMoves = []
+        let cleared = items
+        items = []
+        for item in cleared {
+            item.panel.alphaValue = 0
+            item.panel.orderOut(nil)
+        }
+    }
+
+    #if PHOTONZ_PLAYTEST
+    /// How many toast panels are on screen right now, counted off the panels
+    /// themselves rather than the list, so a panel the list forgot but the
+    /// screen still shows counts.
+    var visiblePanelCount: Int {
+        NSApp.windows.filter { $0.title == Self.panelTitle && $0.isVisible && $0.alphaValue > 0 }.count
+    }
+    #endif
+
     /// Remove a progress toast once its work is done (or failed).
     func dismissProgress(_ progress: ToastProgress) {
         guard let item = items.first(where: { $0.progress === progress }) else { return }
