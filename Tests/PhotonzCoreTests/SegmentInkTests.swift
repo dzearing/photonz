@@ -120,38 +120,43 @@ struct SegmentInkTests {
         let white = try #require(RGBA(hex: "FFFFFF"))
         let states = Set(SegmentInk.pairs(scheme: .light, accent: blue, backdrop: white).map(\.state))
         for state in ["unpicked at rest", "unpicked hovered", "unpicked pressed", "unavailable",
-                      "picked", "picked pressed", "under the moving chip", "picked, window in the back",
+                      "picked", "picked pressed", "picked, moving", "picked, window in the back",
                       "disabled unpicked", "disabled picked"] {
             #expect(states.contains(state), "\(state) is not checked")
         }
     }
 
-    @Test("The chip is the glass itself: no colour is laid over it")
-    func chipIsTheGlass() throws {
-        // Measured 2026-09-30 with the probe in front: tinted regular glass
-        // draws its tint at full strength (system blue came out 0,121,255,
-        // yellow 253,196,0), so what a word sits on is the accent itself.
-        let white = try #require(RGBA(hex: "FFFFFF"))
+    @Test("The chip is one material: the accent's glass over the rail at one strength, at rest and moving alike")
+    func chipIsOneMaterial() throws {
+        // The user, 2026-10-01: "There should be no snapping to solid, or
+        // transitioning of materials! If it's glass, it's glass." A full
+        // tint read as solid blue paint; a separate lens glass while moving
+        // read as murky. One glass, one tint, everywhere.
+        #expect(SegmentInk.chipGlassTint >= 0.35 && SegmentInk.chipGlassTint <= 0.75)
+        let white = try #require(RGBA(hex: "FFFFFF")), black = try #require(RGBA(hex: "000000"))
         for scheme in SegmentInk.Scheme.allCases {
             for accent in Self.accents {
-                let picked = SegmentInk.pairs(scheme: scheme, accent: accent, backdrop: white)
-                    .first { $0.state == "picked" }
-                #expect(picked?.behind == SegmentInk.chip(accent: accent))
+                for backdrop in [white, black] {
+                    let pairs = SegmentInk.pairs(scheme: scheme, accent: accent, backdrop: backdrop)
+                    let rail = SegmentInk.over(SegmentInk.rail(scheme), backdrop)
+                    let expected = SegmentInk.chipDrawn(accent: accent, over: rail)
+                    let rest = pairs.first { $0.state == "picked" }
+                    let moving = pairs.first { $0.state == "picked, moving" }
+                    #expect(rest?.behind == expected)
+                    #expect(moving?.behind == expected)
+                    #expect(rest?.word == moving?.word)
+                }
             }
         }
     }
 
-    @Test("A travelling chip is a lens: the words under it are their own, seen through a hint of the accent")
-    func travellingChipIsALens() throws {
-        #expect(SegmentInk.lensTint > 0 && SegmentInk.lensTint <= 0.25)
-        let blue = try #require(RGBA(hex: "007AFF")), white = try #require(RGBA(hex: "FFFFFF"))
+    @Test("The chip's glass is the accent laid over the rail at the chip's tint")
+    func chipDrawnIsTheTintOverTheRail() throws {
+        let blue = try #require(RGBA(hex: "007AFF"))
         for scheme in SegmentInk.Scheme.allCases {
-            let under = SegmentInk.pairs(scheme: scheme, accent: blue, backdrop: white)
-                .first { $0.state == "under the moving chip" }
-            #expect(under?.word == SegmentInk.word(scheme))
-            let chip = SegmentInk.chip(accent: blue)
-            #expect(under?.behind == SegmentInk.over(RGBA(r: chip.r, g: chip.g, b: chip.b, a: SegmentInk.lensTint),
-                                                     SegmentInk.rail(scheme)))
+            let rail = SegmentInk.rail(scheme)
+            #expect(SegmentInk.chipDrawn(accent: blue, over: rail)
+                    == SegmentInk.over(RGBA(r: blue.r, g: blue.g, b: blue.b, a: SegmentInk.chipGlassTint), rail))
         }
     }
 

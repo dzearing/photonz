@@ -94,8 +94,8 @@ struct SegmentedControlUsageTests {
             #expect(!code.contains(word), "SegmentedControl.swift has \(word) again: one style, the tinted glass chip")
         }
         // The chip is the system's glass, tinted.
-        #expect(code.contains(".glassEffect(") && code.contains(".regular.tint(fill)"),
-                "the chip is a pane of tinted Liquid Glass")
+        #expect(code.contains(".glassEffect(") && code.contains(".regular.tint(fill.opacity(SegmentInk.chipGlassTint))"),
+                "the chip is a pane of tinted Liquid Glass, at the one tint SegmentInk sets")
         // Interactive glass swells past the chip under a press, outside any
         // clip (filmed 2026-09-30), so the chip's glass is not interactive.
         #expect(!code.contains(".interactive()"), "the chip's glass never swells past the chip")
@@ -112,9 +112,11 @@ struct SegmentedControlUsageTests {
         #expect(code.contains("SegmentInk.rail("), "the rail takes its colour from SegmentInk")
         #expect(!code.contains("chipCover"), "nothing is painted over the chip's glass")
         #expect(code.contains("SegmentInk.pickedWordScheme("), "the picked word takes the system's label SegmentInk picks")
-        // While it travels the chip is clear glass riding over the words, so
-        // they bend at its edges.
-        #expect(code.contains(".clear.tint("), "a travelling chip is a clear glass lens")
+        // One material at every moment (the user, 2026-10-01: "There should
+        // be no snapping to solid, or transitioning of materials! If it's
+        // glass, it's glass"): no second glass for a moving chip.
+        #expect(!code.contains(".clear.tint("), "the chip never changes material while it moves")
+        #expect(!code.contains("isLifted"), "the chip has no separate moving look")
         // A disabled control never fades its words below 4.5:1.
         #expect(!code.contains("0.42"), "a faded control cannot keep its words readable")
 
