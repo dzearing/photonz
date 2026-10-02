@@ -5,15 +5,16 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 0.000002,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-02T18:43:34.864Z",
-  "updated": "2026-10-02T18:43:34.959Z",
+  "updated": "2026-10-02T22:24:44.362Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
   "acceptance": [
+    "CORRECTION (user 2026-10-02): the shortcuts are the app's ⇧⌘ capture family (CaptureHotkey.swift: ⇧⌘3 to ⇧⌘6, ⇧⌘6 = edit last capture, which the user just pressed and saw the toasts stay), not Ctrl-Shift; every one of them, as bound in Settings, clears the toasts",
     "Pressing Ctrl-Shift-4, -5 or -6 (whatever each is bound to in Settings, if rebindable) dismisses every visible Photonz toast immediately, before the capture overlay, recording setup or session window appears, so no toast is in the picture or in the way",
     "The dismissal is instant (no fade that could be captured), and a toast that was about to appear from an earlier action is cancelled too",
     "Toasts still show normally at all other times, including the ones the capture itself produces afterwards (e.g. 'Saved')",
@@ -27,6 +28,15 @@
     {
       "t": "2026-10-02T18:43:34.958Z",
       "note": "seq 430 -> 0.000002"
+    },
+    {
+      "t": "2026-10-02T22:15:53.802Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-02T22:24:44.361Z",
+      "note": "USER 2026-10-02: pressed Cmd-Shift-6 (open last capture) and the toasts stayed. The keys are the ⇧⌘3-6 capture family (CaptureHotkey), not Ctrl-Shift as the goal says; cover every one, including 6."
     }
-  ]
+  ],
+  "started": "2026-10-02T22:15:53.800Z"
 }
