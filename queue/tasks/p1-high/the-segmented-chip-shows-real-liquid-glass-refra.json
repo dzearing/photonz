@@ -4,12 +4,12 @@
   "goal": "The picked choice in every row of side-by-side choices sits on the Mac's own Liquid Glass, and when you pick another one it slides over the words like a lens, so they visibly bend at its edges, instead of being a flat painted shape with nothing to refract.",
   "epic": "design-system",
   "priority": "p1-high",
-  "seq": 5e-7,
+  "seq": 40,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T19:50:30.011Z",
-  "updated": "2026-09-30T22:54:12.126Z",
+  "updated": "2026-10-02T02:01:32.966Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window. The user's words (2026-09-30 12:49, screenshot of the Library's Media | Comps mid-move): 'I see no liquid glass refraction on the edges.' Original filing: User 2026-09-30 12:49, screenshot of the Library's Media | Comps control mid-move: 'I see no liquid glass refraction on the edges.' In a42eacb8 the chip is .glassEffect(.regular.tint(accent)) but covered by the accent at 88% opacity (SegmentedControl.swift:422-427, SegmentInk.chipCover = 0.88) so a white word reads in light mode, and it sits BEHIND the labels over a flat black rail, so the glass has nothing to refract and is mostly painted over. Liquid Glass refraction shows where glass passes over detail (Apple's segmented thumb lifts and lenses the labels as it moves). | Done in 7d88a0cd: DesignedSegments (Sources/Photonz/DesignSystem/SegmentedControl.swift) puts the chip in an overlay ABOVE the words; at rest .regular.tint(accent) with the picked word inside the glass (.primary, colorScheme from SegmentInk.pickedWordScheme, only while appearsActive); while travelling/dragging (isLifted: travelling token + dragCenter + shownTravel) .clear.tint(accent @ SegmentInk.lensTint 0.18), inner words hidden, base words unmasked. chipCover and wordsOnChip are gone. Offscreen (legibility sheet glassAsPaint, walk ChipGlassSwitch) paints the tint and the measured word ink. Measured with the probe in front: tinted regular glass draws its tint at full strength; system primary on it is white in dark / black in light for every tint (white on yellow in dark, hence the flip). Window in the back: tint greyed to 48,49,52 (dark) / 119,120,123 (light). filmThumb makes the filmed window key in a front walk (a walk's history strip never has the keys). Film walks hold the front.",
@@ -69,6 +69,18 @@
     {
       "t": "2026-09-30T22:54:12.125Z",
       "note": "Seen while measuring the history filter (2026-09-30): after each pick in the history bar the main thread takes one extra pass of 15 to 20ms, 0.3 to 1s after the click, and it stays with the strip's contents pinned (entries forced to the whole list, 0 tiles built), so it is the segmented control after its chip moves, not the filter. Longest after a move to All (17-23ms), 13-15ms after the others. Reproduce: Scripts/playtest/history-filter-switch-speed-walk.json with a longestUnderMS 16 on the wait after each press instead of on the press."
+    },
+    {
+      "t": "2026-10-02T02:00:11.661Z",
+      "note": "seq 5e-7 -> 10"
+    },
+    {
+      "t": "2026-10-02T02:01:14.363Z",
+      "note": "Triage 2026-10-01: the user answered this card's question with a new report at 18:56 (filed as the-segmented-chip-is-one-glass-material-at-rest, which says it supersedes this task's lens-while-moving instruction). The intake window holds that task, so the digest left this card and task as they are; whoever closes the new task should withdraw this card as answered and close this one."
+    },
+    {
+      "t": "2026-10-02T02:01:32.964Z",
+      "note": "seq 10 -> 40"
     }
   ],
   "started": "2026-09-30T20:31:36.088Z",

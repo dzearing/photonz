@@ -1,0 +1,44 @@
+{
+  "id": "walks-that-fail-in-the-full-sweep-8",
+  "title": "Walks that fail in the full sweep",
+  "goal": "The scripted walks are the app driving itself, and the check between tasks found some that no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-10-01T04:11:52.684Z",
+  "updated": "2026-10-02T02:00:12.014Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-01T18:25:09Z: 700 of 702 walks passed in 177 minutes.\n\nFailing walks (2): an-editing-session-walk, first-long-jump-when-zoomed-in-walk\n\nFull output: queue/sweep/2026-10-01-082825.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: jumping-the-playhead-far-along-a-zoomed-in-long: Walk harness: snapshot time no longer counts on the main thread meter, and play/pause/seek/trim actions zero it; every walk with a picture before a timed wait reads differently; a-whole-walk-run-gets-past-the-1080p-export-walk: probe launcher now waits for the last probe to exit (a-whole-walk-run-gets-past-the-1080p-export-walk); the whole set should get past the 1080p export walk; the-floating-tool-bar-sits-as-tight-as-the-mock: tool bar spacing changed in every Next editor window; the tool-bar walks passed, the rest should be checked in the next full run; every-dropdown-in-the-panel-opens-when-you-click: VideoKit.Dropdown rebuilt as an AppKit pull-down; every video panel dropdown and the timeline Easing changed, used by dozens of walks; the-floating-tool-bar-shows-as-many-tools-as-the: The floating tool bar now folds by width and shows every tool that fits (c03413fb): any walk that clicks a tool bar slot at a fixed point, or expects More on a video, may have moved; pills-and-toasts-say-what-happened-never-how-to: notice wording and canvas pills changed at Next defaults; walks that read describe notes about the Measure pill may have stale notes; walks-that-fail-in-the-full-sweep-7: SegmentedControl in Next: small rows now draw 11pt words (were 13pt by a bug) and narrow rows keep segments instead of dropdowns; every walk touching a segmented row is affected; dragging-a-layer-feels-physical-the-row-lifts-ri: Layers list rows now carry their own drag in Next (no onDrag, a gesture per row, window-activation clicks on); 29 neighbouring walks passed, the rest of the ~280 selectRow walks should be seen by the full set\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
+  "acceptance": [
+    "Every walk the sweep block names as this task's own either passes or is rewritten to match what the app does now",
+    "Each one is run on its own and passes twice in a row",
+    "Any walk that was wrong rather than broken says so in this task log"
+  ],
+  "log": [
+    {
+      "t": "2026-10-01T04:11:52.686Z",
+      "note": "created (rotating check)"
+    },
+    {
+      "t": "2026-10-01T04:11:52.689Z",
+      "note": "rotating check 2026-10-01T04:11:52Z, 50 walks run from 230 onward in the rotation: an-editing-session-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-01T18:25:10.237Z",
+      "note": "sweep 2026-10-01T18:25:09Z: 2 failing (an-editing-session-walk, first-long-jump-when-zoomed-in-walk)"
+    },
+    {
+      "t": "2026-10-02T01:59:36.052Z",
+      "note": "Triage 2026-10-01, looked at the picture: an-editing-session-walk step 24 (labelsWhole) reads '•..' at 1697,50, and in 2-cut-sc.png that spot is the Properties header's '…' menu button (beside the '?' help button), not a word cut short. So the check is misreading an icon as clipped text; the app is fine there. It first went red in the rotating check right after 39d066d8 (click effects) and passed in the one before it, so that commit nudged the header, but the fix belongs in the walk's label reader: an icon is not a label. first-long-jump-when-zoomed-in-walk missed its 50ms budget by 0.8ms (50.8ms) in the 2026-10-01 sweep and passed in the rotating check before; run it twice before touching anything."
+    },
+    {
+      "t": "2026-10-02T02:00:12.013Z",
+      "note": "seq 3520 -> 10"
+    }
+  ],
+  "standing": "walk-sweep"
+}

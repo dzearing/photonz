@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p1-high",
   "seq": 0.000001,
-  "status": "blocked",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T02:46:57.276Z",
-  "updated": "2026-09-30T20:15:56.942Z",
+  "updated": "2026-10-02T01:59:30.777Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window. Built 2026-09-30: Sources/Photonz/DesignSystem/SegmentedControl.swift (DesignedSegments, ChipGlassSwitch), Sources/PhotonzCore/SegmentInk.swift (+tests: every word/state/scheme/accent at 4.5:1), SegmentThumbMotion.swift restored (drag), Scripts/segmented-contrast.swift (run by Scripts/test.sh: draws the shipped control in 14 specimens x light/dark x white/black/grey and measures each word against the pixels behind it; fails below 4.5:1). Walks: segmented-thumb-film-walk (title bar + panel films), segmented-history-film-walk (front: true; history bar films, slack 2pt), segmented-thumb-glass-walk (stills). Audit queue/audits/2026-09-30-tinted-segmented.json.",
@@ -139,6 +139,18 @@
     {
       "t": "2026-09-30T20:15:56.941Z",
       "note": "From the legibility task (2026-09-30): the chip no longer deepens the accent (the user's 10:12 correction); SegmentInk.chip is the accent as drawn, the picked word white (dark only on yellow/graphite, SegmentInk.pickedWord); SegmentInk.minimum and Scripts/segmented-contrast.swift are gone, replaced by the app-wide legibility check in Scripts/test.sh."
+    },
+    {
+      "t": "2026-10-02T01:59:30.711Z",
+      "note": "the question \"The picked choice is now a tinted glass chip that stretches across as it moves. Is this the effect you meant?\" was taken down without an answer: Answered by the user's own report at 12:49 on 2026-09-30, made while looking at this chip: 'I see no liquid glass refraction on the edges.' That report became the-segmented-chip-shows-real-liquid-glass-refra, which was built on top of this chip, and its card now carries the one open question about the segmented control.. Nobody chose anything, so nothing here was decided."
+    },
+    {
+      "t": "2026-10-02T01:59:30.720Z",
+      "note": "the question this was waiting on has been answered: the answer was \"Back to the drawn glass\", so this goes back in the queue with it rather than waiting on a question that is settled."
+    },
+    {
+      "t": "2026-10-02T01:59:30.775Z",
+      "note": "Built and shipped in a42eacb8 (our drawn control back everywhere, tinted glass chip, legible in every state). The user's next word on it was the refraction report, so the remaining question moved to the-segmented-chip-shows-real-liquid-glass-refra and its card; this task's card was withdrawn as answered by that report. Triage 2026-10-01."
     }
   ],
   "started": "2026-09-30T15:05:01.245Z",
@@ -149,5 +161,6 @@
     "segment-tooltips-walk",
     "transition-placement-and-hold-walk",
     "transition-edge-follows-the-pointer-walk"
-  ]
+  ],
+  "completed": "2026-10-02T01:59:30.776Z"
 }

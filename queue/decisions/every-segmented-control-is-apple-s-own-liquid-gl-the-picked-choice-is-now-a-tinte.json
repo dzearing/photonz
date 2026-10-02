@@ -45,6 +45,10 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
-  "created": "2026-09-30T19:16:26.123Z"
+  "status": "withdrawn",
+  "created": "2026-09-30T19:16:26.123Z",
+  "withdrawn": {
+    "reason": "Answered by the user's own report at 12:49 on 2026-09-30, made while looking at this chip: 'I see no liquid glass refraction on the edges.' That report became the-segmented-chip-shows-real-liquid-glass-refra, which was built on top of this chip, and its card now carries the one open question about the segmented control.",
+    "at": "2026-10-02T01:59:30.684Z"
+  }
 }

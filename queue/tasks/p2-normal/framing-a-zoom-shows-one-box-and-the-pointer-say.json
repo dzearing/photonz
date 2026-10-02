@@ -1,0 +1,35 @@
+{
+  "id": "framing-a-zoom-shows-one-box-and-the-pointer-say",
+  "title": "Framing a zoom shows one box, and the pointer says what it will grab",
+  "goal": "While a zoom region is picked, the picture shows the zoom box and the clip's own selection handles at once, so there are two boxes and nothing says which one a press will move. Framing a zoom should show only the zoom box, with the pointer changing over its corners and body, and Escape should let the zoom go.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-01T02:53:05.298Z",
+  "updated": "2026-10-02T02:00:12.127Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Left rough by a-zoom-region-that-frames-a-spot-and-can-follow (audit 2026-09-30-zoom-regions). Box presses are handled in CanvasNSView via zoomBoxUp/onZoomBoxDown (CanvasPointerDrags.swift) and drawn by ZoomBoxOverlay (hit testing off), so the cursor cue belongs in CanvasPointerCue.toolCursor and the handles in the canvas selection chrome when editorState.showsZoomBox. Seen in /tmp/photonz-playtest/a-zoom-follows-the-cursor-walk/1-zoom-added-box-on-the-picture-sc.png.",
+  "acceptance": [
+    "With a zoom picked and the transport stopped, the clip's own selection handles are not drawn; only the zoom box is",
+    "The pointer shows a resize cursor over the box's corners and a hand over its body",
+    "Escape lets a picked zoom go",
+    "A walk at Next defaults photographs the framing state with one box"
+  ],
+  "log": [
+    {
+      "t": "2026-10-01T02:53:05.300Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-02T02:00:12.126Z",
+      "note": "seq 3510 -> 30"
+    }
+  ],
+  "walks": [
+    "a-zoom-is-shaped-by-hand-walk"
+  ]
+}

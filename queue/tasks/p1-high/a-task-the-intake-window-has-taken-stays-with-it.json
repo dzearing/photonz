@@ -1,0 +1,37 @@
+{
+  "id": "a-task-the-intake-window-has-taken-stays-with-it",
+  "title": "A task the intake window has taken stays with it until it hands the task back",
+  "goal": "When the person asks the intake window to take a task itself, the loop has to leave that task alone. Today the loop's safety sweep after every task resets anything marked in progress back to waiting, with no regard for who holds it, so the loop can pick up the very task the person is working on in the other window and the two change the same code at once.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-02T02:01:14.228Z",
+  "updated": "2026-10-02T02:01:32.713Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-01 by the digest pass. Commit 7b9ef022 (19:00:11 local) set the-segmented-chip-is-one-glass-material-at-rest in_progress with the log line \"Taken by the intake window at the user's request ... the loop must not claim it\". One second later the digest ran `node queue/bin/queue.mjs guard`, which printed {\"reset\":[\"the-segmented-chip-is-one-glass-material-at-rest\"],...} and logged \"runner exited without finalizing; reset to pending (attempt 1)\". The digest put it back by hand. guardStuck in queue/bin/queue-lib.mjs resets every in_progress task; queue/bin/go-loop.sh runs `Q guard` after every runner (around line 717), so after the loop's next task the hold is undone again and `next` would claim that task, which sits first in p1. Sequenced just ahead of the user's arrows task for that reason: it protects the task the person is working on right now.",
+  "acceptance": [
+    "A task can be marked as held by the intake window (or any named holder other than a loop runner), through queue.mjs, and the intake skill says to use it when it takes a task",
+    "The safety sweep (guard) leaves a held task in progress and does not count it as a failure; it still resets a loop runner's task that was left in progress",
+    "The loop never claims a held task; handing it back (done, or released to pending) is one queue.mjs command",
+    "A drill: hold a task, run guard and next, the task stays held and unclaimed; release it, and next can claim it",
+    "The dashboard shows who holds an in-progress task"
+  ],
+  "log": [
+    {
+      "t": "2026-10-02T02:01:14.230Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-02T02:01:14.308Z",
+      "note": "seq 430 -> 0.000005"
+    },
+    {
+      "t": "2026-10-02T02:01:32.709Z",
+      "note": "seq 0.000005 -> 20"
+    }
+  ]
+}

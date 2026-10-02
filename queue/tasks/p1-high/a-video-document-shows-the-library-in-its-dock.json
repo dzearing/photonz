@@ -4,12 +4,12 @@
   "goal": "The video mock keeps the Library in the dock so the media pool is one click away, but the app hides the Library until View > Library is chosen, because the user said the Library would almost never be used for pictures. Decide whether a document with a timeline shows it without being asked.",
   "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 30,
+  "seq": 60,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T21:55:35.854Z",
-  "updated": "2026-09-30T12:29:20.106Z",
+  "updated": "2026-10-02T02:01:33.209Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by recordings-and-sounds-in-a-document-sit-on-the-l (2026-09-23): its walk has to run the showLibrary action (the same as View > Library) before any tile exists. Rule lives in PanelSectionVisibility.isShownAutomatically (case library: situation.isLibraryAskedFor, with the user quote) and InspectorPanel (isLibraryVisible gate). Mock: video.html line ~62 (Library keeps its header, the media pool is still one click away) and #gLibrary collapsed at line ~528.",
@@ -53,8 +53,14 @@
       "note": "seq 20 -> 30"
     },
     {
-      "t": "2026-09-30T12:29:20.105Z",
-      "note": "seq 30 -> 30"
+      "t": "2026-10-02T02:00:11.778Z",
+      "note": "seq 30 -> 30",
+      "since": "2026-09-30T12:29:20.105Z",
+      "count": 2
+    },
+    {
+      "t": "2026-10-02T02:01:33.208Z",
+      "note": "seq 30 -> 60"
     }
   ]
 }

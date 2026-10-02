@@ -4,12 +4,12 @@
   "goal": "The audio mock gives a picked sound an Effects group whose add menu offers EQ, Compressor and Noise reduction. The app has none, so the noise cleaning strength sits under Gain for now. Build the sound Effects group and move Noise reduction into it, keeping Normalize's Clean noise checkbox.",
   "epic": "video-audio",
   "priority": "p2-normal",
-  "seq": 30,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-29T18:02:37.973Z",
-  "updated": "2026-09-30T12:29:20.374Z",
+  "updated": "2026-10-02T02:00:12.240Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by normalize-cleans-background-noise-too-on-by-defa (2026-09-29). Model is AudioLevel.noiseReduction (PhotonzCore/NoiseCleaning.swift); panel today is SoundGainInspector.noise in SoundInspector.swift. EQ and Compressor have no model yet.",
@@ -27,6 +27,10 @@
     {
       "t": "2026-09-30T12:29:20.373Z",
       "note": "seq 3440 -> 30"
+    },
+    {
+      "t": "2026-10-02T02:00:12.239Z",
+      "note": "seq 30 -> 50"
     }
   ]
 }

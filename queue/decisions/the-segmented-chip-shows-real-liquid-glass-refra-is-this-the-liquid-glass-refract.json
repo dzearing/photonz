@@ -1,0 +1,49 @@
+{
+  "id": "the-segmented-chip-shows-real-liquid-glass-refra-is-this-the-liquid-glass-refract",
+  "taskId": "the-segmented-chip-shows-real-liquid-glass-refra",
+  "question": "Is this the Liquid Glass refraction you meant on the segmented chip?",
+  "context": "Filmed at 120 fps, dark and light, with the window in front. The brief shows the frames, the chip's edges enlarged, before and after.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Yes, this is it",
+      "summary": "Keep it as filmed: when you pick, the chip lifts into a clear glass lens, the words bend at its curved ends and mirror along its rims as it slides, and it lands as the tinted chip with its word inside.",
+      "pros": [
+        "It is the system's own glass, so it matches the rest of the Mac",
+        "Nothing is painted over the glass any more"
+      ],
+      "cons": [
+        "The words under the middle of the lens are frosted, not sharp"
+      ],
+      "mitigation": "The move lasts about a third of a second, so the frost is a blur in passing, and the word is sharp again the moment the chip lands."
+    },
+    {
+      "id": "b",
+      "label": "Crisp lens",
+      "summary": "Same move, but we draw the lens ourselves: the words under the middle of the chip stay sharp and a little larger, bending only at its edges, like the thumb on an iPhone.",
+      "pros": [
+        "Closest to Apple's own lifting thumb",
+        "The words stay readable the whole way across"
+      ],
+      "cons": [
+        "Our own drawing, not the system's glass, so it could drift from how the Mac draws glass"
+      ],
+      "mitigation": "The rim and tint stay the system's glass; only the bending of the words under it is ours."
+    },
+    {
+      "id": "c",
+      "label": "Stay tinted while it moves",
+      "summary": "The chip keeps its colour as it slides, frosted blue glass the whole way, and the bending shows only at its rim.",
+      "pros": [
+        "The chip never changes look, so the move reads as one object"
+      ],
+      "cons": [
+        "Little refraction to see: the tint and frost hide the words it passes"
+      ],
+      "mitigation": "The rim still catches the light and bends what is right at the edge."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-09-30T21:41:37.069Z"
+}

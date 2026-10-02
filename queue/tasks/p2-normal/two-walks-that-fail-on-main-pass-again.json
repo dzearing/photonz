@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 3490,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T18:46:24.565Z",
-  "updated": "2026-09-30T18:55:45.091Z",
+  "updated": "2026-10-02T01:59:36.001Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-30 on unchanged HEAD 26b43510 in a clean worktree (git worktree add /tmp/photonz-head HEAD; Scripts/playtest.sh <walk> --no-build): every-title-dropdown-opens-on-a-click-walk: step 66 (panelMenu) FAILED: no menu called \"Easing\" is in the window; the ones that are: ... Curve (Linear) 153.0pt wide ... every-caption-control-changes-the-captions-walk: step 87 (key) FAILED: command+z is Edit > Undo, which is dimmed and empty in a walk, and nothing else took the press. menu-checkmarks-walk and panel-name-walk got front: true for the same frozen-menu reason on 2026-09-30 (902f8163). Found by the segmented-control task running its segment walks; not caused by it (same failures on HEAD).",
@@ -31,11 +31,16 @@
     {
       "t": "2026-09-30T18:55:45.090Z",
       "note": "walks every-title-dropdown-opens-on-a-click-walk, every-caption-control-changes-the-captions-walk -> every-title-dropdown-opens-on-a-click-walk, every-caption-control-changes-the-captions-walk, library-import-walk"
+    },
+    {
+      "t": "2026-10-02T01:59:35.998Z",
+      "note": "Triage 2026-10-01: all three now pass on main with no change to their scripts. every-title-dropdown-opens-on-a-click-walk and every-caption-control-changes-the-captions-walk passed in the rotating check at 2026-10-01T02:54Z and again in the full sweep of 2026-10-01 (15:28Z to 18:25Z, 700 of 702 passed, queue/sweep/latest.json); library-import-walk passed in that sweep. The failures on 2026-09-30 were seen in a clean worktree at 26b43510; the app moved on since (the Easing menu the walk names is drawn by the timeline dock). Closing on the sweep's evidence; if any of the three goes red again it lands on the standing walk task."
     }
   ],
   "walks": [
     "every-title-dropdown-opens-on-a-click-walk",
     "every-caption-control-changes-the-captions-walk",
     "library-import-walk"
-  ]
+  ],
+  "completed": "2026-10-02T01:59:36.000Z"
 }

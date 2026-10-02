@@ -4,12 +4,12 @@
   "goal": "User 2026-10-01: 'I would like the arrow tool to have more stylized options... It is extremely mechanical now.' Four references saved in docs/design/references/arrows/: user-ref-25 (a thin hand-drawn curved line with an open hooked head), user-ref-26 (a rough charcoal/marker outline arrow, double-stroked and textured), user-ref-27 (a bold curved stroke with a loose open head), user-ref-28 (a brush stroke that tapers thin at the tail, swells in the middle and ends in a calligraphic swept head). Today arrows have ArrowheadStyle (PhotonzCore/ArrowheadStyle.swift) and straight/curved paths: geometric, uniform width. Compare with Skitch, CleanShot X and Excalidraw's hand-drawn arrows.",
   "epic": "interaction-foundations",
   "priority": "p1-high",
-  "seq": 0.00001,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-02T01:58:52.684Z",
-  "updated": "2026-10-02T01:58:52.768Z",
+  "updated": "2026-10-02T02:01:32.857Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window. References are the user's own images.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-10-02T01:58:52.767Z",
       "note": "seq 440 -> 0.00001"
+    },
+    {
+      "t": "2026-10-02T02:01:32.856Z",
+      "note": "seq 0.00001 -> 30"
     }
   ]
 }

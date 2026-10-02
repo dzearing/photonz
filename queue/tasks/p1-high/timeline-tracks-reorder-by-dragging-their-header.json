@@ -4,12 +4,12 @@
   "goal": "The user asked (2026-09-30) for the lifting, make-room drag to work on the timeline track headers too. Tracks cannot be reordered at all today, so a person who wants a title track above the recording has no way to move it. Dragging a track header should lift it, the other tracks slide aside, and it lands in the gap.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 430,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-01T00:28:12.242Z",
-  "updated": "2026-10-01T11:58:07.520Z",
+  "updated": "2026-10-02T02:01:33.594Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split off dragging-a-layer-feels-physical-the-row-lifts-ri, which built the layers-list half: PhotonzCore/LayerRowDrag.swift (halves, gap, offsets, spring-open, tested) and Photonz/LayerRowDragSession.swift + LayerRowDragViews.swift (lifted row, gap, edge autoscroll through the AppKit scroll view, Escape via a local key monitor, allowsWindowActivationEvents for click-through). The same model should drive track headers: tracks are rows of one pitch. grep found no track reorder anywhere today (EditorState+Tracks.swift, TimelineTrackRows.swift).",
@@ -183,6 +183,18 @@
     {
       "t": "2026-10-01T11:58:07.519Z",
       "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-02T01:59:47.662Z",
+      "note": "Triage 2026-10-01 (design review): this is the second list that lifts a dragged row. The layers list has LayerRowDrag (rows of one height); the set-aside attempt in stash 9af77fa9 adds a separate TrackRowDrag for rows of different heights. Prefer one model for any list of rows, heights included, with the layers list using it too, so the halves rule, gap and spring-open are written once. Not a separate task: do it here if it fits, otherwise say in the log why not."
+    },
+    {
+      "t": "2026-10-02T02:00:11.957Z",
+      "note": "seq 430 -> 60"
+    },
+    {
+      "t": "2026-10-02T02:01:33.592Z",
+      "note": "seq 60 -> 90"
     }
   ],
   "started": "2026-10-01T11:58:05.284Z",
