@@ -27,6 +27,10 @@ struct TimelineTrackRow: View {
     let isBlade: Bool
     /// How tall the rows are zoomed to: the lane and its header grow together.
     var rows: TimelineRowZoom = .compact
+    /// The copy of the track drawn lifted over the others while its header is
+    /// carried (`TrackRowDragSession`). It says nothing about where the track
+    /// is: the track itself, standing invisible in its slot, still does.
+    var isLifted = false
 
     @State private var isHovered = false
     @State private var draftName = ""
@@ -165,10 +169,33 @@ struct TimelineTrackRow: View {
             }
         }
         .contentShape(Rectangle())
+        // Press and move: the whole track lifts and rides the pointer up and
+        // down, and the others make room (`TrackRowDragSession`). Alongside
+        // the name's button rather than under it: a button holds the press
+        // until it is let go, and a plain gesture under one heard nothing of
+        // the drag until the mouse came up, so the track jumped instead of
+        // lifting. A press only becomes a carry once it moves four points, so
+        // a click is still a click.
+        .simultaneousGesture(carryGesture, including: Experiments.shared.draggedLayerLiftsEnabled && !isLifted
+                             ? .all : .subviews)
         .contextMenu { TimelineTrackMenu(track: track, index: index) }
         .help(track.name)
         .accessibilityLabel("Track \(track.name)")
         .panelReadout(readout)
+    }
+
+    private var carryGesture: some Gesture {
+        DragGesture(minimumDistance: 4, coordinateSpace: .named(TimelineDock.tracksSpace))
+            .onChanged { value in
+                let session = editorState.trackRowDrag
+                if !session.isCarrying {
+                    guard !session.refused, editorState.renamingTrackID == nil else { return }
+                    guard session.pickUp(track.id, pointerY: value.startLocation.y, editor: editorState)
+                    else { return }
+                }
+                session.move(pointerY: value.location.y)
+            }
+            .onEnded { _ in editorState.trackRowDrag.letGo() }
     }
 
     private var indent: CGFloat { inGroup ? 10 : 0 }
@@ -422,10 +449,11 @@ struct TimelineTrackRow: View {
         .onGeometryChange(for: CGRect.self) { proxy in
             proxy.frame(in: .named(TimelineDock.tracksSpace))
         } action: { frame in
+            guard !isLifted else { return }
             editorState.trackDropRows[track.id] = TrackDropRow(trackID: track.id, minY: frame.minY,
                                                                maxY: frame.maxY)
         }
-        .onDisappear { editorState.trackDropRows[track.id] = nil }
+        .onDisappear { if !isLifted { editorState.trackDropRows[track.id] = nil } }
     }
 
     /// Every other clip along the track, left to right, which wears the
@@ -1183,6 +1211,6 @@ extension TimelineTrackRow: Equatable {
     nonisolated static func == (a: TimelineTrackRow, b: TimelineTrackRow) -> Bool {
         a.row == b.row && a.inGroup == b.inGroup && a.index == b.index
             && a.trackCount == b.trackCount && a.laneWidth == b.laneWidth && a.isBlade == b.isBlade
-            && a.rows == b.rows
+            && a.rows == b.rows && a.isLifted == b.isLifted
     }
 }

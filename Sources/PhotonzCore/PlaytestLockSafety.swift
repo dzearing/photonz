@@ -138,6 +138,12 @@ public enum PlaytestLockSafety {
         // Added 2026-09-30 by reading: it asks the document for its layers
         // top down, the same list `expectLayers` counts, and no name.
         "expectRows",
+        // Added 2026-10-01 by reading: `expectTracks` asks the document for
+        // its tracks top down, and `dragTrack` drives the timeline's own drag
+        // session the way `dragRow` drives the layers list's, by the track's
+        // name in the document and points worked out from the rows' frames,
+        // with no name looked up through accessibility.
+        "expectTracks", "dragTrack",
         // Added 2026-09-27 by reading: `blank`'s own door with the New Video
         // sheet in place of the canvas, so nothing in it looks a name up.
         "blankVideo",

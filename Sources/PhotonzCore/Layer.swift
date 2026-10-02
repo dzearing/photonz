@@ -1746,6 +1746,13 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// is every layer in every document written before tracks existed.
     public var trackID: UUID?
 
+    /// The audio track this clip's own sound is drawn on, once the tracks have
+    /// been written down (`DocumentTracks.swift`), so the sound stays on its
+    /// track when the tracks are carried up and down. Nil is a sound placed on
+    /// the first audio track it fits, which is every clip in every document
+    /// written before this existed.
+    public var soundTrackID: UUID?
+
     /// Set on a picture that Separate into Layers lifted off a screenshot as a
     /// RUN OF TEXT: the label on a button, a row's caption, a heading. It is
     /// still a picture, because reading the words is a separate step, and this
@@ -1850,6 +1857,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         copy.soundLevel = soundLevel
         // ...and sits on the same track.
         copy.trackID = trackID
+        copy.soundTrackID = soundTrackID
         // A copy of a run of text is still a run of text, so double clicking it
         // still offers to read the words.
         copy.isARunOfText = isARunOfText

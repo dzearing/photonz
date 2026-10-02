@@ -682,6 +682,8 @@ extension Experiments {
     /// A row dragged in the layers list lifts and rides the pointer while the
     /// rows around it open the gap it will land in (`LayerRowDrag`). Off, the
     /// list carries a drag image and draws a drop line, as Current does.
+    /// A track's header on the timeline lifts its track the same way
+    /// (`TrackRowDrag`); off, tracks are not carried at all.
     var draggedLayerLiftsEnabled: Bool { isEnabled(FeatureCatalog.draggedLayerLiftsFlag) }
 
     /// `next-a-separation-arrives-shut`: whether a separation big enough to

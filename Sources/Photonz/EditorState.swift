@@ -2287,6 +2287,9 @@ final class EditorState {
     /// a scripted walk drives the very drag a hand does. A constant: the
     /// session watches its own parts, so the editor never redraws for it.
     let layerRowDrag = LayerRowDragSession()
+    /// A track lifted by its header and carried up or down the timeline, the
+    /// same way (`TrackRowDragSession`).
+    let trackRowDrag = TrackRowDragSession()
 
     /// Where the carried row would land, which is what the reorder line in the
     /// list draws. Written only by `publishRowInHand`.

@@ -1,0 +1,29 @@
+{
+  "feature": "Timeline tracks reorder by dragging their headers",
+  "epic": "video-cutting",
+  "summary": "You can now reorder timeline tracks. Press a track's header and drag up or down: the whole track lifts, the other tracks slide aside, and it drops into the gap. The layers list follows the new order.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open a recording, add a title over it and some music (Sound > Add Sample) so there are four tracks.",
+  "switched": {},
+  "try": [
+    { "do": "Look at the timeline: Title, V1, Audio, Audio 2, top down.", "shot": "2026-10-01-track-reorder-0-start-sc.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed." },
+    { "do": "Press V1's header and drag up past the middle of Title. Keep holding.", "shot": "2026-10-01-track-reorder-1-held-sc.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed." },
+    { "do": "Let go. V1 is on top, and the recording is now in front of the title in the layers list.", "shot": "2026-10-01-track-reorder-2-landed-sc.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed." },
+    { "do": "Drag Audio 2's header up above Audio.", "shot": "2026-10-01-track-reorder-3-music-held-sc.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed." },
+    { "do": "Let go. The music stays on its own track and the recording's sound stays on the other.", "shot": "2026-10-01-track-reorder-4-music-landed-sc.png", "shotNote": "Photographed while the Mac was locked. The window is the real one, drawn and driven normally, with one known cost: colours can read dimmed." },
+    { "do": "Start dragging Title, then press Escape before letting go. It goes back." },
+    { "do": "Press Cmd-Z. The last move is undone in one step." }
+  ],
+  "evaluate": [
+    "Does the lifted track look clearly picked up off the timeline, or is the plate and edge too faint on the dark timeline?",
+    "Does the swap happen where your hand expects it, as you cross the middle of the next track?",
+    "When you drag a track in or out of a group, is it clear from the gap's indent which side you will land on?",
+    "Should a group's heading be draggable too, so the whole group moves at once?"
+  ],
+  "rough": [
+    "No mock draws track reordering. You asked for the layers list's lift on the timeline, so this was checked against that drag rather than a mock frame. The layers list and the tracks now share one model for the gap, the halves and the moved-aside rows.",
+    "Only tracks lift. A group's heading does not, so to move a group you move its tracks one at a time.",
+    "A locked track does not lift at all, the same as a locked layer. The press just does nothing; nothing on screen explains why.",
+    "Premiere does not let you drag tracks, so there is no grown-up habit to match here. The closest one is the layers list in Photoshop, and this works the same way.",
+    "The pointer-driven walk needs the Mac to itself and was forced under the lock to get its pictures. Its drag landed correctly."
+  ]
+}

@@ -45,48 +45,55 @@ public struct LayerRowDrag: Equatable, Sendable {
     /// Every row left standing in the list, top down: what the gap opens
     /// between.
     public private(set) var rest: [LayerPanelRow] = []
-    /// Where the gap sits when the row is back where it came from.
-    public private(set) var homeGap: Int = 0
-    /// Where the gap is now, counted in rows of `rest`: 0 is above the first.
-    public private(set) var gap: Int = 0
     /// How far in the gap is drawn, which is the list the row would join.
     public private(set) var gapDepth: Int = 0
     /// Where letting go would put what is carried, nil while the gap is still
     /// the one the row left, where letting go changes nothing.
     public private(set) var landing: LayerDrop?
+    /// Where everything is drawn, the same lift the timeline's tracks use
+    /// (`RowLift`): every row one `pitch` tall, the first at zero.
+    private var lift: RowLift
+
+    /// Where the gap sits when the row is back where it came from.
+    public var homeGap: Int { lift.homeGap }
+    /// Where the gap is now, counted in rows of `rest`: 0 is above the first.
+    public var gap: Int { lift.gap }
     /// The pointer, in the list's points.
-    public private(set) var pointerY: CGFloat
+    public var pointerY: CGFloat { lift.pointerY }
     /// How far below the grabbed row's top edge the pointer took hold of it, so
     /// the row keeps its place under the pointer rather than jumping to it.
-    public let grabOffset: CGFloat
+    public var grabOffset: CGFloat { lift.grabOffset }
 
     /// Picks `grabbing` up with the pointer at `pointerY`. Nil when there is
     /// nothing to carry it past, or when the row is not in the list.
     public init?(grabbing: UUID, carrying: Set<UUID>, rows: [LayerPanelRow],
                  pitch: CGFloat, pointerY: CGFloat) {
         guard pitch > 0, let index = rows.firstIndex(where: { $0.id == grabbing }) else { return nil }
+        let carried = carrying.union([grabbing])
+        let riding = Self.riding(rows, grabbing: grabbing, carried: carried)
+        guard let lift = RowLift(grabbing: grabbing, riding: riding, rows: Self.laid(rows, pitch: pitch),
+                                 spacing: 0, pointerY: pointerY) else { return nil }
         self.grabbedID = grabbing
-        self.carried = carrying.union([grabbing])
+        self.carried = carried
         self.pitch = pitch
         self.rows = rows
-        self.pointerY = pointerY
-        self.grabOffset = pointerY - CGFloat(index) * pitch
-        lay(rows)
-        guard !rest.isEmpty else { return nil }
-        gap = homeGap
+        self.lift = lift
+        self.hidden = riding
+        self.rest = rows.filter { $0.id != grabbing && !riding.contains($0.id) }
         gapDepth = rows[index].depth
     }
 
-    /// Everything that follows from the rows: which ride along, which stand,
-    /// and where the grabbed one came from.
-    private mutating func lay(_ rows: [LayerPanelRow]) {
-        self.rows = rows
+    /// The rows as the lift measures them: one pitch each, the first at zero.
+    private static func laid(_ rows: [LayerPanelRow], pitch: CGFloat) -> [RowLift.Row] {
+        rows.enumerated().map { RowLift.Row(id: $1.id, top: CGFloat($0) * pitch, height: pitch) }
+    }
+
+    /// The rows that travel with the grabbed one without being it. A carried
+    /// row takes everything under it that sits deeper than it, which is
+    /// exactly its contents: the list draws a group's contents directly under
+    /// its row, one level in.
+    private static func riding(_ rows: [LayerPanelRow], grabbing: UUID, carried: Set<UUID>) -> Set<UUID> {
         var riding: Set<UUID> = []
-        var standing: [LayerPanelRow] = []
-        var home = 0
-        // A carried row takes everything under it that sits deeper than it,
-        // which is exactly its contents: the list draws a group's contents
-        // directly under its row, one level in.
         var carriedDepth: Int?
         for row in rows {
             if let depth = carriedDepth, row.depth > depth {
@@ -96,26 +103,20 @@ public struct LayerRowDrag: Equatable, Sendable {
             carriedDepth = nil
             if carried.contains(row.id) {
                 carriedDepth = row.depth
-                if row.id == grabbedID { home = standing.count } else { riding.insert(row.id) }
-                continue
+                if row.id != grabbing { riding.insert(row.id) }
             }
-            standing.append(row)
         }
-        hidden = riding
-        rest = standing
-        homeGap = home
+        return riding
     }
 
     // MARK: - Where things are drawn
 
     /// Where the lifted row's top edge is drawn: under the pointer, and never
     /// past the first or last place a row could stand.
-    public var liftedTop: CGFloat {
-        min(max(pointerY - grabOffset, 0), CGFloat(rest.count) * pitch)
-    }
+    public var liftedTop: CGFloat { lift.liftedTop }
 
     /// Where the gap's top edge is drawn.
-    public var gapTop: CGFloat { CGFloat(gap) * pitch }
+    public var gapTop: CGFloat { lift.gapTop }
 
     /// Whether this row is drawn somewhere other than its own slot: the grabbed
     /// row (drawn lifted) and every row riding along with it (tucked away).
@@ -124,26 +125,16 @@ public struct LayerRowDrag: Equatable, Sendable {
     /// How far a standing row is drawn from where the list laid it out: a row
     /// between the grabbed one's old slot and the gap moves one row towards
     /// the old slot. Zero for a row that is travelling.
-    public func offset(of id: UUID) -> CGFloat {
-        guard let natural = rows.firstIndex(where: { $0.id == id }),
-              let standing = rest.firstIndex(where: { $0.id == id }) else { return 0 }
-        let drawn = standing < gap ? standing : standing + 1
-        return CGFloat(drawn - natural) * pitch
-    }
+    public func offset(of id: UUID) -> CGFloat { lift.offset(of: id) }
 
     /// How far whatever sits under the last row (the Canvas row) is drawn from
     /// its own slot: up by one row for every row tucked away.
-    public var trailingOffset: CGFloat {
-        CGFloat(rest.count + 1 - rows.count) * pitch
-    }
+    public var trailingOffset: CGFloat { lift.trailingOffset }
 
     /// The standing row the pointer is over, nil over the gap or past the ends.
     public var rowUnderPointer: LayerPanelRow? {
-        guard pointerY >= 0 else { return nil }
-        let drawn = Int((pointerY / pitch).rounded(.down))
-        guard drawn != gap else { return nil }
-        let standing = drawn < gap ? drawn : drawn - 1
-        return rest.indices.contains(standing) ? rest[standing] : nil
+        guard case .row(let standing, _) = lift.spot(pointerY) else { return nil }
+        return rest[standing]
     }
 
     /// The shut group a pointer resting here is aiming at, which the list
@@ -171,40 +162,43 @@ public struct LayerRowDrag: Equatable, Sendable {
     /// what is carried may land at a place; a place it refuses leaves the gap
     /// where it was, so the gap never promises a drop that will not happen.
     public mutating func move(pointerY: CGFloat, canLand: (LayerDrop) -> Bool) {
-        self.pointerY = pointerY
+        lift.pointerY = pointerY
         guard let (drop, newGap, depth) = reading(pointerY), canLand(drop) else { return }
         landing = drop
-        gap = newGap
+        lift.gap = newGap
         gapDepth = depth
     }
 
     /// What the pointer at `y` is asking for, as drawn now: nil while it is
-    /// over the gap, which changes nothing.
+    /// over the gap, which changes nothing. The top half of a row is above
+    /// it, the bottom half below it, and the bottom half of an open group's
+    /// row is inside it, in its first slot.
     private func reading(_ y: CGFloat) -> (LayerDrop, Int, Int)? {
         guard let first = rest.first, let last = rest.last else { return nil }
-        // Above the first row: the very top of the list.
-        guard y >= 0 else { return (.above(first.id), 0, first.depth) }
-        let drawn = Int((y / pitch).rounded(.down))
-        guard drawn != gap else { return nil }
-        let standing = drawn < gap ? drawn : drawn - 1
-        // Past the last row: the very bottom, out at the canvas's own level,
-        // under whatever the last row lives in.
-        guard standing < rest.count else {
+        switch lift.spot(y) {
+        case .gap:
+            return nil
+        case .aboveAll:
+            // The very top of the list.
+            return (.above(first.id), 0, first.depth)
+        case .pastAll:
+            // The very bottom, out at the canvas's own level, under whatever
+            // the last row lives in.
             let root = rest.last { $0.depth == 0 } ?? last
             return (.below(root.id), rest.count, root.depth)
+        case .row(let standing, let upper):
+            let row = rest[standing]
+            if upper { return (.above(row.id), standing, row.depth) }
+            if row.isGroup && row.isExpanded { return (.inside(row.id), standing + 1, row.depth + 1) }
+            return (.below(row.id), standing + 1, row.depth)
         }
-        let row = rest[standing]
-        let fraction = y / pitch - CGFloat(drawn)
-        if fraction < 0.5 { return (.above(row.id), standing, row.depth) }
-        if row.isGroup && row.isExpanded { return (.inside(row.id), standing + 1, row.depth + 1) }
-        return (.below(row.id), standing + 1, row.depth)
     }
 
     /// Called off: the gap goes back to the slot the row came from, and
     /// letting go now changes nothing.
     public mutating func returnHome() {
         landing = nil
-        gap = homeGap
+        lift.gap = homeGap
         gapDepth = rows.first { $0.id == grabbedID }?.depth ?? 0
     }
 
@@ -214,7 +208,11 @@ public struct LayerRowDrag: Equatable, Sendable {
     public mutating func reflow(rows: [LayerPanelRow], canLand: (LayerDrop) -> Bool) {
         guard rows.contains(where: { $0.id == grabbedID }) else { return }
         var previous = landing
-        lay(rows)
+        let riding = Self.riding(rows, grabbing: grabbedID, carried: carried)
+        self.rows = rows
+        hidden = riding
+        rest = rows.filter { $0.id != grabbedID && !riding.contains($0.id) }
+        lift.relay(rows: Self.laid(rows, pitch: pitch), riding: riding)
         // Below a group that has just opened is its first slot now: the row
         // under it is its own first child, so the gap there is inside it.
         if case .below(let id)? = previous,
@@ -223,11 +221,11 @@ public struct LayerRowDrag: Equatable, Sendable {
             landing = previous
         }
         if let previous, let placed = place(of: previous) {
-            gap = placed.gap
+            lift.gap = placed.gap
             gapDepth = placed.depth
         } else {
             landing = nil
-            gap = homeGap
+            lift.gap = homeGap
             gapDepth = rows.first { $0.id == grabbedID }?.depth ?? 0
         }
         move(pointerY: pointerY, canLand: canLand)

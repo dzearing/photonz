@@ -1,0 +1,30 @@
+{
+  "out": "/tmp/photonz-playtest/track-header-lifts-by-pointer",
+  "setup": {
+    "forget": ["all"],
+    "timelineOpen": true
+  },
+  "seed": "The same physical drag as track-header-lifts-walk, made by the pointer itself: a press on V1's header, a pull up and a let go posted to the window, so the header's own gesture lifts the track, Title slides down and V1 lands on top. Photographed with the button still down and after. At Next defaults.",
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [620, 330] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "type", "text": "Shipping today" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "soundAddSample" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectTracks", "tracks": ["Title", "V1", "Audio", "Audio 2"] },
+    { "do": "snapshot", "name": "0-start" },
+    { "do": "windowDrag", "from": [40, 854], "to": [40, 812], "steps": 20, "hold": "1-v1-held-by-the-pointer" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-v1-on-top", "note": "THE TEST: V1's header pressed and pulled up past the middle of Title by the pointer: the track lifted, Title slid down, and V1 landed on top" },
+    { "do": "expectTracks", "tracks": ["V1", "Title", "Audio", "Audio 2"] },
+    { "do": "snapshot", "name": "2-v1-landed" }
+  ]
+}

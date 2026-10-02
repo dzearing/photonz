@@ -428,25 +428,40 @@ struct TimelineDock: View {
                             // Edit mode arriving from View draws its rows a
                             // pass after the dock starts to slide
                             // (`EditModeArrival`).
+                            let carry = editorState.trackRowDrag
                             ForEach(editorState.editArrival.showsTrackRows
                                     ? editorState.timelineRows : []) { row in
-                                switch row {
-                                case .group(let group, let isCollapsed, let tracks):
-                                    TimelineGroupRow(group: group, isCollapsed: isCollapsed,
-                                                     tracks: tracks, laneWidth: laneWidth)
-                                case .track(let track, let inGroup):
-                                    TimelineTrackRow(row: track, inGroup: inGroup,
-                                                     index: order.firstIndex(of: track.id) ?? 0,
-                                                     trackCount: order.count,
-                                                     laneWidth: laneWidth, isBlade: isBlade,
-                                                     rows: rows)
-                                    .equatable()
+                                Group {
+                                    switch row {
+                                    case .group(let group, let isCollapsed, let tracks):
+                                        TimelineGroupRow(group: group, isCollapsed: isCollapsed,
+                                                         tracks: tracks, laneWidth: laneWidth)
+                                    case .track(let track, let inGroup):
+                                        TimelineTrackRow(row: track, inGroup: inGroup,
+                                                         index: order.firstIndex(of: track.id) ?? 0,
+                                                         trackCount: order.count,
+                                                         laneWidth: laneWidth, isBlade: isBlade,
+                                                         rows: rows)
+                                        .equatable()
+                                    }
                                 }
+                                // Where each row stands, measured before it is
+                                // moved aside, for a track carried by its header.
+                                .onGeometryChange(for: CGRect.self) { proxy in
+                                    proxy.frame(in: .named(Self.tracksSpace))
+                                } action: { frame in
+                                    if !carry.isCarrying { carry.rowFrames[row.id] = frame }
+                                }
+                                .modifier(TrackRowDragPlacement(id: row.id, session: carry))
                             }
                             TimelineAddTrackRow(laneWidth: laneWidth)
                         }
                         .padding(.vertical, Self.rowSpacing)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        // A track carried by its header: the gap it will land
+                        // in under the rows, and the track itself over them.
+                        .background(alignment: .topLeading) { TrackDragGap(session: editorState.trackRowDrag) }
+                        .overlay(alignment: .topLeading) { liftedTrack(laneWidth: laneWidth) }
                         .coordinateSpace(.named(Self.tracksSpace))
                         // A box being drawn over the tracks, and a range on
                         // some of them (`EditorState+TrackRange`), in the
@@ -730,6 +745,23 @@ struct TimelineDock: View {
         let words = track.isCaptions && !track.clips.isEmpty && wordsOpen ? CaptionWordsLane.height + 3 : 0
         let zooms = CGFloat(track.zoomedClips.count) * (ZoomLane.height + 3)
         return lane + CGFloat(motionLanes) * (MotionStripView.laneHeight + 3) + inner + words + zooms
+    }
+
+    /// The track lifted by its header, drawn over the others: the real row,
+    /// built again for the drag, never answering the pointer.
+    @ViewBuilder private func liftedTrack(laneWidth: CGFloat) -> some View {
+        let carry = editorState.trackRowDrag
+        if let id = carry.grabbedID,
+           let track = editorState.timelineTrackRows.first(where: { $0.id == id }) {
+            let order = editorState.timelineTrackRows.map(\.id)
+            LiftedTrackRow(session: carry,
+                           row: TimelineTrackRow(row: track, inGroup: carry.grabbedInGroup,
+                                                 index: order.firstIndex(of: id) ?? 0,
+                                                 trackCount: order.count, laneWidth: laneWidth,
+                                                 isBlade: isBlade, rows: editorState.timelineRowZoom,
+                                                 isLifted: true)
+                               .equatable())
+        }
     }
 
     /// The space the tracks are laid out in, which is what a clip carried up

@@ -988,7 +988,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: draggedLayerLiftsFlag,
                     title: "A dragged layer lifts and the list makes room",
-                    description: "Dragging a row in the layers list lifts it under the pointer, and the rows around it move aside to open the gap it will land in. Off means a drag image and a drop line.",
+                    description: "Dragging a layer row or a track's header lifts it under the pointer, and the rows around it move aside to open the gap it lands in. Off: a drag image and drop line, and tracks stay put.",
                     area: .layers,
                     isEnabled: false,
                     parameters: []),

@@ -505,13 +505,18 @@ struct PlaytestScriptTests {
     @Test("A windowDrag step is a press, a pull and a let go anywhere in the window, in window points")
     func windowDragStep() throws {
         let script = try decode("""
-        { "steps": [ { "do": "windowDrag", "from": [691, 943], "to": [864, 943], "steps": 6 },
+        { "steps": [ { "do": "windowDrag", "from": [691, 943], "to": [864, 943], "steps": 6,
+                       "hold": "mid" },
                      { "do": "windowDrag", "from": [10, 20], "to": [30, 40] } ] }
         """)
-        guard case .windowDrag(let from, let to, let steps) = script.steps[0],
-              case .windowDrag(let from2, _, let steps2) = script.steps[1] else {
+        guard case .windowDrag(let from, let to, let steps, let hold) = script.steps[0],
+              case .windowDrag(let from2, _, let steps2, let noHold) = script.steps[1] else {
             Issue.record("windowDrag"); return
         }
+        // A picture taken with the button still down, the only moment what
+        // is in the hand is on screen.
+        #expect(hold == "mid")
+        #expect(noHold == nil)
         #expect(from.point == CGPoint(x: 691, y: 943))
         #expect(from.space == .window)
         #expect(to.point == CGPoint(x: 864, y: 943))
@@ -3065,6 +3070,42 @@ struct PlaytestScriptTests {
     func expectRowsNeedsRows() {
         #expect(throws: (any Error).self) {
             try decode(#"{ "steps": [ { "do": "expectRows" } ] }"#)
+        }
+    }
+
+    // A track carried by its header is driven through the timeline's own
+    // drag, so a walk can lift one, photograph it in the air, and let it go.
+    @Test("A dragTrack step names the track, the row it lands against, and where")
+    func dragTrackNamesBoth() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragTrack", "track": "V1", "onto": "Title", "zone": "below",
+                       "hold": "mid", "cancel": true },
+                     { "do": "dragTrack", "track": "Audio", "onto": "V1" } ] }
+        """)
+        guard case .dragTrack(let track, let onto, let zone, let hold, let cancel) = script.steps[0],
+              case .dragTrack(_, _, let defaultZone, let noHold, let noCancel) = script.steps[1] else {
+            Issue.record("dragTrack"); return
+        }
+        #expect(track == "V1" && onto == "Title" && zone == .below && hold == "mid" && cancel)
+        #expect(defaultZone == .above && noHold == nil && !noCancel)
+        #expect(script.steps[0].name == "dragTrack")
+        #expect(PlaytestStep.names.contains("dragTrack"))
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("dragTrack"))
+    }
+
+    @Test("An expectTracks step names the timeline's tracks top down, two spaces inside a group")
+    func expectTracksNamesThem() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectTracks", "tracks": ["V1", "  Title", "Audio"] } ] }
+        """)
+        guard case .expectTracks(let tracks) = script.steps[0] else {
+            Issue.record("expectTracks"); return
+        }
+        #expect(tracks == ["V1", "  Title", "Audio"])
+        #expect(PlaytestStep.names.contains("expectTracks"))
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectTracks"))
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "expectTracks" } ] }"#)
         }
     }
 

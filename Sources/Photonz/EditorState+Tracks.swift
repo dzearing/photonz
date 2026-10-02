@@ -217,6 +217,14 @@ extension EditorState {
         documentMomentChanged()
     }
 
+    /// Let go of a track carried by its header: it lands, the stack follows,
+    /// and it is the picked track, in one step to undo.
+    func moveTrack(_ id: UUID, _ landing: TrackLanding) {
+        guard var preview = document, preview.moveTrack(id, landing) else { return }
+        perform { $0.moveTrack(id, landing) }
+        selectedTrackIDs = [id]
+    }
+
     /// Gather the tracks a menu acts on into a group.
     func groupTracks(from id: UUID) {
         let ids = tracksActedOn(from: id)

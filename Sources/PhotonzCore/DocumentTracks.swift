@@ -266,12 +266,26 @@ extension PhotonzDocument {
         }
         var linkedTracks: [DocumentTrack] = []
         var linked: [UUID: [UUID]] = [:]
+        func isFree(_ track: UUID, _ span: Range<Int>) -> Bool {
+            !(taken[track] ?? []).contains { $0.lowerBound < span.upperBound && span.lowerBound < $0.upperBound }
+        }
+        // A sound already written onto a track stays on it, so carrying an
+        // audio track up or down carries the sound with it rather than handing
+        // the sound to whichever track is now first. Those go down first, so
+        // a sound nobody has placed never takes the place one already holds.
+        var placed: Set<UUID> = []
         for clip in speakers {
+            guard let pin = clip.soundTrackID, written[pin]?.kind == .audio else { continue }
+            let span = clipSpan(clip, movedTo: nil)
+            guard isFree(pin, span) else { continue }
+            taken[pin, default: []].append(span)
+            linked[pin, default: []].append(clip.id)
+            placed.insert(clip.id)
+        }
+        for clip in speakers where !placed.contains(clip.id) {
             let span = clipSpan(clip, movedTo: nil)
             let candidates = tracks.filter { $0.kind == .audio } + linkedTracks
-            let fits = candidates.first { track in
-                !(taken[track.id] ?? []).contains { $0.lowerBound < span.upperBound && span.lowerBound < $0.upperBound }
-            }
+            let fits = candidates.first { isFree($0.id, span) }
             let track: DocumentTrack
             if let fits {
                 track = fits
@@ -463,11 +477,19 @@ extension PhotonzDocument {
         let layout = trackLayout()
         guard tracks != layout.tracks || layout.clips.contains(where: { track, ids in
             ids.contains { layer(id: $0)?.trackID != track }
+        }) || layout.linked.contains(where: { track, ids in
+            ids.contains { layer(id: $0)?.soundTrackID != track }
         }) else { return }
         tracks = layout.tracks
         for (track, ids) in layout.clips {
             for id in ids where layer(id: id)?.trackID != track {
                 updateLayer(id: id) { $0.trackID = track }
+            }
+        }
+        // And the track each clip's own sound is drawn on.
+        for (track, ids) in layout.linked {
+            for id in ids where layer(id: id)?.soundTrackID != track {
+                updateLayer(id: id) { $0.soundTrackID = track }
             }
         }
     }
@@ -588,6 +610,60 @@ extension PhotonzDocument {
         for (slot, layer) in zip(slots, sorted) { layers[slot] = layer }
     }
 
+    // MARK: Carrying a track up or down
+
+    /// Whether a track can be picked up by its header: it is there and it is
+    /// not locked, the way a locked layer stays put in the layers list.
+    public func canMoveTrack(_ id: UUID) -> Bool {
+        guard let track = track(id: id) else { return false }
+        return !track.isLocked
+    }
+
+    /// Carry a track to another place in the timeline's list, and the clips on
+    /// it with it: a track higher up is further forward in the picture, so the
+    /// stack follows. Above or below a track puts it in that track's group (or
+    /// in none); above or below a group's heading puts it outside the group, at
+    /// its top or under its last track; inside a group is the group's first
+    /// slot. False, and nothing changed, when it would land where it is.
+    @discardableResult
+    public mutating func moveTrack(_ id: UUID, _ landing: TrackLanding) -> Bool {
+        guard canMoveTrack(id) else { return false }
+        var order = timelineTracks
+        guard let from = order.firstIndex(where: { $0.id == id }) else { return false }
+        var moving = order.remove(at: from)
+        let place: (index: Int, group: UUID?)
+        switch landing {
+        case .above(let target):
+            if let index = order.firstIndex(where: { $0.id == target }) {
+                place = (index, order[index].groupID)
+            } else {
+                // A heading: over the group's first track. A group whose only
+                // track is the one in hand has no tracks left to be over, so
+                // the track stays where it was, out of the group.
+                place = (order.firstIndex { $0.groupID == target } ?? from, nil)
+            }
+        case .below(let target):
+            if let index = order.firstIndex(where: { $0.id == target }) {
+                place = (index + 1, order[index].groupID)
+            } else {
+                place = ((order.lastIndex { $0.groupID == target }).map { $0 + 1 } ?? from, nil)
+            }
+        case .inside(let group):
+            guard trackGroups.contains(where: { $0.id == group }) else { return false }
+            place = (order.firstIndex { $0.groupID == group } ?? from, group)
+        }
+        guard place.index != from || place.group != moving.groupID else { return false }
+        materializeTracks()
+        moving = tracks.first { $0.id == id } ?? moving
+        moving.groupID = place.group
+        var written = tracks.filter { $0.id != id }
+        written.insert(moving, at: min(max(0, place.index), written.count))
+        tracks = written
+        dropEmptyTrackGroups()
+        restackByTracks()
+        return true
+    }
+
     // MARK: Groups
 
     /// Gather tracks into a new group, next to the topmost of them.
@@ -638,6 +714,18 @@ extension PhotonzDocument {
         let inUse = Set(tracks.compactMap(\.groupID))
         trackGroups.removeAll { !inUse.contains($0.id) }
     }
+}
+
+/// Where a track carried up or down the timeline by its header lands, named
+/// by the row it lands against: a track, or a group's heading.
+public enum TrackLanding: Hashable, Sendable {
+    /// Over this track, in its group; or over this group, outside it.
+    case above(UUID)
+    /// Under this track, in its group; or under this group's last track,
+    /// outside it.
+    case below(UUID)
+    /// The first slot inside this group.
+    case inside(UUID)
 }
 
 // MARK: - Where a dragged clip lands

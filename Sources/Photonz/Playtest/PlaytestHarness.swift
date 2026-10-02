@@ -1508,7 +1508,7 @@ private final class Run {
                  "\(url.lastPathComponent) let go at \(short(at.point)) \(at.space.rawValue) = view \(short(viewPoint))\(held)",
                  state: describe())
 
-        case .windowDrag(let from, let to, let steps):
+        case .windowDrag(let from, let to, let steps, let hold):
             let window = try requireWindow()
             let a = try windowPoint(from), b = try windowPoint(to)
             var stamp = ProcessInfo.processInfo.systemUptime
@@ -1533,11 +1533,18 @@ private final class Run {
                      pressure: 1)
                 await sleep(0.04)
             }
+            var held = ""
+            if let hold, let content = window.contentView {
+                await sleep(0.35)
+                try snapshot(content, name: hold)
+                await screenCapture(window, name: hold)
+                held = ", held \(hold).png"
+            }
             post(.leftMouseUp, at: b, pressure: 0)
             await sleep(0.3)
             await giveTheFrontBack(front)
             note(number, "windowDrag", "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue), "
-                 + "posted to the window in \(steps) moves\(front.note)")
+                 + "posted to the window in \(steps) moves\(held)\(front.note)")
         case .windowClick(let at, let count):
             // A click, or two in a row, posted to the window the way
             // `windowDrag` posts its press, so it lands on whatever SwiftUI
@@ -2066,6 +2073,8 @@ private final class Run {
 
         case .dragRow(let row, let onto, let zone, let hold, let cancel):
             try await dragRow(row, onto: onto, zone: zone, hold: hold, cancel: cancel, number: number)
+        case .dragTrack(let track, let onto, let zone, let hold, let cancel):
+            try await carryTrack(track, onto: onto, zone: zone, hold: hold, cancel: cancel, number: number)
         case .dragColor(let from, let onto, let hold, let expect, let says):
             try await dragColor(from, onto: onto, hold: hold, expect: expect, says: says,
                                 number: number)
@@ -2306,6 +2315,9 @@ private final class Run {
 
         case .expectRows(let rows):
             note(number, step.name, try checkRows(rows), state: describe())
+
+        case .expectTracks(let tracks):
+            note(number, step.name, try checkTracks(tracks), state: describe())
 
         case .expectTimeline(let claim):
             note(number, step.name, try checkTimeline(claim), state: describe())
@@ -9101,6 +9113,18 @@ private final class Run {
         return "the layers list reads \(spelled), as claimed"
     }
 
+    private func checkTracks(_ expected: [String]) throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.document else { throw Failure(description: "no document is open") }
+        let tracks = document.timelineTracks.map { ($0.groupID == nil ? "" : "  ") + $0.name }
+        let spelled = tracks.map { "\"\($0)\"" }.joined(separator: ", ")
+        guard tracks == expected else {
+            throw Failure(description: "the timeline's tracks read \(spelled), not "
+                + expected.map { "\"\($0)\"" }.joined(separator: ", "))
+        }
+        return "the timeline's tracks read \(spelled), as claimed"
+    }
+
     private func checkLayers(atLeast: Int?, atMost: Int?) throws -> String {
         let editor = try requireEditor()
         let layers = editor.document?.allLayers ?? []
@@ -11700,6 +11724,115 @@ private final class Run {
              "\"\(name)\" lifted and carried \(zone.rawValue) \"\(onto)\": the gap opened \(promised) "
                 + "at depth \(gapDepth), drop \(moved ? "landed" : "did not land")\(held), \(rowInHand()); "
                 + "while carried \(carrying); settling and landing \(dropping)",
+             state: describe())
+    }
+
+    /// Lifts a track on the timeline by its header and carries it against
+    /// another row, through the very `TrackRowDragSession` the header's own
+    /// press drives, a few points at a time the way a hand moves, so the
+    /// tracks spring aside and the gap opens for real. Needs no name looked up
+    /// through accessibility and no front.
+    ///
+    /// Where on the row it aims is the user's rule: the top half of a row is
+    /// above it, the bottom half below it, and `inside` is the bottom half of
+    /// an open group's heading.
+    private func carryTrack(_ name: String, onto: String, zone: PlaytestDropZone,
+                            hold: String?, cancel: Bool, number: Int) async throws {
+        let window = try requireWindow()
+        guard let content = window.contentView, let editor, let document = editor.document else {
+            throw Failure(description: "the window has no content view")
+        }
+        let session = editor.trackRowDrag
+        guard let source = document.timelineTracks.first(where: { $0.name == name }) else {
+            throw Failure(description: "no track called \"\(name)\" on the timeline")
+        }
+        let targetID = document.timelineTracks.first(where: { $0.name == onto })?.id
+            ?? document.trackGroups.first(where: { $0.name == onto })?.id
+        guard let targetID else {
+            throw Failure(description: "no track or group called \"\(onto)\" on the timeline")
+        }
+        guard let frame = session.rowFrames[source.id] else {
+            throw Failure(description: "the track \"\(name)\" is not on screen: open the timeline first")
+        }
+        let start = frame.minY + min(frame.height / 2, 12)
+        let before = editor.document
+        guard session.pickUp(source.id, pointerY: start, editor: editor) else {
+            session.letGo()
+            note(number, "dragTrack", "\"\(name)\" could not be picked up: it is locked, or alone",
+                 state: describe())
+            return
+        }
+        await sleep(0.2)
+        let fraction: CGFloat = zone == .above ? 0.25 : 0.75
+        func aim() -> CGFloat? {
+            guard let drag = session.drag, let row = drag.rest.first(where: { $0.id == targetID }) else { return nil }
+            let top = row.top + drag.offset(of: targetID)
+            return top + (row.height + drag.spacing) * fraction
+        }
+        func glide(to goal: CGFloat) async {
+            let from = session.drag?.pointerY ?? start
+            let steps = 14
+            for step in 1...steps {
+                session.move(pointerY: from + (goal - from) * CGFloat(step) / CGFloat(steps))
+                await sleep(0.03)
+            }
+        }
+        guard let goal = aim() else {
+            session.cancel()
+            throw Failure(description: "\"\(onto)\" is not a row \"\(name)\" can be carried to")
+        }
+        MainThreadMeter.shared.reset()
+        ViewBuildMeter.shared.reset()
+        // Aimed once, at the row where it stood: by the time the pointer is
+        // there the gap has opened under it, which is where a hand stops.
+        await glide(to: goal)
+        await sleep(0.35)
+        let carrying = MainThreadMeter.shared.report + ", " + ViewBuildMeter.shared.report
+        let landing = session.drag?.landing
+        var held = ""
+        if let hold {
+            try snapshot(content, name: hold)
+            await screenCapture(window, name: hold)
+            held = ", held \(hold).png"
+        }
+        if cancel {
+            for type in [NSEvent.EventType.keyDown, .keyUp] {
+                if let key = NSEvent.keyEvent(with: type, location: .zero, modifierFlags: [],
+                                              timestamp: ProcessInfo.processInfo.systemUptime,
+                                              windowNumber: window.windowNumber, context: nil,
+                                              characters: "\u{1b}", charactersIgnoringModifiers: "\u{1b}",
+                                              isARepeat: false, keyCode: 53) {
+                    NSApp.postEvent(key, atStart: false)
+                }
+            }
+        } else {
+            session.letGo()
+        }
+        await sleep(0.7)
+        let moved = editor.document != before
+        if cancel {
+            if moved { throw Failure(description: "Escape was pressed and the tracks moved anyway") }
+            if session.isCarrying { throw Failure(description: "Escape was pressed and the track is still in the air") }
+            note(number, "dragTrack",
+                 "\"\(name)\" lifted and carried \(zone.rawValue) \"\(onto)\", then Escape: it went back "
+                    + "where it came from and nothing changed\(held)",
+                 state: describe())
+            return
+        }
+        if session.isCarrying { throw Failure(description: "the track is still in the air after letting go") }
+        let promised = landing.map { landing -> String in
+            func named(_ id: UUID) -> String {
+                document.track(id: id)?.name ?? document.trackGroups.first { $0.id == id }?.name ?? "a row"
+            }
+            return switch landing {
+            case .above(let id): "above \"\(named(id))\""
+            case .below(let id): "below \"\(named(id))\""
+            case .inside(let id): "inside \"\(named(id))\""
+            }
+        } ?? "back where it came from"
+        note(number, "dragTrack",
+             "\"\(name)\" lifted and carried \(zone.rawValue) \"\(onto)\": the gap opened \(promised), "
+                + "drop \(moved ? "landed" : "did not land")\(held); while carried \(carrying)",
              state: describe())
     }
 

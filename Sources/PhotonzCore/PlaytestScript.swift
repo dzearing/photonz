@@ -2486,7 +2486,9 @@ public enum PlaytestStep: Sendable, Equatable {
     /// to the canvas, so it reaches whatever is under the pointer the way a
     /// hand does: a clip on the timeline, the level line on a sound, a fade
     /// handle. Points are window points, top left, unless `space` says other.
-    case windowDrag(from: PlaytestPoint, to: PlaytestPoint, steps: Int)
+    /// `hold` names a picture taken at the end of the pull with the button
+    /// still down, the only moment what is in the hand is on screen.
+    case windowDrag(from: PlaytestPoint, to: PlaytestPoint, steps: Int, hold: String?)
     /// A click posted to the WINDOW, `count` presses in a row (2 is a
     /// double-click), so it reaches whatever SwiftUI view is under the pointer
     /// the way a hand's does: the timeline's top edge, a clip. Window points,
@@ -2777,6 +2779,15 @@ public enum PlaytestStep: Sendable, Equatable {
     /// it came from with nothing changed. In Next only, where the row is
     /// lifted rather than carried by a drag session.
     case dragRow(row: String, onto: String, zone: PlaytestDropZone, hold: String?, cancel: Bool)
+    /// Lift a track on the timeline by its header and carry it against
+    /// another row, a track or a group's heading, named the way the timeline
+    /// shows it: `above` is that row's top half, `below` its bottom half, and
+    /// `inside` a group's heading is the group's first slot. Driven through
+    /// the timeline's own drag (`TrackRowDragSession`) a few points at a time,
+    /// the way a hand moves. `hold` names a picture taken with the track in
+    /// the air; `cancel: true` presses Escape instead of letting go, and the
+    /// track must go back with nothing changed.
+    case dragTrack(track: String, onto: String, zone: PlaytestDropZone, hold: String?, cancel: Bool)
     /// Pick the colour up off one swatch in the right hand panel and let go of
     /// it on another, naming each by the row it sits on: "Fill", "Outline",
     /// "Shadow". `hold` names a picture taken with the colour still over the
@@ -3266,6 +3277,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// ended up, depth included, since the foot of a group and the row under
     /// it look alike in a picture.
     case expectRows([String])
+    /// The timeline's tracks, top down, exactly as they must read now: one
+    /// name per track, two spaces in front of a track inside a group, a
+    /// folded group's tracks counted. Asks the DOCUMENT.
+    case expectTracks([String])
     /// What the timeline keys did (`TimelineKeys.swift`): where the playhead
     /// is to the millisecond, whether the timeline or the canvas has the
     /// keyboard, how fast it is playing, which of the timeline's tools is in
@@ -3604,9 +3619,9 @@ public enum PlaytestStep: Sendable, Equatable {
     public static let names: [String] = [
         "action", "appKey", "appearance", "blank", "blankVideo", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragComponent", "dragGrip",
-        "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragSection", "dragTile", "dragTiming",
+        "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRows", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "filmThumb", "filmWindow", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "filmThumb", "filmWindow", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -3668,6 +3683,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .dragTile: "dragTile"
         case .pickUpTile: "pickUpTile"
         case .dragRow: "dragRow"
+        case .dragTrack: "dragTrack"
         case .dragColor: "dragColor"
         case .dragSection: "dragSection"
         case .dragClip: "dragClip"
@@ -3702,6 +3718,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectToast: "expectToast"
         case .expectLayers: "expectLayers"
         case .expectRows: "expectRows"
+        case .expectTracks: "expectTracks"
         case .expectTimeline: "expectTimeline"
         case .expectPlaybackNeverBlank: "expectPlaybackNeverBlank"
         case .expectPlaybackShows: "expectPlaybackShows"
@@ -3935,7 +3952,7 @@ public enum PlaytestStep: Sendable, Equatable {
                 from.space = .window
                 to.space = .window
             }
-            self = .windowDrag(from: from, to: to, steps: max(1, steps))
+            self = .windowDrag(from: from, to: to, steps: max(1, steps), hold: try f.optionalString("hold"))
         case "windowClick":
             var at = try f.point("at")
             if fields["space"] == nil { at.space = .window }
@@ -4138,6 +4155,15 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .dragRow(row: try f.string("row"), onto: try f.string("onto"),
                             zone: zone, hold: try f.optionalString("hold"),
                             cancel: try f.optionalFlag("cancel") ?? false)
+        case "dragTrack":
+            let zone: PlaytestDropZone = if fields["zone"] == nil {
+                .above
+            } else {
+                try f.enumValue("zone", PlaytestDropZone.self)
+            }
+            self = .dragTrack(track: try f.string("track"), onto: try f.string("onto"),
+                              zone: zone, hold: try f.optionalString("hold"),
+                              cancel: try f.optionalFlag("cancel") ?? false)
         case "dragColor":
             let expect: PlaytestColorDropExpectation = if fields["expect"] == nil {
                 .takes
@@ -4637,6 +4663,13 @@ public enum PlaytestStep: Sendable, Equatable {
                     + "two spaces in front of a name for each group it sits inside")
             }
             self = .expectRows(rows)
+        case "expectTracks":
+            let tracks = try f.optionalStrings("tracks")
+            guard !tracks.isEmpty else {
+                throw f.invalid("tracks", "expectTracks has to name the tracks: \"tracks\" top down, "
+                    + "two spaces in front of a track inside a group")
+            }
+            self = .expectTracks(tracks)
         case "expectTimeline":
             let keyboard: PlaytestTimelineClaim.Keyboard?
             switch try f.optionalString("keyboard") {
