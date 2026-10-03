@@ -1,0 +1,30 @@
+{
+  "id": "find-out-whether-a-press-step-s-frame-guard-can",
+  "title": "Find out whether a press step's frame guard can see the click it is guarding",
+  "goal": "The check that holds a history filter switch to one frame may not be timing the switch itself: the work right after the click (building a strip of new tiles) never showed up in its reading. If so, a switch could get slow and the walk would stay green.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 3530,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-03T03:08:50.218Z",
+  "updated": "2026-10-03T03:08:50.221Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-10-02 while working walking-the-history-strip-with-the-arrow-keys-ke. With temporary logging (CACurrentMediaTime per HistoryOverlayCell body, per MainThreadMeter.reset, and per counted pass >5ms from the meter's own observer), pressing \"Videos\" in history-filter-switch-speed-walk logged: meter reset at 0ms, 14 tile bodies built between 12ms and 28ms after it, filter onChange at 41ms, and NO counted pass longer than 5ms until 300ms later. So at least ~16ms of app work right after the click was not in the reading; the step reported longest 4-5ms on the original code. Suspect: pressControl's settle loop runs look()/isRestless() (accessibility reads) inside MainThreadMeter.exclude, and an accessibility read forces SwiftUI's pending update to run synchronously inside the excluded span, so the app's own work is subtracted as the harness's (PlaytestHarness.swift around the settle loop, `let began = CACurrentMediaTime(); let restless = isRestless(); let now = try? look(); MainThreadMeter.shared.exclude(...)`). Not confirmed: the update might also run inside the synthesized mouse-down sendEvent before the meter's pass bookkeeping. Repro: add the logging above, run Scripts/playtest.sh Scripts/playtest/history-filter-switch-speed-walk.json, read the lines around the Videos press.",
+  "acceptance": [
+    "It is known, with a reproduction, whether the main-thread meter counts the pass in which a pressed control's change is applied",
+    "If it does not, a press step's longestUnderMS fails when the click's own pass runs long, shown by a walk that makes one deliberately slow",
+    "history-filter-switch-speed-walk still passes"
+  ],
+  "log": [
+    {
+      "t": "2026-10-03T03:08:50.220Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "history-filter-switch-speed-walk"
+  ]
+}

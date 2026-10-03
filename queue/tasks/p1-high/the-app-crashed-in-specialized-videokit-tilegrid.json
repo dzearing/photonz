@@ -1,0 +1,27 @@
+{
+  "id": "the-app-crashed-in-specialized-videokit-tilegrid",
+  "title": "The app crashed in specialized VideoKit.TileGrid.plan",
+  "goal": "Crash watch caught a crash in the loop's probe app at 2026-10-01 20:12:58.00 -0700: EXC_BREAKPOINT (SIGTRAP) in specialized VideoKit.TileGrid.plan(width:count:) < VideoKit.TileGrid.sizeThatFits(proposal:subviews:cache:) < static PhotonzApp.$main(). Read the report, reproduce it, fix the cause, and add a test that would have caught it.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 450,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-03T05:37:37.502Z",
+  "updated": "2026-10-03T05:37:37.505Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-10-01-201258.ips\nException: EXC_BREAKPOINT SIGTRAP\nMessages: \nStack (app frames):\nspecialized VideoKit.TileGrid.plan(width:count:) (VideoKitPicker.swift:141)\nVideoKit.TileGrid.sizeThatFits(proposal:subviews:cache:) (VideoKitPicker.swift:116)\nstatic PhotonzApp.$main() (PhotonzApp.swift)\nPhotonz_main (PhotonzApp.swift)",
+  "acceptance": [
+    "Reproduced (or the exact conditions shown from the report) before the fix",
+    "The cause fixed in Photonz code, with a test or walk that fails before and passes after",
+    "crash-watch shows no new report with this signature for a week of walks"
+  ],
+  "log": [
+    {
+      "t": "2026-10-03T05:37:37.504Z",
+      "note": "created (crash-watch)"
+    }
+  ]
+}

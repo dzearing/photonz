@@ -1,0 +1,30 @@
+{
+  "id": "the-first-editor-window-after-launch-opens-as-qu",
+  "title": "The first editor window after launch opens as quickly as the ones after it",
+  "goal": "Opening the first capture or recording after the app starts takes about a fifth of a second longer than opening the next one, because the editor window is built from nothing the first time. Make the first window as quick as later ones, so opening a recording right after recording it feels instant even when it is the first thing opened.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 3520,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-02T21:00:29.033Z",
+  "updated": "2026-10-02T21:00:29.036Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found on 2026-10-02 while making a recording open at Stop (a-recording-has-its-thumbnail-and-opens-the-mome). Reproduce: remove the first step (openSampleRecording) from Scripts/playtest/a-recording-opens-at-stop-walk.json and run it with Scripts/playtest.sh --no-build: step 1 fails 'the window showed the picture 448 ms after Stop' (468, 547, 553 ms on reruns); with the step in it reads 107-188 ms. Timestamps written from AppCoordinator.openWindow, ImageEditorRootView.body and EditorView.body on a cold run: openWindowAction called at +60 ms after Stop, first root body +109 ms, first EditorView body +131 ms, then nothing until a SECOND EditorState() is made and the root body runs again at +326 ms (about 195 ms inside SwiftUI's first build of EditorView's subtree), root .task +341 ms, openWindow returns +388 ms. A warm run: openWindow asked +40, returned +81, picture +107. setActivationPolicy(.regular) and AppFront.activate took about 2 ms, so they are not it. Note SwiftUI builds EditorState twice on the first window (two 'state init' marks). The editor's code after .task is 2 ms; the cost is the view tree's first build (type metadata, symbol images, fonts, first CI/Metal contexts are candidates; `sample` on the probe attached too late to catch it, so profile with signposts or Instruments).",
+  "acceptance": [
+    "The first editor window of a run shows its picture within 100 ms of the second window's time, measured the same way on the same machine",
+    "Measured with the open-at-stop walk run without its warm-up step, before and after, and the numbers are in the task log",
+    "No window, panel or Dock icon appears that the person did not ask for"
+  ],
+  "log": [
+    {
+      "t": "2026-10-02T21:00:29.035Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "a-recording-opens-at-stop-walk"
+  ]
+}

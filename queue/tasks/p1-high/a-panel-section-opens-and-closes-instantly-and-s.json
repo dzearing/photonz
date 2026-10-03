@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p1-high",
   "seq": 0.0000019,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-02T22:31:23.927Z",
-  "updated": "2026-10-02T22:31:24.013Z",
+  "updated": "2026-10-02T23:52:42.245Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -29,6 +29,40 @@
     {
       "t": "2026-10-02T22:31:24.012Z",
       "note": "seq 430 -> 0.0000019"
+    },
+    {
+      "t": "2026-10-02T22:56:39.003Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-02T23:22:58.735Z",
+      "note": "Measured before changing anything (probe, recording + clip picked, every header pressed by pointer): main thread per toggle is small, longest single pass 3-9ms on every section, one 26ms pass on the very first fold after opening the recording (Time, nothing picked). So the 'heavy content' theory is NOT what the user feels. Filmed the window (filmWindow, new press trigger): the section did not animate at all. Shut at 18ms after the click, fully open at 43ms, rows below jumping; closing the same. The click's withAnimation never reached the dock (the fold is an @AppStorage setting, and its change arrives outside the click's transaction). A value-keyed animation on the dock fixed the slide at once (a frame every ~9ms). The old insertion transition (.opacity + .move(edge:.top)) also slid the body up over its own header."
+    },
+    {
+      "t": "2026-10-02T23:22:58.790Z",
+      "note": "Built: dock-level .animation(spring 0.25, value: folded), nil with Reduce Motion; body transition is now a clip reveal (Layout with animatable height fraction for insertion, animatable clip Shape for removal, because a removed view is out of layout and the rows close up regardless). Filmed after: opens top down, shuts bottom up, rows below slide on the same curve, ~250ms. Motion begins 48-79ms after the click against 43ms for the old jump: a @State mirror of the folds to skip the setting's hop made no difference, so it was reverted; the gap is the spring's soft first frame. Library reveal's expand() stays instant via a one-shot flag."
+    },
+    {
+      "t": "2026-10-02T23:51:48.911Z",
+      "note": "owns these walks: section-fold-motion-walk, every-section-header-opens-walk"
+    },
+    {
+      "t": "2026-10-02T23:52:20.142Z",
+      "note": "Walk section-fold-motion-walk (front, no flags): every header in a recording (nothing picked, then the clip's 10 sections) and a picture (Layers, then a rectangle's Layers/Appearance/Effects/Motion) pressed by pointer shut and open, each press held under 16ms; measured 3.6-10.6ms per press and at most 11ms in any pass during the animations. Four films (Time shut/open in a recording, Layers shut/open in a picture) show the reveal. Five windowClicks in ~0.65s end settled shut, five more end settled open. Harness: filmWindow takes press (and in), timed from the real click, and settles the control before the camera rolls (filming a 2s settle wait used up the stream's frames). 16 related walks green (every-section-header-opens, panel-sections, dock-headers, library-reveal, shelf-tile-reveal, effects-*, an-editing-session, ...). Scripts/test.sh: 10984 tests pass."
+    },
+    {
+      "t": "2026-10-02T23:52:20.199Z",
+      "note": "left rough, not filed (would not clear the bar): (1) the first fold after launch costs one ~25ms pass (23-26ms over six runs, pre-existing, 7ms in a second recording; a Time Profiler trace shows only generic SwiftUI graph and layout work); the walk reads it unjudged as stage 0. (2) Reduce Motion path is code-only, no walk can turn it on without touching the user's system setting. (3) picture films show one 26-34ms gap early in the slide; recording films draw every 9ms."
+    },
+    {
+      "t": "2026-10-02T23:52:42.243Z",
+      "note": "Sections in the right hand panel now grow and shrink on a 0.25s spring with a top-down clip reveal, the rows below sliding on the same curve (InspectorPanel dock-level animation keyed on folds, InspectorSections sectionReveal transition). Root cause, filmed: the fold's stored-setting change reached the dock outside the click's withAnimation, so it jumped; the click was never heavy (3-9ms). Verified by section-fold-motion-walk (every header by pointer, recording + picture, under 16ms per click, 4 films, 5 rapid clicks) plus 16 related walks and Scripts/test.sh (10984 pass). Audit queue/audits/2026-10-02-section-fold-motion.json. Commit 339459d7."
     }
-  ]
+  ],
+  "started": "2026-10-02T22:56:39.002Z",
+  "walks": [
+    "section-fold-motion-walk",
+    "every-section-header-opens-walk"
+  ],
+  "completed": "2026-10-02T23:52:42.244Z"
 }

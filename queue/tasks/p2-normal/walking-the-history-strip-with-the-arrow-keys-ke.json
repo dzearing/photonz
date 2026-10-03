@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T22:54:12.178Z",
-  "updated": "2026-10-02T12:38:22.045Z",
+  "updated": "2026-10-03T03:09:34.580Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-09-30 while fixing the filter switch (switching-the-history-filter-is-instant). 40 appKey right steps over the generated 500-capture history (setup \"history\": 500) and over the real ~500-capture Screenshots folder: mainBusy about 4.4s over the 40 steps (about 110ms per step), longest pass 43-60ms, the same with the old full-size thumbnails and the new small ones, so it is not image decoding. Reproduce: Scripts/playtest/history-filter-switch-speed-walk.json, read the wait after the 40 appKey steps. Suspects: every step changes HistoryOverlay.selection, which re-runs the overlay body (filter.apply over 500 entries, several times), rebuilds the focused and unfocused cells, and runs an animated proxy.scrollTo(center) over a LazyHStack at 120fps; the 110ms includes those animation passes, so first split per-pass cost from pass count.",
@@ -34,7 +34,43 @@
     {
       "t": "2026-10-02T12:38:22.044Z",
       "note": "seq 100 -> 90"
+    },
+    {
+      "t": "2026-10-03T00:06:21.743Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-03T03:09:15.735Z",
+      "note": "walks none -> history-filter-switch-speed-walk"
+    },
+    {
+      "t": "2026-10-03T03:09:15.791Z",
+      "note": "reproduced 2026-10-02: 40 right arrows over a 500-capture history, mainBusy 4253ms over 3827 passes, longest 49.6ms; per step (new per-key meter) 75-150ms busy, longest pass 15-42ms"
+    },
+    {
+      "t": "2026-10-03T03:09:15.846Z",
+      "note": "cause, by experiment: (1) selection was @State on HistoryOverlay so every step re-ran the whole overlay (~30ms even with 60 captures, so not the 500); (2) every tile carried a hidden row of 4 buttons + tooltip anchors, so the accessibility focus walk and environment updates touched ~60 controls per step; (3) building the newly focused tile's buttons and starting the scroll both landed in the key's own frame. Not image decoding, not filter.apply"
+    },
+    {
+      "t": "2026-10-03T03:09:15.902Z",
+      "note": "fix (Sources/Photonz/HistoryOverlay.swift, new NextRunLoopPass.swift): focus lives in an @Observable HistoryStripFocus read only by per-tile wrappers and a background scroller; the scroll starts the pass after the ring moves; tile buttons are built only when shown (on rest for arrow focus, next frame for hover, at once for a jump such as a filter switch) and kept hidden afterwards; an empty footprint reserves the button row's width so narrow tiles never reflow. Harness: appKey zeroes the meters at the key, logs them, and takes longestUnderMS (core parser + test)"
+    },
+    {
+      "t": "2026-10-03T03:09:15.956Z",
+      "note": "verified: history-filter-switch-speed-walk with longestUnderMS 16 on all 40 arrows passed 8/8 runs (arrow longest pass median ~10ms, max 13.7-15.8; filter presses 5-11ms, same as before); held-arrow simulation at 40ms repeat median 8ms max 12-14; all 8 history-strip walks green; Scripts/test.sh 10985 tests passed. Pitfalls found on the way: a .task on every tile cost a filter switch 10ms; a fresh object in a tile's @State default made every tile rebuild on each parent update; a timed button teardown landed on the next arrow's frame"
+    },
+    {
+      "t": "2026-10-03T03:09:16.009Z",
+      "note": "left rough (no task): the first key after clicking the strip costs ~25ms in AppKit's menu-bar key-equivalent check (Apple menu recent items via LaunchServices); system cost, a person sees at most one hitch; the walk presses Up once first, unjudged. Filed find-out-whether-a-press-step-s-frame-guard-can for the press meter missing the click's own pass. Audit rough items are covered by this log"
+    },
+    {
+      "t": "2026-10-03T03:09:34.578Z",
+      "note": "Arrow steps over a 500-capture history now cost ~10ms in their longest pass (was 43-60ms; 110ms busy per step). HistoryOverlay keeps focus in an observable read only by tiles and a scroller, builds tile buttons only when shown (on rest for arrow focus), starts the scroll a pass later. history-filter-switch-speed-walk now holds all 40 arrows under 16ms via the new appKey longestUnderMS: 8/8 runs green, max 15.8ms; all history walks and Scripts/test.sh (10985) pass. Commit 3a5d3074, audit queue/audits/2026-10-02-history-strip-arrow-keys.json."
     }
   ],
-  "walks": []
+  "walks": [
+    "history-filter-switch-speed-walk"
+  ],
+  "started": "2026-10-03T00:06:21.742Z",
+  "completed": "2026-10-03T03:09:34.579Z"
 }

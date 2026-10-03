@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 110,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "docs",
   "created": "2026-09-30T12:30:17.072Z",
-  "updated": "2026-10-02T12:38:22.156Z",
+  "updated": "2026-10-03T03:46:21.694Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the 2026-09-30 digest's design review. Evidence: done tasks the-segmented-control-s-thumb-is-lighter-than-it, the-segmented-thumb-glides-like-a-mac-control-no, try-the-segmented-thumb-on-the-system-s-own-liqu, every-segmented-control-is-the-one-system-glass, then every-segmented-control-is-apple-s-own-liquid-gl deleting them all; dropped the-picked-segment-s-label-is-readable-on-the-gl and the-segmented-thumb-moves-the-way-the-user-likes; commits 605a5c4a through 5a81d5a3. The digest already fixed the same twelve-hours wording in queue/bin/runner-prompt.md and queue/bin/digest-prompt.md (the code, queue/bin/sweep-schedule.mjs, says 24 hours); CLAUDE.md line 38 is the one left, outside the digest's reach.",
@@ -40,6 +40,25 @@
     {
       "t": "2026-10-02T12:38:22.155Z",
       "note": "seq 70 -> 110"
+    },
+    {
+      "t": "2026-10-03T03:40:36.464Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-03T03:46:21.583Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-03T03:46:21.638Z",
+      "note": "CLAUDE.md line 38 already said once a day when claimed (fixed earlier); its walk count and multiple were stale against sweep-size.mjs, as were the runner prompt's 'eleven times' (split across a line so the quote check never matched it). Ran sweep-size.mjs --write: 11 files now say about 720 walks / eighteen times, --check clean."
+    },
+    {
+      "t": "2026-10-03T03:46:21.692Z",
+      "note": "UX-PATTERNS.md has the rule under the placement contract (one build, film the system's version beside ours, one card before any second variant; neither side wins by default; cites the five segmented builds 09-29/30 and the user's return to our drawn control with a tinted glass chip). runner-prompt.md (Every area has one purpose) and manager-prompt.md (Information architecture) point at it. CLAUDE.md table says once a day and now quotes the counted size (about 720 walks, eighteen times the 600s ceiling), as do the 10 other quoters via sweep-size.mjs --write; --check clean. Comments/docs only, no app change. Scripts/test.sh green (10985 tests). Commit f7b3e7a1, pushed."
     }
-  ]
+  ],
+  "started": "2026-10-03T03:40:36.463Z",
+  "walks": [],
+  "completed": "2026-10-03T03:46:21.693Z"
 }

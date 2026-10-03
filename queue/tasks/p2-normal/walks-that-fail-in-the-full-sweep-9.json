@@ -1,0 +1,48 @@
+{
+  "id": "walks-that-fail-in-the-full-sweep-9",
+  "title": "Walks that fail in the full sweep",
+  "goal": "The scripted walks are the app driving itself, and the check between tasks found some that no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 3500,
+  "status": "pending",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-10-02T13:06:34.503Z",
+  "updated": "2026-10-02T22:54:28.550Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-02T17:46:57Z ran only the part of the walk set a locked screen cannot touch: 370 of 710 walks ran in 94 minutes, of which 361 passed. The other 128 were refused because the screen is locked, and those are unknown, not passing. This list is the failures in the part that ran, not the state of the walk set.\n\nFailing walks (9): a-painted-caption-takes-a-click-walk, find-what-stayed-a-picture-walk, history-filter-switch-speed-walk, import-key-leaves-invert-selection-walk, key-a-title-s-scale-walk, keyframe-anything-walk, label-border-follows-walk, normalize-cleans-noise-walk, segmented-history-film-walk\n\nThose 9 are UNCONFIRMED. This run was cut short, and a stop takes the probe app down with it,\nso a walk failing in its last moments may be a casualty of the stop rather than a break.\nRe-run one on its own with Scripts/playtest.sh before believing it; the next sweep that covers the set decides.\n\nNever finished: separate-hierarchy-walk was still running when the run was stopped. It is not a pass and not a failure; nobody asked it anything.\n\nFull output: queue/sweep/2026-10-02-091317.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a scheduled sweep\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
+  "acceptance": [
+    "Every walk the sweep block names as this task's own either passes or is rewritten to match what the app does now",
+    "Each one is run on its own and passes twice in a row",
+    "Any walk that was wrong rather than broken says so in this task log"
+  ],
+  "log": [
+    {
+      "t": "2026-10-02T13:06:34.505Z",
+      "note": "created (rotating check)"
+    },
+    {
+      "t": "2026-10-02T13:06:34.508Z",
+      "note": "rotating check 2026-10-02T13:06:34Z, 37 walks run from 277 onward in the rotation: key-a-title-s-scale-walk, keyframe-anything-walk, normalize-cleans-noise-walk (its script changed since the last check) failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-02T17:46:58.083Z",
+      "note": "sweep 2026-10-02T17:46:57Z: 9 failing (a-painted-caption-takes-a-click-walk, find-what-stayed-a-picture-walk, history-filter-switch-speed-walk, import-key-leaves-invert-selection-walk, key-a-title-s-scale-walk, keyframe-anything-walk, label-border-follows-walk, normalize-cleans-noise-walk, segmented-history-film-walk)"
+    },
+    {
+      "t": "2026-10-02T19:30:24.854Z",
+      "note": "rotating check 2026-10-02T19:30:24Z, 50 walks run from 362 onward in the rotation: normalize-cleans-noise-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-02T21:20:52.077Z",
+      "note": "rotating check 2026-10-02T21:20:51Z, 50 walks run from 411 onward in the rotation: read-every-label-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-02T22:54:28.549Z",
+      "note": "rotating check 2026-10-02T22:54:28Z, 50 walks run from 507 onward in the rotation: sound-effects-eq-compressor-locked-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    }
+  ],
+  "standing": "walk-sweep"
+}

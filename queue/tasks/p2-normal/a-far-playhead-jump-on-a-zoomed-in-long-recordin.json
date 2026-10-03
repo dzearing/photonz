@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-02T06:44:52.888Z",
-  "updated": "2026-10-02T12:38:21.775Z",
+  "updated": "2026-10-02T16:12:49.002Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-01 on HEAD 498436ea: Scripts/playtest.sh Scripts/playtest/first-long-jump-when-zoomed-in-walk.json --no-build, longest pass per timed wait over 6 runs: step 18 (first jump to the middle at 16x) 42-48ms, step 23 (back to the middle) 35-54ms, failing 2 of 6 ('the main thread froze for 52.3ms in one pass, and this walk allows under 50ms'); Fit jumps (steps 28/30) 23-29ms. The 2026-10-01 full sweep failed it at 50.8ms.\n\nBisected by hand (worktree builds, 2-3 runs per commit, summed longest of the 7 timed waits): b13f03da 166-169, a0970339 162-165, 5ee0e42c 157-161, f8fe5834 207-225, 136d05b1 218-232, 6aa4ed87 209-230, 15680c79 229-242, HEAD 228-242. First slow commit: f8fe5834 'Caption and transition tiles play on Core Animation, so an idle recording sits quiet'.\n\nIt is NOT the tiles: at HEAD, turning their CA keyframe animation off changed nothing (234-242), and showing the still frame with no NSViewRepresentable at all changed nothing (229-239). Putting back a hidden 30fps TimelineView (in CaptionStylePreview.body) brought every jump straight back to the old numbers (155-161: 16x jumps 30-35ms, Fit 14-17ms). So the app did not get slower: before f8fe5834 the tiles' 30fps TimelineView kept SwiftUI on its animation clock, and a jump's work was spread over display frames; with the window idle and quiet, the same work lands in one run-loop pass. Re-adding a timer is not the fix (it cost 881ms busy per 1.5s idle, which f8fe5834 fixed).\n\nWhere the pass goes (sample at 1ms over repeated 3/4<->middle jumps at 16x): mostly SwiftUI graph update and NSHostingView.layout -> ViewGraphRootValueUpdater.render (CanvasDisplayList for CaptionCuesLayer.paint, DisplayList.ViewUpdater), CA::Transaction::commit; app frames: CaptionCuesLayer.paint, TimelineTrackRow.body, CaptionWordsLane/CaptionWordChipsView, EditorState.scrubDocument -> documentMomentChanged -> PhotonzDocument.drawn (many Layer copies), CanvasView.updateNSView. Ideas: let the canvas frame and the timeline's follow-scroll land in separate passes; cut the words lane and cue painting to what is on screen at 16x; avoid Layer copies in drawn().",
@@ -30,9 +30,39 @@
     {
       "t": "2026-10-02T12:38:21.774Z",
       "note": "seq 3500 -> 40"
+    },
+    {
+      "t": "2026-10-02T13:06:34.735Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-02T16:12:43.710Z",
+      "note": "Reproduced at HEAD dc13cd48: step 23 froze 50.9ms. Ablation bench (12 far jumps at 16x, 8 at Fit): 16x mean 41 max 45, Fit mean 20 max 25. Whole timeline off: ~20ms at any zoom. Filmstrip ~8.5ms of a 16x jump, other lanes ~6.5, inspector ~4.5 (6.5 at Fit)."
+    },
+    {
+      "t": "2026-10-02T16:12:43.762Z",
+      "note": "Causes found and fixed (01b0eda8, bc584c41): sRGB canvas frame + crisp tile matched to the screen profile on the main thread at CA commit (8-17ms for a tile; now drawn in the window colour space); dock transport + playhead line read the playhead inside the dock/grid bodies (whole timeline rebuilt per step and per playback frame; now own views); EditorView read heldFrameNow (badge is its own view); filmstrip tiles keyed by index (now ClipFilmstrip.slotRing); Captions row searched the document per cue (PhotonzDocument.keyedMotionIDs, ForEach only clips with lanes); gridlines one Shape; ruler labels keyed by place; words lane only reads cues in the window; displayDocument once per submit; panel section facts via PanelTimeFactsWatcher; stale crisp tile comes down with the next frame."
+    },
+    {
+      "t": "2026-10-02T16:12:43.814Z",
+      "note": "Gotcha: drawing in the window colour space made scrub-never-blacks-out trail (7 of 165 frames). The cause was the walk harness, not the app: PlaytestHarness.quarter/transparentShare matched each display-profile frame to deviceRGB, 3ms a display frame on main. Both now read in the picture's own space; Core Image renders 0.9ms into either. Walk passes 4/4."
+    },
+    {
+      "t": "2026-10-02T16:12:43.869Z",
+      "note": "Verified: first-long-jump-when-zoomed-in-walk 5/5 twice, every timed jump <=36ms, Fit steps 28/30 <=24.7ms; a-captioned-recording-sits-quiet ok; crisp-zoom, scrub-never-blacks-out, clip-pictures-when-zoomed-in, key-lanes, a-long-captioned-recording, fix-a-caption-word, caption-words-pop, transitions-at-a-cut, speed-a-stretch ok; forced under the lock ok: a-faded-title-shows-while-playing, a-zoom-follows-the-cursor, clicks-show-a-ripple, transitions-group, default-transition-on-picked-clips, transition-on-every-cut. transition-picker-at-a-cut and transition-placement-and-hold fail forced under the lock on dc13cd48 too (lock artifact, not filed). Scripts/test.sh: 10930 passed. Audit: queue/audits/2026-10-02-far-jump-zoomed-in.json."
+    },
+    {
+      "t": "2026-10-02T16:12:43.924Z",
+      "note": "Shared files, so Current gets the same speed-up with no behaviour change; the one visible difference is wide-gamut colours no longer clipped to sRGB on a wide-gamut screen. Runner slip: ran Scripts/build-app.sh --help, which started a DEV build (stopped by SIGPIPE, dev app untouched at 05:34); filed asking-the-app-build-script-for-help-no-longer-r. Left rough (no task): the first jump after Fit is 20-25ms vs 16-20 for later ones, what is left is SwiftUI/CA internals; CaptionCuesLayer.paint (text shadow) is the largest app item left at 16x, about 2ms."
+    },
+    {
+      "t": "2026-10-02T16:12:49.000Z",
+      "note": "Far jumps at 16x on a 5-minute captioned recording now take ~30ms (was 44-54), Fit ~16ms (was 20-28). Canvas frame and crisp tile drawn in the window colour space (no main-thread colour matching at commit); transport, playhead line and held-frame badge are their own views so a playhead step no longer rebuilds the timeline or the editor; filmstrip tiles drawn by a ring of slots; Captions row does one document pass; gridlines one shape; ruler labels keyed by place; words lane reads only cues in the window; panel section facts handed over only on change; stale crisp tile comes down with the next frame. Commits 01b0eda8, bc584c41, audit 7dbeb8d6. Verified: first-long-jump-when-zoomed-in-walk 5/5 twice, every timed jump <=36ms, Fit jumps <=24.7ms; a-captioned-recording-sits-quiet ok; scrub/crisp/transition/caption walks ok; Scripts/test.sh 10930 passed."
     }
   ],
   "walks": [
     "first-long-jump-when-zoomed-in-walk"
-  ]
+  ],
+  "started": "2026-10-02T13:06:34.734Z",
+  "completed": "2026-10-02T16:12:49.001Z"
 }

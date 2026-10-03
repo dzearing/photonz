@@ -1,0 +1,27 @@
+{
+  "id": "the-probe-keeps-being-killed-by-a-macos-fault-ma",
+  "title": "The probe keeps being killed by a macOS fault: macos-ax-notify",
+  "goal": "Crash watch: 3 probe crashes in 7 days with the known macOS fault 'macos-ax-notify' (EXC_GUARD in macOS posting an accessibility notification (a macOS fault, not the app)). It is not the app's code, but each one pops \"Photonz (Probe) quit unexpectedly\" over the person's work and cuts a walk short. Find what makes it happen here (on 2026-10-02 the person runs a window switcher, ztabby, that watches every window's accessibility notifications) and stop it reaching the app or the person: e.g. post fewer accessibility notifications during walks, or keep the probe out of the switcher's view.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 3550,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-03T05:37:37.389Z",
+  "updated": "2026-10-03T05:37:37.392Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Latest report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-09-30-045007.ips",
+  "acceptance": [
+    "The cause is shown with the crash reports, not guessed",
+    "A walk run that used to hit it 3 times a week runs a week without one, or the dialog never reaches the person",
+    "crash-watch stops counting it"
+  ],
+  "log": [
+    {
+      "t": "2026-10-03T05:37:37.391Z",
+      "note": "created (crash-watch)"
+    }
+  ]
+}

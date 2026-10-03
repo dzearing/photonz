@@ -1,0 +1,51 @@
+{
+  "id": "the-app-crashed-in-closure-1-in-mainthreadmeter",
+  "title": "The app crashed in closure #1 in MainThreadMeter.install",
+  "goal": "Crash watch caught a crash in the loop's probe app at 2026-09-29 04:18:13.00 -0700: EXC_BAD_ACCESS (SIGSEGV) in closure #1 in MainThreadMeter.install() < static PhotonzApp.$main() < Photonz_main. Read the report, reproduce it, fix the cause, and add a test that would have caught it.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 440,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-03T05:37:36.719Z",
+  "updated": "2026-10-03T05:37:37.303Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-09-29-041813.ips\nException: EXC_BAD_ACCESS SIGSEGV\nMessages: \nStack (app frames):\nclosure #1 in MainThreadMeter.install() (PlaytestHarness.swift)\nstatic PhotonzApp.$main() (PhotonzApp.swift)\nPhotonz_main (PhotonzApp.swift)",
+  "acceptance": [
+    "Reproduced (or the exact conditions shown from the report) before the fix",
+    "The cause fixed in Photonz code, with a test or walk that fails before and passes after",
+    "crash-watch shows no new report with this signature for a week of walks"
+  ],
+  "log": [
+    {
+      "t": "2026-10-03T05:37:36.721Z",
+      "note": "created (crash-watch)"
+    },
+    {
+      "t": "2026-10-03T05:37:36.825Z",
+      "note": "crash watch: it happened again in the probe app at 2026-09-29 04:18:37.00 -0700: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-09-29-041837.ips"
+    },
+    {
+      "t": "2026-10-03T05:37:36.932Z",
+      "note": "crash watch: it happened again in the probe app at 2026-09-29 04:18:59.00 -0700: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-09-29-041859.ips"
+    },
+    {
+      "t": "2026-10-03T05:37:37.052Z",
+      "note": "crash watch: it happened again in the probe app at 2026-09-29 04:19:26.00 -0700: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-09-29-041926.ips"
+    },
+    {
+      "t": "2026-10-03T05:37:37.150Z",
+      "note": "crash watch: it happened again in the probe app at 2026-09-29 04:23:47.00 -0700: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-09-29-042347.ips"
+    },
+    {
+      "t": "2026-10-03T05:37:37.226Z",
+      "note": "crash watch: it happened again in the probe app at 2026-09-29 05:26:51.00 -0700: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-09-29-052651.ips"
+    },
+    {
+      "t": "2026-10-03T05:37:37.302Z",
+      "note": "crash watch: it happened again in the probe app at 2026-09-29 05:31:15.00 -0700: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-09-29-053115.ips"
+    }
+  ]
+}

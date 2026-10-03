@@ -760,6 +760,10 @@ TASK FILE: $TASK_FILE" "$SESSION"
   record_exit "$TASK_ID" "$EXIT"
   # Blunt safety net for anything the line above did not cover.
   Q guard >> "$LOG" 2>&1
+  # Every new Photonz crash report (probe, Dev app, release) is read and filed
+  # or counted, so a crash never goes by unseen (the user, 2026-10-02: "make
+  # sure that you're catching these"). See queue/bin/crash-watch.mjs.
+  node queue/bin/crash-watch.mjs 2>&1 | sed 's/^/[crash-watch] /' | tee -a "$LOG" >/dev/null || true
   # ...and this catches anything it left CHANGED. Before the next task is
   # claimed, so that task starts from a tree it owns.
   settle_leftovers task "$TASK_ID" "$OUTCOME" "$TASK_TITLE"

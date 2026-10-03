@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 0.000002,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-02T18:43:34.864Z",
-  "updated": "2026-10-02T22:42:18.155Z",
+  "updated": "2026-10-02T22:42:33.662Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window. Shipped: PhotonzCore/CaptureHotkey.swift (CaptureHotkey.clearsToasts table + ToastHush tickets), CaptureCenter.hotkeyPressed(_:) is the one dispatcher every global hotkey calls and clears the corner first via onClearToasts -> ToastController.clearAll() (instant orderOut, cancels reflow animation, bumps the hush). Deferred toasts take a ticket and are dropped if stale: RecordingSaveAnnouncer reveal + 'saved', copyRecording re-encode 'copied', openRecordingOnceItIsThere notes. The app's shortcuts are Shift-Command 3/4/5/6 (the user said ctrl shift); all four clear. Walk: capture-shortcuts-clear-the-corner-walk (actions hotkeyCapture*, showCaptureToast, beginHeldSave/finishHeldSave; probe-only playtestHotkeyStandIn records toast count where the capture begins).",
@@ -44,10 +44,15 @@
     {
       "t": "2026-10-02T22:42:18.154Z",
       "note": "Adversarial: the user said ctrl shift 4/5/6 but the shortcuts are Shift-Command 3/4/5/6 (no rebinding exists); all capture ones clear, history and the F5 stop do not. The region overlay freezes the screen asynchronously after begin(), so clearing synchronously before begin keeps toasts out of the picture. Verified: walk green with the fix, red with the clear commented out ('1 toast was still on screen when captureRegion began'); Scripts/test.sh green, 10983 tests. Rough items in the audit are explanations, nothing filed."
+    },
+    {
+      "t": "2026-10-02T22:42:33.660Z",
+      "note": "Shift-Command 3/4/5/6 clear every toast instantly before the capture begins, and earlier-asked deferred toasts are dropped (CaptureCenter.hotkeyPressed, ToastController.clearAll, PhotonzCore CaptureHotkey/ToastHush). Verified by capture-shortcuts-clear-the-corner-walk at Next defaults (green; red with the clear removed) and Scripts/test.sh green. Audit: queue/audits/2026-10-02-capture-shortcuts-clear-toasts.json. Commit 15cce44c."
     }
   ],
   "started": "2026-10-02T22:15:53.800Z",
   "walks": [
     "capture-shortcuts-clear-the-corner-walk"
-  ]
+  ],
+  "completed": "2026-10-02T22:42:33.661Z"
 }

@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-02T12:33:18.307Z",
-  "updated": "2026-10-02T12:38:41.181Z",
+  "updated": "2026-10-02T18:21:29.642Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by a-picked-sound-has-the-effects-list-the-audio-mo (2026-10-02). Model: SoundEffectKind.isBuilt is false for .eq/.compressor (PhotonzCore/SoundEffects.swift); AudioLevel.addEffect/removeEffect/effectRows are where they plug in. Likely path: widen SoundCleaning (NoiseCleaning.swift) into a processed-copy identity carrying noise + EQ + compressor settings, and render the chain in PhotonzMedia next to NoiseCleaner so the player, exporter, meter and waveform keep keying on sound.id with no special case. Panel: SoundEffectsInspector.swift (rows, OwnedSettings, AddSoundEffectButton).",
@@ -32,6 +32,41 @@
     {
       "t": "2026-10-02T12:38:41.180Z",
       "note": "Triage 2026-10-02: the effects list now exists twice. The picture's Effects list (EffectsListInspector.swift: EffectRowView with chevron, eye, right-click menu) and the new Audio Effects list (SoundEffectsInspector.swift: its own row with a cross, no on switch, no right-click) were built separately. This task adds the on switch the mock draws, which is the moment to make the sound rows use the picture list's row instead of growing a second one. Added to acceptance."
+    },
+    {
+      "t": "2026-10-02T17:46:58.312Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-02T17:49:33.169Z",
+      "note": "Review before building: (1) a first-time user presses the plus, picks EQ, gets a row reading 'low cut 80' with Low cut, Low and High under it, and compares with the row's switch; since the processed copy is cached per setting, switching off and on again is instant after the first render. (2) Premiere's clip EQ and Dynamics expect a low cut, shelves, threshold and ratio, and those are what is built. A compressor that only turns things down would leave a quieter voice, so it adds make-up gain automatically, as Final Cut's Auto gain does. (3) The order the sound is processed in is fixed: noise, then EQ, then compressor (compressing before cleaning lifts the noise). The rows read in that order. The mock's drag grip is not drawn because the order cannot change; that is a departure from the mock and goes in rough. (4) One row for both lists means the switch is the picture list's eye, not the mock's dot, because the user asked on 2026-09-08 for one picture for 'switched off'. That also goes in rough. (5) Slider changes are written to the document when the slider is let go, not on every tick, so dragging does not start a render on each step."
+    },
+    {
+      "t": "2026-10-02T18:20:38.368Z",
+      "note": "owns these walks: sound-effects-eq-compressor-walk, sound-effects-eq-compressor-locked-walk, sound-effects-noise-reduction-walk"
+    },
+    {
+      "t": "2026-10-02T18:21:14.047Z",
+      "note": "Built: SoundEQ and SoundCompressor plus AudioLevel.effectsOff (the row switch) in PhotonzCore/SoundEffects.swift; SoundCleaning now carries reduction?, eq and compressor, so playedSound, the mix, export (readyURLs) and Normalize (measure playedSound) all hear them with no special case. A noise-only copy keeps its old id. DSP in PhotonzMedia/SoundShaper.swift (RBJ biquads, linked compressor, -1 dBFS ceiling), run after the noise pass in NoiseCleaner.write, which skips the learning pass when there is no noise to take out. The row is now EffectsListRow.swift, shared by the picture Effects list (EffectRowView became a thin wrapper) and Audio Effects."
+    },
+    {
+      "t": "2026-10-02T18:21:14.100Z",
+      "note": "Verified: Scripts/test.sh green (10953 tests), including 13 new model tests (SoundEQCompressorTests) and 7 new DSP tests (SoundShaperTests: low cut takes 30 Hz down over 12 dB and leaves 1 kHz within 0.2 dB, shelves within their dB, compressor narrows a 30 dB gap by over 10 dB, chunking-independent, file written whole). sound-effects-eq-compressor-locked-walk ran green under a locked screen, cold and warm. Picture effects walks that run under a lock all passed on the shared row (border-off-keeps-its-row, border-offset, colour-onto-an-off-part, effect-eye-over-two-shapes, effect-row-is-a-small-pane, effects-say-their-reach, selection-effects, separate-shadow, tutorial-add-a-shadow-a-border-a-glow, type-into-an-effects-slider). Found and fixed on the way: the add reveal scrolled short on a cold launch (now looks three times), and stepped sliders drew a dotted tick line."
+    },
+    {
+      "t": "2026-10-02T18:21:14.156Z",
+      "note": "Not yet run: sound-effects-eq-compressor-walk (the plus clicked at a point) and sound-effects-noise-reduction-walk, plus the picture effects walks that look controls up by name, because the screen stayed locked all session. The rotating check picks the changed walks up. Left rough, in the audit and not filed: no reorder grip because the processing order is fixed, and the eye instead of the mock's dot, because the row is shared with the picture list. Both are asked in the audit's evaluate questions, so the user's reaction decides them."
+    },
+    {
+      "t": "2026-10-02T18:21:29.640Z",
+      "note": "EQ (low cut, low and high shelves) and Compressor (threshold, ratio) are live on the Audio Effects plus. Playback, export and Normalize hear them through the shared processed copy (SoundCleaning plus PhotonzMedia/SoundShaper). Every row, Noise reduction included, has the eye switch, which keeps its settings. Both effects lists now draw one row (EffectsListRow.swift). Verified: Scripts/test.sh green with 10953 tests, 20 of them new for the model and the sound processing. sound-effects-eq-compressor-locked-walk is green at Next defaults with real captures. It adds by pressing the plus, then switches and removes with posted mouse presses. The pointer-click walk is written but waits for an unlocked screen. Audit: queue/audits/2026-10-02-sound-eq-compressor.json. Commit 1548ea26."
     }
-  ]
+  ],
+  "started": "2026-10-02T17:46:58.311Z",
+  "walks": [
+    "sound-effects-eq-compressor-walk",
+    "sound-effects-eq-compressor-locked-walk",
+    "sound-effects-noise-reduction-walk"
+  ],
+  "completed": "2026-10-02T18:21:29.641Z"
 }

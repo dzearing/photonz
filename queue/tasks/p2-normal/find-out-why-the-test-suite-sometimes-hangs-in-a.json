@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-02T07:20:57.068Z",
-  "updated": "2026-10-02T12:38:21.884Z",
+  "updated": "2026-10-02T19:18:08.397Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-02 ~00:15 on HEAD 498436ea + a CutLabelRule change (nothing in PhotonzMedia touched): Scripts/test.sh sat at 0% CPU for 30 minutes. `sample <swiftpm-testing-helper pid>` showed the main test thread in VideoCutExportTests.exportDropsTheMiddle() (VideoCutExportTests.swift:53) -> VideoExporter.exportMP4 -> writeMP4 -> encode -> writePictures (VideoExporter.swift:492), i.e. blocked in `videoOut.copyNextSampleBuffer()` on the AVAssetReader. Killed it and re-ran Scripts/test.sh straight after: 10,893 tests passed in 280s, so NOT reproduced on demand. Conditions at the time: screen locked for hours, and the probe had just run ~40 video walks plus several worktree builds. A runner on 2026-09-21 also hit an export test hang (queue/loop.log around line 241326, re-ran VideoCutExportTests on its own and edited VideoExportBudgetTests). Ideas: a per-test time limit (.timeLimit) on the PhotonzMediaTests export suites so a stuck reader fails the test rather than the run; check whether copyNextSampleBuffer can block when the reader's decoder session is invalidated (screen lock / media server).",
@@ -26,6 +26,37 @@
     {
       "t": "2026-10-02T12:38:21.883Z",
       "note": "seq 3510 -> 60"
+    },
+    {
+      "t": "2026-10-02T18:29:26.309Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-02T19:17:55.008Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-02T19:17:55.061Z",
+      "note": "CAUSE 1 reproduced (pool starvation): the export read frames with copyNextSampleBuffer ON Swift's cooperative pool, and a video-composition read needs a free pool thread to finish. /tmp/hangrepro2 (standalone): 15 of 16 pool threads held on a semaphore, read on the last -> 'HUNG: no answer after 25s', sample = copyNextSampleBuffer -> FigSemaphoreWaitRelative (the 10-02 shape); same read on its own DispatchQueue with the pool still full -> 'READ 600 frames in 0.73s'. In the REAL test runner (temporary ZZStallDrillTests, filter-only, deleted after): 15 pool threads held then VideoExporter.exportMP4 of a 20s TestClip -> OLD exporter sat at 0.0% CPU 5:55 until killed, sample: VideoExporter.writePictures -> copyNextSampleBuffer -> FigSemaphoreWaitRelative; NEW exporter -> 'DRILL FINISHED after 0.40s'."
+    },
+    {
+      "t": "2026-10-02T19:17:55.117Z",
+      "note": "CAUSE 2 reproduced (wedged decoder): /tmp/hangrepro, kill -STOP on the VTDecoderXPCService spawned for the repro mid-read -> reader at 0% CPU, no error, for the whole 40s it was stopped, resumed on CONT. kill -9 of the decoder instead is harmless (read carries on). reader.cancelReading() from another thread while stopped ALSO blocks until CONT, so cancel cannot be the fix. Could not pin the test helper's own decoder (it reuses a long-lived one, no new instance appears), so cause 2 is covered by GuardedReadsTests rather than an end-to-end drill."
+    },
+    {
+      "t": "2026-10-02T19:17:55.174Z",
+      "note": "FIX: Sources/PhotonzMedia/GuardedReads.swift runs each blocking read on a serial queue of its own (never the pool) and throws Stalled past a limit, or CancellationError on cancel; clean-up (cancelReading/cancelWriting) is queued BEHIND the stuck read via afterwards(). VideoExporter.writePictures reads every frame through it, readStallLimit 30s -> ExportError.readerGaveUp. MovieCompression.pictureBytes (the export's weigh read) moved off the pool with OffThePool. Why not .timeLimit: Swift Testing's time limit cancels the task but its group still awaits the blocked child, so the run hangs anyway. Measured: slowest single frame read across the whole suite (TEMP probe, removed) 2.36s, so 30s is ~13x headroom. Perf: VideoCutExportTests+VideoExportBudgetTests 8.2-8.4s with guard vs 8.3-10.2s without, no measurable cost. Scripts/test.sh: 10,960 passed in 255s."
+    },
+    {
+      "t": "2026-10-02T19:17:55.230Z",
+      "note": "left rough, no task (not reproduced): SpeechTranscription.swift:271 also runs copyNextSampleBuffer on the cooperative pool (an audio track read); the 2026-09-29 pool hang named 'a text reader' among the threads. My track-output variant of the repro was itself broken (hung even with a free pool), so whether an audio-track read needs a pool thread is unproven. MovieFrameStream.next() is a synchronous API on its callers' thread, same shape, also unproven. If a hang ever samples into either, wrap it in GuardedReads. Also: in the full suite every heavy suite stretches to ~120s (VideoCutExportTests 122s vs 1.2s alone), so wall-clock ceilings in tests are unreliable; the new tests prove 'caller answered while the read is still stuck' instead of timing it."
+    },
+    {
+      "t": "2026-10-02T19:18:08.395Z",
+      "note": "Shipped in 22ea905e. Cause named and reproduced: the export read frames with a blocking call on Swift's shared pool, and that read needs a free pool thread, so a full pool hangs it (real test runner, pool held: old exporter stuck 6 min in writePictures->copyNextSampleBuffer->FigSemaphoreWaitRelative, the 10-02 stack; new exporter 0.4s). A decoder that stops answering hangs it too (SIGSTOP repro; cancelReading blocks as well). GuardedReads now runs each frame read on its own queue and fails the export after 30s (ExportError.readerGaveUp); 7 unit tests. Scripts/test.sh: 10,960 passed."
     }
-  ]
+  ],
+  "started": "2026-10-02T18:29:26.308Z",
+  "walks": [],
+  "completed": "2026-10-02T19:18:08.396Z"
 }

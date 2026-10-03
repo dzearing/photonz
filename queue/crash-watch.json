@@ -1,0 +1,37 @@
+{
+  "seen": {
+    "Photonz Probe-2026-09-25-223224.ips": "before-watch",
+    "Photonz Probe-2026-09-25-232258.ips": "before-watch",
+    "Photonz Probe-2026-09-26-060353.ips": "before-watch",
+    "Photonz Probe-2026-09-28-032244.ips": "probe|macos-ax-notify",
+    "Photonz Probe-2026-09-29-012929.ips": "probe|macos-ax-notify",
+    "Photonz Probe-2026-09-29-041813.ips": "probe|closure #1 in MainThreadMeter.install() < static PhotonzApp.$main() < Photonz_main",
+    "Photonz Probe-2026-09-29-041837.ips": "probe|closure #1 in MainThreadMeter.install() < static PhotonzApp.$main() < Photonz_main",
+    "Photonz Probe-2026-09-29-041859.ips": "probe|closure #1 in MainThreadMeter.install() < static PhotonzApp.$main() < Photonz_main",
+    "Photonz Probe-2026-09-29-041926.ips": "probe|closure #1 in MainThreadMeter.install() < static PhotonzApp.$main() < Photonz_main",
+    "Photonz Probe-2026-09-29-042347.ips": "probe|closure #1 in MainThreadMeter.install() < static PhotonzApp.$main() < Photonz_main",
+    "Photonz Probe-2026-09-29-052651.ips": "probe|closure #1 in MainThreadMeter.install() < static PhotonzApp.$main() < Photonz_main",
+    "Photonz Probe-2026-09-29-053115.ips": "probe|closure #1 in MainThreadMeter.install() < static PhotonzApp.$main() < Photonz_main",
+    "Photonz Probe-2026-09-30-045007.ips": "probe|macos-ax-notify",
+    "Photonz Probe-2026-09-30-112034.ips": "probe|macos-ax-notify",
+    "Photonz Probe-2026-10-01-201258.ips": "probe|specialized VideoKit.TileGrid.plan(width:count:) < VideoKit.TileGrid.sizeThatFits(proposal:subviews:cache:) < static PhotonzApp.$main()",
+    "Photonz Probe-2026-10-02-223541.ips": "probe|macos-ax-notify"
+  },
+  "signatures": {
+    "probe|closure #1 in MainThreadMeter.install() < static PhotonzApp.$main() < Photonz_main": "the-app-crashed-in-closure-1-in-mainthreadmeter",
+    "probe|specialized VideoKit.TileGrid.plan(width:count:) < VideoKit.TileGrid.sizeThatFits(proposal:subviews:cache:) < static PhotonzApp.$main()": "the-app-crashed-in-specialized-videokit-tilegrid"
+  },
+  "faults": {
+    "probe|macos-ax-notify": {
+      "times": [
+        1790590964000,
+        1790670569000,
+        1790769007000,
+        1790792434000,
+        1791005741000
+      ],
+      "filed": "the-probe-keeps-being-killed-by-a-macos-fault-ma"
+    }
+  },
+  "startedAt": "2026-10-03T05:37:36.633Z"
+}

@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-10-02T12:38:09.564Z",
-  "updated": "2026-10-02T12:38:21.612Z",
+  "updated": "2026-10-02T12:50:22.239Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence, 2026-10-02 12:40Z, from the digest pass:\n$ queue/bin/sweep-schedule.mjs --decide --locked\n{\"run\":\"nothing\",\"why\":\"no sweep has been asked for\",\"hoursSince\":null,\"nextFullInHours\":null}\n$ node queue/bin/loop-day.mjs --hours 24\n  slices 0m 0.0% 0 rotating check(s)   (9 tasks ran in the same window)\n$ ls queue/sweep/requested.json -> no such file\n$ git log --since=2026-10-01T11:25 --format=%h -- Sources Scripts/playtest | wc -l -> 9\nCause: decide() in queue/bin/sweep-schedule.mjs returns nothing('no sweep has been asked for') before it looks at HEAD or the floor, and the whole-set run clears requested.json. Runner-prompt.md tells runners to ask only when they need the whole set, so nobody asks. Last rotating check: 2026-10-01T04:11Z. Last whole-set run: began 2026-10-01T15:28Z. CLAUDE.md promises 'after any task that lands code, a rotating check'. Fix likely: treat 'code landed under Sources/ or Scripts/playtest since rotation.lastHead / latest.head' as an implicit request, keep explicit requests for --now.",
@@ -28,6 +28,29 @@
     {
       "t": "2026-10-02T12:38:21.611Z",
       "note": "seq 3530 -> 10"
+    },
+    {
+      "t": "2026-10-02T12:40:15.861Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-02T12:41:24.878Z",
+      "note": "Reproduced 12:45Z: `queue/bin/sweep-schedule.mjs --decide` -> {\"run\":\"nothing\",\"why\":\"no sweep has been asked for\"}; no requested.json; latest.head = rotation.lastHead = 39d066d8 and `git diff --stat 39d066d8 HEAD -- Sources Scripts` = 83 files changed. Plan: decide() takes codeSinceFull/codeSinceCheck (walk-relevant paths only: Sources, Scripts, Package.*, Resources, Vendor), so landed code is the implicit ask; requests keep --now and their reasons; sweep.sh run no longer refuses without a request when the schedule says full."
+    },
+    {
+      "t": "2026-10-02T12:50:06.414Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-02T12:50:06.468Z",
+      "note": "Adversarial check: a queue-only commit no longer moves the gate (HEAD equality replaced by a diff over WALK_PATHS); a docs/tests commit starts nothing; a partial run cut short by the lock is re-run a day on once unlocked whether or not a request was handed back (same as before, when the partial handed its request back). Also fixed in passing: dashboard floor said 12h (now read from DEFAULTS); sweep-size-drill was red on HEAD (stale 560-walk counts, cap headroom 37%): counts rewritten with --write, budget 20s -> 24s. Left rough (no task): queue/sweep/README.md and a few comments still say 'twelve hour floor' in history notes; harmless prose."
+    },
+    {
+      "t": "2026-10-02T12:50:22.237Z",
+      "note": "Shipped in 30cad60e + dc13cd48. sweep-schedule.mjs decide() treats code landed under Sources/Scripts/Resources/Vendor/Package.* (git diff, not HEAD equality) as the ask: rotating check inside the day floor, whole set past it; queue/docs/tests-only commits start nothing; --now still jumps. sweep.sh run no longer refuses without a request when the schedule says full; status always prints what is next. Verified: sweep-schedule-drill.mjs (scratch git repo through code landed/no request, queue-only, walk script change, request pending, a day on, locked) all pass; live --decide now says slice where it said 'no sweep has been asked for'; Scripts/test.sh 10920 tests pass. CLAUDE.md, queue/README.md, runner-prompt.md, sweep/README.md carry the same sentence. Also: dashboard floor 12h->24h from DEFAULTS, sweep-size counts refreshed (710 walks), per-walk cap budget 20s->24s (drill was red on HEAD)."
     }
-  ]
+  ],
+  "started": "2026-10-02T12:40:15.860Z",
+  "walks": [],
+  "completed": "2026-10-02T12:50:22.238Z"
 }

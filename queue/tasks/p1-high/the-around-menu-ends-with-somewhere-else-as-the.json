@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p1-high",
   "seq": 430,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-03T04:34:35.172Z",
-  "updated": "2026-10-03T05:30:18.974Z",
+  "updated": "2026-10-03T05:30:23.145Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/icon-animate-wt.html, #oriMenu (Its centre, Top centre, Bottom centre, menu-sep, ic-move Somewhere else… Y) and #btnPickOrigin (ghost icon button, ic-move, title Move the pivot on the canvas (Y)) beside #selOrigin. App: Sources/Photonz/MotionListInspector.swift MotionPivotSetting. Found while comparing the Around menu to the mock in task a-menu-that-says-custom-lets-you-get-back-to-cus; that task added Custom below a divider, so Somewhere else goes after it. Check Y against existing shortcuts first (Photoshop parity: no default Y in PS beyond History Brush).",
@@ -39,11 +39,16 @@
     {
       "t": "2026-10-03T05:30:18.973Z",
       "note": "Built and verified. Around menu ends with a divider + Somewhere else… (move glyph, Y printed), below Custom. Move button beside the menu (accent, held in while waiting; second click lets go). Layer > Move the Pivot (Y) in the menu bar. Next press on the canvas puts the pivot down under the pointer and a drag carries it (one undo step); Escape gives up via an app-wide key monitor (left to the canvas if a pivot is already under the hand); picking another layer or tool ends it. Walks green at Next defaults: pivot-somewhere-else-walk (lock-safe: menu choose, click at a point, button pressed with real mouse events, Escape, Y via shortcut stand-in, drag, undo) and pivot-somewhere-else-menu-walk (pointer click on the menu's face, picture of it open). motion-pivot*, custom-goes-back walks still green. Scripts/test.sh: 11001 tests passed. Mock side by side in the audit. Rough items left in the audit, not filed: the mock's tool bar pivot tool (an earlier task's deliberate cut, now an evaluate question for the user) and the bordered Around box reading numbers (an earlier decision). Neither is new or broken, so neither cleared the bar."
+    },
+    {
+      "t": "2026-10-03T05:30:23.143Z",
+      "note": "Around menu ends with Somewhere else (Y) below Custom, a move button beside it, and Layer > Move the Pivot (Y): the next canvas press places the pivot, a drag carries it, Escape gives up. Verified by pivot-somewhere-else-walk and pivot-somewhere-else-menu-walk at Next defaults, 11001 tests green, audit queue/audits/2026-10-02-pivot-somewhere-else.json with the mock side by side."
     }
   ],
   "started": "2026-10-03T04:55:35.031Z",
   "walks": [
     "pivot-somewhere-else-walk",
     "pivot-somewhere-else-menu-walk"
-  ]
+  ],
+  "completed": "2026-10-03T05:30:23.144Z"
 }
