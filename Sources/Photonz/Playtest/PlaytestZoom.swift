@@ -15,6 +15,10 @@ import PhotonzRender
 ///   zoom's own size, and has moved between them.
 /// - `expectZoomExportMatches` checks what an export writes at those three
 ///   moments is what the canvas shows, and that both are zoomed.
+/// - `expectZoomScrubMatchesExport` scrubs across the zoom, picked or not, and
+///   checks the canvas is the exported frame at every moment, pixel for pixel.
+/// - `expectZoomEasesFrameByFrame` steps through the ways in and out and
+///   checks the picture moves at every frame.
 @MainActor
 enum PlaytestZoom {
     struct Failure: Error { let description: String }
@@ -210,6 +214,137 @@ enum PlaytestZoom {
         return "the exported frames match the canvas: " + said.joined(separator: "; ")
     }
 
+    static func expectBoxDown(_ editor: EditorState) throws -> String {
+        let clip = try recording(in: editor)
+        guard editor.selectedZoom?.layerID == clip.id else {
+            throw Failure(description: "no zoom on the recording is picked")
+        }
+        if let box = editor.zoomBoxInDocument {
+            throw Failure(description: "the zoom's box is still up at \(box.integral): the picture shows the "
+                + "whole recording, not what the zoom does at \(editor.documentTimeMS) ms")
+        }
+        return "a zoom is picked with its box down: the picture is the zoom at \(editor.documentTimeMS) ms"
+    }
+
+    /// The one zoom on the recording and where it runs on the timeline.
+    static func theZoom(_ editor: EditorState) throws -> (Layer, ClipZoom, start: Int, end: Int) {
+        let clip = try recording(in: editor)
+        guard let zooms = clip.zooms, zooms.count == 1, let zoom = zooms.first,
+              let span = clip.timelineSpanMS(of: zoom.id) else {
+            throw Failure(description: "the recording has \(clip.zooms?.count ?? 0) zooms, not 1")
+        }
+        return (clip, zoom, span.start, span.end)
+    }
+
+    /// Scrub the playhead to `ms` the way a click on the ruler does, and wait
+    /// for the picture of that moment to land.
+    static func scrub(_ editor: EditorState, toMS ms: Int, settle: Duration = .milliseconds(700)) async {
+        editor.beginRulerPress(atMS: ms, reachMS: 0)
+        editor.dragRulerPress(toMS: ms, moved: false, snapMS: 0)
+        editor.endRulerPress(atMS: ms, moved: false)
+        try? await Task.sleep(for: settle)
+    }
+
+    static func expectScrubMatchesExport(_ editor: EditorState) async throws -> String {
+        let (clip, zoom, start, end) = try theZoom(editor)
+        guard let document = editor.document else { throw Failure(description: "no document") }
+        let picked = editor.selectedZoom != nil
+        let eases = zoom.eases
+        let moments = [
+            ("way in, a quarter", start + eases.inMS / 4),
+            ("way in, half", start + eases.inMS / 2),
+            ("way in, three quarters", start + eases.inMS * 3 / 4),
+            ("hold", (start + eases.inMS + end - eases.outMS) / 2),
+            ("way out, half", end - eases.outMS / 2),
+        ]
+        let frames = DocumentFrames(document: document, store: editor.store,
+                                    movieURLs: MovieLibrary.shared.urls(in: document))
+        defer { frames.putTheStoreBack() }
+        var unzoomed = document
+        unzoomed.updateLayer(id: clip.id) { $0.zooms = nil }
+        let flat = DocumentFrames(document: unzoomed, store: editor.store,
+                                  movieURLs: MovieLibrary.shared.urls(in: unzoomed))
+        defer { flat.putTheStoreBack() }
+        var said: [String] = []
+        var worst = 0.0
+        for (name, ms) in moments {
+            await scrub(editor, toMS: ms)
+            if picked, let box = editor.zoomBoxInDocument {
+                throw Failure(description: "scrubbed to \(ms) ms (\(name)) with the zoom picked, and the "
+                    + "picture shows the whole recording with the box at \(box.integral), not the zoom")
+            }
+            guard let canvas = editor.renderedImage,
+                  let written = await frames.frame(atMS: ms),
+                  let whole = await flat.frame(atMS: ms) else {
+                throw Failure(description: "at \(ms) ms a picture could not be made")
+            }
+            let apart = pixelsApart(canvas, written)
+            worst = max(worst, apart)
+            let zoomedBy = pixelsApart(written, whole)
+            guard apart <= 0.01 else {
+                throw Failure(description: "scrubbed to \(ms) ms (\(name)): \(pct(apart)) of the canvas's "
+                    + "pixels differ from the exported frame, more than 1% (the zoom changes "
+                    + "\(pct(zoomedBy)) of them)")
+            }
+            if name == "hold", zoomedBy < 0.1 {
+                throw Failure(description: "at \(ms) ms, inside the hold, the exported frame is barely zoomed "
+                    + "(\(pct(zoomedBy)) of pixels changed)")
+            }
+            said.append("\(name) \(ms) ms: \(pct(apart)) apart, zoom changes \(pct(zoomedBy))")
+        }
+        if picked, editor.selectedZoom == nil {
+            throw Failure(description: "scrubbing let the picked zoom go")
+        }
+        return "scrubbed with the zoom \(picked ? "picked" : "not picked"), the canvas is the export at "
+            + "every moment (worst \(pct(worst)) of pixels apart): " + said.joined(separator: "; ")
+    }
+
+    static func expectEasesFrameByFrame(_ editor: EditorState) async throws -> String {
+        let (clip, zoom, start, end) = try theZoom(editor)
+        let eases = zoom.eases
+        let step = MovieRef.frameStepMS
+        func widthDrawn(at ms: Int) async throws -> Double {
+            await scrub(editor, toMS: ms, settle: .milliseconds(60))
+            guard let drawn = editor.playtestLastDrawn?.layer(id: clip.id) else {
+                throw Failure(description: "at \(ms) ms the canvas was given no recording")
+            }
+            return Double(drawn.zoomWindow?.width ?? 1)
+        }
+        var into: [Double] = []
+        for ms in stride(from: start + step, to: start + eases.inMS, by: step) {
+            into.append(try await widthDrawn(at: ms))
+        }
+        var outOf: [Double] = []
+        for ms in stride(from: end - eases.outMS + step, to: end, by: step) {
+            outOf.append(try await widthDrawn(at: ms))
+        }
+        guard into.count >= 5, outOf.count >= 5 else {
+            throw Failure(description: "the zoom's ways in and out are too short to step through")
+        }
+        let inSteps = zip(into, into.dropFirst()).filter { $1 >= $0 }.count
+        let outSteps = zip(outOf, outOf.dropFirst()).filter { $1 <= $0 }.count
+        func widths(_ w: [Double]) -> String { w.map { String(format: "%.3f", $0) }.joined(separator: " ") }
+        guard inSteps == 0, outSteps == 0 else {
+            throw Failure(description: "the picture does not move at every frame: in \(widths(into)); out "
+                + "\(widths(outOf))")
+        }
+        return "frame by frame the picture goes in over \(into.count) frames (\(widths(into))) and back out "
+            + "over \(outOf.count) (\(widths(outOf)))"
+    }
+
+    /// The share of two pictures' pixels, nought to one, that differ by more
+    /// than a tenth in any channel, read at 320 x 200.
+    static func pixelsApart(_ a: CGImage, _ b: CGImage) -> Double {
+        guard let x = small(a, width: 320, height: 200), let y = small(b, width: 320, height: 200),
+              x.count == y.count, !x.isEmpty else { return 1 }
+        var apart = 0
+        for i in stride(from: 0, to: x.count, by: 4) {
+            let most = (0..<3).map { abs(Int(x[i + $0]) - Int(y[i + $0])) }.max() ?? 0
+            if most > 25 { apart += 1 }
+        }
+        return Double(apart) / Double(x.count / 4)
+    }
+
     /// The mean difference of two pictures, nought to one, read at 64 x 36.
     static func difference(_ a: CGImage, _ b: CGImage) -> Double {
         guard let x = small(a), let y = small(b), x.count == y.count, !x.isEmpty else { return 1 }
@@ -224,8 +359,7 @@ enum PlaytestZoom {
         return total / Double(max(1, count))
     }
 
-    private static func small(_ image: CGImage) -> [UInt8]? {
-        let width = 64, height = 36
+    private static func small(_ image: CGImage, width: Int = 64, height: Int = 36) -> [UInt8]? {
         var data = [UInt8](repeating: 0, count: width * height * 4)
         guard let space = CGColorSpace(name: CGColorSpace.sRGB),
               let context = CGContext(data: &data, width: width, height: height, bitsPerComponent: 8,

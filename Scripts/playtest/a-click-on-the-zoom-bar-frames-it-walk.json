@@ -1,0 +1,26 @@
+{
+  "out": "/tmp/photonz-playtest/a-click-on-the-zoom-bar-frames-it-walk",
+  "seed": "After a scrub has taken a picked zoom's box down, a click with the pointer on the zoom's bar puts the box back up to frame it, at the moment the playhead is on.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "clickRuler", "seconds": 2.0 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "zoomAddAtPlayhead" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "clickRuler", "seconds": 3.5 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "expectZoomBoxDown" },
+    { "do": "windowClick", "at": [800, 897] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "expectZoomPicked" },
+    { "do": "describe", "stage": "1-bar-click-frames", "note": "A click on the zoom's bar puts its box back up over the whole picture" },
+    { "do": "snapshot", "name": "1-bar-click-frames" }
+  ]
+}

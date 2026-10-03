@@ -3929,7 +3929,8 @@ private final class Run {
                 note(number, step.name, "captions: \(onIt.count) cues on the one \(track.name) track",
                      state: describe())
             case .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
-                 .expectZoomShapedByHand, .expectZoomSuggested, .expectZoomPicked, .expectZoomLetGo, .zoomAddAtPlayhead:
+                 .expectZoomShapedByHand, .expectZoomSuggested, .expectZoomPicked, .expectZoomLetGo, .zoomAddAtPlayhead,
+                 .expectZoomBoxDown, .expectZoomScrubMatchesExport, .expectZoomEasesFrameByFrame:
                 do {
                     let said = switch action {
                     case .zoomScriptPointerPath: try PlaytestZoom.scriptPointerPath(editor)
@@ -3939,6 +3940,9 @@ private final class Run {
                     case .expectZoomPicked: try PlaytestZoom.expectPicked(editor)
                     case .expectZoomLetGo: try PlaytestZoom.expectLetGo(editor)
                     case .zoomAddAtPlayhead: try PlaytestZoom.addAtPlayhead(editor)
+                    case .expectZoomBoxDown: try PlaytestZoom.expectBoxDown(editor)
+                    case .expectZoomScrubMatchesExport: try await PlaytestZoom.expectScrubMatchesExport(editor)
+                    case .expectZoomEasesFrameByFrame: try await PlaytestZoom.expectEasesFrameByFrame(editor)
                     default: try await PlaytestZoom.expectExportMatches(editor)
                     }
                     note(number, step.name, said, state: describe())
@@ -5399,6 +5403,7 @@ private final class Run {
                  .captionsExpectEndWithRecording, .captionsExpectInsideMarks, .expectAddedClick,
                  .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
                  .expectZoomShapedByHand, .expectZoomSuggested, .expectZoomPicked, .expectZoomLetGo, .zoomAddAtPlayhead,
+                 .expectZoomBoxDown, .expectZoomScrubMatchesExport, .expectZoomEasesFrameByFrame,
                  .expectClickRipple, .expectClickEffectExportMatches, .expectClickTicksEdited,
                  .captionsPickFirst, .captionsPickNext, .captionsEditFirstInPlace, .captionsCommitFirstWords,
                  .captionsTrimFirstEnd, .captionsStyleCaption, .captionsStyleLowerThird,

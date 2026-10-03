@@ -1,0 +1,29 @@
+{
+  "feature": "Scrubbing shows what the zoom does",
+  "epic": "video-transitions-motion",
+  "summary": "Scrubbing across a zoom now shows the zoom at every frame, eases included, whether the zoom is picked or not. The box for framing it comes up when you add a zoom, click its bar, or click the picture, and goes down as soon as the playhead moves.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording, transport stopped. Walks: Scripts/playtest/scrubbing-shows-the-zoom-walk.json and a-click-on-the-zoom-bar-frames-it-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Put the playhead at 2 seconds, right-click the clip, choose Add Zoom: the whole picture shows with the zoom's box on it.", "shot": "2026-10-03-zoom-scrub-1-framing.png" },
+    { "do": "Click the ruler a third of a second later: the box goes down and the picture is the zoom part way in.", "shot": "2026-10-03-zoom-scrub-2-way-in.png" },
+    { "do": "Drag the playhead through the zoom: the picture eases in, holds and eases out under your hand, the zoom still picked.", "shot": "2026-10-03-zoom-scrub-3-hold.png" },
+    { "do": "Click the zoomed picture (the pointer is a pointing hand there): the box comes back up at that moment.", "shot": "2026-10-03-zoom-scrub-4-box-back-up.png" },
+    { "do": "Drag the box somewhere else, then press the Right Arrow: the picture shows the zoom on its new spot." },
+    { "do": "Press Escape, then scrub again: the zoom shows the same way with nothing picked.", "shot": "2026-10-03-zoom-scrub-6-let-go.png" },
+    { "do": "Click the zoom's bar on the Zoom lane: the box comes back up to frame it." }
+  ],
+  "evaluate": [
+    "Does the box going down the moment you scrub feel right, or would you rather it stayed up until you click away?",
+    "With the box down, would you think to click the picture to frame the zoom again?",
+    "Is a click on the bar the place you would expect to get the box back?",
+    "Does watching the zoom while scrubbing now tell you what the export will show?"
+  ],
+  "rough": [
+    "Measured, not eyeballed: at five moments across the zoom (a quarter, half and three quarters of the way in, the hold, half way out) the canvas differed from the exported frame in 0.0% of pixels, picked and not picked, while the zoom itself changes up to 35% of them. Frame by frame, all 21 frames in and 21 out move the picture.",
+    "No mock draws a zoom region. Framing as its own state follows Final Cut's crop and Ken Burns controls: you enter them to edit, and the viewer shows the result otherwise.",
+    "Nothing but the pointer says a click on the zoomed picture brings the box back.",
+    "A click on the ruler exactly where the playhead already is leaves the box up, since nothing moved.",
+    "While playing with a zoom picked, the clip's own outline and handles show round the picture, as they did before."
+  ]
+}

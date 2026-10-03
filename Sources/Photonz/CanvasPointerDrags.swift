@@ -23,7 +23,7 @@ extension CanvasNSView {
         }
         // A picked zoom's box takes a press on its clip before any tool does:
         // carry it, pull a corner, or draw it again (`EditorState+Zoom`).
-        if zoomBoxUp, !isWatching,
+        if zoomOwnsPicture, !isWatching,
            onZoomBoxDown(viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))) {
             window?.makeFirstResponder(self)
             zoomBoxPressing = true

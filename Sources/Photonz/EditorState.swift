@@ -167,6 +167,10 @@ final class EditorState {
         didSet { noteDialogOpened(.export, was: oldValue, now: isExportDialogPresented) }
     }
     #if PHOTONZ_PLAYTEST
+    /// Probe only: the document last handed to the canvas to draw, as drawn at
+    /// the playhead, so a walk can read what the picture was given (a zoom's
+    /// window at a frame) rather than working it out again.
+    @ObservationIgnored var playtestLastDrawn: PhotonzDocument?
     /// Probe only: the Export sheet opens on SVG, because a walk cannot click
     /// inside a sheet to pick it (`PlaytestAction.exportDialogAsSVG`). Compiled
     /// out of every shipping build.
@@ -1353,7 +1357,12 @@ final class EditorState {
     /// Only means anything in a document that HAS time. In every other
     /// document it stays at nought and nothing reads it, which is what makes
     /// all of this free for a screenshot.
-    var documentTimeMS: Int = 0
+    var documentTimeMS: Int = 0 {
+        // Framing a zoom is done at one moment: the playhead moving on, by a
+        // scrub, a key or playing, puts the picture back to what the zoom
+        // shows there (`EditorState+Zoom`).
+        didSet { if zoomFraming, documentTimeMS != oldValue { zoomFraming = false } }
+    }
     /// Whether the document is playing.
     var isDocumentPlaying = false
     /// True while this window holds a recording opened the moment it was
@@ -1622,6 +1631,10 @@ final class EditorState {
     /// The zoom region picked on a clip's Zoom lane (`EditorState+Zoom`).
     /// Picking another layer lets it go.
     var selectedZoom: ClipZoomRef?
+    /// The picked zoom's box is up over the whole picture to be moved or
+    /// drawn again. Picking a zoom puts it up; the playhead moving takes it
+    /// down, so a scrub always shows what the zoom does (`EditorState+Zoom`).
+    var zoomFraming = false
     /// A zoom's bar or box under a hand: drawn as the hand has it, written
     /// down once on letting go (`EditorState+Zoom`).
     var zoomDrag: ZoomDragSession?
@@ -4631,6 +4644,9 @@ final class EditorState {
     func submit(_ document: PhotonzDocument) {
         let submitted = document
         let displayed = displayDocument(document)
+        #if PHOTONZ_PLAYTEST
+        playtestLastDrawn = displayed
+        #endif
         var document = displayed
         // A recording is composited at the size it is shown rather than at
         // its own (`CompositeScale`): a full-screen Retina recording fitted in

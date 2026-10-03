@@ -51,7 +51,7 @@ extension CanvasNSView {
     /// button is down — an overlay pass, a scroll, a zoom, the preview's own
     /// thirty frames a second — draws the same live point.
     var showingMotionPivot: MotionPivotHandle? {
-        guard tool == .select, !zoomBoxUp, let handle = motionPivot else { return nil }
+        guard tool == .select, !zoomOwnsPicture, let handle = motionPivot else { return nil }
         guard let drag = motionPivotDrag, drag.handle.motionID == handle.motionID else { return handle }
         return MotionPivotHandle(layerID: handle.layerID, motionID: handle.motionID,
                                  point: drag.current, box: handle.box)

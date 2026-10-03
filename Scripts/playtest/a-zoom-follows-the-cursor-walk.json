@@ -117,7 +117,7 @@
     },
     {
       "do": "snapshot",
-      "name": "3-box-follows-early"
+      "name": "3-picked-zoom-follows-early"
     },
     {
       "do": "clickRuler",
@@ -129,7 +129,7 @@
     },
     {
       "do": "snapshot",
-      "name": "4-box-follows-middle"
+      "name": "4-picked-zoom-follows-middle"
     },
     {
       "do": "clickRuler",
@@ -141,7 +141,7 @@
     },
     {
       "do": "snapshot",
-      "name": "5-box-follows-late"
+      "name": "5-picked-zoom-follows-late"
     },
     {
       "do": "action",

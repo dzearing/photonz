@@ -1,0 +1,56 @@
+{
+  "out": "/tmp/photonz-playtest/scrubbing-shows-the-zoom-walk",
+  "seed": "Scrubbing a recording with a zoom shows what the zoom does at every frame, with the zoom picked and with it let go, matching the export pixel for pixel; a click on the picture or the zoom's bar puts its box back up to frame it.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "zoomScriptPointerPath" },
+    { "do": "clickRuler", "seconds": 2.0 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "zoomAddAtPlayhead" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "expectZoomPicked" },
+    { "do": "describe", "stage": "1-framing", "note": "Add Zoom picks the new zoom with its box up: the whole picture, the box on it to move or resize" },
+    { "do": "snapshot", "name": "1-framing-after-add" },
+
+    { "do": "clickRuler", "seconds": 2.35 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "expectZoomBoxDown" },
+    { "do": "describe", "stage": "2-picked-way-in", "note": "A click on the ruler half way through the way in: the zoom stays picked, its box goes down, and the picture is the zoom part way in" },
+    { "do": "snapshot", "name": "2-picked-scrub-way-in" },
+    { "do": "clickRuler", "seconds": 3.5 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "expectZoomBoxDown" },
+    { "do": "snapshot", "name": "3-picked-scrub-hold" },
+    { "do": "action", "action": "expectZoomScrubMatchesExport" },
+    { "do": "action", "action": "expectZoomEasesFrameByFrame" },
+
+    { "do": "clickRuler", "seconds": 3.5 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "move", "at": [700, 400], "space": "window" },
+    { "do": "expectCue", "says": "frame" },
+    { "do": "click", "at": [700, 400], "space": "window" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "expectZoomPicked" },
+    { "do": "describe", "stage": "4-box-back-up", "note": "A click on the zoomed picture puts the box back up over the whole picture, at the moment the playhead is on" },
+    { "do": "snapshot", "name": "4-box-back-up" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "expectZoomLetGo" },
+    { "do": "clickRuler", "seconds": 2.35 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "snapshot", "name": "5-let-go-scrub-way-in" },
+    { "do": "clickRuler", "seconds": 3.5 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "6-let-go-hold", "note": "With the zoom let go, a scrub shows the zoom the same way" },
+    { "do": "snapshot", "name": "6-let-go-scrub-hold" },
+    { "do": "action", "action": "expectZoomScrubMatchesExport" }
+  ]
+}

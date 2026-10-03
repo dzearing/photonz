@@ -360,10 +360,11 @@ struct CanvasView: NSViewRepresentable {
     /// True between Somewhere else (or Y) and the press that puts the pivot
     /// down: the next press takes the pivot wherever it lands.
     var placingMotionPivot: Bool = false
-    /// A picked zoom's box is up over the picture (`EditorState+Zoom`): a
-    /// press on its clip goes to the box first.
-    var zoomBoxUp: Bool = false
+    /// A picked zoom owns the picture (`EditorState+Zoom`): a press on its
+    /// clip goes to the zoom first, to its box when the box is up.
+    var zoomOwnsPicture: Bool = false
     var zoomBoxHit: (CGPoint) -> ZoomBoxHit? = { _ in nil }
+    var zoomFramesOnPress: (CGPoint) -> Bool = { _ in false }
     var onZoomBoxDown: (CGPoint) -> Bool = { _ in false }
     var onZoomBoxDrag: (CGPoint) -> Void = { _ in }
     var onZoomBoxRelease: (CGPoint) -> Void = { _ in }
@@ -514,8 +515,9 @@ struct CanvasView: NSViewRepresentable {
         view.placingClick = placingClick
         view.onPlaceClick = onPlaceClick
         view.placingMotionPivot = placingMotionPivot
-        view.zoomBoxUp = zoomBoxUp
+        view.zoomOwnsPicture = zoomOwnsPicture
         view.zoomBoxHit = zoomBoxHit
+        view.zoomFramesOnPress = zoomFramesOnPress
         view.onZoomBoxDown = onZoomBoxDown
         view.onZoomBoxDrag = onZoomBoxDrag
         view.onZoomBoxRelease = onZoomBoxRelease
@@ -705,13 +707,14 @@ final class CanvasNSView: NSView {
     var placingMotionPivot = false {
         didSet { if placingMotionPivot != oldValue { window?.invalidateCursorRects(for: self) } }
     }
-    /// A picked zoom's box is up: a press the box takes is the box's from
-    /// down to up (`ZoomBoxOverlay`, `EditorState+Zoom`). While it is, the
-    /// box is the only frame on the picture: the clip's own outline, handles
-    /// and knob step aside, so there is one thing a press can be about.
-    var zoomBoxUp = false {
+    /// A zoom is picked: a press on its clip is the zoom's from down to up,
+    /// the box's while its box is up (`ZoomBoxOverlay`, `EditorState+Zoom`),
+    /// and otherwise a press that puts the box up. While it is, the clip's own
+    /// outline, handles and knob step aside, so there is one thing a press
+    /// can be about.
+    var zoomOwnsPicture = false {
         didSet {
-            guard zoomBoxUp != oldValue else { return }
+            guard zoomOwnsPicture != oldValue else { return }
             refreshOverlays()
             refreshGrabCursor()
         }
@@ -719,6 +722,9 @@ final class CanvasNSView: NSView {
     /// What a press at a document point would take on the box, read by the
     /// pointer so it says what the press will do.
     var zoomBoxHit: ((CGPoint) -> ZoomBoxHit?) = { _ in nil }
+    /// Whether a press at a document point puts the picked zoom's box up,
+    /// read by the pointer so it says a click there frames the zoom.
+    var zoomFramesOnPress: ((CGPoint) -> Bool) = { _ in false }
     var zoomBoxPressing = false
     var onZoomBoxDown: ((CGPoint) -> Bool) = { _ in false }
     var onZoomBoxDrag: ((CGPoint) -> Void) = { _ in }

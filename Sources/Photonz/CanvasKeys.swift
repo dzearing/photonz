@@ -235,10 +235,10 @@ extension CanvasNSView {
             return
         }
         if event.keyCode == 53 { // Esc, in priority order: cancel drag → ants → layer → tool
-            // A picked zoom's box owns the picture while it is up: Escape puts
-            // a drag on it back, or lets the zoom go with its clip still
-            // picked, the way it steps out of a group before deselecting.
-            if zoomBoxUp, onZoomBoxEscape() {
+            // A picked zoom owns the picture: Escape puts a drag on its box
+            // back, or lets the zoom go with its clip still picked, the way it
+            // steps out of a group before deselecting.
+            if zoomOwnsPicture, onZoomBoxEscape() {
                 refreshOverlays()
                 return
             }

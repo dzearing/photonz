@@ -80,4 +80,18 @@ struct ZoomPickedWalkActionTests {
     @Test func thePointerBesideTheBoxIsAClaimAWalkMayMake() {
         #expect(PlaytestScript.pointerCueNames.contains("draw"))
     }
+
+    @Test func aClickThatPutsTheBoxBackUpIsAClaimAWalkMayMake() {
+        #expect(PlaytestScript.pointerCueNames.contains("frame"))
+    }
+}
+
+@Suite("Walks can check what a scrub across a zoom shows")
+struct ZoomScrubWalkActionTests {
+
+    @Test func theScrubClaimsAreActionsTheEditorAnswers() {
+        #expect(PlaytestAction(rawValue: "expectZoomScrubMatchesExport")?.drivesTheTimeline == true)
+        #expect(PlaytestAction(rawValue: "expectZoomEasesFrameByFrame")?.drivesTheTimeline == true)
+        #expect(PlaytestAction(rawValue: "expectZoomBoxDown")?.drivesTheTimeline == true)
+    }
 }

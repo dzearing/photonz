@@ -283,7 +283,15 @@ extension CanvasNSView {
         // resize arrows on a corner, the hand on the box, a crosshair beside
         // it where a drag draws a new one. Off the clip a press only lets the
         // zoom go, so nothing there offers a grab.
-        if zoomBoxUp {
+        if zoomOwnsPicture {
+            // The zoom shown with its box down: a click on the picture puts
+            // the box up to frame it.
+            if zoomFramesOnPress(doc) {
+                #if PHOTONZ_PLAYTEST
+                recordPlaytestCue("frame")
+                #endif
+                return applyGrabCursor(.pointingHand)
+            }
             let hit = zoomBoxHit(doc)
             #if PHOTONZ_PLAYTEST
             switch hit {

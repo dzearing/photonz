@@ -37,7 +37,7 @@ public struct PlaytestScript: Sendable, Equatable {
     /// worse than no claim at all.
     public static let pointerCueNames: [String] =
         ["none", "grab", "rotate", "name-grab", "drag-copy",
-         "screen-sweep", "screen-move", "screen-copy", "draw"]
+         "screen-sweep", "screen-move", "screen-copy", "draw", "frame"]
         + ResizeAxis.allCases.map { "resize-\($0.rawValue)" }
 
     /// Parses a script, naming the step and field of the first problem.
@@ -952,6 +952,18 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Fail unless no zoom is picked and the recording it was on still is:
     /// the zoom was let go, one step back, not the whole selection.
     case expectZoomLetGo
+    /// Fail unless a zoom is picked with its box DOWN: the picture shows what
+    /// the zoom does at the playhead, not the whole picture with the box.
+    case expectZoomBoxDown
+    /// Scrub across the one zoom on the recording, through its way in, its
+    /// hold and its way out, and fail unless at every moment the canvas is
+    /// the exported frame to within 1% of its pixels, and zoomed in the hold.
+    /// Leaves whether the zoom is picked as it found it.
+    case expectZoomScrubMatchesExport
+    /// Step the playhead frame by frame through the zoom's way in and its way
+    /// out, and fail unless the picture goes in a little further at every
+    /// frame in, and back out a little at every frame out.
+    case expectZoomEasesFrameByFrame
     /// Fail unless the recording's clicks are drawn as a ripple: at three
     /// moments across its first scripted click there is a ring centred on the
     /// click, growing and fading, and nothing just before or after
@@ -1405,6 +1417,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .clipSpeedDouble, .clipSpeedHalf, .expectAddedClick,
              .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
              .expectZoomShapedByHand, .expectZoomSuggested, .expectZoomPicked, .expectZoomLetGo,
+             .expectZoomBoxDown, .expectZoomScrubMatchesExport, .expectZoomEasesFrameByFrame,
              .zoomAddAtPlayhead, .expectClickRipple, .expectClickEffectExportMatches, .expectClickTicksEdited,
              .soundDetach, .soundAddSample, .soundDuck, .soundLevelHalf,
              .captionsAddVoiceover, .captionsWrite, .captionsWriteHearingNothing,

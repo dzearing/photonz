@@ -851,7 +851,7 @@ extension CanvasNSView {
     var playtestOutlineAbsence: String {
         if selectedLayerID == nil { return "nothing selected" }
         if selectedLayerFrame == nil { return "the selection has no frame yet" }
-        if zoomBoxUp { return "a zoom's box is up" }
+        if zoomOwnsPicture { return "a zoom is picked" }
         if resizeDrag != nil || endpointDrag != nil || measureHandleDrag != nil
             || captionDrag != nil { return "mid-resize" }
         if endpointHoldLayerID != nil { return "holding the ends just dragged" }
@@ -924,11 +924,12 @@ extension CanvasNSView {
             }
             return
         }
-        // A picked zoom's box is up: it is the one frame on the picture, so
-        // the clip it frames shows no outline, handles or knob of its own
-        // (`ZoomBoxOverlay`). Two boxes left nothing saying which one a press
-        // would move.
-        if zoomBoxUp {
+        // A zoom is picked: its box, when up, is the one frame on the
+        // picture, so the clip it frames shows no outline, handles or knob of
+        // its own (`ZoomBoxOverlay`). Two boxes left nothing saying which one
+        // a press would move, and with the box down a press on the picture
+        // is the zoom's, to put the box back up.
+        if zoomOwnsPicture {
             layerOutlineLayer.isHidden = true
             handlesLayer.isHidden = true
             rotateKnobLayer.isHidden = true

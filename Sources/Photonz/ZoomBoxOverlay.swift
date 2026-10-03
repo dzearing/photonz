@@ -4,9 +4,11 @@ import SwiftUI
 
 /// The picked zoom's box on the picture (`EditorState+Zoom`).
 ///
-/// While a zoom is picked and nothing is playing, the canvas shows the whole
-/// recording and this box over the part the zoom fills the frame with, the
-/// rest of the picture dimmed. Carry the box to move it, pull a corner to
+/// While a zoom is picked to frame (just added, or its bar or the picture
+/// clicked) and nothing is playing, the canvas shows the whole recording and
+/// this box over the part the zoom fills the frame with, the rest of the
+/// picture dimmed. Moving the playhead takes the box down, so a scrub shows
+/// the zoom itself. Carry the box to move it, pull a corner to
 /// resize it, or press beside it and drag to draw it again. It always keeps the
 /// frame's shape, because any other shape would stretch the picture. A click
 /// beside it without a drag lets the zoom go, the way a click off a crop does,

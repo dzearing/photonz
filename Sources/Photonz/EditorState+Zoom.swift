@@ -7,8 +7,11 @@ import PhotonzCore
 // Add Zoom on a clip's right-click menu, the ruler's, or the Clip menu puts a
 // zoom at the playhead: a bar on the clip's Zoom lane for WHEN, and a box on
 // the picture for WHERE. Picked, the bar's ends and its two ramps drag on the
-// lane, and while the transport is stopped the canvas shows the whole picture
-// with the box on it to move, resize or draw again. Follow Cursor makes the box
+// lane. Picking a zoom (adding it, clicking its bar, or clicking the picture
+// while it is picked) puts its box up: the canvas shows the whole picture with
+// the box on it to move, resize or draw again. Moving the playhead takes the
+// box down, so a scrub shows exactly what the zoom does at every frame, the
+// same as playing and exporting. Follow Cursor makes the box
 // ride the pointer the recorder took down; Suggest Zooms puts one round every
 // run of clicks. Every change is one undo step.
 
@@ -135,15 +138,18 @@ extension EditorState {
 
     // MARK: Picking
 
+    /// Pick a zoom with its box up to frame it.
     func pickZoom(_ ref: ClipZoomRef) {
         if selectedLayerID != ref.layerID { selectLayer(ref.layerID) }
         if selectedZoom != ref { selectedZoom = ref }
+        if !zoomFraming { zoomFraming = true }
         documentMomentChanged()
     }
 
     func letGoOfZoom() {
         guard selectedZoom != nil else { return }
         selectedZoom = nil
+        zoomFraming = false
         documentMomentChanged()
     }
 
@@ -151,7 +157,10 @@ extension EditorState {
 
     func removeZoom(_ ref: ClipZoomRef) {
         guard zoom(ref) != nil, !isClipLocked(ref.layerID) else { return }
-        if selectedZoom == ref { selectedZoom = nil }
+        if selectedZoom == ref {
+            selectedZoom = nil
+            zoomFraming = false
+        }
         perform { $0.removeZoom(onClip: ref.layerID, id: ref.zoomID) }
         documentMomentChanged()
     }
@@ -347,10 +356,24 @@ extension EditorState {
         return document
     }
 
-    /// Whether the canvas is showing a picked zoom's box over the whole
-    /// picture rather than the zoom itself: picked, and nothing playing.
-    var showsZoomBox: Bool {
+    /// Whether a picked zoom owns presses on the picture: picked, and
+    /// nothing playing. The clip's own outline and handles step aside, so
+    /// there is one thing a press can be about.
+    var zoomOwnsPicture: Bool {
         selectedZoom != nil && !isDocumentPlaying && zoomInHand != nil
+    }
+
+    /// Whether the canvas is showing a picked zoom's box over the whole
+    /// picture rather than the zoom itself: picked, being framed, and nothing
+    /// playing. Otherwise the picture is what the zoom shows at the playhead.
+    var showsZoomBox: Bool { zoomOwnsPicture && zoomFraming }
+
+    /// Whether a press at `p` (document points) would put the picked zoom's
+    /// box up: the zoom owns the picture, its box is down, and the press is
+    /// on its clip.
+    func zoomFramesOnPress(at p: CGPoint) -> Bool {
+        guard zoomOwnsPicture, !zoomFraming, let frame = zoomInHand?.layer.frame.standardized else { return false }
+        return frame.contains(p)
     }
 
     /// A drawn document with the picked zoom's clip shown whole, so its box
@@ -387,6 +410,16 @@ extension EditorState {
     /// A press on the picture while the box is up: the box takes it when it
     /// lands on the clip (or just beside a corner), and says what it holds.
     func zoomBoxDown(at p: CGPoint) -> Bool {
+        // The zoom shown, its box down: a press on the picture puts the box
+        // back up to frame, and a press off it lets the zoom go.
+        if zoomOwnsPicture, !zoomFraming {
+            if zoomFramesOnPress(at: p), let ref = selectedZoom {
+                pickZoom(ref)
+            } else {
+                letGoOfZoom()
+            }
+            return true
+        }
         guard let box = zoomBoxInDocument, let start = zoomUnitPoint(fromDocument: p) else { return false }
         guard let hit = zoomBoxHit(at: p) else {
             // Off the clip: done framing, the way a click off a crop is. The
