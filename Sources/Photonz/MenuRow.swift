@@ -90,9 +90,9 @@ struct MenuRow: Identifiable {
                 isDestructive: destructive, kind: .command, run: run)
     }
 
-    static func toggle(_ title: String, isOn: Bool,
+    static func toggle(_ title: String, isOn: Bool, shortcut: MenuShortcut? = nil,
                        run: @escaping @MainActor () -> Void) -> MenuRow {
-        MenuRow(title: title, kind: .toggle(isOn: isOn), run: run)
+        MenuRow(title: title, shortcut: shortcut, kind: .toggle(isOn: isOn), run: run)
     }
 
     static func submenu(_ title: String, _ rows: [MenuRow]) -> MenuRow {
@@ -112,7 +112,12 @@ struct MenuRowsView: View {
             case .separator:
                 Divider()
             case .toggle(let isOn):
-                Toggle(row.title, isOn: Binding(get: { isOn }, set: { _ in row.run() }))
+                let toggle = Toggle(row.title, isOn: Binding(get: { isOn }, set: { _ in row.run() }))
+                if let shortcut = row.shortcut {
+                    toggle.keyboardShortcut(shortcut.keyEquivalent, modifiers: shortcut.modifiers)
+                } else {
+                    toggle
+                }
             case .submenu(let inner):
                 Menu(row.title) { MenuRowsView(rows: inner) }
             case .command:

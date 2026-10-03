@@ -1741,6 +1741,12 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// thing: at the level it was recorded at, the whole way through.
     public var soundLevel: AudioLevel?
 
+    /// How this layer's PICTURE rises out of black at the start of its bar and
+    /// sinks back into it at the end (`PictureFade.swift`). Nil is the
+    /// ordinary case: it cuts on and cuts off, which is every layer in every
+    /// document written before this existed.
+    public internal(set) var pictureFade: PictureFade?
+
     /// The timeline track this clip sits on (`DocumentTracks.swift`). Nil is a
     /// clip on a track of its own, worked out when the timeline is read, which
     /// is every layer in every document written before tracks existed.
@@ -1855,6 +1861,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         // was set to.
         copy.soundDetached = soundDetached
         copy.soundLevel = soundLevel
+        copy.pictureFade = pictureFade
         // ...and sits on the same track.
         copy.trackID = trackID
         copy.soundTrackID = soundTrackID

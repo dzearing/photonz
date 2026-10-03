@@ -280,13 +280,13 @@
     },
     {
       "do": "panelMenu",
-      "menu": "Fade",
+      "menu": "Fade In",
       "at": [
         "centre",
         "start",
         "end"
       ],
-      "choose": "0.50s"
+      "choose": "0.5s"
     },
     {
       "do": "wait",
@@ -294,8 +294,27 @@
     },
     {
       "do": "expect",
-      "menu": "Fade",
-      "reads": "0.50s"
+      "menu": "Fade In",
+      "reads": "0.5s"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Fade Out",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "0.5s"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Fade Out",
+      "reads": "0.5s"
     },
     {
       "do": "press",

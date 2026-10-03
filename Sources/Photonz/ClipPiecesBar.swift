@@ -51,6 +51,8 @@ struct ClipPiecesBar: View {
     @State private var isHovered = false
     /// A fade handle in the hand: which end, and how long the fade would be.
     @State private var fadeDrag: FadeDrag?
+    /// A picture fade handle in the hand, on a clip, a title or a shape.
+    @State private var pictureFadeDrag: FadeDrag?
 
     private struct FadeDrag: Equatable {
         let isIn: Bool
@@ -178,6 +180,9 @@ struct ClipPiecesBar: View {
                     fadeHandles(pieces, x0: x0, ruler: ruler)
                 }
             }
+            if fadesPicture {
+                pictureFadeRamps(pieces, x0: x0, ruler: ruler)
+            }
             if isBeingDragged, let snap = editorState.clipBarSnap {
                 snapLine(atMS: snap.ms, ruler: ruler)
             }
@@ -194,7 +199,7 @@ struct ClipPiecesBar: View {
         }
         .frame(width: laneWidth, alignment: .leading)
         .modifier(BarWatch(on: carriesWalkNames, name: "\(fieldName) bar", readout: readoutText) { inside in
-            if kind != nil, isSound { isHovered = inside }
+            if kind != nil, isSound || fadesPicture { isHovered = inside }
         })
     }
 
@@ -735,6 +740,83 @@ struct ClipPiecesBar: View {
             .panelHelp(isIn ? "Fade in: drag right" : "Fade out: drag left")
     }
 
+    // MARK: The picture's fades
+
+    /// Whether this bar's picture can fade: a clip, a title, a shape, a
+    /// picture, on the dock, and never a sound.
+    private var fadesPicture: Bool {
+        kind != nil && !isSound && !isLinkedSound && editorState.pictureFadeLayer(layerID) != nil
+    }
+
+    /// The fade at each end drawn as a shade over the bar, darkest where the
+    /// picture is furthest down, the way Final Cut draws a video fade; and,
+    /// on the picked or hovered bar, a handle at each top corner to drag it.
+    @ViewBuilder
+    private func pictureFadeRamps(_ pieces: ClipPieces, x0: CGFloat,
+                                  ruler: MotionStripRuler) -> some View {
+        let length = pieces.totalLengthMS
+        let layer = editorState.document?.layer(id: layerID)
+        let fadeIn = pictureFadeDrag.flatMap { $0.isIn ? $0.ms : nil } ?? layer?.pictureFadeMS(.in) ?? 0
+        let fadeOut = pictureFadeDrag.flatMap { $0.isIn ? nil : $0.ms } ?? layer?.pictureFadeMS(.out) ?? 0
+        let whole = laneWidth * ruler.fraction(spanningMS: Double(length))
+        let inWidth = laneWidth * ruler.fraction(spanningMS: Double(fadeIn))
+        let outWidth = laneWidth * ruler.fraction(spanningMS: Double(fadeOut))
+        if fadeIn > 0 {
+            FadeWedge(isIn: true)
+                .fill(Color.black.opacity(0.4))
+                .frame(width: inWidth, height: barHeight)
+                .offset(x: x0)
+                .allowsHitTesting(false)
+        }
+        if fadeOut > 0 {
+            FadeWedge(isIn: false)
+                .fill(Color.black.opacity(0.4))
+                .frame(width: outWidth, height: barHeight)
+                .offset(x: x0 + whole - outWidth)
+                .allowsHitTesting(false)
+        }
+        if let drag = pictureFadeDrag {
+            capsule(ClipBarCopy.length(drag.ms), x: drag.isIn ? x0 + inWidth : x0 + whole - outWidth - 90)
+                .frame(height: barHeight)
+        }
+        if whole >= Self.smallestGrabbablePiece * 2, isPicked || isHovered || pictureFadeDrag != nil {
+            pictureFadeHandle(isIn: true, fromMS: layer?.pictureFadeMS(.in) ?? 0,
+                              roomMS: length - fadeOut, ruler: ruler)
+                .offset(x: min(x0 + whole - 9, x0 + max(1, inWidth - 4)))
+            pictureFadeHandle(isIn: false, fromMS: layer?.pictureFadeMS(.out) ?? 0,
+                              roomMS: length - fadeIn, ruler: ruler)
+                .offset(x: max(x0, x0 + whole - max(9, outWidth + 4)))
+        }
+    }
+
+    private func pictureFadeHandle(isIn: Bool, fromMS: Int, roomMS: Int,
+                                   ruler: MotionStripRuler) -> some View {
+        // The sound's diamond, ringed dark rather than in the sound's colour,
+        // so the two fades never read as one.
+        RoundedRectangle(cornerRadius: 1.5)
+            .fill(Color.white)
+            .overlay { RoundedRectangle(cornerRadius: 1.5).strokeBorder(Color.black.opacity(0.6), lineWidth: 1.2) }
+            .frame(width: 7, height: 7)
+            .rotationEffect(.degrees(45))
+            .frame(width: 8, height: 8)
+            .padding(.top, 1)
+            .contentShape(Rectangle().inset(by: -4))
+            .gesture(DragGesture(minimumDistance: 1, coordinateSpace: Self.handSpace)
+                .onChanged { value in
+                    let moved = Self.ms(value.translation.width, laneWidth: laneWidth, ruler: ruler)
+                    let ms = min(max(0, fromMS + (isIn ? moved : -moved)), max(0, roomMS))
+                    pictureFadeDrag = FadeDrag(isIn: isIn, ms: ms)
+                }
+                .onEnded { _ in
+                    if let drag = pictureFadeDrag {
+                        editorState.setPictureFade(drag.isIn ? .in : .out, toMS: drag.ms, layerID: layerID)
+                    }
+                    pictureFadeDrag = nil
+                })
+            .playtestField("\(fieldName) picture fade \(isIn ? "in" : "out")")
+            .panelHelp(isIn ? "Fade in: drag right" : "Fade out: drag left")
+    }
+
     // MARK: Keys
 
     /// How near the playhead, in points, a dragged key has to come to land on it.
@@ -1132,6 +1214,11 @@ struct ClipPiecesBar: View {
             let fadeOut = level.fadeOutMS(lengthMS: pieces.totalLengthMS)
             if fadeIn > 0 { words += ", fade in \(ClipBarCopy.length(fadeIn))" }
             if fadeOut > 0 { words += ", fade out \(ClipBarCopy.length(fadeOut))" }
+        }
+        if fadesPicture, let layer = editorState.document?.layer(id: layerID) {
+            let fadeIn = layer.pictureFadeMS(.in), fadeOut = layer.pictureFadeMS(.out)
+            if fadeIn > 0 { words += ", picture fades in over \(ClipBarCopy.length(fadeIn))" }
+            if fadeOut > 0 { words += ", picture fades out over \(ClipBarCopy.length(fadeOut))" }
         }
         if isBeingDragged, let readout = editorState.clipBarReadout {
             words += ", dragging \(readout)"

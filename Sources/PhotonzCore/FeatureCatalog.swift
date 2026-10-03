@@ -216,6 +216,8 @@ public enum FeatureCatalog {
 
     public static let clickEffectsFlag = "next-click-effects"
 
+    public static let pictureFadesFlag = "next-picture-fades"
+
     public static let titleOnTheTimelineFlag = "next-a-title-has-an-in-and-an-out"
 
     public static let captionsFromTheSoundFlag = "next-captions-from-the-sound"
@@ -834,6 +836,16 @@ public enum FeatureCatalog {
                     name: clickEffectsFlag,
                     title: "An effect at each click of a recording",
                     description: "A Clicks row on a recording's Properties draws a ripple, a pulse or a spotlight at every click the recorder took down, and marks each click on the clip's bar. Off means clicks are never drawn.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: pictureFadesFlag,
+                    title: "Fade a clip in and out",
+                    description: "Right click anything on the timeline for Fade In and Fade Out, or drag the handle at a top corner of its bar, to bring its picture up out of black and back down. Off means only sounds fade.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

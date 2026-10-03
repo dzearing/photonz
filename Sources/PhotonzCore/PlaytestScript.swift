@@ -2747,6 +2747,20 @@ public enum PlaytestStep: Sendable, Equatable {
     /// frame at a moment other than the one the playhead is on, for a walk
     /// that wants two different frames without moving the playhead twice.
     case writeFrame(name: String, atMS: Int?, width: Double?, height: Double?)
+    /// Measures how bright the picture is at each of `atMS`: with the playhead
+    /// stopped there (a scrub), while the document plays through them, as the
+    /// export draws it before the encoder, and in an MP4 written as the Export
+    /// sheet writes one and read back. Each is the mean luminance of the whole
+    /// frame over black, nought to one. Fails where a stopped picture and the
+    /// export's at the same moment, or a played picture and the export's at the
+    /// moment it showed, are further apart than `within`. The MP4's readings
+    /// are written down beside them and never fail the step: the encoder's own
+    /// tone curve moves every frame, faded or not. Writes `<name>.json`.
+    ///
+    /// The acceptance for a picture fade is that what plays, what you scrub
+    /// to and what exports agree at the fade's midpoint, measured
+    /// (`a-video-clip-fades-in-from-black-and-out-to-blac`).
+    case measureFade(name: String, atMS: [Int], within: Double)
     /// Open a menu that lives INSIDE the window — the Add menu on a
     /// component's Properties list, the ellipsis on the Measurements header —
     /// write its rows to the log, photograph it if `shot` names a picture, and
@@ -3699,7 +3713,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "filmThumb", "filmWindow", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "timelinePinch",
-        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
+        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
     ].sorted()
 
     /// The `do` name this step answers to.
@@ -3752,6 +3766,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .writeRecording: "writeRecording"
         case .writeVideo: "writeVideo"
         case .writeFrame: "writeFrame"
+        case .measureFade: "measureFade"
         case .panelMenu: "panelMenu"
         case .menuShot: "menuShot"
         case .rightClick: "rightClick"
@@ -4173,6 +4188,10 @@ public enum PlaytestStep: Sendable, Equatable {
                                range: try f.optionalString("range"),
                                startsAtMS: try f.optionalNumber("startsAtMS").map { Int($0) },
                                paceShare: try f.optionalNumber("paceShare"))
+        case "measureFade":
+            self = .measureFade(name: try f.string("name"),
+                                atMS: try f.optionalNumbers("atMS").map { Int($0) },
+                                within: try f.optionalNumber("within") ?? 0.03)
         case "writeFrame":
             self = .writeFrame(name: try f.string("name"),
                                atMS: try f.optionalNumber("atMS").map { Int($0) },

@@ -1,0 +1,95 @@
+{
+  "out": "/tmp/photonz-playtest/a-video-clip-fades-walk",
+  "seed": "A recording, nothing switched from its default. Right-click the video clip: Fade In ▸ 1s and Fade Out ▸ 1s. The clip's bar shades each fade, the panel's Time section reads both, and the picture rises out of black and sinks back into it. Its brightness is measured at a quarter, half and three quarters of each fade, stopped, playing and in an exported MP4, and the three must agree. Then a title typed over it fades in the same way, from its own right-click, over the recording rather than over black.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "selectRow", "row": "Tutorial Sample" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    {
+      "do": "rightClick",
+      "at": [900, 893],
+      "space": "window",
+      "shot": "1-video-clip-menu",
+      "keys": { "Split at Playhead": "⌘K" }
+    },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "rightClick", "at": [900, 893], "space": "window", "choose": "Fade In > 1s" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "rightClick", "at": [900, 893], "space": "window", "choose": "Fade Out > 1s" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "menu": "Fade In", "reads": "1s" },
+    { "do": "expect", "menu": "Fade Out", "reads": "1s" },
+    {
+      "do": "describe",
+      "stage": "2-faded",
+      "note": "Both ends faded from the right-click: the clip's bar is shaded at each end, and Time reads Fade In 1s, Fade Out 1s"
+    },
+    { "do": "panel", "stage": "2-faded" },
+    { "do": "snapshot", "name": "2-faded" },
+    {
+      "do": "describe",
+      "stage": "3-measured",
+      "note": "THE TEST: brightness at a quarter, half and three quarters of the fade in (250, 500, 750 ms) and of the fade out (7250, 7500, 7750 ms), with 3000 ms fully up for reference, stopped, playing and exported; all three must agree"
+    },
+    {
+      "do": "measureFade",
+      "name": "recording-fade",
+      "atMS": [250, 500, 750, 3000, 7250, 7500, 7750],
+      "within": 0.03
+    },
+    { "do": "windowDrag", "from": [1514, 885], "to": [1414, 885], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+    {
+      "do": "describe",
+      "stage": "3-handle-dragged",
+      "note": "The handle at the clip's top right corner dragged half a second further left with the pointer: the fade out is longer, and the panel says so"
+    },
+    { "do": "panel", "stage": "3-handle-dragged" },
+    { "do": "expect", "menu": "Fade Out", "reads": "1.5s" },
+    { "do": "snapshot", "name": "3-handle-dragged" },
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "videoStepQuarterSecond" },
+    { "do": "action", "action": "videoStepQuarterSecond" },
+    { "do": "wait", "seconds": 1.0 },
+    {
+      "do": "describe",
+      "stage": "4-half-faded-in",
+      "note": "Half a second in, half way up out of black"
+    },
+    { "do": "snapshot", "name": "4-half-faded-in" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [640, 400], "space": "document" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "type", "text": "Fades too" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "rightClick", "on": "Fades too clip", "choose": "Fade In > 0.5s" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "menu": "Fade In", "reads": "0.5s" },
+    { "do": "expect", "menu": "Fade Out", "reads": "None" },
+    { "do": "action", "action": "videoStepQuarterSecond" },
+    { "do": "wait", "seconds": 1.0 },
+    {
+      "do": "describe",
+      "stage": "5-title-half-faded-in",
+      "note": "A quarter second after the title arrives, half way through its own fade in: the words come up over the recording, not over black"
+    },
+    { "do": "panel", "stage": "5-title-half-faded-in" },
+    { "do": "snapshot", "name": "5-title-half-faded-in" }
+  ]
+}

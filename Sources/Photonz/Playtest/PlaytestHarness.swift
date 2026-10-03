@@ -2051,6 +2051,10 @@ private final class Run {
                                           paceShare: paceShare),
                  state: describe())
 
+        case .measureFade(let name, let atMS, let within):
+            note(number, step.name, try await measureFade(name: name, atMS: atMS, within: within),
+                 state: describe())
+
         case .writeFrame(let name, let atMS, let width, let height):
             note(number, step.name,
                  try await writeFrameFile(name: name, atMS: atMS, width: width, height: height),
@@ -13491,6 +13495,146 @@ private final class Run {
                 + facts.joined(separator: "; "))
         }
         return facts.joined(separator: "; ")
+    }
+
+    /// How bright the picture is at each moment stopped, playing and exported
+    /// (`measureFade`).
+    private func measureFade(name: String, atMS moments: [Int], within: Double) async throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.document, document.hasTime else {
+            throw Failure(description: "this window holds no document with time in it to measure")
+        }
+        guard let first = moments.min(), let last = moments.max() else {
+            throw Failure(description: "measureFade was given no moments to measure")
+        }
+        editor.pauseDocument()
+        // Stopped: the playhead put on each moment, and the picture let settle
+        // to the sharp frame a hand holding still gets.
+        var stopped: [Int: Double] = [:]
+        for ms in moments {
+            editor.scrubDocument(toMS: ms)
+            try await poll("the picture at \(ms) ms", within: 10) { editor.shownMomentMS == ms }
+            await sleep(0.8)
+            guard editor.shownMomentMS == ms, let picture = editor.renderedImage else {
+                throw Failure(description: "the canvas moved off \(ms) ms while it was being measured")
+            }
+            stopped[ms] = Self.meanLuma(picture)
+        }
+        // Playing: from half a second before the first moment to just past the
+        // last, every new picture the canvas is handed, with the moment it is of.
+        let from = max(0, first - 500)
+        editor.scrubDocument(toMS: from)
+        try await poll("the picture at \(from) ms", within: 10) { editor.shownMomentMS == from }
+        await sleep(0.5)
+        var played: [(ms: Int, luma: Double)] = []
+        editor.playDocument()
+        let started = Date()
+        let budget = Double(last + 300 - from) / 1000 + 2
+        while Date().timeIntervalSince(started) < budget {
+            await sleep(0.012)
+            guard let ms = editor.shownMomentMS, ms != played.last?.ms,
+                  let picture = editor.renderedImage else { continue }
+            played.append((ms, Self.meanLuma(picture)))
+            if ms >= last + 300 { break }
+        }
+        editor.pauseDocument()
+        // The played picture nearest each moment, within a frame or two.
+        let nearest: [Int: (ms: Int, luma: Double)] = Dictionary(uniqueKeysWithValues: moments.compactMap { ms in
+            played.min(by: { abs($0.ms - ms) < abs($1.ms - ms) })
+                .flatMap { abs($0.ms - ms) <= 50 ? (ms, $0) : nil }
+        })
+        // Exported: an MP4 written as the sheet writes one, read back at each
+        // moment and at each moment a played picture was of.
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("photonz-walk-fade-\(UUID().uuidString).mp4")
+        defer { try? FileManager.default.removeItem(at: url) }
+        editor.startVideoExport(format: .mp4, quality: .standard, to: url)
+        try await poll("the export to land", within: 300) { editor.videoExport == nil }
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            throw Failure(description: "the export finished without writing a file")
+        }
+        let generator = AVAssetImageGenerator(asset: AVURLAsset(url: url))
+        generator.requestedTimeToleranceBefore = .zero
+        generator.requestedTimeToleranceAfter = .zero
+        generator.appliesPreferredTrackTransform = true
+        var exported: [Int: Double] = [:]
+        for ms in Set(moments + nearest.values.map(\.ms)) {
+            let frame = try await generator.image(at: CMTime(value: CMTimeValue(ms), timescale: 1000)).image
+            exported[ms] = Self.meanLuma(frame)
+        }
+        // The exporter's own picture at each moment, before the encoder: what
+        // the sheet hands the file, drawn by the export's renderer.
+        var handed: [Int: Double] = [:]
+        for ms in Set(moments + nearest.values.map(\.ms)) {
+            guard let data = await editor.stillFrame(atMS: ms),
+                  let picture = CGImageSourceCreateWithData(data as CFData, nil)
+                    .flatMap({ CGImageSourceCreateImageAtIndex($0, 0, nil) }) else {
+                throw Failure(description: "the export's picture at \(ms) ms could not be made")
+            }
+            handed[ms] = Self.meanLuma(picture)
+        }
+        func r3(_ value: Double) -> Double { (value * 1000).rounded() / 1000 }
+        func f3(_ value: Double) -> String { String(format: "%.3f", value) }
+        var rows: [[String: Any]] = []
+        var said: [String] = []
+        var wrong: [String] = []
+        for ms in moments.sorted() {
+            let still = stopped[ms] ?? 0, export = handed[ms] ?? 0, file = exported[ms] ?? 0
+            var row: [String: Any] = ["ms": ms, "stopped": r3(still), "export": r3(export), "mp4": r3(file)]
+            var line = "\(ms) ms stopped \(f3(still)) export \(f3(export)) mp4 \(f3(file))"
+            if abs(still - export) > within {
+                wrong.append("at \(ms) ms the stopped picture reads \(f3(still)) "
+                    + "and the export's \(f3(export))")
+            }
+            if let look = nearest[ms] {
+                let exportThen = handed[look.ms] ?? 0
+                row["played"] = r3(look.luma)
+                row["playedMS"] = look.ms
+                row["exportAtPlayed"] = r3(exportThen)
+                row["mp4AtPlayed"] = r3(exported[look.ms] ?? 0)
+                line += " played \(f3(look.luma)) at \(look.ms) ms (export there \(f3(exportThen)))"
+                if abs(look.luma - exportThen) > within {
+                    wrong.append("at \(look.ms) ms the played picture reads \(f3(look.luma)) "
+                        + "and the export's \(f3(exportThen))")
+                }
+            } else {
+                line += " played: no picture within 50 ms"
+                row["played"] = NSNull()
+            }
+            rows.append(row)
+            said.append(line)
+        }
+        write(json: ["within": within, "moments": rows, "playedLooks": played.count], to: "\(name).json")
+        let summary = "mean luminance over black, nought to one, of \(moments.count) moments: the "
+            + "canvas stopped, the canvas playing (\(played.count) pictures), the export's picture "
+            + "before the encoder, and the MP4 as read back (\(name).json): " + said.joined(separator: "; ")
+        guard wrong.isEmpty else {
+            throw Failure(description: wrong.joined(separator: "; ") + " (allowed \(within)). " + summary)
+        }
+        return summary
+    }
+
+    /// The mean luminance of a picture laid over black, nought to one: Rec.
+    /// 709's weights on the sRGB values, the picture shrunk to a few thousand
+    /// pixels first since only the average is wanted.
+    private static func meanLuma(_ image: CGImage) -> Double {
+        let width = 96, height = max(1, Int((96 * Double(image.height) / Double(max(1, image.width))).rounded()))
+        var data = [UInt8](repeating: 0, count: width * height * 4)
+        let space = CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB()
+        guard let context = CGContext(data: &data, width: width, height: height, bitsPerComponent: 8,
+                                      bytesPerRow: width * 4, space: space,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return 0 }
+        let whole = CGRect(x: 0, y: 0, width: width, height: height)
+        context.setFillColor(gray: 0, alpha: 1)
+        context.fill(whole)
+        context.interpolationQuality = .medium
+        context.draw(image, in: whole)
+        var total = 0.0
+        for index in stride(from: 0, to: data.count, by: 4) {
+            total += 0.2126 * Double(data[index]) + 0.7152 * Double(data[index + 1])
+                + 0.0722 * Double(data[index + 2])
+        }
+        return total / Double(width * height) / 255
     }
 
     /// How many frames an animated GIF or HEIC holds and how big they are,

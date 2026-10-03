@@ -535,6 +535,7 @@ extension Experiments {
     var zoomRegionsEnabled: Bool { isEnabled(FeatureCatalog.zoomRegionsFlag) }
     /// An effect at each click of a recording (`ClickEffect.swift`).
     var clickEffectsEnabled: Bool { isEnabled(FeatureCatalog.clickEffectsFlag) }
+    var pictureFadesEnabled: Bool { isEnabled(FeatureCatalog.pictureFadesFlag) }
 
     /// `next-open-out-the-timeline`: whether the timeline's own bar carries a
     /// zoom, so a recording longer than a few seconds can be worked on a

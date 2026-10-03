@@ -234,6 +234,12 @@ extension PhotonzDocument {
         shown.layers = shown.layers.map {
             $0.movedTree(atDocumentTimeMS: moment, documentCycleMS: cycle)
         }
+        // ...and a layer faded at either end of its bar is drawn as far up as
+        // the fade is (`PictureFade.swift`). After the motions, so the fade
+        // takes down whatever opacity its keys left it at.
+        if hasPictureFades {
+            shown.layers = shown.layers.map { $0.withPictureFadeShown(atDocumentTimeMS: moment) }
+        }
         // ...and a clip inside a zoom shows the part of its picture the zoom
         // is on (`ClipZoom.swift`): its box stays put, the picture in it moves.
         if hasZooms {

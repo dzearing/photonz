@@ -1184,6 +1184,30 @@ struct EditorCommands: Commands {
         .disabled(!gained)
     }
 
+    // Clip: Fade In ▸ and Fade Out ▸, on the picked clip, title or shape, the
+    // rows its right-click has. The one-second row of each carries its key.
+    @ViewBuilder private var pictureFadeRows: some View {
+        let layer = editor?.pictureFadeLayerInHand
+        ForEach(FadeEnd.allCases, id: \.self) { end in
+            let now = layer?.pictureFadeMS(end) ?? 0
+            let stops = layer.map { editor?.pictureFadeStops(end, layer: $0) ?? [] } ?? PictureFade.stopsMS
+            Menu(end.title) {
+                ForEach(stops, id: \.self) { ms in
+                    let row = Toggle(PictureFade.title(ms), isOn: Binding(
+                        get: { now == ms },
+                        set: { _ in if let layer { editor?.choosePictureFade(end, ms: ms, layerID: layer.id) } }))
+                    if ms == EditorState.pictureFadeKeyMS {
+                        let key = EditorState.pictureFadeKey(end)
+                        row.keyboardShortcut(key.keyEquivalent, modifiers: key.modifiers)
+                    } else {
+                        row
+                    }
+                }
+            }
+            .disabled(layer == nil)
+        }
+    }
+
     // Clip ▸ Animate: a title's time, and the keys and path of the picked layer.
     @ViewBuilder private var placedLayerRows: some View {
         let placed = editor?.placedLayerInHand
@@ -1191,14 +1215,18 @@ struct EditorCommands: Commands {
             .disabled(!(placed.map { editor?.canStartPlacedLayerHere($0.id) ?? false } ?? false))
         Button("End at Playhead") { if let placed { editor?.endPlacedLayerHere(placed.id) } }
             .disabled(!(placed.map { editor?.canEndPlacedLayerHere($0.id) ?? false } ?? false))
-        Menu("Fade") {
-            ForEach(TitleTime.fadeStopsMS, id: \.self) { ms in
-                Toggle(TitleTime.fadeTitle(ms), isOn: Binding(
-                    get: { (placed?.titleFadeMS ?? 0) == ms },
-                    set: { _ in if let placed { editor?.setPlacedLayerFade(ms, layerID: placed.id) } }))
+        // A title fades the way a clip does once picture fades are on: Clip ▸
+        // Fade In and Fade Out (`pictureFadeRows`).
+        if !Experiments.shared.pictureFadesEnabled {
+            Menu("Fade") {
+                ForEach(TitleTime.fadeStopsMS, id: \.self) { ms in
+                    Toggle(TitleTime.fadeTitle(ms), isOn: Binding(
+                        get: { (placed?.titleFadeMS ?? 0) == ms },
+                        set: { _ in if let placed { editor?.setPlacedLayerFade(ms, layerID: placed.id) } }))
+                }
             }
+            .disabled(placed == nil)
         }
-        .disabled(placed == nil)
         let animates = placed != nil && !(placed.map { editor?.isClipLocked($0.id) ?? true } ?? true)
         Menu("Animate In") {
             ForEach(TitleAnimation.allCases, id: \.self) { kind in
@@ -1365,6 +1393,9 @@ struct EditorCommands: Commands {
             if Experiments.shared.punchInEnabled {
                 punchInRows
                 Divider()
+            }
+            if Experiments.shared.pictureFadesEnabled {
+                pictureFadeRows
             }
             if Experiments.shared.transitionsAtACutEnabled {
                 transitionAtCutMenu

@@ -119,13 +119,20 @@ extension EditorState {
     func placedLayerMenuRows(layerID id: UUID) -> [MenuRow] {
         guard let layer = placedLayer(id) else { return [] }
         let fade = layer.titleFadeMS ?? 0
-        return [
+        let rows: [MenuRow] = [
             .command("Start at Playhead", enabled: canStartPlacedLayerHere(id)) {
                 self.startPlacedLayerHere(id)
             },
             .command("End at Playhead", enabled: canEndPlacedLayerHere(id)) {
                 self.endPlacedLayerHere(id)
             },
+        ]
+        // One fade for everything on the timeline: Fade In ▸ and Fade Out ▸,
+        // the same rows a clip has (`EditorState+PictureFade`).
+        if Experiments.shared.pictureFadesEnabled {
+            return rows + pictureFadeMenuRows(layerID: id)
+        }
+        return rows + [
             .submenu("Fade", TitleTime.fadeStopsMS.map { ms in
                 .toggle(TitleTime.fadeTitle(ms), isOn: ms == fade) {
                     self.setPlacedLayerFade(ms, layerID: id)

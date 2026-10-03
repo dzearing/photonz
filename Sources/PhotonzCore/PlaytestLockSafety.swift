@@ -221,6 +221,11 @@ public enum PlaytestLockSafety {
         // file: no name, no menu, and nothing on screen it depends on. Writing
         // one frame out as a picture is the same thing, one frame long.
         "writeVideo", "writeFrame",
+        // Added 2026-10-03 by reading, NOT yet watched under a lock: it moves
+        // the playhead, plays and writes a file through the editor, and reads
+        // the picture the editor already holds. a-video-clip-fades-walk is its
+        // watch.
+        "measureFade",
         // Watched on 2026-09-20, twenty-two walks forced under a lock and all
         // of them green. Every one of these either drives the app through its
         // own pasteboard and its own views, or reads a number the app is

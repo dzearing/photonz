@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/title-bar-right-click-menu-walk",
-  "seed": "A title's bar on the timeline answers a right click the way a clip does, with the verbs that belong to words placed in time: Start at Playhead, End at Playhead and a Fade menu. This walk types a title at Next defaults, puts the playhead at six seconds, right clicks the title's bar, chooses End at Playhead and reads the new out point back off the Properties pane's clip line, then does the same for the start at three seconds.",
+  "seed": "A title's bar on the timeline answers a right click the way a clip does, with the verbs that belong to words placed in time: Start at Playhead, End at Playhead, and Fade In and Fade Out. This walk types a title at Next defaults, puts the playhead at six seconds, right clicks the title's bar, chooses End at Playhead and reads the new out point back off the Properties pane's clip line, then does the same for the start at three seconds.",
   "setup": {
     "forget": [
       "all"
@@ -157,7 +157,7 @@
     {
       "do": "rightClick",
       "on": "Shipping today clip",
-      "choose": "Fade > 0.50s"
+      "choose": "Fade In > 0.5s"
     },
     {
       "do": "wait",
@@ -166,7 +166,7 @@
     {
       "do": "describe",
       "stage": "4-faded",
-      "note": "Fade on the same menu writes the half second fade the Time section's Fade row shows"
+      "note": "Fade In on the same menu writes the half second fade the Time section's Fade In row shows"
     },
     {
       "do": "reveal",
@@ -174,8 +174,8 @@
     },
     {
       "do": "expect",
-      "menu": "Fade",
-      "reads": "0.50s"
+      "menu": "Fade In",
+      "reads": "0.5s"
     },
     {
       "do": "expect",

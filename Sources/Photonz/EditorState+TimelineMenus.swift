@@ -148,6 +148,11 @@ extension EditorState {
                 }
             }))
         }
+        // How the picture comes up at the clip's start and goes down at its
+        // end. A title's are with its Start and End at Playhead, below.
+        if !onTheSound, !layer.isPlacedInTime {
+            rows.append(contentsOf: pictureFadeMenuRows(layerID: layerID))
+        }
         let ends = transitionCuts(of: pieces, aroundPiece: index)
         if Experiments.shared.transitionsAtACutEnabled, !ends.isEmpty, !onTheSound {
             rows.append(.submenu("Add Transition", ClipTransitionKind.allCases.map { kind in

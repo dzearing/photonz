@@ -29,6 +29,7 @@ struct SpeedInspector: View {
                 } else {
                     plays(piece)
                 }
+                pictureFades
             }
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
@@ -43,21 +44,29 @@ struct SpeedInspector: View {
     // verbs, so they are on the bar's right-click menu, not here.
     @ViewBuilder
     private var placedInTime: some View {
-        fade
+        pictureFades
     }
 
-    /// How long the words take to arrive and to go. It writes an ordinary
-    /// Opacity animation, so its curve is Animating's, not a second control.
-    private var fade: some View {
-        let now = editorState.placedLayerFadeMS
-        return VideoKit.DropdownRow(
-            label: "Fade", value: TitleTime.fadeTitle(now),
-            choices: .picking(TitleTime.fadeStopsMS, current: now, title: TitleTime.fadeTitle,
-                              isEnabled: { $0 == now || editorState.canSetPlacedLayerFade($0) }) { ms in
-                editorState.setPlacedLayerFade(ms)
-            })
-        .playtestField("Fade")
-        .panelHelp("How long it takes to fade in and out.")
+    /// Fade In and Fade Out: how the picture comes up at the start of the bar
+    /// and goes down at its end, the lengths the right-click offers. The same
+    /// two rows for a clip, a title or anything else on the timeline.
+    @ViewBuilder
+    private var pictureFades: some View {
+        if let layer = editorState.pictureFadeLayerInHand {
+            ForEach(FadeEnd.allCases, id: \.self) { end in
+                let now = layer.pictureFadeMS(end)
+                let stops = editorState.pictureFadeStops(end, layer: layer)
+                VideoKit.DropdownRow(
+                    label: end.title, value: PictureFade.title(now),
+                    choices: .picking(stops.contains(now) ? stops : stops + [now], current: now,
+                                      title: PictureFade.title,
+                                      isEnabled: { _ in true }) { ms in
+                        editorState.setPictureFade(end, toMS: ms, layerID: layer.id)
+                    })
+                .playtestField(end.title)
+                .panelHelp(end == .in ? "How long the picture takes to come up" : "How long the picture takes to go down")
+            }
+        }
     }
 
     // MARK: Which piece
