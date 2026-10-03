@@ -20456,3 +20456,10 @@ second with sound. Baseline: thumbnail 176 ms at 5 s and 398 ms at 60 s.
 
 Next: the first editor window's ~200 ms first build
 (`the-first-editor-window-after-launch-opens-as-qu`).
+
+## 2026-10-03 — A NaN written as JSON no longer crashes the probe (go loop)
+
+- Crash-watch task for MainThreadMeter.install: the seven reports (2026-09-29) were the close-and-reopen route d94bc9e2 already fixed; re-proved by commenting that fix out (crashes) and back in (passes).
+- The same mechanism was live overnight in MenuBarArranger.start: an Objective-C exception (`Invalid number value (NaN) in JSON write`) thrown inside a Swift task corrupts the main thread's executor record, and the next main-actor check dies. `try?` does not catch it.
+- `PhotonzCore/SafeJSON` now writes every probe JSON file (NaN/inf as null, never raises); new `close-and-reopen-a-recording-walk` runs while the person works; crash-watch refiles a crash whose task is closed.
+- Next: if crash-watch files a fresh crash in a main-actor check, look in the unified log a second before it for the exception that actually caused it.
