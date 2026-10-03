@@ -2399,7 +2399,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// history overlay is exactly that: Esc and click-away take it down through
     /// an application-wide event monitor, and a monitor only ever sees what
     /// goes through the app. This step is how a walk reaches those.
-    case appKey(PlaytestKey, [PlaytestModifier])
+    ///
+    /// `longestUnderMS` fails the step when any one pass of main thread work
+    /// in the key's own window (the press until what it changed is laid out)
+    /// took that long or longer, the way it does on a `press`.
+    case appKey(PlaytestKey, [PlaytestModifier], longestUnderMS: Double? = nil)
     /// Move the pointer without pressing anything, so a walk can read what the
     /// canvas SAYS a press would do there AND what resting on something makes
     /// the app do. `control` rests on a control by the name the panel gives it,
@@ -3868,7 +3872,11 @@ public enum PlaytestStep: Sendable, Equatable {
             guard let key = PlaytestKey(keyName) else {
                 throw f.invalid("key", "\"\(keyName)\" is not a key; use a single character or return, escape, tab, space, delete, left, right, up, down")
             }
-            self = .appKey(key, try f.modifiers())
+            let bound = try f.optionalNumber("longestUnderMS")
+            if let bound, !(bound > 0 && bound.isFinite) {
+                throw f.invalid("longestUnderMS", "must be a positive number of milliseconds")
+            }
+            self = .appKey(key, try f.modifiers(), longestUnderMS: bound)
         case "move":
             if let control = try f.optionalString("control") {
                 self = .move(.control(control, in: try f.optionalString("in")), try f.modifiers())

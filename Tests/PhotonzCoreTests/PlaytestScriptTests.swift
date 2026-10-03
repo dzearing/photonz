@@ -1253,14 +1253,33 @@ struct PlaytestScriptTests {
           ]
         }
         """)
-        guard case .appKey(let plain, let noModifiers) = script.steps[0] else { Issue.record("appKey"); return }
+        guard case .appKey(let plain, let noModifiers, let unbounded) = script.steps[0] else {
+            Issue.record("appKey"); return
+        }
         #expect(plain == PlaytestKey("escape"))
         #expect(noModifiers.isEmpty)
-        guard case .appKey(let letter, let modifiers) = script.steps[1] else { Issue.record("appKey"); return }
+        #expect(unbounded == nil)
+        guard case .appKey(let letter, let modifiers, _) = script.steps[1] else { Issue.record("appKey"); return }
         #expect(letter == PlaytestKey("h"))
         #expect(modifiers == [.command, .shift])
         #expect(script.steps[0].name == "appKey")
         #expect(PlaytestStep.names.contains("appKey"))
+    }
+
+    /// A key handed to the app can hold what it costs to one frame, the way a
+    /// press can: the longest single pass of main thread work from the key
+    /// until what it changed has been laid out. The history strip's walk
+    /// judges every arrow step by it (2026-10-02).
+    @Test func anAppKeyCanHoldItsCostToAFrame() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "appKey", "key": "right", "longestUnderMS": 16 } ] }
+        """)
+        guard case .appKey(let key, _, let longest) = script.steps[0] else { Issue.record("appKey"); return }
+        #expect(key == PlaytestKey("right"))
+        #expect(longest == 16)
+        #expect(throws: PlaytestScriptError.self) {
+            try decode(#"{ "steps": [ { "do": "appKey", "key": "right", "longestUnderMS": 0 } ] }"#)
+        }
     }
 
     @Test func anAppKeyStepNeedsAKeyItKnows() {

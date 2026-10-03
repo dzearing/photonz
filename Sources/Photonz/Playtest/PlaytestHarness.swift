@@ -923,7 +923,7 @@ private final class Run {
             await sleep(0.2)
             note(number, step.name, "\(chord) reached \(destination.path) and it ran", state: describe())
 
-        case .appKey(let key, let modifiers):
+        case .appKey(let key, let modifiers, let longestUnderMS):
             // Handed to the application, not posted into the window, because an
             // application-wide event monitor is the only thing that sees a
             // press this way — and that is what takes the history overlay down
@@ -937,14 +937,28 @@ private final class Run {
             let strip = NSApp.windows.first { $0.isVisible && $0.title == "Capture History" }
             let window = try strip ?? appKeyTarget()
             let flags = eventFlags(modifiers)
+            // Zeroed at the key, so what the meters hold after it is this
+            // key's own cost: forty arrows in a row used to read as one sum,
+            // and no walk could say which step of the history strip froze.
+            MainThreadMeter.shared.install()
+            MainThreadMeter.shared.reset()
+            ViewBuildMeter.shared.reset()
             for down in [true, false] {
                 guard let event = keyEvent(key, flags: flags, down: down, in: window) else { continue }
                 NSApp.sendEvent(event)
                 if window === strip, NSApp.keyWindow == nil, window.isVisible { window.sendEvent(event) }
             }
             await sleep(0.2)
-            note(number, step.name, "\(Self.chord(key, modifiers)) sent through the app",
+            note(number, step.name, "\(Self.chord(key, modifiers)) sent through the app; "
+                 + MainThreadMeter.shared.report + "; " + ViewBuildMeter.shared.report,
                  state: describe())
+            if let longestUnderMS, MainThreadMeter.shared.longestMS >= longestUnderMS {
+                throw Failure(description: String(
+                    format: "the %@ key held the main thread for %.1fms in one pass, and this walk "
+                        + "allows under %.0fms: a pass that long is a frame the app did not draw "
+                        + "right after the key",
+                    Self.chord(key, modifiers), MainThreadMeter.shared.longestMS, longestUnderMS))
+            }
 
         case .move(let target, let modifiers):
             let canvas = try requireCanvas()

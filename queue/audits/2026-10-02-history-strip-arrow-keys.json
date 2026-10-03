@@ -1,0 +1,26 @@
+{
+  "feature": "Walking the history strip with the arrow keys",
+  "epic": "video-editing",
+  "summary": "Each arrow press in a big capture history now moves the focus within a frame: about 10ms of work in its longest frame, down from 43 to 60ms, so holding an arrow glides instead of sticking.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. A history of a few hundred captures shows it best.",
+  "switched": {},
+  "try": [
+    { "do": "Press Shift-Command-H to open the history strip." },
+    { "do": "Hold the Right Arrow key for two or three seconds.", "shot": "2026-10-02-history-arrows-forty-along-sc.png" },
+    { "do": "Let go, and watch the buttons come up under the capture the ring stopped on." },
+    { "do": "Tap the Right Arrow a few times, slowly." },
+    { "do": "Point at a capture other than the focused one, and watch its buttons come up at once." },
+    { "do": "Click Videos, then All, and look at the first capture.", "shot": "2026-10-02-history-arrows-back-at-start-sc.png" }
+  ],
+  "evaluate": [
+    "Does holding an arrow feel smooth all the way along the strip?",
+    "While the arrows are moving, only the ring travels and the buttons come up once you stop (a quarter second later). Does that feel right, or do you want the buttons on every capture as the ring passes?",
+    "After a filter switch, are the first capture's buttons there as soon as you expect them?",
+    "Does a narrow (portrait) capture stay the same width when it gains and loses focus?"
+  ],
+  "rough": [
+    "The buttons under a focused capture now wait until the focus has rested for a quarter second when you move by keyboard. Before, they came up on every capture the ring passed; building them on each step cost about 8ms of that step's frame.",
+    "The very first key after opening the strip and clicking on it costs about 25ms, whatever the key. That is macOS checking the whole menu bar for a shortcut (the Apple menu's recent items included), not the strip, so the walk presses Up once first and does not judge it.",
+    "Measured with the walk's own meter while accessibility is on (the walk reads controls by name). Any change in this window costs about 8 to 10ms whatever it is, so the arrows sit at about 10ms with occasional steps near 15ms: inside the 16ms bar, but not far inside it."
+  ]
+}

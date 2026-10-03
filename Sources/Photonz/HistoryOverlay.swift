@@ -15,8 +15,12 @@ struct HistoryOverlay: View {
     let coordinator: AppCoordinator
 
     @State private var filter: CaptureFilter = .all
-    /// Index of the focused item within the *filtered* list (nil = nothing / empty).
-    @State private var selection: Int?
+    /// Which item the arrows have focused. Kept out of this view's own state
+    /// on purpose: only the tiles and the strip's scroller read it, so an
+    /// arrow step redraws the two tiles it moves between and nothing else.
+    /// When it lived here, every step rebuilt the whole overlay, filter bar
+    /// and all, for about 30ms of main thread work (2026-10-02).
+    @State private var focus = HistoryStripFocus()
     @FocusState private var keyboardFocused: Bool
     /// True for the one update a filter switch makes, while the focus lands on
     /// the first item and the strip has already jumped there.
@@ -61,7 +65,10 @@ struct HistoryOverlay: View {
             DispatchQueue.main.async { jumpingToStart = false }
         }
         // Folder changes (a deletion, a new capture): keep the index valid.
-        .onChange(of: entries.count) { selection = HistorySelection.clamp(selection, count: entries.count) }
+        .onChange(of: entries.count) {
+            focus.byKeys = false
+            focus.selection = HistorySelection.clamp(focus.selection, count: entries.count)
+        }
     }
 
     @ViewBuilder
@@ -141,18 +148,18 @@ struct HistoryOverlay: View {
 
     private var strip: some View {
         let shown = entries
-        let focusedID = selection.flatMap { shown.indices.contains($0) ? shown[$0].id : nil }
         return ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(alignment: .top, spacing: 14) {
                     // Keyed by the capture alone, so a capture in both the old
                     // and the new filter keeps its cell (and its picture) across
                     // a switch rather than being built again.
-                    ForEach(shown) { entry in
-                        HistoryOverlayCell(
+                    ForEach(Array(shown.enumerated()), id: \.element.id) { index, entry in
+                        HistoryOverlayFocusedCell(
+                            index: index,
+                            focus: focus,
                             entry: entry,
                             coordinator: coordinator,
-                            focused: entry.id == focusedID,
                             highlighted: entry.url == coordinator.highlightedCaptureURL)
                         .id(entry.id)
                     }
@@ -172,11 +179,9 @@ struct HistoryOverlay: View {
                 withTransaction(still) { proxy.scrollTo(first.id, anchor: .leading) }
             }
             // Keep the focused item on screen as ← / → walk off the visible edge.
-            .onChange(of: selection) {
-                guard !jumpingToStart, let selection, entries.indices.contains(selection) else { return }
-                withAnimation(.easeOut(duration: 0.18)) {
-                    proxy.scrollTo(entries[selection].id, anchor: .center)
-                }
+            .background {
+                HistoryStripScroller(focus: focus, ids: shown.map(\.id),
+                                     jumpingToStart: jumpingToStart, proxy: proxy)
             }
         }
     }
@@ -204,18 +209,22 @@ struct HistoryOverlay: View {
     // MARK: - Keyboard selection
 
     private func resetSelection() {
-        selection = entries.isEmpty ? nil : 0
+        focus.byKeys = false
+        focus.selection = entries.isEmpty ? nil : 0
     }
 
     @discardableResult
     private func moveSelection(by delta: Int) -> KeyPress.Result {
-        guard !entries.isEmpty else { return .ignored }
-        selection = HistorySelection.move(selection, by: delta, count: entries.count)
+        let shown = entries
+        guard !shown.isEmpty else { return .ignored }
+        focus.byKeys = true
+        focus.selection = HistorySelection.move(focus.selection, by: delta, count: shown.count)
         return .handled
     }
 
     private func activateSelection() -> KeyPress.Result {
-        guard let selection, entries.indices.contains(selection) else { return .ignored }
+        let entries = entries
+        guard let selection = focus.selection, entries.indices.contains(selection) else { return .ignored }
         let entry = entries[selection]
         if entry.kind == .video {
             coordinator.openRecording(entry.url)
@@ -227,7 +236,8 @@ struct HistoryOverlay: View {
     }
 
     private func deleteSelection() -> KeyPress.Result {
-        guard let selection, entries.indices.contains(selection) else { return .ignored }
+        let entries = entries
+        guard let selection = focus.selection, entries.indices.contains(selection) else { return .ignored }
         // Trash is recoverable; the folder watcher re-lists and `onChange` clamps
         // the index so the same slot stays focused on the next item.
         capture.store.remove(entries[selection])
@@ -235,9 +245,75 @@ struct HistoryOverlay: View {
     }
 }
 
+/// The strip's keyboard focus, as an object the overlay holds but never reads
+/// while drawing, so moving it redraws only what reads it.
+@MainActor @Observable
+private final class HistoryStripFocus {
+    /// Index of the focused item within the *filtered* list (nil = nothing / empty).
+    var selection: Int?
+    /// Whether the arrows put it there, rather than the strip opening, a
+    /// filter switch or a deletion. Only read when the focus has moved, never
+    /// while drawing.
+    @ObservationIgnored var byKeys = false
+}
+
+/// One tile and the question "is it the focused one", asked here rather than
+/// in the strip: an arrow step re-asks it in every visible tile, which is
+/// cheap, and the tile itself is rebuilt only when the answer changes.
+private struct HistoryOverlayFocusedCell: View {
+    let index: Int
+    let focus: HistoryStripFocus
+    let entry: CaptureEntry
+    let coordinator: AppCoordinator
+    let highlighted: Bool
+
+    var body: some View {
+        HistoryOverlayCell(entry: entry, coordinator: coordinator, focus: focus,
+                           focused: focus.selection == index, highlighted: highlighted)
+    }
+}
+
+/// Scrolls the strip to keep the focused item in view. A view of its own, with
+/// nothing to draw, so the focus moving re-runs this and not the strip.
+///
+/// The scroll starts the frame after the ring moves rather than in the same
+/// one: starting it lays out, and builds, the tile coming into view, and that
+/// on top of the ring cost the key's own frame up to 18ms (2026-10-02).
+private struct HistoryStripScroller: View {
+    let focus: HistoryStripFocus
+    let ids: [URL]
+    /// True for the one update a filter switch makes: the strip has already
+    /// jumped to the start, and must not animate a scroll there on top of that.
+    let jumpingToStart: Bool
+    let proxy: ScrollViewProxy
+
+    /// The scroll waiting for its frame, dropped when the focus moves again
+    /// first. Never read while drawing, so setting it redraws nothing.
+    @State private var pending: Task<Void, Never>?
+
+    var body: some View {
+        Color.clear
+            .onChange(of: focus.selection) {
+                pending?.cancel()
+                guard !jumpingToStart, let selection = focus.selection, ids.indices.contains(selection) else {
+                    return
+                }
+                let target = ids[selection]
+                pending = Task { @MainActor in
+                    await NextRunLoopPass.start()
+                    guard !Task.isCancelled else { return }
+                    withAnimation(.easeOut(duration: 0.18)) {
+                        proxy.scrollTo(target, anchor: .center)
+                    }
+                }
+            }
+    }
+}
+
 private struct HistoryOverlayCell: View {
     let entry: CaptureEntry
     let coordinator: AppCoordinator
+    let focus: HistoryStripFocus
     /// Keyboard-focused (selected) tile: accent outline + action buttons shown.
     /// Selection is a KEYBOARD concept (← / → / Return / ⌫) and is deliberately
     /// independent of hover — hovering a tile reveals its actions but does NOT
@@ -247,6 +323,19 @@ private struct HistoryOverlayCell: View {
     let highlighted: Bool
 
     @State private var hovered = false
+    /// Whether the action buttons exist at all. They are built the first time
+    /// the tile shows them, and late when the arrows bring the focus, so the
+    /// frame an arrow key lands in only moves the ring: building four buttons
+    /// and their tooltip anchors in that same frame cost about 8ms of it, and
+    /// keeping a hidden set in every tile cost more than that whenever a new
+    /// tile scrolled in (2026-10-02).
+    @State private var actionsBuilt = false
+    /// Putting the buttons up, while it waits its turn. Started only when the
+    /// tile comes to show them: a `.task` on every tile cost the first switch
+    /// to Videos, which builds fifteen tiles at once, 10ms. Never read while
+    /// drawing, so setting it redraws nothing, and nil to start with, so a
+    /// tile made again from the same values is the same tile.
+    @State private var pendingActions: Task<Void, Never>?
 
     private var store: CaptureStore { coordinator.capture.store }
 
@@ -295,12 +384,16 @@ private struct HistoryOverlayCell: View {
     @ViewBuilder
     private var bottomSlot: some View {
         ZStack {
+            actionsFootprint
             // Actions reveal on focus/hover; their labels float on the app's
             // own tooltip window so they escape the overlay without reserving
             // space here.
-            actions
-                .opacity(showsActions ? 1 : 0)
-                .allowsHitTesting(showsActions)
+            if actionsBuilt {
+                actions
+                    .opacity(showsActions ? 1 : 0)
+                    .allowsHitTesting(showsActions)
+                    .transition(.opacity)
+            }
 
             Text(RelativeTime.string(from: entry.createdAt, to: .now))
                 .font(.caption)
@@ -309,6 +402,55 @@ private struct HistoryOverlayCell: View {
                 .allowsHitTesting(false)
         }
         .animation(.easeOut(duration: 0.12), value: showsActions)
+        // A tile that comes into being focused (the first one as the strip
+        // opens) gets its buttons the way any other does.
+        .onAppear { if showsActions { matchActions() } }
+        .onChange(of: showsActions) { matchActions() }
+    }
+
+    /// Builds the buttons the first time this tile shows them. Once built
+    /// they stay, hidden when the tile is neither focused nor hovered, for as
+    /// long as the strip keeps the tile: taking them down was a frame of work
+    /// of its own, and it landed on the next arrow's.
+    private func matchActions() {
+        pendingActions?.cancel()
+        guard showsActions, !actionsBuilt else { return }
+        // Focus that jumps here (the strip opening, a filter switch, a
+        // deletion) brings the buttons with it in the same update, which is
+        // already building the tiles it shows.
+        if !hovered, !focus.byKeys {
+            actionsBuilt = true
+            return
+        }
+        pendingActions = Task { await buildActions() }
+    }
+
+    private func buildActions() async {
+        // Under the pointer: the next frame, fading in as they always did.
+        // Under the arrows: once the focus has rested, so a run of arrows
+        // moves only the ring and the buttons come up on the tile it stops at.
+        // Either way in a frame of its own rather than whichever one the timer
+        // lands in, which while an arrow is held is the next arrow's.
+        if !hovered {
+            try? await Task.sleep(for: .milliseconds(250))
+        }
+        await NextRunLoopPass.start()
+        guard !Task.isCancelled, showsActions else { return }
+        withAnimation(.easeOut(duration: 0.12)) { actionsBuilt = true }
+    }
+
+    /// The room the buttons take, held whether they are built or not, so a
+    /// narrow capture's tile is as wide unfocused as focused and the strip
+    /// never shifts as the buttons come and go. Mirrors `actions`: the copy
+    /// menu's 22pt on a recording, then round buttons of the style's size.
+    private var actionsFootprint: some View {
+        let round = IconActionButtonStyle().diameter
+        return HStack(spacing: 6) {
+            if entry.kind == .video { Color.clear.frame(width: 22) }
+            ForEach(0..<(entry.kind == .video ? 3 : 4), id: \.self) { _ in
+                Color.clear.frame(width: round)
+            }
+        }
     }
 
     private var actions: some View {

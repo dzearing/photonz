@@ -12,7 +12,7 @@
   {
    "do": "describe",
    "stage": "why",
-   "note": "The user, 2026-09-30: switching the history filter was slow. Over a made-up history of 500 captures (one in three a recording), this walk opens the history bar, clicks each filter segment with the pointer and holds every switch to one frame of main thread work (under 16ms in any one pass, from the click until the new set is laid out) and to building no more tiles than a strip shows, then walks 40 captures along with the arrow keys and switches again from there, where the strip must jump back to the start rather than scroll through everything in between."
+   "note": "The user, 2026-09-30: switching the history filter was slow. Over a made-up history of 500 captures (one in three a recording), this walk opens the history bar, clicks each filter segment with the pointer and holds every switch to one frame of main thread work (under 16ms in any one pass, from the click until the new set is laid out) and to building no more tiles than a strip shows, then walks 40 captures along with the arrow keys, holding every step to one frame of main thread work too (each pass under 16ms, from the key until the strip has moved), and switches again from there, where the strip must jump back to the start rather than scroll through everything in between."
   },
   {
    "do": "blank",
@@ -150,164 +150,217 @@
    "seconds": 1
   },
   {
-   "do": "appKey",
-   "key": "right"
+   "do": "describe",
+   "stage": "first-key",
+   "note": "The first key the strip is handed after the clicks on the bar costs one pass of about 25ms whatever the key is (measured 2026-10-02 with up, which the strip ignores and which rebuilt no view): AppKit checks the whole menu bar for a shortcut first and revalidates it, the Apple menu's recent items included. That is the menu bar, not the strip, so up goes first here and is not judged; every right after it is held to one frame."
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "up"
+  },
+  {
+   "do": "wait",
+   "seconds": 1
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "appKey",
-   "key": "right"
+   "key": "right",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "appKey",
+   "key": "right",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "appKey",
+   "key": "right",
+   "longestUnderMS": 16
   },
   {
    "do": "wait",
