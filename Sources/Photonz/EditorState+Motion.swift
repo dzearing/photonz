@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import PhotonzCore
 
@@ -286,19 +287,75 @@ extension EditorState {
     }
 
     /// The button up: one undo step from where the pivot started to where it
-    /// ended.
+    /// ended. A pivot that was being put down has been.
     func commitMotionPivot() {
+        endPlacingMotionPivot()
         guard let preview = motionPivotPreview else { return }
         motionPivotPreview = nil
         setMotionPivot(preview.pivot, of: preview.motionID)
     }
 
     /// A drag that went nowhere leaves nothing behind, not even a redraw of
-    /// the picture it never changed.
+    /// the picture it never changed. Escape part way through putting one
+    /// down gives the whole thing up.
     func cancelMotionPivot() {
+        endPlacingMotionPivot()
         guard motionPivotPreview != nil else { return }
         motionPivotPreview = nil
         rerender()
+    }
+
+    // MARK: Somewhere else
+
+    /// Whether the pivot can be handed to the canvas: something picked is
+    /// turning.
+    var canPlaceMotionPivot: Bool { turningMotion != nil }
+
+    /// True between choosing Somewhere else (or Y, or the move button) and the
+    /// press on the canvas that puts the pivot down. Asked of the turn that is
+    /// picked NOW, so a placement can never land on another layer's.
+    var isPlacingMotionPivot: Bool {
+        guard let id = motionPivotPlacement else { return false }
+        return turningMotion?.id == id
+    }
+
+    /// Hand the pivot to the canvas: the next press puts it down under the
+    /// pointer, and a drag from there carries it on. The way to a point no
+    /// menu can name, for a person who has not found the crosshair yet.
+    ///
+    /// Select comes into hand if it was not, since that is the tool the
+    /// crosshair answers under.
+    func beginPlacingMotionPivot() {
+        guard let motion = turningMotion else { return }
+        if activeTool != .select { setTool(.select) }
+        motionPivotPlacement = motion.id
+        // Escape gives up wherever the keyboard is: the menu or the button
+        // that started it is in the panel, and the panel may still have it.
+        // A pivot already under the hand is the canvas's to let go of (it
+        // puts the old point back), so the key is left to the canvas then.
+        if motionPivotPlacementEscape == nil {
+            motionPivotPlacementEscape = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+                guard event.keyCode == 53 else { return event }
+                let gaveUp = MainActor.assumeIsolated { () -> Bool in
+                    guard let self, self.motionPivotPlacement != nil,
+                          self.motionPivotPreview == nil else { return false }
+                    self.endPlacingMotionPivot()
+                    return true
+                }
+                return gaveUp ? nil : event
+            }
+        }
+    }
+
+    /// The move button beside Around: in when it is out, out when it is in.
+    func toggleMotionPivotPlacement() {
+        if isPlacingMotionPivot { endPlacingMotionPivot() } else { beginPlacingMotionPivot() }
+    }
+
+    func endPlacingMotionPivot() {
+        if motionPivotPlacement != nil { motionPivotPlacement = nil }
+        if let monitor = motionPivotPlacementEscape { NSEvent.removeMonitor(monitor) }
+        motionPivotPlacementEscape = nil
     }
 
     /// The pivot set outright: the Around menu's three named spots, and the

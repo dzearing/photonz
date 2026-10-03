@@ -5991,6 +5991,12 @@ private final class Run {
             case .fillWithForeground: editor.fillSelectedLayer(useBackground: false)
             case .fillWithBackground: editor.fillSelectedLayer(useBackground: true)
             case .copyLook: editor.copyLook()
+            case .moveThePivot:
+                guard editor.canPlaceMotionPivot else {
+                    throw Failure(description: "nothing picked is turning, so there is no pivot to move")
+                }
+                editor.beginPlacingMotionPivot()
+                actionDetail = "the next press on the canvas puts the pivot down"
             case .pasteLook: editor.pasteLook()
             case .toggleTimingStrip:
                 editor.toggleMotionStrip()

@@ -357,6 +357,9 @@ struct CanvasView: NSViewRepresentable {
     /// says where it happened: the next press places it.
     var placingClick: Bool = false
     var onPlaceClick: (CGPoint) -> Void = { _ in }
+    /// True between Somewhere else (or Y) and the press that puts the pivot
+    /// down: the next press takes the pivot wherever it lands.
+    var placingMotionPivot: Bool = false
     /// A picked zoom's box is up over the picture (`EditorState+Zoom`): a
     /// press on its clip goes to the box first.
     var zoomBoxUp: Bool = false
@@ -510,6 +513,7 @@ struct CanvasView: NSViewRepresentable {
         view.onWindowChange = onWindowChange
         view.placingClick = placingClick
         view.onPlaceClick = onPlaceClick
+        view.placingMotionPivot = placingMotionPivot
         view.zoomBoxUp = zoomBoxUp
         view.zoomBoxHit = zoomBoxHit
         view.onZoomBoxDown = onZoomBoxDown
@@ -695,6 +699,12 @@ final class CanvasNSView: NSView {
         didSet { if placingClick != oldValue { window?.invalidateCursorRects(for: self) } }
     }
     var onPlaceClick: ((CGPoint) -> Void) = { _ in }
+    /// The next press puts the turn's pivot down where it lands, rather than
+    /// doing what Select would (`EditorState+Motion`, Somewhere else). A
+    /// crosshair says so.
+    var placingMotionPivot = false {
+        didSet { if placingMotionPivot != oldValue { window?.invalidateCursorRects(for: self) } }
+    }
     /// A picked zoom's box is up: a press the box takes is the box's from
     /// down to up (`ZoomBoxOverlay`, `EditorState+Zoom`). While it is, the
     /// box is the only frame on the picture: the clip's own outline, handles

@@ -1656,6 +1656,15 @@ struct EditorCommands: Commands {
                 }
                 .disabled(editor.map { $0.straightenableArrows($0.pickedArrowIDs).isEmpty } ?? true)
             }
+            // The Around menu's Somewhere else, where every command lives with
+            // its key: the next press on the canvas puts the picked turn's
+            // pivot down. Dimmed with nothing turning, so the row is where a
+            // person learns the key exists.
+            if Experiments.shared.motionEnabled {
+                Button(MotionPivot.PlaceOnCanvas.menuBarTitle) { editor?.beginPlacingMotionPivot() }
+                    .keyboardShortcut(KeyEquivalent(MotionPivot.PlaceOnCanvas.key), modifiers: [])
+                    .disabled(!(editor?.canPlaceMotionPivot ?? false))
+            }
             Button("Merge Down") { editor?.mergeDown() }
                 .keyboardShortcut("e", modifiers: .command)
                 .disabled(!(editor?.canMergeDown ?? false))

@@ -476,32 +476,78 @@ private struct MotionPivotSetting: View {
                              help: "The point this layer turns about. A bell hangs from its "
                                  + "mount, not from its middle: drag the crosshair on the "
                                  + "picture to where yours hangs from.") {
-                Menu {
-                    ForEach(MotionPivot.Named.allCases, id: \.self) { spot in
-                        Button(spot.title) {
-                            editorState.setMotionPivot(spot.pivot, of: motion.id)
-                        }
-                    }
-                    // The row prints Custom, so the menu offers it: the point
-                    // of your own this turn was last on, kept when a named
-                    // spot was tried in its place (`CustomChoice`). Absent
-                    // until there has been one, so it never offers nothing.
-                    if let own = motion.customPivot {
-                        Divider()
-                        Button(own.title) {
-                            editorState.setMotionPivot(own, of: motion.id)
-                        }
-                    }
-                } label: {
-                    Text(reading).lineLimit(1)
+                HStack(spacing: 2) {
+                    aroundMenu
+                    placeButton
                 }
-                .menuStyle(.borderlessButton)
-                .controlSize(.small)
-                .fixedSize()
-                .accessibilityLabel("Around")
-                .playtestControl("Around", detail: reading)
             }
         }
+    }
+
+    /// The three named spots, the point of your own when there is one, and
+    /// the way to any other point at all, in the mock's order.
+    private var aroundMenu: some View {
+        Menu {
+            ForEach(MotionPivot.Named.allCases, id: \.self) { spot in
+                Button(spot.title) {
+                    editorState.setMotionPivot(spot.pivot, of: motion.id)
+                }
+            }
+            // The row prints Custom, so the menu offers it: the point
+            // of your own this turn was last on, kept when a named
+            // spot was tried in its place (`CustomChoice`). Absent
+            // until there has been one, so it never offers nothing.
+            if let own = motion.customPivot {
+                Divider()
+                Button(own.title) {
+                    editorState.setMotionPivot(own, of: motion.id)
+                }
+            }
+            // Any other point: the next press on the canvas puts it
+            // down. Y is printed here because the menu bar's Move the
+            // Pivot answers it, and this row is the same command.
+            Divider()
+            Button {
+                editorState.beginPlacingMotionPivot()
+            } label: {
+                Label(PlaceOnCanvas.menuTitle, systemImage: "arrow.up.and.down.and.arrow.left.and.right")
+            }
+            .keyboardShortcut(KeyEquivalent(PlaceOnCanvas.key), modifiers: [])
+        } label: {
+            Text(reading).lineLimit(1)
+        }
+        .menuStyle(.borderlessButton)
+        .controlSize(.small)
+        .fixedSize()
+        .accessibilityLabel("Around")
+        .playtestControl("Around", detail: reading)
+    }
+
+    private typealias PlaceOnCanvas = MotionPivot.PlaceOnCanvas
+
+    /// The mock's ghost button beside the menu: the same Somewhere else, one
+    /// click away. Held in, in the accent, while the canvas is waiting for
+    /// the press, so the person can see why the pointer is a crosshair; a
+    /// second click lets go.
+    private var placeButton: some View {
+        let placing = editorState.isPlacingMotionPivot
+        return Button {
+            editorState.toggleMotionPivotPlacement()
+        } label: {
+            // The mock's move glyph: four arrows out of one point.
+            Image(systemName: "arrow.up.and.down.and.arrow.left.and.right")
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(placing ? AnyShapeStyle(.white) : AnyShapeStyle(.secondary))
+                .frame(width: 20, height: 18)
+                .background(RoundedRectangle(cornerRadius: 4)
+                    .fill(placing ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.clear)))
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .panelHelp(PlaceOnCanvas.buttonHelp)
+        .accessibilityLabel("Move the pivot")
+        .accessibilityAddTraits(placing ? .isSelected : [])
+        .playtestControl("Move the pivot", detail: placing ? "waiting for the canvas" : "out")
     }
 }
 

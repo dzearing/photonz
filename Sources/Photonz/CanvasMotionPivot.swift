@@ -199,6 +199,20 @@ extension CanvasNSView {
         return true
     }
 
+    /// The press that puts a pivot down after Somewhere else, Y or the move
+    /// button: the crosshair jumps to the pointer, the swing follows it at
+    /// once, and the rest of the gesture is the ordinary drag. Already
+    /// counted as moved, so a plain click is a placement and one undo step.
+    func motionPivotPlaceMouseDown(at p: CGPoint) -> Bool {
+        guard let handle = motionPivot else { return false }
+        motionPivotDrag = MotionPivotDrag(handle: handle, current: p, moved: true)
+        applyGrabCursor(.closedHand, force: true)
+        onMotionPivotBegin()
+        onMotionPivotMove(p)
+        refreshMotionPivotChrome()
+        return true
+    }
+
     /// The pointer, while the pivot is held. The picture follows it: this is
     /// the whole feature, and a preview that only caught up on release would
     /// make finding the mount a guessing game.

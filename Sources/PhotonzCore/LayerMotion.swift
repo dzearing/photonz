@@ -499,6 +499,21 @@ public struct MotionPivot: Hashable, Codable, Sendable {
 
     /// What the Around row reads when it is not showing numbers.
     public var title: String { named?.title ?? "Custom" }
+
+    /// The way to a point no menu can name: the Around menu's last row, the
+    /// move button beside it, and Y all hand you the pivot, and the next press
+    /// on the canvas puts it down under the pointer (a drag carries it on).
+    /// The words and the key are the mock's (`icon-animate-wt.html`,
+    /// `#oriMenu`, `#btnPickOrigin`).
+    public enum PlaceOnCanvas {
+        public static let menuTitle = "Somewhere else\u{2026}"
+        /// No tool answers it, and the timeline leaves it to the canvas.
+        public static let key: Character = "y"
+        public static let buttonHelp = "Move the pivot on the canvas (Y)"
+        /// The same command in the menu bar, where every command lives with
+        /// its key.
+        public static let menuBarTitle = "Move the Pivot"
+    }
 }
 
 // MARK: - When, and how long

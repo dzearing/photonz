@@ -1,0 +1,29 @@
+{
+  "feature": "The Around menu ends with Somewhere else",
+  "epic": "icon-animate",
+  "summary": "A turning layer's pivot can now be put anywhere without knowing to drag the small crosshair: choose Somewhere else at the end of the Around menu, press Y, or click the move button beside the menu, then click or drag on the canvas.",
+  "setup": "Photonz Dev, release Next, no switch changed from its defaults. Walks: Scripts/playtest/pivot-somewhere-else-walk.json and pivot-somewhere-else-menu-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Draw a tall rectangle, pick it, press the plus on the Motion header and choose Rotation." },
+    { "do": "Open the Around menu. It ends with a line and Somewhere else, with Y beside it.", "shot": "2026-10-02-pivot-somewhere-else-1-menu-open.png" },
+    { "do": "Choose Somewhere else. The pointer turns to a crosshair over the canvas and the move button beside Around is held in.", "shot": "2026-10-02-pivot-somewhere-else-2-waiting.png" },
+    { "do": "Click anywhere on the canvas, even off the shape. The pivot lands there and At shows the point.", "shot": "2026-10-02-pivot-somewhere-else-3-placed.png" },
+    { "do": "Click the move button, then press Escape. Nothing moves and the shape stays picked." },
+    { "do": "Press Y (Layer > Move the Pivot), then press and drag on the canvas. The pivot starts where you pressed and follows the drag.", "shot": "2026-10-02-pivot-somewhere-else-4-dragged.png" },
+    { "do": "Press Command Z. The whole press and drag is undone in one step." },
+    { "do": "Compare with the mock, step 5 with its Around menu open.", "shot": "2026-10-02-pivot-somewhere-else-mock-step-5.png" }
+  ],
+  "evaluate": [
+    "After choosing Somewhere else, is it clear that the canvas is waiting for your click?",
+    "Should a plain click off the shape put the pivot there, or should a click only count on or near the shape?",
+    "Is the held-in blue move button enough to tell you how to get out, or would you want to see Escape mentioned somewhere?",
+    "The mock also has a Move the pivot tool on the floating tool bar. Now that Y and the move button exist, do you still want that tool there?"
+  ],
+  "rough": [
+    "The mock's tool bar has a pivot tool on Y. An earlier task left it out on purpose (a mode for one handle) and this one does not bring it back, so the tool bar still differs from the mock. Y here hands the pivot to the canvas for one click instead of picking a tool.",
+    "The mock's Around box is a bordered dropdown that shows the point's numbers (12, 4.4). Ours has no border and reads Custom, with the numbers on the At row below. That was decided in an earlier task and is unchanged here.",
+    "Our menu has a Custom row the mock does not draw, so Somewhere else comes after it, under its own line.",
+    "Choosing Somewhere else with another tool in hand switches to Select first, because the pivot only answers under Select."
+  ]
+}

@@ -51,6 +51,13 @@ extension CanvasNSView {
         // drag after it.
         motionPivotCancelled = false
         motionPathCancelled = false
+        // Somewhere else: the pivot was handed to the canvas, and this press
+        // puts it down, wherever it lands and whatever is under it.
+        if placingMotionPivot,
+           motionPivotPlaceMouseDown(at: viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))) {
+            window?.makeFirstResponder(self)
+            return
+        }
         // Adjusting the grid owns the whole canvas: nothing on it can be picked
         // up, selected or edited by accident. A press means one of three
         // things, in this order — grab the zero point by its knob or its two

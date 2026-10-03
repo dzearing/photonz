@@ -1,0 +1,22 @@
+{
+  "out": "/tmp/photonz-playtest/pivot-somewhere-else-menu",
+  "seed": "The Around menu as a hand opens it: a pointer click on the menu's own face, and a picture of it open. It ends the way the mock draws it (icon-animate-wt.html, #oriMenu): the three named spots, Custom under a divider once there is a point of your own, then a divider and Somewhere else with Y printed beside it. Choosing it from that opening hands the pivot to the canvas, and one click puts it down. Next defaults, no switch changed. The picture of the open menu needs the Mac to itself.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "open", "file": "fixtures/pivot-of-its-own.photonz", "width": 1320, "height": 900 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "click", "at": [380, 280] },
+    { "do": "wait", "seconds": 1 },
+    { "do": "reveal", "control": "Around", "in": "Rotation" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-the-menu-open", "note": "THE PICTURE TO LOOK AT. The Around menu opened by a click on its face: Its centre, Top centre, Bottom centre, Custom, and Somewhere else with Y at the end." },
+    { "do": "panelMenu", "menu": "Around", "in": "Rotation", "at": ["centre"], "shot": "1-around-menu-open", "choose": "Somewhere else…" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "control": "Move the pivot", "in": "Rotation", "reads": "waiting for the canvas" },
+    { "do": "click", "at": [300, 120] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "field": "Around X", "reads": "300" },
+    { "do": "expect", "field": "Around Y", "reads": "120" },
+    { "do": "snapshot", "name": "2-placed" }
+  ]
+}

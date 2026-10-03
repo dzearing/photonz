@@ -125,6 +125,15 @@ struct PlaytestMenuStandInTests {
                                                      rowIsLive: false, somethingTookIt: false))
     }
 
+    // Layer > Move the Pivot hangs off the editor like undo, so its Y is dead
+    // in a walk's frozen menu bar. The stand-in hands the pivot to the canvas,
+    // which is what the row does.
+    @Test("Plain Y means hand the turn's pivot to the canvas")
+    func moveThePivot() {
+        #expect(PlaytestMenuStandIn.action(for: key("y"), modifiers: []) == .moveThePivot)
+        #expect(PlaytestMenuStandIn.action(for: key("y"), modifiers: [.command]) == nil)
+    }
+
     private func key(_ name: String) -> PlaytestKey {
         guard let key = PlaytestKey(name) else {
             Issue.record("\(name) is not a key")

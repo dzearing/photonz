@@ -107,5 +107,8 @@ public enum PlaytestMenuStandIn {
         // to key. Window-scoped like undo, so dimmed for the whole of a walk.
         Chord(key: "k", modifiers: [.shift]): .goToNextKey,
         Chord(key: "k", modifiers: [.option]): .goToPreviousKey,
+        // Layer ▸ Move the Pivot, plain Y: the Around menu's Somewhere else
+        // in the menu bar. Window-scoped like undo.
+        Chord(key: "y", modifiers: []): .moveThePivot,
     ]
 }

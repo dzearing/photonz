@@ -242,6 +242,7 @@ struct EditorCanvasSurface: View {
                    onWindowChange: { editorState.canvasDidMoveToWindow($0) },
                    placingClick: editorState.clickPlacementClip != nil,
                    onPlaceClick: { editorState.placeClick(at: $0) },
+                   placingMotionPivot: editorState.isPlacingMotionPivot,
                    zoomBoxUp: editorState.zoomBoxInDocument != nil,
                    zoomBoxHit: { editorState.zoomBoxHit(at: $0) },
                    onZoomBoxDown: { editorState.zoomBoxDown(at: $0) },

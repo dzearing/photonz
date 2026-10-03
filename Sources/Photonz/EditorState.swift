@@ -836,6 +836,9 @@ final class EditorState {
                 // goes back to its opening one rather than talking about a
                 // point nobody has picked.
                 if pathEditHint != nil { pathEditHint = nil }
+                // A pivot waiting to be put down belongs to the turn that was
+                // picked: the next press must not move another layer's.
+                if motionPivotPlacement != nil { endPlacingMotionPivot() }
                 // ...and so does the line saying a shape had just become one:
                 // it is about the layer that was turned, not the next one.
                 if turnedIntoPathNotice != nil { turnedIntoPathNotice = nil }
@@ -970,6 +973,12 @@ final class EditorState {
     /// dragged (`next-motion`). Kept out of the document so the whole drag is
     /// one step to undo rather than forty.
     var motionPivotPreview: (motionID: UUID, pivot: MotionPivot)?
+
+    /// The turn whose pivot the next press on the canvas puts down, between
+    /// choosing Somewhere else (or Y, or the move button) and that press. Nil
+    /// the rest of the time (`EditorState+Motion`).
+    var motionPivotPlacement: UUID?
+    @ObservationIgnored var motionPivotPlacementEscape: Any?
 
     /// The curve of your own each stretch between two keys was last on, kept
     /// when a named one was picked over it, so the Curve dropdown's Custom can
@@ -3551,6 +3560,9 @@ final class EditorState {
             }
             return
         }
+        // The pivot is put down with Select in hand; another tool's press
+        // means that tool's gesture, not this.
+        if tool != .select, motionPivotPlacement != nil { endPlacingMotionPivot() }
         if tool == .crop {
             // A selected image layer makes this a per-layer crop; otherwise
             // the marquee selection seeds the rect (a common flow: marquee

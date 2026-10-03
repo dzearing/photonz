@@ -1737,6 +1737,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// rows, so a walk's chord reaches a frozen bar and does nothing; these
     /// are the stand-ins (`PlaytestMenuStandIn`).
     case copyLook, pasteLook
+    /// Layer ▸ Move the Pivot (Y): the next press on the canvas puts the
+    /// picked turn's pivot down. A window-scoped row like the two above.
+    /// Fails where nothing picked is turning.
+    case moveThePivot
     /// View ▸ Show Timing (⌥⌘T): the timing strip under the canvas, opened or
     /// put away. A window-scoped row like the two above.
     case toggleTimingStrip

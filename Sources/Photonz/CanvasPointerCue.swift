@@ -260,6 +260,11 @@ extension CanvasNSView {
             return applyGrabCursor(doc.flatMap { gridAdjustCursor(at: $0) } ?? .crosshair,
                                    force: true)
         }
+        // A pivot waiting to be put down takes the next press wherever it
+        // lands, so no handle under the pointer may promise anything else.
+        if placingMotionPivot, motionPivotDrag == nil {
+            return applyGrabCursor(.crosshair)
+        }
         guard captionDrag == nil, measureHandleDrag == nil, resizeDrag == nil,
               cornerRadiusDrag == nil,
               endpointDrag == nil, transformDrag == nil, canvasResizeDrag == nil,
@@ -377,7 +382,7 @@ extension CanvasNSView {
     /// leaves the plain arrow (Select, Fill). The grab cue restores this when
     /// the pointer leaves a pill, so a hand never lingers over a crosshair tool.
     private var toolCursor: NSCursor? {
-        if placingClick { return .crosshair }
+        if placingClick || placingMotionPivot { return .crosshair }
         if tool.isRegionSelectionTool {
             // The badge mirrors the LIVE modifiers so the combine mode is
             // visible before the drag starts (⇧ +, ⌥ −, ⇧⌥ ×).
