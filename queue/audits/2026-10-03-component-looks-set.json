@@ -1,0 +1,26 @@
+{
+  "feature": "A component's looks stay together as a set",
+  "epic": "ui-components",
+  "summary": "A new look of a component now lands with the looks it already has, along their row and then straight under it, so a button's four states on a narrow page stand as two rows of two instead of one drawing and a column beside it.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Help ▸ Tutorials ▸ All Tutorials…, Components track, A button in all its states.",
+  "switched": {},
+  "try": [
+    { "do": "Open the guide A button in all its states from the Components track." },
+    { "do": "Click the original Save Button, open Add under Properties and pick A second Variant; name it Hover." },
+    { "do": "With Hover still selected, add another state and name it Pressed." },
+    { "do": "With Pressed still selected, add one more and name it Disabled.", "shot": "2026-10-03-component-looks-set-2.png" },
+    { "do": "Finish the guide: click a copy under the set and set its State to Hover.", "shot": "2026-10-03-component-looks-set-1.png" },
+    { "do": "On a blank wide page, make any component and add three looks: they stand in one row." }
+  ],
+  "evaluate": [
+    "Do the four states read as one set at a glance, with Default and Hover on top and Pressed and Disabled under them?",
+    "Is a 24 point gap between the set's rows enough room for the state labels, or do Pressed and Disabled feel crowded against the row above?",
+    "When something already sits right under the first look (a copy, say), the set still steps around it and can break up. Would you rather the looks were held in one outlined box, the way Figma draws a component set?",
+    "Is it right that the copies in the guide now sit lower on the page, below the set, rather than straight under the original?"
+  ],
+  "rough": [
+    "The set is not one thing on the canvas: nothing outlines the four looks or names them as a group, so on a busy page they read as a set only by lining up.",
+    "Something sitting where the set's next row would go (copies parked right under the original, for one) is still stepped past, so the looks can still end up in a column in your own documents. The guide avoids it by keeping its copies lower.",
+    "The state labels sit in the 24 point gap between rows, so the second row's labels sit close under the first row's buttons."
+  ]
+}

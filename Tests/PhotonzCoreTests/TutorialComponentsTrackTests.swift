@@ -1,6 +1,6 @@
 import CoreGraphics
 import Foundation
-import PhotonzCore
+@testable import PhotonzCore
 import Testing
 
 /// The Components track: make a piece of UI once, fetch it as often as you
@@ -377,6 +377,17 @@ struct TutorialComponentsTrackTests {
                 #expect(!box.intersects(copyBox), "\(state.name) lands on a copy")
             }
         }
+        // And they read as ONE set: two rows of two, lined up under each other,
+        // rather than the resting drawing on its own with the other three in a
+        // column beside it. The page is too narrow for four in a row, so this
+        // is the test that the copies under the original leave the set room
+        // for its second row.
+        let gap = PhotonzDocument.componentVersionGap
+        #expect(boxes[1].minY == boxes[0].minY && boxes[3].minY == boxes[2].minY,
+                "the states are not in rows: \(boxes)")
+        #expect(boxes[2].minX == boxes[0].minX && boxes[3].minX == boxes[1].minX,
+                "the states are not in columns: \(boxes)")
+        #expect(boxes[2].minY == boxes[0].maxY + gap, "the second row is not straight under the first")
     }
 
     // MARK: The samples the track brings

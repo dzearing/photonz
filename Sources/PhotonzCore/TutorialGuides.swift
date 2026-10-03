@@ -2739,8 +2739,12 @@ public enum TutorialSampleScreen {
     /// came from, and it has to land somewhere the person is looking.
     static let componentOrigin = CGPoint(x: 88, y: 88)
     /// Where the two copies sit under it on the samples that bring copies.
-    static let firstCopyOrigin = CGPoint(x: 88, y: 192)
-    static let secondCopyOrigin = CGPoint(x: 88, y: 296)
+    /// Low enough to leave the states guide's set its second row: four states
+    /// do not fit across this page, so Pressed and Disabled go straight under
+    /// the first two, and copies sitting there pushed them into a column
+    /// beside the original instead.
+    static let firstCopyOrigin = CGPoint(x: 88, y: 264)
+    static let secondCopyOrigin = CGPoint(x: 88, y: 368)
 
     /// The identity the sample's component is known by. Fixed rather than
     /// minted, so the same sample opened twice is the same sample.

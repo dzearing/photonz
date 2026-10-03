@@ -74,6 +74,52 @@ struct ComponentVersionRoomTests {
         }
     }
 
+    // MARK: - The looks of one component stay together as a set
+
+    /// The four states of a button on a page too narrow for four in a row.
+    /// Each one is added from the look made just before it, which is what you
+    /// do when the drawing you named last is still the one selected. They used
+    /// to land along from THAT look, so the third and fourth fell into a
+    /// column beside the first; they now fill the set's own rows, reading from
+    /// the component's first look.
+    @Test func looksAddedOneFromTheNextFormOneGridWithTheFirst() {
+        var c = withButton(at: CGRect(x: 88, y: 88, width: 240, height: 52),
+                           canvas: CGSize(width: 720, height: 480))
+        var from = c.doc.componentVersions(of: c.componentID)[0].id
+        for _ in 0..<3 {
+            from = c.doc.addComponentVersion(componentID: c.componentID, from: from)!
+        }
+        let origins = versionBoxes(c.doc, c.componentID).map(\.origin)
+        #expect(origins == [CGPoint(x: 88, y: 88), CGPoint(x: 352, y: 88),
+                            CGPoint(x: 88, y: 164), CGPoint(x: 352, y: 164)])
+    }
+
+    @Test func onAPageWideEnoughTheyStandInOneRow() {
+        var c = withButton(at: CGRect(x: 88, y: 88, width: 240, height: 52),
+                           canvas: CGSize(width: 1440, height: 900))
+        var from = c.doc.componentVersions(of: c.componentID)[0].id
+        for _ in 0..<3 {
+            from = c.doc.addComponentVersion(componentID: c.componentID, from: from)!
+        }
+        let origins = versionBoxes(c.doc, c.componentID).map(\.origin)
+        #expect(origins.map(\.y) == [88, 88, 88, 88])
+        #expect(origins.map(\.x) == [88, 352, 616, 880])
+    }
+
+    /// A look somebody dragged off on its own is still one of the set: a new
+    /// look made from it joins the others rather than starting a second set
+    /// out where that one was left.
+    @Test func aLookMadeFromOneMovedAwayStillJoinsTheSet() {
+        var c = withButton(at: CGRect(x: 88, y: 88, width: 240, height: 52),
+                           canvas: CGSize(width: 1440, height: 900))
+        let hover = c.doc.addComponentVersion(componentID: c.componentID)!
+        let hoverLayer = c.doc.componentVersion(of: c.componentID, id: hover)!.layerID
+        c.doc.updateLayer(id: hoverLayer) { $0.frame.origin = CGPoint(x: 900, y: 600) }
+        _ = c.doc.addComponentVersion(componentID: c.componentID, from: hover)
+        let added = versionBoxes(c.doc, c.componentID)[2]
+        #expect(added.origin == CGPoint(x: 352, y: 88))
+    }
+
     // MARK: - It steps past whatever is already there
 
     @Test func aVersionStepsPastSomethingAlreadySittingBeside() {

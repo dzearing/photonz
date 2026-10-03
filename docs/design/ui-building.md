@@ -3054,9 +3054,16 @@ versions start out identical and only differ where somebody made them differ.
 hides, saves and undoes like any group, and every tool already works on it. That
 is the whole reason a version is a drawing rather than hidden data: a version
 you cannot see is a version you cannot edit. A new one lands loose on the canvas
-just to the right of the one it came from — not inside whatever holds that one,
-or adding a version to a button that lives on a screen would drop a stray button
-into the screen.
+with the looks the component already has — not inside whatever holds the one it
+came from, or adding a version to a button that lives on a screen would drop a
+stray button into the screen. Where it lands reads from the component's FIRST
+look whichever look it was copied from (2026-10-03): along the set's row, and
+when the page runs out, straight under it, so four states on a page too narrow
+for a row stand as two rows of two. Reading from the source used to put a
+button's states in one drawing and a column beside it. Something sitting where
+the set's next row would go is still stepped past, so copies parked right under
+the original can still break the set up; the states guide's sample keeps its
+copies below the set's second row for that reason.
 
 **The duplicate keeps the knob ids and points them at its own layers.** That is
 what lets a copy keep the wording and the colours it chose when it is switched

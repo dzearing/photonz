@@ -27,7 +27,7 @@
     { "do": "panel", "stage": "4-knob-added" },
     { "do": "snapshot", "name": "4-knob-added" },
 
-    { "do": "click", "at": [176, 216] },
+    { "do": "click", "at": [176, 290] },
     { "do": "waitFor", "condition": "tutorialStep", "value": "give-it-its-own-words", "timeout": 6 },
     { "do": "wait", "seconds": 0.9 },
     { "do": "describe", "stage": "5-copy-picked", "note": "the copy's section: it says what it is, and it carries the one knob the original offered and nothing else" },

@@ -80,7 +80,7 @@
     { "do": "wait", "seconds": 0.6 },
     { "do": "action", "action": "fadeLayer" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "7-four-states-built", "note": "all four states now stand on the page under one name: the resting drawing on the left and Hover, Pressed and Disabled in a column beside it, each one labelled" },
+    { "do": "describe", "stage": "7-four-states-built", "note": "all four states now stand on the page under one name as one set, two rows of two: Default and Hover on top, Pressed and Disabled straight under them, each one labelled, with the two copies below the set" },
     { "do": "panel", "stage": "7-four-states-built" },
     { "do": "snapshot", "name": "7-four-states-built" },
     { "do": "render", "name": "7-four-states-built-doc" },
@@ -90,7 +90,7 @@
     { "do": "wait", "seconds": 0.9 },
     { "do": "snapshot", "name": "8-pick-a-copy" },
 
-    { "do": "click", "at": [176, 216] },
+    { "do": "click", "at": [176, 290] },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "9-copy-picked", "note": "a copy's own section, with State as its top row: the name the original was given is the word the copy is asked in" },
     { "do": "panel", "stage": "9-copy-picked" },

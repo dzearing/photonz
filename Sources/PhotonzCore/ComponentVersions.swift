@@ -125,9 +125,11 @@ extension PhotonzDocument {
     /// switched from one version to the other — a duplicate with fresh knob ids
     /// would reset every copy the moment it switched.
     ///
-    /// It lands loose on the canvas beside the version it came from rather than
-    /// inside whatever holds that one, so adding a version to a button that
-    /// lives on a screen never drops a stray button into the screen.
+    /// It lands loose on the canvas with the looks the component already has,
+    /// in the next free place along the set's rows from its first look, rather
+    /// than inside whatever holds the one it came from, so adding a version to
+    /// a button that lives on a screen never drops a stray button into the
+    /// screen.
     @discardableResult
     public mutating func addComponentVersion(componentID: UUID, from version: UUID? = nil,
                                              name: String? = nil) -> UUID? {
@@ -156,7 +158,16 @@ extension PhotonzDocument {
         copy.isLocked = false
         let parent = parentOrigin(of: settled.id) ?? .zero
         let sourceBox = settled.localBounds.offsetBy(dx: parent.x, dy: parent.y)
-        let landing = roomForDrawing(size: sourceBox.size, beside: sourceBox)
+        // The new look joins the SET, so the search reads from the component's
+        // first look whichever one it was copied from. Reading from the source
+        // put the third look of a button along from the second, and on a page
+        // too narrow for four in a row the set fell into one drawing and a
+        // column beside it.
+        let firstID = existing.first?.layerID ?? settled.id
+        let firstParent = parentOrigin(of: firstID) ?? .zero
+        let setBox = layer(id: firstID)?.localBounds.offsetBy(dx: firstParent.x, dy: firstParent.y)
+            ?? sourceBox
+        let landing = roomForDrawing(size: sourceBox.size, beside: setBox)
         // The copy goes in at the top level, so its own box IS its canvas box:
         // sitting it where the source sits and then shifting by the difference
         // lands it exactly on the spot that was found.
