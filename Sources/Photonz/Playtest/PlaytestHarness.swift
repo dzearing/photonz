@@ -10588,6 +10588,14 @@ private final class Run {
             for item in menu.items where !item.isSeparatorItem {
                 if let key = Self.shortcut(for: item) { reading.keys[item.title] = key }
             }
+            // A setting with several answers lives in a submenu (Arrow Style),
+            // so a row the step asks about is looked for the way `choose` looks
+            // for one: the top first, then one step into each submenu.
+            for row in ticked + unticked {
+                if let found = Self.find(row, in: menu) {
+                    reading.asked[row] = found.menu.items[found.index].state == .on
+                }
+            }
             if let shotURL, let menuWindow = PlaytestPanelMenu.openMenuWindow() {
                 // A menu drawn shorter than its rows opened with a scroll arrow
                 // and rows out of sight, and a person would have to scroll it
@@ -10704,15 +10712,16 @@ private final class Run {
         // Read off what the OPEN menu was wearing, not off the menu now that it
         // has closed: closing it is another event, and another chance for the
         // words to change under the reading.
-        for row in ticked + unticked where !reading.rows.contains(row) {
-            throw Failure(description: "no row called \"\(row)\" in the menu on \"\(target.name)\"; "
-                + "the rows are: " + reading.rows.map { $0.isEmpty ? "—" : $0 }.joined(separator: ", "))
+        for row in ticked + unticked where reading.asked[row] == nil {
+            throw Failure(description: "no row called \"\(row)\" in the menu on \"\(target.name)\" "
+                + "or one step into its submenus; the rows are: "
+                + reading.rows.map { $0.isEmpty ? "—" : $0 }.joined(separator: ", "))
         }
-        if let missing = ticked.first(where: { !reading.ticked.contains($0) }) {
+        if let missing = ticked.first(where: { reading.asked[$0] != true }) {
             throw Failure(description: "\(target.name) ▸ \(missing) should be ticked and it is not; "
                 + "ticked: \(reading.ticked.isEmpty ? "none" : reading.ticked.joined(separator: ", "))")
         }
-        if let extra = unticked.first(where: { reading.ticked.contains($0) }) {
+        if let extra = unticked.first(where: { reading.asked[$0] == true }) {
             throw Failure(description: "\(target.name) ▸ \(extra) should NOT be ticked and it is")
         }
         // A printed key is a promise; the walk holds the row to the one it

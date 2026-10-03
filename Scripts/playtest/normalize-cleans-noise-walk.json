@@ -37,7 +37,7 @@
     { "do": "panel", "stage": "3-normalize-clean" },
     { "do": "snapshot", "name": "3-normalize-clean" },
 
-    { "do": "press", "control": "Remove Noise reduction" },
+    { "do": "press", "control": "Remove", "in": "Noise reduction" },
     { "do": "waitFor", "condition": "soundSettled", "timeout": 30 },
     { "do": "wait", "seconds": 0.5 },
     { "do": "expect", "field": "Gain in dB", "reads": "+30.7" },

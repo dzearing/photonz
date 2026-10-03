@@ -77,11 +77,12 @@
       "reads": "Arrow Style, on"
     },
     {
-      "do": "key",
+      "do": "shortcut",
       "key": "z",
       "modifiers": [
         "command"
-      ]
+      ],
+      "menuItem": "Undo"
     },
     {
       "do": "wait",

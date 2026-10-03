@@ -57,6 +57,10 @@ struct PlaytestMenuReading: Sendable {
     var dimmed: [String] = []
     /// The rows wearing a checkmark, which is how a setting says it is on.
     var ticked: [String] = []
+    /// Each row the step asked to be ticked or not, wherever it sits in the
+    /// menu (a submenu row too), and whether it wore the checkmark. A row
+    /// missing here is in no part of the menu.
+    var asked: [String: Bool] = [:]
     /// The key each row prints beside its name, as a person reads it ("⌘J").
     var keys: [String: String] = [:]
     /// The row that was picked, if the step asked for one.
