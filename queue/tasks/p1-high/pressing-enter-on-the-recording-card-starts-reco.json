@@ -1,0 +1,36 @@
+{
+  "id": "pressing-enter-on-the-recording-card-starts-reco",
+  "title": "Pressing Enter on the recording card starts recording that instant",
+  "goal": "After Cmd+Shift+5 and Enter, the recording must already be running the moment the card goes away, with no pause before the first frame. Right now there is a noticeable wait between pressing Enter and the recording actually starting, and the person loses the start of what they meant to film.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-03T05:39:38.195Z",
+  "updated": "2026-10-03T05:39:52.030Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words: \"when i start recording a video with cmd shift 5 and hit enter, it doesn't immediately start recording! This is critical. no delays\"\n\nNOT reproduced or measured in intake; these are suspects on the start path, measure each before fixing.\n\nPath: Cmd+Shift+5 is Photonz's own global hotkey (CaptureCenter.swift:71) -> beginRecordingFlow (CaptureCenter.swift:131) -> setup card, Enter = default action 'Start Recording' (RecordingSetupController.swift:134-151) -> resolveMicrophoneAccessThenStart -> launchRecording (CaptureCenter.swift:211) -> RecordingCoordinator.start (RecordingCoordinator.swift:47) -> ScreenRecorder.start (ScreenRecorder.swift:66).\n\nSerial costs on that path, all paid AFTER Enter:\n1. RecordingCoordinator.start shows the stop HUD then sleeps a fixed 150 ms so the window server knows the HUD exists for exclusion.\n2. ScreenRecorder.start awaits SCShareableContent.excludingDesktopWindows (often 100-300+ ms) to find the display and the HUD's SCWindow.\n3. SCStream + SCRecordingOutput construction, then await stream.startCapture() (typically the largest cost, more with mic/system audio).\n4. Setup card dismissal and the Task hops in between.\n\nIdeas, not prescriptions: prewarm while the setup card is open (fetch SCShareableContent, create the HUD window offscreen or hidden so it already has a window number, maybe build the stream/filter ahead of time and only startCapture on Enter); drop the fixed 150 ms sleep in favour of a HUD that already exists; or start the stream when the card opens and only begin writing on Enter (check with SCRecordingOutput whether adding the output later is supported, or use a sample buffer writer). Trap: the HUD must stay excluded from the video, and prewarming must not trip Screen Recording or mic permission prompts earlier than today or more than once per launch (see memory rule on permission prompt loops). Trap: the first-frame clock (FirstFrameClock) and PointerTracker start are tied to the stream start; pointer and click effects must stay aligned.\n\nThere is a probe latency drill already ('showsControls: false is the probe's latency drill', RecordingCoordinator.swift:45-46); extend it to measure Enter-to-first-frame rather than building a new one.\n\nRelated, done: 'A recording shows in history the moment you stop it' (the stop side of the same latency work).",
+  "acceptance": [
+    "Reproduce first: measure the time from the Enter keypress on the recording setup card (full display, and with system audio and microphone on) to the first captured frame, on the probe, before changing anything. Record the numbers in the audit.",
+    "Enter to first captured frame is under 100 ms for full display recording, MEASURED over at least 10 runs (report median and worst) and written in the audit; anything that cannot get under that is explained with the measured cost of each step.",
+    "The stop control and timer appear at the same moment recording begins, and the timer starts from the first frame, not from the keypress or from a later point.",
+    "Nothing the person does after pressing Enter is missing from the start of the file: a walk or drill presses Enter, changes something on screen within 50 ms, and the first second of the saved file shows that change.",
+    "Region recording: once the region drag ends, recording starts with the same budget.",
+    "The stop control is still kept out of the recorded video.",
+    "Works at Next defaults; Current gets the same fix since the path is shared.",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-03T05:39:38.197Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-03T05:39:52.029Z",
+      "note": "seq 460 -> 5"
+    }
+  ]
+}
