@@ -6298,6 +6298,28 @@ private final class Run {
                 + "and says of each one it cannot reach why not.")
         }
         let flags = eventFlags(modifiers)
+        // A double click is two clicks, the way a hand sends it: the first
+        // counted one, the second counted two. One event counted two with no
+        // click before it is something no mouse sends, and a SwiftUI double
+        // tap (a Library tile's) never fired for it, so the walk could not
+        // prove what a person does. Each earlier click goes the same way the
+        // last one does, below.
+        for earlier in 1..<max(1, count) {
+            let at = ProcessInfo.processInfo.systemUptime
+            guard let firstDown = NSEvent.mouseEvent(
+                    with: .leftMouseDown, location: target.point, modifierFlags: flags, timestamp: at,
+                    windowNumber: window.windowNumber, context: nil, eventNumber: 0,
+                    clickCount: earlier, pressure: 1),
+                  let firstUp = NSEvent.mouseEvent(
+                    with: .leftMouseUp, location: target.point, modifierFlags: flags, timestamp: at + 0.04,
+                    windowNumber: window.windowNumber, context: nil, eventNumber: 1,
+                    clickCount: earlier, pressure: 0) else { break }
+            NSApp.postEvent(firstUp, atStart: false)
+            NSApp.postEvent(firstDown, atStart: true)
+            NSApp.sendEvent(NSApp.nextEvent(matching: .leftMouseDown, until: .distantPast,
+                                            inMode: .default, dequeue: true) ?? firstDown)
+            await sleep(0.06)
+        }
         let stamp = ProcessInfo.processInfo.systemUptime
         guard let down = NSEvent.mouseEvent(
                 with: .leftMouseDown, location: target.point, modifierFlags: flags, timestamp: stamp,
@@ -16316,6 +16338,12 @@ extension Run {
                 return try await dropTransitionOnTimeline(tile, board: board, track: track, seconds: seconds,
                                                           hold: hold, release: release, says: says)
             }
+            // ...and a title page or name card off the Library lands on the
+            // track under it, or on a new one of its own.
+            if board.data(forType: NSPasteboard.PasteboardType(TitlePresetDrag.typeIdentifier)) != nil {
+                return try await dropTitleOnTimeline(tile, board: board, track: track, seconds: seconds,
+                                                     hold: hold, release: release, says: says)
+            }
             guard let carriedURL = DragCargo.fileURL(on: board) else {
                 throw Failure(description: "the tile \"\(tile)\" carries no file to land: it carries "
                     + (board.types ?? []).map(\.rawValue).joined(separator: ", "))
@@ -16428,6 +16456,113 @@ extension Run {
         return "\(url.lastPathComponent) let go over \(track) at \(seconds)s (\(insert ? "⌘ held" : "no keys")), "
             + "saying \"\(sentence)\"\(held); the document now holds "
             + "\(editor.document?.allLayers.count ?? 0) layers, was \(before)"
+    }
+
+    /// Carries a title tile off the Library shelf onto a track at a moment,
+    /// through the timeline's own drop target, and lets go unless told not
+    /// to. The ghost it draws is the one a file draws, saying the preset's
+    /// kind, the track and the time; the log line says which track the title
+    /// landed on and when.
+    private func dropTitleOnTimeline(_ tile: String, board: NSPasteboard, track: String, seconds: Double,
+                                     hold: String?, release: Bool, says: String?) async throws -> String {
+        let editor = try requireEditor()
+        let window = try requireWindow()
+        guard let document = editor.document,
+              let trackID = document.timelineTracks.first(where: { $0.name == track })?.id else {
+            throw Failure(description: "no track is called \"\(track)\"")
+        }
+        guard editor.trackDropRows[trackID] != nil, editor.timelineLaneWidth > 0 else {
+            throw Failure(description: "the track \"\(track)\" is not on screen: is the timeline open?")
+        }
+        // Worked out afresh once the tile is in the air too: the timeline
+        // makes room past its end for it, which moves every moment along.
+        func aim() throws -> CGPoint {
+            let frame = editor.timelineTracksFrame
+            guard let row = editor.trackDropRows[trackID] else {
+                throw Failure(description: "the track \"\(track)\" left the screen")
+            }
+            let fraction = editor.motionStripRuler.fraction(ofMS: seconds * 1000)
+            let global = CGPoint(x: frame.minX + TimelineDock.lanesLeading + editor.timelineLaneWidth * fraction,
+                                 y: frame.minY + (row.minY + row.maxY) / 2)
+            return try self.windowPoint(PlaytestPoint(global, space: .window))
+        }
+        let info = PlaytestDraggingInfo(pasteboard: board, location: try aim(), window: window)
+        guard let content = window.contentView else {
+            throw Failure(description: "the window has no content view")
+        }
+        let chain = Self.visibleDestinations(at: info.draggingLocation, in: content)
+        func hears(_ view: NSView) -> Bool {
+            let listening = view.registeredDraggedTypes.compactMap { UTType($0.rawValue) }
+            return (board.types ?? []).contains { carried in
+                guard let type = UTType(carried.rawValue) else { return false }
+                return listening.contains { type.conforms(to: $0) }
+            }
+        }
+        var taker: NSView?
+        for view in chain where hears(view) && view.draggingEntered(info) != [] {
+            taker = view
+            break
+        }
+        guard let taker else {
+            throw Failure(description: "nothing on the timeline at \(track) \(seconds)s takes the tile "
+                + "\"\(tile)\", carrying \((board.types ?? []).map(\.rawValue).joined(separator: " ")); offered to "
+                + chain.map { view in
+                    "\(type(of: view)) (listening for "
+                        + view.registeredDraggedTypes.map(\.rawValue).joined(separator: " ") + ")"
+                }.joined(separator: " then "))
+        }
+        // The preset is read off the drag in the background, the way it is
+        // under a real pointer, so the ghost arrives a moment after the tile.
+        var waited = 0.0
+        while editor.timelineFileHover == nil, waited < 3 {
+            _ = taker.draggingUpdated(info)
+            await sleep(0.05)
+            waited += 0.05
+        }
+        await sleep(0.15)
+        info.draggingLocation = try aim()
+        _ = taker.draggingUpdated(info)
+        await sleep(0.2)
+        guard let hover = editor.timelineFileHover else {
+            taker.draggingExited(info)
+            throw Failure(description: "the tile \"\(tile)\" held over \(track) at \(seconds)s drew no ghost "
+                + "on the timeline after 3s; the preset in the air: "
+                + (editor.timelineTitleInAir?.name ?? "never arrived"))
+        }
+        let sentence = hover.note
+        if let says, !sentence.localizedCaseInsensitiveContains(says) {
+            taker.draggingExited(info)
+            throw Failure(description: "the timeline said \"\(sentence)\" about the tile \"\(tile)\", "
+                + "and the walk expected \"\(says)\"")
+        }
+        var held = ""
+        if let hold {
+            try snapshot(content, name: hold)
+            await screenCapture(window, name: hold)
+            held = ", held \(hold).png"
+        }
+        guard release else {
+            taker.draggingExited(info)
+            await sleep(0.1)
+            return "\(tile) held over \(track) at \(seconds)s, saying \"\(sentence)\"\(held)"
+        }
+        let before = document.allLayers.count
+        guard taker.performDragOperation(info) else {
+            throw Failure(description: "the timeline would not take the tile \"\(tile)\", "
+                + "having said \"\(sentence)\"")
+        }
+        waited = 0
+        while (editor.document?.allLayers.count ?? before) == before, waited < 3 {
+            await sleep(0.1)
+            waited += 0.1
+        }
+        let landed = editor.selectedLayerID.flatMap { editor.document?.layer(id: $0) }
+        let where_ = landed.flatMap { layer in
+            editor.document?.trackID(ofClip: layer.id).flatMap { id in
+                editor.document?.timelineTracks.first { $0.id == id }?.name
+            }.map { "\(layer.name) on \($0) at \(CaptionProgress.clock(layer.time?.inMS ?? 0))" }
+        } ?? "nothing picked"
+        return "\(tile) let go over \(track) at \(seconds)s, saying \"\(sentence)\"\(held); landed: \(where_)"
     }
 
     /// Carries a transition tile from the panel's Transitions group onto a

@@ -76,7 +76,10 @@ struct LibraryPanel: View {
     /// the width the shelf has, and a sliver of the next. A card shelf's row
     /// grows with the dock, so this is the shelf's to say, not the dock's.
     private var squeezeFloor: CGFloat {
+        // A shelf drawn in groups opens with a header, which the row it keeps
+        // sits under.
         LibraryShelfLayout.squeezeFloor(peek: DockMetrics.bodyPeek, width: shelfWidth, sizing: sizing)
+            + (shelfGroups == nil ? 0 : LibraryShelfLayout.groupHeaderHeight)
     }
 
     /// What each tile is drawn at, handed down to the tile views so the
@@ -207,6 +210,7 @@ struct LibraryPanel: View {
                 .nameFieldKeys(canCommit: !isEmpty,
                                commit: selectFirstTile,
                                revert: { query = "" })
+                .playtestControl("Search library", detail: "Library")
             if !query.isEmpty {
                 Button { query = "" } label: {
                     Image(systemName: "xmark.circle.fill")
@@ -282,6 +286,26 @@ struct LibraryPanel: View {
         }
     }
 
+    /// The title pages and name cards Components draws for what is typed, in
+    /// a document with time: every preset, the person's own first in each
+    /// kind (`video-title-wt.html`, step 10, the lower third on this shelf).
+    private var visibleTitles: [TitlePreset] {
+        guard scope == .components else { return [] }
+        let shelf = editorState.titleShelf
+        guard !shelf.isEmpty else { return [] }
+        let hits = Set(LibrarySearch.filter(shelf.map(\.entry), query: query).map(\.id))
+        return Array(shelf.filter { hits.contains($0.id) }.prefix(Self.maxTiles))
+    }
+
+    /// The shelf's groups, when it is drawn in groups: the titles under their
+    /// header and the components under theirs. Nil for a shelf with no
+    /// titles on it, which is drawn as the one grid it has always been.
+    private var shelfGroups: [Int]? {
+        let titles = visibleTitles.count
+        guard titles > 0 else { return nil }
+        return [titles, visibleComponents.count]
+    }
+
     /// The tiles Styles draws for what is typed: the named colors saved in the
     /// open document, each paired with the style so the tile can draw its
     /// color (Next, `next-styles`).
@@ -327,14 +351,14 @@ struct LibraryPanel: View {
     /// says. The empty state and the resize grabber both hang off this.
     private var isEmpty: Bool {
         visibleClips.isEmpty && visibleMedia.isEmpty && visibleComponents.isEmpty && visibleStyles.isEmpty
-            && visibleTextStyles.isEmpty && visibleEffectStyles.isEmpty
+            && visibleTextStyles.isEmpty && visibleEffectStyles.isEmpty && visibleTitles.isEmpty
     }
 
     /// How many tiles the shelf is showing right now, whatever scope they came
     /// from — the shelf only ever draws one scope at a time.
     private var tileCount: Int {
         visibleClips.count + visibleMedia.count + visibleComponents.count + visibleStyles.count
-            + visibleTextStyles.count + visibleEffectStyles.count
+            + visibleTextStyles.count + visibleEffectStyles.count + visibleTitles.count
     }
 
     /// The height the shelf takes: its tiles, capped at the LOWER of the two
@@ -345,9 +369,10 @@ struct LibraryPanel: View {
         // An empty shelf is a sentence, not a list: there is no grid to cap and
         // nothing for the dock to take away.
         guard !isEmpty else { return 0 }
+        let cap = min(maxHeight, dockCeiling ?? .greatestFiniteMagnitude)
+        if shelfGroups != nil { return shelfWidth > 0 ? min(shelfContentHeight, cap) : cap }
         return LibraryShelfLayout.shelfHeight(
-            tileCount: tileCount, width: shelfWidth,
-            cap: min(maxHeight, dockCeiling ?? .greatestFiniteMagnitude), sizing: sizing)
+            tileCount: tileCount, width: shelfWidth, cap: cap, sizing: sizing)
     }
 
     /// ...and what it would be if the dock were NOT pressing on it: its tiles,
@@ -356,6 +381,7 @@ struct LibraryPanel: View {
     /// rather than for the one it has already shortened.
     private var unpressedShelfHeight: CGFloat {
         guard !isEmpty else { return 0 }
+        if shelfGroups != nil { return shelfWidth > 0 ? min(shelfContentHeight, maxHeight) : maxHeight }
         return LibraryShelfLayout.shelfHeight(tileCount: tileCount, width: shelfWidth,
                                               cap: maxHeight, sizing: sizing)
     }
@@ -414,32 +440,74 @@ struct LibraryPanel: View {
         }
     }
 
+    @ViewBuilder
     private var grid: some View {
+        if shelfGroups != nil {
+            // Titles, then the components, each under its header and each
+            // starting a row of its own, so a lower third never sits beside a
+            // button as if they were one kind of thing.
+            VStack(alignment: .leading, spacing: 0) {
+                groupHeader("Titles")
+                tileGrid {
+                    ForEach(visibleTitles) { preset in LibraryTitleTile(preset: preset) }
+                }
+                if !visibleComponents.isEmpty {
+                    groupHeader("Components")
+                    tileGrid { componentTiles }
+                }
+            }
+        } else {
+            tileGrid { allTiles }
+        }
+    }
+
+    /// The label over a group of tiles, exactly as tall as the shelf's
+    /// arithmetic says (`LibraryShelfLayout.groupHeaderHeight`).
+    private func groupHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(height: LibraryShelfLayout.groupHeaderHeight, alignment: .bottomLeading)
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    private var componentTiles: some View {
+        ForEach(visibleComponents, id: \.entry.id) { pair in
+            LibraryComponentTile(entry: pair.entry, layer: pair.layer, starter: pair.starter,
+                                 shared: pair.shared)
+        }
+    }
+
+    private func tileGrid<Tiles: View>(@ViewBuilder _ tiles: () -> Tiles) -> some View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: sizing.minimumWidth),
                                     spacing: LibraryShelfLayout.tileSpacing)],
                   alignment: .leading, spacing: LibraryShelfLayout.tileSpacing) {
-            ForEach(visibleClips, id: \.entry.id) { pair in
-                LibraryClipTile(item: pair.entry, clip: pair.item)
-            }
-            ForEach(visibleMedia, id: \.entry.id) { pair in
-                LibraryTile(item: pair.entry, media: pair.item)
-            }
-            ForEach(visibleComponents, id: \.entry.id) { pair in
-                LibraryComponentTile(entry: pair.entry, layer: pair.layer, starter: pair.starter,
-                                     shared: pair.shared)
-            }
-            ForEach(visibleStyles, id: \.entry.id) { pair in
-                LibraryStyleTile(entry: pair.entry, style: pair.style)
-            }
-            ForEach(visibleTextStyles, id: \.entry.id) { pair in
-                LibraryTextStyleTile(entry: pair.entry, style: pair.style)
-            }
-            ForEach(visibleEffectStyles, id: \.entry.id) { pair in
-                LibraryEffectStyleTile(entry: pair.entry, style: pair.style)
-            }
+            tiles()
         }
         .padding(.vertical, LibraryShelfLayout.gridVerticalPadding)
         .environment(\.libraryTile, tileMetrics)
+    }
+
+    @ViewBuilder
+    private var allTiles: some View {
+        ForEach(visibleClips, id: \.entry.id) { pair in
+            LibraryClipTile(item: pair.entry, clip: pair.item)
+        }
+        ForEach(visibleMedia, id: \.entry.id) { pair in
+            LibraryTile(item: pair.entry, media: pair.item)
+        }
+        componentTiles
+        ForEach(visibleStyles, id: \.entry.id) { pair in
+            LibraryStyleTile(entry: pair.entry, style: pair.style)
+        }
+        ForEach(visibleTextStyles, id: \.entry.id) { pair in
+            LibraryTextStyleTile(entry: pair.entry, style: pair.style)
+        }
+        ForEach(visibleEffectStyles, id: \.entry.id) { pair in
+            LibraryEffectStyleTile(entry: pair.entry, style: pair.style)
+        }
     }
 
     @ViewBuilder
@@ -501,10 +569,21 @@ struct LibraryPanel: View {
         // Not on this shelf: a scope was switched under it, or a search still
         // has no room for it. Nothing to scroll to, so let the request go.
         guard let index = shelfIndex(of: id), shelfWidth > 0 else { return }
-        let action = LibraryShelfLayout.tileReveal(index: index, width: shelfWidth,
+        let action: DockReveal.Action
+        if let groups = shelfGroups {
+            // A component sits in the second group, under the titles.
+            let inTitles = index < groups[0]
+            let top = LibraryShelfLayout.tileTop(group: inTitles ? 0 : 1,
+                                                 index: inTitles ? index : index - groups[0],
+                                                 groups: groups, width: shelfWidth, sizing: sizing)
+            action = LibraryShelfLayout.tileReveal(top: top, width: shelfWidth, gridTop: shelfReveal.gridTop,
+                                                   viewportHeight: shelfHeight, sizing: sizing)
+        } else {
+            action = LibraryShelfLayout.tileReveal(index: index, width: shelfWidth,
                                                    gridTop: shelfReveal.gridTop,
                                                    viewportHeight: shelfHeight,
                                                    sizing: sizing)
+        }
         guard action != .none else { return }
         withAnimation(.easeInOut(duration: 0.28)) {
             proxy.scrollTo(id, anchor: action == .top ? .top : .bottom)
@@ -519,7 +598,10 @@ struct LibraryPanel: View {
         if let index = visibleMedia.firstIndex(where: { $0.entry.id == id }) {
             return visibleClips.count + index
         }
-        if let index = visibleComponents.firstIndex(where: { $0.entry.id == id }) { return index }
+        if let index = visibleTitles.firstIndex(where: { $0.id == id }) { return index }
+        if let index = visibleComponents.firstIndex(where: { $0.entry.id == id }) {
+            return visibleTitles.count + index
+        }
         if let index = visibleStyles.firstIndex(where: { $0.entry.id == id }) { return index }
         return nil
     }
@@ -531,6 +613,8 @@ struct LibraryPanel: View {
             editorState.selectLibraryItem(first.entry.id)
         } else if let first = visibleMedia.first {
             editorState.selectLibraryItem(first.entry.id)
+        } else if let first = visibleTitles.first {
+            editorState.selectLibraryItem(first.id)
         } else if let first = visibleComponents.first {
             editorState.selectLibraryItem(first.entry.id)
         } else if let first = visibleStyles.first {
@@ -550,6 +634,9 @@ struct LibraryPanel: View {
     /// ceiling for that one frame, exactly as `shelfHeight` does.
     private var shelfContentHeight: CGFloat {
         guard shelfWidth > 0 else { return maxHeight }
+        if let groups = shelfGroups {
+            return LibraryShelfLayout.contentHeight(groups: groups, width: shelfWidth, sizing: sizing)
+        }
         return LibraryShelfLayout.contentHeight(tileCount: tileCount, width: shelfWidth, sizing: sizing)
     }
 

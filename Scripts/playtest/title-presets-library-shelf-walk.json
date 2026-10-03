@@ -1,0 +1,273 @@
+{
+  "out": "/tmp/photonz-playtest/title-presets-library-shelf-walk",
+  "seed": "Title pages and name cards are picture tiles on the Library's Components shelf, under a Titles header, the way the title mock drags a lower third out of the Library (video-title-wt.html, step 10). At Next defaults with no flag set: the shelf is opened by View > Library and the Comps segment pressed by the pointer. The Sunrise tile is picked up by the pointer, and the Midnight tile double clicked by the pointer lands at the playhead on its own track, exactly as Sequence > Insert does. Then Sunrise held over the recording on V1 says it goes on a new track, never over the recording, and let go it lands there half a second in; held over that new track after itself it lands on the same track.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "comment": "View > Library, the way a person turns the shelf on, then the Comps segment by the pointer.",
+      "do": "action",
+      "action": "showLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Comps"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expect",
+      "control": "Midnight",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Sunrise",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "1-titles-on-the-shelf",
+      "note": "THE FIRST TEST: the Components shelf of a screen recording opens with a Titles group: a picture tile for each title page and name card, each the preset itself on the recording's frame shape, with its kind on the line under its name"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-titles-on-the-shelf"
+    },
+    {
+      "comment": "The search reads the line under each name, so typing a kind finds every preset of it.",
+      "do": "press",
+      "control": "Search library"
+    },
+    {
+      "do": "type",
+      "text": "name card"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expect",
+      "control": "Bar",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "1b-name-cards",
+      "note": "Typing name card into the Library's search box leaves the four name cards (and any of your own): Bar, Clean, Accent, Minimal, each pictured where it sits on the frame, at the bottom left"
+    },
+    {
+      "do": "snapshot",
+      "name": "1b-name-cards"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "pickUpTile",
+      "tile": "Sunrise",
+      "to": [
+        640,
+        700
+      ]
+    },
+    {
+      "do": "press",
+      "control": "Midnight",
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectClip",
+      "clip": "Title Page",
+      "startsAt": 2.0,
+      "endsAt": 6.0,
+      "count": 1
+    },
+    {
+      "do": "describe",
+      "stage": "2-double-clicked",
+      "note": "THE SECOND TEST: a double click on the Midnight tile, by the pointer, put the Midnight title page at the playhead (two seconds) on a track of its own, four seconds long, exactly as Sequence > Insert Title Page > Midnight does"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-double-clicked"
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "Sunrise",
+      "track": "V1",
+      "seconds": 0.5,
+      "release": false,
+      "hold": "3-held-over-the-recording",
+      "says": "Title Page · New V2"
+    },
+    {
+      "do": "describe",
+      "stage": "3-held-over-the-recording",
+      "note": "THE THIRD TEST: the Sunrise tile held over the recording on V1, half a second in. The lane draws the dashed ghost a file draws, four seconds long, and it says Title Page on a new track: a title is laid over the recording, never cut into it"
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "Sunrise",
+      "track": "V1",
+      "seconds": 0.5
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectClip",
+      "clip": "Title Page",
+      "track": "V2",
+      "startsAt": 0.5,
+      "endsAt": 4.5,
+      "count": 2
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 8.0
+    },
+    {
+      "do": "describe",
+      "stage": "4-let-go-over-the-recording",
+      "note": "Let go, the Sunrise title page lands half a second in on the new track V2, over the recording, which is untouched on V1"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-let-go-over-the-recording"
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "Sunrise",
+      "track": "V2",
+      "seconds": 5.5,
+      "release": false,
+      "says": "Title Page · V2"
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "Sunrise",
+      "track": "V2",
+      "seconds": 5.5
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectClip",
+      "clip": "Title Page",
+      "track": "V2",
+      "startsAt": 5.5,
+      "endsAt": 9.5,
+      "count": 3
+    },
+    {
+      "do": "describe",
+      "stage": "5-let-go-on-a-free-track",
+      "note": "THE FOURTH TEST: held over V2 where it is free, after the first Sunrise, the ghost says V2 and the second lands there at five and a half seconds, on the same track"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-let-go-on-a-free-track"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectClip",
+      "clip": "Title Page",
+      "count": 2
+    },
+    {
+      "do": "describe",
+      "stage": "6-undo",
+      "note": "One Command Z takes the last drop back whole"
+    }
+  ]
+}

@@ -105,6 +105,8 @@ struct EveryCommandIsInTheMenuBarTests {
     /// A right-click row with no menu bar row, and why.
     static let noRow: [String: String] = [
         "Delete Style": "a saved caption style is a tile in the Captions section, and nothing about the document says which one is in hand",
+        "Delete Preset": "a saved title preset is a tile on the Library shelf, and nothing about the document says which one is in hand",
+        "Insert at Playhead": "a title tile's preset is in the bar already, by name, under Sequence > Insert Title Page and Insert Name Card, whose rows are built from the preset list",
     ]
 
     // MARK: Reading the source

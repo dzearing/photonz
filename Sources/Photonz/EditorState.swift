@@ -224,6 +224,16 @@ final class EditorState {
     /// The layer Save as Preset… is naming, while its sheet is up
     /// (`EditorState+TitlePresets`).
     var titlePresetSaving: UUID?
+    /// The pictures on the Library's title tiles, keyed by the preset, the
+    /// frame shape and the size drawn (`LibraryTitleTile`).
+    var titlePresetPictures: [String: CGImage] = [:]
+    @ObservationIgnored var titlePresetPicturesInFlight: Set<String> = []
+    /// A title tile held over the timeline, read off its drag once it arrives
+    /// (`TitlePresetDrag.swift`).
+    @ObservationIgnored var timelineTitleInAir: TitlePreset?
+    /// The title tile the Library last handed to a drag, so the timeline can
+    /// answer the moment it arrives, before the drag's own bytes are read.
+    @ObservationIgnored var titleTileLifted: TitlePreset?
 
     /// The user's persisted show/hide preference for the docked inspector.
     /// Distinct from `isLayersPanelVisible`: auto-collapse never touches this,

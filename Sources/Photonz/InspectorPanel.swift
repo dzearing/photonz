@@ -1223,6 +1223,9 @@ struct InspectorPanel: View {
     /// has selected a rectangle. Reported by the user on 2026-09-03.
     private func sectionTitle(_ id: InspectorSectionID) -> String {
         if id == .libraryItem {
+            // A title tile is named after its kind: a picked lower third is a
+            // Name Card, not a Component.
+            if let preset = editorState.selectedTitlePreset { return preset.kind.name }
             return (LibraryScope(rawValue: libraryScopeRaw) ?? .media).itemTitle
         }
         // With the parts list on, this section is no longer only colours: it
@@ -1418,7 +1421,9 @@ struct InspectorPanel: View {
         case .libraryItem:
             // The picked tile's section, named and filled by the scope it came
             // from: a capture's details, or a component's.
-            if editorState.selectedComponentLayer != nil {
+            if let preset = editorState.selectedTitlePreset {
+                LibraryTitlePresetInspector(preset: preset)
+            } else if editorState.selectedComponentLayer != nil {
                 LibraryComponentInspector()
             } else if editorState.selectedStarterComponent != nil {
                 StarterComponentInspector()

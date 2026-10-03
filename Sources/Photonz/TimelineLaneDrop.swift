@@ -32,20 +32,34 @@ struct TimelineFileDropDelegate: DropDelegate {
     /// the way the canvas judges one: a drag from the Finder says it carries
     /// a file and not always what kind.
     func validateDrop(info: DropInfo) -> Bool {
-        carriesTransition(info) || info.hasItemsConforming(to: [.fileURL])
+        carriesTransition(info) || carriesTitle(info) || info.hasItemsConforming(to: [.fileURL])
             || FileDrop.carriesUsableFile(info, into: editorState)
     }
 
-    /// The types the timeline listens for: every file the window takes, and a
-    /// transition tile out of the panel's Transitions group.
-    static let types: [UTType] = FileDrop.types + [TransitionDrag.type]
+    /// The types the timeline listens for: every file the window takes, a
+    /// transition tile out of the panel's Transitions group, and a title page
+    /// or name card off the Library shelf.
+    static let types: [UTType] = FileDrop.types + [TransitionDrag.type, TitlePresetDrag.type]
 
     /// A transition tile rather than a file (`TransitionDrag.swift`).
     private func carriesTransition(_ info: DropInfo) -> Bool {
         info.hasItemsConforming(to: [TransitionDrag.type])
     }
 
+    /// A title tile off the Library shelf (`LibraryTitleTile.swift`).
+    private func carriesTitle(_ info: DropInfo) -> Bool {
+        info.hasItemsConforming(to: [TitlePresetDrag.type])
+    }
+
     func dropEntered(info: DropInfo) {
+        if carriesTitle(info) {
+            let point = info.location
+            // The tile the shelf just handed over answers at once; the drag's
+            // own bytes, read in the background, have the last word.
+            if let lifted = editorState.titleTileLifted { editorState.moveTitleHover(lifted, to: point) }
+            TitlePresetDrag.load(info) { [editorState] preset in editorState.moveTitleHover(preset, to: point) }
+            return
+        }
         if carriesTransition(info) {
             let point = info.location
             // The tile the panel just handed over answers at once; the drag's
@@ -64,6 +78,12 @@ struct TimelineFileDropDelegate: DropDelegate {
     }
 
     func dropUpdated(info: DropInfo) -> DropProposal? {
+        if carriesTitle(info) {
+            if let preset = editorState.timelineTitleInAir ?? editorState.titleTileLifted {
+                editorState.moveTitleHover(preset, to: info.location)
+            }
+            return DropProposal(operation: .copy)
+        }
         if carriesTransition(info) {
             guard let kind = editorState.timelineTransitionInAir ?? editorState.transitionTileLifted else {
                 return DropProposal(operation: .copy)
@@ -81,11 +101,19 @@ struct TimelineFileDropDelegate: DropDelegate {
     }
 
     func dropExited(info: DropInfo) {
-        editorState.endTimelineFileHover()
+        editorState.endTitleHover()
         editorState.endTransitionHover()
     }
 
     func performDrop(info: DropInfo) -> Bool {
+        if carriesTitle(info) {
+            let point = info.location
+            if let preset = editorState.timelineTitleInAir ?? editorState.titleTileLifted {
+                return editorState.dropTitle(preset, at: point)
+            }
+            TitlePresetDrag.load(info) { [editorState] preset in editorState.dropTitle(preset, at: point) }
+            return true
+        }
         if carriesTransition(info) {
             let point = info.location
             // Read already, while it was in the air: land it now, so the

@@ -59,9 +59,8 @@ still make one a component (Make Component) and drop copies of it.
 | Menu bar, **Clip** | `Save as Preset…` | Every right-click verb is also in the menu bar. |
 
 No new panel, no new tool, no new window. The Library shelf is the mock's
-browsing surface for things you place; title presets as shelf tiles is the
-natural next step and is left to a follow-up (it needs preview thumbnails
-rendered per preset).
+browsing surface for things you place, and presets are tiles there too (next
+section).
 
 ## What one insert does
 
@@ -85,3 +84,37 @@ new UI.
 its in and out animation kinds, its length) and keeps it in the app's settings
 under a name the person types. It then appears at the top of that kind's
 submenu, above the built-ins, in every document.
+
+## On the Library shelf
+
+Task `title-page-and-name-card-presets-are-tiles-on-th`, 2026-10-03. The mock
+drags a lower third out of the Library at scope Components onto a track
+(`video-title-wt.html`, step 10), so in a document with time the Comps shelf
+opens with a **Titles** group: every preset, title pages then name cards, your
+own first in each, then a **Components** header over the components.
+
+* **The picture.** `TitlePreset.preview(frame:width:)` lands the preset on a
+  still document the way an insert does and draws it at the moment it has
+  finished arriving, so a slide or a fade is pictured at rest. A title page is
+  the whole frame. A name card on the whole frame is a speck, so its picture is
+  the bottom left corner of the frame in the tile's 16:10 shape, over a dark
+  backdrop. Rendered off the main thread and cached per preset, frame and size
+  (`EditorState.titlePresetPicture`).
+* **Click** picks it (one selection) and opens a short section: its kind and
+  length and Insert at Playhead. **Double click** is Sequence > Insert, at the
+  playhead on a track of its own. **Right-click**: Insert at Playhead, and
+  Delete Preset on your own.
+* **Drag onto the timeline** (`TitlePresetDrag`, type `com.photonz.title-preset`,
+  declared in the app's Info.plist). Over a track that takes pictures, is not
+  locked and is free for the whole of it, it lands on that track; over a busy
+  one it goes on a new track just above it; between tracks it makes one there.
+  A title never cuts into a clip, so the ghost names the kind
+  (`Name Card · V2 · 0:05`) where a file says Overwrite or Insert, and there is
+  no ⌘ Insert hint (`PhotonzDocument.titleLanding`). The moment snaps to clip
+  edges and the playhead the way a file's does.
+* The shelf's height arithmetic knows about the two headers
+  (`LibraryShelfLayout.contentHeight(groups:)`, `tileTop(group:index:groups:)`).
+
+Walk: `title-presets-library-shelf-walk` (Next defaults, pointer double click,
+pick-up, held ghosts, drops). Tests: `TitlePresetShelfTests`.
+

@@ -197,7 +197,9 @@ struct TimelineDock: View {
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(VideoKit.Palette.ink)
                     .lineLimit(1)
-                if hover.landing.allowed, hover.landing.edit == .overwrite {
+                // A title tile names its kind instead of an edit, and ⌘ does
+                // nothing to it: it never cuts into what is there.
+                if hover.landing.allowed, hover.landing.edit == .overwrite, hover.verb == nil {
                     Text("⌘ Insert")
                         .font(.system(size: 11))
                         .foregroundStyle(VideoKit.Palette.faint)

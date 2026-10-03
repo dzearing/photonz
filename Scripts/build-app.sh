@@ -166,6 +166,16 @@ DRAG_TYPE=$(cat <<'TYPES'
             <key>UTTypeTagSpecification</key>
             <dict/>
         </dict>
+        <dict>
+            <key>UTTypeIdentifier</key><string>com.photonz.title-preset</string>
+            <key>UTTypeDescription</key><string>Photonz Title Preset</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.item</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict/>
+        </dict>
 TYPES
 )
 
@@ -348,6 +358,13 @@ if ! /usr/libexec/PlistBuddy -c "Print :UTExportedTypeDeclarations" "$APP/Conten
      | grep -q "com.photonz.transition"; then
   echo "==> FAILED: Info.plist does not declare com.photonz.transition;" >&2
   echo "    a transition tile dragged onto a cut would land on nothing." >&2
+  exit 1
+fi
+
+if ! /usr/libexec/PlistBuddy -c "Print :UTExportedTypeDeclarations" "$APP/Contents/Info.plist" 2>/dev/null \
+     | grep -q "com.photonz.title-preset"; then
+  echo "==> FAILED: Info.plist does not declare com.photonz.title-preset;" >&2
+  echo "    a title tile dragged onto a track would land on nothing." >&2
   exit 1
 fi
 

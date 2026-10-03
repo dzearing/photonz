@@ -305,6 +305,36 @@ public enum LibraryShelfLayout {
                           viewportHeight: viewportHeight)
     }
 
+    // MARK: A shelf drawn in groups
+
+    /// The label over a group of tiles ("Titles", "Components"), top to
+    /// bottom. The header view is drawn exactly this tall.
+    public static let groupHeaderHeight: CGFloat = 20
+
+    /// The height of a shelf drawn as groups, `groups` being how many tiles
+    /// each holds: every group that has any opens with its header and starts
+    /// a row of its own; one with none takes no room at all.
+    public static func contentHeight(groups: [Int], width: CGFloat, sizing: Sizing = .compact) -> CGFloat {
+        groups.filter { $0 > 0 }.reduce(0) { total, count in
+            total + groupHeaderHeight + contentHeight(tileCount: count, width: width, sizing: sizing)
+        }
+    }
+
+    /// Where tile `index` of group `group` starts, measured down from the top
+    /// of the shelf: under every group above it and its own header.
+    public static func tileTop(group: Int, index: Int, groups: [Int], width: CGFloat,
+                               sizing: Sizing = .compact) -> CGFloat {
+        let above = contentHeight(groups: Array(groups.prefix(max(0, group))), width: width, sizing: sizing)
+        return above + groupHeaderHeight + tileTop(index: index, width: width, sizing: sizing)
+    }
+
+    /// `tileReveal` for a tile whose top is already known.
+    public static func tileReveal(top: CGFloat, width: CGFloat, gridTop: CGFloat,
+                                  viewportHeight: CGFloat, sizing: Sizing = .compact) -> DockReveal.Action {
+        DockReveal.action(sectionTop: gridTop + top, sectionHeight: tileHeight(width: width, sizing: sizing),
+                          viewportHeight: viewportHeight)
+    }
+
     // MARK: The picture in a tile
 
     /// Which edge of a tile's picture the well cuts off.

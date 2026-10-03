@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 import Observation
 import PhotonzCore
@@ -102,6 +103,13 @@ extension EditorState {
         }
     }
 
+    func insertTitle(_ preset: TitlePreset, onTrack trackID: UUID? = nil) {
+        switch preset {
+        case .builtIn(let builtIn): insertTitle(builtIn, onTrack: trackID)
+        case .saved(let saved): insertTitle(saved: saved, onTrack: trackID)
+        }
+    }
+
     func insertTitle(_ preset: BuiltInTitle, onTrack trackID: UUID? = nil) {
         landTitle(onTrack: trackID) { $0.insertTitle(preset, atTimeMS: $1) }
     }
@@ -113,11 +121,11 @@ extension EditorState {
     /// Puts it in at the playhead, picks it, moves the playhead on to where it
     /// has finished arriving (at its first frame a fade is invisible and a
     /// slide is off the picture), and opens its main line for typing.
-    private func landTitle(onTrack trackID: UUID?,
+    private func landTitle(onTrack trackID: UUID?, atMS ms: Int? = nil,
                            _ insert: @escaping (inout PhotonzDocument, Int) -> InsertedTitle?) {
         guard canInsertTitle else { return }
         pauseDocument()
-        let moment = documentTimeMS
+        let moment = ms ?? documentTimeMS
         var inserted: InsertedTitle?
         if let trackID { landingTrack = (trackID, moment) }
         perform { inserted = insert(&$0, moment) }
@@ -131,6 +139,113 @@ extension EditorState {
         // is the card at the start of its slide.
         typeInOnceShown = (inserted.wordsID, documentTimeMS)
         rerender()
+    }
+
+    // MARK: On the Library shelf
+
+    /// Every preset as a Library tile, in a document that can take one:
+    /// title pages then name cards, your own first in each
+    /// (`TitlePresetShelf.swift`).
+    var titleShelf: [TitlePreset] {
+        guard canInsertTitle else { return [] }
+        return TitlePreset.shelf(saved: TitlePresetStore.shared.saved)
+    }
+
+    /// The preset behind a shelf id, nil for any other kind of tile.
+    func titlePreset(entryID: String) -> TitlePreset? {
+        guard canInsertTitle else { return nil }
+        return TitlePreset(entryID: entryID, saved: TitlePresetStore.shared.saved)
+    }
+
+    /// The preset behind the picked Library tile.
+    var selectedTitlePreset: TitlePreset? {
+        selectedLibraryItemID.flatMap { titlePreset(entryID: $0) }
+    }
+
+    /// One of your own off the shelf and out of the menus, from its tile's
+    /// right-click. Nothing already on a timeline changes: what landed was a
+    /// copy.
+    func forgetTitlePreset(_ id: UUID) {
+        if selectedLibraryItemID == TitlePreset.id(ofSaved: id) { selectedLibraryItemID = nil }
+        TitlePresetStore.shared.forget(id)
+    }
+
+    /// The picture on a preset's tile, `pixelsWide` across: the preset at
+    /// rest on this document's frame (`TitlePreset.preview`). Drawn once off
+    /// the main thread and kept; nil until it has been.
+    func titlePresetPicture(_ preset: TitlePreset, pixelsWide: CGFloat) -> CGImage? {
+        guard let frame = document?.canvasSize, frame.width > 0, frame.height > 0 else { return nil }
+        let width = max(1, pixelsWide.rounded())
+        let own = if case .saved(let saved) = preset { saved.hashValue } else { 0 }
+        let key = "\(preset.id)|\(Int(frame.width))x\(Int(frame.height))|\(Int(width))|\(own)"
+        if let picture = titlePresetPictures[key] { return picture }
+        guard !titlePresetPicturesInFlight.contains(key) else { return nil }
+        titlePresetPicturesInFlight.insert(key)
+        let renderer = previewRenderer
+        let store = store
+        Task { @MainActor [weak self] in
+            let image = await Task.detached(priority: .utility) {
+                preset.preview(frame: frame, width: width).flatMap { renderer.render($0, store: store) }
+            }.value
+            guard let self else { return }
+            self.titlePresetPicturesInFlight.remove(key)
+            if let image { self.titlePresetPictures[key] = image }
+        }
+        return nil
+    }
+
+    // MARK: Let go over the timeline
+
+    /// Where a title tile let go at `point` (the tracks' own space) would
+    /// land: the moment under the pointer, pulled onto a nearby clip edge or
+    /// the playhead, on the track under it when that track is free, else on a
+    /// new track of its own (`PhotonzDocument.titleLanding`).
+    func titleLanding(_ preset: TitlePreset, at point: CGPoint) -> ClipLanding? {
+        guard canInsertTitle, let document, timelineLaneWidth > 0 else { return nil }
+        let ruler = motionStripRuler
+        let fraction = min(max(0, (point.x - TimelineDock.lanesLeading) / timelineLaneWidth), 1)
+        let raw = Int(ruler.ms(atFraction: Double(fraction)).rounded())
+        let reach = Int(ruler.msSpanning(fraction: Double(Self.timelineDropSnapPoints / timelineLaneWidth))
+            .rounded())
+        let start = ClipLanding.snapped(startMS: raw, lengthMS: preset.lengthMS,
+                                        to: document.timelineEdgesMS + [documentTimeMS],
+                                        withinMS: isTimelineSnapping ? max(0, reach) : 0)
+        return document.titleLanding(lengthMS: preset.lengthMS, atMS: start, over: trackDrop(atY: point.y))
+    }
+
+    /// A title tile has arrived over the timeline, or moved across it: the
+    /// ghost a file draws, saying the preset's kind, its track and its time.
+    func moveTitleHover(_ preset: TitlePreset, to point: CGPoint) {
+        timelineTitleInAir = preset
+        // Room past the end for it, so one let go after the last clip has a
+        // lane to be drawn on.
+        if timelineDropRoomMS != preset.lengthMS { timelineDropRoomMS = preset.lengthMS }
+        guard let landing = titleLanding(preset, at: point) else {
+            if timelineFileHover != nil { timelineFileHover = nil }
+            return
+        }
+        let next = TimelineFileHover(name: preset.name, landing: landing, verb: preset.kind.name)
+        if timelineFileHover != next { timelineFileHover = next }
+    }
+
+    /// The tile has left the timeline without landing.
+    func endTitleHover() {
+        timelineTitleInAir = nil
+        titleTileLifted = nil
+        endTimelineFileHover()
+    }
+
+    /// Let go over the timeline: the preset lands where the ghost said, as
+    /// one step to undo, picked with its words open, the way an insert lands.
+    @discardableResult
+    func dropTitle(_ preset: TitlePreset, at point: CGPoint) -> Bool {
+        // Read before the room made for it goes, since taking the room away
+        // moves the lane under the pointer.
+        let landing = titleLanding(preset, at: point)
+        endTitleHover()
+        guard let landing, landing.allowed else { return false }
+        landTitle(onTrack: nil, atMS: landing.startMS) { $0.insertTitle(preset, atTimeMS: $1, landing: landing) }
+        return true
     }
 
     // MARK: Saving your own

@@ -1,0 +1,31 @@
+{
+  "feature": "Title pages and name cards on the Library shelf",
+  "epic": "video-titles-graphics",
+  "summary": "Every title page and name card, yours included, is now a picture tile on the Library's Comps shelf under a Titles header. Double click one to put it at the playhead, or drag it onto a track to put it exactly there.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open any screen recording.",
+  "switched": {},
+  "try": [
+    { "do": "Choose View > Library, then click Comps. The Titles group leads the shelf: four title pages, four name cards, your own saved ones first.", "shot": "2026-10-03-title-tiles-1-titles-on-the-shelf.png" },
+    { "do": "Type name card in the Library's search box to see only the name cards, each shown in the corner of the frame it lands in.", "shot": "2026-10-03-title-tiles-1b-name-cards.png" },
+    { "do": "Put the playhead at 2s and double click Midnight. It lands there on its own track, words ready to type, the same as Sequence > Insert Title Page.", "shot": "2026-10-03-title-tiles-2-double-clicked.png" },
+    { "do": "Drag Sunrise over the recording on V1 and hold. The bar over the tracks says Title Page · New V2, and a line shows where the new track goes.", "shot": "2026-10-03-title-tiles-3-held-over-the-recording.png" },
+    { "do": "Let go. Sunrise lands on a new track above the recording, which is left untouched.", "shot": "2026-10-03-title-tiles-4-let-go-over-the-recording.png" },
+    { "do": "Drag Sunrise again onto that new track, after the first one, and let go. It lands on the same track at that moment.", "shot": "2026-10-03-title-tiles-5-let-go-on-a-free-track.png" },
+    { "do": "Right-click one of your own tiles and choose Delete Preset. Right-click any tile for Insert at Playhead." }
+  ],
+  "evaluate": [
+    "Is the Comps shelf where you would look for titles, or do they want a scope of their own beside Media and Comps?",
+    "Do the tile pictures tell the presets apart at a glance, title pages shown whole and name cards shown in their corner?",
+    "Dropped over the recording, a title goes on a new track rather than cutting into it. Is that what you expect, or should it replace that stretch of the recording like a clip would?",
+    "Is double click to insert at the playhead and drag to place the right pair, or do you miss a key like Final Cut's Q?"
+  ],
+  "rough": [
+    "Clicks: open the shelf 2 (View > Library, Comps), insert at the playhead 2 (a double click), place anywhere 1 drag.",
+    "Reused, not rebuilt: a tile lands the same group of layers Sequence > Insert does; the drag uses the ghost and the label a file dragged onto the timeline already draws, saying the preset's kind where a file says Overwrite or Insert.",
+    "Departs from the mock (video-title-wt, step 10): the mock's Comps shelf shows a Lower third and an End card as linked components with variant counts and a violet mark. These tiles are presets that land as copies you own (decided in the previous task's audit), so they carry no component mark, sit under their own Titles header, and say their kind (Title Page, Name Card) under the name. There is no End card kind yet. The mock's line under the grid explains components, so it is not shown over the titles.",
+    "In a short window with a clip's Time, Captions and Transitions sections open, the dock does not scroll far enough to show the shelf's tiles. Filed as a follow-up.",
+    "One leftover saved name card made on a recording of another size showed its name wrapped over its role on its tile. Filed to look into.",
+    "Dragging a tile onto the picture instead of the timeline does nothing yet; only the timeline takes it.",
+    "The walk's double click now sends two clicks the way a mouse does; before, one event counted twice never reached a SwiftUI double tap."
+  ]
+}

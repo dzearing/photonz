@@ -9,13 +9,17 @@ struct TimelineFileHover: Equatable {
     /// What the clip will be called, which is what the ghost says.
     var name: String
     var landing: ClipLanding
+    /// What the label calls the edit in place of Insert or Overwrite: a title
+    /// tile is laid over the picture and never edits into it, so it says its
+    /// kind ("Name Card") instead.
+    var verb: String?
 
     /// The label for it, in the bar over the tracks and on a refused ghost:
     /// the edit, the track and the time, the way Premiere's drag says Insert
     /// or Overwrite. Never a sentence (`no-sentences-or-debug-readouts-anywhere-in-the-c`).
     var note: String {
         guard landing.allowed else { return landing.isLocked ? "Locked" : "Occupied" }
-        let edit = landing.edit == .insert ? "Insert" : "Overwrite"
+        let edit = verb ?? (landing.edit == .insert ? "Insert" : "Overwrite")
         let track: String
         if case .newTrack = landing.target {
             track = "New \(landing.trackName)"

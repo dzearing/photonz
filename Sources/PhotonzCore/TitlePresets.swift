@@ -405,13 +405,15 @@ extension PhotonzDocument {
 
     /// Put a built-in preset on the timeline at a moment of the document: a
     /// track of its own, the kind's length, animated in and out. Nil on a
-    /// document with no time.
+    /// document with no time. `landing` puts it where a tile let go over the
+    /// timeline said it would go instead (`titleLanding`).
     @discardableResult
-    public mutating func insertTitle(_ preset: BuiltInTitle, atTimeMS ms: Int) -> InsertedTitle? {
+    public mutating func insertTitle(_ preset: BuiltInTitle, atTimeMS ms: Int,
+                                     landing: ClipLanding? = nil) -> InsertedTitle? {
         guard hasTime else { return nil }
         let layer = preset.layer(in: canvasSize)
         guard let inserted = landTitle(layer, kind: preset.kind, lengthMS: preset.kind.lengthMS,
-                                       sourceInMS: 0, atTimeMS: ms) else { return nil }
+                                       sourceInMS: 0, atTimeMS: ms, landing: landing) else { return nil }
         // A fade is the one fade everything on the timeline has
         // (`PictureFade`): shaded on the bar, checked under Fade In and Fade
         // Out, dragged from the bar's corner. Anything else is keys.
@@ -431,7 +433,8 @@ extension PhotonzDocument {
     /// Put somebody's own preset on the timeline. Its keys come with it, and a
     /// frame of another size gets it scaled to fit, centred.
     @discardableResult
-    public mutating func insertTitle(_ saved: SavedTitlePreset, atTimeMS ms: Int) -> InsertedTitle? {
+    public mutating func insertTitle(_ saved: SavedTitlePreset, atTimeMS ms: Int,
+                                     landing: ClipLanding? = nil) -> InsertedTitle? {
         guard hasTime else { return nil }
         // A whole copy, fade and keys included, with fresh ids, on no track
         // yet: the track it was saved from belongs to another document, or to
@@ -460,19 +463,27 @@ extension PhotonzDocument {
             }
         }
         return landTitle(layer, kind: saved.kind, lengthMS: saved.lengthMS,
-                         sourceInMS: saved.layer.time?.sourceInMS ?? 0, atTimeMS: ms)
+                         sourceInMS: saved.layer.time?.sourceInMS ?? 0, atTimeMS: ms, landing: landing)
     }
 
     private mutating func landTitle(_ built: Layer, kind: TitleKind, lengthMS: Int,
-                                    sourceInMS: Int, atTimeMS ms: Int) -> InsertedTitle? {
+                                    sourceInMS: Int, atTimeMS ms: Int,
+                                    landing: ClipLanding?) -> InsertedTitle? {
         var layer = built
-        let start = max(0, ms)
+        let start = max(0, landing?.startMS ?? ms)
         layer.time = LayerTime(inMS: start, outMS: start + max(lengthMS, LayerTime.shortestMS),
                                sourceInMS: sourceInMS)
         let texts = layer.selfAndDescendants.filter { $0.text != nil }
         guard let words = texts.first(where: { $0.name == kind.wordsName }) ?? texts.first
         else { return nil }
-        addLayer(layer)
+        if let landing {
+            // Where the ghost said: a free track, or a new one made for it.
+            // Never over anything, so the landing's own edit has nothing to
+            // clear (`titleLanding`).
+            guard land(layer, at: landing) != nil else { return nil }
+        } else {
+            addLayer(layer)
+        }
         refreshDuration()
         return InsertedTitle(layerID: layer.id, wordsID: words.id)
     }

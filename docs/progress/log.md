@@ -20527,3 +20527,10 @@ Next: the first editor window's ~200 ms first build
 - Design note `docs/design/video-titles.md`. Core `Sources/PhotonzCore/TitlePresets.swift` (+ `TitlePresetsTests`), app `EditorState+TitlePresets.swift`, `SaveTitlePresetDialog.swift`. Slide now measures a group by what it covers.
 - Walks: `title-pages-and-name-cards-walk` (end to end, right-clicks, MP4), `title-presets-gallery-walk` (all eight), `title-presets-menu-bar-walk` (front, menu pictures). Audit `queue/audits/2026-10-03-title-presets.json`.
 - Next: presets as Library tiles; a title page at the start pushing the recording later (both filed p1).
+
+## 2026-10-03 (later): title presets as Library tiles
+
+- Comps shelf opens with a Titles group in a document with time: a picture tile per preset (yours first), double click inserts at the playhead, drag onto a track lands there (new track above a busy one). Core: `TitlePresetShelf.swift` (shelf list, `titleLanding`, still preview), grouped shelf math in `LibraryShelfLayout`. App: `LibraryTitleTile.swift`, `EditorState+TitlePresets.swift`, timeline drop delegate, Info.plist type `com.photonz.title-preset`.
+- Walk harness: a `press` with `count: 2` now sends two clicks (counted 1 then 2), as a mouse does; a lone click counted 2 never reached a SwiftUI double tap. The Library search box has a walk name (`Search library`).
+- Follow-ups: `the-library-s-titles-shelf-can-be-scrolled-into` (dock does not scroll far enough when the shelf's floor binds), `find-out-whether-a-saved-name-card-inserted-on-a`.
+
