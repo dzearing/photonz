@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 8,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-03T14:26:39.261Z",
-  "updated": "2026-10-03T17:08:45.726Z",
+  "updated": "2026-10-03T17:08:55.293Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"It's also unintuitive on how to fade the video out or in.\" ... \"then fade any of the things out at the end.\"\n\nFrom code reading (not run): no picture fade for a video clip exists. Fade handles in ClipPiecesBar.swift:175-179 and :676-700 are drawn only when isSound (TimelineTrackRows.swift:319). The 'Fades' panel section on a video is SoundFadesInspector (InspectorSections.swift:153-156). Fade submenu (EditorState+TitleTime.swift:119-135) and Animate In/Out (EditorState+ClipKeys.swift:66-77) are guarded by isPlacedInTime = time != nil && !hasMediaBehindIt (PhotonzCore/TitleTime.swift:130), which excludes video clips. Dip to black only applies at a cut with both an outgoing and incoming piece (ClipPieces.cut(at:), ClipTransitions.swift:401-411), so no head/tail fade. Only workaround: opacity keys via Add Key (TimelineMenus.swift:171-177).\nTrap: opacity fade of the top clip over nothing composites against the canvas background; make sure that is black for video documents, not transparent/checkerboard in export. Reuse the title Fade machinery (TitleTime.fadeStopsMS) rather than a second fade model if it fits. Rendering change touches the composite path: perf note required.\n\nDONE 2026-10-03. Model: Sources/PhotonzCore/PictureFade.swift (Layer.pictureFade, FadeEnd, PhotonzDocument.setPictureFade; applied in DocumentTime.drawn after movedTree). App: EditorState+PictureFade.swift (menu rows, ⌃⌥I/⌃⌥O on the 1s row), EditorState+TimelineMenus (clip menu), EditorState+TitleTime (title menu swaps Fade for Fade In/Out when next-picture-fades), EditorCommands pictureFadeRows (Clip menu), SpeedInspector pictureFades rows, ClipPiecesBar pictureFadeRamps/handles (field '<clip> picture fade in/out'). Flag next-picture-fades (Next default on). New walk step measureFade (PlaytestHarness) compares canvas stopped, canvas playing, export pre-encode picture; MP4 read-back reported, not gated.",
@@ -59,6 +59,10 @@
     {
       "t": "2026-10-03T17:08:45.725Z",
       "note": "Filed: find-out-whether-an-exported-video-looks-brighte (p2): MP4 read back ~10% brighter than canvas at every moment, faded or not; pre-encode export picture matches the canvas within 0.002."
+    },
+    {
+      "t": "2026-10-03T17:08:55.291Z",
+      "note": "Picture Fade In / Fade Out for every timeline layer: right-click and Clip menu (⌃⌥I/⌃⌥O), Time rows, bar shade + corner handle; PictureFade model applied in drawn(atTimeMS:), flag next-picture-fades on at Next. Verified: 11069 tests green; a-video-clip-fades-walk green at Next defaults with real pointer drag on the handle; stopped/playing/export agree within 0.006 at 25/50/75% (0.25/0.49/0.75 of full). Audit queue/audits/2026-10-03-video-clip-fades.json."
     }
   ],
   "started": "2026-10-03T16:09:36.001Z",
@@ -67,5 +71,6 @@
     "title-on-the-timeline-walk",
     "title-bar-right-click-menu-walk",
     "every-title-dropdown-opens-on-a-click-walk"
-  ]
+  ],
+  "completed": "2026-10-03T17:08:55.292Z"
 }
