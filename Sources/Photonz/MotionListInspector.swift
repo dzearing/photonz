@@ -482,6 +482,16 @@ private struct MotionPivotSetting: View {
                             editorState.setMotionPivot(spot.pivot, of: motion.id)
                         }
                     }
+                    // The row prints Custom, so the menu offers it: the point
+                    // of your own this turn was last on, kept when a named
+                    // spot was tried in its place (`CustomChoice`). Absent
+                    // until there has been one, so it never offers nothing.
+                    if let own = motion.customPivot {
+                        Divider()
+                        Button(own.title) {
+                            editorState.setMotionPivot(own, of: motion.id)
+                        }
+                    }
                 } label: {
                     Text(reading).lineLimit(1)
                 }
@@ -544,6 +554,13 @@ private struct MotionCurveSetting: View {
                     }
                 }
                 Divider()
+                // The row prints Drawn, so the menu offers it: the curve you
+                // drew last, kept when a named one was tried in its place.
+                if let drawn = motion.customCurve {
+                    Button { choose(drawn) } label: {
+                        Label { Text("Drawn") } icon: { CurveThumbnail(curve: drawn, side: 14) }
+                    }
+                }
                 Button("Draw a Curve...") { isDrawing = true }
             } label: {
                 HStack(spacing: 5) {

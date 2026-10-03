@@ -1,0 +1,28 @@
+{
+  "feature": "A menu that says Custom lets you pick Custom",
+  "epic": "icon-animate",
+  "summary": "Try a named spot or a preset size over a value of your own, and Custom in the same menu now gives your value back. It works the same way in a turn's Around menu, both Curve menus, and the size lists in New Frame, New Canvas and New Video.",
+  "setup": "Photonz Dev, release Next, no switch changed from its defaults. Walk: Scripts/playtest/custom-goes-back-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Draw a tall rectangle, pick it, press the plus on the Motion header and choose Rotation." },
+    { "do": "Drag the crosshair labelled pivot to just above the shape. Around reads Custom." },
+    { "do": "Open the Around menu and choose Top centre. The shape now swings from its top edge.", "shot": "2026-10-02-custom-goes-back-1-tried-top-centre.png" },
+    { "do": "Open Around again and choose Custom, below the line. Your own point is back, and At shows its numbers.", "shot": "2026-10-02-custom-goes-back-2-custom-gives-it-back.png" },
+    { "do": "Choose Layer > New Frame, pick Custom and type 300 by 200, then click Desktop. The Custom row now shows 300 × 200.", "shot": "2026-10-02-custom-goes-back-5-desktop-tried.png" },
+    { "do": "Click Custom. The boxes read 300 and 200 again, and Add Frame makes that size.", "shot": "2026-10-02-custom-goes-back-6-custom-size-back.png" },
+    { "do": "Do the same in File > New Blank Canvas: type 640 by 480, click Square, click Custom.", "shot": "2026-10-02-custom-goes-back-7-new-canvas.png" }
+  ],
+  "evaluate": [
+    "Is Custom below a line, under the three named spots, where you would look for your own point?",
+    "With a preset picked, does the size beside Custom in New Frame, New Canvas and New Video make it obvious that clicking Custom brings your size back?",
+    "Custom appears in Around only once you have had a point of your own. Is that right, or would you rather always see it, dimmed until there is one?",
+    "Your own pivot is saved with the document, so it is still there to pick after you reopen the file. Is that what you would expect?"
+  ],
+  "rough": [
+    "The two Curve menus (Motion's Curve, which says Drawn, and Properties' Between the keys Curve, which says Custom) offer the same way back, but no walk can draw a curve yet, so those two are checked only by unit tests and a build, not on screen.",
+    "The Properties curve remembers your drawn curve for as long as the window is open. The pivot and Motion's curve are saved with the document.",
+    "The mock ends the Around menu with Somewhere else (Y) and puts a move button beside it. The app has never had either, so that is filed as its own task: the-around-menu-ends-with-somewhere-else-as-the.",
+    "Custom does not carry a checkmark in Around or Motion's Curve, because no menu in the Motion section marks its current value. The Properties dropdown does mark it."
+  ]
+}

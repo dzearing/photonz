@@ -149,7 +149,19 @@ private struct BetweenKeysSection: View {
     private func curveChoices(current: EasingCurve?) -> [VideoKit.Choice] {
         [.heading("Standard")] + EasingCurve.named.prefix(4).map { item($0, current: current) }
             + [.heading("Shaped")] + EasingCurve.named.dropFirst(4).map { item($0, current: current) }
-            + [.divider, .item("Draw a Curve\u{2026}") { isDrawing = true }]
+            + [.divider] + customChoice(current: current)
+            + [.item("Draw a Curve\u{2026}") { isDrawing = true }]
+    }
+
+    /// The row reads Custom for a curve of your own, so the menu offers it:
+    /// ticked while the stretch is on it, and the one it last left for a named
+    /// curve otherwise (`CustomChoice`). Absent until there has been one.
+    private func customChoice(current: EasingCurve?) -> [VideoKit.Choice] {
+        guard let own = editorState.customBetweenKeysCurve else { return [] }
+        return [.item(StretchCurve.title(own), isOn: current == own,
+                      image: CurveMenuImage.image(for: own)) {
+            editorState.curveBetweenKeys(own)
+        }]
     }
 
     private func item(_ curve: EasingCurve, current: EasingCurve?) -> VideoKit.Choice {

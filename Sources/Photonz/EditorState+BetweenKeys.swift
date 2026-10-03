@@ -33,9 +33,33 @@ extension EditorState {
     /// the playhead runs on `curve`.
     func curveBetweenKeys(_ curve: EasingCurve) {
         guard let layer = keyLayer, let property = betweenKeysProperty,
-              betweenKeysCurve != curve else { return }
+              let current = betweenKeysCurve, current != curve else { return }
+        if let key = betweenKeysStretchKey {
+            var choice = ownStretchCurves[key] ?? CustomChoice()
+            choice.change(from: current, oldIsOwn: current.isDrawn, to: curve, newIsOwn: curve.isDrawn)
+            ownStretchCurves[key] = choice
+        }
         let time = documentTimeMS
         perform { $0.curveStretch(layerID: layer.id, property, atDocumentTimeMS: time, curve) }
+    }
+
+    /// What the Curve dropdown's Custom puts back: the stretch's own curve
+    /// while it is on one, else the one it last left for a named curve. Nil
+    /// when it has never been on one, and then the dropdown offers no Custom.
+    var customBetweenKeysCurve: EasingCurve? {
+        guard let current = betweenKeysCurve else { return nil }
+        let choice = betweenKeysStretchKey.flatMap { ownStretchCurves[$0] } ?? CustomChoice()
+        return choice.custom(current: current, currentIsOwn: current.isDrawn)
+    }
+
+    /// Which stretch the playhead is in, as a key for `ownStretchCurves`.
+    private var betweenKeysStretchKey: String? {
+        guard let layer = keyLayer, let property = betweenKeysProperty,
+              let stored = document?.layer(id: layer.id),
+              let motion = stored.keyedMotion(property),
+              let stretch = motion.stretch(atMS: stored.motionClockMS(atDocumentTimeMS: documentTimeMS))
+        else { return nil }
+        return "\(motion.id.uuidString)#\(stretch)"
     }
 
     // MARK: Key at Playhead

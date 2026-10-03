@@ -1,0 +1,28 @@
+{
+  "id": "the-around-menu-ends-with-somewhere-else-as-the",
+  "title": "The Around menu ends with Somewhere else, as the mock draws it",
+  "goal": "The icon animation mock ends a turn's Around menu with Somewhere else (shortcut Y), which hands you the pivot to place on the canvas, and puts a small move button beside the menu that does the same. The app has neither: its menu stops at the three named spots (and, since 2026-10-02, Custom once you have a point of your own), so the only way to a point of your own is knowing to drag the small crosshair.",
+  "epic": "icon-animate",
+  "priority": "p1-high",
+  "seq": 430,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-03T04:34:35.172Z",
+  "updated": "2026-10-03T04:34:35.175Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/icon-animate-wt.html, #oriMenu (Its centre, Top centre, Bottom centre, menu-sep, ic-move Somewhere else… Y) and #btnPickOrigin (ghost icon button, ic-move, title Move the pivot on the canvas (Y)) beside #selOrigin. App: Sources/Photonz/MotionListInspector.swift MotionPivotSetting. Found while comparing the Around menu to the mock in task a-menu-that-says-custom-lets-you-get-back-to-cus; that task added Custom below a divider, so Somewhere else goes after it. Check Y against existing shortcuts first (Photoshop parity: no default Y in PS beyond History Brush).",
+  "acceptance": [
+    "The Around menu ends with a separator and Somewhere else, with Y shown as its shortcut, below Custom when Custom is offered",
+    "Choosing it, pressing Y, or clicking the move button beside the menu lets the next click or drag on the canvas set the pivot, and Escape gives up without changing it",
+    "A walk at Next defaults chooses Somewhere else by clicking at a point, places the pivot, and reads Around as Custom with At showing the new point",
+    "Side by side with icon-animate-wt.html step 5 in the audit"
+  ],
+  "log": [
+    {
+      "t": "2026-10-03T04:34:35.174Z",
+      "note": "created (manual)"
+    }
+  ]
+}

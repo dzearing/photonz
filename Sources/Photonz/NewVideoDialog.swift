@@ -20,6 +20,9 @@ struct NewVideoDialog: View {
     @State private var height: Double = Double(BlankVideo.defaultPreset.size.height)
     @State private var seconds: Double = BlankVideo.defaultLengthSeconds
     @FocusState private var customFieldFocused: Bool
+    /// The last size typed by hand, kept when a preset is picked over it, so
+    /// picking Custom again gives it back (`CustomChoice`).
+    @State private var custom = CustomChoice<CGSize>()
 
     private static let customID = "custom"
 
@@ -37,7 +40,13 @@ struct NewVideoDialog: View {
                     }
                     Divider().opacity(0.4)
                 }
-                row(id: Self.customID, title: "Custom", detail: nil) {}
+                row(id: Self.customID, title: "Custom",
+                    detail: selection == Self.customID ? nil : custom.kept.map(Self.dimensions)) {
+                    if let size = custom.kept {
+                        width = Double(size.width)
+                        height = Double(size.height)
+                    }
+                }
             }
             .background(.quaternary.opacity(0.35), in: .rect(cornerRadius: 10))
 
@@ -83,6 +92,7 @@ struct NewVideoDialog: View {
                      onPick: @escaping () -> Void) -> some View {
         let isSelected = selection == id
         return Button {
+            custom.keep(chosenSize, isOwn: selection == Self.customID)
             selection = id
             onPick()
         } label: {
@@ -103,6 +113,7 @@ struct NewVideoDialog: View {
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
+        .playtestControl(title, detail: detail ?? "")
     }
 
     private static func dimensions(_ size: CGSize) -> String {

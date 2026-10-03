@@ -165,7 +165,11 @@ extension EditorState {
             document.updateLayer(id: layer.id) { edited in
                 guard var motions = edited.motions,
                       let index = motions.firstIndex(where: { $0.id == id }) else { return }
+                let before = motions[index]
                 mutate(&motions[index])
+                // A pivot or a curve of your own, left for a named one, is
+                // kept so the menu's Custom can put it back (`CustomChoice`).
+                motions[index] = motions[index].keepingOwnValues(of: before)
                 edited.motions = motions
             }
         }

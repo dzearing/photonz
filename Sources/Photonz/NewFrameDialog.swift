@@ -22,6 +22,9 @@ struct NewFrameDialog: View {
     @State private var width: Double = 0
     @State private var height: Double = 0
     @FocusState private var customFieldFocused: Bool
+    /// The last size typed by hand, kept when a preset is picked over it, so
+    /// picking Custom again gives it back (`CustomChoice`).
+    @State private var custom = CustomChoice<CGSize>()
 
     private static let customID = "custom"
 
@@ -42,7 +45,13 @@ struct NewFrameDialog: View {
                     iconSizes
                     Divider().opacity(0.4)
                 }
-                row(id: Self.customID, title: "Custom", detail: nil) {}
+                row(id: Self.customID, title: "Custom",
+                    detail: selection == Self.customID ? nil : custom.kept.map(FramePreset.sizeText)) {
+                    if let size = custom.kept {
+                        width = Double(size.width)
+                        height = Double(size.height)
+                    }
+                }
             }
             .background(.quaternary.opacity(0.35), in: .rect(cornerRadius: 10))
 
@@ -106,6 +115,7 @@ struct NewFrameDialog: View {
     private func chip(_ preset: FramePreset) -> some View {
         let isSelected = selection == preset.id
         return Button {
+            custom.keep(chosenSize, isOwn: selection == Self.customID)
             selection = preset.id
             take(preset.size)
         } label: {
@@ -136,6 +146,7 @@ struct NewFrameDialog: View {
                      onPick: @escaping () -> Void) -> some View {
         let isSelected = selection == id
         return Button {
+            custom.keep(chosenSize, isOwn: selection == Self.customID)
             selection = id
             onPick()
         } label: {

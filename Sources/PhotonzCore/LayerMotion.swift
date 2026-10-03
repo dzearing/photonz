@@ -779,6 +779,14 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
     /// existed reads back untouched, and nil means the middle, which is what
     /// it drew then (`turnsAbout`).
     public var pivot: MotionPivot?
+    /// The last pivot of your own this turn left for a named spot, which is
+    /// what the Around menu's Custom puts back (`CustomChoice`). Nil until
+    /// there has been one, so a document that never had one reads back byte
+    /// for byte the same.
+    public var ownPivot: MotionPivot?
+    /// The last curve you drew for this motion, which the Curve menu's Drawn
+    /// puts back after a named curve has been tried in its place.
+    public var ownCurve: EasingCurve?
     /// The switch on the row. Off keeps every number on it and stops it
     /// moving, which is the same bargain the eye on an effect strikes:
     /// with-and-without is the thing you do constantly, so it is the gesture

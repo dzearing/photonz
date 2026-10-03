@@ -102,6 +102,13 @@ struct MotionRenderTests {
     /// equal, and could not be made to fail again on 2026-09-27, on that commit
     /// or later, alone, loaded or beside the whole render target. So when it
     /// fails it says which half broke and keeps both pictures.
+    ///
+    /// On 2026-10-02 it failed the same way, 0.0078 apart, 3 of 3, right after
+    /// `LayerMotion` gained two stored fields AHEAD of `isOn`, and the model
+    /// half showed why: the motion still read switched on. This file had not
+    /// been recompiled, so it wrote `isOn` at the field's old offset. Touching
+    /// it made the suite pass. A failure here with `isOn: true` in the message
+    /// is a stale build, not the renderer.
     @Test func aSwitchedOffMotionDrawsTheLayerAsItWasDrawn() throws {
         var document = swinging()
         document.layers[0].motions?[0].isOn = false

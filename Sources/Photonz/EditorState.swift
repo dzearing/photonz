@@ -971,6 +971,12 @@ final class EditorState {
     /// one step to undo rather than forty.
     var motionPivotPreview: (motionID: UUID, pivot: MotionPivot)?
 
+    /// The curve of your own each stretch between two keys was last on, kept
+    /// when a named one was picked over it, so the Curve dropdown's Custom can
+    /// put it back (`CustomChoice`, `EditorState+BetweenKeys`). Keyed by the
+    /// motion and the stretch's place in it; it lasts as long as the window.
+    var ownStretchCurves: [String: CustomChoice<EasingCurve>] = [:]
+
     /// The middle of a motion path under the hand while its handle on the
     /// canvas is being dragged (`EditorState+MotionPath`). Kept out of the
     /// document for the pivot's reason: the whole bend is one step to undo.

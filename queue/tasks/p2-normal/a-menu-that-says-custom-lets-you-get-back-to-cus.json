@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p2-normal",
   "seq": 130,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-20T12:26:21.377Z",
-  "updated": "2026-10-02T12:38:22.262Z",
+  "updated": "2026-10-03T04:35:14.080Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the daily digest of 2026-09-20 in the rough list of queue/audits/2026-09-20-motion-pivot-reads-once.json, which shipped the Around row saying Custom: 'Custom is a word the menu shows but does not offer: once you pick a named spot there is no way back to your own point except by dragging the crosshair again or typing into At. That is true of every menu with a custom value in it.' The same audit names New Frame and New Canvas as already printing Custom for a size that is not a preset. Nothing in the queue covered it: searched 'menu shows Custom but does not offer it' and 'custom value in a menu cannot be chosen', both empty. The likely shape of the answer is that picking Custom means 'put back the last value I set by hand', which means the row has to remember it, so check whether the pivot already keeps that when a named spot is picked.",
@@ -85,6 +85,22 @@
     {
       "t": "2026-10-02T12:38:22.261Z",
       "note": "seq 120 -> 130"
+    },
+    {
+      "t": "2026-10-03T04:00:09.508Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-03T04:14:31.403Z",
+      "note": "owns these walks: custom-goes-back-walk"
+    },
+    {
+      "t": "2026-10-03T04:35:14.079Z",
+      "note": "Adversarial pass before building: the Around menu offered three named spots and printed Custom without offering it; New Frame/Canvas/Video had a Custom row that showed the PRESET's numbers after you tried a preset, so the typed size was lost the same way; both Curve menus (Motion 'Drawn', Properties 'Custom') lose a drawn curve the same way. One answer for all six: PhotonzCore CustomChoice keeps the last value of your own a menu moved away from, and Custom puts it back. Pivot and Motion curve memory is saved with the document (LayerMotion.ownPivot/ownCurve, kept via keepingOwnValues in EditorState.updateMotion, so every door counts); Properties stretch curves remember per window (EditorState.ownStretchCurves); dialogs keep it in @State and show the kept size beside Custom. Mock (icon-animate-wt.html #oriMenu) ends with 'Somewhere else… Y', which the app never had: filed p1 the-around-menu-ends-with-somewhere-else-as-the. Verified: CustomChoiceTests (12), full suite 10996 green, custom-goes-back-walk ok at Next defaults (pivot round trip from file and from a drag; New Frame, New Canvas, New Video round trips), and 9 neighbour walks ok. Left rough (no task): the two Curve menus have no walk because no walk step draws a curve. Also found the 'switched-off motion' render test failure is a stale incremental build, filed a-change-to-a-core-type-rebuilds-every-test-that."
     }
+  ],
+  "started": "2026-10-03T04:00:09.506Z",
+  "walks": [
+    "custom-goes-back-walk"
   ]
 }

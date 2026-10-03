@@ -1,0 +1,27 @@
+{
+  "id": "a-change-to-a-core-type-rebuilds-every-test-that",
+  "title": "A change to a core type rebuilds every test that uses it",
+  "goal": "After a stored field was added to the middle of a core data type, a render test kept running old compiled code and failed on correct code, 3 runs out of 3, until its file was touched. A runner who sees that red suite spends a whole cycle chasing a bug that is not there, as happened on 2026-09-25. The test run should never report a failure that only a stale build causes.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 3540,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-03T04:28:58.512Z",
+  "updated": "2026-10-03T04:28:58.515Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-02 in task a-menu-that-says-custom-lets-you-get-back-to-cus: added `ownPivot: MotionPivot?` and `ownCurve: EasingCurve?` to LayerMotion just above `isOn`, then `Scripts/test.sh --filter MotionRenderTests` failed 3/3: `aSwitchedOffMotionDrawsTheLayerAsItWasDrawn() ... motions: [LayerMotion(... ownPivot: nil, ownCurve: nil, isOn: true)]` after the test sets `document.layers[0].motions?[0].isOn = false`, and `difference 0.007775`. HEAD with the change stashed passed. `touch Tests/PhotonzRenderTests/MotionRenderTests.swift` then the same filter: `✔ Test run with 15 tests in 4 suites passed`. So the test object was not recompiled after the layout of a non-resilient struct changed (likely swift-driver cross-module incremental build skipping files whose used decls fingerprint the same). Same symptom and number as task a-switched-off-motion-test-passes-whichever-rend on 2026-09-25, closed as machine state. Possible fixes: build tests with -disable-incremental-imports / -enable-incremental-file-hashing flags, or have test.sh compare PhotonzCore .swiftmodule hashes and clean the test targets when they change.",
+  "acceptance": [
+    "Adding a stored field ahead of an existing one in a PhotonzCore struct and running Scripts/test.sh --filter on a test target that writes that field passes without touching any test file",
+    "Or, if the build tool cannot be made to do that, Scripts/test.sh notices the stale build and rebuilds the affected target by itself, saying so in one plain line",
+    "The reproduction below is written into a check that can be re-run"
+  ],
+  "log": [
+    {
+      "t": "2026-10-03T04:28:58.514Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-25T12:03:33.572Z",
-  "updated": "2026-09-27T17:16:33.387Z",
+  "updated": "2026-10-03T04:28:48.538Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-09-25 on main at 3f6a7c04 with the working tree stashed: `Scripts/test.sh --filter MotionRenderTests` -> `✘ Test aSwitchedOffMotionDrawsTheLayerAsItWasDrawn() recorded an issue at MotionRenderTests.swift:102:9: Expectation failed: (difference(still, drawn) → 0.007775) == (0 → 0.0)`, 3 of 3 runs. Run alone (`--filter aSwitchedOffMotionDrawsTheLayerAsItWasDrawn`) it passes 3 of 3, and a debug print showed the moved and stored documents are equal (frame and transform identical), so two renders of equal documents differ: likely shared renderer or cache state between tests of the 4 suites that filter matches. It also failed once in a full run the same day and passed in the next.",
@@ -51,6 +51,10 @@
     {
       "t": "2026-09-27T17:16:33.386Z",
       "note": "finished, but left 1 file(s) changed and uncommitted: docs/design/mocks/pages/dashboard.html. Put aside so the next task started clean; restore with `git stash apply e0d8b1ef539d1379d30869cd1e1a00b522d13f14` before carrying on."
+    },
+    {
+      "t": "2026-10-03T04:28:48.537Z",
+      "note": "2026-10-02: reproduced 3/3 on a branch that added two stored fields to LayerMotion ahead of isOn; the model half of the test showed isOn: true after the test set it false. Touching MotionRenderTests.swift (forcing a recompile) made it pass. So the cause is a stale test object built against the old LayerMotion layout, not renderer state; the 09-25 failure (same 0.007775) was very likely the same. See task a-change-to-a-core-type-rebuilds-every-test-that (filed today)."
     }
   ],
   "started": "2026-09-27T16:55:43.543Z",
