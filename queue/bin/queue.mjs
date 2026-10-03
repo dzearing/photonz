@@ -77,6 +77,9 @@
 //                                            whether a runner that stopped with its task in progress,
 //                                            saying it was waiting for something, gets its session back
 //                                            for one more turn; prints RESUME=0|1 for the go loop to eval
+//   node queue/bin/queue.mjs stall-presence <idleSeconds>
+//                                            during a stall, whether the person has just come back to the
+//                                            Mac; prints NOTIFY/REASON/STALLHOURS for the go loop to eval
 //   node queue/bin/queue.mjs event <ev> [dataJSON]
 //   node queue/bin/queue.mjs devapp [--json]
 //                                            how far "dist/Photonz Dev.app" is behind the code and
@@ -373,6 +376,15 @@ try {
     }
     // Asked BEFORE runner-exit: a yes means the loop resumes the same session
     // and only records the exit after that second turn.
+    // The go loop evals this too, every poll of a stall's wait: <idle> is
+    // seconds since the person last touched the Mac (person-at-mac.sh idle).
+    // NOTIFY=1 means they have just come back to a loop that is still stalled.
+    case 'stall-presence': {
+      const r = q.advancePresence(q.readStatus().stall, args[0] ?? null);
+      if (r.changed) q.writeStatus({ stall: r.stall });
+      out(`NOTIFY=${r.notify ? 1 : 0} REASON=${r.stall?.reason || ''} STALLHOURS=${r.hours || 0}`);
+      break;
+    }
     case 'runner-resume': {
       const rest = args.slice(2);
       const flag = rest.indexOf('--reason');

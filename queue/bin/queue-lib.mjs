@@ -916,6 +916,9 @@ export function advanceStall(prev, reason, at = now()) {
   const due = (t - last) / 1000 >= STALL_RENOTICE_SECONDS;
   return {
     stall: {
+      // the presence fields ride along untouched: a retry says nothing about
+      // whether the person is at the Mac (see advancePresence)
+      ...record,
       reason,
       since: record.since,
       notifiedAt: due ? at : record.notifiedAt,
@@ -924,6 +927,46 @@ export function advanceStall(prev, reason, at = now()) {
     },
     notify: due,
     hours: Math.max(0, Math.floor((t - since) / 3600000)),
+  };
+}
+
+// The once-a-day rule has one hole, and on 2026-09-30 the loop fell straight
+// through it: the stall started at 22:05, its one notice went out to an empty
+// room, and the person came back to the Mac the next day with nothing waiting
+// to tell them. The loop sat on 39 sign-in refusals for twenty hours until they
+// happened to log in that evening. A notice only works if it lands while
+// somebody is there, so a stall also tells the person the first time they come
+// back to the Mac after being away.
+//
+// "Away" is the same reading the walks use (HIDIdleTime, via person-at-mac.sh):
+// no keyboard, mouse or trackpad input for STALL_AWAY_SECONDS. Fifteen minutes,
+// the whole walk set's absence, so somebody reading a long page at the Mac is
+// not "back" every time they touch the trackpad. Returning is the first reading
+// below that after one at or above it. One notice per return, never one per
+// reading, and none at all with no stall on record.
+export const STALL_AWAY_SECONDS = Number(process.env.PHOTONZ_STALL_AWAY || 900);
+// prev = the stall record on status.json, idle = seconds since the last input
+// (null when there was no reading). Returns the record to store, whether it
+// changed, whether to tell the person now, and how long the stall has run.
+export function advancePresence(prev, idle, at = now()) {
+  const record = (prev && typeof prev === 'object' && prev.reason) ? prev : null;
+  if (!record) return { stall: null, changed: false, notify: false, hours: 0 };
+  const t = Date.parse(at);
+  const since = Date.parse(record.since) || t;
+  const hours = Math.max(0, Math.floor((t - since) / 3600000));
+  const reading = Number(idle);
+  if (idle === null || idle === undefined || idle === '' || !Number.isFinite(reading)) {
+    return { stall: record, changed: false, notify: false, hours };
+  }
+  if (reading >= STALL_AWAY_SECONDS) {
+    if (record.away) return { stall: record, changed: false, notify: false, hours };
+    return { stall: { ...record, away: true, awaySince: new Date(t - reading * 1000).toISOString() }, changed: true, notify: false, hours };
+  }
+  if (!record.away) return { stall: record, changed: false, notify: false, hours };
+  const { awaySince, ...rest } = record;
+  return {
+    stall: { ...rest, away: false, returnedAt: at, returnNotices: (record.returnNotices || 0) + 1 },
+    changed: true, notify: true, hours,
   };
 }
 

@@ -25,6 +25,15 @@
 #   PHOTONZ_STALL_RENOTICE  seconds a stall on a refusal only a person can clear
 #                         (spend limit, sign-in) must last before they are told
 #                         a second time. Default 86400; drills set it low.
+#   PHOTONZ_STALL_AWAY    seconds with no input before the person counts as away
+#                         from the Mac during such a stall, so their return is
+#                         told. Default 900. See stall_wait.
+#   PHOTONZ_PRESENCE_POLL seconds between idle readings in a stall's wait.
+#                         Default 20.
+#   PHOTONZ_RETURN_RETRY  the most a stall's wait goes on once the person is
+#                         back. Default 120.
+#   PHOTONZ_PERSON_AT_MAC the idle clock to read (drills point it at a stand-in).
+#                         Default queue/bin/person-at-mac.sh.
 #   PHOTONZ_LOOP_RELOAD   0 to stop the loop adopting edits to this file
 #                         between tasks. Default 1.
 #   PHOTONZ_LOOP_ITERS    set by the loop on itself across a reload; not for
@@ -146,8 +155,8 @@ record_exit() { # $1 = task id or "-", $2 = exit code
 # starts, once more per day it survives, never once per retry. This decides
 # WHAT IT SAYS, and it has one job, which is to name the one action that ends
 # the stall.
-notify_person() { # $1 = reason (signin|spend), $2 = whole hours stalled so far
-  local title body hours=${2:-0}
+notify_person() { # $1 = reason (signin|spend), $2 = whole hours stalled so far, $3 = "return" when they just came back
+  local title body hours=${2:-0} on=${3:-}
   case "$1" in
     spend)
       title="Photonz build loop has stopped"
@@ -157,7 +166,12 @@ notify_person() { # $1 = reason (signin|spend), $2 = whole hours stalled so far
       body="Sign-in needed, so nothing is building. Run claude in a terminal and log in. It resumes on its own." ;;
     *) return 0 ;;
   esac
-  (( hours > 0 )) && body="Still stopped ${hours}h later. $body"
+  if [[ "$on" == return ]]; then
+    if (( hours > 0 )); then body="Stopped ${hours}h ago while you were away. $body"
+    else body="Stopped while you were away. $body"; fi
+  else
+    (( hours > 0 )) && body="Still stopped ${hours}h later. $body"
+  fi
   # A notification banner shows two or three lines and cuts the rest, so the
   # wording above puts what is wrong and where to go in the first sentence.
   # argv, not string interpolation: the refusal text and the limit URL travel
@@ -165,14 +179,44 @@ notify_person() { # $1 = reason (signin|spend), $2 = whole hours stalled so far
   if osascript -e 'on run argv' \
                -e 'display notification (item 1 of argv) with title (item 2 of argv) sound name "Basso"' \
                -e 'end run' -- "$body" "$title" >/dev/null 2>&1; then
-    echo "[go-loop] $(date +%T) notified you: $title. $body" | tee -a "$LOG"
-    Q event stall_notified "{\"reason\":\"$1\",\"hours\":$hours}"
+    echo "[go-loop] $(date +%T) notified you${on:+ on your $on}: $title. $body" | tee -a "$LOG"
+    Q event stall_notified "{\"reason\":\"$1\",\"hours\":$hours${on:+,\"on\":\"$on\"}}"
   else
     # Notifications can be switched off for the terminal, and there is nothing
     # the loop can do about that except say so where it can be read later.
     echo "[go-loop] $(date +%T) could not raise a notification; the stall is only visible here and on the dashboard." | tee -a "$LOG"
-    Q event stall_notify_failed "{\"reason\":\"$1\",\"hours\":$hours}"
+    Q event stall_notify_failed "{\"reason\":\"$1\",\"hours\":$hours${on:+,\"on\":\"$on\"}}"
   fi
+}
+
+# Wait out a backoff, and during a stall only a person can clear, watch for that
+# person coming back to the Mac. The notice at the start of a stall goes to
+# whoever is there at that moment, and on 2026-09-30 nobody was: it went out at
+# 22:05, the person came back the next day to nothing, and the loop sat on 39
+# sign-in refusals for twenty hours. So the wait reads the Mac's idle clock
+# (the same reading the walks use) every PHOTONZ_PRESENCE_POLL seconds and the
+# queue decides, in advancePresence, whether this reading is somebody arriving
+# after being away. If it is, they are told once, and the rest of the wait is
+# cut to PHOTONZ_RETURN_RETRY seconds so the loop notices their sign-in soon
+# after it happens instead of half an hour later. Outside a stall this is sleep.
+PERSON_AT_MAC="${PHOTONZ_PERSON_AT_MAC:-$REPO/queue/bin/person-at-mac.sh}"
+PRESENCE_POLL="${PHOTONZ_PRESENCE_POLL:-20}"
+RETURN_RETRY="${PHOTONZ_RETURN_RETRY:-120}"
+stall_wait() { # $1 = seconds, $2 = the stall's reason (signin|spend) or empty
+  local left=${1:-0} reason=${2:-} chunk idle NOTIFY REASON STALLHOURS
+  if [[ -z "$reason" ]]; then sleep "$left"; return 0; fi
+  while (( left > 0 )); do
+    idle=$("$PERSON_AT_MAC" idle 2>/dev/null)
+    NOTIFY=0; REASON=""; STALLHOURS=0
+    eval "$(Q stall-presence "${idle:-}")"
+    if (( NOTIFY )) && [[ -n "$REASON" ]]; then
+      notify_person "$REASON" "$STALLHOURS" return
+      (( left > RETURN_RETRY )) && left=$RETURN_RETRY
+    fi
+    chunk=$(( left < PRESENCE_POLL ? left : PRESENCE_POLL ))
+    sleep "$chunk"
+    left=$(( left - chunk ))
+  done
 }
 
 # Manager pass: the loop's own product manager. Whenever fewer than
@@ -609,7 +653,7 @@ backoff_wait() {
     title "photonz: go-loop (unhealthy)"
   fi
   state idle
-  sleep "$secs"
+  stall_wait "$secs" "${REASON:-}"
   title "photonz: go-loop"
 }
 DIGEST_HOUR="${PHOTONZ_DIGEST_HOUR:-5}"

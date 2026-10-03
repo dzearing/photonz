@@ -121,6 +121,16 @@ exit 0
 FAKENOTIFY
 chmod +x "$SHARED_BIN/osascript"
 export PATH="$SHARED_BIN:$PATH"
+# A stalled loop also watches for the person coming back to the Mac
+# (stall_wait in go-loop.sh). A person who happens to return mid-drill must not
+# add a notification the drill did not ask for, so the idle clock here always
+# reads "here". queue/bin/stall-return-drill.sh is the drill for that path.
+cat > "$SHARED_BIN/person-at-mac.sh" <<'FAKEPERSON'
+#!/bin/zsh
+print -r -- 0
+FAKEPERSON
+chmod +x "$SHARED_BIN/person-at-mac.sh"
+export PHOTONZ_PERSON_AT_MAC="$SHARED_BIN/person-at-mac.sh"
 
 # Every scenario but 4 runs the REAL queue/bin/go-loop.sh, straight out of the
 # repo, and between passes the loop adopts an edit to that file by exec-ing

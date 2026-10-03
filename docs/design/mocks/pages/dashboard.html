@@ -1046,6 +1046,15 @@
     h += '<div class="db-beat">heartbeat ' + rel(L.updatedAt) + '<br>' + S.counts.byStatus.pending + ' pending · ' + S.counts.byStatus.blocked + ' blocked';
     h += '<br>' + sweepLine() + leftoversLine() + devAppLine() + '</div>';
     h += '</div>';
+    // When the person was last told about the stall, and whether that was on
+    // coming back to the Mac (advancePresence in queue-lib.mjs) or at its start.
+    var told = '';
+    if (L.stall && L.stall.notifiedAt) {
+      var back = L.stall.returnedAt && L.stall.returnedAt > L.stall.notifiedAt;
+      told = ' You were last notified ' + rel(back ? L.stall.returnedAt : L.stall.notifiedAt) +
+        (back ? ', when you came back to the Mac.' : '.') +
+        (L.stall.away ? ' The Mac has been idle for ' + span(L.stall.awaySince) + ', so you will be notified again when you are back.' : '');
+    }
     if (L.health === 'unhealthy' && L.lastError && L.lastError.signIn) {
       var LS = L.lastError;
       h += '<div class="db-herr"><i class="ic ic-warning"></i><div>';
@@ -1053,7 +1062,7 @@
       h += '<code>' + esc(LS.message || 'no error text captured') + '</code>';
       h += '<p>The agent’s login expired. No task was charged a failure and none was parked' +
         (LS.kind === 'digest' ? '; today’s digest is waiting and will be written once sign-in works' : '') +
-        '. To fix it: open a terminal, run claude, and log in. The loop retries every few minutes and picks up where it left off.</p>';
+        '. To fix it: open a terminal, run claude, and log in. The loop retries every few minutes and picks up where it left off.' + esc(told) + '</p>';
       h += '</div></div>';
     } else if (L.health === 'unhealthy' && L.lastError && L.lastError.reason === 'spend') {
       var LP = L.lastError;
@@ -1062,7 +1071,7 @@
       h += '<code>' + esc(LP.message || 'no error text captured') + '</code>';
       h += '<p>The agent refused to run because its spend limit is used up.' +
         (LP.kind === 'digest' ? ' Today’s digest is waiting and will be written once runs work again.' : (LP.taskId ? ' The run was on ' + esc(LP.taskId) + '.' : '')) +
-        ' To fix it: wait for the reset the message names, or raise the limit. The loop retries every few minutes and picks up where it left off.</p>';
+        ' To fix it: wait for the reset the message names, or raise the limit. The loop retries every few minutes and picks up where it left off.' + esc(told) + '</p>';
       h += '</div></div>';
     } else if (L.health === 'unhealthy' && L.lastError) {
       var LE = L.lastError;

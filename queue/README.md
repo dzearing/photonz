@@ -40,6 +40,7 @@ a task says otherwise.
 | `bin/manager-prompt.md` | The manager pass contract: assess, file executable tasks, stage epics, never block on the user. |
 | `bin/leftovers.mjs` | What the loop does about a working tree a runner walked out on. `snapshot` before a runner, `settle` after: everything that became dirty during that runner's turn is named in the log, stashed under a message carrying the task id, and recorded in `leftovers/`. The queue's own files are never touched (no task owns them, every runner writes them) and neither is anything that was already dirty before the runner started (that is the user editing their own repo). |
 | `bin/leftovers-drill.sh` | Ends a task part way ON PURPOSE against a throwaway git repo and a throwaway queue, and asserts what the next task starts from: the files are named with their task, stashed under its id, gone from the tree the next runner is handed, given back to the owning task with the restore command when it is claimed again, restorable byte for byte, and never the queue's own files or the user's own edits. A second scenario makes git refuse the stash and asserts that case is louder, not quieter. Run it after touching `leftovers.mjs` or the loop's exit path. |
+| `bin/stall-return-drill.sh` | Drives the loop's real stall wait in a throwaway queue with a scripted idle clock and a stand-in for notifications: a stalled loop tells the person once when they come back to the Mac, once per return, and never without a stall. Run it after touching stall notices. |
 | `bin/failure-drill.sh` | Runs the real loop in throwaway queues against fake runners (one that always exits non-zero, one whose login has expired and is later restored, one refused by the spend limit, one that merely talks about it, one stall that has to reach a person, and one fix landing while the loop is stuck) and asserts what the dashboard would show and who gets told. Run it after touching failure handling. Name a scenario (`failure-drill.sh 7`) to run just that one. |
 | `bin/manager-due-drill.sh` | Drives the real `manager_due`/`manager_pass` (sourced out of `go-loop.sh`) in a throwaway queue and asserts the manager pass cannot wake itself up: a pass that restages an epic is not a reason to run another one, an edit by anyone else still is, a rewrite that changes nothing is not, and a pass whose runner died leaves the edit that called it still pending. Replays the two recorded passes of 2026-09-13. Run it after touching the manager trigger. |
 | `bin/queue-cli-drill.mjs` | Runs the real CLI against a throwaway queue and asserts the two slips that used to change the queue by accident are harmless: `add`/`addjson --dry-run` print what would be filed and write nothing, a title under three words or an unknown flag is refused, `status <id>` with no status word prints the task and writes nothing, an unknown status word is refused with the allowed list, and the same status again with no note leaves no history event. Run it after touching `add`, `addjson` or `status`. |
@@ -157,6 +158,24 @@ happens now, after every runner exit:
     it worked, and a loop that pings on recovery teaches them to ignore it. A
     different refusal (spend, then sign-in) is a new stall and is told at once,
     because the action that ends it has changed.
+  - **Again when the person comes back to the Mac.** A notice only works if it
+    lands while somebody is there, and on 2026-09-30 it did not: the stall
+    began at 22:05, its one notice went to an empty room, and the loop sat on
+    39 sign-in refusals for twenty hours until the person happened to log in
+    the next evening. So while a stall waits out its backoff, `stall_wait` in
+    `go-loop.sh` reads the Mac's idle clock (`person-at-mac.sh idle`, the
+    reading the walks use) every `PHOTONZ_PRESENCE_POLL` seconds (default 20),
+    and `advancePresence` in `queue-lib.mjs` records on `stall` when nobody has
+    touched the Mac for `PHOTONZ_STALL_AWAY` seconds (default 900, `away`,
+    `awaySince`). The first reading after that with input in it is a return:
+    one notice ("Stopped 20h ago while you were away. Sign-in needed..."),
+    `returnedAt` and `returnNotices` on the record, `stall_notified` with
+    `"on":"return"` in history, `notified you on your return` in `loop.log`,
+    and the rest of the wait cut to `PHOTONZ_RETURN_RETRY` seconds (default
+    120) so their sign-in is picked up soon after it happens. One per return,
+    none once the stall has cleared. The dashboard's stall hero says when the
+    last notice went out and whether the Mac is idle now.
+    `bin/stall-return-drill.sh` proves it.
   - If notifications are switched off for the terminal, `osascript` fails and
     the loop says so in `loop.log` and records `stall_notify_failed`. Nothing
     else about the stall changes.
