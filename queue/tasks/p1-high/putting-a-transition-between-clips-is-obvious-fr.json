@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 9,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-03T14:26:39.398Z",
-  "updated": "2026-10-03T14:26:39.481Z",
+  "updated": "2026-10-03T17:51:10.589Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"I have nothing selected. I see this 'Transitions' pane. I try to drag them to the timeline but that doesn't work. i click on them, they do nothing. I don't even know why im seeing them. I expect to right click on a video clip, or on the timeline itself, and insert some transition.\"\n\nFrom code reading (not run): TransitionsGroup.swift, shown at InspectorPanel.swift:782 whenever showsTransitionsGroup (flag on, document has time, any movie on the timeline, TransitionsGroup.swift:153-156), deliberately even with nothing selected (InspectorPanel.swift:778-781). Click = .onTapGesture (:96) -> pickTransitionTile (:182-190) only applies with a cut/edit point in hand, else just highlights. Drag IS wired (.onDrag :97-104; drops TimelineLaneDrop.swift:41-45, TransitionDrag.swift:95,126) yet the user says it did not work: REPRODUCE, likely drop targets are only the exact join / inner cut with no feedback. Clip right-click 'Add Transition' (TimelineMenus.swift:143-149) appears only when the clip has inner cuts; cut menu :432-463 and edit-point menu :467-491 have Apply Default Transition (Cmd-T), Add Transition, Remove. Cross dissolve needs overlap (needsOverlap ClipTransitions.swift:60) so it greys out via canAfford.\n\nRelated: the-panel-shows-what-the-picked-thing-is-and-its (blocked on the card 'How many buttons may the right hand panel keep?') moves Add transition / Apply to Every Cut out of the panel; coordinate. Related fade task filed same day: 'A video clip fades in from black and out to black in one step' owns head/tail fades; this task owns joins between clips.",
@@ -30,6 +30,45 @@
     {
       "t": "2026-10-03T14:26:39.479Z",
       "note": "seq 460 -> 9"
+    },
+    {
+      "t": "2026-10-03T17:09:35.295Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-03T17:50:01.009Z",
+      "note": "owns these walks: transitions-where-clips-meet-walk, transition-tile-comes-away-walk, transitions-group-walk"
+    },
+    {
+      "t": "2026-10-03T17:50:45.031Z",
+      "note": "Reproduced at Next defaults (two recordings back to back, nothing picked): (1) click Cross dissolve tile = tile gets a ring, nothing else; (2) tile held over the join at 7.5s = ghost + 'Cross dissolve · 0:07', and let go it lands; (3) held mid clip (3.5s), at the clip start (0.05s) and end (15.4s) = no ghost, no label, drop forbidden, nothing at all; (4) pickUpTile on the tile with a posted pointer: it comes away carrying com.photonz.transition. So the user's drag most likely did start; it only lands within 16pt of the join and nothing shows where that is. Empty timeline has no lane to drop on."
+    },
+    {
+      "t": "2026-10-03T17:50:45.031Z",
+      "note": "Adversarial review before building: a first-time user cannot see joins (2pt seam), does not know the tiles need one, and a Premiere user expects right-click on a clip and a single-sided Cross dissolve at a clip end to fade from black. Toasts may not carry instructions (UX-PATTERNS placement table), so a 'drag it onto a join' toast was ruled out; the panel's one hint line and lit marks on the timeline answer it instead. The Transitions group stays visible with nothing picked: it is a list of what you can add, like the Library, which the inspector row allows, and the mock draws it."
+    },
+    {
+      "t": "2026-10-03T17:50:45.031Z",
+      "note": "Built: PhotonzCore/TransitionTargets.swift (+TransitionTargetTests, TransitionWayThroughTests), CanvasNoticeAction.putTransition, CopyConfirmation.transitionCutSkipped, DefaultTransitionRefusal.needsTwoClips; app EditorState+TransitionTargets.swift (putTransition one undo step, menus, lit spots), TransitionDrag rewritten onto spots, TimelineTransitionSpots marks, Transitions hint line, transitionTileLifted so the timeline knows the tile before the drag's bytes are read."
+    },
+    {
+      "t": "2026-10-03T17:50:45.031Z",
+      "note": "Verified: Scripts/test.sh 11086 tests passed; transitions-where-clips-meet-walk (10 real captures) plus 14 existing transition walks all green; transition-tile-comes-away-walk green."
+    },
+    {
+      "t": "2026-10-03T17:50:45.031Z",
+      "note": "left rough (none clears the follow-up bar): marks light only over the timeline or 2.5s after a click, not from the moment a tile leaves the panel (no drag-ended signal); the hint is the mock line's first half; the system drag loop between pick-up and drop cannot be walked; Push/Wipe/Blur/Dip to white refuse at a free end; mock tile set differs (already put to the user in the transitions group audit)."
+    },
+    {
+      "t": "2026-10-03T17:51:10.586Z",
+      "note": "Right-click any recording for Add Transition at both ends (join, or a fade from/to black where it meets nothing); the ruler offers it at the nearby cut; lit marks show every landing place while a tile is over the timeline or just clicked; the bar says Drop on a lit cut or end; Transitions hint line with no cut picked; no-spare cuts say so and offer Use Dip to black. Core TransitionTargets.swift tested first; 11086 tests pass; transitions-where-clips-meet-walk (Next defaults, 10 real captures) and 14 existing transition walks green. Commit 008a857d. Audit 2026-10-03-transitions-where-clips-meet."
     }
-  ]
+  ],
+  "started": "2026-10-03T17:09:35.294Z",
+  "walks": [
+    "transitions-where-clips-meet-walk",
+    "transition-tile-comes-away-walk",
+    "transitions-group-walk"
+  ],
+  "completed": "2026-10-03T17:51:10.588Z"
 }
