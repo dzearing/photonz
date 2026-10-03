@@ -1,0 +1,35 @@
+{
+  "id": "a-video-clip-s-right-click-menu-leads-with-the-p",
+  "title": "A video clip's right-click menu leads with the picture, not the sound",
+  "goal": "Right-clicking a video clip should offer what you do to a video first. Today a recording with sound gets a stack of audio rows (Detach Audio, Normalize, Clean Noise, Reset Gain, captions) mixed into its menu, which reads as if you right-clicked an audio clip.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-03T14:26:39.112Z",
+  "updated": "2026-10-03T14:26:39.196Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words: \"when i right click on a video clip, it gives me audio options. I only expect that on audio clips.\"\n\nFrom code reading (not run): timelineClipMenuRows, Sources/Photonz/EditorState+TimelineMenus.swift:68. Audio rows key on layer.sound != nil, and Layer.sound returns the movie's own sound until detached (PhotonzCore/SoundClip.swift:76-80), so any recording with sound gets: Detach Audio (:151, canDetachSound SoundClip.swift:113-116), soundGainMenuRows (:159/:206: Normalize submenu, Clean Noise/Remove Noise Cleaning, Reset Gain), Add/Rewrite/Cancel Captions (:164, :397). The panel shows Sound, Fades, Gain, Sound Effects for a video clip too (InspectorPanel.swift:750-755, soundLayerInHand).\n\nRelated: the-panel-shows-what-the-picked-thing-is-and-its (blocked on the card 'How many buttons may the right hand panel keep?') moves panel one-shot buttons to right-click menus; coordinate so the video menu does not grow those back inline. Related fade task filed the same day: a video clip fades in and out (the 'Fades' label confusion is shared).\nTrap: Detach Audio must stay easy to find on a video, it is how a person gets to its sound.",
+  "acceptance": [
+    "Reproduce first: right-click a recording with sound and a recording without, and photograph both menus before changing anything",
+    "A video clip's right-click menu shows video rows (cut, transitions, fade, zoom, speed and so on) first; sound rows for a video that carries sound are grouped under one clearly named submenu (for example Audio) or reached through Detach Audio, not listed inline. The chosen layout is checked against docs/design IA placement rules and written in the audit",
+    "An audio clip (a detached or imported sound) keeps its sound rows at the top level, as today",
+    "Selecting a video clip does not put sound sections in the panel ahead of the clip's own picture sections; if Sound/Fades/Gain stay, they are clearly labelled as the clip's sound so 'Fades' is never mistaken for a picture fade",
+    "Every row that moved is still on the menu bar with its key",
+    "A walk at Next defaults photographs both menus and the panel for a video clip and an audio clip",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-03T14:26:39.114Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-03T14:26:39.195Z",
+      "note": "seq 460 -> 7"
+    }
+  ]
+}

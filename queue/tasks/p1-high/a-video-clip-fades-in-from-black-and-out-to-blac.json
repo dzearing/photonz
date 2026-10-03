@@ -1,0 +1,36 @@
+{
+  "id": "a-video-clip-fades-in-from-black-and-out-to-blac",
+  "title": "A video clip fades in from black and out to black in one step",
+  "goal": "Fading a video in at its start or out at its end is a basic edit, and today there is no way to do it: the fades you find on a video are its sound fades. A video clip gets a picture fade in and fade out that you can add from its right-click menu and the menu bar and see and drag on the clip, the same way as in Final Cut or Premiere. Titles, overlays and other things on the timeline fade the same way.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 8,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-03T14:26:39.261Z",
+  "updated": "2026-10-03T14:26:39.343Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words: \"It's also unintuitive on how to fade the video out or in.\" ... \"then fade any of the things out at the end.\"\n\nFrom code reading (not run): no picture fade for a video clip exists. Fade handles in ClipPiecesBar.swift:175-179 and :676-700 are drawn only when isSound (TimelineTrackRows.swift:319). The 'Fades' panel section on a video is SoundFadesInspector (InspectorSections.swift:153-156). Fade submenu (EditorState+TitleTime.swift:119-135) and Animate In/Out (EditorState+ClipKeys.swift:66-77) are guarded by isPlacedInTime = time != nil && !hasMediaBehindIt (PhotonzCore/TitleTime.swift:130), which excludes video clips. Dip to black only applies at a cut with both an outgoing and incoming piece (ClipPieces.cut(at:), ClipTransitions.swift:401-411), so no head/tail fade. Only workaround: opacity keys via Add Key (TimelineMenus.swift:171-177).\nTrap: opacity fade of the top clip over nothing composites against the canvas background; make sure that is black for video documents, not transparent/checkerboard in export. Reuse the title Fade machinery (TitleTime.fadeStopsMS) rather than a second fade model if it fits. Rendering change touches the composite path: perf note required.",
+  "acceptance": [
+    "Reproduce first: try to fade a recording out at its end at Next defaults and write in the audit every path tried and what it did",
+    "Right-click a video clip offers Fade In and Fade Out (with a few lengths); the same is in the Clip menu with keys; the fade shows on the clip's bar as a handle the person drags to change its length, distinct from the sound fade",
+    "The fade goes to and from black when nothing is under the clip, and to and from whatever is underneath when something is (so a recording fading over a title page reads right)",
+    "Optional: fading the picture also fades its sound by default, with a way to keep the sound",
+    "Titles, text, shapes, images and components on the timeline take the same Fade In / Fade Out rows and handle, so the person learns one fade for everything",
+    "Playback, scrubbing and export match at the fade's midpoint, MEASURED (mean luminance at 25/50/75% of the fade) and written in the audit",
+    "Works at Next defaults; a walk adds fade in and out to a recording and a title and photographs mid-fade frames",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-03T14:26:39.263Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-03T14:26:39.342Z",
+      "note": "seq 460 -> 8"
+    }
+  ]
+}

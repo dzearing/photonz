@@ -1,0 +1,36 @@
+{
+  "id": "insert-title-pages-and-name-cards-on-the-timelin",
+  "title": "Insert title pages and name cards on the timeline from presets you can make your own",
+  "goal": "A person making a video can insert ready-made things onto the timeline: full title pages (text over a background with simple graphics) and name cards that slide in at the bottom of the screen showing someone's name and role, then slide out. Each type comes with several good presets, and anything about a preset (text, fonts, colours, background, animation in and out, length) can be changed and saved as the person's own. It has to sit in the existing layout without a confusing new place, so the basic edit is easy: title page, cross fade to a recording, a name card that comes in and out, cut to other clips, fade everything out at the end.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-03T14:26:39.539Z",
+  "updated": "2026-10-03T14:26:39.619Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words: \"It's also unintuitive to insert things like Title entrances which can have nice animated text and bg options for the user to easily add to the timeline. It would be great to insert 'things' into the timeline of different types. Full title pages with easy to add graphics is one, Intro card overlays is another, where they sort of animate in and out to show someones name/title for example at the bottom of the screen. I don't just want one type, some presets are great but with high flexibility to make your own. I want it to fit in with the existing IA and not be confusing. But it's imperative that I can do basic things like, title page, cross fade to recording, with some text overlay that comes in and out, switch to other clips easily, then fade any of the things out at the end. Maybe some of this is already doable, but it's quite unintuitive to me.\"\n\nWhat exists (code reading, not run): text with time via the Text tool when titleOnTheTimelineEnabled (EditorState+Text.swift:19-21, ~3s at playhead :345-354); empty video track right-click Add Text / Add Rectangle / Paste Here / Put Layer Here (TimelineTrackRows.swift:694-705, EditorState+EmptyTracks.swift:79); Insert Component in menu bar (EditorCommands.swift:1859); Library shelf places at playhead (placementMomentMS EditorState+TitleTime.swift:38-41); title bar right-click Start/End at Playhead, Fade, Animate In/Out with Fade/Slide/Pop/Scale (ClipKeys.swift:207-214). No title object, no titles panel (EditorState+TitleTime.swift:8-9 says so), no title or lower-third presets; the only 'Lower third' is a caption look (PhotonzCore/CaptionLook.swift:38-43,168). Components on the timeline may be the natural carrier for a multi-part preset (background + text + graphic animated together): check components-on-the-timeline-animated-the-way-ever (done).\n\nDepends on / works with, all filed the same day: 'A video clip fades in from black and out to black in one step' (fades for every thing), 'Putting a transition between clips is obvious from the clip and the timeline' (cross dissolve into the recording). The end-to-end walk here is the user's bar for all three. Memory rules: mocks are the floor; one purpose per area; user-facing copy has no em dashes.",
+  "acceptance": [
+    "Design first: before building, a short design note under docs/design/ says where inserting lives (for example an Insert menu in the menu bar, the timeline right-click, and the existing Library shelf as the one browsing surface for presets) checked against the IA rules and the user's mocks in docs/design/mocks; any real choice with no clear answer goes to the user as a decision card with option cards, not guessed",
+    "At least two types at launch: Title page (full frame, background colour/gradient/image plus text with a simple graphic) and Name card (lower third: name and role, animates in and out at the bottom). Each has at least 4 presets that look professional, photographed in the audit",
+    "Inserting a preset puts it at the playhead on its own track with a sensible length (for example 4s title page, 5s name card), already animated in and out, and its text ready to type",
+    "Everything about an inserted thing is editable in the panel and on the canvas with existing controls (text, font, colour, background, position, in and out animation and its length), and 'Save as preset' keeps the person's version next to the built-in ones",
+    "The type list is built so new types (end card, callout, subscribe card and so on) can be added without new UI",
+    "End-to-end walk at Next defaults: insert a title page, cross dissolve into a recording, add a name card over the recording that animates in and out, cut to a second clip, fade everything out at the end, export, and photograph frames from each step. Every step is reachable by right-click or the menu bar without hunting, and the audit says how many clicks each took",
+    "Builds on what exists (text titles with time, Animate In/Out, components, the Library shelf) instead of a second parallel system; the audit says what was reused",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-03T14:26:39.541Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-03T14:26:39.618Z",
+      "note": "seq 460 -> 10"
+    }
+  ]
+}

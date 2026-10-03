@@ -1,0 +1,35 @@
+{
+  "id": "putting-a-transition-between-clips-is-obvious-fr",
+  "title": "Putting a transition between clips is obvious from the clip and the timeline",
+  "goal": "Adding a transition should be something you do where the clips meet: right-click the join or a clip and pick one, or drag a tile onto the join. Today the Transitions tiles sit in the panel even when nothing is picked, clicking a tile seems to do nothing, and dragging one onto the timeline did not work for the user, so they could not tell what the tiles were for.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 9,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-03T14:26:39.398Z",
+  "updated": "2026-10-03T14:26:39.481Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words: \"I have nothing selected. I see this 'Transitions' pane. I try to drag them to the timeline but that doesn't work. i click on them, they do nothing. I don't even know why im seeing them. I expect to right click on a video clip, or on the timeline itself, and insert some transition.\"\n\nFrom code reading (not run): TransitionsGroup.swift, shown at InspectorPanel.swift:782 whenever showsTransitionsGroup (flag on, document has time, any movie on the timeline, TransitionsGroup.swift:153-156), deliberately even with nothing selected (InspectorPanel.swift:778-781). Click = .onTapGesture (:96) -> pickTransitionTile (:182-190) only applies with a cut/edit point in hand, else just highlights. Drag IS wired (.onDrag :97-104; drops TimelineLaneDrop.swift:41-45, TransitionDrag.swift:95,126) yet the user says it did not work: REPRODUCE, likely drop targets are only the exact join / inner cut with no feedback. Clip right-click 'Add Transition' (TimelineMenus.swift:143-149) appears only when the clip has inner cuts; cut menu :432-463 and edit-point menu :467-491 have Apply Default Transition (Cmd-T), Add Transition, Remove. Cross dissolve needs overlap (needsOverlap ClipTransitions.swift:60) so it greys out via canAfford.\n\nRelated: the-panel-shows-what-the-picked-thing-is-and-its (blocked on the card 'How many buttons may the right hand panel keep?') moves Add transition / Apply to Every Cut out of the panel; coordinate. Related fade task filed same day: 'A video clip fades in from black and out to black in one step' owns head/tail fades; this task owns joins between clips.",
+  "acceptance": [
+    "Reproduce first, at Next defaults: with nothing selected, click a Transitions tile, and drag a tile onto (a) the join between two clips, (b) the middle of a clip, (c) the start and end of a clip, (d) empty timeline. Write what each did in the audit, and find why the user's drag did nothing",
+    "Right-click a clip offers Add Transition at its start and end even when the clip has no inner cuts (a join with the neighbouring clip, or a fade from/to black at the ends); right-click the empty timeline at a join offers it too. Cross dissolve is first",
+    "Dragging a tile onto a join applies it, and while dragging the joins it can land on are highlighted, so a drop anywhere else visibly does nothing and says why",
+    "Clicking a tile with no join picked never silently does nothing: either it explains how to use it in place (for example 'Pick a join between two clips, or drag this onto one') or the tile group is not shown until something it can apply to is picked. The chosen behaviour is checked against the IA rules in docs/design and written in the audit",
+    "Cross dissolve that cannot apply because a clip has no spare media says so in words, and offers the nearest thing that works",
+    "A walk at Next defaults: two recordings back to back, cross dissolve added by right-click and by drag, photographed mid-dissolve",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-03T14:26:39.400Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-03T14:26:39.479Z",
+      "note": "seq 460 -> 9"
+    }
+  ]
+}
