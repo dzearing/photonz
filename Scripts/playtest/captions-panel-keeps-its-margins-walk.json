@@ -234,7 +234,8 @@
     },
     {
       "do": "reveal",
-      "control": "Left"
+      "control": "Color",
+      "in": "Caption background"
     },
     {
       "do": "wait",
