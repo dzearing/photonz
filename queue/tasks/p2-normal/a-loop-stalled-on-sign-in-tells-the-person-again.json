@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 100,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-02T01:59:55.701Z",
-  "updated": "2026-10-02T12:38:22.100Z",
+  "updated": "2026-10-03T03:40:15.996Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: queue/loop.log shows sign-in failures from 2026-09-30 22:05 to 2026-10-01 18:25 local (39 attempts); queue/history.jsonl has a single stall_notified event at 2026-10-01T05:05:09Z (hours 0). notify_person and the once-a-day rule are in queue/bin/go-loop.sh; person-at-mac.sh reads HIDIdleTime. loop-day.mjs for that day: tasks 10.8 per cent, between 74.9 per cent.",
@@ -31,6 +31,25 @@
     {
       "t": "2026-10-02T12:38:22.099Z",
       "note": "seq 60 -> 100"
+    },
+    {
+      "t": "2026-10-03T03:26:04.055Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-03T03:40:06.198Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-03T03:40:06.254Z",
+      "note": "Reproduced from the record: queue/history.jsonl has one stall_notified (2026-10-01T05:05:09Z, hours 0) for a sign-in stall that loop.log shows lasting to 18:25 the next day; nothing between. Built: advancePresence in queue-lib.mjs (away after PHOTONZ_STALL_AWAY=900s of no input, a return is the next reading with input, one notice per return, presence fields survive retries, nothing without a stall); queue.mjs stall-presence; go-loop.sh stall_wait polls person-at-mac.sh idle every 20s during a signin/spend backoff, notifies via notify_person ... return ('Stopped 20h ago while you were away. Sign-in needed...'), logs 'notified you on your return', records stall_notified on=return, and cuts the rest of the wait to 120s so a sign-in is picked up quickly. Dashboard stall hero says when the last notice went out and whether the Mac is idle. Verified: queue/bin/stall-return-drill.sh 13/13 (and all fail with PHOTONZ_STALL_AWAY=999999 as a mutation check), failure-drill.sh all 8 scenarios pass (now with a stand-in idle clock so a real return mid-drill cannot add a notice), manager-due-drill 14/14, Scripts/test.sh green (10985 tests). No app code touched, so no walks and no audit (loop infrastructure only)."
+    },
+    {
+      "t": "2026-10-03T03:40:15.994Z",
+      "note": "A loop stalled on sign-in or the spend limit now notifies the person the first time they return to the Mac after 15 min idle (one per return, none after the stall clears), and cuts its wait to 2 min so their sign-in is picked up quickly. Shipped in go-loop.sh stall_wait, queue-lib advancePresence, queue.mjs stall-presence, dashboard stall hero; loop.log and history (stall_notified on=return) record it. Verified by queue/bin/stall-return-drill.sh (13/13, mutation-checked), failure-drill.sh (all 8), manager-due-drill, Scripts/test.sh green. Commit 264e862e."
     }
-  ]
+  ],
+  "started": "2026-10-03T03:26:04.053Z",
+  "walks": [],
+  "completed": "2026-10-03T03:40:15.995Z"
 }
