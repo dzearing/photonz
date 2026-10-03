@@ -20463,3 +20463,9 @@ Next: the first editor window's ~200 ms first build
 - The same mechanism was live overnight in MenuBarArranger.start: an Objective-C exception (`Invalid number value (NaN) in JSON write`) thrown inside a Swift task corrupts the main thread's executor record, and the next main-actor check dies. `try?` does not catch it.
 - `PhotonzCore/SafeJSON` now writes every probe JSON file (NaN/inf as null, never raises); new `close-and-reopen-a-recording-walk` runs while the person works; crash-watch refiles a crash whose task is closed.
 - Next: if crash-watch files a fresh crash in a main-actor check, look in the unified log a second before it for the exception that actually caused it.
+
+## 2026-10-03 — The tile grids cannot trap on an unbounded width (go loop)
+
+- Crash-watch task for VideoKit.TileGrid.plan (one report, 2026-10-01 20:12): an infinite width offer became `Int(infinity)`, and that fired even with columns pinned. 9b94fbe7 guarded it in the view 15 minutes later, with no test.
+- The math now lives in `PhotonzCore/TileGridPlan`; `TileGridPlanTests` crash with SIGTRAP on the old arithmetic and pass now.
+- `arrow-reshuffle-walk` fails on clean main (its style rows sit in a submenu). Logged on `walks-that-fail-in-the-full-sweep-9`.
