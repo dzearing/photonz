@@ -28,6 +28,7 @@
 //                                            task's wording. --none says the walks it names are only
 //                                            examples. With no arguments it prints what the task says
 //   node queue/bin/queue.mjs off-by-default <id> ["why" | --clear]
+//   node queue/bin/queue.mjs mock-check <id> | <audit.json> ...
 //                                            this task's feature is meant to stay behind a switch
 //                                            that is off by default. Without it, `status <id> done`
 //                                            on an app task is refused when every walk it names
@@ -253,6 +254,29 @@ try {
       const why = args[1] === '--clear' ? '' : args.slice(1).join(' ');
       if (args[1] !== '--clear' && !why.trim()) throw new Error('say why it is off by default, in words');
       out(q.setOffByDefault(args[0], why).id);
+      break;
+    }
+    // What the done gate reads in an audit's rough lines: each difference from
+    // a mock, and the card, task, answer or rule it names (or that it names
+    // nothing). Give a task id to judge the audits that task wrote, exactly as
+    // `status <id> done` will, or audit file names to read those.
+    case 'mock-check': {
+      if (!args[0]) throw new Error('usage: queue.mjs mock-check <task id> | <YYYY-MM-DD-name.json> ...');
+      const t = args.length === 1 && !/\.json$/.test(args[0]) ? q.readTaskDetail(args[0]) : null;
+      if (args.length === 1 && !/\.json$/.test(args[0]) && !t) throw new Error(`no task ${args[0]}`);
+      const names = t ? q.auditsOfTask(t, '', { withLog: true }) : args.map((a) => a.replace(/^.*\//, ''));
+      if (!names.length) { out(t ? `${t.id} names no audit and has written none since it was claimed` : 'no audits'); break; }
+      const rows = q.mockDifferencesIn(names, t);
+      let open = 0;
+      for (const n of names) {
+        const mine = rows.filter((r) => r.audit === n);
+        out(`${n}: ${mine.length ? `${mine.length} difference${mine.length === 1 ? '' : 's'} from the mock` : 'no difference from the mock'}`);
+        for (const r of mine) {
+          if (!r.settledBy) open++;
+          out(`  line ${r.index + 1}  ${r.settledBy ? `settled by ${r.settledBy}` : 'NAMES NOTHING'}  ${r.line.length > 110 ? r.line.slice(0, 109) + '…' : r.line}`);
+        }
+      }
+      out(open ? `${open} difference${open === 1 ? ' names' : 's name'} nothing that settles ${open === 1 ? 'it' : 'them'}${t ? `; status ${t.id} done ${t.status === 'done' ? 'would have been' : 'will be'} refused` : ''}` : 'every difference names what settles it');
       break;
     }
     case 'needs-screen': {

@@ -10,6 +10,7 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { readCatalog, flagDefaults, forcedOn } from './flag-defaults.mjs';
 import { DEFAULTS as SWEEP_DEFAULTS } from './sweep-schedule.mjs';
+import { mockDifferences, auditNamesIn } from './mock-differences.mjs';
 
 // The queue lives at <repo>/queue. PHOTONZ_QUEUE_DIR points every writer at a
 // throwaway copy instead, which is how the runner-failure drill
@@ -580,6 +581,88 @@ export function setOffByDefault(id, why = '') {
   return t;
 }
 
+// ---- every difference from the mock names what settles it -------------------
+// The runner prompt has said for weeks that a difference from the user's mock
+// is fixed, filed or put on a card, never just written down. On 2026-10-02 and
+// 10-03 four audits in a row listed differences in `rough` with a reason and
+// nothing else, and the user's mocks were undercut quietly. So an app task is
+// not done while an audit it wrote lists a difference from a mock that names
+// no decision card (open or answered), no other task, no dated answer from the
+// user and no written rule. The reading of the lines is mock-differences.mjs.
+
+// The audits a task wrote: any written between its claim and now (or its
+// finish, for a task already done), and the ones named in the note it is being
+// closed with. Its notes and older log lines are left out on purpose: a task
+// about an old audit quotes it as evidence, and must not be judged on it.
+//   withLog: also the audits its own log names since it was claimed, for
+//            reading a finished task back (mock-check), whose closing note is
+//            in its log by then
+export function auditsOfTask(t, note = '', { withLog = false } = {}) {
+  const since = Date.parse(t.started || '');
+  const until = t.status === 'done' && t.completed ? Date.parse(t.completed) + 60_000 : Infinity;
+  const own = withLog && Number.isFinite(since)
+    ? (t.log || []).filter((e) => e && Date.parse(e.t) >= since).map((e) => e.note)
+    : [];
+  const names = new Set(auditNamesIn([note, ...own].join('\n')).filter((n) => existsSync(join(AUDITS, n))));
+  if (Number.isFinite(since)) {
+    for (const n of listAudits()) {
+      try {
+        const at = statSync(join(AUDITS, n)).mtimeMs;
+        if (at >= since && at <= until) names.add(n);
+      } catch { /* raced with a write */ }
+    }
+  }
+  return [...names].sort();
+}
+
+function isLiveCard(id) {
+  const d = readJSON(join(DECISIONS, `${id}.json`));
+  return !!d && d.status !== 'withdrawn';
+}
+function userAskedFor(t) {
+  return t.source === 'user' || t.source === 'audit feedback'
+    || /^created \((user|audit feedback)\)/.test(((t.log || [])[0] || {}).note || '');
+}
+
+// Every difference line in the given audits, judged for task `t` (or for no
+// task at all when t is null).
+//   [{ audit, index, line, settledBy }]
+export function mockDifferencesIn(names, t = null) {
+  const ctx = {
+    card: isLiveCard,
+    task: (id) => !!readTaskDetail(id),
+    ownId: t ? t.id : '',
+    userAsked: t ? userAskedFor(t) : false,
+  };
+  const out = [];
+  for (const audit of names) {
+    const a = readAudit(audit);
+    if (!a) continue;
+    for (const d of mockDifferences(a, ctx)) out.push({ audit, ...d });
+  }
+  return out;
+}
+
+// Whether `t` may be called done as far as the mock goes.
+//   { refused, why, unsettled: [{ audit, index, line }], audits }
+export function mockCheck(t, note = '') {
+  const pass = (audits = []) => ({ refused: false, why: '', unsettled: [], audits });
+  if ((t.area || 'app') !== 'app') return pass();
+  const audits = auditsOfTask(t, note);
+  const unsettled = mockDifferencesIn(audits, t).filter((d) => !d.settledBy);
+  if (!unsettled.length) return pass(audits);
+  return {
+    refused: true,
+    why: unsettled.map((d) => `${d.audit} rough line ${d.index + 1} ("${clip(d.line, 90)}") differs from the mock and names nothing that settles it`).join('; '),
+    unsettled,
+    audits,
+  };
+}
+function clip(s, n) {
+  const one = String(s).replace(/\s+/g, ' ').trim();
+  return one.length > n ? one.slice(0, n - 1).trimEnd() + '…' : one;
+}
+
 // `checkReach` is the runner's path (queue.mjs status). The dashboard, where
 // the user marks things by hand, and the sweep closing its own standing task
 // do not go through it.
@@ -604,6 +687,20 @@ export function setStatus(id, status, note = '', { checkReach = false } = {}) {
         + `  - switch it on by default in Sources/PhotonzCore/FeatureCatalog.swift\n`
         + `  - name a walk that reaches it without switching anything on: node queue/bin/queue.mjs walks ${id} <walk> ...\n`
         + `  - if it is meant to stay off, say why: node queue/bin/queue.mjs off-by-default ${id} "<why>"`);
+    }
+  }
+  if (status === 'done' && checkReach && t.status !== 'done') {
+    const mock = mockCheck(t, note);
+    if (mock.refused) {
+      appendLog(t, `not done yet: ${mock.why}`);
+      saveTask(t);
+      appendEvent('task_done_refused', { id, mockDifferences: mock.unsettled.map((d) => ({ audit: d.audit, line: d.index + 1 })) });
+      throw new Error(`Not done: an audit lists a difference from the mock that nobody has been asked about.\n`
+        + mock.unsettled.map((d) => `  - ${d.audit}, rough line ${d.index + 1} ("${clip(d.line, 100)}"): name the decision card or task that settles this difference in the line itself, or fix it and take the line out.`).join('\n') + '\n'
+        + `A difference from the user's mock is fixed in this task, filed as its own task, or put to the user on a card (queue.mjs decision). Name the one that covers it in the line itself:\n`
+        + `  - a card: its decision id; a task: its id (queue.mjs search to find one, addjson to file one)\n`
+        + `  - the user's own answer: "your call on <YYYY-MM-DD>"; a written rule: "UX-PATTERNS §<n>"\n`
+        + `Check before trying again: node queue/bin/queue.mjs mock-check ${id}`);
     }
   }
   // Blocking is only ever the answer to a question that is still open. If the

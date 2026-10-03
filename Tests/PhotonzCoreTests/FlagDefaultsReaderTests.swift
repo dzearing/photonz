@@ -36,7 +36,7 @@ struct FlagDefaultsReaderTests {
 
     /// Runs one of the queue's scripts with node: its exit status, what it
     /// printed and what it complained about.
-    private static func runQueueScript(_ script: String, _ arguments: [String] = []) throws
+    static func runQueueScript(_ script: String, _ arguments: [String] = []) throws
         -> (status: Int32, out: Data, err: String) {
         let node = try #require(findNode(), "no node on this Mac, and the queue cannot run without it")
         let process = Process()
