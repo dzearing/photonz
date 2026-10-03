@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 450,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-03T05:37:37.502Z",
-  "updated": "2026-10-03T05:37:37.505Z",
+  "updated": "2026-10-03T09:42:40.559Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-10-01-201258.ips\nException: EXC_BREAKPOINT SIGTRAP\nMessages: \nStack (app frames):\nspecialized VideoKit.TileGrid.plan(width:count:) (VideoKitPicker.swift:141)\nVideoKit.TileGrid.sizeThatFits(proposal:subviews:cache:) (VideoKitPicker.swift:116)\nstatic PhotonzApp.$main() (PhotonzApp.swift)\nPhotonz_main (PhotonzApp.swift)",
@@ -22,6 +22,33 @@
     {
       "t": "2026-10-03T05:37:37.504Z",
       "note": "created (crash-watch)"
+    },
+    {
+      "t": "2026-10-03T09:23:06.266Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-03T09:42:25.733Z",
+      "note": "Reproduced: report line 141 (pre-9b94fbe7) is 'let fit = Int(((width + spacing) / (minimumWidth + spacing)).rounded(.down))'; sizeThatFits passed proposal.width straight through, so an unbounded offer (.infinity) became Int(inf) and trapped. New TileGridPlanTests run against that same arithmetic (temporarily in PhotonzCore) killed the test process with signal 5, the report's SIGTRAP. 9b94fbe7 (arrow styles, 20:28 the same evening) had already guarded it in the view with no test; this moves the math into PhotonzCore.TileGridPlan with 8 tests, TileGrid calls it. Only one report with this signature exists (2026-10-01-201258); none since the guard landed."
+    },
+    {
+      "t": "2026-10-03T09:42:25.789Z",
+      "note": "Walks: arrow-styles, transition-picker-at-a-cut, transitions-group, every-caption-control-changes-the-captions all ok (no flags). caption-pick-answers-at-once stalled 499ms once, then passed on rerun (flaky perf, unrelated). arrow-reshuffle-walk fails on clean main too (submenu row 'Hand-drawn' not read); folded into walks-that-fail-in-the-full-sweep-9 with the reproduction. Full suite: 11027 tests green. Acceptance item 3 (a week with no new report) is watched by crash-watch; nothing to do in this run."
+    },
+    {
+      "t": "2026-10-03T09:42:25.844Z",
+      "note": "owns these walks: arrow-styles-walk, transition-picker-at-a-cut-walk, transitions-group-walk"
+    },
+    {
+      "t": "2026-10-03T09:42:40.557Z",
+      "note": "Reproduced from the report: the old line 141 turned an unbounded width offer into Int(infinity), and the new tests trap with signal 5 on that arithmetic. The column math moved to PhotonzCore.TileGridPlan (8 tests) and VideoKit.TileGrid calls it (e3522722). arrow-styles, transition-picker-at-a-cut, transitions-group and every-caption-control walks pass with no flags; full suite green (11027). Crash-watch keeps watching the signature."
     }
-  ]
+  ],
+  "started": "2026-10-03T09:23:06.264Z",
+  "walks": [
+    "arrow-styles-walk",
+    "transition-picker-at-a-cut-walk",
+    "transitions-group-walk"
+  ],
+  "completed": "2026-10-03T09:42:40.558Z"
 }

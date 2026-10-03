@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-10-02T13:06:34.503Z",
-  "updated": "2026-10-02T22:54:28.550Z",
+  "updated": "2026-10-03T09:36:49.042Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-02T17:46:57Z ran only the part of the walk set a locked screen cannot touch: 370 of 710 walks ran in 94 minutes, of which 361 passed. The other 128 were refused because the screen is locked, and those are unknown, not passing. This list is the failures in the part that ran, not the state of the walk set.\n\nFailing walks (9): a-painted-caption-takes-a-click-walk, find-what-stayed-a-picture-walk, history-filter-switch-speed-walk, import-key-leaves-invert-selection-walk, key-a-title-s-scale-walk, keyframe-anything-walk, label-border-follows-walk, normalize-cleans-noise-walk, segmented-history-film-walk\n\nThose 9 are UNCONFIRMED. This run was cut short, and a stop takes the probe app down with it,\nso a walk failing in its last moments may be a casualty of the stop rather than a break.\nRe-run one on its own with Scripts/playtest.sh before believing it; the next sweep that covers the set decides.\n\nNever finished: separate-hierarchy-walk was still running when the run was stopped. It is not a pass and not a failure; nobody asked it anything.\n\nFull output: queue/sweep/2026-10-02-091317.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a scheduled sweep\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -42,6 +42,10 @@
     {
       "t": "2026-10-02T22:54:28.549Z",
       "note": "rotating check 2026-10-02T22:54:28Z, 50 walks run from 507 onward in the rotation: sound-effects-eq-compressor-locked-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-03T09:36:49.041Z",
+      "note": "arrow-reshuffle-walk fails on clean main (a40c736b), reproduced 2026-10-03 02:3x: 'Scripts/playtest.sh Scripts/playtest/arrow-reshuffle-walk.json' -> step 9 (rightClick) with ticked:[\"Hand-drawn\"]: no row called \"Hand-drawn\" in the menu; the rows are: Arrow Style, Reshuffle, —, Duplicate, ... The style rows sit inside the Arrow Style submenu, so either the walk should look in the submenu or the rightClick step should read submenu rows. Also seen in the 2026-10-02 22:32 slice."
     }
   ],
   "standing": "walk-sweep"

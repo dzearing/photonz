@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 440,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-03T05:37:36.719Z",
-  "updated": "2026-10-03T09:06:29.891Z",
+  "updated": "2026-10-03T09:06:48.628Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-09-29-041813.ips\nException: EXC_BAD_ACCESS SIGSEGV\nMessages: \nStack (app frames):\nclosure #1 in MainThreadMeter.install() (PlaytestHarness.swift)\nstatic PhotonzApp.$main() (PhotonzApp.swift)\nPhotonz_main (PhotonzApp.swift)",
@@ -66,11 +66,16 @@
     {
       "t": "2026-10-03T09:06:29.890Z",
       "note": "Fix: PhotonzCore SafeJSON (NaN/inf -> null, isValidJSONObject guard, never raises; 5 tests) used by every probe JSON writer (both recording drills, walk log writer which used to silently drop log.json on a NaN, grip traces, probe grants). New walk close-and-reopen-a-recording-walk (no drags, no names: runs while the person works and under a lock; timeline-dock-resizes-walk also covers reopen but needs the Mac to itself) CRASHED on a probe without d94bc9e2, ok on HEAD with 3 real captures. crash-watch: a repeat of a signature whose task is closed now files a fresh p1 naming the closed task instead of a log line nobody reads, so acceptance 3 (a week with no recurrence) is enforced after this task closes. My 3 deliberate crash reports and the 5 overnight ones are marked seen in queue/crash-watch.json, the overnight signature mapped to this task. Scripts/test.sh: 11019 passed."
+    },
+    {
+      "t": "2026-10-03T09:06:48.626Z",
+      "note": "The 09-29 MainThreadMeter crashes were the close-and-reopen route d94bc9e2 fixed (re-proved: crashes with it commented out, passes on HEAD); the same mechanism was live overnight as 5 MenuBarArranger crashes from a NaN in a JSON write raising an ObjC exception inside a Swift task. 85cdc27b: PhotonzCore SafeJSON (tested) for every probe JSON writer, close-and-reopen-a-recording-walk (crashes without the fix, ok with, 3 real captures, no flags), crash-watch refiles crashes whose task is closed. Scripts/test.sh 11019 passed."
     }
   ],
   "started": "2026-10-03T08:33:01.997Z",
   "walks": [
     "close-and-reopen-a-recording-walk",
     "timeline-dock-resizes-walk"
-  ]
+  ],
+  "completed": "2026-10-03T09:06:48.627Z"
 }

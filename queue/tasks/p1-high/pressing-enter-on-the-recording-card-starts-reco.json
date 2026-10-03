@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 5,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-03T05:39:38.195Z",
-  "updated": "2026-10-03T08:15:50.797Z",
+  "updated": "2026-10-03T08:16:14.100Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"when i start recording a video with cmd shift 5 and hit enter, it doesn't immediately start recording! This is critical. no delays\"\n\nNOT reproduced or measured in intake; these are suspects on the start path, measure each before fixing.\n\nPath: Cmd+Shift+5 is Photonz's own global hotkey (CaptureCenter.swift:71) -> beginRecordingFlow (CaptureCenter.swift:131) -> setup card, Enter = default action 'Start Recording' (RecordingSetupController.swift:134-151) -> resolveMicrophoneAccessThenStart -> launchRecording (CaptureCenter.swift:211) -> RecordingCoordinator.start (RecordingCoordinator.swift:47) -> ScreenRecorder.start (ScreenRecorder.swift:66).\n\nSerial costs on that path, all paid AFTER Enter:\n1. RecordingCoordinator.start shows the stop HUD then sleeps a fixed 150 ms so the window server knows the HUD exists for exclusion.\n2. ScreenRecorder.start awaits SCShareableContent.excludingDesktopWindows (often 100-300+ ms) to find the display and the HUD's SCWindow.\n3. SCStream + SCRecordingOutput construction, then await stream.startCapture() (typically the largest cost, more with mic/system audio).\n4. Setup card dismissal and the Task hops in between.\n\nIdeas, not prescriptions: prewarm while the setup card is open (fetch SCShareableContent, create the HUD window offscreen or hidden so it already has a window number, maybe build the stream/filter ahead of time and only startCapture on Enter); drop the fixed 150 ms sleep in favour of a HUD that already exists; or start the stream when the card opens and only begin writing on Enter (check with SCRecordingOutput whether adding the output later is supported, or use a sample buffer writer). Trap: the HUD must stay excluded from the video, and prewarming must not trip Screen Recording or mic permission prompts earlier than today or more than once per launch (see memory rule on permission prompt loops). Trap: the first-frame clock (FirstFrameClock) and PointerTracker start are tied to the stream start; pointer and click effects must stay aligned.\n\nThere is a probe latency drill already ('showsControls: false is the probe's latency drill', RecordingCoordinator.swift:45-46); extend it to measure Enter-to-first-frame rather than building a new one.\n\nRelated, done: 'A recording shows in history the moment you stop it' (the stop side of the same latency work).",
@@ -59,6 +59,10 @@
     {
       "t": "2026-10-03T08:15:50.796Z",
       "note": "owns these walks: a-recording-keeps-its-clicks-walk, a-recording-opens-at-stop-walk, capture-shortcuts-clear-the-corner-walk"
+    },
+    {
+      "t": "2026-10-03T08:16:14.098Z",
+      "note": "Enter on the Record Screen card now starts the recording at once: the stream, display filter and unseen stop control are made ready while the card is up, and Enter adds the file to the running stream. Enter to first frame, 10 runs each on the probe (Scripts/recording-start-drill.sh): no sound 278.5 -> 33.6 ms median (worst 39.2), every file began before a change made 50 ms after Enter; system+mic 297.1 -> 111.2 ms (worst 116.1, over the 100 ms budget by macOS's own ~100 ms start with sound, explained in the audit); region 70.4 ms from drag end. First-frame clock now matches the file exactly; stop control never in a file; clock ticks from the first frame; Stop during a sound start is honoured; Escape leaves nothing behind. Tests green (11,014), recording walks pass. Commit 9158a898; audit queue/audits/2026-10-03-recording-starts-on-enter.json."
     }
   ],
   "started": "2026-10-03T05:46:22.631Z",
@@ -66,5 +70,6 @@
     "a-recording-keeps-its-clicks-walk",
     "a-recording-opens-at-stop-walk",
     "capture-shortcuts-clear-the-corner-walk"
-  ]
+  ],
+  "completed": "2026-10-03T08:16:14.099Z"
 }
