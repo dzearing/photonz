@@ -42,6 +42,21 @@ tool options capsule AND, with the panel open, in the panel's section for that
 tool (the user chose "Leave it in both places", 2026-09); two doors to one
 setting are allowed otherwise only where §3 "One setting, two doors" says so.
 
+**A request that names a system look gets one filmed card, not a second
+build.** When a request names a system look or material (Liquid Glass, "the
+Mac's own control", "like Finder's"), build it once, then film the system's own
+version beside ours in the same place, light and dark, at rest and moving, and
+put both films on one decision card before building any other variant. Neither
+side wins by default: the system control is not automatically right, and ours
+is not either; the user picks from the films. Why: on 2026-09-29 and 30 the
+segmented control was built five ways in two days (a lighter glass thumb, a
+gliding thumb, one pane of system glass, the system glass thumb everywhere,
+then the Mac's own control, commits `dbf9de22` to `5a81d5a3`), and the user
+sent the Mac's own back ("this IS the native slider, but it's ugly and I want
+to go back to our custom one") for our drawn control with the picked choice a
+tinted glass chip (`a42eacb8`, "The one segmented control" below). One card
+with two films would have asked that question on the first day.
+
 **The first audit against it** (2026-09-29, every surface of the Next editor,
 picture and video, View and Edit, with photographs) is
 `docs/design/ia-audit-2026-09-29.md`: each control, where it is, where this

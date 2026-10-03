@@ -2,7 +2,7 @@
 # The full walk sweep, owned by the go loop instead of by a task runner.
 #
 # Scripts/playtest-all.sh runs every scripted walk in Scripts/playtest:
-# about 710 walks and about 175 minutes. That size is COUNTED, not remembered:
+# about 720 walks and about 175 minutes. That size is COUNTED, not remembered:
 # queue/bin/sweep-size.mjs reads the walk count off disk and the seconds a walk
 # costs out of the recorded sweeps in queue/history.jsonl, and CI fails if this
 # comment drifts away from it. It used to be typed in, and by 2026-09-19 eleven

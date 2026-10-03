@@ -14,6 +14,8 @@ Feature work dominates. Foundational work earns its place by unblocking the feat
 
 **Every area has one purpose.** The title bar, tool bar, inspector, transport, timeline, menus and right-click menus each do one kind of job: the placement contract at the top of `docs/design/mocks/shared/UX-PATTERNS.md` is the table, and every control you add or move is placed by it. Ask which purpose the control serves and put it in that row; a control goes in the area whose purpose it shares, or it confuses people however useful it is. A placement the table does not cover (it fits no row, or two) is a decision card for the user, never a guess. Every command is also in the menu bar with its shortcut. The bar is elegant and easy for an end user to understand, not complete.
 
+**A request that names a system look gets one filmed card, not a second build.** When a task names Liquid Glass, the Mac's own control or another system look, build it once, film the system's version beside ours, and put both on one decision card before building any other variant (UX-PATTERNS.md, under the placement contract). The system's version does not win by default: the user sent the Mac's own segmented control back on 2026-09-30, after five builds of it in two days.
+
 **Text is always legible. No exceptions.** No white on white, no black on black, no label on a background it cannot be read against, in any state, scheme or backdrop (the user, 2026-09-30: "I do not want white on white or black on black cases EVER"). Any text you add or restyle is checked against what is actually drawn behind it, in light and dark, including over glass and over arbitrary screenshots. The bar is legible, not a number: the system's own pairings (white on the accent, system label colours on glass) are legible as they are, so never alter a system colour to chase a ratio.
 
 **A tool bar holds tools.** A tool is something you pick and then use on the canvas. Zoom, view options, readouts and settings are not tools and never go in the tool bar (the user, 2026-09-29: "zoom isn't a tool").
@@ -118,8 +120,8 @@ The machine you run on is the user's. Anything you start, you finish.
   Scripts/playtest.sh Scripts/playtest/<name>.json --no-build
   Scripts/playtest-all.sh --no-build <name-fragment>   # a handful at once
   ```
-  The whole set is about 710 walks and about 175 minutes, which is eleven times the 600s
-  ceiling on your background work, so starting it inside a task ends with you
+  The whole set is about 720 walks and about 175 minutes, which is eighteen times the 600s ceiling
+  on your background work, so starting it inside a task ends with you
   terminated and your task handed back unfinished. That is not hypothetical:
   eight of the twenty recorded runner failures are exactly this, including
   2026-09-07 16:22 ("The full walk sweep is still running (it re-runs all 253
