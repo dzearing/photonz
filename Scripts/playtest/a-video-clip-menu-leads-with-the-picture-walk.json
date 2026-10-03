@@ -1,0 +1,176 @@
+{
+  "out": "/tmp/photonz-playtest/a-video-clip-menu-leads-with-the-picture-walk",
+  "seed": "A recording with sound, nothing switched from its default. Right-clicking the video clip leads with what you do to a picture; its sound is Detach Audio plus one Audio submenu. Right-clicking the sound drawn under it on the Audio track, or a sound of its own once detached, leads with the sound. The panel for the video shows its picture before its audio, and the audio sections say Audio.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "selectRow",
+      "row": "Tutorial Sample"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-video-clip-panel",
+      "note": "The recording picked: Properties and Time first, then how it looks, then its sound under Audio, Audio Fades, Audio Gain and Audio Effects"
+    },
+    {
+      "do": "panel",
+      "stage": "1-video-clip-panel"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-video-clip-panel"
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        900,
+        893
+      ],
+      "space": "window",
+      "shot": "2-video-clip-menu",
+      "keys": {
+        "Detach Audio": "⌃⇧D",
+        "Split at Playhead": "⌘K"
+      }
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        900,
+        893
+      ],
+      "space": "window",
+      "choose": "Audio > Clean Noise"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        691,
+        943
+      ],
+      "space": "window",
+      "shot": "3-linked-sound-menu",
+      "keys": {
+        "Detach Audio": "⌃⇧D"
+      }
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        691,
+        943
+      ],
+      "space": "window",
+      "choose": "Detach Audio"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample sound",
+      "startsAt": 0
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        691,
+        943
+      ],
+      "space": "window",
+      "shot": "4-audio-clip-menu"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "selectRow",
+      "row": "Tutorial Sample sound"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-audio-clip-panel",
+      "note": "The detached sound picked: Properties, then Channel, Fades and Gain, under the mock's own names"
+    },
+    {
+      "do": "expectSections",
+      "leading": [
+        "Properties",
+        "Channel",
+        "Fades"
+      ]
+    },
+    {
+      "do": "panel",
+      "stage": "5-audio-clip-panel"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-audio-clip-panel"
+    },
+    {
+      "do": "selectRow",
+      "row": "Tutorial Sample"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        900,
+        893
+      ],
+      "space": "window",
+      "shot": "6-video-clip-menu-detached"
+    }
+  ]
+}

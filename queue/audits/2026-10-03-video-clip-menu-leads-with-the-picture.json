@@ -1,0 +1,28 @@
+{
+  "feature": "A video clip's right-click menu leads with the picture",
+  "epic": "video-cutting",
+  "summary": "Right-clicking a video clip now offers picture actions first, with its sound reached through Detach Audio and one Audio submenu. Right-clicking the sound under it on the Audio track, or an audio clip, still leads with the sound. The panel shows a video's picture before its audio and names those sections Audio.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any recording with sound and leave the timeline open. Walk: Scripts/playtest/a-video-clip-menu-leads-with-the-picture-walk.json",
+  "switched": {},
+  "try": [
+    { "do": "Right-click the video clip on V1.", "shot": "2026-10-03-video-clip-menu-2-video-clip-menu-sc.png" },
+    { "do": "Hover Audio at the foot of the clip's own rows: Normalize, Clean Noise and Add Captions are inside it." },
+    { "do": "Right-click the green sound segment under the clip on the Audio track.", "shot": "2026-10-03-video-clip-menu-3-linked-sound-menu-sc.png" },
+    { "do": "Choose Detach Audio, then right-click the detached sound.", "shot": "2026-10-03-video-clip-menu-4-audio-clip-menu-sc.png" },
+    { "do": "Click the video clip and read the panel top to bottom.", "shot": "2026-10-03-video-clip-menu-1-video-clip-panel-sc.png" }
+  ],
+  "evaluate": [
+    "Does the video clip's menu now read as a video clip's menu?",
+    "Is Detach Audio plus an Audio submenu the right way to reach a video's sound, or should Detach Audio go inside Audio too?",
+    "Should right-clicking the sound segment under a video lead with the sound, as it does now, or give the video's menu?",
+    "Do Audio, Audio Fades and Audio Gain read clearly as the clip's sound and not its picture?",
+    "Is it fine that a video's Volume is now below the fold on a laptop-sized window?"
+  ],
+  "rough": [
+    "Placement (UX-PATTERNS placement table, Right-click row: verbs for the thing under the pointer): the video bar is the picture, so picture verbs lead; the sound segment is the sound, so sound verbs lead. Detach Audio stays at the top level of the video's menu because it is how you get to the sound, as in Final Cut.",
+    "Detach Audio throws away what you did to the sound (volume, fades, gain, noise cleaning). This walk caught it, and it is filed as its own task.",
+    "The Time section on a video still has a Sound row (As recorded, Higher, Silent). It says what a speed change does to the sound, so it stays with Speed.",
+    "A video's audio sections are below the fold on a 1200 by 720 window. That is the cost of picture first. Music and other sounds still show Volume without scrolling.",
+    "Once a video's sound is detached, its menu no longer offers Add Captions. The panel's Captions section and the Captions menu still do."
+  ]
+}

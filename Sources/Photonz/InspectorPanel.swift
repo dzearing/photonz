@@ -1017,11 +1017,16 @@ struct InspectorPanel: View {
     /// back, so the saved order stays the person's own and a document without
     /// time never sees it.
     private func timeOrdered(_ order: [InspectorSectionID]) -> [InspectorSectionID] {
-        guard editorState.documentHasTime,
-              let layer = selectedLayer ?? editorState.soundLayerInHand,
-              let role = TimePanelOrder.role(of: layer) else { return order }
+        guard let role = timeRole else { return order }
         return TimePanelOrder.arrange(order.map(\.rawValue), for: role)
             .compactMap(InspectorSectionID.init(rawValue:))
+    }
+
+    /// What the picked layer is for, in a document with time.
+    private var timeRole: TimePanelOrder.Role? {
+        guard editorState.documentHasTime,
+              let layer = selectedLayer ?? editorState.soundLayerInHand else { return nil }
+        return TimePanelOrder.role(of: layer)
     }
 
     /// The optional sections this release actually builds, in the order the
@@ -1229,6 +1234,11 @@ struct InspectorPanel: View {
         // reading "Position & Size" over a layer's name would take them for
         // the layer's.
         if id == .geometry, editorState.regionGeometry != nil { return "Selection" }
+        // A video clip's sound sections say they are its audio, so Fades on
+        // a video is never read as the picture fading (`TimePanelOrder`).
+        if let role = timeRole, TimePanelOrder.trails(role).contains(id.rawValue) {
+            return TimePanelOrder.title(id.rawValue, shown: id.title, for: role)
+        }
         guard Experiments.shared.colorStylesEnabled else { return id.title }
         switch id {
         case .annotation:

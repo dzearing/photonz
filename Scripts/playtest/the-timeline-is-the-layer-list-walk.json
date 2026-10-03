@@ -134,6 +134,8 @@
       "leading": [
         "Properties",
         "Time",
+        "Color",
+        "Effects",
         "Channel"
       ]
     },

@@ -91,10 +91,45 @@ struct TimePanelOrderTests {
     // Every role opens on Properties (raw id `keys`): the clip line and what
     // is animating, as `video.html` draws its dock (2026-09-25).
 
-    @Test func aClipLeadsWithItsPropertiesThenHowItPlaysThenHowLoud() {
+    @Test func aClipLeadsWithItsPropertiesThenHowItPlays() {
         let order = TimePanelOrder.arrange(Self.saved, for: .playing)
-        #expect(Array(order.prefix(7)) == ["layers", "keys", "speed", "sound", "fades", "gain",
-                                           "soundEffects"])
+        #expect(Array(order.prefix(3)) == ["layers", "keys", "speed"])
+    }
+
+    /// A video clip is a picture first: its sound sections come AFTER how it
+    /// looks, never ahead of it (the user, 2026-10-03: "when i right click on
+    /// a video clip, it gives me audio options. I only expect that on audio
+    /// clips"). `video.html` draws no Audio section for a video clip at all.
+    @Test func aClipsSoundComesAfterItsPicture() {
+        let order = TimePanelOrder.arrange(Self.saved, for: .playing)
+        let effects = order.firstIndex(of: "effects") ?? -1
+        let color = order.firstIndex(of: "color") ?? -1
+        for sound in ["sound", "fades", "gain", "soundEffects"] {
+            let at = order.firstIndex(of: sound) ?? -1
+            #expect(at > effects && at > color, "\(sound) sits under the picture")
+        }
+        let effectsAt = order.firstIndex(of: "effects") ?? 0
+        #expect(Array(order[(effectsAt + 1)...].prefix(4)) == ["sound", "fades", "gain", "soundEffects"])
+    }
+
+    @Test func withNoPictureSectionAClipsSoundStaysWhereItWasSaved() {
+        let order = TimePanelOrder.arrange(["layers", "keys", "speed", "sound", "fades", "captions"],
+                                           for: .playing)
+        #expect(order == ["layers", "keys", "speed", "sound", "fades", "captions"])
+    }
+
+    /// A clip's sound sections say whose sound they are, so Fades on a video
+    /// is never read as the picture fading. A sound's own keep the mock's
+    /// names.
+    @Test func aClipsSoundSectionsAreNamedAsItsAudio() {
+        #expect(TimePanelOrder.title("sound", shown: "Channel", for: .playing) == "Audio")
+        #expect(TimePanelOrder.title("fades", shown: "Fades", for: .playing) == "Audio Fades")
+        #expect(TimePanelOrder.title("gain", shown: "Gain", for: .playing) == "Audio Gain")
+        #expect(TimePanelOrder.title("soundEffects", shown: "Audio Effects", for: .playing) == "Audio Effects")
+        #expect(TimePanelOrder.title("speed", shown: "Time", for: .playing) == "Time")
+        #expect(TimePanelOrder.title("fades", shown: "Fades", for: .heard) == "Fades")
+        #expect(TimePanelOrder.title("sound", shown: "Channel", for: .heard) == "Channel")
+        #expect(TimePanelOrder.title("fades", shown: "Fades", for: nil) == "Fades")
     }
 
     @Test func aTitleLeadsWithItsPropertiesThenWhenItIsOnThenItsWords() {
@@ -119,7 +154,7 @@ struct TimePanelOrderTests {
     /// draws its channel strip: the level, then the fades.
     @Test func fadesFollowTheLevelWhereverItLeads() {
         for role in TimePanelOrder.Role.allCases {
-            let lead = TimePanelOrder.leads(role)
+            let lead = TimePanelOrder.leads(role) + TimePanelOrder.trails(role)
             guard let sound = lead.firstIndex(of: "sound") else { continue }
             #expect(lead.indices.contains(sound + 1) && lead[sound + 1] == "fades")
         }
@@ -129,7 +164,7 @@ struct TimePanelOrderTests {
     /// under the channel strip (`#chExtra`), so the strip keeps its one Volume.
     @Test func gainFollowsTheFadesWhereverTheyLead() {
         for role in TimePanelOrder.Role.allCases {
-            let lead = TimePanelOrder.leads(role)
+            let lead = TimePanelOrder.leads(role) + TimePanelOrder.trails(role)
             guard let fades = lead.firstIndex(of: "fades") else { continue }
             #expect(lead.indices.contains(fades + 1) && lead[fades + 1] == "gain")
         }
@@ -140,7 +175,7 @@ struct TimePanelOrderTests {
     /// the channel strip (`#gEffects`).
     @Test func theSoundsEffectsFollowItsGainWhereverItLeads() {
         for role in TimePanelOrder.Role.allCases {
-            let lead = TimePanelOrder.leads(role)
+            let lead = TimePanelOrder.leads(role) + TimePanelOrder.trails(role)
             guard let gain = lead.firstIndex(of: "gain") else { continue }
             #expect(lead.indices.contains(gain + 1) && lead[gain + 1] == "soundEffects")
         }
@@ -151,7 +186,7 @@ struct TimePanelOrderTests {
     @Test func everythingElseKeepsTheOrderItWasSavedIn() {
         for role in TimePanelOrder.Role.allCases {
             let order = TimePanelOrder.arrange(Self.saved, for: role)
-            let lead = Set(TimePanelOrder.leads(role))
+            let lead = Set(TimePanelOrder.leads(role) + TimePanelOrder.trails(role))
             #expect(order.filter { !lead.contains($0) } == Self.saved.filter { !lead.contains($0) })
             #expect(order.sorted() == Self.saved.sorted(), "nothing is lost or doubled")
         }
@@ -163,8 +198,8 @@ struct TimePanelOrderTests {
     }
 
     @Test func withNoLayersSectionTheLeadGoesToTheTop() {
-        let order = TimePanelOrder.arrange(["geometry", "sound", "speed"], for: .playing)
-        #expect(order == ["speed", "sound", "geometry"])
+        let order = TimePanelOrder.arrange(["geometry", "keys", "speed"], for: .playing)
+        #expect(order == ["keys", "speed", "geometry"])
     }
 
     @Test func theRuleIsWrittenDownForEveryRole() {

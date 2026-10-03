@@ -16,7 +16,7 @@
     { "do": "press", "control": "Tutorial Sample clip" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "1-a-clip", "note": "THE FIRST TEST: the recording picked on the timeline. The panel opens on Properties with a Clip chip; its first line names the clip and says it runs 0.0s to 8.0s, 8.0s long at 1.0x; Animating says nothing yet and lists no rows" },
-    { "do": "expectSections", "leading": ["Properties", "Time", "Channel"] },
+    { "do": "expectSections", "leading": ["Properties", "Time", "Color", "Effects", "Channel"] },
     { "do": "expect", "field": "Properties Kind", "reads": "Clip" },
     { "do": "expect", "field": "Clip line", "reads": "Tutorial Sample 0.0s → 8.0s · 8.0s · 1.0x" },
     { "do": "expect", "field": "Animating Count", "reads": "nothing yet" },

@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/video-panel-order-walk",
-  "seed": "The panel beside a recording, at the smallest window the app supports, with nothing switched from its default. It leads with what the picked layer is FOR: a clip's Time, Sound and Animating, a title's Time, Text and Animating, a sound's Sound. Every row is a short label and a value, inset like the rest of the panel, and the speed, the level and the fade are on screen without scrolling.",
+  "seed": "The panel beside a recording, at the smallest window the app supports, with nothing switched from its default. It leads with what the picked layer is FOR: a clip's Animating, Time and picture, its audio under that, a title's Time, Text and Animating, a sound's Sound. Every row is a short label and a value, inset like the rest of the panel, and the speed, a title's fade and a sound's level are on screen without scrolling.",
   "setup": {
     "timelineOpen": true,
     "forget": ["all"]
@@ -15,10 +15,9 @@
     { "do": "tool", "tool": "select" },
     { "do": "action", "action": "videoSeekQuarter" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "1-a-clip", "note": "THE FIRST TEST: an eight second recording picked in a 1200 by 720 window. The panel opens on Properties: the clip line (name, in, out, length, speed) and what is animating; then how it plays (Time: Speed, Sound) and how loud (Channel: Mute, Solo, Volume). No paragraph anywhere, no Reframe section, and every row starts on the same margin as the rest of the panel" },
-    { "do": "expectSections", "leading": ["Properties", "Time", "Channel"] },
+    { "do": "describe", "stage": "1-a-clip", "note": "THE FIRST TEST: an eight second recording picked in a 1200 by 720 window. The panel opens on Properties: the clip line (name, in, out, length, speed) and what is animating; then how it plays (Time: Speed, Sound), then how it looks (Appearance, Effects), and only then its sound, headed Audio, Audio Fades, Audio Gain and Audio Effects so a fade there is never read as the picture fading. No paragraph anywhere, no Reframe section, and every row starts on the same margin as the rest of the panel" },
+    { "do": "expectSections", "leading": ["Properties", "Time", "Color", "Effects", "Channel"] },
     { "do": "expectInView", "field": "Speed" },
-    { "do": "expectInView", "field": "Volume" },
     { "do": "expect", "menu": "Speed", "reads": "Normal" },
     { "do": "expect", "field": "Clip line", "reads": "Tutorial Sample 0.0s → 8.0s · 8.0s · 1.0x" },
     { "do": "expect", "field": "Sound reading", "reads": "As recorded" },

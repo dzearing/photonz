@@ -206,7 +206,7 @@
   },
   {
    "do": "press",
-   "control": "Channel section",
+   "control": "Appearance section",
    "longestUnderMS": 16
   },
   {
@@ -215,61 +215,7 @@
   },
   {
    "do": "press",
-   "control": "Channel section",
-   "longestUnderMS": 16
-  },
-  {
-   "do": "wait",
-   "seconds": 0.4
-  },
-  {
-   "do": "press",
-   "control": "Fades section",
-   "longestUnderMS": 16
-  },
-  {
-   "do": "wait",
-   "seconds": 0.4
-  },
-  {
-   "do": "press",
-   "control": "Fades section",
-   "longestUnderMS": 16
-  },
-  {
-   "do": "wait",
-   "seconds": 0.4
-  },
-  {
-   "do": "press",
-   "control": "Gain section",
-   "longestUnderMS": 16
-  },
-  {
-   "do": "wait",
-   "seconds": 0.4
-  },
-  {
-   "do": "press",
-   "control": "Gain section",
-   "longestUnderMS": 16
-  },
-  {
-   "do": "wait",
-   "seconds": 0.4
-  },
-  {
-   "do": "press",
-   "control": "Audio Effects section",
-   "longestUnderMS": 16
-  },
-  {
-   "do": "wait",
-   "seconds": 0.4
-  },
-  {
-   "do": "press",
-   "control": "Audio Effects section",
+   "control": "Appearance section",
    "longestUnderMS": 16
   },
   {
@@ -295,8 +241,23 @@
    "seconds": 0.4
   },
   {
+   "do": "describe",
+   "stage": "3-clip-audio",
+   "note": "Properties and Time shut, so the clip's audio sections, which sit under its picture, are in view: each clicked shut and open again"
+  },
+  {
    "do": "press",
-   "control": "Appearance section",
+   "control": "Properties section",
+   "longestUnderMS": 16,
+   "in": "Properties Kind"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Time section",
    "longestUnderMS": 16
   },
   {
@@ -305,7 +266,70 @@
   },
   {
    "do": "press",
-   "control": "Appearance section",
+   "control": "Audio section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Audio section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Audio Fades section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Audio Fades section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Audio Gain section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Audio Gain section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Audio Effects section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Audio Effects section",
    "longestUnderMS": 16
   },
   {
@@ -357,6 +381,25 @@
    "do": "expect",
    "control": "Normalize",
    "present": true
+  },
+  {
+   "do": "press",
+   "control": "Properties section",
+   "longestUnderMS": 16,
+   "in": "Properties Kind"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Time section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
   },
   {
    "do": "snapshot",

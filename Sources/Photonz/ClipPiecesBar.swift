@@ -407,7 +407,7 @@ struct ClipPiecesBar: View {
                 }
             }
             .contextMenu {
-                if kind != nil { TimelineClipMenu(layerID: layerID, piece: index) }
+                if kind != nil { TimelineClipMenu(layerID: layerID, piece: index, onTheSound: isLinkedSound) }
             }
             // Named BEFORE the offset, as the grips are, so the mark is where
             // the piece is drawn: after it, the mark sat on the piece's
@@ -928,7 +928,8 @@ struct ClipPiecesBar: View {
                         if edge > 0, edge < pieces.count {
                             TimelineCutMenu(layerID: layerID, cut: edge)
                         } else {
-                            TimelineClipMenu(layerID: layerID, piece: edge == 0 ? 0 : pieces.count - 1)
+                            TimelineClipMenu(layerID: layerID, piece: edge == 0 ? 0 : pieces.count - 1,
+                                             onTheSound: isLinkedSound)
                         }
                     }
                 }
@@ -1171,9 +1172,12 @@ struct TimelineClipMenu: View {
     @Environment(EditorState.self) private var editorState
     let layerID: UUID
     var piece: Int = 0
+    /// Opened on the clip's linked sound, on the Audio track under it.
+    var onTheSound = false
 
     var body: some View {
-        MenuRowsView(rows: editorState.timelineClipMenuRows(layerID: layerID, piece: piece))
+        MenuRowsView(rows: editorState.timelineClipMenuRows(layerID: layerID, piece: piece,
+                                                            onTheSound: onTheSound))
     }
 }
 

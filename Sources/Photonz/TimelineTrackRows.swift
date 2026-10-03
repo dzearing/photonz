@@ -862,7 +862,7 @@ struct TimelineTrackSelect: View {
                     isPressed = false
                     editorState.commitClipBarDrag()
                 })
-            .contextMenu { TimelineClipMenu(layerID: group.layerID) }
+            .contextMenu { TimelineClipMenu(layerID: group.layerID, onTheSound: isLinkedSound) }
             .playtestControl("Track Select \(name)", detail: "Timeline")
             .offset(x: x0)
     }

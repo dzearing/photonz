@@ -65,7 +65,10 @@ extension EditorState {
     // MARK: A clip
 
     /// The menu on one piece of a clip (the whole clip, when it is uncut).
-    func timelineClipMenuRows(layerID: UUID, piece index: Int) -> [MenuRow] {
+    /// `onTheSound` is a click on the clip's linked sound, drawn on the Audio
+    /// track under it, which answers like the audio clip it looks like
+    /// (`ClipMenuPlan`).
+    func timelineClipMenuRows(layerID: UUID, piece index: Int, onTheSound: Bool = false) -> [MenuRow] {
         guard let document, let layer = document.layer(id: layerID),
               let time = layer.time, let pieces = layer.clipPieces else { return [] }
         var rows: [MenuRow] = []
@@ -91,6 +94,11 @@ extension EditorState {
         }
         let piece = pieces.piece(at: index)
         let underPlayhead = time.contains(ms: documentTimeMS)
+        // A video leads with its picture and keeps its sound one submenu
+        // away; its sound on the Audio track, and a sound of its own, lead
+        // with the sound (the user, 2026-10-03).
+        let plan = ClipMenuPlan(hasPicture: layer.movie != nil,
+                                hasSound: layer.sound != nil, onTheSound: onTheSound)
 
         rows.append(.command("Split at Playhead", TimelineMenuKeys.split, enabled: canSplitClip(layerID)) {
             self.selectLayer(layerID)
@@ -119,7 +127,7 @@ extension EditorState {
                 })
             }
         }
-        if layer.movie != nil {
+        if plan.offersPictureRows {
             rows.append(freezeFrameMenuRow(layerID: layerID, piece: index, enabled: underPlayhead))
             rows.append(contentsOf: punchInMenuRows(layerID: layerID, around: nil))
             // A click the recording missed, or one made before clicks were
@@ -141,43 +149,59 @@ extension EditorState {
             }))
         }
         let ends = transitionCuts(of: pieces, aroundPiece: index)
-        if Experiments.shared.transitionsAtACutEnabled, !ends.isEmpty {
+        if Experiments.shared.transitionsAtACutEnabled, !ends.isEmpty, !onTheSound {
             rows.append(.submenu("Add Transition", ClipTransitionKind.allCases.map { kind in
                 .command(kind.title, enabled: ends.contains { $0.canAfford(kind) }) {
                     self.addTransition(kind, layerID: layerID, atCuts: ends.map(\.index))
                 }
             }))
         }
-        if document.canDetachSound(ofLayer: layerID) {
-            rows.append(.command("Detach Audio", TimelineMenuKeys.detachAudio) {
+        // What its sound does: how loud it is at the source (Premiere's Audio
+        // Gain) and captions from what is said in it (Premiere's Transcribe,
+        // only ever when asked).
+        var soundRows: [MenuRow] = []
+        if Experiments.shared.soundOnTheTimelineEnabled, layer.sound != nil {
+            soundRows += soundGainMenuRows(layerID: layerID)
+        }
+        if layer.movie != nil || layer.sound != nil, let row = addCaptionsMenuRow() {
+            if !soundRows.isEmpty { soundRows.append(.separator) }
+            soundRows.append(row)
+        }
+        let detachAudio: MenuRow? = document.canDetachSound(ofLayer: layerID) && plan.offersDetachAudio
+            ? .command("Detach Audio", TimelineMenuKeys.detachAudio) {
                 self.selectLayer(layerID)
                 self.detachSound()
-            })
+            }
+            : nil
+        // On the sound itself, the sound's rows are what the click was for.
+        if !plan.offersPictureRows {
+            if let detachAudio { rows.append(detachAudio) }
+            rows += soundRows
         }
-        // How loud its sound is at the source: Premiere's Audio Gain, on the
-        // clip where the hand already is.
-        if Experiments.shared.soundOnTheTimelineEnabled, layer.sound != nil {
-            rows.append(contentsOf: soundGainMenuRows(layerID: layerID))
+        if !onTheSound {
+            // A title, a piece of clip art: when it comes on and goes off, and how.
+            rows.append(contentsOf: placedLayerMenuRows(layerID: layerID))
+            rows.append(contentsOf: titleAnimationMenuRows(layerID: layerID))
+            // Where it is, its size, its angle and its opacity, keyed at the
+            // playhead: the header diamond's verb, where the hand already is.
+            if Experiments.shared.drawnOnTheTimelineEnabled, !layer.isSoundOnly {
+                let onKey = document.transformKeyDiamond(layerID: layerID, atDocumentTimeMS: documentTimeMS) == .onKey
+                rows.append(.command(onKey ? "Remove Key" : "Add Key", enabled: underPlayhead) {
+                    self.selectLayer(layerID)
+                    self.toggleHeaderKey(layerID)
+                })
+            }
+            // Keys copied off another layer land here at the playhead.
+            if keysOnClipboard != nil { rows.append(pasteKeysRow(layerID: layerID)) }
         }
-        // Captions from what is said in it: Premiere's Transcribe, on the
-        // thing that talks. Only ever when asked.
-        if layer.movie != nil || layer.sound != nil, let row = addCaptionsMenuRow() {
-            rows.append(row)
+        // A video's sound: Detach Audio where the hand is, since it is how a
+        // person gets to the sound, and the rest folded into one Audio menu.
+        if plan.offersPictureRows {
+            let audio = plan.sound == .submenu && !soundRows.isEmpty
+                ? MenuRow.submenu(ClipMenuPlan.soundSubmenuTitle, soundRows) : nil
+            let tail = [detachAudio, audio].compactMap { $0 }
+            if !tail.isEmpty { rows += [.separator] + tail }
         }
-        // A title, a piece of clip art: when it comes on and goes off, and how.
-        rows.append(contentsOf: placedLayerMenuRows(layerID: layerID))
-        rows.append(contentsOf: titleAnimationMenuRows(layerID: layerID))
-        // Where it is, its size, its angle and its opacity, keyed at the
-        // playhead: the header diamond's verb, where the hand already is.
-        if Experiments.shared.drawnOnTheTimelineEnabled, !layer.isSoundOnly {
-            let onKey = document.transformKeyDiamond(layerID: layerID, atDocumentTimeMS: documentTimeMS) == .onKey
-            rows.append(.command(onKey ? "Remove Key" : "Add Key", enabled: underPlayhead) {
-                self.selectLayer(layerID)
-                self.toggleHeaderKey(layerID)
-            })
-        }
-        // Keys copied off another layer land here at the playhead.
-        if keysOnClipboard != nil { rows.append(pasteKeysRow(layerID: layerID)) }
         rows.append(.separator)
         // The Track Select Forward tool's pick (A), where the hand already is.
         rows.append(.command("Select Forward") {
