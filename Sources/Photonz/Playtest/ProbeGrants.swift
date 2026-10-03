@@ -1,5 +1,6 @@
 #if PHOTONZ_PLAYTEST
 import AppKit
+import PhotonzCore
 import ScreenCaptureKit
 
 /// What the probe build can and cannot see, written where the shell can read it.
@@ -59,8 +60,7 @@ enum ProbeGrants {
             "bundleID": Bundle.main.bundleIdentifier ?? "unknown",
             "at": ISO8601DateFormatter().string(from: Date()),
         ]
-        guard let data = try? JSONSerialization.data(withJSONObject: payload,
-                                                     options: [.prettyPrinted, .sortedKeys]) else { return }
+        guard let data = SafeJSON.data(from: payload, options: [.prettyPrinted, .sortedKeys]) else { return }
         try? data.write(to: url)
     }
 }

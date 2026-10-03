@@ -654,8 +654,7 @@ private final class Run {
     }
 
     private func write(json: Any, to name: String) {
-        guard JSONSerialization.isValidJSONObject(json),
-              let data = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys]) else { return }
+        guard let data = SafeJSON.data(from: json, options: [.prettyPrinted, .sortedKeys]) else { return }
         try? data.write(to: out.appendingPathComponent(name))
     }
 
@@ -1668,8 +1667,8 @@ private final class Run {
             await sleep(0.3)
             await giveTheFrontBack(front)
             let trace = GripTrace(samples)
-            let data = try JSONSerialization.data(withJSONObject: readings, options: [.prettyPrinted])
-            try data.write(to: out.appendingPathComponent("grip-trace-\(number).json"))
+            try SafeJSON.data(from: readings, options: [.prettyPrinted])?
+                .write(to: out.appendingPathComponent("grip-trace-\(number).json"))
             note(number, "dragGrip", "\(control) pulled \(short(CGPoint(x: by, y: 0))) in \(steps) moves: "
                  + trace.summary + held + cancelled + front.note)
             if let within, !trace.follows(within: within) {

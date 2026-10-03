@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 440,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-03T05:37:36.719Z",
-  "updated": "2026-10-03T05:37:37.303Z",
+  "updated": "2026-10-03T09:06:29.891Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-09-29-041813.ips\nException: EXC_BAD_ACCESS SIGSEGV\nMessages: \nStack (app frames):\nclosure #1 in MainThreadMeter.install() (PlaytestHarness.swift)\nstatic PhotonzApp.$main() (PhotonzApp.swift)\nPhotonz_main (PhotonzApp.swift)",
@@ -46,6 +46,31 @@
     {
       "t": "2026-10-03T05:37:37.302Z",
       "note": "crash watch: it happened again in the probe app at 2026-09-29 05:31:15.00 -0700: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-09-29-053115.ips"
+    },
+    {
+      "t": "2026-10-03T08:33:01.998Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-03T09:06:29.727Z",
+      "note": "owns these walks: close-and-reopen-a-recording-walk, timeline-dock-resizes-walk"
+    },
+    {
+      "t": "2026-10-03T09:06:29.781Z",
+      "note": "Read the 7 reports (2026-09-29 04:18-05:31): all fire in Swift's main-actor check at the top of the meter's run-loop observer, reading a bad executor pointer. All predate d94bc9e2 (09-29 05:55), which fixed the route that caused them: a walk closing a recording and reopening it adopted the closed editor, AppKit threw unrecognized selector at the close guard, the ObjC exception unwound through the walk's Swift task. Verified today: /tmp/ptl/close-reopen-walk.json passes on HEAD; with both halves of d94bc9e2 commented out it CRASHED again (signature moved to MenuBarArranger.start, same isMainExecutor frames). No report with the MainThreadMeter signature since 09-29 05:31."
+    },
+    {
+      "t": "2026-10-03T09:06:29.834Z",
+      "note": "Same mechanism found live overnight: 5 probe crashes 2026-10-02 23:35 to 2026-10-03 00:57 in MenuBarArranger.start (crash-watch had not scanned them yet). Unified log 1s before each: 'NSInvalidArgumentException: Invalid number value (NaN) in JSON write'. Source: the recording-start drill the previous runner was building wrote a NaN through JSONSerialization; try? does not catch ObjC exceptions. Reproduced on HEAD by injecting a NaN into the drill output: old writer -> 'The drill wrote nothing', CRASHED in MenuBarArranger.start; SafeJSON writer -> PASS, null in the file. HEAD's drill without the injection (sound, mic, stop-early, cancel) does not crash."
+    },
+    {
+      "t": "2026-10-03T09:06:29.890Z",
+      "note": "Fix: PhotonzCore SafeJSON (NaN/inf -> null, isValidJSONObject guard, never raises; 5 tests) used by every probe JSON writer (both recording drills, walk log writer which used to silently drop log.json on a NaN, grip traces, probe grants). New walk close-and-reopen-a-recording-walk (no drags, no names: runs while the person works and under a lock; timeline-dock-resizes-walk also covers reopen but needs the Mac to itself) CRASHED on a probe without d94bc9e2, ok on HEAD with 3 real captures. crash-watch: a repeat of a signature whose task is closed now files a fresh p1 naming the closed task instead of a log line nobody reads, so acceptance 3 (a week with no recurrence) is enforced after this task closes. My 3 deliberate crash reports and the 5 overnight ones are marked seen in queue/crash-watch.json, the overnight signature mapped to this task. Scripts/test.sh: 11019 passed."
     }
+  ],
+  "started": "2026-10-03T08:33:01.997Z",
+  "walks": [
+    "close-and-reopen-a-recording-walk",
+    "timeline-dock-resizes-walk"
   ]
 }

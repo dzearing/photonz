@@ -15,11 +15,20 @@
     "Photonz Probe-2026-09-30-045007.ips": "probe|macos-ax-notify",
     "Photonz Probe-2026-09-30-112034.ips": "probe|macos-ax-notify",
     "Photonz Probe-2026-10-01-201258.ips": "probe|specialized VideoKit.TileGrid.plan(width:count:) < VideoKit.TileGrid.sizeThatFits(proposal:subviews:cache:) < static PhotonzApp.$main()",
-    "Photonz Probe-2026-10-02-223541.ips": "probe|macos-ax-notify"
+    "Photonz Probe-2026-10-02-223541.ips": "probe|macos-ax-notify",
+    "Photonz Probe-2026-10-03-013747.ips": "deliberate: the-app-crashed-in-closure-1-in-mainthreadmeter reverted its fix to show the crash",
+    "Photonz Probe-2026-10-03-013851.ips": "deliberate: the-app-crashed-in-closure-1-in-mainthreadmeter ran its new walk on a probe built without the fix",
+    "Photonz Probe-2026-10-03-015719.ips": "deliberate: the-app-crashed-in-closure-1-in-mainthreadmeter injected a NaN into the drill with the old JSON writer to show the crash",
+    "Photonz Probe-2026-10-02-233510.ips": "probe|closure #1 in static MenuBarArranger.start() < static PhotonzApp.$main() < Photonz_main",
+    "Photonz Probe-2026-10-02-233821.ips": "probe|closure #1 in static MenuBarArranger.start() < static PhotonzApp.$main() < Photonz_main",
+    "Photonz Probe-2026-10-02-234054.ips": "probe|closure #1 in static MenuBarArranger.start() < static PhotonzApp.$main() < Photonz_main",
+    "Photonz Probe-2026-10-03-005453.ips": "probe|closure #1 in static MenuBarArranger.start() < static PhotonzApp.$main() < Photonz_main",
+    "Photonz Probe-2026-10-03-005758.ips": "probe|closure #1 in static MenuBarArranger.start() < static PhotonzApp.$main() < Photonz_main"
   },
   "signatures": {
     "probe|closure #1 in MainThreadMeter.install() < static PhotonzApp.$main() < Photonz_main": "the-app-crashed-in-closure-1-in-mainthreadmeter",
-    "probe|specialized VideoKit.TileGrid.plan(width:count:) < VideoKit.TileGrid.sizeThatFits(proposal:subviews:cache:) < static PhotonzApp.$main()": "the-app-crashed-in-specialized-videokit-tilegrid"
+    "probe|specialized VideoKit.TileGrid.plan(width:count:) < VideoKit.TileGrid.sizeThatFits(proposal:subviews:cache:) < static PhotonzApp.$main()": "the-app-crashed-in-specialized-videokit-tilegrid",
+    "probe|closure #1 in static MenuBarArranger.start() < static PhotonzApp.$main() < Photonz_main": "the-app-crashed-in-closure-1-in-mainthreadmeter"
   },
   "faults": {
     "probe|macos-ax-notify": {

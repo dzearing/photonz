@@ -11,7 +11,10 @@
 //     (~/Library/Logs/DiagnosticReports, read by Scripts/crash-report.mjs)
 //   * a crash in the app's own code: one p1 task per signature (the app, the
 //     top three frames of its own code), with the report path and the stack;
-//     a repeat of a signature already filed is logged on that task instead
+//     a repeat of a signature already filed is logged on that task instead,
+//     unless that task is closed: then the crash came back after its fix, and a
+//     fresh p1 task says so and names the closed one (a line in a done task's
+//     log is read by nobody)
 //   * a crash in the Dev app is ALWAYS filed, even a known macOS fault: it
 //     happened to the person
 //   * a known macOS fault in the probe is counted; once one signature has
@@ -50,6 +53,15 @@ function queue(...args) {
     { cwd: ROOT, encoding: 'utf8' }).trim();
 }
 
+// The status of a task by id, wherever its priority folder is; null if gone.
+function taskStatus(id) {
+  const dir = path.join(ROOT, 'queue', 'tasks');
+  for (const folder of fs.readdirSync(dir)) {
+    try { return JSON.parse(fs.readFileSync(path.join(dir, folder, `${id}.json`), 'utf8')).status; } catch {}
+  }
+  return null;
+}
+
 let names = [];
 try { names = fs.readdirSync(REPORTS_DIR).filter((n) => n.endsWith('.ips') && /Photonz/i.test(n)); } catch {}
 const lines = [];
@@ -85,7 +97,8 @@ for (const name of names.sort()) {
   const known = state.signatures[sig];
   lines.push(`crash ${app} ${r.when}: ${r.summary}`);
   if (dry) continue;
-  if (known) {
+  const cameBack = known && ['done', 'dropped', null].includes(taskStatus(known));
+  if (known && !cameBack) {
     queue('log', known, `crash watch: it happened again in the ${app} app at ${r.when}: ${r.file}`);
     lines.push(`  logged on ${known}`);
     continue;
@@ -94,10 +107,10 @@ for (const name of names.sort()) {
   const who = app === 'dev' ? 'the person\'s own Dev app' : app === 'probe' ? 'the loop\'s probe app' : 'the release app';
   const task = {
     title: `The app crashed in ${(r.frames[0]?.symbol || r.exception).replace(/\(.*$/, '').slice(0, 80)}`,
-    goal: `Crash watch caught a crash in ${who} at ${r.when}: ${r.summary}. Read the report, reproduce it, fix the cause, and add a test that would have caught it.${r.systemFault ? ' macOS calls this a fault of its own, but it happened to the person, so find what in Photonz invites it.' : ''}`,
+    goal: `Crash watch caught a crash in ${who} at ${r.when}: ${r.summary}.${cameBack ? ` It came back after ${known} was closed, so that fix did not hold or missed a route.` : ''} Read the report, reproduce it, fix the cause, and add a test that would have caught it.${r.systemFault ? ' macOS calls this a fault of its own, but it happened to the person, so find what in Photonz invites it.' : ''}`,
     epic: 'unmanned-loop', priority: 'p1-high', source: 'crash-watch',
     acceptance: ['Reproduced (or the exact conditions shown from the report) before the fix', 'The cause fixed in Photonz code, with a test or walk that fails before and passes after', 'crash-watch shows no new report with this signature for a week of walks'],
-    notes: `Report: ${r.file}\nException: ${r.exception} ${r.signal}\nMessages: ${r.messages.join(' | ')}\nStack (app frames):\n${stack}`,
+    notes: `${cameBack ? `Came back after: ${known}\n` : ''}Report: ${r.file}\nException: ${r.exception} ${r.signal}\nMessages: ${r.messages.join(' | ')}\nStack (app frames):\n${stack}`,
   };
   const id = queue('addjson', JSON.stringify(task)).split('\n').pop();
   state.signatures[sig] = id;

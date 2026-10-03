@@ -71,7 +71,7 @@ enum RecordingStartLatencyDiag {
         var readings: [[String: Any]] = []
         defer {
             out["readings"] = readings
-            if let data = try? JSONSerialization.data(withJSONObject: out, options: [.prettyPrinted, .sortedKeys]) {
+            if let data = SafeJSON.data(from: out, options: [.prettyPrinted, .sortedKeys]) {
                 try? data.write(to: URL(fileURLWithPath: resultPath))
             }
             NSLog("[recording-start-latency-diag] \(out)")

@@ -1,0 +1,33 @@
+{
+  "out": "/tmp/photonz-playtest/close-and-reopen-a-recording-walk",
+  "seed": "A walk can close a recording and open it again, twice, and the probe is still alive and editing at the end. Until 2026-09-29 the second open took the closed editor for the new one, ordered its dead window back on screen, and an exception thrown through the walk's task crashed the app at the next main-thread check (the crash read as MainThreadMeter.install). No drags, no names, no menus: it runs while the person works and on a locked screen, so the rotating check always reaches it, unlike timeline-dock-resizes-walk which also reopens but needs the Mac to itself.",
+  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectTimeline", "lengthMS": 8000 },
+    { "do": "snapshot", "name": "1-opened" },
+    { "do": "action", "action": "closeDocument" },
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectEdited", "edited": false },
+    { "do": "expectTimeline", "lengthMS": 8000 },
+    { "do": "describe", "stage": "2-reopened", "note": "the same recording closed and opened again: one live editor, untouched, eight seconds long" },
+    { "do": "snapshot", "name": "2-reopened" },
+    { "do": "action", "action": "closeDocument" },
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "key", "key": "k", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectEdited", "edited": true },
+    { "do": "describe", "stage": "3-reopened-again-and-cut", "note": "closed and opened a second time, then cut with Command K: the reopened editor takes edits" },
+    { "do": "snapshot", "name": "3-reopened-again-and-cut" }
+  ]
+}
