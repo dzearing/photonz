@@ -1,0 +1,35 @@
+{
+  "feature": "The first window after launch opens as quickly as the ones after it",
+  "epic": "video-editing",
+  "summary": "The first capture or recording you open after the app starts no longer waits about a third of a second longer than later ones. The app now builds the editor out of sight while it launches, so a recording opened the moment you press Stop shows its last frame in about a quarter of a second, even when it is the first thing you open.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: a-recording-opens-at-stop-walk (no flags), and the same walk without its first step to time the first window of a run.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Quit Photonz and start it again from the Dock or Spotlight."
+    },
+    {
+      "do": "Press Shift Command 5 and record a few seconds of the screen."
+    },
+    {
+      "do": "Stop the recording and click Edit on the corner card straight away."
+    },
+    {
+      "do": "Close the window, record again and open it the same way, and compare how quickly each window showed its picture."
+    },
+    {
+      "do": "Quit and relaunch, then open a screenshot from Capture History first, to check a picture opens just as quickly."
+    }
+  ],
+  "evaluate": [
+    "Does the first recording you open after launch now feel as quick as the second?",
+    "Does anything flash, appear in the Dock or show up in the Window menu while the app starts?",
+    "Is the app quick to answer its capture keys straight after launch, or do you notice it settling for a moment?"
+  ],
+  "rough": [
+    "Measured with the open-at-stop walk, eight runs each, Stop to the picture: the first window of a run took 438 to 614 ms before and 174 to 325 ms now (mean 241). A window opened beside one already open takes 149 to 179 ms (mean 167).",
+    "A window opened when no other editor window is open still costs about 100 ms more than one opened beside an open window (159 to 325 ms, mean 266, for a second window after closing the first). That is the app turning from a menu-bar icon into a Dock app, and it is the same for the first window of a run and any later one, so the warm-up cannot buy it back without putting an icon in the Dock.",
+    "Launch takes about a third of a second longer, spent building the hidden editor before the app answers its first key.",
+    "No picture attached: every capture this walk takes is a recording of a corner of the live screen, which on this run showed the person's own browser, so the pictures stay in /tmp/photonz-playtest/a-recording-opens-at-stop-walk rather than going into the repo. Nothing on screen changes with this work, only how soon it appears."
+  ]
+}

@@ -2190,6 +2190,11 @@ final class EditorState {
     /// close confirmation can attach and the edited-dot can track dirtiness.
     @ObservationIgnored weak var hostWindow: NSWindow?
 
+    /// The throwaway editor `EditorWarmUp` builds at launch and never shows.
+    /// Its canvas joins a window nobody sees, and it must never take that
+    /// window as its own or announce itself as an open editor.
+    @ObservationIgnored var isWarmUp = false
+
     /// Whether closing this window would lose work.
     var hasUnsavedChanges: Bool { saveAffordance.asksBeforeClosing }
 
@@ -2962,6 +2967,7 @@ final class EditorState {
     /// window and, for a just-opened document, hides it until it's been sized so
     /// it appears fully formed instead of snapping from SwiftUI's default size.
     func canvasDidMoveToWindow(_ window: NSWindow?) {
+        guard !isWarmUp else { return }
         #if PHOTONZ_PLAYTEST
         PlaytestHarness.register(self)
         #endif

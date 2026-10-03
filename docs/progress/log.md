@@ -20475,3 +20475,10 @@ Next: the first editor window's ~200 ms first build
 - Each layer heading on the icon timing strip starts with a mark for its kind (`PhotonzCore/LayerMark.swift`, drawn in `MotionStripView`). Path = curve glyph like the mock's ic-bezier; other kinds reuse tool bar and video track header glyphs.
 - The name column stays 92pt (the video timeline shares it), so names lose 14pt; 14 to 16 character names now cut and use the tooltip.
 - Next: the user's reaction to the audit (2026-10-03-timing-strip-marks).
+
+## 2026-10-03: first editor window as quick as later ones
+
+- `EditorWarmUp` (Sources/Photonz/EditorWarmUp.swift) builds `EditorView` at launch in a window never ordered in, empty and then holding a stand-in recording, and drops it. `EditorState.isWarmUp` keeps its canvas from adopting the window or registering as an open editor.
+- Why: Time Profiler on the cold open-at-stop walk put ~200 of 338 main-thread ms in `swift_getTypeByMangledName` under SwiftUI's first build of the editor tree. Cold first window 438-614 ms before, 174-325 ms (mean 241) now; warm 149-179 (mean 167).
+- Left: a window opened with no other editor window open costs ~100 ms more (accessory to regular, Dock and window-server round trips); same for any window opened from zero, not launch-specific. Logged on the task.
+- Next: the user's reaction to the audit (2026-10-03-first-window-quick).

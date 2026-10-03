@@ -91,6 +91,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             // the first frame is mixed the way that release mixes.
             _ = Experiments.shared
             AppDelegate.coordinator?.start()
+            if let coordinator = AppDelegate.coordinator { EditorWarmUp.run(coordinator: coordinator) }
             #if PHOTONZ_PLAYTEST
             // Non-shipping builds only; the probe alone acts on either of these.
             ProbeGrants.recordOnLaunch()
