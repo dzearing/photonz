@@ -427,6 +427,7 @@ extension PhotonzDocument {
                 animateOut(kind, layerID: inserted.layerID)
             }
         }
+        if preset.kind == .titlePage { pushPictureAfterOpeningTitle(inserted.layerID) }
         return inserted
     }
 
@@ -462,8 +463,41 @@ extension PhotonzDocument {
                 })
             }
         }
-        return landTitle(layer, kind: saved.kind, lengthMS: saved.lengthMS,
-                         sourceInMS: saved.layer.time?.sourceInMS ?? 0, atTimeMS: ms, landing: landing)
+        guard let inserted = landTitle(layer, kind: saved.kind, lengthMS: saved.lengthMS,
+                                       sourceInMS: saved.layer.time?.sourceInMS ?? 0,
+                                       atTimeMS: ms, landing: landing) else { return nil }
+        if saved.kind == .titlePage { pushPictureAfterOpeningTitle(inserted.layerID) }
+        return inserted
+    }
+
+    /// A title page put at the very start of a recording plays BEFORE it, not
+    /// over its first seconds: everything after moves later by the page's
+    /// length less its fade out, so the two overlap only for the dissolve and
+    /// no frame of the recording plays hidden. Premiere's title on V1 ahead of
+    /// the clip, with a dissolve at the cut.
+    ///
+    /// Only at 0:00 and only over a picture that starts there: anywhere else a
+    /// page is laid over what is under it, as a title over footage is. A clip
+    /// on a locked track stays put, because locking a track says exactly that,
+    /// and then the page lies over it.
+    @discardableResult
+    mutating func pushPictureAfterOpeningTitle(_ id: UUID) -> Bool {
+        guard let page = layer(id: id), let time = page.time, time.inMS == 0 else { return false }
+        let locked = layerIDsOnLockedTracks()
+        let pictureAtStart = layers.contains { other in
+            other.id != id && (other.movie != nil || other.merged != nil)
+                && other.time?.inMS == 0 && !locked.contains(other.id)
+        }
+        let push = time.lengthMS - min(max(0, page.pictureFadeMS(.out)), time.lengthMS)
+        guard pictureAtStart, push > 0 else { return false }
+        let inside = Set(page.selfAndDescendants.map(\.id))
+        for layer in allLayers {
+            guard !inside.contains(layer.id), !locked.contains(layer.id),
+                  let theirs = layer.time else { continue }
+            updateLayer(id: layer.id) { $0.time = theirs.moved(toInMS: theirs.inMS + push) }
+        }
+        refreshDuration()
+        return true
     }
 
     private mutating func landTitle(_ built: Layer, kind: TitleKind, lengthMS: Int,

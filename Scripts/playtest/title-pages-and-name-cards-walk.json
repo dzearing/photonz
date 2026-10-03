@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/title-pages-and-name-cards-walk",
-  "seed": "The user's basic edit, end to end at Next defaults with no switch touched, every step from a right-click: a recording with a second clip cut on after it; a track added above V1 and, from that empty track's right-click, Add Title Page > Midnight at the start with its words typed straight in; the page's Fade Out lengthened to a second from its own right-click so it dissolves into the recording; another track and Add Name Card > Bar at five seconds, sliding in and fading out, its name typed in; the last clip faded to black from its right-click; the card saved as a preset from its right-click and inserted again from the empty-track menu; and the edit written out as an MP4. Frames are photographed at each step.",
+  "seed": "The user's basic edit, end to end at Next defaults with no switch touched, every step from a right-click: a recording with a second clip cut on after it; a track added above V1 and, from that empty track's right-click, Add Title Page > Midnight at the start with its words typed straight in; the page at the start pushes the recording later by its length less its half-second fade out, so it dissolves into the recording with no frame lost; another track and Add Name Card > Bar at five seconds, sliding in and fading out, its name typed in; the last clip faded to black from its right-click; the card saved as a preset from its right-click and inserted again from the empty-track menu; and the edit written out as an MP4. Frames are photographed at each step.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -112,13 +112,19 @@
       "name": "2-title-page"
     },
     {
-      "do": "rightClick",
-      "on": "Timing Title Page",
-      "choose": "Fade Out > 1s"
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 3.5,
+      "endsAt": 11.4,
+      "within": 0.05
     },
     {
-      "do": "wait",
-      "seconds": 0.6
+      "do": "expectClip",
+      "clip": "b-roll",
+      "track": "V1",
+      "startsAt": 11.4,
+      "within": 0.05
     },
     {
       "do": "key",
@@ -145,13 +151,17 @@
       "action": "videoStepQuarterSecond"
     },
     {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
       "do": "wait",
       "seconds": 1.0
     },
     {
       "do": "describe",
       "stage": "3-dissolve",
-      "note": "THE DISSOLVE: the title page's own Fade Out set to one second from its right-click; at 3.5s the page is half gone and the recording shows through"
+      "note": "THE DISSOLVE, made by the insert: a title page put at the start pushed the recording later by its length less its half-second fade out, so at 3.75s the page is half gone over the recording's first frames"
     },
     {
       "do": "snapshot",
@@ -159,15 +169,24 @@
     },
     {
       "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "3b-recording-starts",
+      "note": "Right after the dissolve, at 4s: the page is gone and the recording plays from half a second in, every frame of it on screen since it started under the fade"
+    },
+    {
+      "do": "snapshot",
+      "name": "3b-recording-starts"
+    },
+    {
+      "do": "action",
       "action": "videoStepOneSecond"
-    },
-    {
-      "do": "action",
-      "action": "videoStepQuarterSecond"
-    },
-    {
-      "do": "action",
-      "action": "videoStepQuarterSecond"
     },
     {
       "do": "wait",
@@ -400,6 +419,14 @@
       "action": "videoStepOneSecond"
     },
     {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
       "do": "wait",
       "seconds": 0.6
     },
@@ -423,7 +450,7 @@
     {
       "do": "describe",
       "stage": "6-own-preset",
-      "note": "YOUR OWN: Save as Preset from the card's right-click, named Dana card, then the empty track's Add Name Card lists it above the built-ins; inserted at ten seconds over the b-roll, with the name already in it"
+      "note": "YOUR OWN: Save as Preset from the card's right-click, named Dana card, then the empty track's Add Name Card lists it above the built-ins; inserted at twelve seconds over the b-roll, with the name already in it"
     },
     {
       "do": "snapshot",
@@ -433,7 +460,7 @@
       "do": "writeVideo",
       "name": "the-edit",
       "format": "mp4",
-      "seconds": 16.0,
+      "seconds": 19.4,
       "within": 0.6,
       "copied": false,
       "estimateFactor": 2

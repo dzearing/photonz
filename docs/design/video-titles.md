@@ -118,3 +118,26 @@ own first in each, then a **Components** header over the components.
 Walk: `title-presets-library-shelf-walk` (Next defaults, pointer double click,
 pick-up, held ghosts, drops). Tests: `TitlePresetShelfTests`.
 
+
+## A title page at the start plays before the recording
+
+Task `a-title-page-at-the-start-pushes-the-recording-a`, 2026-10-03. The basic
+edit is title page, dissolve, recording, and a page laid OVER the first four
+seconds hid them. Premiere puts the title on V1 ahead of the clip with a
+dissolve at the cut; Final Cut connects the title and ripples. So a title page
+(built-in or your own, from the menu bar, a track's right-click or the
+Library) that lands at 0:00 where a picture clip also starts at 0:00 moves
+everything else later by the page's length less its fade out
+(`PhotonzDocument.pushPictureAfterOpeningTitle`). The two overlap only for the
+fade, which is the dissolve, and it is one step to undo.
+
+* Only at 0:00 and only over a picture starting there. Anywhere else a page is
+  laid over what is under it, as a title over footage is. A name card never
+  pushes.
+* Everything moves, every track, so what was drawn on the recording stays on
+  its frame. A clip on a locked track stays put, and then the page lies over it.
+* Not yet: changing the page's fade out afterwards does not move the recording
+  again (task `an-opening-title-page-keeps-its-dissolve-onto-th`).
+
+Tests: `TitlePageAtStartTests`. Walk: `title-pages-and-name-cards-walk`
+(photographs 3.75s, mid dissolve, and 4.0s, the recording after it).

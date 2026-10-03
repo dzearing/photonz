@@ -20534,3 +20534,9 @@ Next: the first editor window's ~200 ms first build
 - Walk harness: a `press` with `count: 2` now sends two clicks (counted 1 then 2), as a mouse does; a lone click counted 2 never reached a SwiftUI double tap. The Library search box has a walk name (`Search library`).
 - Follow-ups: `the-library-s-titles-shelf-can-be-scrolled-into` (dock does not scroll far enough when the shelf's floor binds), `find-out-whether-a-saved-name-card-inserted-on-a`.
 
+
+## 2026-10-03 — A title page at the start pushes the recording
+
+- A title page that lands at 0:00 where a picture clip starts moves everything after it later by the page's length less its fade out, so title, dissolve, recording loses no footage (`PhotonzDocument.pushPictureAfterOpeningTitle`, `TitlePresets.swift`). Elsewhere it still overlays; name cards never push; locked tracks stay put.
+- Tests `TitlePageAtStartTests` (7). Walk `title-pages-and-name-cards-walk` now shows the dissolve at 3.75s and the recording at 4.0s, and exports 19.4s; `title-presets-menu-bar-walk` names the bar `Timing Title Page`.
+- Next: `an-opening-title-page-keeps-its-dissolve-onto-th` (fade length changes and Ripple Delete on the opening page).
