@@ -1,3 +1,4 @@
+import PhotonzCore
 import SwiftUI
 
 // MARK: - A tile
@@ -113,19 +114,15 @@ extension VideoKit {
 
         func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
             // An unbounded offer (a frame with no maximum) is answered with
-            // the narrowest grid that fits, never by laying out across
-            // infinity: that width becomes a column count, and an infinite
-            // one traps.
-            let offered = proposal.width.flatMap { $0.isFinite ? $0 : nil }
-            let width = offered ?? minimumWidth * 2 + spacing
-            let plan = plan(width: width, count: subviews.count)
+            // the narrowest grid that fits: `TileGridPlan` owns why.
+            let plan = plan(width: proposal.width)
             let heights = rowHeights(subviews, plan: plan)
             let total = heights.reduce(0, +) + spacing * CGFloat(max(0, heights.count - 1))
-            return CGSize(width: width, height: total)
+            return CGSize(width: plan.width, height: total)
         }
 
         func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-            let plan = plan(width: bounds.width, count: subviews.count)
+            let plan = plan(width: bounds.width)
             let heights = rowHeights(subviews, plan: plan)
             var y = bounds.minY
             for (row, height) in heights.enumerated() {
@@ -140,17 +137,11 @@ extension VideoKit {
             }
         }
 
-        private struct Plan { let columns: Int; let tileWidth: CGFloat }
-
-        private func plan(width: CGFloat, count: Int) -> Plan {
-            let ratio = ((width + spacing) / (minimumWidth + spacing)).rounded(.down)
-            let fit = ratio.isFinite ? Int(min(max(ratio, 1), 1000)) : 1
-            let columns = max(1, columns ?? fit)
-            let tileWidth = max(0, (width - spacing * CGFloat(columns - 1)) / CGFloat(columns))
-            return Plan(columns: columns, tileWidth: tileWidth)
+        private func plan(width: CGFloat?) -> TileGridPlan {
+            TileGridPlan(offeredWidth: width, minimumWidth: minimumWidth, spacing: spacing, columns: columns)
         }
 
-        private func rowHeights(_ subviews: Subviews, plan: Plan) -> [CGFloat] {
+        private func rowHeights(_ subviews: Subviews, plan: TileGridPlan) -> [CGFloat] {
             stride(from: 0, to: subviews.count, by: plan.columns).map { start in
                 subviews[start..<min(start + plan.columns, subviews.count)]
                     .map { $0.sizeThatFits(ProposedViewSize(width: plan.tileWidth, height: nil)).height }
