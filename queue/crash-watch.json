@@ -23,7 +23,13 @@
     "Photonz Probe-2026-10-02-233821.ips": "probe|closure #1 in static MenuBarArranger.start() < static PhotonzApp.$main() < Photonz_main",
     "Photonz Probe-2026-10-02-234054.ips": "probe|closure #1 in static MenuBarArranger.start() < static PhotonzApp.$main() < Photonz_main",
     "Photonz Probe-2026-10-03-005453.ips": "probe|closure #1 in static MenuBarArranger.start() < static PhotonzApp.$main() < Photonz_main",
-    "Photonz Probe-2026-10-03-005758.ips": "probe|closure #1 in static MenuBarArranger.start() < static PhotonzApp.$main() < Photonz_main"
+    "Photonz Probe-2026-10-03-005758.ips": "probe|closure #1 in static MenuBarArranger.start() < static PhotonzApp.$main() < Photonz_main",
+    "Photonz Probe-2026-10-03-065859.ips": "deliberate: the-probe-keeps-being-killed-by-a-macos-fault-ma crashed the probe with kill -SEGV to reproduce the quit unexpectedly alert and prove it closes",
+    "Photonz Probe-2026-10-03-070542.ips": "deliberate: the-probe-keeps-being-killed-by-a-macos-fault-ma crashed the probe with kill -SEGV to reproduce the quit unexpectedly alert and prove it closes",
+    "Photonz Probe-2026-10-03-070610.ips": "deliberate: the-probe-keeps-being-killed-by-a-macos-fault-ma crashed the probe with kill -SEGV to reproduce the quit unexpectedly alert and prove it closes",
+    "Photonz Probe-2026-10-03-070643.ips": "deliberate: the-probe-keeps-being-killed-by-a-macos-fault-ma crashed the probe with kill -SEGV to reproduce the quit unexpectedly alert and prove it closes",
+    "Photonz Probe-2026-10-03-071209.ips": "deliberate: the-probe-keeps-being-killed-by-a-macos-fault-ma crashed the probe with kill -SEGV to reproduce the quit unexpectedly alert and prove it closes",
+    "Photonz Probe-2026-10-03-071248.ips": "deliberate: the-probe-keeps-being-killed-by-a-macos-fault-ma crashed the probe with kill -SEGV to reproduce the quit unexpectedly alert and prove it closes"
   },
   "signatures": {
     "probe|closure #1 in MainThreadMeter.install() < static PhotonzApp.$main() < Photonz_main": "the-app-crashed-in-closure-1-in-mainthreadmeter",

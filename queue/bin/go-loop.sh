@@ -764,6 +764,10 @@ TASK FILE: $TASK_FILE" "$SESSION"
   # or counted, so a crash never goes by unseen (the user, 2026-10-02: "make
   # sure that you're catching these"). See queue/bin/crash-watch.mjs.
   node queue/bin/crash-watch.mjs 2>&1 | sed 's/^/[crash-watch] /' | tee -a "$LOG" >/dev/null || true
+  # A probe crash (a macOS fault, or a runner crashing it on purpose) leaves
+  # "Photonz (Probe) quit unexpectedly" over the person's work; close it if it is
+  # the probe's and still up. See Scripts/probe-crash-alert.mjs.
+  node Scripts/probe-crash-alert.mjs close 2>&1 | sed 's/^/[crash-alert] /' | tee -a "$LOG" >/dev/null || true
   # ...and this catches anything it left CHANGED. Before the next task is
   # claimed, so that task starts from a tree it owns.
   settle_leftovers task "$TASK_ID" "$OUTCOME" "$TASK_TITLE"

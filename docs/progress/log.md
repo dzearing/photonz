@@ -20482,3 +20482,10 @@ Next: the first editor window's ~200 ms first build
 - Why: Time Profiler on the cold open-at-stop walk put ~200 of 338 main-thread ms in `swift_getTypeByMangledName` under SwiftUI's first build of the editor tree. Cold first window 438-614 ms before, 174-325 ms (mean 241) now; warm 149-179 (mean 167).
 - Left: a window opened with no other editor window open costs ~100 ms more (accessory to regular, Dock and window-server round trips); same for any window opened from zero, not launch-specific. Logged on the task.
 - Next: the user's reaction to the audit (2026-10-03-first-window-quick).
+
+## 2026-10-03: the probe's crash alert closes itself
+
+- Reproduced with `kill -SEGV` on the probe: macOS shows "quit unexpectedly" only when the probe is a regular Dock app (video and tutorial walks make it one; ReportCrash logs "WAS user visible"), never while it is the accessory it launches as, window or not.
+- `Scripts/probe-crash-alert.mjs` closes that alert (killall UserNotificationCenter) only when it went up after the probe's launch, a probe crash is in ReportCrash's log since then, and it is the one new alert. Run by playtest.sh on a death, probe-app.sh before launch and on --quit, and the go loop between tasks. Drill: `Scripts/probe-crash-alert-drill.mjs`.
+- Gotcha: macOS stops writing crash reports for an app past a daily cap ("Log limit exceeded") and still shows the alert, so the crash is read from the log, not only from reports.
+- The macos-ax-notify fault itself is not stoppable from here (Ztabby has no app exclusion list); crash-watch now lists it without filing.

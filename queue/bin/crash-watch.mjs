@@ -17,9 +17,10 @@
 //     log is read by nobody)
 //   * a crash in the Dev app is ALWAYS filed, even a known macOS fault: it
 //     happened to the person
-//   * a known macOS fault in the probe is counted; once one signature has
-//     happened 3 times in 7 days a p2 task asks how to stop it reaching the
-//     app (it still pops the "quit unexpectedly" dialog over the person's work)
+//   * a known macOS fault in the probe is listed and not filed: the walk is
+//     run once more, and the "quit unexpectedly" alert it leaves is closed by
+//     Scripts/probe-crash-alert.mjs (until 2026-10-03 three in a week filed a
+//     task, which became that script)
 //
 //   node queue/bin/crash-watch.mjs          scan, file, print one line each
 //   node queue/bin/crash-watch.mjs --dry    scan and print, file nothing
@@ -75,23 +76,12 @@ for (const name of names.sort()) {
   const sig = `${app}|${r.systemFault || own || r.exception}`;
   state.seen[name] = sig;
   if (r.systemFault && app !== 'dev') {
-    const f = state.faults[sig] || { times: [], filed: null };
-    f.times.push(r.whenMs || Date.now());
-    const week = Date.now() - 7 * 864e5;
-    f.times = f.times.filter((t) => t >= week);
-    lines.push(`crash ${app} ${r.when}: ${r.summary} (macOS fault, ${f.times.length} in 7 days)`);
-    if (f.times.length >= 3 && !f.filed && !dry) {
-      const task = {
-        title: `The probe keeps being killed by a macOS fault: ${r.systemFault}`,
-        goal: `Crash watch: ${f.times.length} probe crashes in 7 days with the known macOS fault '${r.systemFault}' (${r.summary}). It is not the app's code, but each one pops "Photonz (Probe) quit unexpectedly" over the person's work and cuts a walk short. Find what makes it happen here (on 2026-10-02 the person runs a window switcher, ztabby, that watches every window's accessibility notifications) and stop it reaching the app or the person: e.g. post fewer accessibility notifications during walks, or keep the probe out of the switcher's view.`,
-        epic: 'unmanned-loop', priority: 'p2-normal', source: 'crash-watch',
-        acceptance: ['The cause is shown with the crash reports, not guessed', 'A walk run that used to hit it 3 times a week runs a week without one, or the dialog never reaches the person', 'crash-watch stops counting it'],
-        notes: `Latest report: ${r.file}`,
-      };
-      f.filed = queue('addjson', JSON.stringify(task)).split('\n').pop();
-      lines.push(`  filed ${f.filed}`);
-    }
-    state.faults[sig] = f;
+    // Not counted toward a task any more. Its harm was never the crash (the
+    // walk is run once more) but the "quit unexpectedly" alert it left over the
+    // person's work, and since 2026-10-03 that alert is closed the moment the
+    // harness sees the probe die (Scripts/probe-crash-alert.mjs). The fault
+    // itself is macOS's and the window switcher's, and nothing here can stop it.
+    lines.push(`crash ${app} ${r.when}: ${r.summary} (macOS fault: the walk reruns and its alert is closed, not filed)`);
     continue;
   }
   const known = state.signatures[sig];

@@ -101,6 +101,20 @@ runs the walk once more, and `playtest-all.sh` marks a pass that took two as
 reported as CRASHED like any other. `PHOTONZ_CRASH_REPORTS_DIR` points
 `crash-report.mjs` at another folder, so a drill can hand it a report.
 
+A probe crash, that fault or any other, deliberate or not, also used to leave
+"Photonz (Probe) quit unexpectedly" over the person's work, and while it was up
+no app could take focus, so every walk after it failed for want of a key
+window. macOS shows that alert only when the crashed app was a regular Dock
+app, which every video and tutorial walk makes the probe; an accessory probe
+dies without one (ReportCrash logs "was NOT user visible"). Now
+`Scripts/probe-crash-alert.mjs` closes it: `playtest.sh` runs it the moment it
+sees the probe die, `probe-app.sh` before every launch and on `--quit`, and the
+go loop between tasks. It closes only an alert that went up after the probe's
+launch with a probe crash behind it (found in ReportCrash's own log, since macOS
+stops writing reports for an app past a daily cap and still shows the alert),
+and only when that alert is the one new one; anybody else's alert is left alone.
+`node Scripts/probe-crash-alert-drill.mjs` is its drill.
+
 `Scripts/playtest-all.sh` counts crashes apart from failures
 (`==> 3 passed, 1 failed, 2 crashed`), lists what each died in above the counts,
 and still puts their names in the list under it, so the sweep files them like

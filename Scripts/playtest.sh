@@ -161,6 +161,11 @@ elif (( DIED )); then
   # are all the loop ever reads, and "no done.json" sent four sweeps in a row
   # past twenty-one crashes (2026-09-17 night).
   STATUS=4
+  # A crash while the probe is a regular Dock app (any video or tutorial walk)
+  # puts "quit unexpectedly" up over the person's work. Take it down first,
+  # before the wait for the crash report, rather than at the next launch.
+  # See Scripts/probe-crash-alert.mjs.
+  node Scripts/probe-crash-alert.mjs close --wait 3 || true
   CRASH="$(node Scripts/crash-report.mjs --since "$RUN_BEGAN_MS" --wait 10 2>/dev/null || true)"
   echo "!! THE APP DIED part way through this walk. It is gone and it left no done.json," >&2
   echo "   which is not the same news as a walk that merely ran slowly." >&2

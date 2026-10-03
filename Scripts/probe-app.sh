@@ -76,7 +76,7 @@ BUILD=1
 PLAYTEST=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --quit)     quit_probe; echo "==> Probe quit."; exit 0 ;;
+    --quit)     quit_probe; node Scripts/probe-crash-alert.mjs close || true; echo "==> Probe quit."; exit 0 ;;
     --no-build) BUILD=0; shift ;;
     --playtest)
       [[ -f "${2:-}" ]] || { echo "!! --playtest needs a script file (got '${2:-}')" >&2; exit 1; }
@@ -91,6 +91,13 @@ fi
 [[ -d "$APP" ]] || { echo "!! $APP does not exist; run without --no-build" >&2; exit 1; }
 
 quit_probe
+# A crash of the last probe (a macOS fault, or a runner crashing it on purpose)
+# leaves "Photonz (Probe) quit unexpectedly" up over the person's work, and
+# while it is up no app can take focus, so this walk would fail for want of a
+# key window. Close it if, and only if, it is the probe's, then note the newest
+# window on the Mac so the next close can tell. See Scripts/probe-crash-alert.mjs.
+node Scripts/probe-crash-alert.mjs close || true
+node Scripts/probe-crash-alert.mjs mark || true
 # The probe rewrites this at launch; drop it first so a failed launch reports
 # "unknown" rather than yesterday's answer.
 rm -f "$GRANTS"
@@ -286,9 +293,10 @@ if [[ "$ALERT_IN_FRONT" == yes ]]; then
   echo "    A SYSTEM ALERT IS IN FRONT, usually \"Photonz (Probe) quit unexpectedly\" after a"
   echo "    crash. Until it goes, no app can take focus: buttons still work, but a click on"
   echo "    the timeline (a cut, a clip, the Blade, a caption bar) does NOTHING, and every"
-  echo "    walk that makes one fails for a reason that is not in the app. Somebody at the"
-  echo "    Mac clicks Ignore on it; or, knowing it is the probe's crash dialog, run"
-  echo "    \`killall UserNotificationCenter\`, which closes it the same way."
+  echo "    walk that makes one fails for a reason that is not in the app. The probe's own"
+  echo "    crash alert is closed before every launch (Scripts/probe-crash-alert.mjs), so this"
+  echo "    one is somebody else's or was up before the probe started: whoever is at the Mac"
+  echo "    clicks it away."
 fi
 if [[ "$SCREEN" != "granted" ]]; then
   echo "    No real screenshots: the probe can only write offscreen renders, and an audit"
