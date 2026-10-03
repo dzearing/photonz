@@ -1,0 +1,32 @@
+{
+  "id": "layer-names-on-the-timing-strip-read-whole-besid",
+  "title": "Layer names on the timing strip read whole beside their kind mark",
+  "goal": "The new kind mark at the start of each heading on the timing strip took room from the name, so names that used to fit, such as Notification bell or Settings window, are now cut in the middle and only read whole in the tooltip. The mock wraps a long name onto a second line instead. A person animating an icon should read every layer name without pointing at it.",
+  "epic": "icon-animate",
+  "priority": "p3-low",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-03T12:41:41.559Z",
+  "updated": "2026-10-03T12:42:02.086Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the 2026-10-03 digest design review. Evidence: queue/audits/2026-10-03-timing-strip-marks.json rough item 2 (the mark costs the name 14 points, 86 down to 72; names of 14 to 16 characters that fitted are now cut) and item 3 (the mock wraps long names onto two lines in a 58 pixel column; the app keeps one line). Commit 17ce4476.",
+  "acceptance": [
+    "A layer named Notification bell, Settings window or Title text layer reads whole on the timing strip at its default width, beside its kind mark",
+    "Follows the mock (icon-animate-wt.html, the timing dock): a long name wraps onto a second line rather than being cut, or the difference goes to the user on a decision card with pictures of both",
+    "The video timeline lanes still start where they do now",
+    "timing-strip-long-names-walk photographs the long names at Next defaults, and the audit puts that picture beside the mock"
+  ],
+  "log": [
+    {
+      "t": "2026-10-03T12:41:41.561Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-03T12:42:02.085Z",
+      "note": "seq 1350 -> 20"
+    }
+  ]
+}

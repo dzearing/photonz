@@ -4,12 +4,12 @@
   "goal": "Running the app build script with a flag it does not know, such as --help, quietly starts a full rebuild of the person's own dev app instead of printing how to use it, which would quit the app they are using. It should print its usage and stop for anything it does not recognise.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 3510,
+  "seq": 110,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-02T16:11:50.631Z",
-  "updated": "2026-10-02T16:11:50.634Z",
+  "updated": "2026-10-03T12:42:01.921Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-02 by a runner on task a-far-playhead-jump-on-a-zoomed-in-long-recordin: `Scripts/build-app.sh --help 2>&1 | head -5` printed `==> Building Photonz 0.15.0 (dev, arm64)` then `Building for production...`. It was only stopped because `head` closed the pipe (SIGPIPE); dist/Photonz Dev.app kept its 05:34 binary. queue/playtest.lock did not exist at the time, so the dev-build guard would not have refused. Cause: Scripts/build-app.sh only compares \"${1:-}\" against --release/--dmg/--dmg-only/--probe (lines 40, 95, 354); anything else falls through to the default dev build. Fix: a case on $1 at the top that handles the known flags and prints the header comment (lines 4-35) for -h/--help/anything else, exit 2.",
@@ -22,6 +22,14 @@
     {
       "t": "2026-10-02T16:11:50.633Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-03T12:40:52.681Z",
+      "note": "seq 3510 -> 100"
+    },
+    {
+      "t": "2026-10-03T12:42:01.920Z",
+      "note": "seq 100 -> 110"
     }
   ]
 }

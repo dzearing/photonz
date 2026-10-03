@@ -4,24 +4,41 @@
   "goal": "The check that holds a history filter switch to one frame may not be timing the switch itself: the work right after the click (building a strip of new tiles) never showed up in its reading. If so, a switch could get slow and the walk would stay green.",
   "epic": "video-editing",
   "priority": "p2-normal",
-  "seq": 3530,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-03T03:08:50.218Z",
-  "updated": "2026-10-03T03:08:50.221Z",
+  "updated": "2026-10-03T12:42:01.705Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-02 while working walking-the-history-strip-with-the-arrow-keys-ke. With temporary logging (CACurrentMediaTime per HistoryOverlayCell body, per MainThreadMeter.reset, and per counted pass >5ms from the meter's own observer), pressing \"Videos\" in history-filter-switch-speed-walk logged: meter reset at 0ms, 14 tile bodies built between 12ms and 28ms after it, filter onChange at 41ms, and NO counted pass longer than 5ms until 300ms later. So at least ~16ms of app work right after the click was not in the reading; the step reported longest 4-5ms on the original code. Suspect: pressControl's settle loop runs look()/isRestless() (accessibility reads) inside MainThreadMeter.exclude, and an accessibility read forces SwiftUI's pending update to run synchronously inside the excluded span, so the app's own work is subtracted as the harness's (PlaytestHarness.swift around the settle loop, `let began = CACurrentMediaTime(); let restless = isRestless(); let now = try? look(); MainThreadMeter.shared.exclude(...)`). Not confirmed: the update might also run inside the synthesized mouse-down sendEvent before the meter's pass bookkeeping. Repro: add the logging above, run Scripts/playtest.sh Scripts/playtest/history-filter-switch-speed-walk.json, read the lines around the Videos press.",
   "acceptance": [
     "It is known, with a reproduction, whether the main-thread meter counts the pass in which a pressed control's change is applied",
     "If it does not, a press step's longestUnderMS fails when the click's own pass runs long, shown by a walk that makes one deliberately slow",
-    "history-filter-switch-speed-walk still passes"
+    "history-filter-switch-speed-walk still passes",
+    "history-filter-switch-speed-walk passes five runs in a row on its own, on an ordinary working day (its arrow steps' 16ms gate failed 2 of 3 runs on 2026-10-03 on both old and new code)"
   ],
   "log": [
     {
       "t": "2026-10-03T03:08:50.220Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-03T10:37:49.122Z",
+      "note": "rotating check 2026-10-03T10:37:49Z, 50 walks run from 225 onward in the rotation: history-filter-switch-speed-walk failing."
+    },
+    {
+      "t": "2026-10-03T12:19:48.566Z",
+      "note": "2026-10-03 (from walks-that-fail-in-the-full-sweep-9): history-filter-switch-speed-walk is red on most runs today, and NOT from a regression. Its 40 'appKey right, longestUnderMS 16' steps fail at random ones (steps 33/34/35/66/68, 16.4-20.6ms). A/B on the same machine minutes apart, interleaved, Scripts/playtest.sh Scripts/playtest/history-filter-switch-speed-walk.json --no-build: 3a5d3074 (the commit that set the 16ms gate, measured 8/8 green max 15.8ms) failed 1 of 3, HEAD 52124135 failed 2 of 3; both read median ~10ms, p90 12-15ms per right arrow, with a stray 16-21ms pass. Load average ~4, person idle. So the gate (every one of 40 arrows under 16ms, each judged over a 0.2s window that takes any main-thread pass) has no headroom on this machine: the per-step cost is ~10ms and any noise spike fails it. Either buy real headroom in the strip's arrow step or gate on what a person sees (e.g. no pass over two frames, plus a median under one)."
+    },
+    {
+      "t": "2026-10-03T12:40:52.442Z",
+      "note": "seq 3530 -> 60"
+    },
+    {
+      "t": "2026-10-03T12:42:01.704Z",
+      "note": "seq 60 -> 70"
     }
   ],
   "walks": [

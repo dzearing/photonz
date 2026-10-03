@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 150,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T10:43:55.290Z",
-  "updated": "2026-10-02T12:38:22.371Z",
+  "updated": "2026-10-03T11:01:53.862Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced on 2026-09-23 with Scripts/playtest.sh Scripts/playtest/tutorial-component-versions-walk.json --no-build. The guide builds all four states on its own sample page (720x480, button 240x52 starting at 88,88) and its last step promises \"Four drawings under one name, each labelled with its state\". The render it leaves, /tmp/photonz-playtest/tutorial-component-versions-walk/7-four-states-built-doc.png, is Default at top left with its two copies below it and Hover, Pressed and Disabled in a column to its right.\n\nWhy: PhotonzDocument.roomForDrawing (Sources/PhotonzCore/ComponentVersions.swift) is a generic packer. It walks along the row the SOURCE drawing is on, steps over anything in the way, and when the row runs out of canvas it drops to a fresh row under the blockers. Four 240-wide drawings with the 24pt gap need 1032pt and the sample page is 720, so the third and fourth wrap. On a 1440 wide page they do land in a row, which is why the journey walk (Scripts/playtest/button-states-journey-walk.json) looks right and the tutorial does not.\n\nThis was measured twice before: make-a-button-with-states-and-properties-and-set logged it on 2026-09-15 and tutorials-making-states-in-a-component folded it on 2026-09-16. Both left it because the fix is a real decision rather than a tweak: keeping a set together on a page too narrow for it means either wrapping them deliberately into a grid of the component's own, growing the page, or giving the component a strip that holds its looks. That decision is the first act of this task.",
@@ -71,10 +71,44 @@
     {
       "t": "2026-10-02T12:38:22.370Z",
       "note": "seq 140 -> 150"
+    },
+    {
+      "t": "2026-10-03T10:39:59.549Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-03T11:01:37.640Z",
+      "note": "Reproduced with Scripts/playtest.sh Scripts/playtest/tutorial-component-versions-walk.json: render 7 showed Default alone, its two copies under it, and Hover/Pressed/Disabled in a column at x=352."
+    },
+    {
+      "t": "2026-10-03T11:01:37.640Z",
+      "note": "Root cause is wider than the notes said: addComponentVersion searched for room from the SOURCE look, so adding each state from the one just made produced the column even on an empty 720 page (new ComponentVersionRoomTests.looksAddedOneFromTheNextFormOneGridWithTheFirst failed with [(88,88),(352,88),(352,164),(352,240)]). The copies under the original were a second cause in the guide."
+    },
+    {
+      "t": "2026-10-03T11:01:37.640Z",
+      "note": "Decision taken (no card): the looks wrap into rows of their own, read from the component's FIRST look. Least invasive of the three in the notes, never changes the page size, and is what any later outlined-set box would lay out inside. Growing the page was ruled out as changing the document under the person. The outlined set (Figma style) is raised as an evaluate question on the audit instead of a card, so the user's reaction files it if wanted."
+    },
+    {
+      "t": "2026-10-03T11:01:37.640Z",
+      "note": "Shipped: ComponentVersions.addComponentVersion anchors roomForDrawing on the first look's canvas box. Shared component placement already anchored on the first look. Starter drop placement untouched. Guide sample copies moved from y=192/296 to y=264/368 so the set's second row is free; both guide walks' copy click moved to (176,290)."
+    },
+    {
+      "t": "2026-10-03T11:01:37.640Z",
+      "note": "Verified: 3 new room tests + tutorial test asserting two rows of two; Scripts/test.sh 11035 passed; 11 walks that add looks all ok (tutorial-component-versions, tutorial-override-one-copy, button-states-journey, component-versions, apply-to-versions, place-a-version, version-*, name-chip-reads-anywhere, dock-component-first, component-whole-path). Real capture 10-all-four-together-sc.png shows the 2x2 set."
+    },
+    {
+      "t": "2026-10-03T11:01:37.640Z",
+      "note": "Left rough (audit rough, not filed): no outline marks the set as one thing; something parked where the set's next row goes still breaks it up in a person's own document; state labels sit tight in the 24pt row gap. All three are on the audit for the user to react to; none is broken, and 'a version set drawn as one thing' was already named as not-in-slice in ui-building.md."
+    },
+    {
+      "t": "2026-10-03T11:01:53.860Z",
+      "note": "New looks of a component land with the set, read from its first look, so four states on a narrow page are two rows of two (ComponentVersions.addComponentVersion). States guide sample copies moved below the set. Verified: new room + tutorial tests, full suite 11035 passed, 11 look-adding walks ok, real capture in audit 2026-10-03-component-looks-set. Commit 69f24bf5."
     }
   ],
   "walks": [
     "tutorial-component-versions-walk",
     "button-states-journey-walk"
-  ]
+  ],
+  "started": "2026-10-03T10:39:59.548Z",
+  "completed": "2026-10-03T11:01:53.861Z"
 }

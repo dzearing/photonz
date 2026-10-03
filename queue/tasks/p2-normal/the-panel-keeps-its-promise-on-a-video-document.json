@@ -4,12 +4,12 @@
   "goal": "On a document with time, the strip along the bottom takes its height off the right hand panel as well as off the picture, so on a laptop window there is not enough room left for Appearance and Effects to both be on screen, and the panel goes back to scrolling. Make the two sections nobody should have to scroll to fit on a video document as well as on a still one.",
   "epic": "video-editing",
   "priority": "p2-normal",
-  "seq": 70,
+  "seq": 80,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T02:12:33.004Z",
-  "updated": "2026-10-02T12:38:21.940Z",
+  "updated": "2026-10-03T12:42:01.758Z",
   "deps": [
     "the-timeline-is-the-one-in-the-mock",
     "on-a-video-the-timeline-is-the-layer-list-and-th"
@@ -120,6 +120,14 @@
     {
       "t": "2026-10-02T12:38:21.939Z",
       "note": "seq 80 -> 70"
+    },
+    {
+      "t": "2026-10-03T12:40:52.500Z",
+      "note": "seq 70 -> 70"
+    },
+    {
+      "t": "2026-10-03T12:42:01.757Z",
+      "note": "seq 70 -> 80"
     }
   ],
   "walks": [],

@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 3500,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-10-02T13:06:34.503Z",
-  "updated": "2026-10-03T09:36:49.042Z",
+  "updated": "2026-10-03T12:21:33.215Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-02T17:46:57Z ran only the part of the walk set a locked screen cannot touch: 370 of 710 walks ran in 94 minutes, of which 361 passed. The other 128 were refused because the screen is locked, and those are unknown, not passing. This list is the failures in the part that ran, not the state of the walk set.\n\nFailing walks (9): a-painted-caption-takes-a-click-walk, find-what-stayed-a-picture-walk, history-filter-switch-speed-walk, import-key-leaves-invert-selection-walk, key-a-title-s-scale-walk, keyframe-anything-walk, label-border-follows-walk, normalize-cleans-noise-walk, segmented-history-film-walk\n\nThose 9 are UNCONFIRMED. This run was cut short, and a stop takes the probe app down with it,\nso a walk failing in its last moments may be a casualty of the stop rather than a break.\nRe-run one on its own with Scripts/playtest.sh before believing it; the next sweep that covers the set decides.\n\nNever finished: separate-hierarchy-walk was still running when the run was stopped. It is not a pass and not a failure; nobody asked it anything.\n\nFull output: queue/sweep/2026-10-02-091317.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a scheduled sweep\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -46,7 +46,50 @@
     {
       "t": "2026-10-03T09:36:49.041Z",
       "note": "arrow-reshuffle-walk fails on clean main (a40c736b), reproduced 2026-10-03 02:3x: 'Scripts/playtest.sh Scripts/playtest/arrow-reshuffle-walk.json' -> step 9 (rightClick) with ticked:[\"Hand-drawn\"]: no row called \"Hand-drawn\" in the menu; the rows are: Arrow Style, Reshuffle, —, Duplicate, ... The style rows sit inside the Arrow Style submenu, so either the walk should look in the submenu or the rightClick step should read submenu rows. Also seen in the 2026-10-02 22:32 slice."
+    },
+    {
+      "t": "2026-10-03T11:51:38.696Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-03T12:07:41.519Z",
+      "note": "Re-ran all 12 named walks on main (52124135) on their own. Passing alone, so casualties of the cut-short locked sweep and not broken: a-painted-caption-takes-a-click, find-what-stayed-a-picture, import-key-leaves-invert-selection, key-a-title-s-scale, keyframe-anything, label-border-follows, segmented-history-film, read-every-label, sound-effects-eq-compressor-locked (each passed twice in a row)."
+    },
+    {
+      "t": "2026-10-03T12:07:41.646Z",
+      "note": "normalize-cleans-noise-walk was WRONG, not broken: step 32 pressed 'Remove Noise reduction', a name the app dropped in 1548ea26 when Audio Effects rows moved onto the shared effects row (its cross is now 'Remove' in the 'Noise reduction' row). Walk now presses {control: Remove, in: Noise reduction}; passes 2/2 and the 4-removed capture shows Audio Effects reading 'No effects'."
+    },
+    {
+      "t": "2026-10-03T12:07:41.833Z",
+      "note": "arrow-reshuffle-walk was WRONG from birth (9b94fbe7): its rightClick asked for 'Hand-drawn' to be ticked, but the style rows have always lived in the Arrow Style submenu and the harness only read ticked/unticked at the top level (choose already looked one step into submenus). Harness fix: rightClick's ticked/unticked now find their row the way choose does (top first, then one step into each submenu, 'Parent > Row' allowed). Its step 13 was also a bare key cmd+z, which walks refuse since the probe went background-only; now a shortcut step with menuItem Undo. Passes 2/2; Reshuffle changes the render and Undo returns the identical first render (same md5). The six other walks that use ticked/unticked on a rightClick still pass."
+    },
+    {
+      "t": "2026-10-03T12:07:44.548Z",
+      "note": "owns these walks: a-painted-caption-takes-a-click-walk, find-what-stayed-a-picture-walk, import-key-leaves-invert-selection-walk, key-a-title-s-scale-walk, keyframe-anything-walk, label-border-follows-walk, normalize-cleans-noise-walk, segmented-history-film-walk, read-every-label-walk, sound-effects-eq-compressor-locked-walk, arrow-reshuffle-walk"
+    },
+    {
+      "t": "2026-10-03T12:21:25.389Z",
+      "note": "history-filter-switch-speed-walk belongs to find-out-whether-a-press-step-s-frame-guard-can (it named it with queue.mjs walks). Measured here: red 5 of 6 runs today, but an interleaved A/B against 3a5d3074 (the commit that set its 16ms arrow gate) fails the same way, median ~10ms per arrow with stray 16-21ms passes, so it is a gate with no headroom, not a regression. Evidence and a new acceptance item folded into that task. separate-hierarchy-walk (never finished in the sweep) passes 2/2. Scripts/test.sh: 11042 tests pass."
+    },
+    {
+      "t": "2026-10-03T12:21:33.213Z",
+      "note": "Of the 12 walks named, 9 pass on their own twice in a row; the locked, cut-short sweep had failed them by accident. 2 were wrong walks, fixed in d0a0a150: normalize-cleans-noise used a control name the app dropped, and arrow-reshuffle asked for a tick inside a submenu, which right-click steps could not read until now (the harness fix also covers unticked). Both pass 2/2, the 6 other walks that check ticks on right-click menus still pass, and Scripts/test.sh passes 11042 tests. history-filter-switch-speed-walk belongs to find-out-whether-a-press-step-s-frame-guard-can. An A/B against old code shows its 16ms arrow gate has no headroom on this machine, and that evidence is now on that task. separate-hierarchy-walk passes 2/2."
     }
   ],
-  "standing": "walk-sweep"
+  "standing": "walk-sweep",
+  "started": "2026-10-03T11:51:38.695Z",
+  "walks": [
+    "a-painted-caption-takes-a-click-walk",
+    "find-what-stayed-a-picture-walk",
+    "import-key-leaves-invert-selection-walk",
+    "key-a-title-s-scale-walk",
+    "keyframe-anything-walk",
+    "label-border-follows-walk",
+    "normalize-cleans-noise-walk",
+    "segmented-history-film-walk",
+    "read-every-label-walk",
+    "sound-effects-eq-compressor-locked-walk",
+    "arrow-reshuffle-walk"
+  ],
+  "completed": "2026-10-03T12:21:33.214Z"
 }

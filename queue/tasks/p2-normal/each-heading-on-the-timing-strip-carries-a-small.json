@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p2-normal",
   "seq": 160,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T12:12:41.452Z",
-  "updated": "2026-10-02T12:38:22.425Z",
+  "updated": "2026-10-03T11:36:26.856Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the side-by-side for a-lane-on-the-timing-strip-says-which-layer-it-b (queue/audits/2026-09-30-timing-strip-names-mock.png vs 2026-09-30-timing-strip-names-1.png). Mock: docs/design/mocks/pages/icon-animate-wt.html, the timing dock: <span class=\"tl\"><i class=\"ic xs ic-bezier\"></i> Bell body</span>. App: Sources/Photonz/MotionStripView.swift MotionStripGroupView draws Text(group.layerName) in a labelWidth - 6 (86pt) frame with no glyph. A glyph costs about 14pt of that, so long names get cut sooner; the whole-name tooltip (wholeNameTip) already covers reading them. Decide which symbol set: the Layers list uses thumbnails, not glyphs, so a small kind glyph may need a mapping from layer kind to SF Symbol; if the mapping is a new choice with a visible consequence, it is a decision card.",
@@ -43,9 +43,32 @@
     {
       "t": "2026-10-02T12:38:22.424Z",
       "note": "seq 150 -> 160"
+    },
+    {
+      "t": "2026-10-03T11:20:49.316Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-03T11:36:18.050Z",
+      "note": "Review before building: the mock marks Bell body with ic-bezier and Knob with ic-circle; TimelineTrackKind calls every shape an overlay, so a finer LayerMark (PhotonzCore/LayerMark.swift, tested in LayerMarkTests) was added and carried on MotionStripGroup.mark. Glyph mapping is not a new visual vocabulary, so no decision card: path = the mock's bezier (SF curvepath, already used in KeyLanesView), drawn shapes reuse Tool.barSymbol, text/picture/sound/component reuse TimelineTrackRow.symbol. Column could NOT widen: TimelineDock.lanesLeading (84+gap) equals MotionStripView.labelWidth and the video timeline's MotionStripLaneView rows depend on it, so the mark (11pt + 3pt gap) comes out of the name's room (86 -> 72pt). Default names all fit; 14-16 char names now cut, tooltip covers them (audit says so)."
+    },
+    {
+      "t": "2026-10-03T11:36:18.103Z",
+      "note": "Verified: Scripts/test.sh 11042 tests pass; timing-strip-long-names-walk ok on a freshly built probe (no flags), tutorial-two-parts-out-of-phase-walk ok; captures show lanes still starting at ruler 0 and the hover tooltip still rising from the pointer. Audit queue/audits/2026-10-03-timing-strip-marks.json. Rough items: none filed; glyph-end detail and name-room cost left in the audit for the user to react to."
+    },
+    {
+      "t": "2026-10-03T11:36:18.159Z",
+      "note": "walks timing-strip-long-names-walk -> timing-strip-long-names-walk, tutorial-two-parts-out-of-phase-walk"
+    },
+    {
+      "t": "2026-10-03T11:36:26.854Z",
+      "note": "Timing strip headings now start with a kind mark (path curve, circle, square, and tool/track glyphs for other kinds) via PhotonzCore LayerMark + MotionStripView. Tests 11042 pass; timing-strip-long-names-walk (no flags) and the bell tutorial walk ok with real captures; audit queue/audits/2026-10-03-timing-strip-marks.json. Commit 17ce4476."
     }
   ],
   "walks": [
-    "timing-strip-long-names-walk"
-  ]
+    "timing-strip-long-names-walk",
+    "tutorial-two-parts-out-of-phase-walk"
+  ],
+  "started": "2026-10-03T11:20:49.314Z",
+  "completed": "2026-10-03T11:36:26.855Z"
 }

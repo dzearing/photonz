@@ -1,0 +1,32 @@
+{
+  "id": "every-difference-from-the-mock-in-an-audit-names",
+  "title": "Every difference from the mock in an audit names the card or task that settles it",
+  "goal": "Runners keep finishing work that differs from the user's mocks and writing the difference into the audit as a note, when the rules say a difference is either fixed, filed, or put to the user on a card. Two days running the user's mocks were quietly undercut this way. Finishing a task should not be possible while an audit lists a difference from the mock that nobody has been asked about.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 60,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-03T12:41:51.301Z",
+  "updated": "2026-10-03T12:42:01.651Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the 2026-10-03 digest design review. Rule already written: queue/bin/runner-prompt.md line ~352 (differences in layout, colour, control type, spacing or copy length are defects to fix in this task or to file as p1, not notes) and objectives principle 4 (a departure is a decision card). Evidence: 2026-10-02 audio effects drew Effects as a section where the mock draws a dock group (logged on the-panel-keeps-its-promise-on-a-video-document); 2026-10-03 timing strip marks lists mock differences (glyph ends, two-line wrap, bright headings) as rough with no card (filed as layer-names-on-the-timing-strip-read-whole-besid); 2026-10-02 sound EQ and pivot audits list differences with reasons but no card. The done gate already has one refusal of this kind (off-by-default switches, queue.mjs off-by-default), so this sits beside it.",
+  "acceptance": [
+    "Marking an app task done is refused when its audit lists a difference from a mock that names neither an open or answered decision card, nor a task id, nor an earlier task that settled it",
+    "The refusal says which audit line and what to add, in one plain sentence",
+    "The audits from 2026-10-02 and 2026-10-03 (audio effects, EQ and compressor, pivot somewhere else, timing strip marks) are run through the check and what it says about each is in this task log",
+    "A drill shows a done refused and then accepted once the line names a card"
+  ],
+  "log": [
+    {
+      "t": "2026-10-03T12:41:51.303Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-03T12:42:01.650Z",
+      "note": "seq 3510 -> 60"
+    }
+  ]
+}

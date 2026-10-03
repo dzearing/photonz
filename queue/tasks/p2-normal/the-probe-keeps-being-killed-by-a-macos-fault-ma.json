@@ -1,27 +1,40 @@
 {
   "id": "the-probe-keeps-being-killed-by-a-macos-fault-ma",
-  "title": "The probe keeps being killed by a macOS fault: macos-ax-notify",
-  "goal": "Crash watch: 3 probe crashes in 7 days with the known macOS fault 'macos-ax-notify' (EXC_GUARD in macOS posting an accessibility notification (a macOS fault, not the app)). It is not the app's code, but each one pops \"Photonz (Probe) quit unexpectedly\" over the person's work and cuts a walk short. Find what makes it happen here (on 2026-10-02 the person runs a window switcher, ztabby, that watches every window's accessibility notifications) and stop it reaching the app or the person: e.g. post fewer accessibility notifications during walks, or keep the probe out of the switcher's view.",
+  "title": "A crash in the loop's test copy of the app stops leaving an alert over the person's work",
+  "goal": "About every other day, the copy of the app the loop tests with is killed by a fault inside macOS (not in the app) while it announces a change to accessibility tools, most likely set off by the window switcher the person runs. Each time, a \"quit unexpectedly\" alert lands over the person's work and stays in front, and every walk after it fails because the app cannot get focus. Stop the fault reaching the app, or stop the alert reaching the person and the walks.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 3550,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-03T05:37:37.389Z",
-  "updated": "2026-10-03T05:37:37.392Z",
+  "updated": "2026-10-03T12:42:01.542Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Latest report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-09-30-045007.ips",
   "acceptance": [
     "The cause is shown with the crash reports, not guessed",
     "A walk run that used to hit it 3 times a week runs a week without one, or the dialog never reaches the person",
-    "crash-watch stops counting it"
+    "crash-watch stops counting it",
+    "After a probe crash, deliberate or not, the next walk run does not fail for want of focus: the alert is gone or never shown"
   ],
   "log": [
     {
       "t": "2026-10-03T05:37:37.391Z",
       "note": "created (crash-watch)"
+    },
+    {
+      "t": "2026-10-03T12:40:38.595Z",
+      "note": "Triage 2026-10-03: this is not only noise in crash-watch. The rotating check at 12:35Z failed 4 walks (an-editing-session-walk among them) only because a crash alert held the front; all 3 that could be re-run pass on their own. So each of these crashes costs the person a dialog over their work and costs the loop a red check and a standing walk task. Moved up to sit right after the focus work. Also worth answering here: a runner that crashes the probe on purpose to prove a fix (three times on 2026-10-03, 08:37-08:57Z) leaves the same dialog up; whatever dismisses or prevents this dialog should cover those too."
+    },
+    {
+      "t": "2026-10-03T12:40:52.332Z",
+      "note": "seq 3550 -> 40"
+    },
+    {
+      "t": "2026-10-03T12:42:01.541Z",
+      "note": "seq 40 -> 40"
     }
   ]
 }
