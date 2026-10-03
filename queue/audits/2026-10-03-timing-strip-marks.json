@@ -1,0 +1,26 @@
+{
+  "feature": "A kind mark in front of each layer on the timing strip",
+  "epic": "icon-animate",
+  "summary": "Each layer heading on the icon's timing strip now starts with a small mark for what kind of layer it is, as the Make a bell swing mock draws it: a curve for a path, a circle for an ellipse, a square for a rectangle. You can tell parts apart at a glance without reading names.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: timing-strip-long-names-walk (no flags) and tutorial-two-parts-out-of-phase-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open any picture, draw a rectangle and an ellipse, and give each a Rotation from Add Motion in the side panel.", "shot": "2026-10-03-timing-strip-marks-2-sc.png" },
+    { "do": "Look at the strip across the bottom: the rectangle's heading starts with a square, the ellipse's with a circle." },
+    { "do": "Start the Icons guide Two parts out of phase: the bell's two path parts each carry the curve mark the mock gives Bell body.", "shot": "2026-10-03-timing-strip-marks-1-sc.png" },
+    { "do": "Pick a layer: its mark brightens along with its name." },
+    { "do": "Rename a layer to something long (settings-capture-top) and rest the pointer on its cut heading to read it whole.", "shot": "2026-10-03-timing-strip-marks-3-sc.png" }
+  ],
+  "evaluate": [
+    "Can you tell a path from a circle from a rectangle on the strip without reading the names?",
+    "Is the curve mark for a path close enough to the mock's bezier glyph, or should it look more like the pen?",
+    "Do the marks sit quietly enough that the names still lead, or do they add clutter to a busy strip?",
+    "Is losing about 14 points of name room acceptable, given the whole name is one pointer rest away?"
+  ],
+  "rough": [
+    "Side by side with the mock (icon-animate-wt.html, the timing dock; queue/audits/2026-09-30-timing-strip-names-mock.png): the mock's path glyph has small squares at the curve's ends, the app's system glyph has small circles.",
+    "The mark costs the name 14 points (86 down to 72). Every name the app gives by default still fits, but names of about 14 to 16 characters that fitted before (Notification bell, Settings window, Title text layer) are now cut in the middle and read whole on the tooltip. The column could not widen instead: the video timeline's lanes start at the same point.",
+    "Unchanged from before, still different from the mock: the mock wraps a long name onto two lines in a 58 pixel column and draws every heading bright; the app keeps one line in a wider column and dims headings that are not picked.",
+    "Kinds the mock does not draw (words, picture, sound, group, frame, component, callout, lens, measure, collage) take the glyph their tool or their video track header already wears, so one kind keeps one picture across the app."
+  ]
+}

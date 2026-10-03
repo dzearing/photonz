@@ -121,18 +121,22 @@ public struct MotionStripGroup: Identifiable, Hashable, Sendable {
     /// What the row is on a document's timeline, which picks its icon and its
     /// clip colour (`TimelineTrack.swift`).
     public var trackKind: TimelineTrackKind
+    /// The small mark in front of the row's name saying what kind of layer it
+    /// is (`LayerMark.swift`).
+    public var mark: LayerMark
 
     public var id: UUID { layerID }
 
     public init(layerID: UUID, layerName: String, lanes: [MotionStripLane],
                 bar: LayerTime? = nil, isSound: Bool = false,
-                trackKind: TimelineTrackKind = .overlay) {
+                trackKind: TimelineTrackKind = .overlay, mark: LayerMark) {
         self.layerID = layerID
         self.layerName = layerName
         self.lanes = lanes
         self.bar = bar
         self.isSound = isSound
         self.trackKind = trackKind
+        self.mark = mark
     }
 }
 
@@ -230,7 +234,8 @@ extension PhotonzDocument {
             },
             bar: layer.time,
             isSound: layer.sound != nil,
-            trackKind: layer.timelineTrackKind)
+            trackKind: layer.timelineTrackKind,
+            mark: layer.mark)
     }
 
     /// The ends of every bar except one: what the bar being dragged can catch

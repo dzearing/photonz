@@ -45,6 +45,11 @@ struct MotionStripView: View {
     static let soundLaneHeight: CGFloat = 42
     /// The labelled hairline over each layer's lanes.
     static let layerRowHeight: CGFloat = 16
+    /// The kind mark in front of a layer's name, and the air after it.
+    static let markWidth: CGFloat = 11
+    static let markGap: CGFloat = 3
+    /// What a layer's name has left of the column once its mark is in.
+    static var headingNameRoom: CGFloat { labelWidth - 6 - markWidth - markGap }
     /// Air round the whole strip.
     private static let inset: CGFloat = 12
     /// Past which the strip scrolls instead of growing. Six or seven lanes fit
@@ -380,14 +385,23 @@ private struct MotionStripGroupView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 6) {
-                Text(group.layerName)
-                    .font(.system(size: 10, weight: .semibold))
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                    .foregroundStyle(isPicked ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
-                    .frame(width: MotionStripView.labelWidth - 6, alignment: .leading)
-                    .wholeNameTip(group.layerName, weight: .semibold,
-                                  room: MotionStripView.labelWidth - 6)
+                // The mark for what kind of layer it is, then its name, as the
+                // mock draws the heading. The mark comes out of the name's
+                // room, never the lanes': the column stays one width.
+                HStack(spacing: MotionStripView.markGap) {
+                    Image(systemName: group.mark.symbol)
+                        .font(.system(size: 9, weight: .medium))
+                        .frame(width: MotionStripView.markWidth)
+                        .accessibilityHidden(true)
+                    Text(group.layerName)
+                        .font(.system(size: 10, weight: .semibold))
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+                .foregroundStyle(isPicked ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+                .frame(width: MotionStripView.labelWidth - 6, alignment: .leading)
+                .wholeNameTip(group.layerName, weight: .semibold,
+                              room: MotionStripView.headingNameRoom)
                 if let bar = group.bar {
                     clipBar(bar)
                 } else {
@@ -591,6 +605,36 @@ struct MotionStripLaneView: View {
         }
         .frame(height: MotionStripView.laneHeight)
         .playtestField("Timing \(layerName) \(lane.title)")
+    }
+}
+
+// MARK: - A layer's kind mark
+
+extension LayerMark {
+    /// The glyph in front of a layer's name. Where a tool draws the kind, it is
+    /// the glyph that tool wears in the tool bar, and where the video timeline
+    /// names it, the glyph its track header wears, so one kind of thing has
+    /// one picture wherever it is shown. A path is the mock's `ic-bezier`: a
+    /// curve between two points.
+    var symbol: String {
+        switch self {
+        case .path: "point.topleft.down.to.point.bottomright.curvepath"
+        case .rectangle: Tool.rectangle.barSymbol
+        case .ellipse: Tool.ellipse.barSymbol
+        case .arrow: Tool.arrow.barSymbol
+        case .line: Tool.line.barSymbol
+        case .highlight: Tool.highlight.barSymbol
+        case .text: TimelineTrackRow.symbol(.text)
+        case .picture, .video: TimelineTrackRow.symbol(.video)
+        case .sound: TimelineTrackRow.symbol(.audio)
+        case .component: TimelineTrackRow.symbol(.component)
+        case .group: "square.stack"
+        case .frame: Tool.frame.barSymbol
+        case .zoomCallout: Tool.zoomCallout.barSymbol
+        case .lens: Tool.lens.barSymbol
+        case .measure: Tool.measure.barSymbol
+        case .collage: "square.grid.2x2"
+        }
     }
 }
 
