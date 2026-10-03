@@ -20540,3 +20540,9 @@ Next: the first editor window's ~200 ms first build
 - A title page that lands at 0:00 where a picture clip starts moves everything after it later by the page's length less its fade out, so title, dissolve, recording loses no footage (`PhotonzDocument.pushPictureAfterOpeningTitle`, `TitlePresets.swift`). Elsewhere it still overlays; name cards never push; locked tracks stay put.
 - Tests `TitlePageAtStartTests` (7). Walk `title-pages-and-name-cards-walk` now shows the dissolve at 3.75s and the recording at 4.0s, and exports 19.4s; `title-presets-menu-bar-walk` names the bar `Timing Title Page`.
 - Next: `an-opening-title-page-keeps-its-dissolve-onto-th` (fade length changes and Ripple Delete on the opening page).
+
+## 2026-10-03 (evening): walks that failed in the sweep
+
+- Two walks were out of date after the picture fades (76596454), not broken: `video-panel-order-walk` now reads a title's Fade In row, and `captions-panel-keeps-its-margins-walk` scrolls the narrowest panel to the caption Background swatch (the new Time rows had pushed it off the bottom). Commit 13866640.
+- The other six walks named on the standing task pass on their own. `normalize-cleans-noise-walk` and `every-section-header-opens-walk` each failed once right after a probe build (a recording's clip picked, no Audio sections in the panel), then passed every run after: filed as `find-out-whether-picking-a-recording-s-clip-some` (p2).
+- `view-to-edit-on-a-long-recording-walk` goes over its 100ms limit (127/130ms) on the way back to View; logged on its owner, `edit-mode-s-contents-come-in-with-the-slide-not`.

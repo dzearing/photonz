@@ -1,0 +1,31 @@
+{
+  "id": "find-out-whether-picking-a-recording-s-clip-some",
+  "title": "Find out whether picking a recording's clip sometimes leaves its sound sections out of the panel",
+  "goal": "Twice in one evening, picking a recording's clip on the timeline showed its picture sections in the panel but none of its sound ones (Audio, Audio Fades, Audio Gain, Audio Effects), though its sound was right there on the Audio track. It did not happen again in about twenty more tries, so find out whether a person can hit it and why.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 3560,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-03T22:43:58.211Z",
+  "updated": "2026-10-03T22:43:58.214Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-10-03 about 22:25-22:30Z by walks-that-fail-in-the-full-sweep-10, in the first runs after a fresh probe build (Scripts/playtest.sh video-panel-order-walk.json, then the rest with --no-build).\n\n1) Scripts/playtest.sh Scripts/playtest/normalize-cleans-noise-walk.json --no-build -> FAILED step 6 (expect): no field called \"Gain in dB\" is in the panel to read; the ones that are: Opacity, Corner Radius, Search transitions, Properties Kind, Clip line, Animating Count, Sound reading, Opacity, Blending, Corner Radius, Effects Empty, Timeline ruler, Track V1, Track V1, Noisy voice recording 1280x800 clip, Track Audio, Noisy voice recording 1280x800 level line, ... The press step's state right after the click read selected nil, dockSections [Time, Captions, Transitions]; in a passing run the same step reads the clip's id and Properties..Audio Effects. Failed twice out of ~12 runs that evening.\n\n2) Scripts/playtest.sh Scripts/playtest/every-section-header-opens-walk.json --no-build -> FAILED step 45 (expect): no control called \"Mute\" is in the panel; the list has Properties/Time/Appearance/Key It/Effects/Captions/Transitions but no Audio section, while Track Audio shows Tutorial Sample sound clip. That walk picks the clip with selectRow, not a timeline click, so it is not just the click missing. Failed once out of 5.\n\nAfter those, 3 more rounds of both walks plus a debug copy of the normalize walk run 9 times: all ok. The sections come from InspectorPanel.availableSections: .sound/.fades/.gain/.soundEffects need Experiments.shared.soundOnTheTimelineEnabled and editorState.soundLayerInHand (selectedLayerID's layer.sound != nil, which is movie.hasSound read once in MovieLibrary.movie(at:) via try? asset.loadTracks(.audio)). A transient false from that load would explain the panel but not the sound clip on the Audio track, so check what draws that first. Theory only: first launches after a re-sign are slow.",
+  "acceptance": [
+    "The cause of the two runs where the sound sections were missing is named, or the task says plainly it could not be made to happen again after a stated number of tries",
+    "If it is real, picking a recording's clip always shows its sound sections, and a walk proves it",
+    "If it is the harness, the walk step that raced is made to wait for the right thing"
+  ],
+  "log": [
+    {
+      "t": "2026-10-03T22:43:58.213Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "normalize-cleans-noise-walk",
+    "every-section-header-opens-walk"
+  ]
+}

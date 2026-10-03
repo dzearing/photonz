@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-30T14:58:43.448Z",
-  "updated": "2026-10-03T12:42:01.433Z",
+  "updated": "2026-10-03T22:38:34.753Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows the-slide-into-edit-mode-draws-every-frame-like, which moved every stage after the key pass to wait for the slide (EditModeArrival.nextWaitsForTheSlide). Profiled 2026-09-30 with xctrace Time Profiler against the probe, samples cut to the 500ms after each Cmd-2: about 480ms busy per switch either way; about 270ms of it is per-frame NSHostingView.layout while canvas/panel/dock frames animate. Into Edit, SwiftUI AccessibilityNode.updateFocusResponder was about 28ms per switch (walks the whole responder tree after every render, grows with every view built), AccessibilityViewGraph.update about 10ms more. Per frame the canvas updateNSView runs CanvasNSView.apply → refreshOverlaysInsideTransaction, refreshLayerSelectionDisplay, canvasNameLabels because canvasViewSizeChanged writes a new viewport each frame. Stage costs: key pass ~50ms, timeline+tool bar ~80, track rows ~90 (captions lane with 191 cues and words lane), panel sections 15 to 45ms each (CaptionStylePreview, PanelFieldRowLayout, SystemSegments.sizeThatFits). Measure with a filmWindow step (docs/design/playtest-harness.md) rather than mainBusy alone.",
@@ -66,6 +66,14 @@
     {
       "t": "2026-10-03T12:42:01.432Z",
       "note": "seq 20 -> 20"
+    },
+    {
+      "t": "2026-10-03T22:21:27.593Z",
+      "note": "rotating check 2026-10-03T22:21:27Z, 50 walks run from 696 onward in the rotation: view-to-edit-on-a-long-recording-walk failing."
+    },
+    {
+      "t": "2026-10-03T22:38:34.752Z",
+      "note": "Re-run on its own twice on 2026-10-03 ~22:30Z (walks-that-fail-in-the-full-sweep-10): view-to-edit-on-a-long-recording-walk fails at step 17 (wait after the second Cmd-1, back to View) both times, longest pass 127.0ms and 130.5ms against the walk's 100ms. It passed when this task was set aside on 10-02, so something landed since made the trip back to View cost more. Left to this task, which owns the walk."
     }
   ],
   "walks": [
