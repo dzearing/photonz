@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-03T05:37:37.389Z",
-  "updated": "2026-10-03T14:19:54.879Z",
+  "updated": "2026-10-03T14:20:13.191Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Latest report: /Users/dzearing/Library/Logs/DiagnosticReports/Photonz Probe-2026-09-30-045007.ips",
@@ -51,8 +51,13 @@
     {
       "t": "2026-10-03T14:19:54.878Z",
       "note": "Built Scripts/probe-crash-alert.mjs (+ Scripts/system-alerts.swift, drill Scripts/probe-crash-alert-drill.mjs, 16 checks). It closes the alert only when it went up after the probe's launch (window numbers count up; mark taken at launch), a probe crash is in ReportCrash's log since then ('Formulating fatal 309 report for corpse[pid] Photonz Probe', persisted even when macOS refuses the report with 'Log limit exceeded', which happened during this task), and it is the single new alert. Each crash is spent once. Wired into playtest.sh on a death (before the 10s report wait), probe-app.sh before launch and on --quit, and go-loop between tasks. Proven live while the person was away: video walk crash -> alert up about 1s, then closed, verdict printed; deliberate crash + --quit -> closed; a stand-in CFUserNotification alert put up after a handled crash survived the next walk; with a stand-in up before launch, a probe crash closed nothing and said so. A first version closed the stand-in (crash not spent); fixed and drilled. crash-watch no longer counts or files macos-ax-notify. Deliberate test crashes marked in queue/crash-watch.json. Scripts/test.sh: 11042 tests passed."
+    },
+    {
+      "t": "2026-10-03T14:20:13.189Z",
+      "note": "Shipped Scripts/probe-crash-alert.mjs (d8a713b0): after a probe crash, the 'quit unexpectedly' alert is closed within about a second by playtest.sh, and also before every probe launch, on --quit and between tasks; any other alert is left alone. Cause shown from the reports and ReportCrash's log: the alert appears only when the probe is a regular Dock app. The macOS fault itself is not stoppable from this repo (Ztabby has no exclusion list), so crash-watch now lists it without filing. Verified live with deliberate kill -SEGV crashes (closed: walk crash, crash + --quit; left alone: a stand-in alert before launch or after a handled crash), a 16-check drill, and Scripts/test.sh (11042 passed)."
     }
   ],
   "started": "2026-10-03T13:57:18.061Z",
-  "walks": []
+  "walks": [],
+  "completed": "2026-10-03T14:20:13.190Z"
 }
