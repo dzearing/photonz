@@ -5,14 +5,14 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 8,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-03T14:26:39.261Z",
-  "updated": "2026-10-03T14:26:39.343Z",
+  "updated": "2026-10-03T17:08:45.726Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "User's words: \"It's also unintuitive on how to fade the video out or in.\" ... \"then fade any of the things out at the end.\"\n\nFrom code reading (not run): no picture fade for a video clip exists. Fade handles in ClipPiecesBar.swift:175-179 and :676-700 are drawn only when isSound (TimelineTrackRows.swift:319). The 'Fades' panel section on a video is SoundFadesInspector (InspectorSections.swift:153-156). Fade submenu (EditorState+TitleTime.swift:119-135) and Animate In/Out (EditorState+ClipKeys.swift:66-77) are guarded by isPlacedInTime = time != nil && !hasMediaBehindIt (PhotonzCore/TitleTime.swift:130), which excludes video clips. Dip to black only applies at a cut with both an outgoing and incoming piece (ClipPieces.cut(at:), ClipTransitions.swift:401-411), so no head/tail fade. Only workaround: opacity keys via Add Key (TimelineMenus.swift:171-177).\nTrap: opacity fade of the top clip over nothing composites against the canvas background; make sure that is black for video documents, not transparent/checkerboard in export. Reuse the title Fade machinery (TitleTime.fadeStopsMS) rather than a second fade model if it fits. Rendering change touches the composite path: perf note required.",
+  "notes": "User's words: \"It's also unintuitive on how to fade the video out or in.\" ... \"then fade any of the things out at the end.\"\n\nFrom code reading (not run): no picture fade for a video clip exists. Fade handles in ClipPiecesBar.swift:175-179 and :676-700 are drawn only when isSound (TimelineTrackRows.swift:319). The 'Fades' panel section on a video is SoundFadesInspector (InspectorSections.swift:153-156). Fade submenu (EditorState+TitleTime.swift:119-135) and Animate In/Out (EditorState+ClipKeys.swift:66-77) are guarded by isPlacedInTime = time != nil && !hasMediaBehindIt (PhotonzCore/TitleTime.swift:130), which excludes video clips. Dip to black only applies at a cut with both an outgoing and incoming piece (ClipPieces.cut(at:), ClipTransitions.swift:401-411), so no head/tail fade. Only workaround: opacity keys via Add Key (TimelineMenus.swift:171-177).\nTrap: opacity fade of the top clip over nothing composites against the canvas background; make sure that is black for video documents, not transparent/checkerboard in export. Reuse the title Fade machinery (TitleTime.fadeStopsMS) rather than a second fade model if it fits. Rendering change touches the composite path: perf note required.\n\nDONE 2026-10-03. Model: Sources/PhotonzCore/PictureFade.swift (Layer.pictureFade, FadeEnd, PhotonzDocument.setPictureFade; applied in DocumentTime.drawn after movedTree). App: EditorState+PictureFade.swift (menu rows, ⌃⌥I/⌃⌥O on the 1s row), EditorState+TimelineMenus (clip menu), EditorState+TitleTime (title menu swaps Fade for Fade In/Out when next-picture-fades), EditorCommands pictureFadeRows (Clip menu), SpeedInspector pictureFades rows, ClipPiecesBar pictureFadeRamps/handles (field '<clip> picture fade in/out'). Flag next-picture-fades (Next default on). New walk step measureFade (PlaytestHarness) compares canvas stopped, canvas playing, export pre-encode picture; MP4 read-back reported, not gated.",
   "acceptance": [
     "Reproduce first: try to fade a recording out at its end at Next defaults and write in the audit every path tried and what it did",
     "Right-click a video clip offers Fade In and Fade Out (with a few lengths); the same is in the Clip menu with keys; the fade shows on the clip's bar as a handle the person drags to change its length, distinct from the sound fade",
@@ -31,6 +31,41 @@
     {
       "t": "2026-10-03T14:26:39.342Z",
       "note": "seq 460 -> 8"
+    },
+    {
+      "t": "2026-10-03T16:09:36.002Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-03T17:06:39.641Z",
+      "note": "owns these walks: a-video-clip-fades-walk, title-on-the-timeline-walk, title-bar-right-click-menu-walk, every-title-dropdown-opens-on-a-click-walk"
+    },
+    {
+      "t": "2026-10-03T17:08:45.505Z",
+      "note": "Reproduced at Next defaults (a-video-clip-menu-leads-with-the-picture-walk, today 08:53, HEAD 9edbf52a): the video clip's right-click had no fade row (21 rows read); Clip > Animate > Fade only spoke for titles (placedLayerInHand nil for media); the panel's Audio Fades faded only the sound. Only workaround was Opacity keys by hand."
+    },
+    {
+      "t": "2026-10-03T17:08:45.560Z",
+      "note": "Adversarial review before building: no mock draws a head/tail picture fade, so built to Final Cut (corner handles + shade) and Premiere (dip at head/tail). Trap found: a fade written as an Opacity motion lives on the clip's SOURCE clock and slides on trim; built a document-clock fade at each bar end instead (PictureFade.swift). Black under a faded clip is already the canvas (CanvasDisplay contentLayer black when hasTime) and the export (DocumentMovieWriter fills black)."
+    },
+    {
+      "t": "2026-10-03T17:08:45.617Z",
+      "note": "After building: handle sits beside the trim edge at the corners (picked/hovered only); shade on a dark title bar is faint. Optional sound-follows-picture not done; sound keeps Audio Fades. Left rough in the audit and here, not filed: a person would notice but no defect, and the user's reaction on the audit decides."
+    },
+    {
+      "t": "2026-10-03T17:08:45.672Z",
+      "note": "Gotcha for the next runner: adding a stored property to Layer left PhotonzRenderTests' incremental build reading the old layout (SeparatedRowsSayTheirWords failed with names 'Text 1'..); touching the test file forced a rebuild and it passed. Full suite then green, 11069 tests."
+    },
+    {
+      "t": "2026-10-03T17:08:45.725Z",
+      "note": "Filed: find-out-whether-an-exported-video-looks-brighte (p2): MP4 read back ~10% brighter than canvas at every moment, faded or not; pre-encode export picture matches the canvas within 0.002."
     }
+  ],
+  "started": "2026-10-03T16:09:36.001Z",
+  "walks": [
+    "a-video-clip-fades-walk",
+    "title-on-the-timeline-walk",
+    "title-bar-right-click-menu-walk",
+    "every-title-dropdown-opens-on-a-click-walk"
   ]
 }

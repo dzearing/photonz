@@ -20489,3 +20489,16 @@ Next: the first editor window's ~200 ms first build
 - `Scripts/probe-crash-alert.mjs` closes that alert (killall UserNotificationCenter) only when it went up after the probe's launch, a probe crash is in ReportCrash's log since then, and it is the one new alert. Run by playtest.sh on a death, probe-app.sh before launch and on --quit, and the go loop between tasks. Drill: `Scripts/probe-crash-alert-drill.mjs`.
 - Gotcha: macOS stops writing crash reports for an app past a daily cap ("Log limit exceeded") and still shows the alert, so the crash is read from the log, not only from reports.
 - The macos-ax-notify fault itself is not stoppable from here (Ztabby has no app exclusion list); crash-watch now lists it without filing.
+
+## 2026-10-03: a video clip fades in and out
+
+- Every picture on the timeline (recording, title, shape, picture, component)
+  has Fade In ▸ / Fade Out ▸ on its right-click and the Clip menu (⌃⌥I / ⌃⌥O
+  toggle 1s), Fade In / Fade Out rows in Time, and a shade plus a corner
+  handle on its bar. Model `PictureFade.swift`, a length at each bar end on the
+  document clock, multiplied into opacity in `drawn(atTimeMS:)`.
+- New walk step `measureFade`; `a-video-clip-fades-walk` measures stopped,
+  playing and export agree within 0.006. MP4 read-back reads ~10% brighter at
+  every moment; filed as p2 to look into.
+- Next: the user's reaction to the audit (sound following the picture fade,
+  handle placement next to the trim edge).

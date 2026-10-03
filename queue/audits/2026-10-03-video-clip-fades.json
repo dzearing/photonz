@@ -1,0 +1,32 @@
+{
+  "feature": "Fade a clip in and out",
+  "epic": "video-transitions-motion",
+  "summary": "A recording, a title or anything else on the timeline can now fade in from black at its start and out to black at its end, from its right-click, the Clip menu, the Time section, or by dragging a handle on its bar. Before this, the only fades on a video were its sound's.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any recording.",
+  "switched": {},
+  "try": [
+    { "do": "Right-click the video clip on the timeline: Fade In and Fade Out sit under Speed.", "shot": "2026-10-03-video-fades-1-video-clip-menu-sc.png" },
+    { "do": "Choose Fade In > 1s, then Fade Out > 1s. Each end of the bar gets a dark shade and the Time section reads Fade In 1s, Fade Out 1s.", "shot": "2026-10-03-video-fades-2-faded-sc.png" },
+    { "do": "Hover the bar and drag the small diamond at its top right corner left: the fade out grows to 1.5s.", "shot": "2026-10-03-video-fades-3-handle-dragged-sc.png" },
+    { "do": "Put the playhead at 0:00.5: the picture is half way up out of black.", "shot": "2026-10-03-video-fades-4-half-faded-in-sc.png" },
+    { "do": "Press Space and watch it come up out of black and sink back into it at the end." },
+    { "do": "Type a title over the recording, right-click its bar and choose Fade In > 0.5s: the words come up over the recording, not over black.", "shot": "2026-10-03-video-fades-5-title-half-faded-in-sc.png" },
+    { "do": "With the clip picked, press Control-Option-I and Control-Option-O (Clip menu > Fade In / Fade Out > 1s) to turn a one second fade on and off." }
+  ],
+  "evaluate": [
+    "Is right-click > Fade In / Fade Out where you would look first, the way Premiere and Final Cut put it?",
+    "Is the shade at the end of the bar enough to see at a glance that a clip fades, without the panel?",
+    "Is the corner diamond easy enough to grab, given it sits right next to the trim edge?",
+    "Should fading the picture also fade the clip's sound by default?",
+    "Are None, 0.25s, 0.5s, 1s and 2s the right lengths to offer?"
+  ],
+  "rough": [
+    "Reproduced first at Next defaults on the code before this change: right-click on a video clip had no fade row; Clip > Animate > Fade was greyed for a video (it only spoke for titles); the panel's Audio Fades faded only the sound; the only way to fade the picture was Add Key on Opacity twice by hand.",
+    "Measured (2026-10-03-video-fades-measured.json): with a 1s fade in, mean brightness at 0.25s, 0.5s and 0.75s was 0.075, 0.147 and 0.223 against 0.297 fully up (a quarter, half and three quarters). Stopped, playing and the export's own picture agreed within 0.006 at every moment measured, fade in and fade out.",
+    "The MP4 read back after encoding is about 10% brighter than the canvas at every moment, faded or not (0.328 against 0.297 fully up), and a little darker in the darkest frames. That is the encoder's tone, not the fade; it is written beside the other numbers and filed to look into.",
+    "No mock draws a picture fade at a clip's ends, so this follows Final Cut: a handle at each top corner and a shade over the faded stretch. The handle is the sound fade's diamond ringed dark instead of cyan so the two never read as one.",
+    "On a dark title bar the shade is faint; it reads well on a video clip's bright bar.",
+    "Fading the picture does not fade the sound (the task's optional item). The sound keeps its own fades in Audio Fades.",
+    "A title's old single Fade row is replaced by Fade In and Fade Out, so the two ends can differ. A title faded before this still shows its fade at both ends and becomes the new kind the first time you change it."
+  ]
+}

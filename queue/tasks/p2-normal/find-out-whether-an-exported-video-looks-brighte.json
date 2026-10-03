@@ -1,0 +1,26 @@
+{
+  "id": "find-out-whether-an-exported-video-looks-brighte",
+  "title": "Find out whether an exported video looks brighter than the same moment on the canvas",
+  "goal": "While measuring video fades, the MP4 read back after export came out about a tenth brighter than the canvas at the same moment, faded or not, and a little darker in the darkest frames. Find out whether a person playing the file in QuickTime actually sees a different picture from the editor, or whether it is only how the file was read back.",
+  "epic": "video-share",
+  "priority": "p2-normal",
+  "seq": 3520,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-03T17:08:31.957Z",
+  "updated": "2026-10-03T17:08:31.960Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-10-03 by the measureFade walk step (Scripts/playtest/a-video-clip-fades-walk.json; numbers in queue/audits/2026-10-03-video-fades-measured.json). Command: Scripts/playtest.sh Scripts/playtest/a-video-clip-fades-walk.json --no-build. Output at 3000 ms (no fade): canvas stopped 0.297, export's pre-encode picture (EditorState.stillFrame) 0.299, MP4 via AVAssetImageGenerator 0.328. At 250 ms of a 1s fade: canvas 0.075, pre-encode 0.075, MP4 0.064. So the renderer agrees with the canvas; the difference arrives at encode or at read-back (DocumentMovieWriter writes BGRA sRGB into H.264; generator output drawn into an sRGB context for Rec.709 luma). NOT reproduced as something a person sees: only measured through AVAssetImageGenerator. Could be untagged/limited-range read-back rather than the file.",
+  "acceptance": [
+    "The exported MP4 and the canvas are compared at the same moment in a real player (QuickTime) and the answer is written down with pictures",
+    "If they differ visibly, a p1 task names the cause (colour space, video range, transfer curve) and the fix; if not, this task records why the read-back differed and is closed"
+  ],
+  "log": [
+    {
+      "t": "2026-10-03T17:08:31.959Z",
+      "note": "created (manual)"
+    }
+  ]
+}
