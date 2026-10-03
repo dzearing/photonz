@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-03T12:41:51.301Z",
-  "updated": "2026-10-03T12:42:01.651Z",
+  "updated": "2026-10-03T23:19:13.272Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-10-03 digest design review. Rule already written: queue/bin/runner-prompt.md line ~352 (differences in layout, colour, control type, spacing or copy length are defects to fix in this task or to file as p1, not notes) and objectives principle 4 (a departure is a decision card). Evidence: 2026-10-02 audio effects drew Effects as a section where the mock draws a dock group (logged on the-panel-keeps-its-promise-on-a-video-document); 2026-10-03 timing strip marks lists mock differences (glyph ends, two-line wrap, bright headings) as rough with no card (filed as layer-names-on-the-timing-strip-read-whole-besid); 2026-10-02 sound EQ and pivot audits list differences with reasons but no card. The done gate already has one refusal of this kind (off-by-default switches, queue.mjs off-by-default), so this sits beside it.",
@@ -27,6 +27,28 @@
     {
       "t": "2026-10-03T12:42:01.650Z",
       "note": "seq 3510 -> 60"
+    },
+    {
+      "t": "2026-10-03T23:07:24.240Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-03T23:19:01.741Z",
+      "note": "Built: queue/bin/mock-differences.mjs reads an audit's rough lines a sentence at a time and picks out differences from a mock (mentions a mock or a mock page, and is not 'no mock covers this', an addition the mock does not draw, 'goes further than the mock', a pure match, or a long mock line moved behind the question mark). A difference is settled when the line names a live decision card id, another task id, the user's dated answer ('your call on <date>'), a written rule ('UX-PATTERNS §7'), or (only on a task the user filed) 'because you asked'. queue-lib mockCheck runs on queue.mjs status <id> done for app tasks, on the audits written since the task was claimed plus any named in the closing note (not ones quoted in notes as evidence). New: queue.mjs mock-check <id | audit.json...>. Drill: queue/bin/mock-diff-drill.mjs (34 checks, run by MockDifferenceGateTests in Scripts/test.sh). Runner prompt's side-by-side rule now says the gate exists."
+    },
+    {
+      "t": "2026-10-03T23:19:01.797Z",
+      "note": "The four audits through the check (node queue/bin/queue.mjs mock-check <audit>): 2026-10-02-audio-effects.json: 4 differences, all naming nothing (line 1 Audio Effects title vs the mock's Effects; line 2 a panel section where the mock draws a dock group with a rail tab; line 4 cross and no on/off dot vs the mock's grip and dot; line 5 menu rows without the mock's icons). Lines 3, 6 and 7 not read as differences (no mock word; 'go further than the mock'; the lock note). 2026-10-02-sound-eq-compressor.json: 2 differences; line 1 (no grip because the order is fixed) names nothing; line 2 (eye instead of the mock's dot) is settled by the user's answer on 2026-09-08. 2026-10-02-pivot-somewhere-else.json: 2 differences, both naming nothing (line 1 no pivot tool on Y, 'an earlier task left it out' with no id; line 2 Around box without border and numbers, 'decided in an earlier task' with no id); line 3 (Custom row the mock does not draw) is an addition. 2026-10-03-timing-strip-marks.json: 2 differences naming nothing (line 1 circles vs the mock's squares at the path glyph's ends; line 3 one-line names and dim headings vs the mock's wrap and bright headings); line 4 (kinds the mock does not draw) is an addition. So 9 of 10 differences would have refused done; each of those four tasks would have been held."
+    },
+    {
+      "t": "2026-10-03T23:19:01.852Z",
+      "note": "Calibration: over every audit since 2026-09-25 (162 rough lines mentioning a mock) the check reads 104 unsettled differences, 11 settled and 47 not differences. Known misses: a departure in a sentence that says 'its' instead of 'the mock' (2026-10-01 timing names tooltip), and one hidden behind 'the mock has no X' (captions Text section). Known false reads: 'the existing video.html layout unchanged' and a contrast note about the mock's glass tone. Both cost a runner one id or a reword, never the mock. Left rough, not filed: the 102-odd unsettled lines in older audits are history; the gate is forward-only and nothing re-opens those tasks."
+    },
+    {
+      "t": "2026-10-03T23:19:13.270Z",
+      "note": "queue.mjs status <id> done now refuses an app task while an audit it wrote lists a difference from a mock naming no card, task, dated user answer or UX-PATTERNS rule; the refusal names the audit line and says what to add. New queue.mjs mock-check <id|audit>. Verified: mock-diff-drill.mjs 34/34 (refused, then accepted once the line names a card), reach/decision/cli drills green, Scripts/test.sh 11137 tests pass. Four named audits run through it: 9 of 10 differences named nothing (details in log). Commit ccb6fc6b."
     }
-  ]
+  ],
+  "started": "2026-10-03T23:07:24.238Z",
+  "completed": "2026-10-03T23:19:13.271Z"
 }
