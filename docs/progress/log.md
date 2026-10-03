@@ -20469,3 +20469,9 @@ Next: the first editor window's ~200 ms first build
 - Crash-watch task for VideoKit.TileGrid.plan (one report, 2026-10-01 20:12): an infinite width offer became `Int(infinity)`, and that fired even with columns pinned. 9b94fbe7 guarded it in the view 15 minutes later, with no test.
 - The math now lives in `PhotonzCore/TileGridPlan`; `TileGridPlanTests` crash with SIGTRAP on the old arithmetic and pass now.
 - `arrow-reshuffle-walk` fails on clean main (its style rows sit in a submenu). Logged on `walks-that-fail-in-the-full-sweep-9`.
+
+## 2026-10-03: timing strip kind marks
+
+- Each layer heading on the icon timing strip starts with a mark for its kind (`PhotonzCore/LayerMark.swift`, drawn in `MotionStripView`). Path = curve glyph like the mock's ic-bezier; other kinds reuse tool bar and video track header glyphs.
+- The name column stays 92pt (the video timeline shares it), so names lose 14pt; 14 to 16 character names now cut and use the tooltip.
+- Next: the user's reaction to the audit (2026-10-03-timing-strip-marks).
