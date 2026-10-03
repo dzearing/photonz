@@ -218,6 +218,8 @@ public enum FeatureCatalog {
 
     public static let pictureFadesFlag = "next-picture-fades"
 
+    public static let titlePresetsFlag = "next-title-pages-and-name-cards"
+
     public static let titleOnTheTimelineFlag = "next-a-title-has-an-in-and-an-out"
 
     public static let captionsFromTheSoundFlag = "next-captions-from-the-sound"
@@ -836,6 +838,16 @@ public enum FeatureCatalog {
                     name: clickEffectsFlag,
                     title: "An effect at each click of a recording",
                     description: "A Clicks row on a recording's Properties draws a ripple, a pulse or a spotlight at every click the recorder took down, and marks each click on the clip's bar. Off means clicks are never drawn.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: titlePresetsFlag,
+                    title: "Title pages and name cards",
+                    description: "Sequence and an empty track's right-click insert a title page or name card preset at the playhead, animated in and out, and Save as Preset keeps your own. Off means titles are typed with the Text tool only.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

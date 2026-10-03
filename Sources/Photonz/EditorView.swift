@@ -411,6 +411,11 @@ struct EditorView: View {
         .sheet(isPresented: $editorState.isNewFrameDialogPresented) {
             NewFrameDialog()
         }
+        .sheet(isPresented: Binding(
+            get: { editorState.titlePresetSaving != nil },
+            set: { if !$0 { editorState.titlePresetSaving = nil } })) {
+            SaveTitlePresetDialog()
+        }
     }
 
     @ViewBuilder

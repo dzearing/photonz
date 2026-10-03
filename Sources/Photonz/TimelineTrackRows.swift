@@ -697,6 +697,9 @@ struct TimelineTrackMenu: View {
         if isEmpty, track.kind == .video, !track.isLocked {
             Button("Add Rectangle") { editorState.addRectangle(onTrack: track.id) }
             Button("Add Text") { editorState.addText(onTrack: track.id) }
+            // A title page or a name card from its presets, on this track
+            // from the playhead (`EditorState+TitlePresets`).
+            MenuRowsView(rows: editorState.titleInsertMenuRows(verb: "Add", onTrack: track.id))
             Button("Paste Here") { editorState.paste(onTrack: track.id) }
                 .disabled(!editorState.canPasteLayerOrPicture)
             let loose = editorState.layersOffTheTimeline

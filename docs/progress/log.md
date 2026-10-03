@@ -20520,3 +20520,10 @@ Next: the first editor window's ~200 ms first build
   answers "1 cut skipped" or "No transition added" with Use Dip to black.
 - Walk `transitions-where-clips-meet-walk`, audit
   `2026-10-03-transitions-where-clips-meet`.
+
+## 2026-10-03 — Title pages and name cards (go loop)
+
+- Shipped `insert-title-pages-and-name-cards-on-the-timelin`: Sequence > Insert Title Page / Insert Name Card, an empty track's right-click Add Title Page / Add Name Card, and Save as Preset... on a title's right-click and in Clip. Four title pages (Midnight, Sunrise, Paper, Spotlight) and four name cards (Bar, Clean, Accent, Minimal), drawn per frame size, inserted at the playhead on their own track, faded or slid in and out, words open for typing. Switch `next-title-pages-and-name-cards`, on at Next.
+- Design note `docs/design/video-titles.md`. Core `Sources/PhotonzCore/TitlePresets.swift` (+ `TitlePresetsTests`), app `EditorState+TitlePresets.swift`, `SaveTitlePresetDialog.swift`. Slide now measures a group by what it covers.
+- Walks: `title-pages-and-name-cards-walk` (end to end, right-clicks, MP4), `title-presets-gallery-walk` (all eight), `title-presets-menu-bar-walk` (front, menu pictures). Audit `queue/audits/2026-10-03-title-presets.json`.
+- Next: presets as Library tiles; a title page at the start pushing the recording later (both filed p1).

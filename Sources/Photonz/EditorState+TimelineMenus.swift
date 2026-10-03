@@ -182,6 +182,8 @@ extension EditorState {
             // A title, a piece of clip art: when it comes on and goes off, and how.
             rows.append(contentsOf: placedLayerMenuRows(layerID: layerID))
             rows.append(contentsOf: titleAnimationMenuRows(layerID: layerID))
+            // ...and kept as a preset of your own, beside the built-in ones.
+            rows.append(contentsOf: titlePresetSaveMenuRows(layerID: layerID))
             // Where it is, its size, its angle and its opacity, keyed at the
             // playhead: the header diamond's verb, where the hand already is.
             if Experiments.shared.drawnOnTheTimelineEnabled, !layer.isSoundOnly {

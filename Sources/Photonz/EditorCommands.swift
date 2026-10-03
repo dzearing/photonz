@@ -936,6 +936,24 @@ struct EditorCommands: Commands {
             .disabled((editor?.soundLevelInHand.points.isEmpty ?? true))
     }
 
+    /// Insert Title Page ▸ and Insert Name Card ▸, each listing its presets,
+    /// the person's own first (`EditorState+TitlePresets`). Dimmed where the
+    /// document has no time to put one in.
+    @ViewBuilder private var insertTitleRows: some View {
+        ForEach(TitleKind.allCases) { kind in
+            Menu("Insert \(kind.name)") {
+                if let editor { MenuRowsView(rows: editor.titlePresetRows(kind)) }
+            }
+            .disabled(!(editor?.canInsertTitle ?? false))
+        }
+    }
+
+    /// Save as Preset…: the picked title page or name card, kept as your own.
+    @ViewBuilder private var saveTitlePresetRow: some View {
+        Button("Save as Preset…") { editor?.beginSavingTitlePreset() }
+            .disabled(editor?.titlePresetLayerInHand == nil)
+    }
+
     @ViewBuilder private var exportSoundRow: some View {
         Button("Export Sound…") { editor?.exportSound() }
             .disabled(!(editor?.documentHasAudio ?? false))
@@ -1409,6 +1427,10 @@ struct EditorCommands: Commands {
                 soundCleanupRows
                 Divider()
             }
+            if Experiments.shared.titlePresetsEnabled {
+                saveTitlePresetRow
+                Divider()
+            }
             // A submenu rather than a section: everything a key, a path or a
             // title's time does made the Clip menu taller than a laptop's
             // screen, and a menu that scrolls hides its own rows. The keys it
@@ -1451,6 +1473,10 @@ struct EditorCommands: Commands {
             if Experiments.shared.soundOnTheTimelineEnabled {
                 addSoundRow
                 exportSoundRow
+                Divider()
+            }
+            if Experiments.shared.titlePresetsEnabled {
+                insertTitleRows
                 Divider()
             }
             if Experiments.shared.captionsFromTheSoundEnabled {

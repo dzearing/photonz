@@ -116,6 +116,12 @@ final class EditorState {
     /// follow. Nil before the first picture of a document with time lands.
     private(set) var shownMomentMS: Int?
     @ObservationIgnored private(set) var shownDrawnDocument: PhotonzDocument?
+    /// A caret asked for at a moment the picture has not reached yet: a title
+    /// page or name card just inserted, whose words are only where they rest
+    /// once the canvas has drawn that moment (`EditorState+TitlePresets`).
+    /// Opened over a picture still drawn at the old moment, the field sat
+    /// where a sliding card started and the words landed off the frame.
+    @ObservationIgnored var typeInOnceShown: (layerID: UUID, atMS: Int)?
     /// The last few composites of a document with time: how long each took to
     /// draw and how long from the ask to the picture. A walk reads them to say
     /// what a scrub costs (`expectScrubSmooth`).
@@ -215,6 +221,9 @@ final class EditorState {
     /// They used to be a section sitting open in the panel for every layer;
     /// now they are asked for, from the Layer menu or the layer's own row.
     var isExactPlacementPresented = false
+    /// The layer Save as Preset… is naming, while its sheet is up
+    /// (`EditorState+TitlePresets`).
+    var titlePresetSaving: UUID?
 
     /// The user's persisted show/hide preference for the docked inspector.
     /// Distinct from `isLayersPanelVisible`: auto-collapse never touches this,
@@ -4695,6 +4704,10 @@ final class EditorState {
                     self.shownDrawnDocument = frame.document
                     let moment = frame.document.hasTime ? frame.stamp : nil
                     if self.shownMomentMS != moment { self.shownMomentMS = moment }
+                    if let pending = self.typeInOnceShown, moment == pending.atMS {
+                        self.typeInOnceShown = nil
+                        self.askToTypeIn(pending.layerID)
+                    }
                     if moment != nil {
                         self.recentCompositeTimes.append((frame.drawMS, frame.sinceAskedMS))
                         if self.recentCompositeTimes.count > 400 { self.recentCompositeTimes.removeFirst(100) }

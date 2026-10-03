@@ -536,6 +536,7 @@ extension Experiments {
     /// An effect at each click of a recording (`ClickEffect.swift`).
     var clickEffectsEnabled: Bool { isEnabled(FeatureCatalog.clickEffectsFlag) }
     var pictureFadesEnabled: Bool { isEnabled(FeatureCatalog.pictureFadesFlag) }
+    var titlePresetsEnabled: Bool { isEnabled(FeatureCatalog.titlePresetsFlag) }
 
     /// `next-open-out-the-timeline`: whether the timeline's own bar carries a
     /// zoom, so a recording longer than a few seconds can be worked on a

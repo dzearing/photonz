@@ -1,0 +1,34 @@
+{
+  "feature": "Title pages and name cards",
+  "epic": "video-titles-graphics",
+  "summary": "You can now put a ready-made title page or name card on the timeline from presets in three clicks. It lands at the playhead on its own track, already animated in and out, with its words open for typing. Save as Preset keeps your edited version beside the built-in ones.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open any screen recording.",
+  "switched": {},
+  "try": [
+    { "do": "Put the playhead at the start and choose Sequence > Insert Title Page > Midnight. Type your title; it opens selected and ready.", "shot": "2026-10-03-title-presets-2-title-ready.png" },
+    { "do": "Look at Sequence: Insert Title Page and Insert Name Card sit under Add Sound, each listing its presets.", "shot": "2026-10-03-title-presets-1-sequence-menu.png" },
+    { "do": "Right-click the Title Page bar and choose Fade Out > 1s, then scrub to 3.5s: the page dissolves into the recording.", "shot": "2026-10-03-title-presets-3-dissolve.png" },
+    { "do": "Right-click an empty track (or add one with Add Track Above) and choose Add Name Card > Bar at 5s. Type a name; double-click the role line and press Return to retype it.", "shot": "2026-10-03-title-presets-4-empty-track-menu.png" },
+    { "do": "Play across 5s: the card slides in from the left at the bottom and fades out five seconds later. A longer name widens the panel.", "shot": "2026-10-03-title-presets-5-name-card.png" },
+    { "do": "Right-click the last clip and choose Fade Out > 1s to end on black." },
+    { "do": "Right-click the Name Card bar, choose Save as Preset..., name it and Save. Add Name Card now lists it first; insert it again later in the cut.", "shot": "2026-10-03-title-presets-6-own-preset.png" },
+    { "do": "Compare the eight built-in presets: Midnight, Sunrise, Paper, Spotlight, Bar, Clean, Accent, Minimal.", "shot": "2026-10-03-title-presets-7-all-eight.png" }
+  ],
+  "evaluate": [
+    "Is Sequence the menu you would look in for Insert Title Page, or would you expect a Graphics or Insert menu like Premiere's?",
+    "Do the four title pages and four name cards look good enough to use as they are, and which one would you change first?",
+    "A title page at the start covers the first seconds of the recording rather than pushing it later. Is that how you want the title then dissolve edit to work?",
+    "Is three clicks (right-click, Add Name Card, a preset) quick enough, or do you want to drag presets from the Library?",
+    "Does Save as Preset with a name and a Kind ask the right questions?"
+  ],
+  "rough": [
+    "Clicks, as measured in the walks: insert a title page 3 (Sequence > Insert Title Page > preset, or right-click empty track > Add Title Page > preset), typing its words 0 more, dissolve into the recording 0 (every preset fades out half a second) or 3 to make it a second, name card 3, its role 2 (double-click, Return), fade the last clip to black 3, save as preset 3 plus the name.",
+    "Reused, not rebuilt: the preset is a group of ordinary text and shape layers on the timeline, placed in time like a typed title, faded with the clip's own Fade In and Fade Out, and slid, popped or scaled with the keys Animate In and Animate Out write. No new panel, tool or window.",
+    "Departs from the mock (video-title-wt): the mock shows a lower third as a linked component dragged from the Library's Components shelf. A preset here is a copy you own, because a component dropped on a recording brings its original with it on a second track (checked in the app). Your own components still go on the timeline the mock's way.",
+    "Not yet on the Library shelf: presets are reached from Sequence and an empty track's right-click only. Filed as a follow-up.",
+    "A title page placed over the start of the recording hides the recording's first seconds instead of pushing it later. Filed as a follow-up.",
+    "Retyping a line inside a card is double-click then Return: the first double-click picks the line and the second step opens it. Typing the main line after inserting needs neither.",
+    "A preset saved from a recording of one size and inserted into another is scaled to fit and centred, so a title page from a wide recording leaves bands on a square one.",
+    "Splitting at the playhead is still offered on a title page's bar, as it is on any typed title."
+  ]
+}

@@ -1,0 +1,442 @@
+{
+  "out": "/tmp/photonz-playtest/title-pages-and-name-cards-walk",
+  "seed": "The user's basic edit, end to end at Next defaults with no switch touched, every step from a right-click: a recording with a second clip cut on after it; a track added above V1 and, from that empty track's right-click, Add Title Page > Midnight at the start with its words typed straight in; the page's Fade Out lengthened to a second from its own right-click so it dissolves into the recording; another track and Add Name Card > Bar at five seconds, sliding in and fading out, its name typed in; the last clip faded to black from its right-click; the card saved as a preset from its right-click and inserted again from the empty-track menu; and the edit written out as an MP4. Frames are photographed at each step.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ],
+    "scratch": [
+      "sample:recording as b-roll.mp4"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "dropOnTimeline",
+      "file": "scratch/b-roll.mp4",
+      "track": "V1",
+      "seconds": 7.9
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "track": "V1",
+      "count": 1
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V1",
+      "choose": "Add Track Above"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V2",
+      "choose": "Add Title Page > Midnight"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "describe",
+      "stage": "1-title-page-ready",
+      "note": "RIGHT-CLICK, TWO ROWS: Add Track Above on V1, then the empty track's Add Title Page > Midnight. A full-frame title page lands at the playhead on that track, four seconds long; the playhead steps half a second in to where it has finished arriving and its title is open for typing"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-title-page-ready"
+    },
+    {
+      "do": "type",
+      "text": "Ship it faster"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expect",
+      "field": "Timing Title Page",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "2-title-page",
+      "note": "The words typed straight in, centred over the Midnight background with its accent bar and subtitle"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-title-page"
+    },
+    {
+      "do": "rightClick",
+      "on": "Timing Title Page",
+      "choose": "Fade Out > 1s"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "3-dissolve",
+      "note": "THE DISSOLVE: the title page's own Fade Out set to one second from its right-click; at 3.5s the page is half gone and the recording shows through"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-dissolve"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V2",
+      "choose": "Add Track Above"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V3",
+      "choose": "Add Name Card > Bar"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "type",
+      "text": "Dana Zearing"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expect",
+      "field": "Name Card clip",
+      "present": true
+    },
+    {
+      "do": "click",
+      "at": [
+        152,
+        693
+      ],
+      "count": 2,
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "4a-role-open"
+    },
+    {
+      "do": "type",
+      "text": "Design lead"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "4-name-card",
+      "note": "RIGHT-CLICK, TWO ROWS: Add Track Above, then Add Name Card > Bar at five seconds. The card has slid in from the left at the bottom of the frame; the name typed straight in"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-name-card"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "5-sliding-in",
+      "note": "A quarter second after the card arrives: most of the way through its slide in from the left, which eases out as it lands"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-sliding-in"
+    },
+    {
+      "do": "rightClick",
+      "on": "b-roll clip",
+      "choose": "Fade Out > 1s"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "on": "Name Card clip",
+      "choose": "Save as Preset\u2026"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "snapshot",
+      "name": "6-save-sheet"
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Dana card"
+    },
+    {
+      "do": "press",
+      "control": "Save"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V3",
+      "choose": "Add Track Above"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V4",
+      "choose": "Add Name Card > Dana card"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "6-own-preset",
+      "note": "YOUR OWN: Save as Preset from the card's right-click, named Dana card, then the empty track's Add Name Card lists it above the built-ins; inserted at ten seconds over the b-roll, with the name already in it"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-own-preset"
+    },
+    {
+      "do": "writeVideo",
+      "name": "the-edit",
+      "format": "mp4",
+      "seconds": 16.0,
+      "within": 0.6,
+      "copied": false,
+      "estimateFactor": 2
+    }
+  ]
+}

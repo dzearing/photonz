@@ -288,7 +288,13 @@ extension PhotonzDocument {
         case .fade:
             key(.opacity, off: .number(0))
         case .slide:
-            let x = isIn ? -frame.width - TitleAnimation.clearance : canvasSize.width + TitleAnimation.clearance
+            // Measured by what the layer COVERS, not by its frame: a group's
+            // pieces can reach past its own box, and a name card that slid in
+            // by its frame's width started with half of itself on screen.
+            let box = layer.localBounds.standardized
+            let x = isIn
+                ? frame.origin.x - box.maxX - TitleAnimation.clearance
+                : frame.origin.x + canvasSize.width + TitleAnimation.clearance - box.minX
             key(.position, off: .point(CGPoint(x: x, y: frame.origin.y)))
         case .pop:
             key(.scale, off: .number(TitleAnimation.smallestPercent),

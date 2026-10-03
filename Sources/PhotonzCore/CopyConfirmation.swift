@@ -171,6 +171,9 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// draws nothing on the canvas, so the same reason applies twice over:
         /// the only place it shows up is the timeline and the layers list.
         case soundAdded(name: String)
+        /// A title page or name card was kept as a preset. Nothing on screen
+        /// changes when you save one, so without this it reads as nothing.
+        case titlePresetSaved(name: String)
         /// A recording was let go on a document that runs in time and landed
         /// as a clip over it (`MediaDrop`). It DOES draw on the canvas, unlike
         /// a piece of sound, but it lands at the playhead and the playhead is
@@ -381,6 +384,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         switch subject {
         case .soundDetached: return "Sound taken off"
         case .soundAdded: return "Sound added"
+        case .titlePresetSaved: return "Preset saved"
         case .clipAdded: return "Clip added"
         case .clickAdded: return "Click added"
         case .zoomsAdded(let count): return count == 1 ? "Zoom added" : "\(count) zooms added"
@@ -446,6 +450,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "\(clip) keeps its picture. Its sound is a layer of its own now"
         case .soundAdded(let name):
             return "\(name) is on the timeline"
+        case .titlePresetSaved(let name):
+            return name
         case .defaultTransitionRefused(let refusal):
             return refusal.detail
         case .defaultTransitionSet(let kind):

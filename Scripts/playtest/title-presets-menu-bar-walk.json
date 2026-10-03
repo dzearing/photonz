@@ -1,0 +1,143 @@
+{
+  "out": "/tmp/photonz-playtest/title-presets-menu-bar-walk",
+  "seed": "The menu-bar half of title pages and name cards, at Next defaults: Sequence carries Insert Title Page and Insert Name Card with their presets, Sequence > Insert Title Page > Sunrise puts one in at the playhead with its words open for typing, the clip's right-click offers Save as Preset beside Animate In and Out, an empty track's right-click offers Add Title Page and Add Name Card, and Clip > Save as Preset opens the naming sheet. Needs the front for the menu pictures.",
+  "setup": {
+    "timelineOpen": true,
+    "front": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "menuShot",
+      "menu": "Sequence",
+      "name": "1-sequence-menu"
+    },
+    {
+      "do": "menus",
+      "stage": "2-insert",
+      "menu": "Sequence",
+      "oneKeyEach": true,
+      "choose": "Sequence > Insert Title Page > Sunrise"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "type",
+      "text": "Ship it faster"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expect",
+      "field": "Title Page clip",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "2-inserted",
+      "note": "Sequence > Insert Title Page > Sunrise from the menu bar: three clicks, words typed straight in"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-inserted-from-the-menu"
+    },
+    {
+      "do": "rightClick",
+      "on": "Title Page clip",
+      "shot": "3-clip-menu"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V1",
+      "choose": "Add Track Above"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V2",
+      "shot": "4-empty-track-menu"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "selectRow",
+      "row": "Title Page"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "menus",
+      "stage": "5-clip-menu",
+      "menu": "Clip",
+      "choose": "Clip > Save as Preset\u2026"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "snapshot",
+      "name": "5-save-sheet"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    }
+  ]
+}
