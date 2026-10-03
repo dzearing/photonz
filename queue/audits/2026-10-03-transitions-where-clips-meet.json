@@ -1,0 +1,30 @@
+{
+  "feature": "Transitions where the clips meet",
+  "epic": "video-transitions-motion",
+  "summary": "You can now add a transition from a right-click on a clip or the ruler, or by dragging a tile, and the timeline lights up every place a tile can land. A clip's first and last frames take a fade from or to black. A join with no spare frames says so and offers Dip to black.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Two or three recordings back to back on V1 (drop a recording onto the end of the first one).",
+  "switched": {},
+  "try": [
+    { "do": "With nothing picked, look at the Transitions section, then click the Cross dissolve tile.", "shot": "2026-10-03-transitions-where-clips-meet-1-places-lit.png" },
+    { "do": "Drag the Cross dissolve tile over the middle of a clip and read the timeline's bar.", "shot": "2026-10-03-transitions-where-clips-meet-2-held-mid-clip.png" },
+    { "do": "Let go of it on a lit join.", "shot": "2026-10-03-transitions-where-clips-meet-4-dropped-mid-dissolve.png" },
+    { "do": "Command Z, then right-click the middle clip and choose Add Transition > Cross dissolve.", "shot": "2026-10-03-transitions-where-clips-meet-5-right-click-mid-dissolve.png" },
+    { "do": "Press Use Dip to black on the notice.", "shot": "2026-10-03-transitions-where-clips-meet-6-dip-instead.png" },
+    { "do": "Right-click the first clip and choose Add Transition > Cross dissolve.", "shot": "2026-10-03-transitions-where-clips-meet-7-fade-from-black.png" },
+    { "do": "Right-click the ruler over a join and choose Add Transition > Wipe." }
+  ],
+  "evaluate": [
+    "With nothing picked, does the one line in the Transitions section tell you what the tiles are for?",
+    "When you click a tile with no join picked, do the lit marks on the timeline tell you where to take it?",
+    "Are the white marks (lands) and the dark red-ringed marks (no spare frames) easy to tell apart on every clip colour?",
+    "Is it right that Cross dissolve at a clip end with nothing next to it fades from or to black, the way Premiere does?",
+    "Is '1 cut skipped / No spare frames at 0:15' with a Use Dip to black button the answer you want when one end could not take it?"
+  ],
+  "rough": [
+    "The lit marks only show while a tile is over the timeline or for 2.5 seconds after a click. They do not light the moment the tile leaves the panel, because a drag gives no signal when it ends outside the timeline.",
+    "The section's hint, 'Drag a tile onto a cut on the timeline', is the first half of the mock's line in fewer words. The mock's whole line still sits behind the question mark.",
+    "The walks drive the drop through the timeline's own drop target, and a real pointer was proved to pick the tile up. The system's drag loop between the two cannot be driven by a walk, so a real hand-made drag from panel to timeline is still for you to try.",
+    "Push, Wipe, Blur through and Dip to white at a clip end with nothing next to it say 'needs a clip on both sides' rather than offering something. Only Cross dissolve and Dip to black become a fade there.",
+    "The mock's six tiles (Dip to color, Slide, Morph, Cut) are still not the app's six. That was already so before this task."
+  ]
+}

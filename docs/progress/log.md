@@ -20502,3 +20502,21 @@ Next: the first editor window's ~200 ms first build
   every moment; filed as p2 to look into.
 - Next: the user's reaction to the audit (sound following the picture fade,
   handle placement next to the trim edge).
+
+## 2026-10-03: transitions go where the clips meet
+
+- Reproduced at Next defaults: a tile clicked with no cut picked only took a
+  ring; a tile held anywhere but within 16pt of a join drew nothing and said
+  nothing; a real pointer does pick the tile up (`transition-tile-comes-away-walk`).
+- Core `TransitionTargets.swift`: a clip's two ends as targets (join, edit, or
+  a fade where it meets nothing), every landing spot, the plan per kind, one
+  call to put a kind on several, and `nearestTransition` (a dip when there is
+  no spare). Cross dissolve and Dip to black fade at a free end; the rest
+  refuse with "needs a clip on both sides".
+- App: Add Transition ▸ on every recording's right-click (both ends), the
+  ruler's (cut near the click), never greyed; lit marks on the lanes while a
+  tile is in the air or just clicked; the timeline bar says "Drop on a lit cut
+  or end"; one hint line in Transitions with no cut picked; a cut with no spare
+  answers "1 cut skipped" or "No transition added" with Use Dip to black.
+- Walk `transitions-where-clips-meet-walk`, audit
+  `2026-10-03-transitions-where-clips-meet`.

@@ -1,0 +1,12 @@
+{
+  "out": "/tmp/photonz-playtest/transition-tile-comes-away-walk",
+  "seed": "A pointer pressing the Cross dissolve tile and pulling it toward the timeline starts a drag that carries the transition.",
+  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "reveal", "control": "Cross dissolve", "in": "Transitions" },
+    { "do": "pickUpTile", "tile": "Cross dissolve", "to": [640, 700] }
+  ]
+}

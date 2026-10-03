@@ -45,29 +45,37 @@ enum TransitionDrag {
     }
 }
 
-/// Where a transition tile in the air over the timeline would land.
+/// A transition tile in the air over the timeline: the place it would land,
+/// if it is near one, and what landing there would do.
 struct TimelineTransitionHover: Equatable {
     var kind: ClipTransitionKind
-    var plan: DefaultTransitionPlan
-    /// The track the cut is on, so the ghost is drawn on that lane only.
-    var trackID: UUID?
-    /// Where the cut is on the document's clock.
-    var atMS: Int
+    /// The cut or clip end under the pointer, nil where it is near none.
+    var spot: TransitionSpot?
+    var plan: TransitionTargetPlan
 
-    var lands: Bool {
-        if case .put = plan { return true }
-        return false
-    }
+    /// The track the place is on, so the ghost is drawn on that lane only.
+    var trackID: UUID? { spot?.trackID }
+    /// Where the place is on the document's clock.
+    var atMS: Int { spot?.atMS ?? 0 }
+
+    var lands: Bool { plan.lands }
 
     /// The label in the bar over the tracks: what goes on and where, the way
-    /// a file in the air says Overwrite and the track. A label, not a sentence.
+    /// a file in the air says Overwrite and the track. A label, not a
+    /// sentence, and never nothing: a tile held where it cannot land says
+    /// where it can.
     var note: String {
         switch plan {
         case .put: "\(kind.title) · \(CaptionProgress.clock(atMS))"
+        case .fade(_, let end, _): "\(kind.title) · \(end.title)"
         case .refused(.noSpare): "Needs spare frames"
-        case .refused(.noCutNearby): ""
+        case .refused(.needsTwoClips): "Needs a clip on both sides"
+        case .refused(.noCutNearby): Self.nowhereNote
         }
     }
+
+    /// What the bar says while the tile is over no place it could land.
+    static let nowhereNote = "Drop on a lit cut or end"
 }
 
 extension EditorState {
@@ -87,11 +95,12 @@ extension EditorState {
     /// The tile has left the timeline without landing.
     func endTransitionHover() {
         timelineTransitionInAir = nil
+        transitionTileLifted = nil
         if timelineTransitionHover != nil { timelineTransitionHover = nil }
     }
 
-    /// Where `kind` let go at `point` would land, nil where the pointer is not
-    /// near any cut at all.
+    /// Where `kind` let go at `point` would land, and what it would do there.
+    /// Nil only where transitions cannot be put on at all.
     func transitionDropHover(_ kind: ClipTransitionKind, at point: CGPoint) -> TimelineTransitionHover? {
         guard Experiments.shared.transitionsAtACutEnabled, let document, document.hasTime,
               timelineLaneWidth > 0 else { return nil }
@@ -101,42 +110,23 @@ extension EditorState {
         let reach = max(80, Int(ruler.msSpanning(fraction: Double(Self.transitionDropReachPoints / timelineLaneWidth))
             .rounded()))
         let track: UUID? = if case .onto(let id) = trackDrop(atY: point.y) { id } else { nil }
-        let plan = document.transitionDropPlan(kind, atMS: ms, onTrack: track, reachMS: reach)
-        switch plan {
-        case .put(_, let place):
-            let at = document.documentCut(at: place)?.atMS ?? ms
-            return TimelineTransitionHover(kind: kind, plan: plan,
-                                           trackID: document.trackID(ofClip: place.arrivingClip), atMS: at)
-        case .refused(.noSpare):
-            // The cut is there and cannot pay: said on the cut, in red.
-            let cut = document.transitionCuts(among: nil)
-                .filter { track == nil || document.trackID(ofClip: $0.place.arrivingClip) == track }
-                .min { abs($0.atMS - ms) < abs($1.atMS - ms) }
-            return TimelineTransitionHover(kind: kind, plan: plan,
-                                           trackID: cut.flatMap { document.trackID(ofClip: $0.place.arrivingClip) },
-                                           atMS: cut?.atMS ?? ms)
-        case .refused(.noCutNearby):
-            return nil
+        guard let spot = document.transitionDropSpot(atMS: ms, onTrack: track, reachMS: reach) else {
+            return TimelineTransitionHover(kind: kind, spot: nil, plan: .refused(.noCutNearby))
         }
+        return TimelineTransitionHover(kind: kind, spot: spot, plan: document.transitionPlan(kind, on: spot.target))
     }
 
-    /// Let go over the timeline: the tile's transition on the cut the ghost
-    /// was on, as one step to undo. False where it lands on nothing.
+    /// Let go over the timeline: the tile's transition on the cut or clip end
+    /// the ghost was on, as one step to undo. A place that cannot take it
+    /// says why, and offers what it can take. False where it lands on nothing.
     @discardableResult
     func dropTransition(_ kind: ClipTransitionKind, at point: CGPoint) -> Bool {
         let hover = transitionDropHover(kind, at: point)
         endTransitionHover()
-        guard let hover else { return false }
-        switch hover.plan {
-        case .put(_, let place):
-            closeTransitionPicker()
-            transitionsGroupPick = kind
-            setTransition(kind, at: place)
-            return true
-        case .refused(let why):
-            raiseCanvasNotice(.defaultTransitionRefused(why))
-            return false
-        }
+        guard let hover, let spot = hover.spot else { return false }
+        closeTransitionPicker()
+        transitionsGroupPick = kind
+        return putTransition(kind, on: [spot.target])
     }
 }
 
@@ -154,6 +144,8 @@ struct TimelineTransitionGhost: View {
         let ruler = editorState.motionStripRuler
         let (startMS, spanMS): (Int, Int) = switch hover.plan {
         case .put(let transition, _): (hover.atMS - transition.beforeMS, transition.spanMS)
+        case .fade(_, .in, let length): (hover.atMS, length)
+        case .fade(_, .out, let length): (hover.atMS - length, length)
         case .refused: (hover.atMS - 100, 200)
         }
         let x0 = laneWidth * ruler.fraction(ofMS: Double(startMS))
@@ -180,5 +172,54 @@ struct TimelineTransitionGhost: View {
         .panelReadout(hover.lands ? "\(hover.kind.title.lowercased()) would land at \(CaptionProgress.clock(hover.atMS))"
                                   : "\(hover.kind.title.lowercased()) refused at \(CaptionProgress.clock(hover.atMS))")
         .playtestField("Transition ghost")
+    }
+}
+
+/// Every place a transition tile could go on one lane, lit while a tile is in
+/// the air over the timeline or has just been clicked with no cut picked: a
+/// bright accent mark on each cut and clip end that would take it, and a
+/// faint red one on each that could not, so a person sees where to let go
+/// before they let go.
+struct TimelineTransitionSpots: View {
+    @Environment(EditorState.self) private var editorState
+    @Environment(\.colorScheme) private var colorScheme
+    let kind: ClipTransitionKind
+    let trackID: UUID
+    let laneWidth: CGFloat
+    let height: CGFloat
+
+    var body: some View {
+        let ruler = editorState.motionStripRuler
+        let spots = (editorState.document?.transitionSpots() ?? []).filter { $0.trackID == trackID }
+        let landing = spots.filter { editorState.document?.transitionPlan(kind, on: $0.target).lands == true }
+        ZStack(alignment: .topLeading) {
+            ForEach(spots, id: \.self) { spot in
+                mark(lands: landing.contains(spot))
+                    // Kept whole at the lane's ends, where a clip's first
+                    // and last frames are.
+                    .offset(x: min(max(0, laneWidth * ruler.fraction(ofMS: Double(spot.atMS)) - Self.width / 2),
+                                   laneWidth - Self.width), y: 1)
+            }
+        }
+        .frame(width: laneWidth, height: height, alignment: .topLeading)
+        .allowsHitTesting(false)
+        .transition(.opacity)
+        .panelReadout("\(landing.count) of \(spots.count) places lit for \(kind.title.lowercased())")
+        .playtestField("Transition spots")
+    }
+
+    static let width: CGFloat = 8
+
+    /// White on an accent ring where it lands, so it reads on a clip of any
+    /// colour; dark on a red ring where it cannot, so it reads as a place
+    /// that says no rather than as nothing.
+    private func mark(lands: Bool) -> some View {
+        let crit = VideoKit.Palette.crit.color(colorScheme)
+        let shape = RoundedRectangle(cornerRadius: Self.width / 2)
+        return shape
+            .fill(lands ? Color.white : VideoKit.rgb(0x14161D))
+            .overlay(shape.strokeBorder(lands ? VideoKit.Palette.accent : crit, lineWidth: 2))
+            .frame(width: Self.width, height: max(0, height - 2))
+            .shadow(color: lands ? VideoKit.Palette.accent.opacity(0.8) : .clear, radius: 4)
     }
 }

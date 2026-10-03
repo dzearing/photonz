@@ -48,6 +48,9 @@ struct TimelineFileDropDelegate: DropDelegate {
     func dropEntered(info: DropInfo) {
         if carriesTransition(info) {
             let point = info.location
+            // The tile the panel just handed over answers at once; the drag's
+            // own bytes, read in the background, have the last word.
+            if let lifted = editorState.transitionTileLifted { editorState.moveTransitionHover(lifted, to: point) }
             TransitionDrag.load(info) { [editorState] kind in editorState.moveTransitionHover(kind, to: point) }
             return
         }
@@ -62,9 +65,13 @@ struct TimelineFileDropDelegate: DropDelegate {
 
     func dropUpdated(info: DropInfo) -> DropProposal? {
         if carriesTransition(info) {
-            guard let kind = editorState.timelineTransitionInAir else { return DropProposal(operation: .copy) }
+            guard let kind = editorState.timelineTransitionInAir ?? editorState.transitionTileLifted else {
+                return DropProposal(operation: .copy)
+            }
             editorState.moveTransitionHover(kind, to: info.location)
-            return DropProposal(operation: editorState.timelineTransitionHover?.lands == true ? .copy : .forbidden)
+            // Over a cut or a clip end it lands, or says why not and offers
+            // what does; anywhere else there is nothing to let go on.
+            return DropProposal(operation: editorState.timelineTransitionHover?.spot == nil ? .forbidden : .copy)
         }
         editorState.moveTimelineFileHover(to: info.location, insert: Self.insertHeld)
         if let hover = editorState.timelineFileHover, !hover.landing.allowed {
@@ -83,7 +90,7 @@ struct TimelineFileDropDelegate: DropDelegate {
             let point = info.location
             // Read already, while it was in the air: land it now, so the
             // drop answers on the frame it is let go.
-            if let kind = editorState.timelineTransitionInAir {
+            if let kind = editorState.timelineTransitionInAir ?? editorState.transitionTileLifted {
                 return editorState.dropTransition(kind, at: point)
             }
             TransitionDrag.load(info) { [editorState] kind in editorState.dropTransition(kind, at: point) }

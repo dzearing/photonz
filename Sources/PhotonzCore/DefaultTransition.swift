@@ -60,12 +60,16 @@ public enum DefaultTransitionRefusal: Hashable, Sendable {
     /// The cut cannot pay for this kind: it needs spare frames either side and
     /// there are none.
     case noSpare(ClipTransitionKind)
+    /// The end of a clip that meets nothing, and a kind that only means
+    /// something between two pictures (`TransitionTargets.swift`).
+    case needsTwoClips(ClipTransitionKind)
 
     /// The line the canvas says it with.
     public var detail: String {
         switch self {
         case .noCutNearby: "There is no cut at the playhead"
         case .noSpare(let kind): "\(kind.title) needs spare frames either side of this cut"
+        case .needsTwoClips(let kind): "\(kind.title) needs a clip on both sides"
         }
     }
 }

@@ -16,7 +16,8 @@ struct TransitionsGroup: View {
     @State private var query = ""
 
     /// The mock's line under the grid, longer than the panel's budget, so it
-    /// sits behind the header's question mark in the mock's words.
+    /// sits behind the header's question mark in the mock's words. Its first
+    /// half is said in the panel too, as the hint, while no cut is picked.
     static let sectionHelp = "Drag a tile onto a cut, or pick one to apply it to the selected cut. "
         + "Every transition rides the same keyframe and easing engine as the rest of the timeline."
 
@@ -42,8 +43,19 @@ struct TransitionsGroup: View {
         }
     }
 
+    /// The section's one hint line, while no cut is picked: what the tiles
+    /// are for, said where they are (the mock's own line, in fewer words).
+    static let hint = "Drag a tile onto a cut on the timeline"
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
+            if !editorState.isACutPicked {
+                Text(Self.hint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .playtestField("Transitions hint")
+            }
             searchField
             VideoKit.TileGrid(columns: 2, spacing: 8) {
                 ForEach(shown, id: \.self) { kind in tile(kind) }
@@ -97,6 +109,7 @@ struct TransitionsGroup: View {
         .onTapGesture { pick(kind) }
         .onDrag {
             editorState.transitionsGroupPick = kind
+            editorState.transitionTileLifted = kind
             return TransitionDrag.itemProvider(kind)
         } preview: {
             VideoKit.AnimatedTransitionThumbnail(style: TransitionPicker.style(kind))
@@ -157,7 +170,7 @@ extension EditorState {
 
     /// Whether a cut itself is picked, rather than a clip with the playhead
     /// near one of its joins: only then does a click on a tile mean it.
-    private var isACutPicked: Bool { selectedEditPoint != nil || selectedClipCutIndex != nil }
+    var isACutPicked: Bool { selectedEditPoint != nil || selectedClipCutIndex != nil }
 
     /// The tile the group shows picked and its plus menu acts on: what is on
     /// the picked cut, else the one clicked last, else the default.
@@ -168,15 +181,15 @@ extension EditorState {
 
     /// A tile clicked in the Transitions group: picked, and put on the picked
     /// cut when there is one (the mock's "pick one to apply it to the selected
-    /// cut"). A cut that cannot pay for it says so on the canvas, the way ⌘T
-    /// does, and keeps what it has.
+    /// cut"). A cut that cannot pay for it says so on the canvas and offers
+    /// the kind it can take. With no cut picked, every place the tile could
+    /// go lights up on the timeline, so the click answers where to take it.
     func pickTransitionTile(_ kind: ClipTransitionKind) {
         transitionsGroupPick = kind
-        guard isACutPicked, canWorkWithClipTransitions, let inHand = cutInHand else { return }
-        guard inHand.cut.fitted(kind) != nil else {
-            raiseCanvasNotice(.defaultTransitionRefused(.noSpare(kind)))
+        guard isACutPicked, canWorkWithClipTransitions, let inHand = cutInHand else {
+            flashTransitionSpots(kind)
             return
         }
-        setTransition(kind, at: inHand.place)
+        putTransition(kind, on: [.cut(inHand.place)])
     }
 }

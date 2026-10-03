@@ -1,0 +1,282 @@
+{
+  "out": "/tmp/photonz-playtest/transitions-where-clips-meet-walk",
+  "seed": "Three recordings back to back at Next defaults, no flag set, nothing picked. The Transitions section says what its tiles are for; a tile clicked with no cut picked lights every place it could go; a tile held mid clip says where to drop it; held over the join it says what lands, and let go it dissolves there, photographed mid dissolve. Right-click a clip and Add Transition puts it at both its ends: the join it can pay for dissolves, the join with no spare frames says so and offers Dip to black, and an end that meets nothing fades from black. The ruler's right-click offers it at the cut too.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ],
+    "scratch": [
+      "sample:recording as b-roll.mp4",
+      "sample:recording as c-roll.mp4"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "dropOnTimeline",
+      "file": "scratch/b-roll.mp4",
+      "track": "V1",
+      "seconds": 7.5
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "dropOnTimeline",
+      "file": "scratch/c-roll.mp4",
+      "track": "V1",
+      "seconds": 7.5,
+      "insert": true
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "track": "V1",
+      "startsAt": 15.5,
+      "count": 1
+    },
+    {
+      "do": "expectClip",
+      "clip": "c-roll",
+      "track": "V1",
+      "startsAt": 7.5,
+      "count": 1
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "0-nothing-picked",
+      "note": "three recordings back to back, nothing picked: the Transitions section's one line says what the tiles are for"
+    },
+    {
+      "do": "panel",
+      "stage": "0-nothing-picked"
+    },
+    {
+      "do": "snapshot",
+      "name": "0-nothing-picked"
+    },
+    {
+      "do": "reveal",
+      "control": "Cross dissolve",
+      "in": "Transitions"
+    },
+    {
+      "do": "press",
+      "control": "Cross dissolve",
+      "in": "Transitions"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "1-places-lit",
+      "note": "THE CLICK: Cross dissolve clicked with no cut picked lights every place it could go on V1: the start of the first clip, the join at 7.5s, the end of the last clip in accent, and the join at 15.5s faint red, because neither side of it has spare frames"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-places-lit"
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "Cross dissolve",
+      "track": "V1",
+      "seconds": 4.0,
+      "release": false,
+      "hold": "2-held-mid-clip",
+      "says": "Drop on a lit cut or end"
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "Cross dissolve",
+      "track": "V1",
+      "seconds": 15.5,
+      "release": false,
+      "hold": "2b-held-over-a-join-with-no-spare",
+      "says": "Needs spare frames"
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "Cross dissolve",
+      "track": "V1",
+      "seconds": 7.5,
+      "hold": "3-held-over-the-join",
+      "says": "Cross dissolve"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Cross dissolve"
+    },
+    {
+      "do": "describe",
+      "stage": "4-dropped",
+      "note": "THE DROP: let go over the join at 7.5s, a cross dissolve is on it, the playhead is on the cut and the picture is half way through the dissolve"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-dropped-mid-dissolve"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        890,
+        893
+      ],
+      "space": "window",
+      "choose": "Add Transition > Cross dissolve"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Cross dissolve"
+    },
+    {
+      "do": "expectNotice",
+      "says": "No spare frames at 0:15"
+    },
+    {
+      "do": "describe",
+      "stage": "5-right-clicked",
+      "note": "THE RIGHT CLICK: Add Transition > Cross dissolve on the middle clip dissolves its start at 7.5s, shown half way through, and says the cut at 15.5s was skipped for want of spare frames, offering Dip to black"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-right-click-mid-dissolve"
+    },
+    {
+      "do": "press",
+      "control": "Use Dip to black"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Dip to black"
+    },
+    {
+      "do": "describe",
+      "stage": "6-dip-instead",
+      "note": "Use Dip to black on the notice put a dip on the join at 15.5s"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-dip-instead"
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        346,
+        893
+      ],
+      "space": "window",
+      "choose": "Add Transition > Cross dissolve"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Fade In",
+      "reads": "1s"
+    },
+    {
+      "do": "describe",
+      "stage": "7-fade-from-black",
+      "note": "Add Transition > Cross dissolve on the first clip: its start meets nothing, so it fades up from black over a second; its end already dissolves"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-fade-from-black"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 7.4
+    },
+    {
+      "do": "hover",
+      "at": [
+        621,
+        860
+      ],
+      "space": "window"
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        621,
+        860
+      ],
+      "space": "window",
+      "choose": "Add Transition > Wipe"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Wipe"
+    },
+    {
+      "do": "describe",
+      "stage": "8-ruler",
+      "note": "The ruler's right click at 7.5s offers Add Transition for the cut there: Wipe replaces the dissolve"
+    },
+    {
+      "do": "snapshot",
+      "name": "8-ruler-wipe"
+    }
+  ]
+}

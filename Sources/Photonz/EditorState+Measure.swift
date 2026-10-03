@@ -373,6 +373,8 @@ extension EditorState {
             case .undo:
                 guard let reported = self.canvasNoticeUndoes, self.document == reported else { return }
                 self.undo()
+            // The cut that refused, never the one picked now.
+            case let .putTransition(kind, place): self.putTransition(kind, on: [.cut(place)])
             }
         }
     }

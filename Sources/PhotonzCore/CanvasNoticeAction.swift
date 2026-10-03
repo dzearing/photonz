@@ -61,6 +61,12 @@ public enum CanvasNoticeAction: Hashable, Sendable {
     /// outline closed) used to end its line with "or Command Z to put it
     /// back"; the contract gives a toast Undo as a button instead.
     case undo
+    /// Put the transition a cut CAN take on the cut that just refused one
+    /// (`TransitionTargets.swift`, `nearestTransition`): a dissolve asked of a
+    /// cut with no spare frames, answered with a dip, which spends none. The
+    /// cut is the one refused, captured then, for the reason the cases above
+    /// carry theirs.
+    case putTransition(ClipTransitionKind, at: TimelineCutPlace)
 
     /// The layers this action would act on.
     public var layerIDs: [UUID] {
@@ -69,6 +75,7 @@ public enum CanvasNoticeAction: Hashable, Sendable {
         case .readTheWords(let runs): return runs
         case .findStillPictures(let labels): return labels
         case .undo: return []
+        case .putTransition(_, let place): return [place.arrivingClip]
         }
     }
 
@@ -87,7 +94,7 @@ public enum CanvasNoticeAction: Hashable, Sendable {
     /// See `Presentation`.
     public var presentation: Presentation {
         switch self {
-        case .turnIntoPicture, .readTheWords, .undo: return .button
+        case .turnIntoPicture, .readTheWords, .undo, .putTransition: return .button
         case .findStillPictures: return .wordsInTheLine
         }
     }
@@ -110,6 +117,7 @@ public enum CanvasNoticeAction: Hashable, Sendable {
         case .findStillPictures(let labels):
             return TextReading.Batch.stayedPictures(labels.count)
         case .undo: return "Undo"
+        case .putTransition(let kind, _): return "Use \(kind.title)"
         }
     }
 
@@ -125,7 +133,7 @@ public enum CanvasNoticeAction: Hashable, Sendable {
         switch self {
         case .turnIntoPicture: return "\u{21E7}\u{2318}R"
         case .undo: return "\u{2318}Z"
-        case .readTheWords, .findStillPictures: return nil
+        case .readTheWords, .findStillPictures, .putTransition: return nil
         }
     }
 }

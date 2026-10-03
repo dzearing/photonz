@@ -1653,6 +1653,14 @@ final class EditorState {
     var timelineTransitionHover: TimelineTransitionHover?
     /// The kind on that drag, read off it once it arrives.
     @ObservationIgnored var timelineTransitionInAir: ClipTransitionKind?
+    /// The tile the Transitions group last handed to a drag, so the timeline
+    /// knows what is in the air the moment it arrives, before the drag's own
+    /// bytes have been read (`TransitionDrag.swift`).
+    @ObservationIgnored var transitionTileLifted: ClipTransitionKind?
+    /// A tile clicked with no cut picked: every place it could go is lit on
+    /// the timeline for a moment, so the click answers where to take it.
+    var transitionSpotsFlash: ClipTransitionKind?
+    @ObservationIgnored var transitionSpotsFlashTask: Task<Void, Never>?
     /// The tile picked in the Transitions group, which its plus menu acts on.
     /// Nil until one is clicked; the group then shows the cut's own kind, else
     /// the default.

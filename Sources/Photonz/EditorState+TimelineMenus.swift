@@ -153,14 +153,9 @@ extension EditorState {
         if !onTheSound, !layer.isPlacedInTime {
             rows.append(contentsOf: pictureFadeMenuRows(layerID: layerID))
         }
-        let ends = transitionCuts(of: pieces, aroundPiece: index)
-        if Experiments.shared.transitionsAtACutEnabled, !ends.isEmpty, !onTheSound {
-            rows.append(.submenu("Add Transition", ClipTransitionKind.allCases.map { kind in
-                .command(kind.title, enabled: ends.contains { $0.canAfford(kind) }) {
-                    self.addTransition(kind, layerID: layerID, atCuts: ends.map(\.index))
-                }
-            }))
-        }
+        // A transition at both ends of the piece: the cut where it meets
+        // the next, or a fade where it meets nothing (`TransitionTargets`).
+        if !onTheSound { rows.append(contentsOf: clipTransitionMenuRows(layerID: layerID, piece: index)) }
         // What its sound does: how loud it is at the source (Premiere's Audio
         // Gain) and captions from what is said in it (Premiere's Transcribe,
         // only ever when asked).
@@ -310,32 +305,6 @@ extension EditorState {
         return pieces.split(atMS: documentTimeMS - time.inMS)
     }
 
-    /// The cuts either side of a piece, which is where Premiere puts a
-    /// transition you ask a clip for: at both of its ends.
-    private func transitionCuts(of pieces: ClipPieces, aroundPiece index: Int) -> [ClipCut] {
-        [index, index + 1].compactMap { pieces.cut(at: $0) }
-    }
-
-    /// Put one kind of transition on several cuts of one clip, as ONE step to
-    /// undo. Each cut gets the longest it can pay for up to the usual length,
-    /// and a cut that cannot pay for the kind at all is left as it was.
-    func addTransition(_ kind: ClipTransitionKind, layerID: UUID, atCuts indices: [Int]) {
-        guard Experiments.shared.transitionsAtACutEnabled,
-              let pieces = document?.layer(id: layerID)?.clipPieces else { return }
-        let planned: [(Int, ClipTransition)] = indices.compactMap { index in
-            guard let transition = pieces.cut(at: index)?.fitted(kind) else { return nil }
-            return (index, transition)
-        }
-        guard !planned.isEmpty else { return }
-        endTrimBeforeCutting()
-        pauseDocument()
-        perform { document in
-            for (index, transition) in planned { document.setClipTransition(layerID, atCut: index, to: transition) }
-        }
-        selectClipCut(layerID: layerID, index: planned[0].0)
-        documentMomentChanged()
-    }
-
     /// Delete from the timeline: the piece, when the clip is cut, and the whole
     /// clip when it is not. A piece takes its stretch out of everything with it
     /// (`deleteClipPieceInHand`); a whole clip leaves a gap where it was, which
@@ -465,18 +434,10 @@ extension EditorState {
         var rows: [MenuRow] = []
         if Experiments.shared.transitionsAtACutEnabled {
             let place = TimelineCutPlace.join(clip: layerID, index: index)
-            rows.append(.command("Apply Default Transition", TimelineMenuKeys.applyDefaultTransition,
-                                 enabled: canApplyDefaultTransition(at: place)) {
+            rows.append(.command("Apply Default Transition", TimelineMenuKeys.applyDefaultTransition) {
                 self.applyDefaultTransition(at: place)
             })
-            rows.append(.submenu("Add Transition", ClipTransitionKind.allCases.map { kind -> MenuRow in
-                if cut.transition?.kind == kind {
-                    return .toggle(kind.title, isOn: true) {}
-                }
-                return .command(kind.title, enabled: cut.canAfford(kind)) {
-                    self.addTransition(kind, layerID: layerID, atCuts: [index])
-                }
-            }))
+            rows.append(addTransitionMenuRow([.cut(place)], current: cut.transition?.kind))
             if cut.transition != nil {
                 rows.append(.command("Remove Transition") {
                     self.selectClipCut(layerID: layerID, index: index)
@@ -501,16 +462,10 @@ extension EditorState {
               let cut = document?.documentCut(at: place)?.cut,
               !isClipLocked(point.incoming), !isClipLocked(point.outgoing) else { return [] }
         var rows: [MenuRow] = [
-            .command("Apply Default Transition", TimelineMenuKeys.applyDefaultTransition,
-                     enabled: canApplyDefaultTransition(at: place)) {
+            .command("Apply Default Transition", TimelineMenuKeys.applyDefaultTransition) {
                 self.applyDefaultTransition(at: place)
             },
-            .submenu("Add Transition", ClipTransitionKind.allCases.map { kind -> MenuRow in
-                if cut.transition?.kind == kind { return .toggle(kind.title, isOn: true) {} }
-                return .command(kind.title, enabled: cut.canAfford(kind)) {
-                    self.setTransition(kind, at: place)
-                }
-            })
+            addTransitionMenuRow([.cut(place)], current: cut.transition?.kind),
         ]
         if cut.transition != nil {
             rows.append(.command("Remove Transition") {
@@ -581,6 +536,8 @@ extension EditorState {
             self.splitEverything(atMS: ms)
         })
         if let paste = pasteRangeRow(atMS: ms) { rows.append(paste) }
+        // A transition on the cut the click was at, where two clips meet.
+        rows.append(contentsOf: rulerTransitionMenuRows(atMS: ms))
         // A zoom on the recording playing here, starting here.
         if canWorkWithZooms, let clip = clipToAddZoom(atMS: ms) {
             rows.append(.command("Add Zoom") {

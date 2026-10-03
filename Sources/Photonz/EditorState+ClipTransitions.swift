@@ -324,7 +324,13 @@ extension EditorState {
         guard let plan = defaultTransitionPlan(at: place) else { return false }
         switch plan {
         case .refused(let why):
-            raiseCanvasNotice(.defaultTransitionRefused(why))
+            // A cut in hand that cannot pay says why, and offers the kind it
+            // can take (`putTransition`).
+            if case .noSpare = why, let at = place ?? pickedCutPlace {
+                putTransition(defaultTransitionKind, on: [.cut(at)])
+            } else {
+                raiseCanvasNotice(.defaultTransitionRefused(why))
+            }
         case .put(let transition, let place):
             closeTransitionPicker()
             setTransition(transition.kind, at: place)

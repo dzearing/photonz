@@ -457,6 +457,9 @@ struct TimelineTrackRow: View {
             if let hover = editorState.timelineFileHover, hover.landing.target == .onto(track.id) {
                 TimelineFileGhost(hover: hover, laneWidth: laneWidth, height: laneHeight)
             }
+            if let kind = editorState.transitionSpotsLitKind, track.kind == .video {
+                TimelineTransitionSpots(kind: kind, trackID: track.id, laneWidth: laneWidth, height: laneHeight)
+            }
             if let hover = editorState.timelineTransitionHover, hover.trackID == track.id {
                 TimelineTransitionGhost(hover: hover, laneWidth: laneWidth, height: laneHeight)
             }

@@ -203,6 +203,11 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// frames to pay for it (`#rowAlign`). The segment stays where it
         /// was, so it says why.
         case transitionSideRefused(ClipTransitionAlignment)
+        /// A transition asked of a clip went on one end and not the other:
+        /// the cut at `atMS` has no spare frames to pay for it
+        /// (`TransitionTargets.swift`). "No transition added" would be false,
+        /// so it says which cut was left as it was.
+        case transitionCutSkipped(atMS: Int)
         /// A sound or a recording let go on the TIMELINE landed on a track at
         /// the moment it was let go at (`ClipLanding`), which is not the
         /// playhead, so the words say where.
@@ -336,7 +341,7 @@ public struct CopyConfirmation: Hashable, Sendable {
              .componentVersionAdded, .regionSliceRefused,
              .separatedIntoLayers, .turnedIntoText, .turnedIntoTextInBatch,
              .lookPasted, .shapesCombined,
-             .nothingJoined, .nothingClosed: return Self.breakLifetime
+             .nothingJoined, .nothingClosed, .transitionCutSkipped: return Self.breakLifetime
         // ...and a swap is one of them exactly when it left something behind:
         // "Title did not carry over" is a sentence naming a thing you may want
         // to press Command Z about, and the swap that carried everything is
@@ -385,6 +390,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .transitionOnEveryCut(let kind, let outcome):
             return outcome.put.isEmpty ? "No transition added" : kind.title
         case .transitionSideRefused: return "Not moved"
+        case .transitionCutSkipped: return "1 cut skipped"
         case .landedOnTrack(_, _, _, let isSound): return isSound ? "Sound added" : "Clip added"
         case .mediaWouldNotOpen: return "Not added"
         case .broughtIntoLibrary(let outcome): return outcome.title
@@ -446,6 +452,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "\u{2318}T now puts \(kind.title) on a cut"
         case .transitionOnEveryCut(_, let outcome):
             return outcome.countLine
+        case .transitionCutSkipped(let ms):
+            return "No spare frames at \(CaptionProgress.clock(ms))"
         case .transitionSideRefused:
             return "No spare frames on that side"
         case .clipAdded(let name):
