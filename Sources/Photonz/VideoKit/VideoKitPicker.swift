@@ -1,4 +1,9 @@
+// The kit stands on its own (Scripts/test.sh typechecks it alone, and the
+// gallery compiles it with nothing else), so the one pure piece of core it
+// uses, `TileGridPlan`, is compiled in beside it there instead of imported.
+#if canImport(PhotonzCore)
 import PhotonzCore
+#endif
 import SwiftUI
 
 // MARK: - A tile

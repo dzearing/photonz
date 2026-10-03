@@ -45,6 +45,7 @@
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "5-grid-on", "note": "THE OTHER TEST: switching the grid on really moved the guide on, so the step waits for the lines rather than asking and hoping" },
     { "do": "snapshot", "name": "5-grid-on" },
+    { "comment": "Keylines are off for this person, so the card asks for the row by its real name and waits for it.", "do": "expectTutorialStep", "step": "show-the-keylines", "offers": "Skip This Step", "says": "choose Show Icon Keylines" },
 
     { "do": "action", "action": "showIconKeylines" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "what-the-frame-knows", "timeout": 6 },

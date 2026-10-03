@@ -3052,7 +3052,7 @@ private final class Run {
                  + (hold ? ", with the slider still under the finger" : ""),
                  state: describe())
 
-        case .expectTutorialStep(let id):
+        case .expectTutorialStep(let id, let offers, let says):
             guard let run = TutorialController.shared.run else {
                 throw Failure(description: "no guide is running, so nothing is on step \"\(id)\"")
             }
@@ -3061,8 +3061,17 @@ private final class Run {
                               + "\"\(run.step.id)\" (\(run.number) of \(run.count)), "
                               + "not \"\(id)\"")
             }
+            if let offers, run.buttonTitle != offers {
+                throw Failure(description: "the card on \"\(id)\" offers \"\(run.buttonTitle)\", "
+                              + "not \"\(offers)\"")
+            }
+            if let says, !run.body.contains(says) {
+                throw Failure(description: "the card on \"\(id)\" says \"\(run.body)\", "
+                              + "which does not contain \"\(says)\"")
+            }
             note(number, step.name,
-                 "still on \"\(id)\", \(run.number) of \(run.count)", state: describe())
+                 "still on \"\(id)\", \(run.number) of \(run.count), offering \(run.buttonTitle): "
+                 + "\"\(run.body)\"", state: describe())
 
         case .startGuide(let id, let size):
             guard let guide = TutorialCatalog.guide(id: id) else {

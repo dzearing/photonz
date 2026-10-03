@@ -17,5 +17,6 @@ out="${1:-docs/design/mocks/shared/video-kit}"
 bin="$(mktemp -d)/video-kit-gallery"
 trap 'rm -rf "$(dirname "$bin")"' EXIT
 swiftc -parse-as-library -swift-version 6 -O \
-  Sources/Photonz/VideoKit/*.swift Scripts/video-kit-gallery.swift -o "$bin"
+  Sources/Photonz/VideoKit/*.swift Sources/PhotonzCore/TileGridPlan.swift \
+  Scripts/video-kit-gallery.swift -o "$bin"
 "$bin" "$out"

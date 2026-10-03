@@ -3664,7 +3664,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// spot proves a step stayed. A guide that advances on a change far short
     /// of what it asked for passes every waiting step in its walk, because the
     /// step it wrongly moved to is the step the walk was waiting for.
-    case expectTutorialStep(String)
+    ///
+    /// `offers` is the card's button word for word ("Next", "Skip This Step")
+    /// and `says` is words its body must contain: a step that came up with its
+    /// ask already done reads differently from one that asks, and only these
+    /// tell the two apart.
+    case expectTutorialStep(String, offers: String? = nil, says: String? = nil)
 
     public static let defaultTimeout: Double = 10
     public static let defaultDragSteps = 8
@@ -3995,7 +4000,9 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .setLensAmount(CGFloat(try f.number("to")),
                                   hold: try f.optionalFlag("hold") ?? false)
         case "expectTutorialStep":
-            self = .expectTutorialStep(try f.string("step"))
+            self = .expectTutorialStep(try f.string("step"),
+                                       offers: try f.optionalString("offers"),
+                                       says: try f.optionalString("says"))
         case "snapshot":
             self = .snapshot(name: try f.string("name"), window: try f.optionalString("window"))
         case "dropComponent":

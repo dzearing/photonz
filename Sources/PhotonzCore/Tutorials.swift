@@ -553,12 +553,19 @@ public struct TutorialStep: Identifiable, Hashable, Codable, Sendable {
     /// One or two short sentences. Product copy: plain words, no dashes
     /// standing in for punctuation, nothing about how the app was built.
     public let body: String
+    /// What the card says instead when the step came up with its ask already
+    /// done (`TutorialRun.stepWasAlreadyTrue`). Needed by any step whose body
+    /// names a switch: keylines are on from the start, so "choose Show Icon
+    /// Keylines" on a step that is already satisfied sends somebody to untick
+    /// them. Nil keeps `body` either way.
+    public let bodyWhenAlreadyTrue: String?
     public let side: TutorialSide
     public let advance: TutorialAdvance
     /// What has to be on screen for the anchor to exist. Reveal only.
     public let prepare: [TutorialPrep]
 
     public init(id: String, anchor: TutorialAnchor, title: String, body: String,
+                bodyWhenAlreadyTrue: String? = nil,
                 side: TutorialSide = .automatic,
                 advance: TutorialAdvance = .next,
                 prepare: [TutorialPrep] = []) {
@@ -566,6 +573,7 @@ public struct TutorialStep: Identifiable, Hashable, Codable, Sendable {
         self.anchor = anchor
         self.title = title
         self.body = body
+        self.bodyWhenAlreadyTrue = bodyWhenAlreadyTrue
         self.side = side
         self.advance = advance
         self.prepare = prepare
@@ -1028,6 +1036,11 @@ public struct TutorialRun: Hashable, Sendable {
     public mutating func markStepAlreadyTrue() { stepWasAlreadyTrue = true }
 
     public var step: TutorialStep { guide.steps[index] }
+    /// What the card says: the step's own words, or its already-done words
+    /// when the thing it asks for was so before it came up.
+    public var body: String {
+        stepWasAlreadyTrue ? (step.bodyWhenAlreadyTrue ?? step.body) : step.body
+    }
     public var number: Int { index + 1 }
     public var count: Int { guide.steps.count }
     public var canGoBack: Bool { index > 0 }
@@ -1176,6 +1189,9 @@ public enum TutorialCopyRules {
         for step in guide.steps {
             found += problems(in: step.title, label: "\(guide.id)/\(step.id) title")
             found += problems(in: step.body, label: "\(guide.id)/\(step.id) body")
+            if let done = step.bodyWhenAlreadyTrue {
+                found += problems(in: done, label: "\(guide.id)/\(step.id) body when already true")
+            }
         }
         return found
     }

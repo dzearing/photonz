@@ -1,0 +1,25 @@
+{
+  "feature": "Icon guide keylines card says what is true",
+  "epic": "icon-svg",
+  "summary": "In the Start on an icon frame guide, the keylines card no longer sends you to the menu row that would switch keylines off. If they are already on it says so and offers Next. If they are off it asks for the row by its real name. The grid step works the same way.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: tutorial-icon-keylines-already-on-walk (keylines on, the default) and tutorial-start-on-an-icon-frame-walk (keylines off).",
+  "switched": {},
+  "try": [
+    { "do": "Open any picture, then choose Help > Tutorials > Icons > Start on an icon frame." },
+    { "do": "Follow the cards: Layer > New Frame, take 24, Add Frame, then Next." },
+    { "do": "Press ⌘' when the grid card asks." },
+    { "do": "Read the keylines card. With keylines on (the default) it says they are already on and offers Next.", "shot": "2026-10-03-keylines-card-already-on.png" },
+    { "do": "Press Next. The keylines stay drawn and the guide moves to the Frame section." },
+    { "do": "Turn keylines off (View > Show Icon Keylines) and start the guide again. Now the card asks you to choose that row and waits for it.", "shot": "2026-10-03-keylines-card-asking.png" }
+  ],
+  "evaluate": [
+    "With keylines already on, is 'The keylines are already on' enough to tell you that nothing needs doing?",
+    "With keylines off, does 'In the View menu, choose Show Icon Keylines' get you to the row without hunting?",
+    "Should a step that is already done move on by itself after a moment, instead of waiting for Next?"
+  ],
+  "rough": [
+    "The tutorial card has no mock page, so there was nothing to compare it against side by side. It was checked against the real View menu row name instead.",
+    "If you start the guide with the grid already on, the grid card now says 'The grid is already on' in the same way. The walks only start with the grid off, so that wording was checked by unit test, not in a walk.",
+    "The shot of the asking card was taken before you choose the row. In it, the keylines are still off on the frame."
+  ]
+}

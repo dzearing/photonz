@@ -1609,12 +1609,17 @@ public enum TutorialGuides {
                 anchor: .canvas,
                 title: "Turn the pixels on",
                 body: "Press \u{2318}'. The lines are what an icon has to land on, and a point you place sticks to the nearest crossing.",
+                bodyWhenAlreadyTrue: "The grid is already on. Its lines are what an icon has to land on, and a point you place sticks to the nearest crossing.",
                 advance: .waitsFor(.gridShown)),
             TutorialStep(
                 id: "show-the-keylines",
                 anchor: .canvas,
                 title: "Keep inside the keylines",
-                body: "Show Icon Keylines, in the View menu, draws the margin every icon in a set keeps to, and the two lines through the middle.",
+                // Keylines are on until somebody turns them off, so this step
+                // usually comes up already done, and "choose the row" would
+                // send that person to untick them.
+                body: "In the View menu, choose Show Icon Keylines. They draw the margin every icon in a set keeps to, and the two lines through the middle.",
+                bodyWhenAlreadyTrue: "The keylines are already on. They draw the margin every icon in a set keeps to, and the two lines through the middle.",
                 advance: .waitsFor(.keylinesShown)),
             TutorialStep(
                 id: "what-the-frame-knows",

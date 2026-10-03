@@ -243,6 +243,24 @@ struct TutorialIconsTrackTests {
         #expect(TutorialSampleScreen.layers(for: .blankPage).isEmpty)
     }
 
+    @Test func theKeylinesAndGridStepsSayWhatIsTrueWhenAlreadyOn() throws {
+        // Keylines are on until somebody turns them off, so the keylines step
+        // usually comes up already done. Telling that person to choose the
+        // menu row would untick it. The asking wording names the row as the
+        // View menu really spells it; the done wording names no switch at all.
+        let guide = try #require(TutorialCatalog.guide(id: "start-on-an-icon-frame"))
+        let keylines = try #require(guide.steps.first { $0.advance == .waitsFor(.keylinesShown) })
+        #expect(keylines.body.contains(MenuToggleNames.iconKeylines))
+        let done = try #require(keylines.bodyWhenAlreadyTrue)
+        #expect(!done.contains(MenuToggleNames.iconKeylines))
+        #expect(!done.lowercased().contains("choose"))
+        // The grid step is the same shape: the shortcut on a grid already
+        // showing hides it.
+        let grid = try #require(guide.steps.first { $0.advance == .waitsFor(.gridShown) })
+        let gridDone = try #require(grid.bodyWhenAlreadyTrue)
+        #expect(!gridDone.contains("\u{2318}"))
+    }
+
     @Test func theDrawingGuideTeachesTheCurveAsItsOwnShape() throws {
         // Being unable to find the curve at all is what a real first session
         // with the Pen ran aground on, so it is not a sentence tacked onto the

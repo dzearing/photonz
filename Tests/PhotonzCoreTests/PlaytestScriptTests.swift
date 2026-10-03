@@ -4044,6 +4044,21 @@ struct PlaytestScriptTests {
 
     // MARK: - The colours a path came out wearing
 
+    @Test("An expectTutorialStep step can claim what the card offers and says")
+    func expectTutorialStepReadsTheCard() throws {
+        // A step that came up already done says something different from one
+        // that asks, so a walk can hold the card to the right wording.
+        let script = try decode("""
+        { "steps": [
+          { "do": "expectTutorialStep", "step": "show-the-keylines",
+            "offers": "Next", "says": "already on" },
+          { "do": "expectTutorialStep", "step": "put-it-back" } ] }
+        """)
+        #expect(script.steps[0] == .expectTutorialStep("show-the-keylines",
+                                                        offers: "Next", says: "already on"))
+        #expect(script.steps[1] == .expectTutorialStep("put-it-back"))
+    }
+
     @Test("An expectPath step can claim how many points curve on one side only")
     func expectPathCountsHalfSmoothPoints() throws {
         let script = try decode("""

@@ -166,9 +166,12 @@ final class TutorialController {
             "; \($0.resolved ? "found" : "NOT FOUND YET") after "
                 + String(format: "%.1fs on screen", $0.shown)
         } ?? ""
+        // What the card says and offers, so a walk can tell the asking
+        // wording from the already-done one.
+        let says = "; offers \(run.buttonTitle), says \"\(run.body)\""
         return "\(run.guide.id)/\(run.step.id) \(run.number) of \(run.count); "
             + "\(anchor.name) at\(where_); card \(cardPanel.map { "\(Int($0.frame.minX)), \(Int($0.frame.minY)) \(Int($0.frame.width))x\(Int($0.frame.height))" } ?? "none")"
-            + host + verdict
+            + host + verdict + says
     }
 
     /// The window the running guide is teaching in. What a walk asks the anchor
@@ -723,7 +726,7 @@ final class TutorialController {
                       beakOffset: CGFloat?, note: String? = nil) -> TutorialCalloutView {
         TutorialCalloutView(
             number: run.number, count: run.count,
-            title: run.step.title, message: run.step.body, note: note,
+            title: run.step.title, message: run.body, note: note,
             buttonTitle: run.buttonTitle, canGoBack: run.canGoBack,
             side: side, beakOffset: beakOffset,
             onBack: { [weak self] in self?.back() },

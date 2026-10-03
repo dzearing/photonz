@@ -160,6 +160,41 @@ struct TutorialsTests {
         #expect(!run.stepWasAlreadyTrue)
     }
 
+    @Test func aStepAlreadyDoneSaysSoInsteadOfAskingAgain() {
+        // Keylines are on from the start, so "choose Show Icon Keylines" on a
+        // step that came up already done sends somebody to untick them. A step
+        // that names a switch says what is true instead, and says the ask
+        // again the moment it is a fresh step.
+        let step = TutorialStep(id: "s", anchor: .canvas, title: "T",
+                                body: "Choose the switch.",
+                                bodyWhenAlreadyTrue: "It is on already.",
+                                advance: .waitsFor(.keylinesShown))
+        let guide = TutorialGuide(id: "g", track: .icons, title: "G", summary: "S",
+                                  minutes: 1, sample: nil, steps: [step, step])
+        var run = TutorialRun(guide: guide)
+        #expect(run.body == "Choose the switch.")
+        run.markStepAlreadyTrue()
+        #expect(run.body == "It is on already.")
+        run.advance()
+        #expect(run.body == "Choose the switch.")
+    }
+
+    @Test func aStepWithNoSecondWordingKeepsItsOwnWhenAlreadyTrue() {
+        var run = TutorialRun(guide: TutorialGuides.takeTheTour)
+        while !run.step.waits && !run.isLastStep { run.advance() }
+        run.markStepAlreadyTrue()
+        #expect(run.body == run.step.body)
+    }
+
+    @Test func theSecondWordingIsHeldToTheSameCopyRules() {
+        let step = TutorialStep(id: "s", anchor: .canvas, title: "T", body: "Fine.",
+                                bodyWhenAlreadyTrue: "It is on \u{2014} already.",
+                                advance: .waitsFor(.keylinesShown))
+        let guide = TutorialGuide(id: "g", track: .icons, title: "G", summary: "S",
+                                  minutes: 1, sample: nil, steps: [step])
+        #expect(TutorialCopyRules.problems(in: guide).contains { $0.contains("g/s body when already true") })
+    }
+
     @Test func aWaitingStepMovesOnWhenThePersonDoesTheThing() {
         var run = TutorialRun(guide: TutorialGuides.takeTheTour)
         run.advance() // the Measure step
