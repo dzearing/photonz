@@ -1,0 +1,39 @@
+{
+  "feature": "Recording starts the moment you press Enter",
+  "epic": "video-editing",
+  "summary": "Pressing Enter on the Record Screen card now starts the recording in about 34 ms instead of about 280 ms, so what you do straight after Enter is in the file. With system audio and a microphone on it is about 111 ms instead of about 300 ms, and the stop control's clock counts from the file's first frame.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Current gets the same, because the recording path is shared. Measured on the probe with Scripts/recording-start-drill.sh (10 runs per case).",
+  "switched": {},
+  "try": [
+    { "do": "Press Shift-Command-5, leave Full Screen and no sound chosen, and press Enter." },
+    { "do": "The instant you press Enter, do something on screen: open a menu or type a letter." },
+    {
+      "do": "Press Stop, open the recording and step to its first frame: it shows the screen from before you acted.",
+      "shot": "2026-10-03-recording-starts-on-enter-first-frame.png",
+      "shotNote": "Taken from a real recording by the start drill, not a window capture, and cut down to the drill's two squares so nothing else on the screen is in it. Black square: still black in the file's first frame. Green: the stop control's place, which stays out of the file."
+    },
+    {
+      "do": "Step forward a frame or two: your action appears.",
+      "shot": "2026-10-03-recording-starts-on-enter-turn-frame.png",
+      "shotNote": "The same recording, the frame where the square, turned white 50 ms after Enter, first appears."
+    },
+    { "do": "Open the card again, turn on System Audio and a microphone, press Enter and watch the stop control's clock start at once." },
+    { "do": "Start one more recording with sound and press Stop within its first second: it stops." },
+    { "do": "Choose Region…, drag a region, and act the moment you let go of the drag." }
+  ],
+  "evaluate": [
+    "Does a recording without sound now feel like it starts the instant you press Enter?",
+    "With system audio and a microphone on, is about 111 ms from Enter to the first frame still something you can feel?",
+    "Without sound, the menu bar's screen recording indicator now comes on while the card is up (nothing is written until Enter). Is that acceptable?",
+    "Does a region recording start fast enough once you let go of the drag?"
+  ],
+  "rough": [
+    "Before this change, measured the same way: Enter to first frame was a median of 278.5 ms (worst 303.8) without sound and 297.1 ms (worst 314.9) with system audio and microphone, and with sound the stop control's clock started about 1.4 s after Enter.",
+    "After: without sound the median is 33.6 ms (worst 39.2), and every file began before a change made 50 ms after Enter reached the screen. A still screen gives a median of 35.3 ms.",
+    "With system audio and a microphone the median is 111.2 ms (worst 116.1), just over the 100 ms budget. Enter to the stream being asked for is about 10 ms. The rest is macOS: a stream with both sounds takes about 100 ms to its first frame, against about 55 ms without sound. A stream with sound warmed while the card is up takes 1.3 s to start, a file added while it starts never begins, and a second stream started meanwhile waits behind it (1.4 s), so with sound only the display and the stop control are made ready, not a stream.",
+    "Region recording: a median of 70.4 ms (worst 73.4) from the end of the drag, inside the budget, but reframing the warm stream to the region costs about 40 ms, so 4 of 10 files began after a change made 50 ms after the drag reached the screen. With sound a region takes a median of 118.4 ms.",
+    "The first recording after each launch spends about 0.4 s getting ready while the card is up (loading the encoder and the reframe). Press Enter inside that and that one recording starts from scratch, in about 100 ms.",
+    "No picture of the stop control on screen: the stop control is left out of the recording by design, and both pictures come from the recording file.",
+    "Two fixes that came along: the clock now counts from the file's first frame (with sound it used to sit at 0:00 for over a second and then jump), and Stop pressed while a recording with sound is still starting is no longer ignored."
+  ]
+}

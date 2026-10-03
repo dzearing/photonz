@@ -40,12 +40,55 @@ final class RecordingCoordinator {
         self.config = RecordingCoordinator.loadConfig()
     }
 
+    /// Stop was pressed while the recording was still starting.
+    @ObservationIgnored private var stopWhenStarted = false
+
+    /// The last warm-up asked for, so the next one queues behind it.
+    @ObservationIgnored private var warming: Task<Void, Never>?
+
+    /// Get ready to record `config` on `screen` while the person is still on
+    /// the recording card: the stop control goes up unseen, and a stream that
+    /// writes nothing starts with it and the windows in `alsoExcluding` (the
+    /// card) left out of its picture. Start then begins the file on that
+    /// stream with nothing to wait for. Calls queue behind one another; the
+    /// last one wins.
+    func prepare(config: RecordingConfig, screen: NSScreen, alsoExcluding: [NSWindow] = []) {
+        guard !isRecording, !isStarting else { return }
+        let hud = controls.prepare(on: screen)
+        let previous = warming
+        warming = Task { [recorder] in
+            await previous?.value
+            await recorder.warmUp(config: config, screen: screen, excluding: [hud] + alsoExcluding)
+        }
+    }
+
+    /// The card went away without a recording: stop the warm stream and take
+    /// the unseen stop control down.
+    func cancelPrepared() {
+        guard !isRecording, !isStarting else { return }
+        controls.hide()
+        let previous = warming
+        warming = Task { [recorder] in
+            await previous?.value
+            await recorder.coolDown()
+        }
+    }
+
+    #if PHOTONZ_PLAYTEST
+    /// Probe drill: something made ready by `prepare` is still standing.
+    var playtestSomethingPrepared: Bool { recorder.warmConfig != nil || controls.playtestIsUp }
+    #endif
+
     /// Begin recording per `config` on `screen`. The stop HUD is shown first (so
     /// the window server knows about it) and excluded from the captured video.
+    /// When `prepare` warmed a stream for these choices the recording begins
+    /// on it at once: the stop control is made visible and the file starts at
+    /// the stream's next frame.
     /// `showsControls: false` is the probe's latency drill, which records
     /// without putting the stop control on the person's screen.
     func start(config: RecordingConfig, screen: NSScreen, showsControls: Bool = true) async {
         guard !isRecording, !isStarting else { return }
+        lastStartTrace = StartTrace(requested: PointerTracker.hostNow())
         isStarting = true
         defer { isStarting = false }
         self.config = config
@@ -55,20 +98,35 @@ final class RecordingCoordinator {
 
         var excluded: [NSWindow] = []
         if showsControls {
+            let wasUp = controls.isUp(on: screen)
             excluded.append(controls.show(on: screen) { [weak self] in
                 Task { await self?.stop() }
             })
-            // Give the HUD a window-server presence so SCContentFilter can exclude it.
-            try? await Task.sleep(for: .milliseconds(150))
+            lastStartTrace?.controlsShown = PointerTracker.hostNow()
+            // A control put up just now needs a window-server presence before
+            // SCContentFilter can exclude it; one prepared with the card has it.
+            if !wasUp { try? await Task.sleep(for: .milliseconds(150)) }
+        } else {
+            controls.hide()
         }
+        // The clock ticks from the moment the control is up, reading from the
+        // first frame, so it never sits at 0:00 while macOS finishes starting
+        // a stream with sound (about 1.3 s, with the file already going).
+        startTimer()
 
         do {
             try await recorder.start(config: config, screen: screen, to: url, excluding: excluded,
                                      pointer: pointer)
             isRecording = true
-            startTimer()
+            // Stop pressed while macOS was still starting the stream.
+            if stopWhenStarted {
+                stopWhenStarted = false
+                await stop()
+            }
         } catch {
             NSLog("Recording failed to start: \(error)")
+            stopWhenStarted = false
+            stopTimer()
             controls.hide()
             // A start that fails must say so. Before this alert the only sign
             // was the stop HUD flashing away in under a second, which reads as
@@ -93,7 +151,12 @@ final class RecordingCoordinator {
     /// copy to the clipboard waits for the file, since there is nothing to
     /// paste before it exists.
     func stop() async {
-        guard isRecording else { return }
+        guard isRecording else {
+            // The stop control is up from the moment Start is pressed; a press
+            // before the stream has finished starting stops it once it has.
+            if isStarting { stopWhenStarted = true }
+            return
+        }
         let stoppedAt = PointerTracker.hostNow()
         isRecording = false
         let started = startDate ?? .now
@@ -142,6 +205,16 @@ final class RecordingCoordinator {
     @ObservationIgnored var playtestFileCloseSeconds: Double = 0
     #endif
 
+    /// When each part of the last start happened, on the host clock (the
+    /// probe's start drill).
+    struct StartTrace {
+        var requested: Double
+        var controlsShown: Double?
+        var timerStarted: Double?
+    }
+    private(set) var lastStartTrace: StartTrace?
+    var lastRecorderStartTrace: ScreenRecorder.StartTrace { recorder.lastStart }
+
     /// When each part of the last stop happened (the probe's latency drill).
     var lastStopTrace: ScreenRecorder.StopTrace? { recorder.lastStop }
 
@@ -156,11 +229,15 @@ final class RecordingCoordinator {
 
     private func startTimer() {
         startDate = Date()
+        lastStartTrace?.timerStarted = PointerTracker.hostNow()
         timer?.invalidate()
+        controls.updateElapsed(0)
         timer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
-                guard let self, let start = self.startDate else { return }
-                self.controls.updateElapsed(Date().timeIntervalSince(start))
+                // The clock counts from the recording's first frame, which is
+                // where the file starts, not from the key press.
+                guard let self, let first = self.recorder.firstFrameHostSeconds else { return }
+                self.controls.updateElapsed(max(0, PointerTracker.hostNow() - first))
             }
         }
     }

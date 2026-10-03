@@ -15,13 +15,51 @@ final class RecordingControlsController {
     private var panel: NSPanel?
 
     /// Shows the HUD top-center of `screen` and returns its window so the
-    /// recorder can exclude it from the capture.
+    /// recorder can exclude it from the capture. A control already put up
+    /// for this screen by `prepare` is simply made visible.
     @discardableResult
     func show(on screen: NSScreen, onStop: @escaping () -> Void) -> NSWindow {
         model.elapsed = 0
         model.onStop = onStop
+        if let panel, panel.frame == Self.frame(on: screen) {
+            panel.alphaValue = 1
+            panel.ignoresMouseEvents = false
+            return panel
+        }
+        hide()
+        let panel = makePanel(on: screen)
+        panel.orderFrontRegardless()
+        self.panel = panel
+        return panel
+    }
 
-        let size = CGSize(width: 232, height: 52)
+    #if PHOTONZ_PLAYTEST
+    var playtestIsUp: Bool { panel != nil }
+    #endif
+
+    /// Whether the control's window already exists on `screen`.
+    func isUp(on screen: NSScreen) -> Bool {
+        panel?.frame == Self.frame(on: screen)
+    }
+
+    /// Puts the control up on `screen` without anyone seeing it or being able
+    /// to click it, so its window exists for a stream warmed while the
+    /// recording card is up to leave out. `show` makes it visible.
+    func prepare(on screen: NSScreen) -> NSWindow {
+        if let panel, panel.frame == Self.frame(on: screen) { return panel }
+        hide()
+        model.elapsed = 0
+        let panel = makePanel(on: screen)
+        panel.alphaValue = 0
+        panel.ignoresMouseEvents = true
+        panel.orderFrontRegardless()
+        self.panel = panel
+        return panel
+    }
+
+    private func makePanel(on screen: NSScreen) -> NSPanel {
+        let frame = Self.frame(on: screen)
+        let size = frame.size
         let panel = NonactivatingPanel(
             contentRect: CGRect(origin: .zero, size: size),
             styleMask: [.borderless, .nonactivatingPanel],
@@ -38,13 +76,16 @@ final class RecordingControlsController {
         hosting.frame = CGRect(origin: .zero, size: size)
         hosting.autoresizingMask = [.width, .height]
         panel.contentView = hosting
-
-        let vf = screen.visibleFrame
-        let origin = CGPoint(x: vf.midX - size.width / 2, y: vf.maxY - size.height - 12)
-        panel.setFrameOrigin(origin)
-        panel.orderFrontRegardless()
-        self.panel = panel
+        panel.setFrameOrigin(frame.origin)
         return panel
+    }
+
+    /// Where the stop control sits on `screen`: top centre, just under the
+    /// menu bar, in screen points.
+    static func frame(on screen: NSScreen) -> CGRect {
+        let size = CGSize(width: 232, height: 52)
+        let vf = screen.visibleFrame
+        return CGRect(origin: CGPoint(x: vf.midX - size.width / 2, y: vf.maxY - size.height - 12), size: size)
     }
 
     func updateElapsed(_ seconds: TimeInterval) {

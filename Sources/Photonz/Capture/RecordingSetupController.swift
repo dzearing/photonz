@@ -15,10 +15,23 @@ final class RecordingSetupController {
     /// this app on dismiss keeps focus where the user left it.
     private var previousApp: NSRunningApplication?
 
+    /// Watches the card's close button, which closes it without Cancel.
+    private var closeObserver: NSObjectProtocol?
+    private var onCancel: () -> Void = {}
+
+    /// The card's window while it is up.
+    var window: NSWindow? { panel }
+
+    /// `onChange` hears every choice made on the card as it is made, and
+    /// `onCancel` every way the card goes away without a recording (Cancel,
+    /// Escape, its close button).
     func present(initial: RecordingConfig,
                  microphones: [(id: String, name: String)],
+                 onChange: @escaping (RecordingConfig) -> Void = { _ in },
+                 onCancel: @escaping () -> Void = {},
                  onStart: @escaping (RecordingConfig) -> Void) {
         dismiss()
+        self.onCancel = onCancel
 
         // The hotkey fires without activating Photonz, so the frontmost app here
         // is still whatever the user was in (the browser, an editor, …). Remember
@@ -29,8 +42,22 @@ final class RecordingSetupController {
         let view = RecordingSetupView(
             initial: initial,
             microphones: microphones,
-            onStart: { [weak self] config in self?.dismiss(); onStart(config) },
-            onCancel: { [weak self] in self?.dismiss() })
+            onChange: onChange,
+            onStart: { [weak self] config in
+                // A full-screen recording starts first: the card is left out
+                // of its picture, and handing focus back to the person's app
+                // costs several milliseconds the first frame should not wait
+                // behind. A region's overlay has to come up after focus is
+                // handed back, or the hand-back takes the overlay's keys.
+                guard config.source == .fullDisplay else {
+                    self?.dismiss()
+                    onStart(config)
+                    return
+                }
+                onStart(config)
+                Task { @MainActor in self?.dismiss() }
+            },
+            onCancel: { [weak self] in self?.dismiss(); onCancel() })
 
         let size = CGSize(width: 360, height: 260)
         // A non-activating panel: it takes key focus on its own (so its buttons
@@ -50,10 +77,56 @@ final class RecordingSetupController {
         panel.isMovableByWindowBackground = true
         panel.contentView = NSHostingView(rootView: view)
         panel.center()
+        closeObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification, object: panel, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self, self.panel === panel else { return }
+                let cancel = self.onCancel
+                self.dismiss()
+                cancel()
+            }
+        }
         panel.orderFrontRegardless()
+        #if PHOTONZ_PLAYTEST
+        if !playtestLeavesKeyAlone { panel.makeKey() }
+        #else
         panel.makeKey()
+        #endif
         self.panel = panel
     }
+
+    #if PHOTONZ_PLAYTEST
+    /// Probe only: put the card up without taking the keyboard from whoever is
+    /// typing, for the start drill.
+    var playtestLeavesKeyAlone = false
+
+    /// Probe only: press Return on the card, the way the person's Enter
+    /// reaches its default button. False when the card did not take it.
+    @discardableResult
+    func playtestPressReturn() -> Bool {
+        guard let panel,
+              let event = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [],
+                                           timestamp: ProcessInfo.processInfo.systemUptime,
+                                           windowNumber: panel.windowNumber, context: nil,
+                                           characters: "\r", charactersIgnoringModifiers: "\r",
+                                           isARepeat: false, keyCode: 36)
+        else { return false }
+        return panel.performKeyEquivalent(with: event)
+    }
+
+    /// Probe only: press Escape on the card, which is its Cancel.
+    @discardableResult
+    func playtestPressEscape() -> Bool {
+        guard let panel,
+              let event = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [],
+                                           timestamp: ProcessInfo.processInfo.systemUptime,
+                                           windowNumber: panel.windowNumber, context: nil,
+                                           characters: "\u{1b}", charactersIgnoringModifiers: "\u{1b}",
+                                           isARepeat: false, keyCode: 53)
+        else { return false }
+        return panel.performKeyEquivalent(with: event)
+    }
+    #endif
 
     func dismiss() {
         // Hand focus back BEFORE ordering the panel out: re-activating the prior
@@ -64,6 +137,8 @@ final class RecordingSetupController {
             AppFront.activate(previousApp)
         }
         previousApp = nil
+        if let closeObserver { NotificationCenter.default.removeObserver(closeObserver) }
+        closeObserver = nil
         panel?.orderOut(nil)
         panel = nil
     }
@@ -81,6 +156,7 @@ private struct RecordingSetupView: View {
     enum SourceChoice: Hashable { case full, region }
 
     let microphones: [(id: String, name: String)]
+    let onChange: (RecordingConfig) -> Void
     let onStart: (RecordingConfig) -> Void
     let onCancel: () -> Void
 
@@ -90,9 +166,11 @@ private struct RecordingSetupView: View {
 
     init(initial: RecordingConfig,
          microphones: [(id: String, name: String)],
+         onChange: @escaping (RecordingConfig) -> Void,
          onStart: @escaping (RecordingConfig) -> Void,
          onCancel: @escaping () -> Void) {
         self.microphones = microphones
+        self.onChange = onChange
         self.onStart = onStart
         self.onCancel = onCancel
         if case .region = initial.source { _source = State(initialValue: .region) }
@@ -138,14 +216,20 @@ private struct RecordingSetupView: View {
         }
         .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear { onChange(chosen) }
+        .onChange(of: source) { onChange(chosen) }
+        .onChange(of: systemAudio) { onChange(chosen) }
+        .onChange(of: micID) { onChange(chosen) }
     }
 
-    private func start() {
+    private func start() { onStart(chosen) }
+
+    private var chosen: RecordingConfig {
         var audio: AudioSources = []
         if systemAudio { audio.insert(.systemAudio) }
         if micID != nil { audio.insert(.microphone) }
         // Region rect is a placeholder here; the selection overlay fills it in.
         let src: RecordingSource = source == .region ? .region(.zero) : .fullDisplay
-        onStart(RecordingConfig(source: src, audio: audio, microphoneDeviceID: micID, format: .mp4))
+        return RecordingConfig(source: src, audio: audio, microphoneDeviceID: micID, format: .mp4)
     }
 }

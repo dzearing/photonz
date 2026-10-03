@@ -20,8 +20,9 @@ final class CaptureCenter {
     /// Set when a capture attempt is blocked on the Screen Recording permission.
     var needsScreenRecordingPermission = false
 
-    /// True while a recording is in progress (menu label / state).
-    var isRecording: Bool { recording.isRecording }
+    /// True while a recording is in progress (menu label / state), from the
+    /// moment Start is pressed: the stop control is up and stops it from then.
+    var isRecording: Bool { recording.isRecording || recording.isStarting }
 
     /// History presentation now lives in the resident agent's global slide-down
     /// overlay (phase 11.4), not an in-editor panel — so capture just signals
@@ -114,7 +115,7 @@ final class CaptureCenter {
 
     /// ⇧⌘5 / menu: stop if recording, otherwise open the setup card.
     func toggleRecording() {
-        if recording.isRecording {
+        if recording.isRecording || recording.isStarting {
             Task { await recording.stop() }
         } else {
             beginRecordingFlow()
@@ -123,20 +124,51 @@ final class CaptureCenter {
 
     /// ⌃⇧F5: stop a recording in progress (no-op otherwise).
     func stopRecordingIfNeeded() {
-        guard recording.isRecording else { return }
+        guard recording.isRecording || recording.isStarting else { return }
         Task { await recording.stop() }
     }
 
     /// Presents the recording setup card, then starts on the chosen source.
+    /// While the card is up the recording is made ready (`prepare`), so
+    /// pressing Start begins the file with nothing left to set up.
     func beginRecordingFlow() {
         guard !recording.isRecording, !recording.isStarting else { return }
         guard ensurePermission() else { return }
+        let screen = activeScreen()
+        recordingScreen = screen
         recordingSetup.present(
             initial: recording.config,
-            microphones: ScreenRecorder.availableMicrophones()
+            microphones: ScreenRecorder.availableMicrophones(),
+            onChange: { [weak self] chosen in
+                // A hop, so the card's own window exists to be left out.
+                Task { @MainActor in self?.prepareRecording(chosen, on: screen) }
+            },
+            onCancel: { [weak self] in self?.recording.cancelPrepared() }
         ) { [weak self] config in
             self?.startRecording(with: config)
         }
+    }
+
+    /// The screen the card was opened over, which a full-screen recording
+    /// records.
+    @ObservationIgnored private var recordingScreen: NSScreen?
+
+    private func prepareRecording(_ chosen: RecordingConfig, on screen: NSScreen) {
+        guard let card = recordingSetup.window else { return }
+        recording.prepare(config: Self.warmConfig(for: chosen), screen: screen, alsoExcluding: [card])
+    }
+
+    /// What to warm for the card's choices. A region is not chosen until after
+    /// the card, so the whole display warms and is reframed once it is. A
+    /// microphone whose access is not settled yet is left out: warming must
+    /// never be what asks for it (that stays with Start, once per launch).
+    static func warmConfig(for chosen: RecordingConfig) -> RecordingConfig {
+        var config = chosen
+        if case .region = config.source { config.source = .fullDisplay }
+        if config.audio.capturesMicrophone, microphoneAuthorization() != .authorized {
+            config = config.withoutMicrophone
+        }
+        return config
     }
 
     /// Resolve microphone access BEFORE any stream exists. If SCStream is left
@@ -147,6 +179,12 @@ final class CaptureCenter {
     /// happened. That silent flash was reported as "recording with the
     /// microphone crashes".
     private func startRecording(with config: RecordingConfig) {
+        // Access already settled starts the recording now, with no hop.
+        if MicrophonePermissionGate.decision(wantsMicrophone: config.audio.capturesMicrophone,
+                                             authorization: Self.microphoneAuthorization()) == .proceed {
+            launchRecording(with: config)
+            return
+        }
         Task { await resolveMicrophoneAccessThenStart(config) }
     }
 
@@ -200,11 +238,12 @@ final class CaptureCenter {
         case .alertFirstButtonReturn:
             launchRecording(with: config.withoutMicrophone)
         case .alertSecondButtonReturn:
+            recording.cancelPrepared()
             if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
                 NSWorkspace.shared.open(url)
             }
         default:
-            break
+            recording.cancelPrepared()
         }
     }
 
@@ -224,10 +263,14 @@ final class CaptureCenter {
                     regionConfig.source = .region(rect)
                     Task { await self?.recording.start(config: regionConfig, screen: screen) }
                 },
-                onCancel: { [weak self] in self?.rectSelection = nil })
+                onCancel: { [weak self] in
+                    self?.rectSelection = nil
+                    self?.recording.cancelPrepared()
+                })
             rectSelection?.begin()
         } else {
-            Task { await recording.start(config: config, screen: activeScreen()) }
+            let screen = recordingScreen ?? activeScreen()
+            Task { await recording.start(config: config, screen: screen) }
         }
     }
 

@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 5,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-03T05:39:38.195Z",
-  "updated": "2026-10-03T05:39:52.030Z",
+  "updated": "2026-10-03T08:15:50.797Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"when i start recording a video with cmd shift 5 and hit enter, it doesn't immediately start recording! This is critical. no delays\"\n\nNOT reproduced or measured in intake; these are suspects on the start path, measure each before fixing.\n\nPath: Cmd+Shift+5 is Photonz's own global hotkey (CaptureCenter.swift:71) -> beginRecordingFlow (CaptureCenter.swift:131) -> setup card, Enter = default action 'Start Recording' (RecordingSetupController.swift:134-151) -> resolveMicrophoneAccessThenStart -> launchRecording (CaptureCenter.swift:211) -> RecordingCoordinator.start (RecordingCoordinator.swift:47) -> ScreenRecorder.start (ScreenRecorder.swift:66).\n\nSerial costs on that path, all paid AFTER Enter:\n1. RecordingCoordinator.start shows the stop HUD then sleeps a fixed 150 ms so the window server knows the HUD exists for exclusion.\n2. ScreenRecorder.start awaits SCShareableContent.excludingDesktopWindows (often 100-300+ ms) to find the display and the HUD's SCWindow.\n3. SCStream + SCRecordingOutput construction, then await stream.startCapture() (typically the largest cost, more with mic/system audio).\n4. Setup card dismissal and the Task hops in between.\n\nIdeas, not prescriptions: prewarm while the setup card is open (fetch SCShareableContent, create the HUD window offscreen or hidden so it already has a window number, maybe build the stream/filter ahead of time and only startCapture on Enter); drop the fixed 150 ms sleep in favour of a HUD that already exists; or start the stream when the card opens and only begin writing on Enter (check with SCRecordingOutput whether adding the output later is supported, or use a sample buffer writer). Trap: the HUD must stay excluded from the video, and prewarming must not trip Screen Recording or mic permission prompts earlier than today or more than once per launch (see memory rule on permission prompt loops). Trap: the first-frame clock (FirstFrameClock) and PointerTracker start are tied to the stream start; pointer and click effects must stay aligned.\n\nThere is a probe latency drill already ('showsControls: false is the probe's latency drill', RecordingCoordinator.swift:45-46); extend it to measure Enter-to-first-frame rather than building a new one.\n\nRelated, done: 'A recording shows in history the moment you stop it' (the stop side of the same latency work).",
@@ -31,6 +31,40 @@
     {
       "t": "2026-10-03T05:39:52.029Z",
       "note": "seq 460 -> 5"
+    },
+    {
+      "t": "2026-10-03T05:46:22.632Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-03T05:53:25.267Z",
+      "note": "Reproduced with new probe drill Scripts/recording-start-drill.sh (10 runs, full display, no sound, before any change): Return to first frame median 278.5 ms, worst 303.8 ms, best 263.4. Every file began with the square that turned white 50 ms after Return already white: ~230 ms of what the person did after Enter is missing. Costs: Return->start() 6-17 ms (Task hops, card dismissal), stop control shown +15 ms, fixed 150 ms sleep, SCShareableContent ~30 ms, stream build 3 ms, startCapture ~60 ms, first frame = startCapture return."
+    },
+    {
+      "t": "2026-10-03T08:15:50.578Z",
+      "note": "Before building (adversarial): a QuickTime/Premiere user expects Record to be live the instant they commit. Risks found: the stop control must stay out of the video (exclusion needs its window known to ScreenCaptureKit before the filter is built), the first-frame clock drives pointer/click alignment, and warming must never ask for mic or screen permission. Handled: the control goes up unseen (alpha 0, no mouse) while the card is up and its window is in the filter; warming only with Screen Recording granted and never with an unsettled mic."
+    },
+    {
+      "t": "2026-10-03T08:15:50.634Z",
+      "note": "Shipped: while the card is up, RecordingCoordinator.prepare puts the stop control up unseen and ScreenRecorder.warmUp finds the display and builds a filter excluding control and card; with no sound it also starts a stream that writes nothing. On Enter the file is added to that running stream (RecordingWarmStart.begin, PhotonzCore, tested); a region reframes it first; with sound or a mismatch a fresh stream starts on the cached filter. The first-frame clock waits for recordingOutputDidStartRecording (a file added to a running stream starts ~20 ms later than added; measured clock-vs-file error now 0 ms on every run, was up to a frame). Encoder priming (attach+remove an output on a never-started stream, 19 ms) and a one-off reframe of the warm stream pay first-of-launch costs while the card is up. Card starts the full-screen recording before handing focus back. Timer ticks from the moment the control shows, counting from the first frame; Stop pressed while a sound stream is still starting is honoured once it has started (was silently ignored)."
+    },
+    {
+      "t": "2026-10-03T08:15:50.689Z",
+      "note": "Measured after (Scripts/recording-start-drill.sh, 10 runs each): full display no sound median 33.6 ms worst 39.2 (was 278.5/303.8), every file began before a change made 50 ms after Enter reached the screen; still screen 35.3/44.6; system+mic 111.2/116.1 (was 297.1/314.9) - over budget by ~11 ms, all macOS: a stream with both sounds takes ~100 ms to first frame vs ~55 without, Enter->stream asked ~10 ms; region 70.4/73.4 from drag end (reframe ~40 ms, 4/10 files began after the 50 ms change); region+sound 118.4/125.4 (5 runs). Stop control never in any file. --stop-early 3/3, --cancel 5/5 (nothing left after Escape). Dead ends measured and dropped: a sound stream warmed ahead (1.3 s start, file added mid-start never begins, a second stream waits behind it: 1.4-8 s); a fresh region stream instead of a reframe (median 102); a silent warm stream kept alive beside the sound one (92 ms but 2.5 s start, 17 ms clock error); prebuilding the unstarted sound stream (within noise); a side stream for priming (its file never started, and reframing it killed the warm stream with -3805)."
+    },
+    {
+      "t": "2026-10-03T08:15:50.743Z",
+      "note": "left rough, not filed: (1) system+mic sits ~11 ms over the 100 ms budget, cause is macOS's own stream start, no lever found; in the audit for the user to judge. (2) region misses the strict 50 ms change check in 4/10 runs (reframe ~40 ms) while meeting the 100 ms budget. (3) without sound the menu bar recording indicator now shows while the card is up; asked in the audit. (4) a card left open keeps a silent 60 fps stream running. None is broken behaviour; all are in the audit's rough list."
+    },
+    {
+      "t": "2026-10-03T08:15:50.796Z",
+      "note": "owns these walks: a-recording-keeps-its-clicks-walk, a-recording-opens-at-stop-walk, capture-shortcuts-clear-the-corner-walk"
     }
+  ],
+  "started": "2026-10-03T05:46:22.631Z",
+  "walks": [
+    "a-recording-keeps-its-clicks-walk",
+    "a-recording-opens-at-stop-walk",
+    "capture-shortcuts-clear-the-corner-walk"
   ]
 }
