@@ -2,6 +2,42 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.16.0 — 2026-10-04
+
+**Record your screen and edit it in the same window.** A recording is now a document like any other. It is ready the moment you stop, it shows in history straight away, and it opens on a sharp first frame. An untouched recording opens to watch: the picture fills the window over the play controls, with nothing else in the way. One switch at the right of the title bar, or Command 2, brings the full editor in, and Command 1 tucks it away again. Save keeps your edit as a project you can open later, and Revert to Original takes you back to what you recorded.
+
+**A real timeline for cutting.** Split a clip, drag the pieces around and drop the ones you do not want. Drag along the ruler to pick a stretch of time, then cut, copy, paste, merge or export just that stretch. Mark an In and an Out and take the stretch out with one key, and Play In to Out plays only that part. The keys you know from Premiere work as soon as a recording opens, including Q and W to trim up to the playhead, and S switches snapping off and on. Pinch to zoom the timeline, drag its top edge to make it taller, drag tracks by their headers to reorder them, and click a track's name to pick it so Delete removes it. Bring in a second clip and cut between the two.
+
+**Change the pace.** Speed a stretch up as far as thirty times, or slow a moment down. The sound comes along between half speed and double, and the panel tells you when it has gone quiet. Hold on a frame for as long as you need, and anything you draw while the frame is held stays on screen for exactly that hold. Punch in on something and stay there.
+
+**Zoom in on what matters, and show the clicks.** Add a zoom to a recording and choose where it looks. Follow Cursor makes the zoom glide after the pointer, and Suggest Zooms puts one around every run of clicks. Every click can also show a ripple, a pulse or a spotlight. You can slide a click to a new moment or hide one you do not want.
+
+**Transitions between clips.** Click a cut and pick a transition from tiles, drag one from the panel onto a cut, or press Command T to use your default. Put one transition on every cut in a single step. A transition can sit before, across or after its cut, takes the sound across with it, and a dip can hold on black. A clip can also fade in from black and out to black.
+
+**Title pages and name cards.** Insert a full-frame title page or a lower-third name card from a set of presets, type over it, then save your version as a preset of your own. A title page at the start plays before the recording and dissolves onto it, and a title stays readable over light footage. Titles and name cards also sit as picture tiles on the Library shelf.
+
+**Captions written from the speech, on this Mac.** Choose Add Captions and the app listens to the sound and writes the captions on one Captions track, with nothing sent anywhere. Fix a caption one word at a time, on the picture or on its own lane. Choose how the words appear: a whole caption, a lower third, or a few words at a time with the current word lit. Burn the captions into the video, or save them beside it as an SRT or WebVTT file.
+
+**Sound is something you can see and shape.** Every clip shows its sound on the timeline. Detach the sound from a picture, bring in a voiceover, and hear the sound under the playhead as you drag. Normalize brings up a quiet recording and cleans out background noise first. A picked sound has Audio Effects for Noise reduction, EQ and a Compressor. The mix shows how loud it is and stops itself from going louder than a file can hold. A volume slider sits beside the play controls.
+
+**Animate anything.** Every value in the panel has a key diamond. Set keys to move a layer from one place to another, grow it or fade it, and its path appears on the canvas, where you can drag it into an arc. Copy keys from one layer to another, choose from the same eight easing curves everywhere, and open a layer's track to see one lane for each value that moves. Anything you draw on a video gets its own row on the timeline.
+
+**Export the way you need.** An edited recording leaves through the same Export sheet as everything else. Choose its size, keep to your In and Out marks, and carry on working while a toast shows the progress. A five minute recording exports in less time than it takes to play, and an exported video plays with the same colours you saw in the editor. Any frame can come out as a picture. Save as WebP, choose the quality of any lossy format, and see what a PNG, GIF or SVG will weigh before you save it.
+
+**Draw icons and make them move.** A frame can be icon sized, and it shows the square, the circle and the space an icon has to fit inside. Preview the icon at the sizes it will really be used. The Pen draws straight edges and curves in one outline, a rectangle can become a path you reshape, and two shapes can be joined, cut from each other or reduced to their overlap. Give a part of the icon a property that changes over time, and choose the point it turns around. A strip along the bottom shows every moving part on one cycle. The icon exports as a small animated SVG that stays sharp at every size.
+
+**Take a screenshot apart.** One command separates a screenshot into layers: its text, its boxes, its cards and the rows inside them, with the hole behind each one filled in. Separated text becomes text you can retype in the same typeface, and a separated card keeps a real shadow. A size read off a screenshot matches the size the type really was, and an exported redline comes out as shapes rather than a flat picture.
+
+**Drawing tools that feel right.** The paint bucket floods only the enclosed area you click, the way it does in Photoshop. Click once, let go and click again to draw a line or an arrow. Arrows can bend, and they come in Hand-drawn, Marker, Brush and Sketch styles. Cut a piece onto its own layer and fill the hole it leaves, copy the look of one shape onto another, and see in the Layers list when a layer is being used as a mask.
+
+**Everything has a place.** Every command in the app is also in the menu bar, which is now arranged like a pro Mac editor's, in Title Case. A chip beside the window buttons sets the window up for Icon, Redline, Video or Design work. Every panel section opens and closes from its header, the choice controls are Liquid Glass, and messages tell you what happened in a few words.
+
+**Guides that teach by doing.** New guides walk you through the app's real controls, grouped on shelves: Basics, Redlining, Looks, Colours and Styles, Components, Building UI, Video and Icons. You are offered the tour once, and finishing a guide leaves you ready to work rather than surrounded by samples.
+
+**Next is where all of this lives.** Open Experiments from the app menu to switch between Current and Next. Both ship in the same app, so there is nothing extra to install, and switching takes a relaunch.
+
+**Fixes worth naming.** Renaming a layer no longer quits the app. The first editor window after launch opens as quickly as the ones after it. Playing a recording never blinks, and scrubbing never goes black. A long captioned recording edits without freezing. Pressing Enter on the recording card starts recording at once. A shadow survives export to SVG. A turned shape keeps its turn while you move or resize it. Saying no to Screen Recording is remembered.
+
 ## 0.15.0 — 2026-09-12
 
 **Build interfaces, not just mark them up.** A document can hold several screens, a screen is a frame you can size and name, and groups can hold groups as deep as you like. Drop a capture or a shape onto a screen and it goes inside that screen. Everything you build is still layers, so nothing you already knew stops working.
