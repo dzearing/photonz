@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-03T17:08:31.957Z",
-  "updated": "2026-10-04T09:14:05.555Z",
+  "updated": "2026-10-04T09:14:24.538Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-03 by the measureFade walk step (Scripts/playtest/a-video-clip-fades-walk.json; numbers in queue/audits/2026-10-03-video-fades-measured.json). Command: Scripts/playtest.sh Scripts/playtest/a-video-clip-fades-walk.json --no-build. Output at 3000 ms (no fade): canvas stopped 0.297, export's pre-encode picture (EditorState.stillFrame) 0.299, MP4 via AVAssetImageGenerator 0.328. At 250 ms of a 1s fade: canvas 0.075, pre-encode 0.075, MP4 0.064. So the renderer agrees with the canvas; the difference arrives at encode or at read-back (DocumentMovieWriter writes BGRA sRGB into H.264; generator output drawn into an sRGB context for Rec.709 luma). NOT reproduced as something a person sees: only measured through AVAssetImageGenerator. Could be untagged/limited-range read-back rather than the file.",
@@ -37,6 +37,10 @@
     {
       "t": "2026-10-04T09:14:05.553Z",
       "note": "Yes, it looks different: in real QuickTime an exported MP4 plays mid greys lighter (sRGB 76 as 86), deepest greys darker and reds/greens shifted, because the movie writer leaves the file untagged and players guess SMPTE-C/601/709. Pictures and numbers in docs/progress/2026-10-04-export-brightness.md; fix (tag 709 primaries + sRGB transfer + 709 matrix, verified to round-trip) filed as p1 an-exported-video-plays-with-the-same-brightness."
+    },
+    {
+      "t": "2026-10-04T09:14:24.537Z",
+      "note": "Note: the closing commit e4216ca6 also swept in 20 other queue task files that were already changed in the working tree before this run (queue state written by queue.mjs, committed as they stood; nothing reverted). Docs and findings are in 8d8e41b6."
     }
   ],
   "started": "2026-10-04T09:07:02.568Z",
