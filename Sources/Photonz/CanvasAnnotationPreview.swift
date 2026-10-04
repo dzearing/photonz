@@ -64,6 +64,27 @@ extension CanvasNSView {
         tool == .zoomCallout || (tool == .lens && lensMagnifies)
     }
 
+    /// Whether a click with the tool in hand starts a line that a second click
+    /// ends (`Tool.drawsByTwoClicks`, Next `next-click-click-draws-a-line`).
+    var drawsByTwoClicks: Bool {
+        tool.drawsByTwoClicks && Experiments.shared.clickClickLineEnabled
+    }
+
+    /// Between the two clicks of a click-started line, the far end follows the
+    /// pointer with the button up, snapping exactly as a drag's would.
+    /// Answers whether there was such a line to move.
+    @discardableResult
+    func followPointerWithWaitingLine(_ event: NSEvent) -> Bool {
+        guard let viewport, var drag = annotationDrag, drag.waitingForSecondClick else { return false }
+        let p = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
+        drag.update(to: snappedAnnotationPoint(p, shape: tool.annotationShape,
+                                               opposite: drag.anchor, event: event))
+        annotationDrag = drag
+        refreshAnnotationPreview(constrained: event.modifierFlags.contains(.shift))
+        refreshOverlays()
+        return true
+    }
+
     /// In-flight drag-to-create: preview the active tool's styled content.
     func refreshAnnotationPreview(constrained: Bool) {
         guard let drag = annotationDrag else {

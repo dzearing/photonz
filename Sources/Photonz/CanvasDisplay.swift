@@ -109,7 +109,12 @@ extension CanvasNSView {
         if tool != self.tool {
             self.tool = tool
             // A tool switch mid-drag abandons the draft annotation/endpoint edit
-            // and any in-progress caliper placement.
+            // and any in-progress caliper placement. A line started by a click
+            // has its draft up with no button down, so the draft goes too.
+            if annotationDrag?.waitingForSecondClick == true {
+                snapGuide = nil
+                clearAnnotationPreview()
+            }
             annotationDrag = nil
             // ...and the path the Pen was laying down. Nothing was in the
             // document, so there is nothing to undo; the chrome just goes.

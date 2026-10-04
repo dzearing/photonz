@@ -74,7 +74,9 @@ extension CanvasNSView {
         // is none of this one's business. A caliper being placed is the
         // exception — it is ONE gesture spread over two clicks, and the line
         // its preview is showing has to still be the line the click lands on.
-        if measurePlacement == nil { snapHold = .none }
+        if measurePlacement == nil, annotationDrag?.waitingForSecondClick != true {
+            snapHold = .none
+        }
         // A click outside the inline text editor commits it; the click is
         // swallowed so committing never doubles as starting something else.
         // The one exception is the fresh arrow's caption field: the Arrow tool
@@ -100,6 +102,18 @@ extension CanvasNSView {
         window?.makeFirstResponder(self)
         let viewPoint = convert(event.locationInWindow, from: nil)
         let p = viewport.documentPoint(fromView: viewPoint)
+        // A line started by a click is waiting for the click that ends it, and
+        // this is that click, whatever it lands on: nothing under it is picked
+        // or opened. The release says whether it lands the line or, back on
+        // the start point, calls it off (`AnnotationDrag.release`).
+        if var drag = annotationDrag, drag.waitingForSecondClick {
+            drag.update(to: snappedAnnotationPoint(p, shape: tool.annotationShape,
+                                                   opposite: drag.anchor, event: event))
+            annotationDrag = drag
+            refreshAnnotationPreview(constrained: event.modifierFlags.contains(.shift))
+            refreshOverlays()
+            return
+        }
         // The name above a screen or component is a handle on it: click it to
         // pick that box, double click it to rename it where it sits. It is chrome,
         // the same size at every zoom, so it is resolved in view space and
@@ -1260,6 +1274,10 @@ extension CanvasNSView {
             snapGuide = nil
             let closedField = pressClosedCaptionField
             pressClosedCaptionField = false
+            // A click that only closed an arrow's caption field never starts
+            // a line: it hands back to Select, as it always has.
+            let release = drag.release(drawsByTwoClicks: drawsByTwoClicks && !closedField,
+                                       atZoom: viewport.zoom)
             // The frame tool answers a click as well as a drag: a click drops a
             // frame at the size you made last, which is how a second screen
             // costs one click rather than a trip to a dialog.
@@ -1277,7 +1295,17 @@ extension CanvasNSView {
                 onLensCreate(drag.anchor,
                              drag.end(constrained: event.modifierFlags.contains(.shift),
                                       shape: .rectangle))
-            } else if drag.isClick(atZoom: viewport.zoom) {
+            } else if release != .commit {
+                if release == .waitForSecondClick {
+                    // A click with the Line or Arrow: the line is started, and
+                    // its far end follows the pointer until the next click.
+                    var waiting = drag
+                    waiting.waitingForSecondClick = true
+                    annotationDrag = waiting
+                    refreshAnnotationPreview(constrained: event.modifierFlags.contains(.shift))
+                    refreshOverlays()
+                    return
+                }
                 clearAnnotationPreview()
                 // The press only dismissed the caption field: the arrow is
                 // finished, so Select comes back as it does for Return or Esc.

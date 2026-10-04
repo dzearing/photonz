@@ -469,6 +469,10 @@ extension Experiments {
     /// point of a shape (`CanvasDrawLanding`).
     var drawLandingEnabled: Bool { isEnabled(FeatureCatalog.drawLandingFlag) }
 
+    /// A click with the Line or Arrow tool starts a line that a second click
+    /// ends (`AnnotationDrag.release`).
+    var clickClickLineEnabled: Bool { isEnabled(FeatureCatalog.clickClickLineFlag) }
+
     /// The pill that rides under a drag saying where it is going or how big it
     /// is becoming (`CanvasDragReadout`).
     var dragReadoutEnabled: Bool { isEnabled(FeatureCatalog.dragReadoutFlag) }

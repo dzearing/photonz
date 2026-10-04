@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 13,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-04T00:19:42.450Z",
-  "updated": "2026-10-04T00:19:42.544Z",
+  "updated": "2026-10-04T03:22:46.479Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"when i draw a line, if I click a point, and let go, I expect to be creating a line and clicking another point to end it.\"\n\nFrom code reading (not run): annotation tools commit on mouseUp in CanvasPointerDrags.swift (mouseUp at :1169; the commit at :1301-1310 calls onAnnotationCommit(drag.anchor, drag.end(...)) with tool.annotationShape ?? .line), anchor set at :241 via snappedAnnotationPoint and updated at :839. There is no click-without-drag path, so a click either makes nothing or a degenerate line; confirm which. Click-click needs: a pending-line state that survives mouseUp, mouseMoved updating the preview (CanvasAnnotationPreview.swift), the second mouseDown committing, and Esc/tool change cancelling. Trap: a click on an existing layer with the line tool may currently select or hit-test it; keep whatever that does sensible and say in the audit. Trap: the arrow's caption session (beginCaptionSession) starts after commit; it must start after the second click, not the first. Trap: measure tool's endpoint handles and readouts also hang off these drags. Memory: user's primary use is UX redlining, so Measure behaving the same matters.",
@@ -30,6 +30,34 @@
     {
       "t": "2026-10-04T00:19:42.543Z",
       "note": "seq 480 -> 13"
+    },
+    {
+      "t": "2026-10-04T03:06:26.714Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-04T03:22:23.052Z",
+      "note": "owns these walks: click-click-draws-a-line-walk"
+    },
+    {
+      "t": "2026-10-04T03:22:46.308Z",
+      "note": "Reproduced at Next defaults (/tmp walk: blank, Line tool, click 150,150, move 500,200, click 500,200): no preview after the first click, and the document still held only Background after the second (expectLayers failed: 1 layer, not at least 2). A click made nothing; there was no zero-length line."
+    },
+    {
+      "t": "2026-10-04T03:22:46.362Z",
+      "note": "Review before building: Photoshop's Line tool is drag-only, so a drag must stay exactly as it was; click-click is additive (CAD/Visio style) and is what the user asked for. Traps checked: the second press must not pick or open whatever is under it (it is handled before every hit test), the arrow caption must open after the second click (it does, same commit path), and the press that closes an arrow's caption field still hands back to Select rather than starting a waiting arrow. Measure already placed by clicks (3 clicks, D7 2026-09-02) and is unchanged; Size/Gap commit on one click by design. Rectangle/Ellipse/Highlight stay drag-only: a box has no meaningful second click, and a stray click must not leave a box stuck to the pointer."
+    },
+    {
+      "t": "2026-10-04T03:22:46.419Z",
+      "note": "Built: AnnotationDrag.waitingForSecondClick + release(drawsByTwoClicks:atZoom:) -> commit / waitForSecondClick / cancel / nothing, and Tool.drawsByTwoClicks (line, arrow) in PhotonzCore/Tools.swift, tests first in ToolTests. App: CanvasPointerDrags (second press handled right after the document point is computed; release switch; snapHold kept across the two clicks the way a caliper keeps it), CanvasAnnotationPreview.followPointerWithWaitingLine (called from mouseMoved), CanvasDisplay tool switch clears the waiting draft, Esc was already handled by the annotationDrag branch. Behind next-click-click-draws-a-line, on by default in Next, so Current is untouched."
+    },
+    {
+      "t": "2026-10-04T03:22:46.478Z",
+      "note": "Verified: Scripts/playtest/click-click-draws-a-line-walk.json at Next defaults (no flags) passes: line by click-click, Cmd-Z removes it whole, Redo puts it back, line by drag, Shift holds a level line, Escape / click on start / tool switch each make nothing, arrow by click-click (caption field opens after the 2nd click) and by drag, measure by clicks and by drag+click; 5 real window captures. Scripts/test.sh: 11178 tests passed. Rough items: the four in the audit are not defects (no mock, documented choices); filed a-level-line-shows-in-its-layer-row-thumbnail (p2) for the blank thumbnail seen in shot 3."
     }
+  ],
+  "started": "2026-10-04T03:06:26.711Z",
+  "walks": [
+    "click-click-draws-a-line-walk"
   ]
 }

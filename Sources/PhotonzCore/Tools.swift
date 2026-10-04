@@ -153,6 +153,19 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
 
     public var createsAnnotationByDrag: Bool { annotationShape != nil }
 
+    /// Whether a click that does not drag STARTS the shape: let go, and its far
+    /// end follows the pointer until a second click puts it down. That is how
+    /// a line is drawn in most drawing apps, and the user asked for it on
+    /// 2026-10-04 ("if I click a point, and let go, I expect to be creating a
+    /// line and clicking another point to end it").
+    ///
+    /// Only the two-ended tools. A box has no second point a click could mean:
+    /// a click with the rectangle, ellipse or highlight still makes nothing, so
+    /// a stray click on the picture never leaves a box hanging off the pointer.
+    public var drawsByTwoClicks: Bool {
+        annotationShape == .line || annotationShape == .arrow
+    }
+
     /// Whether a double click on BARE canvas — the matte, or a locked base
     /// image, anywhere that is not an editable layer — zooms the window.
     ///
@@ -268,6 +281,10 @@ public enum ToolColorControl: String, CaseIterable, Hashable, Codable, Sendable 
 public struct AnnotationDrag: Equatable, Sendable {
     public var anchor: CGPoint
     public var current: CGPoint
+    /// The first press was a click, and the shape is waiting for the click
+    /// that ends it (`Tool.drawsByTwoClicks`). Until then `current` follows the
+    /// pointer with the button up.
+    public var waitingForSecondClick = false
 
     public init(anchor: CGPoint) {
         self.anchor = anchor
@@ -304,6 +321,32 @@ public struct AnnotationDrag: Equatable, Sendable {
     public func isClick(atZoom zoom: CGFloat, tolerance: CGFloat = 4) -> Bool {
         hypot(current.x - anchor.x, current.y - anchor.y) * zoom < tolerance
     }
+
+    /// What letting go of the button means, with `current` where it came up.
+    ///
+    /// A drag always lands the shape in one gesture. A click on a tool that
+    /// draws by two clicks starts waiting; on any other tool it makes nothing.
+    /// While waiting, the release of the second press lands the shape, unless
+    /// it came up back on the start point, which calls the shape off: the
+    /// same thing a click on the first point does in the Pen.
+    public func release(drawsByTwoClicks: Bool, atZoom zoom: CGFloat) -> AnnotationRelease {
+        let click = isClick(atZoom: zoom)
+        if waitingForSecondClick { return click ? .cancel : .commit }
+        if !click { return .commit }
+        return drawsByTwoClicks ? .waitForSecondClick : .nothing
+    }
+}
+
+/// What a release does to the shape being drawn (`AnnotationDrag.release`).
+public enum AnnotationRelease: Equatable, Sendable {
+    /// Put the shape in the document.
+    case commit
+    /// The first click of two: keep the shape following the pointer.
+    case waitForSecondClick
+    /// The second click landed on the start point: nothing is made.
+    case cancel
+    /// A click on a tool that only draws by dragging: nothing is made.
+    case nothing
 }
 
 /// Builds annotation layers from completed drags.

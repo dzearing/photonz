@@ -40,6 +40,7 @@ extension CanvasNSView {
                           event: event)
         }
         handleMeasureHover(event)
+        followPointerWithWaitingLine(event)
         // Where a press would put the first point of a shape, marked while the
         // hand is still only aiming (`CanvasDrawLanding`). Read after the
         // modifiers so ⌘ and ⇧ are the ones being held right now.

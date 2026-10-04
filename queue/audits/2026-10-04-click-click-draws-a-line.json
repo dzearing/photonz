@@ -1,0 +1,28 @@
+{
+  "feature": "Click, let go, click again draws a line",
+  "epic": "measure-redline",
+  "summary": "With the Line or Arrow tool, a click starts a line that follows the pointer, and a second click puts it down. Dragging still draws in one go. Before this, a click made nothing at all.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Walk: Scripts/playtest/click-click-draws-a-line-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Before: with the Line tool, click, let go and move the pointer. Nothing followed it and the second click made nothing.", "shot": "2026-10-04-click-click-line-before-sc.png" },
+    { "do": "Now: press L, click once on the picture, let go and move the pointer. The line follows it.", "shot": "2026-10-04-click-click-line-1-line-follows-the-pointer-sc.png" },
+    { "do": "Click again to end the line. Press Command-Z once: the whole line goes in one step." },
+    { "do": "Click to start another line, hold Shift and move. It holds to 0, 45 or 90 degrees; click to place it.", "shot": "2026-10-04-click-click-line-2-shift-holds-the-angle-sc.png" },
+    { "do": "Start a line and press Escape, or click its start point again, or pick another tool. Nothing is made.", "shot": "2026-10-04-click-click-line-3-called-off-leaves-nothing-sc.png" },
+    { "do": "Press A and do the same with an arrow. The caption field opens after the second click, not the first." },
+    { "do": "Press I and measure by clicks (start, end, then a click for the number), or by dragging and then a click. Both still work.", "shot": "2026-10-04-click-click-line-5-all-six-drawn-sc.png" }
+  ],
+  "evaluate": [
+    "Does a click-started line feel as quick as the drag, with nothing in the way?",
+    "Is clicking back on the start point the right way to call a line off, or would you rather it made nothing only with Escape?",
+    "Should Rectangle, Ellipse and Highlight also start by a click and end by a second click, or is drag-only right for boxes?",
+    "After a click closes an arrow's caption field, Select comes back as before instead of starting a new arrow. Is that what you expect?"
+  ],
+  "rough": [
+    "No mock covers how a line is drawn; this follows your words from 2026-10-04.",
+    "Rectangle, Ellipse and Highlight still draw only by dragging, and a click with them still makes nothing. A box needs both its corners, so a lone click could only leave a box stuck to the pointer by accident.",
+    "Measure already took clicks: start, end, then a third click to place the number (your call on 2026-09-02, next-measure.md section 10). It is unchanged, so measuring by clicks takes three, not two.",
+    "A drawing drag shows no size or angle pill, only the yellow snap guide. The click-started line shows the same guide and no pill either."
+  ]
+}

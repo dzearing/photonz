@@ -157,6 +157,8 @@ public enum FeatureCatalog {
 
     public static let drawLandingFlag = "next-where-the-point-will-land"
 
+    public static let clickClickLineFlag = "next-click-click-draws-a-line"
+
     public static let dragReadoutFlag = "next-a-drag-says-its-numbers"
 
     public static let reshapePathFlag = "next-reshape-a-path"
@@ -968,6 +970,16 @@ public enum FeatureCatalog {
                     name: drawLandingFlag,
                     title: "See where a point will land before you press",
                     description: "Before you press, a ring under the pointer shows where a drawing tool's point will snap; hold Command to place it freely. Off means points still snap, but silently.",
+                    area: .drawing,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: clickClickLineFlag,
+                    title: "Click, let go, click again draws a line",
+                    description: "With the Line or Arrow tool, a click starts a line that follows the pointer until a second click ends it; Escape calls it off. Off means a line is only drawn by dragging.",
                     area: .drawing,
                     isEnabled: false,
                     parameters: []),

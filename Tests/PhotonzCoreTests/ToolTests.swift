@@ -162,6 +162,60 @@ struct AnnotationDragTests {
         let end = drag.end(constrained: true, shape: .rectangle)
         #expect(end == CGPoint(x: 40, y: 40))
     }
+
+    // MARK: Click, let go, click again
+
+    @Test func onlyTheTwoEndedToolsDrawByTwoClicks() {
+        let twoClick = Tool.allCases.filter { $0.drawsByTwoClicks }
+        #expect(twoClick == [.arrow, .line])
+    }
+
+    @Test func aClickWithTheLineOrArrowWaitsForASecondClick() {
+        var drag = AnnotationDrag(anchor: CGPoint(x: 10, y: 10))
+        drag.update(to: CGPoint(x: 11, y: 10))
+        #expect(drag.release(drawsByTwoClicks: true, atZoom: 1) == .waitForSecondClick)
+    }
+
+    @Test func aClickWithABoxToolMakesNothing() {
+        var drag = AnnotationDrag(anchor: CGPoint(x: 10, y: 10))
+        drag.update(to: CGPoint(x: 11, y: 10))
+        #expect(drag.release(drawsByTwoClicks: false, atZoom: 1) == .nothing)
+    }
+
+    @Test func aDragCommitsInOneGestureWhateverTheTool() {
+        var drag = AnnotationDrag(anchor: CGPoint(x: 10, y: 10))
+        drag.update(to: CGPoint(x: 80, y: 40))
+        #expect(drag.release(drawsByTwoClicks: true, atZoom: 1) == .commit)
+        #expect(drag.release(drawsByTwoClicks: false, atZoom: 1) == .commit)
+    }
+
+    @Test func theSecondClickSomewhereElseCommits() {
+        var drag = AnnotationDrag(anchor: CGPoint(x: 10, y: 10))
+        drag.waitingForSecondClick = true
+        drag.update(to: CGPoint(x: 200, y: 10))
+        #expect(drag.release(drawsByTwoClicks: true, atZoom: 1) == .commit)
+    }
+
+    @Test func theSecondClickBackOnTheStartCancels() {
+        var drag = AnnotationDrag(anchor: CGPoint(x: 10, y: 10))
+        drag.waitingForSecondClick = true
+        drag.update(to: CGPoint(x: 12, y: 11))
+        #expect(drag.release(drawsByTwoClicks: true, atZoom: 1) == .cancel)
+    }
+
+    @Test func theStartPointToleranceIsInViewPoints() {
+        // 2 document points is a click on the start at 100%, and a real line
+        // at 400%, where those 2 points are 8 on screen.
+        var drag = AnnotationDrag(anchor: CGPoint(x: 10, y: 10))
+        drag.waitingForSecondClick = true
+        drag.update(to: CGPoint(x: 12, y: 10))
+        #expect(drag.release(drawsByTwoClicks: true, atZoom: 1) == .cancel)
+        #expect(drag.release(drawsByTwoClicks: true, atZoom: 4) == .commit)
+    }
+
+    @Test func aFreshDragIsNotWaiting() {
+        #expect(!AnnotationDrag(anchor: .zero).waitingForSecondClick)
+    }
 }
 
 @Suite("AnnotationBuilder")

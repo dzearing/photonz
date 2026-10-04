@@ -20569,3 +20569,11 @@ Next: the first editor window's ~200 ms first build
 - Delete Track prints ⌫ on the header menu and Sequence > Track (live only while tracks are in hand).
 - Walks: pick-a-track-and-delete-it-walk, delete-track-menu-shows-its-key-walk. Audit: queue/audits/2026-10-03-pick-a-track-and-delete-it.json.
 - Open question for the user (audit): deleting V1 also takes the recording's sound off its Audio track; Premiere would keep it.
+
+## 2026-10-03 — Click, let go, click again draws a line
+
+- Reproduced first: with the Line tool, click, let go, click again made nothing (no preview, no layer).
+- Line and Arrow now start a line on a click; its end follows the pointer with the same snapping and Shift angle hold, and a second click lands it as one undo step. Escape, a tool switch, or a click back on the start point make nothing. Drags are unchanged. Arrow captions open after the second click.
+- Core: `Tool.drawsByTwoClicks`, `AnnotationDrag.waitingForSecondClick` and `release(drawsByTwoClicks:atZoom:)` (Tools.swift, tested). App: CanvasPointerDrags, CanvasAnnotationPreview, CanvasPointerCue, CanvasDisplay. Switch `next-click-click-draws-a-line`, on in Next.
+- Rectangle, Ellipse and Highlight stay drag-only; Measure keeps its three-click placement (D7).
+- Walk: click-click-draws-a-line-walk. Audit: queue/audits/2026-10-04-click-click-draws-a-line.json. Follow-up p2: a level line's layer thumbnail is blank.
