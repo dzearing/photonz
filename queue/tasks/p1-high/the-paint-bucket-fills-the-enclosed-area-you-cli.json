@@ -1,0 +1,36 @@
+{
+  "id": "the-paint-bucket-fills-the-enclosed-area-you-cli",
+  "title": "The paint bucket fills the enclosed area you click, like Photoshop",
+  "goal": "Clicking with the paint bucket inside an area enclosed by lines in a picture fills just that area, the way Photoshop's paint bucket does: it floods outward from the click over similar colour and stops at the lines. Today the bucket recolours the whole layer (or only a selection), so drawing a shape with lines, merging it into the background and clicking inside it does not fill the shape.",
+  "epic": "image-paint",
+  "priority": "p1-high",
+  "seq": 14,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-04T00:22:19.080Z",
+  "updated": "2026-10-04T00:22:19.185Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words: \"i create lines which create a consecutive area and merge down into background. i use the fill and try to fill the area, but it ends up not filling the whole screen\". Screenshot 2026-10-03 17.20.24: four thin red lines on white; top and left cross near (630,368), left and lower diagonal cross near (601,555), right and lower diagonal meet near (1165,848) where the ends may NOT quite touch (possible gap: check, it would make even a correct flood leak).\n\nFrom code reading (not run): the bucket is not a flood fill. CanvasPointerDrags.swift:191 -> onFillAt -> EditorState.fillLayer(at:hit:useBackground:) (EditorState+Regions.swift:122-144): with a pixel region it fills the region; otherwise it fills the WHOLE hit layer (or the locked Background under the point) via PhotonzCore/Fill.swift filled(_:colorHex:solidRef:), where an image layer's content becomes a solid ref of its frame. So clicking the merged background should turn the whole background one colour; the user saw something partial instead, which is unexplained: reproduce (suspects: Background frame not the canvas, the hit landing on a different layer, or the merged lines not being in the Background).\nReuse PhotonzRender/FloodFill.swift (the wand's scanline flood, seed-relative tolerance, RGBA distance); it returns a mask, and fillRegion already fills a region into a target layer, so bucket = FloodFill mask on that layer's own pixels (not the composite, Photoshop's default is the current layer; consider a Sample All Layers switch) -> region -> fillRegion. Anti-alias: feather the mask edge or fill by coverage so thin AA lines leave no fringe. Workaround the user can use today: Magic Wand inside the area, then the bucket or Option-Delete fills the selection. Memory: Photoshop shortcut/behaviour parity.",
+  "acceptance": [
+    "Reproduce first at Next defaults with the user's exact steps: draw four lines that enclose an area (crossing at the corners, as in the screenshot), Merge Down into the Background, pick the Fill tool, click inside the enclosed area. Photograph and write in the audit what happens, and explain the user's report that it 'ends up not filling the whole screen'",
+    "On a picture layer (including the Background and anything merged into it), a bucket click floods the contiguous area of similar colour around the click and fills only it, with a Tolerance setting (default 32 like Photoshop), Anti-alias on by default so the fill meets thin anti-aliased lines with no white fringe, and a Contiguous switch (off fills every pixel of that colour on the layer)",
+    "A 1 px anti-aliased line closes the area: the fill does not leak through it and leaves no unfilled ring along it, MEASURED (count of seed-coloured pixels left inside the shape, and filled pixels outside it) and written in the audit",
+    "If the area is not closed (a gap at a corner) the fill leaks as Photoshop's would; that is acceptable, but the audit shows it and the result is one undo step",
+    "Shapes, text, arrows and other vector layers keep today's behaviour (the bucket recolours the thing you point at); an active selection still limits the fill to the selection",
+    "The fill is one undo step and, like other picture edits, never moves the layer",
+    "A walk at Next defaults does the user's steps and photographs the result; unit tests cover the flood with tolerance, anti-alias and contiguous off",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-04T00:22:19.082Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-04T00:22:19.182Z",
+      "note": "seq 480 -> 14"
+    }
+  ]
+}
