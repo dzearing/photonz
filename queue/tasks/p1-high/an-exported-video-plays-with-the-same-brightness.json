@@ -1,0 +1,32 @@
+{
+  "id": "an-exported-video-plays-with-the-same-brightness",
+  "title": "An exported video plays with the same brightness and colours as the editor",
+  "goal": "Videos exported from Photonz play lighter in the mid greys, darker in the deepest shadows and with shifted reds and greens in QuickTime and Safari, because the file does not say what colours it holds and players guess wrong. Make the exported file say so, so it plays exactly as it looks in the editor.",
+  "epic": "video-share",
+  "priority": "p1-high",
+  "seq": 490,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-04T09:13:45.813Z",
+  "updated": "2026-10-04T09:13:45.816Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found and reproduced 2026-10-04 by task find-out-whether-an-exported-video-looks-brighte; write-up with real QuickTime screenshots in docs/progress/2026-10-04-export-brightness.md. Cause: DocumentMovieWriter.videoSettings (Sources/PhotonzMedia/DocumentMovieWriter.swift) sets no AVVideoColorPropertiesKey, so the H.264 file is untagged (ffprobe all unknown on a real probe export) and VideoToolbox guesses SMPTE-C / 601 / 709-transfer on decode. Measured in QuickTime: sRGB 76 plays as 86, 128 as 139, 16 as 14; red (255,0,0) as (231,23,0). Fix that round-trips exactly (tested with a writer identical to DocumentMovieWriter, docs/progress/media/2026-10-04-export-brightness-write.swift): AVVideoColorPropertiesKey = [AVVideoColorPrimariesKey: AVVideoColorPrimaries_ITU_R_709_2, AVVideoTransferFunctionKey: AVVideoTransferFunction_IEC_sRGB, AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_709_2]. Tagging 709 transfer alone does NOT fix it (76 still plays as 86). Same gap in VideoExporter.movieSettings (Sources/PhotonzMedia/VideoExporter.swift ~line 667). Put the colour properties in one shared place and unit test the settings dictionary (TDD, PhotonzMedia). Check the sheet's weigh still lands its estimate (same writer). Alternative if sRGB transfer turns out poorly supported somewhere that matters: convert pixels to the 709 curve and tag 709/709/709 like Apple's own screen recordings; note the choice in the commit.",
+  "acceptance": [
+    "An MP4 exported at every size and quality carries Rec.709 primaries, the 709 matrix and the sRGB transfer curve in its colour tags (ffprobe shows bt709 / iec61966-2-1 / bt709)",
+    "A grey strip exported from the editor plays in QuickTime within one code value of the same strip shown in the editor, mid grey and darkest greys included",
+    "Pure red, green and blue exported from the editor play within two code values of what the editor shows",
+    "The fades walk's MP4 reading agrees with the canvas within its allowance at every moment it measures, with no special case for the file",
+    "The other video writer (the recording exporter) tags its files the same way"
+  ],
+  "log": [
+    {
+      "t": "2026-10-04T09:13:45.815Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "a-video-clip-fades-walk"
+  ]
+}

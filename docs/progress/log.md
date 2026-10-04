@@ -20602,3 +20602,13 @@ Next: the first editor window's ~200 ms first build
 - Fix: both test targets list PhotonzCore (Package.swift). Same change on the real package now passes, 15/15, no test file touched.
 - Guard: `Scripts/check-direct-imports.mjs` (runs first in `Scripts/test.sh`) fails naming any target that imports one of our modules without listing it. Drill: `Scripts/stale-build-drill.sh` (miniature package, ~10s: STALE when only the middle module is listed, FRESH when both are) and `--real` (the LayerMotion change on this package, ~2 min).
 - Likely the same cause as the signal 10/11 "half-rebuilt .build" deaths test.sh rebuilds after; that fallback stays.
+
+## 2026-10-04: exported video brightness answered
+
+- An exported MP4 really does play lighter (mid greys), darker (deepest
+  shadows) and colour-shifted in QuickTime against the editor. Cause: the movie
+  writer sets no colour tags, so players guess SMPTE-C / 601 / 709 transfer.
+  Measured on real QuickTime screenshots; write-up in
+  `docs/progress/2026-10-04-export-brightness.md`.
+- Next: p1 task `an-exported-video-plays-with-the-same-brightness` tags both
+  video writers Rec.709 primaries / sRGB transfer / 709 matrix.

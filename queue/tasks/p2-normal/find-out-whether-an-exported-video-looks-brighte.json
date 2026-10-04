@@ -5,11 +5,11 @@
   "epic": "video-share",
   "priority": "p2-normal",
   "seq": 3520,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-03T17:08:31.957Z",
-  "updated": "2026-10-03T17:08:31.960Z",
+  "updated": "2026-10-04T09:14:00.519Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-03 by the measureFade walk step (Scripts/playtest/a-video-clip-fades-walk.json; numbers in queue/audits/2026-10-03-video-fades-measured.json). Command: Scripts/playtest.sh Scripts/playtest/a-video-clip-fades-walk.json --no-build. Output at 3000 ms (no fade): canvas stopped 0.297, export's pre-encode picture (EditorState.stillFrame) 0.299, MP4 via AVAssetImageGenerator 0.328. At 250 ms of a 1s fade: canvas 0.075, pre-encode 0.075, MP4 0.064. So the renderer agrees with the canvas; the difference arrives at encode or at read-back (DocumentMovieWriter writes BGRA sRGB into H.264; generator output drawn into an sRGB context for Rec.709 luma). NOT reproduced as something a person sees: only measured through AVAssetImageGenerator. Could be untagged/limited-range read-back rather than the file.",
@@ -21,6 +21,20 @@
     {
       "t": "2026-10-03T17:08:31.959Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-04T09:07:02.570Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-04T09:14:00.460Z",
+      "note": "Reproduced in real QuickTime (probe --capture-diag screenshots, unlocked screen): untagged export plays sRGB 76 as 86, 128 as 139, 16 as 14; red (255,0,0) as (231,23,0). Cause: the movie writer sets no colour properties, file is untagged (ffprobe on a real 1080p probe export), VideoToolbox guesses SMPTE-C/601/709 transfer. Tagging 709 primaries + sRGB transfer + 709 matrix round-trips exactly; 709 transfer alone does not. Write-up with pictures: docs/progress/2026-10-04-export-brightness.md. Fix filed p1: an-exported-video-plays-with-the-same-brightness."
+    },
+    {
+      "t": "2026-10-04T09:14:00.518Z",
+      "note": "owns no walks; the ones it names are examples"
     }
-  ]
+  ],
+  "started": "2026-10-04T09:07:02.568Z",
+  "walks": []
 }
