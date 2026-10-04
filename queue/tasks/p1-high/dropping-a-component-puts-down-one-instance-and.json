@@ -1,0 +1,37 @@
+{
+  "id": "dropping-a-component-puts-down-one-instance-and",
+  "title": "Dropping a component puts down one instance and nothing else",
+  "goal": "Dragging a component from the Library onto the canvas puts down exactly one thing: an instance of it, which changes when the component changes and can be made unique from its right-click menu. The component's original never lands on the person's canvas; it lives in the Library and is edited in a space of its own, the way Figma keeps a library's main component out of the file that uses it.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 15,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-04T15:11:20.210Z",
+  "updated": "2026-10-04T15:11:20.297Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-04, screenshot of a Card (single diamond, the instance) above a Card (four-diamond, the original) after one drag): \"when i drag a component to the canvas, why are there 2 copies\" then, told it was option a of the 2026-09-15 card: \"how does 'always a copy' translate into 'copy AND original'\".\n\nThe card: queue/decisions/a-copy-of-a-component-is-configured-not-authored-when-you-drag-a-component-onto-t.json. The user picked a 'Always a copy' with the note 'An Instance, not a copy. Changes to the component change instances, but you can right click and make unique?'. Option a's small print said the original goes off to one side on the canvas, but its label and its pro 'Matches what every other design tool does with a library' read as one thing landing; Figma's library drag puts down only an instance. This task supersedes option a with what the card called c 'Originals leave the canvas'. Lesson for card writers: the label must state what lands on the canvas.\n\nCode (read, not run): EditorState+Components.swift:138-182 placeComponent / insertStarterComponent bring the original when document.mainComponent(componentID:) == nil, then sayTheOriginalArrived (:188). Shared components the same via EditorState+SharedComponents.swift:127. Originals are drawn on the canvas from document.mainComponents (CanvasComponents.swift:35). Edit Original today just selects the original on the canvas (ComponentPanel.swift:744-752 selectComponentOnCanvas; also :1007, PartsInspector.swift:126). Tests that pin today's behaviour: FirstDropIsAnInstanceTests (expect them to change). Trap: main components may be what instances render from (looks, versions, named colors, properties); keep them in the document model, just not in the drawn layer tree, so rendering and Codable round trips still work. Trap: PhotonzCore must stay pure; model change needs tests first.",
+  "acceptance": [
+    "Reproduce first at Next defaults: drag a starter component (Card) and a shared component onto a fresh document and photograph the two drawings that land today",
+    "The first and every later drop of any component (starter, shared, made in this document) puts exactly one instance under the pointer and nothing else on the canvas; no 'the original arrived' notice",
+    "Edit Original (on an instance's panel and right-click, and on the Library tile's right-click) opens the original in its own editing space (for example a focused component view in the same window with a clear Done / back control, like Figma's main-component editing or Sketch's symbol page). Changes there update every instance when you return. The design is checked against the IA rules and the mocks in docs/design/mocks and written in the audit; if a real choice remains it goes to the user as a decision card whose label says exactly what lands on the canvas",
+    "Making a component from a selection (Create Component) turns the selection into an instance on the canvas and moves the original into the Library, so the canvas still shows the same thing",
+    "Right-click an instance offers Make Unique (detach), keeping the user's note on the 2026-09-15 card",
+    "Existing documents that already hold originals on their canvas keep working: the originals are moved out of the drawing into the document's component library on open, or left in place and marked, whichever the audit justifies; no instance loses its link and nothing visible moves without saying so",
+    "Export, copy as image and screenshots never include an original that is not on the canvas",
+    "A walk at Next defaults drops a Card twice, edits the original through Edit Original, returns, and photographs both instances updated",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-04T15:11:20.212Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-04T15:11:20.296Z",
+      "note": "seq 500 -> 15"
+    }
+  ]
+}
