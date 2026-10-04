@@ -1,0 +1,24 @@
+{
+  "feature": "Detach Audio keeps the sound's mix",
+  "epic": "video-cutting",
+  "summary": "Taking a recording's sound off its picture now brings its volume, fades, gain, noise cleaning and audio effects with it. Before, the detached sound started over as if nobody had touched it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording with the timeline showing.",
+  "switched": {},
+  "try": [
+    { "do": "Right-click the recording on V1 and choose Audio > Clean Noise.", "shot": "2026-10-04-detach-audio-keeps-mix-0.png" },
+    { "do": "Pick the recording and set its Audio Fades In to 1.0s and its volume down a little in the panel." },
+    { "do": "Right-click its sound on the Audio track and choose Detach Audio (or press ⌃⇧D)." },
+    { "do": "Right-click the detached sound: it offers Remove Noise Cleaning, and its panel shows Clean noise ticked.", "shot": "2026-10-04-detach-audio-keeps-mix-1.png" },
+    { "do": "Check its Fades and Volume in the panel: the same values you set before detaching." },
+    { "do": "Press ⌘Z: the sound is linked again, with its cleaning, fade and volume as they were." }
+  ],
+  "evaluate": [
+    "After Detach Audio, does the sound sound exactly the same as it did while linked?",
+    "Does the fade line drawn on the detached sound's bar sit where it was on the linked one?",
+    "After undo, is anything about the linked sound different from before?"
+  ],
+  "rough": [
+    "No mock covers this: it is a fix to keep work you already did, with no new surface.",
+    "The silent picture keeps no copy of the mix once detached; there is no reattach command today, so nothing reads it back."
+  ]
+}

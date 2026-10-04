@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/a-video-clip-menu-leads-with-the-picture-walk",
-  "seed": "A recording with sound, nothing switched from its default. Right-clicking the video clip leads with what you do to a picture; its sound is Detach Audio plus one Audio submenu. Right-clicking the sound drawn under it on the Audio track, or a sound of its own once detached, leads with the sound. The panel for the video shows its picture before its audio, and the audio sections say Audio.",
+  "seed": "A recording with sound, nothing switched from its default. Right-clicking the video clip leads with what you do to a picture; its sound is Detach Audio plus one Audio submenu. Right-clicking the sound drawn under it on the Audio track, or a sound of its own once detached, leads with the sound. The panel for the video shows its picture before its audio, and the audio sections say Audio. Noise cleaned on the linked sound comes with it when it is detached: the detached sound still offers Remove Noise Cleaning.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -14,7 +14,7 @@
     },
     {
       "do": "wait",
-      "seconds": 2.0
+      "seconds": 2
     },
     {
       "do": "action",
@@ -22,7 +22,7 @@
     },
     {
       "do": "wait",
-      "seconds": 1.0
+      "seconds": 1
     },
     {
       "do": "selectRow",
@@ -89,7 +89,10 @@
       "shot": "3-linked-sound-menu",
       "keys": {
         "Detach Audio": "⌃⇧D"
-      }
+      },
+      "unticked": [
+        "Remove Noise Cleaning"
+      ]
     },
     {
       "do": "wait",
@@ -120,7 +123,10 @@
         943
       ],
       "space": "window",
-      "shot": "4-audio-clip-menu"
+      "shot": "4-audio-clip-menu",
+      "unticked": [
+        "Remove Noise Cleaning"
+      ]
     },
     {
       "do": "wait",

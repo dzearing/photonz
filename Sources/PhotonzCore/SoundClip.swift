@@ -133,6 +133,11 @@ extension PhotonzDocument {
 
         var layer = Layer.sound(sound, name: "\(clip.name) sound", time: time)
         layer.cuts = clip.cuts
+        // Everything already done to the sound goes with it: level, fades,
+        // gain, cleaning and effects. Its points are measured from the layer's
+        // own start, and the new layer starts where the clip does, so they
+        // land on the same moments.
+        layer.soundLevel = clip.soundLevel
         let soundLayerID = layer.id
 
         var after = self
@@ -143,7 +148,12 @@ extension PhotonzDocument {
             after.materializeTracks()
             layer.trackID = track
         }
-        after.updateLayer(id: id) { $0.soundDetached = true }
+        // The silent picture lets go of the level, so the mix lives in one
+        // place, on the layer that plays it.
+        after.updateLayer(id: id) {
+            $0.soundDetached = true
+            $0.soundLevel = nil
+        }
         if path.count == 1 {
             after.addLayer(layer, at: path[0] + 1)
         } else if let parent = after.layer(atPath: Array(path.dropLast()))?.id {

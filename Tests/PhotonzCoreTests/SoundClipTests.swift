@@ -116,6 +116,40 @@ struct SoundClipTests {
         #expect(sound.clipPieces == split.document.layer(id: clipID)?.clipPieces)
     }
 
+    @Test("The detached sound keeps its level, fades, gain and cleaning, and the silent picture lets go of them")
+    func detachedSoundKeepsItsMix() throws {
+        var doc = Self.recording()
+        let clipID = try #require(doc.layers.first?.id)
+        let length = try #require(doc.layer(id: clipID)?.time?.lengthMS)
+        var level = AudioLevel(gain: 0.5, clipGainDB: 6, noiseReduction: .strong,
+                               eq: SoundEQ(lowCutHz: 80, lowDB: 2, highDB: -1),
+                               compressor: SoundCompressor(thresholdDB: -18, ratio: 3), effectsOff: [.eq])
+        level.setFadeIn(1200, lengthMS: length)
+        level.setFadeOut(800, lengthMS: length)
+        doc.updateLayer(id: clipID) { $0.setSoundLevel(level) }
+
+        let split = try #require(doc.detachingSound(ofLayer: clipID))
+        let sound = try #require(split.document.layer(id: split.soundLayerID))
+        #expect(sound.soundLevel == level)
+        #expect(sound.soundLevel?.fadeInMS == 1200)
+        #expect(sound.soundLevel?.fadeOutMS(lengthMS: length) == 800)
+        // The picture makes no sound any more, so it holds no level for one:
+        // the mix lives in one place, on the layer that plays it.
+        #expect(split.document.layer(id: clipID)?.soundLevel == nil)
+
+        // Undo is the document before, and that still has the linked sound
+        // exactly as it was.
+        #expect(doc.layer(id: clipID)?.soundLevel == level)
+        #expect(doc.layer(id: clipID)?.soundDetached != true)
+    }
+
+    @Test("A clip nobody mixed detaches to a sound nobody mixed")
+    func untouchedSoundStaysUntouched() throws {
+        let doc = Self.recording()
+        let split = try #require(doc.detachingSound(ofLayer: doc.layers[0].id))
+        #expect(split.document.layer(id: split.soundLayerID)?.soundLevel == nil)
+    }
+
     @Test("Once detached, cutting the picture leaves the sound alone")
     func aCutToThePictureDoesNotCutTheSound() throws {
         let opened = Self.recording()
