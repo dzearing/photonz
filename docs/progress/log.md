@@ -20585,3 +20585,12 @@ Next: the first editor window's ~200 ms first build
 - Settings: Tolerance 32, Anti-alias on, Contiguous on (Photoshop's), in the tool settings capsule and a Fill Tool panel section, remembered under `bucket.*`.
 - Walks can press ⌘E now (stand-in `mergeDown`). Walk: bucket-fills-the-enclosed-area-walk. Audit: queue/audits/2026-10-03-bucket-flood.json.
 - Open question for the user (audit): an All Layers switch, so lines on their own layer stop the flood.
+
+## 2026-10-04 — Switching the history filter answers within a frame
+
+- Reproduced on the fixed meter: a filter switch held the main thread 36 to 112ms in one pass (Videos from 40 along 112ms, 45 tiles built). Profiled with `xctrace` (Time Profiler and the SwiftUI template) during a walk of 120 switches.
+- Causes and fixes (HistoryOverlay.swift): one strip per filter, each in its own NSHostingView kept alive and hidden with `isHidden` (SwiftUI opacity/hit-testing/accessibility modifiers pushed a new environment into every tile); the filter lives in an `@Observable` read only by the bar and the strips (the overlay's body re-ran and its fresh `onKeyPress` closures reached every tile); the history bar answers over three frames (click, pick, then chip departure and strip swap). Hidden strips are built in the background after opening, one frame each, and rewound while out of sight.
+- Shared SegmentedControl: the chip sets off a frame after the pick; both word weights are drawn and the pick flips opacity; drawn words hidden from accessibility; dead `travelling` state removed.
+- HistoryOverlayController: bare ←/→ go straight to the key panel, skipping AppKit's menu-bar key-equivalent check (~1.5ms a step).
+- Numbers: 120 switches median 6.9ms, max 13.2; arrows max ~14ms; history-filter-switch-speed-walk passed six runs in a row. Audit: queue/audits/2026-10-04-history-filter-switch-speed.json.
+- Method worth reusing: `/usr/bin/sample` is too coarse for one-frame work; `xctrace record --template 'Time Profiler' --attach <probe pid>` exported to XML and split into main-thread bursts finds the frame, and the SwiftUI template's `swiftui-updates` table (attach before the window opens, or views read "created before tracing started") names the views.

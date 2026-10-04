@@ -1,0 +1,27 @@
+{
+  "feature": "Switching the history filter answers within a frame",
+  "epic": "video-editing",
+  "summary": "Clicking All, Screenshots or Videos in the history bar no longer holds the app: the filter shows your pick on the next frame and the new strip a frame after, every frame under 16ms (it was 40 to 110ms). Walking the strip with the arrow keys is smoother too.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Best with a big Screenshots folder (the walk uses a made-up history of 500 captures, one in three a recording).",
+  "switched": {},
+  "try": [
+    { "do": "Press Shift-Command-H to open the history bar." },
+    { "do": "Click Screenshots, then Videos, then All, quickly, several times over.", "shot": "2026-10-04-history-filter-speed-1-screenshots-sc.png" },
+    { "do": "Press the right arrow thirty or forty times to walk well along the strip." },
+    { "do": "Click Videos: the newest recordings show at the start, at once.", "shot": "2026-10-04-history-filter-speed-2-videos-sc.png" },
+    { "do": "Click All: it is back at its start with the newest capture ringed.", "shot": "2026-10-04-history-filter-speed-3-all-sc.png" },
+    { "do": "Hold the right arrow down for a second and watch the ring and the strip move." }
+  ],
+  "evaluate": [
+    "Does a click on the filter feel instant now, with no catch before the strip changes?",
+    "Does the chip still slide across the filter the way it did, with nothing jumping?",
+    "Does the strip you come back to always start at the newest capture?",
+    "Do the arrow keys move the ring without a stutter near the start of the strip?"
+  ],
+  "rough": [
+    "The answer comes over three short frames rather than one: the filter's words change the frame after the click, then the chip sets off and the strip changes. At 60Hz that is all within about 33ms.",
+    "Opening the bar still takes one long frame of 85 to 125ms, as before this change; after it, the two strips not in sight are built in the background, one frame of about 35ms each, while nothing moves.",
+    "Arrow steps read 7ms typically and up to about 14ms; the first steps after a switch are the slowest.",
+    "No visual change was intended: the bar and strip look as they did on 2026-09-30."
+  ]
+}
