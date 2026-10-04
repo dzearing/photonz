@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 6,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-03T14:26:38.978Z",
-  "updated": "2026-10-03T15:00:18.792Z",
+  "updated": "2026-10-03T15:00:37.123Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"with regards to zoom, it works, but not when I'm scrubbing the video. It only shows the zoom effect when i play. I'd like to be able to scrub the video and see what the zoom box will do at any given frame.\"\n\nSUSPECT, not reproduced: EditorState.swift:4501-4503 calls withZoomInHandUnzoomed after drawn(atTimeMS:), stripping zoomWindow whenever showsZoomBox, which is selectedZoom != nil && !isDocumentPlaying && zoomInHand != nil (EditorState+Zoom.swift:352-363). addZoom selects the new zoom (EditorState+Zoom.swift:108) and scrubbing never deselects it (only letGoOfZoom: empty Zoom lane click ZoomLane.swift:201, box handlers, Escape). So right after Add Zoom / Suggest Zooms every scrub shows the unzoomed picture with the box. The normal render path does apply the zoom while scrubbing (DocumentTime.drawn -> withZoomShown, PhotonzCore/DocumentTime.swift:237-241; DocumentRenderer.swift:1117). Trap: the unzoomed-with-box view exists on purpose so the box can be edited; do not just delete it, the person still needs to place the box. Secondary, unverified: MovieFrames.swift:174 reads scrub frames at a zoom-dependent size, may affect sharpness.\n\nShipped task this extends: a-zoom-region-that-frames-a-spot-and-can-follow (did not mention scrubbing).\n\nDONE NOTES: framing state is EditorState.zoomFraming (EditorState.swift, documentTimeMS didSet clears it); showsZoomBox = zoomOwnsPicture && zoomFraming (EditorState+Zoom.swift). Canvas flag zoomOwnsPicture + zoomFramesOnPress closure (CanvasView/CanvasPointerCue). Walk actions expectZoomBoxDown, expectZoomScrubMatchesExport, expectZoomEasesFrameByFrame (PlaytestZoom.swift).",
@@ -49,6 +49,10 @@
     {
       "t": "2026-10-03T15:00:18.791Z",
       "note": "Verified: scrubbing-shows-the-zoom-walk at Next defaults (no flags) ok: expectZoomScrubMatchesExport picked and let go, 0.0% of pixels apart from export at 2175/2350/2525/3500/4650 ms (zoom changes 2.7-35.3%); expectZoomEasesFrameByFrame 21 frames in, 21 out, window width moving every frame (reads playtestLastDrawn, the document actually handed to the canvas). a-click-on-the-zoom-bar-frames-it-walk ok (windowClick on the bar, needs the Mac). All 10 zoom walks ok via playtest-all zoom. Scripts/test.sh: 11044 tests passed. Left rough, not filed (no defect, nothing a person is stopped by): nothing but the pointer says clicking the zoomed picture frames it; clicking the ruler at the playhead's own moment leaves the box up; during playback with a zoom picked the clip's handles show (pre-existing). Audit: queue/audits/2026-10-03-zoom-shows-while-scrubbing.json."
+    },
+    {
+      "t": "2026-10-03T15:00:37.121Z",
+      "note": "Scrubbing across a zoom shows the zoom at every frame, picked or not. Framing the box is its own state: Add Zoom, a click on the bar or on the picture put it up, and any playhead move takes it down. Measured: canvas vs export 0.0% of pixels apart at 5 moments, picked and let go; eases move at every frame (21 in, 21 out). Walks scrubbing-shows-the-zoom-walk + a-click-on-the-zoom-bar-frames-it-walk at Next defaults, all 10 zoom walks ok, 11044 tests pass. Audit queue/audits/2026-10-03-zoom-shows-while-scrubbing.json. Commit 5bfa7878."
     }
   ],
   "started": "2026-10-03T14:36:01.317Z",
@@ -57,5 +61,6 @@
     "a-click-on-the-zoom-bar-frames-it-walk",
     "a-zoom-follows-the-cursor-walk",
     "framing-a-zoom-shows-one-box-walk"
-  ]
+  ],
+  "completed": "2026-10-03T15:00:37.122Z"
 }

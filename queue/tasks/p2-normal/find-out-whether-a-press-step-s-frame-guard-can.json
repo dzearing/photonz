@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-03T03:08:50.218Z",
-  "updated": "2026-10-03T12:42:01.705Z",
+  "updated": "2026-10-04T00:26:52.952Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-02 while working walking-the-history-strip-with-the-arrow-keys-ke. With temporary logging (CACurrentMediaTime per HistoryOverlayCell body, per MainThreadMeter.reset, and per counted pass >5ms from the meter's own observer), pressing \"Videos\" in history-filter-switch-speed-walk logged: meter reset at 0ms, 14 tile bodies built between 12ms and 28ms after it, filter onChange at 41ms, and NO counted pass longer than 5ms until 300ms later. So at least ~16ms of app work right after the click was not in the reading; the step reported longest 4-5ms on the original code. Suspect: pressControl's settle loop runs look()/isRestless() (accessibility reads) inside MainThreadMeter.exclude, and an accessibility read forces SwiftUI's pending update to run synchronously inside the excluded span, so the app's own work is subtracted as the harness's (PlaytestHarness.swift around the settle loop, `let began = CACurrentMediaTime(); let restless = isRestless(); let now = try? look(); MainThreadMeter.shared.exclude(...)`). Not confirmed: the update might also run inside the synthesized mouse-down sendEvent before the meter's pass bookkeeping. Repro: add the logging above, run Scripts/playtest.sh Scripts/playtest/history-filter-switch-speed-walk.json, read the lines around the Videos press.",
@@ -39,9 +39,35 @@
     {
       "t": "2026-10-03T12:42:01.704Z",
       "note": "seq 60 -> 70"
+    },
+    {
+      "t": "2026-10-03T23:19:32.878Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-04T00:26:45.152Z",
+      "note": "walks history-filter-switch-speed-walk -> press-meter-sees-the-click-walk"
+    },
+    {
+      "t": "2026-10-04T00:26:45.206Z",
+      "note": "Reproduced (item 1): NO, the meter did not count the pass a pressed control's change is applied in, and the cause was not the settle loop's exclusion the notes suspected (that runs before the click). Temporary trace on the old meter, Videos press: DOWN sent at 4.4ms, run EXIT at 6.2ms, then all 14 historyTile bodies built at 10.6 to 38.4ms with NO pass open, next run ENTRY at 64.1ms. AppKit dispatches the queued mouse-up BETWEEN two runs and MainThreadMeter closed a pass at every run exit and opened one only at entry/afterWaiting, so a click's own work was invisible (read 5.6ms). Also ruled out: CA/UpdateCycle commit work after the meter's order-0 beforeWaiting observer (an order-max observer saw nothing >2ms there)."
+    },
+    {
+      "t": "2026-10-04T00:26:45.260Z",
+      "note": "Fix (commit 264e54bd): MainThreadPassClock in PhotonzCore (7 tests) counts the time between runs as a pass of its own, run edges still cut. Tried wake-to-sleep first: it joined stretches with a frame committed between them and pushed five gated walks red by 4 to 20ms, so it was not shipped. Item 2: press takes stallMS (one-shot local monitor busy-waits inside the release's dispatch; fails when the meter reads less). press-meter-sees-the-click-walk stalls two clicks 40ms: reads 64.9 and 68.4ms, green. Same stalled click with longestUnderMS 16 FAILED at 45.4ms (/tmp/stall-guard-demo-walk.json)."
+    },
+    {
+      "t": "2026-10-04T00:26:45.315Z",
+      "note": "Items 3 and 4 moved to switching-the-history-filter-answers-within-a-fr (p1, owns history-filter-switch-speed-walk): with the meter able to see clicks the walk is honestly red, a filter switch is 48 to 106ms in one pass, so it goes green only by making the switch faster, which is that task's work, not this one's. The arrow-key flakiness (item 4) is unchanged by the fix (appKey is sent inside a run) and is that task's third item. Other walks the fix touches: section-fold-motion-walk red 3/3 at 16.9-22.6ms -> filed folding-a-panel-section-answers-within-a-frame (p2); view-to-edit-on-a-long-recording-walk 119-137ms vs 100 -> folded into edit-mode-s-contents-come-in-with-the-slide-not, which already owns it and logged 127-130ms fails. Green on the fixed meter: first-long-jump, clip-pictures, export-card, first-press-of-play, ninety-second-cut, a-long-captioned-recording, a-captioned-recording-sits-quiet, redline. Left rough, not filed: caption-pick-answers-at-once read 81.7 of its 80ms gate once, then three greens; borderline, recorded here."
+    },
+    {
+      "t": "2026-10-04T00:26:52.950Z",
+      "note": "Reproduced: the meter could not see a click, because AppKit hands the click's release to the app between two run-loop runs and that time counted for nothing (a 58ms Videos switch read 5.6ms). Fixed in 264e54bd: MainThreadPassClock (PhotonzCore, tested) counts the time between runs as a pass. press stallMS plus press-meter-sees-the-click-walk prove it: a 40ms stall reads 65 to 68ms, and with a 16ms guard the stalled click fails at 45.4ms. history-filter-switch-speed-walk is now honestly red (switches take 48 to 106ms), so its items moved to p1 switching-the-history-filter-answers-within-a-fr. section-fold filed as p2 folding-a-panel-section-answers-within-a-frame; view-to-edit folded into edit-mode-s-contents-come-in-with-the-slide-not."
     }
   ],
   "walks": [
-    "history-filter-switch-speed-walk"
-  ]
+    "press-meter-sees-the-click-walk"
+  ],
+  "started": "2026-10-03T23:19:32.877Z",
+  "completed": "2026-10-04T00:26:52.951Z"
 }

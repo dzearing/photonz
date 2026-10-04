@@ -5,14 +5,14 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 100,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-03T04:28:58.512Z",
-  "updated": "2026-10-03T12:42:01.867Z",
+  "updated": "2026-10-04T08:00:35.199Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Reproduced 2026-10-02 in task a-menu-that-says-custom-lets-you-get-back-to-cus: added `ownPivot: MotionPivot?` and `ownCurve: EasingCurve?` to LayerMotion just above `isOn`, then `Scripts/test.sh --filter MotionRenderTests` failed 3/3: `aSwitchedOffMotionDrawsTheLayerAsItWasDrawn() ... motions: [LayerMotion(... ownPivot: nil, ownCurve: nil, isOn: true)]` after the test sets `document.layers[0].motions?[0].isOn = false`, and `difference 0.007775`. HEAD with the change stashed passed. `touch Tests/PhotonzRenderTests/MotionRenderTests.swift` then the same filter: `✔ Test run with 15 tests in 4 suites passed`. So the test object was not recompiled after the layout of a non-resilient struct changed (likely swift-driver cross-module incremental build skipping files whose used decls fingerprint the same). Same symptom and number as task a-switched-off-motion-test-passes-whichever-rend on 2026-09-25, closed as machine state. Possible fixes: build tests with -disable-incremental-imports / -enable-incremental-file-hashing flags, or have test.sh compare PhotonzCore .swiftmodule hashes and clean the test targets when they change.",
+  "notes": "Reproduced 2026-10-02 in task a-menu-that-says-custom-lets-you-get-back-to-cus: added `ownPivot: MotionPivot?` and `ownCurve: EasingCurve?` to LayerMotion just above `isOn`, then `Scripts/test.sh --filter MotionRenderTests` failed 3/3: `aSwitchedOffMotionDrawsTheLayerAsItWasDrawn() ... motions: [LayerMotion(... ownPivot: nil, ownCurve: nil, isOn: true)]` after the test sets `document.layers[0].motions?[0].isOn = false`, and `difference 0.007775`. HEAD with the change stashed passed. `touch Tests/PhotonzRenderTests/MotionRenderTests.swift` then the same filter: `✔ Test run with 15 tests in 4 suites passed`. So the test object was not recompiled after the layout of a non-resilient struct changed (likely swift-driver cross-module incremental build skipping files whose used decls fingerprint the same). Same symptom and number as task a-switched-off-motion-test-passes-whichever-rend on 2026-09-25, closed as machine state. Possible fixes: build tests with -disable-incremental-imports / -enable-incremental-file-hashing flags, or have test.sh compare PhotonzCore .swiftmodule hashes and clean the test targets when they change.\n\nRESOLVED 2026-10-04: not the driver. PhotonzRenderTests (and PhotonzMediaTests) imported PhotonzCore without listing it in Package.swift; SwiftPM only treats LISTED modules as inputs to a target's compile, and PhotonzRender.swiftmodule was byte-identical after the core change, so the test compile was skipped entirely (RenderTests .o unchanged). -disable-incremental-imports and -enable-incremental-file-hashing did not help; `swift test -v` hides it (forces a rebuild). Fix: list PhotonzCore on both test targets. Guard: Scripts/check-direct-imports.mjs, run first by Scripts/test.sh. Drill: Scripts/stale-build-drill.sh [--real].",
   "acceptance": [
     "Adding a stored field ahead of an existing one in a PhotonzCore struct and running Scripts/test.sh --filter on a test target that writes that field passes without touching any test file",
     "Or, if the build tool cannot be made to do that, Scripts/test.sh notices the stale build and rebuilds the affected target by itself, saying so in one plain line",
@@ -30,6 +30,24 @@
     {
       "t": "2026-10-03T12:42:01.866Z",
       "note": "seq 90 -> 100"
+    },
+    {
+      "t": "2026-10-04T07:44:37.198Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-04T08:05:00.000Z",
+      "note": "Reproduced in a two-module temp package (STALE 3/3) and on the real package: ownCurve+2 fields ahead of LayerMotion.isOn -> MotionRenderTests fails, difference 0.007775. Object timestamps showed the test target was never recompiled: its only listed dependency's module came out identical."
+    },
+    {
+      "t": "2026-10-04T08:20:00.000Z",
+      "note": "Fix: PhotonzCore listed on PhotonzRenderTests and PhotonzMediaTests. Same change on the real package then passes 15/15 without touching a test file (twice: by hand and via Scripts/stale-build-drill.sh --real). Guard Scripts/check-direct-imports.mjs runs first in test.sh and fails naming the gap (checked against HEAD's Package.swift: names both targets). Full suite 11190 tests green."
+    },
+    {
+      "t": "2026-10-04T08:00:35.197Z",
+      "note": "Cause was Package.swift, not the compiler: PhotonzRenderTests and PhotonzMediaTests imported PhotonzCore without listing it, so SwiftPM skipped their compile when PhotonzRender's module came out unchanged. Both now list PhotonzCore. Verified: two fields ahead of LayerMotion.isOn failed MotionRenderTests (0.007775) before, passes 15/15 after with no test file touched. Guard Scripts/check-direct-imports.mjs runs first in Scripts/test.sh; drill Scripts/stale-build-drill.sh [--real]. Full suite green (11190 tests)."
     }
-  ]
+  ],
+  "started": "2026-10-04T07:44:37.197Z",
+  "completed": "2026-10-04T08:00:35.198Z"
 }

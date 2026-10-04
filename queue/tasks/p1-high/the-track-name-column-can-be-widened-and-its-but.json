@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 11,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-04T00:17:17.852Z",
-  "updated": "2026-10-04T01:42:13.473Z",
+  "updated": "2026-10-04T01:42:36.262Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"the labels area of the tracks can't be resized, and it's so small the buttons overlap.\" Screenshot 2026-10-03 17.14.27: V7 expanded with a red hide (eye-slash) button and a purple key diamond touching each other at the right edge of the header.\n\nFrom code reading (not run): the column is a fixed constant, TimelineDock.gutter = 84 (TimelineDock.swift:45). Header width math at TimelineTrackRows.swift:165 (gutter - indent - switchesWidth - twistWidth - keyWidth) and frame at :184; other uses at TimelineDock.swift:476 (Time row), TimelineTrackRows.swift:291, :983, :1047, and MotionStripView.labelWidth 92 (MotionStripView.swift:37) for the property rows. Making it a stored value means every one of those reads the live width. Trap: the lane/canvas x mapping (ruler, playhead, drops) is offset by the gutter; check nothing assumes the constant. Trap: the track-carry gesture (simultaneousGesture at TimelineTrackRows.swift:192) must not steal the edge drag.",
@@ -51,10 +51,15 @@
     {
       "t": "2026-10-04T01:42:13.472Z",
       "note": "Walk fallout: 8 walks aimed fixed window points into the lanes (lanes moved from x104 to x160 and lost 56pt). Remapped their dock x points onto the same moments (x' = 160 + (x-104)*1552/1608), leaving the transport scrub-bar points alone: a-click-tick-is-hidden-and-slid, a-clip-s-sound-is-linked-under-it, a-video-clip-fades, a-zoom-is-shaped-by-hand, double-click-clears-a-range, draw-a-range-by-hand, keys-copy-between-layers, timeline-right-click; all pass. Also ran 19 more dock-point walks and 44 track/timeline walks: all pass except dock-headers-walk once (panel section order; passed alone right after, order-dependent, untouched by this change) and section-fold-motion-walk (20.6ms press, already owned by folding-a-panel-section-answers-within-a-frame, measured 17-23ms before this change). Scripts/test.sh: 11165 tests pass. left rough: the edge strip sits over the tracks' scroll view, so a wheel scroll that starts exactly on the 8pt gap may not scroll the rows; not filed, nobody will start a scroll there on purpose."
+    },
+    {
+      "t": "2026-10-04T01:42:36.260Z",
+      "note": "Track name column drags 123-320pt by its right edge (default 140, double-click resets, remembered via UserDefaults); header switches and key keep 4pt apart at every width, name shortens first. Verified: TrackColumnTests + ExpectApartStepTests, Scripts/test.sh 11165 pass, track-column-resizes-walk at Next defaults measures 4.0pt gaps and V10 whole at 123/140/320, reset and reopen. 8 point-driven walks remapped, all pass. Audit queue/audits/2026-10-03-track-column.json. Commit 31ca0fb6."
     }
   ],
   "started": "2026-10-04T00:46:53.705Z",
   "walks": [
     "track-column-resizes-walk"
-  ]
+  ],
+  "completed": "2026-10-04T01:42:36.261Z"
 }

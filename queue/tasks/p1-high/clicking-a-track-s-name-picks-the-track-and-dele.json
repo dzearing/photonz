@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 12,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-04T00:17:18.010Z",
-  "updated": "2026-10-04T00:17:18.106Z",
+  "updated": "2026-10-04T02:50:04.345Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"I have no idea how to delete a track. i click it, hit backspace, doesn't delete it. i click a track expecting it to select the whole track, press backspace, doesn't delete it.\"\n\nFrom code reading (not run): Delete Track exists only on the header right-click (TimelineTrackRows.swift:739) and Track menu bar (EditorCommands.swift:1351), deleteTrack at EditorState+Tracks.swift:213. pickTrack (EditorState+Tracks.swift:165-172) sets selectedTrackIDs = [id] AND selects the track's first clip (selectLayer), so the panel and the Delete key are about that clip, not the track. SUSPECT for 'nothing happens': focus after the header Button click may not be in the timeline/canvas responder that handles Delete, or Delete acts on the clip in a way the person did not see; confirm before fixing. Trap: picking a track must not break clicking a clip, the track carry gesture (TimelineTrackRows.swift:192), or Group Tracks which gathers selectedTrackIDs. Trap: the panel-buttons task (the-panel-shows-what-the-picked-thing-is-and-its) is reworking what the panel shows for a picked thing; coordinate.",
@@ -31,6 +31,36 @@
     {
       "t": "2026-10-04T00:17:18.105Z",
       "note": "seq 480 -> 12"
+    },
+    {
+      "t": "2026-10-04T02:01:21.793Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-04T02:49:38.439Z",
+      "note": "owns these walks: pick-a-track-and-delete-it-walk, delete-track-menu-shows-its-key-walk"
+    },
+    {
+      "t": "2026-10-04T02:49:38.496Z",
+      "note": "Reproduced at Next defaults before fixing (Scripts/playtest.sh /tmp/ptrepro/repro.json): a press on 'Track V1' picked the recording clip (panel said Clip), Backspace was 'taken by timeline' and deleted the CLIP and its sound, leaving V1 standing empty; on empty V2 Backspace reached nobody. Cause: pickTrack selected the track's first clip, and liftInHand had no track branch."
+    },
+    {
+      "t": "2026-10-04T02:49:38.550Z",
+      "note": "Adversarial review before: Premiere/FCP pick a track by its header and Delete removes it; risks were (a) a track left picked under a clip coming back into hand after the clip is deleted, so a second Backspace takes a track nobody looked at -> picking any layer now clears the track pick (selectedLayerID/multiSelectedLayerIDs didSet); (b) a live Backspace on the menu bar row stealing Backspace from clip/layer deletes -> the row answers the key only while tracks are the thing in hand, otherwise prints it (U+007F); (c) Library tile pick and Add at Playhead rely on the picked track as target -> a tile picked since makes tracksInHand empty but keeps selectedTrackIDs."
+    },
+    {
+      "t": "2026-10-04T02:49:38.605Z",
+      "note": "Review after, on the probe: header and lane read as one picked thing, clips light up with it including the linked sound, panel Track section (name in header, Hide/Mute, Solo, Lock, Clips). Left rough, not filed: deleting V1 takes the recording's sound too (Audio left empty) -- existing core behavior, raised as an audit evaluate question for the user rather than filed. Walks changed to match the new behavior: tracks-you-can-add-rename-group-walk and the-timeline-is-the-layer-list-walk now press the clip bar instead of the header to pick a clip."
+    },
+    {
+      "t": "2026-10-04T02:50:04.342Z",
+      "note": "Header click picks the whole track (header+lane wash, clips that go light up, panel Track section with Hide/Mute, Solo, Lock, Clips); Backspace/Delete removes picked tracks and their clips in one undo step; Shift/Cmd click picks several; clip clicks still pick clips and Delete on a clip takes only the clip; Delete Track prints ⌫ on header menu and Sequence > Track. Reproduced before fixing; verified by pick-a-track-and-delete-it-walk (Next defaults, pointer presses, 6 real captures) and delete-track-menu-shows-its-key-walk, 17 related walks green, Scripts/test.sh green (11170 tests). Commit 4c758da3. Audit queue/audits/2026-10-03-pick-a-track-and-delete-it.json."
     }
-  ]
+  ],
+  "started": "2026-10-04T02:01:21.791Z",
+  "walks": [
+    "pick-a-track-and-delete-it-walk",
+    "delete-track-menu-shows-its-key-walk"
+  ],
+  "completed": "2026-10-04T02:50:04.344Z"
 }

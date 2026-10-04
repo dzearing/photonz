@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 110,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-02T16:11:50.631Z",
-  "updated": "2026-10-03T12:42:01.921Z",
+  "updated": "2026-10-04T08:23:39.258Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-02 by a runner on task a-far-playhead-jump-on-a-zoomed-in-long-recordin: `Scripts/build-app.sh --help 2>&1 | head -5` printed `==> Building Photonz 0.15.0 (dev, arm64)` then `Building for production...`. It was only stopped because `head` closed the pipe (SIGPIPE); dist/Photonz Dev.app kept its 05:34 binary. queue/playtest.lock did not exist at the time, so the dev-build guard would not have refused. Cause: Scripts/build-app.sh only compares \"${1:-}\" against --release/--dmg/--dmg-only/--probe (lines 40, 95, 354); anything else falls through to the default dev build. Fix: a case on $1 at the top that handles the known flags and prints the header comment (lines 4-35) for -h/--help/anything else, exit 2.",
@@ -30,6 +30,20 @@
     {
       "t": "2026-10-03T12:42:01.920Z",
       "note": "seq 100 -> 110"
+    },
+    {
+      "t": "2026-10-04T08:18:04.080Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-04T08:23:39.195Z",
+      "note": "Reproduced in a sandbox copy with a stub swift: --help, -h and --bogus each printed '==> Building Photonz 0.15.0 (dev, arm64)' and called swift build. Fixed with a case on $1 before anything else runs."
+    },
+    {
+      "t": "2026-10-04T08:23:39.256Z",
+      "note": "Scripts/build-app.sh (0ab565a8): -h/--help print the header-comment usage and exit 0; an unknown option or a second argument prints usage to stderr and exits 2. Checked in a sandbox copy with a stub swift: '', --probe, --release, --dmg pick the same variant as before, and --dmg-only still checks for the app. On the real repo --help exits 0, --nope exits 2, and the dev app binary's mtime didn't change. Scripts/test.sh green (11190 tests)."
     }
-  ]
+  ],
+  "started": "2026-10-04T08:18:04.078Z",
+  "completed": "2026-10-04T08:23:39.257Z"
 }

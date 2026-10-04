@@ -1,0 +1,26 @@
+{
+  "id": "find-out-whether-a-saved-name-card-inserted-on-a",
+  "title": "Find out whether a saved name card inserted on a frame of another size wraps its name over its role",
+  "goal": "A person's own name card, saved on one recording and used on a recording of another size, may come out with its name wrapped onto two lines and drawn over the role line. It was seen once on a Library tile picture of an older saved card; it is not yet confirmed on the timeline.",
+  "epic": "video-titles-graphics",
+  "priority": "p2-normal",
+  "seq": 3540,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-03T21:16:17.587Z",
+  "updated": "2026-10-03T21:16:17.590Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-10-03 in title-presets-library-shelf-walk capture 1b-name-cards-sc.png: the probe's leftover saved preset 'Dana card' (saved by an earlier walk on another frame size) drew 'Dana / Zearing' wrapped over 'Design lead' in its tile, while the same card drawn on the whole frame at 320 px earlier that day read fine. The tile picture goes through PhotonzDocument.insertTitle(SavedTitlePreset) which scales with drawnLarger(by:about:) when frames differ; a scaled text box narrower than its words would wrap. Not reproduced on the canvas yet: try saving Clean on a 1920x1080 document and inserting it into a 1280x800 one, and compare the name's box with its natural width (TextRasterizer.naturalSize).",
+  "acceptance": [
+    "A name card saved on a 1920x1080 recording and inserted into a 1280x800 one keeps its name on one line, clear of the role, on the canvas",
+    "Its Library tile picture shows the same"
+  ],
+  "log": [
+    {
+      "t": "2026-10-03T21:16:17.589Z",
+      "note": "created (manual)"
+    }
+  ]
+}

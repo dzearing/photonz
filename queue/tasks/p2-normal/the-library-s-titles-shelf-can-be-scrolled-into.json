@@ -1,0 +1,30 @@
+{
+  "id": "the-library-s-titles-shelf-can-be-scrolled-into",
+  "title": "The Library's Titles shelf can be scrolled into view in a crowded dock",
+  "goal": "In a short window with a clip's Time, Captions and Transitions sections open, the Library's Components shelf (now led by the title tiles) sits below the dock's last scroll position with no tiles showing, so a person cannot reach the titles without folding other sections. The dock should scroll far enough to show at least one whole row of the shelf, as it does for the shorter Media shelf.",
+  "epic": "video-titles-graphics",
+  "priority": "p2-normal",
+  "seq": 3530,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-03T21:16:17.506Z",
+  "updated": "2026-10-03T21:16:17.509Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-03 while building title-page-and-name-card-presets-are-tiles-on-th. Walk title-presets-library-shelf-walk, with the Midnight double click moved AFTER the two Sunrise drops (timeline grown with Scale lanes, dock crowded): Scripts/playtest.sh Scripts/playtest/title-presets-library-shelf-walk.json --no-build -> step 46 (press): scrolled 858pt and a press still could not land: \"Midnight\" is 100pt below the bottom of the part of its own scrolling area that is on screen, and that area would not scroll any further. Capture 4-let-go-on-a-free-track-sc.png of that run shows the dock at its end with the Library ending at its search box. Logged numbers from LibraryPanel in that state: shelf 160 tall, dockCeiling 160, floor 160 (the budget's floor binds), natural 256, grouped [9,5]. Same state with the Media scope (one tile, natural 112, no squeeze) revealed its tile fine after scrolling 81pt. So the dock's outer scroll seems to fall short exactly when the shelf's floor binds; look at DockHeightBudget.overflow vs what InspectorPanel lays out for .library (listExtras + ceiling). The shipped walk avoids it by double clicking before the drops.",
+  "acceptance": [
+    "With a recording open, a title page placed on the timeline and the Library on Comps, scrolling the dock to its end shows a whole row of title tiles",
+    "A walk reveals and double clicks a title tile by the pointer in that state",
+    "The Media shelf in the same state still reveals its tiles"
+  ],
+  "log": [
+    {
+      "t": "2026-10-03T21:16:17.508Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "title-presets-library-shelf-walk"
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "id": "title-page-and-name-card-presets-are-tiles-on-th",
+  "title": "Title page and name card presets are tiles on the Library shelf",
+  "goal": "A person browsing the Library while editing a video sees the title page and name card presets as picture tiles, including their own saved ones, and drags one onto the timeline or double-clicks it to put it at the playhead, the way the title mock places a lower third from the Library.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 460,
+  "status": "done",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-03T19:35:32.104Z",
+  "updated": "2026-10-03T21:17:35.758Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from insert-title-pages-and-name-cards-on-the-timelin (audit queue/audits/2026-10-03-title-presets.json). Mock: docs/design/mocks/pages/video-title-wt.html step 10, Library at scope Components holding Lower third (3 variants) and End card. Presets today: Sources/PhotonzCore/TitlePresets.swift (BuiltInTitle, SavedTitlePreset), app side Sources/Photonz/EditorState+TitlePresets.swift (TitlePresetStore.shared, insertTitle(_:onTrack:)). Tiles need a thumbnail rendered per preset at the document frame size. Existing shelf drops at the playhead: placementMomentMS in EditorState+TitleTime.swift.",
+  "acceptance": [
+    "In a document with time the Library shows a Titles group with a tile for every built-in and saved preset, each a real picture of the preset",
+    "Double-clicking a tile inserts it at the playhead on its own track, exactly as Sequence > Insert does",
+    "Dragging a tile onto a track lets go of it there at the drop moment",
+    "A walk at Next defaults proves both by pointer, with photographs"
+  ],
+  "log": [
+    {
+      "t": "2026-10-03T19:35:32.106Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-03T19:54:49.593Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-03T19:57:39.812Z",
+      "note": "Adversarial review before building: (1) Where: the mock (video-title-wt step 10) puts the lower third on the Library at scope Components, so title presets go there as a Titles group, FIRST in a document with time (the starter UI components a video doc also shows would otherwise push them below the fold). (2) First-time user must open View > Library and pick Comps, same as the mock's step 10. (3) Final Cut's Titles browser shows each title as a picture over a sample frame and you drag it to the timeline; Premiere's Essential Graphics browse panel likewise. So tiles render the preset at rest at the document's frame shape, a name card over a dark backdrop so a white name reads. (4) Mock calls the lower third a linked component; the shipped preset is a copy you own (prior task's decision, recorded in its audit), so the tile is a preset tile not a component tile and carries no component mark. (5) Gesture collisions: a tile dragged onto the canvas is not asked for; the timeline is the target, with the same ghost a file draws, landing on the track under the pointer when free there or on a new track above it when not, never covering a clip. (6) Click picks the tile (one selection) and opens a short section with Insert at Playhead; right-click carries Insert at Playhead and, for your own, Delete Preset."
+    },
+    {
+      "t": "2026-10-03T21:16:53.762Z",
+      "note": "owns these walks: title-presets-library-shelf-walk"
+    },
+    {
+      "t": "2026-10-03T21:16:59.158Z",
+      "note": "Built and verified. Side by side with video-title-wt step 10 (Library at Comps): mock tiles are gradient swatches of linked components (Lower third 3 variants, End card) with a violet component mark and a note line about components; shipped tiles are real pictures of presets under a Titles header with their kind on the second line, no component mark (presets are copies, decided last task), no End card kind, the components note not shown over titles. All listed in the audit's rough. Rough items: dock-scroll problem filed (the-library-s-titles-shelf-can-be-scrolled-into), saved card wrapping filed to look into (find-out-whether-a-saved-name-card-inserted-on-a). Left rough, not filed: a title tile dropped on the picture does nothing (no one asked, the timeline is the target in the mock); the walk had to double click before the drops because of the dock issue above."
+    },
+    {
+      "t": "2026-10-03T21:17:35.756Z",
+      "note": "Library Comps shelf opens with a Titles group in a document with time: a real picture tile per built-in and saved preset, double click inserts at the playhead as Sequence > Insert does, drag onto a track lands there (new track above a busy one, ghost says kind, track, time). Commit 32075c14. Verified: 20 new core tests, full suite 11129 passed, title-presets-library-shelf-walk green at Next defaults with pointer double click, pointer pick-up, held ghosts and drops, 6 real captures; 6 related walks green. Audit queue/audits/2026-10-03-title-tiles.json. Follow-ups filed: the-library-s-titles-shelf-can-be-scrolled-into, find-out-whether-a-saved-name-card-inserted-on-a."
+    }
+  ],
+  "started": "2026-10-03T19:54:49.592Z",
+  "walks": [
+    "title-presets-library-shelf-walk"
+  ],
+  "completed": "2026-10-03T21:17:35.757Z"
+}

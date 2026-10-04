@@ -1,0 +1,52 @@
+{
+  "id": "switching-the-history-filter-answers-within-a-fr",
+  "title": "Switching the history filter answers within a frame",
+  "goal": "Clicking Screenshots, Videos or All in the capture history bar holds the app for 50 to 100 milliseconds, three to six frames, every time. An earlier fix was judged fast by a check that could not see the click, so the slowness you reported on 2026-09-30 is still there.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 480,
+  "status": "done",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-04T00:26:19.445Z",
+  "updated": "2026-10-04T07:25:32.971Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reopens switching-the-history-filter-is-instant (done 2026-09-30 on numbers from a meter blind to clicks). Found by find-out-whether-a-press-step-s-frame-guard-can, commit 264e54bd: MainThreadMeter ended a pass at each run loop exit, and AppKit dispatches the queued mouse-up between two runs, so a press's own work was never counted. Trace on the old meter, Videos press: 14 historyTile bodies built 10.6 to 38.4ms after the click, all with no pass open; the thread was busy from 6.2ms to 64.1ms; the step read longest 5.6ms. Fixed meter, the walk with every gate set to 1000 (node rewrite to /tmp/hf-relaxed-walk.json, Scripts/playtest.sh /tmp/hf-relaxed-walk.json --no-build): presses All 48.7 (the first, key-taking one), Screenshots 70.8, Videos 54.6, All 58.6, Screenshots 61.1 (no tile bodies built), Videos 84.7, All 75.2, Videos-from-40-along 106.0, All 47.3. A click on All while All is picked reads ~10ms (25 in a row, and 16 more after 0.2s and 1s waits), so the cost is the switch itself, not the click or the walk's window handling, and not tile bodies (61ms with none built). A 14s sample of the probe during the presses (/usr/bin/sample) put about a quarter of main-thread time in NSHostingView.layout under the UpdateCycle flush; profile the switch alone before guessing. Arrow keys (appKey, sent inside a run, so unchanged by the fix): median 12ms, p90 16.4, max 20.9, 6 of 41 at or over 16 on 2026-10-03, which is the flakiness this task's third item is about.",
+  "acceptance": [
+    "Over the 500-capture history in history-filter-switch-speed-walk, every filter switch reads under 16ms in its longest pass on the fixed meter",
+    "Walking 40 captures with the right arrow keeps every step under one frame, or the arrow gate is changed to what a person sees through a decision the user has answered",
+    "history-filter-switch-speed-walk passes five runs in a row on its own, on an ordinary working day"
+  ],
+  "log": [
+    {
+      "t": "2026-10-04T00:26:19.447Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-04T04:30:53.010Z",
+      "note": "rotating check 2026-10-04T04:30:52Z, 50 walks run from 242 onward in the rotation: history-filter-switch-speed-walk failing."
+    },
+    {
+      "t": "2026-10-04T04:33:10.721Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-04T06:12:55.750Z",
+      "note": "Reproduced on the fixed meter: switches 36-112ms longest pass (Videos from 40 along 112ms, 45 tiles built). Profiled with xctrace: cost was (1) one strip re-diffing/re-laying the 500 item list and building new tiles on every switch, (2) the overlay body re-running on the pick, handing every tile a new environment (fresh onKeyPress closures) so all tiles redrew text and redid accessibility, (3) the segmented control's pick frame: chip departure + words changing weight. Fixes in progress: one strip per filter in its own NSHostingView hidden with isHidden; filter in an @Observable read only by bar+strips; strip swap and chip departure a frame after the pick; both word weights drawn, opacity picks. Now ~6-17ms."
+    },
+    {
+      "t": "2026-10-04T07:25:21.709Z",
+      "note": "Done. Commits 130dbde5 (strips per filter in hidden NSHostingViews, filter in an Observable, three-frame answer, segmented control pick trimmed) and be4acaa5 (bare arrows skip menu key-equivalent check). Verified: 120 switches 0.6s apart median 6.9ms max 13.2 (none over 16); real walk passed 6 runs in a row (switches 4-15ms, arrows max 14.5); 11190 tests green; segmented film walks, history walks, chrome-says-labels, never-granting, a-recording-opens-at-stop, press-meter-sees-the-click all ok. Left rough (not filed, no task earns it): opening the bar is still one 85-125ms frame as before; each hidden strip's background build is one ~35ms frame shortly after opening while nothing moves. Audit rough lines stay in this log."
+    },
+    {
+      "t": "2026-10-04T07:25:32.969Z",
+      "note": "Filter switches now 4-15ms longest pass (120 switches: median 6.9, max 13.2; were 36-112). One strip per filter in its own hidden NSHostingView, filter in an Observable, the bar answers over three frames, segmented control pick trimmed, bare arrows skip the menu-bar check. history-filter-switch-speed-walk passed 6 runs in a row; 11190 tests green; related walks ok. Commits 130dbde5, be4acaa5. Audit queue/audits/2026-10-04-history-filter-switch-speed.json."
+    }
+  ],
+  "walks": [
+    "history-filter-switch-speed-walk"
+  ],
+  "started": "2026-10-04T04:33:10.720Z",
+  "completed": "2026-10-04T07:25:32.970Z"
+}

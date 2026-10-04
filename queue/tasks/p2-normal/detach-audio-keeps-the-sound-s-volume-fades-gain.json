@@ -1,0 +1,48 @@
+{
+  "id": "detach-audio-keeps-the-sound-s-volume-fades-gain",
+  "title": "Detach Audio keeps the sound's volume, fades, gain and noise cleaning",
+  "goal": "When you separate a video's sound from its picture, everything you already did to that sound (its volume, fades, gain, noise cleaning, audio effects) should come with it. Today the detached sound starts over as if untouched, so the work is silently lost.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 3510,
+  "status": "done",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-03T15:33:40.976Z",
+  "updated": "2026-10-04T08:51:54.873Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-03 with Scripts/playtest.sh Scripts/playtest/a-video-clip-menu-leads-with-the-picture-walk.json (probe, unlocked, real captures): right-click the recording on V1, Audio > Clean Noise; the linked sound's menu then reads 'Remove Noise Cleaning'; Detach Audio; the detached sound's menu reads 'Clean Noise' again. Cause: PhotonzDocument.detachingSound (Sources/PhotonzCore/SoundClip.swift:128) builds Layer.sound(sound, name:, time:) and copies cuts but never clip.soundLevel (AudioLevel: gain points, fades, clipGainDB, noiseReduction, eq, compressor). Probably also wants the clip's soundLevel cleared or left (it is unheard once soundDetached). TDD in SoundClip tests. Filed p2 since it is found by the loop, though it is lost work.",
+  "acceptance": [
+    "A recording whose sound was turned down, faded in and noise-cleaned keeps all three after Detach Audio, on the new sound clip",
+    "Undo after Detach Audio puts the linked sound back exactly as it was",
+    "A walk cleans noise from a video's sound, detaches it, and the detached sound's menu offers Remove Noise Cleaning"
+  ],
+  "log": [
+    {
+      "t": "2026-10-03T15:33:40.978Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-04T08:38:53.391Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-04T08:51:45.400Z",
+      "note": "Fix: PhotonzDocument.detachingSound (Sources/PhotonzCore/SoundClip.swift) copies clip.soundLevel (gain, points/fades, fade curve, clipGainDB, noiseReduction, eq, compressor, effectsOff) onto the new sound layer and clears it on the now-silent clip. Points are layer-relative and the new layer has the same time, so fades land on the same moments. Tests first in SoundClipTests (detachedSoundKeepsItsMix, untouchedSoundStaysUntouched); undo is the prior document, asserted unchanged."
+    },
+    {
+      "t": "2026-10-04T08:51:45.400Z",
+      "note": "Walk a-video-clip-menu-leads-with-the-picture-walk now asserts Remove Noise Cleaning on the linked sound menu and on the detached sound menu (rightClick unticked doubles as a presence check). Proved it bites: with the fix reverted, step 20 FAILED with the rows reading Clean Noise; with the fix, status ok, 6 real captures. Full suite 11192 tests green. Audit queue/audits/2026-10-04-detach-audio-keeps-mix.json. Nothing filed: no follow-up cleared the bar."
+    },
+    {
+      "t": "2026-10-04T08:51:54.871Z",
+      "note": "Detach Audio now carries the clip's whole sound mix (level, fades, gain, noise cleaning, EQ, compressor) onto the detached sound and clears it from the silent picture (SoundClip.swift detachingSound). TDD in SoundClipTests; walk a-video-clip-menu-leads-with-the-picture-walk asserts Remove Noise Cleaning after detach, fails without the fix and passes with it (6 real captures). Full suite green. Commit 23e7c601, audit 2026-10-04-detach-audio-keeps-mix."
+    }
+  ],
+  "walks": [
+    "a-video-clip-menu-leads-with-the-picture-walk"
+  ],
+  "started": "2026-10-04T08:38:53.390Z",
+  "completed": "2026-10-04T08:51:54.872Z"
+}

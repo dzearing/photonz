@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-02T21:00:29.033Z",
-  "updated": "2026-10-03T12:42:02.302Z",
+  "updated": "2026-10-03T13:42:35.356Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found on 2026-10-02 while making a recording open at Stop (a-recording-has-its-thumbnail-and-opens-the-mome). Reproduce: remove the first step (openSampleRecording) from Scripts/playtest/a-recording-opens-at-stop-walk.json and run it with Scripts/playtest.sh --no-build: step 1 fails 'the window showed the picture 448 ms after Stop' (468, 547, 553 ms on reruns); with the step in it reads 107-188 ms. Timestamps written from AppCoordinator.openWindow, ImageEditorRootView.body and EditorView.body on a cold run: openWindowAction called at +60 ms after Stop, first root body +109 ms, first EditorView body +131 ms, then nothing until a SECOND EditorState() is made and the root body runs again at +326 ms (about 195 ms inside SwiftUI's first build of EditorView's subtree), root .task +341 ms, openWindow returns +388 ms. A warm run: openWindow asked +40, returned +81, picture +107. setActivationPolicy(.regular) and AppFront.activate took about 2 ms, so they are not it. Note SwiftUI builds EditorState twice on the first window (two 'state init' marks). The editor's code after .task is 2 ms; the cost is the view tree's first build (type metadata, symbol images, fonts, first CI/Metal contexts are candidates; `sample` on the probe attached too late to catch it, so profile with signposts or Instruments).",
@@ -34,9 +34,35 @@
     {
       "t": "2026-10-03T12:42:02.301Z",
       "note": "Triage 2026-10-03: the same first-time-per-launch cost shows up in three other audits from the last day, so whoever takes this should look for one shared warm-up rather than four fixes: the first panel section fold after launch costs about 25ms (2026-10-02-section-fold-motion), the first key in the history strip about 25ms (2026-10-02-history-strip-arrow-keys, put down to macOS checking the menu bar), and the first recording after launch spends about 0.4s getting ready while the Record card is up (2026-10-03-recording-starts-on-enter). Only the window is in this task's acceptance; the others are context."
+    },
+    {
+      "t": "2026-10-03T12:43:37.764Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-03T13:29:23.054Z",
+      "note": "Reproduced: cold open-at-stop walk (warm-up step removed) read 614, 438, 608 ms; with the warm-up step 175, 161, 191 ms. Time Profiler (xctrace attached to the probe during the 3s recording): ~200 of 338 main-thread ms in swift_getTypeByMangledName under SwiftUI's first build of EditorView's tree. Fix: EditorWarmUp builds EditorView at launch in a window never ordered in, empty then holding a stand-in recording, and throws it away. Offscreen hosting view alone (no window, empty editor) only got to 364-390; blank video doc 172-300; a recording doc alone made it worse (the empty-editor first build came back) so it builds both states in order."
+    },
+    {
+      "t": "2026-10-03T13:42:22.946Z",
+      "note": "Final, eight alternating runs each, Stop to picture: cold first window 185,298,177,325,188,285,174,295 (mean 241); warm, beside an open window 179,176,163,179,164,160,149,170 (mean 167); second window after closing the first 316,277,297,180,325,159,295,280 (mean 266). Cold is within 100 ms of warm on mean and median, and no slower than a window reopened from zero. Checked during a walk: warm-up window never visible, activation policy stayed accessory (no Dock icon), probe had no on-screen windows 1.5s after launch, throwaway EditorState freed. Scripts/test.sh: 11042 tests pass. Walks green: a-recording-opens-at-stop, blank-canvas, a-recording-is-a-document, a-guide-recording-opens-sharp, redline."
+    },
+    {
+      "t": "2026-10-03T13:42:23.001Z",
+      "note": "left rough: a window opened while no other editor window is open costs ~100 ms more than one beside an open window (bimodal ~180 vs ~290 ms). sample(1) shows the main thread blocked in -[NSWindow _windowMoved:] -> displaysWillChange -> SLSIsDisplayChangedSeedValid and a first MenuBarInstance built from a Dock callback: the accessory -> regular switch. Same for any window opened from zero, not launch-specific, and mostly under the 300 ms budget, so not filed; file it if it shows up again. Also: SwiftUI restores the group's saved frame for the first window (_setFrameAutosaveName), a synchronous layout inside openWindow; removing the saved frame did not change the numbers."
+    },
+    {
+      "t": "2026-10-03T13:42:23.057Z",
+      "note": "walks a-recording-opens-at-stop-walk -> a-recording-opens-at-stop-walk"
+    },
+    {
+      "t": "2026-10-03T13:42:35.354Z",
+      "note": "EditorWarmUp (Sources/Photonz/EditorWarmUp.swift) builds the editor at launch in a never-shown window, empty then holding a stand-in recording. First window after launch, Stop to picture: 438-614 ms before, 174-325 (mean 241) now, against 149-179 (mean 167) beside an open window, so within 100 ms on mean and median. No window, panel or Dock icon (checked during a walk). Tests 11042 pass; open-at-stop and four other walks green. Audit 2026-10-03-first-window-quick. Commit 35ca3f31."
     }
   ],
   "walks": [
     "a-recording-opens-at-stop-walk"
-  ]
+  ],
+  "started": "2026-10-03T12:43:37.763Z",
+  "completed": "2026-10-03T13:42:35.355Z"
 }

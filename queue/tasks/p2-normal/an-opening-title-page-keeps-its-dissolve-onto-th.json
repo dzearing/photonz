@@ -1,0 +1,30 @@
+{
+  "id": "an-opening-title-page-keeps-its-dissolve-onto-th",
+  "title": "An opening title page keeps its dissolve onto the recording when its fade out changes",
+  "goal": "After a title page at the start pushes the recording later, making the page's fade out longer or shorter keeps the dissolve exactly over the recording's start, so a longer dissolve never dims the page toward black before the recording arrives.",
+  "epic": "video-titles-graphics",
+  "priority": "p2-normal",
+  "seq": 3550,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-03T22:06:09.984Z",
+  "updated": "2026-10-03T22:06:09.987Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from a-title-page-at-the-start-pushes-the-recording-a. Insert pushes everything later by page length less its fade out (PhotonzDocument.pushPictureAfterOpeningTitle in TitlePresets.swift), so at the default 0.5s the recording starts at 3.5s under a 3.5-4.0 fade. Reproduced: /tmp/tp-fade-probe.json (title-pages-and-name-cards-walk up to 2-title-page, then rightClick 'Timing Title Page' > 'Fade Out > 1s', home, step to 3.25s, snapshot). Scripts/playtest.sh /tmp/tp-fade-probe.json --no-build -> status ok; at-3-25-sc.png shows the page at about 75% over an empty black frame with the recording still to start at 3.5s. Premiere would grow a dissolve at the cut out of the title's handle, Final Cut likewise; the obvious model is: when a page at 0 has a picture clip starting exactly at out minus its old fade, a fade change moves that clip and everything after by the difference. Same family: Ripple Delete on the opening page leaves the recording at 3.5s with black before it (rippleDeleteLayer closes only what starts at or after the page's end); worth folding into the same change.",
+  "acceptance": [
+    "Setting Fade Out to 1s on a title page that opened the recording leaves the recording starting where the fade begins, in one undo step",
+    "Between the page's fade start and the recording's start there is no frame of the page over an empty frame",
+    "A page placed by hand elsewhere keeps today's behavior: its fade changes nothing else"
+  ],
+  "log": [
+    {
+      "t": "2026-10-03T22:06:09.986Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "title-pages-and-name-cards-walk"
+  ]
+}

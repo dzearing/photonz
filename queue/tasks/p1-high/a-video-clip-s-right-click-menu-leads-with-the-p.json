@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 7,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-03T14:26:39.112Z",
-  "updated": "2026-10-03T14:26:39.196Z",
+  "updated": "2026-10-03T15:52:46.957Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"when i right click on a video clip, it gives me audio options. I only expect that on audio clips.\"\n\nFrom code reading (not run): timelineClipMenuRows, Sources/Photonz/EditorState+TimelineMenus.swift:68. Audio rows key on layer.sound != nil, and Layer.sound returns the movie's own sound until detached (PhotonzCore/SoundClip.swift:76-80), so any recording with sound gets: Detach Audio (:151, canDetachSound SoundClip.swift:113-116), soundGainMenuRows (:159/:206: Normalize submenu, Clean Noise/Remove Noise Cleaning, Reset Gain), Add/Rewrite/Cancel Captions (:164, :397). The panel shows Sound, Fades, Gain, Sound Effects for a video clip too (InspectorPanel.swift:750-755, soundLayerInHand).\n\nRelated: the-panel-shows-what-the-picked-thing-is-and-its (blocked on the card 'How many buttons may the right hand panel keep?') moves panel one-shot buttons to right-click menus; coordinate so the video menu does not grow those back inline. Related fade task filed the same day: a video clip fades in and out (the 'Fades' label confusion is shared).\nTrap: Detach Audio must stay easy to find on a video, it is how a person gets to its sound.",
@@ -30,6 +30,36 @@
     {
       "t": "2026-10-03T14:26:39.195Z",
       "note": "seq 460 -> 7"
+    },
+    {
+      "t": "2026-10-03T15:19:27.943Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-03T15:23:59.841Z",
+      "note": "Reproduced (walk a-video-clip-menu-leads-with-the-picture-walk, probe, screen unlocked, real captures): right-click on the sample recording's V1 bar gives 22 rows with Detach Audio, Normalize, Clean Noise, Add Captions inline among Freeze/Punch In/Zoom; the linked sound segment under it gives the IDENTICAL menu; a detached sound gives its sound rows top level. Panel: TimePanelOrder.playing leads keys,speed,sound,fades,gain,soundEffects, so a picked recording shows Channel/Fades/Gain/Audio Effects above Appearance and Effects."
+    },
+    {
+      "t": "2026-10-03T15:23:59.896Z",
+      "note": "Design review before building: video.html draws an 'Audio' section only for an audio clip (kind aud), none for a video clip, so the user and the mock agree. Plan: (1) video bar menu = picture rows, then Detach Audio top level (Final Cut keeps Detach Audio top level on a video clip; it is how you reach the sound, the task's trap) and one 'Audio' submenu holding Normalize, Clean Noise/Reset Gain and Add Captions. (2) The linked sound segment on the Audio track is what a person sees as the audio clip: its menu leads with sound rows top level and drops picture-only rows (Freeze, Punch In, Add Click, zooms, Add Transition, Add Key). (3) Detached/imported sound unchanged. (4) Panel: a video's sound sections trail its picture sections (Appearance, Effects) and read Audio, Audio Fades, Audio Gain, Audio Effects, so 'Fades' is never read as a picture fade. Menu bar already carries Detach Audio, Normalize, Clean Noise, Reset Gain, Add Captions (EditorCommands.swift), untouched. Cost: on a laptop window a recording's Volume is no longer in view without scrolling; that is the user's ask (picture first) and video-panel-order-walk's expectation changes with it."
+    },
+    {
+      "t": "2026-10-03T15:47:33.054Z",
+      "note": "owns these walks: a-video-clip-menu-leads-with-the-picture-walk, video-panel-order-walk"
+    },
+    {
+      "t": "2026-10-03T15:52:46.900Z",
+      "note": "Rough items: Detach Audio dropping the sound's level settings FILED as detach-audio-keeps-the-sound-s-volume-fades-gain (reproduced in this task's walk). Left rough, not filed: Time section's Sound row on a video (it reports what a speed does to the sound, belongs with Speed); a video's audio below the fold at laptop size (the cost of picture first, the user's ask); Add Captions absent from a silent video's menu (still in the panel and the Captions menu); expectSections reports raw section titles (Color, Channel) where the panel draws Appearance and Audio, a harness-only naming wrinkle. Commit 9edbf52a."
+    },
+    {
+      "t": "2026-10-03T15:52:46.955Z",
+      "note": "Video bar menu leads with picture rows, then Detach Audio and one Audio submenu (Normalize, Clean Noise/Reset Gain, Add Captions); the linked sound segment and audio clips keep sound rows top level (ClipMenuPlan, EditorState+TimelineMenus). Panel: a recording's sound sections trail Appearance/Effects and read Audio, Audio Fades, Audio Gain, Audio Effects (TimePanelOrder). Menu bar untouched. Verified: Scripts/test.sh 11053 green; new walk a-video-clip-menu-leads-with-the-picture-walk at Next defaults with 6 real captures (before and after); six panel walks updated and green. Audit queue/audits/2026-10-03-video-clip-menu-leads-with-the-picture.json. Commit 9edbf52a."
     }
-  ]
+  ],
+  "started": "2026-10-03T15:19:27.941Z",
+  "walks": [
+    "a-video-clip-menu-leads-with-the-picture-walk",
+    "video-panel-order-walk"
+  ],
+  "completed": "2026-10-03T15:52:46.956Z"
 }
