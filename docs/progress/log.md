@@ -20546,3 +20546,9 @@ Next: the first editor window's ~200 ms first build
 - Two walks were out of date after the picture fades (76596454), not broken: `video-panel-order-walk` now reads a title's Fade In row, and `captions-panel-keeps-its-margins-walk` scrolls the narrowest panel to the caption Background swatch (the new Time rows had pushed it off the bottom). Commit 13866640.
 - The other six walks named on the standing task pass on their own. `normalize-cleans-noise-walk` and `every-section-header-opens-walk` each failed once right after a probe build (a recording's clip picked, no Audio sections in the panel), then passed every run after: filed as `find-out-whether-picking-a-recording-s-clip-some` (p2).
 - `view-to-edit-on-a-long-recording-walk` goes over its 100ms limit (127/130ms) on the way back to View; logged on its owner, `edit-mode-s-contents-come-in-with-the-slide-not`.
+
+## 2026-10-03 (night): a press step's frame guard sees the click
+
+- The main-thread meter missed every click's own work: AppKit hands the queued release to the app between two run-loop runs, and the meter counted nothing there (a 58ms Videos switch read 5.6ms). `MainThreadPassClock` (PhotonzCore, tested) now counts that time as a pass; run edges still cut. Commit 264e54bd.
+- `press` takes `stallMS`; `press-meter-sees-the-click-walk` stalls two clicks 40ms and reads 65 to 68ms.
+- What the honest meter shows: history filter switches take 48 to 106ms (p1 `switching-the-history-filter-answers-within-a-fr`, owns `history-filter-switch-speed-walk`, now red); the Time section fold takes 17 to 23ms (p2 `folding-a-panel-section-answers-within-a-frame`); view-to-edit's 100ms gate was folded into `edit-mode-s-contents-come-in-with-the-slide-not`.
