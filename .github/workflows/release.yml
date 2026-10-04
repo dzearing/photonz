@@ -46,7 +46,9 @@ jobs:
           fi
 
       - name: Run tests
-        timeout-minutes: 12
+        # 45: this step builds everything as well as testing it, and the
+        # suite outgrew 12 minutes on a hired runner (see ci.yml).
+        timeout-minutes: 45
         # --no-parallel: see ci.yml — serial avoids the headless-runner test hang.
         run: Scripts/test.sh --no-parallel
 

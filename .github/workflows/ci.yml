@@ -10,7 +10,7 @@ jobs:
   test:
     name: Build & test (arm64)
     runs-on: macos-26
-    timeout-minutes: 25
+    timeout-minutes: 55
     steps:
       - uses: actions/checkout@v4
 
@@ -64,7 +64,11 @@ jobs:
         run: swift build
 
       - name: Run tests
-        timeout-minutes: 12
+        # 40, not 12: by 2026-10 the suite is ~10,800 tests and the runner
+        # compiles the test targets inside this step. Every CI run from
+        # 2026-09-17 to 2026-10-04 hit 12 minutes at a different test (about
+        # 9,900 passed), so the step was out of time, not wedged.
+        timeout-minutes: 40
         # --no-parallel: swift-testing otherwise launches every test concurrently;
         # the GPU-bound render tests then saturate the cooperative thread pool on
         # the headless CI VM and the whole process wedges. Serial is ~seconds here.
