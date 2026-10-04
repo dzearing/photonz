@@ -1,0 +1,36 @@
+{
+  "id": "clicking-a-track-s-name-picks-the-track-and-dele",
+  "title": "Clicking a track's name picks the track and Delete removes it",
+  "goal": "Deleting a track should work the way it does in Premiere or Final Cut: click the track's name, the whole track is visibly picked, and pressing Delete or Backspace removes it (with undo). Today clicking the name and pressing Backspace does nothing visible, and the only way to delete a track is a right-click menu the person did not find.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 12,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-04T00:17:18.010Z",
+  "updated": "2026-10-04T00:17:18.106Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words: \"I have no idea how to delete a track. i click it, hit backspace, doesn't delete it. i click a track expecting it to select the whole track, press backspace, doesn't delete it.\"\n\nFrom code reading (not run): Delete Track exists only on the header right-click (TimelineTrackRows.swift:739) and Track menu bar (EditorCommands.swift:1351), deleteTrack at EditorState+Tracks.swift:213. pickTrack (EditorState+Tracks.swift:165-172) sets selectedTrackIDs = [id] AND selects the track's first clip (selectLayer), so the panel and the Delete key are about that clip, not the track. SUSPECT for 'nothing happens': focus after the header Button click may not be in the timeline/canvas responder that handles Delete, or Delete acts on the clip in a way the person did not see; confirm before fixing. Trap: picking a track must not break clicking a clip, the track carry gesture (TimelineTrackRows.swift:192), or Group Tracks which gathers selectedTrackIDs. Trap: the panel-buttons task (the-panel-shows-what-the-picked-thing-is-and-its) is reworking what the panel shows for a picked thing; coordinate.",
+  "acceptance": [
+    "Reproduce first at Next defaults: click a track header, press Backspace and Delete, and record in the audit what was picked and what happened (the user saw nothing deleted)",
+    "Clicking a track's name picks the track: the header and the whole lane are highlighted as one picked thing, and the panel says a track is picked (its name and settings) rather than silently picking its first clip",
+    "With a track picked, Delete or Backspace removes the track and everything on it in one undoable step; if the track holds clips, the person can tell what will go (for example the clips highlight with the track) and Undo brings it all back",
+    "Shift or Command click picks several tracks and Delete removes them all",
+    "Clicking a clip still picks the clip, and Delete on a clip still removes only the clip",
+    "Delete Track stays on the header's right-click menu and the Track menu, now showing the Delete key",
+    "A walk at Next defaults picks a track by its name, deletes it with Backspace, undoes, and photographs each step",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-04T00:17:18.012Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-04T00:17:18.105Z",
+      "note": "seq 480 -> 12"
+    }
+  ]
+}
