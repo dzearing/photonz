@@ -20618,3 +20618,10 @@ Next: the first editor window's ~200 ms first build
 - Both MP4 writers (document and recording) tag Rec.709 primaries, sRGB transfer, 709 matrix (`MovieColour`); the recording's reader converts its pictures to those colours first. Grey 76 used to play as 86 and red as (230,33,0); now every grey and primary reads back within a code value.
 - `a-video-clip-fades-walk` now holds the MP4 to the canvas at every moment (was recorded, never compared). Measured within 0.008 against an allowance of 0.03.
 - Tests: `Tests/PhotonzMediaTests/MovieColourTests.swift`. ffprobe on a real probe export: tv / bt709 / iec61966-2-1 / bt709.
+
+## 2026-10-04: v0.16.0 released
+
+- Released v0.16.0 (https://github.com/dzearing/photonz/releases/tag/v0.16.0): recording and editing in one window, the timeline, transitions, title pages and name cards, captions, sound, keys, icons, screenshot separation. DMG attached, `releases/latest/download/Photonz.dmg` serves it, site `version.json` reads 0.16.0.
+- CI had been red since 2026-09-17: every run hit the 12 minute test step at a different test, so the suite outgrew the limit (about 21 minutes serially on the hosted runner). Raised to 40 minutes in `ci.yml` (job 55) and 45 in `release.yml`.
+- The first Release run then failed one canary, `BusyVideoSizeTests` at 900 px/s, which required Small to go over its size budget; the GitHub VM's encoder held it. Narrowed to "High never goes over" (a busy local Mac put Standard over too). Tag deleted, fixed on main, re-tagged on 140f491c; the second run went green.
+- Next: confirm CI on main is green again with the longer limit.
