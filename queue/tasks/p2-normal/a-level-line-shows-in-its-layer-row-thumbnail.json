@@ -4,12 +4,12 @@
   "goal": "In the layers list, a perfectly level (or upright) line gets a blank thumbnail, while a sloped line shows its stroke, so you cannot tell the row is a line. The thumbnail should show the stroke whatever the line's angle.",
   "epic": "measure-redline",
   "priority": "p2-normal",
-  "seq": 3580,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-04T03:22:34.435Z",
-  "updated": "2026-10-04T03:22:46.254Z",
+  "updated": "2026-10-04T13:07:34.089Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-04 running Scripts/playtest/click-click-draws-a-line-walk.json --no-build: snapshot 3-called-off-leaves-nothing-sc.png (copied to queue/audits/2026-10-04-click-click-line-3-called-off-leaves-nothing-sc.png) shows rows Line and Line 2 (sloped) with a thin red stroke and Line 3 (drawn with Shift, level) with an empty grey thumbnail. Theory, not checked: the thumbnail scales the layer frame to fit, and a level line's frame is only a few points tall, so the stroke scales below a pixel.",
@@ -26,6 +26,14 @@
     {
       "t": "2026-10-04T03:22:46.253Z",
       "note": "walks click-click-draws-a-line-walk -> none"
+    },
+    {
+      "t": "2026-10-04T13:05:44.593Z",
+      "note": "seq 3580 -> 80"
+    },
+    {
+      "t": "2026-10-04T13:07:34.088Z",
+      "note": "seq 80 -> 90"
     }
   ],
   "walks": []

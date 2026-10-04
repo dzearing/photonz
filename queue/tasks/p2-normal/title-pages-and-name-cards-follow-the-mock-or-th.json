@@ -1,0 +1,36 @@
+{
+  "id": "title-pages-and-name-cards-follow-the-mock-or-th",
+  "title": "Title pages and name cards follow the mock or the user agrees they are copies",
+  "goal": "The video title mock puts a name card on the timeline as a linked component, so changing its look once changes every name card in the video. The app shipped them as copies you own instead, explained in an audit but never asked. Ask the user which they want, and build to the answer.",
+  "epic": "video-titles-graphics",
+  "priority": "p2-normal",
+  "seq": 60,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-04T13:07:19.900Z",
+  "updated": "2026-10-04T13:07:33.924Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by the 2026-10-04 digest design review. Audits queue/audits/2026-10-03-title-presets.json and 2026-10-03-title-tiles.json both say they depart from video-title-wt (step 10: Lower third and End card as linked components with variant counts and the violet mark on the Comps shelf). The runner chose copies because a component dropped on a recording brings its original with it on a second track (checked in the app). Both tasks finished before the mock-difference gate (ccb6fc6b) landed, so nothing made them name a card. The users words for the feature: presets are great but with high flexibility to make your own.",
+  "acceptance": [
+    "The user has answered the card on this task",
+    "If they pick linked components: a name card or title page dropped on a recording lands as an instance with no original on a second track, editing the main look changes every instance, and one instance can still override its words; walked at Next defaults and photographed",
+    "If they keep copies: the two audits list the departure as settled by the card, and the mock is left as it is",
+    "Either way an end card kind is offered beside title pages and name cards, or the audit says why not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-04T13:07:19.902Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-04T13:07:33.865Z",
+      "note": "waiting on the card: copies you own, or linked as the mock draws"
+    },
+    {
+      "t": "2026-10-04T13:07:33.923Z",
+      "note": "seq 3570 -> 60"
+    }
+  ]
+}

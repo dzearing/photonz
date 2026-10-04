@@ -4,12 +4,12 @@
   "goal": "The scripted walks are the app driving itself, and the check between tasks found some that no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 3590,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-10-04T08:36:34.686Z",
-  "updated": "2026-10-04T08:36:34.692Z",
+  "updated": "2026-10-04T13:07:34.035Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nOpened by the rotating check at 2026-10-04T08:36:34Z, not by a full sweep: it ran 50 of 737 walks and found the ones below failing with no other open task naming them. Nothing here is a claim about the rest of the set.\n\nFailing walks (1): panel-rows-read-as-one-column-walk\n\nFull output: /Users/dzearing/git/photonz/queue/sweep/slice-2026-10-04-012352.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -26,6 +26,18 @@
     {
       "t": "2026-10-04T08:36:34.691Z",
       "note": "rotating check 2026-10-04T08:36:34Z, 50 walks run from 388 onward in the rotation: panel-rows-read-as-one-column-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-04T13:05:44.139Z",
+      "note": "Digest 2026-10-04 re-ran Scripts/playtest.sh Scripts/playtest/panel-rows-read-as-one-column-walk.json --no-build on its own: FAILED at step 27 (reveal Kind in Shadow 1): scrolled 396pt and Kind stayed 50pt below the visible part of the panel, which would not scroll further. Reproduces, so it is not the slice's noise. Theory, not checked: same cause as captions-panel-keeps-its-margins-walk in sweep 10, the new Fade In and Fade Out rows in Time made a title's panel taller than the walk's window."
+    },
+    {
+      "t": "2026-10-04T13:05:44.539Z",
+      "note": "seq 3590 -> 70"
+    },
+    {
+      "t": "2026-10-04T13:07:34.034Z",
+      "note": "seq 70 -> 80"
     }
   ],
   "standing": "walk-sweep"

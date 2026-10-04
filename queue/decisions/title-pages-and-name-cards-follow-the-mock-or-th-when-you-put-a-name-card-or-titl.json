@@ -1,0 +1,39 @@
+{
+  "id": "title-pages-and-name-cards-follow-the-mock-or-th-when-you-put-a-name-card-or-titl",
+  "taskId": "title-pages-and-name-cards-follow-the-mock-or-th",
+  "question": "When you put a name card or title page on a video, should it be a copy you own, or linked so one change updates every copy?",
+  "context": "The title presets shipped on 2026-10-03 as copies you own. The video title mock (step 10) shows a lower third and an end card as linked components on the Library shelf. The runner explained the change in its audit but never asked. Your words for the feature were that presets are great but you want high flexibility to make your own.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep them as copies",
+      "summary": "What ships today: a preset lands as ordinary text and shapes you own. Changing one name card changes only that one. Save as Preset keeps your version for next time.",
+      "pros": [
+        "Nothing to learn: it behaves like text you typed",
+        "Already built and walked at Next defaults"
+      ],
+      "cons": [
+        "Goes against the video title mock, which links them",
+        "Restyling every name card in a long video means editing each one"
+      ],
+      "mitigation": "Save as Preset lets you make the look once and insert it again."
+    },
+    {
+      "id": "b",
+      "label": "Linked, as the mock draws",
+      "summary": "A name card lands as a component, like the mock shows on the Library shelf with the violet mark. Change the look of one and every name card in the video follows, while each keeps its own name and role.",
+      "pros": [
+        "Matches the mock",
+        "One change restyles every name card"
+      ],
+      "cons": [
+        "Needs work first: today a component dropped on a recording brings its original onto a second track",
+        "One more idea to understand while editing a video"
+      ],
+      "mitigation": "Each copy keeps its own words, so the link only carries the look."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-04T13:07:27.716Z"
+}

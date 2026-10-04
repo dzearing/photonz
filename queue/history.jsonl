@@ -9284,3 +9284,24 @@
 {"t":"2026-10-04T11:42:58.397Z","ev":"task_started","id":"find-out-whether-picking-a-recording-s-clip-some","title":"Find out whether picking a recording's clip sometimes leaves its sound sections out of the panel","priority":"p2-normal"}
 {"t":"2026-10-04T12:46:53.787Z","ev":"task_note","id":"find-out-whether-picking-a-recording-s-clip-some"}
 {"t":"2026-10-04T12:46:58.052Z","ev":"task_done","id":"find-out-whether-picking-a-recording-s-clip-some","from":"in_progress","note":"Real app bug, reproduced 1 in 10 on a fresh probe: the panel adds new sections one pass at a time and SwiftUI sometimes skipped the onChange that asks for the next, so a picked clip stopped after Effects and never got Audio, Audio Fades, Audio Gain or Audio Effects. Fixed in InspectorPanel.catchUp (the step asks for the next itself); a tagged trace showed 2 of 11 runs rescued at the same point. both walks 5/5 on final code, 4 pick/panel walks ok, Scripts/test.sh green (11211). Commit aac8df2a."}
+{"t":"2026-10-04T13:01:47.340Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-10-04T13:04:18.001Z","ev":"slice_pass","walks":50,"passed":49,"failed":1,"seconds":862,"of":739,"rotating":true}
+{"t":"2026-10-04T13:05:44.141Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-11"}
+{"t":"2026-10-04T13:05:44.198Z","ev":"task_resequenced","id":"time-on-a-video-reads-in-frames-where-an-editor","from":10,"to":10}
+{"t":"2026-10-04T13:05:44.256Z","ev":"task_resequenced","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":20,"to":20}
+{"t":"2026-10-04T13:05:44.313Z","ev":"task_resequenced","id":"the-panel-keeps-its-promise-on-a-video-document","from":80,"to":30}
+{"t":"2026-10-04T13:05:44.369Z","ev":"task_resequenced","id":"shift-z-means-the-one-thing-you-choose-on-a-vide","from":90,"to":40}
+{"t":"2026-10-04T13:05:44.430Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":120,"to":50}
+{"t":"2026-10-04T13:05:44.487Z","ev":"task_resequenced","id":"folding-a-panel-section-answers-within-a-frame","from":3570,"to":60}
+{"t":"2026-10-04T13:05:44.541Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep-11","from":3590,"to":70}
+{"t":"2026-10-04T13:05:44.595Z","ev":"task_resequenced","id":"a-level-line-shows-in-its-layer-row-thumbnail","from":3580,"to":80}
+{"t":"2026-10-04T13:06:24.203Z","ev":"task_note","id":"the-panel-keeps-its-promise-on-a-video-document"}
+{"t":"2026-10-04T13:07:19.904Z","ev":"task_created","id":"title-pages-and-name-cards-follow-the-mock-or-th","priority":"p2-normal","title":"Title pages and name cards follow the mock or the user agrees they are copies"}
+{"t":"2026-10-04T13:07:27.717Z","ev":"decision_opened","id":"title-pages-and-name-cards-follow-the-mock-or-th-when-you-put-a-name-card-or-titl","taskId":"title-pages-and-name-cards-follow-the-mock-or-th","question":"When you put a name card or title page on a video, should it be a copy you own, or linked so one change updates every copy?"}
+{"t":"2026-10-04T13:07:33.869Z","ev":"task_blocked","id":"title-pages-and-name-cards-follow-the-mock-or-th","from":"pending","note":"waiting on the card: copies you own, or linked as the mock draws"}
+{"t":"2026-10-04T13:07:33.925Z","ev":"task_resequenced","id":"title-pages-and-name-cards-follow-the-mock-or-th","from":3570,"to":60}
+{"t":"2026-10-04T13:07:33.981Z","ev":"task_resequenced","id":"folding-a-panel-section-answers-within-a-frame","from":60,"to":70}
+{"t":"2026-10-04T13:07:34.036Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep-11","from":70,"to":80}
+{"t":"2026-10-04T13:07:34.090Z","ev":"task_resequenced","id":"a-level-line-shows-in-its-layer-row-thumbnail","from":80,"to":90}
+{"t":"2026-10-04T13:07:50.514Z","ev":"triage","summary":"open 17 -> 18. merged 0, dropped 0, moved 0, reset 0. Filed 1 (title presets mock departure, blocked on a new card). Resequenced p2 to clean steps of 10. Reproduced sweep 11 walk failure and logged it; folded panel-height evidence into the-panel-keeps-its-promise-on-a-video-document. p1 and p3 already clean; no leftovers; guard found nothing."}
+{"t":"2026-10-04T13:08:43.438Z","ev":"digest","file":"2026-10-04.md"}

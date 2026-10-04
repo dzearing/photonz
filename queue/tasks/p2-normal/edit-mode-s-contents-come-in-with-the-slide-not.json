@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-30T14:58:43.448Z",
-  "updated": "2026-10-04T00:26:19.388Z",
+  "updated": "2026-10-04T13:05:44.255Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows the-slide-into-edit-mode-draws-every-frame-like, which moved every stage after the key pass to wait for the slide (EditModeArrival.nextWaitsForTheSlide). Profiled 2026-09-30 with xctrace Time Profiler against the probe, samples cut to the 500ms after each Cmd-2: about 480ms busy per switch either way; about 270ms of it is per-frame NSHostingView.layout while canvas/panel/dock frames animate. Into Edit, SwiftUI AccessibilityNode.updateFocusResponder was about 28ms per switch (walks the whole responder tree after every render, grows with every view built), AccessibilityViewGraph.update about 10ms more. Per frame the canvas updateNSView runs CanvasNSView.apply → refreshOverlaysInsideTransaction, refreshLayerSelectionDisplay, canvasNameLabels because canvasViewSizeChanged writes a new viewport each frame. Stage costs: key pass ~50ms, timeline+tool bar ~80, track rows ~90 (captions lane with 191 cues and words lane), panel sections 15 to 45ms each (CaptionStylePreview, PanelFieldRowLayout, SystemSegments.sizeThatFits). Measure with a filmWindow step (docs/design/playtest-harness.md) rather than mainBusy alone.",
@@ -78,6 +78,14 @@
     {
       "t": "2026-10-04T00:26:19.387Z",
       "note": "2026-10-03 (find-out-whether-a-press-step-s-frame-guard-can, commit 264e54bd): the main-thread meter now counts the time between two runs of the run loop, where AppKit hands a QUEUED event to the app. A walk's key step is queued, so the Cmd-2/Cmd-1 work was partly uncounted before. On the fixed meter view-to-edit-on-a-long-recording-walk read 119.2, 131.1 and 136.8ms at its wait steps (gate 100) and passed both on one run of four. Readings now include the key's own dispatch, so expect them a little higher than before for the same app."
+    },
+    {
+      "t": "2026-10-04T13:01:47.338Z",
+      "note": "rotating check 2026-10-04T13:01:47Z, 50 walks run from 678 onward in the rotation: view-to-edit-on-a-long-recording-walk failing."
+    },
+    {
+      "t": "2026-10-04T13:05:44.254Z",
+      "note": "seq 20 -> 20"
     }
   ],
   "walks": [
