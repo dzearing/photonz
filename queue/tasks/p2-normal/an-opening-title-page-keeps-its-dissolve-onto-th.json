@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 3550,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-03T22:06:09.984Z",
-  "updated": "2026-10-03T22:06:09.987Z",
+  "updated": "2026-10-04T11:23:38.950Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from a-title-page-at-the-start-pushes-the-recording-a. Insert pushes everything later by page length less its fade out (PhotonzDocument.pushPictureAfterOpeningTitle in TitlePresets.swift), so at the default 0.5s the recording starts at 3.5s under a 3.5-4.0 fade. Reproduced: /tmp/tp-fade-probe.json (title-pages-and-name-cards-walk up to 2-title-page, then rightClick 'Timing Title Page' > 'Fade Out > 1s', home, step to 3.25s, snapshot). Scripts/playtest.sh /tmp/tp-fade-probe.json --no-build -> status ok; at-3-25-sc.png shows the page at about 75% over an empty black frame with the recording still to start at 3.5s. Premiere would grow a dissolve at the cut out of the title's handle, Final Cut likewise; the obvious model is: when a page at 0 has a picture clip starting exactly at out minus its old fade, a fade change moves that clip and everything after by the difference. Same family: Ripple Delete on the opening page leaves the recording at 3.5s with black before it (rippleDeleteLayer closes only what starts at or after the page's end); worth folding into the same change.",
@@ -22,9 +22,36 @@
     {
       "t": "2026-10-03T22:06:09.986Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-04T11:07:03.298Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-04T11:23:20.097Z",
+      "note": "walks title-pages-and-name-cards-walk -> opening-title-dissolve-walk, title-pages-and-name-cards-walk"
+    },
+    {
+      "t": "2026-10-04T11:23:34.170Z",
+      "note": "Reproduced first: /tmp/tp-fade-probe.json at 3.25s showed the page dimming over black, recording still at 3.5s. Before-build review: Premiere/Final Cut grow a dissolve at the cut out of the title's handle; the model here moves the recording and everything after it to the new fade start (keepOpeningDissolve in TitlePresets.swift), only for a non-picture layer at 0:00 with an unlocked picture starting exactly at out minus its old fade (openingDissolveStartMS). setPictureFade routes through it, so the right-click menu, the panel's Fade Out, the bar's corner drag and the transition picker's fade all follow; insertTitle uses the raw fadePicture so its own push is unchanged. Nothing moves when a moved clip would land on one that stays on the same track. Ripple Delete on such a page closes from the dissolve start, so the recording is back at 0:00 (folded in from the notes)."
+    },
+    {
+      "t": "2026-10-04T11:23:34.226Z",
+      "note": "Verified: 7 new tests in TitlePageAtStartTests.swift (OpeningTitleDissolveTests) fail without the change and pass with it; Scripts/test.sh 11211 tests green. New walk Scripts/playtest/opening-title-dissolve-walk.json (no flags) checks the recording's start at 3.5 -> 3.0 (Fade Out > 1s) -> 3.5 (one Undo) -> 3.75 (0.25s) -> 0.0 (Ripple Delete), b-roll moving with it; ok with 4 real captures. title-pages-and-name-cards-walk ok."
+    },
+    {
+      "t": "2026-10-04T11:23:34.283Z",
+      "note": "left rough: dragging the fade-out corner on the page's bar moves the recording only on release (ClipPiecesBar commits on onEnded); the shading follows the hand. Not filed: one-step change, nobody has hit it, and it lands in the audit's evaluate for the user to weigh."
+    },
+    {
+      "t": "2026-10-04T11:23:38.948Z",
+      "note": "Changing the fade out on an opening title page moves the recording and everything after it to where the fade begins (one undo step); Ripple Delete on that page puts the recording back at 0:00; a page elsewhere changes only its own fade. Core: openingDissolveStartMS/keepOpeningDissolve in TitlePresets.swift, routed through setPictureFade and rippleDeleteLayer. Verified by 7 new tests (failing first), full suite green, and the new opening-title-dissolve-walk at Next defaults (4 real captures). Audit: queue/audits/2026-10-04-opening-title-dissolve.json"
     }
   ],
   "walks": [
+    "opening-title-dissolve-walk",
     "title-pages-and-name-cards-walk"
-  ]
+  ],
+  "started": "2026-10-04T11:07:03.296Z",
+  "completed": "2026-10-04T11:23:38.949Z"
 }

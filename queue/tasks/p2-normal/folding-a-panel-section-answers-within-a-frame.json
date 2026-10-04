@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-04T00:26:30.372Z",
-  "updated": "2026-10-04T00:26:30.375Z",
+  "updated": "2026-10-04T09:44:16.055Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reopens a-panel-section-opens-and-closes-instantly-and-s (done) for one section. Found by find-out-whether-a-press-step-s-frame-guard-can, commit 264e54bd: MainThreadMeter did not count the time between two run loop runs, where AppKit dispatches a press's queued mouse-up, so every press guard read only part of the click. On the fixed meter, Scripts/playtest.sh Scripts/playtest/section-fold-motion-walk.json --no-build failed at step 12 (press \"Time section\", longestUnderMS 16) three times out of three on 2026-10-03: 22.6ms, 16.9ms, 19.7ms. On the old meter the same walk passed. The walk needs the Mac to itself (front: true).",
@@ -21,6 +21,10 @@
     {
       "t": "2026-10-04T00:26:30.374Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-04T09:44:16.054Z",
+      "note": "rotating check 2026-10-04T09:44:15Z, 50 walks run from 485 onward in the rotation: section-fold-motion-walk failing."
     }
   ],
   "walks": [

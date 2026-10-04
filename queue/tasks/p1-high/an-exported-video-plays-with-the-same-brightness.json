@@ -5,11 +5,11 @@
   "epic": "video-share",
   "priority": "p1-high",
   "seq": 490,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-04T09:13:45.813Z",
-  "updated": "2026-10-04T09:13:45.816Z",
+  "updated": "2026-10-04T09:28:09.354Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found and reproduced 2026-10-04 by task find-out-whether-an-exported-video-looks-brighte; write-up with real QuickTime screenshots in docs/progress/2026-10-04-export-brightness.md. Cause: DocumentMovieWriter.videoSettings (Sources/PhotonzMedia/DocumentMovieWriter.swift) sets no AVVideoColorPropertiesKey, so the H.264 file is untagged (ffprobe all unknown on a real probe export) and VideoToolbox guesses SMPTE-C / 601 / 709-transfer on decode. Measured in QuickTime: sRGB 76 plays as 86, 128 as 139, 16 as 14; red (255,0,0) as (231,23,0). Fix that round-trips exactly (tested with a writer identical to DocumentMovieWriter, docs/progress/media/2026-10-04-export-brightness-write.swift): AVVideoColorPropertiesKey = [AVVideoColorPrimariesKey: AVVideoColorPrimaries_ITU_R_709_2, AVVideoTransferFunctionKey: AVVideoTransferFunction_IEC_sRGB, AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_709_2]. Tagging 709 transfer alone does NOT fix it (76 still plays as 86). Same gap in VideoExporter.movieSettings (Sources/PhotonzMedia/VideoExporter.swift ~line 667). Put the colour properties in one shared place and unit test the settings dictionary (TDD, PhotonzMedia). Check the sheet's weigh still lands its estimate (same writer). Alternative if sRGB transfer turns out poorly supported somewhere that matters: convert pixels to the 709 curve and tag 709/709/709 like Apple's own screen recordings; note the choice in the commit.",
@@ -24,9 +24,23 @@
     {
       "t": "2026-10-04T09:13:45.815Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-04T09:14:44.646Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-04T09:28:09.290Z",
+      "note": "Reproduced first with failing tests: document file played sRGB 16/76/128/200 as 14/85/139/207 and red as (230,33,0); recording export shifted primaries. Fixed in 698c0146 (MovieColour shared by both writers; recording reader converts to the same colours, proven load-bearing by removing it: greys then failed). QuickTime itself not re-shot: the investigation's QuickTime row for a tagged 709/sRGB/709 file written exactly like DocumentMovieWriter already reads within one code value, and VideoToolbox (what the tests read through) matched QuickTime on every grey. No audit written: a fix to export fidelity, nothing new to playtest beyond opening an exported file."
+    },
+    {
+      "t": "2026-10-04T09:28:09.352Z",
+      "note": "Both MP4 writers tag Rec.709 primaries / sRGB transfer / 709 matrix (Sources/PhotonzMedia/MovieColour.swift); the recording export converts its pictures to match. Verified: MovieColourTests (every size and quality's settings; greys within 1 and primaries within 2 read back through VideoToolbox for both writers), ffprobe on a real probe 1080p export reads tv/bt709/iec61966-2-1/bt709, a-video-clip-fades-walk at defaults now compares the MP4 to the canvas and passes within 0.008 of 0.03, full suite 11,195 green. Commit 698c0146."
     }
   ],
   "walks": [
     "a-video-clip-fades-walk"
-  ]
+  ],
+  "started": "2026-10-04T09:14:44.645Z",
+  "completed": "2026-10-04T09:28:09.353Z"
 }

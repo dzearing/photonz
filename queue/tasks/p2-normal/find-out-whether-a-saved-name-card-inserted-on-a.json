@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 3540,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-03T21:16:17.587Z",
-  "updated": "2026-10-03T21:16:17.590Z",
+  "updated": "2026-10-04T10:47:54.406Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-03 in title-presets-library-shelf-walk capture 1b-name-cards-sc.png: the probe's leftover saved preset 'Dana card' (saved by an earlier walk on another frame size) drew 'Dana / Zearing' wrapped over 'Design lead' in its tile, while the same card drawn on the whole frame at 320 px earlier that day read fine. The tile picture goes through PhotonzDocument.insertTitle(SavedTitlePreset) which scales with drawnLarger(by:about:) when frames differ; a scaled text box narrower than its words would wrap. Not reproduced on the canvas yet: try saving Clean on a 1920x1080 document and inserting it into a 1280x800 one, and compare the name's box with its natural width (TextRasterizer.naturalSize).",
@@ -21,6 +21,31 @@
     {
       "t": "2026-10-03T21:16:17.589Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-04T10:25:18.125Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-04T10:47:34.489Z",
+      "note": "owns these walks: saved-name-card-on-another-frame-walk"
+    },
+    {
+      "t": "2026-10-04T10:47:34.546Z",
+      "note": "Reproduced 2026-10-04 with real CoreText: a one-line text box shrunk by 2/3 (1920x1080 to 1280x800) came out 192pt for words needing 195pt (the box's 4pt glyph room shrank with it, and small type sets a touch wider), so 'Dana Zearing' wrapped (41pt to 77pt tall); every downscale tried wrapped every line. Seen in the probe too, before the fix: new walk saved-name-card-on-another-frame-walk (Clean saved on the 2880x1800 Retina talk, inserted on the 1280x800 sample) showed 'Dana / Zearing' and 'Role or / title' on the canvas and the tile, the tile drawing the name over the role. Fix: Layer.drawnLarger (MotionScale.swift) widens a text box that held its words on one line to their new one-line width, away from its aligned edge; insertTitle(saved) then reflows the scaled card so the tile (never reflowed by History) matches the canvas. Same fix covers a keyed Scale below 100% on text, which went through the same path and would have wrapped mid-animation. After the fix the walk shows one line each on canvas and tile. Tests: MotionScaleTests (3 new), TitlePresetsTests.aSavedCardOnASmallerFrameKeepsItsNameOnOneLine; Scripts/test.sh 11204 passed."
+    },
+    {
+      "t": "2026-10-04T10:47:54.343Z",
+      "note": "Perf note correction for c574c4ac: the two one-line measurements in drawnLarger run on every magnified one-line text layer (grow or shrink), not only on shrinks as the commit message says. Cost is two CoreText layouts per text layer per frame while a Scale key is moving it; no other composite path changes."
+    },
+    {
+      "t": "2026-10-04T10:47:54.404Z",
+      "note": "Reproduced and fixed. A saved name card used on a smaller recording broke its name and role onto two lines (and the Library tile drew the name over the role), because shrinking a text box also shrank the few points of room round the words. Layer.drawnLarger now keeps one-line words on one line, and a saved card inserted on another frame size is laid out again so tile and canvas agree. Checked by new unit tests, Scripts/test.sh (11204 passed), and new walk saved-name-card-on-another-frame-walk: before the fix it showed 'Dana / Zearing' on canvas and tile, after it one line each. Commit c574c4ac."
     }
-  ]
+  ],
+  "started": "2026-10-04T10:25:18.124Z",
+  "walks": [
+    "saved-name-card-on-another-frame-walk"
+  ],
+  "completed": "2026-10-04T10:47:54.405Z"
 }
