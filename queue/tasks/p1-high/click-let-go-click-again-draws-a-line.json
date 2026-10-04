@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 13,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-04T00:19:42.450Z",
-  "updated": "2026-10-04T03:22:46.479Z",
+  "updated": "2026-10-04T03:23:02.001Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"when i draw a line, if I click a point, and let go, I expect to be creating a line and clicking another point to end it.\"\n\nFrom code reading (not run): annotation tools commit on mouseUp in CanvasPointerDrags.swift (mouseUp at :1169; the commit at :1301-1310 calls onAnnotationCommit(drag.anchor, drag.end(...)) with tool.annotationShape ?? .line), anchor set at :241 via snappedAnnotationPoint and updated at :839. There is no click-without-drag path, so a click either makes nothing or a degenerate line; confirm which. Click-click needs: a pending-line state that survives mouseUp, mouseMoved updating the preview (CanvasAnnotationPreview.swift), the second mouseDown committing, and Esc/tool change cancelling. Trap: a click on an existing layer with the line tool may currently select or hit-test it; keep whatever that does sensible and say in the audit. Trap: the arrow's caption session (beginCaptionSession) starts after commit; it must start after the second click, not the first. Trap: measure tool's endpoint handles and readouts also hang off these drags. Memory: user's primary use is UX redlining, so Measure behaving the same matters.",
@@ -54,10 +54,15 @@
     {
       "t": "2026-10-04T03:22:46.478Z",
       "note": "Verified: Scripts/playtest/click-click-draws-a-line-walk.json at Next defaults (no flags) passes: line by click-click, Cmd-Z removes it whole, Redo puts it back, line by drag, Shift holds a level line, Escape / click on start / tool switch each make nothing, arrow by click-click (caption field opens after the 2nd click) and by drag, measure by clicks and by drag+click; 5 real window captures. Scripts/test.sh: 11178 tests passed. Rough items: the four in the audit are not defects (no mock, documented choices); filed a-level-line-shows-in-its-layer-row-thumbnail (p2) for the blank thumbnail seen in shot 3."
+    },
+    {
+      "t": "2026-10-04T03:23:01.999Z",
+      "note": "Line and Arrow: click, let go, click again draws a line (Next, on by default); Esc / tool switch / click on start cancels; drag unchanged; Measure keeps its click placement. Walk click-click-draws-a-line-walk green at Next defaults with 5 real captures, Scripts/test.sh 11178 passed. Audit queue/audits/2026-10-04-click-click-draws-a-line.json. Commit dde86004."
     }
   ],
   "started": "2026-10-04T03:06:26.711Z",
   "walks": [
     "click-click-draws-a-line-walk"
-  ]
+  ],
+  "completed": "2026-10-04T03:23:02.000Z"
 }
