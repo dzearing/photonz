@@ -542,6 +542,26 @@ extension PhotonzDocument {
         refreshDuration()
     }
 
+    /// Take several tracks away at once, each the way `deleteTrack` does: the
+    /// picked tracks in the timeline going in one step.
+    public mutating func deleteTracks(_ ids: some Sequence<UUID>) {
+        for id in ids { deleteTrack(id) }
+    }
+
+    /// What deleting these tracks would take, read before it is done so the
+    /// timeline can show it: the clips that go whole, and the clips that keep
+    /// their picture and only lose the sound drawn on one of them.
+    public func deletingTracks(_ ids: some Sequence<UUID>) -> TrackDeletion {
+        let layout = trackLayout()
+        var clips = Set<UUID>()
+        var sounds = Set<UUID>()
+        for id in ids {
+            clips.formUnion(layout.clips[id] ?? [])
+            sounds.formUnion(layout.linked[id] ?? [])
+        }
+        return TrackDeletion(clips: clips, sounds: sounds.subtracting(clips))
+    }
+
     // MARK: Clips between tracks
 
     /// Whether a clip may be put on a track, landing at `atInMS` (or where it
@@ -781,4 +801,20 @@ extension Layer {
         if case .text = content { return true }
         return false
     }
+}
+
+/// What deleting some tracks takes (`PhotonzDocument.deletingTracks`).
+public struct TrackDeletion: Equatable, Sendable {
+    /// Clips that go whole: everything on a picture, title or sound track.
+    public var clips: Set<UUID>
+    /// Clips that stay but lose their own sound, drawn on an audio track that
+    /// is going.
+    public var sounds: Set<UUID>
+
+    public init(clips: Set<UUID>, sounds: Set<UUID>) {
+        self.clips = clips
+        self.sounds = sounds
+    }
+
+    public var isEmpty: Bool { clips.isEmpty && sounds.isEmpty }
 }

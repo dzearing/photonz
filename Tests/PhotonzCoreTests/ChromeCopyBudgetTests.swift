@@ -139,7 +139,7 @@ struct ChromeNeverSaysHowTests {
                              "Pick a clip to trim"],
         // Menu rows: commands, named by what they do.
         "LayerCommandMenu.swift": ["Separate into Layers", "Turn into Text", "Make ···· Fit"],
-        "TimelineTrackRows.swift": ["Delete Empty Tracks"],
+        "TimelineTrackRows.swift": ["Delete Empty Tracks", "Delete ···· Tracks"],
         // The foot of the tool's own press-and-hold list, not the canvas.
         "ToolModeButton.swift": ["Press ···· to cycle"],
         // The quiet second line of a trim handle's tooltip.

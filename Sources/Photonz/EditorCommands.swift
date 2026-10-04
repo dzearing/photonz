@@ -1348,8 +1348,17 @@ struct EditorCommands: Commands {
             Button("Ungroup Tracks") { if let group = track?.groupID { editor?.ungroupTracks(group) } }
                 .disabled(track?.groupID == nil)
             Divider()
-            Button("Delete Track", role: .destructive) { if let track { editor?.deleteTrack(track.id) } }
-                .disabled(track == nil)
+            // With tracks picked on their headers this row is what ⌫ does, so
+            // it answers the key (U+0008, see `DeleteKeyCharacters`) for when
+            // the canvas has the keyboard rather than the timeline. Otherwise
+            // it acts on the clip in hand's track and only prints ⌫: a live
+            // key there would take a track where ⌫ means the clip or the layer.
+            let held = editor?.tracksInHand.count ?? 0
+            Button(held > 1 ? "Delete \(held) Tracks" : "Delete Track", role: .destructive) {
+                if held > 0 { editor?.deleteTracksInHand() } else if let track { editor?.deleteTrack(track.id) }
+            }
+            .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuRow(answersThePress: held > 0)), modifiers: [])
+            .disabled(track == nil)
             Button("Delete Empty Tracks", role: .destructive) { editor?.deleteEmptyTracks() }
                 .disabled(!(editor?.hasEmptyTracks ?? false))
         }

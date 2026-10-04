@@ -1,0 +1,324 @@
+{
+  "out": "/tmp/photonz-playtest/pick-a-track-and-delete-it-walk",
+  "seed": "Deleting a track the way Premiere and Final Cut do it: click the track's name and the whole track is picked, its header and lane lit as one with the clips on it, and the panel says Track; Backspace takes the track and everything on it in one step, and Cmd-Z brings it all back. Shift-click picks several and Backspace takes them all. A click on a clip still picks the clip, and Backspace on it takes only the clip. Every press is a pointer click on the control's face. At Next defaults, no flag set.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Track",
+      "choose": "Video Track"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "soundAddSample"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expect",
+      "control": "Track V2",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Track V1",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Track Audio 2",
+      "present": true
+    },
+    {
+      "do": "press",
+      "control": "Track V1"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "1-v1-picked",
+      "note": "THE FIRST TEST: a click on V1's name picks the TRACK, not the clip on it: its header and lane wear one wash, the recording on it and its sound below light up because Backspace takes them too, and the panel's one section is Track, named V1, with Hide, Solo and Lock and the clips on it"
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": []
+    },
+    {
+      "do": "expectPicked",
+      "layers": []
+    },
+    {
+      "do": "expect",
+      "control": "Track section",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Speed",
+      "present": false
+    },
+    {
+      "do": "panel",
+      "stage": "1-v1-picked"
+    },
+    {
+      "do": "snapshot",
+      "name": "pick-track-1-v1-picked"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-v1-deleted",
+      "note": "THE SECOND TEST: Backspace took V1 and the recording on it, its sound with it; V2 and the music are still there"
+    },
+    {
+      "do": "expect",
+      "control": "Track V1",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Track V2",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Track Audio 2",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Tutorial Sample clip",
+      "present": false
+    },
+    {
+      "do": "panel",
+      "stage": "2-v1-deleted"
+    },
+    {
+      "do": "snapshot",
+      "name": "pick-track-2-v1-deleted"
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-undone",
+      "note": "THE THIRD TEST: one Cmd-Z puts V1 back with the recording and its sound on it"
+    },
+    {
+      "do": "expect",
+      "control": "Track V1",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Tutorial Sample clip",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "pick-track-3-undone"
+    },
+    {
+      "do": "click",
+      "at": [
+        640,
+        400
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "4-clip-picked",
+      "note": "THE FOURTH TEST: a click on the recording picks the clip, and the track lets go (a press on the clip's bar needs the probe in front, which this walk does not ask for, so it picks it on the picture; both land in the same pick)"
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": [
+        "Tutorial Sample"
+      ]
+    },
+    {
+      "do": "expect",
+      "control": "Track section",
+      "present": false
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-clip-deleted",
+      "note": "THE FIFTH TEST: Backspace on the clip takes only the clip; V1 stays, empty"
+    },
+    {
+      "do": "expect",
+      "control": "Tutorial Sample clip",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Track V1",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "pick-track-4-clip-deleted"
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Tutorial Sample clip",
+      "present": true
+    },
+    {
+      "do": "press",
+      "control": "Track V2"
+    },
+    {
+      "do": "press",
+      "control": "Track Audio 2",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "6-two-picked",
+      "note": "THE SIXTH TEST: Shift-click adds Audio 2 to V2; both are lit and the panel's Track header says 2 tracks"
+    },
+    {
+      "do": "panel",
+      "stage": "6-two-picked"
+    },
+    {
+      "do": "snapshot",
+      "name": "pick-track-5-two-picked"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "7-two-deleted",
+      "note": "THE SEVENTH TEST: Backspace took both tracks and the music; V1 and the recording stay"
+    },
+    {
+      "do": "expect",
+      "control": "Track V2",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Track Audio 2",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Track V1",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "pick-track-6-two-deleted"
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Track V2",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Track Audio 2",
+      "present": true
+    }
+  ]
+}

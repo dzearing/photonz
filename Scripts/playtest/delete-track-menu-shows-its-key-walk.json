@@ -1,0 +1,23 @@
+{
+  "out": "/tmp/photonz-playtest/delete-track-menu-shows-its-key-walk",
+  "seed": "Sequence > Track > Delete Track prints the Delete key, and with a track picked on its header it is the row Backspace reaches from the menu bar, named for how many tracks it takes. At Next defaults, no flag set. In front, because the menu bar is only live with the probe in front.",
+  "setup": {
+    "front": true,
+    "timelineOpen": true,
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "panelMenu", "menu": "Add Track", "choose": "Video Track" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "menus", "stage": "1-nothing-picked", "menu": "Sequence" },
+    { "do": "press", "control": "Track V2" },
+    { "do": "press", "control": "Track V1", "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-two-picked", "note": "with V2 and V1 picked the row reads Delete 2 Tracks and carries the Delete key, and no other live row prints it" },
+    { "do": "menus", "stage": "2-two-picked", "menu": "Sequence", "oneKeyEach": true },
+    { "do": "rightClick", "on": "Track V1", "shot": "delete-track-menu-1-header-menu", "keys": { "Delete 2 Tracks": "⌫" } }
+  ]
+}

@@ -112,7 +112,9 @@ struct TimelineTrackRow: View {
     /// (unless its drag began on the painted layer), not being retyped or
     /// trimmed, and nothing keyed or drifting on it that the full bar draws.
     private var paintedCues: [MotionStripGroup] {
-        guard row.isCaptions, row.cuesArePlain else { return [] }
+        // A picked track lights up every cue on it, which the painted layer
+        // cannot draw.
+        guard row.isCaptions, row.cuesArePlain, !isHeld else { return [] }
         let carried = editorState.carriedCaptionCueID
         let picked = editorState.selectedLayerID
         let renaming = editorState.renamingClipID
@@ -132,6 +134,10 @@ struct TimelineTrackRow: View {
     private var laneHeight: CGFloat {
         rows.height(row.carriesSound ? TimelineDock.soundLaneHeight : TimelineDock.laneHeight)
     }
+
+    /// This track is the thing in hand: picked on its header, nothing else
+    /// picked. Its header and lane light up as one, with every clip on it.
+    private var isHeld: Bool { editorState.tracksInHand.contains(track.id) }
 
     private var isPicked: Bool {
         editorState.selectedTrackIDs.contains(track.id)
@@ -198,11 +204,7 @@ struct TimelineTrackRow: View {
         }
         .frame(width: TimelineDock.gutter, height: laneHeight, alignment: .leading)
         .overlay(alignment: .leading) { twist.padding(.leading, layout.twistX ?? indent) }
-        .background {
-            if editorState.selectedTrackIDs.contains(track.id) {
-                RoundedRectangle(cornerRadius: 5).fill(VideoKit.Palette.accent.opacity(0.14))
-            }
-        }
+        .background { if isHeld { heldFill } }
         .contentShape(Rectangle())
         // Press and move: the whole track lifts and rides the pointer up and
         // down, and the others make room (`TrackRowDragSession`). Alongside
@@ -234,6 +236,11 @@ struct TimelineTrackRow: View {
     }
 
     private var indent: CGFloat { inGroup ? TrackHeaderLayout.groupIndent : 0 }
+
+    /// What a picked track wears, on its header and along its lane.
+    private var heldFill: some View {
+        RoundedRectangle(cornerRadius: 5).fill(VideoKit.Palette.accent.opacity(0.14))
+    }
 
     /// Whether a name is drawn whole in the room it has, in the header's own
     /// font: the walk's `expectApart` reads "name shortened" off the control.
@@ -391,6 +398,9 @@ struct TimelineTrackRow: View {
     private var lane: some View {
         let ruler = editorState.motionStripRuler
         return ZStack(alignment: .topLeading) {
+            // The same wash as the header's, so a picked track reads as one
+            // thing from its name to the end of its lane.
+            if isHeld { heldFill.allowsHitTesting(false) }
             TimelineGridlines(ruler: ruler, laneWidth: laneWidth, height: laneHeight)
             // A click on the bare lane puts the playhead there; a drag draws a
             // box that picks the clips it touches, or with ⌥ a range on the
@@ -752,7 +762,15 @@ struct TimelineTrackMenu: View {
         Divider()
         MenuRowsView(rows: editorState.timelineViewMenuRows())
         Divider()
-        Button("Delete Track", role: .destructive) { editorState.deleteTrack(track.id) }
+        // ⌫ is printed, not answered: the press reaches the picked tracks
+        // through the timeline (`liftInHand`), and a context menu is not up
+        // to hear it anyway.
+        let held = editorState.tracksInHand
+        let deleting = held.contains(track.id) ? held.count : 1
+        Button(deleting > 1 ? "Delete \(deleting) Tracks" : "Delete Track", role: .destructive) {
+            if held.contains(track.id) { editorState.deleteTracksInHand() } else { editorState.deleteTrack(track.id) }
+        }
+        .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuRow(answersThePress: false)), modifiers: [])
         if editorState.hasEmptyTracks {
             Button("Delete Empty Tracks", role: .destructive) { editorState.deleteEmptyTracks() }
         }
@@ -795,7 +813,9 @@ struct TimelineClipView: View {
             let x0 = laneWidth * ruler.fraction(ofMS: 0)
             let x1 = laneWidth * ruler.fraction(ofMS: Double(editorState.documentLengthMS))
             VideoKit.ClipBar(title: group.layerName, kind: kind,
-                             isSelected: editorState.isLayerSelected(group.layerID), height: height)
+                             isSelected: editorState.isLayerSelected(group.layerID)
+                                 || editorState.goesWithTracksInHand(group.layerID, asSound: isLinkedSound),
+                             height: height)
                 .frame(width: max(2, x1 - x0))
                 .offset(x: x0)
                 .onTapGesture {

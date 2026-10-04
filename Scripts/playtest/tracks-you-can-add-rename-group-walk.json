@@ -63,7 +63,7 @@
     { "do": "press", "control": "Track V1 Hide" },
     { "do": "wait", "seconds": 0.6 },
 
-    { "do": "press", "control": "Track V1" },
+    { "do": "press", "control": "Tutorial Sample clip" },
     { "do": "wait", "seconds": 0.3 },
     { "do": "action", "action": "clipCarryUpATrackHeld" },
     { "do": "wait", "seconds": 0.4 },

@@ -328,12 +328,16 @@ private struct SoundFadeField: View {
 /// One of the Channel's two switches, the mock's `.btn.sm`: quiet (`ghost`)
 /// until pressed, then filled in its colour, red for Mute (`danger`) and the
 /// accent for Solo (`primary`), and filled for as long as it is on.
-private struct ChannelSwitch: View {
+///
+/// The Track section wears the same switches for a track picked on its header
+/// (`TrackInspector`), so `section` says which section's control it is.
+struct ChannelSwitch: View {
     let title: String
     let symbol: String
     let isOn: Bool
     let tint: AnyShapeStyle
     let help: String
+    var section = "Channel"
     let action: () -> Void
 
     @State private var hovering = false
@@ -366,7 +370,7 @@ private struct ChannelSwitch: View {
         .accessibilityLabel(title)
         .accessibilityAddTraits(isOn ? .isSelected : [])
         .panelHelp(help)
-        .playtestControl(title, detail: "Channel")
+        .playtestControl(title, detail: section)
         .panelReadout(isOn ? "On" : "Off")
         .playtestField(title)
     }

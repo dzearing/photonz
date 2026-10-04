@@ -963,6 +963,13 @@ struct InspectorPanel: View {
         if set.contains(.zoom) {
             set.formIntersection([.layers, .zoom, .library])
         }
+        // ...and so is a track picked on its header (`EditorState+Tracks`):
+        // the panel says a track is picked rather than talking about the
+        // whole document as though nothing were.
+        if editorState.documentHasTime, !editorState.tracksInHand.isEmpty {
+            set.formIntersection([.layers, .library])
+            set.insert(.track)
+        }
         if selectedLayer?.isCaptionsLayer == true { set.remove(.placement) }
         return set
     }
@@ -1149,12 +1156,13 @@ struct InspectorPanel: View {
             // The mock's `.dgrp-h` plus (`#efxMenu`): the two verbs that act
             // on the picked tile across the whole timeline.
             return AnyView(TransitionsGroupMenu())
-        case .editPoint, .transition, .sound:
+        case .editPoint, .transition, .sound, .track:
             // The mock's `.sec-h .mut`: where the cut is, what is on it, and
             // which file the picked sound came from.
             let note = switch id {
             case .editPoint: EditPointInspector.headerNote(editorState)
             case .transition: TransitionInspector.headerNote(editorState)
+            case .track: TrackInspector.headerNote(editorState)
             default: SoundInspector.headerNote(editorState)
             }
             guard let note else { return nil }
@@ -1381,6 +1389,8 @@ struct InspectorPanel: View {
             TransitionInspector()
         case .zoom:
             ZoomInspector()
+        case .track:
+            TrackInspector()
         case .transitions:
             TransitionsGroup()
         case .speed:

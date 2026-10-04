@@ -132,6 +132,10 @@ enum InspectorSectionID: String, CaseIterable {
     // Beside the cut's sections, because it is the same kind of subject: a
     // thing in your hand on the timeline rather than the whole layer.
     case zoom
+    // A track picked on its header: its switches and what is on it. The same
+    // kind of subject as a cut or a zoom, a thing in your hand on the timeline
+    // rather than a layer, and it answers for the panel alone the same way.
+    case track
     // What the picked PIECE does with time: how fast it plays
     // (`next-speed-a-stretch`), and holding one of its frames
     // (`next-hold-on-a-frame`). Right under Transition because they are the two
@@ -222,6 +226,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .editPoint: "Edit point"
         case .transition: "Transition"
         case .zoom: "Zoom"
+        case .track: "Track"
         case .speed: "Time"
         // The audio mock's channel strip (`pages/video-audio.html`,
         // `#propBody`); the raw id stays `sound` for saved orders.

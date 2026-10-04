@@ -225,13 +225,20 @@ extension EditorState {
 
     /// Premiere's Delete: what is picked goes and nothing else moves. Keys
     /// picked on a lane first, because they are the smaller and more recent
-    /// thing in hand; then a picked piece of a clip; then the picked layers.
+    /// thing in hand; then tracks picked on their headers; then a picked piece
+    /// of a clip; then the picked layers.
     func liftInHand() -> Bool {
         if selectedZoom != nil {
             removeZoomInHand()
             return true
         }
         if canDeletePickedKeys { return deletePickedKeys() }
+        // Tracks picked on their headers, with nothing else picked: they go,
+        // and everything on them (`EditorState+Tracks`).
+        if !tracksInHand.isEmpty {
+            deleteTracksInHand()
+            return true
+        }
         if canDeleteClipPieceInHand {
             deleteClipPieceInHand()
             return true

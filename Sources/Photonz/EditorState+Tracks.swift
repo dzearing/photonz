@@ -159,16 +159,84 @@ extension EditorState {
 
     // MARK: Picking tracks
 
-    /// A click on a track's header picks it, and the clip on it so the panel
-    /// talks about it; ⇧ or ⌘ adds it to the tracks already picked, which is
-    /// what Group Tracks gathers.
+    /// A click on a track's header picks the TRACK, the way Premiere and Final
+    /// Cut do: the header and its lane light up as one thing, the panel talks
+    /// about the track, and ⌫ takes it away. ⇧ or ⌘ adds it to the tracks
+    /// already picked, which is what Group Tracks gathers and what ⌫ takes.
+    ///
+    /// It lets go of whatever else was in hand first. It used to pick the
+    /// track's first clip as well, so ⌫ deleted that clip and left the track
+    /// standing, and on an empty track did nothing at all (the user,
+    /// 2026-10-04: "i click a track expecting it to select the whole track,
+    /// press backspace, doesn't delete it").
     func pickTrack(_ id: UUID, extending: Bool) {
-        if extending {
-            if selectedTrackIDs.contains(id) { selectedTrackIDs.remove(id) } else { selectedTrackIDs.insert(id) }
-            return
-        }
-        selectedTrackIDs = [id]
-        if let clip = document?.clipIDs(onTrack: id).first { selectLayer(clip) }
+        var picked = extending ? selectedTrackIDs : []
+        if extending, picked.contains(id) { picked.remove(id) } else { picked.insert(id) }
+        holdTracks(picked)
+    }
+
+    /// Make these tracks the one thing in hand: no clip, piece, cut, zoom or
+    /// key is picked alongside them. Setting a layer clears the tracks
+    /// (`selectedLayerID`), so the tracks are written after it.
+    func holdTracks(_ ids: Set<UUID>) {
+        selectLayer(nil)
+        selectedLibraryItemID = nil
+        selectedEditPoint = nil
+        selectedZoom = nil
+        keySelection = nil
+        letGoOfTimelinePicks()
+        rulerRangeInHand = nil
+        selectedTrackIDs = ids
+    }
+
+    /// The tracks that are the thing in hand: picked on their headers with no
+    /// clip or layer picked. What ⌫ takes, what the panel's Track section
+    /// talks about, and what lights up on the timeline.
+    var tracksInHand: Set<UUID> {
+        guard !selectedTrackIDs.isEmpty, selectedLayerID == nil, multiSelectedLayerIDs.isEmpty,
+              // A Library tile picked since is the thing in hand; the track
+              // stays picked as where Add at Playhead puts it.
+              selectedLibraryItemID == nil,
+              // A range drawn since, on the ruler or across the tracks, is the
+              // newer thing in hand and is what ⌫ lifts.
+              rulerRangeHeld == nil, trackRangeHeld == nil, timelinePicksHeld == nil
+        else { return [] }
+        return selectedTrackIDs
+    }
+
+    /// The tracks in hand in the timeline's order, top first.
+    var orderedTracksInHand: [UUID] {
+        let held = tracksInHand
+        guard !held.isEmpty else { return [] }
+        return (document?.timelineTracks.map(\.id) ?? []).filter(held.contains)
+    }
+
+    /// What ⌫ would take with the tracks in hand, so their clips light up with
+    /// them before the press.
+    var goingWithTracksInHand: TrackDeletion {
+        let held = tracksInHand
+        guard !held.isEmpty, let document else { return TrackDeletion(clips: [], sounds: []) }
+        return document.deletingTracks(held)
+    }
+
+    /// Whether a bar goes with the tracks in hand: a clip that goes whole, or
+    /// the sound bar of a clip whose sound is on one of them.
+    func goesWithTracksInHand(_ layerID: UUID, asSound: Bool) -> Bool {
+        guard !selectedTrackIDs.isEmpty else { return false }
+        let going = goingWithTracksInHand
+        return going.clips.contains(layerID) || (asSound && going.sounds.contains(layerID))
+    }
+
+    /// ⌫ with tracks in hand: every one goes, and everything on it, in one
+    /// step to undo.
+    func deleteTracksInHand() {
+        let ids = orderedTracksInHand
+        guard !ids.isEmpty else { return }
+        selectedTrackIDs = []
+        pauseDocument()
+        perform { $0.deleteTracks(ids) }
+        documentTimeMS = min(documentTimeMS, lastDocumentTimeMS)
+        documentMomentChanged()
     }
 
     /// The tracks a menu on `id` acts on: the picked ones when it is one of
@@ -184,7 +252,7 @@ extension EditorState {
     func addTrack(_ kind: DocumentTrack.Kind, at index: Int? = nil) {
         var made: UUID?
         perform { made = $0.addTrack(kind, at: index) }
-        if let made { selectedTrackIDs = [made] }
+        if let made { holdTracks([made]) }
     }
 
     func beginRenamingTrack(_ id: UUID) {
@@ -222,7 +290,7 @@ extension EditorState {
     func moveTrack(_ id: UUID, _ landing: TrackLanding) {
         guard var preview = document, preview.moveTrack(id, landing) else { return }
         perform { $0.moveTrack(id, landing) }
-        selectedTrackIDs = [id]
+        holdTracks([id])
     }
 
     /// Gather the tracks a menu acts on into a group.

@@ -118,6 +118,57 @@ struct DocumentTracksTests {
         #expect(doc.timelineTracks.map(\.name) == ["V1", "Audio", "Audio 2"])
     }
 
+    @Test("Deleting several tracks takes every one and the clips on them, whatever order they come in")
+    func deleteSeveralTracks() {
+        var (doc, recording, title, music) = Self.cut()
+        let tracks = doc.timelineTracks
+        doc.deleteTracks([tracks[3].id, tracks[0].id])
+        #expect(doc.timelineTracks.map(\.name) == ["V1", "Audio"])
+        #expect(doc.layer(id: title) == nil)
+        #expect(doc.layer(id: music) == nil)
+        #expect(doc.layer(id: recording) != nil)
+    }
+
+    @Test("Deleting a picture track and the audio track its sound is drawn on takes the clip whole")
+    func deletePictureAndItsSound() {
+        var (doc, recording, _, music) = Self.cut()
+        let tracks = doc.timelineTracks
+        doc.deleteTracks([tracks[1].id, tracks[2].id])
+        #expect(doc.layer(id: recording) == nil)
+        #expect(doc.layer(id: music) != nil)
+        #expect(doc.timelineTracks.map(\.name) == ["Title", "Audio 2"])
+    }
+
+    @Test("A track nobody has heard of is passed over")
+    func deleteUnknownTrack() {
+        var (doc, _, _, _) = Self.cut()
+        let before = doc.timelineTracks
+        doc.deleteTracks([UUID()])
+        #expect(doc.timelineTracks == before)
+    }
+
+    @Test("What deleting tracks takes: a picture track takes its clips whole, an audio track only the sound drawn on it")
+    func whatDeletingTracksTakes() {
+        let (doc, recording, title, music) = Self.cut()
+        let tracks = doc.timelineTracks
+        // V1: the recording goes, and its sound with it.
+        #expect(doc.deletingTracks([tracks[1].id]) == TrackDeletion(clips: [recording], sounds: []))
+        // Audio: the recording's sound goes and its picture stays.
+        #expect(doc.deletingTracks([tracks[2].id]) == TrackDeletion(clips: [], sounds: [recording]))
+        // Both: the clip goes whole, so it is not also a sound left behind.
+        #expect(doc.deletingTracks([tracks[1].id, tracks[2].id]) == TrackDeletion(clips: [recording], sounds: []))
+        #expect(doc.deletingTracks([tracks[0].id, tracks[3].id]) == TrackDeletion(clips: [title, music], sounds: []))
+        #expect(doc.deletingTracks([]) == TrackDeletion(clips: [], sounds: []))
+        #expect(doc.deletingTracks([tracks[0].id]).isEmpty == false)
+    }
+
+    @Test("An empty track takes nothing with it")
+    func deletingAnEmptyTrack() {
+        var (doc, _, _, _) = Self.cut()
+        let id = doc.addTrack(.video)
+        #expect(doc.deletingTracks([id]).isEmpty)
+    }
+
     // MARK: - Hide, mute, solo, lock
 
     @Test("A hidden track's clips are not drawn, and showing it again brings them back")

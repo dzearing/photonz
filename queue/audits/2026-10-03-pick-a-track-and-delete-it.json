@@ -1,0 +1,28 @@
+{
+  "feature": "Pick a track by its name and delete it",
+  "epic": "video-cutting",
+  "summary": "Clicking a track's name now picks the whole track: its header and lane light up with the clips on it, the panel shows a Track section, and Backspace or Delete removes the track and everything on it in one undoable step. Before, the click picked the first clip, so Backspace deleted that clip and left the track standing, and on an empty track it did nothing.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open the Tutorial Sample, add a Video Track from the + under the track names, and add some music so there are a few tracks.",
+  "switched": {},
+  "try": [
+    { "do": "Before the fix, for comparison: clicking V1's name picked the clip on it (the panel says Clip), and Backspace deleted the clip, not the track.", "shot": "2026-10-03-pick-a-track-0-before-fix.png" },
+    { "do": "Click V1's name. The header and lane light up together, the recording and its sound below light up with them, and the panel shows Track V1 with Hide, Solo, Lock and Clips.", "shot": "2026-10-03-pick-a-track-1-picked.png" },
+    { "do": "Press Backspace. V1 and the recording on it are gone.", "shot": "2026-10-03-pick-a-track-2-deleted.png" },
+    { "do": "Press Cmd-Z once. V1 comes back with the recording and its sound.", "shot": "2026-10-03-pick-a-track-3-undone.png" },
+    { "do": "Click the recording on the canvas or the timeline, then press Backspace. Only the clip goes; V1 stays, empty. Cmd-Z." },
+    { "do": "Click V2's name, then Shift-click Audio 2's name. Both light up and the panel's Track header says 2 tracks. Press Backspace: both go.", "shot": "2026-10-03-pick-a-track-4-two-picked.png" },
+    { "do": "With tracks picked, right-click a picked header, or open Sequence > Track. The row reads Delete 2 Tracks with the Delete key beside it.", "shot": "2026-10-03-pick-a-track-5-menu.png" }
+  ],
+  "evaluate": [
+    "When you click a track's name, is it obvious the whole track is picked, from the name to the end of its lane?",
+    "Before you press Backspace, can you tell from what lights up which clips will go with the track?",
+    "Is the Track section in the panel (switches and clip count) what you would expect to see for a picked track?",
+    "Deleting V1 also takes the recording's sound off the Audio track below. Is that what you expect, or should the sound stay behind the way Premiere keeps A1?"
+  ],
+  "rough": [
+    "Deleting a picture track takes each clip whole, its sound included, so the Audio track under the recording is left empty. Premiere would keep the audio on A1. The sound bar lights up before the press, so the person can see it will go. Left as the document model already behaved; the fourth evaluate question asks for your call.",
+    "The audio mock draws the picked track's strip with a Volume fader. In the app that strip is the picked sound's Channel section (task the-picked-sound-opens-on-the-channel-strip-the), so the Track section has the switches and the clip count and no fader.",
+    "No mock draws a picked picture track, so the Track section copies the audio mock's Channel layout: the name beside the header and the switches as a row of buttons. It goes further than the mock with Lock and a Clips row.",
+    "The walk picks the clip by clicking the recording on the canvas rather than its bar on the timeline. A press on a clip bar needs the probe in front, which would make the walk wait for nobody to be at the Mac. Clicking a bar picks the clip through code this change did not touch, and the tracks walk (which runs in front) still presses the bar."
+  ]
+}

@@ -276,6 +276,8 @@ struct ClipPiecesBar: View {
         if !isPicked, editorState.multiSelectedLayerIDs.contains(layerID) { return true }
         // A piece a box over the tracks picked (`EditorState+TrackRange`).
         if !isPicked, editorState.isPiecePickedByBox(layerID: layerID, index: index) { return true }
+        // On a track picked on its header: ⌫ takes it with the track.
+        if !isPicked, editorState.goesWithTracksInHand(layerID, asSound: isLinkedSound) { return true }
         guard isPicked else { return false }
         guard count > 1 else { return true }
         // Mid-carry the bar is already drawn in the order it would land in, so

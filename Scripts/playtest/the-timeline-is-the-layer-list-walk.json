@@ -71,7 +71,7 @@
     },
     {
       "do": "press",
-      "control": "Track V1"
+      "control": "b-roll clip"
     },
     {
       "do": "wait",

@@ -850,6 +850,12 @@ final class EditorState {
                 // ...and so do pieces a box picked and a range on some tracks
                 // (`EditorState+TrackRange`): one thing is in hand at a time.
                 if selectedLayerID != nil { letGoOfTimelinePicks() }
+                // ...and so do tracks picked on their headers: a track left
+                // picked under a clip would come back into hand the moment
+                // the clip went, and a second ⌫ would take a track nobody was
+                // looking at (`EditorState+Tracks`). What picks a track sets
+                // it after the layer.
+                if !selectedTrackIDs.isEmpty { selectedTrackIDs = [] }
                 // ...and so do keys picked on another layer's lanes, so ⌫ can
                 // never throw away keys nobody is looking at.
                 if let keys = keySelection, keys.layerID != selectedLayerID { keySelection = nil }
@@ -925,6 +931,7 @@ final class EditorState {
             let gained = multiSelectedLayerIDs.subtracting(oldValue)
             if !gained.isEmpty { revealInLayersList(gained) }
             if !multiSelectedLayerIDs.isEmpty { letGoOfTimelinePicks() }
+            if !multiSelectedLayerIDs.isEmpty, !selectedTrackIDs.isEmpty { selectedTrackIDs = [] }
             if !multiSelectedLayerIDs.isEmpty, selectedLibraryItemID != nil { selectedLibraryItemID = nil }
             // A half-typed style name belongs to the layers that were picked
             // when the field opened, and those are not the layers any more
