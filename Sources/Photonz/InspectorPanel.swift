@@ -578,7 +578,7 @@ struct InspectorPanel: View {
     }
 
     /// One more waiting section, a pass from now; the pass it makes asks for
-    /// the next through `arrivalPass`, until nothing is waiting.
+    /// the next, until nothing is waiting.
     private func catchUp() {
         guard editorState.editArrival.panelMayFill,
               !arrivals.isCatchingUp, arrivals.isWaiting(for: orderedAvailableSections) else { return }
@@ -595,6 +595,16 @@ struct InspectorPanel: View {
             guard arrivals.isWaiting(for: latest) else { return }
             arrivals.allowNext(latest)
             arrivalPass &+= 1
+            // ...and asks for the next one itself, a turn of the run loop
+            // later, rather than trusting `.onChange(of: arrivalPass)` alone.
+            // About one pick in ten SwiftUI drew the new pass and never ran
+            // that action, so the chain stopped part way down: a recording's
+            // clip got its picture sections and none of its Audio ones, for
+            // good. Traced on 2026-10-04 (every-section-header-opens-walk):
+            // the pass went 2 to 3, the dock redrew six times over the next
+            // three seconds, and no catch-up was ever asked for. When the
+            // action does run, `isCatchingUp` makes this second ask a no-op.
+            DispatchQueue.main.async { catchUp() }
         }
     }
 
