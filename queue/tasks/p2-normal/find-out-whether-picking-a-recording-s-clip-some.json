@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 3560,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-03T22:43:58.211Z",
-  "updated": "2026-10-03T22:43:58.214Z",
+  "updated": "2026-10-04T12:46:58.051Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-03 about 22:25-22:30Z by walks-that-fail-in-the-full-sweep-10, in the first runs after a fresh probe build (Scripts/playtest.sh video-panel-order-walk.json, then the rest with --no-build).\n\n1) Scripts/playtest.sh Scripts/playtest/normalize-cleans-noise-walk.json --no-build -> FAILED step 6 (expect): no field called \"Gain in dB\" is in the panel to read; the ones that are: Opacity, Corner Radius, Search transitions, Properties Kind, Clip line, Animating Count, Sound reading, Opacity, Blending, Corner Radius, Effects Empty, Timeline ruler, Track V1, Track V1, Noisy voice recording 1280x800 clip, Track Audio, Noisy voice recording 1280x800 level line, ... The press step's state right after the click read selected nil, dockSections [Time, Captions, Transitions]; in a passing run the same step reads the clip's id and Properties..Audio Effects. Failed twice out of ~12 runs that evening.\n\n2) Scripts/playtest.sh Scripts/playtest/every-section-header-opens-walk.json --no-build -> FAILED step 45 (expect): no control called \"Mute\" is in the panel; the list has Properties/Time/Appearance/Key It/Effects/Captions/Transitions but no Audio section, while Track Audio shows Tutorial Sample sound clip. That walk picks the clip with selectRow, not a timeline click, so it is not just the click missing. Failed once out of 5.\n\nAfter those, 3 more rounds of both walks plus a debug copy of the normalize walk run 9 times: all ok. The sections come from InspectorPanel.availableSections: .sound/.fades/.gain/.soundEffects need Experiments.shared.soundOnTheTimelineEnabled and editorState.soundLayerInHand (selectedLayerID's layer.sound != nil, which is movie.hasSound read once in MovieLibrary.movie(at:) via try? asset.loadTracks(.audio)). A transient false from that load would explain the panel but not the sound clip on the Audio track, so check what draws that first. Theory only: first launches after a re-sign are slow.",
@@ -22,10 +22,24 @@
     {
       "t": "2026-10-03T22:43:58.213Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-04T11:42:58.390Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-04T12:46:53.785Z",
+      "note": "Reproduced: fresh probe build, 10 runs each of both walks with nobody at the Mac (idle 37639s), every-section-header-opens-walk failed once (run 5) with the probe ACTIVE and the clip picked (one layer), dock [Properties, Time, Appearance, Effects, Captions, Transitions], no Audio. Cause traced with a temporary file log in InspectorPanel.catchUp/body: sections arrive one per pass (DockArrivals); each step bumps @State arrivalPass and relies on .onChange(of: arrivalPass) to ask for the next. In the failing run (1 of 12 traced) the pass went 2->3 (Effects mounted), the body ran 8 times over 3.5s and onChange never fired, so Audio/Fades/Gain/Effects never arrived. App bug, not harness: a person picking a clip hits it too. Fix: the async step also asks for the next itself (DispatchQueue.main.async { catchUp() }); isCatchingUp makes the double ask a no-op. With the fix and a tagged trace, 11/11 runs passed and 2 of them were rescued at exactly the same point (onChange skipped at pass 2->3, self-ask carried on). Final code: both walks 5/5 each, caption-pick-answers-at-once, layer-pick-latency, pick-leaves-settings-alone, video-panel-order all ok; Scripts/test.sh 11211 tests passed. The sweep variants with a SHORT field list and nothing selected (2026-10-02 sweep, locked-screen and system-alert runs) are the other case: the press is a synthesized click that SwiftUI takes only in the active app, and the probe was not active; the harness already labels the system-alert case."
+    },
+    {
+      "t": "2026-10-04T12:46:58.049Z",
+      "note": "Real app bug, reproduced 1 in 10 on a fresh probe: the panel adds new sections one pass at a time and SwiftUI sometimes skipped the onChange that asks for the next, so a picked clip stopped after Effects and never got Audio, Audio Fades, Audio Gain or Audio Effects. Fixed in InspectorPanel.catchUp (the step asks for the next itself); a tagged trace showed 2 of 11 runs rescued at the same point. both walks 5/5 on final code, 4 pick/panel walks ok, Scripts/test.sh green (11211). Commit aac8df2a."
     }
   ],
   "walks": [
     "normalize-cleans-noise-walk",
     "every-section-header-opens-walk"
-  ]
+  ],
+  "started": "2026-10-04T11:42:58.388Z",
+  "completed": "2026-10-04T12:46:58.050Z"
 }
