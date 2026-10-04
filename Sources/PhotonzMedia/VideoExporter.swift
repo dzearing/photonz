@@ -483,7 +483,11 @@ public enum VideoExporter {
         let videoOut = AVAssetReaderVideoCompositionOutput(
             videoTracks: composition.tracks(withMediaType: .video),
             videoSettings: [kCVPixelBufferPixelFormatTypeKey as String:
-                                kCVPixelFormatType_32BGRA])
+                                kCVPixelFormatType_32BGRA,
+                            // Whatever the recording says it holds, the pictures
+                            // come out in the colours the file is tagged with,
+                            // since they are copied to the writer as they are.
+                            AVVideoColorPropertiesKey: MovieColour.properties])
         videoOut.videoComposition = videoComposition
         // The reader hands its own buffers straight over rather than copying
         // each one; every frame is copied into the writer's pool below, and
@@ -661,12 +665,13 @@ public enum VideoExporter {
     private static let stallLimit: TimeInterval = 90
 
     /// What the encoder is asked for: the size, the frame rate and the budget.
-    private static func movieSettings(_ plan: VideoExportRecipe,
-                                      holdsToBudget: Bool) -> [String: Any] {
+    static func movieSettings(_ plan: VideoExportRecipe,
+                              holdsToBudget: Bool) -> [String: Any] {
         [
             AVVideoCodecKey: AVVideoCodecType.h264,
             AVVideoWidthKey: Int(plan.size.width.rounded()),
             AVVideoHeightKey: Int(plan.size.height.rounded()),
+            AVVideoColorPropertiesKey: MovieColour.properties,
             AVVideoCompressionPropertiesKey: MovieCompression.properties(
                 bitsPerSecond: plan.videoBitsPerSecond, fps: plan.fps,
                 holdsToBudget: holdsToBudget),

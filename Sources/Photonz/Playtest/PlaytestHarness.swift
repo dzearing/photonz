@@ -13689,6 +13689,12 @@ private final class Run {
                 wrong.append("at \(ms) ms the stopped picture reads \(f3(still)) "
                     + "and the export's \(f3(export))")
             }
+            // The file as a player reads it, held to the same allowance: it
+            // carries its colours, so it plays as the canvas shows (`MovieColour`).
+            if abs(still - file) > within {
+                wrong.append("at \(ms) ms the stopped picture reads \(f3(still)) "
+                    + "and the MP4 \(f3(file))")
+            }
             if let look = nearest[ms] {
                 let exportThen = handed[look.ms] ?? 0
                 row["played"] = r3(look.luma)

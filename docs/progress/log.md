@@ -20612,3 +20612,9 @@ Next: the first editor window's ~200 ms first build
   `docs/progress/2026-10-04-export-brightness.md`.
 - Next: p1 task `an-exported-video-plays-with-the-same-brightness` tags both
   video writers Rec.709 primaries / sRGB transfer / 709 matrix.
+
+## 2026-10-04: exported videos carry their colour tags
+
+- Both MP4 writers (document and recording) tag Rec.709 primaries, sRGB transfer, 709 matrix (`MovieColour`); the recording's reader converts its pictures to those colours first. Grey 76 used to play as 86 and red as (230,33,0); now every grey and primary reads back within a code value.
+- `a-video-clip-fades-walk` now holds the MP4 to the canvas at every moment (was recorded, never compared). Measured within 0.008 against an allowance of 0.03.
+- Tests: `Tests/PhotonzMediaTests/MovieColourTests.swift`. ffprobe on a real probe export: tv / bt709 / iec61966-2-1 / bt709.

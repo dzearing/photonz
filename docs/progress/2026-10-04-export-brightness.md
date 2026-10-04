@@ -63,3 +63,16 @@ the same pixels reads 76 as 86 too. What round-trips is Rec.709 primaries, the
   display. The reference PNG was shot the same way in Preview.
 - A real export: `Scripts/playtest.sh` on a three step walk
   (`openSampleRecording`, `startExportAt1080p`, `awaitExport`), then ffprobe.
+
+## Fixed the same day
+
+Both writers now tag their files Rec.709 primaries, the IEC sRGB transfer and
+the 709 matrix (`Sources/PhotonzMedia/MovieColour.swift`). The recording's
+export also asks its reader for pictures in those colours, since it copies
+them straight to the writer: without that a recording tagged 709 / 709 / 709
+came out with its greys read through the wrong curve. A real 1080p export from
+the probe reads `tv / bt709 / iec61966-2-1 / bt709` in ffprobe, and the fades
+walk's MP4 reading now sits within 0.008 of the canvas at every moment it
+measures (it used to be about a tenth brighter mid fade), and the walk now
+fails if it does not. `Tests/PhotonzMediaTests/MovieColourTests.swift` reads
+both writers' files back through VideoToolbox, which QuickTime decodes with.

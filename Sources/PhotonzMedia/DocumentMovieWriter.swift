@@ -379,12 +379,14 @@ public enum DocumentMovieWriter {
     /// What the encoder is asked for. The budget comes from the plan rather
     /// than being left to AVFoundation, so the Export sheet can say what the
     /// file will weigh before anybody commits to it (`VideoExportRecipe`).
-    private static func videoSettings(plan: VideoFramePlan,
-                                      holdsToBudget: Bool) -> [String: Any] {
+    static func videoSettings(plan: VideoFramePlan,
+                              holdsToBudget: Bool) -> [String: Any] {
         var settings: [String: Any] = [
             AVVideoCodecKey: AVVideoCodecType.h264,
             AVVideoWidthKey: Int(plan.size.width),
             AVVideoHeightKey: Int(plan.size.height),
+            // The pictures are drawn in sRGB, and the file says so (`MovieColour`).
+            AVVideoColorPropertiesKey: MovieColour.properties,
         ]
         guard plan.videoBitsPerSecond > 0 else { return settings }
         settings[AVVideoCompressionPropertiesKey] = MovieCompression.properties(
