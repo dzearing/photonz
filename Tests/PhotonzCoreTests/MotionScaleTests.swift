@@ -120,6 +120,56 @@ struct MotionScaleTests {
         #expect(try #require(grown.text).fontSize == 40)
     }
 
+    /// Words that fit their box on one line still fit it shrunk. The box
+    /// carries a few points of room the renderer always needs round the glyphs,
+    /// and shrinking the box shrank that room too, so a name that hugged its
+    /// box at full size broke onto two lines at two thirds.
+    @Test func wordsThatFitOnOneLineStillFitShrunk() throws {
+        for string in ["Dana Zearing", "Your Name", "Role or title"] {
+            let words = TextContent(string: string, fontSize: 46, weight: .bold)
+            let natural = TextMeasurement.size(of: words)
+            let label = Layer(name: "Name", content: .text(words),
+                              frame: CGRect(x: 0, y: 0, width: natural.width.rounded(.up),
+                                            height: natural.height.rounded(.up)))
+            for factor in [CGFloat(2) / 3, 0.5, 0.74, 0.9] {
+                let shrunk = label.drawnLarger(by: factor, about: .zero)
+                let text = try #require(shrunk.text)
+                let oneLine = TextMeasurement.size(of: text)
+                #expect(shrunk.frame.width >= oneLine.width, "\(string) at \(factor)")
+                #expect(abs(shrunk.frame.height - oneLine.height) < 1, "\(string) at \(factor)")
+                // The words start where the magnification put them.
+                #expect(shrunk.frame.minX == 0)
+            }
+        }
+    }
+
+    /// Centred words keep their middle where the magnification put it, and
+    /// right-aligned ones their right edge, when the box has to be widened to
+    /// hold them.
+    @Test func widenedWordsKeepTheirAlignment() throws {
+        for (align, edge) in [(TextAlign.center, \CGRect.midX), (.right, \CGRect.maxX)] {
+            var words = TextContent(string: "Dana Zearing", fontSize: 46, weight: .bold)
+            words.alignment = align
+            let natural = TextMeasurement.size(of: words)
+            let label = Layer(name: "Name", content: .text(words),
+                              frame: CGRect(x: 100, y: 0, width: natural.width.rounded(.up),
+                                            height: natural.height.rounded(.up)))
+            let shrunk = label.drawnLarger(by: 0.5, about: .zero)
+            #expect(abs(shrunk.frame[keyPath: edge] - label.frame[keyPath: edge] * 0.5) < 0.01,
+                    "\(align)")
+        }
+    }
+
+    /// A paragraph narrower than its words is left a magnification: it was
+    /// wrapping on purpose, at a width somebody chose.
+    @Test func aParagraphShrinksExactly() throws {
+        let words = TextContent(string: "A long run of words that wraps", fontSize: 20)
+        let label = Layer(name: "Para", content: .text(words),
+                          frame: CGRect(x: 0, y: 0, width: 120, height: 80))
+        let shrunk = label.drawnLarger(by: 0.5, about: .zero)
+        #expect(shrunk.frame.width == 60)
+    }
+
     // MARK: Groups
 
     /// A group magnifies whole: every child moves outward from the middle and

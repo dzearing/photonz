@@ -462,6 +462,13 @@ extension PhotonzDocument {
                     return moved
                 })
             }
+            // Laid out again at its new size, as every edit lays a card out
+            // (`reflowLayouts`): words a few points wider than a plain
+            // magnification of their box push what sits under them down by
+            // those points instead of drawing over it, and the Library's tile
+            // picture, which no edit ever touches, shows the card the canvas
+            // will.
+            layer = GroupFlow.flowing(layer)
         }
         guard let inserted = landTitle(layer, kind: saved.kind, lengthMS: saved.lengthMS,
                                        sourceInMS: saved.layer.time?.sourceInMS ?? 0,

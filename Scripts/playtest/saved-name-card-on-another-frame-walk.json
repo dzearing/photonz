@@ -1,0 +1,214 @@
+{
+  "out": "/tmp/photonz-playtest/saved-name-card-on-another-frame-walk",
+  "seed": "A person's own name card saved on one recording and used on a recording of another size keeps its name on one line, clear of its role, at Next defaults with no switch touched. an empty track's Add Name Card > Clean on a 2880 by 1800 recording, the name typed as Dana Zearing, the clip's Save as Preset named Wrap check; then on the 1280 by 800 sample recording, an empty track's Add Name Card > Wrap check, photographed on the canvas, and its tile on the Library's Components shelf photographed too. Until 2026-10-04 the card shrank its words' box a few points short of the words and the name broke onto two lines over the role.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openLongRetinaTalk"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V1",
+      "choose": "Add Track Above"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V2",
+      "choose": "Add Name Card > Clean"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Dana Zearing"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "1-on-the-big-frame",
+      "note": "The Clean name card on the 2880 by 1800 recording with Dana Zearing typed in, on one line above its role"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-on-the-big-frame"
+    },
+    {
+      "do": "rightClick",
+      "on": "Name Card clip",
+      "choose": "Save as Preset…"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Wrap check"
+    },
+    {
+      "do": "press",
+      "control": "Save"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V1",
+      "choose": "Add Track Above"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V2",
+      "choose": "Add Name Card > Wrap check"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "3-on-the-small-frame",
+      "note": "THE TEST: the card saved on the 2880 by 1800 recording, inserted on the 1280 by 800 one, scaled to fit with Dana Zearing still on one line and clear of the role"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-on-the-small-frame"
+    },
+    {
+      "do": "action",
+      "action": "showLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Comps"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "press",
+      "control": "Search library"
+    },
+    {
+      "do": "type",
+      "text": "Wrap"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "expect",
+      "control": "Wrap check",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "4-tile",
+      "note": "The Library tile of the saved card on the 1280 by 800 recording shows the name on one line over the role, as the canvas does"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-tile"
+    }
+  ]
+}

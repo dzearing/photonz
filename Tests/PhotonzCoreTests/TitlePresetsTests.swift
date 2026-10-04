@@ -301,6 +301,45 @@ struct TitlePresetsTests {
         #expect(abs(after.minY - before.minY / 2) < before.height * 0.05)
     }
 
+    /// A person's own card, saved on a 1920 by 1080 recording and put on a
+    /// 1280 by 800 one, keeps its name on one line and clear of its role
+    /// (seen on a Library tile on 2026-10-03: "Dana / Zearing" over "Design
+    /// lead").
+    @Test func aSavedCardOnASmallerFrameKeepsItsNameOnOneLine() throws {
+        for preset in BuiltInTitle.presets(of: .nameCard) {
+            var doc = Self.eightSeconds()
+            let card = try #require(Self.insert(&doc, preset, atTimeMS: 0))
+            doc.updateLayer(id: card.wordsID) { layer in
+                if case .text(var words) = layer.content {
+                    words.string = "Dana Zearing"
+                    layer.content = .text(words)
+                    let natural = TextMeasurement.size(of: words)
+                    layer.frame.size = CGSize(width: natural.width.rounded(.up),
+                                              height: natural.height.rounded(.up))
+                }
+            }
+            doc.reflowLayouts()
+            let saved = try #require(doc.savedTitlePreset(layerID: card.layerID, name: "Dana card"))
+            var small = Self.eightSeconds(canvas: CGSize(width: 1280, height: 800))
+            let placed = try #require(Self.insert(&small, saved, atTimeMS: 0))
+            let group = try #require(small.layer(id: placed.layerID))
+            let texts = group.selfAndDescendants.filter { $0.text != nil }
+            for words in texts {
+                let text = try #require(words.text)
+                let oneLine = TextMeasurement.size(of: text)
+                #expect(words.frame.width >= oneLine.width, "\(preset.name) \(words.name)")
+                #expect(abs(words.frame.height - oneLine.height) < 1, "\(preset.name) \(words.name)")
+            }
+            // The boxes as they LOOK: a text box's few points of room past its
+            // glyphs are not words, and a card stacks its pieces by what shows.
+            let nameLayer = try #require(texts.first { $0.name == "Name" })
+            let roleLayer = try #require(texts.first { $0.name == "Role" })
+            let name = nameLayer.withoutSlack(try #require(small.canvasFrame(of: nameLayer.id)))
+            let role = roleLayer.withoutSlack(try #require(small.canvasFrame(of: roleLayer.id)))
+            #expect(name.maxY <= role.minY + 0.5, "\(preset.name): name \(name) runs into role \(role)")
+        }
+    }
+
     @Test func onlySomethingPlacedInTimeCanBeSaved() throws {
         var doc = Self.eightSeconds()
         let recording = try #require(doc.layers.first)

@@ -83,7 +83,37 @@ extension Layer {
             out.frame = grown
             return out
         }
-        return out.resized(to: grown)
+        return out.resized(to: wideEnoughForItsWords(grown, drawn: out))
+    }
+
+    /// `grown`, widened if it has to be so words that fit this box on one line
+    /// still fit it at their new size.
+    ///
+    /// Type does not shrink in proportion: the room the renderer keeps round
+    /// the glyphs is a few points whatever the size, and small type sets a
+    /// little wider than large type made small. So a name hugging its box at
+    /// full size, magnified to two thirds, came out a few points short of its
+    /// own words and broke onto two lines over whatever sat under it. The box
+    /// grows away from the edge the words are aligned to, so the words stay
+    /// exactly where the magnification put them. A paragraph narrower than its
+    /// words was wrapping on purpose and is left a plain magnification.
+    private func wideEnoughForItsWords(_ grown: CGRect, drawn: Layer) -> CGRect {
+        guard case let .text(was) = content, case let .text(now) = drawn.content else {
+            return grown
+        }
+        guard frame.standardized.width >= TextMeasurement.size(of: was).width - 0.5 else {
+            return grown
+        }
+        let needed = TextMeasurement.size(of: now).width.rounded(.up)
+        guard needed > grown.width else { return grown }
+        var wide = grown
+        wide.size.width = needed
+        switch now.alignment ?? .left {
+        case .left: break
+        case .center: wide.origin.x -= (needed - grown.width) / 2
+        case .right: wide.origin.x -= needed - grown.width
+        }
+        return wide
     }
 
     /// Whether this layer's content covers no area at all, so there is nothing
