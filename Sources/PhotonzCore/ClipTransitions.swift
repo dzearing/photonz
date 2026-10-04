@@ -69,6 +69,16 @@ public enum ClipTransitionKind: String, CaseIterable, Hashable, Codable, Sendabl
         }
     }
 
+    /// How long a new one is when nobody has said. A dip gets a second, half
+    /// of it going out and half coming back in, which is Premiere's and Final
+    /// Cut's length and the transition mock's (`video-transition-wt.html`,
+    /// "1.0s"): at four tenths it spent a fifth of a second each way, six
+    /// frames, and played as two hard cuts. The kinds that overlap keep four
+    /// tenths, since every millisecond of theirs is spare media spent.
+    public var defaultLengthMS: Int {
+        needsOverlap ? ClipTransition.defaultLengthMS : 1000
+    }
+
     /// The few words under its name in the picker, saying what it costs;
     /// nothing for one that costs nothing, never a "no overlap".
     public var note: String? {
@@ -106,9 +116,10 @@ public enum ClipTransitionAlignment: String, CaseIterable, Hashable, Codable, Se
 /// Nothing about WHICH cut, because that is the cut it is on.
 public struct ClipTransition: Hashable, Codable, Sendable {
 
-    /// How long one is when nobody has said: four tenths of a second, which is
-    /// long enough to read as a transition and short enough not to be the
-    /// thing you remember about the edit.
+    /// How long one that overlaps is when nobody has said: four tenths of a
+    /// second, which is long enough to read as a transition and short enough
+    /// not to be the thing you remember about the edit. A dip has its own,
+    /// longer one (`ClipTransitionKind.defaultLengthMS`).
     public static let defaultLengthMS = 400
 
     /// The shortest one worth having. Below about a tenth of a second a
@@ -131,10 +142,10 @@ public struct ClipTransition: Hashable, Codable, Sendable {
     /// in two first (`PhotonzDocument.holdOnColour`).
     public var holdMS: Int
 
-    public init(kind: ClipTransitionKind, lengthMS: Int = ClipTransition.defaultLengthMS,
+    public init(kind: ClipTransitionKind, lengthMS: Int? = nil,
                 alignment: ClipTransitionAlignment = .across, holdMS: Int = 0) {
         self.kind = kind
-        self.lengthMS = max(Self.shortestMS, lengthMS)
+        self.lengthMS = max(Self.shortestMS, lengthMS ?? kind.defaultLengthMS)
         self.alignment = alignment
         self.holdMS = kind.needsOverlap ? 0 : max(0, holdMS)
     }
@@ -704,6 +715,22 @@ public enum ClipTransitionCopy {
     /// heading.
     public static let overlapHelp = "The ones that need an overlap put both clips on screen together, "
         + "so they spend spare media. The dips do not: each clip fades inside the time it already has."
+
+    /// One length as the Length menu offers it. A dip's says how it splits,
+    /// out of the outgoing clip and back into the incoming one, since its
+    /// length is two fades and not one overlap.
+    public static func lengthChoice(_ ms: Int, of kind: ClipTransitionKind) -> String {
+        guard !kind.needsOverlap else { return seconds(ms) }
+        let split = ClipTransition(kind: kind, lengthMS: ms)
+        return "\(seconds(ms)), \(half(split.beforeMS)) out and \(half(split.afterMS)) in"
+    }
+
+    /// Half a length in seconds: to one place like every other length, and to
+    /// two where one would round it, so 1.5s splits into 0.75s and 0.75s and
+    /// the two halves still add up to what the menu says.
+    private static func half(_ ms: Int) -> String {
+        ms % 100 == 0 ? seconds(ms) : String(format: "%.2fs", Double(ms) / 1000)
+    }
 
     /// What the Hold row is called: the colour the dip goes through.
     public static func holdLabel(_ kind: ClipTransitionKind) -> String {

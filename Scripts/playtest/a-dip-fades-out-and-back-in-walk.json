@@ -1,0 +1,351 @@
+{
+  "out": "/tmp/photonz-playtest/a-dip-fades-out-and-back-in-walk",
+  "seed": "Two recordings back to back, nothing switched from its default. A Dip to black dropped on the join is a second long, half out and half in, and the Length menu says so. Its brightness at ten evenly spaced moments across the fade down and ten across the fade up, stopped, playing and exported, must ramp with no step bigger than a third of the range. The same for Dip to white, for a white hold of a second, and for a dip on a cut inside one recording.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ],
+    "scratch": [
+      "sample:recording as b-roll.mp4"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "clipDragEndIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 7.0,
+      "count": 1
+    },
+    {
+      "do": "dropOnTimeline",
+      "file": "scratch/b-roll.mp4",
+      "track": "V1",
+      "seconds": 6.95
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "track": "V1",
+      "startsAt": 7.0,
+      "count": 1
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "Dip to black",
+      "track": "V1",
+      "seconds": 7.0
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Dip to black"
+    },
+    {
+      "do": "expect",
+      "menu": "Length",
+      "reads": "1.0s"
+    },
+    {
+      "do": "describe",
+      "stage": "1-dip-to-black",
+      "note": "A Dip to black dropped on the join between two clips, nothing else touched: a second long, half a second out of the recording and half a second into b-roll"
+    },
+    {
+      "do": "panel",
+      "stage": "1-dip-to-black"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Length",
+      "choose": "1.0s, 0.5s out and 0.5s in"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-dip-to-black"
+    },
+    {
+      "do": "describe",
+      "stage": "2-dip-to-black-measured",
+      "note": "THE FIRST TEST: brightness at ten evenly spaced moments across the fade down (6.5s to 7.0s) and ten across the fade up (7.0s to 7.5s), stopped, PLAYING and exported. Each must ramp: no two neighbours further apart than a third of the range"
+    },
+    {
+      "do": "measureFade",
+      "name": "dip-to-black",
+      "atMS": [
+        6500,
+        6556,
+        6611,
+        6667,
+        6722,
+        6778,
+        6833,
+        6889,
+        6944,
+        7000,
+        7056,
+        7111,
+        7167,
+        7222,
+        7278,
+        7333,
+        7389,
+        7444,
+        7500
+      ],
+      "within": 0.06,
+      "smooth": true
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Type",
+      "choose": "Dip to white"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Dip to white"
+    },
+    {
+      "do": "expect",
+      "menu": "Length",
+      "reads": "1.0s"
+    },
+    {
+      "do": "describe",
+      "stage": "3-dip-to-white-measured",
+      "note": "THE SECOND TEST: the same join turned into a Dip to white, measured the same way"
+    },
+    {
+      "do": "measureFade",
+      "name": "dip-to-white",
+      "atMS": [
+        6500,
+        6556,
+        6611,
+        6667,
+        6722,
+        6778,
+        6833,
+        6889,
+        6944,
+        7000,
+        7056,
+        7111,
+        7167,
+        7222,
+        7278,
+        7333,
+        7389,
+        7444,
+        7500
+      ],
+      "within": 0.06,
+      "smooth": true
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 6.75
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "4-half-way-to-white",
+      "note": "A quarter second before the join, half way through the fade up to white: the recording is still there under a half white veil"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-half-way-to-white"
+    },
+    {
+      "do": "press",
+      "control": "Transition Tutorial Sample to b-roll"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Hold on white",
+      "choose": "1.0s"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "track": "V1",
+      "startsAt": 8.0,
+      "count": 1
+    },
+    {
+      "do": "describe",
+      "stage": "5-held-measured",
+      "note": "THE THIRD TEST: a second held on white. The recording fades up to white over its last half second, white stands for a second, and b-roll fades in out of it from 8.0s"
+    },
+    {
+      "do": "measureFade",
+      "name": "dip-to-white-held",
+      "atMS": [
+        6500,
+        6556,
+        6611,
+        6667,
+        6722,
+        6778,
+        6833,
+        6889,
+        6944,
+        7000,
+        7500,
+        8000,
+        8056,
+        8111,
+        8167,
+        8222,
+        8278,
+        8333,
+        8389,
+        8444,
+        8500
+      ],
+      "within": 0.06,
+      "smooth": true
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "track": "V1",
+      "startsAt": 7.0,
+      "count": 1
+    },
+    {
+      "do": "selectRow",
+      "row": "Tutorial Sample"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 3.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "clipSplit"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "Dip to black",
+      "track": "V1",
+      "seconds": 3.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Dip to black"
+    },
+    {
+      "do": "expect",
+      "menu": "Length",
+      "reads": "1.0s"
+    },
+    {
+      "do": "describe",
+      "stage": "6-cut-inside-a-recording",
+      "note": "THE FOURTH TEST: a cut inside one recording takes a Dip to black of the same second, and it ramps out and back in the same way"
+    },
+    {
+      "do": "measureFade",
+      "name": "dip-inside-a-recording",
+      "atMS": [
+        3000,
+        3056,
+        3111,
+        3167,
+        3222,
+        3278,
+        3333,
+        3389,
+        3444,
+        3500,
+        3556,
+        3611,
+        3667,
+        3722,
+        3778,
+        3833,
+        3889,
+        3944,
+        4000
+      ],
+      "within": 0.06,
+      "smooth": true
+    },
+    {
+      "do": "snapshot",
+      "name": "6-cut-inside-a-recording"
+    }
+  ]
+}

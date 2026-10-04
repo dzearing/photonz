@@ -28,8 +28,8 @@ extension ClipTransitionKind {
 extension ClipCut {
 
     /// The transition putting `kind` on this cut would write: the length that
-    /// is there now, else the usual length, never longer than this cut can pay
-    /// for. Nil where it cannot take `kind` at all.
+    /// is there now, else the usual length for `kind`, never longer than this
+    /// cut can pay for. Nil where it cannot take `kind` at all.
     ///
     /// It sits where the one there now sits when that side can pay, else
     /// across the cut, else on whichever side has the spare: a clip dropped
@@ -37,7 +37,7 @@ extension ClipCut {
     /// a dissolve there after the cut rather than refusing it. A dip keeps the
     /// hold the cut has; anything else holds nothing.
     public func fitted(_ kind: ClipTransitionKind) -> ClipTransition? {
-        let asked = transition?.lengthMS ?? ClipTransition.defaultLengthMS
+        let asked = transition?.lengthMS ?? kind.defaultLengthMS
         let hold = kind.needsOverlap ? 0 : (transition?.holdMS ?? 0)
         var order: [ClipTransitionAlignment] = [transition?.alignment ?? .across, .across]
         order += ClipTransitionAlignment.allCases

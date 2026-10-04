@@ -397,12 +397,17 @@ struct TimelineSpareStrips: View {
            let cut = editorState.document?.documentCut(
                at: .edit(outgoing: point.outgoing, incoming: point.incoming))?.cut,
            (cut.transition?.holdMS ?? 0) == 0 {
+            // A transition's band sits over the cut, so each length starts
+            // past the band's edge rather than under its handle.
+            let band = cut.drawnTransition
             ZStack(alignment: .topLeading) {
                 if let after = cut.spareAfterOutMS, after > 0 {
-                    strip(fromMS: point.atMS, lengthMS: after, alongTop: true)
+                    strip(fromMS: point.atMS, lengthMS: after, alongTop: true,
+                          clearOfMS: band?.afterMS ?? 0)
                 }
                 if let before = cut.spareBeforeInMS, before > 0 {
-                    strip(fromMS: point.atMS - before, lengthMS: before, alongTop: false)
+                    strip(fromMS: point.atMS - before, lengthMS: before, alongTop: false,
+                          clearOfMS: band?.beforeMS ?? 0)
                 }
             }
             .allowsHitTesting(false)
@@ -410,14 +415,18 @@ struct TimelineSpareStrips: View {
     }
 
     /// `.xspare{height:5px}`, 3pt dashes: purple for the outgoing side, orange
-    /// for the incoming one, with its length riding inside the clip body.
-    private func strip(fromMS start: Int, lengthMS: Int, alongTop: Bool) -> some View {
+    /// for the incoming one, with its length riding inside the clip body,
+    /// `clearOfMS` along from the cut so a band over it does not cover it.
+    private func strip(fromMS start: Int, lengthMS: Int, alongTop: Bool, clearOfMS: Int) -> some View {
         let ruler = editorState.motionStripRuler
         let x0 = max(0, laneWidth * ruler.fraction(ofMS: Double(start)))
         let x1 = min(laneWidth, laneWidth * ruler.fraction(ofMS: Double(start + lengthMS)))
         let width = max(2, x1 - x0)
         let ink = alongTop ? VideoKit.rgb(0x9A7DFF) : VideoKit.rgb(0xFFB98A)
         let label = "\(ClipTransitionCopy.seconds(lengthMS)) spare"
+        let clear = clearOfMS > 0
+            ? laneWidth * ruler.fraction(spanningMS: Double(clearOfMS)) + 6
+            : 0
         return ZStack(alignment: alongTop ? .topLeading : .bottomTrailing) {
             Path { path in
                 path.move(to: CGPoint(x: 0, y: 2.5))
@@ -435,7 +444,7 @@ struct TimelineSpareStrips: View {
                 .padding(.vertical, 1)
                 .background(RoundedRectangle(cornerRadius: 3).fill(VideoKit.rgb(0x080A12, 0.72)))
                 .padding(alongTop ? .top : .bottom, 7)
-                .padding(alongTop ? .leading : .trailing, 2)
+                .padding(alongTop ? .leading : .trailing, 2 + clear)
         }
         .frame(width: width, height: height, alignment: alongTop ? .topLeading : .bottomTrailing)
         .offset(x: x0)

@@ -1,0 +1,31 @@
+{
+  "feature": "Dip to black and Dip to white fade out and back in",
+  "epic": "video-transitions-motion",
+  "summary": "A new dip is now a second long: the outgoing clip fades to black or white over half a second and the next clip fades up out of it over half a second, the length the transition mock shows. Before, a dip was 0.4s, so 0.2s each way, about six frames, and it played like two hard cuts.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Two clips back to back on V1. The walk is Scripts/playtest/a-dip-fades-out-and-back-in-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Put two clips back to back on V1 and drag the Dip to black tile onto the join.", "shot": "2026-10-04-dip-fade-1-dip-to-black-sc.png" },
+    { "do": "Press Space from a second before the join and watch it play: half a second down to black, half a second up into the next clip." },
+    { "do": "Open the Length menu: each choice says how it splits, e.g. \"1.0s, 0.5s out and 0.5s in\"." },
+    { "do": "Pick Dip to white from Type and stop a quarter second before the join: the picture is half way to white.", "shot": "2026-10-04-dip-fade-4-half-way-to-white-sc.png" },
+    { "do": "Pick 1.0s from Hold on white and play it: fade up to white, a second of white, then the next clip fades in." },
+    { "do": "Cut one recording in two with Command K and drop Dip to black on that cut: the same second-long fade.", "shot": "2026-10-04-dip-fade-6-cut-inside-a-recording-sc.png" },
+    { "do": "Export the movie and play it back in QuickTime: the fades are there too." }
+  ],
+  "evaluate": [
+    "Does a dip now read as a fade out and a fade in when it plays, rather than two cuts?",
+    "Is a second the right default for a dip, or would you rather it matched Premiere's per-transition default you set yourself?",
+    "Is \"1.0s, 0.5s out and 0.5s in\" in the Length menu clear, or is it too much for a menu row?",
+    "Should a cross dissolve also default to a second, as Premiere and Final Cut do, instead of 0.4s?"
+  ],
+  "rough": [
+    "MEASURED, before the change (default 0.4s, Dip to black between the sample recording and a copy of it, mean brightness 0 to 1 every 40 ms from 6.8s to 7.2s): stopped 0.30 0.24 0.18 0.12 0.06 0.00 0.06 0.12 0.18 0.24 0.30, and the same playing and exported. So the old dip did ramp everywhere, in playback, scrubbing and export alike. It just lasted 0.2s each way, which is what you saw as a jump.",
+    "MEASURED, after (default 1.0s, ten evenly spaced moments down and ten up): Dip to black stopped 0.30 0.27 0.23 0.20 0.17 0.13 0.10 0.07 0.03 0.00 0.03 0.07 0.10 0.13 0.16 0.20 0.23 0.26 0.30, playing 0.29 0.27 0.23 0.20 0.16 0.14 0.10 0.08 0.03 0.01 0.03 0.07 0.09 0.14 0.16 0.20 0.22 0.26 0.30, export the same as stopped to within 0.01. Dip to white climbs 0.30 to 1.00 and back in steps of about 0.08 in all three. The white hold stands at 1.00 for its second. The dip on a cut inside one recording matches Dip to black. No step is bigger than a ninth of the range, and the walk fails anything bigger than a third.",
+    "A dip that was already on a cut keeps its length. So does a cross dissolve you switch to a dip: Premiere keeps the duration when you replace a transition too. Only a new dip gets the second.",
+    "Cross dissolve, Push, Wipe and Blur through still default to 0.4s. Each of those spends spare frames from both clips, so making them longer is a separate call. It is asked in evaluate, not changed here.",
+    "The longer band covered the \"1.0s spare\" label under its right handle, and the incoming clip's name showed through the label. Each label now starts past the band's edge. That was fixed in this task.",
+    "Side by side with video-transition-wt.html, step \"Change it to a dip to black\": Type Dip to black, Length 1.0s and Hold on black 0.0s match the mock. The mock's paragraph under the section (\"Nothing overlaps now...\") is still not printed, the same as before this task (UX-PATTERNS §4).",
+    "The sound dips with the picture as before. It uses the same curve, so it now dips over the same second. Checked by transition-carries-the-sound-walk and the sound unit tests, not by ear."
+  ]
+}

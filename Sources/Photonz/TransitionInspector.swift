@@ -167,12 +167,17 @@ struct TransitionInspector: View {
         .playtestField("Type")
     }
 
+    /// **Length** (`#rowLen`): the mock's "1.0s" on the row, and on a dip
+    /// each choice says how it splits, out and back in.
     private func length(_ inHand: DocumentCut) -> some View {
         let now = inHand.cut.drawnTransition?.lengthMS ?? 0
+        let kind = inHand.cut.drawnTransition?.kind ?? .dissolve
         return VideoKit.DropdownRow(
             label: "Length", value: ClipTransitionCopy.seconds(now),
             choices: .picking(editorState.clipTransitionLengthOffers, current: now,
-                              title: ClipTransitionCopy.seconds) { editorState.setClipTransitionLength($0) })
+                              title: { ClipTransitionCopy.lengthChoice($0, of: kind) }) {
+                editorState.setClipTransitionLength($0)
+            })
         .playtestField("Length")
     }
 

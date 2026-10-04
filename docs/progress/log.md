@@ -20631,3 +20631,10 @@ Next: the first editor window's ~200 ms first build
 - Every guarded fold in `section-fold-motion-walk` was over a frame on the honest meter (18 to 108ms), not just Time. Three causes, each proved by experiment: a dotted `@AppStorage` key (`inspector.width`, `timeline.height`) is invalidated by every defaults write, so each fold rebuilt the whole editor; the fold was the panel's stored setting, so each fold rebuilt every section; and opening built the body from nothing.
 - `StoredSetting` replaces view-level `@AppStorage`; `PanelSectionFoldStore` gives each section its own fold cell; a section keeps its body built once opened; Tab, VoiceOver and the walk's markers follow the fold off the click's frame. Folds now 6 to 15ms.
 - Residual: about one full walk run in three still catches one 16 to 18ms frame; task `folding-a-panel-section-lands-under-a-frame-on-e` owns it.
+
+## 2026-10-04: a dip fades out and back in
+
+- Reproduced the user's "it just goes to black and then to the new clip": the dip did ramp everywhere (stopped, playing, exported), but at the old 0.4s default it was 0.2s each way, about six frames. A new dip now defaults to 1.0s, half out and half in, matching Premiere, Final Cut and the transition mock. The overlap kinds stay at 0.4s; the audit asks whether they should move to a second too.
+- The Length menu on a dip says how it splits ("1.0s, 0.5s out and 0.5s in"). The spare-strip label starts past the band edge so the wider band does not cover it.
+- `measureFade` gained `smooth` (`FadeRamp`); `a-dip-fades-out-and-back-in-walk` measures Dip to black, Dip to white, a white hold and a dip inside one recording during playback at Next defaults.
+- Next: the user's answer on a dissolve's default length (audit evaluate).

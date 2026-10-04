@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 5,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-04T17:31:44.445Z",
-  "updated": "2026-10-04T17:31:44.523Z",
+  "updated": "2026-10-04T22:09:09.038Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"when i dip to black, there is no fade out and fade in. It just goes to black and then to the new clip.\" then \"same with white\".\n\nFrom code reading (not run): the model does ramp. ClipTransition.dipAmount (PhotonzCore/ClipTransitions.swift:199-210) rises over beforeMS to the cut, holds holdMS at 1, falls over afterMS. Used for a cut inside a clip (ClipTransitions.swift:483, panel at :542 via dipPanel :565-575, a full-frame rectangle layer at that opacity) and for an edit point between two clips (EditPointTransitions.swift:245, panel inserted :307). Sound uses it too (TransitionSound.swift:46).\nSuspects, NOT confirmed, reproduce first: (1) default length 400 ms (ClipTransition.defaultLengthMS, :112) is split across the cut, so 200 ms down and 200 ms up, which at playback reads as a jump; (2) the playback path draws frames without the dip panel opacity (or only at whole-clip boundaries), while scrub/export are right; (3) at an edit point between two separate clips, the incoming clip starts drawing over the panel or the panel sits under it (insert at index + 1 ordering); (4) with a hold, the panel order or timing around the moved clip start. Existing walks with dips: transitions-at-a-cut-walk, transition-placement-and-hold-walk, transition-carries-the-sound-walk; check whether any of them measures frames mid-fade during PLAYBACK (likely not).",
@@ -30,6 +30,34 @@
     {
       "t": "2026-10-04T17:31:44.522Z",
       "note": "seq 500 -> 5"
+    },
+    {
+      "t": "2026-10-04T21:34:43.237Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-04T22:08:57.082Z",
+      "note": "owns these walks: a-dip-fades-out-and-back-in-walk"
+    },
+    {
+      "t": "2026-10-04T22:09:08.871Z",
+      "note": "Reproduced at Next defaults (probe, screen unlocked, Screen Recording granted): with the 0.4s default a Dip to black between two clips ramps correctly when stopped, playing and exported (6.8s..7.2s every 40 ms: 0.30 0.24 0.18 0.12 0.06 0.00 0.06 ... 0.30), so suspects 2-4 (playback path, panel order, hold) are ruled out. The real cause is suspect 1: 0.2s each way is about six frames and plays as two cuts."
+    },
+    {
+      "t": "2026-10-04T22:09:08.928Z",
+      "note": "Adversarial pass: Premiere and Final Cut default a new transition to 1s, and the transition mock's dip reads 1.0s ('A fades out inside its own last half second and B fades in inside its own first half second'). So a NEW dip now defaults to 1000 ms (ClipTransitionKind.defaultLengthMS; ClipTransition.init with no length and ClipCut.fitted use it). An existing transition keeps its length when its kind changes, as Premiere does. The overlap kinds stay at 400 ms because each extra ms is spare media spent; whether to raise them is asked in the audit."
+    },
+    {
+      "t": "2026-10-04T22:09:08.982Z",
+      "note": "Shipped: Length menu choices on a dip read '1.0s, 0.5s out and 0.5s in' (ClipTransitionCopy.lengthChoice); measureFade gained 'smooth' (FadeRamp: no neighbour step > 1/3 of the range, for stopped, played and export); new walk a-dip-fades-out-and-back-in-walk at Next defaults measures Dip to black, Dip to white, a 1s white hold and a dip on a cut inside one recording. The spare-strip label now starts past the band edge, because the wider band covered it. Tests: DipLengthTests and FadeRampTests. Full suite 11228 green. Walks green: the new one, transition-carries-the-sound, transitions-where-clips-meet, transition-placement-and-hold, transitions-at-a-cut, default-transition-key, transition-on-every-cut, transition-edge-follows-the-pointer."
+    },
+    {
+      "t": "2026-10-04T22:09:09.037Z",
+      "note": "Rough items: dissolve default length is a question in the audit's evaluate list (no task, since the user decides). The mock's dip paragraph is not printed, covered by UX-PATTERNS §4. Nothing filed: nothing left clears the follow-up bar."
     }
+  ],
+  "started": "2026-10-04T21:34:43.236Z",
+  "walks": [
+    "a-dip-fades-out-and-back-in-walk"
   ]
 }

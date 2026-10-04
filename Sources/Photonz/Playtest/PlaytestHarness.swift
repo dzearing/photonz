@@ -2051,8 +2051,9 @@ private final class Run {
                                           paceShare: paceShare),
                  state: describe())
 
-        case .measureFade(let name, let atMS, let within):
-            note(number, step.name, try await measureFade(name: name, atMS: atMS, within: within),
+        case .measureFade(let name, let atMS, let within, let smooth):
+            note(number, step.name,
+                 try await measureFade(name: name, atMS: atMS, within: within, smooth: smooth),
                  state: describe())
 
         case .writeFrame(let name, let atMS, let width, let height):
@@ -13586,7 +13587,8 @@ private final class Run {
 
     /// How bright the picture is at each moment stopped, playing and exported
     /// (`measureFade`).
-    private func measureFade(name: String, atMS moments: [Int], within: Double) async throws -> String {
+    private func measureFade(name: String, atMS moments: [Int], within: Double,
+                             smooth: Bool) async throws -> String {
         let editor = try requireEditor()
         guard let document = editor.document, document.hasTime else {
             throw Failure(description: "this window holds no document with time in it to measure")
@@ -13697,7 +13699,29 @@ private final class Run {
             rows.append(row)
             said.append(line)
         }
-        write(json: ["within": within, "moments": rows, "playedLooks": played.count], to: "\(name).json")
+        // Held to a ramp, each reading on its own: a fade down or up that
+        // moves most of the way between two neighbours is a jump, however
+        // well the three agree with each other (`FadeRamp`).
+        if smooth {
+            let runs: [(String, [(ms: Int, value: Double)])] = [
+                ("stopped", moments.map { ($0, stopped[$0] ?? 0) }),
+                ("played", moments.compactMap { ms in nearest[ms].map { (ms, $0.luma) } }),
+                ("export", moments.map { ($0, handed[$0] ?? 0) }),
+            ]
+            for (what, readings) in runs {
+                for jump in FadeRamp.jumps(in: readings) {
+                    wrong.append("the \(what) picture jumps from \(f3(jump.from)) at \(jump.fromMS) ms "
+                        + "to \(f3(jump.to)) at \(jump.toMS) ms, more than a third of its range "
+                        + "(\(f3(jump.allowed))), so it plays as a cut rather than a fade")
+                }
+            }
+            if nearest.count < moments.count {
+                wrong.append("only \(nearest.count) of \(moments.count) moments had a played picture "
+                    + "within 50 ms, so the fade as it plays was not all seen")
+            }
+        }
+        write(json: ["within": within, "smooth": smooth, "moments": rows, "playedLooks": played.count],
+              to: "\(name).json")
         let summary = "mean luminance over black, nought to one, of \(moments.count) moments: the "
             + "canvas stopped, the canvas playing (\(played.count) pictures), the export's picture "
             + "before the encoder, and the MP4 as read back (\(name).json): " + said.joined(separator: "; ")

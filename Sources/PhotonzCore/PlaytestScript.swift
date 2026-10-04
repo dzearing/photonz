@@ -2764,7 +2764,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// The acceptance for a picture fade is that what plays, what you scrub
     /// to and what exports agree at the fade's midpoint, measured
     /// (`a-video-clip-fades-in-from-black-and-out-to-blac`).
-    case measureFade(name: String, atMS: [Int], within: Double)
+    ///
+    /// `smooth` also holds each of the three readings, stopped, played and
+    /// exported, to a ramp: no two neighbouring moments further apart than a
+    /// third of everything the run covers (`FadeRamp`). That is how a dip
+    /// that plays as two hard cuts fails a walk
+    /// (`dip-to-black-and-dip-to-white-visibly-fade-out-a`).
+    case measureFade(name: String, atMS: [Int], within: Double, smooth: Bool)
     /// Open a menu that lives INSIDE the window — the Add menu on a
     /// component's Properties list, the ellipsis on the Measurements header —
     /// write its rows to the log, photograph it if `shot` names a picture, and
@@ -4210,7 +4216,8 @@ public enum PlaytestStep: Sendable, Equatable {
         case "measureFade":
             self = .measureFade(name: try f.string("name"),
                                 atMS: try f.optionalNumbers("atMS").map { Int($0) },
-                                within: try f.optionalNumber("within") ?? 0.03)
+                                within: try f.optionalNumber("within") ?? 0.03,
+                                smooth: try f.optionalFlag("smooth") ?? false)
         case "writeFrame":
             self = .writeFrame(name: try f.string("name"),
                                atMS: try f.optionalNumber("atMS").map { Int($0) },
