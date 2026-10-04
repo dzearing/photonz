@@ -111,14 +111,17 @@ struct BusyVideoSizeTests {
             }
         }
         // Which the encoder cannot be held to, said rather than hidden: none
-        // of an ordinary pace of scrolling, and Small of the fast one, where
-        // its floor is 1.3 times the budget. High is never among them. If the
-        // system's encoder ever gets under its floor, this is the line that
-        // says so, and the sheet's weigh goes on being right either way.
+        // of an ordinary pace of scrolling, and of the fast one at most Standard
+        // and Small, where the encoder floors above their budget. High is never
+        // among them. Which of the two go over depends on the encoder and the
+        // load on the machine: the v0.16.0 Release run on a GitHub VM held both
+        // to budget, and a busy Mac put both over. So neither is required
+        // either way. The sheet's weigh, the promise people see, is checked
+        // above at every choice.
         if speed < 600 {
             #expect(beyondTheBudget.isEmpty, "at \(Int(speed)) px/s: \(beyondTheBudget)")
         } else {
-            #expect(beyondTheBudget.contains("small") && !beyondTheBudget.contains("high"),
+            #expect(!beyondTheBudget.contains("high"),
                     "at \(Int(speed)) px/s the budget could not hold \(beyondTheBudget)")
         }
     }
