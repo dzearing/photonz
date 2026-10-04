@@ -67,13 +67,21 @@ let package = Package(
             dependencies: ["PhotonzCore", "PhotonzRender"],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
+        // Every target lists EVERY module of ours it imports, not just the one
+        // that brings the rest along. The build decides whether a target is up
+        // to date by looking only at the modules it lists, so a test target
+        // reaching PhotonzCore through PhotonzRender alone was never recompiled
+        // when a core type changed shape: it kept writing a field at its old
+        // offset and failed on correct code until its file was touched
+        // (2026-09-25, 2026-10-02). `Scripts/check-direct-imports.mjs` holds
+        // this rule and `Scripts/stale-build-drill.sh` shows why.
         .testTarget(
             name: "PhotonzCoreTests",
             dependencies: ["PhotonzCore"]
         ),
         .testTarget(
             name: "PhotonzRenderTests",
-            dependencies: ["PhotonzRender"],
+            dependencies: ["PhotonzCore", "PhotonzRender"],
             // A real 2x screenshot of a settings pane whose CSS geometry is
             // known, so element detection is pinned against measured truth
             // rather than against a synthetic drawing of what we expect.
@@ -84,7 +92,7 @@ let package = Package(
             // ...and the renderer, because the one claim a video export has to
             // make is that the frame on disk is the frame the canvas draws, and
             // the only way to check it is to draw one and then write it.
-            dependencies: ["PhotonzMedia", "PhotonzRender"]
+            dependencies: ["PhotonzCore", "PhotonzMedia", "PhotonzRender"]
         ),
     ]
 )

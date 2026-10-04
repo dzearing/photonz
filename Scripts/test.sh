@@ -34,6 +34,15 @@ run_tests() {
   fi
 }
 
+# A target that imports one of our modules without listing it in Package.swift
+# is not rebuilt when that module changes shape, and its tests then fail on
+# correct code (2026-09-25, 2026-10-02). Caught here, before a build can go
+# stale, rather than after a runner has chased the red.
+if ! gaps="$(node Scripts/check-direct-imports.mjs)"; then
+  echo "$gaps"
+  exit 1
+fi
+
 # The whole output is kept only so the last lines can be looked at for a crash.
 # Everything is still printed as it happens.
 log="$(mktemp -t photonz-test-XXXXXX)"

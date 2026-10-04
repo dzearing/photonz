@@ -20594,3 +20594,11 @@ Next: the first editor window's ~200 ms first build
 - HistoryOverlayController: bare ←/→ go straight to the key panel, skipping AppKit's menu-bar key-equivalent check (~1.5ms a step).
 - Numbers: 120 switches median 6.9ms, max 13.2; arrows max ~14ms; history-filter-switch-speed-walk passed six runs in a row. Audit: queue/audits/2026-10-04-history-filter-switch-speed.json.
 - Method worth reusing: `/usr/bin/sample` is too coarse for one-frame work; `xctrace record --template 'Time Profiler' --attach <probe pid>` exported to XML and split into main-thread bursts finds the frame, and the SwiftUI template's `swiftui-updates` table (attach before the window opens, or views read "created before tracing started") names the views.
+
+## 2026-10-04 — A change to a core type rebuilds every test that uses it
+
+- Reproduced on this package: two stored fields ahead of `LayerMotion.isOn`, then `Scripts/test.sh --filter MotionRenderTests` failed with the same `difference 0.007775` as 2026-09-25 and 2026-10-02.
+- Cause: PhotonzRenderTests and PhotonzMediaTests import PhotonzCore but listed only PhotonzRender / PhotonzMedia. SwiftPM decides a target is up to date from the modules it LISTS; PhotonzRender's module came out byte for byte the same, so the test compile never ran. Not the driver's incremental logic (`-disable-incremental-imports` and `-enable-incremental-file-hashing` made no difference; verbose `-v` hid it by forcing a rebuild).
+- Fix: both test targets list PhotonzCore (Package.swift). Same change on the real package now passes, 15/15, no test file touched.
+- Guard: `Scripts/check-direct-imports.mjs` (runs first in `Scripts/test.sh`) fails naming any target that imports one of our modules without listing it. Drill: `Scripts/stale-build-drill.sh` (miniature package, ~10s: STALE when only the middle module is listed, FRESH when both are) and `--real` (the LayerMotion change on this package, ~2 min).
+- Likely the same cause as the signal 10/11 "half-rebuilt .build" deaths test.sh rebuilds after; that fallback stays.
