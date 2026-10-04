@@ -7229,12 +7229,11 @@ private final class Run {
             // The innermost thing holding it turns first, because that is the
             // one a person would put the pointer over. When it is already
             // showing that stretch of its own length, or has no more to give,
-            // the section around it takes the turn instead.
+            // or shows too little of itself to hold the control at all, the
+            // section around it takes the turn instead (`PlaytestReach.turns`).
             var round = 0.0
-            for (clip, reach) in reaches {
-                let by = Self.gap(from: current.box, into: reach)
-                guard by != 0 else { continue }
-                round = Self.scrollClip(clip, by: by)
+            for turn in PlaytestReach.turns(for: current.box, reaches: reaches.map(\.reach)) {
+                round = Self.scrollClip(reaches[turn.index].clip, by: turn.by)
                 if round > 0.5 { break }
             }
             moved += round
@@ -7249,10 +7248,6 @@ private final class Run {
         throw Failure(description: "scrolled \(Int(moved))pt and a press still could not land: "
             + trouble)
     }
-
-    /// Two points of daylight, so a control resting exactly on the edge is not
-    /// left one rounding error short of reachable.
-    private static let revealMargin = 2.0
 
     /// Every scrolling area the control is inside, outermost first: the dock
     /// before the Effects list that sits inside the dock.
@@ -7314,18 +7309,6 @@ private final class Run {
             pairs.append((clip, region))
         }
         return pairs.reversed().filter { !$0.reach.isNull && !$0.reach.isEmpty }
-    }
-
-    /// How far the wheel has to turn to bring `box` inside `reach`, and which
-    /// way round. Zero when it is already there.
-    ///
-    /// A window's coordinates run bottom up, so something FURTHER DOWN the
-    /// list has the SMALLER y, and reaching it means going down the list,
-    /// which the wheel writes as a negative number.
-    private static func gap(from box: CGRect, into reach: CGRect) -> Double {
-        if box.minY < reach.minY { return -(reach.minY - box.minY + revealMargin) }
-        if box.maxY > reach.maxY { return box.maxY - reach.maxY + revealMargin }
-        return 0
     }
 
     /// Scrolls one clip view and answers how far it actually went. The wheel

@@ -130,6 +130,49 @@ public enum PlaytestReach {
         return nil
     }
 
+    /// Two points of daylight, so a control resting exactly on the edge is not
+    /// left one rounding error short of reachable.
+    public static let revealMargin: Double = 2.0
+
+    /// How far the wheel has to turn to bring `box` inside `reach`, and which
+    /// way round. Zero when it is already there.
+    ///
+    /// Something FURTHER DOWN the list has the SMALLER y, and reaching it
+    /// means going down the list, which the wheel writes as a negative number.
+    public static func gap(from box: CGRect, into reach: CGRect) -> Double {
+        if box.minY < reach.minY { return -(reach.minY - box.minY + revealMargin) }
+        if box.maxY > reach.maxY { return box.maxY - reach.maxY + revealMargin }
+        return 0
+    }
+
+    /// The scrollers a reveal may turn this round, in the order it tries them,
+    /// each with the distance it would turn: `reaches` are the strips of window
+    /// each scrolling area around the control could park it in, innermost
+    /// first, and `index` points back into that list. The first one that
+    /// actually moves takes the round.
+    ///
+    /// **A strip shorter than the control cannot hold it, so it never takes the
+    /// turn.** The innermost scroller is the one a person would put the
+    /// pointer over, but only when it is showing enough of itself to show the
+    /// thing. With the dock at its top on 2026-10-04, the Library shelf showed
+    /// 3 points of itself above the dock's bottom edge; being innermost, it
+    /// took every round, sliding a 106 point tile back and forth along that
+    /// sliver, and the dock that could have brought the whole shelf up never
+    /// moved. The walk then reported the shelf "would not scroll any further".
+    ///
+    /// When no strip at all is tall enough the old order stands, innermost
+    /// first: nothing can show the control whole, and turning still brings the
+    /// most of it in.
+    public static func turns(for box: CGRect, reaches: [CGRect],
+                             slack: Double = PlaytestReach.slack) -> [(index: Int, by: Double)] {
+        let all = reaches.enumerated().compactMap { index, reach -> (index: Int, by: Double)? in
+            let by = gap(from: box, into: reach)
+            return by == 0 ? nil : (index, by)
+        }
+        let roomy = all.filter { reaches[$0.index].height + slack >= box.height }
+        return roomy.isEmpty ? all : roomy
+    }
+
     /// What the walk prints. Plain words, naming the control, saying which of
     /// the three it is and by how much, and ending with what would fix it.
     ///

@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/title-presets-library-shelf-walk",
-  "seed": "Title pages and name cards are picture tiles on the Library's Components shelf, under a Titles header, the way the title mock drags a lower third out of the Library (video-title-wt.html, step 10). At Next defaults with no flag set: the shelf is opened by View > Library and the Comps segment pressed by the pointer. The Sunrise tile is picked up by the pointer, and the Midnight tile double clicked by the pointer lands at the playhead on its own track, exactly as Sequence > Insert does. Then Sunrise held over the recording on V1 says it goes on a new track, never over the recording, and let go it lands there half a second in; held over that new track after itself it lands on the same track.",
+  "seed": "Title pages and name cards are picture tiles on the Library's Components shelf, under a Titles header, the way the title mock drags a lower third out of the Library (video-title-wt.html, step 10). At Next defaults with no flag set: the shelf is opened by View > Library and the Comps segment pressed by the pointer. The Sunrise tile is picked up by the pointer, and the Midnight tile double clicked by the pointer lands at the playhead on its own track, exactly as Sequence > Insert does. Then Sunrise held over the recording on V1 says it goes on a new track, never over the recording, and let go it lands there half a second in; held over that new track after itself it lands on the same track. Last, in the dock those drops crowded, Midnight double clicked by the pointer still lands, the dock at its end shows a whole row of title tiles, and the Media shelf still brings its tile into reach.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -268,6 +268,83 @@
       "do": "describe",
       "stage": "6-undo",
       "note": "One Command Z takes the last drop back whole"
+    },
+    {
+      "comment": "THE FIFTH TEST, in the dock the drops crowded (Time, Captions and Transitions open over the Library, the shelf's floor binding): a double click on Midnight by the pointer. The press scrolls the dock itself until the tile is whole, the way a person would; with the shelf showing a 3 point sliver above the dock's edge it used to turn the shelf instead, back and forth, and give up.",
+      "do": "press",
+      "control": "Midnight",
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectClip",
+      "clip": "Title Page",
+      "count": 3
+    },
+    {
+      "do": "scrollPanel",
+      "row": "Comps",
+      "by": -3000
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Midnight",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "7-crowded-dock-at-its-end",
+      "note": "THE FIFTH TEST: with the timeline grown and the dock crowded, a double click on Midnight by the pointer still lands it at the playhead, and the dock scrolled to its end shows a whole row of title tiles with a sliver of the next under the fade"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-crowded-dock-at-its-end"
+    },
+    {
+      "do": "press",
+      "control": "Media"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "comment": "Back to the top of the dock, so the Media tile has to be scrolled to the same way Midnight was.",
+      "do": "scrollPanel",
+      "row": "Media",
+      "by": 3000
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "reveal",
+      "control": "Tutorial Sample.mp4"
+    },
+    {
+      "do": "describe",
+      "stage": "8-media-in-the-same-dock",
+      "note": "The Media shelf in the same crowded dock still brings its tile into reach"
+    },
+    {
+      "do": "snapshot",
+      "name": "8-media-in-the-same-dock"
     }
   ]
 }

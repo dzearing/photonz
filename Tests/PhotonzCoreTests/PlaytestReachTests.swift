@@ -129,4 +129,58 @@ struct PlaytestReachTests {
             PlaytestReach.Problem(cutter: .aScroller, side: .right, points: 9), control: "Width")
         #expect(said.contains("past the right edge of"))
     }
+
+    // MARK: Which scroller turns
+
+    /// The bug this was written for (2026-10-04): with the dock at its top, the
+    /// Library shelf showed 3 points of itself above the dock's bottom edge.
+    /// The shelf, being innermost, took every turn, sliding a 106 point tile
+    /// back and forth along a strip 3 points tall, and the dock that could
+    /// have brought the whole shelf up never moved.
+    @Test("A scroller showing less of itself than the control is tall hands the turn to the one around it")
+    func aSliverOfAListDoesNotTakeTheTurn() {
+        let tile = CGRect(x: 1478, y: 214, width: 114, height: 106)
+        let shelfSliver = CGRect(x: 1478, y: 339, width: 236, height: 3)
+        let dockStrip = CGRect(x: 1460, y: 339, width: 270, height: 600)
+        let turns = PlaytestReach.turns(for: tile, reaches: [shelfSliver, dockStrip])
+        #expect(turns.first?.index == 1)
+        // Down the dock, which the wheel writes as a negative number, by the
+        // whole gap and the margin.
+        #expect(turns.first?.by == -(339 - 214 + PlaytestReach.revealMargin))
+        #expect(!turns.contains { $0.index == 0 })
+    }
+
+    @Test("A scroller with room for the control turns first, innermost before the one around it")
+    func innermostTurnsFirstWhenItCanHoldIt() {
+        let tile = CGRect(x: 1478, y: 100, width: 114, height: 106)
+        let shelf = CGRect(x: 1478, y: 300, width: 236, height: 160)
+        let dockStrip = CGRect(x: 1460, y: 200, width: 270, height: 600)
+        let turns = PlaytestReach.turns(for: tile, reaches: [shelf, dockStrip])
+        #expect(turns.map(\.index) == [0, 1])
+        #expect(turns[0].by == -(300 - 100 + PlaytestReach.revealMargin))
+    }
+
+    @Test("A scroller already holding the control has nothing to turn")
+    func alreadyInsideIsNoTurn() {
+        let row = CGRect(x: 1110, y: 400, width: 280, height: 24)
+        let turns = PlaytestReach.turns(for: row, reaches: [dock])
+        #expect(turns.isEmpty)
+    }
+
+    @Test("Above the strip, the wheel turns up")
+    func aboveTurnsUp() {
+        let row = CGRect(x: 1110, y: 820, width: 280, height: 24)
+        let turns = PlaytestReach.turns(for: row, reaches: [dock])
+        #expect(turns.first?.by == 844 - 800 + PlaytestReach.revealMargin)
+    }
+
+    /// A control taller than every strip around it cannot be shown whole by
+    /// anything, but turning still brings the most of it in, so the old order
+    /// stands rather than nothing being tried at all.
+    @Test("When no strip can hold the control, every scroller still gets its turn, innermost first")
+    func nothingCanHoldItKeepsTheOldOrder() {
+        let tall = CGRect(x: 1110, y: -900, width: 280, height: 700)
+        let turns = PlaytestReach.turns(for: tall, reaches: [CGRect(x: 1100, y: 300, width: 300, height: 100), dock])
+        #expect(turns.map(\.index) == [0, 1])
+    }
 }
