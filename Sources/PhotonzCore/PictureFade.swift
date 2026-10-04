@@ -166,8 +166,20 @@ extension PhotonzDocument {
     /// Fade a layer's picture in or out over this many milliseconds, or stop
     /// with nought. The other end keeps the length it is shown with. A title's
     /// old Fade becomes this fade here, so there is only ever one.
+    ///
+    /// A page that opened the recording keeps its dissolve over the
+    /// recording's start when its fade out changes (`keepOpeningDissolve`).
     @discardableResult
     public mutating func setPictureFade(_ id: UUID, _ end: FadeEnd, toMS ms: Int) -> Bool {
+        let opening = end == .out ? openingDissolveStartMS(id) : nil
+        guard fadePicture(id, end, toMS: ms) else { return false }
+        if let opening { keepOpeningDissolve(id, from: opening) }
+        return true
+    }
+
+    /// The fade alone, nothing around it moved.
+    @discardableResult
+    mutating func fadePicture(_ id: UUID, _ end: FadeEnd, toMS ms: Int) -> Bool {
         guard let layer = layer(id: id), layer.canSetPictureFade(end, toMS: ms) else { return false }
         var fade = layer.shownPictureFade ?? PictureFade(inMS: 0, outMS: 0)
         if end == .in { fade.inMS = ms } else { fade.outMS = ms }

@@ -1,0 +1,27 @@
+{
+  "feature": "An opening title page keeps its dissolve onto the recording",
+  "epic": "video-titles-graphics",
+  "summary": "Changing the fade out on a title page that opened the recording now moves the recording to where the fade begins, so the page always dissolves into the recording and never dims over black. Ripple Delete on that page puts the recording back at 0:00.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording with the timeline showing. Walk: Scripts/playtest/opening-title-dissolve-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Right-click the track header V1 and choose Add Track Above." },
+    { "do": "Right-click the empty V2 track and choose Add Title Page > Midnight, then type a title and press Command-Return. The recording moves to start at 3.5s." },
+    { "do": "Right-click the title page bar and choose Fade Out > 1s. The recording now starts at 3s, where the longer fade begins.", "shot": "2026-10-04-opening-title-dissolve-1.png" },
+    { "do": "Step the playhead to about 3.25s and look at the canvas: the recording shows through the dimming page." },
+    { "do": "Press Command-Z once. The fade and the recording go back together, to 3.5s." },
+    { "do": "Right-click the page and choose Fade Out > 0.25s. The recording moves later, to 3.75s." },
+    { "do": "Right-click the page and choose Ripple Delete. The recording is back at 0:00.", "shot": "2026-10-04-opening-title-dissolve-2.png" }
+  ],
+  "evaluate": [
+    "When you lengthen the page's fade out, does the recording sliding earlier feel like the dissolve growing, the way it would in Premiere?",
+    "Is it right that a fade put on a page that cut straight into the recording also pulls the recording in, making a dissolve rather than a dip to black?",
+    "After Ripple Delete on the opening page, is the recording back at 0:00 what you expected?",
+    "Should dragging the fade corner on the bar move the recording live while you drag, instead of when you let go?"
+  ],
+  "rough": [
+    "No mock covers this behaviour: it is how the timeline moves the recording when the page's fade changes.",
+    "Dragging the fade-out corner on the page's bar moves the recording only when you let go, not while you drag. The fade shading follows the hand; the clip jumps on release.",
+    "Only a page at 0:00 that is followed by a recording right where its fade begins does this. A page placed anywhere else, or laid over a recording on a locked track, still changes nothing but its own fade."
+  ]
+}

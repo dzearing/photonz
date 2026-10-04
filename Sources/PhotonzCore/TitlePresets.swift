@@ -420,7 +420,8 @@ extension PhotonzDocument {
         let fadeMS = TitleAnimation.lengthMS
         for (end, kind) in [(FadeEnd.in, preset.animateIn), (.out, preset.animateOut)] {
             if kind == .fade {
-                setPictureFade(inserted.layerID, end, toMS: fadeMS)
+                // Only the fade: what follows the page is pushed below.
+                fadePicture(inserted.layerID, end, toMS: fadeMS)
             } else if end == .in {
                 animateIn(kind, layerID: inserted.layerID)
             } else {
@@ -505,6 +506,58 @@ extension PhotonzDocument {
         }
         refreshDuration()
         return true
+    }
+
+    /// Where an opening page's dissolve into the recording begins: its end
+    /// less its fade out, when it starts at 0:00, is not itself a picture,
+    /// and a picture on a track that is not locked starts exactly there. Nil
+    /// for a page laid over what is under it, as a title anywhere else is.
+    func openingDissolveStartMS(_ id: UUID) -> Int? {
+        guard let page = layer(id: id), let time = page.time, time.inMS == 0,
+              page.movie == nil, page.merged == nil else { return nil }
+        let start = time.outMS - min(max(0, page.pictureFadeMS(.out)), time.lengthMS)
+        let locked = layerIDsOnLockedTracks()
+        let inside = Set(page.selfAndDescendants.map(\.id))
+        let follows = allLayers.contains { other in
+            !inside.contains(other.id) && (other.movie != nil || other.merged != nil)
+                && other.time?.inMS == start && !locked.contains(other.id)
+        }
+        return follows ? start : nil
+    }
+
+    /// An opening page's fade out changed from `oldStart`: the recording that
+    /// started under the old dissolve, and everything from it on, moves to
+    /// where the new one begins, so the page never fades over an empty frame
+    /// and no frame of the recording plays hidden. Premiere and Final Cut
+    /// grow a dissolve at the cut the same way. Nothing moves when it would
+    /// land on something that stays, on a track they share.
+    mutating func keepOpeningDissolve(_ id: UUID, from oldStart: Int) {
+        guard let page = layer(id: id), let time = page.time else { return }
+        let newStart = time.outMS - min(max(0, page.pictureFadeMS(.out)), time.lengthMS)
+        let shift = newStart - oldStart
+        guard shift != 0 else { return }
+        let locked = layerIDsOnLockedTracks()
+        let inside = Set(page.selfAndDescendants.map(\.id))
+        let moving = Set(allLayers.filter { layer in
+            !inside.contains(layer.id) && !locked.contains(layer.id)
+                && (layer.time?.inMS ?? -1) >= oldStart
+        }.map(\.id))
+        let lands = layers.contains { mover in
+            guard moving.contains(mover.id), let track = mover.trackID,
+                  let theirs = mover.time else { return false }
+            let from = theirs.inMS + shift, to = theirs.outMS + shift
+            return layers.contains { stays in
+                guard !moving.contains(stays.id), stays.trackID == track,
+                      let still = stays.time else { return false }
+                return still.inMS < to && from < still.outMS
+            }
+        }
+        guard !lands else { return }
+        for layer in allLayers {
+            guard moving.contains(layer.id), let theirs = layer.time else { continue }
+            updateLayer(id: layer.id) { $0.time = theirs.moved(toInMS: max(0, theirs.inMS + shift)) }
+        }
+        refreshDuration()
     }
 
     private mutating func landTitle(_ built: Layer, kind: TitleKind, lengthMS: Int,

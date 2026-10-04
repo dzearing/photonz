@@ -33,8 +33,15 @@ extension PhotonzDocument {
     /// Take a whole layer away and close the gap it leaves.
     @discardableResult
     public mutating func rippleDeleteLayer(_ id: UUID) -> Bool {
+        // A page that opened the recording takes the time before its
+        // dissolve with it, so the recording is back at 0:00.
+        let opening = openingDissolveStartMS(id)
         guard let time = layer(id: id)?.time, removeLayer(id: id) != nil else { return false }
-        closeGap(endingAtMS: time.outMS, lengthMS: time.lengthMS, except: id)
+        if let opening {
+            closeGap(endingAtMS: opening, lengthMS: opening, except: id)
+        } else {
+            closeGap(endingAtMS: time.outMS, lengthMS: time.lengthMS, except: id)
+        }
         refreshDuration()
         return true
     }
