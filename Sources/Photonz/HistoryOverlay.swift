@@ -1,3 +1,4 @@
+import AppKit
 import PhotonzCore
 import SwiftUI
 
@@ -14,26 +15,26 @@ import SwiftUI
 struct HistoryOverlay: View {
     let coordinator: AppCoordinator
 
-    @State private var filter: CaptureFilter = .all
-    /// Which item the arrows have focused. Kept out of this view's own state
-    /// on purpose: only the tiles and the strip's scroller read it, so an
-    /// arrow step redraws the two tiles it moves between and nothing else.
-    /// When it lived here, every step rebuilt the whole overlay, filter bar
-    /// and all, for about 30ms of main thread work (2026-10-02).
-    @State private var focus = HistoryStripFocus()
+    /// Which filter is picked. Held in an object only the filter bar and the
+    /// strips read while drawing, so a switch never runs this view's body:
+    /// when it did, the overlay's fresh key handlers reached every tile in
+    /// all three strips as a new environment, and each one redrew its words
+    /// and told accessibility about itself again (2026-10-03).
+    @State private var choice = HistoryFilterChoice()
+    /// One strip per filter, each with its own keyboard focus.
+    @State private var strips = HistoryStrips()
     @FocusState private var keyboardFocused: Bool
-    /// True for the one update a filter switch makes, while the focus lands on
-    /// the first item and the strip has already jumped there.
-    @State private var jumpingToStart = false
 
     private var capture: CaptureCenter { coordinator.capture }
     private var allEntries: [CaptureEntry] { capture.store.entries }
-    private var entries: [CaptureEntry] { filter.apply(to: allEntries) }
+    /// The strip in sight's captures and focus, which the keys act on.
+    private var entries: [CaptureEntry] { choice.showing.apply(to: allEntries) }
+    private var focus: HistoryStripFocus { strips.focus(for: choice.showing) }
 
     var body: some View {
         VStack(spacing: 8) {
             if !allEntries.isEmpty {
-                topBar
+                HistoryFilterBar(choice: choice, coordinator: coordinator)
             }
             if capture.needsScreenRecordingPermission {
                 permissionHint
@@ -53,21 +54,9 @@ struct HistoryOverlay: View {
         .onKeyPress(.rightArrow) { moveSelection(by: 1) }
         .onKeyPress(.return) { activateSelection() }
         .onKeyPress(.delete) { deleteSelection() }
-        .onAppear { resetSelection(); keyboardFocused = true }
-        // Filtering changes which items exist: land the focus on the first one
-        // and keep the keyboard target.
-        .onChange(of: filter) {
-            // The strip jumps to the start itself; the focus landing on the
-            // first item must not animate a scroll there on top of that.
-            jumpingToStart = true
-            resetSelection()
+        .onAppear {
+            focus.land(count: entries.count)
             keyboardFocused = true
-            DispatchQueue.main.async { jumpingToStart = false }
-        }
-        // Folder changes (a deletion, a new capture): keep the index valid.
-        .onChange(of: entries.count) {
-            focus.byKeys = false
-            focus.selection = HistorySelection.clamp(focus.selection, count: entries.count)
         }
     }
 
@@ -75,26 +64,10 @@ struct HistoryOverlay: View {
     private var content: some View {
         if allEntries.isEmpty {
             firstCaptureKeys
-        } else if entries.isEmpty {
-            emptyMessage(filterEmptyMessage)
         } else {
-            strip
-        }
-    }
-
-    private func emptyMessage(_ text: String) -> some View {
-        Text(text)
-            .font(.callout)
-            .foregroundStyle(.secondary)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    /// A count, never a sentence: the filter above already says what kind.
-    private var filterEmptyMessage: String {
-        switch filter {
-        case .all: return "0 captures"
-        case .screenshots: return "0 screenshots"
-        case .videos: return "0 videos"
+            // A new filter keeps the keyboard target.
+            HistoryStripsArea(choice: choice, strips: strips, coordinator: coordinator,
+                              switched: { keyboardFocused = true })
         }
     }
 
@@ -115,74 +88,6 @@ struct HistoryOverlay: View {
         HStack(spacing: 6) {
             Text(keys).foregroundStyle(.tertiary)
             Text(label)
-        }
-    }
-
-    private var topBar: some View {
-        // The segmented filter is CENTERED in the bar; "Clear All" floats at the
-        // trailing edge (a ZStack, so the button's width never shifts the picker
-        // off-center the way an HStack + Spacer would).
-        ZStack {
-            // The one segmented control, tinted glass chip and all: the user
-            // asked for every segmented control to look and move the same
-            // (2026-09-29), and for the picked chip to be tinted glass
-            // (2026-09-30).
-            SegmentedControl("Filter captures", selection: $filter,
-                             options: CaptureFilter.allCases.map { .init($0, $0.title) },
-                             form: .natural)
-            .fixedSize()
-            .toolTip("Filter the history by capture type", below: true)
-
-            HStack {
-                Spacer()
-                Button(role: .destructive) {
-                    coordinator.clearHistory()
-                } label: {
-                    Label("Clear All", systemImage: "trash")
-                }
-                .buttonStyle(PillActionButtonStyle())
-                .toolTip("Move all captures to the Trash", below: true)
-            }
-        }
-    }
-
-    private var strip: some View {
-        let shown = entries
-        return ScrollViewReader { proxy in
-            ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(alignment: .top, spacing: 14) {
-                    // Keyed by the capture alone, so a capture in both the old
-                    // and the new filter keeps its cell (and its picture) across
-                    // a switch rather than being built again.
-                    ForEach(Array(shown.enumerated()), id: \.element.id) { index, entry in
-                        HistoryOverlayFocusedCell(
-                            index: index,
-                            focus: focus,
-                            entry: entry,
-                            coordinator: coordinator,
-                            highlighted: entry.url == coordinator.highlightedCaptureURL)
-                        .id(entry.id)
-                    }
-                }
-                .padding(.horizontal, 4)
-                .padding(.vertical, 2)
-                // A filter switch swaps the whole set in one frame: no tile
-                // fades or slides, whatever transaction the pick came in.
-                .transaction(value: filter) { $0.animation = nil }
-            }
-            // A new filter starts at its newest capture, at once. Scrolling
-            // there would sweep past, and build, every tile in between.
-            .onChange(of: filter) {
-                guard let first = entries.first else { return }
-                var still = Transaction()
-                still.disablesAnimations = true
-                withTransaction(still) { proxy.scrollTo(first.id, anchor: .leading) }
-            }
-            // Keep the focused item on screen as ← / → walk off the visible edge.
-            .background {
-                HistoryStripScroller(focus: focus, ids: shown.map(\.id),
-                                     jumpingToStart: jumpingToStart, proxy: proxy)
-            }
         }
     }
 
@@ -207,11 +112,6 @@ struct HistoryOverlay: View {
     }
 
     // MARK: - Keyboard selection
-
-    private func resetSelection() {
-        focus.byKeys = false
-        focus.selection = entries.isEmpty ? nil : 0
-    }
 
     @discardableResult
     private func moveSelection(by delta: Int) -> KeyPress.Result {
@@ -238,10 +138,124 @@ struct HistoryOverlay: View {
     private func deleteSelection() -> KeyPress.Result {
         let entries = entries
         guard let selection = focus.selection, entries.indices.contains(selection) else { return .ignored }
-        // Trash is recoverable; the folder watcher re-lists and `onChange` clamps
-        // the index so the same slot stays focused on the next item.
+        // Trash is recoverable; the folder watcher re-lists and the strip
+        // clamps the index so the same slot stays focused on the next item.
         capture.store.remove(entries[selection])
         return .handled
+    }
+}
+
+/// The filter picked in the history bar, and the one whose strip is in sight.
+///
+/// A click on the filter is answered over three frames, each well inside one
+/// at 60Hz: the click itself, then the filter showing the new pick, then the
+/// chip setting off and the new strip in sight. All of it in the click's own
+/// frame came to 20 to 35ms (2026-10-03). Only the bar reads `filter` and
+/// only the strips read `showing`, so each frame redraws only its own part.
+@MainActor @Observable
+private final class HistoryFilterChoice {
+    private(set) var filter: CaptureFilter = .all
+    private(set) var showing: CaptureFilter = .all
+    /// The next step, waiting for its frame. A pick that overtakes it takes
+    /// its place.
+    @ObservationIgnored private var pending: Task<Void, Never>?
+
+    func pick(_ picked: CaptureFilter) {
+        pending?.cancel()
+        pending = Task { [weak self] in
+            await NextRunLoopPass.start()
+            guard let self, !Task.isCancelled else { return }
+            self.filter = picked
+            await NextRunLoopPass.start()
+            guard !Task.isCancelled, self.showing != picked else { return }
+            self.showing = picked
+        }
+    }
+}
+
+/// The top row: the filter, centred, and Clear All at the trailing edge.
+private struct HistoryFilterBar: View {
+    let choice: HistoryFilterChoice
+    let coordinator: AppCoordinator
+
+    var body: some View {
+        // The segmented filter is CENTERED in the bar; "Clear All" floats at the
+        // trailing edge (a ZStack, so the button's width never shifts the picker
+        // off-center the way an HStack + Spacer would).
+        ZStack {
+            // The one segmented control, tinted glass chip and all: the user
+            // asked for every segmented control to look and move the same
+            // (2026-09-29), and for the picked chip to be tinted glass
+            // (2026-09-30).
+            SegmentedControl("Filter captures", selection: choice.filter,
+                             options: CaptureFilter.allCases.map { .init($0, $0.title) },
+                             form: .natural) { choice.pick($0) }
+            .fixedSize()
+            .toolTip("Filter the history by capture type", below: true)
+
+            HStack {
+                Spacer()
+                Button(role: .destructive) {
+                    coordinator.clearHistory()
+                } label: {
+                    Label("Clear All", systemImage: "trash")
+                }
+                .buttonStyle(PillActionButtonStyle())
+                .toolTip("Move all captures to the Trash", below: true)
+            }
+        }
+    }
+}
+
+/// The three strips, one over another, with only the picked filter's in
+/// sight. A switch changes which one is visible and nothing else: handing ONE
+/// strip a different list re-sorted and re-laid out the whole 500 item stack
+/// and built a new row of tiles, 40 to 110ms on every click (2026-10-03).
+private struct HistoryStripsArea: View {
+    let choice: HistoryFilterChoice
+    let strips: HistoryStrips
+    let coordinator: AppCoordinator
+    let switched: () -> Void
+
+    /// The filters whose strip exists. The one in sight always does; the
+    /// others are built one at a time once the bar has come down
+    /// (`buildTheOthers`), so the first switch to each is as quick as the
+    /// tenth.
+    @State private var built: Set<CaptureFilter> = [.all]
+
+    var body: some View {
+        let showing = choice.showing
+        ZStack {
+            ForEach(CaptureFilter.allCases, id: \.self) { kind in
+                if built.contains(kind) || kind == showing {
+                    HistoryStripHost(strip: HistoryStrip(filter: kind, focus: strips.focus(for: kind),
+                                                         coordinator: coordinator),
+                                     shown: kind == showing)
+                }
+            }
+        }
+        .task { await buildTheOthers() }
+        // A new filter comes into sight at its newest capture, focused.
+        .onChange(of: showing) { left, picked in
+            built.insert(picked)
+            switched()
+            strips.focus(for: picked).land(count: picked.apply(to: coordinator.capture.store.entries).count)
+            strips.switched(from: left, to: picked)
+        }
+    }
+
+    /// Builds the strips the bar is not showing yet, one per pass, after the
+    /// bar has finished coming down, so neither the slide nor the first click
+    /// on Screenshots or Videos pays for building a row of tiles.
+    private func buildTheOthers() async {
+        for other in CaptureFilter.allCases {
+            // Apart, so each strip's row of tiles is a frame of its own: the
+            // two together were one 65ms frame (2026-10-03).
+            try? await Task.sleep(for: .milliseconds(300))
+            await NextRunLoopPass.start()
+            guard !Task.isCancelled else { return }
+            if !built.contains(other) { built.insert(other) }
+        }
     }
 }
 
@@ -255,6 +269,165 @@ private final class HistoryStripFocus {
     /// filter switch or a deletion. Only read when the focus has moved, never
     /// while drawing.
     @ObservationIgnored var byKeys = false
+    /// Bumped to put the strip back at its start at once, with no scroll
+    /// through what lies between. Read only by the strip's scroller.
+    var rewinds = 0
+    /// The strip was put out of sight and has not been taken back to its
+    /// start yet.
+    @ObservationIgnored var awayFromStart = false
+
+    /// The strip comes into sight: focus on its newest capture, and back at
+    /// its start if it was not put there while out of sight.
+    func land(count: Int) {
+        byKeys = false
+        let first: Int? = count == 0 ? nil : 0
+        if selection != first { selection = first }
+        if awayFromStart { rewind() }
+    }
+
+    /// Back to the start: the newest capture focused and in view.
+    func rewind() {
+        awayFromStart = false
+        byKeys = false
+        if selection != nil, selection != 0 { selection = 0 }
+        rewinds += 1
+    }
+}
+
+/// The three strips' focuses, and the strip just put out of sight going back
+/// to its start while nobody is looking, so coming back to it later is only a
+/// matter of showing it.
+@MainActor
+private final class HistoryStrips {
+    private let all = HistoryStripFocus()
+    private let screenshots = HistoryStripFocus()
+    private let videos = HistoryStripFocus()
+    private var picked: CaptureFilter = .all
+    private var rewinding: [CaptureFilter: Task<Void, Never>] = [:]
+
+    func focus(for filter: CaptureFilter) -> HistoryStripFocus {
+        switch filter {
+        case .all: all
+        case .screenshots: screenshots
+        case .videos: videos
+        }
+    }
+
+    /// `left` goes out of sight as `picked` comes in. Its trip back to the
+    /// start waits for the switch, and the chip's slide across the filter,
+    /// to be over: it lays out the tiles at the start again, and that is
+    /// work for a moment when nothing is moving.
+    func switched(from left: CaptureFilter, to picked: CaptureFilter) {
+        self.picked = picked
+        rewinding[picked]?.cancel()
+        rewinding[picked] = nil
+        let away = focus(for: left)
+        away.awayFromStart = true
+        rewinding[left]?.cancel()
+        rewinding[left] = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(500))
+            await NextRunLoopPass.start()
+            guard let self, !Task.isCancelled, self.picked != left, away.awayFromStart else { return }
+            away.rewind()
+            self.rewinding[left] = nil
+        }
+    }
+}
+
+/// A strip in an AppKit view of its own, so that putting it out of sight is
+/// one flag on that view: drawing, clicks and accessibility all stop at a
+/// hidden view without anything inside it being told. Hiding it with SwiftUI
+/// modifiers instead (opacity, hit testing, accessibility) handed every tile
+/// in the strip a new environment and a new accessibility state on every
+/// switch, about 40% of a switch's 20 to 60ms (2026-10-03).
+private struct HistoryStripHost: NSViewRepresentable {
+    let strip: HistoryStrip
+    let shown: Bool
+
+    func makeNSView(context: Context) -> NSHostingView<HistoryStrip> {
+        let view = NSHostingView(rootView: strip)
+        // It fills whatever room the bar gives it; its content never sizes
+        // the bar.
+        view.sizingOptions = []
+        view.isHidden = !shown
+        return view
+    }
+
+    /// The strip it was made with reads everything it shows for itself, and
+    /// the same three things are handed in every time, so it is never given
+    /// again: only shown or not.
+    func updateNSView(_ view: NSHostingView<HistoryStrip>, context: Context) {
+        if view.isHidden == shown { view.isHidden = !shown }
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, nsView: NSHostingView<HistoryStrip>,
+                      context: Context) -> CGSize? {
+        proposal.replacingUnspecifiedDimensions()
+    }
+}
+
+/// One filter's strip: its captures newest first, laid out lazily. It reads
+/// the folder and nothing about which filter is picked, so a switch never
+/// rebuilds it.
+private struct HistoryStrip: View {
+    let filter: CaptureFilter
+    let focus: HistoryStripFocus
+    let coordinator: AppCoordinator
+
+    var body: some View {
+        let shown = filter.apply(to: coordinator.capture.store.entries)
+        Group {
+            if shown.isEmpty {
+                Text(emptyLabel)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                strip(shown)
+            }
+        }
+        // Folder changes (a deletion, a new capture): keep the index valid.
+        .onChange(of: shown.count) {
+            focus.byKeys = false
+            focus.selection = HistorySelection.clamp(focus.selection, count: shown.count)
+        }
+    }
+
+    /// A count, never a sentence: the filter above already says what kind.
+    private var emptyLabel: String {
+        switch filter {
+        case .all: return "0 captures"
+        case .screenshots: return "0 screenshots"
+        case .videos: return "0 videos"
+        }
+    }
+
+    private func strip(_ shown: [CaptureEntry]) -> some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(alignment: .top, spacing: 14) {
+                    // Keyed by the capture alone, so a capture keeps its cell
+                    // (and its picture) when the folder changes around it.
+                    ForEach(Array(shown.enumerated()), id: \.element.id) { index, entry in
+                        HistoryOverlayFocusedCell(
+                            index: index,
+                            focus: focus,
+                            entry: entry,
+                            coordinator: coordinator,
+                            highlighted: entry.url == coordinator.highlightedCaptureURL)
+                        .id(entry.id)
+                    }
+                }
+                .padding(.horizontal, 4)
+                .padding(.vertical, 2)
+            }
+            // Keep the focused item on screen as ← / → walk off the visible
+            // edge, and go back to the start when told.
+            .background {
+                HistoryStripScroller(focus: focus, ids: shown.map(\.id), proxy: proxy)
+            }
+        }
+    }
 }
 
 /// One tile and the question "is it the focused one", asked here rather than
@@ -273,8 +446,9 @@ private struct HistoryOverlayFocusedCell: View {
     }
 }
 
-/// Scrolls the strip to keep the focused item in view. A view of its own, with
-/// nothing to draw, so the focus moving re-runs this and not the strip.
+/// Scrolls the strip to keep the focused item in view as the arrows move it,
+/// and puts it back at its start when the strip is rewound. A view of its own,
+/// with nothing to draw, so the focus moving re-runs this and not the strip.
 ///
 /// The scroll starts the frame after the ring moves rather than in the same
 /// one: starting it lays out, and builds, the tile coming into view, and that
@@ -282,9 +456,6 @@ private struct HistoryOverlayFocusedCell: View {
 private struct HistoryStripScroller: View {
     let focus: HistoryStripFocus
     let ids: [URL]
-    /// True for the one update a filter switch makes: the strip has already
-    /// jumped to the start, and must not animate a scroll there on top of that.
-    let jumpingToStart: Bool
     let proxy: ScrollViewProxy
 
     /// The scroll waiting for its frame, dropped when the focus moves again
@@ -295,7 +466,9 @@ private struct HistoryStripScroller: View {
         Color.clear
             .onChange(of: focus.selection) {
                 pending?.cancel()
-                guard !jumpingToStart, let selection = focus.selection, ids.indices.contains(selection) else {
+                // Only the arrows scroll: a focus that jumped (the strip
+                // opening, a switch, a deletion) is already in view.
+                guard focus.byKeys, let selection = focus.selection, ids.indices.contains(selection) else {
                     return
                 }
                 let target = ids[selection]
@@ -306,6 +479,15 @@ private struct HistoryStripScroller: View {
                         proxy.scrollTo(target, anchor: .center)
                     }
                 }
+            }
+            // At once and without a sweep: scrolling there would pass over,
+            // and build, every tile in between.
+            .onChange(of: focus.rewinds) {
+                pending?.cancel()
+                guard let first = ids.first else { return }
+                var still = Transaction()
+                still.disablesAnimations = true
+                withTransaction(still) { proxy.scrollTo(first, anchor: .leading) }
             }
     }
 }
@@ -520,3 +702,4 @@ private struct HistoryOverlayCell: View {
         .toolTip(title, below: true)
     }
 }
+

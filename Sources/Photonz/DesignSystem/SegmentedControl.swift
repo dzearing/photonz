@@ -291,10 +291,9 @@ struct DesignedSegments<Value: Hashable>: View {
     /// A drag that began off the chip belongs to the segment it began on.
     @State private var dragIgnored = false
     @State private var rowWidth: CGFloat = 0
-    /// The chip is on its way to a new pick. `travelToken` tells the end of
-    /// the latest trip from the end of one it overtook.
-    @State private var travelling = false
-    @State private var travelToken = 0
+    /// The chip's trip to a new pick, waiting for the frame after the pick's
+    /// own (`setOff`). Never read while drawing, so setting it redraws nothing.
+    @State private var pendingTrip: Task<Void, Never>?
 
     private typealias Palette = VideoKit.Palette
 
@@ -350,7 +349,7 @@ struct DesignedSegments<Value: Hashable>: View {
         // the glass slides over it.
         .overlay(alignment: .topLeading) { wordsOnChip }
         .simultaneousGesture(chipDrag)
-        .onChange(of: pickedIndex) { _, picked in moveChip(to: picked) }
+        .onChange(of: pickedIndex) { _, picked in setOff(to: picked) }
         .onChange(of: slots) { settleChip() }
         .onAppear { settleChip() }
         .padding(2)
@@ -535,6 +534,22 @@ struct DesignedSegments<Value: Hashable>: View {
         }
     }
 
+    /// Sends the chip to a new pick in the frame after the pick's own. The
+    /// pick's frame already holds every word changing weight and colour and
+    /// whatever the caller does with the value; setting the chip off in it as
+    /// well took that frame past 16ms in the history bar, where a click
+    /// measured 20 to 35ms (2026-10-03). A frame later is about 8ms at 120Hz,
+    /// well under anything a person can see, and a pick that overtakes it
+    /// takes its place.
+    private func setOff(to picked: Int?) {
+        pendingTrip?.cancel()
+        pendingTrip = Task {
+            await NextRunLoopPass.start()
+            guard !Task.isCancelled else { return }
+            moveChip(to: picked)
+        }
+    }
+
     /// Sends the chip to a new pick: the edge on the side it is heading sets
     /// off first. The chip's own curves, whatever animation the pick was
     /// made inside.
@@ -549,16 +564,11 @@ struct DesignedSegments<Value: Hashable>: View {
             return
         }
         let forward = target.midX >= (leading + trailing) / 2
-        travelToken += 1
-        let token = travelToken
-        travelling = true
         withAnimation(Self.leadCurve) {
             if forward { chipTrailing = target.maxX } else { chipLeading = target.minX }
         }
         withAnimation(Self.trailCurve) {
             if forward { chipLeading = target.minX } else { chipTrailing = target.maxX }
-        } completion: {
-            if token == travelToken { travelling = false }
         }
     }
 
@@ -702,17 +712,31 @@ struct DesignedSegments<Value: Hashable>: View {
                     .lineLimit(1)
                     .hidden()
                     .overlay {
-                        Text(option.title)
-                            .font(.system(size: size.fontSize, weight: isOn ? .semibold : .medium))
-                            .tracking(-0.03)
-                            .lineLimit(1)
-                            .fixedSize()
+                        // Both weights, always, and the pick only says which
+                        // one shows: a word that changed weight was set and
+                        // measured again on every pick, four of them a pick,
+                        // a fifth of the click's frame (2026-10-03).
+                        ZStack {
+                            word(option.title, weight: .medium).opacity(isOn ? 0 : 1)
+                            word(option.title, weight: .semibold).opacity(isOn ? 1 : 0)
+                        }
                     }
+                    // The segment carries its name; the drawn words are
+                    // picture, so a pick tells accessibility nothing new.
+                    .accessibilityHidden(true)
             }
         }
         .foregroundStyle(ink)
         .padding(.horizontal, showsTitles || option.image == nil ? wordPadding : 0)
         .frame(minWidth: showsTitles ? 0 : size.height - 4, maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func word(_ title: String, weight: Font.Weight) -> some View {
+        Text(title)
+            .font(.system(size: size.fontSize, weight: weight))
+            .tracking(-0.03)
+            .lineLimit(1)
+            .fixedSize()
     }
 
     /// What resting on a segment says: why it cannot be picked, its own
