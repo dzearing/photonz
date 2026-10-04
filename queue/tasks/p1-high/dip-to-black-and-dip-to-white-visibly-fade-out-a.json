@@ -1,0 +1,35 @@
+{
+  "id": "dip-to-black-and-dip-to-white-visibly-fade-out-a",
+  "title": "Dip to black and Dip to white visibly fade out and fade back in",
+  "goal": "A dip should read as a fade: the outgoing clip fades down to black (or white), holds if asked, then the next clip fades up out of it. Today the user sees the picture jump straight to black or white and then jump straight to the next clip, with no fade either way, so the transition looks like two hard cuts.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-04T17:31:44.445Z",
+  "updated": "2026-10-04T17:31:44.523Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words: \"when i dip to black, there is no fade out and fade in. It just goes to black and then to the new clip.\" then \"same with white\".\n\nFrom code reading (not run): the model does ramp. ClipTransition.dipAmount (PhotonzCore/ClipTransitions.swift:199-210) rises over beforeMS to the cut, holds holdMS at 1, falls over afterMS. Used for a cut inside a clip (ClipTransitions.swift:483, panel at :542 via dipPanel :565-575, a full-frame rectangle layer at that opacity) and for an edit point between two clips (EditPointTransitions.swift:245, panel inserted :307). Sound uses it too (TransitionSound.swift:46).\nSuspects, NOT confirmed, reproduce first: (1) default length 400 ms (ClipTransition.defaultLengthMS, :112) is split across the cut, so 200 ms down and 200 ms up, which at playback reads as a jump; (2) the playback path draws frames without the dip panel opacity (or only at whole-clip boundaries), while scrub/export are right; (3) at an edit point between two separate clips, the incoming clip starts drawing over the panel or the panel sits under it (insert at index + 1 ordering); (4) with a hold, the panel order or timing around the moved clip start. Existing walks with dips: transitions-at-a-cut-walk, transition-placement-and-hold-walk, transition-carries-the-sound-walk; check whether any of them measures frames mid-fade during PLAYBACK (likely not).",
+  "acceptance": [
+    "Reproduce first at Next defaults, in the user's setup: two clips back to back on the timeline with Dip to black between them (and a cut inside one recording too), at the default length and with a hold. Watch it PLAY in the editor, scrub it, and export it. Record in the audit which of those shows hard jumps, and photograph frames at 25/50/75% of the fade down and the fade up",
+    "MEASURED in the audit: mean luminance of the picture at 10 evenly spaced moments across the fade down and the fade up, for playback (frames as shown on the canvas during play), scrubbing and export. Each must change smoothly (no step bigger than a third of the range between neighbouring samples) for Dip to black and Dip to white",
+    "If the default length is the problem (today 400 ms in all, so 0.2 s each way), the default becomes long enough to read as a fade (for example 1 s, 0.5 s each way) and the Length menu says the fade length in plain words; the change is justified with the frames in the audit",
+    "The fade down uses the outgoing clip and the fade up uses the incoming clip; the hold, if any, is solid colour between them",
+    "The sound dips with it as it does today",
+    "A walk at Next defaults plays a dip to black and a dip to white between two clips and records frames during playback, failing if any step is bigger than the bound above",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-04T17:31:44.447Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-04T17:31:44.522Z",
+      "note": "seq 500 -> 5"
+    }
+  ]
+}
