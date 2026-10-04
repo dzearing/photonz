@@ -20577,3 +20577,11 @@ Next: the first editor window's ~200 ms first build
 - Core: `Tool.drawsByTwoClicks`, `AnnotationDrag.waitingForSecondClick` and `release(drawsByTwoClicks:atZoom:)` (Tools.swift, tested). App: CanvasPointerDrags, CanvasAnnotationPreview, CanvasPointerCue, CanvasDisplay. Switch `next-click-click-draws-a-line`, on in Next.
 - Rectangle, Ellipse and Highlight stay drag-only; Measure keeps its three-click placement (D7).
 - Walk: click-click-draws-a-line-walk. Audit: queue/audits/2026-10-04-click-click-draws-a-line.json. Follow-up p2: a level line's layer thumbnail is blank.
+
+## 2026-10-03 — The paint bucket floods the enclosed area you click
+
+- Reproduced first: four lines merged into the Background, then a bucket click inside, turned the WHOLE Background the fill colour and wiped the lines.
+- A bucket click on a plain picture now floods from the click over similar colour in that layer's own pixels and stops at lines (`PhotonzRender/BucketFill`, reusing the wand's flood). Anti-alias swaps only the seed colour's share of each edge pixel, so thin lines leave no pale ring. Shapes, text, arrows and cropped or turned pictures keep the whole-layer fill; a marquee still limits the fill.
+- Settings: Tolerance 32, Anti-alias on, Contiguous on (Photoshop's), in the tool settings capsule and a Fill Tool panel section, remembered under `bucket.*`.
+- Walks can press ⌘E now (stand-in `mergeDown`). Walk: bucket-fills-the-enclosed-area-walk. Audit: queue/audits/2026-10-03-bucket-flood.json.
+- Open question for the user (audit): an All Layers switch, so lines on their own layer stop the flood.
