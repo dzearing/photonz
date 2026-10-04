@@ -2968,8 +2968,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `longestUnderMS` fails the step when any one pass of main thread work
     /// in the press's own window (the click until what it changed is laid
     /// out) took that long or longer: a frame the app did not draw.
+    ///
+    /// `stallMS` holds the main thread that long while the click's release is
+    /// handled, and fails the step when the meter reads less: the proof that
+    /// `longestUnderMS` sees the pass a click's own change is applied in,
+    /// which it did not until 2026-10-03 (`press-meter-sees-the-click-walk`).
     case press(control: String, in: String?, count: Int, modifiers: [PlaytestModifier],
-               across: CGFloat?, longestUnderMS: Double? = nil)
+               across: CGFloat?, longestUnderMS: Double? = nil, stallMS: Double? = nil)
     /// Write what the right hand panel is showing to the log and to
     /// `panel-<stage>.json`: every tile on the shelf, every row in the layers
     /// list, and every menu in the dock, by the names a walk has to use for
@@ -4336,9 +4341,13 @@ public enum PlaytestStep: Sendable, Equatable {
             // rather than in its middle, which is the only way to put a
             // slider's knob anywhere but halfway.
             let across = try f.optionalNumber("across").map { CGFloat(min(max($0, 0), 1)) }
+            let stall = try f.optionalNumber("stallMS")
+            if let stall, !(stall > 0 && stall.isFinite) {
+                throw f.invalid("stallMS", "must be a positive number of milliseconds")
+            }
             self = .press(control: try f.string("control"), in: try f.optionalString("in"),
                           count: max(1, count), modifiers: try f.modifiers(), across: across,
-                          longestUnderMS: try f.optionalNumber("longestUnderMS"))
+                          longestUnderMS: try f.optionalNumber("longestUnderMS"), stallMS: stall)
         case "panel":
             self = .panel(stage: try f.string("stage"))
         case "expect":

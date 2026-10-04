@@ -1,0 +1,62 @@
+{
+ "out": "/tmp/photonz-playtest/press-meter-sees-the-click",
+ "setup": {
+  "forget": [
+   "all"
+  ],
+  "history": 60
+ },
+ "steps": [
+  {
+   "do": "describe",
+   "stage": "why",
+   "note": "A press step's longestUnderMS holds a click to one frame, and on 2026-10-03 it could not see the click: AppKit hands a queued release to the app between two runs of the run loop, the meter ended its pass at the end of a run, and the history filter's switch built its 14 tiles in time nobody counted (about 50ms read as 5.6ms). This walk clicks a history filter with the pointer and holds the main thread 40ms inside the release on purpose: the meter must read at least that, or the guard on every press is blind."
+  },
+  {
+   "do": "blank",
+   "canvasWidth": 600,
+   "canvasHeight": 400,
+   "width": 1200,
+   "height": 900
+  },
+  {
+   "do": "key",
+   "key": "h",
+   "modifiers": [
+    "command",
+    "shift"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 2
+  },
+  {
+   "do": "press",
+   "control": "All"
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "press",
+   "control": "Screenshots",
+   "stallMS": 40
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "press",
+   "control": "All",
+   "stallMS": 40
+  },
+  {
+   "do": "snapshot",
+   "name": "1-after-the-stalled-clicks",
+   "window": "Capture History"
+  }
+ ]
+}

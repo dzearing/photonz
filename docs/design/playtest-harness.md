@@ -650,7 +650,14 @@ Four steps close it, and one more makes them writable:
   `longestUnderMS` fails the step when one pass of main thread work in the
   press's own window (the click until what it changed is laid out, 0.3s) took
   that long or longer; unlike a guarded `wait`, nothing that happens after that
-  window counts against it. Either way the press is real
+  window counts against it. The click's own work is in that reading because
+  the meter counts the time between two runs of the run loop as a pass:
+  AppKit hands the release to the app there, and until 2026-10-03 that time
+  counted for nothing, so a history filter switch that held the thread for
+  58ms read 5.6ms (`MainThreadPassClock`). `stallMS` holds the main thread
+  that long inside the release on purpose and fails the step when the meter
+  reads less, which is how `press-meter-sees-the-click-walk` proves the guard
+  can see a click. Either way the press is real
   mouse events POSTED to the app's queue. That last word is the whole trick:
   SwiftUI answers a press from inside its own tracking loop, which pulls the
   release out of that queue, so a walk that called `mouseDown` on the view

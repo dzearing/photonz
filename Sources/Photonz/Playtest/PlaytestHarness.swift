@@ -2139,9 +2139,18 @@ private final class Run {
                     + "; " + EditorReadWatch.report,
                  state: describe())
 
-        case .press(let control, let row, let count, let modifiers, let across, let longestUnderMS):
+        case .press(let control, let row, let count, let modifiers, let across, let longestUnderMS,
+                    let stallMS):
             try await pressControl(control, in: row, count: count, modifiers: modifiers,
-                                   across: across, number: number)
+                                   across: across, stallMS: stallMS, number: number)
+            // A click told to stall that reads shorter than its stall is a
+            // meter blind to the click it is guarding.
+            if let stallMS, MainThreadMeter.shared.longestMS < stallMS {
+                throw Failure(description: String(
+                    format: "pressing \"%@\" held the main thread for %.0fms on purpose and the meter's "
+                        + "longest pass read %.1fms: the guard on a press cannot see the click's own work",
+                    control, stallMS, MainThreadMeter.shared.longestMS))
+            }
             // Read straight away: the meter was zeroed at the click, and what
             // it holds now is the press's own window and nothing after it.
             if let longestUnderMS, MainThreadMeter.shared.longestMS >= longestUnderMS {
@@ -6259,7 +6268,7 @@ private final class Run {
     /// left the release nowhere to be found and stopped for good (tried
     /// 2026-09-04). Posting both first means the loop always finds its way out.
     private func pressControl(_ name: String, in row: String?, count: Int,
-                              modifiers: [PlaytestModifier], across: CGFloat?,
+                              modifiers: [PlaytestModifier], across: CGFloat?, stallMS: Double? = nil,
                               number: Int, alreadySettled: Bool = false) async throws {
         // Waited for and scrolled to, the way a person does it: look for the
         // control, and if the dock has it below the fold, scroll until it is
@@ -6331,6 +6340,7 @@ private final class Run {
                 clickCount: count, pressure: 0) else {
             throw Failure(description: "could not make a mouse event for \"\(target.name)\"")
         }
+        if let stallMS { MainThreadMeter.shared.stallNextRelease(for: stallMS / 1000) }
         MainThreadMeter.shared.install()
         MainThreadMeter.shared.reset()
         ViewBuildMeter.shared.reset()
@@ -16149,8 +16159,11 @@ final class MainThreadMeter {
     private var busy: CFTimeInterval = 0
     private var passes = 0
     private var longest: CFTimeInterval = 0
-    private var activeSince: CFTimeInterval?
-    private var excludedInPass: CFTimeInterval = 0
+    /// Where a pass begins and ends. The time between two runs of the run
+    /// loop is a pass too, because AppKit hands a queued event (a click's
+    /// release) to the app there, and that is where the click's own work
+    /// goes. It used to count for nothing (`MainThreadPassClock`).
+    private var clock = MainThreadPassClock()
     /// Main thread work since the last time anyone asked. A `wait` step reads
     /// this every slice to tell a busy editor from a finished one.
     private var sinceAsked: CFTimeInterval = 0
@@ -16168,31 +16181,52 @@ final class MainThreadMeter {
     func setAsidePasses() { setAside += 1 }
     func countPassesAgain() { setAside = max(0, setAside - 1) }
 
+    /// A stall a walk asked for, run once while the next click's release is
+    /// handled (`press` with `stallMS`). The release is dispatched by AppKit
+    /// outside any harness code, so a monitor is the one place to stand.
+    private var stallMonitor: Any?
+
+    /// Holds the main thread for `seconds` inside the handling of the next
+    /// left mouse release, so a walk can prove the meter sees a click's own
+    /// pass: a press told to stall that reads shorter than its stall is a
+    /// meter that cannot see the click it is guarding.
+    func stallNextRelease(for seconds: CFTimeInterval) {
+        if let stallMonitor { NSEvent.removeMonitor(stallMonitor) }
+        stallMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseUp) { [weak self] event in
+            let until = CACurrentMediaTime() + seconds
+            while CACurrentMediaTime() < until {}
+            MainActor.assumeIsolated {
+                if let monitor = self?.stallMonitor { NSEvent.removeMonitor(monitor) }
+                self?.stallMonitor = nil
+            }
+            return event
+        }
+    }
+
     func install() {
         guard observer == nil else { return }
         let observer = CFRunLoopObserverCreateWithHandler(nil, CFRunLoopActivity.allActivities.rawValue, true, 0) { [unowned self] _, activity in
             let now = CACurrentMediaTime()
+            let moment: MainThreadPassClock.Moment
             switch activity {
-            case .afterWaiting, .entry:
-                if activeSince == nil { activeSince = now; excludedInPass = 0 }
-            case .beforeWaiting, .exit:
-                if activeSince != nil, setAside > 0 {
-                    // A pass while the harness has the window out only to
-                    // photograph it: whatever it cost is the photograph's.
-                    activeSince = nil
-                    excludedInPass = 0
-                } else if let since = activeSince {
-                    let d = max(0, now - since - excludedInPass)
-                    busy += d
-                    sinceAsked += d
-                    passes += 1
-                    passesSinceAsked += 1
-                    longest = max(longest, d)
-                    activeSince = nil
-                    excludedInPass = 0
-                }
-            default: break
+            case .afterWaiting: moment = .woke
+            case .entry: moment = .enteredARun
+            case .exit: moment = .leftARun
+            case .beforeWaiting: moment = .fallingAsleep
+            default: return
             }
+            if moment == .fallingAsleep, setAside > 0 {
+                // A pass while the harness has the window out only to
+                // photograph it: whatever it cost is the photograph's.
+                clock.drop()
+                return
+            }
+            guard let d = clock.record(moment, at: now) else { return }
+            busy += d
+            sinceAsked += d
+            passes += 1
+            passesSinceAsked += 1
+            longest = max(longest, d)
         }
         self.observer = observer
         CFRunLoopAddObserver(CFRunLoopGetMain(), observer, .commonModes)
@@ -16200,8 +16234,7 @@ final class MainThreadMeter {
 
     func reset() {
         busy = 0; passes = 0; longest = 0
-        activeSince = CACurrentMediaTime()
-        excludedInPass = 0
+        clock.restart(at: CACurrentMediaTime())
         sinceAsked = 0
         passesSinceAsked = 0
     }
@@ -16226,7 +16259,8 @@ final class MainThreadMeter {
     /// Time the harness itself spent on the main thread, which is not the
     /// app's cost: taken off the total and off the pass it happened in.
     func exclude(_ seconds: CFTimeInterval) {
-        if activeSince != nil { excludedInPass += seconds } else { busy -= seconds; sinceAsked -= seconds }
+        let off = clock.exclude(seconds)
+        busy -= off; sinceAsked -= off
     }
 
     /// The longest whole pass since the meter was last zeroed. The pass the
@@ -16235,7 +16269,7 @@ final class MainThreadMeter {
 
     var report: String {
         var total = busy
-        if let since = activeSince { total += max(0, CACurrentMediaTime() - since - excludedInPass) }
+        total += clock.running(at: CACurrentMediaTime()) ?? 0
         return String(format: "mainBusy %.1fms over %d passes, longest %.1fms", total * 1000, passes, longest * 1000)
     }
 }
