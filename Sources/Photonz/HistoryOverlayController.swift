@@ -124,6 +124,16 @@ final class HistoryOverlayController {
                 self?.hide()
                 return nil
             }
+            // A bare ← or → walks the strip, and no menu item answers to one,
+            // so it goes straight to the panel: on its way AppKit would first
+            // ask every menu in the bar whether it is theirs, re-checking each
+            // item, about 1.5ms of every step (2026-10-04).
+            if let panel = self?.panel, event.window === panel, panel.isKeyWindow,
+               [123, 124].contains(event.keyCode),
+               event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty {
+                panel.sendEvent(event)
+                return nil
+            }
             return event
         }
         // Clicks inside our app but outside the panel dismiss it; clicks on the
