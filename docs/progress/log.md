@@ -20560,3 +20560,12 @@ Next: the first editor window's ~200 ms first build
 - New walk step `expectApart` measures control boxes and gaps; `expectTimeline` gains `trackColumn`. Walk: `track-column-resizes-walk`.
 - Eight walks with fixed window points in the lanes were remapped onto the same moments (lanes now start at x 160).
 - Next: nothing open from this; a sweep was requested because timeline geometry moved for every walk.
+
+## 2026-10-03 — Clicking a track's name picks the track and Delete removes it
+
+- Reproduced first: a header click picked the track's first clip, Backspace deleted the clip and left the track; on an empty track Backspace did nothing.
+- Header click now picks the track (header + lane wash, clips that go light up), panel shows a Track section, Backspace/Delete removes the picked tracks in one undo step (`EditorState+Tracks`: `holdTracks`, `tracksInHand`, `deleteTracksInHand`; core `deleteTracks`/`deletingTracks`).
+- Picking a layer clears the track pick; a Library tile or drawn range wins over picked tracks.
+- Delete Track prints ⌫ on the header menu and Sequence > Track (live only while tracks are in hand).
+- Walks: pick-a-track-and-delete-it-walk, delete-track-menu-shows-its-key-walk. Audit: queue/audits/2026-10-03-pick-a-track-and-delete-it.json.
+- Open question for the user (audit): deleting V1 also takes the recording's sound off its Audio track; Premiere would keep it.
