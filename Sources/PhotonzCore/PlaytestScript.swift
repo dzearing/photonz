@@ -1587,6 +1587,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// pressed in a walk. A walk that checks what happens after something is
     /// taken away asks for it here.
     case deleteLayer
+    /// Layer ▸ Merge Down (⌘E), a menu chord hanging off the focused window, so
+    /// dimmed for the whole of a walk. A walk that draws on a layer and merges
+    /// it into the Background, then works on the pixels, asks for it here.
+    case mergeDown
     /// The four arrange rows in the Layer menu: Bring to Front, Bring Forward,
     /// Send Backward, Send to Back. All four are menu chords hanging off the
     /// focused window, so all four are dimmed and empty for the whole of a

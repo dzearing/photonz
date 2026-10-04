@@ -511,6 +511,29 @@ final class EditorState {
     }
     static let wandToleranceKey = "wand.tolerance"
 
+    /// The paint bucket's three settings on a picture, named and defaulted as
+    /// Photoshop's are (tolerance 32, anti-aliased, contiguous) and remembered
+    /// like the wand's tolerance. `BucketFill` is what they steer.
+    var bucketTolerance: Double = UserDefaults.standard.object(forKey: EditorState.bucketToleranceKey)
+        .flatMap { $0 as? Double } ?? BucketFill.Options.photoshop.tolerance {
+        didSet { UserDefaults.standard.set(bucketTolerance, forKey: Self.bucketToleranceKey) }
+    }
+    var bucketAntiAlias: Bool = UserDefaults.standard.object(forKey: EditorState.bucketAntiAliasKey)
+        .flatMap { $0 as? Bool } ?? BucketFill.Options.photoshop.antiAlias {
+        didSet { UserDefaults.standard.set(bucketAntiAlias, forKey: Self.bucketAntiAliasKey) }
+    }
+    var bucketContiguous: Bool = UserDefaults.standard.object(forKey: EditorState.bucketContiguousKey)
+        .flatMap { $0 as? Bool } ?? BucketFill.Options.photoshop.contiguous {
+        didSet { UserDefaults.standard.set(bucketContiguous, forKey: Self.bucketContiguousKey) }
+    }
+    static let bucketToleranceKey = "bucket.tolerance"
+    static let bucketAntiAliasKey = "bucket.antiAlias"
+    static let bucketContiguousKey = "bucket.contiguous"
+    var bucketOptions: BucketFill.Options {
+        BucketFill.Options(tolerance: bucketTolerance, contiguous: bucketContiguous,
+                           antiAlias: bucketAntiAlias)
+    }
+
     /// The grid you build against (Next, `next-canvas-grid`). A VIEW
     /// preference: remembered between launches, carried by no document, and
     /// drawn by the canvas rather than the renderer, so it never reaches an

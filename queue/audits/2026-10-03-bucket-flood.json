@@ -1,0 +1,30 @@
+{
+  "feature": "The paint bucket fills the enclosed area you click",
+  "epic": "image-paint",
+  "summary": "Clicking with the Fill tool inside lines on a picture now fills just the area the lines enclose, the way Photoshop's paint bucket does. Before, it turned the whole picture one colour and the lines disappeared.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/bucket-fills-the-enclosed-area-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Before this change, with your steps: four lines merged down, the Fill tool clicked inside. The whole picture went the fill colour and the lines were gone.", "shot": "2026-10-03-bucket-flood-0-before.png" },
+    { "do": "Draw four lines that cross at the corners with the Line tool, pressing Command E after each to merge it into the Background." },
+    { "do": "Press G for the Fill tool and click inside the box. Only the box fills, right up to the lines.", "shot": "2026-10-03-bucket-flood-1-filled.png" },
+    { "do": "Press Command Z once. The whole fill goes back." },
+    { "do": "Draw a box whose bottom line stops short and click inside it. The fill leaks out through the gap, as Photoshop's would.", "shot": "2026-10-03-bucket-flood-2-gap.png" },
+    { "do": "Untick Contiguous in the bar above the tools and click again. Every pixel of that colour on the layer fills, joined or not.", "shot": "2026-10-03-bucket-flood-3-contiguous-off.png" },
+    { "do": "Draw a rectangle and click it with the bucket. It still takes the colour whole, as before." }
+  ],
+  "evaluate": [
+    "Does the fill meet the lines cleanly, with no pale ring between line and fill?",
+    "Is Tolerance 32 the right default for screenshots, or do you find yourself raising it?",
+    "Are Tolerance, Anti-alias and Contiguous where you look for them, in the bar above the tools and the Fill Tool section of the panel?",
+    "Should the bucket also offer Photoshop's All Layers, so it can fill using lines that sit on another layer?"
+  ],
+  "rough": [
+    "Your report said the fill 'ends up not filling the whole screen'. In the reproduction, the old bucket filled the WHOLE picture and wiped the lines (first picture), so I read the report as the bucket not filling just the shape. If you saw something else, say so on this line.",
+    "Measured on the walk's picture (lines about 3 px wide): 306,767 pixels flooded, 0 white pixels left inside, 0 left along the lines, 0 pixels changed outside the box. The unit tests measure the same for a 1 px anti-aliased line.",
+    "The bucket reads only the layer you click, like Photoshop's default. Lines on a layer of their own, above an unmerged picture, do not stop it. There is no All Layers switch yet.",
+    "A picture that has been cropped or turned still takes the colour whole, as before. Only a plain picture floods.",
+    "With a marquee up, the bucket still fills the whole marquee rather than flooding inside it.",
+    "No mock covers the bucket's settings. They follow the Tool options row of the placement table (UX-PATTERNS, placement contract), beside the wand's Tolerance."
+  ]
+}

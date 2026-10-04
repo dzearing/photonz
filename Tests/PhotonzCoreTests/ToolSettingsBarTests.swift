@@ -16,7 +16,7 @@ struct ToolSettingsBarTests {
         // The acceptance the user wrote: picking the arrow must not leave an
         // empty bar hanging over the picture.
         for tool in [Tool.select, .arrow, .line, .rectangle, .ellipse,
-                     .highlight, .text, .fill, .rectSelect, .ellipseSelect,
+                     .highlight, .text, .rectSelect, .ellipseSelect,
                      .frame, .crop] {
             #expect(ToolSettingsBar.settings(for: tool, availability: .all).isEmpty,
                     "\(tool) should carry no capsule")
@@ -32,6 +32,19 @@ struct ToolSettingsBarTests {
 
     @Test func theWandCarriesItsTolerance() {
         #expect(ToolSettingsBar.settings(for: .wand, availability: .all) == [.wandTolerance])
+    }
+
+    @Test func theBucketCarriesPhotoshopsThreeInPhotoshopsOrder() {
+        // Photoshop's options bar for the bucket reads Tolerance, Anti-alias,
+        // Contiguous, so somebody who knows it finds them where they look.
+        #expect(ToolSettingsBar.settings(for: .fill, availability: .all)
+                == [.fillTolerance, .fillAntiAlias, .fillContiguous])
+        // A bucket with no tolerance is not a flood fill: no flag of its own.
+        #expect(ToolSettingsBar.settings(for: .fill, availability: .none)
+                == [.fillTolerance, .fillAntiAlias, .fillContiguous])
+        #expect(ToolSetting.fillTolerance.title == "Tolerance")
+        #expect(ToolSetting.fillAntiAlias.title == "Anti-alias")
+        #expect(ToolSetting.fillContiguous.title == "Contiguous")
     }
 
     @Test func measureCarriesSnapAndShowInThatOrder() {

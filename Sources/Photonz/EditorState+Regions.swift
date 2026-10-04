@@ -140,7 +140,47 @@ extension EditorState {
             $0.isLocked && $0.imageRef != nil && $0.frame.contains(point)
         })?.id
         guard let target else { return }
-        fillLayer(id: target, hex: useBackground ? backgroundFillHex : foregroundFillHex)
+        let hex = useBackground ? backgroundFillHex : foregroundFillHex
+        if floodFill(at: point, into: target, hex: hex) { return }
+        fillLayer(id: target, hex: hex)
+    }
+
+    /// The bucket on a picture, Photoshop's way: flood the area of similar
+    /// colour around the click in that layer's own pixels and fill only it
+    /// (`BucketFill`, steered by Tolerance, Anti-alias and Contiguous). The
+    /// layer keeps its box and its place, and the fill is one undo step.
+    ///
+    /// False when the layer is not a plain picture this can read pixel for
+    /// pixel (a shape, text, a picture that has been cropped or turned, or a
+    /// layer with nothing on it yet), which leaves the caller's whole-layer
+    /// fill to answer as it always has. The flood runs off the main thread: a
+    /// Retina screenshot is twelve million pixels to walk.
+    private func floodFill(at point: CGPoint, into id: UUID, hex: String) -> Bool {
+        guard let layer = document?.layer(id: id), let ref = layer.imageRef,
+              layer.crop == nil, layer.transform.isIdentity, !layer.hasNothingOnIt,
+              layer.frame.width > 0, layer.frame.height > 0,
+              let bitmap = store.image(for: ref) else { return false }
+        // A click outside the picture's own box has nothing of it to flood.
+        guard layer.frame.contains(point) else { return true }
+        let pixel = CGPoint(x: (point.x - layer.frame.minX) * CGFloat(bitmap.width) / layer.frame.width,
+                            y: (point.y - layer.frame.minY) * CGFloat(bitmap.height) / layer.frame.height)
+        let options = bucketOptions
+        let frame = layer.frame
+        Task.detached(priority: .userInitiated) { [weak self] in
+            guard let filled = BucketFill.filled(bitmap, at: pixel, hex: hex, options: options)
+            else { return }
+            await MainActor.run {
+                // Dropped if the picture changed underneath the flood: its
+                // pixels would land on a layer they were not read from.
+                guard let self, let now = self.document?.layer(id: id),
+                      now.imageRef == ref, now.frame == frame else { return }
+                let newRef = self.store.register(filled)
+                self.discardDragPreview()
+                self.perform { $0.updateLayer(id: id) { $0.content = .image(newRef) } }
+                self.recordRecentColor(hex: hex)
+            }
+        }
+        return true
     }
 
     /// ⌥⌫ — fill the selected layer with the foreground (or background)

@@ -13,6 +13,9 @@ enum InspectorSectionID: String, CaseIterable {
     case layers
     case measureTool
     case wandTool
+    // The paint bucket's Tolerance, Anti-alias and Contiguous, while it is in
+    // hand: settings by D15's test, like the wand's tolerance beside it.
+    case fillTool
     case cropTool
     // The Zoom Callout tool's own setting (`next-callout-shape`): whether the
     // next callout comes out a box or a circle. It sits with the other
@@ -201,6 +204,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .layers: "Layers"
         case .measureTool: "Measure Tool"
         case .wandTool: "Magic Wand"
+        case .fillTool: "Fill Tool"
         case .cropTool: "Crop Tool"
         case .calloutTool: "Zoom Callout Tool"
         case .lensTool: "Lens Tool"

@@ -63,7 +63,8 @@ struct ToolSettingsCapsule: View {
             // The lens's number is named after the adjustment in hand
             // (Strength, Block size, Amount), so its control prints its own
             // word and this row prints none.
-            if setting != .lensAmount {
+            // A checkbox carries its own word after the box, the Mac way.
+            if setting != .lensAmount, setting != .fillAntiAlias, setting != .fillContiguous {
                 Text(setting.title)
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
@@ -121,6 +122,34 @@ struct ToolSettingsCapsule: View {
                     .frame(width: 22, alignment: .trailing)
             }
             .help("How far a color may drift and still join the selection.")
+        case .fillTolerance:
+            // The wand's short track and readout: the same idea, the same look.
+            HStack(spacing: 6) {
+                Slider(value: Binding(get: { editorState.bucketTolerance },
+                                      set: { editorState.bucketTolerance = $0.rounded() }),
+                       in: 0...128)
+                    .controlSize(.small)
+                    .frame(width: 116)
+                Text("\(Int(editorState.bucketTolerance))")
+                    .font(.system(size: 11).monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .frame(width: 22, alignment: .trailing)
+            }
+            .help("How far a color may drift from the one you click and still fill.")
+        case .fillAntiAlias:
+            Toggle(isOn: $state.bucketAntiAlias) {
+                Text("Anti-alias").font(.system(size: 11)).foregroundStyle(.secondary)
+            }
+            .toggleStyle(.checkbox)
+            .controlSize(.small)
+            .help("Blend the fill into the edges of lines so no pale ring is left.")
+        case .fillContiguous:
+            Toggle(isOn: $state.bucketContiguous) {
+                Text("Contiguous").font(.system(size: 11)).foregroundStyle(.secondary)
+            }
+            .toggleStyle(.checkbox)
+            .controlSize(.small)
+            .help("Fill only the area joined to the click. Off fills that color everywhere on the layer.")
         case .measureSnap:
             Picker("Snap", selection: $state.measureSnapsToCenters) {
                 Text("Edges").tag(false)

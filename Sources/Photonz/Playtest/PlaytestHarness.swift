@@ -5580,6 +5580,15 @@ private final class Run {
                     actionDetail = "deleted \(before - after) of \(picked.count) picked"
                         + (kept.isEmpty ? "" : ", kept locked \(kept.map(\.name).sorted().joined(separator: ", "))")
                 }
+            case .mergeDown:
+                // Merge Down quietly does nothing when its row is dimmed, so
+                // the log says which it was.
+                let dimmed = !editor.canMergeDown
+                let before = editor.document?.layers.count ?? 0
+                editor.mergeDown()
+                let after = editor.document?.layers.count ?? 0
+                actionDetail = dimmed ? "menu row dimmed, nothing merged"
+                    : "merged, \(before) layers became \(after)"
             case .selectComponentOriginal: editor.selectComponentOriginal()
             case .copyLayer: editor.copySelectedLayer()
             case .pasteLayer: editor.paste()

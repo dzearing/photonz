@@ -17,6 +17,14 @@ public enum ToolSetting: String, CaseIterable, Hashable, Sendable {
     case calloutMagnification
     /// How far a color may drift and still join the wand's selection.
     case wandTolerance
+    /// How far a colour may drift from the one clicked and still take the
+    /// paint bucket's fill.
+    case fillTolerance
+    /// Whether the bucket's fill blends into the edge of a line or stops hard.
+    case fillAntiAlias
+    /// Whether the bucket fills only the area joined to the click, or every
+    /// pixel of that colour on the layer.
+    case fillContiguous
     /// What a measure point magnetizes to: edges, or edges and centers.
     case measureSnap
     /// Which measurements the canvas draws.
@@ -33,6 +41,9 @@ public enum ToolSetting: String, CaseIterable, Hashable, Sendable {
         case .calloutShape: "Shape"
         case .calloutMagnification: "Magnification"
         case .wandTolerance: "Tolerance"
+        case .fillTolerance: "Tolerance"
+        case .fillAntiAlias: "Anti-alias"
+        case .fillContiguous: "Contiguous"
         case .measureSnap: "Snap"
         case .measureShow: "Show"
         case .lensAdjustment: "Lens"
@@ -99,6 +110,11 @@ public enum ToolSettingsBar {
             // The wand's tolerance answers to no flag of its own: a wand with
             // no tolerance is not a wand.
             [.wandTolerance]
+        case .fill:
+            // Photoshop's options bar order. No flag of their own: a bucket
+            // that floods with no tolerance to tune is not one anybody could
+            // steer, so the settings come with the flood.
+            [.fillTolerance, .fillAntiAlias, .fillContiguous]
         case .measure:
             [.measureSnap, .measureShow].filter {
                 $0 == .measureSnap ? availability.measureSnap : availability.measureShow

@@ -923,6 +923,11 @@ struct InspectorPanel: View {
         if editorState.activeTool == .wand, Experiments.shared.toolOptionsEnabled {
             set.insert(.wandTool)
         }
+        // The bucket's own settings (D15), the same test as the wand's: they
+        // change what the click fills, not what the pointer does.
+        if editorState.activeTool == .fill, Experiments.shared.toolOptionsEnabled {
+            set.insert(.fillTool)
+        }
         // Crop's aspect lock, in words. The tool button's flyout is the fast
         // path; D15 asks that the live mode stay readable somewhere as a word,
         // because a glyph says what the next drag does and does not remind you
@@ -1292,6 +1297,8 @@ struct InspectorPanel: View {
             MeasureToolInspector()
         case .wandTool:
             WandToolInspector()
+        case .fillTool:
+            FillToolInspector()
         case .cropTool:
             CropToolInspector()
         case .calloutTool:

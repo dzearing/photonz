@@ -79,6 +79,8 @@ public enum PlaytestMenuStandIn {
         Chord(key: "backspace", modifiers: [.command]): .deleteLayer,
         Chord(key: "delete", modifiers: [.option]): .fillWithForeground,
         Chord(key: "backspace", modifiers: [.option]): .fillWithForeground,
+        // Layer ▸ Merge Down, window-scoped like undo.
+        Chord(key: "e", modifiers: [.command]): .mergeDown,
         // Layer ▸ Copy Look and Paste Look, and View ▸ Show Timing. All three
         // hang off the focused window like undo, so all three are dimmed and
         // empty for the whole of a walk: `copy-a-look-walk` and

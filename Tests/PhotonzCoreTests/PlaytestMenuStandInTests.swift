@@ -79,6 +79,14 @@ struct PlaytestMenuStandInTests {
         #expect(PlaytestMenuStandIn.action(for: key("delete"), modifiers: [.command, .option]) == nil)
     }
 
+    @Test("Command E merges down, and only Command E does")
+    func mergeDownChord() {
+        // Layer ▸ Merge Down hangs off the focused window like undo, so a walk
+        // drawing on the Background and merging into it could not press it.
+        #expect(PlaytestMenuStandIn.action(for: key("e"), modifiers: [.command]) == .mergeDown)
+        #expect(PlaytestMenuStandIn.action(for: key("e"), modifiers: [.command, .shift]) == nil)
+    }
+
     @Test("A chord with no stand-in says so rather than guessing")
     func unknown() {
         // Nothing should quietly stand in for a chord nobody wrote down: a

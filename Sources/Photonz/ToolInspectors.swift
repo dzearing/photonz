@@ -128,6 +128,45 @@ struct WandToolInspector: View {
     }
 }
 
+// MARK: - Fill tool properties (D15)
+
+/// The paint bucket's own settings, shown while it is in hand: Photoshop's
+/// three, in Photoshop's order. They decide how far a click on a picture
+/// floods; a shape, a piece of text or an arrow takes the colour whole.
+struct FillToolInspector: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        @Bindable var state = editorState
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text("Tolerance").font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Text("\(Int(editorState.bucketTolerance))")
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(.secondary)
+            }
+            Slider(value: Binding(get: { editorState.bucketTolerance },
+                                  set: { editorState.bucketTolerance = $0.rounded() }),
+                   in: 0...128)
+                .controlSize(.small)
+                .panelHelp("How far a color may drift from the one you click and still fill")
+            Toggle("Anti-alias", isOn: $state.bucketAntiAlias)
+                .toggleStyle(.checkbox)
+                .controlSize(.small)
+                .panelHelp("Blend the fill into the edges of lines")
+                .playtestField("Anti-alias")
+            Toggle("Contiguous", isOn: $state.bucketContiguous)
+                .toggleStyle(.checkbox)
+                .controlSize(.small)
+                .panelHelp("Off fills that color everywhere on the layer")
+                .playtestField("Contiguous")
+        }
+        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
+        .padding(.vertical, 8)
+    }
+}
+
 // MARK: - Crop tool properties (D15)
 
 /// The Crop tool's own properties, shown while the tool is in hand: the aspect

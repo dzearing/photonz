@@ -48,6 +48,11 @@ extension PlaytestMemory {
             // Nothing in the app was wrong and nothing in the walk said so.
             EditorState.toolMemoryKeys
                 + [EditorState.wandToleranceKey,
+                   // The bucket's three, for the same reason as the wand's:
+                   // a walk left with Contiguous off would flood every white
+                   // pixel of the next walk's picture.
+                   EditorState.bucketToleranceKey, EditorState.bucketAntiAliasKey,
+                   EditorState.bucketContiguousKey,
                    EditorState.lensToolKey, EditorState.lensToolKindKey,
                    // The timeline bar's Easing, the curve new keys are given:
                    // left behind, a walk's keys would ease however the last

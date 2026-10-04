@@ -43,43 +43,60 @@ public enum FloodFill {
         }
         guard drew else { return nil }
 
+        let result = rgba.withUnsafeBufferPointer { px in
+            floodMask(px, width: w, height: h, seedX: sx, seedY: sy,
+                      tolerance: tolerance, contiguous: true)
+        }
+        return Mask(mask: result, width: w, height: h)
+    }
+
+    /// The flood itself, over premultiplied RGBA8 already in top-left row
+    /// order. `contiguous` false takes every similar pixel in the image rather
+    /// than only the ones joined to the seed (the paint bucket's Contiguous
+    /// switch, off).
+    static func floodMask(_ px: UnsafeBufferPointer<UInt8>, width w: Int, height h: Int,
+                          seedX sx: Int, seedY sy: Int, tolerance: Double,
+                          contiguous: Bool) -> [Bool] {
         var result = [Bool](repeating: false, count: w * h)
-        rgba.withUnsafeBufferPointer { px in
-            let seed = (sy * w + sx) * 4
-            let sr = Int(px[seed]), sg = Int(px[seed + 1])
-            let sb = Int(px[seed + 2]), sa = Int(px[seed + 3])
-            let limit = Int((tolerance * tolerance).rounded(.down))
+        let seed = (sy * w + sx) * 4
+        let sr = Int(px[seed]), sg = Int(px[seed + 1])
+        let sb = Int(px[seed + 2]), sa = Int(px[seed + 3])
+        let limit = Int((tolerance * tolerance).rounded(.down))
 
-            func similar(_ i: Int) -> Bool {
-                let o = i * 4
-                let dr = Int(px[o]) - sr, dg = Int(px[o + 1]) - sg
-                let db = Int(px[o + 2]) - sb, da = Int(px[o + 3]) - sa
-                return dr * dr + dg * dg + db * db + da * da <= limit
-            }
+        func similar(_ i: Int) -> Bool {
+            let o = i * 4
+            let dr = Int(px[o]) - sr, dg = Int(px[o + 1]) - sg
+            let db = Int(px[o + 2]) - sb, da = Int(px[o + 3]) - sa
+            return dr * dr + dg * dg + db * db + da * da <= limit
+        }
 
-            // Scanline fill: flood a whole horizontal run at once, then seed
-            // the rows above and below from each similar sub-run.
-            var stack = [(x: sx, y: sy)]
-            while let (x, y) = stack.popLast() {
-                let row = y * w
-                if result[row + x] || !similar(row + x) { continue }
-                var lx = x
-                while lx > 0 && !result[row + lx - 1] && similar(row + lx - 1) { lx -= 1 }
-                var rx = x
-                while rx < w - 1 && !result[row + rx + 1] && similar(row + rx + 1) { rx += 1 }
-                for i in lx...rx { result[row + i] = true }
-                for ny in [y - 1, y + 1] where ny >= 0 && ny < h {
-                    let nrow = ny * w
-                    var runStarted = false
-                    for i in lx...rx {
-                        let candidate = !result[nrow + i] && similar(nrow + i)
-                        if candidate && !runStarted { stack.append((i, ny)) }
-                        runStarted = candidate
-                    }
+        guard contiguous else {
+            for i in 0..<(w * h) where similar(i) { result[i] = true }
+            return result
+        }
+
+        // Scanline fill: flood a whole horizontal run at once, then seed
+        // the rows above and below from each similar sub-run.
+        var stack = [(x: sx, y: sy)]
+        while let (x, y) = stack.popLast() {
+            let row = y * w
+            if result[row + x] || !similar(row + x) { continue }
+            var lx = x
+            while lx > 0 && !result[row + lx - 1] && similar(row + lx - 1) { lx -= 1 }
+            var rx = x
+            while rx < w - 1 && !result[row + rx + 1] && similar(row + rx + 1) { rx += 1 }
+            for i in lx...rx { result[row + i] = true }
+            for ny in [y - 1, y + 1] where ny >= 0 && ny < h {
+                let nrow = ny * w
+                var runStarted = false
+                for i in lx...rx {
+                    let candidate = !result[nrow + i] && similar(nrow + i)
+                    if candidate && !runStarted { stack.append((i, ny)) }
+                    runStarted = candidate
                 }
             }
         }
-        return Mask(mask: result, width: w, height: h)
+        return result
     }
 
     /// The flooded region as a boundary path (via `ContourTracer`), ready to
