@@ -32,6 +32,20 @@
 #                          artifact; the local release preflight runs `--dmg`
 #                          without the identity).
 set -euo pipefail
+
+# The header comment above is the usage. Print it for -h/--help, and refuse
+# anything else unrecognised: falling through to the default would rebuild the
+# dev app, which quits it under the person using it.
+usage() { sed -n '2,/^set -euo/{/^#/s/^# \{0,1\}//p;}' "$0"; }
+case "${1:-}" in
+  ""|--probe|--release|--dmg|--dmg-only) ;;
+  -h|--help) usage; exit 0 ;;
+  *) echo "build-app.sh: unknown option '$1'" >&2; usage >&2; exit 2 ;;
+esac
+if (( $# > 1 )); then
+  echo "build-app.sh: takes at most one option, got: $*" >&2; usage >&2; exit 2
+fi
+
 cd "$(dirname "$0")/.."
 
 VERSION="$(cat VERSION)"
