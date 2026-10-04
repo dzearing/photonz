@@ -41,12 +41,11 @@ extension Color {
 /// `InspectorResizeHandle` on its left edge.
 struct InspectorPanel: View {
     @Environment(EditorState.self) private var editorState
-    @AppStorage(InspectorPanel.sectionOrderKey) private var orderRaw = ""
-    @AppStorage(InspectorPanel.collapsedKey) private var collapsedRaw = ""
+    @StoredSetting(InspectorPanel.sectionOrderKey) private var orderRaw = ""
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// Which one-time section moves this panel's saved order has had. See
     /// `loadOrder`.
-    @AppStorage(InspectorPanel.sectionOrderVersionKey) private var orderVersion = 0
+    @StoredSetting(InspectorPanel.sectionOrderVersionKey) private var orderVersion = 0
     /// What the dock remembers about its own sections between launches, named
     /// so a scripted walk that rearranges them can put them back.
     static let sectionOrderKey = "inspector.sectionOrder"
@@ -180,10 +179,17 @@ struct InspectorPanel: View {
     @State private var dragScratch = SectionDragScratch()
     /// The Library's scope, so the picked item's section can be titled after
     /// what it is ("Media", "Component") rather than "Library Item".
-    @AppStorage(LibraryPanel.scopeKey) private var libraryScopeRaw = LibraryScope.media.rawValue
+    @StoredSetting(LibraryPanel.scopeKey) private var libraryScopeRaw = LibraryScope.media.rawValue
     /// Scratch measurements for the Library reveal. A reference on purpose:
     /// see the note at the geometry reader.
     @State private var reveal = DockRevealScratch()
+    /// Which sections are folded. Each section reads its own fold, so a click
+    /// on a header redraws that section and not this panel. See `toggleCollapsed`
+    /// for the one way a fold still reaches the panel.
+    @State private var folds = PanelSectionFoldStore()
+    /// Goes up when a fold changes how much height the dock's lists get, which
+    /// is the one thing about a fold this panel has to draw.
+    @State private var foldBudgetPass = 0
     // WHAT A PICK ACTUALLY COSTS, measured 2026-09-16 by taking one piece out
     // at a time and running the same walk again. Written down because three
     // tasks in a row have gone looking for the cost in the machinery below it
@@ -319,18 +325,21 @@ struct InspectorPanel: View {
         // How tall each list section may be drawn, so that the forms under it
         // stay where they are instead of being carried off the bottom.
         let ceilings = layout.ceilings(for: sections)
-        // Which sections are folded, read HERE and handed to the rows as a
-        // value, never read inside them. The rows are built in closures that
-        // capture this panel, and the panel's stored setting compares equal
-        // to itself however its contents change, so a click that changed
-        // nothing but a fold left SwiftUI sure the rows were the same and it
-        // never built them again: the click was saved and the header stayed
-        // shut. Wherever the click also moved the dock's height budget the
-        // rows were rebuilt for that and the fold showed, which is why it
-        // worked on a picked clip and never on a recording with nothing
-        // picked (the user, 2026-10-02: "collapsed panels that can't be
-        // expanded"). `Scripts/playtest/every-section-header-opens-walk.json`.
-        let folded = foldedSections
+        let _ = (reveal.drawnCeilings = ceilings)
+        // Folds are NOT read here for the rows: each section reads its own
+        // from `PanelSectionFoldStore`, so a fold redraws one section. This
+        // panel was once handed the folds through its stored setting, and
+        // rebuilt every section on every click, 20 to 70ms a fold with a clip
+        // picked (`section-fold-motion-walk`, 2026-10-04). Before that it read
+        // the setting inside the rows' closures and SwiftUI never saw a fold
+        // change at all (the user, 2026-10-02: "collapsed panels that can't
+        // be expanded", `every-section-header-opens-walk`). What it does read
+        // is when a fold moved the height budget, and when somebody outside
+        // the panel changed the folds.
+        let _ = foldBudgetPass
+        let _ = folds.syncs
+        let _ = (folds.onFoldFromAnotherWindow = { checkFoldBudget() })
+        let _ = (reveal.drawnSections = sections)
         #if PHOTONZ_PLAYTEST
         let _ = ViewBuildMeter.shared.note(
             "[\(sections.map(\.rawValue).joined(separator: ","))] arrival \(arrivalPass) "
@@ -350,7 +359,7 @@ struct InspectorPanel: View {
                             VStack(alignment: .leading, spacing: 0) {
                                 CollapsibleSection(
                                     title: sectionTitle(id),
-                                    isCollapsed: folded.contains(id),
+                                    fold: folds.cell(id),
                                     onToggle: { toggleCollapsed(id) },
                                     onReorder: { pointerY, carriedBy in
                                         sectionDragChanged(id, pointerY: pointerY,
@@ -447,16 +456,6 @@ struct InspectorPanel: View {
                         }
                     }
                     .padding(.vertical, DockMetrics.listTopPadding)
-                    // Opening or shutting a section moves the whole dock on
-                    // ONE curve: the section grows or shrinks and everything
-                    // under it slides with it. Keyed here, on the folds, and
-                    // not left to the click's `withAnimation`: the fold is a
-                    // stored setting, and its change reached the dock outside
-                    // the click's transaction, so every section jumped open
-                    // and shut with nothing animated at all (filmed
-                    // 2026-10-02, `section-fold-motion-walk`).
-                    .animation(foldMotion, value: folded)
-                    .onChange(of: folded) { reveal.foldWithoutMotion = false }
                     // NO implicit animation on the section SET (10.7). Animating
                     // section insert/remove forces the whole .regularMaterial panel to
                     // re-blur and an NSColorWell to animate in/out every frame for the
@@ -1627,36 +1626,53 @@ struct InspectorPanel: View {
     }
 
     private func isCollapsed(_ id: InspectorSectionID) -> Bool {
-        collapsedRaw.split(separator: ",").contains(Substring(id.rawValue))
-    }
-
-    /// Every section left folded, as a value the rows can be handed. See
-    /// `body` for why the rows must not read the setting themselves.
-    private var foldedSections: Set<InspectorSectionID> {
-        Set(collapsedRaw.split(separator: ",").compactMap { InspectorSectionID(rawValue: String($0)) })
+        folds.isFolded(id)
     }
 
     /// The curve a section opens and shuts on, and nothing with Reduce Motion
-    /// on: the section is simply open or shut. The animation is the dock's,
-    /// keyed on the folds (see `body`), so this is the one place it is chosen.
+    /// on: the section is simply open or shut. The section grows or shrinks
+    /// and everything under it slides with it, on this one curve.
     private var foldMotion: Animation? {
-        reduceMotion || reveal.foldWithoutMotion ? nil : .spring(duration: 0.25)
+        reduceMotion ? nil : .spring(duration: 0.25)
     }
 
+    /// A click on a header. The section redraws itself; this panel redraws
+    /// only when the fold changed what the dock's lists may be given, so a
+    /// shut form hands its room to the layers list on the same curve.
     private func toggleCollapsed(_ id: InspectorSectionID) {
-        var set = Set(collapsedRaw.split(separator: ",").map(String.init))
-        if set.contains(id.rawValue) { set.remove(id.rawValue) } else { set.insert(id.rawValue) }
-        collapsedRaw = set.sorted().joined(separator: ",")
+        withAnimation(foldMotion) {
+            refold { folds.toggle(id) }
+        }
     }
 
     /// Opens a section that was left collapsed, and does nothing to one that is
     /// already open. No animation: the reveal that calls this needs a height
     /// that has finished changing.
     private func expand(_ id: InspectorSectionID) {
-        var set = Set(collapsedRaw.split(separator: ",").map(String.init))
-        guard set.remove(id.rawValue) != nil else { return }
-        reveal.foldWithoutMotion = true
-        collapsedRaw = set.sorted().joined(separator: ",")
+        var quiet = Transaction()
+        quiet.disablesAnimations = true
+        withTransaction(quiet) {
+            refold { folds.open(id) }
+        }
+    }
+
+    /// Changes the folds, and tells this panel only if an open section would
+    /// now be handed a different height than the one it was drawn with. A
+    /// folded section's own height does not count: its body is out of sight,
+    /// and handing it a new one rebuilt the whole of Appearance for nothing
+    /// (60 to 80ms a fold, 2026-10-04).
+    private func refold(_ change: () -> Void) {
+        change()
+        checkFoldBudget()
+    }
+
+    private func checkFoldBudget() {
+        let sections = reveal.drawnSections
+        let now = layout.ceilings(for: sections)
+        let drawn = reveal.drawnCeilings
+        if sections.contains(where: { !isCollapsed($0) && now[$0] != drawn[$0] }) {
+            foldBudgetPass += 1
+        }
     }
 }
 

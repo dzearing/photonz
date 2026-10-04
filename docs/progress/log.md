@@ -20625,3 +20625,9 @@ Next: the first editor window's ~200 ms first build
 - CI had been red since 2026-09-17: every run hit the 12 minute test step at a different test, so the suite outgrew the limit (about 21 minutes serially on the hosted runner). Raised to 40 minutes in `ci.yml` (job 55) and 45 in `release.yml`.
 - The first Release run then failed one canary, `BusyVideoSizeTests` at 900 px/s, which required Small to go over its size budget; the GitHub VM's encoder held it. Narrowed to "High never goes over" (a busy local Mac put Standard over too). Tag deleted, fixed on main, re-tagged on 140f491c; the second run went green.
 - Next: confirm CI on main is green again with the longer limit.
+
+## 2026-10-04: a panel fold redraws one section, not the window
+
+- Every guarded fold in `section-fold-motion-walk` was over a frame on the honest meter (18 to 108ms), not just Time. Three causes, each proved by experiment: a dotted `@AppStorage` key (`inspector.width`, `timeline.height`) is invalidated by every defaults write, so each fold rebuilt the whole editor; the fold was the panel's stored setting, so each fold rebuilt every section; and opening built the body from nothing.
+- `StoredSetting` replaces view-level `@AppStorage`; `PanelSectionFoldStore` gives each section its own fold cell; a section keeps its body built once opened; Tab, VoiceOver and the walk's markers follow the fold off the click's frame. Folds now 6 to 15ms.
+- Residual: about one full walk run in three still catches one 16 to 18ms frame; task `folding-a-panel-section-lands-under-a-frame-on-e` owns it.

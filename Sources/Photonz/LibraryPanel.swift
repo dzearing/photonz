@@ -26,12 +26,12 @@ struct LibraryPanel: View {
     @Environment(EditorState.self) private var editorState
     /// The scope you were last in, remembered across launches (and read by the
     /// section header, so a collapsed Library still says what it is set to).
-    @AppStorage(LibraryPanel.scopeKey) private var scopeRaw = LibraryScope.media.rawValue
+    @StoredSetting(LibraryPanel.scopeKey) private var scopeRaw = LibraryScope.media.rawValue
     /// The tile area's max height, resizable and persisted, the same way the
     /// layers area is: a long shelf must not shove the rest of the dock off
     /// the bottom. Its first value is the release's own: two whole rows of
     /// cards in Next (`LibraryShelfLayout.defaultCap`).
-    @AppStorage(LibraryPanel.heightKey) private var maxHeight = 220.0
+    @StoredSetting(LibraryPanel.heightKey) private var maxHeight = 220.0
     @State private var query = ""
     /// How much room the shelf has across, which is all that has to be
     /// measured: the rest of the height is arithmetic.
@@ -65,7 +65,7 @@ struct LibraryPanel: View {
         self.dockCeiling = dockCeiling
         self.onMetrics = onMetrics
         let firstCap = LibraryShelfLayout.defaultCap(sizing: Experiments.shared.libraryTileSizing)
-        _maxHeight = AppStorage(wrappedValue: Double(firstCap), Self.heightKey)
+        _maxHeight = StoredSetting(wrappedValue: Double(firstCap), Self.heightKey)
     }
 
     /// How this release sizes its tiles: the mock's cards in Next, the older

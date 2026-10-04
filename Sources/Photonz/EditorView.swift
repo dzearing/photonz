@@ -45,7 +45,7 @@ struct EditorView: View {
     @State private var strokeWidthDraft: CGFloat?
     @State private var arrowheadScaleDraft: CGFloat?
     /// Docked inspector width, set by the 1px left resize handle; persisted.
-    @AppStorage("inspector.width") private var panelWidth = 264.0
+    @StoredSetting("inspector.width") private var panelWidth = 264.0
     /// Anchors the active-tool accent circle so it slides between buttons.
     @Namespace private var toolbarNamespace
     /// False until the document has first appeared, so the inspector pane doesn't

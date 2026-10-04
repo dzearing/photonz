@@ -30,7 +30,7 @@ struct TimelineDock: View {
     let windowHeight: CGFloat
     /// The tracks area's height as the top edge last left it, or 0 for the
     /// height the dock always had. The person's, across every recording.
-    @AppStorage(EditorState.timelineHeightKey) private var storedHeight = TimelineDockHeight.defaultStored
+    @StoredSetting(EditorState.timelineHeightKey) private var storedHeight = TimelineDockHeight.defaultStored
     /// The tracks area's height while the edge is in hand: live, and only
     /// written to the settings when the drag ends.
     @State private var draggedBody: CGFloat?

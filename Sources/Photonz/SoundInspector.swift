@@ -112,7 +112,7 @@ struct SoundGainInspector: View {
     @Environment(EditorState.self) private var editorState
     /// Clean noise beside Normalize, remembered per user and on until
     /// somebody unchecks it (`EditorState.normalizeCleansNoise`).
-    @AppStorage(EditorState.normalizeCleansNoiseKey) private var cleansNoise = true
+    @StoredSetting(EditorState.normalizeCleansNoiseKey) private var cleansNoise = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {

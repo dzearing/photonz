@@ -25,6 +25,20 @@ extension EnvironmentValues {
     /// in them follows the playhead, so a recording playing in View pays
     /// nothing for tracks nobody can see (`EditorState.editPiecesAsleep`).
     @Entry var editPiecesAsleep = false
+    /// The panel section this is inside, asked at the moment a walk looks
+    /// whether it is folded: a folded body is kept built, under a window
+    /// closed to nothing, and nothing in it is there for a walk to find, as
+    /// nothing is for a person (`CollapsibleSection.isBuilt`). A reference
+    /// handed down once and asked later, so a fold costs SwiftUI nothing:
+    /// handed down as a flag, every fold re-sent it through the whole body,
+    /// an 18ms frame of its own as Transitions opened (2026-10-04).
+    @Entry var foldedSectionReach: FoldedSectionReach?
+}
+
+/// Whether a panel section's body is folded, for whatever asks later rather
+/// than draws (`EnvironmentValues.foldedSectionReach`).
+@MainActor final class FoldedSectionReach {
+    var isFolded = false
 }
 
 #if PHOTONZ_PLAYTEST
@@ -65,9 +79,14 @@ final class PanelTargetView: NSView {
     /// Exactly the closure the view's own `onDrag` uses. Nil for something
     /// that cannot be picked up, so a walk that tries is told so.
     var payload: (@MainActor () -> NSItemProvider)?
-    /// In one of Edit's pieces kept out of sight behind View: a walk passes
-    /// it by, as a person cannot reach it (`EnvironmentValues.editPiecesOutOfReach`).
-    var isOutOfReach = false
+    /// In one of Edit's pieces kept out of sight behind View
+    /// (`EnvironmentValues.editPiecesOutOfReach`).
+    var isInEditPiecesOutOfReach = false
+    /// The panel section this is inside, if any.
+    weak var foldedSection: FoldedSectionReach?
+    /// Out of a person's reach, so a walk passes it by: in Edit's pieces kept
+    /// behind View, or in a folded section's body.
+    var isOutOfReach: Bool { isInEditPiecesOutOfReach || foldedSection?.isFolded == true }
 
     init(name: String, kind: PanelTargetKind, detail: String, steady: [String] = [],
          payload: (@MainActor () -> NSItemProvider)?) {
@@ -99,12 +118,14 @@ private struct PanelTargetAnchor: NSViewRepresentable {
 
     func makeNSView(context: Context) -> PanelTargetView {
         let view = PanelTargetView(name: name, kind: kind, detail: detail, steady: steady, payload: payload)
-        view.isOutOfReach = context.environment.editPiecesOutOfReach
+        view.isInEditPiecesOutOfReach = context.environment.editPiecesOutOfReach
+        view.foldedSection = context.environment.foldedSectionReach
         return view
     }
 
     func updateNSView(_ view: PanelTargetView, context: Context) {
-        view.isOutOfReach = context.environment.editPiecesOutOfReach
+        view.isInEditPiecesOutOfReach = context.environment.editPiecesOutOfReach
+        view.foldedSection = context.environment.foldedSectionReach
         view.name = name
         view.kind = kind
         view.detail = detail

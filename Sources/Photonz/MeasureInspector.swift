@@ -28,7 +28,7 @@ struct MeasureInspector: View {
     /// Remembered across selections and across launches, like the parts list's
     /// open row: someone checking coordinates all afternoon should not have to
     /// open the fold again on every measurement they click.
-    @AppStorage(MeasureInspector.detailsOpenKey) private var isDetailsOpen = false
+    @StoredSetting(MeasureInspector.detailsOpenKey) private var isDetailsOpen = false
     static let detailsOpenKey = "inspector.measureDetailsOpen"
 
     private var content: MeasureContent? {

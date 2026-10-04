@@ -1,0 +1,30 @@
+{
+  "id": "folding-a-panel-section-lands-under-a-frame-on-e",
+  "title": "Folding a panel section lands under a frame on every run",
+  "goal": "Folding a section in the right hand panel now costs one frame of 12 to 15ms for the biggest sections, so about one full run in three of the fold walk still catches a single 16 to 18ms frame somewhere. Find what is left in that frame and take it out, so the guarantee holds every time, not most times.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 3570,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-04T18:12:22.357Z",
+  "updated": "2026-10-04T18:12:22.360Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follows folding-a-panel-section-answers-within-a-frame (2026-10-04), which took folds from 18-108ms to 6-15ms: StoredSetting (dotted @AppStorage keys rebuilt the editor on every defaults write), PanelSectionFoldStore (per-section fold cells, panel redraws only when an open section's ceiling changes, other windows follow after 0.3s without motion), bodies kept built once opened (CollapsibleSection.isBuilt), reach (Tab via focusable(false, interactions: []), VoiceOver, header value) deferred to after the motion, walk markers asked through FoldedSectionReach. Residual measured on the final build, 13 full runs: worst press per run 14-16ms, misses at 16.1-18.6ms, scattered across Properties, Transitions, Effects/Appearance on a rectangle, and the guarded wait after five rapid Layers clicks (16.4-19.1ms, could not reproduce it outside the full walk: 6 isolated cycles with both windows open read 9-11ms). Each press = an ~8ms click pass then the fold pass starting ~8ms in. Time Profiler on that pass: generic AttributeGraph update, layout, accessibility needsUpdate/postUpdate (~10-15%), display list render; per animation frame 6-9ms, a share of it AppKit moving every NSView in the panel (CoreViewSetGeometry, tracking-area refresh, NSViewFrameDidChange posts), including the probe-only PanelTargetView markers (stopping their frame notifications made no measurable difference). Ideas not tried: fewer onGeometryChange observers per section during motion, fewer NSView-backed controls (VideoKit.Dropdown is an NSPopUpButton plus its own NSHostingView), measuring the shipping build's fold pass against the probe's. The press failure message now says how long after the click its longest pass began (MainThreadMeter.longestBeganMS), and every press log line ends 'longest Xms from Yms in'.",
+  "acceptance": [
+    "section-fold-motion-walk passes ten runs in a row on its own, every guarded press and the guarded waits under 16ms",
+    "Properties, Transitions and a rectangle's Appearance each fold with their longest pass under 13ms over 16 folds (median and worst both reported)",
+    "No section is dimmed, half open or out of reach of the pointer while it moves"
+  ],
+  "log": [
+    {
+      "t": "2026-10-04T18:12:22.359Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "section-fold-motion-walk"
+  ]
+}

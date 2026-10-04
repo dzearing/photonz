@@ -520,7 +520,12 @@ extension View {
 /// its header (drag to reorder). Elegant/modern: clean header, smooth collapse.
 struct CollapsibleSection<Content: View>: View {
     let title: String
-    let isCollapsed: Bool
+    /// Folded, for a section with no `fold` of its own to read.
+    var isCollapsed = false
+    /// The dock's sections read their fold here, each from its own cell, so a
+    /// click on one header redraws that section and not the whole panel
+    /// (`PanelSectionFoldStore`).
+    var fold: PanelFoldCell?
     let onToggle: () -> Void
     /// The header being dragged up or down the dock: where the pointer is in
     /// the dock's visible area, and how far it has carried this section.
@@ -558,6 +563,42 @@ struct CollapsibleSection<Content: View>: View {
     @State private var isCarrying = false
     /// The pointer on the header, which lights the mock's heading up in ink.
     @State private var isHovering = false
+    /// Whether the body has been built at all. Once it has, folding keeps it
+    /// and only closes the window it is seen through: building a body is most
+    /// of what opening one cost (Transitions 50ms, Appearance 65ms against 15
+    /// and 9 kept, `section-fold-motion-walk` 2026-10-04). A section folded
+    /// since launch is not built until it is first opened.
+    @State private var isBuilt = false
+
+    private var isFolded: Bool { fold?.isFolded ?? isCollapsed }
+    /// Whether a folded body is out of the Tab order, so Tab cannot land in a
+    /// field nobody can see (it did, with the body kept built: measured with
+    /// a bare SwiftUI window on 2026-10-04), and whether it is gone from
+    /// VoiceOver and from a walk reading names. Both follow the fold behind
+    /// it on purpose, so the click's own frame carries the picture and
+    /// nothing else: switching off every control in a body and taking it out
+    /// of the accessibility tree cost as much as the rest of the fold
+    /// together (Transitions 19 against 9ms, Audio 17 opening), so they wait
+    /// for the motion to settle, a beat apart, both ways. A walk reading
+    /// names follows the fold at once (`reach`). A pointer cannot reach a
+    /// body whose window is shut whatever these say (`allowsHitTesting`).
+    ///
+    /// Out of the Tab order by `focusable(false, interactions: [])` rather
+    /// than `disabled`: the same for Tab, but it dims nothing and touches only
+    /// what can take focus, where switching every control off and on again
+    /// was a 20ms frame of its own as Transitions opened.
+    @State private var isOutOfTabOrder = false
+    @State private var isUnheard = false
+    /// A folded body's controls are gone from what a walk can find by name,
+    /// as from what a person can see (`FoldedSectionReach`).
+    @State private var reach = FoldedSectionReach()
+    /// What the header says it is to VoiceOver, collapsed or expanded. It
+    /// changes with the body leaving or rejoining what VoiceOver hears, not
+    /// in the click's own frame; nil until the first fold, and then the fold.
+    @State private var spokenFolded: Bool?
+    /// The steps above still waiting from the last fold. A new fold cancels
+    /// them, so five clicks in a second settle once, on where they ended.
+    @State private var reachSteps: Task<Void, Never>?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -571,40 +612,60 @@ struct CollapsibleSection<Content: View>: View {
             // to where it ends up. It used to fade in place and slide down from
             // over its own header, and the click's animation never reached the
             // dock at all, so in practice it was a jump (filmed 2026-10-02).
-            // The curve is the dock's own, keyed on which sections are folded:
-            // see `InspectorPanel.foldMotion`.
-            if !isCollapsed {
-                boundedBody
+            // The curve is the click's own: see `InspectorPanel.foldMotion`.
+            //
+            // The body is a view of its own whose inputs a fold does not
+            // touch, so folding redraws the header and the window the body is
+            // seen through, and SwiftUI leaves the body's rows alone.
+            let folded = isFolded
+            if !folded || isBuilt {
+                SectionBodyHost(bodyCeiling: bodyCeiling, onBodyHeight: onBodyHeight, content: content)
                     .onGeometryChange(for: CGRect.self) {
                         $0.frame(in: .named(inspectorDockSpace))
-                    } action: { onBodyFrame?($0) }
-                    .transition(.sectionReveal)
+                    } action: { frame in
+                        // A folded body is still laid out, at its whole height
+                        // under a closed window, and where it sits then is no
+                        // room anything inside it has.
+                        if !isFolded { onBodyFrame?(frame) }
+                    }
+                    .modifier(SectionRevealModifier(fraction: folded ? 0 : 1))
+                    // Folded, nothing in it can be reached: not by the pointer,
+                    // not by Tab, not by VoiceOver or a walk reading names.
+                    .allowsHitTesting(!folded)
+                    .focusable(!isOutOfTabOrder, interactions: [])
+                    .accessibilityHidden(isUnheard)
+                    .environment(\.foldedSectionReach, reach)
+                    .onAppear { isBuilt = true }
+                    // The first time a body folded since launch is opened it is
+                    // built then, and grows in the same way.
+                    .transition(.asymmetric(
+                        insertion: .modifier(active: SectionRevealModifier(fraction: 0),
+                                             identity: SectionRevealModifier(fraction: 1)),
+                        removal: .identity))
+            }
+        }
+        .onChange(of: isFolded) { _, folded in
+            reach.isFolded = folded
+            reachSteps?.cancel()
+            reachSteps = Task { @MainActor in
+                try? await Task.sleep(for: .seconds(Self.reachDelay))
+                guard !Task.isCancelled else { return }
+                if isUnheard != folded { isUnheard = folded }
+                if spokenFolded != folded { spokenFolded = folded }
+                try? await Task.sleep(for: .seconds(Self.beatApart))
+                guard !Task.isCancelled else { return }
+                if isOutOfTabOrder != folded { isOutOfTabOrder = folded }
             }
         }
     }
 
-    /// The body, inside its own scroller when the dock has had to shorten it.
-    ///
-    /// Whole and unwrapped the rest of the time, which is every case where the
-    /// panel fits: a section that would be drawn at exactly its own height
-    /// gains nothing from a scroller and loses a frame of lag every time its
-    /// content changes, because the height it is given is measured one pass
-    /// behind the content it is given for.
-    @ViewBuilder private var boundedBody: some View {
-        let measured = content()
-            .padding(.bottom, DockMetrics.bodyBottomPadding)
-            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
-                onBodyHeight?($0)
-            }
-        if let bodyCeiling {
-            ScrollView(.vertical) { measured }
-                .frame(height: bodyCeiling)
-                .scrollBounceBehavior(.basedOnSize)
-                .scrollEdgeFade()
-        } else {
-            measured
-        }
-    }
+    /// Past the fold's 0.25s spring, and past the other windows' following
+    /// it too (`PanelSectionFoldStore.followDelay`), so each has a frame of
+    /// its own rather than sharing one.
+    private static var reachDelay: Double { 0.45 }
+    /// Between a body leaving or rejoining what VoiceOver hears and the Tab
+    /// order.
+    private static var beatApart: Double { 0.1 }
 
     private var header: some View {
         Group {
@@ -635,7 +696,7 @@ struct CollapsibleSection<Content: View>: View {
             return .handled
         }
         .accessibilityAddTraits(.isButton)
-        .accessibilityValue(isCollapsed ? "collapsed" : "expanded")
+        .accessibilityValue((spokenFolded ?? isFolded) ? "collapsed" : "expanded")
         .playtestHover { isHovering = $0 }
         .panelHelp("Drag to reorder • click to collapse")
         // Named for a scripted walk, so one can collapse a section, or pick it
@@ -652,7 +713,7 @@ struct CollapsibleSection<Content: View>: View {
             Image(systemName: "chevron.right")
                 .font(.system(size: 9, weight: .bold))
                 .foregroundStyle(VideoKit.Palette.faint)
-                .rotationEffect(.degrees(isCollapsed ? 0 : 90))
+                .rotationEffect(.degrees(isFolded ? 0 : 90))
             Text(DockGroupHeader.title(title))
                 .font(.system(size: DockGroupHeader.titleSize, weight: .semibold))
                 .tracking(DockGroupHeader.titleTracking)
@@ -672,7 +733,7 @@ struct CollapsibleSection<Content: View>: View {
                 .font(.system(size: PanelSectionLook.Section.chevronSize,
                               weight: PanelSectionLook.Section.chevronWeight))
                 .foregroundStyle(.secondary)
-                .rotationEffect(.degrees(isCollapsed ? 0 : 90))
+                .rotationEffect(.degrees(isFolded ? 0 : 90))
             Text(title)
                 .font(PanelSectionLook.Section.titleFont)
             Spacer(minLength: 8)
@@ -713,14 +774,40 @@ struct CollapsibleSection<Content: View>: View {
     }
 }
 
-/// How a section's body arrives: laid out at its full height from the first
-/// frame, and given a height that grows from nothing to the whole body, so the
-/// section's height is what animates and the rows below it slide on the same
-/// curve. Nothing inside the body is squeezed or re-flowed while it opens.
+/// A section's body, inside its own scroller when the dock has had to shorten
+/// it.
 ///
-/// Only for arriving. A body on its way out is no longer in the layout at
-/// all: the rows below it close up on their own curve whatever it does, so
-/// what shuts it is the window it is drawn through (`SectionRevealWindow`).
+/// Whole and unwrapped the rest of the time, which is every case where the
+/// panel fits: a section that would be drawn at exactly its own height gains
+/// nothing from a scroller and loses a frame of lag every time its content
+/// changes, because the height it is given is measured one pass behind the
+/// content it is given for.
+private struct SectionBodyHost<Content: View>: View {
+    let bodyCeiling: CGFloat?
+    let onBodyHeight: ((CGFloat) -> Void)?
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        let measured = content()
+            .padding(.bottom, DockMetrics.bodyBottomPadding)
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
+                onBodyHeight?($0)
+            }
+        if let bodyCeiling {
+            ScrollView(.vertical) { measured }
+                .frame(height: bodyCeiling)
+                .scrollBounceBehavior(.basedOnSize)
+                .scrollEdgeFade()
+        } else {
+            measured
+        }
+    }
+}
+
+/// How a section's body opens and shuts: laid out at its full height all the
+/// time, and given a height that runs between nothing and the whole body, so
+/// the section's height is what animates and the rows below it slide on the
+/// same curve. Nothing inside the body is squeezed or re-flowed while it moves.
 private struct SectionRevealLayout: Layout {
     /// How much of the body's height the section takes, 0 to 1.
     var fraction: CGFloat
@@ -743,47 +830,27 @@ private struct SectionRevealLayout: Layout {
     }
 }
 
-/// The window a section's body is seen through: the top `fraction` of its
-/// bounds, so a body shutting is covered from the bottom up exactly as fast as
-/// the header under it climbs. Wider than the body on either side and a little
-/// above it, so a focus ring or a knob's shadow at the edge of a control is
-/// never shaved off once the body is open.
-private struct SectionRevealWindow: Shape {
-    var fraction: CGFloat
-
-    var animatableData: CGFloat {
-        get { fraction }
-        set { fraction = newValue }
-    }
-
-    func path(in rect: CGRect) -> Path {
-        Path(CGRect(x: rect.minX - 40, y: rect.minY - 4,
-                    width: rect.width + 80, height: rect.height * min(max(fraction, 0), 1) + 4))
-    }
-}
-
+/// A section body open (1), shut (0) or anywhere between while it moves. The
+/// body stays built while it is shut: see `CollapsibleSection.isBuilt`.
+///
+/// It is seen through a window the height the section has been given, so a
+/// body opening is uncovered top down and one shutting is covered from the
+/// bottom up exactly as fast as the header under it climbs. The window is
+/// wider than the body on either side and a little above it, so a focus ring
+/// or a knob's shadow at the edge of a control is never shaved off once the
+/// body is open. A plain rectangle, padded out and back: every section wears
+/// it on every frame of a fold.
 private struct SectionRevealModifier: ViewModifier {
-    /// How much of its height the body takes in the dock (arriving).
-    let height: CGFloat
-    /// How much of what it takes is drawn (leaving).
-    let shown: CGFloat
+    let fraction: CGFloat
+
+    private static let margin = EdgeInsets(top: 4, leading: 40, bottom: 0, trailing: 40)
+    private static let back = EdgeInsets(top: -4, leading: -40, bottom: 0, trailing: -40)
 
     func body(content: Content) -> some View {
-        SectionRevealLayout(fraction: height) { content }
-            .clipShape(SectionRevealWindow(fraction: shown))
-    }
-}
-
-extension AnyTransition {
-    /// A section body uncovered top down as it opens and covered bottom up as
-    /// it shuts, always in step with the rows below it. See
-    /// `SectionRevealLayout` for why the two directions differ.
-    static var sectionReveal: AnyTransition {
-        .asymmetric(
-            insertion: .modifier(active: SectionRevealModifier(height: 0, shown: 1),
-                                 identity: SectionRevealModifier(height: 1, shown: 1)),
-            removal: .modifier(active: SectionRevealModifier(height: 1, shown: 0),
-                               identity: SectionRevealModifier(height: 1, shown: 1)))
+        SectionRevealLayout(fraction: fraction) { content }
+            .padding(Self.margin)
+            .clipped()
+            .padding(Self.back)
     }
 }
 

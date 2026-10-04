@@ -439,10 +439,12 @@ struct DockBudgetScratch: Equatable {
     var libraryFrame: CGRect?
     var viewportHeight: CGFloat = 0
     var isPending = false
-    /// The next change of folds lands without the fold's spring: set when the
-    /// app opens a section itself in order to scroll to it, which needs a
-    /// height that has stopped moving. Spent by the change it was set for.
-    var foldWithoutMotion = false
+    /// The sections the dock drew last, so a fold can ask whether it moved
+    /// their height budget without the panel reading the folds at all.
+    var drawnSections: [InspectorSectionID] = []
+    /// ...and the height each of them was handed, so a fold redraws the dock
+    /// only when an OPEN section would be handed a different one.
+    var drawnCeilings: [InspectorSectionID: CGFloat] = [:]
     /// How many picks the dock has seen. Only the release that still scrolls to
     /// a pick reads it: a reveal waits a beat for the section it is about to
     /// scroll to to finish being laid out, and this is how the wait knows it is

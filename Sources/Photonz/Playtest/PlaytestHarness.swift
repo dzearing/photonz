@@ -2155,10 +2155,11 @@ private final class Run {
             // it holds now is the press's own window and nothing after it.
             if let longestUnderMS, MainThreadMeter.shared.longestMS >= longestUnderMS {
                 throw Failure(description: String(
-                    format: "pressing \"%@\" held the main thread for %.1fms in one pass, and this walk "
-                        + "allows under %.0fms: a pass that long is a frame the app did not draw "
-                        + "right after the click",
-                    control, MainThreadMeter.shared.longestMS, longestUnderMS))
+                    format: "pressing \"%@\" held the main thread for %.1fms in one pass, starting %.0fms "
+                        + "after the click, and this walk allows under %.0fms: a pass that long is a "
+                        + "frame the app did not draw right after the click",
+                    control, MainThreadMeter.shared.longestMS, MainThreadMeter.shared.longestBeganMS,
+                    longestUnderMS))
             }
 
         case .dragSection(let section, let past, let stop, let hold, let cancel):
@@ -16219,6 +16220,8 @@ final class MainThreadMeter {
     private var busy: CFTimeInterval = 0
     private var passes = 0
     private var longest: CFTimeInterval = 0
+    private var longestEndedAt: CFTimeInterval = 0
+    private var zeroedAt: CFTimeInterval = 0
     /// Where a pass begins and ends. The time between two runs of the run
     /// loop is a pass too, because AppKit hands a queued event (a click's
     /// release) to the app there, and that is where the click's own work
@@ -16286,7 +16289,10 @@ final class MainThreadMeter {
             sinceAsked += d
             passes += 1
             passesSinceAsked += 1
-            longest = max(longest, d)
+            if d > longest {
+                longest = d
+                longestEndedAt = now
+            }
         }
         self.observer = observer
         CFRunLoopAddObserver(CFRunLoopGetMain(), observer, .commonModes)
@@ -16294,6 +16300,7 @@ final class MainThreadMeter {
 
     func reset() {
         busy = 0; passes = 0; longest = 0
+        zeroedAt = CACurrentMediaTime()
         clock.restart(at: CACurrentMediaTime())
         sinceAsked = 0
         passesSinceAsked = 0
@@ -16327,10 +16334,18 @@ final class MainThreadMeter {
     /// harness is standing in right now is not over, and is mostly its own.
     var longestMS: Double { longest * 1000 }
 
+    /// How long after the meter was zeroed the longest pass BEGAN: for a
+    /// press, how long after the click. Near zero is the click's own handling;
+    /// a frame or two later is the update the click set off; later still is
+    /// something that followed it (`section-fold-motion-walk`, 2026-10-04,
+    /// where it told the fold apart from a second window catching up).
+    var longestBeganMS: Double { max(0, longestEndedAt - longest - zeroedAt) * 1000 }
+
     var report: String {
         var total = busy
         total += clock.running(at: CACurrentMediaTime()) ?? 0
-        return String(format: "mainBusy %.1fms over %d passes, longest %.1fms", total * 1000, passes, longest * 1000)
+        return String(format: "mainBusy %.1fms over %d passes, longest %.1fms from %.0fms in",
+                      total * 1000, passes, longest * 1000, longestBeganMS)
     }
 }
 

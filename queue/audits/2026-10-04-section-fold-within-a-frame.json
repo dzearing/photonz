@@ -1,0 +1,28 @@
+{
+  "feature": "Panel sections fold within a frame",
+  "epic": "video-editing",
+  "summary": "Clicking a section header in the right hand panel now redraws that section and nothing else, so its motion starts on the next frame. A fold used to rebuild the whole panel and the whole editor around it, which held the app for 20 to 100ms a click (Appearance on a clip was the worst); now it is 6 to 15ms.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open any recording (File > Open Sample Recording works) and pick its clip on the timeline.",
+  "switched": {},
+  "try": [
+    { "do": "Click the TIME header to shut it, and watch its rows covered from the bottom up while Appearance climbs.", "shot": "2026-10-04-section-fold-frame-shutting-sc.png" },
+    { "do": "Click TIME again: Speed and Sound come back from the top, never dimmed, while the rest slides down.", "shot": "2026-10-04-section-fold-frame-opening-sc.png" },
+    { "do": "Shut and open Appearance, Audio Gain and Transitions, one after another.", "shot": "2026-10-04-section-fold-frame-clip-open-sc.png" },
+    { "do": "Shut Time, click in the In field under Audio Fades, and press Shift-Tab a few times: Tab never lands inside Time." },
+    { "do": "Open a picture (File > New), draw a rectangle, and fold Appearance and Effects while the recording window is still open behind.", "shot": "2026-10-04-section-fold-frame-shape-sc.png" },
+    { "do": "Click one header five times as fast as you can, and check it settles shut or open, never half way." }
+  ],
+  "evaluate": [
+    "Does a fold now start moving the instant you let go, with no hitch before it?",
+    "On a clip with every section open, does folding Appearance feel as light as folding Time?",
+    "With two windows open, is it right that folding a section in one also folds it in the other (as before), only without the motion there?",
+    "Does anything in a section you just folded still answer to the keyboard or to VoiceOver?"
+  ],
+  "rough": [
+    "The walk's 16ms limit is met on most runs, not all: the fold's frame is 12 to 15ms for the biggest sections (Properties, Transitions, a rectangle's Appearance) and about one run in three still catches a single 16 to 18ms frame somewhere among its 44 guarded clicks. Owned by its own task, folding-a-panel-section-lands-under-a-frame-on-e.",
+    "A section now keeps its rows built while it is folded, once it has been opened in that window: opening it again is cheap, but a folded section still costs its share whenever what it shows changes. A section folded since launch is not built until it is first opened, and that first open still costs a build (25 to 65ms).",
+    "VoiceOver hears a section fold or open about half a second after the click, once the motion has settled, and the header's collapsed or expanded value changes then too. Moving that into the click's frame was the biggest single cost left in it.",
+    "The very first fold after launch still costs one pass of about 25ms, as before; the walk reads it but does not judge it.",
+    "No mock draws this motion; the mocks only say a header collapses its group, and the header looks the same as before."
+  ]
+}

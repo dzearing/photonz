@@ -53,12 +53,22 @@
   {
    "do": "describe",
    "stage": "1-recording-nothing-picked",
-   "note": "A recording with nothing picked: Time, Captions and Transitions each clicked shut and open again by their headers, every click held under 16ms in any one pass of main thread work"
+   "note": "A recording with nothing picked: Time, Captions and Transitions each clicked shut and open again by their headers, every click held under 16ms in any one pass of main thread work. A fold redraws its own section and nothing else: not the editor, not the panel (it used to rebuild both, 2026-10-04)"
   },
   {
    "do": "press",
    "control": "Time section",
    "longestUnderMS": 16
+  },
+  {
+   "do": "expectBuilds",
+   "view": "editorBody",
+   "atMost": 0
+  },
+  {
+   "do": "expectBuilds",
+   "view": "inspectorPanel",
+   "atMost": 0
   },
   {
    "do": "wait",

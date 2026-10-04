@@ -321,7 +321,7 @@ struct LayersListView: View {
     /// of layers spent a third of the panel on a list you were not looking at
     /// and pushed the look of the thing off the bottom. Drag the grabber under
     /// the list to give it back as much room as you want; that sticks.
-    @AppStorage(LayersListView.heightKey) private var maxHeight = 200.0
+    @StoredSetting(LayersListView.heightKey) private var maxHeight = 200.0
     /// Measured height of the Canvas row, the one row that is always built.
     @State private var canvasRowHeight: CGFloat = 38
     /// What the count line and the grab bar under the list come to.
