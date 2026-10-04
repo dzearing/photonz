@@ -1,0 +1,28 @@
+{
+  "feature": "The track name column can be widened and its buttons never overlap",
+  "epic": "video-cutting",
+  "summary": "The column of track names on the left of the timeline now drags wider or narrower by its right edge, is remembered, and its hide, solo, lock and key buttons sit 4 points apart at every width while the name shortens first.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. A recording open in Edit with a title typed over it.",
+  "switched": {},
+  "try": [
+    { "do": "Before: the title's track picked and hidden, pointer on its header. Measured: name 17 pt wide ('T…'), switches 1 pt apart, lock touching the key diamond (0 pt).", "shot": "2026-10-03-track-column-0-before-sc.png" },
+    { "do": "Pick the title and rest the pointer on its track header (renamed V10, grouped, keyed). Measured at the 140 pt default: every gap 4.0 pt, V10 whole.", "shot": "2026-10-03-track-column-1-default-sc.png" },
+    { "do": "Move the pointer onto the gap between the names and the lanes: the pointer turns into the left-right resize arrows and a thin line shows." },
+    { "do": "Drag that edge hard left. It stops at 123 pt, still 4.0 pt between every control and V10 whole.", "shot": "2026-10-03-track-column-2-narrowest-sc.png" },
+    { "do": "Drag it hard right. It stops at 320 pt; the switches and key stay on the right edge and the Time, group, key and Audio rows follow.", "shot": "2026-10-03-track-column-3-widest-sc.png" },
+    { "do": "Double-click the edge: back to 140 pt." },
+    { "do": "Drag it to 200 pt, close the recording and open it again: still 200 pt.", "shot": "2026-10-03-track-column-5-remembered-sc.png" }
+  ],
+  "evaluate": [
+    "Is 140 pt the right default, or would you rather it opened narrower and you widen it when you need to?",
+    "Do you find the edge without being told, with only the pointer change and a line on hover to show it is there?",
+    "With the switches now 4 points apart, does the hide, solo, lock cluster still read as one group?",
+    "Should the widest the column goes be more than 320 pt for long track names?"
+  ],
+  "rough": [
+    "The column opens at 140 pt where the video mock draws 84 pt with names only: the mock has no switches or key diamond, and 84 pt is what made them overlap. Settled by the user's own report on 2026-10-03 (the-track-name-column-can-be-widened-and-its-but). The mock frame is 2026-10-03-track-column-mock.png (video page, timeline dock).",
+    "The kind icon in front of a name now gives way when the column is too narrow for it and a few letters of the name, rather than squeezing the name.",
+    "The draggable edge goes further than the mock, which has no edge at all: it shows a line only on hover and while dragged, so nothing new is drawn at rest.",
+    "The narrowest is 123 pt, not narrower: that is what the fullest header (in a group, with its arrow, three switches and the key) needs with 4 points between everything and three letters of its name."
+  ]
+}

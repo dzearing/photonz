@@ -138,6 +138,10 @@ public enum PlaytestLockSafety {
         // Added 2026-09-30 by reading: it asks the document for its layers
         // top down, the same list `expectLayers` counts, and no name.
         "expectRows",
+        // Added 2026-10-03 by reading: it measures the boxes the app's own
+        // register of controls holds, the same register a press reads, and
+        // asks accessibility for nothing.
+        "expectApart",
         // Added 2026-10-01 by reading: `expectTracks` asks the document for
         // its tracks top down, and `dragTrack` drives the timeline's own drag
         // session the way `dragRow` drives the layers list's, by the track's

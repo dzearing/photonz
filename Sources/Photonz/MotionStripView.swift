@@ -580,6 +580,10 @@ struct MotionStripLaneView: View {
     let lane: MotionStripLane
     let layerName: String
     let laneWidth: CGFloat
+    /// Where the lane starts: the strip's own label column, or under a
+    /// timeline track, the column of track names and its gap
+    /// (`TimelineDock.lanesLeading`), which the person can drag wider.
+    var labelWidth: CGFloat = MotionStripView.labelWidth
 
     var body: some View {
         HStack(spacing: 6) {
@@ -591,9 +595,9 @@ struct MotionStripLaneView: View {
                 .lineLimit(1)
                 .foregroundStyle(lane.isOn ? AnyShapeStyle(.secondary) : AnyShapeStyle(.tertiary))
                 .padding(.leading, 10)
-                .frame(width: MotionStripView.labelWidth - 6, alignment: .leading)
+                .frame(width: labelWidth - 6, alignment: .leading)
                 .wholeNameTip(lane.title, weight: .regular,
-                              room: MotionStripView.labelWidth - 6 - 10)
+                              room: labelWidth - 6 - 10)
             ZStack(alignment: .topLeading) {
                 RoundedRectangle(cornerRadius: 5)
                     .fill(.quaternary.opacity(0.5))

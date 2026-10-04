@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 11,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-04T00:17:17.852Z",
-  "updated": "2026-10-04T00:17:17.945Z",
+  "updated": "2026-10-04T01:42:13.473Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"the labels area of the tracks can't be resized, and it's so small the buttons overlap.\" Screenshot 2026-10-03 17.14.27: V7 expanded with a red hide (eye-slash) button and a purple key diamond touching each other at the right edge of the header.\n\nFrom code reading (not run): the column is a fixed constant, TimelineDock.gutter = 84 (TimelineDock.swift:45). Header width math at TimelineTrackRows.swift:165 (gutter - indent - switchesWidth - twistWidth - keyWidth) and frame at :184; other uses at TimelineDock.swift:476 (Time row), TimelineTrackRows.swift:291, :983, :1047, and MotionStripView.labelWidth 92 (MotionStripView.swift:37) for the property rows. Making it a stored value means every one of those reads the live width. Trap: the lane/canvas x mapping (ruler, playhead, drops) is offset by the gutter; check nothing assumes the constant. Trap: the track-carry gesture (simultaneousGesture at TimelineTrackRows.swift:192) must not steal the edge drag.",
@@ -31,6 +31,30 @@
     {
       "t": "2026-10-04T00:17:17.944Z",
       "note": "seq 480 -> 11"
+    },
+    {
+      "t": "2026-10-04T00:46:53.707Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-04T00:58:55.483Z",
+      "note": "Reproduced at Next defaults (probe, new expectApart step, Title track picked + hidden): pointer on the header -> name box 17pt ('Title' needs 23.4, shows 'T…'), switches 1.0pt apart, Lock to Key diamond 0.0pt; at rest Hide to Key 0.0pt. Column is the fixed 84pt. Adversarial pass: Premiere's track header column is resizable by its right edge with a resize cursor and its buttons never overlap; a first-time user finds the edge by the cursor change on the gap between names and lanes, so the grab strip is that 8pt gap (nothing else lives there, so it steals no clicks). Trap: the track carry gesture lives on the header, not the gap, so it cannot fight the edge. Floor must fit the fullest header (group indent + arrow + 3 switches + key) => 123pt; default 140 shows V10 whole on that header and Audio 2 whole on an ordinary one."
+    },
+    {
+      "t": "2026-10-04T01:41:54.809Z",
+      "note": "owns these walks: track-column-resizes-walk"
+    },
+    {
+      "t": "2026-10-04T01:42:13.415Z",
+      "note": "Built: TrackColumn + TrackHeaderLayout in PhotonzCore (12 tests: floor/default/ceiling, 4pt apart at every width 123..320 for every combination of group/arrow/switches/key), TrackColumnWidth store (UserDefaults timeline.trackColumnWidth, forgotten with walk 'motion' memory), TrackColumnEdge in the dock's 8pt gap (resize cursor, line on hover, double-click resets), TimelineDock.gutter now reads the live width so Time/group/caption/sound/key/zoom/words rows follow; MotionStripLaneView takes labelWidth so motion lanes under tracks follow. New walk step expectApart (+ expectTimeline trackColumn, which also checks the width on disk for the next launch). Walk track-column-resizes-walk passes at Next defaults: default 140 gaps 4.0/4.0/4.0/4.0 V10 whole; min 123 gaps 4.0 x4 name 44pt V10 whole; max 320 gaps 4.0 x4; double-click -> 140; 200 survives close+reopen. Shared dock code, not gated to Next, following the dock-height edge's precedent (both live in the shared TimelineDock)."
+    },
+    {
+      "t": "2026-10-04T01:42:13.472Z",
+      "note": "Walk fallout: 8 walks aimed fixed window points into the lanes (lanes moved from x104 to x160 and lost 56pt). Remapped their dock x points onto the same moments (x' = 160 + (x-104)*1552/1608), leaving the transport scrub-bar points alone: a-click-tick-is-hidden-and-slid, a-clip-s-sound-is-linked-under-it, a-video-clip-fades, a-zoom-is-shaped-by-hand, double-click-clears-a-range, draw-a-range-by-hand, keys-copy-between-layers, timeline-right-click; all pass. Also ran 19 more dock-point walks and 44 track/timeline walks: all pass except dock-headers-walk once (panel section order; passed alone right after, order-dependent, untouched by this change) and section-fold-motion-walk (20.6ms press, already owned by folding-a-panel-section-answers-within-a-frame, measured 17-23ms before this change). Scripts/test.sh: 11165 tests pass. left rough: the edge strip sits over the tracks' scroll view, so a wheel scroll that starts exactly on the 8pt gap may not scroll the rows; not filed, nobody will start a scroll there on purpose."
     }
+  ],
+  "started": "2026-10-04T00:46:53.705Z",
+  "walks": [
+    "track-column-resizes-walk"
   ]
 }

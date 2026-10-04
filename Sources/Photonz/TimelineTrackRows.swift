@@ -11,8 +11,9 @@ import SwiftUI
 /// The header is the mock's icon and name. Its switches (hide or mute, solo,
 /// lock) come up while the pointer is over the track, and any that is ON stays
 /// up, so a track that is not playing always says why. Picking a track does
-/// not bring them up: the gutter is the mock's 84 points, and three switches
-/// in it left a picked track's name as "O…".
+/// not bring them up. Where each thing sits is `TrackHeaderLayout`: the
+/// switches and the key keep to the right edge, 4 points apart, and the name
+/// takes what is left and shortens before anything touches (user 2026-10-03).
 /// Every one of them is also on the header's right-click menu, with rename,
 /// group, add and delete, the way Premiere puts a track's verbs on its header.
 struct TimelineTrackRow: View {
@@ -79,7 +80,8 @@ struct TimelineTrackRow: View {
                                  indent: indent, isLocked: track.isLocked)
                 }
                 ForEach(clip.lanes.filter { !keyed.contains($0.motionID) }) { lane in
-                    MotionStripLaneView(lane: lane, layerName: clip.layerName, laneWidth: laneWidth)
+                    MotionStripLaneView(lane: lane, layerName: clip.layerName, laneWidth: laneWidth,
+                                        labelWidth: TimelineDock.lanesLeading)
                 }
                 // Its zooms, one bar each, under the clip they frame.
                 if row.zoomedClips.contains(clip.layerID) {
@@ -139,8 +141,15 @@ struct TimelineTrackRow: View {
 
     // MARK: The header
 
+    /// Where everything in the header goes at the column's width right now.
+    private var layout: TrackHeaderLayout {
+        TrackHeaderLayout(width: TimelineDock.gutter, inGroup: inGroup, hasTwist: hasKeyLanes || hasWordsLane,
+                          switches: shownSwitches, hasKey: keyLayerID != nil, wantsIcon: !showsAllSwitches)
+    }
+
     private var header: some View {
-        HStack(spacing: 0) {
+        let layout = layout
+        return HStack(spacing: 0) {
             if editorState.renamingTrackID == track.id {
                 nameField
             } else {
@@ -161,28 +170,34 @@ struct TimelineTrackRow: View {
                 } label: {
                     // While the switches are up the icon gives the name its
                     // room: the switches already say what kind of track it is.
-                    VideoKit.TrackHeader(title: track.name, symbol: showsAllSwitches ? nil : symbol,
-                                         width: TimelineDock.gutter - indent - switchesWidth - twistWidth
-                                             - keyWidth,
+                    // It gives way too when the column is too narrow for it.
+                    VideoKit.TrackHeader(title: track.name, symbol: layout.showsIcon ? symbol : nil,
+                                         width: layout.nameWidth,
                                          uppercase: false,
                                          // Written by the app off the sound: the
                                          // mock's sparkle and lavender.
-                                         isAutomatic: row.isCaptions && !showsAllSwitches,
+                                         isAutomatic: row.isCaptions && layout.showsIcon,
                                          isSelected: isPicked)
-                        .padding(.leading, indent + twistWidth)
+                        .padding(.leading, layout.nameX)
                         .frame(height: laneHeight)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .playtestControl("Track \(track.name)", detail: "Timeline")
-                switches
+                .playtestControl("Track \(track.name)",
+                                 detail: Self.nameFits(track.name, in: layout.textWidth)
+                                     ? "Timeline" : "Timeline, name shortened")
+                if !layout.switchXs.isEmpty {
+                    Color.clear.frame(width: TrackHeaderLayout.gap)
+                    switches
+                }
                 if let keyLayerID {
+                    Color.clear.frame(width: TrackHeaderLayout.gap)
                     TrackKeyDiamond(layerID: keyLayerID, trackName: track.name)
                 }
             }
         }
         .frame(width: TimelineDock.gutter, height: laneHeight, alignment: .leading)
-        .overlay(alignment: .leading) { twist.padding(.leading, indent) }
+        .overlay(alignment: .leading) { twist.padding(.leading, layout.twistX ?? indent) }
         .background {
             if editorState.selectedTrackIDs.contains(track.id) {
                 RoundedRectangle(cornerRadius: 5).fill(VideoKit.Palette.accent.opacity(0.14))
@@ -218,7 +233,14 @@ struct TimelineTrackRow: View {
             .onEnded { _ in editorState.trackRowDrag.letGo() }
     }
 
-    private var indent: CGFloat { inGroup ? 10 : 0 }
+    private var indent: CGFloat { inGroup ? TrackHeaderLayout.groupIndent : 0 }
+
+    /// Whether a name is drawn whole in the room it has, in the header's own
+    /// font: the walk's `expectApart` reads "name shortened" off the control.
+    static func nameFits(_ name: String, in room: CGFloat) -> Bool {
+        let font = NSFont.systemFont(ofSize: 10, weight: .semibold)
+        return (name as NSString).size(withAttributes: [.font: font, .kern: 0.2]).width <= room + 0.5
+    }
 
     /// The picked layer, where it is on this track: the one the header's key
     /// diamond keys.
@@ -226,8 +248,6 @@ struct TimelineTrackRow: View {
         guard !track.isLocked, editorState.renamingTrackID != track.id else { return nil }
         return editorState.headerKeyLayerID(onTrackWith: row.clips.map(\.layerID))
     }
-
-    private var keyWidth: CGFloat { keyLayerID == nil ? 0 : TrackKeyDiamond.width }
 
     // MARK: The arrow that opens the lanes
 
@@ -240,8 +260,6 @@ struct TimelineTrackRow: View {
     /// A Captions track opens into its Words lane the same way, and starts
     /// open, the way the captions mock draws it.
     private var hasWordsLane: Bool { row.isCaptions && !row.clips.isEmpty }
-
-    private var twistWidth: CGFloat { hasKeyLanes || hasWordsLane ? 12 : 0 }
 
     /// The arrow before the name, the way Premiere and After Effects open a
     /// track into its keyed values: pointing right while closed, down while
@@ -257,7 +275,7 @@ struct TimelineTrackRow: View {
                     .font(.system(size: 8, weight: .bold))
                     .foregroundStyle(VideoKit.Palette.faint)
                     .rotationEffect(.degrees(open ? 90 : 0))
-                    .frame(width: 12, height: laneHeight)
+                    .frame(width: TrackHeaderLayout.twistWidth, height: laneHeight)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -321,13 +339,12 @@ struct TimelineTrackRow: View {
         if showsAllSwitches { return 3 }
         return [isSound ? track.isMuted : track.isHidden, track.isSolo, track.isLocked].filter { $0 }.count
     }
-    private var switchesWidth: CGFloat { shownSwitches == 0 ? 0 : CGFloat(shownSwitches) * 16 + 3 }
 
     /// Hide (or mute), solo and lock: up while the pointer is over the track,
     /// and always up while on.
     private var switches: some View {
         let showAll = showsAllSwitches
-        return HStack(spacing: 1) {
+        return HStack(spacing: TrackHeaderLayout.switchSpacing) {
             if showAll || (isSound ? track.isMuted : track.isHidden) {
                 TrackSwitch(symbol: isSound ? (track.isMuted ? "speaker.slash.fill" : "speaker.wave.2")
                                             : (track.isHidden ? "eye.slash" : "eye"),
@@ -355,7 +372,6 @@ struct TimelineTrackRow: View {
                 .playtestControl("Track \(track.name) Lock", detail: "Timeline")
             }
         }
-        .padding(.leading, shownSwitches == 0 ? 0 : 3)
     }
 
     /// The mock's track icons: the kind of the first clip on the track, or of
@@ -575,7 +591,7 @@ struct TimelineTrackRow: View {
 /// the way After Effects keys a layer's Transform. Pressed on a key, those keys
 /// go. Once it is keyed, a drag on the canvas somewhere else is the next key.
 struct TrackKeyDiamond: View {
-    static let width: CGFloat = 16
+    static let width: CGFloat = TrackHeaderLayout.keySize
     @Environment(EditorState.self) private var editorState
     let layerID: UUID
     let trackName: String
@@ -655,7 +671,7 @@ private struct TrackSwitch: View {
                 }
             }
             .foregroundStyle(isOn ? AnyShapeStyle(Color.white) : AnyShapeStyle(VideoKit.Palette.dim))
-            .frame(width: 15, height: 15)
+            .frame(width: TrackHeaderLayout.switchSize, height: TrackHeaderLayout.switchSize)
             .background {
                 RoundedRectangle(cornerRadius: 3.5)
                     .fill(isOn ? tint : AnyShapeStyle(VideoKit.Palette.glassThin))
@@ -1004,7 +1020,8 @@ struct TimelineInnerRow: View {
             .frame(height: height)
             .playtestField("Timing \(group.layerName)")
             ForEach(group.lanes) { lane in
-                MotionStripLaneView(lane: lane, layerName: group.layerName, laneWidth: laneWidth)
+                MotionStripLaneView(lane: lane, layerName: group.layerName, laneWidth: laneWidth,
+                                    labelWidth: TimelineDock.lanesLeading)
             }
         }
     }

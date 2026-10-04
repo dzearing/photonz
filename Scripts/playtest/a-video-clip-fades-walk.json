@@ -17,15 +17,15 @@
     { "do": "wait", "seconds": 0.6 },
     {
       "do": "rightClick",
-      "at": [900, 893],
+      "at": [928.3, 893],
       "space": "window",
       "shot": "1-video-clip-menu",
       "keys": { "Split at Playhead": "⌘K" }
     },
     { "do": "wait", "seconds": 0.4 },
-    { "do": "rightClick", "at": [900, 893], "space": "window", "choose": "Fade In > 1s" },
+    { "do": "rightClick", "at": [928.3, 893], "space": "window", "choose": "Fade In > 1s" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "rightClick", "at": [900, 893], "space": "window", "choose": "Fade Out > 1s" },
+    { "do": "rightClick", "at": [928.3, 893], "space": "window", "choose": "Fade Out > 1s" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expect", "menu": "Fade In", "reads": "1s" },
     { "do": "expect", "menu": "Fade Out", "reads": "1s" },
@@ -47,7 +47,7 @@
       "atMS": [250, 500, 750, 3000, 7250, 7500, 7750],
       "within": 0.03
     },
-    { "do": "windowDrag", "from": [1514, 885], "to": [1414, 885], "steps": 8 },
+    { "do": "windowDrag", "from": [1520.9, 885], "to": [1424.4, 885], "steps": 8 },
     { "do": "wait", "seconds": 0.6 },
     {
       "do": "describe",

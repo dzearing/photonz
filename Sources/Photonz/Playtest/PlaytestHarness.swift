@@ -2407,6 +2407,11 @@ private final class Run {
         case .expectInView(let field, let whole):
             note(number, step.name, try checkInView(field, whole: whole), state: describe())
 
+        case .expectApart(let controls, let gap, let whole):
+            note(number, step.name,
+                 try await patiently { try self.checkApart(controls, gap: CGFloat(gap), whole: whole) },
+                 state: describe())
+
         case .expectOneUnit:
             note(number, step.name, try checkOneUnit(), state: describe())
 
@@ -9704,6 +9709,51 @@ private final class Run {
     /// `whole` takes that allowance away, for the pane the dock promised to
     /// keep room for: too tall for the room it was given is exactly the failure
     /// there, since the room was the panel's to decide.
+    /// `expectApart`: the named controls' boxes, left to right, and the gap
+    /// between each neighbouring pair, measured in the window. Fails naming the
+    /// pair closer than `gap`, or a `whole` control that says its words were
+    /// shortened.
+    private func checkApart(_ names: [String], gap: CGFloat, whole: [String]) throws -> String {
+        let all = try pressTargets()
+        var boxes: [(name: String, box: CGRect, detail: String)] = []
+        for name in names {
+            guard let match = all.first(where: { $0.name == name }) else {
+                let near = all.map(\.name).filter { $0.localizedCaseInsensitiveContains(name.split(separator: " ").last.map(String.init) ?? name) }
+                throw Failure(description: "no control called \"\(name)\" is on screen to measure; "
+                    + "nearby names: " + (near.isEmpty ? "none" : near.prefix(12).joined(separator: ", ")))
+            }
+            boxes.append((name, match.box, match.says))
+        }
+        boxes.sort { $0.box.minX < $1.box.minX }
+        func n(_ value: CGFloat) -> String { String(format: "%.1f", value) }
+        var line = ""
+        var closest: (String, String, CGFloat)?
+        for (i, item) in boxes.enumerated() {
+            if i > 0 {
+                let apart = item.box.minX - boxes[i - 1].box.maxX
+                line += " · \(n(apart))pt · "
+                if apart < gap - 0.05, closest.map({ apart < $0.2 }) ?? true {
+                    closest = (boxes[i - 1].name, item.name, apart)
+                }
+            }
+            line += "\(item.name) x \(n(item.box.minX))–\(n(item.box.maxX)) (\(n(item.box.width)) wide)"
+        }
+        if let (a, b, apart) = closest {
+            throw Failure(description: "\"\(a)\" and \"\(b)\" are \(n(apart))pt apart, less than "
+                + "\(n(gap))pt" + (apart < 0 ? ", so they OVERLAP" : "") + ": " + line)
+        }
+        for name in whole {
+            guard let item = boxes.first(where: { $0.name == name }) else {
+                throw Failure(description: "\"\(name)\" is to be whole but is not one of the controls measured")
+            }
+            if item.detail.localizedCaseInsensitiveContains("shortened") {
+                throw Failure(description: "\"\(name)\" says its words are shortened (\(item.detail)): " + line)
+            }
+        }
+        let words = whole.isEmpty ? "" : "; " + whole.map { "\"\($0)\" is whole" }.joined(separator: ", ")
+        return "every pair at least \(n(gap))pt apart: " + line + words
+    }
+
     private func checkInView(_ name: String, whole: Bool = false) throws -> String {
         let all = try panelTargets()
         guard let match = all.first(where: { PlaytestSteadyName.matches(name, steady: $0.steady) })
@@ -12541,6 +12591,18 @@ private final class Run {
         if let want = claim.dockHeight, abs(editor.timelineDockFrame.height - want) > 1 {
             wrong.append(String(format: "the timeline dock stands %.0f points tall, not %.0f",
                                 editor.timelineDockFrame.height, want))
+        }
+        if let want = claim.trackColumn {
+            if abs(TimelineDock.gutter - want) > 1 {
+                wrong.append(String(format: "the column of track names is %.0f points wide, not %.0f",
+                                    TimelineDock.gutter, want))
+            }
+            // ...and what the next launch would open at, read off the disk.
+            let kept = TrackColumn.width(stored: UserDefaults.standard.double(forKey: TrackColumnWidth.defaultsKey))
+            if abs(kept - want) > 1 {
+                wrong.append(String(format: "the next launch would open the track names %.0f points wide, not %.0f",
+                                    kept, want))
+            }
         }
         if let want = claim.arrived, want != (editor.editArrival == .settled) {
             wrong.append(editor.editArrival == .settled ? "Edit's tool bar and tracks have all arrived"

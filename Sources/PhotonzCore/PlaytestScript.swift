@@ -3515,6 +3515,15 @@ public enum PlaytestStep: Sendable, Equatable {
     /// points of its 277 and passed the plain step, because 175 was all the
     /// room the panel had kept for it (2026-09-09).
     case expectInView(field: String, whole: Bool)
+    /// CLAIMS that the named controls stand at least `gap` points apart, side
+    /// to side, measured off their boxes in the window, and fails naming the
+    /// pair that comes closer. The log line prints every box and every gap, so
+    /// "nothing overlaps" is a set of numbers rather than a picture of two
+    /// buttons a point apart. `whole` names controls whose words must not be
+    /// shortened: a control says it is by putting "shortened" in its detail
+    /// (a track header's name does). Built for the track headers
+    /// (user 2026-10-03: "it's so small the buttons overlap").
+    case expectApart(controls: [String], gap: Double, whole: [String])
     /// CLAIMS that every readout in the right hand panel spells the unit the
     /// same way, and fails the run naming the row that does not.
     ///
@@ -3715,7 +3724,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "filmThumb", "filmWindow", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "filmThumb", "filmWindow", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -3826,6 +3835,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectSectionFits: "expectSectionFits"
         case .expectSections: "expectSections"
         case .expectInView: "expectInView"
+        case .expectApart: "expectApart"
         case .expectOneUnit: "expectOneUnit"
         case .expectOneNumberPerName: "expectOneNumberPerName"
         case .expectPicked: "expectPicked"
@@ -4814,9 +4824,13 @@ public enum PlaytestStep: Sendable, Equatable {
                 zoomScale: try f.optionalNumber("zoomScale"),
                 rowScale: try f.optionalNumber("rowScale"),
                 dockHeight: try f.optionalNumber("dockHeight"),
-                arrived: fields["arrived"] as? Bool)
+                arrived: fields["arrived"] as? Bool,
+                trackColumn: try f.optionalNumber("trackColumn"))
             if let height = claim.dockHeight, height <= 0 {
                 throw f.invalid("dockHeight", "the timeline dock stands some points tall, not \(height)")
+            }
+            if let width = claim.trackColumn, width <= 0 {
+                throw f.invalid("trackColumn", "the column of track names is some points wide, not \(width)")
             }
             if let percent = claim.volumePercent, !(0...100).contains(percent) {
                 throw f.invalid("volumePercent", "the volume slider reads 0 to 100, not \(percent)")
@@ -4829,7 +4843,7 @@ public enum PlaytestStep: Sendable, Equatable {
                     + "\"keyboard\", \"rate\", \"blade\", \"markInMS\", \"markOutMS\", \"hasIn\", "
                     + "\"hasOut\", \"markers\", \"rulerMatches\", \"rulerAtPlayhead\", \"lengthMS\", "
                     + "\"open\", \"mode\", \"tool\", \"timelineTool\", \"tracks\", "
-                    + "\"volumePercent\", \"muted\", \"outputGain\", \"zoomScale\", \"rowScale\", \"dockHeight\" or \"arrived\"")
+                    + "\"volumePercent\", \"muted\", \"outputGain\", \"zoomScale\", \"rowScale\", \"dockHeight\", \"trackColumn\" or \"arrived\"")
             }
             self = .expectTimeline(claim)
         case "expectPlaybackNeverBlank":
@@ -4956,6 +4970,14 @@ public enum PlaytestStep: Sendable, Equatable {
         case "expectInView":
             self = .expectInView(field: try f.string("field"),
                                  whole: try f.optionalFlag("whole") ?? false)
+        case "expectApart":
+            let controls = try f.optionalStrings("controls")
+            guard controls.count >= 2 else {
+                throw f.invalid("controls", "expectApart measures between controls, so it needs at least two names")
+            }
+            let gap = try f.optionalNumber("gap") ?? 4
+            guard gap >= 0 else { throw f.invalid("gap", "is the least distance apart, not \(gap)") }
+            self = .expectApart(controls: controls, gap: gap, whole: try f.optionalStrings("whole"))
         case "expectOneUnit":
             self = .expectOneUnit
         case "expectOneNumberPerName":
@@ -5272,6 +5294,10 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
     /// window points, to within one. Dragged by its top edge and remembered
     /// (`TimelineDockHeight`).
     public var dockHeight: Double?
+    /// How wide the column of track names down the left of the timeline is,
+    /// in points, to within one. Dragged by its right edge and remembered
+    /// (`TrackColumn`).
+    public var trackColumn: Double?
     /// Edit's tool bar and tracks have all come in (true), nothing of them
     /// still arriving (`EditModeArrival`). The panel's sections keep their
     /// own count of what has arrived.
@@ -5285,8 +5311,9 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
                 timelineTool: TimelineTool? = nil, tracks: [String]? = nil,
                 mode: ViewEditMode? = nil, volumePercent: Int? = nil, muted: Bool? = nil,
                 outputGain: Double? = nil, zoomScale: Double? = nil, rowScale: Double? = nil,
-                dockHeight: Double? = nil, arrived: Bool? = nil) {
+                dockHeight: Double? = nil, arrived: Bool? = nil, trackColumn: Double? = nil) {
         self.dockHeight = dockHeight
+        self.trackColumn = trackColumn
         self.arrived = arrived
         self.zoomScale = zoomScale
         self.rowScale = rowScale
@@ -5320,6 +5347,7 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
             || rulerMatches != nil || rulerAtPlayhead != nil || lengthMS != nil || tracks != nil
             || volumePercent != nil || muted != nil || outputGain != nil
             || zoomScale != nil || rowScale != nil || dockHeight != nil || arrived != nil
+            || trackColumn != nil
     }
 }
 

@@ -20552,3 +20552,11 @@ Next: the first editor window's ~200 ms first build
 - The main-thread meter missed every click's own work: AppKit hands the queued release to the app between two run-loop runs, and the meter counted nothing there (a 58ms Videos switch read 5.6ms). `MainThreadPassClock` (PhotonzCore, tested) now counts that time as a pass; run edges still cut. Commit 264e54bd.
 - `press` takes `stallMS`; `press-meter-sees-the-click-walk` stalls two clicks 40ms and reads 65 to 68ms.
 - What the honest meter shows: history filter switches take 48 to 106ms (p1 `switching-the-history-filter-answers-within-a-fr`, owns `history-filter-switch-speed-walk`, now red); the Time section fold takes 17 to 23ms (p2 `folding-a-panel-section-answers-within-a-frame`); view-to-edit's 100ms gate was folded into `edit-mode-s-contents-come-in-with-the-slide-not`.
+
+## 2026-10-03 — track name column resizes, header buttons never overlap
+
+- The timeline's column of track names is now dragged wider or narrower by its right edge (the gap before the lanes): 123 to 320 pt, default 140 (was a fixed 84), double-click resets, remembered per user across windows and launches (`TrackColumn`, `TrackHeaderLayout` in PhotonzCore; `TrackColumnWidth`/`TrackColumnEdge` in the app).
+- Header layout: switches and key diamond keep to the right edge 4 pt apart; the name takes the rest and shortens; the kind icon gives way when space is tight.
+- New walk step `expectApart` measures control boxes and gaps; `expectTimeline` gains `trackColumn`. Walk: `track-column-resizes-walk`.
+- Eight walks with fixed window points in the lanes were remapped onto the same moments (lanes now start at x 160).
+- Next: nothing open from this; a sweep was requested because timeline geometry moved for every walk.

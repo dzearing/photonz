@@ -41,8 +41,11 @@ struct TimelineDock: View {
     @State private var transportHeight: CGFloat = 0
     @State private var localBarHeight: CGFloat = 0
 
-    /// The track name column (`#tlDock{--gutter:84px}`) and the gap after it.
-    static let gutter: CGFloat = 84
+    /// The track name column and the gap after it. The mock's
+    /// `#tlDock{--gutter:84px}` left no room for a header's switches, so the
+    /// column is the person's to drag wider or narrower by its right edge
+    /// (`TrackColumn`, user 2026-10-03), and every row reads it live.
+    static var gutter: CGFloat { TrackColumnWidth.shared.width }
     static let gap: CGFloat = VideoKit.Metrics.trackGap
     /// Where the lanes start. Equal to the timing strip's label column, which
     /// is why a motion's lane under a track lines up without a second layout.
@@ -440,6 +443,12 @@ struct TimelineDock: View {
                 .overlay(alignment: .topLeading) {
                     TimelinePlayheadLine(laneWidth: laneWidth)
                         .padding(.leading, Self.lanesLeading)
+                }
+                // The track names' right edge: the gap between them and the
+                // lanes, from the ruler down, is its grab strip.
+                .overlay(alignment: .topLeading) {
+                    TrackColumnEdge()
+                        .padding(.leading, Self.gutter)
                 }
                 // The ruler and the tracks under it: where a video guide
                 // points when it means "on the timeline" rather than the
