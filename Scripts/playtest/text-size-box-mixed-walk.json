@@ -1,0 +1,53 @@
+{
+  "out": "/tmp/photonz-playtest/text-size-box-mixed",
+  "seed": "Two labels at different sizes are picked together, so the Size box reads Mixed in the dimmed style. Typing 30 and pressing Return sets both to 30 in one undo step: one Command-Z brings back the two sizes and the word Mixed. At Next defaults with no flag changed.",
+  "setup": {
+    "forget": ["text", "panel", "shapes"]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1320, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "appearance", "value": "dark" },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [140, 130] },
+    { "do": "type", "text": "Sign in" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [140, 300] },
+    { "do": "type", "text": "Use your account" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [180, 145] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "setTextSizeLarge" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "click", "at": [200, 312], "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-mixed",
+      "note": "two labels picked, 40 px and 24 px: the Size box reads Mixed, dimmed" },
+    { "do": "expect", "field": "Size", "reads": "Mixed" },
+    { "do": "panel", "stage": "1-mixed" },
+    { "do": "snapshot", "name": "1-mixed-dark" },
+
+    { "do": "focus", "field": "Size" },
+    { "do": "type", "text": "30" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-both-30",
+      "note": "THE TEST: 30 typed over Mixed reaches both labels" },
+    { "do": "expect", "field": "Size", "reads": "30" },
+    { "do": "snapshot", "name": "2-both-30-dark" },
+
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-one-undo",
+      "note": "one Command-Z takes both back: Mixed again" },
+    { "do": "expect", "field": "Size", "reads": "Mixed" },
+    { "do": "appearance", "value": "light" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "3-mixed-light" },
+    { "do": "appearance", "value": "dark" }
+  ]
+}

@@ -327,6 +327,20 @@ struct CaptionsTextInspector: View {
                           help: "The font of every caption") { font in
                 editorState.setCaption(.font, to: .font(font))
             }
+            if Experiments.shared.panelRowsInOneColumnEnabled {
+                // The same line a title's Text section has: a Size box beside
+                // the Weight dropdown.
+                let shown = look.resolvedFontSize(in: size)
+                TextSizeAndWeightRow(
+                    size: StyleReading(value: shown, isMixed: false),
+                    sizes: [shown],
+                    weight: StyleReading(value: look.weight, isMixed: false),
+                    identity: AnyHashable("captions"),
+                    sizeHelp: "The size of every caption",
+                    weightHelp: "The weight of every caption",
+                    setSize: { editorState.setCaption(.size, to: .size($0)) },
+                    setWeight: { editorState.setCaption(.weight, to: .weight($0)) })
+            } else {
             PanelPair {
                 let shown = look.resolvedFontSize(in: size)
                 SelectionMenu(label: "Size",
@@ -343,6 +357,7 @@ struct CaptionsTextInspector: View {
                               help: "The weight of every caption") { weight in
                     editorState.setCaption(.weight, to: .weight(weight))
                 }
+            }
             }
             CaptionColourWellRow(control: .textColour, name: "Caption colour", look: look)
             CaptionColourWellRow(control: .background, name: "Caption background", look: look)

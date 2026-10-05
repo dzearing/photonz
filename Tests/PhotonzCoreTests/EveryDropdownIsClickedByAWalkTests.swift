@@ -28,11 +28,12 @@ struct EveryDropdownIsClickedByAWalkTests {
         "Hold on black",
         "Fade In", "Fade Out",
         // `SelectionMenu`, the Text section's (and a Captions layer's) type
-        // menus, on the panel's dropdown since 2026-10-05.
+        // menus, on the panel's dropdown since 2026-10-05. In Next, Size is a
+        // box whose preset list (`PanelNumberField.presets`) is the dropdown.
         "Font", "Size", "Weight",
     ]
     /// How many dropdown call sites build their row name from a variable.
-    static let builtSites = 4
+    static let builtSites = 5
 
     /// The name a walk finds each dropdown by: the first `playtestField` or
     /// `playtestControl` after the call, nil when that name is built at run

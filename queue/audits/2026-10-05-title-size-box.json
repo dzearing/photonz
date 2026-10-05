@@ -1,0 +1,46 @@
+{
+  "feature": "A title's size is a number you type or nudge",
+  "epic": "video-titles-graphics",
+  "summary": "Size in the Text section is now a box you type any size into, beside the Weight dropdown on one line, the way the title mock draws it. The preset sizes are on a small list at the end of the box. A Captions layer's Text section has the same box.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording, add a title with the Text tool, pick it.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Pick the title and look at the Text section: Size and Weight share one line, the word Size inside its box.",
+      "shot": "2026-10-05-title-size-box-vs-mock.png"
+    },
+    {
+      "do": "Click the Size box, type 30 and press Return: the title becomes 30 px.",
+      "shot": "2026-10-05-title-size-box-typed-dark-sc.png"
+    },
+    {
+      "do": "Click the box again and press Shift and the up arrow: 40. The up arrow alone goes up by one."
+    },
+    {
+      "do": "Click the small chevron at the end of the box and pick 64 px from the presets."
+    },
+    {
+      "do": "Switch the Mac to Light and look again.",
+      "shot": "2026-10-05-title-size-box-light-sc.png"
+    },
+    {
+      "do": "Pick two text layers of different sizes: Size reads Mixed, dimmed. Type 30, Return: both are 30. Press Cmd-Z once: both go back.",
+      "shot": "2026-10-05-title-size-box-mixed-dark-sc.png"
+    },
+    {
+      "do": "The same Mixed box in Light.",
+      "shot": "2026-10-05-title-size-box-mixed-light-sc.png"
+    }
+  ],
+  "evaluate": [
+    "Does Size beside Weight on one line read as clearly as the mock?",
+    "Is the small chevron at the end of the box enough to tell you the preset sizes are there?",
+    "Does the Size and Weight line starting at the panel's left edge, under the Font label rather than under the Font dropdown, look right to you?",
+    "Is the box right to show the number with no px after it, as the mock does?"
+  ],
+  "rough": [
+    "The app goes further than the mock: a chevron at the end of the Size box opens the preset sizes, which this task's own checklist asks for (a-title-s-size-is-a-number-you-type-or-nudge-the).",
+    "Dragging sideways on the word Size does not change the size yet; it is a click target that puts the keyboard in the box.",
+    "With Mixed showing, an arrow key does nothing until a number is typed; it does not step each layer from its own size."
+  ]
+}

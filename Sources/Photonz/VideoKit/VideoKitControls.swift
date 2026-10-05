@@ -116,12 +116,30 @@ extension VideoKit {
         /// What the value is drawn in, when not the ink: the word Mixed wears
         /// `MixedLook.style`, the strength every other control says it at.
         var valueStyle: AnyShapeStyle?
+        /// The chevron and nothing else, for a list that hangs off something
+        /// that is not a dropdown: the preset sizes at the end of the Size
+        /// box. The value is still the button's title, so a walk reads it.
+        var isBare = false
 
         @State private var isHovering = false
 
         var body: some View {
+            if isBare { bareBody } else { faceBody }
+        }
+
+        private var bareBody: some View {
+            Image(systemName: "chevron.down")
+                .font(.system(size: 8, weight: .bold))
+                .foregroundStyle(isOpen || isHovering ? AnyShapeStyle(Palette.accent)
+                                                      : AnyShapeStyle(Palette.faint))
+                .frame(width: 16, height: size == .small ? Metrics.controlSmall : Metrics.control)
+                .contentShape(Rectangle())
+                .kitHover(value) { isHovering = $0 }
+        }
+
+        private var faceBody: some View {
             let radius: CGFloat = size == .small ? 6 : 8
-            HStack(spacing: 8) {
+            return HStack(spacing: 8) {
                 HStack(spacing: 7) {
                     if let swatch {
                         RoundedRectangle(cornerRadius: 4).fill(swatch).frame(width: 14, height: 14)
@@ -251,21 +269,25 @@ extension VideoKit {
         /// What resting the pointer on it says. On the button itself: a
         /// SwiftUI `.help` around an AppKit view does not reach it.
         var help: String?
+        /// Just the chevron (`SelectFace.isBare`).
+        var isBare = false
         let choices: [Choice]
 
         init(label: String, value: String, swatch: AnyShapeStyle? = nil, size: SelectFace.Size = .small,
-             valueStyle: AnyShapeStyle? = nil, help: String? = nil, choices: [Choice]) {
+             valueStyle: AnyShapeStyle? = nil, help: String? = nil, isBare: Bool = false,
+             choices: [Choice]) {
             self.label = label
             self.value = value
             self.swatch = swatch
             self.size = size
             self.valueStyle = valueStyle
             self.help = help
+            self.isBare = isBare
             self.choices = choices
         }
 
         private var face: SelectFace {
-            SelectFace(value: value, swatch: swatch, size: size, valueStyle: valueStyle)
+            SelectFace(value: value, swatch: swatch, size: size, valueStyle: valueStyle, isBare: isBare)
         }
 
         func makeNSView(context: Context) -> DropdownButton {

@@ -101,6 +101,27 @@ public struct TextStyles: Equatable, Codable, Sendable {
     /// The size picker's options, smallest first.
     public static let fontSizes: [CGFloat] = [14, 18, 24, 32, 48, 64, 96]
 
+    /// The smallest and largest size the Size box takes. A size of nought
+    /// draws nothing at all, and the top is three digits, so the box never
+    /// has to grow for a fourth.
+    public static let smallestSize: CGFloat = 1
+    public static let largestSize: CGFloat = 999
+
+    /// What the Size box shows: the one size the picked text wears, as a
+    /// whole number with no unit (the mock's box reads "28"), the word Mixed
+    /// when they disagree, and nothing when nothing is picked.
+    public static func sizeShowing(_ reading: StyleReading<CGFloat>) -> NumberBox.Showing {
+        if reading.isMixed { return .standIn(MixedValue.text) }
+        return NumberBox.showing(reading.value, standingIn: "")
+    }
+
+    /// The preset list on the Size box: the presets, plus any size the picked
+    /// text already wears, smallest first, so the one it wears can be ticked.
+    public static func sizeOptions(picked: [CGFloat]) -> [CGFloat] {
+        let extra = Set(picked.filter { !fontSizes.contains($0) })
+        return extra.isEmpty ? fontSizes : (fontSizes + extra).sorted()
+    }
+
     /// The words a size wears in the Size menu: the number, the unit, and
     /// enough blank after it that every size takes the same room.
     ///

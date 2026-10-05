@@ -81,6 +81,19 @@ struct TextInspector: View {
                 // The three menus read the pick when chosen, not when drawn, so
                 // they can skip picks that change nothing they show.
                 .equatable()
+                if Experiments.shared.panelRowsInOneColumnEnabled {
+                    // The title mock's line (`video-title-wt.html`, `.numgrid`):
+                    // a Size box you type into beside the Weight dropdown.
+                    TextSizeAndWeightRow(
+                        size: selection.number { $0.fontSize },
+                        sizes: selection.fontSizes,
+                        weight: selection.reading { $0.weight },
+                        identity: AnyHashable(ids),
+                        sizeHelp: help("size", selection.count),
+                        weightHelp: help("weight", selection.count),
+                        setSize: { editorState.setTextStyle(ids: pickedIDs, fontSize: $0) },
+                        setWeight: { editorState.setTextStyle(ids: pickedIDs, weight: $0) })
+                } else {
                 PanelPair {
                     SelectionMenu(label: "Size",
                                   reading: selection.number { $0.fontSize },
@@ -98,6 +111,7 @@ struct TextInspector: View {
                         editorState.setTextStyle(ids: pickedIDs, weight: $0)
                     }
                     .equatable()
+                }
                 }
                 // Where the words sit inside their own boxes. Only tells while
                 // a box is bigger than its words, which is what a box told to
@@ -221,7 +235,69 @@ struct TextInspector: View {
 
     /// Preset sizes plus any the picked labels already wear.
     private func sizes(_ selection: TextLayerSelection) -> [CGFloat] {
-        let extra = selection.fontSizes.filter { !TextStyles.fontSizes.contains($0) }
-        return extra.isEmpty ? TextStyles.fontSizes : (TextStyles.fontSizes + extra).sorted()
+        TextStyles.sizeOptions(picked: selection.fontSizes)
+    }
+}
+
+/// Size and Weight on one line, the way the title mock draws them
+/// (`video-title-wt.html`, the `.numgrid` in the Text section): a box you type
+/// any size into, with the preset sizes on a list at its end, and the Weight
+/// dropdown beside it. Half the line each, like X beside Y.
+///
+/// A box rather than a menu because type is a number. With a menu of seven
+/// sizes the only way to 30 was to drag the text's box on the canvas;
+/// Photoshop's size field takes any number and keeps its presets on the same
+/// field, and so does this. Arrow keys nudge by one, Shift by ten.
+///
+/// Shared by text layers and the Captions layer, so both read the same.
+struct TextSizeAndWeightRow: View {
+    let size: StyleReading<CGFloat>
+    /// The sizes the picked text wears, so one off the preset list joins it
+    /// and can be ticked.
+    let sizes: [CGFloat]
+    let weight: StyleReading<TextWeight>
+    /// What the box speaks for: a different pick starts a fresh draft.
+    let identity: AnyHashable
+    let sizeHelp: String
+    let weightHelp: String
+    let setSize: (CGFloat) -> Void
+    let setWeight: (TextWeight) -> Void
+
+    var body: some View {
+        let shownSize = size.isMixed ? nil : size.value
+        let shownWeight = weight.isMixed ? nil : weight.value
+        HStack(spacing: 8) {
+            PanelNumberField(
+                showing: TextStyles.sizeShowing(size),
+                label: "Size",
+                identity: identity,
+                width: .flexible(least: 28),
+                floor: TextStyles.smallestSize,
+                ceiling: TextStyles.largestSize,
+                wholeNumbers: true,
+                help: sizeHelp,
+                look: .well,
+                presets: .init(
+                    label: "Size",
+                    value: shownSize.map(TextStyles.sizeWords) ?? LayerStyleSelection.mixedText,
+                    choices: .picking(TextStyles.sizeOptions(picked: sizes), current: shownSize,
+                                      title: { TextStyles.sizeWords($0) }) { setSize($0) }),
+                land: { value in
+                    setSize(value)
+                    return nil
+                })
+            .frame(maxWidth: .infinity)
+            .playtestField("Size")
+            VideoKit.Dropdown(
+                label: "Weight",
+                value: shownWeight.map { $0.rawValue.capitalized } ?? LayerStyleSelection.mixedText,
+                valueStyle: shownWeight == nil ? MixedLook.style : nil,
+                help: weightHelp,
+                choices: .picking(TextWeight.allCases, current: shownWeight,
+                                  title: { $0.rawValue.capitalized }) { setWeight($0) })
+            .frame(maxWidth: .infinity)
+            .playtestField("Weight")
+            .panelHelp(weightHelp)
+        }
     }
 }

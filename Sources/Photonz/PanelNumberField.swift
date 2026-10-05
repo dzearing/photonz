@@ -92,6 +92,13 @@ struct PanelNumberField: View {
     var stepEach: ((Int, Bool) -> Void)?
     /// How this panel spells a number. Whole points unless it says otherwise.
     var spell: (CGFloat) -> String = { String(Int($0.rounded())) }
+    /// How the box is drawn: the system's own field, or the mock's stepper.
+    var look = Look.field
+    /// A short list hanging off the end of the box, for a number that has a
+    /// handful of everyday values as well as any other you care to type: the
+    /// preset sizes on the Size box, the way Photoshop's size field is a box
+    /// and a list in one. Only drawn in the `well` look.
+    var presets: Presets?
     /// Lands the number, and hands back what the thing really became.
     ///
     /// A layer can refuse part of what was typed — a text box will not go
@@ -101,6 +108,26 @@ struct PanelNumberField: View {
     /// five layers that each hold it differently comes back as Mixed. Hand
     /// back nil where the thing took exactly what it was given.
     let land: (CGFloat) -> NumberBox.Showing?
+
+    /// The two ways a number box is drawn.
+    enum Look: Equatable {
+        /// The system's rounded field, with any letter in front of it. Every
+        /// number box in the panel until 2026-10-05.
+        case field
+        /// The mock's stepper (`input.css` `.stepper.sm`): one sunken well
+        /// with the box's name inside it, small and faint in front of the
+        /// number, and the number flush right. A click anywhere on the well,
+        /// the name included, puts the keyboard in the number.
+        case well
+    }
+
+    /// The list at the end of a `well`: what it is called, what it says it
+    /// shows (a walk reads that back), and its rows.
+    struct Presets {
+        let label: String
+        let value: String
+        let choices: [VideoKit.Choice]
+    }
 
     /// How wide the box is.
     enum Width: Equatable {
@@ -136,7 +163,62 @@ struct PanelNumberField: View {
     /// only ever takes down this box's own draft.
     @State private var token = UUID()
 
+    @State private var isHovering = false
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
+        switch look {
+        case .field: fieldBody
+        case .well: wellBody
+        }
+    }
+
+    /// The mock's stepper: the name, the number and the preset list in one
+    /// well, the same height and corner as the dropdown it sits beside.
+    private var wellBody: some View {
+        HStack(spacing: 6) {
+            Text(leading ?? label)
+                .font(.system(size: 10.5, weight: .semibold))
+                .foregroundStyle(VideoKit.Palette.faint)
+                .lineLimit(1)
+                .fixedSize()
+                .accessibilityHidden(true)
+            box
+            if let presets {
+                VideoKit.Dropdown(label: presets.label, value: presets.value,
+                                  help: presets.label, isBare: true,
+                                  choices: presets.choices)
+                    .frame(width: 16)
+                    .playtestControl("\(presets.label) presets", detail: presets.label)
+            }
+        }
+        .padding(.leading, 8)
+        .padding(.trailing, presets == nil ? 8 : 2)
+        .frame(height: VideoKit.Metrics.controlSmall)
+        // Sunk into the panel, as `--well-sh` draws it: a soft shadow along
+        // the inside of the top edge.
+        .background(RoundedRectangle(cornerRadius: 6).fill(VideoKit.Palette.well.shadow(
+            .inner(color: .black.opacity(colorScheme == .dark ? 0.55 : 0.10), radius: 1, y: 1))))
+        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(wellEdge))
+        .contentShape(RoundedRectangle(cornerRadius: 6))
+        // The name and the room around the number are the box's too: a click
+        // on the word Size is a click on the size.
+        .onTapGesture { isFocused = true }
+        .kitHover(label) { isHovering = $0 }
+        .modifier(OptionalPanelHelp(text: help))
+        .modifier(OptionalPlaytestControl(playtest: playtest))
+    }
+
+    /// The well's edge: the accent while you type in it, a hint of it under
+    /// the pointer, the panel's own hairline at rest (`.stepper:focus-within`,
+    /// `.stepper:hover`).
+    private var wellEdge: AnyShapeStyle {
+        if isFocused { return AnyShapeStyle(VideoKit.Palette.accent) }
+        if isHovering { return AnyShapeStyle(VideoKit.Palette.accent.opacity(0.45)) }
+        return AnyShapeStyle(VideoKit.Palette.line)
+    }
+
+    private var fieldBody: some View {
         HStack(spacing: 4) {
             if let leading {
                 Text(leading)
@@ -157,8 +239,7 @@ struct PanelNumberField: View {
 
     private var box: some View {
         TextField(label, text: $draft, prompt: prompt.map { Text($0) })
-            .textFieldStyle(.roundedBorder)
-            .controlSize(.small)
+            .modifier(BoxLook(look: look))
             .multilineTextAlignment(.trailing)
             .monospacedDigit()
             // Mixed is a word among numbers, so it reads as the quieter thing
@@ -312,6 +393,22 @@ enum NumberFieldDraft {
         guard let draft = held else { return false }
         held = nil
         return draft.land()
+    }
+}
+
+/// The field itself in each look: the system's rounded border, or bare text
+/// in the mock's 11pt with the well around it doing the drawing.
+private struct BoxLook: ViewModifier {
+    let look: PanelNumberField.Look
+
+    func body(content: Content) -> some View {
+        switch look {
+        case .field:
+            content.textFieldStyle(.roundedBorder).controlSize(.small)
+        case .well:
+            content.textFieldStyle(.plain)
+                .font(.system(size: 11, weight: .medium))
+        }
     }
 }
 
