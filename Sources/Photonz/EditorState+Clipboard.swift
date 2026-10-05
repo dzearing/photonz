@@ -183,8 +183,7 @@ extension EditorState {
             raiseRegionSliceRefusal(refusal, layer: id)
             return
         }
-        guard let id = selectedLayerID, let layer = document?.layer(id: id),
-              !layer.isLocked else { return }
+        guard let id = selectedLayerID, document?.canDeleteLayers(ids: [id]) == true else { return }
         // Cutting the layer whole copies it whole, marquee or no marquee: a
         // clipboard holding a corner of something the document no longer has
         // is the worse of the two answers.

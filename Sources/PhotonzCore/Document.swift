@@ -683,9 +683,13 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// Which of `ids` a delete may actually take. A locked layer is left where
     /// it is: the lock is one promise, so it has to hold against every way to
     /// delete (the menu command, the row menu, the key) rather than only the
-    /// key. Unknown ids drop out too, so the count says exactly what would go.
+    /// key. A clip on a locked track, and anything inside it, is held the same
+    /// way: the track's lock is a promise too, and a clip picked on the canvas
+    /// or in Layers never went past the timeline's own guards. Unknown ids drop
+    /// out too, so the count says exactly what would go.
     public func deletableLayerIDs(in ids: Set<UUID>) -> Set<UUID> {
-        ids.filter { layer(id: $0)?.isLocked == false }
+        let onLockedTracks = layerIDsOnLockedTracks()
+        return ids.filter { layer(id: $0)?.isLocked == false && !onLockedTracks.contains($0) }
     }
 
     /// Whether a delete over `ids` would remove anything: false while the only

@@ -799,10 +799,12 @@ extension PhotonzDocument {
         }
     }
 
-    /// Throw a piece of a clip away. The gap closes.
+    /// Throw a piece of a clip away. The gap closes. Refused on a locked
+    /// track, whichever way the piece was picked.
     @discardableResult
     public mutating func removeClipPiece(_ id: UUID, at index: Int) -> Bool {
-        editClip(id) { pieces, _ in pieces.remove(at: index) }
+        guard !isClipOnLockedTrack(id) else { return false }
+        return editClip(id) { pieces, _ in pieces.remove(at: index) }
     }
 
     /// Put a piece of a clip somewhere else in the order.

@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T09:48:42.977Z",
-  "updated": "2026-10-05T12:50:53.101Z",
+  "updated": "2026-10-05T14:38:25.270Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Manager pass 2026-10-05, from reading the code, NOT reproduced (the loop held the probe). PhotonzCore/Document.swift:687-689 deletableLayerIDs filters on layer.isLocked only; Track.isLocked lives in DocumentTracks.swift:52. EditorState+Layout.swift:48-56 deleteSelectedLayers uses actionableLayerIDs then deleteLayers. canDeleteClipPieceInHand (EditorState+ClipBar.swift:155-161) has no track-lock check either. Timeline-side guards that DO hold: EditorState+ClipBar.swift:111-113, 357-361; EditorState+TimelineMenus.swift:77-87, 327; TimelineMenuEdits.swift:58-91. Whether a locked track's clip can be picked on the canvas at all is the first thing to learn; if it cannot, this is likely a no-op.",
@@ -31,6 +31,30 @@
     {
       "t": "2026-10-05T12:50:53.100Z",
       "note": "seq 6 -> 20"
+    },
+    {
+      "t": "2026-10-05T14:19:54.567Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-05T14:21:16.580Z",
+      "note": "REPRODUCED at Next defaults (no flags): walk /tmp/lt/explore.json = openSampleRecording, pause, seek quarter, hover Track V1, press 'Track V1 Lock', click the picture at (640,300), key delete. describe before: layers 1, V1 lock lit + lane striped (1-locked-clicked-sc.png); after delete: layers 0, the whole recording gone, black canvas, V1 empty (2-after-delete-sc.png). The clip CAN be picked on the canvas while its track is locked, and Delete takes it."
+    },
+    {
+      "t": "2026-10-05T14:38:25.146Z",
+      "note": "owns these walks: a-locked-track-keeps-its-clip-walk"
+    },
+    {
+      "t": "2026-10-05T14:38:25.208Z",
+      "note": "Fix: PhotonzCore deletableLayerIDs now also leaves out every layer on a locked track (layerIDsOnLockedTracks, one layout per call), so canDeleteLayers/Delete Layer row greys when only such a clip is picked; removeClipPiece (and so rippleDeleteClipPiece) refuses a clip on a locked track. App: deleteLayer(id:) and Cut read canDeleteLayers instead of the layer's own lock; canDeleteClipPieceInHand checks isClipLocked. Tests first: DeletableLayersTests.clipsOnALockedTrackAreNotDeletable, whatIsInsideAClipOnALockedTrackIsNotDeletable, TimelineMenuEditsTests.pieceOnALockedTrackStays (failed 7 issues before, pass after). Full suite 11385 tests green. New walk a-locked-track-keeps-its-clip-walk (no flags): Delete key, Delete Layer (log: 'menu row dimmed, nothing deleted'), Cmd-Delete, Cut, whole-canvas marquee + Delete all keep the recording (layers 2); rectangle + locked recording picked together, Delete takes only the rectangle (layers 1). Select All has no walk stand-in, so the marquee tool draws the same whole-canvas region. Also green: 6 other *locked* walks, delete-key-drops-a-timeline-piece, trim-with-pieces, tracks-you-can-add-rename-group."
+    },
+    {
+      "t": "2026-10-05T14:38:25.269Z",
+      "note": "left rough (no task, does not clear the bar): deleting a locked TRACK itself from its header (deleteTracksInHand) still takes the track and its clips. That is a deliberate whole-track act and Premiere allows deleting a locked track too, so left as is; not reproduced as a complaint. Collage/merge-down also remove layers without a track-lock check, but they are still-image edits that do not reach a recording's clip. No audit written: a bug fix with no new surface to playtest."
     }
+  ],
+  "started": "2026-10-05T14:19:54.565Z",
+  "walks": [
+    "a-locked-track-keeps-its-clip-walk"
   ]
 }

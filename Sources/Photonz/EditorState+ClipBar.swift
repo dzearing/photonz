@@ -156,7 +156,9 @@ extension EditorState {
         guard Experiments.shared.cutRecordingEnabled, documentHasTime,
               let id = clipInHandID, selectedLayerID == id,
               let index = selectedClipPieceIndex,
-              let pieces = clipInHandPieces else { return false }
+              let pieces = clipInHandPieces,
+              // A clip on a locked track keeps every piece (`DocumentTracks.swift`).
+              !isClipLocked(id) else { return false }
         return pieces.canRemove(at: index)
     }
 

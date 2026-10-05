@@ -142,6 +142,32 @@ struct DeletableLayersTests {
         #expect(doc.deletableLayerIDs(in: [group.id]) == [group.id])
     }
 
+    /// A locked TRACK is the same promise as a locked layer: a clip on it
+    /// picked some way other than the timeline (on the canvas, from Layers)
+    /// stays put whatever door the delete came through.
+    @Test func clipsOnALockedTrackAreNotDeletable() {
+        var (doc, recording, title, music) = DocumentTracksTests.cut()
+        doc.updateTrack(doc.timelineTracks[1].id) { $0.isLocked = true }
+        #expect(doc.deletableLayerIDs(in: [recording]).isEmpty)
+        #expect(!doc.canDeleteLayers(ids: [recording]))
+        #expect(doc.deletableLayerIDs(in: [recording, title, music]) == [title, music])
+        #expect(doc.canDeleteLayers(ids: [recording, title]))
+    }
+
+    /// Anything inside a clip is on its clip's track, so the lock holds for
+    /// what a group clip carries too.
+    @Test func whatIsInsideAClipOnALockedTrackIsNotDeletable() {
+        var (doc, _, title, _) = DocumentTracksTests.cut()
+        guard let group = doc.groupLayers(ids: [title])?.id else {
+            Issue.record("no group made")
+            return
+        }
+        let track = doc.trackID(ofClip: group)
+        #expect(track != nil)
+        doc.updateTrack(track ?? UUID()) { $0.isLocked = true }
+        #expect(doc.deletableLayerIDs(in: [group, title]).isEmpty)
+    }
+
     @Test func unknownIDsAreNotDeletable() {
         var doc = PhotonzDocument(canvasSize: canvas)
         let open = annotationLayer(name: "Open", frame: CGRect(x: 0, y: 0, width: 10, height: 10))

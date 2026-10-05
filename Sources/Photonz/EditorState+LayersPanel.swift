@@ -511,8 +511,9 @@ extension EditorState {
             deleteLayers(ids: Array(multiSelectedLayerIDs))
             return
         }
-        // A locked layer stays put whichever door the delete came through.
-        guard document?.layer(id: id)?.isLocked == false else { return }
+        // A locked layer, or a clip on a locked track, stays put whichever
+        // door the delete came through.
+        guard document?.canDeleteLayers(ids: [id]) == true else { return }
         discardDragPreview()
         if selectedLayerID == id { selectedLayerID = nil }
         // Taking a piece OUT of a turned card changes the box that card

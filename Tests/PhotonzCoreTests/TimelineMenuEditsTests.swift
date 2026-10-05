@@ -152,6 +152,19 @@ struct TimelineMenuEditsTests {
         #expect(doc.layer(id: voice)?.time?.inMS == 6000)
     }
 
+    @Test("A piece of a clip on a locked track is not deleted, plain or ripple")
+    func pieceOnALockedTrackStays() throws {
+        var (doc, clip) = Self.cutRecording()
+        let track = try #require(doc.trackID(ofClip: clip))
+        doc.updateTrack(track) { $0.isLocked = true }
+        let before = doc
+        let rippled = doc.rippleDeleteClipPiece(clip, at: 1)
+        let removed = doc.removeClipPiece(clip, at: 1)
+        #expect(!rippled)
+        #expect(!removed)
+        #expect(doc == before)
+    }
+
     @Test("Ripple deleting a whole clip takes it away and closes its gap")
     func rippleDeleteClip() {
         var doc = PhotonzDocument.recording(Self.movie(), name: "Take 1")
