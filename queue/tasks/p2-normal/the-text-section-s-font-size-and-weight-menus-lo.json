@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 4,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T09:48:33.817Z",
-  "updated": "2026-10-05T12:27:49.244Z",
+  "updated": "2026-10-05T12:28:24.094Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Manager pass 2026-10-05, UI quality lens. Seen in /tmp/photonz-playtest/an-editing-session-walk/6-title-at-b-sc.png (copied to queue/manager/shots/2026-10-05-0245-app-dissolve.png for the panel at a cut): Font 'Georgia ⇕', Size '80 px ⇕', Weight 'Bold ⇕' against Fade In 'None ⌄'. Code: InspectorControls.swift:445-520 SelectionMenu is a SwiftUI Picker .pickerStyle(.menu) (a system pop-up). The rest of the video panel uses VideoKit.Dropdown (VideoKitControls.swift, an AppKit pull-down holding the drawn SelectFace, from every-dropdown-in-the-panel-opens-when-you-click, audit 2026-09-29-every-dropdown-opens-on-a-click.json). Callers: TextInspector.swift:74-105, CaptionsInspector.swift:323. Keep SelectionMenu's Equatable short-circuit (picking-or-retyping-a-caption-answers-at-once) and its MenuTip help. This is shared code, so Current gets it too; check Current's text panel still reads right.",
@@ -54,6 +54,10 @@
     {
       "t": "2026-10-05T12:28:03.108946Z",
       "note": "Follow-ups: filed the-appearance-and-effects-menus-wear-the-same-d (Blending, Masked by, Effects Kind still system pop-ups, p2) and a-title-s-size-is-a-number-you-type-or-nudge-the (mock draws Size as a typed box, p1 per the mock-difference rule). Left rough in this log only: the Font list is not drawn in each family's own face (unchanged, nobody asked); the text tool popover's pickers are a different surface. Not filed: the caption Font/Size/Weight menus are not clicked by a walk of their own, but they are the same SelectionMenu and the same names as the clicked ones."
+    },
+    {
+      "t": "2026-10-05T12:28:24.092Z",
+      "note": "Font, Size and Weight in the Text section (and a Captions layer's) now draw the panel's own dropdown (SelectionMenu on VideoKit.Dropdown), matching Fade In in light and dark; Mixed dimmed, cut font names spelled in full on hover, one undo per pick. Verified with 11 walks incl. the click walk that now clicks all three at middle and both ends, and Scripts/test.sh green (11367). Audit queue/audits/2026-10-05-text-menus-one-dropdown.json. Follow-ups filed: the-appearance-and-effects-menus-wear-the-same-d, a-title-s-size-is-a-number-you-type-or-nudge-the."
     }
   ],
   "started": "2026-10-05T11:56:41.777Z",
@@ -64,5 +68,6 @@
     "size-menu-one-width-walk",
     "font-menu-one-width-walk",
     "mixed-one-look-walk"
-  ]
+  ],
+  "completed": "2026-10-05T12:28:24.093Z"
 }

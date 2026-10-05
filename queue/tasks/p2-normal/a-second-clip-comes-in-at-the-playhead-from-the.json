@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 2,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T09:48:04.997Z",
-  "updated": "2026-10-05T09:49:18.255Z",
+  "updated": "2026-10-05T11:04:58.480Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Manager pass 2026-10-05, workflow lens (focus workflow step: add a second clip). Today: EditorCommands.swift:929-932 addSoundRow -> EditorState+Audio.swift:95-104 addSoundFromFile (SoundLibrary.openableTypes only). File > Import Media (EditorCommands.swift:332-336, EditorState+LibraryImport.swift:24-52) only fills the shelf; the timeline gets a clip by dragging the tile or the Library's Add at Playhead button (LibraryPanel.swift:807). The drop path that lands a video on the timeline with overwrite rules is ClipLanding.swift (bring-in-a-second-clip-and-cut-between-clips); reuse it rather than writing a second landing. Placement: Menu bar (Sequence), per the placement contract. Premiere's equivalent is Import then drag; Final Cut's is Import then E (append). Keep Add Sound's existing walks passing (rename their menu step).",
@@ -29,6 +29,39 @@
     {
       "t": "2026-10-05T09:49:18.254Z",
       "note": "seq 3590 -> 2"
+    },
+    {
+      "t": "2026-10-05T10:39:31.393Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-05T11:04:36.907Z",
+      "note": "owns these walks: add-media-at-playhead-walk"
+    },
+    {
+      "t": "2026-10-05T11:04:36.964Z",
+      "note": "Adversarial pass before building: a Premiere user imports then drags or presses period; a Final Cut user presses E. Neither finds a menu row that lands a clip, so the row covers the menu path. Risk found: with no pointer, 'which track' must be decided; landing on a free track UNDER a busy one would put the clip out of sight, so the rule is the lowest picture track free for the clip's whole length with nothing playing over it, else a new track straight over the topmost busy one. Hidden and locked tracks are passed over."
+    },
+    {
+      "t": "2026-10-05T11:04:37.022Z",
+      "note": "Built: PhotonzDocument.pictureLandingAtPlayhead (ClipLanding.swift, 8 tests in ClipLandingAtPlayheadTests); EditorState.addMediaFromFile/addMedia(from:) (EditorState+Audio.swift) replaces addSoundFromFile; addClipAtPlayhead reuses landTimelineFile (EditorState+TimelineDrop.swift), so the shelf remembers the file and the landing is one undo step. Sequence and the old Video menu say Add Media at Playhead… in place of Add Sound…. importPicks now also answers this row's panel. Found while walking: the playhead rests at 7999 ms on an 8 s document, so a clip 'at the end' overlapped by 1 ms and got a new track; the start now snaps onto a clip edge within one frame (ClipLanding.playheadReachMS = 34)."
+    },
+    {
+      "t": "2026-10-05T11:04:37.078Z",
+      "note": "Verified: Scripts/test.sh 11350 tests green; add-media-at-playhead-walk (front: true, no flags) passes with 4 real captures; sound-on-the-timeline, drop-a-sound-or-a-video, second-clip-on-the-timeline walks still ok. The editing-session walk keeps its drag (it runs under locks, a menus step does not); the new walk's fourth test is the same step done from the row."
+    },
+    {
+      "t": "2026-10-05T11:04:37.132Z",
+      "note": "Left rough, not filed (no one is stopped by it): the playhead stays put after a landing where Premiere's Overwrite moves it to the clip's end, and the row has no key (E and period mean other things today). Both are asked in the audit's evaluate list so the user's answer files them if wanted."
+    },
+    {
+      "t": "2026-10-05T11:04:58.478Z",
+      "note": "Sequence > Add Media at Playhead… (replacing Add Sound…) puts a video at the playhead on a free picture track with nothing over it, or a new one on top, its sound linked under it; a sound lands as Add Sound did; the file goes on the shelf; one undo. Core: pictureLandingAtPlayhead with 8 tests; full suite 11350 green; add-media-at-playhead-walk passes at Next defaults with 4 real captures; audit queue/audits/2026-10-05-add-media-at-playhead.json. Commit a48ef47a."
     }
-  ]
+  ],
+  "started": "2026-10-05T10:39:31.392Z",
+  "walks": [
+    "add-media-at-playhead-walk"
+  ],
+  "completed": "2026-10-05T11:04:58.479Z"
 }

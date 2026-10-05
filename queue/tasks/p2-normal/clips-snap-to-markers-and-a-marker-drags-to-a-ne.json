@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 3,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T09:48:14.124Z",
-  "updated": "2026-10-05T09:49:18.313Z",
+  "updated": "2026-10-05T11:39:15.775Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Manager pass 2026-10-05, objective gap against video-cutting success line 'Drag a clip along a track and onto another track, with snapping to clips, the playhead and markers'. Evidence: PhotonzCore/ClipBarDrag.swift:310-327 clipBarEdges lists the document ends, the playhead and clip edges/joins, no markers. TimelineDock.swift:881-888 marker flags ignore clicks; only Extract's ripple moves a marker (MarkedStretch.swift:123). Only the ruler range snaps to markers (RulerRange.swift:118-124); the playhead snaps to keys only (EditorState+KeyLanes.swift:375-381). TimelineMarker is id + atMS (TimelineMarks.swift:14-23). Naming a marker is NOT in scope (it would add a new field; left as an open thread in the manager report).",
@@ -31,6 +31,32 @@
     {
       "t": "2026-10-05T09:49:18.312Z",
       "note": "seq 3600 -> 3"
+    },
+    {
+      "t": "2026-10-05T11:19:24.163Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-05T11:27:01.754Z",
+      "note": "Adversarial review before building: (1) M drops a marker UNDER the playhead, so a press there is ambiguous. Premiere's rule kept: the playhead wins, the marker is dragged once the playhead is elsewhere; a click on a marker puts the playhead exactly on it. (2) In/Out band ends still win over a marker (their grips are what is drawn there). (3) A marker dragged onto another becomes one marker (the model already says two on one frame are one). (4) A dragged marker catches on cuts, clip ends, both document ends and the playhead, never on another marker. (5) Clip moves and trims both read clipBarEdges, so one change covers both; the capsule says 'caught on a marker at 0:12' (26 chars, inside the chrome budget). (6) Over a marker the pointer shows the left-right arrows the band ends use, so it reads as draggable. No mock draws a marker drag; Premiere is the reference."
+    },
+    {
+      "t": "2026-10-05T11:38:56.148Z",
+      "note": "owns these walks: clips-snap-to-markers-walk, drag-a-marker-by-hand-walk"
+    },
+    {
+      "t": "2026-10-05T11:39:15.710Z",
+      "note": "left rough (none filed; none clears the bar): (a) 'caught on …' is spoken in the bar readout, not drawn, same as every catch today; the green catch line is the on-screen cue. (b) A marker under the playhead is dragged only after the playhead moves off it (Premiere's rule; asked in the audit's evaluate). (c) No time capsule during a marker drag, same as the In/Out band ends. (d) The pointer walk uses window points measured off the probe's pictures (194 pt/s, 0:00 at x 160); a change of dock layout would move them."
+    },
+    {
+      "t": "2026-10-05T11:39:15.773Z",
+      "note": "Markers are snap edges for clip moves and trims (capsule readout 'caught on a marker at 0:02'), the playhead dragged on the ruler catches on markers, and a marker's flag drags to a new moment catching on cuts and the playhead in one undo step; a click puts the playhead on it. Core: ClipBarDrag.clipBarEdges, TimelineMarks.moveMarker/playheadSnapMoments/markerSnapMoments, RulerRange.grip(.marker)/markerMoved; app: EditorState+RulerRange, TimelineDock ruler. Verified: MarkerSnapTests (written first) + full suite 11367 green; walks clips-snap-to-markers-walk and drag-a-marker-by-hand-walk (real pointer) pass at Next defaults with 8 real captures. Audit queue/audits/2026-10-05-clips-snap-to-markers.json."
     }
-  ]
+  ],
+  "started": "2026-10-05T11:19:24.162Z",
+  "walks": [
+    "clips-snap-to-markers-walk",
+    "drag-a-marker-by-hand-walk"
+  ],
+  "completed": "2026-10-05T11:39:15.774Z"
 }
