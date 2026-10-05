@@ -294,13 +294,23 @@ extension VideoKit {
             let button = DropdownButton(face: face)
             button.update(label: label, value: value, radius: size == .small ? 6 : 8, choices: choices)
             button.toolTip = help
+            enable(button, context.environment.isEnabled)
             return button
+        }
+
+        /// A `.disabled` around it reaches the AppKit button, which SwiftUI
+        /// does not do for a view it did not build: dimmed, and its menu shut.
+        private func enable(_ button: DropdownButton, _ isEnabled: Bool) {
+            guard button.isEnabled != isEnabled else { return }
+            button.isEnabled = isEnabled
+            button.alphaValue = isEnabled ? 1 : 0.45
         }
 
         func updateNSView(_ button: DropdownButton, context: Context) {
             button.face = face
             button.update(label: label, value: value, radius: size == .small ? 6 : 8, choices: choices)
             if button.toolTip != help { button.toolTip = help }
+            enable(button, context.environment.isEnabled)
         }
 
         func sizeThatFits(_ proposal: ProposedViewSize, nsView button: DropdownButton,
@@ -308,6 +318,35 @@ extension VideoKit {
             let fitting = button.host.intrinsicContentSize
             let width = proposal.width.flatMap { $0.isFinite ? $0 : nil } ?? fitting.width
             return CGSize(width: width, height: fitting.height)
+        }
+    }
+
+    /// A dropdown whose list opens in a popover rather than a menu: the same
+    /// face as `Dropdown`, for a list a menu cannot be. Blending's paints each
+    /// mode on the canvas while the pointer rests on it, which an `NSMenu`
+    /// never does. Until 2026-10-05 those rows drew the system pop-up's up and
+    /// down arrows by hand, right under the Text section's drawn dropdowns.
+    ///
+    /// The whole face is the button, so a click anywhere a person can see it
+    /// opens the list, and its edge goes accent while the list is up.
+    struct ListDropdown<List: View>: View {
+        let value: String
+        /// What the value is drawn in, when not the ink (`SelectFace`).
+        var valueStyle: AnyShapeStyle?
+        @Binding var isOpen: Bool
+        /// Run just before the list opens, to note what was true before it.
+        var willOpen: () -> Void = {}
+        @ViewBuilder let list: () -> List
+
+        var body: some View {
+            Button {
+                willOpen()
+                isOpen = true
+            } label: {
+                SelectFace(value: value, size: .small, isOpen: isOpen, valueStyle: valueStyle)
+            }
+            .buttonStyle(.plain)
+            .popover(isPresented: $isOpen, arrowEdge: .bottom) { list() }
         }
     }
 
@@ -417,6 +456,14 @@ extension VideoKit {
         }
 
         override func draw(_ dirtyRect: NSRect) {}
+
+        /// None. A pop-up button reports the inset of the bezel it would draw,
+        /// and SwiftUI lines up that inset rather than the frame, so every
+        /// dropdown in the panel stood 4pt left of the column the sliders and
+        /// boxes under it start on (seen 2026-10-05 beside Blending, whose
+        /// face is drawn by SwiftUI). This button draws no bezel: its frame is
+        /// its face.
+        override var alignmentRectInsets: NSEdgeInsets { NSEdgeInsetsZero }
 
         override var focusRingMaskBounds: NSRect { bounds }
 

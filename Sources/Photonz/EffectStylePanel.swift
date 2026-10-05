@@ -553,25 +553,17 @@ struct LibraryEffectStyleInspector: View {
         _ apply: @escaping (inout LayerEffect, Option) -> Void) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label).font(.caption).foregroundStyle(.secondary)
-            Picker(label, selection: Binding(
-                get: { current },
-                set: { new in
+            // The panel's dropdown, as wide as the sliders under it.
+            VideoKit.Dropdown(
+                label: label,
+                value: current[keyPath: title],
+                help: "Changing this re-sets every effect using this style",
+                choices: .picking(options, current: current, title: { $0[keyPath: title] }) { new in
                     var effect = style.effect
                     apply(&effect, new)
                     editorState.setEffectStyle(styleID: style.id, effect: effect)
-                })) {
-                    ForEach(options, id: \.self) { option in
-                        Text(option[keyPath: title]).tag(option)
-                    }
-                }
-                .labelsHidden()
-                .pickerStyle(.menu)
-                .controlSize(.small)
-                // A width rather than `fixedSize`, for the reason every other
-                // menu picker in the dock carries one: an ideal-width menu
-                // inside the dock's column pushed the whole pane wider than the
-                // window (2026-09-07).
-                .frame(width: 120, alignment: .leading)
+                })
+                .frame(maxWidth: .infinity)
                 .panelHelp("Changing this re-sets every effect using this style")
                 .playtestControl(label, detail: current[keyPath: title])
         }

@@ -185,27 +185,18 @@ struct MaskedByRow: View {
         .panelStartProbe(.row, owner: "Masked by")
     }
 
+    /// The panel's dropdown face, the one Font and Fade In wear, opening the
+    /// list rather than a menu.
     private var button: some View {
-        Button {
-            isOpen = true
-        } label: {
-            HStack(spacing: 4) {
-                Text(words)
-                    .foregroundStyle(MixedLook.style(reading.isMixed, otherwise: .primary))
-                    .panelReadout(words)
-                Spacer(minLength: 6)
-                Image(systemName: "chevron.up.chevron.down")
-                    .font(.system(size: 8, weight: .semibold))
-                    .foregroundStyle(.secondary)
-            }
-            .contentShape(Rectangle())
-        }
-        .controlSize(.small)
+        VideoKit.ListDropdown(
+            value: words,
+            valueStyle: reading.isMixed ? MixedLook.style : nil,
+            isOpen: $isOpen) { list }
         .playtestControl("Masked by", detail: words)
+        .panelReadout(words)
         .panelHelp("Cut this layer to the shape, or the brightness, of the layer directly "
                    + "under it in the layers list. That layer stops drawing and becomes "
                    + "the shape instead.")
-        .popover(isPresented: $isOpen, arrowEdge: .bottom) { list }
     }
 
     private var list: some View {

@@ -1,0 +1,29 @@
+{
+  "feature": "Appearance and Effects menus wear the panel's dropdown",
+  "epic": "video-titles-graphics",
+  "task": "the-appearance-and-effects-menus-wear-the-same-d",
+  "summary": "Blending, Masked by, a shadow's or glow's Kind, a border's Follows and Position, and a saved effect style's Kind now look like Font and Fade In: the same filled box with a chevron, filling the row. Every dropdown in the panel also moved 4pt right, onto the column the sliders start on.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/appearance-and-effects-dropdowns-open-on-a-click-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Before: type a label and pick it. Blending and Masked by had up and down arrows, under Font's chevron.", "shot": "2026-10-05-panel-dropdowns-before.png" },
+    { "do": "Now: type a label with the Text tool, press ⌘Return, and look at Appearance under Text.", "shot": "2026-10-05-panel-dropdowns-appearance-sc.png" },
+    { "do": "Click Blending near its right end and rest the pointer on Multiply, then click it.", "shot": "2026-10-05-panel-dropdowns-blending-open-sc.png" },
+    { "do": "Click Masked by and pick Its shape, then set it back to Nothing." },
+    { "do": "Add a Glow and a Border from the plus on Effects, set Follows to Box and Position to Inside.", "shot": "2026-10-05-panel-dropdowns-effects-dark-sc.png" },
+    { "do": "Switch the Mac to Light and look at the same rows.", "shot": "2026-10-05-panel-dropdowns-effects-light-sc.png" },
+    { "do": "Save the shadow as a style from its Style menu, open the style in the Library and change its Kind.", "shot": "2026-10-05-panel-dropdowns-style-sc.png" }
+  ],
+  "evaluate": [
+    "Does the Appearance section now read as the same app as the Text section above it?",
+    "Is Font's left edge on the same line as Blending's and the Opacity slider's now that it moved 4pt right?",
+    "Does Blending still paint each mode on the canvas as you move down its list?",
+    "Does a two-choice Kind (Drop or Inner) feel right as a dropdown, or would you rather see both choices at once?"
+  ],
+  "rough": [
+    "Blending and Masked by open their list in a popover with an arrow, where Font's menu hangs flush under its face as the fields mock's Open state draws it (comp-fields.html, 05 Select). Kept on purpose because a menu cannot paint each blend mode on the canvas as you rest on it, which the task's goal asked to keep (the-appearance-and-effects-menus-wear-the-same-d).",
+    "Shadow Kind, Glow Kind and Follows have two choices, and the fields mock says two choices are a segmented control, not a dropdown: two-choice-effect-settings-are-a-segmented-contr.",
+    "Twelve more panel menus are still the system pop-up: the measure and crop tools, a lens, a Library text style and component properties. Converting them is the-tool-lens-text-style-and-component-menus-in; a test now stops the count from growing.",
+    "Opening Blending or Masked by again within about a second of picking from it sometimes does nothing in a walk, before this change as well as after. Not seen by a hand yet; noted in this task's log."
+  ]
+}

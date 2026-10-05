@@ -76,41 +76,28 @@ struct BlendModeRow: View {
         .panelStartProbe(.row, owner: "Blending")
     }
 
-    /// The closed control. A bordered button wearing the mode's name and a
-    /// chevron, so it reads as the pop-ups beside it even though what it opens
-    /// is a list with sentences in it.
+    /// The closed control: the panel's dropdown face, the one Font and Fade In
+    /// wear, opening the list rather than a menu.
     private func button(_ reading: StyleReading<PhotonzCore.BlendMode>) -> some View {
-        Button {
-            committed = editorState.layerStyleSelection.mixable.reading { $0.blendMode }
-            hovered = nil
-            isOpen = true
-        } label: {
-            HStack(spacing: 4) {
-                let words = reading.isMixed
-                    ? LayerStyleSelection.mixedText
-                    : (reading.value?.title ?? PhotonzCore.BlendMode.normal.title)
-                Text(words)
-                    .foregroundStyle(MixedLook.style(reading.isMixed, otherwise: .primary))
-                    .panelReadout(words)
-                Spacer(minLength: 6)
-                Image(systemName: "chevron.up.chevron.down")
-                    .font(.system(size: 8, weight: .semibold))
-                    .foregroundStyle(.secondary)
-            }
-            .contentShape(Rectangle())
-        }
-        .controlSize(.small)
-        .disabled(selection.isEmpty)
+        let words = reading.isMixed
+            ? LayerStyleSelection.mixedText
+            : (reading.value?.title ?? PhotonzCore.BlendMode.normal.title)
+        return VideoKit.ListDropdown(
+            value: words,
+            valueStyle: reading.isMixed ? MixedLook.style : nil,
+            isOpen: $isOpen,
+            willOpen: {
+                committed = editorState.layerStyleSelection.mixable.reading { $0.blendMode }
+                hovered = nil
+            }) { list }
         // The detail carries the value as well as the place, the way the Fill
         // row's switch says "Fill, on": a walk has to be able to CLAIM what
         // the row is reading, and the words here are a SwiftUI Text, which
         // publishes nothing a walk could read off the screen.
-        .playtestControl("Blending",
-                         detail: reading.isMixed
-                            ? LayerStyleSelection.mixedText
-                            : (reading.value?.title ?? PhotonzCore.BlendMode.normal.title))
+        .playtestControl("Blending", detail: words)
+        .panelReadout(words)
+        .disabled(selection.isEmpty)
         .panelHelp(modeHelp(reading))
-        .popover(isPresented: $isOpen, arrowEdge: .bottom) { list }
     }
 
     /// The button's hover tip: what the mode it reads does, once it is not

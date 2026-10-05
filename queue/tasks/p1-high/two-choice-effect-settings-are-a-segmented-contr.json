@@ -1,0 +1,28 @@
+{
+  "id": "two-choice-effect-settings-are-a-segmented-contr",
+  "title": "Two-choice effect settings are a segmented control, as the fields mock draws them",
+  "goal": "A shadow's Kind (Drop or Inner), a glow's Kind (Outer or Inner) and a label border's Follows (Letters or Box) each offer only two choices, but open a dropdown. The user's fields mock says two choices are a segmented control, never a dropdown, so both answers are on screen and one click switches them.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 500,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-05T16:15:12.273Z",
+  "updated": "2026-10-05T16:15:12.276Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/comp-fields.html section 05 Select: \"For 5 or more exclusive options, or fewer when space is tight. Below that use a .seg\" and the dont: \"Use a select for two options. That is a segmented control.\" Found 2026-10-05 by the-appearance-and-effects-menus-wear-the-same-d while comparing against the mock; that task moved these rows from the system pop-up onto VideoKit.Dropdown (EffectsListInspector.swift BorderFollowsRow, GlowKindRow, ShadowKindRow; EffectStylePanel.picker). Use SegmentedControl (Sources/Photonz/DesignSystem), never Picker .segmented (UX-PATTERNS: The one segmented control). Walks that choose these today: label-border-follows-walk (panelMenu Follows), appearance-and-effects-dropdowns-open-on-a-click-walk (panelMenu Kind/Follows/Position at centre/start/end); remove those panelMenu steps from the click walk and lower EveryDropdownIsClickedByAWalkTests.builtNames if Kind/Position leave the style panel dropdown.",
+  "acceptance": [
+    "Shadow Kind, Glow Kind and Follows in the Effects list, and Kind on a saved effect style, are the app's one segmented control with both choices showing, at Next defaults",
+    "Mixed still reads as Mixed (no segment picked) and picking either gives it to every picked layer in one undo step",
+    "Position (three choices) and Masked by stay dropdowns only if three segments do not fit the effect row's control column in the narrowest panel; the audit says which and why",
+    "A walk clicks each segment with the pointer, and the walks that pick these today pass"
+  ],
+  "log": [
+    {
+      "t": "2026-10-05T16:15:12.275Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -31,9 +31,12 @@ struct EveryDropdownIsClickedByAWalkTests {
         // menus, on the panel's dropdown since 2026-10-05. In Next, Size is a
         // box whose preset list (`PanelNumberField.presets`) is the dropdown.
         "Font", "Size", "Weight",
+        // A saved effect style's own settings (`EffectStylePanel.picker`),
+        // on the panel's dropdown since 2026-10-05.
+        "Kind", "Position",
     ]
     /// How many dropdown call sites build their row name from a variable.
-    static let builtSites = 5
+    static let builtSites = 6
 
     /// The name a walk finds each dropdown by: the first `playtestField` or
     /// `playtestControl` after the call, nil when that name is built at run
@@ -114,6 +117,55 @@ struct EveryDropdownIsClickedByAWalkTests {
             No walk opens these dropdowns the way a person does. Add a `panelMenu` step with \
             "at": ["centre", "start", "end"] for each, at Next defaults \
             (Scripts/playtest/every-dropdown-opens-on-a-click-walk.json and its neighbours): \
+            \(missing.joined(separator: ", "))
+            """)
+    }
+
+    /// The dropdowns whose list opens in a popover (`VideoKit.ListDropdown`),
+    /// by the name a walk presses them by.
+    static func listDropdownNames() throws -> [String] {
+        let app = root.appendingPathComponent("Sources/Photonz")
+        guard let walk = FileManager.default.enumerator(at: app, includingPropertiesForKeys: nil) else {
+            return []
+        }
+        var names: [String] = []
+        for case let file as URL in walk where file.pathExtension == "swift" && !file.path.contains("/VideoKit/") {
+            let lines = try String(contentsOf: file, encoding: .utf8)
+                .split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+            for (index, line) in lines.enumerated() where line.contains("VideoKit.ListDropdown(") {
+                let after = lines[index..<min(lines.count, index + 16)].joined(separator: "\n")
+                guard let name = firstName(in: after), !name.contains("\\(") else {
+                    Issue.record("\(file.lastPathComponent):\(index + 1): a list dropdown with no plain playtestControl a walk can press it by")
+                    continue
+                }
+                names.append(name)
+            }
+        }
+        return names
+    }
+
+    /// A list dropdown opens a popover, not a menu, so `panelMenu` cannot open
+    /// it. A walk proves a hand opens it with `press` steps: one in the middle
+    /// (no `across`) and one near each end (`across` at most 0.1 and at least
+    /// 0.9), each followed by a press on a row of the list it opened.
+    @Test("Every list dropdown in the panel is pressed by a walk at its middle and both ends")
+    func everyListDropdownIsClicked() throws {
+        let names = try Self.listDropdownNames()
+        #expect(names.count >= 2, "found only \(names.count) list dropdowns; the scan is broken")
+        var spots: [String: Set<String>] = [:]
+        for walk in try Self.walks() {
+            for step in walk.steps where step["do"] as? String == "press" && step["in"] == nil {
+                guard let control = step["control"] as? String else { continue }
+                let across = (step["across"] as? NSNumber)?.doubleValue
+                let spot = across == nil ? "centre" : across! <= 0.1 ? "start" : across! >= 0.9 ? "end" : "other"
+                spots[control, default: []].insert(spot)
+            }
+        }
+        let missing = names.filter { !(spots[$0] ?? []).isSuperset(of: ["centre", "start", "end"]) }
+        #expect(missing.isEmpty, """
+            No walk presses these list dropdowns at their middle and near both ends. Add `press` steps \
+            with no `across`, `"across": 0.05` and `"across": 0.95`, each followed by a press on a row \
+            of the list (Scripts/playtest/appearance-and-effects-dropdowns-open-on-a-click-walk.json): \
             \(missing.joined(separator: ", "))
             """)
     }

@@ -275,41 +275,38 @@ private struct BorderFollowsRow: View {
     @Environment(EditorState.self) private var editorState
     let row: LayerEffectRow
 
+    /// The dropdown's hover tip, on the AppKit button and in the panel's
+    /// register where a walk reads it.
+    static let help = "Letters draws round each letter, so words stay readable over "
+        + "anything. Box draws round the label's frame."
+
     var body: some View {
         let borders = editorState.layerStyleSelection.borders(at: row.index)
         if borders.hasLettersEverywhere {
             let ids = borders.layerIDs
             let reading = borders.reading { $0.borderEffect(at: row.index)?.follows ?? .letters }
-            HStack(alignment: .firstTextBaseline, spacing: ColorPartLayout.spacing) {
+            HStack(alignment: .center, spacing: ColorPartLayout.spacing) {
                 Text("Follows")
                     .panelRowName()
                     .frame(width: ColorPartLayout.nameWidth, alignment: .leading)
-                Picker("Follows", selection: Binding(
-                    get: { reading.isMixed ? nil : reading.value },
-                    set: { new in
-                        guard let new else { return }
+                // The panel's dropdown, filling the rest of the row the way
+                // Font does in the Text section.
+                VideoKit.Dropdown(
+                    label: "Follows",
+                    value: reading.isMixed ? LayerStyleSelection.mixedText
+                        : (reading.value ?? .letters).title,
+                    valueStyle: reading.isMixed ? MixedLook.style : nil,
+                    help: Self.help,
+                    choices: .picking(BorderFollows.allCases,
+                                      current: reading.isMixed ? nil : reading.value,
+                                      title: \.title) { new in
                         editorState.setBorderEffectFollows(at: row.index, ids: ids, to: new)
-                    })) {
-                        if reading.isMixed {
-                            Text(LayerStyleSelection.mixedText).tag(BorderFollows?.none)
-                        }
-                        ForEach(BorderFollows.allCases, id: \.self) { follows in
-                            Text(follows.title).tag(BorderFollows?.some(follows))
-                        }
-                    }
-                    .labelsHidden()
-                    .pickerStyle(.menu)
-                    .controlSize(.small)
-                    // The width the Position popup beside it carries, for the
-                    // same reason: an ideal-width menu inside the dock's column
-                    // pushed the whole pane wider than the window.
-                    .frame(width: 92, alignment: .leading)
+                    })
+                    .frame(maxWidth: .infinity)
                     .disabled(ids.isEmpty)
-                    .panelHelp("Letters draws round each letter, so words stay readable over "
-                          + "anything. Box draws round the label's frame.")
+                    .panelHelp(Self.help)
                     .playtestControl("Follows", detail: reading.isMixed ? "mixed"
                                         : (reading.value ?? .letters).title)
-                Spacer(minLength: 0)
             }
             // Its own row name, the way the Color row above it carries one:
             // with this row on screen the border holds THREE menus, and a walk
@@ -383,35 +380,26 @@ private struct BorderPositionRow: View {
         let borders = editorState.layerStyleSelection.borders(at: row.index)
         let ids = borders.layerIDs
         let reading = borders.reading { $0.borderEffect(at: row.index)?.position ?? .outside }
-        HStack(alignment: .firstTextBaseline, spacing: ColorPartLayout.spacing) {
+        HStack(alignment: .center, spacing: ColorPartLayout.spacing) {
             Text("Position")
                 .panelRowName()
                 .frame(width: ColorPartLayout.nameWidth, alignment: .leading)
-            Picker("Position", selection: Binding(
-                get: { reading.isMixed ? nil : reading.value },
-                set: { new in
-                    guard let new else { return }
+            VideoKit.Dropdown(
+                label: "Position",
+                value: reading.isMixed ? LayerStyleSelection.mixedText
+                    : (reading.value ?? .outside).title,
+                valueStyle: reading.isMixed ? MixedLook.style : nil,
+                help: "Inside keeps the ring within the layer. Outside grows it past the edge.",
+                choices: .picking(BorderPosition.allCases,
+                                  current: reading.isMixed ? nil : reading.value,
+                                  title: \.title) { new in
                     editorState.setBorderEffectPosition(at: row.index, ids: ids, to: new)
-                })) {
-                    if reading.isMixed {
-                        Text(LayerStyleSelection.mixedText).tag(BorderPosition?.none)
-                    }
-                    ForEach(BorderPosition.allCases, id: \.self) { position in
-                        Text(position.title).tag(BorderPosition?.some(position))
-                    }
-                }
-                .labelsHidden()
-                .pickerStyle(.menu)
-                .controlSize(.small)
-                // A width rather than `fixedSize`, for the reason the Kind
-                // popup carries one: an ideal-width menu inside the dock's
-                // column pushed the whole pane wider than the window.
-                .frame(width: 92, alignment: .leading)
+                })
+                .frame(maxWidth: .infinity)
                 .disabled(ids.isEmpty)
                 .panelHelp("Inside keeps the ring within the layer. Outside grows it past the edge.")
                 .playtestControl("Position", detail: reading.isMixed ? "mixed"
                                     : (reading.value ?? .outside).title)
-            Spacer(minLength: 0)
         }
         // No field name of its own: it belongs to the border row above it, so
         // a walk names it `{"control": "Position", "in": "Border 2"}` and two
@@ -532,40 +520,35 @@ private struct GlowKindRow: View {
     @Environment(EditorState.self) private var editorState
     let row: LayerEffectRow
 
+    /// The dropdown's hover tip, on the AppKit button and in the panel's
+    /// register where a walk reads it.
+    static let help = "Outer throws the halo past the layer's edge. "
+        + "Inner lights the edge from inside."
+
     var body: some View {
         let glows = editorState.layerStyleSelection.glows(at: row.index)
         let ids = glows.layerIDs
         let reading = glows.reading { $0.glowEffect(at: row.index)?.kind ?? .outer }
-        HStack(alignment: .firstTextBaseline, spacing: ColorPartLayout.spacing) {
+        HStack(alignment: .center, spacing: ColorPartLayout.spacing) {
             Text("Kind")
                 .panelRowName()
                 .frame(width: ColorPartLayout.nameWidth, alignment: .leading)
-            Picker("Kind", selection: Binding(
-                get: { reading.isMixed ? nil : reading.value },
-                set: { new in
-                    guard let new else { return }
+            VideoKit.Dropdown(
+                label: "Kind",
+                value: reading.isMixed ? LayerStyleSelection.mixedText
+                    : (reading.value ?? .outer).title,
+                valueStyle: reading.isMixed ? MixedLook.style : nil,
+                help: Self.help,
+                choices: .picking(GlowKind.allCases,
+                                  current: reading.isMixed ? nil : reading.value,
+                                  title: \.title) { new in
                     editorState.setGlowKind(at: row.index, ids: ids, to: new)
-                })) {
-                    if reading.isMixed {
-                        Text(LayerStyleSelection.mixedText).tag(GlowKind?.none)
-                    }
-                    ForEach(GlowKind.allCases, id: \.self) { kind in
-                        Text(kind.title).tag(GlowKind?.some(kind))
-                    }
-                }
-                .labelsHidden()
-                .pickerStyle(.menu)
-                .controlSize(.small)
-                // A width rather than `fixedSize`, for the reason the shadow's
-                // Kind popup carries one: an ideal-width menu inside the dock's
-                // column pushed the whole pane wider than the window.
-                .frame(width: 92, alignment: .leading)
+                })
+                .frame(maxWidth: .infinity)
                 .disabled(ids.isEmpty)
-                .panelHelp("Outer throws the halo past the layer's edge. "
-                      + "Inner lights the edge from inside.")
+                .panelHelp(Self.help)
                 .playtestControl("Kind", detail: reading.isMixed ? "mixed"
                                     : (reading.value ?? .outer).title)
-            Spacer(minLength: 0)
         }
         // No field name of its own: it belongs to the glow row above it, so a
         // walk names it `{"control": "Kind", "in": "Glow 2"}` and two glows
@@ -637,35 +620,25 @@ private struct ShadowKindRow: View {
     var body: some View {
         let reading = editorState.layerStyleSelection.shadows(at: index)
             .reading { $0.shadow(at: index)?.kind ?? .drop }
-        HStack(alignment: .firstTextBaseline, spacing: ColorPartLayout.spacing) {
+        HStack(alignment: .center, spacing: ColorPartLayout.spacing) {
             Text("Kind")
                 .panelRowName()
                 .frame(width: ColorPartLayout.nameWidth, alignment: .leading)
-            Picker("Kind", selection: Binding(
-                get: { reading.isMixed ? nil : reading.value },
-                set: { new in
-                    guard let new else { return }
+            VideoKit.Dropdown(
+                label: "Kind",
+                value: reading.isMixed ? LayerStyleSelection.mixedText
+                    : (reading.value ?? .drop).title,
+                valueStyle: reading.isMixed ? MixedLook.style : nil,
+                help: "Drop throws it behind the layer. Inner casts it into the layer.",
+                choices: .picking(ShadowKind.allCases,
+                                  current: reading.isMixed ? nil : reading.value,
+                                  title: \.title) { new in
                     editorState.setShadowKind(index: index, ids: ids, to: new)
-                })) {
-                    if reading.isMixed {
-                        Text(LayerStyleSelection.mixedText).tag(ShadowKind?.none)
-                    }
-                    ForEach(ShadowKind.allCases, id: \.self) { kind in
-                        Text(kind.title).tag(ShadowKind?.some(kind))
-                    }
-                }
-                .labelsHidden()
-                .pickerStyle(.menu)
-                .controlSize(.small)
-                // A width, not `fixedSize`: a menu picker asked for its ideal
-                // width inside the dock's column pushed the whole pane wider
-                // than the window, and the shell answered by auto-collapsing
-                // the dock the moment a SECOND one appeared (2026-09-07).
-                .frame(width: 92, alignment: .leading)
+                })
+                .frame(maxWidth: .infinity)
                 .panelHelp("Drop throws it behind the layer. Inner casts it into the layer.")
                 .playtestControl("Kind", detail: reading.isMixed ? "mixed"
                                     : (reading.value ?? .drop).title)
-            Spacer(minLength: 0)
         }
         // No field name of its own: it belongs to the shadow row above it, so
         // a walk names it `{"control": "Kind", "in": "Shadow 2"}` and two

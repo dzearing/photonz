@@ -1,0 +1,489 @@
+{
+  "out": "/tmp/photonz-playtest/appearance-and-effects-dropdowns-open-on-a-click-walk",
+  "seed": "Every menu in the Appearance section and the Effects list opens when a person clicks it, at Next defaults with no flag changed. Blending and Masked by open their lists from a press near either end and in the middle, and each pick reads back on the face. A shadow's Kind, a glow's Kind, a border's Follows and Position, and a saved effect style's Kind are panel dropdowns now, clicked on their face in the middle and 8pt in from each end; every click must open the menu and the last picks a value. Pictures in dark and light.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1320,
+      "height": 1000
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        140,
+        130
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Sign in"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        180,
+        145
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "reveal",
+      "control": "Blending"
+    },
+    {
+      "do": "describe",
+      "stage": "1-appearance",
+      "note": "one label picked: Blending and Masked by sit under Opacity wearing the panel's dropdown face, the one Font and Size wear in the Text section above them"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-appearance"
+    },
+    {
+      "do": "press",
+      "control": "Blending",
+      "across": 0.05
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "2-blending-list"
+    },
+    {
+      "do": "press",
+      "control": "Multiply",
+      "in": "Blending"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "expect",
+      "control": "Blending",
+      "reads": "Blending, Multiply"
+    },
+    {
+      "do": "press",
+      "control": "Blending",
+      "across": 0.95
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Screen",
+      "in": "Blending"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "expect",
+      "control": "Blending",
+      "reads": "Blending, Screen"
+    },
+    {
+      "do": "press",
+      "control": "Blending"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Normal",
+      "in": "Blending"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "expect",
+      "control": "Blending",
+      "reads": "Blending, Normal"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Blending",
+      "reads": "Blending, Screen"
+    },
+    {
+      "do": "action",
+      "action": "redo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Blending",
+      "reads": "Blending, Normal"
+    },
+    {
+      "do": "press",
+      "control": "Masked by",
+      "across": 0.05
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Its shape",
+      "in": "Masked by"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "expect",
+      "control": "Masked by",
+      "reads": "Masked by, Its shape"
+    },
+    {
+      "do": "press",
+      "control": "Masked by",
+      "across": 0.95
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Its brightness",
+      "in": "Masked by"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "expect",
+      "control": "Masked by",
+      "reads": "Masked by, Its brightness"
+    },
+    {
+      "do": "press",
+      "control": "Masked by"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Nothing",
+      "in": "Masked by"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "expect",
+      "control": "Masked by",
+      "reads": "Masked by, Nothing"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Kind",
+      "in": "Shadow",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Inner"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Kind",
+      "in": "Shadow",
+      "reads": "Shadow, Inner"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Kind",
+      "in": "Shadow",
+      "reads": "Shadow, Drop"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "at": [
+        "centre"
+      ],
+      "choose": "Glow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Kind",
+      "in": "Glow",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Inner"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Kind",
+      "in": "Glow",
+      "reads": "Glow, Inner"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "at": [
+        "centre"
+      ],
+      "choose": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Follows",
+      "in": "Border",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Box"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Follows",
+      "in": "Border",
+      "reads": "Border, Follows, Box"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Position",
+      "in": "Border",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Inside"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Position",
+      "in": "Border",
+      "reads": "Border, Inside"
+    },
+    {
+      "do": "reveal",
+      "control": "Effects section"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "3-effects",
+      "note": "a shadow, a glow and a border on the label: each Kind, Follows and Position is the panel's dropdown filling its row, where the shadow's Kind used to be a narrow system pop-up"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-effects"
+    },
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "4-effects-light"
+    },
+    {
+      "do": "reveal",
+      "control": "Blending"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "snapshot",
+      "name": "5-appearance-light"
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Shadow Style",
+      "at": [
+        "centre"
+      ],
+      "choose": "Save as Style"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "type",
+      "text": "Card lift"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        560
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Card lift"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "6-style",
+      "note": "the saved shadow style's own settings: its Kind is the panel's dropdown too"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-style"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Kind",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Inner"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Kind",
+      "reads": "Kind, Inner"
+    }
+  ]
+}
