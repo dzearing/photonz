@@ -121,4 +121,55 @@ extension PhotonzDocument {
         updateLayer(id: id) { $0.setClipPieces(pieces) }
         return true
     }
+
+    /// Roll any cut to a moment of the document: a join inside one clip, or
+    /// the edit point where one clip ends and the next starts. The two look
+    /// the same on the timeline, so they roll the same way.
+    @discardableResult
+    public mutating func rollCut(at place: TimelineCutPlace, toMS ms: Int) -> Bool {
+        switch place {
+        case let .join(clip, index):
+            return rollClipCut(clip, atCut: index, toMS: ms)
+        case let .edit(outgoing, incoming):
+            return rollEditPoint(outgoing: outgoing, incoming: incoming, toMS: ms)
+        }
+    }
+
+    /// Whether `rollCut` would roll, without rolling: a menu row asks.
+    public func canRollCut(at place: TimelineCutPlace, toMS ms: Int) -> Bool {
+        var trial = self
+        return trial.rollCut(at: place, toMS: ms)
+    }
+
+    /// The edit point between two clips, rolled: the outgoing clip's last
+    /// piece gets longer by what the incoming clip's first piece gives up, and
+    /// the incoming clip starts that much later (or the other way round), so
+    /// the frames either side of the old cut stay where they were and nothing
+    /// after the two clips moves. A dip holding on its colour keeps its hold,
+    /// since both clips move by the same amount.
+    ///
+    /// Refused on the same grounds as a join's roll: no recording left on
+    /// one side, a piece left too short to hold, or a transition on the cut
+    /// that could no longer be paid for.
+    private mutating func rollEditPoint(outgoing: UUID, incoming: UUID, toMS ms: Int) -> Bool {
+        guard let cut = editPointCut(outgoing: outgoing, incoming: incoming),
+              let into = layer(id: incoming)?.time,
+              var outPieces = layer(id: outgoing)?.clipPieces,
+              var inPieces = layer(id: incoming)?.clipPieces else { return false }
+        let delta = ms - cut.atMS
+        guard delta != 0, outPieces.trimEnd(ofPiece: outPieces.count - 1, byMS: delta),
+              inPieces.trimStart(ofPiece: 0, byMS: delta) else { return false }
+        var trial = self
+        trial.updateLayer(id: outgoing) { $0.setClipPieces(outPieces) }
+        trial.updateLayer(id: incoming) { clip in
+            clip.setClipPieces(inPieces)
+            clip.time = clip.time?.moved(toInMS: into.inMS + delta)
+        }
+        if let transition = cut.transition {
+            guard let rolled = trial.editPointCut(outgoing: outgoing, incoming: incoming),
+                  rolled.longestMS(for: transition) >= transition.lengthMS else { return false }
+        }
+        self = trial
+        return true
+    }
 }

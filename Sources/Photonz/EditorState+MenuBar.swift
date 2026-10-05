@@ -144,15 +144,15 @@ extension EditorState {
 
     /// Clip ▸ Roll Edit to Playhead: whether the cut in hand can roll to the
     /// playhead.
+    /// A join of the clip in hand, or the edit point between two clips.
     var canRollCutInHand: Bool {
-        guard var trial = document, case let .join(clip, index)? = cutInHand?.place,
-              !isClipLocked(clip) else { return false }
-        return trial.rollClipCut(clip, atCut: index, toMS: documentTimeMS)
+        guard let place = cutInHand?.place else { return false }
+        return canRollCut(at: place)
     }
 
     func rollCutInHand() {
-        guard case let .join(clip, index)? = cutInHand?.place, canRollCutInHand else { return }
-        rollCutToPlayhead(layerID: clip, cut: index)
+        guard let place = cutInHand?.place else { return }
+        rollCutToPlayhead(at: place)
     }
 
     /// The transition Apply to Every Cut and Set as Default Transition act on:

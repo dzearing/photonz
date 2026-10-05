@@ -448,11 +448,7 @@ extension EditorState {
             }
             rows.append(.separator)
         }
-        var trial = document
-        rows.append(.command("Roll Edit to Playhead",
-                             enabled: trial.rollClipCut(layerID, atCut: index, toMS: documentTimeMS)) {
-            self.rollCutToPlayhead(layerID: layerID, cut: index)
-        })
+        rows.append(rollEditMenuRow(at: .join(clip: layerID, index: index)))
         return rows
     }
 
@@ -460,34 +456,59 @@ extension EditorState {
     /// drawn over one.
     func timelineEditPointMenuRows(_ point: TimelineEditPoint) -> [MenuRow] {
         let place = TimelineCutPlace.edit(outgoing: point.outgoing, incoming: point.incoming)
-        guard Experiments.shared.transitionsAtACutEnabled,
-              let cut = document?.documentCut(at: place)?.cut,
-              !isClipLocked(point.incoming), !isClipLocked(point.outgoing) else { return [] }
-        var rows: [MenuRow] = [
-            .command("Apply Default Transition", TimelineMenuKeys.applyDefaultTransition) {
+        guard let cut = document?.documentCut(at: place)?.cut, !isCutLocked(place) else { return [] }
+        var rows: [MenuRow] = []
+        if Experiments.shared.transitionsAtACutEnabled {
+            rows.append(.command("Apply Default Transition", TimelineMenuKeys.applyDefaultTransition) {
                 self.applyDefaultTransition(at: place)
-            },
-            addTransitionMenuRow([.cut(place)], current: cut.transition?.kind),
-        ]
-        if cut.transition != nil {
-            rows.append(.command("Remove Transition") {
-                self.pickCut(place)
-                self.setTransition(nil, at: place)
             })
+            rows.append(addTransitionMenuRow([.cut(place)], current: cut.transition?.kind))
+            if cut.transition != nil {
+                rows.append(.command("Remove Transition") {
+                    self.pickCut(place)
+                    self.setTransition(nil, at: place)
+                })
+            }
+            rows.append(.separator)
         }
+        // The cut between two clips looks just like a join on the timeline,
+        // so it rolls just like one, as any edit point does in Premiere.
+        rows.append(rollEditMenuRow(at: place))
         return rows
     }
 
-    /// Roll a join to where the playhead is: the piece before it grows by what
-    /// the piece after it gives up, and the clip stays the length it was.
-    func rollCutToPlayhead(layerID: UUID, cut index: Int) {
-        guard documentHasTime, !isClipLocked(layerID) else { return }
+    /// Roll Edit to Playhead, on a join or on the cut between two clips.
+    private func rollEditMenuRow(at place: TimelineCutPlace) -> MenuRow {
+        .command("Roll Edit to Playhead", enabled: canRollCut(at: place)) {
+            self.rollCutToPlayhead(at: place)
+        }
+    }
+
+    /// Whether a cut can roll to the playhead: there is time, neither side is
+    /// on a locked track, and both sides have the recording the roll needs.
+    func canRollCut(at place: TimelineCutPlace) -> Bool {
+        guard documentHasTime, !isCutLocked(place), let document else { return false }
+        return document.canRollCut(at: place, toMS: documentTimeMS)
+    }
+
+    /// Whether either clip a cut belongs to is on a locked track.
+    private func isCutLocked(_ place: TimelineCutPlace) -> Bool {
+        switch place {
+        case let .join(clip, _): isClipLocked(clip)
+        case let .edit(outgoing, incoming): isClipLocked(outgoing) || isClipLocked(incoming)
+        }
+    }
+
+    /// Roll a cut to where the playhead is: the side before it grows by what
+    /// the side after it gives up. A join keeps its clip the length it was;
+    /// between two clips, the outgoing one ends and the incoming one starts on
+    /// the playhead, and nothing after them moves. One step for undo.
+    func rollCutToPlayhead(at place: TimelineCutPlace) {
         endTrimBeforeCutting()
-        var trial = document
-        guard trial?.rollClipCut(layerID, atCut: index, toMS: documentTimeMS) == true else { return }
+        guard canRollCut(at: place) else { return }
         pauseDocument()
-        perform { $0.rollClipCut(layerID, atCut: index, toMS: self.documentTimeMS) }
-        selectClipCut(layerID: layerID, index: index)
+        perform { $0.rollCut(at: place, toMS: self.documentTimeMS) }
+        pickCut(place)
         documentMomentChanged()
     }
 

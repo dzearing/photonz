@@ -1,0 +1,25 @@
+{
+  "feature": "Roll the cut between two clips",
+  "epic": "video-cutting",
+  "summary": "The cut where one clip ends and the next starts now rolls to the playhead from its right-click and from Clip > Roll Edit to Playhead, just like a cut inside one clip: the first clip grows by what the second gives up, and nothing after them moves.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Two clips butted on V1, each with some footage trimmed off at the cut (W on the first, Q on the second).",
+  "switched": {},
+  "try": [
+    { "do": "Put two clips end to end on V1 and trim a little off each side of where they meet.", "shot": "2026-10-05-roll-between-clips-1-before.png" },
+    { "do": "Park the playhead a second past the cut, then right-click the cut between the clips.", "shot": "2026-10-05-roll-between-clips-2-menu.png" },
+    { "do": "Choose Roll Edit to Playhead.", "shot": "2026-10-05-roll-between-clips-3-after.png" },
+    { "do": "Press Command Z once, then Shift Command Z." },
+    { "do": "Click the cut to pick it and choose Clip > Roll Edit to Playhead in the menu bar." },
+    { "do": "Move the playhead far from the cut and right-click it again.", "shot": "2026-10-05-roll-between-clips-4-dimmed.png" }
+  ],
+  "evaluate": [
+    "After the roll, does the first clip end and the second start exactly on the playhead, with the second clip still ending where it did?",
+    "Does each clip's sound stay linked under its own clip after the roll?",
+    "When the playhead is further than the spare footage allows, is a dimmed row clear enough, or would you rather it rolled as far as it can?",
+    "Does the roll on a cut between clips feel the same as the roll on a cut inside one clip?"
+  ],
+  "rough": [
+    "No mock draws the right-click menu on a cut; the row sits under the transition rows, as it already does on a cut inside one clip.",
+    "A roll past the spare footage is refused (row dimmed) rather than rolling as far as it can, the same rule the cut inside one clip already had."
+  ]
+}
