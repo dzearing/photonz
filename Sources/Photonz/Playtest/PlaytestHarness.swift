@@ -7240,7 +7240,9 @@ private final class Run {
             // or shows too little of itself to hold the control at all, the
             // section around it takes the turn instead (`PlaytestReach.turns`).
             var round = 0.0
-            for turn in PlaytestReach.turns(for: current.box, reaches: reaches.map(\.reach)) {
+            let frames = reaches.map { $0.clip.convert($0.clip.bounds, to: nil) }
+            for turn in PlaytestReach.turns(for: current.box, reaches: reaches.map(\.reach),
+                                            frames: frames) {
                 round = Self.scrollClip(reaches[turn.index].clip, by: turn.by)
                 if round > 0.5 { break }
             }

@@ -150,6 +150,39 @@ struct PlaytestReachTests {
         #expect(!turns.contains { $0.index == 0 })
     }
 
+    /// The bug this was written for (2026-10-05): a title's panel in a video
+    /// document, at the dock's top. The Effects list is drawn 283 points tall
+    /// but only its top 28 show above the dock's bottom edge, and the shadow's
+    /// Kind row sits inside the list's own 283 points, just below that edge.
+    /// The list, being innermost and 28 points being room enough for a 20
+    /// point row, took every turn: each one overshot, and six rounds slid the
+    /// row back and forth across the sliver until the walk gave up. Nothing in
+    /// the list needed scrolling at all. A person scrolls the dock.
+    @Test("A list already holding the control in its own viewport hands the turn to the scroller cutting it")
+    func aListAlreadyHoldingItLetsTheDockTurnFirst() {
+        let kind = CGRect(x: 1590, y: 215, width: 92, height: 20)
+        let effectsSliver = CGRect(x: 1464, y: 289, width: 264, height: 28)
+        let dockStrip = CGRect(x: 1464, y: 289, width: 264, height: 701)
+        let effectsList = CGRect(x: 1464, y: 34, width: 264, height: 283)
+        let dockClip = CGRect(x: 1464, y: 289, width: 264, height: 701)
+        let turns = PlaytestReach.turns(for: kind, reaches: [effectsSliver, dockStrip],
+                                        frames: [effectsList, dockClip])
+        #expect(turns.map(\.index) == [1, 0])
+        #expect(turns.first?.by == -(289 - 215 + PlaytestReach.revealMargin))
+    }
+
+    @Test("A list that has the control past its own edge still turns first")
+    func aListThatMustScrollStillTurnsFirst() {
+        let row = CGRect(x: 1590, y: -200, width: 92, height: 20)
+        let effectsStrip = CGRect(x: 1464, y: 289, width: 264, height: 120)
+        let dockStrip = CGRect(x: 1464, y: 289, width: 264, height: 701)
+        let effectsList = CGRect(x: 1464, y: 189, width: 264, height: 220)
+        let dockClip = CGRect(x: 1464, y: 289, width: 264, height: 701)
+        let turns = PlaytestReach.turns(for: row, reaches: [effectsStrip, dockStrip],
+                                        frames: [effectsList, dockClip])
+        #expect(turns.map(\.index) == [0, 1])
+    }
+
     @Test("A scroller with room for the control turns first, innermost before the one around it")
     func innermostTurnsFirstWhenItCanHoldIt() {
         let tile = CGRect(x: 1478, y: 100, width: 114, height: 106)

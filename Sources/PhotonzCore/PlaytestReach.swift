@@ -163,14 +163,31 @@ public enum PlaytestReach {
     /// When no strip at all is tall enough the old order stands, innermost
     /// first: nothing can show the control whole, and turning still brings the
     /// most of it in.
-    public static func turns(for box: CGRect, reaches: [CGRect],
+    ///
+    /// **A scroller whose own viewport already holds the control goes last.**
+    /// `frames` are each scrolling area's whole viewport in the window, uncut
+    /// by anything around it. When the control sits inside one, that area is
+    /// already showing it and something outside is what hides it, so the area
+    /// around it turns first. On 2026-10-05 the Effects list of a title showed
+    /// 28 of its 283 points above the dock's bottom edge with the shadow's Kind
+    /// row just under that edge, inside the list. Twenty eight points is room
+    /// for a 20 point row, so the list took every turn, each one overshot,
+    /// and six rounds slid the row back and forth across the sliver while the
+    /// dock that would have shown the whole shadow never moved. It still gets
+    /// its turn after the others, for the window that cuts it with nothing
+    /// left to scroll around it.
+    public static func turns(for box: CGRect, reaches: [CGRect], frames: [CGRect] = [],
                              slack: Double = PlaytestReach.slack) -> [(index: Int, by: Double)] {
         let all = reaches.enumerated().compactMap { index, reach -> (index: Int, by: Double)? in
             let by = gap(from: box, into: reach)
             return by == 0 ? nil : (index, by)
         }
         let roomy = all.filter { reaches[$0.index].height + slack >= box.height }
-        return roomy.isEmpty ? all : roomy
+        let order = roomy.isEmpty ? all : roomy
+        func alreadyHolds(_ index: Int) -> Bool {
+            frames.indices.contains(index) && overhang(of: box, in: frames[index], slack: slack) == nil
+        }
+        return order.filter { !alreadyHolds($0.index) } + order.filter { alreadyHolds($0.index) }
     }
 
     /// What the walk prints. Plain words, naming the control, saying which of
