@@ -2,6 +2,7 @@ import AVFoundation
 import CoreGraphics
 import Foundation
 import ImageIO
+import VideoToolbox
 import PhotonzCore
 @testable import PhotonzMedia
 import Testing
@@ -44,20 +45,61 @@ struct AnimatedExportWeighTests {
     /// with one block moving over it, and for `stillAfter` seconds onwards
     /// nothing moving at all. Both halves matter — a still stretch is where
     /// every sampling shortcut went wrong.
+    ///
+    /// **It is written by the software H.264 encoder, so it is the same
+    /// recording on a busy machine as on a quiet one.** The hardware encoder,
+    /// which the app's own writer gets, decides differently when other encodes
+    /// share it: written alone, the short clip came out 55,108 bytes every
+    /// time; written beside fifteen others it landed anywhere from 53,164 to
+    /// 90,592, and the GIFs made from those swung with it, Small weighing from
+    /// 57 to 89 per cent of Standard where alone it was 63. On 2026-10-05 one
+    /// full test run drew a source whose Small GIF outweighed its Standard
+    /// (91,233 against 84,279) and the next run did not. The software encoder
+    /// came out identical alone and among eleven other encodes, and so did
+    /// every GIF made from it. A person's recording is one fixed file, and a
+    /// GIF made from one fixed file is the same bytes busy or quiet, so a
+    /// fixed source is the case that matches theirs.
     static func screenSource(seconds: Int, size: CGSize, stillAfter: Double) async throws -> URL {
         let url = folder.appendingPathComponent("screen-\(seconds)s-\(Int(size.width)).mp4")
         if FileManager.default.fileExists(atPath: url.path) { return url }
-        let plan = DocumentVideoExport.plan(durationMS: seconds * 1000, canvasSize: size,
-                                            format: .mp4, quality: .high)
-        let width = Int(plan.size.width), height = Int(plan.size.height)
-        let frames: DocumentMovieWriter.FrameSource = { ms in
-            guard let ctx = CGContext(data: nil, width: width, height: height,
-                                      bitsPerComponent: 8, bytesPerRow: 0,
-                                      space: CGColorSpace(name: CGColorSpace.sRGB)
-                                          ?? CGColorSpaceCreateDeviceRGB(),
-                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-            else { return nil }
-            let t = min(Double(ms) / 1000, stillAfter)
+        let width = Int(size.width), height = Int(size.height), fps = 30
+        let writer = try AVAssetWriter(outputURL: url, fileType: .mp4)
+        let input = AVAssetWriterInput(mediaType: .video, outputSettings: [
+            AVVideoCodecKey: AVVideoCodecType.h264,
+            AVVideoWidthKey: width,
+            AVVideoHeightKey: height,
+            AVVideoCompressionPropertiesKey: [AVVideoAverageBitRateKey: 2_000_000],
+            AVVideoEncoderSpecificationKey: [
+                kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder as String: false,
+            ],
+        ])
+        input.expectsMediaDataInRealTime = false
+        let adaptor = AVAssetWriterInputPixelBufferAdaptor(
+            assetWriterInput: input,
+            sourcePixelBufferAttributes: [
+                kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32BGRA),
+                kCVPixelBufferWidthKey as String: width,
+                kCVPixelBufferHeightKey as String: height,
+            ])
+        writer.add(input)
+        writer.startWriting()
+        writer.startSession(atSourceTime: .zero)
+        for index in 0..<(seconds * fps) {
+            while !input.isReadyForMoreMediaData {
+                try await Task.sleep(for: .milliseconds(5))
+            }
+            var buffer: CVPixelBuffer?
+            let pool = try #require(adaptor.pixelBufferPool)
+            #expect(CVPixelBufferPoolCreatePixelBuffer(nil, pool, &buffer) == kCVReturnSuccess)
+            let frame = try #require(buffer)
+            CVPixelBufferLockBaseAddress(frame, [])
+            let ctx = try #require(CGContext(
+                data: CVPixelBufferGetBaseAddress(frame), width: width, height: height,
+                bitsPerComponent: 8, bytesPerRow: CVPixelBufferGetBytesPerRow(frame),
+                space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue
+                    | CGBitmapInfo.byteOrder32Little.rawValue))
+            let t = min(Double(index) / Double(fps), stillAfter)
             ctx.setFillColor(red: 0.12, green: 0.12, blue: 0.14, alpha: 1)
             ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
             ctx.setFillColor(red: 0.82, green: 0.84, blue: 0.88, alpha: 1)
@@ -76,10 +118,15 @@ struct AnimatedExportWeighTests {
             let shift = (t * 90).truncatingRemainder(dividingBy: travel)
             ctx.setFillColor(red: 0.2, green: 0.5, blue: 0.9, alpha: 1)
             ctx.fill(CGRect(x: shift, y: Double(height) / 3, width: 100, height: 70))
-            return ctx.makeImage()
+            CVPixelBufferUnlockBaseAddress(frame, [])
+            adaptor.append(frame, withPresentationTime: CMTime(value: CMTimeValue(index),
+                                                              timescale: CMTimeScale(fps)))
         }
-        try await DocumentMovieWriter.write(plan: plan, mix: [], soundURLs: [:], to: url,
-                                            frames: frames)
+        input.markAsFinished()
+        writer.endSession(atSourceTime: CMTime(value: CMTimeValue(seconds * fps),
+                                               timescale: CMTimeScale(fps)))
+        await writer.finishWriting()
+        if let error = writer.error { throw error }
         return url
     }
 
@@ -142,17 +189,25 @@ struct AnimatedExportWeighTests {
                 let small = try #require(landed[.small])
                 let row = "\(label) \(format.rawValue) came out \(high)/\(standard)/\(small) "
                     + "bytes at High/Standard/Small, so the preset row does not move the size"
-                // Small is always the lightest by a wide margin, a third or more
-                // under the next. High is deliberately NOT claimed heavier than
-                // Standard: on the longer clip, still for half its length, a GIF
-                // lands 515,331 against 489,554 bytes, five per cent apart, and
-                // came out the other way round (639,231 against 666,520) off a
-                // source recording written on a busy machine; a HEIC's High came
-                // out under its Standard with the suite running (208,988 against
-                // 234,401). The sheet weighs every choice, so it shows whichever
-                // way round they really are.
+                // Small is lighter than High, and every choice writes a
+                // different file. Neither Small nor High is claimed against
+                // Standard. Small under Standard is a property of the
+                // recording, not of the preset: Standard keeps a recording
+                // under 800 pixels at its own size, and on a sharp, mostly
+                // still one Small's scaling turns every crisp line into
+                // in-between greys that weigh more than the frames it saves.
+                // The short clip written as ProRes came out 23,280 bytes at
+                // Standard and 26,988 at Small every time, and written by this
+                // encoder it is a tie (queue task
+                // a-small-gif-of-a-crisp-recording-weighs-less-tha).
+                // High against Standard: on the longer clip, still
+                // for half its length, a GIF has landed five per cent apart
+                // and the other way round, and a HEIC's High came out under its
+                // Standard with the suite running (208,988 against 234,401).
+                // The sheet weighs every choice, so it shows whichever way
+                // round they really are.
                 #expect(small < high, "\(row)")
-                if format == .gif { #expect(small < standard, "\(row)") }
+                #expect(Set([high, standard, small]).count == 3, "\(row)")
                 // What the choice writes, as opposed to what the encoder makes
                 // of it, is exact every time: fewer frames each step down.
                 let frames = try #require(held[.high]?.count)
