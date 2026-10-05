@@ -75,8 +75,7 @@ struct TextInspector: View {
                               reading: selection.reading { $0.fontName },
                               options: fontFamilies(selection),
                               title: { $0 },
-                              help: help("font", selection.count),
-                              pinnedWidth: Self.fontMenuWidth) {
+                              help: help("font", selection.count)) {
                     editorState.setTextStyle(ids: pickedIDs, fontName: $0)
                 }
                 // The three menus read the pick when chosen, not when drawn, so
@@ -86,14 +85,7 @@ struct TextInspector: View {
                     SelectionMenu(label: "Size",
                                   reading: selection.number { $0.fontSize },
                                   options: sizes(selection),
-                                  // Padded out to three digits, so every size
-                                  // takes the same room and the box holds one
-                                  // width whatever the list picked up. The
-                                  // padding is invisible; `spoken` is the same
-                                  // words without it, for the sentence a
-                                  // hover says.
-                                  title: { TextStyles.sizeTitle($0) },
-                                  spoken: { TextStyles.sizeWords($0) },
+                                  title: { TextStyles.sizeWords($0) },
                                   help: help("size", selection.count)) {
                         editorState.setTextStyle(ids: pickedIDs, fontSize: $0)
                     }
@@ -225,18 +217,6 @@ struct TextInspector: View {
     /// label in an off-list font does not lose it just by being picked.
     private func fontFamilies(_ selection: TextLayerSelection) -> [String] {
         TextStyles.fontOptions(picked: selection.fontNames)
-    }
-
-    /// The width the Font menu holds, whatever is in its list.
-    ///
-    /// The curated families are in the list in every state it can be in, so the
-    /// width they need is the narrowest the menu could ever be — and a pop-up
-    /// never accepts a width wider than its content, so this is also the widest
-    /// constant available. Every curated family therefore lands exactly where
-    /// it does today, and only a longer name brought in by an opened document
-    /// is shortened rather than shoving the row sideways.
-    private static var fontMenuWidth: CGFloat {
-        MenuMetrics.width(ofOptions: TextStyles.fonts)
     }
 
     /// Preset sizes plus any the picked labels already wear.

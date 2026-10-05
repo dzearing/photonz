@@ -27,9 +27,12 @@ struct EveryDropdownIsClickedByAWalkTests {
         "Caption said", "Caption coming",
         "Hold on black",
         "Fade In", "Fade Out",
+        // `SelectionMenu`, the Text section's (and a Captions layer's) type
+        // menus, on the panel's dropdown since 2026-10-05.
+        "Font", "Size", "Weight",
     ]
     /// How many dropdown call sites build their row name from a variable.
-    static let builtSites = 3
+    static let builtSites = 4
 
     /// The name a walk finds each dropdown by: the first `playtestField` or
     /// `playtestControl` after the call, nil when that name is built at run

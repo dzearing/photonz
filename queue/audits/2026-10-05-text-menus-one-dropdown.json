@@ -1,0 +1,29 @@
+{
+  "feature": "The Text section's Font, Size and Weight menus wear the panel's dropdown",
+  "epic": "video-titles-graphics",
+  "summary": "Font, Size and Weight in the Text section (and a Captions layer's Text section) are now the same drawn dropdown as Fade In, Curve and every other menu in the panel, instead of small system pop-ups with up and down arrows.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording, add a title with the Text tool, pick it.",
+  "switched": {},
+  "try": [
+    { "do": "Before: the Text section's menus were narrower grey pop-ups with up and down arrows under the Time section's chevron dropdowns.", "shot": "2026-10-05-text-menus-before-dark.png" },
+    { "do": "Pick a title and scroll the panel to Time and Text: Font, Size and Weight now match Fade In in height, fill, chevron and where the value sits.", "shot": "2026-10-05-text-menus-after-dark-sc.png" },
+    { "do": "Switch the Mac to Light and look again.", "shot": "2026-10-05-text-menus-after-light-sc.png" },
+    { "do": "Click anywhere on the Font box, including near its left and right ends, and pick Georgia: the menu hangs from the box and the title changes; Cmd-Z puts it back in one step." },
+    { "do": "Pick two text layers of different sizes: Size reads Mixed, dimmed, and the open menu ticks nothing.", "shot": "2026-10-05-text-menus-mixed-dark-sc.png" },
+    { "do": "The same in Light.", "shot": "2026-10-05-text-menus-mixed-light-sc.png" },
+    { "do": "Set a text in Bodoni 72 Smallcaps and rest the pointer on Font: the box cuts the name with an ellipsis and the tip spells it in full." }
+  ],
+  "evaluate": [
+    "Does the Text section now read as part of the same panel as the Time section?",
+    "Is the dimmed Mixed in the Size box clear enough in both light and dark?",
+    "Is a full-width Size box right for a value as short as 48 px, or would you rather it be narrow?",
+    "Does the open menu hanging from the box's left edge feel right for a list of fonts?"
+  ],
+  "rough": [
+    "The video title mock (video-title-wt.html, Text section) draws Size as a box you type a number into, beside Weight; the app still offers Size as a dropdown of preset sizes on its own row. Filed as a-title-s-size-is-a-number-you-type-or-nudge-the.",
+    "Blending and Masked by in Appearance, and menus in the Effects list such as a shadow's Kind, are still system pop-ups right under the Text section. Filed as the-appearance-and-effects-menus-wear-the-same-d.",
+    "The Font list shows every family in the system font, not in its own face; that is unchanged from before.",
+    "The text tool's own options popover still uses system pop-ups for Font, Size and Weight; it is a different surface and was left alone.",
+    "Current's Text section shares this code, so it gets the same face; Size and Weight there keep their two columns and were checked in a picture."
+  ]
+}

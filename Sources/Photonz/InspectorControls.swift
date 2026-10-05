@@ -439,77 +439,55 @@ struct ShapeSlider: View, Equatable {
 }
 
 /// A menu that speaks for the whole selection: the one thing they all say, or
-/// the word Mixed. Choosing anything makes them agree — which is exactly what
-/// the word is there to offer, so it is a real entry in the menu rather than a
-/// blank box.
+/// the word Mixed. Choosing anything makes them agree, and while they differ
+/// the open menu ticks nothing.
+///
+/// Drawn as the panel's own dropdown (`VideoKit.Dropdown`), the face Fade In
+/// and every other menu in the panel wears. Until 2026-10-05 this was a system
+/// pop-up, up and down arrows on a narrower grey box, and the Text section
+/// read as a second app under the Time section. The face takes the width its
+/// row gives it, so a long name or a padded number can no longer move it.
 struct SelectionMenu<Value: Hashable & Sendable>: View {
     let label: String
     let reading: StyleReading<Value>
     let options: [Value]
     let title: (Value) -> String
-    /// The same value in the words a SENTENCE wants, when the words in the box
-    /// are not those: the Size menu pads its numbers out with blank so every
-    /// size takes the same room, and a hover must not read that blank back.
-    /// Nil wherever the box already says exactly what it means.
-    var spoken: ((Value) -> String)?
     /// What this menu is, in words, for anyone who hovers it. The caption above
     /// the menu says the same thing without being asked. When the box is too
     /// narrow for what it is showing, the full value is said here first.
     let help: String
-    /// A width to hold, whatever ends up in the list. Nil for a menu whose list
-    /// never changes, which is every menu but Font: those are already still.
-    var pinnedWidth: CGFloat?
     let choose: (Value) -> Void
+
+    /// How wide the face came out, so the hover can tell whether the name in
+    /// it was cut short.
+    @State private var width: CGFloat = 0
 
     /// The words the box is showing, when it is showing a value at all.
     private var shownTitle: String? {
         reading.isMixed ? nil : reading.value.map(title)
     }
 
-    /// The same value as a sentence would say it, which is what a hover reads.
-    private var saidTitle: String? {
-        reading.isMixed ? nil : reading.value.map(spoken ?? title)
-    }
-
     /// Whether the box had to shorten them.
     private var isClipped: Bool {
-        guard let pinnedWidth, let shownTitle else { return false }
-        return !MenuMetrics.fits(shownTitle, in: pinnedWidth)
+        guard width > 0, let shownTitle else { return false }
+        return !VideoKit.SelectFace.fits(shownTitle, in: width)
     }
 
     var body: some View {
-        // The caption sits above the menu, the way every other labelled
-        // control in this dock reads (Effects sliders, Measure fields). A menu
-        // showing Mixed is only useful if the row beside it says WHAT is
-        // mixed, and with three menus in a row the shape of the word is not
-        // enough: "Regular" and "Mixed" both look like a weight.
+        let shown = reading.isMixed ? nil : reading.value
+        let choose = choose
+        let tip = MenuTip.text(about: help, showing: shownTitle, isClipped: isClipped)
+        // The caption names the row the way every other labelled control in
+        // this dock reads. A menu showing Mixed is only useful if the row says
+        // WHAT is mixed: "Regular" and "Mixed" both look like a weight.
         PanelNamedControl(label) {
-            Picker(label, selection: Binding<Value?>(
-                get: { reading.isMixed ? nil : reading.value },
-                set: { if let value = $0 { choose(value) } })) {
-                if reading.isMixed {
-                    // A closed pop-up button draws its own title, and
-                    // `.foregroundStyle` on the Picker does not reach it (tried
-                    // in the probe and photographed: the word stayed white).
-                    // Styling the Text on the row does reach it, which is the
-                    // only way this menu can say Mixed at the same strength the
-                    // field and the slider beside it do.
-                    Text(LayerStyleSelection.mixedText)
-                        .foregroundStyle(MixedLook.style)
-                        .tag(Value?.none)
-                }
-                ForEach(options, id: \.self) { option in
-                    Text(title(option)).tag(Value?.some(option))
-                }
-            }
-            .pickerStyle(.menu).labelsHidden().controlSize(.small)
-            // Held to one width, so a name the list picked up from an opened
-            // document cannot stretch the row. A pop-up takes a width smaller
-            // than its content and shortens the closed title with an ellipsis,
-            // which is what should happen to a name too long for the box; the
-            // open menu still spells every name out in full.
-            .frame(width: pinnedWidth)
-            .accessibilityLabel(label)
+            VideoKit.Dropdown(
+                label: label,
+                value: shownTitle ?? LayerStyleSelection.mixedText,
+                valueStyle: shown == nil ? MixedLook.style : nil,
+                help: tip,
+                choices: .picking(options, current: shown, title: title) { choose($0) })
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
         }
         .frame(maxWidth: Experiments.shared.panelRowsInOneColumnEnabled ? .infinity : nil,
                alignment: .leading)
@@ -518,10 +496,9 @@ struct SelectionMenu<Value: Hashable & Sendable>: View {
         // so a walk that named it by its words would stop working the first
         // time it used it.
         .playtestField(label)
-        // `panelHelp`, not `.help`, so the sentence a shortened name puts in
-        // front is something a walk can read back. It is the same text either
-        // way; the probe simply keeps a copy of it.
-        .panelHelp(MenuTip.text(about: help, showing: saidTitle, isClipped: isClipped))
+        // `panelHelp` as well as the button's own tip, so the sentence a
+        // shortened name puts in front is something a walk can read back.
+        .panelHelp(tip)
     }
 }
 
@@ -536,6 +513,6 @@ struct SelectionMenu<Value: Hashable & Sendable>: View {
 extension SelectionMenu: Equatable {
     nonisolated static func == (lhs: SelectionMenu, rhs: SelectionMenu) -> Bool {
         lhs.label == rhs.label && lhs.reading == rhs.reading && lhs.options == rhs.options
-            && lhs.help == rhs.help && lhs.pinnedWidth == rhs.pinnedWidth
+            && lhs.help == rhs.help
     }
 }

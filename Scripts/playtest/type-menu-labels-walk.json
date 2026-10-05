@@ -2,7 +2,9 @@
   "out": "/tmp/photonz-playtest/type-menu-labels",
   "seed": "Two labels are typed on a blank canvas, one is picked and resized, then both are picked at once so the Size menu has to say Mixed. The walk starts from the text settings a fresh machine would have, because it changes the remembered size on its way through.",
   "setup": {
-    "forget": ["text"]
+    "forget": [
+      "text"
+    ]
   },
   "steps": [
     {
@@ -136,6 +138,27 @@
     {
       "do": "snapshot",
       "name": "3-two-picked-mixed"
+    },
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-mixed-in-light",
+      "note": "the same two labels in the light scheme: Mixed in the Size box must read dimmed but legible on the dropdown's face, the same face the Time section's Fade In wears."
+    },
+    {
+      "do": "snapshot",
+      "name": "4-two-picked-mixed-light"
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
     }
   ]
 }

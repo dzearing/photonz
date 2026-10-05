@@ -113,6 +113,9 @@ extension VideoKit {
         /// Its menu is up: the accent edge the mock's Open state wears
         /// (`comp-fields.html`, 05 Select).
         var isOpen = false
+        /// What the value is drawn in, when not the ink: the word Mixed wears
+        /// `MixedLook.style`, the strength every other control says it at.
+        var valueStyle: AnyShapeStyle?
 
         @State private var isHovering = false
 
@@ -125,7 +128,7 @@ extension VideoKit {
                     }
                     Text(value)
                         .font(.system(size: size == .small ? 11 : 11.5, weight: .medium))
-                        .foregroundStyle(Palette.ink)
+                        .foregroundStyle(valueStyle ?? AnyShapeStyle(Palette.ink))
                         .lineLimit(1)
                         .truncationMode(.tail)
                 }
@@ -141,6 +144,21 @@ extension VideoKit {
                 .strokeBorder(borderStyle))
             .contentShape(RoundedRectangle(cornerRadius: radius))
             .kitHover(value) { isHovering = $0 }
+        }
+
+        /// Whether a value is drawn in full in a face this wide, or cut with an
+        /// ellipsis. The same sums the body does: the words, the padding either
+        /// side, the chevron, and the 8pt gap the stack puts on BOTH sides of
+        /// the spacer between them, which is 16 even when the spacer is 0.
+        @MainActor static func fits(_ value: String, swatch: Bool = false, size: Size = .small,
+                                    in width: CGFloat) -> Bool {
+            let font = NSFont.systemFont(ofSize: size == .small ? 11 : 11.5, weight: .medium)
+            let words = (value as NSString).size(withAttributes: [.font: font]).width
+            let chevron = NSImage(systemSymbolName: "chevron.down", accessibilityDescription: nil)?
+                .withSymbolConfiguration(.init(pointSize: 8, weight: .bold))?.size.width ?? 8
+            let padding: CGFloat = size == .small ? 8 : 10
+            let room = width - 2 * padding - 16 - chevron - (swatch ? 14 + 7 : 0)
+            return words.rounded(.up) <= room
         }
 
         private var borderStyle: AnyShapeStyle {
@@ -228,28 +246,39 @@ extension VideoKit {
         let value: String
         var swatch: AnyShapeStyle?
         var size: SelectFace.Size = .small
+        /// What the value is drawn in, when not the ink (`SelectFace`).
+        var valueStyle: AnyShapeStyle?
+        /// What resting the pointer on it says. On the button itself: a
+        /// SwiftUI `.help` around an AppKit view does not reach it.
+        var help: String?
         let choices: [Choice]
 
         init(label: String, value: String, swatch: AnyShapeStyle? = nil, size: SelectFace.Size = .small,
-             choices: [Choice]) {
+             valueStyle: AnyShapeStyle? = nil, help: String? = nil, choices: [Choice]) {
             self.label = label
             self.value = value
             self.swatch = swatch
             self.size = size
+            self.valueStyle = valueStyle
+            self.help = help
             self.choices = choices
         }
 
-        private var face: SelectFace { SelectFace(value: value, swatch: swatch, size: size) }
+        private var face: SelectFace {
+            SelectFace(value: value, swatch: swatch, size: size, valueStyle: valueStyle)
+        }
 
         func makeNSView(context: Context) -> DropdownButton {
             let button = DropdownButton(face: face)
             button.update(label: label, value: value, radius: size == .small ? 6 : 8, choices: choices)
+            button.toolTip = help
             return button
         }
 
         func updateNSView(_ button: DropdownButton, context: Context) {
             button.face = face
             button.update(label: label, value: value, radius: size == .small ? 6 : 8, choices: choices)
+            if button.toolTip != help { button.toolTip = help }
         }
 
         func sizeThatFits(_ proposal: ProposedViewSize, nsView button: DropdownButton,

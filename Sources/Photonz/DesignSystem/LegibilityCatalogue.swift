@@ -202,6 +202,10 @@ enum LegibilityCatalogue {
             Specimen(control: "Dropdown face", state: "component, small", ground: .panel) {
                 AnyView(Kit.SelectFace(value: "Pulse", size: .small, isComponent: true).frame(width: 140))
             },
+            Specimen(control: "Dropdown face", state: "mixed, small", ground: .panel) {
+                AnyView(Kit.SelectFace(value: LayerStyleSelection.mixedText, size: .small,
+                                       valueStyle: MixedLook.style).frame(width: 140))
+            },
             Specimen(control: "Section header", state: "rest", ground: .panel) {
                 AnyView(section(collapsed: false))
             },

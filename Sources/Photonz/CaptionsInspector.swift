@@ -332,8 +332,7 @@ struct CaptionsTextInspector: View {
                 SelectionMenu(label: "Size",
                               reading: StyleReading(value: shown, isMixed: false),
                               options: Self.sizes(with: shown),
-                              title: { TextStyles.sizeTitle($0) },
-                              spoken: { TextStyles.sizeWords($0) },
+                              title: { TextStyles.sizeWords($0) },
                               help: "The size of every caption") { picked in
                     editorState.setCaption(.size, to: .size(picked))
                 }

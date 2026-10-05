@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 4,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T09:48:33.817Z",
-  "updated": "2026-10-05T09:49:18.368Z",
+  "updated": "2026-10-05T12:27:49.244Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Manager pass 2026-10-05, UI quality lens. Seen in /tmp/photonz-playtest/an-editing-session-walk/6-title-at-b-sc.png (copied to queue/manager/shots/2026-10-05-0245-app-dissolve.png for the panel at a cut): Font 'Georgia ⇕', Size '80 px ⇕', Weight 'Bold ⇕' against Fade In 'None ⌄'. Code: InspectorControls.swift:445-520 SelectionMenu is a SwiftUI Picker .pickerStyle(.menu) (a system pop-up). The rest of the video panel uses VideoKit.Dropdown (VideoKitControls.swift, an AppKit pull-down holding the drawn SelectFace, from every-dropdown-in-the-panel-opens-when-you-click, audit 2026-09-29-every-dropdown-opens-on-a-click.json). Callers: TextInspector.swift:74-105, CaptionsInspector.swift:323. Keep SelectionMenu's Equatable short-circuit (picking-or-retyping-a-caption-answers-at-once) and its MenuTip help. This is shared code, so Current gets it too; check Current's text panel still reads right.",
@@ -30,6 +30,39 @@
     {
       "t": "2026-10-05T09:49:18.367Z",
       "note": "seq 3620 -> 4"
+    },
+    {
+      "t": "2026-10-05T11:56:41.779Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-05T11:58:27.791769Z",
+      "note": "Adversarial pass before building: (1) the fix is to draw SelectionMenu with VideoKit.Dropdown, so the three menus become full-width drawn faces exactly like Fade In; the box no longer sizes from its list, so the figure-space padding and the pinned Font width stop being needed. (2) Mixed: the drawn face has no Mixed row trick, so the face itself wears Mixed in MixedLook.style and the open menu ticks nothing (Photoshop shows a blank, the app has always said Mixed). (3) Clipping: the old test measured an NSPopUpButton; a drawn face needs its own measure against the width it is actually given, or the hover stops leading with a shortened font name. (4) A SwiftUI .help may not reach an AppKit button inside a representable, so the dropdown carries its own toolTip. (5) Shared code: Current's Text section gets the same face; Size and Weight keep their two columns there. The text tool's own popover (EditorView fontMenu pickers) is a different surface and is left alone."
+    },
+    {
+      "t": "2026-10-05T12:27:49.243Z",
+      "note": "owns these walks: every-title-dropdown-opens-on-a-click-walk, type-menu-labels-walk, menu-says-its-whole-value-walk, size-menu-one-width-walk, font-menu-one-width-walk, mixed-one-look-walk"
+    },
+    {
+      "t": "2026-10-05T12:28:03.108946Z",
+      "note": "Built: SelectionMenu (InspectorControls.swift) now draws VideoKit.Dropdown; SelectFace/Dropdown gained valueStyle (Mixed in MixedLook.style) and help (button toolTip, since .help does not reach the AppKit button); SelectFace.fits replaces MenuMetrics (deleted) for the clipped-name tip, measured against the width the face actually gets (onGeometryChange). Size titles use sizeWords now: the figure-space padding only existed to hold a pop-up's width. Gotcha: the face's HStack puts 8pt on BOTH sides of the Spacer, so the room is width - 2*pad - 16 - chevron; counting 8 made the Bodoni hover walk fail."
+    },
+    {
+      "t": "2026-10-05T12:28:03.108946Z",
+      "note": "Verified: type-menu-labels, size-menu-one-width, font-menu-one-width, menu-says-its-whole-value, mixed-one-look, label-size, label-weight, captions-are-one-layer, a-title-reads-over-a-video, one-unit-word, text-style walks all ok. every-title-dropdown-opens-on-a-click-walk now clicks Font, Size and Weight at centre/start/end and photographs Time+Text in dark and light; EveryDropdownIsClickedByAWalkTests registers the three names. Current layout checked with next-panel-rows-in-one-column off (a /tmp copy of type-menu-labels): Size and Weight share their row evenly. Scripts/test.sh 11367 tests green."
+    },
+    {
+      "t": "2026-10-05T12:28:03.108946Z",
+      "note": "Follow-ups: filed the-appearance-and-effects-menus-wear-the-same-d (Blending, Masked by, Effects Kind still system pop-ups, p2) and a-title-s-size-is-a-number-you-type-or-nudge-the (mock draws Size as a typed box, p1 per the mock-difference rule). Left rough in this log only: the Font list is not drawn in each family's own face (unchanged, nobody asked); the text tool popover's pickers are a different surface. Not filed: the caption Font/Size/Weight menus are not clicked by a walk of their own, but they are the same SelectionMenu and the same names as the clicked ones."
     }
+  ],
+  "started": "2026-10-05T11:56:41.777Z",
+  "walks": [
+    "every-title-dropdown-opens-on-a-click-walk",
+    "type-menu-labels-walk",
+    "menu-says-its-whole-value-walk",
+    "size-menu-one-width-walk",
+    "font-menu-one-width-walk",
+    "mixed-one-look-walk"
   ]
 }

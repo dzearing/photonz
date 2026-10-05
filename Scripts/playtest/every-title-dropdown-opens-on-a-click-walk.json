@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/every-title-dropdown-opens-on-a-click-walk",
-  "seed": "Every dropdown a moving title shows opens when a person clicks it, at Next defaults with no flag changed: the Curve between two keys in Properties, the Easing in the timeline's bar once a key is picked, and the Fade in the Time section. Each is clicked with the pointer on its face, in its middle and near each end; every click must open the menu, and the last picks a value the dropdown then shows.",
+  "seed": "Every dropdown a moving title shows opens when a person clicks it, at Next defaults with no flag changed: the Curve between two keys in Properties, the Easing in the timeline's bar once a key is picked, the Fade in the Time section, and the Font, Size and Weight in the Text section. Each is clicked with the pointer on its face, in its middle and near each end; every click must open the menu, and the last picks a value the dropdown then shows.",
   "setup": {
     "forget": [
       "all"
@@ -317,6 +317,79 @@
       "reads": "0.5s"
     },
     {
+      "do": "reveal",
+      "control": "Text section"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "snapshot",
+      "name": "0-time-and-text"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Font",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Georgia"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Font",
+      "reads": "Georgia"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Size",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "48 px"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Size",
+      "reads": "48 px"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Weight",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Bold"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Weight",
+      "reads": "Bold"
+    },
+    {
+      "do": "snapshot",
+      "name": "0-time-and-text-picked"
+    },
+    {
       "do": "press",
       "control": "Key Position 1"
     },
@@ -346,6 +419,26 @@
     {
       "do": "snapshot",
       "name": "1-after-every-click"
+    },
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "reveal",
+      "control": "Text section"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "2-time-and-text-light"
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
     }
   ]
 }

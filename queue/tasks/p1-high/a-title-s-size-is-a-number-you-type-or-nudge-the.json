@@ -1,0 +1,28 @@
+{
+  "id": "a-title-s-size-is-a-number-you-type-or-nudge-the",
+  "title": "A title's size is a number you type or nudge, the way the title mock draws it",
+  "goal": "The title mock gives a title's Text section a Size box you type a number into, sitting beside the Weight dropdown, the way Photoshop's size field takes any number. The app offers Size as a dropdown of seven preset sizes on its own row, so a size between the presets can only be reached by dragging the box on the canvas. Build the mock's Size box, keeping the presets reachable.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 500,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-05T12:27:36.398Z",
+  "updated": "2026-10-05T12:27:36.401Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-title-wt.html line ~214, .numgrid with <span class=\"stepper sm\"><span class=\"k\">Size</span><input id=\"pSize\" value=\"28\"></span> beside <span class=\"select sm\">Regular</span>. App: TextInspector.swift SelectionMenu(label: \"Size\") over TextStyles.fontSizes, now on VideoKit.Dropdown (2026-10-05, the-text-section-s-font-size-and-weight-menus-lo); CaptionsInspector.swift CaptionsTextInspector has the same Size row. Seen in queue/audits/2026-10-05-text-menus-after-dark-sc.png. The panel-rows-in-one-column layout stacks Size and Weight as two rows (PanelPair); the mock puts them side by side on one line, so the runner decides with the placement contract whether the pair shares a row. Size is clamped by setTextStyle already (typed sizes in walks use setTextSizeThreeDigits).",
+  "acceptance": [
+    "With a title picked at Next defaults, the Text section shows Size as a box you can type a number into, beside Weight, as video-title-wt.html draws it (stepper sm with Size in it)",
+    "Typing a size and pressing Return changes every picked text in one undo step; Mixed still reads Mixed in the dimmed style",
+    "The preset sizes stay one click away (arrow keys nudge, or a preset list on the box), and the Captions layer's Size row gets the same control",
+    "A walk types a size and photographs the section beside the mock frame, light and dark"
+  ],
+  "log": [
+    {
+      "t": "2026-10-05T12:27:36.400Z",
+      "note": "created (manual)"
+    }
+  ]
+}
