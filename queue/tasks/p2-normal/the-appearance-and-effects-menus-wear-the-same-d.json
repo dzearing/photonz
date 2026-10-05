@@ -4,12 +4,12 @@
   "goal": "With a layer picked, the Appearance section's Blending and Masked by menus, and menus in the Effects list such as a shadow's Kind, are still small system pop-ups with up and down arrows, right under the Text section whose menus now wear the panel's own dropdown with a chevron. Draw them with the same dropdown so the panel reads as one app, keeping what each does today.",
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
-  "seq": 3590,
+  "seq": 110,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T12:21:51.131Z",
-  "updated": "2026-10-05T12:21:51.134Z",
+  "updated": "2026-10-05T12:51:02.215Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-05 in /tmp/photonz-playtest/type-menu-labels/2-size-menu-sc.png (copied to queue/manager/shots/2026-10-05-appearance-popups.png): Blending \"Normal ⇕\" and Masked by \"Nothing ⇕\" directly under Font/Size/Weight drawn as VideoKit.Dropdown. Run: Scripts/playtest.sh Scripts/playtest/type-menu-labels-walk.json --no-build. Code: BlendModeInspector.swift:60 (PanelNamedControl Blending), mask row near it, EffectsListInspector.swift (4 x pickerStyle(.menu)), EffectStylePanel.swift. Pattern to copy: SelectionMenu in InspectorControls.swift now wraps VideoKit.Dropdown (valueStyle for Mixed, help on the button, onGeometryChange + SelectFace.fits for the clipped-name tip). Follow-up from the-text-section-s-font-size-and-weight-menus-lo.",
@@ -17,12 +17,21 @@
     "Blending, Masked by and every menu in the Effects list are drawn with the panel dropdown face (same height, chevron, fill and label placement as Fade In and Font), in light and dark",
     "Each still picks what it picked before, in one undo step, and the walks that use them pass",
     "A walk clicks each one with the pointer at its middle and near each end (EveryDropdownIsClickedByAWalkTests registers them)",
-    "Works at Next defaults and an audit shows the panel before and after"
+    "Works at Next defaults and an audit shows the panel before and after",
+    "A unit test reads the panel source and fails on any menu still drawn as a system pop-up (pickerStyle(.menu) or a bare Picker in the panel), so the next panel menu cannot drift back; today that is EffectsListInspector.swift (4), EffectStylePanel.swift (1) and the Blending and Masked by rows"
   ],
   "log": [
     {
       "t": "2026-10-05T12:21:51.133Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-05T12:50:53.606Z",
+      "note": "seq 3590 -> 110"
+    },
+    {
+      "t": "2026-10-05T12:51:02.214Z",
+      "note": "Digest 2026-10-05: this is the third pass that converts panel menus to the drawn dropdown one section at a time (Fade In, then Text on 2026-10-05, now this), while UX-PATTERNS' kit table already says every .select is VideoKit.Dropdown. Added an acceptance item: a test that refuses a system pop-up anywhere in the panel, so this is the last pass. grep on 2026-10-05: pickerStyle(.menu) in EffectsListInspector.swift x4, EffectStylePanel.swift x1, EditorView.swift x1, CanvasGridSettingsView.swift x1, ExportDialog.swift x2 (the last three are not the panel)."
     }
   ]
 }

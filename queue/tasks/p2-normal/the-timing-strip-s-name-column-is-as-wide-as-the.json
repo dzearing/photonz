@@ -3,13 +3,13 @@
   "title": "The timing strip's name column is as wide as the mock draws it",
   "goal": "The mock draws the layer names on the icon timing strip in a narrower column than the app does, which gives the bars more room but makes long names wrap sooner and moves where the bars start. The user decides which width the strip should have.",
   "epic": "icon-animate",
-  "priority": "p3-low",
-  "seq": 1350,
+  "priority": "p2-normal",
+  "seq": 120,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T08:57:40.392Z",
-  "updated": "2026-10-05T08:58:04.988Z",
+  "updated": "2026-10-05T12:50:53.660Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found writing the 2026-10-05 audit for layer-names-on-the-timing-strip-read-whole-besid. Mock: icon-animate-wt.html, .track.bl-lt .tl width 58px at 9.5px. App: MotionStripView.labelWidth 92 (name room 72 after the kind mark). The column has been 92 since e4607244; the strip and the video timeline lanes were kept starting at the same point (commit 17ce4476 message). Comparison picture: queue/audits/2026-10-05-timing-strip-wrapped-names-vs-mock.png.",
@@ -25,6 +25,18 @@
     {
       "t": "2026-10-05T08:58:04.986Z",
       "note": "Waiting on the user's pick of column width (card the-timing-strip-s-name-column-is-as-wide-as-the-how-wide-should-the-column-of-la)"
+    },
+    {
+      "t": "2026-10-05T12:50:52.706Z",
+      "note": "priority p3-low -> p2-normal"
+    },
+    {
+      "t": "2026-10-05T12:50:52.763Z",
+      "note": "Triage 2026-10-05: p3 -> p2. It serves icon-animate, a now sub-epic, and it is a difference from the mock; now work sits at p2. It stays blocked on its card."
+    },
+    {
+      "t": "2026-10-05T12:50:53.659Z",
+      "note": "seq 1350 -> 120"
     }
   ],
   "walks": [

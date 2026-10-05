@@ -4,12 +4,12 @@
   "goal": "The video title mock puts a name card on the timeline as a linked component, so changing its look once changes every name card in the video. The app shipped them as copies you own instead, explained in an audit but never asked. Ask the user which they want, and build to the answer.",
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
-  "seq": 60,
+  "seq": 90,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-04T13:07:19.900Z",
-  "updated": "2026-10-04T13:07:33.924Z",
+  "updated": "2026-10-05T12:50:53.491Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the 2026-10-04 digest design review. Audits queue/audits/2026-10-03-title-presets.json and 2026-10-03-title-tiles.json both say they depart from video-title-wt (step 10: Lower third and End card as linked components with variant counts and the violet mark on the Comps shelf). The runner chose copies because a component dropped on a recording brings its original with it on a second track (checked in the app). Both tasks finished before the mock-difference gate (ccb6fc6b) landed, so nothing made them name a card. The users words for the feature: presets are great but with high flexibility to make your own.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-10-04T13:07:33.923Z",
       "note": "seq 3570 -> 60"
+    },
+    {
+      "t": "2026-10-05T12:50:53.490Z",
+      "note": "seq 60 -> 90"
     }
   ]
 }

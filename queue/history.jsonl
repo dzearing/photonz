@@ -9409,3 +9409,51 @@
 {"t":"2026-10-05T10:20:36.908Z","ev":"task_walks","id":"a-gif-plays-at-the-speed-of-the-edit-it-came-fro","walks":[]}
 {"t":"2026-10-05T10:20:51.451Z","ev":"task_note","id":"an-edited-video-copies-to-the-clipboard-as-a-vid"}
 {"t":"2026-10-05T10:21:03.748Z","ev":"task_done","id":"an-edited-video-copies-to-the-clipboard-as-a-vid","from":"in_progress","note":"Edit > Copy Video (⌃⇧⌘C) and Copy as GIF (⌃⇧⌘G) in Next put the whole edit on the clipboard via the Export writer at the sheet's remembered settings, captions burned in, with the export toast while copying and a Copied pill (EditorState+VideoExport.swift, EditorCommands.swift, PhotonzCore/VideoClipboardCopy.swift). Verified at Next defaults by copy-the-edit-to-the-clipboard-walk (clipboard file = 4.0 s edit, GIF = edit's 60 frames) and copy-a-long-captioned-edit-walk (5 min captioned copy, longest main-thread pass 27 ms); 11342 tests pass. Audit queue/audits/2026-10-05-copy-the-edit-to-the-clipboard.json. Commit adb729d6."}
+{"t":"2026-10-05T10:39:31.217Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":937,"of":747,"rotating":true}
+{"t":"2026-10-05T10:39:31.399Z","ev":"task_started","id":"a-second-clip-comes-in-at-the-playhead-from-the","title":"A second clip comes in at the playhead from the menu bar, like a sound does","priority":"p2-normal"}
+{"t":"2026-10-05T11:04:36.909Z","ev":"task_walks","id":"a-second-clip-comes-in-at-the-playhead-from-the","walks":["add-media-at-playhead-walk"]}
+{"t":"2026-10-05T11:04:36.966Z","ev":"task_note","id":"a-second-clip-comes-in-at-the-playhead-from-the"}
+{"t":"2026-10-05T11:04:37.024Z","ev":"task_note","id":"a-second-clip-comes-in-at-the-playhead-from-the"}
+{"t":"2026-10-05T11:04:37.080Z","ev":"task_note","id":"a-second-clip-comes-in-at-the-playhead-from-the"}
+{"t":"2026-10-05T11:04:37.135Z","ev":"task_note","id":"a-second-clip-comes-in-at-the-playhead-from-the"}
+{"t":"2026-10-05T11:04:58.481Z","ev":"task_done","id":"a-second-clip-comes-in-at-the-playhead-from-the","from":"in_progress","note":"Sequence > Add Media at Playhead… (replacing Add Sound…) puts a video at the playhead on a free picture track with nothing over it, or a new one on top, its sound linked under it; a sound lands as Add Sound did; the file goes on the shelf; one undo. Core: pictureLandingAtPlayhead with 8 tests; full suite 11350 green; add-media-at-playhead-walk passes at Next defaults with 4 real captures; audit queue/audits/2026-10-05-add-media-at-playhead.json. Commit a48ef47a."}
+{"t":"2026-10-05T11:19:24.008Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":701,"of":748,"rotating":true}
+{"t":"2026-10-05T11:19:24.169Z","ev":"task_started","id":"clips-snap-to-markers-and-a-marker-drags-to-a-ne","title":"Clips snap to markers, and a marker drags to a new moment","priority":"p2-normal"}
+{"t":"2026-10-05T11:27:01.756Z","ev":"task_note","id":"clips-snap-to-markers-and-a-marker-drags-to-a-ne"}
+{"t":"2026-10-05T11:38:56.150Z","ev":"task_walks","id":"clips-snap-to-markers-and-a-marker-drags-to-a-ne","walks":["clips-snap-to-markers-walk","drag-a-marker-by-hand-walk"]}
+{"t":"2026-10-05T11:39:15.712Z","ev":"task_note","id":"clips-snap-to-markers-and-a-marker-drags-to-a-ne"}
+{"t":"2026-10-05T11:39:15.776Z","ev":"task_done","id":"clips-snap-to-markers-and-a-marker-drags-to-a-ne","from":"in_progress","note":"Markers are snap edges for clip moves and trims (capsule readout 'caught on a marker at 0:02'), the playhead dragged on the ruler catches on markers, and a marker's flag drags to a new moment catching on cuts and the playhead in one undo step; a click puts the playhead on it. Core: ClipBarDrag.clipBarEdges, TimelineMarks.moveMarker/playheadSnapMoments/markerSnapMoments, RulerRange.grip(.marker)/markerMoved; app: EditorState+RulerRange, TimelineDock ruler. Verified: MarkerSnapTests (written first) + full suite 11367 green; walks clips-snap-to-markers-walk and drag-a-marker-by-hand-walk (real pointer) pass at Next defaults with 8 real captures. Audit queue/audits/2026-10-05-clips-snap-to-markers.json."}
+{"t":"2026-10-05T11:56:41.621Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":876,"of":750,"rotating":true}
+{"t":"2026-10-05T11:56:41.785Z","ev":"task_started","id":"the-text-section-s-font-size-and-weight-menus-lo","title":"The Text section's Font, Size and Weight menus look like every other dropdown in the panel","priority":"p2-normal"}
+{"t":"2026-10-05T12:21:51.135Z","ev":"task_created","id":"the-appearance-and-effects-menus-wear-the-same-d","priority":"p2-normal","title":"The Appearance and Effects menus wear the same dropdown face as the rest of the panel"}
+{"t":"2026-10-05T12:27:36.402Z","ev":"task_created","id":"a-title-s-size-is-a-number-you-type-or-nudge-the","priority":"p1-high","title":"A title's size is a number you type or nudge, the way the title mock draws it"}
+{"t":"2026-10-05T12:27:49.245Z","ev":"task_walks","id":"the-text-section-s-font-size-and-weight-menus-lo","walks":["every-title-dropdown-opens-on-a-click-walk","type-menu-labels-walk","menu-says-its-whole-value-walk","size-menu-one-width-walk","font-menu-one-width-walk","mixed-one-look-walk"]}
+{"t":"2026-10-05T12:28:24.095Z","ev":"task_done","id":"the-text-section-s-font-size-and-weight-menus-lo","from":"in_progress","note":"Font, Size and Weight in the Text section (and a Captions layer's) now draw the panel's own dropdown (SelectionMenu on VideoKit.Dropdown), matching Fade In in light and dark; Mixed dimmed, cut font names spelled in full on hover, one undo per pick. Verified with 11 walks incl. the click walk that now clicks all three at middle and both ends, and Scripts/test.sh green (11367). Audit queue/audits/2026-10-05-text-menus-one-dropdown.json. Follow-ups filed: the-appearance-and-effects-menus-wear-the-same-d, a-title-s-size-is-a-number-you-type-or-nudge-the."}
+{"t":"2026-10-05T12:48:38.755Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":927,"of":750,"rotating":true}
+{"t":"2026-10-05T12:50:52.708Z","ev":"task_reprioritized","id":"the-timing-strip-s-name-column-is-as-wide-as-the","from":"p3-low","to":"p2-normal"}
+{"t":"2026-10-05T12:50:52.765Z","ev":"task_note","id":"the-timing-strip-s-name-column-is-as-wide-as-the"}
+{"t":"2026-10-05T12:50:52.821Z","ev":"task_resequenced","id":"a-video-document-shows-the-library-in-its-dock","from":20,"to":10}
+{"t":"2026-10-05T12:50:52.877Z","ev":"task_resequenced","id":"the-panel-shows-what-the-picked-thing-is-and-its","from":30,"to":20}
+{"t":"2026-10-05T12:50:52.934Z","ev":"task_resequenced","id":"the-grid-s-controls-come-back-to-the-tool-bar-as","from":40,"to":30}
+{"t":"2026-10-05T12:50:52.991Z","ev":"task_resequenced","id":"a-title-s-size-is-a-number-you-type-or-nudge-the","from":500,"to":40}
+{"t":"2026-10-05T12:50:53.047Z","ev":"task_resequenced","id":"a-cut-between-two-clips-rolls-to-the-playhead-fr","from":5,"to":10}
+{"t":"2026-10-05T12:50:53.102Z","ev":"task_resequenced","id":"find-out-whether-a-clip-on-a-locked-track-can-st","from":6,"to":20}
+{"t":"2026-10-05T12:50:53.158Z","ev":"task_resequenced","id":"zooms-write-themselves-from-the-clicks-in-a-reco","from":7,"to":30}
+{"t":"2026-10-05T12:50:53.213Z","ev":"task_resequenced","id":"time-on-a-video-reads-in-frames-where-an-editor","from":10,"to":40}
+{"t":"2026-10-05T12:50:53.269Z","ev":"task_resequenced","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":20,"to":50}
+{"t":"2026-10-05T12:50:53.323Z","ev":"task_resequenced","id":"the-panel-keeps-its-promise-on-a-video-document","from":30,"to":60}
+{"t":"2026-10-05T12:50:53.379Z","ev":"task_resequenced","id":"shift-z-means-the-one-thing-you-choose-on-a-vide","from":40,"to":70}
+{"t":"2026-10-05T12:50:53.435Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":50,"to":80}
+{"t":"2026-10-05T12:50:53.493Z","ev":"task_resequenced","id":"title-pages-and-name-cards-follow-the-mock-or-th","from":60,"to":90}
+{"t":"2026-10-05T12:50:53.551Z","ev":"task_resequenced","id":"a-gif-plays-at-the-speed-of-the-edit-it-came-fro","from":3580,"to":100}
+{"t":"2026-10-05T12:50:53.608Z","ev":"task_resequenced","id":"the-appearance-and-effects-menus-wear-the-same-d","from":3590,"to":110}
+{"t":"2026-10-05T12:50:53.661Z","ev":"task_resequenced","id":"the-timing-strip-s-name-column-is-as-wide-as-the","from":1350,"to":120}
+{"t":"2026-10-05T12:50:53.715Z","ev":"task_resequenced","id":"a-colour-swatch-at-the-very-top-of-the-panel-ope","from":40,"to":10}
+{"t":"2026-10-05T12:50:53.772Z","ev":"task_resequenced","id":"find-out-whether-grid-settings-is-hard-to-read-i","from":50,"to":20}
+{"t":"2026-10-05T12:51:02.216Z","ev":"task_note","id":"the-appearance-and-effects-menus-wear-the-same-d"}
+{"t":"2026-10-05T12:51:27.999Z","ev":"task_created","id":"rounding-corners-works-the-same-way-on-a-rectang","priority":"p2-normal","title":"Rounding corners works the same way on a rectangle and on a drawn shape"}
+{"t":"2026-10-05T12:51:36.485Z","ev":"decision_opened","id":"rounding-corners-works-the-same-way-on-a-rectang-when-you-pull-a-corner-to-round","taskId":"rounding-corners-works-the-same-way-on-a-rectang","question":"When you pull a corner to round it, should it round every corner or just that one?"}
+{"t":"2026-10-05T12:51:38.421Z","ev":"task_resequenced","id":"rounding-corners-works-the-same-way-on-a-rectang","from":3580,"to":130}
+{"t":"2026-10-05T12:51:41.040Z","ev":"task_blocked","id":"rounding-corners-works-the-same-way-on-a-rectang","from":"pending","note":"waiting on the card: every corner or just the one on a plain pull"}
+{"t":"2026-10-05T12:52:08.254Z","ev":"triage","summary":"merged 0, dropped 0, moved 1 (timing strip column p3->p2), filed 1 (corner rounding consistency, blocked on a card), reset 0, groomed 1 (panel dropdown task gained a no-system-pop-up test), resequenced p1/p2/p3 to clean steps of 10"}
+{"t":"2026-10-05T12:52:56.593Z","ev":"digest","file":"2026-10-05.md"}

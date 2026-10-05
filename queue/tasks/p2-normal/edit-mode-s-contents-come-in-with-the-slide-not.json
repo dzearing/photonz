@@ -4,12 +4,12 @@
   "goal": "Switching a long captioned recording from View to Edit now slides smoothly, but the tool bar, the track rows and the panel fill in up to about 0.7s after the key, visibly after the slide, and the app stays busy for most of that time. Make those pieces cheap enough to build that they can arrive with the slide again without making it stutter.",
   "epic": "video-editing",
   "priority": "p2-normal",
-  "seq": 20,
+  "seq": 50,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T14:58:43.448Z",
-  "updated": "2026-10-05T05:49:53.886Z",
+  "updated": "2026-10-05T12:50:53.268Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows the-slide-into-edit-mode-draws-every-frame-like, which moved every stage after the key pass to wait for the slide (EditModeArrival.nextWaitsForTheSlide). Profiled 2026-09-30 with xctrace Time Profiler against the probe, samples cut to the 500ms after each Cmd-2: about 480ms busy per switch either way; about 270ms of it is per-frame NSHostingView.layout while canvas/panel/dock frames animate. Into Edit, SwiftUI AccessibilityNode.updateFocusResponder was about 28ms per switch (walks the whole responder tree after every render, grows with every view built), AccessibilityViewGraph.update about 10ms more. Per frame the canvas updateNSView runs CanvasNSView.apply → refreshOverlaysInsideTransaction, refreshLayerSelectionDisplay, canvasNameLabels because canvasViewSizeChanged writes a new viewport each frame. Stage costs: key pass ~50ms, timeline+tool bar ~80, track rows ~90 (captions lane with 191 cues and words lane), panel sections 15 to 45ms each (CaptionStylePreview, PanelFieldRowLayout, SystemSegments.sizeThatFits). Measure with a filmWindow step (docs/design/playtest-harness.md) rather than mainBusy alone.",
@@ -90,6 +90,10 @@
     {
       "t": "2026-10-05T05:49:53.885Z",
       "note": "Seen 2026-10-04 while checking related walks for folding-a-panel-section-lands-under-a-frame-on-e: view-to-edit-on-a-long-recording-walk fails 3 of 4 on main WITHOUT that task's changes (Scripts/playtest.sh Scripts/playtest/view-to-edit-on-a-long-recording-walk.json: step 10 wait 103.8ms, step 23 wait 139.3ms, step 29 film still 35ms; one pass at 95.7ms) and 4 of 4 with them (96.5-104.4ms, film stills 36-45ms). Same failures either way, so not caused by the fold change."
+    },
+    {
+      "t": "2026-10-05T12:50:53.267Z",
+      "note": "seq 20 -> 50"
     }
   ],
   "walks": [

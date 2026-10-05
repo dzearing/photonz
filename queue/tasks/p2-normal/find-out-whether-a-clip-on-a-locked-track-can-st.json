@@ -4,12 +4,12 @@
   "goal": "Locking a track is a promise that nothing on it changes. On the timeline the lock holds: its clips cannot be clicked, dragged, split or ripple deleted. But the plain delete path checks only whether the layer itself is locked, not its track, so a clip on a locked track that gets picked some other way (on the canvas, from Layers, by Select All) may still be deleted by Delete or Command Delete. Find out, and if it does, make the lock hold against every delete.",
   "epic": "video-cutting",
   "priority": "p2-normal",
-  "seq": 6,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T09:48:42.977Z",
-  "updated": "2026-10-05T09:49:18.479Z",
+  "updated": "2026-10-05T12:50:53.101Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Manager pass 2026-10-05, from reading the code, NOT reproduced (the loop held the probe). PhotonzCore/Document.swift:687-689 deletableLayerIDs filters on layer.isLocked only; Track.isLocked lives in DocumentTracks.swift:52. EditorState+Layout.swift:48-56 deleteSelectedLayers uses actionableLayerIDs then deleteLayers. canDeleteClipPieceInHand (EditorState+ClipBar.swift:155-161) has no track-lock check either. Timeline-side guards that DO hold: EditorState+ClipBar.swift:111-113, 357-361; EditorState+TimelineMenus.swift:77-87, 327; TimelineMenuEdits.swift:58-91. Whether a locked track's clip can be picked on the canvas at all is the first thing to learn; if it cannot, this is likely a no-op.",
@@ -27,6 +27,10 @@
     {
       "t": "2026-10-05T09:49:18.478Z",
       "note": "seq 3630 -> 6"
+    },
+    {
+      "t": "2026-10-05T12:50:53.100Z",
+      "note": "seq 6 -> 20"
     }
   ]
 }

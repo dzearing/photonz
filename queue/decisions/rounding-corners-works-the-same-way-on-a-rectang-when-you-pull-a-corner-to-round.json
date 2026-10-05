@@ -1,0 +1,52 @@
+{
+  "id": "rounding-corners-works-the-same-way-on-a-rectang-when-you-pull-a-corner-to-round",
+  "taskId": "rounding-corners-works-the-same-way-on-a-rectang",
+  "question": "When you pull a corner to round it, should it round every corner or just that one?",
+  "context": "Two features built a month apart chose opposite defaults. Audit: queue/audits/2026-10-04-round-a-path-s-corners.json (its second evaluate question asks this).",
+  "options": [
+    {
+      "id": "a",
+      "label": "Every corner on a plain pull, Option for one; rectangles change to match",
+      "summary": "Pulling any corner handle rounds all the corners together, on a rectangle and on a shape you drew. Hold Option to round only the corner you are pulling. This is how drawn shapes already work, and rectangles switch over.",
+      "pros": [
+        "Same as Photoshop, Figma and Illustrator",
+        "Drawn shapes already work this way, so only rectangles change",
+        "The common case, all corners alike, takes no key"
+      ],
+      "cons": [
+        "Anyone used to the rectangle's one corner pull has to add Option for it"
+      ],
+      "mitigation": "The pill under the shape names what is changing as you pull, so the first pull shows which way it went."
+    },
+    {
+      "id": "b",
+      "label": "Just that corner on a plain pull, Option for all; drawn shapes change to match",
+      "summary": "Pulling a corner handle rounds only that corner, on a rectangle and on a shape you drew. Hold Option to round them all. This is how rectangles already work, and drawn shapes switch over.",
+      "pros": [
+        "Rectangles keep working the way they do today",
+        "Rounding one corner, the finer job, takes no key"
+      ],
+      "cons": [
+        "The reverse of Photoshop, Figma and Illustrator",
+        "Rounding a whole shape takes Option every time"
+      ],
+      "mitigation": "The Corner Radius slider in Appearance still rounds every corner in one move."
+    },
+    {
+      "id": "c",
+      "label": "Leave them different",
+      "summary": "Rectangles keep rounding one corner on a plain pull and drawn shapes keep rounding every corner. Nothing changes.",
+      "pros": [
+        "No work, and nothing anyone has learned changes"
+      ],
+      "cons": [
+        "Learning one teaches you the other backwards"
+      ],
+      "mitigation": "None.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-05T12:51:36.483Z"
+}
